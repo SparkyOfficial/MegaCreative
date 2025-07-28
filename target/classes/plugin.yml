@@ -1,0 +1,27 @@
+name: SparkyBetaCreative
+main: ua.sparkybeta.sparkybetacreative.SparkyBetaCreative
+version: 1.0.0-SNAPSHOT
+api-version: 1.20
+authors: [SparkyBeta, Gemini]
+description: A creative worlds plugin with visual scripting.
+softdepend: [PlaceholderAPI, ProtocolLib, Vault, FastAsyncWorldEdit]
+
+commands:
+  world:
+    description: Main command for SparkyBetaCreative worlds.
+    aliases: [sw, sparkyworld]
+  value:
+    description: Creates a value item for coding.
+    aliases: [text, number, location, boolean]
+  play:
+    description: Switch to play mode.
+  dev:
+    description: Switch to dev mode.
+  build:
+    description: Switch to build mode.
+  hub:
+    description: Teleport to the server hub/spawn.
+    aliases: [spawn]
+  worlds:
+    description: List your worlds.
+    aliases: [myworlds] 
