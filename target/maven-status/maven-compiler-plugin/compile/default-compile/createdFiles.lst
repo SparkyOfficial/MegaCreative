@@ -1,0 +1,16 @@
+ua\sparkycreative\worldsystem\logic\LogicBlockConfigGUI.class
+ua\sparkycreative\worldsystem\WorldTeleportUtil.class
+ua\sparkycreative\worldsystem\WorldsCommand.class
+ua\sparkycreative\worldsystem\DevWorldListener$1.class
+ua\sparkycreative\worldsystem\logic\LogicBlock.class
+ua\sparkycreative\worldsystem\logic\LogicBlockManager.class
+ua\sparkycreative\worldsystem\WorldManager$Flat300Generator.class
+ua\sparkycreative\worldsystem\WorldManager.class
+ua\sparkycreative\worldsystem\WorldSystemPlugin.class
+ua\sparkycreative\worldsystem\logic\LogicExecutor.class
+ua\sparkycreative\worldsystem\logic\LogicBlockType.class
+ua\sparkycreative\worldsystem\DevWorldListener.class
+ua\sparkycreative\worldsystem\WorldsBrowserGUI.class
+ua\sparkycreative\worldsystem\WorldBorderListener.class
+ua\sparkycreative\worldsystem\WorldSystemPlugin$1.class
+ua\sparkycreative\worldsystem\logic\LogicExecutor$1.class

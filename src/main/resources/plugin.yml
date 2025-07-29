@@ -1,0 +1,13 @@
+name: WorldSystem
+main: ua.sparkycreative.worldsystem.WorldSystemPlugin
+version: 1.0
+api-version: 1.21
+commands:
+  worlds:
+    description: Открыть браузер миров
+    usage: /worlds
+    permission: worldsystem.use
+permissions:
+  worldsystem.use:
+    description: Доступ к системе миров
+    default: true 
