@@ -1,0 +1,53 @@
+name: MegaCreative
+main: com.megacreative.MegaCreative
+version: 1.0.0
+api-version: 1.20
+description: Advanced Minecraft plugin for world creation and visual programming
+author: MegaCreative Team
+website: https://github.com/megacreative
+
+commands:
+  megacreative:
+    description: Main plugin command
+    aliases: [mc, mega]
+  myworlds:
+    description: Open my worlds menu
+    aliases: [mw, worlds]
+  worldbrowser:
+    description: Open world browser
+    aliases: [wb, browser]
+  join:
+    description: Join world by ID
+    aliases: [j]
+  play:
+    description: Switch to play mode
+  build:
+    description: Switch to build mode
+  dev:
+    description: Switch to dev mode
+  worldsettings:
+    description: Open world settings
+    usage: /<command>
+    permission: megacreative.user
+  testscript:
+    description: Создает тестовый скрипт для проверки системы кодирования.
+    usage: /<command>
+    permission: megacreative.admin
+
+permissions:
+  megacreative.*:
+    description: All MegaCreative permissions
+    default: op
+    children:
+      megacreative.admin: true
+      megacreative.create: true
+      megacreative.join: true
+  megacreative.admin:
+    description: Admin permissions
+    default: op
+  megacreative.create:
+    description: Create worlds
+    default: true
+  megacreative.join:
+    description: Join worlds
+    default: true
