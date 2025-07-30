@@ -3,6 +3,7 @@ package com.megacreative.gui;
 import com.megacreative.MegaCreative;
 import com.megacreative.models.CreativeWorld;
 import com.megacreative.models.WorldComment;
+import org.bukkit.event.HandlerList;
 import org.bukkit.Bukkit;
 import org.bukkit.Material;
 import org.bukkit.entity.Player;
