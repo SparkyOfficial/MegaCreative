@@ -11,10 +11,12 @@ com\megacreative\coding\actions\PlayerHealthCondition.class
 com\megacreative\coding\actions\CommandAction.class
 com\megacreative\coding\actions\GiveItemAction.class
 com\megacreative\commands\CreateScriptCommand.class
+com\megacreative\gui\TemplateBrowserGUI.class
 com\megacreative\coding\ScriptDebugger$1.class
 com\megacreative\coding\actions\WorldTimeCondition.class
 com\megacreative\coding\CodingParameterGUI.class
 com\megacreative\coding\actions\SetGlobalVariableAction.class
+com\megacreative\coding\ParameterResolver$1.class
 com\megacreative\coding\actions\MulVarAction.class
 com\megacreative\listeners\PlayerJoinListener.class
 com\megacreative\coding\actions\SetTimeAction.class
@@ -41,6 +43,8 @@ com\megacreative\coding\actions\HasPermissionCondition.class
 com\megacreative\commands\HubCommand.class
 com\megacreative\managers\PlayerManager.class
 com\megacreative\coding\ScriptDebugger.class
+com\megacreative\coding\conditions\IsOpCondition.class
+com\megacreative\managers\TemplateManager.class
 com\megacreative\coding\actions\SubVarAction.class
 com\megacreative\coding\actions\GetServerVariableAction.class
 com\megacreative\gui\WorldCreationGUI.class
@@ -55,6 +59,7 @@ com\megacreative\listeners\WorldInteractListener.class
 com\megacreative\commands\WorldSettingsCommand.class
 com\megacreative\coding\actions\CompareVariableCondition.class
 com\megacreative\coding\actions\GetPlayerNameAction.class
+com\megacreative\coding\conditions\CompareVariableCondition.class
 com\megacreative\coding\conditions\MobNearCondition.class
 com\megacreative\coding\conditions\IsNearBlockCondition.class
 com\megacreative\coding\actions\SetGameModeAction.class
@@ -62,8 +67,10 @@ com\megacreative\coding\CodeScript.class
 com\megacreative\coding\actions\BlockAction.class
 com\megacreative\models\WorldFlags.class
 com\megacreative\coding\BlockCondition.class
+com\megacreative\coding\conditions\WorldTimeCondition.class
 com\megacreative\coding\actions\SetServerVariableAction.class
 com\megacreative\coding\CodeBlock.class
+com\megacreative\commands\TemplatesCommand.class
 com\megacreative\coding\actions\TeleportAction.class
 com\megacreative\coding\BlockConnectionVisualizer$1.class
 com\megacreative\coding\actions\PlayParticleEffectAction.class
@@ -76,7 +83,6 @@ com\megacreative\commands\JoinCommand.class
 com\megacreative\coding\actions\EffectAction.class
 com\megacreative\coding\actions\ExplosionAction.class
 com\megacreative\listeners\PlayerQuitListener.class
-com\megacreative\gui\ParameterSelectorGUI.class
 com\megacreative\coding\actions\SendMessageAction.class
 com\megacreative\coding\actions\HealPlayerAction.class
 com\megacreative\coding\actions\BroadcastAction.class
@@ -87,6 +93,7 @@ com\megacreative\coding\data\DataItemFactory$DataItem.class
 com\megacreative\models\WorldMode.class
 com\megacreative\coding\actions\IsOpCondition.class
 com\megacreative\utils\ConfigManager.class
+com\megacreative\coding\ParameterSelectorGUI.class
 com\megacreative\coding\BlockConnectionVisualizer.class
 com\megacreative\gui\AnvilInputGUI.class
 com\megacreative\commands\MainCommand.class

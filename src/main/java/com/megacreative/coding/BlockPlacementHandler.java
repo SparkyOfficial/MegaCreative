@@ -2,7 +2,8 @@ package com.megacreative.coding;
 
 import com.megacreative.MegaCreative;
 import com.megacreative.coding.data.DataItemFactory;
-import com.megacreative.gui.ParameterSelectorGUI;
+import com.megacreative.coding.data.DataItemFactory.DataItem;
+import com.megacreative.coding.ParameterSelectorGUI;
 import org.bukkit.Location;
 import org.bukkit.Material;
 import org.bukkit.block.Block;
@@ -34,9 +35,10 @@ public class BlockPlacementHandler implements Listener {
     
     // Хранилище: Location -> CodeBlock (содержит действие и параметры)
     private final Map<Location, CodeBlock> blockCodeBlocks = new HashMap<>();
-    
-    // Новое поле для хранения первого выбранного блока
+    private final Map<UUID, Boolean> playerVisualizationStates = new HashMap<>();
+    private final Map<UUID, Boolean> playerDebugStates = new HashMap<>();
     private final Map<UUID, Location> playerSelections = new HashMap<>();
+    private final Map<UUID, CodeBlock> clipboard = new HashMap<>(); // Буфер обмена для копирования
 
     // Список действий для каждого типа блока (MVP, можно расширять)
     private static final Map<Material, List<String>> ACTIONS = Map.of(
@@ -101,10 +103,45 @@ public class BlockPlacementHandler implements Listener {
     @EventHandler
     public void onPlayerInteract(PlayerInteractEvent event) {
         Player player = event.getPlayer();
-        if (!isInDevWorld(player)) return;
+        
+        // Проверяем, что игрок в мире разработки
+        if (!player.getWorld().getName().equals("dev")) {
+            return;
+        }
+        
+        ItemStack itemInHand = player.getInventory().getItemInMainHand();
+        
+        // Инспектор блоков (DEBUG_STICK)
+        if (itemInHand.getType() == Material.DEBUG_STICK && itemInHand.hasItemMeta() && event.getAction().isRightClick()) {
+            Block clickedBlock = event.getClickedBlock();
+            if (clickedBlock != null && blockCodeBlocks.containsKey(clickedBlock.getLocation())) {
+                event.setCancelled(true);
+                displayBlockInfo(player, blockCodeBlocks.get(clickedBlock.getLocation()));
+                return;
+            }
+        }
+        
+        // Копировщик блоков (GOLDEN_AXE)
+        if (itemInHand.getType() == Material.GOLDEN_AXE && itemInHand.hasItemMeta()) {
+            Block clickedBlock = event.getClickedBlock();
+            if (clickedBlock != null) {
+                event.setCancelled(true);
+                handleBlockCopying(player, event.getAction(), clickedBlock, event.getBlockFace());
+                return;
+            }
+        }
+        
+        // Предметы-данные (DataItem)
+        if (DataItemFactory.isDataItem(itemInHand) && event.getAction().isRightClick()) {
+            Block clickedBlock = event.getClickedBlock();
+            if (clickedBlock != null && blockCodeBlocks.containsKey(clickedBlock.getLocation())) {
+                event.setCancelled(true);
+                handleDataItemInsertion(player, clickedBlock, itemInHand);
+                return;
+            }
+        }
         
         // Проверяем, что игрок не использует связующий жезл
-        ItemStack itemInHand = player.getInventory().getItemInMainHand();
         if (itemInHand.getType() == Material.BLAZE_ROD && itemInHand.hasItemMeta() && 
             itemInHand.getItemMeta().getDisplayName().contains("Связующий жезл")) {
             return; // Пропускаем, если используется связующий жезл
@@ -284,7 +321,22 @@ public class BlockPlacementHandler implements Listener {
             // Игрок хочет вставить данные в блок
             var dataItem = DataItemFactory.fromItemStack(itemInHand);
             if (dataItem.isPresent()) {
-                new ParameterSelectorGUI(player, codeBlock, location, dataItem.get()).open();
+                new ParameterSelectorGUI(player, codeBlock, dataItem.get(), parameterAndData -> {
+                    // Парсим результат: "parameterName:data:TYPE:value"
+                    String[] parts = parameterAndData.split(":", 2);
+                    if (parts.length != 2) return;
+                    
+                    String parameterName = parts[0];
+                    String dataPointer = parts[1];
+                    
+                    // Устанавливаем параметр в блок
+                    codeBlock.setParameter(parameterName, dataPointer);
+                    
+                    // Обновляем табличку на блоке
+                    setSignOnBlock(location, codeBlock.getAction());
+                    
+                    player.sendMessage("§a✓ Данные вставлены в блок '" + codeBlock.getAction() + "'");
+                }).open();
                 return;
             }
         }
@@ -333,5 +385,96 @@ public class BlockPlacementHandler implements Listener {
         
         // Открываем GUI для выбора действия
         handleBlockConfiguration(player, material, location, false);
+    }
+
+    /**
+     * Отображает информацию о блоке кода
+     */
+    private void displayBlockInfo(Player player, CodeBlock block) {
+        player.sendMessage("§e===== [Инспектор Блоков] =====");
+        player.sendMessage("§7Действие: §f" + block.getAction());
+        player.sendMessage("§7Параметры:");
+        block.getParameters().forEach((key, value) -> {
+            player.sendMessage("  §7- §f" + key + ": §e" + value.toString());
+        });
+        if (block.getNextBlock() != null) {
+            player.sendMessage("§7Следующий блок: §a" + block.getNextBlock().getAction());
+        } else {
+            player.sendMessage("§7Следующий блок: §cНет");
+        }
+        if (!block.getChildren().isEmpty()) {
+            player.sendMessage("§7Дочерние блоки: §b" + block.getChildren().size() + " шт.");
+        }
+        player.sendMessage("§e=========================");
+    }
+    
+    /**
+     * Обрабатывает копирование и вставку блоков
+     */
+    private void handleBlockCopying(Player player, Action action, Block clickedBlock, BlockFace blockFace) {
+        // ЛКМ по блоку кода - Копировать
+        if (action == Action.LEFT_CLICK_BLOCK && blockCodeBlocks.containsKey(clickedBlock.getLocation())) {
+            try {
+                CodeBlock original = blockCodeBlocks.get(clickedBlock.getLocation());
+                clipboard.put(player.getUniqueId(), (CodeBlock) original.clone());
+                player.sendMessage("§a✓ Блок скопирован в буфер обмена.");
+            } catch (CloneNotSupportedException e) {
+                player.sendMessage("§cЭтот блок не может быть скопирован.");
+            }
+        } 
+        // ПКМ по блоку - Вставить
+        else if (action == Action.RIGHT_CLICK_BLOCK) {
+            CodeBlock copied = clipboard.get(player.getUniqueId());
+            if (copied == null) {
+                player.sendMessage("§cВаш буфер обмена пуст.");
+                return;
+            }
+            
+            Location placeLocation = clickedBlock.getRelative(blockFace).getLocation();
+            placeLocation.getBlock().setType(copied.getMaterial());
+            try {
+                blockCodeBlocks.put(placeLocation, (CodeBlock) copied.clone());
+            } catch (CloneNotSupportedException e) {
+                player.sendMessage("§cОшибка при вставке блока.");
+                return;
+            }
+            setSignOnBlock(placeLocation, copied.getAction());
+            player.sendMessage("§a✓ Блок вставлен из буфера обмена.");
+        }
+    }
+
+    /**
+     * Обрабатывает вставку данных из DataItem в блок кода
+     */
+    private void handleDataItemInsertion(Player player, Block clickedBlock, ItemStack dataItemStack) {
+        CodeBlock targetBlock = blockCodeBlocks.get(clickedBlock.getLocation());
+        if (targetBlock == null) return;
+        
+        // Получаем DataItem из предмета
+        var dataItemOpt = DataItemFactory.fromItemStack(dataItemStack);
+        if (dataItemOpt.isEmpty()) {
+            player.sendMessage("§cОшибка: не удалось прочитать данные из предмета");
+            return;
+        }
+        
+        DataItem dataItem = dataItemOpt.get();
+        
+        // Открываем GUI для выбора параметра
+        new ParameterSelectorGUI(player, targetBlock, dataItem, parameterAndData -> {
+            // Парсим результат: "parameterName:data:TYPE:value"
+            String[] parts = parameterAndData.split(":", 2);
+            if (parts.length != 2) return;
+            
+            String parameterName = parts[0];
+            String dataPointer = parts[1];
+            
+            // Устанавливаем параметр в блок
+            targetBlock.setParameter(parameterName, dataPointer);
+            
+            // Обновляем табличку на блоке
+            setSignOnBlock(clickedBlock.getLocation(), targetBlock.getAction());
+            
+            player.sendMessage("§a✓ Данные вставлены в блок '" + targetBlock.getAction() + "'");
+        }).open();
     }
 }

@@ -15,6 +15,11 @@ public class CodeScript {
     private String name;
     private boolean enabled;
     private final CodeBlock rootBlock; // Начальный блок-событие
+    
+    // Поля для шаблонов
+    private boolean isTemplate = false;
+    private String author;
+    private String description = "";
 
     public CodeScript(String name, boolean enabled, CodeBlock rootBlock) {
         this.id = UUID.randomUUID();
@@ -34,5 +39,19 @@ public class CodeScript {
      */
     public boolean isValid() {
         return rootBlock != null && rootBlock.getMaterial() == org.bukkit.Material.DIAMOND_BLOCK;
+    }
+    
+    /**
+     * Проверяет, является ли скрипт шаблоном
+     */
+    public boolean isTemplate() {
+        return isTemplate;
+    }
+    
+    /**
+     * Устанавливает, является ли скрипт шаблоном
+     */
+    public void setTemplate(boolean isTemplate) {
+        this.isTemplate = isTemplate;
     }
 }

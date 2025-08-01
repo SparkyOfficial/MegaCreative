@@ -49,6 +49,27 @@ public class CodingItems {
         // Связующий жезл
         player.getInventory().setItem(8, getLinkingTool());
         
+        // Инструменты разработчика
+        ItemStack inspector = new ItemStack(Material.DEBUG_STICK);
+        ItemMeta inspectorMeta = inspector.getItemMeta();
+        inspectorMeta.setDisplayName("§b🔍 Инспектор блоков");
+        inspectorMeta.setLore(Arrays.asList(
+            "§7ПКМ по блоку кода для просмотра",
+            "§7информации о действии и параметрах"
+        ));
+        inspector.setItemMeta(inspectorMeta);
+        player.getInventory().addItem(inspector);
+        
+        ItemStack copier = new ItemStack(Material.GOLDEN_AXE);
+        ItemMeta copierMeta = copier.getItemMeta();
+        copierMeta.setDisplayName("§6📋 Копировщик блоков");
+        copierMeta.setLore(Arrays.asList(
+            "§7ЛКМ по блоку - скопировать",
+            "§7ПКМ по блоку - вставить"
+        ));
+        copier.setItemMeta(copierMeta);
+        player.getInventory().addItem(copier);
+
         player.sendMessage("§a✓ Вы получили универсальные блоки для кодинга!");
         player.sendMessage("§7Используйте §eСвязующий жезл§7 для их соединения.");
         player.sendMessage("§7Используйте §eЖелезный слиток§7 для создания данных.");

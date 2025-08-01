@@ -30,7 +30,11 @@ commands:
     aliases: [lobby, spawn]
   savescript:
     description: Save current code blocks as a script
-    usage: /<command> <script_name>
+    usage: /<command> <script_name> [template]
+    permission: megacreative.user
+  templates:
+    description: Open template browser
+    aliases: [template, tpl]
     permission: megacreative.user
   scripts:
     description: Open scripts management GUI

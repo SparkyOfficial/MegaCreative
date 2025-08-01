@@ -29,6 +29,7 @@ public class MegaCreative extends JavaPlugin {
     private BlockConnectionVisualizer blockConnectionVisualizer;
     private ScriptDebugger scriptDebugger;
     private DataManager dataManager;
+    private TemplateManager templateManager;
     private Logger logger;
     
     // Система комментариев
@@ -51,6 +52,7 @@ public class MegaCreative extends JavaPlugin {
         this.blockConnectionVisualizer = new BlockConnectionVisualizer(this);
         this.scriptDebugger = new ScriptDebugger(this);
         this.dataManager = new DataManager(this);
+        this.templateManager = new TemplateManager(this);
         
         // Регистрируем команды и события
         registerCommands();
@@ -84,6 +86,7 @@ public class MegaCreative extends JavaPlugin {
         getCommand("dev").setExecutor(new DevCommand(this));
         getCommand("hub").setExecutor(new HubCommand(this));
         getCommand("savescript").setExecutor(new SaveScriptCommand(this));
+        getCommand("templates").setExecutor(new TemplatesCommand(this));
         getCommand("scripts").setExecutor(new ScriptsCommand(this));
         getCommand("worldsettings").setExecutor(new WorldSettingsCommand(this));
         getCommand("testscript").setExecutor(new TestScriptCommand(this));
@@ -133,6 +136,10 @@ public class MegaCreative extends JavaPlugin {
     
     public DataManager getDataManager() {
         return dataManager;
+    }
+    
+    public TemplateManager getTemplateManager() {
+        return templateManager;
     }
     
     public Map<UUID, CreativeWorld> getCommentInputs() {

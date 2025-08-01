@@ -239,6 +239,24 @@ public class CodingParameterGUI implements Listener {
                     new ParameterField("var", "Серверная переменная", "event_active", Material.BEACON),
                     new ParameterField("localVar", "Локальная переменная", "temp", Material.BOOK)
                 );
+            case "wait":
+                return List.of(new ParameterField("ticks", "Задержка (в тиках)", "20", Material.CLOCK));
+            
+            case "randomNumber":
+                return List.of(
+                    new ParameterField("min", "Мин. число", "1", Material.IRON_NUGGET),
+                    new ParameterField("max", "Макс. число", "100", Material.GOLD_NUGGET),
+                    new ParameterField("var", "Сохранить в переменную", "random_num", Material.NAME_TAG)
+                );
+            
+            case "playParticle":
+                return List.of(
+                    new ParameterField("particle", "Частица", "FLAME", Material.BLAZE_POWDER),
+                    new ParameterField("count", "Количество", "20", Material.GLOWSTONE_DUST),
+                    new ParameterField("offset", "Разброс", "0.5", Material.COMPASS)
+                );
+            
+
             default:
                 return Arrays.asList();
         }

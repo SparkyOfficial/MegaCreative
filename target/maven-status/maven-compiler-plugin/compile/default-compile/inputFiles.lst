@@ -1,6 +1,7 @@
 C:\Users\Богдан\Desktop\MegaCreativeCURSOR\src\main\java\com\megacreative\coding\actions\PlayerHealthCondition.java
 C:\Users\Богдан\Desktop\MegaCreativeCURSOR\src\main\java\com\megacreative\commands\MainCommand.java
 C:\Users\Богдан\Desktop\MegaCreativeCURSOR\src\main\java\com\megacreative\coding\actions\SetGlobalVariableAction.java
+C:\Users\Богдан\Desktop\MegaCreativeCURSOR\src\main\java\com\megacreative\managers\TemplateManager.java
 C:\Users\Богдан\Desktop\MegaCreativeCURSOR\src\main\java\com\megacreative\models\WorldFlags.java
 C:\Users\Богдан\Desktop\MegaCreativeCURSOR\src\main\java\com\megacreative\coding\actions\AddVarAction.java
 C:\Users\Богдан\Desktop\MegaCreativeCURSOR\src\main\java\com\megacreative\utils\ConfigManager.java
@@ -11,11 +12,13 @@ C:\Users\Богдан\Desktop\MegaCreativeCURSOR\src\main\java\com\megacreative\
 C:\Users\Богдан\Desktop\MegaCreativeCURSOR\src\main\java\com\megacreative\coding\conditions\MobNearCondition.java
 C:\Users\Богдан\Desktop\MegaCreativeCURSOR\src\main\java\com\megacreative\gui\WorldBrowserGUI.java
 C:\Users\Богдан\Desktop\MegaCreativeCURSOR\src\main\java\com\megacreative\commands\CreateScriptCommand.java
+C:\Users\Богдан\Desktop\MegaCreativeCURSOR\src\main\java\com\megacreative\coding\conditions\IsOpCondition.java
 C:\Users\Богдан\Desktop\MegaCreativeCURSOR\src\main\java\com\megacreative\commands\WorldBrowserCommand.java
 C:\Users\Богдан\Desktop\MegaCreativeCURSOR\src\main\java\com\megacreative\managers\DataManager.java
 C:\Users\Богдан\Desktop\MegaCreativeCURSOR\src\main\java\com\megacreative\coding\CodingItems.java
 C:\Users\Богдан\Desktop\MegaCreativeCURSOR\src\main\java\com\megacreative\commands\WorldSettingsCommand.java
 C:\Users\Богдан\Desktop\MegaCreativeCURSOR\src\main\java\com\megacreative\listeners\GuiListener.java
+C:\Users\Богдан\Desktop\MegaCreativeCURSOR\src\main\java\com\megacreative\coding\conditions\WorldTimeCondition.java
 C:\Users\Богдан\Desktop\MegaCreativeCURSOR\src\main\java\com\megacreative\models\CreativeWorldType.java
 C:\Users\Богдан\Desktop\MegaCreativeCURSOR\src\main\java\com\megacreative\commands\BuildCommand.java
 C:\Users\Богдан\Desktop\MegaCreativeCURSOR\src\main\java\com\megacreative\MegaCreative.java
@@ -42,13 +45,15 @@ C:\Users\Богдан\Desktop\MegaCreativeCURSOR\src\main\java\com\megacreative\
 C:\Users\Богдан\Desktop\MegaCreativeCURSOR\src\main\java\com\megacreative\gui\WorldCreationGUI.java
 C:\Users\Богдан\Desktop\MegaCreativeCURSOR\src\main\java\com\megacreative\listeners\WorldInteractListener.java
 C:\Users\Богдан\Desktop\MegaCreativeCURSOR\src\main\java\com\megacreative\coding\BlockPlacementHandler.java
+C:\Users\Богдан\Desktop\MegaCreativeCURSOR\src\main\java\com\megacreative\coding\conditions\CompareVariableCondition.java
 C:\Users\Богдан\Desktop\MegaCreativeCURSOR\src\main\java\com\megacreative\coding\conditions\IsNearBlockCondition.java
-C:\Users\Богдан\Desktop\MegaCreativeCURSOR\src\main\java\com\megacreative\gui\ParameterSelectorGUI.java
 C:\Users\Богдан\Desktop\MegaCreativeCURSOR\src\main\java\com\megacreative\coding\actions\SendMessageAction.java
 C:\Users\Богдан\Desktop\MegaCreativeCURSOR\src\main\java\com\megacreative\coding\actions\CommandAction.java
 C:\Users\Богдан\Desktop\MegaCreativeCURSOR\src\main\java\com\megacreative\commands\TestScriptCommand.java
 C:\Users\Богдан\Desktop\MegaCreativeCURSOR\src\main\java\com\megacreative\coding\actions\GetPlayerNameAction.java
 C:\Users\Богдан\Desktop\MegaCreativeCURSOR\src\main\java\com\megacreative\coding\ScriptDebugger.java
+C:\Users\Богдан\Desktop\MegaCreativeCURSOR\src\main\java\com\megacreative\commands\TemplatesCommand.java
+C:\Users\Богдан\Desktop\MegaCreativeCURSOR\src\main\java\com\megacreative\coding\ParameterSelectorGUI.java
 C:\Users\Богдан\Desktop\MegaCreativeCURSOR\src\main\java\com\megacreative\coding\CodingParameterGUI.java
 C:\Users\Богдан\Desktop\MegaCreativeCURSOR\src\main\java\com\megacreative\coding\actions\MulVarAction.java
 C:\Users\Богдан\Desktop\MegaCreativeCURSOR\src\main\java\com\megacreative\coding\conditions\PlayerGameModeCondition.java
@@ -87,6 +92,7 @@ C:\Users\Богдан\Desktop\MegaCreativeCURSOR\src\main\java\com\megacreative\
 C:\Users\Богдан\Desktop\MegaCreativeCURSOR\src\main\java\com\megacreative\commands\PlayCommand.java
 C:\Users\Богдан\Desktop\MegaCreativeCURSOR\src\main\java\com\megacreative\managers\WorldManager.java
 C:\Users\Богдан\Desktop\MegaCreativeCURSOR\src\main\java\com\megacreative\commands\ScriptsCommand.java
+C:\Users\Богдан\Desktop\MegaCreativeCURSOR\src\main\java\com\megacreative\gui\TemplateBrowserGUI.java
 C:\Users\Богдан\Desktop\MegaCreativeCURSOR\src\main\java\com\megacreative\coding\actions\SetGameModeAction.java
 C:\Users\Богдан\Desktop\MegaCreativeCURSOR\src\main\java\com\megacreative\coding\actions\GetGlobalVariableAction.java
 C:\Users\Богдан\Desktop\MegaCreativeCURSOR\src\main\java\com\megacreative\commands\DevCommand.java

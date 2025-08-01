@@ -16,7 +16,7 @@ import org.bukkit.Material;
  */
 @Data
 @NoArgsConstructor
-public class CodeBlock {
+public class CodeBlock implements Cloneable {
 
     private UUID id;
     private Material material; // Тип блока (DIAMOND_BLOCK и т.д.)
@@ -64,5 +64,16 @@ public class CodeBlock {
      */
     public void setNext(CodeBlock next) {
         this.nextBlock = next;
+    }
+
+    @Override
+    public CodeBlock clone() throws CloneNotSupportedException {
+        CodeBlock cloned = (CodeBlock) super.clone();
+        cloned.id = UUID.randomUUID(); // У нового блока новый ID
+        cloned.parameters = new HashMap<>(this.parameters);
+        // Важно: не копируем nextBlock и children, чтобы не создавать непредсказуемых связей
+        cloned.nextBlock = null;
+        cloned.children = new ArrayList<>();
+        return cloned;
     }
 }

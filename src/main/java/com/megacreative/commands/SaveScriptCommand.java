@@ -30,11 +30,13 @@ public class SaveScriptCommand implements CommandExecutor {
         }
         
         if (args.length < 1) {
-            player.sendMessage("§cИспользование: /savescript <имя_скрипта>");
+            player.sendMessage("§cИспользование: /savescript <имя_скрипта> [template]");
+            player.sendMessage("§7Добавьте 'template' для сохранения как публичный шаблон");
             return true;
         }
         
         String scriptName = args[0];
+        boolean isTemplate = args.length > 1 && args[1].equalsIgnoreCase("template");
         
         // Проверяем, что игрок находится в мире разработки
         CreativeWorld creativeWorld = plugin.getWorldManager().findCreativeWorldByBukkit(player.getWorld());
@@ -67,18 +69,21 @@ public class SaveScriptCommand implements CommandExecutor {
         
         CodeScript script = new CodeScript(scriptName, true, rootBlock);
         
-        // Добавляем скрипт в мир
-        creativeWorld.getScripts().add(script);
-        
-        // Сохраняем мир
-        try {
+        if (isTemplate) {
+            // Сохраняем как публичный шаблон
+            script.setTemplate(true);
+            script.setAuthor(player.getName());
+            plugin.getTemplateManager().saveTemplate(script);
+            player.sendMessage("§a✓ Шаблон '" + scriptName + "' успешно сохранен как публичный!");
+            player.sendMessage("§7Другие игроки смогут импортировать его через /templates");
+        } else {
+            // Сохраняем как обычный скрипт для мира
+            creativeWorld.getScripts().add(script);
             plugin.getWorldManager().saveWorld(creativeWorld);
             player.sendMessage("§a✓ Скрипт '" + scriptName + "' успешно сохранен!");
-            player.sendMessage("§7Блоков в скрипте: " + blockCodeBlocks.size());
-        } catch (Exception e) {
-            player.sendMessage("§cОшибка при сохранении скрипта: " + e.getMessage());
-            plugin.getLogger().severe("Ошибка сохранения скрипта: " + e.getMessage());
         }
+        
+        player.sendMessage("§7Блоков в скрипте: " + blockCodeBlocks.size());
         
         return true;
     }

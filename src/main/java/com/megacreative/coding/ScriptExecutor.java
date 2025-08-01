@@ -2,12 +2,12 @@ package com.megacreative.coding;
 
 import com.megacreative.MegaCreative;
 import com.megacreative.coding.actions.*;
-// import com.megacreative.coding.conditions.CompareVariableCondition;
-// import com.megacreative.coding.conditions.PlayerHealthCondition;
-// import com.megacreative.coding.conditions.WorldTimeCondition;
-// import com.megacreative.coding.conditions.IsNearBlockCondition;
-// import com.megacreative.coding.conditions.PlayerGameModeCondition;
-// import com.megacreative.coding.conditions.MobNearCondition;
+import com.megacreative.coding.conditions.IsOpCondition;
+import com.megacreative.coding.conditions.CompareVariableCondition;
+import com.megacreative.coding.conditions.WorldTimeCondition;
+import com.megacreative.coding.conditions.IsNearBlockCondition;
+import com.megacreative.coding.conditions.MobNearCondition;
+import com.megacreative.coding.conditions.PlayerGameModeCondition;
 import org.bukkit.Location;
 import org.bukkit.Material;
 import org.bukkit.entity.Player;
@@ -80,20 +80,16 @@ public class ScriptExecutor {
 
     private void registerConditions() {
         // Базовые условия
-        // conditionRegistry.put("isOp", new IsOpCondition());
-        // conditionRegistry.put("isInWorld", new IsInWorldCondition());
-        // conditionRegistry.put("hasItem", new HasItemCondition());
-        // conditionRegistry.put("hasPermission", new HasPermissionCondition());
+        conditionRegistry.put("isOp", new IsOpCondition());
+        conditionRegistry.put("compareVariable", new CompareVariableCondition());
+        conditionRegistry.put("worldTime", new WorldTimeCondition());
         
-        // Условия сравнения
-        // conditionRegistry.put("compareVariable", new CompareVariableCondition());
-        // conditionRegistry.put("playerHealth", new PlayerHealthCondition());
-        // conditionRegistry.put("worldTime", new WorldTimeCondition());
+        // Пространственные условия
+        conditionRegistry.put("isNearBlock", new IsNearBlockCondition());
+        conditionRegistry.put("mobNear", new MobNearCondition());
         
-        // Новые условия
-        // conditionRegistry.put("isNearBlock", new IsNearBlockCondition());
-        // conditionRegistry.put("playerGameMode", new PlayerGameModeCondition());
-        // conditionRegistry.put("mobNear", new MobNearCondition());
+        // Условия игрока
+        conditionRegistry.put("playerGameMode", new PlayerGameModeCondition());
     }
 
     public void execute(CodeScript script, ExecutionContext context, String triggerAction) {
