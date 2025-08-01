@@ -9,13 +9,16 @@ import org.bukkit.event.EventHandler;
 import org.bukkit.event.Listener;
 import org.bukkit.event.block.BlockPlaceEvent;
 import org.bukkit.event.player.PlayerInteractEvent;
-import org.bukkit.inventory.ItemStack;
-import org.bukkit.inventory.meta.ItemMeta;
-import org.bukkit.persistence.PersistentDataContainer;
-import org.bukkit.persistence.PersistentDataType;
-
-import java.util.HashMap;
+import org.bukkit.block.Sign;
+import org.bukkit.block.data.type.WallSign;
+import org.bukkit.block.BlockFace;
+import org.bukkit.event.block.Action;
+import java.util.List;
 import java.util.Map;
+import java.util.HashMap;
+import java.util.UUID;
+import java.util.function.Consumer;
+import org.bukkit.inventory.ItemStack;
 
 /**
  * Обработчик размещения и взаимодействия с блоками кодирования в мире разработки.
@@ -24,11 +27,25 @@ public class BlockPlacementHandler implements Listener {
 
     private final MegaCreative plugin;
     
-    // Хранилище размещенных блоков кода: Location -> BlockType
-    private final Map<Location, BlockType> placedCodeBlocks = new HashMap<>();
+    // Хранилище: Location -> CodeBlock (содержит действие и параметры)
+    private final Map<Location, CodeBlock> blockCodeBlocks = new HashMap<>();
     
-    // Хранилище соединений между блоками: Location -> Location (следующий блок)
-    private final Map<Location, Location> blockConnections = new HashMap<>();
+    // Новое поле для хранения первого выбранного блока
+    private final Map<UUID, Location> playerSelections = new HashMap<>();
+
+    // Список действий для каждого типа блока (MVP, можно расширять)
+    private static final Map<Material, List<String>> ACTIONS = Map.of(
+        Material.DIAMOND_BLOCK, List.of("onJoin", "onLeave", "onChat", "onInteract"),
+        Material.OAK_PLANKS, List.of("isOp", "isInWorld", "hasItem", "hasPermission", "isNearBlock", "timeOfDay"),
+        Material.COBBLESTONE, List.of("sendMessage", "teleport", "giveItem", "playSound", "effect", "command", "broadcast"),
+        Material.IRON_BLOCK, List.of("setVar", "addVar", "subVar", "mulVar", "divVar"),
+        Material.END_STONE, List.of("else"),
+        Material.NETHERITE_BLOCK, List.of("setTime", "setWeather", "spawnMob"),
+        Material.OBSIDIAN, List.of("ifVar", "ifNotVar"),
+        Material.REDSTONE_BLOCK, List.of("ifGameMode", "ifWorldType"),
+        Material.BRICKS, List.of("ifMobType", "ifMobNear"),
+        Material.POLISHED_GRANITE, List.of("getVar", "getPlayerName")
+    );
 
     public BlockPlacementHandler(MegaCreative plugin) {
         this.plugin = plugin;
@@ -41,24 +58,11 @@ public class BlockPlacementHandler implements Listener {
     public void onBlockPlace(BlockPlaceEvent event) {
         Player player = event.getPlayer();
         Block block = event.getBlockPlaced();
-        ItemStack item = event.getItemInHand();
+        Material mat = block.getType();
+        if (!ACTIONS.containsKey(mat)) return;
+        if (!isInDevWorld(player)) return;
         
-        // Проверяем, что игрок в мире разработки
-        if (!isInDevWorld(player)) {
-            return;
-        }
-        
-        // Проверяем, что это блок кодирования
-        BlockType blockType = getBlockTypeFromItem(item);
-        if (blockType == null) {
-            return;
-        }
-        
-        // Сохраняем информацию о размещенном блоке
-        placedCodeBlocks.put(block.getLocation(), blockType);
-        
-        player.sendMessage("§a✓ Блок '" + getBlockDisplayName(blockType) + "' размещен!");
-        player.sendMessage("§7Кликните ПКМ по блоку для настройки или соединения.");
+        handleBlockConfiguration(player, mat, block.getLocation(), false);
     }
 
     /**
@@ -68,28 +72,111 @@ public class BlockPlacementHandler implements Listener {
     public void onPlayerInteract(PlayerInteractEvent event) {
         Player player = event.getPlayer();
         Block clickedBlock = event.getClickedBlock();
+        if (clickedBlock == null || !isInDevWorld(player)) return;
+        if (event.getAction() != Action.RIGHT_CLICK_BLOCK) return;
         
-        if (clickedBlock == null || !isInDevWorld(player)) {
-            return;
+        // Проверяем, что игрок не использует связующий жезл
+        ItemStack itemInHand = player.getInventory().getItemInMainHand();
+        if (itemInHand.getType() == Material.BLAZE_ROD && itemInHand.hasItemMeta() && 
+            itemInHand.getItemMeta().getDisplayName().contains("Связующий жезл")) {
+            return; // Пропускаем, если используется связующий жезл
         }
         
-        // Проверяем, что это размещенный блок кодирования
-        BlockType blockType = placedCodeBlocks.get(clickedBlock.getLocation());
-        if (blockType == null) {
-            return;
-        }
+        Material mat = clickedBlock.getType();
+        if (!ACTIONS.containsKey(mat)) return;
+        event.setCancelled(true);
         
-        event.setCancelled(true); // Отменяем стандартное взаимодействие
-        
-        // Открываем меню настройки блока
-        openBlockConfigMenu(player, clickedBlock.getLocation(), blockType);
+        handleBlockConfiguration(player, mat, clickedBlock.getLocation(), true);
     }
 
     /**
-     * Определяет тип блока кодирования по предмету
+     * Обрабатывает использование "Связующего жезла"
      */
-    private BlockType getBlockTypeFromItem(ItemStack item) {
-        return CodingItems.getCodingBlockType(item);
+    @EventHandler
+    public void onLinkerUse(PlayerInteractEvent event) {
+        Player player = event.getPlayer();
+        ItemStack itemInHand = player.getInventory().getItemInMainHand();
+
+        // Проверяем, что игрок в мире разработки и держит наш инструмент
+        if (!isInDevWorld(player) || itemInHand.getType() != Material.BLAZE_ROD || !itemInHand.hasItemMeta() || !itemInHand.getItemMeta().getDisplayName().contains("Связующий жезл")) {
+            return;
+        }
+
+        // Предотвращаем другие действия с жезлом (например, открытие печки)
+        event.setCancelled(true);
+        
+        Action action = event.getAction();
+        Block clickedBlock = event.getClickedBlock();
+
+        // --- ЛЕВЫЙ КЛИК: ВЫБОР ПЕРВОГО БЛОКА ---
+        if (action == Action.LEFT_CLICK_BLOCK) {
+            if (clickedBlock != null && blockCodeBlocks.containsKey(clickedBlock.getLocation())) {
+                playerSelections.put(player.getUniqueId(), clickedBlock.getLocation());
+                player.sendMessage("§a✓ Начальный блок выбран. Нажмите ПКМ по конечному блоку.");
+            }
+        } 
+        // --- ПРАВЫЙ КЛИК: ВЫБОР ВТОРОГО БЛОКА И СОЕДИНЕНИЕ ---
+        else if (action == Action.RIGHT_CLICK_BLOCK) {
+            Location firstBlockLoc = playerSelections.get(player.getUniqueId());
+
+            if (firstBlockLoc == null) {
+                player.sendMessage("§c✗ Сначала выберите начальный блок (ЛКМ).");
+                return;
+            }
+
+            if (clickedBlock != null && blockCodeBlocks.containsKey(clickedBlock.getLocation())) {
+                Location secondBlockLoc = clickedBlock.getLocation();
+
+                if (firstBlockLoc.equals(secondBlockLoc)) {
+                    player.sendMessage("§c✗ Нельзя соединить блок с самим собой.");
+                    return;
+                }
+
+                CodeBlock firstBlock = blockCodeBlocks.get(firstBlockLoc);
+                CodeBlock secondBlock = blockCodeBlocks.get(secondBlockLoc);
+
+                if (firstBlock != null && secondBlock != null) {
+                    firstBlock.setNext(secondBlock);
+                    player.sendMessage("§a✓ Связь установлена!");
+                    playerSelections.remove(player.getUniqueId());
+                    
+                    // Обновляем визуализацию
+                    var creativeWorld = plugin.getWorldManager().getWorld(player.getWorld().getName());
+                    if(creativeWorld != null) {
+                         plugin.getBlockConnectionVisualizer().addBlock(creativeWorld, firstBlockLoc, firstBlock);
+                    }
+                }
+            }
+        }
+    }
+
+    /**
+     * Общий метод для обработки конфигурации блока
+     */
+    private void handleBlockConfiguration(Player player, Material material, Location location, boolean isUpdate) {
+        List<String> actions = ACTIONS.get(material);
+        
+        // Открываем GUI для выбора действия
+        new CodingActionGUI(player, material, location, actions, action -> {
+            // После выбора действия открываем GUI для параметров
+            new CodingParameterGUI(player, action, location, parameters -> {
+                // Создаем CodeBlock с параметрами
+                CodeBlock codeBlock = createCodeBlockWithParameters(material, action, parameters);
+                blockCodeBlocks.put(location, codeBlock);
+                
+                // Добавляем/обновляем блок в визуализации
+                var world = plugin.getWorldManager().getWorld(player.getWorld().getName());
+                if (world != null) {
+                    plugin.getBlockConnectionVisualizer().addBlock(world, location, codeBlock);
+                }
+                
+                setSignOnBlock(location, action);
+                
+                String message = isUpdate ? "§aДействие обновлено: §e" : "§aДействие установлено: §e";
+                player.sendMessage(message + action);
+                player.sendMessage("§7Параметры: §f" + parameters.toString());
+            }).open();
+        }).open();
     }
 
     /**
@@ -98,62 +185,6 @@ public class BlockPlacementHandler implements Listener {
     private boolean isInDevWorld(Player player) {
         String worldName = player.getWorld().getName();
         return worldName.startsWith("megacreative_") && worldName.endsWith("_dev");
-    }
-
-    /**
-     * Открывает меню настройки блока
-     */
-    private void openBlockConfigMenu(Player player, Location blockLocation, BlockType blockType) {
-        player.sendMessage("§e=== Настройка блока ===");
-        player.sendMessage("§7Тип: §f" + getBlockDisplayName(blockType));
-        player.sendMessage("§7Позиция: §f" + locationToString(blockLocation));
-        player.sendMessage("");
-        
-        switch (blockType) {
-            case ACTION_SEND_MESSAGE:
-                player.sendMessage("§a▶ Введите в чат сообщение для отправки:");
-                player.sendMessage("§7Пример: §fПривет, %player%!");
-                break;
-                
-            case ACTION_TELEPORT_PLAYER:
-                player.sendMessage("§a▶ Введите координаты для телепортации:");
-                player.sendMessage("§7Пример: §f100 70 200");
-                break;
-                
-            case CONDITION_HAS_ITEM:
-                player.sendMessage("§a▶ Введите название предмета для проверки:");
-                player.sendMessage("§7Пример: §fDIAMOND_SWORD");
-                break;
-                
-            case VARIABLE_SET:
-                player.sendMessage("§a▶ Введите имя и значение переменной:");
-                player.sendMessage("§7Пример: §fplayerScore 100");
-                break;
-                
-            default:
-                player.sendMessage("§a▶ Этот блок не требует дополнительной настройки.");
-                player.sendMessage("§7Соедините его с другими блоками для создания скрипта.");
-                break;
-        }
-        
-        player.sendMessage("");
-        player.sendMessage("§e[Будущая функция] Соединение блоков и создание скриптов");
-    }
-
-    /**
-     * Возвращает отображаемое имя блока
-     */
-    private String getBlockDisplayName(BlockType blockType) {
-        switch (blockType) {
-            case EVENT_PLAYER_JOIN: return "Игрок зашел";
-            case EVENT_PLAYER_QUIT: return "Игрок вышел";
-            case EVENT_PLAYER_INTERACT: return "Игрок кликнул";
-            case ACTION_SEND_MESSAGE: return "Отправить сообщение";
-            case ACTION_TELEPORT_PLAYER: return "Телепортировать";
-            case CONDITION_HAS_ITEM: return "Есть предмет";
-            case VARIABLE_SET: return "Присвоить переменную";
-            default: return blockType.name();
-        }
     }
 
     /**
@@ -167,16 +198,31 @@ public class BlockPlacementHandler implements Listener {
     }
 
     /**
-     * Возвращает карту размещенных блоков (для отладки)
-     */
-    public Map<Location, BlockType> getPlacedCodeBlocks() {
-        return placedCodeBlocks;
-    }
-
-    /**
      * Возвращает карту соединений блоков (для отладки)
      */
-    public Map<Location, Location> getBlockConnections() {
-        return blockConnections;
+    public Map<Location, CodeBlock> getBlockCodeBlocks() {
+        return new HashMap<>(blockCodeBlocks);
+    }
+
+    // Установить табличку с действием на блок
+    private void setSignOnBlock(Location loc, String action) {
+        Block above = loc.clone().add(0, 1, 0).getBlock();
+        above.setType(Material.OAK_SIGN);
+        if (above.getState() instanceof Sign sign) {
+            sign.setLine(0, "§e[КОД]");
+            sign.setLine(1, action);
+            sign.update();
+        }
+    }
+
+    // Метод для создания CodeBlock с параметрами
+    private CodeBlock createCodeBlockWithParameters(Material material, String action, Map<String, Object> parameters) {
+        CodeBlock block = new CodeBlock(material, action);
+        if (parameters != null) {
+            for (Map.Entry<String, Object> entry : parameters.entrySet()) {
+                block.setParameter(entry.getKey(), entry.getValue());
+            }
+        }
+        return block;
     }
 }

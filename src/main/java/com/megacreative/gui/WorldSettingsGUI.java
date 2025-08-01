@@ -189,7 +189,7 @@ public class WorldSettingsGUI implements Listener {
         else if (slot == 49) {
             player.closeInventory();
             player.sendMessage("§cВведите в чат 'УДАЛИТЬ' для подтверждения удаления мира");
-            // Здесь можно добавить систему подтверждения
+            plugin.getDeleteConfirmations().put(player.getUniqueId(), world.getId());
         }
     }
 }

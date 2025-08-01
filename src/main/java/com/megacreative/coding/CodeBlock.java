@@ -8,6 +8,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.UUID;
+import org.bukkit.Material;
 
 /**
  * Представляет один блок в скрипте.
@@ -18,14 +19,16 @@ import java.util.UUID;
 public class CodeBlock {
 
     private UUID id;
-    private BlockType type;
+    private Material material; // Тип блока (DIAMOND_BLOCK и т.д.)
+    private String action;     // Выбранное действие (например, onJoin, sendMessage)
     private Map<String, Object> parameters;
     private List<CodeBlock> children; // Для вложенных блоков (например, внутри условия IF)
     private CodeBlock nextBlock; // Следующий блок в последовательности
 
-    public CodeBlock(BlockType type) {
+    public CodeBlock(Material material, String action) {
         this.id = UUID.randomUUID();
-        this.type = type;
+        this.material = material;
+        this.action = action;
         this.parameters = new HashMap<>();
         this.children = new ArrayList<>();
     }
@@ -37,6 +40,14 @@ public class CodeBlock {
      */
     public void setParameter(String key, Object value) {
         parameters.put(key, value);
+    }
+
+    public Object getParameter(String key) {
+        return parameters.get(key);
+    }
+
+    public Map<String, Object> getParameters() {
+        return parameters;
     }
 
     /**

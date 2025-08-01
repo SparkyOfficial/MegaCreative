@@ -4,6 +4,8 @@ import com.megacreative.commands.*;
 import com.megacreative.listeners.*;
 import com.megacreative.coding.BlockPlacementHandler;
 import com.megacreative.coding.CodingManager;
+import com.megacreative.coding.BlockConnectionVisualizer;
+import com.megacreative.coding.ScriptDebugger;
 import com.megacreative.managers.*;
 import com.megacreative.models.CreativeWorld;
 import com.megacreative.utils.ConfigManager;
@@ -14,6 +16,7 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.UUID;
 import java.util.logging.Logger;
+import com.megacreative.commands.CreateScriptCommand;
 
 public class MegaCreative extends JavaPlugin {
     
@@ -23,10 +26,14 @@ public class MegaCreative extends JavaPlugin {
     private PlayerManager playerManager;
     private CodingManager codingManager;
     private BlockPlacementHandler blockPlacementHandler;
+    private BlockConnectionVisualizer blockConnectionVisualizer;
+    private ScriptDebugger scriptDebugger;
     private Logger logger;
     
     // Система комментариев
     private Map<UUID, CreativeWorld> commentInputs = new HashMap<>();
+    // Система подтверждения удаления мира
+    private Map<UUID, String> deleteConfirmations = new HashMap<>();
     
     @Override
     public void onEnable() {
@@ -41,14 +48,14 @@ public class MegaCreative extends JavaPlugin {
         playerManager = new PlayerManager(this);
         codingManager = new CodingManager(this);
         blockPlacementHandler = new BlockPlacementHandler(this);
+        blockConnectionVisualizer = new BlockConnectionVisualizer(this);
+        scriptDebugger = new ScriptDebugger(this);
         
-        // Регистрация команд
+        // Регистрируем команды и события
         registerCommands();
-        
-        // Регистрация событий
         registerEvents();
         
-        getLogger().info("MegaCreative успешно запущен!");
+        getLogger().info("MegaCreative включен!");
     }
     
     @Override
@@ -69,6 +76,9 @@ public class MegaCreative extends JavaPlugin {
         getCommand("dev").setExecutor(new DevCommand(this));
         getCommand("worldsettings").setExecutor(new WorldSettingsCommand(this));
         getCommand("testscript").setExecutor(new TestScriptCommand(this));
+        getCommand("createscript").setExecutor(new CreateScriptCommand(this));
+        getCommand("visualize").setExecutor(new VisualizeCommand(this));
+        getCommand("debug").setExecutor(new DebugCommand(this));
     }
     
     private void registerEvents() {
@@ -98,9 +108,21 @@ public class MegaCreative extends JavaPlugin {
     public BlockPlacementHandler getBlockPlacementHandler() {
         return blockPlacementHandler;
     }
+
+    public BlockConnectionVisualizer getBlockConnectionVisualizer() {
+        return blockConnectionVisualizer;
+    }
+    
+    public ScriptDebugger getScriptDebugger() {
+        return scriptDebugger;
+    }
     
     public Map<UUID, CreativeWorld> getCommentInputs() {
         return commentInputs;
+    }
+    
+    public Map<UUID, String> getDeleteConfirmations() {
+        return deleteConfirmations;
     }
     
     public ConfigManager getConfigManager() {

@@ -11,8 +11,6 @@ import org.bukkit.event.EventHandler;
 import org.bukkit.event.Listener;
 import org.bukkit.event.inventory.InventoryClickEvent;
 import org.bukkit.event.inventory.InventoryCloseEvent;
-import org.bukkit.event.HandlerList;
-import org.bukkit.event.player.AsyncPlayerChatEvent;
 import org.bukkit.inventory.Inventory;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.inventory.meta.ItemMeta;
@@ -37,11 +35,9 @@ public class WorldCommentsGUI implements Listener {
         this.world = world;
         this.page = Math.max(0, page); // Ensure page is not negative
         
-        // Register this class as an event listener if not already registered
-        if (!isRegistered) {
-            Bukkit.getPluginManager().registerEvents(this, plugin);
-            isRegistered = true;
-        }
+        // Register this class as an event listener
+        Bukkit.getPluginManager().registerEvents(this, plugin);
+        isRegistered = true;
         
         createInventory();
     }
@@ -54,7 +50,7 @@ public class WorldCommentsGUI implements Listener {
         int endIndex = Math.min(startIndex + commentsPerPage, comments.size());
         
         // Create inventory with 4 rows (36 slots) - 3 for comments, 1 for navigation
-        Inventory inventory = Bukkit.createInventory(null, 36, "§6§lКомментарии: " + world.getName());
+        inventory = Bukkit.createInventory(null, 36, "§6§lКомментарии: " + world.getName());
         
         // Add comments to the inventory
         for (int i = startIndex; i < endIndex; i++) {
@@ -103,179 +99,52 @@ public class WorldCommentsGUI implements Listener {
             inventory.setItem(35, nextPage);
         }
         
-        // Add page info
-        ItemStack pageInfo = new ItemStack(Material.PAPER);
-        ItemMeta pageMeta = pageInfo.getItemMeta();
-        pageMeta.setDisplayName("§6Страница §e" + (currentPage + 1) + " §6из §e" + totalPages);
-        pageInfo.setItemMeta(pageMeta);
-        inventory.setItem(31, pageInfo);
-        
-        // Add comment button
+        // Add "Add Comment" button
         ItemStack addComment = new ItemStack(Material.WRITABLE_BOOK);
         ItemMeta addMeta = addComment.getItemMeta();
         addMeta.setDisplayName("§a§lДобавить комментарий");
-        addMeta.setLore(Arrays.asList(
-            "§7Нажмите, чтобы добавить новый",
-            "§7комментарий к этому миру"
-        ));
+        addMeta.setLore(Collections.singletonList("§7Нажмите, чтобы написать комментарий"));
         addComment.setItemMeta(addMeta);
         inventory.setItem(31, addComment);
-        
-        // Back button
-        ItemStack backButton = new ItemStack(Material.BARRIER);
-        ItemMeta backMeta = backButton.getItemMeta();
-        backMeta.setDisplayName("§c§lНазад");
-        backMeta.setLore(Collections.singletonList("§7Вернуться к настройкам мира"));
-        backButton.setItemMeta(backMeta);
-        inventory.setItem(30, backButton);
     }
     
-    /**
-     * Opens the GUI for the player
-     */
     public void open() {
         if (inventory != null) {
             player.openInventory(inventory);
         }
     }
     
-    /**
-     * Handles inventory close event to clean up the listener
-     */
     @EventHandler
-    public void onInventoryClose(InventoryCloseEvent event) {
-        if (event.getPlayer().getUniqueId().equals(player.getUniqueId()) && 
-            event.getView().getTopInventory().equals(this.inventory)) {
-            // Unregister this listener when the inventory is closed
-            HandlerList.unregisterAll(this);
-            isRegistered = false;
-        }
-    }
-    
-    // Handle inventory clicks for comments GUI
-    public static boolean handleClick(InventoryClickEvent event, MegaCreative plugin) {
-        if (!(event.getWhoClicked() instanceof Player)) return false;
-        
-        String viewTitle = event.getView().getTitle();
-        if (!viewTitle.startsWith("§6§lКомментарии: ")) return false;
+    public void onInventoryClick(InventoryClickEvent event) {
+        if (!event.getInventory().equals(inventory)) return;
+        if (!event.getWhoClicked().equals(player)) return;
         
         event.setCancelled(true);
-        Player clicker = (Player) event.getWhoClicked();
         
-        if (event.getCurrentItem() == null || !event.getCurrentItem().hasItemMeta()) return true;
+        ItemStack clicked = event.getCurrentItem();
+        if (clicked == null) return;
         
-        String displayName = event.getCurrentItem().getItemMeta().getDisplayName();
-        if (displayName == null) return true;
-        
-        // Get the world name from the inventory title
-        String worldName = viewTitle.replace("§6§lКомментарии: ", "");
-        // Get the world by its display name
-        CreativeWorld world = plugin.getWorldManager().getWorldByName(worldName);
-        
-        if (world == null) {
-            clicker.sendMessage("§cОшибка: мир не найден");
-            return true;
-        }
-        
-        // Handle back button
-        if (displayName.equals("§c§lНазад")) {
-            new WorldActionsGUI(plugin, clicker, world);
-            return true;
-        }
-        
-        // Handle add comment button
-        if (displayName.equals("§a§lДобавить комментарий")) {
-            clicker.closeInventory();
-            clicker.sendMessage("§a§lНапишите ваш комментарий в чат (или 'отмена' для отмены):");
-            plugin.getCommentInputs().put(clicker.getUniqueId(), world);
-            return true;
-        }
-        
-        // Handle pagination
-        if (displayName.startsWith("§e§l")) {
-            if (displayName.contains("Предыдущая")) {
-                // Get current page from the item's lore
-                int currentPage = 0;
-                if (event.getCurrentItem().getItemMeta().hasLore()) {
-                    for (String line : event.getCurrentItem().getItemMeta().getLore()) {
-                        if (line.startsWith("§7Страница: ")) {
-                            try {
-                                currentPage = Integer.parseInt(line.replace("§7Страница: ", "").trim()) - 1;
-                            } catch (NumberFormatException e) {
-                                // Use default page 0
-                            }
-                            break;
-                        }
-                    }
-                }
-                if (currentPage > 0) {
-                    new WorldCommentsGUI(plugin, clicker, world, currentPage);
-                }
-                return true;
-            } else if (displayName.contains("Следующая")) {
-                // Get next page from the item's lore
-                int nextPage = 1;
-                if (event.getCurrentItem().getItemMeta().hasLore()) {
-                    for (String line : event.getCurrentItem().getItemMeta().getLore()) {
-                        if (line.startsWith("§7Страница: ")) {
-                            try {
-                                nextPage = Integer.parseInt(line.replace("§7Страница: ", "").trim());
-                            } catch (NumberFormatException e) {
-                                // Use default next page 1
-                            }
-                            break;
-                        }
-                    }
-                }
-                new WorldCommentsGUI(plugin, clicker, world, nextPage - 1);
-                return true;
+        if (clicked.getType() == Material.ARROW) {
+            if (event.getSlot() == 27) {
+                // Previous page
+                new WorldCommentsGUI(plugin, player, world, page - 1).open();
+            } else if (event.getSlot() == 35) {
+                // Next page
+                new WorldCommentsGUI(plugin, player, world, page + 1).open();
             }
+        } else if (clicked.getType() == Material.WRITABLE_BOOK) {
+            // Add comment
+            player.closeInventory();
+            player.sendMessage("§aНапишите ваш комментарий в чат:");
+            plugin.getCommentInputs().put(player.getUniqueId(), world);
         }
-        
-        return true;
     }
     
-    // Handle chat input for adding comments
-    public static boolean handleChat(Player player, String message, MegaCreative plugin) {
-        if (!plugin.getCommentInputs().containsKey(player.getUniqueId())) {
-            return false;
+    @EventHandler
+    public void onInventoryClose(InventoryCloseEvent event) {
+        if (event.getInventory().equals(inventory) && event.getPlayer().equals(player)) {
+            // Unregister this listener to prevent memory leaks
+            HandlerList.unregisterAll(this);
         }
-        
-        // Get the world the player is commenting on
-        CreativeWorld world = plugin.getCommentInputs().get(player.getUniqueId());
-        
-        // Check for cancel command
-        if (message.equalsIgnoreCase("отмена")) {
-            player.sendMessage("§cДобавление комментария отменено.");
-            plugin.getCommentInputs().remove(player.getUniqueId());
-            return true;
-        }
-        
-        // Validate message length
-        if (message.length() > 100) {
-            player.sendMessage("§cКомментарий слишком длинный! Максимум 100 символов.");
-            return true;
-        }
-        
-        // Create and add the comment
-        WorldComment comment = new WorldComment(
-            player.getUniqueId(),
-            player.getName(),
-            message,
-            System.currentTimeMillis()
-        );
-        
-        world.addComment(comment);
-        
-        // Save the world to persist the comment
-        plugin.getWorldManager().saveWorld(world);
-        
-        // Remove from inputs and show the updated comments GUI
-        plugin.getCommentInputs().remove(player.getUniqueId());
-        
-        // Open the comments GUI on the first page
-        new WorldCommentsGUI(plugin, player, world, 0);
-        
-        return true;
     }
 }

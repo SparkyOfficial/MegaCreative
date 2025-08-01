@@ -359,7 +359,8 @@ public class WorldManager {
     private Map<String, Object> serializeBlock(CodeBlock block) {
         if (block == null) return null;
         Map<String, Object> blockMap = new HashMap<>();
-        blockMap.put("type", block.getType().name());
+        blockMap.put("material", block.getMaterial().name());
+        blockMap.put("action", block.getAction());
         blockMap.put("parameters", block.getParameters());
         blockMap.put("nextBlock", serializeBlock(block.getNextBlock()));
         
@@ -379,8 +380,9 @@ public class WorldManager {
     private CodeBlock deserializeBlock(Map<String, Object> blockMap) {
         if (blockMap == null || blockMap.isEmpty()) return null;
 
-        BlockType type = BlockType.valueOf((String) blockMap.get("type"));
-        CodeBlock block = new CodeBlock(type);
+        Material material = Material.valueOf((String) blockMap.get("material"));
+        String action = (String) blockMap.get("action");
+        CodeBlock block = new CodeBlock(material, action);
         
         // Восстановление параметров
         Map<String, Object> parameters = (Map<String, Object>) blockMap.get("parameters");
@@ -483,7 +485,20 @@ public class WorldManager {
         playerWorlds.computeIfAbsent(ownerId, k -> new ArrayList<>()).add(id);
 
         // Автоматическая загрузка мира и скриптов, если он уже существует
-        if (Bukkit.getWorld(world.getWorldName()) != null) {
+        World bukkitWorld = Bukkit.getWorld(world.getWorldName());
+        if (bukkitWorld == null) {
+            WorldCreator creator = new WorldCreator(world.getWorldName());
+            switch (world.getWorldType()) {
+                case FLAT -> creator.type(WorldType.FLAT);
+                case VOID -> creator.generator("VoidWorld"); // если есть генератор пустоты
+                case OCEAN -> creator.type(WorldType.NORMAL); // можно добавить генератор океана
+                case NETHER -> creator.environment(World.Environment.NETHER);
+                case END -> creator.environment(World.Environment.THE_END);
+                default -> creator.type(WorldType.NORMAL);
+            }
+            bukkitWorld = creator.createWorld();
+        }
+        if (bukkitWorld != null) {
             plugin.getCodingManager().loadScriptsForWorld(world);
         }
     }

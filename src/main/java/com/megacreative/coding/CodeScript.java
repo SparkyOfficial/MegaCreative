@@ -33,6 +33,6 @@ public class CodeScript {
      * @return true, если корневой блок - это событие
      */
     public boolean isValid() {
-        return rootBlock != null && rootBlock.getType().name().startsWith("EVENT_");
+        return rootBlock != null && rootBlock.getMaterial() == org.bukkit.Material.DIAMOND_BLOCK;
     }
 }
