@@ -2,6 +2,7 @@ package com.megacreative.coding.actions;
 
 import com.megacreative.coding.CodeBlock;
 import com.megacreative.coding.ExecutionContext;
+import com.megacreative.coding.ParameterResolver;
 import org.bukkit.Location;
 import org.bukkit.entity.Player;
 
@@ -13,7 +14,9 @@ public class TeleportAction implements BlockAction {
 
         if (player == null || block == null) return;
         
-        String coords = (String) block.getParameter("coords");
+        Object rawCoords = block.getParameter("coords");
+        String coords = ParameterResolver.resolve(context, rawCoords).toString();
+        
         if (coords != null) {
             try {
                 String[] parts = coords.split(" ");

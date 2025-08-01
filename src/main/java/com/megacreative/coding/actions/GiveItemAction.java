@@ -2,6 +2,7 @@ package com.megacreative.coding.actions;
 
 import com.megacreative.coding.CodeBlock;
 import com.megacreative.coding.ExecutionContext;
+import com.megacreative.coding.ParameterResolver;
 import org.bukkit.Material;
 import org.bukkit.entity.Player;
 import org.bukkit.inventory.ItemStack;
@@ -14,8 +15,11 @@ public class GiveItemAction implements BlockAction {
 
         if (player == null || block == null) return;
         
-        String itemName = (String) block.getParameter("item");
-        int amount = (int) block.getParameter("amount");
+        Object rawItemName = block.getParameter("item");
+        Object rawAmount = block.getParameter("amount");
+        
+        String itemName = ParameterResolver.resolve(context, rawItemName).toString();
+        int amount = Integer.parseInt(ParameterResolver.resolve(context, rawAmount).toString());
         
         if (itemName != null) {
             try {

@@ -124,6 +124,24 @@ public class CodingParameterGUI implements Listener {
                 return Arrays.asList(
                     new ParameterField("message", "Сообщение", "Всем привет!", Material.BELL)
                 );
+            case "healPlayer":
+                return Arrays.asList(
+                    new ParameterField("amount", "Количество здоровья", "10.0", Material.GOLDEN_APPLE)
+                );
+            case "setGameMode":
+                return Arrays.asList(
+                    new ParameterField("mode", "Режим игры", "CREATIVE", Material.DIAMOND_SWORD)
+                );
+            case "explosion":
+                return Arrays.asList(
+                    new ParameterField("power", "Мощность", "4.0", Material.TNT),
+                    new ParameterField("breakBlocks", "Ломать блоки", "true", Material.BARRIER)
+                );
+            case "setBlock":
+                return Arrays.asList(
+                    new ParameterField("material", "Материал", "STONE", Material.STONE),
+                    new ParameterField("coords", "Координаты", "100 70 200", Material.COMPASS)
+                );
             case "setVar":
             case "addVar":
             case "subVar":
@@ -160,14 +178,26 @@ public class CodingParameterGUI implements Listener {
                     new ParameterField("radius", "Радиус", "5", Material.COMPASS)
                 );
             case "timeOfDay":
+            case "worldTime":
                 return Arrays.asList(
-                    new ParameterField("time", "Время", "DAY", Material.SUNFLOWER)
+                    new ParameterField("timeRange", "Время дня", "DAY", Material.SUNFLOWER)
                 );
             case "ifVar":
             case "ifNotVar":
                 return Arrays.asList(
                     new ParameterField("var", "Переменная", "myVar", Material.OBSIDIAN),
                     new ParameterField("value", "Значение", "0", Material.GOLD_INGOT)
+                );
+            case "compareVariable":
+                return Arrays.asList(
+                    new ParameterField("var1", "Переменная 1", "var1", Material.IRON_INGOT),
+                    new ParameterField("operator", "Оператор", ">", Material.COMPARATOR),
+                    new ParameterField("var2", "Переменная 2", "var2", Material.GOLD_INGOT)
+                );
+            case "playerHealth":
+                return Arrays.asList(
+                    new ParameterField("health", "Здоровье", "10.0", Material.GOLDEN_APPLE),
+                    new ParameterField("operator", "Оператор", ">", Material.COMPARATOR)
                 );
             case "ifGameMode":
                 return Arrays.asList(

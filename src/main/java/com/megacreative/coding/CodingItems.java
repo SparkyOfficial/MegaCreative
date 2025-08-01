@@ -31,8 +31,7 @@ public class CodingItems {
      * Выдаёт игроку 9 новых универсальных блоков для кодинга
      */
     public static void giveCodingItems(Player player) {
-        player.getInventory().clear();
-
+        // Универсальные блоки для кодинга
         player.getInventory().addItem(createSimpleBlock(Material.DIAMOND_BLOCK, "§b§lСобытие игрока"));
         player.getInventory().addItem(createSimpleBlock(Material.OAK_PLANKS, "§6§lУсловие игрока"));
         player.getInventory().addItem(createSimpleBlock(Material.COBBLESTONE, "§7§lДействие игрока"));
@@ -43,12 +42,29 @@ public class CodingItems {
         player.getInventory().addItem(createSimpleBlock(Material.REDSTONE_BLOCK, "§c§lЕсли игра"));
         player.getInventory().addItem(createSimpleBlock(Material.BRICKS, "§d§lЕсли существо"));
         player.getInventory().addItem(createSimpleBlock(Material.POLISHED_GRANITE, "§a§lПолучить данные"));
-
-        // Добавляем наш новый инструмент в инвентарь
-        player.getInventory().setItem(8, getLinkingTool()); // В последний слот хотбара
-
+        
+        // Железный слиток для создания данных
+        player.getInventory().addItem(getDataCreator());
+        
+        // Связующий жезл
+        player.getInventory().setItem(8, getLinkingTool());
+        
         player.sendMessage("§a✓ Вы получили универсальные блоки для кодинга!");
         player.sendMessage("§7Используйте §eСвязующий жезл§7 для их соединения.");
+        player.sendMessage("§7Используйте §eЖелезный слиток§7 для создания данных.");
+    }
+    
+    public static ItemStack getDataCreator() {
+        ItemStack item = new ItemStack(Material.IRON_INGOT);
+        ItemMeta meta = item.getItemMeta();
+        meta.setDisplayName("§b§lСоздать данные");
+        meta.setLore(Arrays.asList(
+            "§7Используйте для создания предметов-данных:",
+            "§aПКМ§7 - открыть меню создания данных",
+            "§7Данные можно вставлять в параметры блоков"
+        ));
+        item.setItemMeta(meta);
+        return item;
     }
 
     private static ItemStack createSimpleBlock(Material material, String displayName) {

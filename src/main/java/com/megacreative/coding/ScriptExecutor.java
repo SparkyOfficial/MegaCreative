@@ -43,10 +43,14 @@ public class ScriptExecutor {
         actionRegistry.put("playSound", new PlaySoundAction());
         actionRegistry.put("effect", new EffectAction());
         actionRegistry.put("command", new CommandAction());
+        actionRegistry.put("healPlayer", new HealPlayerAction());
+        actionRegistry.put("setGameMode", new SetGameModeAction());
         
         // Игровые действия
         actionRegistry.put("setTime", new SetTimeAction());
         actionRegistry.put("setWeather", new SetWeatherAction());
+        actionRegistry.put("explosion", new ExplosionAction());
+        actionRegistry.put("setBlock", new SetBlockAction());
         
         // Получение данных
         actionRegistry.put("getVar", new GetVarAction());
@@ -59,6 +63,11 @@ public class ScriptExecutor {
         conditionRegistry.put("isInWorld", new IsInWorldCondition());
         conditionRegistry.put("hasItem", new HasItemCondition());
         conditionRegistry.put("hasPermission", new HasPermissionCondition());
+        
+        // Новые условия
+        conditionRegistry.put("compareVariable", new CompareVariableCondition());
+        conditionRegistry.put("playerHealth", new PlayerHealthCondition());
+        conditionRegistry.put("worldTime", new WorldTimeCondition());
     }
 
     public void execute(CodeScript script, ExecutionContext context, String triggerAction) {

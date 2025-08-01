@@ -1,24 +1,28 @@
 package com.megacreative.coding;
 
 import com.megacreative.MegaCreative;
+import com.megacreative.coding.data.DataItemFactory;
+import com.megacreative.gui.ParameterSelectorGUI;
 import org.bukkit.Location;
 import org.bukkit.Material;
 import org.bukkit.block.Block;
 import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.Listener;
+import org.bukkit.event.block.Action;
 import org.bukkit.event.block.BlockPlaceEvent;
 import org.bukkit.event.player.PlayerInteractEvent;
 import org.bukkit.block.Sign;
 import org.bukkit.block.data.type.WallSign;
 import org.bukkit.block.BlockFace;
-import org.bukkit.event.block.Action;
+import org.bukkit.inventory.ItemStack;
+import org.bukkit.inventory.meta.ItemMeta;
+
 import java.util.List;
 import java.util.Map;
 import java.util.HashMap;
 import java.util.UUID;
 import java.util.function.Consumer;
-import org.bukkit.inventory.ItemStack;
 
 /**
  * Обработчик размещения и взаимодействия с блоками кодирования в мире разработки.
@@ -71,9 +75,7 @@ public class BlockPlacementHandler implements Listener {
     @EventHandler
     public void onPlayerInteract(PlayerInteractEvent event) {
         Player player = event.getPlayer();
-        Block clickedBlock = event.getClickedBlock();
-        if (clickedBlock == null || !isInDevWorld(player)) return;
-        if (event.getAction() != Action.RIGHT_CLICK_BLOCK) return;
+        if (!isInDevWorld(player)) return;
         
         // Проверяем, что игрок не использует связующий жезл
         ItemStack itemInHand = player.getInventory().getItemInMainHand();
@@ -82,11 +84,34 @@ public class BlockPlacementHandler implements Listener {
             return; // Пропускаем, если используется связующий жезл
         }
         
-        Material mat = clickedBlock.getType();
-        if (!ACTIONS.containsKey(mat)) return;
-        event.setCancelled(true);
+        // Проверяем железный слиток для создания данных
+        if (itemInHand.getType() == Material.IRON_INGOT && itemInHand.hasItemMeta() && 
+            itemInHand.getItemMeta().getDisplayName().contains("Создать данные")) {
+            event.setCancelled(true);
+            new com.megacreative.gui.DataGUI(player).open();
+            return;
+        }
         
-        handleBlockConfiguration(player, mat, clickedBlock.getLocation(), true);
+        // Остальная логика для блоков кода
+        if (event.getAction() != Action.RIGHT_CLICK_BLOCK) return;
+        
+        Block clickedBlock = event.getClickedBlock();
+        if (clickedBlock == null) return;
+        
+        Location location = clickedBlock.getLocation();
+        
+        // Проверяем, есть ли уже блок кода на этой локации
+        if (blockCodeBlocks.containsKey(location)) {
+            CodeBlock existingBlock = blockCodeBlocks.get(location);
+            openBlockConfigurationMenu(player, existingBlock, location);
+            return;
+        }
+        
+        // Проверяем, держит ли игрок блок кода
+        if (isCodingBlock(itemInHand)) {
+            event.setCancelled(true);
+            placeCodeBlock(player, itemInHand, location);
+        }
     }
 
     /**
@@ -224,5 +249,63 @@ public class BlockPlacementHandler implements Listener {
             }
         }
         return block;
+    }
+
+    private void openBlockConfigurationMenu(Player player, CodeBlock codeBlock, Location location) {
+        // Проверяем, держит ли игрок предмет-данные
+        ItemStack itemInHand = player.getInventory().getItemInMainHand();
+        if (DataItemFactory.isDataItem(itemInHand)) {
+            // Игрок хочет вставить данные в блок
+            var dataItem = DataItemFactory.fromItemStack(itemInHand);
+            if (dataItem.isPresent()) {
+                new ParameterSelectorGUI(player, codeBlock, location, dataItem.get()).open();
+                return;
+            }
+        }
+        
+        // Обычная настройка блока
+        new CodingParameterGUI(player, codeBlock.getAction(), location, parameters -> {
+            // Обновляем параметры блока
+            codeBlock.getParameters().clear();
+            codeBlock.getParameters().putAll(parameters);
+            
+            player.sendMessage("§a✓ Параметры блока обновлены!");
+        }).open();
+    }
+
+    /**
+     * Проверяет, является ли предмет блоком кода
+     */
+    private boolean isCodingBlock(ItemStack item) {
+        if (item == null || !item.hasItemMeta()) return false;
+        ItemMeta meta = item.getItemMeta();
+        if (meta == null || !meta.hasDisplayName()) return false;
+        
+        String displayName = meta.getDisplayName();
+        return displayName.contains("Событие игрока") || 
+               displayName.contains("Условие игрока") || 
+               displayName.contains("Действие игрока") || 
+               displayName.contains("Присвоить переменную") || 
+               displayName.contains("Иначе") || 
+               displayName.contains("Игровое действие") || 
+               displayName.contains("Если переменная") || 
+               displayName.contains("Если игра") || 
+               displayName.contains("Если существо") || 
+               displayName.contains("Получить данные");
+    }
+    
+    /**
+     * Размещает блок кода в мире
+     */
+    private void placeCodeBlock(Player player, ItemStack item, Location location) {
+        // Определяем материал блока по предмету
+        Material material = item.getType();
+        if (!ACTIONS.containsKey(material)) {
+            player.sendMessage("§cНеизвестный тип блока кода!");
+            return;
+        }
+        
+        // Открываем GUI для выбора действия
+        handleBlockConfiguration(player, material, location, false);
     }
 }
