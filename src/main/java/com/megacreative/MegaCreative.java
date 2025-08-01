@@ -63,6 +63,9 @@ public class MegaCreative extends JavaPlugin {
     
     @Override
     public void onDisable() {
+        // Останавливаем все повторяющиеся задачи
+        com.megacreative.coding.actions.RepeatTriggerAction.stopAllRepeatingTasks();
+        
         // Сохраняем все данные
         if (dataManager != null) {
             dataManager.saveAllData();
@@ -93,6 +96,8 @@ public class MegaCreative extends JavaPlugin {
         getCommand("debug").setExecutor(new DebugCommand(this));
         getCommand("visualize").setExecutor(new VisualizeCommand(this));
         getCommand("createscript").setExecutor(new CreateScriptCommand(this));
+        getCommand("stoprepeat").setExecutor(new StopRepeatCommand(this));
+        getCommand("status").setExecutor(new StatusCommand(this));
     }
     
     private void registerEvents() {
@@ -104,6 +109,11 @@ public class MegaCreative extends JavaPlugin {
         getServer().getPluginManager().registerEvents(blockPlacementHandler, this);
         getServer().getPluginManager().registerEvents(new WorldInteractListener(this), this);
         getServer().getPluginManager().registerEvents(new InventoryClickListener(this), this);
+        
+        // Новые слушатели для расширенных событий
+        getServer().getPluginManager().registerEvents(new BlockBreakListener(this), this);
+        getServer().getPluginManager().registerEvents(new PlayerDeathListener(this), this);
+        getServer().getPluginManager().registerEvents(new CommandListener(this), this);
     }
     
     public static MegaCreative getInstance() {

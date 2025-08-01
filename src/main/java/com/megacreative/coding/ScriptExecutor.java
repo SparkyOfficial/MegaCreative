@@ -8,6 +8,9 @@ import com.megacreative.coding.conditions.WorldTimeCondition;
 import com.megacreative.coding.conditions.IsNearBlockCondition;
 import com.megacreative.coding.conditions.MobNearCondition;
 import com.megacreative.coding.conditions.PlayerGameModeCondition;
+import com.megacreative.coding.conditions.IfVarEqualsCondition;
+import com.megacreative.coding.conditions.IfVarGreaterCondition;
+import com.megacreative.coding.conditions.IfVarLessCondition;
 import org.bukkit.Location;
 import org.bukkit.Material;
 import org.bukkit.entity.Player;
@@ -76,6 +79,9 @@ public class ScriptExecutor {
         actionRegistry.put("wait", new WaitAction());
         actionRegistry.put("randomNumber", new RandomNumberAction());
         actionRegistry.put("playParticle", new PlayParticleEffectAction());
+        
+        // Повторяющийся триггер
+        actionRegistry.put("repeatTrigger", new RepeatTriggerAction());
     }
 
     private void registerConditions() {
@@ -90,6 +96,11 @@ public class ScriptExecutor {
         
         // Условия игрока
         conditionRegistry.put("playerGameMode", new PlayerGameModeCondition());
+        
+        // Новые условия для переменных
+        conditionRegistry.put("ifVarEquals", new IfVarEqualsCondition());
+        conditionRegistry.put("ifVarGreater", new IfVarGreaterCondition());
+        conditionRegistry.put("ifVarLess", new IfVarLessCondition());
     }
 
     public void execute(CodeScript script, ExecutionContext context, String triggerAction) {

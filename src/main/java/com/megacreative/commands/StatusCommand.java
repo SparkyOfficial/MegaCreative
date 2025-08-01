@@ -3,19 +3,17 @@ package com.megacreative.commands;
 import com.megacreative.MegaCreative;
 import com.megacreative.models.CreativeWorld;
 import com.megacreative.models.WorldMode;
-import org.bukkit.Bukkit;
-import org.bukkit.GameMode;
 import org.bukkit.World;
 import org.bukkit.command.Command;
 import org.bukkit.command.CommandExecutor;
 import org.bukkit.command.CommandSender;
 import org.bukkit.entity.Player;
 
-public class BuildCommand implements CommandExecutor {
+public class StatusCommand implements CommandExecutor {
     
     private final MegaCreative plugin;
     
-    public BuildCommand(MegaCreative plugin) {
+    public StatusCommand(MegaCreative plugin) {
         this.plugin = plugin;
     }
     
@@ -34,29 +32,21 @@ public class BuildCommand implements CommandExecutor {
             return true;
         }
         
-        if (!creativeWorld.canEdit(player)) {
-            player.sendMessage("§cУ вас нет прав на изменение этого мира!");
-            return true;
+        WorldMode mode = creativeWorld.getMode();
+        boolean codeEnabled = mode.isCodeEnabled();
+        
+        player.sendMessage("§6=== Статус мира ===");
+        player.sendMessage("§7Мир: §f" + creativeWorld.getName());
+        player.sendMessage("§7Режим: §f" + mode.getDisplayName());
+        player.sendMessage("§7Код: " + (codeEnabled ? "§a✅ ВКЛЮЧЕН" : "§c❌ ВЫКЛЮЧЕН"));
+        player.sendMessage("§7Скриптов: §f" + creativeWorld.getScripts().size());
+        
+        if (codeEnabled) {
+            player.sendMessage("§aСкрипты будут выполняться при событиях");
+        } else {
+            player.sendMessage("§cСкрипты не будут выполняться");
         }
         
-        creativeWorld.setMode(WorldMode.BUILD);
-        
-        if (currentWorld.getName().endsWith("_dev")) {
-            World mainWorld = Bukkit.getWorld(creativeWorld.getWorldName());
-            if (mainWorld != null) {
-                player.teleport(mainWorld.getSpawnLocation());
-            }
-        }
-        
-        if (creativeWorld.canEdit(player)) {
-            player.setGameMode(GameMode.CREATIVE);
-        }
-        
-        player.sendMessage("§aРежим мира изменен на §f§lСТРОИТЕЛЬСТВО§a!");
-        player.sendMessage("§7❌ Код отключен, скрипты не будут выполняться");
-        player.sendMessage("§7Креатив для строителей");
-        
-        plugin.getWorldManager().saveWorld(creativeWorld);
         return true;
     }
     
@@ -68,4 +58,4 @@ public class BuildCommand implements CommandExecutor {
         }
         return null;
     }
-}
+} 

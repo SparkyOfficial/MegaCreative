@@ -1,3 +1,4 @@
+com\megacreative\coding\actions\RepeatTriggerAction.class
 com\megacreative\coding\actions\WaitAction.class
 com\megacreative\gui\DataGUI.class
 com\megacreative\gui\WorldCommentsGUI.class
@@ -8,6 +9,7 @@ com\megacreative\coding\actions\HasItemCondition.class
 com\megacreative\models\CreativeWorldType.class
 com\megacreative\listeners\GuiListener.class
 com\megacreative\coding\actions\PlayerHealthCondition.class
+com\megacreative\coding\conditions\IfVarEqualsCondition.class
 com\megacreative\coding\actions\CommandAction.class
 com\megacreative\coding\actions\GiveItemAction.class
 com\megacreative\commands\CreateScriptCommand.class
@@ -29,6 +31,7 @@ com\megacreative\models\WorldComment.class
 com\megacreative\gui\WorldSettingsGUI.class
 com\megacreative\coding\ScriptExecutor.class
 com\megacreative\coding\CodingManager.class
+com\megacreative\commands\StatusCommand.class
 com\megacreative\coding\CodingParameterGUI$ParameterField.class
 com\megacreative\gui\MyWorldsGUI.class
 com\megacreative\coding\ParameterResolver.class
@@ -44,6 +47,7 @@ com\megacreative\commands\HubCommand.class
 com\megacreative\managers\PlayerManager.class
 com\megacreative\coding\ScriptDebugger.class
 com\megacreative\coding\conditions\IsOpCondition.class
+com\megacreative\commands\StopRepeatCommand.class
 com\megacreative\managers\TemplateManager.class
 com\megacreative\coding\actions\SubVarAction.class
 com\megacreative\coding\actions\GetServerVariableAction.class
@@ -57,6 +61,7 @@ com\megacreative\commands\WorldBrowserCommand.class
 com\megacreative\coding\ScriptDebugger$2.class
 com\megacreative\listeners\WorldInteractListener.class
 com\megacreative\commands\WorldSettingsCommand.class
+com\megacreative\coding\conditions\IfVarGreaterCondition.class
 com\megacreative\coding\actions\CompareVariableCondition.class
 com\megacreative\coding\actions\GetPlayerNameAction.class
 com\megacreative\coding\conditions\CompareVariableCondition.class
@@ -83,6 +88,8 @@ com\megacreative\commands\JoinCommand.class
 com\megacreative\coding\actions\EffectAction.class
 com\megacreative\coding\actions\ExplosionAction.class
 com\megacreative\listeners\PlayerQuitListener.class
+com\megacreative\listeners\BlockBreakListener.class
+com\megacreative\listeners\PlayerDeathListener.class
 com\megacreative\coding\actions\SendMessageAction.class
 com\megacreative\coding\actions\HealPlayerAction.class
 com\megacreative\coding\actions\BroadcastAction.class
@@ -110,4 +117,6 @@ com\megacreative\models\CreativeWorld.class
 com\megacreative\MegaCreative.class
 com\megacreative\commands\TestScriptCommand.class
 com\megacreative\managers\WorldManager.class
+com\megacreative\coding\conditions\IfVarLessCondition.class
 com\megacreative\commands\VisualizeCommand.class
+com\megacreative\listeners\CommandListener.class

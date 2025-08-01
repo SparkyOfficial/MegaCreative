@@ -55,7 +55,8 @@ public class PlayCommand implements CommandExecutor {
         player.setGameMode(GameMode.ADVENTURE);
         
         player.sendMessage("§aРежим мира изменен на §f§lИГРА§a!");
-        player.sendMessage("§7Код активирован, игроки в режиме приключения");
+        player.sendMessage("§7✅ Код активирован, скрипты будут выполняться");
+        player.sendMessage("§7Игроки в режиме приключения");
         
         // Сохранение изменений
         plugin.getWorldManager().saveWorld(creativeWorld);

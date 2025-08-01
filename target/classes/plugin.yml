@@ -60,6 +60,14 @@ commands:
     description: Управление отладкой скриптов.
     usage: /<command> [on|off|stats|status|help]
     permission: megacreative.user
+  stoprepeat:
+    description: Остановка повторяющихся задач.
+    usage: /<command> [all]
+    permission: megacreative.user
+  status:
+    description: Проверка статуса режима мира.
+    usage: /<command>
+    permission: megacreative.user
 
 permissions:
   megacreative.*:

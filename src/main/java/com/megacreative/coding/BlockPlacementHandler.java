@@ -88,12 +88,28 @@ public class BlockPlacementHandler implements Listener {
         
         Location loc = event.getBlock().getLocation();
         if (blockCodeBlocks.containsKey(loc)) {
-            blockCodeBlocks.remove(loc);
+            CodeBlock removedBlock = blockCodeBlocks.remove(loc);
+            event.getPlayer().sendMessage("§c❌ Блок кода удален: " + removedBlock.getAction());
+            
+            // Удаляем табличку над блоком
+            removeSignFromBlock(loc);
+            
             var world = plugin.getWorldManager().findCreativeWorldByBukkit(event.getPlayer().getWorld());
             if (world != null) {
                 plugin.getBlockConnectionVisualizer().removeBlock(world, loc);
             }
-            event.getPlayer().sendMessage("§cБлок кода удален.");
+        }
+    }
+    
+    // Удалить табличку с блока
+    private void removeSignFromBlock(Location loc) {
+        try {
+            Block above = loc.clone().add(0, 1, 0).getBlock();
+            if (above.getType() == Material.OAK_SIGN) {
+                above.setType(Material.AIR);
+            }
+        } catch (Exception e) {
+            plugin.getLogger().warning("Не удалось удалить табличку: " + e.getMessage());
         }
     }
 
@@ -105,7 +121,7 @@ public class BlockPlacementHandler implements Listener {
         Player player = event.getPlayer();
         
         // Проверяем, что игрок в мире разработки
-        if (!player.getWorld().getName().equals("dev")) {
+        if (!isInDevWorld(player)) {
             return;
         }
         
@@ -143,15 +159,16 @@ public class BlockPlacementHandler implements Listener {
         
         // Проверяем, что игрок не использует связующий жезл
         if (itemInHand.getType() == Material.BLAZE_ROD && itemInHand.hasItemMeta() && 
-            itemInHand.getItemMeta().getDisplayName().contains("Связующий жезл")) {
+            itemInHand.getItemMeta().getDisplayName().contains("§e§lСвязующий жезл")) {
             return; // Пропускаем, если используется связующий жезл
         }
         
         // Проверяем железный слиток для создания данных
         if (itemInHand.getType() == Material.IRON_INGOT && itemInHand.hasItemMeta() && 
-            itemInHand.getItemMeta().getDisplayName().contains("Создать данные")) {
+            itemInHand.getItemMeta().getDisplayName().contains("§b§lСоздать данные")) {
             event.setCancelled(true);
             new com.megacreative.gui.DataGUI(player).open();
+            player.sendMessage("§a✅ Открыто меню создания данных!");
             return;
         }
         
@@ -186,10 +203,10 @@ public class BlockPlacementHandler implements Listener {
         ItemStack itemInHand = player.getInventory().getItemInMainHand();
 
         // Проверяем, что игрок в мире разработки и держит наш инструмент
-        if (!isInDevWorld(player) || itemInHand.getType() != Material.BLAZE_ROD || !itemInHand.hasItemMeta() || !itemInHand.getItemMeta().getDisplayName().contains("Связующий жезл")) {
+        if (!isInDevWorld(player) || itemInHand.getType() != Material.BLAZE_ROD || !itemInHand.hasItemMeta() || !itemInHand.getItemMeta().getDisplayName().contains("§e§lСвязующий жезл")) {
             return;
         }
-
+        
         // Предотвращаем другие действия с жезлом (например, открытие печки)
         event.setCancelled(true);
         
@@ -200,7 +217,11 @@ public class BlockPlacementHandler implements Listener {
         if (action == Action.LEFT_CLICK_BLOCK) {
             if (clickedBlock != null && blockCodeBlocks.containsKey(clickedBlock.getLocation())) {
                 playerSelections.put(player.getUniqueId(), clickedBlock.getLocation());
-                player.sendMessage("§a✓ Начальный блок выбран. Нажмите ПКМ по конечному блоку.");
+                CodeBlock selectedBlock = blockCodeBlocks.get(clickedBlock.getLocation());
+                player.sendMessage("§a✅ Начальный блок выбран: §f" + selectedBlock.getAction());
+                player.sendMessage("§7Теперь нажмите §eПКМ§7 по конечному блоку для соединения.");
+            } else {
+                player.sendMessage("§c❌ Это не блок кода! Выберите блок кода.");
             }
         } 
         // --- ПРАВЫЙ КЛИК: ВЫБОР ВТОРОГО БЛОКА И СОЕДИНЕНИЕ ---
@@ -208,7 +229,7 @@ public class BlockPlacementHandler implements Listener {
             Location firstBlockLoc = playerSelections.get(player.getUniqueId());
 
             if (firstBlockLoc == null) {
-                player.sendMessage("§c✗ Сначала выберите начальный блок (ЛКМ).");
+                player.sendMessage("§c❌ Сначала выберите начальный блок (ЛКМ).");
                 return;
             }
 
@@ -216,7 +237,7 @@ public class BlockPlacementHandler implements Listener {
                 Location secondBlockLoc = clickedBlock.getLocation();
 
                 if (firstBlockLoc.equals(secondBlockLoc)) {
-                    player.sendMessage("§c✗ Нельзя соединить блок с самим собой.");
+                    player.sendMessage("§c❌ Нельзя соединить блок с самим собой.");
                     return;
                 }
 
@@ -225,7 +246,8 @@ public class BlockPlacementHandler implements Listener {
 
                 if (firstBlock != null && secondBlock != null) {
                     firstBlock.setNext(secondBlock);
-                    player.sendMessage("§a✓ Связь установлена!");
+                    player.sendMessage("§a✅ Связь установлена!");
+                    player.sendMessage("§7§f" + firstBlock.getAction() + " §7→ §f" + secondBlock.getAction());
                     playerSelections.remove(player.getUniqueId());
                     
                     // Обновляем визуализацию
@@ -234,6 +256,8 @@ public class BlockPlacementHandler implements Listener {
                          plugin.getBlockConnectionVisualizer().addBlock(creativeWorld, firstBlockLoc, firstBlock);
                     }
                 }
+            } else {
+                player.sendMessage("§c❌ Это не блок кода! Выберите блок кода для соединения.");
             }
         }
     }
@@ -272,7 +296,10 @@ public class BlockPlacementHandler implements Listener {
      */
     private boolean isInDevWorld(Player player) {
         String worldName = player.getWorld().getName();
-        return worldName.startsWith("megacreative_") && worldName.endsWith("_dev");
+        // Проверяем разные варианты названий миров разработки
+        return worldName.startsWith("megacreative_") && worldName.endsWith("_dev") ||
+               worldName.endsWith("_dev") ||
+               worldName.contains("_dev");
     }
 
     /**
@@ -294,12 +321,42 @@ public class BlockPlacementHandler implements Listener {
 
     // Установить табличку с действием на блок
     private void setSignOnBlock(Location loc, String action) {
-        Block above = loc.clone().add(0, 1, 0).getBlock();
-        above.setType(Material.OAK_SIGN);
-        if (above.getState() instanceof Sign sign) {
-            sign.setLine(0, "§e[КОД]");
-            sign.setLine(1, action);
-            sign.update();
+        try {
+            Block above = loc.clone().add(0, 1, 0).getBlock();
+            above.setType(Material.OAK_SIGN);
+            
+            if (above.getState() instanceof Sign sign) {
+                sign.setLine(0, "§e[КОД]");
+                sign.setLine(1, "§f" + action);
+                sign.setLine(2, "§7ПКМ для настройки");
+                sign.update();
+            }
+        } catch (Exception e) {
+            // Если не удалось создать табличку, просто логируем
+            plugin.getLogger().warning("Не удалось создать табличку для блока: " + e.getMessage());
+        }
+    }
+    
+    // Обновить табличку с параметрами
+    private void updateSignOnBlock(Location loc, CodeBlock codeBlock) {
+        try {
+            Block above = loc.clone().add(0, 1, 0).getBlock();
+            if (above.getType() == Material.OAK_SIGN && above.getState() instanceof Sign sign) {
+                sign.setLine(0, "§e[КОД]");
+                sign.setLine(1, "§f" + codeBlock.getAction());
+                
+                // Показываем первый параметр если есть
+                if (!codeBlock.getParameters().isEmpty()) {
+                    String firstParam = codeBlock.getParameters().entrySet().iterator().next().getKey();
+                    sign.setLine(2, "§7" + firstParam + ": " + codeBlock.getParameters().get(firstParam));
+                } else {
+                    sign.setLine(2, "§7ПКМ для настройки");
+                }
+                
+                sign.update();
+            }
+        } catch (Exception e) {
+            plugin.getLogger().warning("Не удалось обновить табличку: " + e.getMessage());
         }
     }
 
@@ -347,7 +404,16 @@ public class BlockPlacementHandler implements Listener {
             codeBlock.getParameters().clear();
             codeBlock.getParameters().putAll(parameters);
             
-            player.sendMessage("§a✓ Параметры блока обновлены!");
+            // Обновляем табличку на блоке
+            updateSignOnBlock(location, codeBlock);
+            
+            player.sendMessage("§a✅ Параметры блока обновлены!");
+            player.sendMessage("§7Действие: §f" + codeBlock.getAction());
+            if (!parameters.isEmpty()) {
+                player.sendMessage("§7Параметры:");
+                parameters.forEach((key, value) -> 
+                    player.sendMessage("§7  - §f" + key + ": §e" + value));
+            }
         }).open();
     }
 
@@ -393,18 +459,27 @@ public class BlockPlacementHandler implements Listener {
     private void displayBlockInfo(Player player, CodeBlock block) {
         player.sendMessage("§e===== [Инспектор Блоков] =====");
         player.sendMessage("§7Действие: §f" + block.getAction());
-        player.sendMessage("§7Параметры:");
-        block.getParameters().forEach((key, value) -> {
-            player.sendMessage("  §7- §f" + key + ": §e" + value.toString());
-        });
+        
+        if (!block.getParameters().isEmpty()) {
+            player.sendMessage("§7Параметры:");
+            block.getParameters().forEach((key, value) -> {
+                player.sendMessage("  §7- §f" + key + ": §e" + value.toString());
+            });
+        } else {
+            player.sendMessage("§7Параметры: §cНет");
+        }
+        
         if (block.getNextBlock() != null) {
             player.sendMessage("§7Следующий блок: §a" + block.getNextBlock().getAction());
         } else {
             player.sendMessage("§7Следующий блок: §cНет");
         }
+        
         if (!block.getChildren().isEmpty()) {
             player.sendMessage("§7Дочерние блоки: §b" + block.getChildren().size() + " шт.");
         }
+        
+        player.sendMessage("§7ПКМ по блоку для настройки");
         player.sendMessage("§e=========================");
     }
     
