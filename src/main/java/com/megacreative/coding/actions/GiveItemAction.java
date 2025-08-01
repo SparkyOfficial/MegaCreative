@@ -14,22 +14,23 @@ public class GiveItemAction implements BlockAction {
         CodeBlock block = context.getCurrentBlock();
 
         if (player == null || block == null) return;
-        
+
+        // 1. Получаем "сырые" значения из параметров блока
         Object rawItemName = block.getParameter("item");
         Object rawAmount = block.getParameter("amount");
-        
-        String itemName = ParameterResolver.resolve(context, rawItemName).toString();
-        int amount = Integer.parseInt(ParameterResolver.resolve(context, rawAmount).toString());
-        
-        if (itemName != null) {
-            try {
-                Material material = Material.valueOf(itemName.toUpperCase());
-                ItemStack item = new ItemStack(material, amount);
-                player.getInventory().addItem(item);
-                player.sendMessage("§aПолучен предмет: " + itemName + " x" + amount);
-            } catch (IllegalArgumentException e) {
-                player.sendMessage("§cНеизвестный предмет: " + itemName);
-            }
+
+        // 2. "Разрешаем" их с помощью ParameterResolver
+        String itemName = ParameterResolver.resolve(context, rawItemName);
+        String amountStr = ParameterResolver.resolve(context, rawAmount);
+
+        try {
+            Material material = Material.valueOf(itemName.toUpperCase());
+            int amount = Integer.parseInt(amountStr);
+
+            player.getInventory().addItem(new ItemStack(material, amount));
+            player.sendMessage("§a✓ Вы получили " + amount + "x " + material.name());
+        } catch (Exception e) {
+            player.sendMessage("§cОшибка в блоке 'Выдать предмет': неверный материал или количество.");
         }
     }
 } 

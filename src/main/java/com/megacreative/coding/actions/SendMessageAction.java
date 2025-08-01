@@ -10,14 +10,14 @@ public class SendMessageAction implements BlockAction {
     public void execute(ExecutionContext context) {
         Player player = context.getPlayer();
         CodeBlock block = context.getCurrentBlock();
-        
+
         if (player == null || block == null) return;
-        
+
         // Получаем параметр "message" из текущего блока и разрешаем его
         Object rawMessage = block.getParameter("message");
-        String resolvedMessage = ParameterResolver.resolve(context, rawMessage).toString();
-        
-        if (resolvedMessage != null) {
+        String resolvedMessage = ParameterResolver.resolve(context, rawMessage);
+
+        if (resolvedMessage != null && !resolvedMessage.isEmpty()) {
             resolvedMessage = resolvedMessage.replace("%player%", player.getName());
             player.sendMessage(resolvedMessage);
         }

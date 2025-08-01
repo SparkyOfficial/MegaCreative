@@ -1,5 +1,7 @@
+com\megacreative\commands\ScriptsCommand.class
 com\megacreative\gui\DataGUI.class
 com\megacreative\gui\WorldCommentsGUI.class
+com\megacreative\commands\SaveScriptCommand.class
 com\megacreative\coding\data\DataItemFactory.class
 com\megacreative\coding\actions\SpawnMobAction.class
 com\megacreative\coding\ExecutionContext$ExecutionContextBuilder.class
@@ -79,6 +81,7 @@ com\megacreative\coding\actions\SetWeatherAction.class
 com\megacreative\MegaCreative.class
 com\megacreative\coding\actions\GetVarAction.class
 com\megacreative\commands\PlayCommand.class
+com\megacreative\gui\ScriptsGUI.class
 com\megacreative\coding\actions\HasPermissionCondition.class
 com\megacreative\commands\HubCommand.class
 com\megacreative\commands\TestScriptCommand.class

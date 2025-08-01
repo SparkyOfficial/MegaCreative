@@ -28,6 +28,14 @@ commands:
   hub:
     description: Return to hub world
     aliases: [lobby, spawn]
+  savescript:
+    description: Save current code blocks as a script
+    usage: /<command> <script_name>
+    permission: megacreative.user
+  scripts:
+    description: Open scripts management GUI
+    aliases: [script, scriptlist]
+    permission: megacreative.user
   worldsettings:
     description: Open world settings
     usage: /<command>

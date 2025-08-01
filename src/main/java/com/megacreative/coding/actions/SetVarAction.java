@@ -2,6 +2,7 @@ package com.megacreative.coding.actions;
 
 import com.megacreative.coding.CodeBlock;
 import com.megacreative.coding.ExecutionContext;
+import com.megacreative.coding.ParameterResolver;
 import org.bukkit.entity.Player;
 
 public class SetVarAction implements BlockAction {
@@ -11,15 +12,17 @@ public class SetVarAction implements BlockAction {
         CodeBlock block = context.getCurrentBlock();
 
         if (player == null || block == null) return;
-        
-        String varName = (String) block.getParameter("variable");
-        Object value = block.getParameter("value");
-        
-        if (varName != null && value != null) {
+
+        // Получаем и разрешаем параметры
+        Object rawVarName = block.getParameter("var");
+        Object rawValue = block.getParameter("value");
+
+        String varName = ParameterResolver.resolve(context, rawVarName);
+        String value = ParameterResolver.resolve(context, rawValue);
+
+        if (varName != null && !varName.isEmpty()) {
             context.setVariable(varName, value);
-            if (player != null) {
-                player.sendMessage("§aПеременная '" + varName + "' установлена: " + value);
-            }
+            player.sendMessage("§a✓ Переменная '" + varName + "' установлена в: " + value);
         }
     }
 } 

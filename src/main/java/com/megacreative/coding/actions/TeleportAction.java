@@ -13,22 +13,26 @@ public class TeleportAction implements BlockAction {
         CodeBlock block = context.getCurrentBlock();
 
         if (player == null || block == null) return;
-        
+
+        // Получаем и разрешаем координаты
         Object rawCoords = block.getParameter("coords");
-        String coords = ParameterResolver.resolve(context, rawCoords).toString();
-        
-        if (coords != null) {
-            try {
-                String[] parts = coords.split(" ");
-                if (parts.length == 3) {
-                    double x = Double.parseDouble(parts[0]);
-                    double y = Double.parseDouble(parts[1]);
-                    double z = Double.parseDouble(parts[2]);
-                    player.teleport(new Location(player.getWorld(), x, y, z));
-                }
-            } catch (Exception e) {
-                player.sendMessage("§cОшибка в координатах для телепортации: " + coords);
+        String coordsStr = ParameterResolver.resolve(context, rawCoords);
+
+        try {
+            String[] parts = coordsStr.split(" ");
+            if (parts.length == 3) {
+                double x = Double.parseDouble(parts[0]);
+                double y = Double.parseDouble(parts[1]);
+                double z = Double.parseDouble(parts[2]);
+                
+                Location targetLocation = new Location(player.getWorld(), x, y, z);
+                player.teleport(targetLocation);
+                player.sendMessage("§a✓ Телепортация на координаты: " + coordsStr);
+            } else {
+                player.sendMessage("§cОшибка: координаты должны быть в формате 'x y z'");
             }
+        } catch (NumberFormatException e) {
+            player.sendMessage("§cОшибка: координаты должны быть числами!");
         }
     }
 } 
