@@ -1,3 +1,4 @@
+com\megacreative\coding\actions\WaitAction.class
 com\megacreative\gui\DataGUI.class
 com\megacreative\gui\WorldCommentsGUI.class
 com\megacreative\commands\SaveScriptCommand.class
@@ -29,6 +30,7 @@ com\megacreative\coding\CodingManager.class
 com\megacreative\coding\CodingParameterGUI$ParameterField.class
 com\megacreative\gui\MyWorldsGUI.class
 com\megacreative\coding\ParameterResolver.class
+com\megacreative\coding\BlockAction.class
 com\megacreative\coding\actions\AddVarAction.class
 com\megacreative\coding\actions\SetWeatherAction.class
 com\megacreative\coding\actions\GetGlobalVariableAction.class
@@ -53,14 +55,18 @@ com\megacreative\listeners\WorldInteractListener.class
 com\megacreative\commands\WorldSettingsCommand.class
 com\megacreative\coding\actions\CompareVariableCondition.class
 com\megacreative\coding\actions\GetPlayerNameAction.class
+com\megacreative\coding\conditions\MobNearCondition.class
+com\megacreative\coding\conditions\IsNearBlockCondition.class
 com\megacreative\coding\actions\SetGameModeAction.class
 com\megacreative\coding\CodeScript.class
 com\megacreative\coding\actions\BlockAction.class
 com\megacreative\models\WorldFlags.class
+com\megacreative\coding\BlockCondition.class
 com\megacreative\coding\actions\SetServerVariableAction.class
 com\megacreative\coding\CodeBlock.class
 com\megacreative\coding\actions\TeleportAction.class
 com\megacreative\coding\BlockConnectionVisualizer$1.class
+com\megacreative\coding\actions\PlayParticleEffectAction.class
 com\megacreative\coding\actions\SetVarAction.class
 com\megacreative\coding\ExecutionContext.class
 com\megacreative\coding\actions\SetBlockAction.class
@@ -75,6 +81,7 @@ com\megacreative\coding\actions\SendMessageAction.class
 com\megacreative\coding\actions\HealPlayerAction.class
 com\megacreative\coding\actions\BroadcastAction.class
 com\megacreative\coding\BlockConnectionVisualizer$2.class
+com\megacreative\coding\conditions\PlayerGameModeCondition.class
 com\megacreative\coding\actions\IsInWorldCondition.class
 com\megacreative\coding\data\DataItemFactory$DataItem.class
 com\megacreative\models\WorldMode.class
@@ -83,6 +90,7 @@ com\megacreative\utils\ConfigManager.class
 com\megacreative\coding\BlockConnectionVisualizer.class
 com\megacreative\gui\AnvilInputGUI.class
 com\megacreative\commands\MainCommand.class
+com\megacreative\coding\actions\RandomNumberAction.class
 com\megacreative\coding\BlockPlacementHandler.class
 com\megacreative\coding\CodingItems.class
 com\megacreative\gui\WorldActionsGUI.class

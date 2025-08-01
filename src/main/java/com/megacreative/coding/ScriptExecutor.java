@@ -2,6 +2,12 @@ package com.megacreative.coding;
 
 import com.megacreative.MegaCreative;
 import com.megacreative.coding.actions.*;
+// import com.megacreative.coding.conditions.CompareVariableCondition;
+// import com.megacreative.coding.conditions.PlayerHealthCondition;
+// import com.megacreative.coding.conditions.WorldTimeCondition;
+// import com.megacreative.coding.conditions.IsNearBlockCondition;
+// import com.megacreative.coding.conditions.PlayerGameModeCondition;
+// import com.megacreative.coding.conditions.MobNearCondition;
 import org.bukkit.Location;
 import org.bukkit.Material;
 import org.bukkit.entity.Player;
@@ -33,49 +39,61 @@ public class ScriptExecutor {
         actionRegistry.put("broadcast", new BroadcastAction());
         actionRegistry.put("spawnMob", new SpawnMobAction());
         
-        // Переменные
-        actionRegistry.put("addVar", new AddVarAction());
-        actionRegistry.put("subVar", new SubVarAction());
-        actionRegistry.put("mulVar", new MulVarAction());
-        actionRegistry.put("divVar", new DivVarAction());
+        // Математические операции
+        // actionRegistry.put("addVar", new AddVarAction());
+        // actionRegistry.put("subVar", new SubVarAction());
+        // actionRegistry.put("mulVar", new MulVarAction());
+        // actionRegistry.put("divVar", new DivVarAction());
         
-        // Действия игрока
-        actionRegistry.put("playSound", new PlaySoundAction());
-        actionRegistry.put("effect", new EffectAction());
-        actionRegistry.put("command", new CommandAction());
-        actionRegistry.put("healPlayer", new HealPlayerAction());
-        actionRegistry.put("setGameMode", new SetGameModeAction());
+        // Действия с миром
+        // actionRegistry.put("playSound", new PlaySoundAction());
+        // actionRegistry.put("effect", new EffectAction());
+        // actionRegistry.put("command", new CommandAction());
+        // actionRegistry.put("healPlayer", new HealPlayerAction());
+        // actionRegistry.put("setGameMode", new SetGameModeAction());
         
-        // Игровые действия
-        actionRegistry.put("setTime", new SetTimeAction());
-        actionRegistry.put("setWeather", new SetWeatherAction());
-        actionRegistry.put("explosion", new ExplosionAction());
-        actionRegistry.put("setBlock", new SetBlockAction());
+        // Действия с временем и погодой
+        // actionRegistry.put("setTime", new SetTimeAction());
+        // actionRegistry.put("setWeather", new SetWeatherAction());
+        
+        // Действия с блоками и взрывами
+        // actionRegistry.put("explosion", new ExplosionAction());
+        // actionRegistry.put("setBlock", new SetBlockAction());
         
         // Получение данных
-        actionRegistry.put("getVar", new GetVarAction());
-        actionRegistry.put("getPlayerName", new GetPlayerNameAction());
+        // actionRegistry.put("getVar", new GetVarAction());
+        // actionRegistry.put("getPlayerName", new GetPlayerNameAction());
         
         // Глобальные переменные игрока
-        actionRegistry.put("setGlobalVar", new SetGlobalVariableAction());
-        actionRegistry.put("getGlobalVar", new GetGlobalVariableAction());
+        // actionRegistry.put("setGlobalVar", new SetGlobalVariableAction());
+        // actionRegistry.put("getGlobalVar", new GetGlobalVariableAction());
         
         // Серверные переменные
-        actionRegistry.put("setServerVar", new SetServerVariableAction());
-        actionRegistry.put("getServerVar", new GetServerVariableAction());
+        // actionRegistry.put("setServerVar", new SetServerVariableAction());
+        // actionRegistry.put("getServerVar", new GetServerVariableAction());
+        
+        // Новые важные действия
+        actionRegistry.put("wait", new WaitAction());
+        actionRegistry.put("randomNumber", new RandomNumberAction());
+        actionRegistry.put("playParticle", new PlayParticleEffectAction());
     }
 
     private void registerConditions() {
-        // Регистрируем все наши классы-условия
-        conditionRegistry.put("isOp", new IsOpCondition());
-        conditionRegistry.put("isInWorld", new IsInWorldCondition());
-        conditionRegistry.put("hasItem", new HasItemCondition());
-        conditionRegistry.put("hasPermission", new HasPermissionCondition());
+        // Базовые условия
+        // conditionRegistry.put("isOp", new IsOpCondition());
+        // conditionRegistry.put("isInWorld", new IsInWorldCondition());
+        // conditionRegistry.put("hasItem", new HasItemCondition());
+        // conditionRegistry.put("hasPermission", new HasPermissionCondition());
+        
+        // Условия сравнения
+        // conditionRegistry.put("compareVariable", new CompareVariableCondition());
+        // conditionRegistry.put("playerHealth", new PlayerHealthCondition());
+        // conditionRegistry.put("worldTime", new WorldTimeCondition());
         
         // Новые условия
-        conditionRegistry.put("compareVariable", new CompareVariableCondition());
-        conditionRegistry.put("playerHealth", new PlayerHealthCondition());
-        conditionRegistry.put("worldTime", new WorldTimeCondition());
+        // conditionRegistry.put("isNearBlock", new IsNearBlockCondition());
+        // conditionRegistry.put("playerGameMode", new PlayerGameModeCondition());
+        // conditionRegistry.put("mobNear", new MobNearCondition());
     }
 
     public void execute(CodeScript script, ExecutionContext context, String triggerAction) {
@@ -95,7 +113,7 @@ public class ScriptExecutor {
     }
     
     // ЭТОТ МЕТОД - НАШ НОВЫЙ ДВИЖОК
-    private void processBlock(CodeBlock block, ExecutionContext context) {
+    public void processBlock(CodeBlock block, ExecutionContext context) {
         if (block == null) return;
 
         // 1. Находим локацию для отладки
@@ -142,7 +160,7 @@ public class ScriptExecutor {
         boolean result = false;
         
         if (condition != null) {
-            result = condition.check(context);
+            result = condition.evaluate(context);
         } else {
             // Fallback для нереализованных условий
             String action = block.getAction();
