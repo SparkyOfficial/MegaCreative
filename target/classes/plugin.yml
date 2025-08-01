@@ -25,6 +25,9 @@ commands:
     description: Switch to build mode
   dev:
     description: Switch to dev mode
+  hub:
+    description: Return to hub world
+    aliases: [lobby, spawn]
   worldsettings:
     description: Open world settings
     usage: /<command>

@@ -11,8 +11,8 @@ import java.util.Optional;
 
 public class DataItemFactory {
     
-    private static final NamespacedKey DATA_TYPE_KEY = new NamespacedKey(MegaCreative.getInstance(), "data_type");
-    private static final NamespacedKey DATA_VALUE_KEY = new NamespacedKey(MegaCreative.getInstance(), "data_value");
+    public static final NamespacedKey DATA_TYPE_KEY = new NamespacedKey(MegaCreative.getInstance(), "data_type");
+    public static final NamespacedKey DATA_VALUE_KEY = new NamespacedKey(MegaCreative.getInstance(), "data_value");
 
     public static ItemStack createDataItem(DataType type, String initialValue) {
         ItemStack item = new ItemStack(Material.BOOK); // Используем книгу как универсальный контейнер

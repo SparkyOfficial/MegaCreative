@@ -23,33 +23,24 @@ public class DataGUI implements Listener {
 
     public DataGUI(Player player) {
         this.player = player;
-        this.inventory = Bukkit.createInventory(null, 9, "§8Создать данные");
+        this.inventory = Bukkit.createInventory(null, 27, "§8Создать шаблон данных");
         Bukkit.getPluginManager().registerEvents(this, MegaCreative.getInstance());
         setupItems();
     }
 
     private void setupItems() {
-        inventory.setItem(0, createButton(DataType.TEXT, "Текст", "Пример текста"));
-        inventory.setItem(1, createButton(DataType.NUMBER, "Число", "123"));
-        inventory.setItem(2, createButton(DataType.VARIABLE, "Переменная", "имя_переменной"));
-
-        // Кнопка "Назад"
-        ItemStack backButton = new ItemStack(Material.BARRIER);
-        ItemMeta backMeta = backButton.getItemMeta();
-        backMeta.setDisplayName("§cЗакрыть");
-        backButton.setItemMeta(backMeta);
-        inventory.setItem(8, backButton);
+        // Добавляем новые типы данных: МАССИВ и ЭФФЕКТ
+        inventory.setItem(0, createButton(DataType.TEXT, "Текст", "Хранит текстовую строку"));
+        inventory.setItem(1, createButton(DataType.NUMBER, "Число", "Хранит целое или дробное число"));
+        inventory.setItem(2, createButton(DataType.VARIABLE, "Переменная", "Ссылается на значение другой переменной"));
+        inventory.setItem(3, createButton(DataType.POTION_EFFECT, "Эффект Зелья", "Хранит тип и уровень эффекта"));
     }
 
-    private ItemStack createButton(DataType type, String name, String exampleValue) {
-        ItemStack item = new ItemStack(Material.WRITABLE_BOOK); // Изменили иконку для консистентности
+    private ItemStack createButton(DataType type, String name, String description) {
+        ItemStack item = new ItemStack(Material.BOOK);
         ItemMeta meta = item.getItemMeta();
-        meta.setDisplayName("§aСоздать " + name);
-        meta.setLore(Arrays.asList(
-                "§7Тип: §f" + type.name(),
-                "§7Пример: §f" + exampleValue,
-                "§e▶ Нажмите для создания"
-        ));
+        meta.setDisplayName("§aПолучить шаблон: " + name);
+        meta.setLore(Arrays.asList("§7" + description, "§e▶ Нажмите, чтобы получить"));
         item.setItemMeta(meta);
         return item;
     }
@@ -60,51 +51,26 @@ public class DataGUI implements Listener {
 
     @EventHandler
     public void onInventoryClick(InventoryClickEvent event) {
-        if (!event.getWhoClicked().equals(player) || !event.getInventory().equals(inventory)) {
-            return;
-        }
+        if (!event.getWhoClicked().equals(player) || !event.getInventory().equals(inventory)) return;
         event.setCancelled(true);
-
         ItemStack clicked = event.getCurrentItem();
         if (clicked == null || !clicked.hasItemMeta()) return;
-        
-        // --- Обработка клика по кнопке ---
-        int slot = event.getSlot();
-        if (slot > 2) { // Если это не кнопка создания данных
-            if(slot == 8) player.closeInventory();
-            return;
+
+        DataType type = null;
+        switch (event.getSlot()) {
+            case 0 -> type = DataType.TEXT;
+            case 1 -> type = DataType.NUMBER;
+            case 2 -> type = DataType.VARIABLE;
+            case 3 -> type = DataType.POTION_EFFECT;
         }
 
-        DataType selectedType = null;
-        String defaultValue = "";
-
-        switch (slot) {
-            case 0 -> {
-                selectedType = DataType.TEXT;
-                defaultValue = "Привет, мир!";
-            }
-            case 1 -> {
-                selectedType = DataType.NUMBER;
-                defaultValue = "100";
-            }
-            case 2 -> {
-                selectedType = DataType.VARIABLE;
-                defaultValue = "score";
-            }
-        }
-
-        // --- Вот место исправления! ---
-        // Создаем final копии переменных, которые будем использовать в лямбде.
-        final DataType finalSelectedType = selectedType;
-        final String finalDefaultValue = defaultValue;
-
-        if (finalSelectedType != null) {
-            new AnvilInputGUI(player, finalDefaultValue, (value) -> {
-                // Внутри этой лямбды мы используем final-копии. Теперь ошибки нет.
-                ItemStack dataItem = DataItemFactory.createDataItem(finalSelectedType, value);
-                player.getInventory().addItem(dataItem);
-                player.sendMessage("§a✓ Создан предмет-данные: " + finalSelectedType.getDisplayName() + " со значением '" + value + "'");
-            });
+        if (type != null) {
+            // Создаем и выдаем предмет-данные с ПУСТЫМ значением
+            ItemStack dataItem = DataItemFactory.createDataItem(type, "Не установлено");
+            player.getInventory().addItem(dataItem);
+            player.sendMessage("§a✓ Вы получили шаблон данных: §e" + type.getDisplayName());
+            player.sendMessage("§7Возьмите его в руку и напишите значение в чат для настройки.");
+            player.closeInventory();
         }
     }
 

@@ -8,6 +8,7 @@ import org.bukkit.command.Command;
 import org.bukkit.command.CommandExecutor;
 import org.bukkit.command.CommandSender;
 import org.bukkit.entity.Player;
+import org.bukkit.persistence.PersistentDataType;
 
 public class DevCommand implements CommandExecutor {
    
@@ -86,6 +87,9 @@ public class DevCommand implements CommandExecutor {
         player.teleport(devWorld.getSpawnLocation());
         player.setGameMode(GameMode.CREATIVE);
         
+        // Очищаем инвентарь перед выдачей предметов
+        player.getInventory().clear();
+        
         // Выдаем блоки кодирования
         CodingItems.giveCodingItems(player);
         
@@ -148,21 +152,22 @@ public class DevCommand implements CommandExecutor {
             // Устанавливаем спавн в безопасное место
             Location spawnLocation = new Location(devWorld, 0, 70, 0);
             
-            // Проверяем, есть ли блок под спавном, если нет - создаем платформу
-            if (spawnLocation.getBlock().getType() == Material.AIR) {
-                // Замена верхнего слоя на стекло и создание платформы
-                for (int x = -16; x <= 16; x++) {
-                    for (int z = -16; z <= 16; z++) {
-                        devWorld.getHighestBlockAt(x, z).getRelative(0, -1, 0).setType(Material.GLASS);
+            // Заполняем область вокруг спавна стеклом, если мир только что создан
+            // Проверяем по флагу, чтобы не делать это каждый раз
+            if (!devWorld.getPersistentDataContainer().has(new NamespacedKey(plugin, "initialized"), PersistentDataType.BYTE)) {
+                plugin.getLogger().info("Производится первичная настройка мира разработки...");
+                
+                // Создаем платформу 50x50 блоков на высоте 60
+                Location center = new Location(devWorld, 0, 60, 0);
+                for (int x = -50; x <= 50; x++) {
+                    for (int z = -50; z <= 50; z++) {
+                        center.clone().add(x, 0, z).getBlock().setType(Material.WHITE_STAINED_GLASS);
                     }
                 }
-
-                // Создание стеклянной платформы на спавне
-                for (int x = -2; x <= 2; x++) {
-                    for (int z = -2; z <= 2; z++) {
-                        spawnLocation.clone().add(x, -1, z).getBlock().setType(Material.GLASS);
-                    }
-                }
+                
+                spawnLocation = new Location(devWorld, 0, 62, 0);
+                // Ставим флаг, что мир настроен
+                devWorld.getPersistentDataContainer().set(new NamespacedKey(plugin, "initialized"), PersistentDataType.BYTE, (byte)1);
             }
             
             devWorld.setSpawnLocation(spawnLocation);

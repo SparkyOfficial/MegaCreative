@@ -46,6 +46,7 @@ com\megacreative\coding\actions\BroadcastAction.class
 com\megacreative\coding\BlockConnectionVisualizer$2.class
 com\megacreative\coding\actions\SetTimeAction.class
 com\megacreative\coding\actions\IsInWorldCondition.class
+com\megacreative\listeners\DataItemListener.class
 com\megacreative\commands\DevCommand.class
 com\megacreative\listeners\InventoryClickListener.class
 com\megacreative\coding\data\DataItemFactory$DataItem.class
@@ -79,6 +80,7 @@ com\megacreative\MegaCreative.class
 com\megacreative\coding\actions\GetVarAction.class
 com\megacreative\commands\PlayCommand.class
 com\megacreative\coding\actions\HasPermissionCondition.class
+com\megacreative\commands\HubCommand.class
 com\megacreative\commands\TestScriptCommand.class
 com\megacreative\managers\PlayerManager.class
 com\megacreative\coding\ScriptDebugger.class

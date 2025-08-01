@@ -17,6 +17,7 @@ import org.bukkit.block.data.type.WallSign;
 import org.bukkit.block.BlockFace;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.inventory.meta.ItemMeta;
+import org.bukkit.event.block.BlockBreakEvent;
 
 import java.util.List;
 import java.util.Map;
@@ -63,10 +64,35 @@ public class BlockPlacementHandler implements Listener {
         Player player = event.getPlayer();
         Block block = event.getBlockPlaced();
         Material mat = block.getType();
-        if (!ACTIONS.containsKey(mat)) return;
+        
+        // Проверяем, является ли предмет "блоком кода" по названию, а не просто по материалу.
+        if (!isCodingBlock(event.getItemInHand())) return;
         if (!isInDevWorld(player)) return;
         
-        handleBlockConfiguration(player, mat, block.getLocation(), false);
+        // НЕ отменяем событие, позволяем блоку установиться
+        
+        // Запускаем настройку через 1 тик, чтобы сервер успел обработать установку
+        plugin.getServer().getScheduler().runTaskLater(plugin, () -> {
+            handleBlockConfiguration(player, mat, block.getLocation(), false);
+        }, 1L);
+    }
+
+    /**
+     * Обрабатывает ломание блоков кодирования
+     */
+    @EventHandler
+    public void onBlockBreak(BlockBreakEvent event) {
+        if (!isInDevWorld(event.getPlayer())) return;
+        
+        Location loc = event.getBlock().getLocation();
+        if (blockCodeBlocks.containsKey(loc)) {
+            blockCodeBlocks.remove(loc);
+            var world = plugin.getWorldManager().findCreativeWorldByBukkit(event.getPlayer().getWorld());
+            if (world != null) {
+                plugin.getBlockConnectionVisualizer().removeBlock(world, loc);
+            }
+            event.getPlayer().sendMessage("§cБлок кода удален.");
+        }
     }
 
     /**
