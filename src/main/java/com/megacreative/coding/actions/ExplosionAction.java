@@ -1,5 +1,6 @@
 package com.megacreative.coding.actions;
 
+import com.megacreative.coding.BlockAction;
 import com.megacreative.coding.CodeBlock;
 import com.megacreative.coding.ExecutionContext;
 import com.megacreative.coding.ParameterResolver;
@@ -11,25 +12,28 @@ public class ExplosionAction implements BlockAction {
     public void execute(ExecutionContext context) {
         Player player = context.getPlayer();
         CodeBlock block = context.getCurrentBlock();
-        
+
         if (player == null || block == null) return;
-        
+
+        // Получаем и разрешаем параметры
         Object rawPower = block.getParameter("power");
         Object rawBreakBlocks = block.getParameter("breakBlocks");
-        
-        String powerStr = ParameterResolver.resolve(context, rawPower).toString();
-        String breakBlocksStr = ParameterResolver.resolve(context, rawBreakBlocks).toString();
-        
+
+        String powerStr = ParameterResolver.resolve(context, rawPower);
+        String breakBlocksStr = ParameterResolver.resolve(context, rawBreakBlocks);
+
         try {
-            float power = Float.parseFloat(powerStr);
-            boolean breakBlocks = Boolean.parseBoolean(breakBlocksStr);
+            float power = powerStr != null ? Float.parseFloat(powerStr) : 4.0f;
+            boolean breakBlocks = breakBlocksStr != null ? Boolean.parseBoolean(breakBlocksStr) : true;
             
-            Location explosionLocation = player.getLocation();
-            player.getWorld().createExplosion(explosionLocation, power, breakBlocks);
+            Location location = context.getBlockLocation() != null ? 
+                context.getBlockLocation() : player.getLocation();
             
-            player.sendMessage("§a✓ Создан взрыв мощностью " + power);
+            location.getWorld().createExplosion(location, power, breakBlocks);
+            player.sendMessage("§a💥 Взрыв создан с мощностью " + power + "!");
+            
         } catch (NumberFormatException e) {
-            player.sendMessage("§cОшибка: мощность взрыва должна быть числом!");
+            player.sendMessage("§cОшибка: мощность должна быть числом");
         }
     }
 } 

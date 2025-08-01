@@ -1,5 +1,6 @@
 package com.megacreative.coding.actions;
 
+import com.megacreative.coding.BlockAction;
 import com.megacreative.coding.CodeBlock;
 import com.megacreative.coding.ExecutionContext;
 import com.megacreative.coding.ParameterResolver;
@@ -11,19 +12,24 @@ public class SetGameModeAction implements BlockAction {
     public void execute(ExecutionContext context) {
         Player player = context.getPlayer();
         CodeBlock block = context.getCurrentBlock();
-        
+
         if (player == null || block == null) return;
-        
+
+        // Получаем и разрешаем параметры
         Object rawMode = block.getParameter("mode");
-        String modeStr = ParameterResolver.resolve(context, rawMode).toString();
-        
+
+        String modeStr = ParameterResolver.resolve(context, rawMode);
+
+        if (modeStr == null) return;
+
         try {
             GameMode gameMode = GameMode.valueOf(modeStr.toUpperCase());
             player.setGameMode(gameMode);
-            player.sendMessage("§a✓ Режим игры изменен на: " + gameMode.name());
+            
+            player.sendMessage("§a🎮 Режим игры изменен на: " + gameMode.name());
+            
         } catch (IllegalArgumentException e) {
-            player.sendMessage("§cОшибка: неизвестный режим игры: " + modeStr);
-            player.sendMessage("§7Доступные режимы: SURVIVAL, CREATIVE, ADVENTURE, SPECTATOR");
+            player.sendMessage("§cНеизвестный режим игры: " + modeStr);
         }
     }
 } 

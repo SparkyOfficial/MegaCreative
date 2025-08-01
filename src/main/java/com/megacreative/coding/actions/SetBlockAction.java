@@ -1,5 +1,6 @@
 package com.megacreative.coding.actions;
 
+import com.megacreative.coding.BlockAction;
 import com.megacreative.coding.CodeBlock;
 import com.megacreative.coding.ExecutionContext;
 import com.megacreative.coding.ParameterResolver;
@@ -12,36 +13,44 @@ public class SetBlockAction implements BlockAction {
     public void execute(ExecutionContext context) {
         Player player = context.getPlayer();
         CodeBlock block = context.getCurrentBlock();
-        
+
         if (player == null || block == null) return;
-        
+
+        // Получаем и разрешаем параметры
         Object rawMaterial = block.getParameter("material");
         Object rawCoords = block.getParameter("coords");
-        
-        String materialStr = ParameterResolver.resolve(context, rawMaterial).toString();
-        String coordsStr = ParameterResolver.resolve(context, rawCoords).toString();
-        
+
+        String materialStr = ParameterResolver.resolve(context, rawMaterial);
+        String coordsStr = ParameterResolver.resolve(context, rawCoords);
+
+        if (materialStr == null) return;
+
         try {
             Material material = Material.valueOf(materialStr.toUpperCase());
+            Location location;
             
-            // Парсим координаты
-            String[] parts = coordsStr.split(" ");
-            if (parts.length == 3) {
-                int x = Integer.parseInt(parts[0]);
-                int y = Integer.parseInt(parts[1]);
-                int z = Integer.parseInt(parts[2]);
-                
-                Location blockLocation = new Location(player.getWorld(), x, y, z);
-                blockLocation.getBlock().setType(material);
-                
-                player.sendMessage("§a✓ Блок " + material.name() + " установлен на координатах " + coordsStr);
+            if (coordsStr != null && !coordsStr.isEmpty()) {
+                // Парсим координаты "x y z"
+                String[] coords = coordsStr.split(" ");
+                if (coords.length == 3) {
+                    int x = Integer.parseInt(coords[0]);
+                    int y = Integer.parseInt(coords[1]);
+                    int z = Integer.parseInt(coords[2]);
+                    location = new Location(player.getWorld(), x, y, z);
+                } else {
+                    location = player.getLocation();
+                }
             } else {
-                player.sendMessage("§cОшибка: координаты должны быть в формате 'x y z'");
+                location = player.getLocation();
             }
+            
+            location.getBlock().setType(material);
+            player.sendMessage("§a🔲 Блок " + material.name() + " установлен!");
+            
         } catch (NumberFormatException e) {
-            player.sendMessage("§cОшибка: координаты должны быть числами!");
+            player.sendMessage("§cОшибка в координатах: " + coordsStr);
         } catch (IllegalArgumentException e) {
-            player.sendMessage("§cОшибка: неизвестный материал: " + materialStr);
+            player.sendMessage("§cНеизвестный материал: " + materialStr);
         }
     }
 } 

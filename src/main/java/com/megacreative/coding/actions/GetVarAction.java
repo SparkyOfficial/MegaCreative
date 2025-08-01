@@ -1,25 +1,29 @@
 package com.megacreative.coding.actions;
 
+import com.megacreative.coding.BlockAction;
 import com.megacreative.coding.CodeBlock;
 import com.megacreative.coding.ExecutionContext;
+import com.megacreative.coding.ParameterResolver;
 import org.bukkit.entity.Player;
 
 public class GetVarAction implements BlockAction {
     @Override
     public void execute(ExecutionContext context) {
+        Player player = context.getPlayer();
         CodeBlock block = context.getCurrentBlock();
-        if (block == null) return;
+
+        if (player == null || block == null) return;
+
+        // Получаем и разрешаем параметры
+        Object rawVarName = block.getParameter("var");
+
+        String varName = ParameterResolver.resolve(context, rawVarName);
+
+        if (varName == null) return;
+
+        Object value = context.getVariable(varName);
+        String displayValue = value != null ? value.toString() : "не установлена";
         
-        String varName = (String) block.getParameter("var");
-        if (varName != null) {
-            Object value = context.getVariable(varName);
-            String stringValue = value != null ? value.toString() : "";
-            context.setVariable("lastValue", stringValue);
-            
-            Player player = context.getPlayer();
-            if (player != null) {
-                player.sendMessage("§aЗначение переменной '" + varName + "': " + stringValue);
-            }
-        }
+        player.sendMessage("§a📖 Переменная '" + varName + "' = " + displayValue);
     }
 } 

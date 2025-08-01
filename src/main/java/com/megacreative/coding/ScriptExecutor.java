@@ -31,7 +31,7 @@ public class ScriptExecutor {
     }
 
     private void registerActions() {
-        // Регистрируем все наши классы-действия
+        // Базовые действия
         actionRegistry.put("sendMessage", new SendMessageAction());
         actionRegistry.put("teleport", new TeleportAction());
         actionRegistry.put("giveItem", new GiveItemAction());
@@ -40,37 +40,37 @@ public class ScriptExecutor {
         actionRegistry.put("spawnMob", new SpawnMobAction());
         
         // Математические операции
-        // actionRegistry.put("addVar", new AddVarAction());
-        // actionRegistry.put("subVar", new SubVarAction());
-        // actionRegistry.put("mulVar", new MulVarAction());
-        // actionRegistry.put("divVar", new DivVarAction());
+        actionRegistry.put("addVar", new AddVarAction());
+        actionRegistry.put("subVar", new SubVarAction());
+        actionRegistry.put("mulVar", new MulVarAction());
+        actionRegistry.put("divVar", new DivVarAction());
         
         // Действия с миром
-        // actionRegistry.put("playSound", new PlaySoundAction());
-        // actionRegistry.put("effect", new EffectAction());
-        // actionRegistry.put("command", new CommandAction());
-        // actionRegistry.put("healPlayer", new HealPlayerAction());
-        // actionRegistry.put("setGameMode", new SetGameModeAction());
+        actionRegistry.put("playSound", new PlaySoundAction());
+        actionRegistry.put("effect", new EffectAction());
+        actionRegistry.put("command", new CommandAction());
+        actionRegistry.put("healPlayer", new HealPlayerAction());
+        actionRegistry.put("setGameMode", new SetGameModeAction());
         
         // Действия с временем и погодой
-        // actionRegistry.put("setTime", new SetTimeAction());
-        // actionRegistry.put("setWeather", new SetWeatherAction());
+        actionRegistry.put("setTime", new SetTimeAction());
+        actionRegistry.put("setWeather", new SetWeatherAction());
         
         // Действия с блоками и взрывами
-        // actionRegistry.put("explosion", new ExplosionAction());
-        // actionRegistry.put("setBlock", new SetBlockAction());
+        actionRegistry.put("explosion", new ExplosionAction());
+        actionRegistry.put("setBlock", new SetBlockAction());
         
         // Получение данных
-        // actionRegistry.put("getVar", new GetVarAction());
-        // actionRegistry.put("getPlayerName", new GetPlayerNameAction());
+        actionRegistry.put("getVar", new GetVarAction());
+        actionRegistry.put("getPlayerName", new GetPlayerNameAction());
         
         // Глобальные переменные игрока
-        // actionRegistry.put("setGlobalVar", new SetGlobalVariableAction());
-        // actionRegistry.put("getGlobalVar", new GetGlobalVariableAction());
+        actionRegistry.put("setGlobalVar", new SetGlobalVariableAction());
+        actionRegistry.put("getGlobalVar", new GetGlobalVariableAction());
         
         // Серверные переменные
-        // actionRegistry.put("setServerVar", new SetServerVariableAction());
-        // actionRegistry.put("getServerVar", new GetServerVariableAction());
+        actionRegistry.put("setServerVar", new SetServerVariableAction());
+        actionRegistry.put("getServerVar", new GetServerVariableAction());
         
         // Новые важные действия
         actionRegistry.put("wait", new WaitAction());

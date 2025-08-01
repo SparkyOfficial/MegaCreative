@@ -1,8 +1,10 @@
 package com.megacreative.coding.actions;
 
+import com.megacreative.coding.BlockAction;
 import com.megacreative.coding.CodeBlock;
 import com.megacreative.coding.ExecutionContext;
-import org.bukkit.World;
+import com.megacreative.coding.ParameterResolver;
+import org.bukkit.WeatherType;
 import org.bukkit.entity.Player;
 
 public class SetWeatherAction implements BlockAction {
@@ -10,38 +12,37 @@ public class SetWeatherAction implements BlockAction {
     public void execute(ExecutionContext context) {
         Player player = context.getPlayer();
         CodeBlock block = context.getCurrentBlock();
-        if (block == null) return;
 
-        String weather = (String) block.getParameter("weather");
-        if (weather != null) {
-            World world = player != null ? player.getWorld() : 
-                org.bukkit.Bukkit.getWorld(context.getCreativeWorld().getWorldName());
-            
-            if (world != null) {
-                switch (weather.toLowerCase()) {
-                    case "clear":
-                        world.setStorm(false);
-                        world.setThundering(false);
-                        break;
-                    case "rain":
-                        world.setStorm(true);
-                        world.setThundering(false);
-                        break;
-                    case "thunder":
-                        world.setStorm(true);
-                        world.setThundering(true);
-                        break;
-                    default:
-                        if (player != null) {
-                            player.sendMessage("§cНеизвестный тип погоды: " + weather);
-                        }
-                        return;
-                }
-                
-                if (player != null) {
-                    player.sendMessage("§aПогода изменена на: " + weather);
-                }
+        if (player == null || block == null) return;
+
+        // Получаем и разрешаем параметры
+        Object rawWeather = block.getParameter("weather");
+
+        String weatherStr = ParameterResolver.resolve(context, rawWeather);
+
+        if (weatherStr == null) return;
+
+        try {
+            WeatherType weatherType;
+            switch (weatherStr.toLowerCase()) {
+                case "clear":
+                case "sunny":
+                    weatherType = WeatherType.CLEAR;
+                    break;
+                case "rain":
+                case "rainy":
+                    weatherType = WeatherType.DOWNFALL;
+                    break;
+                default:
+                    player.sendMessage("§cНеизвестный тип погоды: " + weatherStr);
+                    return;
             }
+            
+            player.setPlayerWeather(weatherType);
+            player.sendMessage("§a🌤 Погода изменена на: " + weatherStr);
+            
+        } catch (Exception e) {
+            player.sendMessage("§cОшибка установки погоды: " + e.getMessage());
         }
     }
 } 

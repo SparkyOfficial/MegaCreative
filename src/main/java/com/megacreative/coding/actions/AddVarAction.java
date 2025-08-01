@@ -9,27 +9,42 @@ import org.bukkit.entity.Player;
 public class AddVarAction implements BlockAction {
     @Override
     public void execute(ExecutionContext context) {
+        Player player = context.getPlayer();
         CodeBlock block = context.getCurrentBlock();
-        if (block == null) return;
-        
-        String varName = (String) block.getParameter("var");
-        String valueStr = (String) block.getParameter("value");
 
-        if (varName != null && valueStr != null) {
-            try {
-                // Получаем текущее значение или 0, если его нет
-                Object currentValue = context.getVariable(varName);
-                double current = currentValue != null ? Double.parseDouble(currentValue.toString()) : 0.0;
-                double toAdd = Double.parseDouble(valueStr);
-                
-                context.setVariable(varName, String.valueOf(current + toAdd));
-                
-            } catch (NumberFormatException e) {
-                Player player = context.getPlayer();
-                if (player != null) {
-                    player.sendMessage("§cОшибка: значение для сложения должно быть числом.");
+        if (player == null || block == null) return;
+
+        // Получаем и разрешаем параметры
+        Object rawVarName = block.getParameter("var");
+        Object rawValue = block.getParameter("value");
+
+        String varName = ParameterResolver.resolve(context, rawVarName);
+        String valueStr = ParameterResolver.resolve(context, rawValue);
+
+        if (varName == null || valueStr == null) return;
+
+        try {
+            // Получаем текущее значение переменной
+            Object currentValue = context.getVariable(varName);
+            double currentNum = 0.0;
+            
+            if (currentValue != null) {
+                try {
+                    currentNum = Double.parseDouble(currentValue.toString());
+                } catch (NumberFormatException e) {
+                    // Если не число, начинаем с 0
                 }
             }
+            
+            // Добавляем новое значение
+            double addValue = Double.parseDouble(valueStr);
+            double result = currentNum + addValue;
+            
+            context.setVariable(varName, result);
+            player.sendMessage("§a✓ Переменная '" + varName + "' увеличена на " + addValue + " = " + result);
+            
+        } catch (NumberFormatException e) {
+            player.sendMessage("§cОшибка: значение должно быть числом");
         }
     }
 } 
