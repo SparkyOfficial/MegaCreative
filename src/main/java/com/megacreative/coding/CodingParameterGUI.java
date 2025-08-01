@@ -300,21 +300,31 @@ public class CodingParameterGUI implements Listener {
         List<ParameterField> fields = getParameterFields(action);
         int startIndex = currentPage * ITEMS_PER_PAGE;
         
-        if (clickedSlot < fields.size() - startIndex) {
-            ParameterField field = fields.get(startIndex + clickedSlot);
-            String currentValue = parameters.getOrDefault(field.getKey(), field.getDefaultValue()).toString();
-            
-            // Открываем наковальню для ввода
-            new AnvilInputGUI(player, currentValue, (newValue) -> {
-                // Этот код выполнится, когда игрок подтвердит ввод в наковальне
-                parameters.put(field.getKey(), newValue);
-                player.sendMessage("§aПараметр '" + field.getName() + "' обновлен!");
+        if (clickedSlot < fields.size() - startIndex && startIndex + clickedSlot < fields.size()) {
+            try {
+                ParameterField field = fields.get(startIndex + clickedSlot);
+                String currentValue = parameters.getOrDefault(field.getKey(), field.getDefaultValue()).toString();
+                
+                // Открываем наковальню для ввода
+                new AnvilInputGUI(player, currentValue, (newValue) -> {
+                    try {
+                        // Этот код выполнится, когда игрок подтвердит ввод в наковальне
+                        parameters.put(field.getKey(), newValue);
+                        player.sendMessage("§a✅ Параметр '" + field.getName() + "' обновлен!");
 
-                // Важно: открываем GUI заново, чтобы игрок увидел изменения и мог настроить другой параметр
-                Bukkit.getScheduler().runTask(com.megacreative.MegaCreative.getInstance(), () -> 
-                    new CodingParameterGUI(player, action, blockLocation, onComplete).open()
-                );
-            });
+                        // Важно: открываем GUI заново, чтобы игрок увидел изменения и мог настроить другой параметр
+                        Bukkit.getScheduler().runTask(com.megacreative.MegaCreative.getInstance(), () -> 
+                            new CodingParameterGUI(player, action, blockLocation, onComplete).open()
+                        );
+                    } catch (Exception e) {
+                        player.sendMessage("§c❌ Ошибка при обновлении параметра: " + e.getMessage());
+                        com.megacreative.MegaCreative.getInstance().getLogger().warning("Ошибка в CodingParameterGUI: " + e.getMessage());
+                    }
+                });
+            } catch (Exception e) {
+                player.sendMessage("§c❌ Ошибка при выборе параметра: " + e.getMessage());
+                com.megacreative.MegaCreative.getInstance().getLogger().warning("Ошибка в CodingParameterGUI при выборе параметра: " + e.getMessage());
+            }
         }
     }
 

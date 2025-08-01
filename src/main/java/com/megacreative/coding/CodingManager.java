@@ -64,7 +64,7 @@ public class CodingManager implements Listener {
                 if (script.isEnabled() && script.getRootBlock() != null &&
                     script.getRootBlock().getMaterial() == org.bukkit.Material.DIAMOND_BLOCK &&
                     "onJoin".equals(script.getRootBlock().getAction())) {
-                    CreativeWorld creativeWorld = plugin.getWorldManager().getWorld(worldId);
+                    CreativeWorld creativeWorld = plugin.getWorldManager().getWorldByName(worldId);
                     if (creativeWorld == null || !creativeWorld.getMode().isCodeEnabled()) {
                         continue; // Пропускаем выполнение если код выключен
                     }
@@ -89,7 +89,7 @@ public class CodingManager implements Listener {
                 if (script.isEnabled() && script.getRootBlock() != null &&
                     script.getRootBlock().getMaterial() == org.bukkit.Material.DIAMOND_BLOCK &&
                     "onChat".equals(script.getRootBlock().getAction())) {
-                    CreativeWorld creativeWorld = plugin.getWorldManager().getWorld(worldId);
+                    CreativeWorld creativeWorld = plugin.getWorldManager().getWorldByName(worldId);
                     if (creativeWorld == null || !creativeWorld.getMode().isCodeEnabled()) {
                         continue; // Пропускаем выполнение если код выключен
                     }
@@ -114,7 +114,7 @@ public class CodingManager implements Listener {
                 if (script.isEnabled() && script.getRootBlock() != null &&
                     script.getRootBlock().getMaterial() == org.bukkit.Material.DIAMOND_BLOCK &&
                     "onLeave".equals(script.getRootBlock().getAction())) {
-                    CreativeWorld creativeWorld = plugin.getWorldManager().getWorld(worldId);
+                    CreativeWorld creativeWorld = plugin.getWorldManager().getWorldByName(worldId);
                     if (creativeWorld == null || !creativeWorld.getMode().isCodeEnabled()) {
                         continue; // Пропускаем выполнение если код выключен
                     }
@@ -139,7 +139,7 @@ public class CodingManager implements Listener {
                 if (script.isEnabled() && script.getRootBlock() != null &&
                     script.getRootBlock().getMaterial() == org.bukkit.Material.DIAMOND_BLOCK &&
                     "onInteract".equals(script.getRootBlock().getAction())) {
-                    CreativeWorld creativeWorld = plugin.getWorldManager().getWorld(worldId);
+                    CreativeWorld creativeWorld = plugin.getWorldManager().getWorldByName(worldId);
                     if (creativeWorld == null || !creativeWorld.getMode().isCodeEnabled()) {
                         continue; // Пропускаем выполнение если код выключен
                     }

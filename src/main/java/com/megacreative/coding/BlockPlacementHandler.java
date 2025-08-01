@@ -250,11 +250,11 @@ public class BlockPlacementHandler implements Listener {
                     player.sendMessage("§7§f" + firstBlock.getAction() + " §7→ §f" + secondBlock.getAction());
                     playerSelections.remove(player.getUniqueId());
                     
-                    // Обновляем визуализацию
-                    var creativeWorld = plugin.getWorldManager().getWorld(player.getWorld().getName());
-                    if(creativeWorld != null) {
-                         plugin.getBlockConnectionVisualizer().addBlock(creativeWorld, firstBlockLoc, firstBlock);
-                    }
+                            // Обновляем визуализацию
+        var creativeWorld = plugin.getWorldManager().getWorldByName(player.getWorld().getName());
+        if(creativeWorld != null) {
+             plugin.getBlockConnectionVisualizer().addBlock(creativeWorld, firstBlockLoc, firstBlock);
+        }
                 }
             } else {
                 player.sendMessage("§c❌ Это не блок кода! Выберите блок кода для соединения.");
@@ -277,7 +277,7 @@ public class BlockPlacementHandler implements Listener {
                 blockCodeBlocks.put(location, codeBlock);
                 
                 // Добавляем/обновляем блок в визуализации
-                var world = plugin.getWorldManager().getWorld(player.getWorld().getName());
+                var world = plugin.getWorldManager().getWorldByName(player.getWorld().getName());
                 if (world != null) {
                     plugin.getBlockConnectionVisualizer().addBlock(world, location, codeBlock);
                 }
@@ -426,16 +426,16 @@ public class BlockPlacementHandler implements Listener {
         if (meta == null || !meta.hasDisplayName()) return false;
         
         String displayName = meta.getDisplayName();
-        return displayName.contains("Событие игрока") || 
-               displayName.contains("Условие игрока") || 
-               displayName.contains("Действие игрока") || 
-               displayName.contains("Присвоить переменную") || 
-               displayName.contains("Иначе") || 
-               displayName.contains("Игровое действие") || 
-               displayName.contains("Если переменная") || 
-               displayName.contains("Если игра") || 
-               displayName.contains("Если существо") || 
-               displayName.contains("Получить данные");
+        return displayName.contains("§b§lСобытие игрока") || 
+               displayName.contains("§6§lУсловие игрока") || 
+               displayName.contains("§7§lДействие игрока") || 
+               displayName.contains("§f§lПрисвоить переменную") || 
+               displayName.contains("§e§lИначе") || 
+               displayName.contains("§8§lИгровое действие") || 
+               displayName.contains("§5§lЕсли переменная") || 
+               displayName.contains("§c§lЕсли игра") || 
+               displayName.contains("§d§lЕсли существо") || 
+               displayName.contains("§a§lПолучить данные");
     }
     
     /**
