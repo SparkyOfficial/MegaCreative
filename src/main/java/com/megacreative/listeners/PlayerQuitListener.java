@@ -16,6 +16,9 @@ public class PlayerQuitListener implements Listener {
     
     @EventHandler
     public void onPlayerQuit(PlayerQuitEvent event) {
+        // Сохраняем данные игрока
+        plugin.getDataManager().savePlayerData(event.getPlayer());
+        
         // Удаление игрока из онлайна всех миров
         plugin.getWorldManager().getAllPublicWorlds().forEach(world -> 
             world.removeOnlinePlayer(event.getPlayer().getUniqueId())

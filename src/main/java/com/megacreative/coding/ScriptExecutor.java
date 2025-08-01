@@ -55,6 +55,14 @@ public class ScriptExecutor {
         // Получение данных
         actionRegistry.put("getVar", new GetVarAction());
         actionRegistry.put("getPlayerName", new GetPlayerNameAction());
+        
+        // Глобальные переменные игрока
+        actionRegistry.put("setGlobalVar", new SetGlobalVariableAction());
+        actionRegistry.put("getGlobalVar", new GetGlobalVariableAction());
+        
+        // Серверные переменные
+        actionRegistry.put("setServerVar", new SetServerVariableAction());
+        actionRegistry.put("getServerVar", new GetServerVariableAction());
     }
 
     private void registerConditions() {

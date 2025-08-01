@@ -219,6 +219,26 @@ public class CodingParameterGUI implements Listener {
                 return Arrays.asList(
                     new ParameterField("var", "Переменная", "myVar", Material.BOOK)
                 );
+            case "setGlobalVar":
+                return Arrays.asList(
+                    new ParameterField("var", "Глобальная переменная", "money", Material.EMERALD),
+                    new ParameterField("value", "Значение", "100", Material.GOLD_INGOT)
+                );
+            case "getGlobalVar":
+                return Arrays.asList(
+                    new ParameterField("var", "Глобальная переменная", "money", Material.EMERALD),
+                    new ParameterField("localVar", "Локальная переменная", "temp", Material.BOOK)
+                );
+            case "setServerVar":
+                return Arrays.asList(
+                    new ParameterField("var", "Серверная переменная", "event_active", Material.BEACON),
+                    new ParameterField("value", "Значение", "true", Material.GOLD_INGOT)
+                );
+            case "getServerVar":
+                return Arrays.asList(
+                    new ParameterField("var", "Серверная переменная", "event_active", Material.BEACON),
+                    new ParameterField("localVar", "Локальная переменная", "temp", Material.BOOK)
+                );
             default:
                 return Arrays.asList();
         }

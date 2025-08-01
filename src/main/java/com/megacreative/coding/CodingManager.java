@@ -67,6 +67,7 @@ public class CodingManager implements Listener {
                     CreativeWorld creativeWorld = plugin.getWorldManager().getWorld(worldId);
                     if (creativeWorld == null) continue;
                     ExecutionContext context = ExecutionContext.builder()
+                            .plugin(plugin)
                             .player(event.getPlayer())
                             .creativeWorld(creativeWorld)
                             .event(event)
@@ -89,6 +90,7 @@ public class CodingManager implements Listener {
                     CreativeWorld creativeWorld = plugin.getWorldManager().getWorld(worldId);
                     if (creativeWorld == null) continue;
                     ExecutionContext context = ExecutionContext.builder()
+                            .plugin(plugin)
                             .player(event.getPlayer())
                             .creativeWorld(creativeWorld)
                             .event(event)
@@ -111,6 +113,7 @@ public class CodingManager implements Listener {
                     CreativeWorld creativeWorld = plugin.getWorldManager().getWorld(worldId);
                     if (creativeWorld == null) continue;
                     ExecutionContext context = ExecutionContext.builder()
+                            .plugin(plugin)
                             .player(event.getPlayer())
                             .creativeWorld(creativeWorld)
                             .event(event)
@@ -133,6 +136,7 @@ public class CodingManager implements Listener {
                     CreativeWorld creativeWorld = plugin.getWorldManager().getWorld(worldId);
                     if (creativeWorld == null) continue;
                     ExecutionContext context = ExecutionContext.builder()
+                            .plugin(plugin)
                             .player(event.getPlayer())
                             .creativeWorld(creativeWorld)
                             .event(event)

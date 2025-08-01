@@ -1,5 +1,6 @@
 package com.megacreative.coding;
 
+import com.megacreative.MegaCreative;
 import com.megacreative.models.CreativeWorld;
 import lombok.Builder;
 import lombok.Getter;
@@ -18,6 +19,7 @@ import java.util.Map;
 @Builder
 public class ExecutionContext {
 
+    private final MegaCreative plugin; // Ссылка на основной плагин
     private final Player player; // Игрок, который вызвал событие (может быть null)
     private final CreativeWorld creativeWorld; // Мир, в котором выполняется скрипт
     private final Event event; // Само событие, которое вызвало скрипт
@@ -35,6 +37,7 @@ public class ExecutionContext {
      */
     public ExecutionContext withCurrentBlock(CodeBlock currentBlock, Location newLocation) {
         return ExecutionContext.builder()
+                .plugin(this.plugin)
                 .player(this.player)
                 .creativeWorld(this.creativeWorld)
                 .event(this.event)

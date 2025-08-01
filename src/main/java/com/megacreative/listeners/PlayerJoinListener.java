@@ -16,6 +16,9 @@ public class PlayerJoinListener implements Listener {
     
     @EventHandler
     public void onPlayerJoin(PlayerJoinEvent event) {
+        // Загружаем данные игрока
+        plugin.getDataManager().loadPlayerData(event.getPlayer());
+        
         // Выдача стартовых предметов через тик, чтобы инвентарь успел загрузиться
         Bukkit.getScheduler().runTaskLater(plugin, () -> {
             plugin.getPlayerManager().giveStarterItems(event.getPlayer());

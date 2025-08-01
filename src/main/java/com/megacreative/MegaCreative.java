@@ -28,6 +28,7 @@ public class MegaCreative extends JavaPlugin {
     private BlockPlacementHandler blockPlacementHandler;
     private BlockConnectionVisualizer blockConnectionVisualizer;
     private ScriptDebugger scriptDebugger;
+    private DataManager dataManager;
     private Logger logger;
     
     // Система комментариев
@@ -43,13 +44,13 @@ public class MegaCreative extends JavaPlugin {
         configManager = new ConfigManager(this);
         configManager.loadConfig();
         
-        // Инициализация менеджеров
-        worldManager = new WorldManager(this);
-        playerManager = new PlayerManager(this);
-        codingManager = new CodingManager(this);
-        blockPlacementHandler = new BlockPlacementHandler(this);
-        blockConnectionVisualizer = new BlockConnectionVisualizer(this);
-        scriptDebugger = new ScriptDebugger(this);
+        // Инициализируем менеджеры
+        this.worldManager = new WorldManager(this);
+        this.playerManager = new PlayerManager(this);
+        this.blockPlacementHandler = new BlockPlacementHandler(this);
+        this.blockConnectionVisualizer = new BlockConnectionVisualizer(this);
+        this.scriptDebugger = new ScriptDebugger(this);
+        this.dataManager = new DataManager(this);
         
         // Регистрируем команды и события
         registerCommands();
@@ -60,10 +61,17 @@ public class MegaCreative extends JavaPlugin {
     
     @Override
     public void onDisable() {
+        // Сохраняем все данные
+        if (dataManager != null) {
+            dataManager.saveAllData();
+        }
+        
+        // Сохраняем миры
         if (worldManager != null) {
             worldManager.saveAllWorlds();
         }
-        getLogger().info("MegaCreative отключен!");
+        
+        logger.info("MegaCreative отключен!");
     }
     
     private void registerCommands() {
@@ -121,6 +129,10 @@ public class MegaCreative extends JavaPlugin {
     
     public ScriptDebugger getScriptDebugger() {
         return scriptDebugger;
+    }
+    
+    public DataManager getDataManager() {
+        return dataManager;
     }
     
     public Map<UUID, CreativeWorld> getCommentInputs() {
