@@ -65,6 +65,7 @@ com\megacreative\gui\WorldCreationGUI.class
 com\megacreative\managers\DataManager.class
 com\megacreative\commands\ScriptsCommand.class
 com\megacreative\coding\BlockConfiguration$BlockConfig.class
+com\megacreative\managers\BlockConfigManager.class
 com\megacreative\coding\data\DataItemFactory.class
 com\megacreative\coding\actions\SpawnMobAction.class
 com\megacreative\coding\ExecutionContext$ExecutionContextBuilder.class
@@ -107,6 +108,7 @@ com\megacreative\listeners\PlayerDeathListener.class
 com\megacreative\coding\actions\SendMessageAction.class
 com\megacreative\coding\actions\CallFunctionAction.class
 com\megacreative\coding\actions\HealPlayerAction.class
+com\megacreative\coding\conditions\IsBlockTypeCondition.class
 com\megacreative\coding\actions\BroadcastAction.class
 com\megacreative\coding\BlockConnectionVisualizer$2.class
 com\megacreative\coding\conditions\PlayerGameModeCondition.class

@@ -22,6 +22,7 @@ import java.util.logging.Logger;
 import com.megacreative.commands.CreateScriptCommand;
 import java.util.ArrayList;
 import java.util.List;
+import com.megacreative.managers.BlockConfigManager;
 
 public class MegaCreative extends JavaPlugin {
     
@@ -39,9 +40,11 @@ public class MegaCreative extends JavaPlugin {
     private TrustedPlayerManager trustedPlayerManager;
     private Logger logger;
     
-    // Система комментариев
+    // --- НОВЫЙ МЕНЕДЖЕР ДЛЯ ВИРТУАЛЬНЫХ ИНВЕНТАРЕЙ ---
+    private BlockConfigManager blockConfigManager;
+
+    // Maps для хранения состояния
     private Map<UUID, CreativeWorld> commentInputs = new HashMap<>();
-    // Система подтверждения удаления мира
     private Map<UUID, String> deleteConfirmations = new HashMap<>();
     
     @Override
@@ -64,8 +67,10 @@ public class MegaCreative extends JavaPlugin {
         this.scoreboardManager = new ScoreboardManager(this);
         this.trustedPlayerManager = new TrustedPlayerManager(this);
         
-        // --- ВОТ ГЛАВНОЕ ИСПРАВЛЕНИЕ ---
-        // Теперь мы загружаем миры, когда все остальные системы готовы
+        // --- ИНИЦИАЛИЗАЦИЯ НОВОГО МЕНЕДЖЕРА ---
+        this.blockConfigManager = new BlockConfigManager(this);
+        
+        // Инициализация после создания всех менеджеров
         this.worldManager.initialize();
         
         // Регистрируем команды и события
@@ -180,6 +185,10 @@ public class MegaCreative extends JavaPlugin {
 
     public TrustedPlayerManager getTrustedPlayerManager() {
         return trustedPlayerManager;
+    }
+    
+    public BlockConfigManager getBlockConfigManager() {
+        return blockConfigManager;
     }
     
     public Map<UUID, CreativeWorld> getCommentInputs() {

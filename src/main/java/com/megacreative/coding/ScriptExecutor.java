@@ -11,6 +11,7 @@ import com.megacreative.coding.conditions.PlayerGameModeCondition;
 import com.megacreative.coding.conditions.IfVarEqualsCondition;
 import com.megacreative.coding.conditions.IfVarGreaterCondition;
 import com.megacreative.coding.conditions.IfVarLessCondition;
+import com.megacreative.coding.conditions.IsBlockTypeCondition;
 import com.megacreative.coding.actions.PlayerHealthCondition;
 import com.megacreative.coding.actions.HasItemCondition;
 import com.megacreative.coding.actions.HasPermissionCondition;
@@ -116,6 +117,9 @@ public class ScriptExecutor {
         conditionRegistry.put("ifVarEquals", new IfVarEqualsCondition());
         conditionRegistry.put("ifVarGreater", new IfVarGreaterCondition());
         conditionRegistry.put("ifVarLess", new IfVarLessCondition());
+        
+        // Условие для проверки типа блока
+        conditionRegistry.put("isBlockType", new IsBlockTypeCondition());
     }
 
     public void execute(CodeScript script, ExecutionContext context, String triggerAction) {

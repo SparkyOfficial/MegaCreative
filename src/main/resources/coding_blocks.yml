@@ -62,6 +62,7 @@ blocks:
       - "ifVarEquals"
       - "ifVarGreater"
       - "ifVarLess"
+      - "isBlockType"
   
   IRON_BLOCK:
     name: "Переменная"

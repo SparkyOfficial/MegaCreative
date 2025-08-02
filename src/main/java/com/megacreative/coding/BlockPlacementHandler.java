@@ -260,11 +260,16 @@ public class BlockPlacementHandler implements Listener {
         
         Location location = clickedBlock.getLocation();
         
-        // Проверяем, есть ли уже блок кода на этой локации, и открываем его меню
+        // Проверяем, есть ли уже блок кода на этой локации
         if (blockCodeBlocks.containsKey(location)) {
-            CodeBlock existingBlock = blockCodeBlocks.get(location);
-            openBlockConfigurationMenu(player, existingBlock, location);
-            // Не отменяем событие здесь, чтобы не мешать другим плагинам, если клик не наш
+            // Предотвращаем открытие GUI, если в руке связующий жезл или другой инструмент
+            if (isTool(itemInHand)) {
+                return;
+            }
+            
+            event.setCancelled(true); // Важно, чтобы не открылся, например, верстак
+            // ВЫЗЫВАЕМ НАШ НОВЫЙ МЕНЕДЖЕР ВМЕСТО СТАРОГО GUI
+            plugin.getBlockConfigManager().openConfigGUI(player, location);
         }
 
         // --- ПРОБЛЕМНЫЙ КОД БЫЛ УДАЛЕН ОТСЮДА ---
@@ -647,5 +652,10 @@ public class BlockPlacementHandler implements Listener {
         } catch (Exception e) {
             plugin.getLogger().severe("Не удалось поставить даже верхнюю табличку: " + e.getMessage());
         }
+    }
+
+    // Метод для проверки, является ли предмет инструментом
+    private boolean isTool(ItemStack item) {
+        return item.getType() == Material.BLAZE_ROD || item.getType() == Material.GOLDEN_AXE || DataItemFactory.isDataItem(item);
     }
 }
