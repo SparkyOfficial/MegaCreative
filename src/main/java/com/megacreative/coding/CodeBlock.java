@@ -29,6 +29,10 @@ public class CodeBlock implements Cloneable {
     // --- НОВОЕ ПОЛЕ ДЛЯ ВИРТУАЛЬНЫХ ИНВЕНТАРЕЙ ---
     // Будет хранить предметы-конфигурации. transient, если используете Gson
     private transient Map<Integer, ItemStack> configItems = new HashMap<>();
+    
+    // --- СИСТЕМА ГРУППИРОВКИ ПРЕДМЕТОВ ---
+    // Группы предметов для сложных конфигураций
+    private transient Map<String, List<Integer>> itemGroups = new HashMap<>();
 
     public CodeBlock(Material material, String action) {
         this.id = UUID.randomUUID();
@@ -118,6 +122,68 @@ public class CodeBlock implements Cloneable {
      */
     public void clearConfigItems() {
         configItems.clear();
+    }
+    
+    // --- МЕТОДЫ ДЛЯ РАБОТЫ С ГРУППАМИ ПРЕДМЕТОВ ---
+    
+    /**
+     * Создает группу предметов
+     * @param groupName Имя группы
+     * @param slots Слоты, входящие в группу
+     */
+    public void createItemGroup(String groupName, List<Integer> slots) {
+        itemGroups.put(groupName, new ArrayList<>(slots));
+    }
+    
+    /**
+     * Получает предметы из группы
+     * @param groupName Имя группы
+     * @return Список предметов в группе
+     */
+    public List<ItemStack> getItemsFromGroup(String groupName) {
+        List<ItemStack> items = new ArrayList<>();
+        List<Integer> slots = itemGroups.get(groupName);
+        if (slots != null) {
+            for (Integer slot : slots) {
+                ItemStack item = configItems.get(slot);
+                if (item != null) {
+                    items.add(item);
+                }
+            }
+        }
+        return items;
+    }
+    
+    /**
+     * Получает все группы предметов
+     * @return Карта групп
+     */
+    public Map<String, List<Integer>> getItemGroups() {
+        return itemGroups;
+    }
+    
+    /**
+     * Проверяет, есть ли группа с указанным именем
+     * @param groupName Имя группы
+     * @return true, если группа существует
+     */
+    public boolean hasItemGroup(String groupName) {
+        return itemGroups.containsKey(groupName);
+    }
+    
+    /**
+     * Удаляет группу предметов
+     * @param groupName Имя группы для удаления
+     */
+    public void removeItemGroup(String groupName) {
+        itemGroups.remove(groupName);
+    }
+    
+    /**
+     * Очищает все группы предметов
+     */
+    public void clearItemGroups() {
+        itemGroups.clear();
     }
 
     @Override

@@ -42,8 +42,8 @@ public class BlockConfigManager implements Listener {
             return;
         }
 
-        // Создаем инвентарь (сундук на 9 слотов)
-        Inventory configInventory = Bukkit.createInventory(null, 9, "§8Настройка: " + codeBlock.getAction());
+        // Создаем инвентарь (сундук на 27 слотов - 3 ряда)
+        Inventory configInventory = Bukkit.createInventory(null, 27, "§8Настройка: " + codeBlock.getAction());
 
         // Загружаем сохраненные предметы в GUI
         if (codeBlock.getConfigItems() != null) {
@@ -60,6 +60,7 @@ public class BlockConfigManager implements Listener {
         
         player.sendMessage("§e§l!§r §eНастройте блок, поместив предметы в инвентарь.");
         player.sendMessage("§7Предметы будут использоваться как параметры для действия '" + codeBlock.getAction() + "'");
+        player.sendMessage("§7§oПодсказка: Используйте 27 слотов для сложных конфигураций");
     }
 
     /**

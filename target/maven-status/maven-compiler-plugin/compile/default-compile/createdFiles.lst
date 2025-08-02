@@ -17,6 +17,7 @@ com\megacreative\gui\TrustedPlayersGUI.class
 com\megacreative\coding\CodeScript$ScriptType.class
 com\megacreative\coding\actions\GiveItemAction.class
 com\megacreative\commands\CreateScriptCommand.class
+com\megacreative\coding\actions\GiveItemsAction.class
 com\megacreative\gui\TemplateBrowserGUI.class
 com\megacreative\coding\ScriptDebugger$1.class
 com\megacreative\models\TrustedPlayer$TrustedPlayerType.class
@@ -44,12 +45,14 @@ com\megacreative\coding\CodingParameterGUI$ParameterField.class
 com\megacreative\gui\MyWorldsGUI.class
 com\megacreative\coding\ParameterResolver.class
 com\megacreative\coding\BlockAction.class
+com\megacreative\coding\conditions\HasArmorCondition$ArmorType.class
 com\megacreative\managers\TrustedPlayerManager.class
 com\megacreative\coding\actions\AddVarAction.class
 com\megacreative\coding\actions\SetWeatherAction.class
 com\megacreative\coding\actions\GetGlobalVariableAction.class
 com\megacreative\coding\actions\GetVarAction.class
 com\megacreative\commands\PlayCommand.class
+com\megacreative\coding\actions\SpawnEntityAction.class
 com\megacreative\gui\ScriptsGUI.class
 com\megacreative\coding\actions\HasPermissionCondition.class
 com\megacreative\commands\HubCommand.class
@@ -61,6 +64,7 @@ com\megacreative\listeners\DevWorldProtectionListener.class
 com\megacreative\managers\TemplateManager.class
 com\megacreative\coding\actions\SubVarAction.class
 com\megacreative\coding\actions\GetServerVariableAction.class
+com\megacreative\coding\conditions\IsPlayerHoldingCondition.class
 com\megacreative\gui\WorldCreationGUI.class
 com\megacreative\managers\DataManager.class
 com\megacreative\commands\ScriptsCommand.class
@@ -68,6 +72,7 @@ com\megacreative\coding\BlockConfiguration$BlockConfig.class
 com\megacreative\managers\BlockConfigManager.class
 com\megacreative\coding\data\DataItemFactory.class
 com\megacreative\coding\actions\SpawnMobAction.class
+com\megacreative\coding\conditions\HasArmorCondition$1.class
 com\megacreative\coding\ExecutionContext$ExecutionContextBuilder.class
 com\megacreative\commands\WorldBrowserCommand.class
 com\megacreative\coding\ScriptDebugger$2.class
@@ -91,10 +96,12 @@ com\megacreative\commands\TemplatesCommand.class
 com\megacreative\coding\actions\TeleportAction.class
 com\megacreative\coding\BlockConnectionVisualizer$1.class
 com\megacreative\coding\actions\PlayParticleEffectAction.class
+com\megacreative\coding\conditions\IsNearEntityCondition$1.class
 com\megacreative\coding\actions\SetVarAction.class
 com\megacreative\utils\JsonSerializer.class
 com\megacreative\coding\ExecutionContext.class
 com\megacreative\coding\actions\SetBlockAction.class
+com\megacreative\coding\conditions\HasArmorCondition.class
 com\megacreative\managers\WorldManager$1.class
 com\megacreative\utils\TabListManager.class
 com\megacreative\coding\actions\PlaySoundAction.class
@@ -113,6 +120,7 @@ com\megacreative\coding\actions\BroadcastAction.class
 com\megacreative\coding\BlockConnectionVisualizer$2.class
 com\megacreative\coding\conditions\PlayerGameModeCondition.class
 com\megacreative\coding\actions\IsInWorldCondition.class
+com\megacreative\coding\conditions\IsNearEntityCondition.class
 com\megacreative\coding\data\DataItemFactory$DataItem.class
 com\megacreative\models\WorldMode.class
 com\megacreative\coding\actions\IsOpCondition.class
@@ -129,6 +137,7 @@ com\megacreative\coding\actions\RepeatAction.class
 com\megacreative\gui\WorldActionsGUI.class
 com\megacreative\coding\actions\DivVarAction.class
 com\megacreative\coding\actions\BlockCondition.class
+com\megacreative\coding\actions\SpawnEntityAction$1.class
 com\megacreative\coding\BlockType.class
 com\megacreative\gui\WorldBrowserGUI.class
 com\megacreative\commands\DebugCommand.class

@@ -7,6 +7,7 @@ import com.megacreative.coding.CodingManager;
 import com.megacreative.coding.BlockConnectionVisualizer;
 import com.megacreative.coding.ScriptDebugger;
 import com.megacreative.coding.CodingItems;
+import com.megacreative.coding.BlockConfiguration;
 import com.megacreative.managers.*;
 import com.megacreative.models.CreativeWorld;
 import com.megacreative.utils.ConfigManager;
@@ -42,6 +43,9 @@ public class MegaCreative extends JavaPlugin {
     
     // --- НОВЫЙ МЕНЕДЖЕР ДЛЯ ВИРТУАЛЬНЫХ ИНВЕНТАРЕЙ ---
     private BlockConfigManager blockConfigManager;
+    
+    // --- НОВЫЙ МЕНЕДЖЕР ДЛЯ КОНФИГУРАЦИИ БЛОКОВ ---
+    private BlockConfiguration blockConfiguration;
 
     // Maps для хранения состояния
     private Map<UUID, CreativeWorld> commentInputs = new HashMap<>();
@@ -69,6 +73,9 @@ public class MegaCreative extends JavaPlugin {
         
         // --- ИНИЦИАЛИЗАЦИЯ НОВОГО МЕНЕДЖЕРА ---
         this.blockConfigManager = new BlockConfigManager(this);
+        
+        // --- ИНИЦИАЛИЗАЦИЯ КОНФИГУРАЦИИ БЛОКОВ ---
+        this.blockConfiguration = new BlockConfiguration(this);
         
         // Инициализация после создания всех менеджеров
         this.worldManager.initialize();
@@ -189,6 +196,10 @@ public class MegaCreative extends JavaPlugin {
     
     public BlockConfigManager getBlockConfigManager() {
         return blockConfigManager;
+    }
+    
+    public BlockConfiguration getBlockConfiguration() {
+        return blockConfiguration;
     }
     
     public Map<UUID, CreativeWorld> getCommentInputs() {

@@ -12,10 +12,18 @@ import com.megacreative.coding.conditions.IfVarEqualsCondition;
 import com.megacreative.coding.conditions.IfVarGreaterCondition;
 import com.megacreative.coding.conditions.IfVarLessCondition;
 import com.megacreative.coding.conditions.IsBlockTypeCondition;
+import com.megacreative.coding.conditions.IsPlayerHoldingCondition;
+import com.megacreative.coding.conditions.IsNearEntityCondition;
+import com.megacreative.coding.conditions.HasArmorCondition;
 import com.megacreative.coding.actions.PlayerHealthCondition;
 import com.megacreative.coding.actions.HasItemCondition;
 import com.megacreative.coding.actions.HasPermissionCondition;
 import com.megacreative.coding.actions.IsInWorldCondition;
+import com.megacreative.coding.actions.WaitAction;
+import com.megacreative.coding.actions.GiveItemsAction;
+import com.megacreative.coding.actions.SpawnEntityAction;
+import com.megacreative.coding.actions.RandomNumberAction;
+import com.megacreative.coding.actions.PlayParticleEffectAction;
 import org.bukkit.Location;
 import org.bukkit.Material;
 import org.bukkit.entity.Player;
@@ -80,8 +88,14 @@ public class ScriptExecutor {
         actionRegistry.put("setServerVar", new SetServerVariableAction());
         actionRegistry.put("getServerVar", new GetServerVariableAction());
         
-        // Новые важные действия
+        // Действие ожидания
         actionRegistry.put("wait", new WaitAction());
+        
+        // Новые действия с виртуальными инвентарями
+        actionRegistry.put("giveItems", new GiveItemsAction());
+        actionRegistry.put("spawnEntity", new SpawnEntityAction());
+        
+        // Действия, которые были в конфигурации, но не зарегистрированы
         actionRegistry.put("randomNumber", new RandomNumberAction());
         actionRegistry.put("playParticle", new PlayParticleEffectAction());
         
@@ -120,6 +134,11 @@ public class ScriptExecutor {
         
         // Условие для проверки типа блока
         conditionRegistry.put("isBlockType", new IsBlockTypeCondition());
+        
+        // Новые условия с виртуальными инвентарями
+        conditionRegistry.put("isPlayerHolding", new IsPlayerHoldingCondition());
+        conditionRegistry.put("isNearEntity", new IsNearEntityCondition());
+        conditionRegistry.put("hasArmor", new HasArmorCondition());
     }
 
     public void execute(CodeScript script, ExecutionContext context, String triggerAction) {

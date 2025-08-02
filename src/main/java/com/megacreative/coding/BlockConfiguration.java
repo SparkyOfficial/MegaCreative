@@ -97,6 +97,14 @@ public class BlockConfiguration {
     }
     
     /**
+     * Получает список действий для указанного материала
+     */
+    public List<String> getActionsForMaterial(Material material) {
+        BlockConfig config = getBlockConfig(material);
+        return config != null ? config.getActions() : null;
+    }
+    
+    /**
      * Проверяет, поддерживается ли действие для указанного материала
      */
     public boolean isActionSupported(Material material, String action) {

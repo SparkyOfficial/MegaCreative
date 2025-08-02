@@ -41,23 +41,8 @@ public class BlockPlacementHandler implements Listener {
     private final Map<UUID, Location> playerSelections = new HashMap<>();
     private final Map<UUID, CodeBlock> clipboard = new HashMap<>(); // Буфер обмена для копирования
 
-    // Список действий для каждого типа блока (MVP, можно расширять)
-    private static final Map<Material, List<String>> ACTIONS = Map.ofEntries(
-        Map.entry(Material.DIAMOND_BLOCK, List.of("onJoin", "onLeave", "onChat", "onInteract")),
-        Map.entry(Material.OAK_PLANKS, List.of("isOp", "isInWorld", "hasItem", "hasPermission", "isNearBlock", "timeOfDay")),
-        Map.entry(Material.COBBLESTONE, List.of("sendMessage", "teleport", "giveItem", "playSound", "effect", "command", "broadcast")),
-        Map.entry(Material.IRON_BLOCK, List.of("setVar", "addVar", "subVar", "mulVar", "divVar")),
-        Map.entry(Material.END_STONE, List.of("else")),
-        Map.entry(Material.NETHERITE_BLOCK, List.of("setTime", "setWeather", "spawnMob")),
-        Map.entry(Material.OBSIDIAN, List.of("ifVar", "ifNotVar")),
-        Map.entry(Material.REDSTONE_BLOCK, List.of("ifGameMode", "ifWorldType")),
-        Map.entry(Material.BRICKS, List.of("ifMobType", "ifMobNear")),
-        Map.entry(Material.POLISHED_GRANITE, List.of("getVar", "getPlayerName")),
-        Map.entry(Material.EMERALD_BLOCK, List.of("repeat")),
-        Map.entry(Material.LAPIS_BLOCK, List.of("callFunction")),
-        Map.entry(Material.BOOKSHELF, List.of("saveFunction")),
-        Map.entry(Material.REDSTONE_BLOCK, List.of("repeatTrigger"))
-    );
+    // Удаляем жестко закодированную карту ACTIONS - теперь используем BlockConfiguration
+    // private static final Map<Material, List<String>> ACTIONS = Map.ofEntries(...);
 
     public BlockPlacementHandler(MegaCreative plugin) {
         this.plugin = plugin;
@@ -112,8 +97,8 @@ public class BlockPlacementHandler implements Listener {
         // Запускаем через 1 тик, чтобы игрок увидел, что блок поставился.
         plugin.getServer().getScheduler().runTaskLater(plugin, () -> {
             
-            List<String> actions = ACTIONS.get(mat);
-            if (actions == null) {
+            List<String> actions = plugin.getBlockConfiguration().getActionsForMaterial(mat);
+            if (actions == null || actions.isEmpty()) {
                 player.sendMessage("§cДля этого блока нет доступных действий.");
                 blockCodeBlocks.remove(block.getLocation()); // Убираем, если что-то пошло не так
                 block.setType(Material.AIR); // Удаляем физический блок
@@ -348,7 +333,7 @@ public class BlockPlacementHandler implements Listener {
      * Общий метод для обработки конфигурации блока
      */
     private void handleBlockConfiguration(Player player, Material material, Location location, boolean isUpdate) {
-        List<String> actions = ACTIONS.get(material);
+        List<String> actions = plugin.getBlockConfiguration().getActionsForMaterial(material);
         
         // Открываем GUI для выбора действия
         new CodingActionGUI(player, material, location, actions, action -> {
@@ -500,13 +485,13 @@ public class BlockPlacementHandler implements Listener {
     private void placeCodeBlock(Player player, ItemStack item, Location location) {
         // Определяем материал блока по предмету
         Material material = item.getType();
-        if (!ACTIONS.containsKey(material)) {
+        List<String> actions = plugin.getBlockConfiguration().getActionsForMaterial(material);
+        if (actions != null && !actions.isEmpty()) {
+            // Открываем GUI для выбора действия
+            handleBlockConfiguration(player, material, location, false);
+        } else {
             player.sendMessage("§cНеизвестный тип блока кода!");
-            return;
         }
-        
-        // Открываем GUI для выбора действия
-        handleBlockConfiguration(player, material, location, false);
     }
 
     /**
