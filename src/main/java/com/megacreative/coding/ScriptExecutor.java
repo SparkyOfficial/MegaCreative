@@ -11,6 +11,10 @@ import com.megacreative.coding.conditions.PlayerGameModeCondition;
 import com.megacreative.coding.conditions.IfVarEqualsCondition;
 import com.megacreative.coding.conditions.IfVarGreaterCondition;
 import com.megacreative.coding.conditions.IfVarLessCondition;
+import com.megacreative.coding.actions.PlayerHealthCondition;
+import com.megacreative.coding.actions.HasItemCondition;
+import com.megacreative.coding.actions.HasPermissionCondition;
+import com.megacreative.coding.actions.IsInWorldCondition;
 import org.bukkit.Location;
 import org.bukkit.Material;
 import org.bukkit.entity.Player;
@@ -96,6 +100,12 @@ public class ScriptExecutor {
         
         // Условия игрока
         conditionRegistry.put("playerGameMode", new PlayerGameModeCondition());
+        conditionRegistry.put("playerHealth", new PlayerHealthCondition());
+        
+        // Условия проверки
+        conditionRegistry.put("hasItem", new HasItemCondition());
+        conditionRegistry.put("hasPermission", new HasPermissionCondition());
+        conditionRegistry.put("isInWorld", new IsInWorldCondition());
         
         // Новые условия для переменных
         conditionRegistry.put("ifVarEquals", new IfVarEqualsCondition());

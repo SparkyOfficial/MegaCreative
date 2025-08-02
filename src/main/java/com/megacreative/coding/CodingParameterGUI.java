@@ -1,12 +1,14 @@
 package com.megacreative.coding;
 
 import com.megacreative.gui.AnvilInputGUI;
+import com.megacreative.listeners.GuiListener;
 import org.bukkit.Bukkit;
 import org.bukkit.Material;
 import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.Listener;
 import org.bukkit.event.inventory.InventoryClickEvent;
+import org.bukkit.event.inventory.InventoryCloseEvent;
 import org.bukkit.inventory.Inventory;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.inventory.meta.ItemMeta;
@@ -34,7 +36,8 @@ public class CodingParameterGUI implements Listener {
         this.blockLocation = blockLocation;
         this.onComplete = onComplete;
         this.inventory = Bukkit.createInventory(null, 9, "§bНастройка: " + action);
-        Bukkit.getPluginManager().registerEvents(this, com.megacreative.MegaCreative.getInstance());
+        // Регистрируем GUI в централизованной системе
+        GuiListener.registerOpenGui(player, this);
         setupInventory();
     }
 
@@ -265,6 +268,13 @@ public class CodingParameterGUI implements Listener {
     public void open() {
         player.openInventory(inventory);
     }
+    
+    /**
+     * Обновляет инвентарь с новыми данными
+     */
+    public void refresh() {
+        setupInventory(); // Просто перестраиваем иконки с обновленными параметрами
+    }
 
     @EventHandler
     public void onInventoryClick(InventoryClickEvent event) {
@@ -291,7 +301,8 @@ public class CodingParameterGUI implements Listener {
         if (displayName.contains("Готово")) {
             onComplete.accept(parameters);
             player.closeInventory();
-            InventoryClickEvent.getHandlerList().unregister(this);
+            // Удаляем регистрацию GUI
+            GuiListener.unregisterOpenGui(player);
             return;
         }
         
@@ -312,10 +323,12 @@ public class CodingParameterGUI implements Listener {
                         parameters.put(field.getKey(), newValue);
                         player.sendMessage("§a✅ Параметр '" + field.getName() + "' обновлен!");
 
-                        // Важно: открываем GUI заново, чтобы игрок увидел изменения и мог настроить другой параметр
-                        Bukkit.getScheduler().runTask(com.megacreative.MegaCreative.getInstance(), () -> 
-                            new CodingParameterGUI(player, action, blockLocation, onComplete).open()
-                        );
+                        // --- ИСПРАВЛЕНИЕ ---
+                        // Обновляем и открываем ТЕКУЩЕЕ GUI, а не создаем новое
+                        Bukkit.getScheduler().runTask(com.megacreative.MegaCreative.getInstance(), () -> {
+                            this.refresh(); // Обновляем иконки в инвентаре
+                            this.open();    // Показываем его игроку снова
+                        });
                     } catch (Exception e) {
                         player.sendMessage("§c❌ Ошибка при обновлении параметра: " + e.getMessage());
                         com.megacreative.MegaCreative.getInstance().getLogger().warning("Ошибка в CodingParameterGUI: " + e.getMessage());

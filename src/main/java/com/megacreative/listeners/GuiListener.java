@@ -7,15 +7,44 @@ import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.Listener;
 import org.bukkit.event.inventory.InventoryClickEvent;
+import org.bukkit.event.inventory.InventoryCloseEvent;
 import org.bukkit.event.player.AsyncPlayerChatEvent;
 import org.bukkit.inventory.Inventory;
+
+import java.util.HashMap;
+import java.util.Map;
+import java.util.UUID;
 import com.megacreative.gui.WorldCommentsGUI;
 
 public class GuiListener implements Listener {
     private final MegaCreative plugin;
+    
+    // Централизованное отслеживание открытых GUI
+    private static final Map<UUID, Object> openGuis = new HashMap<>();
 
     public GuiListener(MegaCreative plugin) {
         this.plugin = plugin;
+    }
+
+    /**
+     * Регистрирует открытое GUI для игрока
+     */
+    public static void registerOpenGui(Player player, Object gui) {
+        openGuis.put(player.getUniqueId(), gui);
+    }
+
+    /**
+     * Удаляет регистрацию GUI для игрока
+     */
+    public static void unregisterOpenGui(Player player) {
+        openGuis.remove(player.getUniqueId());
+    }
+
+    /**
+     * Проверяет, есть ли у игрока открытое GUI
+     */
+    public static boolean hasOpenGui(Player player) {
+        return openGuis.containsKey(player.getUniqueId());
     }
 
     @EventHandler
@@ -30,16 +59,36 @@ public class GuiListener implements Listener {
             return;
         }
         
-        // Handle WorldCommentsGUI clicks (now handled by the GUI itself)
-        if (viewTitle.startsWith("§6§lКомментарии:")) {
-            // The GUI handles its own clicks now
+        // Проверяем, есть ли у игрока открытое GUI
+        if (hasOpenGui(player)) {
+            // GUI сам обработает клик, но мы отменяем стандартное поведение
+            event.setCancelled(true);
             return;
         }
         
-        // Add other GUI handlers here
+        // Обработка специальных GUI по заголовку
+        if (viewTitle.startsWith("§6§lКомментарии:")) {
+            // WorldCommentsGUI обрабатывает свои клики самостоятельно
+            event.setCancelled(true);
+            return;
+        }
         
-        // Default: cancel the event for all our GUIs
+        // Добавить другие специальные GUI здесь при необходимости
+        
+        // По умолчанию отменяем события для всех наших GUI
         event.setCancelled(true);
+    }
+    
+    @EventHandler
+    public void onInventoryClose(InventoryCloseEvent event) {
+        if (!(event.getPlayer() instanceof Player)) return;
+        
+        Player player = (Player) event.getPlayer();
+        
+        // Удаляем регистрацию GUI при закрытии инвентаря
+        if (hasOpenGui(player)) {
+            unregisterOpenGui(player);
+        }
     }
     
     @EventHandler
@@ -107,11 +156,5 @@ public class GuiListener implements Listener {
             
             return;
         }
-
-        // Handle coding block action input (removed - now using GUI)
-        // if (plugin.getBlockPlacementHandler().handleActionInput(player, message)) {
-        //     event.setCancelled(true);
-        //     return;
-        // }
     }
 }

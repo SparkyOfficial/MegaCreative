@@ -1,5 +1,6 @@
 package com.megacreative.coding;
 
+import com.megacreative.listeners.GuiListener;
 import org.bukkit.Bukkit;
 import org.bukkit.Material;
 import org.bukkit.entity.Player;
@@ -32,7 +33,8 @@ public class CodingActionGUI implements Listener {
         this.actions = actions;
         this.onSelect = onSelect;
         this.inventory = Bukkit.createInventory(null, 9, "§bВыберите действие");
-        Bukkit.getPluginManager().registerEvents(this, com.megacreative.MegaCreative.getInstance());
+        // Регистрируем GUI в централизованной системе
+        GuiListener.registerOpenGui(player, this);
         setupInventory();
     }
 
@@ -185,7 +187,8 @@ public class CodingActionGUI implements Listener {
         if (actions.contains(action)) {
             onSelect.accept(action);
             player.closeInventory();
-            InventoryClickEvent.getHandlerList().unregister(this);
+            // Удаляем регистрацию GUI
+            GuiListener.unregisterOpenGui(player);
         }
     }
 }

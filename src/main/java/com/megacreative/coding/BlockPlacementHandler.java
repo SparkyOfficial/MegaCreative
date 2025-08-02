@@ -198,7 +198,7 @@ public class BlockPlacementHandler implements Listener {
             }
         }
         
-        // Предметы-данные (DataItem)
+        // Предметы-данные (DataItem) - Взаимодействие с уже поставленным блоком
         if (DataItemFactory.isDataItem(itemInHand) && event.getAction().isRightClick()) {
             Block clickedBlock = event.getClickedBlock();
             if (clickedBlock != null && blockCodeBlocks.containsKey(clickedBlock.getLocation())) {
@@ -209,21 +209,21 @@ public class BlockPlacementHandler implements Listener {
         }
         
         // Проверяем, что игрок не использует связующий жезл
-        if (itemInHand.getType() == Material.BLAZE_ROD && itemInHand.hasItemMeta() && 
-            itemInHand.getItemMeta().getDisplayName().contains("§e§lСвязующий жезл")) {
+        if (itemInHand.getType() == Material.BLAZE_ROD && itemInHand.hasItemMeta() &&
+            itemInHand.getItemMeta().getDisplayName().contains(CodingItems.LINKER_TOOL_NAME)) {
             return; // Пропускаем, если используется связующий жезл
         }
         
         // Проверяем железный слиток для создания данных
-        if (itemInHand.getType() == Material.IRON_INGOT && itemInHand.hasItemMeta() && 
-            itemInHand.getItemMeta().getDisplayName().contains("§b§lСоздать данные")) {
+        if (itemInHand.getType() == Material.IRON_INGOT && itemInHand.hasItemMeta() &&
+            itemInHand.getItemMeta().getDisplayName().contains(CodingItems.DATA_CREATOR_NAME)) {
             event.setCancelled(true);
             new com.megacreative.gui.DataGUI(player).open();
             player.sendMessage("§a✅ Открыто меню создания данных!");
             return;
         }
         
-        // Остальная логика для блоков кода
+        // Остальная логика только для кликов по уже существующим блокам
         if (event.getAction() != Action.RIGHT_CLICK_BLOCK) return;
         
         Block clickedBlock = event.getClickedBlock();
@@ -231,18 +231,15 @@ public class BlockPlacementHandler implements Listener {
         
         Location location = clickedBlock.getLocation();
         
-        // Проверяем, есть ли уже блок кода на этой локации
+        // Проверяем, есть ли уже блок кода на этой локации, и открываем его меню
         if (blockCodeBlocks.containsKey(location)) {
             CodeBlock existingBlock = blockCodeBlocks.get(location);
             openBlockConfigurationMenu(player, existingBlock, location);
-            return;
+            // Не отменяем событие здесь, чтобы не мешать другим плагинам, если клик не наш
         }
-        
-        // Проверяем, держит ли игрок блок кода
-        if (isCodingBlock(itemInHand)) {
-            event.setCancelled(true);
-            placeCodeBlock(player, itemInHand, location);
-        }
+
+        // --- ПРОБЛЕМНЫЙ КОД БЫЛ УДАЛЕН ОТСЮДА ---
+        // Больше нет проверки "if (isCodingBlock(itemInHand))" для установки блока
     }
 
     /**
@@ -254,7 +251,7 @@ public class BlockPlacementHandler implements Listener {
         ItemStack itemInHand = player.getInventory().getItemInMainHand();
 
         // Проверяем, что игрок в мире разработки и держит наш инструмент
-        if (!isInDevWorld(player) || itemInHand.getType() != Material.BLAZE_ROD || !itemInHand.hasItemMeta() || !itemInHand.getItemMeta().getDisplayName().contains("§e§lСвязующий жезл")) {
+        if (!isInDevWorld(player) || itemInHand.getType() != Material.BLAZE_ROD || !itemInHand.hasItemMeta() || !itemInHand.getItemMeta().getDisplayName().contains(CodingItems.LINKER_TOOL_NAME)) {
             return;
         }
         
@@ -370,45 +367,27 @@ public class BlockPlacementHandler implements Listener {
         return new HashMap<>(blockCodeBlocks);
     }
 
-    // Установить табличку с действием на блок
+    // Установить табличку с действием на блок (НОВАЯ ВЕРСИЯ)
     private void setSignOnBlock(Location loc, String action) {
-        try {
-            Block above = loc.clone().add(0, 1, 0).getBlock();
-            above.setType(Material.OAK_SIGN);
-            
-            if (above.getState() instanceof Sign sign) {
-                sign.setLine(0, "§e[КОД]");
-                sign.setLine(1, "§f" + action);
-                sign.setLine(2, "§7ПКМ для настройки");
-                sign.update();
-            }
-        } catch (Exception e) {
-            // Если не удалось создать табличку, просто логируем
-            plugin.getLogger().warning("Не удалось создать табличку для блока: " + e.getMessage());
-        }
+        placeWallSign(loc, new String[]{"§e[КОД]", "§f" + action, "§7ПКМ для настройки", ""});
     }
     
-    // Обновить табличку с параметрами
+    // Обновить табличку с параметрами (НОВАЯ ВЕРСИЯ)
     private void updateSignOnBlock(Location loc, CodeBlock codeBlock) {
-        try {
-            Block above = loc.clone().add(0, 1, 0).getBlock();
-            if (above.getType() == Material.OAK_SIGN && above.getState() instanceof Sign sign) {
-                sign.setLine(0, "§e[КОД]");
-                sign.setLine(1, "§f" + codeBlock.getAction());
-                
-                // Показываем первый параметр если есть
-                if (!codeBlock.getParameters().isEmpty()) {
-                    String firstParam = codeBlock.getParameters().entrySet().iterator().next().getKey();
-                    sign.setLine(2, "§7" + firstParam + ": " + codeBlock.getParameters().get(firstParam));
-                } else {
-                    sign.setLine(2, "§7ПКМ для настройки");
-                }
-                
-                sign.update();
-            }
-        } catch (Exception e) {
-            plugin.getLogger().warning("Не удалось обновить табличку: " + e.getMessage());
+        String[] lines = new String[4];
+        lines[0] = "§e[КОД]";
+        lines[1] = "§f" + codeBlock.getAction();
+        
+        if (!codeBlock.getParameters().isEmpty()) {
+            Map.Entry<String, Object> firstParam = codeBlock.getParameters().entrySet().iterator().next();
+            lines[2] = "§7" + firstParam.getKey() + ": ";
+            lines[3] = "§e" + firstParam.getValue().toString();
+        } else {
+            lines[2] = "§7ПКМ для настройки";
+            lines[3] = "";
         }
+        
+        placeWallSign(loc, lines);
     }
 
     // Метод для создания CodeBlock с параметрами
@@ -472,21 +451,13 @@ public class BlockPlacementHandler implements Listener {
      * Проверяет, является ли предмет блоком кода
      */
     private boolean isCodingBlock(ItemStack item) {
-        if (item == null || !item.hasItemMeta()) return false;
-        ItemMeta meta = item.getItemMeta();
-        if (meta == null || !meta.hasDisplayName()) return false;
+        if (item == null || !item.hasItemMeta() || !item.getItemMeta().hasDisplayName()) {
+            return false;
+        }
+        String displayName = item.getItemMeta().getDisplayName();
         
-        String displayName = meta.getDisplayName();
-        return displayName.contains("§b§lСобытие игрока") || 
-               displayName.contains("§6§lУсловие игрока") || 
-               displayName.contains("§7§lДействие игрока") || 
-               displayName.contains("§f§lПрисвоить переменную") || 
-               displayName.contains("§e§lИначе") || 
-               displayName.contains("§8§lИгровое действие") || 
-               displayName.contains("§5§lЕсли переменная") || 
-               displayName.contains("§c§lЕсли игра") || 
-               displayName.contains("§d§lЕсли существо") || 
-               displayName.contains("§a§lПолучить данные");
+        // Новая, чистая проверка
+        return CodingItems.isDisplayNameACodingItem(displayName);
     }
     
     /**
@@ -602,5 +573,50 @@ public class BlockPlacementHandler implements Listener {
             
             player.sendMessage("§a✓ Данные вставлены в блок '" + targetBlock.getAction() + "'");
         }).open();
+    }
+    
+    // Новый вспомогательный метод для установки настенной таблички
+    private void placeWallSign(Location blockLocation, String[] lines) {
+        // Список сторон, которые мы будем проверять в поисках свободного места
+        BlockFace[] faces = {BlockFace.NORTH, BlockFace.EAST, BlockFace.SOUTH, BlockFace.WEST};
+
+        for (BlockFace face : faces) {
+            Block signBlock = blockLocation.getBlock().getRelative(face);
+
+            // Если на этом месте уже есть наша табличка или там пусто, ставим/обновляем
+            if (signBlock.getType() == Material.AIR || signBlock.getType() == Material.OAK_WALL_SIGN) {
+                signBlock.setType(Material.OAK_WALL_SIGN);
+                if (signBlock.getState() instanceof Sign sign) {
+                    // Устанавливаем, к какой стене она "прикреплена"
+                    org.bukkit.block.data.type.WallSign signData = (org.bukkit.block.data.type.WallSign) sign.getBlockData();
+                    signData.setFacing(face);
+                    sign.setBlockData(signData);
+                    
+                    // Устанавливаем текст
+                    for (int i = 0; i < lines.length; i++) {
+                        sign.setLine(i, lines[i]);
+                    }
+                    
+                    sign.update();
+                    return; // Нашли место, поставили табличку, выходим из метода
+                }
+            }
+        }
+
+        // Если не нашли свободного места сбоку, ставим сверху, как и раньше
+        plugin.getLogger().warning("Не удалось найти место для настенной таблички, ставлю сверху.");
+        try {
+            Block above = blockLocation.clone().add(0, 1, 0).getBlock();
+            above.setType(Material.OAK_SIGN);
+            
+            if (above.getState() instanceof Sign sign) {
+                for (int i = 0; i < lines.length; i++) {
+                    sign.setLine(i, lines[i]);
+                }
+                sign.update();
+            }
+        } catch (Exception e) {
+            plugin.getLogger().severe("Не удалось поставить даже верхнюю табличку: " + e.getMessage());
+        }
     }
 }

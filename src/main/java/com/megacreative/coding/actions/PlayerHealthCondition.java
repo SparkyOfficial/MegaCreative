@@ -1,5 +1,6 @@
 package com.megacreative.coding.actions;
 
+import com.megacreative.coding.BlockCondition;
 import com.megacreative.coding.CodeBlock;
 import com.megacreative.coding.ExecutionContext;
 import com.megacreative.coding.ParameterResolver;
@@ -7,7 +8,7 @@ import org.bukkit.entity.Player;
 
 public class PlayerHealthCondition implements BlockCondition {
     @Override
-    public boolean check(ExecutionContext context) {
+    public boolean evaluate(ExecutionContext context) {
         Player player = context.getPlayer();
         CodeBlock block = context.getCurrentBlock();
         
@@ -16,22 +17,30 @@ public class PlayerHealthCondition implements BlockCondition {
         Object rawHealth = block.getParameter("health");
         Object rawOperator = block.getParameter("operator");
         
-        String healthStr = ParameterResolver.resolve(context, rawHealth).toString();
-        String operator = ParameterResolver.resolve(context, rawOperator).toString();
+        String healthStr = ParameterResolver.resolve(context, rawHealth);
+        String operatorStr = ParameterResolver.resolve(context, rawOperator);
+        
+        if (healthStr == null || operatorStr == null) return false;
         
         try {
             double requiredHealth = Double.parseDouble(healthStr);
             double currentHealth = player.getHealth();
             
-            return switch (operator) {
-                case ">" -> currentHealth > requiredHealth;
-                case "<" -> currentHealth < requiredHealth;
-                case ">=" -> currentHealth >= requiredHealth;
-                case "<=" -> currentHealth <= requiredHealth;
-                case "==" -> currentHealth == requiredHealth;
-                case "!=" -> currentHealth != requiredHealth;
-                default -> false;
-            };
+            switch (operatorStr) {
+                case ">":
+                    return currentHealth > requiredHealth;
+                case ">=":
+                    return currentHealth >= requiredHealth;
+                case "<":
+                    return currentHealth < requiredHealth;
+                case "<=":
+                    return currentHealth <= requiredHealth;
+                case "==":
+                case "=":
+                    return currentHealth == requiredHealth;
+                default:
+                    return false;
+            }
         } catch (NumberFormatException e) {
             return false;
         }

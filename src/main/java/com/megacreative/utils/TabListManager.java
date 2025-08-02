@@ -1,5 +1,6 @@
 package com.megacreative.utils;
 
+import net.kyori.adventure.text.Component;
 import org.bukkit.Bukkit;
 import org.bukkit.ChatColor;
 import org.bukkit.entity.Player;
@@ -21,21 +22,23 @@ public class TabListManager {
      * Устанавливает TAB для игрока с нашим лого и динамическим футером
      */
     public static void setTabList(Player player) {
-        String footer = "\n" +
+        String footerText = "\n" +
                 ChatColor.GRAY + "Игроков онлайн: " + ChatColor.GREEN + Bukkit.getOnlinePlayers().size() +
                 ChatColor.DARK_GRAY + " | " +
                 ChatColor.GRAY + "Ваш пинг: " + ChatColor.GREEN + player.getPing() + "ms" +
                 "\n" + ChatColor.AQUA + "Приятной игры!";
 
-        player.setPlayerListHeader(HEADER);
-        player.setPlayerListFooter(footer);
+        // Конвертируем старый формат в новый
+        Component headerComponent = Component.text(HEADER);
+        Component footerComponent = Component.text(footerText);
+
+        player.sendPlayerListHeaderAndFooter(headerComponent, footerComponent);
     }
 
     /**
      * Очищает TAB для игрока
      */
     public static void clearTabList(Player player) {
-        player.setPlayerListHeader("");
-        player.setPlayerListFooter("");
+        player.sendPlayerListHeaderAndFooter(Component.empty(), Component.empty());
     }
 } 

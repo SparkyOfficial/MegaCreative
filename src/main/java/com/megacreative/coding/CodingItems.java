@@ -5,6 +5,8 @@ import org.bukkit.entity.Player;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.inventory.meta.ItemMeta;
 import java.util.Arrays;
+import java.util.HashSet;
+import java.util.Set;
 
 /**
  * Класс для создания и выдачи предметов-блоков кодирования игрокам.
@@ -26,6 +28,31 @@ public class CodingItems {
     public static final String INSPECTOR_TOOL_NAME = "§b🔍 Инспектор блоков";
     public static final String COPIER_TOOL_NAME = "§6📋 Копировщик блоков";
     public static final String DATA_CREATOR_NAME = "§b§lСоздать данные";
+
+    // --- ДОБАВЛЯЕМ АВТОМАТИЧЕСКУЮ ПРОВЕРКУ ---
+    private static final Set<String> CODING_ITEM_NAMES = new HashSet<>();
+
+    static {
+        CODING_ITEM_NAMES.add(EVENT_BLOCK_NAME);
+        CODING_ITEM_NAMES.add(CONDITION_BLOCK_NAME);
+        CODING_ITEM_NAMES.add(ACTION_BLOCK_NAME);
+        CODING_ITEM_NAMES.add(VARIABLE_BLOCK_NAME);
+        CODING_ITEM_NAMES.add(ELSE_BLOCK_NAME);
+        CODING_ITEM_NAMES.add(GAME_ACTION_BLOCK_NAME);
+        CODING_ITEM_NAMES.add(IF_VAR_BLOCK_NAME);
+        CODING_ITEM_NAMES.add(IF_GAME_BLOCK_NAME);
+        CODING_ITEM_NAMES.add(IF_MOB_BLOCK_NAME);
+        CODING_ITEM_NAMES.add(GET_DATA_BLOCK_NAME);
+        CODING_ITEM_NAMES.add(LINKER_TOOL_NAME);
+        CODING_ITEM_NAMES.add(INSPECTOR_TOOL_NAME);
+        CODING_ITEM_NAMES.add(COPIER_TOOL_NAME);
+        CODING_ITEM_NAMES.add(DATA_CREATOR_NAME);
+    }
+
+    public static boolean isDisplayNameACodingItem(String displayName) {
+        return CODING_ITEM_NAMES.contains(displayName);
+    }
+    // --- КОНЕЦ БЛОКА ---
 
     /**
      * Создает связующий жезл для соединения блоков

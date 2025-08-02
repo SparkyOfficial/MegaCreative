@@ -401,35 +401,47 @@ public class WorldManager {
     private CodeBlock deserializeBlock(Map<String, Object> blockMap) {
         if (blockMap == null || blockMap.isEmpty()) return null;
 
-        Material material = Material.valueOf((String) blockMap.get("material"));
-        String action = (String) blockMap.get("action");
-        CodeBlock block = new CodeBlock(material, action);
-        
-        // Восстановление параметров
-        Map<String, Object> parameters = (Map<String, Object>) blockMap.get("parameters");
-        if (parameters != null) {
-            for (Map.Entry<String, Object> entry : parameters.entrySet()) {
-                block.setParameter(entry.getKey(), entry.getValue());
-            }
-        }
-
-        // Восстановление следующего блока
-        if (blockMap.containsKey("nextBlock")) {
-            block.setNext(deserializeBlock((Map<String, Object>) blockMap.get("nextBlock")));
-        }
-        
-        // Восстановление дочерних блоков
-        if (blockMap.containsKey("children")) {
-            List<Map<String, Object>> childrenList = (List<Map<String, Object>>) blockMap.get("children");
-            for (Map<String, Object> childMap : childrenList) {
-                CodeBlock child = deserializeBlock(childMap);
-                if (child != null) {
-                    block.addChild(child);
+        try {
+            Material material = Material.valueOf((String) blockMap.get("material"));
+            String action = (String) blockMap.get("action");
+            CodeBlock block = new CodeBlock(material, action);
+            
+            // Восстановление параметров
+            Object parametersObj = blockMap.get("parameters");
+            if (parametersObj instanceof Map) {
+                @SuppressWarnings("unchecked")
+                Map<String, Object> parameters = (Map<String, Object>) parametersObj;
+                for (Map.Entry<String, Object> entry : parameters.entrySet()) {
+                    block.setParameter(entry.getKey(), entry.getValue());
                 }
             }
-        }
 
-        return block;
+            // Восстановление следующего блока
+            Object nextBlockObj = blockMap.get("nextBlock");
+            if (nextBlockObj instanceof Map) {
+                @SuppressWarnings("unchecked")
+                Map<String, Object> nextBlockMap = (Map<String, Object>) nextBlockObj;
+                block.setNext(deserializeBlock(nextBlockMap));
+            }
+            
+            // Восстановление дочерних блоков
+            Object childrenObj = blockMap.get("children");
+            if (childrenObj instanceof List) {
+                @SuppressWarnings("unchecked")
+                List<Map<String, Object>> childrenList = (List<Map<String, Object>>) childrenObj;
+                for (Map<String, Object> childMap : childrenList) {
+                    CodeBlock child = deserializeBlock(childMap);
+                    if (child != null) {
+                        block.addChild(child);
+                    }
+                }
+            }
+
+            return block;
+        } catch (Exception e) {
+            plugin.getLogger().warning("Ошибка десериализации блока: " + e.getMessage());
+            return null;
+        }
     }
     
     public void saveAllWorlds() {
@@ -496,7 +508,16 @@ public class WorldManager {
             Map<String, Object> scriptMap = (Map<String, Object>) scriptMapUntyped;
             String scriptName = (String) scriptMap.getOrDefault("name", "Безымянный скрипт");
             boolean enabled = (boolean) scriptMap.getOrDefault("enabled", true);
-            CodeBlock rootBlock = deserializeBlock((Map<String, Object>) scriptMap.get("rootBlock"));
+            
+            // Безопасная десериализация с проверкой типа
+            CodeBlock rootBlock = null;
+            Object rootBlockObj = scriptMap.get("rootBlock");
+            if (rootBlockObj instanceof Map) {
+                @SuppressWarnings("unchecked")
+                Map<String, Object> rootBlockMap = (Map<String, Object>) rootBlockObj;
+                rootBlock = deserializeBlock(rootBlockMap);
+            }
+            
             if (rootBlock != null) {
                 world.getScripts().add(new CodeScript(scriptName, enabled, rootBlock));
             }

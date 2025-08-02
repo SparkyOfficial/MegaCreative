@@ -2,6 +2,7 @@ package com.megacreative.gui;
 
 import com.megacreative.MegaCreative;
 import com.megacreative.models.CreativeWorld;
+import com.megacreative.listeners.GuiListener;
 
 import org.bukkit.Bukkit;
 import org.bukkit.Material;
@@ -27,7 +28,8 @@ public class MyWorldsGUI implements Listener {
         this.player = player;
         this.inventory = Bukkit.createInventory(null, 54, "§8§lМои миры");
         
-        Bukkit.getPluginManager().registerEvents(this, plugin);
+        // Регистрируем GUI в централизованной системе
+        GuiListener.registerOpenGui(player, this);
         setupInventory();
     }
     
@@ -105,6 +107,8 @@ public class MyWorldsGUI implements Listener {
         // Создание нового мира
         if (clicked.getType() == Material.EMERALD && displayName.contains("Создать")) {
             player.closeInventory();
+            // Удаляем регистрацию GUI
+            GuiListener.unregisterOpenGui(player);
             new WorldCreationGUI(plugin, player).open();
             return;
         }
@@ -120,10 +124,14 @@ public class MyWorldsGUI implements Listener {
             if (event.isLeftClick()) {
                 // Вход в мир
                 player.closeInventory();
+                // Удаляем регистрацию GUI
+                GuiListener.unregisterOpenGui(player);
                 player.performCommand("join " + world.getId());
             } else if (event.isRightClick()) {
                 // Настройки мира
                 player.closeInventory();
+                // Удаляем регистрацию GUI
+                GuiListener.unregisterOpenGui(player);
                 new WorldSettingsGUI(plugin, player, world).open();
             }
         }
