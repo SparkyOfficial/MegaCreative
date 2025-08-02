@@ -30,6 +30,19 @@ public class WorldManager {
     }
     
     public void createWorld(Player player, String name, CreativeWorldType worldType) {
+        // Валидация имени мира
+        if (!isValidWorldName(name)) {
+            player.sendMessage("§cНекорректное имя мира!");
+            player.sendMessage("§7Имя должно содержать 3-20 символов (буквы, цифры, подчеркивания)");
+            return;
+        }
+        
+        // Проверка на дублирование имени
+        if (worldExists(name)) {
+            player.sendMessage("§cМир с таким именем уже существует!");
+            return;
+        }
+        
         // Проверка лимита миров
         if (getPlayerWorldCount(player) >= maxWorldsPerPlayer) {
             player.sendMessage("§cВы достигли лимита в " + maxWorldsPerPlayer + " миров.");
@@ -501,5 +514,23 @@ public class WorldManager {
         if (bukkitWorld != null) {
             plugin.getCodingManager().loadScriptsForWorld(world);
         }
+    }
+    
+    /**
+     * Проверяет корректность имени мира
+     */
+    private boolean isValidWorldName(String name) {
+        return name != null && 
+               name.length() >= 3 && 
+               name.length() <= 20 && 
+               name.matches("^[a-zA-Z0-9_]+$");
+    }
+    
+    /**
+     * Проверяет, существует ли мир с таким именем
+     */
+    private boolean worldExists(String name) {
+        return worlds.values().stream()
+                .anyMatch(world -> world.getName().equalsIgnoreCase(name));
     }
 }

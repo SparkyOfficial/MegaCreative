@@ -28,23 +28,21 @@ public class DevWorldProtectionListener implements Listener {
         if (item == null || !item.hasItemMeta() || !item.getItemMeta().hasDisplayName()) {
             return false;
         }
-        // Этот список нужно будет поддерживать в актуальном состоянии
-        // Лучше всего вынести названия предметов в константы в классе CodingItems
         String displayName = item.getItemMeta().getDisplayName();
-        return displayName.contains("§b§lСобытие игрока") ||
-               displayName.contains("§6§lУсловие игрока") ||
-               displayName.contains("§7§lДействие игрока") ||
-               displayName.contains("§f§lПрисвоить переменную") ||
-               displayName.contains("§e§lИначе") ||
-               displayName.contains("§8§lИгровое действие") ||
-               displayName.contains("§5§lЕсли переменная") ||
-               displayName.contains("§c§lЕсли игра") ||
-               displayName.contains("§d§lЕсли существо") ||
-               displayName.contains("§a§lПолучить данные") ||
-               displayName.contains("§e§lСвязующий жезл") ||
-               displayName.contains("§b🔍 Инспектор блоков") ||
-               displayName.contains("§6📋 Копировщик блоков") ||
-               displayName.contains("§b§lСоздать данные");
+        return displayName.contains(CodingItems.EVENT_BLOCK_NAME) ||
+               displayName.contains(CodingItems.CONDITION_BLOCK_NAME) ||
+               displayName.contains(CodingItems.ACTION_BLOCK_NAME) ||
+               displayName.contains(CodingItems.VARIABLE_BLOCK_NAME) ||
+               displayName.contains(CodingItems.ELSE_BLOCK_NAME) ||
+               displayName.contains(CodingItems.GAME_ACTION_BLOCK_NAME) ||
+               displayName.contains(CodingItems.IF_VAR_BLOCK_NAME) ||
+               displayName.contains(CodingItems.IF_GAME_BLOCK_NAME) ||
+               displayName.contains(CodingItems.IF_MOB_BLOCK_NAME) ||
+               displayName.contains(CodingItems.GET_DATA_BLOCK_NAME) ||
+               displayName.contains(CodingItems.LINKER_TOOL_NAME) ||
+               displayName.contains(CodingItems.INSPECTOR_TOOL_NAME) ||
+               displayName.contains(CodingItems.COPIER_TOOL_NAME) ||
+               displayName.contains(CodingItems.DATA_CREATOR_NAME);
     }
 
     // Запрещаем выкидывать предметы кодинга

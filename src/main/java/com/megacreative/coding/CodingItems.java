@@ -10,6 +10,22 @@ import java.util.Arrays;
  * Класс для создания и выдачи предметов-блоков кодирования игрокам.
  */
 public class CodingItems {
+Иы    
+    // Константы названий предметов для защиты от потери
+    public static final String EVENT_BLOCK_NAME = "§b§lСобытие игрока";
+    public static final String CONDITION_BLOCK_NAME = "§6§lУсловие игрока";
+    public static final String ACTION_BLOCK_NAME = "§7§lДействие игрока";
+    public static final String VARIABLE_BLOCK_NAME = "§f§lПрисвоить переменную";
+    public static final String ELSE_BLOCK_NAME = "§e§lИначе";
+    public static final String GAME_ACTION_BLOCK_NAME = "§8§lИгровое действие";
+    public static final String IF_VAR_BLOCK_NAME = "§5§lЕсли переменная";
+    public static final String IF_GAME_BLOCK_NAME = "§c§lЕсли игра";
+    public static final String IF_MOB_BLOCK_NAME = "§d§lЕсли существо";
+    public static final String GET_DATA_BLOCK_NAME = "§a§lПолучить данные";
+    public static final String LINKER_TOOL_NAME = "§e§lСвязующий жезл";
+    public static final String INSPECTOR_TOOL_NAME = "§b🔍 Инспектор блоков";
+    public static final String COPIER_TOOL_NAME = "§6📋 Копировщик блоков";
+    public static final String DATA_CREATOR_NAME = "§b§lСоздать данные";
 
     /**
      * Создает связующий жезл для соединения блоков
