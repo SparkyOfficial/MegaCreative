@@ -63,7 +63,8 @@ public class GuiListener implements Listener {
         if (hasOpenGui(player)) {
             // GUI сам обработает клик, но мы отменяем стандартное поведение
             event.setCancelled(true);
-            return;
+            // НЕ ВЫХОДИМ! Убираем 'return', чтобы событие пошло дальше
+            // к обработчикам в MyWorldsGUI, WorldCreationGUI и других
         }
         
         // Обработка специальных GUI по заголовку

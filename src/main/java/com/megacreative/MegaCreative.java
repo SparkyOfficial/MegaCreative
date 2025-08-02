@@ -284,9 +284,9 @@ public class MegaCreative extends JavaPlugin {
                 if (name.contains("Инспектор блоков")) hasInspector = true;
                 if (name.contains("Событие игрока")) hasEventBlock = true;
                 if (name.contains("Действие игрока")) hasActionBlock = true;
-                if (name.contains("Условие")) hasConditionBlock = true;
-                if (name.contains("Переменная")) hasVariableBlock = true;
-                if (name.contains("Повторить")) hasRepeatBlock = true;
+                if (name.contains("Условие игрока")) hasConditionBlock = true;
+                if (name.contains("Присвоить переменную")) hasVariableBlock = true; // Исправлено!
+                if (name.contains("Повторить N раз")) hasRepeatBlock = true;
             }
         }
         
