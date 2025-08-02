@@ -130,6 +130,7 @@ public class MegaCreative extends JavaPlugin {
         getCommand("status").setExecutor(new StatusCommand(this));
         getCommand("testhybrid").setExecutor(new TestHybridCommand(this));
         getCommand("cleanworlds").setExecutor(new CleanWorldsCommand(this));
+        getCommand("create").setExecutor(new CreateWorldCommand(this));
     }
     
     private void registerEvents() {

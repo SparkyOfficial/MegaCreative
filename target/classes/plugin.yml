@@ -76,6 +76,10 @@ commands:
     description: Очистка поврежденных миров
     usage: /<command> [check|clean|backup]
     permission: megacreative.admin
+  create:
+    description: Создание нового мира
+    usage: /<command> <тип_мира> [имя_мира]
+    permission: megacreative.create
   trusted:
     description: Управление доверенными игроками
     usage: /<command> <add|remove|list|info> [игрок] [тип] [добавил]

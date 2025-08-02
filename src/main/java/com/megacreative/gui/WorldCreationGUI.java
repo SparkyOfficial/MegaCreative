@@ -167,7 +167,24 @@ public class WorldCreationGUI implements Listener {
             player.closeInventory();
             // Удаляем регистрацию GUI
             GuiListener.unregisterOpenGui(player);
-            player.performCommand("create " + worldType.name().toLowerCase());
+            // Создаем мир напрямую через WorldManager
+            plugin.getWorldManager().createWorld(player, generateWorldName(player), worldType);
         }
+    }
+    
+    /**
+     * Генерирует имя мира для игрока
+     */
+    private String generateWorldName(Player player) {
+        String baseName = player.getName() + "_мир";
+        int counter = 1;
+        String worldName = baseName;
+        
+        while (plugin.getWorldManager().getWorldByName(worldName) != null) {
+            worldName = baseName + "_" + counter;
+            counter++;
+        }
+        
+        return worldName;
     }
 }
