@@ -317,7 +317,7 @@ public class CodingParameterGUI implements Listener {
                 String currentValue = parameters.getOrDefault(field.getKey(), field.getDefaultValue()).toString();
                 
                 // Открываем наковальню для ввода
-                new AnvilInputGUI(player, currentValue, (newValue) -> {
+                new AnvilInputGUI(com.megacreative.MegaCreative.getInstance(), player, "Ввод параметра: " + field.getName(), (newValue) -> {
                     try {
                         // Этот код выполнится, когда игрок подтвердит ввод в наковальне
                         parameters.put(field.getKey(), newValue);
@@ -333,6 +333,9 @@ public class CodingParameterGUI implements Listener {
                         player.sendMessage("§c❌ Ошибка при обновлении параметра: " + e.getMessage());
                         com.megacreative.MegaCreative.getInstance().getLogger().warning("Ошибка в CodingParameterGUI: " + e.getMessage());
                     }
+                }, () -> {
+                    // Callback для отмены
+                    player.sendMessage("§c❌ Ввод параметра отменен");
                 });
             } catch (Exception e) {
                 player.sendMessage("§c❌ Ошибка при выборе параметра: " + e.getMessage());

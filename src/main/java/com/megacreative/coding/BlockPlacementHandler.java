@@ -218,7 +218,7 @@ public class BlockPlacementHandler implements Listener {
         if (itemInHand.getType() == Material.IRON_INGOT && itemInHand.hasItemMeta() &&
             itemInHand.getItemMeta().getDisplayName().contains(CodingItems.DATA_CREATOR_NAME)) {
             event.setCancelled(true);
-            new com.megacreative.gui.DataGUI(player).open();
+            new com.megacreative.gui.DataGUI(plugin, player).open();
             player.sendMessage("§a✅ Открыто меню создания данных!");
             return;
         }

@@ -23,7 +23,7 @@ public class TemplatesCommand implements CommandExecutor {
         }
         
         // Открываем браузер шаблонов
-        new TemplateBrowserGUI(player).open();
+        new TemplateBrowserGUI(plugin, player).open();
         
         return true;
     }

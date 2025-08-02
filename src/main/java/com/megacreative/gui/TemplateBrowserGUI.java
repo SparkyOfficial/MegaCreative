@@ -1,8 +1,9 @@
 package com.megacreative.gui;
 
 import com.megacreative.MegaCreative;
-import com.megacreative.coding.CodeScript;
 import com.megacreative.coding.CodeBlock;
+import com.megacreative.coding.CodeScript;
+import com.megacreative.listeners.GuiListener;
 import org.bukkit.Bukkit;
 import org.bukkit.Material;
 import org.bukkit.entity.Player;
@@ -12,220 +13,178 @@ import org.bukkit.event.inventory.InventoryClickEvent;
 import org.bukkit.inventory.Inventory;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.inventory.meta.ItemMeta;
-import org.bukkit.Location;
 
-import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
-import java.util.UUID;
+import java.util.Map;
 
 public class TemplateBrowserGUI implements Listener {
+    
+    private final MegaCreative plugin;
     private final Player player;
     private final Inventory inventory;
-    private final List<CodeScript> templates;
-    private int currentPage = 0;
-    private static final int ITEMS_PER_PAGE = 7;
-
-    public TemplateBrowserGUI(Player player) {
+    private int page = 0;
+    
+    public TemplateBrowserGUI(MegaCreative plugin, Player player) {
+        this.plugin = plugin;
         this.player = player;
-        this.templates = MegaCreative.getInstance().getTemplateManager().getTemplates();
-        this.inventory = Bukkit.createInventory(null, 9, "§bБраузер шаблонов");
-        Bukkit.getPluginManager().registerEvents(this, MegaCreative.getInstance());
+        this.inventory = Bukkit.createInventory(null, 54, "§8§lБиблиотека шаблонов");
+        
+        // Регистрируем GUI в централизованной системе
+        GuiListener.registerOpenGui(player, this);
         setupInventory();
     }
-
+    
     private void setupInventory() {
         inventory.clear();
         
-        int startIndex = currentPage * ITEMS_PER_PAGE;
-        int endIndex = Math.min(startIndex + ITEMS_PER_PAGE, templates.size());
+        // Заполнение стеклом
+        ItemStack glass = new ItemStack(Material.GRAY_STAINED_GLASS_PANE);
+        ItemMeta glassMeta = glass.getItemMeta();
+        glassMeta.setDisplayName(" ");
+        glass.setItemMeta(glassMeta);
         
-        // Добавляем шаблоны для текущей страницы
-        for (int i = 0; i < endIndex - startIndex; i++) {
-            CodeScript template = templates.get(startIndex + i);
-            ItemStack item = new ItemStack(Material.BOOK);
-            ItemMeta meta = item.getItemMeta();
-            
-            meta.setDisplayName("§a" + template.getName());
-            
-            List<String> lore = new ArrayList<>();
-            lore.add("§7Автор: §f" + template.getAuthor());
-            if (!template.getDescription().isEmpty()) {
-                lore.add("§7Описание: §f" + template.getDescription());
-            }
-            lore.add("§7Блоков: §f" + countBlocks(template.getRootBlock()));
-            lore.add("§e▶ Нажмите для импорта");
-            
-            meta.setLore(lore);
-            item.setItemMeta(meta);
-            inventory.setItem(i, item);
+        for (int i = 0; i < 54; i++) {
+            inventory.setItem(i, glass);
         }
         
-        // Кнопка "Закрыть"
-        ItemStack closeButton = new ItemStack(Material.BARRIER);
-        ItemMeta closeMeta = closeButton.getItemMeta();
-        closeMeta.setDisplayName("§c§lЗакрыть");
-        closeButton.setItemMeta(closeMeta);
-        inventory.setItem(8, closeButton);
+        // Получение шаблонов
+        List<CodeScript> templates = plugin.getTemplateManager().getTemplates();
+        int startIndex = page * 28;
+        int endIndex = Math.min(startIndex + 28, templates.size());
         
-        // Кнопки навигации
-        if (currentPage > 0) {
+        // Отображение шаблонов
+        int slot = 10;
+        for (int i = startIndex; i < endIndex; i++) {
+            if (slot > 43) break;
+            
+            CodeScript template = templates.get(i);
+            
+            ItemStack templateItem = new ItemStack(Material.BOOK);
+            ItemMeta templateMeta = templateItem.getItemMeta();
+            templateMeta.setDisplayName("§f§l" + template.getName());
+            templateMeta.setLore(Arrays.asList(
+                "§7Блоков: §f" + countBlocks(template.getRootBlock()),
+                "§7Автор: §f" + (template.getAuthor() != null ? template.getAuthor() : "Неизвестно"),
+                "",
+                "§a▶ ЛКМ - Импортировать",
+                "§e▶ ПКМ - Предварительный просмотр"
+            ));
+            templateItem.setItemMeta(templateMeta);
+            inventory.setItem(slot, templateItem);
+            
+            slot++;
+            if (slot % 9 == 8) slot += 2;
+        }
+        
+        // Навигация
+        if (page > 0) {
             ItemStack prevButton = new ItemStack(Material.ARROW);
             ItemMeta prevMeta = prevButton.getItemMeta();
-            prevMeta.setDisplayName("§e§lПредыдущая страница");
+            prevMeta.setDisplayName("§a§lПредыдущая страница");
             prevButton.setItemMeta(prevMeta);
-            inventory.setItem(7, prevButton);
+            inventory.setItem(45, prevButton);
         }
         
         if (endIndex < templates.size()) {
             ItemStack nextButton = new ItemStack(Material.ARROW);
             ItemMeta nextMeta = nextButton.getItemMeta();
-            nextMeta.setDisplayName("§e§lСледующая страница");
+            nextMeta.setDisplayName("§a§lСледующая страница");
             nextButton.setItemMeta(nextMeta);
-            inventory.setItem(8, nextButton);
+            inventory.setItem(53, nextButton);
         }
+        
+        // Кнопка назад
+        ItemStack backButton = new ItemStack(Material.BARRIER);
+        ItemMeta backMeta = backButton.getItemMeta();
+        backMeta.setDisplayName("§c§lНазад");
+        backButton.setItemMeta(backMeta);
+        inventory.setItem(46, backButton);
     }
     
     private int countBlocks(CodeBlock block) {
         if (block == null) return 0;
-        
-        int count = 1; // Текущий блок
-        
-        // Считаем следующий блок
-        if (block.getNextBlock() != null) {
-            count += countBlocks(block.getNextBlock());
-        }
-        
-        // Считаем дочерние блоки
+        int count = 1;
+        count += countBlocks(block.getNextBlock());
         for (CodeBlock child : block.getChildren()) {
             count += countBlocks(child);
         }
-        
         return count;
     }
-
+    
     public void open() {
         player.openInventory(inventory);
     }
-
+    
     @EventHandler
     public void onInventoryClick(InventoryClickEvent event) {
-        if (!event.getWhoClicked().equals(player)) return;
         if (!event.getInventory().equals(inventory)) return;
+        
         event.setCancelled(true);
+        
+        if (!(event.getWhoClicked() instanceof Player clicker) || !clicker.equals(player)) {
+            return;
+        }
         
         ItemStack clicked = event.getCurrentItem();
         if (clicked == null || !clicked.hasItemMeta()) return;
         
         String displayName = clicked.getItemMeta().getDisplayName();
         
-        // Обработка "Закрыть"
-        if (displayName.contains("Закрыть")) {
+        // Кнопка назад
+        if (displayName.contains("Назад")) {
             player.closeInventory();
-            InventoryClickEvent.getHandlerList().unregister(this);
+            // Удаляем регистрацию GUI
+            GuiListener.unregisterOpenGui(player);
+            new ScriptsGUI(plugin, player).open();
             return;
         }
         
-        // Обработка навигации
+        // Навигация
         if (displayName.contains("Предыдущая страница")) {
-            currentPage--;
+            page--;
             setupInventory();
             return;
         }
+        
         if (displayName.contains("Следующая страница")) {
-            currentPage++;
+            page++;
             setupInventory();
             return;
         }
         
-        // Обработка выбора шаблона
-        int clickedSlot = event.getSlot();
-        int startIndex = currentPage * ITEMS_PER_PAGE;
+        // Клик по шаблону
+        List<CodeScript> templates = plugin.getTemplateManager().getTemplates();
+        int slot = event.getSlot();
+        int templateIndex = getTemplateIndexFromSlot(slot);
         
-        if (clickedSlot < templates.size() - startIndex) {
-            CodeScript selectedTemplate = templates.get(startIndex + clickedSlot);
-            importTemplate(selectedTemplate);
-        }
-    }
-    
-    private void importTemplate(CodeScript template) {
-        // Проверяем, что игрок в мире разработки
-        if (!player.getWorld().getName().equals("dev")) {
-            player.sendMessage("§cВы должны находиться в мире разработки для импорта шаблонов!");
-            return;
-        }
-        
-        // Клонируем корневой блок
-        try {
-            CodeBlock clonedRoot = cloneBlock(template.getRootBlock());
+        if (templateIndex >= 0 && templateIndex < templates.size()) {
+            CodeScript template = templates.get(templateIndex);
             
-            // Размещаем блоки в мире
-            placeBlocksInWorld(clonedRoot, player.getLocation());
-            
-            player.sendMessage("§a✓ Шаблон '" + template.getName() + "' успешно импортирован!");
-            player.sendMessage("§7Блоки размещены вокруг вас. Используйте связующий жезл для соединения.");
-            
-        } catch (Exception e) {
-            player.sendMessage("§cОшибка импорта шаблона: " + e.getMessage());
+            if (event.isLeftClick()) {
+                // Импорт шаблона
+                player.closeInventory();
+                // Удаляем регистрацию GUI
+                GuiListener.unregisterOpenGui(player);
+                player.performCommand("importtemplate " + template.getName());
+            } else if (event.isRightClick()) {
+                // Предварительный просмотр
+                player.closeInventory();
+                // Удаляем регистрацию GUI
+                GuiListener.unregisterOpenGui(player);
+                player.performCommand("previewtemplate " + template.getName());
+            }
         }
     }
     
-    private CodeBlock cloneBlock(CodeBlock original) {
-        if (original == null) return null;
+    private int getTemplateIndexFromSlot(int slot) {
+        if (slot < 10 || slot > 43) return -1;
         
-        CodeBlock cloned = new CodeBlock(original.getMaterial(), original.getAction());
-        cloned.setId(UUID.randomUUID()); // Новый уникальный ID
+        int row = slot / 9;
+        int col = slot % 9;
         
-        // Копируем параметры
-        cloned.getParameters().putAll(original.getParameters());
+        if (col == 0 || col == 8) return -1;
         
-        // Рекурсивно клонируем следующий блок
-        if (original.getNextBlock() != null) {
-            cloned.setNext(cloneBlock(original.getNextBlock()));
-        }
-        
-        // Рекурсивно клонируем дочерние блоки
-        for (CodeBlock child : original.getChildren()) {
-            cloned.addChild(cloneBlock(child));
-        }
-        
-        return cloned;
-    }
-    
-    private void placeBlocksInWorld(CodeBlock block, Location centerLocation) {
-        if (block == null) return;
-        
-        // Размещаем текущий блок
-        Location blockLocation = centerLocation.clone().add(0, 0, 0);
-        blockLocation.getBlock().setType(block.getMaterial());
-        
-        // Добавляем в систему блоков
-        MegaCreative.getInstance().getBlockPlacementHandler().getBlockCodeBlocks().put(blockLocation, block);
-        
-        // Устанавливаем табличку
-        setSignOnBlock(blockLocation, block.getAction());
-        
-        // Рекурсивно размещаем следующий блок
-        if (block.getNextBlock() != null) {
-            Location nextLocation = centerLocation.clone().add(2, 0, 0);
-            placeBlocksInWorld(block.getNextBlock(), nextLocation);
-        }
-        
-        // Рекурсивно размещаем дочерние блоки
-        int childIndex = 0;
-        for (CodeBlock child : block.getChildren()) {
-            Location childLocation = centerLocation.clone().add(0, 2, childIndex * 2);
-            placeBlocksInWorld(child, childLocation);
-            childIndex++;
-        }
-    }
-    
-    private void setSignOnBlock(Location location, String action) {
-        // Простая реализация установки таблички
-        // В реальности нужно использовать BlockPlacementHandler.setSignOnBlock
-        if (location.getBlock().getType().name().contains("SIGN")) {
-            // Устанавливаем табличку с действием
-            // Это упрощенная версия, в реальности нужно использовать Bukkit API для табличек
-        }
+        return (row - 1) * 7 + (col - 1) + page * 28;
     }
 } 
