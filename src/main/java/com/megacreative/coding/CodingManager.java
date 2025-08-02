@@ -21,22 +21,22 @@ import java.util.UUID;
 public class CodingManager implements Listener {
 
     private final MegaCreative plugin;
-    private final ScriptExecutor scriptExecutor;
+    private final HybridScriptExecutor scriptExecutor;
     private final Map<String, List<CodeScript>> worldScripts = new HashMap<>();
     private final Map<String, Object> globalVariables = new HashMap<>();
     private final Map<String, Object> serverVariables = new HashMap<>();
     
     /**
      * Получает исполнитель скриптов.
-     * @return ScriptExecutor для выполнения скриптов
+     * @return HybridScriptExecutor для выполнения скриптов
      */
-    public ScriptExecutor getScriptExecutor() {
+    public HybridScriptExecutor getScriptExecutor() {
         return scriptExecutor;
     }
 
     public CodingManager(MegaCreative plugin) {
         this.plugin = plugin;
-        this.scriptExecutor = new ScriptExecutor(plugin);
+        this.scriptExecutor = new HybridScriptExecutor(plugin);
         Bukkit.getPluginManager().registerEvents(this, plugin);
     }
 
