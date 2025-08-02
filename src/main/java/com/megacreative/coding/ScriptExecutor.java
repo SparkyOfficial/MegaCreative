@@ -86,6 +86,11 @@ public class ScriptExecutor {
         
         // Повторяющийся триггер
         actionRegistry.put("repeatTrigger", new RepeatTriggerAction());
+        
+        // Циклы и функции
+        actionRegistry.put("repeat", new RepeatAction());
+        actionRegistry.put("callFunction", new CallFunctionAction());
+        actionRegistry.put("saveFunction", new SaveFunctionAction());
     }
 
     private void registerConditions() {

@@ -34,6 +34,7 @@ public class MegaCreative extends JavaPlugin {
     private DataManager dataManager;
     private TemplateManager templateManager;
     private ScoreboardManager scoreboardManager;
+    private TrustedPlayerManager trustedPlayerManager;
     private Logger logger;
     
     // Система комментариев
@@ -59,6 +60,7 @@ public class MegaCreative extends JavaPlugin {
         this.dataManager = new DataManager(this);
         this.templateManager = new TemplateManager(this);
         this.scoreboardManager = new ScoreboardManager(this);
+        this.trustedPlayerManager = new TrustedPlayerManager(this);
         
         // --- ВОТ ГЛАВНОЕ ИСПРАВЛЕНИЕ ---
         // Теперь мы загружаем миры, когда все остальные системы готовы
@@ -98,6 +100,7 @@ public class MegaCreative extends JavaPlugin {
         getCommand("worldbrowser").setExecutor(new WorldBrowserCommand(this));
         getCommand("join").setExecutor(new JoinCommand(this));
         getCommand("play").setExecutor(new PlayCommand(this));
+        getCommand("trusted").setExecutor(new TrustedPlayerCommand(this));
         getCommand("build").setExecutor(new BuildCommand(this));
         getCommand("dev").setExecutor(new DevCommand(this));
         getCommand("hub").setExecutor(new HubCommand(this));
@@ -171,6 +174,10 @@ public class MegaCreative extends JavaPlugin {
     
     public ScoreboardManager getScoreboardManager() {
         return scoreboardManager;
+    }
+
+    public TrustedPlayerManager getTrustedPlayerManager() {
+        return trustedPlayerManager;
     }
     
     public Map<UUID, CreativeWorld> getCommentInputs() {

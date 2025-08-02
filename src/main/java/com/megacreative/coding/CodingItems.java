@@ -24,6 +24,10 @@ public class CodingItems {
     public static final String IF_GAME_BLOCK_NAME = "§c§lЕсли игра";
     public static final String IF_MOB_BLOCK_NAME = "§d§lЕсли существо";
     public static final String GET_DATA_BLOCK_NAME = "§a§lПолучить данные";
+    public static final String REPEAT_BLOCK_NAME = "§f🔄 Повторить N раз";
+    public static final String CALL_FUNCTION_BLOCK_NAME = "§b📞 Вызвать функцию";
+    public static final String SAVE_FUNCTION_BLOCK_NAME = "§d💾 Сохранить функцию";
+    public static final String REPEAT_TRIGGER_BLOCK_NAME = "§e⏰ Повторяющийся триггер";
     public static final String LINKER_TOOL_NAME = "§e§lСвязующий жезл";
     public static final String INSPECTOR_TOOL_NAME = "§b🔍 Инспектор блоков";
     public static final String COPIER_TOOL_NAME = "§6📋 Копировщик блоков";
@@ -43,6 +47,10 @@ public class CodingItems {
         CODING_ITEM_NAMES.add(IF_GAME_BLOCK_NAME);
         CODING_ITEM_NAMES.add(IF_MOB_BLOCK_NAME);
         CODING_ITEM_NAMES.add(GET_DATA_BLOCK_NAME);
+        CODING_ITEM_NAMES.add(REPEAT_BLOCK_NAME);
+        CODING_ITEM_NAMES.add(CALL_FUNCTION_BLOCK_NAME);
+        CODING_ITEM_NAMES.add(SAVE_FUNCTION_BLOCK_NAME);
+        CODING_ITEM_NAMES.add(REPEAT_TRIGGER_BLOCK_NAME);
         CODING_ITEM_NAMES.add(LINKER_TOOL_NAME);
         CODING_ITEM_NAMES.add(INSPECTOR_TOOL_NAME);
         CODING_ITEM_NAMES.add(COPIER_TOOL_NAME);
@@ -85,6 +93,10 @@ public class CodingItems {
         player.getInventory().addItem(createSimpleBlock(Material.REDSTONE_BLOCK, "§c§lЕсли игра"));
         player.getInventory().addItem(createSimpleBlock(Material.BRICKS, "§d§lЕсли существо"));
         player.getInventory().addItem(createSimpleBlock(Material.POLISHED_GRANITE, "§a§lПолучить данные"));
+        player.getInventory().addItem(createSimpleBlock(Material.EMERALD_BLOCK, "§f🔄 Повторить N раз"));
+        player.getInventory().addItem(createSimpleBlock(Material.LAPIS_BLOCK, "§b📞 Вызвать функцию"));
+        player.getInventory().addItem(createSimpleBlock(Material.BOOKSHELF, "§d💾 Сохранить функцию"));
+        player.getInventory().addItem(createSimpleBlock(Material.REDSTONE_BLOCK, "§e⏰ Повторяющийся триггер"));
         
         // Железный слиток для создания данных
         player.getInventory().addItem(getDataCreator());

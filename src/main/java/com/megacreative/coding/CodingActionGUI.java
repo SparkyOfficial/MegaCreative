@@ -113,6 +113,10 @@ public class CodingActionGUI implements Listener {
             case "onLeave": return Material.REDSTONE_TORCH;
             case "onInteract": return Material.LEVER;
             case "else": return Material.END_STONE;
+            case "repeat": return Material.HOPPER;
+            case "callFunction": return Material.BOOKSHELF;
+            case "saveFunction": return Material.WRITABLE_BOOK;
+            case "repeatTrigger": return Material.REPEATER;
             default: return material; // Используем материал блока как иконку по умолчанию
         }
     }
@@ -153,6 +157,10 @@ public class CodingActionGUI implements Listener {
             case "onLeave": return "При выходе игрока";
             case "onInteract": return "При взаимодействии";
             case "else": return "Иначе (если условие не выполнено)";
+            case "repeat": return "Повторить блок N раз";
+            case "callFunction": return "Вызвать функцию";
+            case "saveFunction": return "Сохранить как функцию";
+            case "repeatTrigger": return "Повторяющийся триггер";
             default: return "Действие: " + action;
         }
     }

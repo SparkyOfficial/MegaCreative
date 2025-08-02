@@ -42,17 +42,21 @@ public class BlockPlacementHandler implements Listener {
     private final Map<UUID, CodeBlock> clipboard = new HashMap<>(); // Буфер обмена для копирования
 
     // Список действий для каждого типа блока (MVP, можно расширять)
-    private static final Map<Material, List<String>> ACTIONS = Map.of(
-        Material.DIAMOND_BLOCK, List.of("onJoin", "onLeave", "onChat", "onInteract"),
-        Material.OAK_PLANKS, List.of("isOp", "isInWorld", "hasItem", "hasPermission", "isNearBlock", "timeOfDay"),
-        Material.COBBLESTONE, List.of("sendMessage", "teleport", "giveItem", "playSound", "effect", "command", "broadcast"),
-        Material.IRON_BLOCK, List.of("setVar", "addVar", "subVar", "mulVar", "divVar"),
-        Material.END_STONE, List.of("else"),
-        Material.NETHERITE_BLOCK, List.of("setTime", "setWeather", "spawnMob"),
-        Material.OBSIDIAN, List.of("ifVar", "ifNotVar"),
-        Material.REDSTONE_BLOCK, List.of("ifGameMode", "ifWorldType"),
-        Material.BRICKS, List.of("ifMobType", "ifMobNear"),
-        Material.POLISHED_GRANITE, List.of("getVar", "getPlayerName")
+    private static final Map<Material, List<String>> ACTIONS = Map.ofEntries(
+        Map.entry(Material.DIAMOND_BLOCK, List.of("onJoin", "onLeave", "onChat", "onInteract")),
+        Map.entry(Material.OAK_PLANKS, List.of("isOp", "isInWorld", "hasItem", "hasPermission", "isNearBlock", "timeOfDay")),
+        Map.entry(Material.COBBLESTONE, List.of("sendMessage", "teleport", "giveItem", "playSound", "effect", "command", "broadcast")),
+        Map.entry(Material.IRON_BLOCK, List.of("setVar", "addVar", "subVar", "mulVar", "divVar")),
+        Map.entry(Material.END_STONE, List.of("else")),
+        Map.entry(Material.NETHERITE_BLOCK, List.of("setTime", "setWeather", "spawnMob")),
+        Map.entry(Material.OBSIDIAN, List.of("ifVar", "ifNotVar")),
+        Map.entry(Material.REDSTONE_BLOCK, List.of("ifGameMode", "ifWorldType")),
+        Map.entry(Material.BRICKS, List.of("ifMobType", "ifMobNear")),
+        Map.entry(Material.POLISHED_GRANITE, List.of("getVar", "getPlayerName")),
+        Map.entry(Material.EMERALD_BLOCK, List.of("repeat")),
+        Map.entry(Material.LAPIS_BLOCK, List.of("callFunction")),
+        Map.entry(Material.BOOKSHELF, List.of("saveFunction")),
+        Map.entry(Material.REDSTONE_BLOCK, List.of("repeatTrigger"))
     );
 
     public BlockPlacementHandler(MegaCreative plugin) {
@@ -77,6 +81,13 @@ public class BlockPlacementHandler implements Listener {
         }
         if (!isInDevWorld(player)) {
             Bukkit.getLogger().info("[DEBUG] Canceled: Not in a dev world.");
+            return;
+        }
+        
+        // Проверяем права доверенного игрока
+        if (!plugin.getTrustedPlayerManager().canCodeInDevWorld(player)) {
+            event.setCancelled(true);
+            player.sendMessage("§c❌ У вас нет прав для размещения блоков кода в этом мире!");
             return;
         }
 
@@ -137,6 +148,13 @@ public class BlockPlacementHandler implements Listener {
     public void onBlockBreak(BlockBreakEvent event) {
         if (!isInDevWorld(event.getPlayer())) return;
         
+        // Проверяем права доверенного игрока
+        if (!plugin.getTrustedPlayerManager().canCodeInDevWorld(event.getPlayer())) {
+            event.setCancelled(true);
+            event.getPlayer().sendMessage("§c❌ У вас нет прав для удаления блоков кода в этом мире!");
+            return;
+        }
+        
         Location loc = event.getBlock().getLocation();
         if (blockCodeBlocks.containsKey(loc)) {
             CodeBlock removedBlock = blockCodeBlocks.remove(loc);
@@ -174,6 +192,17 @@ public class BlockPlacementHandler implements Listener {
         // Проверяем, что игрок в мире разработки
         if (!isInDevWorld(player)) {
             return;
+        }
+        
+        // Проверяем права доверенного игрока для взаимодействия с блоками кода
+        if (event.getAction() == Action.RIGHT_CLICK_BLOCK && event.getClickedBlock() != null) {
+            Location clickedLocation = event.getClickedBlock().getLocation();
+            if (blockCodeBlocks.containsKey(clickedLocation) && 
+                !plugin.getTrustedPlayerManager().canCodeInDevWorld(player)) {
+                event.setCancelled(true);
+                player.sendMessage("§c❌ У вас нет прав для взаимодействия с блоками кода в этом мире!");
+                return;
+            }
         }
         
         ItemStack itemInHand = player.getInventory().getItemInMainHand();

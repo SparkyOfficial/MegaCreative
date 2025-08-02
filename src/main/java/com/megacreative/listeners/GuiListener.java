@@ -73,6 +73,13 @@ public class GuiListener implements Listener {
             return;
         }
         
+        // Обработка GUI доверенных игроков
+        if (viewTitle.startsWith("§8Управление доверенными игроками")) {
+            event.setCancelled(true);
+            handleTrustedPlayersGUI(event);
+            return;
+        }
+        
         // Добавить другие специальные GUI здесь при необходимости
         
         // По умолчанию отменяем события для всех наших GUI
@@ -88,6 +95,46 @@ public class GuiListener implements Listener {
         // Удаляем регистрацию GUI при закрытии инвентаря
         if (hasOpenGui(player)) {
             unregisterOpenGui(player);
+        }
+    }
+    
+    /**
+     * Обрабатывает клики в GUI доверенных игроков
+     */
+    private void handleTrustedPlayersGUI(InventoryClickEvent event) {
+        Player player = (Player) event.getWhoClicked();
+        int slot = event.getRawSlot();
+        
+        // Проверяем права доступа
+        if (!player.hasPermission("megacreative.trusted")) {
+            player.sendMessage("§c❌ У вас нет прав для управления доверенными игроками!");
+            return;
+        }
+        
+        switch (slot) {
+            case 19: // Добавить строителя
+                player.sendMessage("§a✅ Используйте команду: §f/trusted add <игрок> BUILDER <ваше_имя>");
+                player.closeInventory();
+                break;
+            case 21: // Добавить программиста
+                player.sendMessage("§a✅ Используйте команду: §f/trusted add <игрок> CODER <ваше_имя>");
+                player.closeInventory();
+                break;
+            case 23: // Удалить игрока
+                player.sendMessage("§a✅ Используйте команду: §f/trusted remove <игрок>");
+                player.closeInventory();
+                break;
+            case 25: // Информация
+                player.sendMessage("§a✅ Используйте команду: §f/trusted info <игрок>");
+                player.closeInventory();
+                break;
+            default:
+                // Проверяем, кликнули ли по голове игрока (удаление)
+                if (slot >= 28 && slot <= 53) {
+                    player.sendMessage("§a✅ Используйте команду: §f/trusted remove <игрок>");
+                    player.closeInventory();
+                }
+                break;
         }
     }
     

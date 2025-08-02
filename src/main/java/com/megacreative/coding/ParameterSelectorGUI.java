@@ -131,6 +131,18 @@ public class ParameterSelectorGUI implements Listener {
             case "getServerVar":
                 return Arrays.asList("var", "value", "localVar");
                 
+            case "repeat":
+                return Arrays.asList("times");
+                
+            case "callFunction":
+                return Arrays.asList("function");
+                
+            case "saveFunction":
+                return Arrays.asList("name");
+                
+            case "repeatTrigger":
+                return Arrays.asList("ticks", "action");
+                
             default:
                 return Arrays.asList();
         }

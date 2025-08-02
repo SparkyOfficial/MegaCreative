@@ -68,6 +68,10 @@ commands:
     description: Проверка статуса режима мира.
     usage: /<command>
     permission: megacreative.user
+  trusted:
+    description: Управление доверенными игроками
+    usage: /<command> <add|remove|list|info> [игрок] [тип] [добавил]
+    permission: megacreative.trusted
 
 permissions:
   megacreative.*:
@@ -86,3 +90,6 @@ permissions:
   megacreative.join:
     description: Join worlds
     default: true
+  megacreative.trusted:
+    description: Manage trusted players
+    default: op

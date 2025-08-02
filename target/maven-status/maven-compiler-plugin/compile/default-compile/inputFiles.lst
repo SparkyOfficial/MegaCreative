@@ -8,6 +8,7 @@ C:\Users\Богдан\Desktop\MegaCreativeCURSOR\src\main\java\com\megacreative\
 C:\Users\Богдан\Desktop\MegaCreativeCURSOR\src\main\java\com\megacreative\utils\ConfigManager.java
 C:\Users\Богдан\Desktop\MegaCreativeCURSOR\src\main\java\com\megacreative\managers\PlayerManager.java
 C:\Users\Богдан\Desktop\MegaCreativeCURSOR\src\main\java\com\megacreative\listeners\BlockBreakListener.java
+C:\Users\Богдан\Desktop\MegaCreativeCURSOR\src\main\java\com\megacreative\models\TrustedPlayer.java
 C:\Users\Богдан\Desktop\MegaCreativeCURSOR\src\main\java\com\megacreative\coding\actions\HasItemCondition.java
 C:\Users\Богдан\Desktop\MegaCreativeCURSOR\src\main\java\com\megacreative\gui\AnvilInputGUI.java
 C:\Users\Богдан\Desktop\MegaCreativeCURSOR\src\main\java\com\megacreative\models\WorldMode.java
@@ -39,6 +40,7 @@ C:\Users\Богдан\Desktop\MegaCreativeCURSOR\src\main\java\com\megacreative\
 C:\Users\Богдан\Desktop\MegaCreativeCURSOR\src\main\java\com\megacreative\coding\CodeBlock.java
 C:\Users\Богдан\Desktop\MegaCreativeCURSOR\src\main\java\com\megacreative\coding\data\DataItemFactory.java
 C:\Users\Богдан\Desktop\MegaCreativeCURSOR\src\main\java\com\megacreative\coding\actions\SpawnMobAction.java
+C:\Users\Богдан\Desktop\MegaCreativeCURSOR\src\main\java\com\megacreative\managers\TrustedPlayerManager.java
 C:\Users\Богдан\Desktop\MegaCreativeCURSOR\src\main\java\com\megacreative\coding\actions\CompareVariableCondition.java
 C:\Users\Богдан\Desktop\MegaCreativeCURSOR\src\main\java\com\megacreative\commands\JoinCommand.java
 C:\Users\Богдан\Desktop\MegaCreativeCURSOR\src\main\java\com\megacreative\listeners\PlayerDeathListener.java
@@ -47,6 +49,7 @@ C:\Users\Богдан\Desktop\MegaCreativeCURSOR\src\main\java\com\megacreative\
 C:\Users\Богдан\Desktop\MegaCreativeCURSOR\src\main\java\com\megacreative\coding\CodingActionGUI.java
 C:\Users\Богдан\Desktop\MegaCreativeCURSOR\src\main\java\com\megacreative\coding\actions\HasPermissionCondition.java
 C:\Users\Богдан\Desktop\MegaCreativeCURSOR\src\main\java\com\megacreative\gui\WorldCreationGUI.java
+C:\Users\Богдан\Desktop\MegaCreativeCURSOR\src\main\java\com\megacreative\gui\TrustedPlayersGUI.java
 C:\Users\Богдан\Desktop\MegaCreativeCURSOR\src\main\java\com\megacreative\listeners\WorldInteractListener.java
 C:\Users\Богдан\Desktop\MegaCreativeCURSOR\src\main\java\com\megacreative\managers\ScoreboardManager.java
 C:\Users\Богдан\Desktop\MegaCreativeCURSOR\src\main\java\com\megacreative\coding\BlockPlacementHandler.java
@@ -56,6 +59,7 @@ C:\Users\Богдан\Desktop\MegaCreativeCURSOR\src\main\java\com\megacreative\
 C:\Users\Богдан\Desktop\MegaCreativeCURSOR\src\main\java\com\megacreative\coding\actions\SendMessageAction.java
 C:\Users\Богдан\Desktop\MegaCreativeCURSOR\src\main\java\com\megacreative\coding\actions\CommandAction.java
 C:\Users\Богдан\Desktop\MegaCreativeCURSOR\src\main\java\com\megacreative\commands\TestScriptCommand.java
+C:\Users\Богдан\Desktop\MegaCreativeCURSOR\src\main\java\com\megacreative\commands\TrustedPlayerCommand.java
 C:\Users\Богдан\Desktop\MegaCreativeCURSOR\src\main\java\com\megacreative\listeners\PlayerWorldChangeListener.java
 C:\Users\Богдан\Desktop\MegaCreativeCURSOR\src\main\java\com\megacreative\coding\conditions\IfVarEqualsCondition.java
 C:\Users\Богдан\Desktop\MegaCreativeCURSOR\src\main\java\com\megacreative\coding\actions\GetPlayerNameAction.java
@@ -82,6 +86,7 @@ C:\Users\Богдан\Desktop\MegaCreativeCURSOR\src\main\java\com\megacreative\
 C:\Users\Богдан\Desktop\MegaCreativeCURSOR\src\main\java\com\megacreative\coding\actions\RandomNumberAction.java
 C:\Users\Богдан\Desktop\MegaCreativeCURSOR\src\main\java\com\megacreative\commands\MyWorldsCommand.java
 C:\Users\Богдан\Desktop\MegaCreativeCURSOR\src\main\java\com\megacreative\coding\actions\SetVarAction.java
+C:\Users\Богдан\Desktop\MegaCreativeCURSOR\src\main\java\com\megacreative\coding\actions\SaveFunctionAction.java
 C:\Users\Богдан\Desktop\MegaCreativeCURSOR\src\main\java\com\megacreative\coding\actions\IsInWorldCondition.java
 C:\Users\Богдан\Desktop\MegaCreativeCURSOR\src\main\java\com\megacreative\coding\data\DataType.java
 C:\Users\Богдан\Desktop\MegaCreativeCURSOR\src\main\java\com\megacreative\coding\CodingManager.java
@@ -96,6 +101,8 @@ C:\Users\Богдан\Desktop\MegaCreativeCURSOR\src\main\java\com\megacreative\
 C:\Users\Богдан\Desktop\MegaCreativeCURSOR\src\main\java\com\megacreative\gui\MyWorldsGUI.java
 C:\Users\Богдан\Desktop\MegaCreativeCURSOR\src\main\java\com\megacreative\coding\BlockType.java
 C:\Users\Богдан\Desktop\MegaCreativeCURSOR\src\main\java\com\megacreative\listeners\InventoryClickListener.java
+C:\Users\Богдан\Desktop\MegaCreativeCURSOR\src\main\java\com\megacreative\coding\actions\RepeatAction.java
+C:\Users\Богдан\Desktop\MegaCreativeCURSOR\src\main\java\com\megacreative\coding\actions\CallFunctionAction.java
 C:\Users\Богдан\Desktop\MegaCreativeCURSOR\src\main\java\com\megacreative\gui\WorldCommentsGUI.java
 C:\Users\Богдан\Desktop\MegaCreativeCURSOR\src\main\java\com\megacreative\models\CreativeWorld.java
 C:\Users\Богдан\Desktop\MegaCreativeCURSOR\src\main\java\com\megacreative\coding\actions\BlockCondition.java
