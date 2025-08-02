@@ -16,6 +16,9 @@ public class PlayerQuitListener implements Listener {
     
     @EventHandler
     public void onPlayerQuit(PlayerQuitEvent event) {
+        // Убираем игрока из менеджера скорбордов
+        plugin.getScoreboardManager().removeScoreboard(event.getPlayer());
+        
         // Сохраняем данные игрока
         plugin.getDataManager().savePlayerData(event.getPlayer());
         

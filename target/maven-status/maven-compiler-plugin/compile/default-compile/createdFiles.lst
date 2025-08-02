@@ -23,6 +23,7 @@ com\megacreative\coding\ParameterResolver$1.class
 com\megacreative\coding\actions\MulVarAction.class
 com\megacreative\listeners\PlayerJoinListener.class
 com\megacreative\coding\actions\SetTimeAction.class
+com\megacreative\listeners\PlayerWorldChangeListener.class
 com\megacreative\listeners\DataItemListener.class
 com\megacreative\commands\DevCommand.class
 com\megacreative\listeners\InventoryClickListener.class
@@ -30,6 +31,7 @@ com\megacreative\coding\CodingActionGUI.class
 com\megacreative\commands\MyWorldsCommand.class
 com\megacreative\models\WorldComment.class
 com\megacreative\gui\WorldSettingsGUI.class
+com\megacreative\managers\ScoreboardManager.class
 com\megacreative\coding\ScriptExecutor.class
 com\megacreative\coding\CodingManager.class
 com\megacreative\commands\StatusCommand.class
@@ -85,6 +87,7 @@ com\megacreative\coding\actions\SetVarAction.class
 com\megacreative\coding\ExecutionContext.class
 com\megacreative\coding\actions\SetBlockAction.class
 com\megacreative\managers\WorldManager$1.class
+com\megacreative\utils\TabListManager.class
 com\megacreative\coding\actions\PlaySoundAction.class
 com\megacreative\commands\JoinCommand.class
 com\megacreative\coding\actions\EffectAction.class

@@ -33,6 +33,7 @@ public class MegaCreative extends JavaPlugin {
     private ScriptDebugger scriptDebugger;
     private DataManager dataManager;
     private TemplateManager templateManager;
+    private ScoreboardManager scoreboardManager;
     private Logger logger;
     
     // Система комментариев
@@ -57,6 +58,7 @@ public class MegaCreative extends JavaPlugin {
         this.scriptDebugger = new ScriptDebugger(this);
         this.dataManager = new DataManager(this);
         this.templateManager = new TemplateManager(this);
+        this.scoreboardManager = new ScoreboardManager(this);
         
         // Регистрируем команды и события
         registerCommands();
@@ -124,6 +126,7 @@ public class MegaCreative extends JavaPlugin {
         
         // РЕГИСТРАЦИЯ НОВОГО СЛУШАТЕЛЯ ДЛЯ ЗАЩИТЫ ПРЕДМЕТОВ
         getServer().getPluginManager().registerEvents(new DevWorldProtectionListener(this), this);
+        getServer().getPluginManager().registerEvents(new PlayerWorldChangeListener(this), this);
     }
     
     public static MegaCreative getInstance() {
@@ -160,6 +163,10 @@ public class MegaCreative extends JavaPlugin {
     
     public TemplateManager getTemplateManager() {
         return templateManager;
+    }
+    
+    public ScoreboardManager getScoreboardManager() {
+        return scoreboardManager;
     }
     
     public Map<UUID, CreativeWorld> getCommentInputs() {
