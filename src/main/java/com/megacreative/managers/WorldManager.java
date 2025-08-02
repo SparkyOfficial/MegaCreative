@@ -337,113 +337,14 @@ public class WorldManager {
         File worldFile = new File(dataFolder, world.getId() + ".yml");
         YamlConfiguration config = new YamlConfiguration();
         
-        // Сохранение данных мира
-        config.set("id", world.getId());
-        config.set("name", world.getName());
-        config.set("description", world.getDescription());
-        config.set("owner.id", world.getOwnerId().toString());
-        config.set("owner.name", world.getOwnerName());
-        config.set("type", world.getWorldType().name());
-        config.set("mode", world.getMode().name());
-        config.set("private", world.isPrivate());
-        config.set("created", world.getCreatedTime());
-        config.set("lastActivity", world.getLastActivity());
-        
-        // Сохранение флагов
-        config.set("flags.mobSpawning", world.getFlags().isMobSpawning());
-        config.set("flags.pvp", world.getFlags().isPvp());
-        config.set("flags.explosions", world.getFlags().isExplosions());
-        
-        // Сохранение доверенных игроков
-        config.set("trusted.builders", world.getTrustedBuilders().stream().map(UUID::toString).toList());
-        config.set("trusted.coders", world.getTrustedCoders().stream().map(UUID::toString).toList());
-        
-        // Сохранение статистики
-        config.set("stats.likes", world.getLikes());
-        config.set("stats.dislikes", world.getDislikes());
-
-        // Сохранение скриптов
-        List<Map<String, Object>> serializedScripts = new ArrayList<>();
-        for (CodeScript script : world.getScripts()) {
-            Map<String, Object> scriptMap = new HashMap<>();
-            scriptMap.put("name", script.getName());
-            scriptMap.put("enabled", script.isEnabled());
-            scriptMap.put("rootBlock", serializeBlock(script.getRootBlock()));
-            serializedScripts.add(scriptMap);
-        }
-        config.set("scripts", serializedScripts);
+        // Используем Gson для сериализации всего мира в JSON
+        String worldJson = com.megacreative.utils.JsonSerializer.serializeWorld(world);
+        config.set("worldData", worldJson);
         
         try {
             config.save(worldFile);
         } catch (IOException e) {
             plugin.getLogger().severe("Ошибка сохранения мира " + world.getId() + ": " + e.getMessage());
-        }
-    }
-
-    private Map<String, Object> serializeBlock(CodeBlock block) {
-        if (block == null) return null;
-        Map<String, Object> blockMap = new HashMap<>();
-        blockMap.put("material", block.getMaterial().name());
-        blockMap.put("action", block.getAction());
-        blockMap.put("parameters", block.getParameters());
-        blockMap.put("nextBlock", serializeBlock(block.getNextBlock()));
-        
-        // Сериализация дочерних блоков (список)
-        List<Map<String, Object>> childrenList = new ArrayList<>();
-        for (CodeBlock child : block.getChildren()) {
-            Map<String, Object> childMap = serializeBlock(child);
-            if (childMap != null) {
-                childrenList.add(childMap);
-            }
-        }
-        blockMap.put("children", childrenList);
-        
-        return blockMap;
-    }
-
-    private CodeBlock deserializeBlock(Map<String, Object> blockMap) {
-        if (blockMap == null || blockMap.isEmpty()) return null;
-
-        try {
-            Material material = Material.valueOf((String) blockMap.get("material"));
-            String action = (String) blockMap.get("action");
-            CodeBlock block = new CodeBlock(material, action);
-            
-            // Восстановление параметров
-            Object parametersObj = blockMap.get("parameters");
-            if (parametersObj instanceof Map) {
-                @SuppressWarnings("unchecked")
-                Map<String, Object> parameters = (Map<String, Object>) parametersObj;
-                for (Map.Entry<String, Object> entry : parameters.entrySet()) {
-                    block.setParameter(entry.getKey(), entry.getValue());
-                }
-            }
-
-            // Восстановление следующего блока
-            Object nextBlockObj = blockMap.get("nextBlock");
-            if (nextBlockObj instanceof Map) {
-                @SuppressWarnings("unchecked")
-                Map<String, Object> nextBlockMap = (Map<String, Object>) nextBlockObj;
-                block.setNext(deserializeBlock(nextBlockMap));
-            }
-            
-            // Восстановление дочерних блоков
-            Object childrenObj = blockMap.get("children");
-            if (childrenObj instanceof List) {
-                @SuppressWarnings("unchecked")
-                List<Map<String, Object>> childrenList = (List<Map<String, Object>>) childrenObj;
-                for (Map<String, Object> childMap : childrenList) {
-                    CodeBlock child = deserializeBlock(childMap);
-                    if (child != null) {
-                        block.addChild(child);
-                    }
-                }
-            }
-
-            return block;
-        } catch (Exception e) {
-            plugin.getLogger().warning("Ошибка десериализации блока: " + e.getMessage());
-            return null;
         }
     }
     
@@ -472,79 +373,39 @@ public class WorldManager {
     private void loadWorld(File worldFile) {
         YamlConfiguration config = YamlConfiguration.loadConfiguration(worldFile);
         
-        String id = config.getString("id");
-        String name = config.getString("name");
-        UUID ownerId = UUID.fromString(config.getString("owner.id"));
-        String ownerName = config.getString("owner.name");
-        CreativeWorldType worldType = CreativeWorldType.valueOf(config.getString("type"));
-        
-        CreativeWorld world = new CreativeWorld(id, name, ownerId, ownerName, worldType);
-        
-        // Загрузка данных
-        world.setDescription(config.getString("description", ""));
-        world.setMode(WorldMode.valueOf(config.getString("mode", "BUILD")));
-        world.setPrivate(config.getBoolean("private", false));
-        world.setCreatedTime(config.getLong("created"));
-        world.setLastActivity(config.getLong("lastActivity"));
-        
-        // Загрузка флагов
-        WorldFlags flags = world.getFlags();
-        flags.setMobSpawning(config.getBoolean("flags.mobSpawning", true));
-        flags.setPvp(config.getBoolean("flags.pvp", false));
-        flags.setExplosions(config.getBoolean("flags.explosions", false));
-        
-        // Загрузка доверенных игроков
-        config.getStringList("trusted.builders").forEach(uuidStr -> 
-            world.getTrustedBuilders().add(UUID.fromString(uuidStr))
-        );
-        config.getStringList("trusted.coders").forEach(uuidStr -> 
-            world.getTrustedCoders().add(UUID.fromString(uuidStr))
-        );
-        
-        // Загрузка статистики
-        world.setLikes(config.getInt("stats.likes", 0));
-        world.setDislikes(config.getInt("stats.dislikes", 0));
-
-        // Загрузка скриптов
-        List<Map<?, ?>> scriptsList = config.getMapList("scripts");
-        for (Map<?, ?> scriptMapUntyped : scriptsList) {
-            Map<String, Object> scriptMap = (Map<String, Object>) scriptMapUntyped;
-            String scriptName = (String) scriptMap.getOrDefault("name", "Безымянный скрипт");
-            boolean enabled = (boolean) scriptMap.getOrDefault("enabled", true);
-            
-            // Безопасная десериализация с проверкой типа
-            CodeBlock rootBlock = null;
-            Object rootBlockObj = scriptMap.get("rootBlock");
-            if (rootBlockObj instanceof Map) {
-                @SuppressWarnings("unchecked")
-                Map<String, Object> rootBlockMap = (Map<String, Object>) rootBlockObj;
-                rootBlock = deserializeBlock(rootBlockMap);
-            }
-            
-            if (rootBlock != null) {
-                world.getScripts().add(new CodeScript(scriptName, enabled, rootBlock));
-            }
+        // Используем Gson для десериализации мира из JSON
+        String worldJson = config.getString("worldData");
+        if (worldJson == null) {
+            plugin.getLogger().warning("Файл мира " + worldFile.getName() + " не содержит данных worldData");
+            return;
         }
+        
+        try {
+            CreativeWorld world = com.megacreative.utils.JsonSerializer.deserializeWorld(worldJson);
+            if (world != null) {
+                worlds.put(world.getId(), world);
+                playerWorlds.computeIfAbsent(world.getOwnerId(), k -> new ArrayList<>()).add(world.getId());
 
-        worlds.put(id, world);
-        playerWorlds.computeIfAbsent(ownerId, k -> new ArrayList<>()).add(id);
-
-        // Автоматическая загрузка мира и скриптов, если он уже существует
-        World bukkitWorld = Bukkit.getWorld(world.getWorldName());
-        if (bukkitWorld == null) {
-            WorldCreator creator = new WorldCreator(world.getWorldName());
-            switch (world.getWorldType()) {
-                case FLAT -> creator.type(WorldType.FLAT);
-                case VOID -> creator.generator("VoidWorld"); // если есть генератор пустоты
-                case OCEAN -> creator.type(WorldType.NORMAL); // можно добавить генератор океана
-                case NETHER -> creator.environment(World.Environment.NETHER);
-                case END -> creator.environment(World.Environment.THE_END);
-                default -> creator.type(WorldType.NORMAL);
+                // Автоматическая загрузка мира и скриптов, если он уже существует
+                World bukkitWorld = Bukkit.getWorld(world.getWorldName());
+                if (bukkitWorld == null) {
+                    WorldCreator creator = new WorldCreator(world.getWorldName());
+                    switch (world.getWorldType()) {
+                        case FLAT -> creator.type(WorldType.FLAT);
+                        case VOID -> creator.generator("VoidWorld"); // если есть генератор пустоты
+                        case OCEAN -> creator.type(WorldType.NORMAL); // можно добавить генератор океана
+                        case NETHER -> creator.environment(World.Environment.NETHER);
+                        case END -> creator.environment(World.Environment.THE_END);
+                        default -> creator.type(WorldType.NORMAL);
+                    }
+                    bukkitWorld = creator.createWorld();
+                }
+                if (bukkitWorld != null) {
+                    plugin.getCodingManager().loadScriptsForWorld(world);
+                }
             }
-            bukkitWorld = creator.createWorld();
-        }
-        if (bukkitWorld != null) {
-            plugin.getCodingManager().loadScriptsForWorld(world);
+        } catch (Exception e) {
+            plugin.getLogger().severe("Ошибка загрузки мира " + worldFile.getName() + ": " + e.getMessage());
         }
     }
     

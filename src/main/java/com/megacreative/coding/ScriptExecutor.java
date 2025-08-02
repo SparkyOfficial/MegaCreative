@@ -126,7 +126,15 @@ public class ScriptExecutor {
         
         CodeBlock root = script.getRootBlock();
         if (root.getMaterial() == Material.DIAMOND_BLOCK && root.getAction().equals(triggerAction)) {
-            processBlock(root.getNextBlock(), context);
+            CodeBlock nextBlock = root.getNextBlock();
+            if (nextBlock != null) {
+                // Находим локацию первого блока ОДИН РАЗ при запуске скрипта
+                Location firstBlockLocation = findBlockLocation(nextBlock);
+                // Создаем контекст с локацией первого блока
+                ExecutionContext startContext = context.withCurrentBlock(nextBlock, firstBlockLocation);
+                // Запускаем выполнение с уже известной локацией
+                processBlock(nextBlock, startContext);
+            }
         }
 
         if (player != null && plugin.getScriptDebugger().isDebugEnabled(player)) {
@@ -138,8 +146,8 @@ public class ScriptExecutor {
     public void processBlock(CodeBlock block, ExecutionContext context) {
         if (block == null) return;
 
-        // 1. Находим локацию для отладки
-        Location blockLocation = findBlockLocation(block);
+        // 1. Используем локацию из контекста (уже передана из предыдущего вызова)
+        Location blockLocation = context.getBlockLocation();
         
         // 2. Создаем контекст для текущего шага
         ExecutionContext currentContext = context.withCurrentBlock(block, blockLocation);
@@ -166,9 +174,15 @@ public class ScriptExecutor {
             }
         }
 
-        // 5. Переход к следующему блоку
-        if (block.getNextBlock() != null) {
-            processBlock(block.getNextBlock(), currentContext);
+        // 5. Переход к следующему блоку с оптимизацией
+        CodeBlock nextBlock = block.getNextBlock();
+        if (nextBlock != null) {
+            // Находим локацию СЛЕДУЮЩЕГО блока ОДИН РАЗ
+            Location nextBlockLocation = findBlockLocation(nextBlock);
+            // Создаем новый контекст для следующего шага с уже известной локацией
+            ExecutionContext nextContext = currentContext.withCurrentBlock(nextBlock, nextBlockLocation);
+            // Рекурсивно обрабатываем следующий блок с уже известной локацией
+            processBlock(nextBlock, nextContext);
         }
     }
     

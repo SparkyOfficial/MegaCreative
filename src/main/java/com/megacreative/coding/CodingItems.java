@@ -7,6 +7,7 @@ import org.bukkit.inventory.meta.ItemMeta;
 import java.util.Arrays;
 import java.util.HashSet;
 import java.util.Set;
+import java.util.List;
 
 /**
  * Класс для создания и выдачи предметов-блоков кодирования игрокам.
@@ -76,6 +77,58 @@ public class CodingItems {
         ));
         tool.setItemMeta(meta);
         return tool;
+    }
+
+    /**
+     * Создает инспектор блоков для просмотра информации
+     */
+    public static ItemStack getInspectorTool() {
+        ItemStack inspector = new ItemStack(Material.DEBUG_STICK);
+        ItemMeta inspectorMeta = inspector.getItemMeta();
+        inspectorMeta.setDisplayName("§b🔍 Инспектор блоков");
+        inspectorMeta.setLore(Arrays.asList(
+            "§7ПКМ по блоку кода для просмотра",
+            "§7информации о действии и параметрах"
+        ));
+        inspector.setItemMeta(inspectorMeta);
+        return inspector;
+    }
+
+    /**
+     * Выдаёт игроку только недостающие предметы для кодинга
+     */
+    public static void giveMissingItems(Player player, List<String> missingItems) {
+        for (String itemName : missingItems) {
+            switch (itemName) {
+                case "Связующий жезл":
+                    player.getInventory().addItem(getLinkingTool());
+                    break;
+                case "Инспектор блоков":
+                    player.getInventory().addItem(getInspectorTool());
+                    break;
+                case "Блок события":
+                    player.getInventory().addItem(createSimpleBlock(Material.DIAMOND_BLOCK, EVENT_BLOCK_NAME));
+                    break;
+                case "Блок действия":
+                    player.getInventory().addItem(createSimpleBlock(Material.COBBLESTONE, ACTION_BLOCK_NAME));
+                    break;
+                case "Блок условия":
+                    player.getInventory().addItem(createSimpleBlock(Material.OAK_PLANKS, CONDITION_BLOCK_NAME));
+                    break;
+                case "Блок переменной":
+                    player.getInventory().addItem(createSimpleBlock(Material.IRON_BLOCK, VARIABLE_BLOCK_NAME));
+                    break;
+                case "Блок повтора":
+                    player.getInventory().addItem(createSimpleBlock(Material.EMERALD_BLOCK, REPEAT_BLOCK_NAME));
+                    break;
+                default:
+                    // Для неизвестных предметов выдаем базовый набор
+                    if (itemName.contains("блок") || itemName.contains("Блок")) {
+                        player.getInventory().addItem(createSimpleBlock(Material.STONE, "§7" + itemName));
+                    }
+                    break;
+            }
+        }
     }
 
     /**

@@ -20,6 +20,8 @@ import java.util.Map;
 import java.util.UUID;
 import java.util.logging.Logger;
 import com.megacreative.commands.CreateScriptCommand;
+import java.util.ArrayList;
+import java.util.List;
 
 public class MegaCreative extends JavaPlugin {
     
@@ -198,10 +200,12 @@ public class MegaCreative extends JavaPlugin {
             public void run() {
                 for (Player player : Bukkit.getOnlinePlayers()) {
                     if (player.getWorld().getName().endsWith("_dev")) {
-                        if (!hasAllCodingItems(player)) {
-                            player.getInventory().clear();
-                            CodingItems.giveCodingItems(player);
-                            player.sendMessage("§e§l!§r §eВаш инвентарь был обновлен, чтобы содержать все инструменты для кодинга.");
+                        // Проверяем, каких предметов не хватает
+                        List<String> missingItems = getMissingCodingItems(player);
+                        if (!missingItems.isEmpty()) {
+                            // Добавляем только недостающие предметы
+                            CodingItems.giveMissingItems(player, missingItems);
+                            player.sendMessage("§e§l!§r §eДобавлены недостающие инструменты для кодинга: " + String.join(", ", missingItems));
                         }
                     }
                 }
@@ -225,5 +229,42 @@ public class MegaCreative extends JavaPlugin {
             }
         }
         return hasLinker && hasInspector && hasEventBlock;
+    }
+    
+    // Новый метод для определения недостающих предметов
+    private List<String> getMissingCodingItems(Player player) {
+        List<String> missingItems = new ArrayList<>();
+        
+        // Проверяем наличие ключевых предметов
+        boolean hasLinker = false;
+        boolean hasInspector = false;
+        boolean hasEventBlock = false;
+        boolean hasActionBlock = false;
+        boolean hasConditionBlock = false;
+        boolean hasVariableBlock = false;
+        boolean hasRepeatBlock = false;
+        
+        for (ItemStack item : player.getInventory().getContents()) {
+            if (item != null && item.hasItemMeta()) {
+                String name = item.getItemMeta().getDisplayName();
+                if (name.contains("Связующий жезл")) hasLinker = true;
+                if (name.contains("Инспектор блоков")) hasInspector = true;
+                if (name.contains("Событие игрока")) hasEventBlock = true;
+                if (name.contains("Действие игрока")) hasActionBlock = true;
+                if (name.contains("Условие")) hasConditionBlock = true;
+                if (name.contains("Переменная")) hasVariableBlock = true;
+                if (name.contains("Повторить")) hasRepeatBlock = true;
+            }
+        }
+        
+        if (!hasLinker) missingItems.add("Связующий жезл");
+        if (!hasInspector) missingItems.add("Инспектор блоков");
+        if (!hasEventBlock) missingItems.add("Блок события");
+        if (!hasActionBlock) missingItems.add("Блок действия");
+        if (!hasConditionBlock) missingItems.add("Блок условия");
+        if (!hasVariableBlock) missingItems.add("Блок переменной");
+        if (!hasRepeatBlock) missingItems.add("Блок повтора");
+        
+        return missingItems;
     }
 }

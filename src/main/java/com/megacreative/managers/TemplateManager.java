@@ -79,36 +79,20 @@ public class TemplateManager {
         try {
             YamlConfiguration config = YamlConfiguration.loadConfiguration(templatesFile);
             
-            if (config.contains("templates")) {
-                for (String key : config.getConfigurationSection("templates").getKeys(false)) {
-                    String path = "templates." + key;
-                    
-                    String name = config.getString(path + ".name");
-                    String author = config.getString(path + ".author");
-                    String idStr = config.getString(path + ".id");
-                    String description = config.getString(path + ".description", "");
-                    boolean enabled = config.getBoolean(path + ".enabled", true);
-                    
-                    if (name != null && author != null && idStr != null) {
-                        // Загружаем корневой блок
-                        CodeBlock rootBlock = null;
-                        if (config.isConfigurationSection(path + ".rootBlock")) {
-                            // Безопасная десериализация с проверкой типа
-                            rootBlock = deserializeBlock(config.getConfigurationSection(path + ".rootBlock").getValues(true));
-                        }
-                        
-                        CodeScript template = new CodeScript(name, enabled, rootBlock);
-                        template.setAuthor(author);
-                        template.setId(UUID.fromString(idStr));
-                        template.setTemplate(true);
-                        template.setDescription(description);
-                        
-                        templates.add(template);
+            if (config.contains("templatesData")) {
+                String templatesJson = config.getString("templatesData");
+                if (templatesJson != null && !templatesJson.isEmpty()) {
+                    // Используем Gson для десериализации шаблонов
+                    List<CodeScript> loadedTemplates = com.megacreative.utils.JsonSerializer.fromJson(templatesJson, List.class);
+                    if (loadedTemplates != null) {
+                        templates.clear();
+                        templates.addAll(loadedTemplates);
+                        plugin.getLogger().info("Загружено " + templates.size() + " шаблонов");
+                    } else {
+                        plugin.getLogger().warning("Не удалось загрузить шаблоны из файла templates.yml");
                     }
                 }
             }
-            
-            plugin.getLogger().info("Загружено " + templates.size() + " шаблонов");
             
         } catch (Exception e) {
             plugin.getLogger().severe("Ошибка загрузки шаблонов: " + e.getMessage());
@@ -122,99 +106,14 @@ public class TemplateManager {
         try {
             YamlConfiguration config = new YamlConfiguration();
             
-            for (int i = 0; i < templates.size(); i++) {
-                CodeScript template = templates.get(i);
-                String path = "templates." + i;
-                
-                config.set(path + ".name", template.getName());
-                config.set(path + ".author", template.getAuthor());
-                config.set(path + ".id", template.getId().toString());
-                config.set(path + ".description", template.getDescription());
-                config.set(path + ".enabled", template.isEnabled());
-                
-                // Сохраняем корневой блок и всю структуру
-                if (template.getRootBlock() != null) {
-                    config.set(path + ".rootBlock", serializeBlock(template.getRootBlock()));
-                }
-            }
+            // Используем Gson для сериализации всех шаблонов в JSON
+            String templatesJson = com.megacreative.utils.JsonSerializer.toJson(templates);
+            config.set("templatesData", templatesJson);
             
             config.save(templatesFile);
             
         } catch (IOException e) {
             plugin.getLogger().severe("Ошибка сохранения шаблонов: " + e.getMessage());
-        }
-    }
-    
-    /**
-     * Сериализует блок кода в Map для сохранения
-     */
-    private Map<String, Object> serializeBlock(CodeBlock block) {
-        if (block == null) return null;
-        Map<String, Object> blockMap = new HashMap<>();
-        blockMap.put("material", block.getMaterial().name());
-        blockMap.put("action", block.getAction());
-        blockMap.put("parameters", block.getParameters());
-        blockMap.put("nextBlock", serializeBlock(block.getNextBlock()));
-        
-        // Сериализация дочерних блоков (список)
-        List<Map<String, Object>> childrenList = new ArrayList<>();
-        for (CodeBlock child : block.getChildren()) {
-            Map<String, Object> childMap = serializeBlock(child);
-            if (childMap != null) {
-                childrenList.add(childMap);
-            }
-        }
-        blockMap.put("children", childrenList);
-        
-        return blockMap;
-    }
-
-    /**
-     * Десериализует блок кода из Map
-     */
-    private CodeBlock deserializeBlock(Map<String, Object> blockMap) {
-        if (blockMap == null || blockMap.isEmpty()) return null;
-
-        try {
-            Material material = Material.valueOf((String) blockMap.get("material"));
-            String action = (String) blockMap.get("action");
-            CodeBlock block = new CodeBlock(material, action);
-            
-            // Восстановление параметров
-            Object parametersObj = blockMap.get("parameters");
-            if (parametersObj instanceof Map) {
-                @SuppressWarnings("unchecked")
-                Map<String, Object> parameters = (Map<String, Object>) parametersObj;
-                for (Map.Entry<String, Object> entry : parameters.entrySet()) {
-                    block.setParameter(entry.getKey(), entry.getValue());
-                }
-            }
-
-            // Восстановление следующего блока
-            Object nextBlockObj = blockMap.get("nextBlock");
-            if (nextBlockObj instanceof Map) {
-                @SuppressWarnings("unchecked")
-                Map<String, Object> nextBlockMap = (Map<String, Object>) nextBlockObj;
-                block.setNext(deserializeBlock(nextBlockMap));
-            }
-            
-            // Восстановление дочерних блоков
-            Object childrenObj = blockMap.get("children");
-            if (childrenObj instanceof List) {
-                @SuppressWarnings("unchecked")
-                List<Map<String, Object>> childrenList = (List<Map<String, Object>>) childrenObj;
-                for (Map<String, Object> childMap : childrenList) {
-                    CodeBlock child = deserializeBlock(childMap);
-                    if (child != null) {
-                        block.addChild(child);
-                    }
-                }
-            }
-
-            return block;
-        } catch (Exception e) {
-            plugin.getLogger().warning("Ошибка десериализации блока: " + e.getMessage());
-            return null;
         }
     }
 } 

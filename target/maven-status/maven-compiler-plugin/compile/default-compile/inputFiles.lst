@@ -24,6 +24,7 @@ C:\Users\Богдан\Desktop\MegaCreativeCURSOR\src\main\java\com\megacreative\
 C:\Users\Богдан\Desktop\MegaCreativeCURSOR\src\main\java\com\megacreative\coding\conditions\WorldTimeCondition.java
 C:\Users\Богдан\Desktop\MegaCreativeCURSOR\src\main\java\com\megacreative\models\CreativeWorldType.java
 C:\Users\Богдан\Desktop\MegaCreativeCURSOR\src\main\java\com\megacreative\commands\BuildCommand.java
+C:\Users\Богдан\Desktop\MegaCreativeCURSOR\src\main\java\com\megacreative\coding\BlockConfiguration.java
 C:\Users\Богдан\Desktop\MegaCreativeCURSOR\src\main\java\com\megacreative\MegaCreative.java
 C:\Users\Богдан\Desktop\MegaCreativeCURSOR\src\main\java\com\megacreative\coding\actions\WaitAction.java
 C:\Users\Богдан\Desktop\MegaCreativeCURSOR\src\main\java\com\megacreative\listeners\PlayerQuitListener.java
@@ -44,6 +45,7 @@ C:\Users\Богдан\Desktop\MegaCreativeCURSOR\src\main\java\com\megacreative\
 C:\Users\Богдан\Desktop\MegaCreativeCURSOR\src\main\java\com\megacreative\coding\actions\CompareVariableCondition.java
 C:\Users\Богдан\Desktop\MegaCreativeCURSOR\src\main\java\com\megacreative\commands\JoinCommand.java
 C:\Users\Богдан\Desktop\MegaCreativeCURSOR\src\main\java\com\megacreative\listeners\PlayerDeathListener.java
+C:\Users\Богдан\Desktop\MegaCreativeCURSOR\src\main\java\com\megacreative\utils\JsonSerializer.java
 C:\Users\Богдан\Desktop\MegaCreativeCURSOR\src\main\java\com\megacreative\coding\conditions\IfVarLessCondition.java
 C:\Users\Богдан\Desktop\MegaCreativeCURSOR\src\main\java\com\megacreative\listeners\PlayerJoinListener.java
 C:\Users\Богдан\Desktop\MegaCreativeCURSOR\src\main\java\com\megacreative\coding\CodingActionGUI.java

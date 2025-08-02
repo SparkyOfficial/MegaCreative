@@ -1,0 +1,162 @@
+# Конфигурация блоков кодинга
+# Этот файл позволяет настраивать доступные блоки без перекомпиляции плагина
+
+blocks:
+  DIAMOND_BLOCK:
+    name: "Событие игрока"
+    description: "Блоки событий, которые запускают скрипт"
+    actions:
+      - "onJoin"
+      - "onLeave"
+      - "onChat"
+      - "onBlockBreak"
+      - "onBlockPlace"
+      - "onPlayerMove"
+      - "onPlayerDeath"
+      - "onCommand"
+      - "onTick"
+  
+  COBBLESTONE:
+    name: "Действие игрока"
+    description: "Блоки действий, которые выполняются в скрипте"
+    actions:
+      - "sendMessage"
+      - "teleport"
+      - "giveItem"
+      - "setVar"
+      - "broadcast"
+      - "spawnMob"
+      - "playSound"
+      - "effect"
+      - "command"
+      - "healPlayer"
+      - "setGameMode"
+      - "setTime"
+      - "setWeather"
+      - "explosion"
+      - "setBlock"
+      - "getVar"
+      - "getPlayerName"
+      - "setGlobalVar"
+      - "getGlobalVar"
+      - "setServerVar"
+      - "getServerVar"
+      - "wait"
+      - "randomNumber"
+      - "playParticle"
+  
+  OAK_PLANKS:
+    name: "Условие игрока"
+    description: "Блоки условий для проверки различных состояний"
+    actions:
+      - "isOp"
+      - "compareVariable"
+      - "worldTime"
+      - "isNearBlock"
+      - "mobNear"
+      - "playerGameMode"
+      - "playerHealth"
+      - "hasItem"
+      - "hasPermission"
+      - "isInWorld"
+      - "ifVarEquals"
+      - "ifVarGreater"
+      - "ifVarLess"
+  
+  IRON_BLOCK:
+    name: "Переменная"
+    description: "Блоки для работы с переменными"
+    actions:
+      - "setVar"
+      - "getVar"
+      - "addVar"
+      - "subVar"
+      - "mulVar"
+      - "divVar"
+      - "setGlobalVar"
+      - "getGlobalVar"
+      - "setServerVar"
+      - "getServerVar"
+  
+  OBSIDIAN:
+    name: "Если переменная"
+    description: "Условия для проверки переменных"
+    actions:
+      - "ifVarEquals"
+      - "ifVarGreater"
+      - "ifVarLess"
+      - "compareVariable"
+  
+  REDSTONE_BLOCK:
+    name: "Если игра"
+    description: "Условия для проверки игровых состояний"
+    actions:
+      - "isOp"
+      - "playerGameMode"
+      - "playerHealth"
+      - "hasItem"
+      - "hasPermission"
+      - "isInWorld"
+      - "worldTime"
+  
+  BRICKS:
+    name: "Если существо"
+    description: "Условия для проверки существ"
+    actions:
+      - "mobNear"
+      - "isNearBlock"
+  
+  EMERALD_BLOCK:
+    name: "Повторить N раз"
+    description: "Циклы и повторения"
+    actions:
+      - "repeat"
+      - "repeatTrigger"
+  
+  LAPIS_BLOCK:
+    name: "Вызвать функцию"
+    description: "Функции и вызовы"
+    actions:
+      - "callFunction"
+      - "saveFunction"
+  
+  BOOKSHELF:
+    name: "Сохранить функцию"
+    description: "Сохранение и управление функциями"
+    actions:
+      - "saveFunction"
+      - "callFunction"
+  
+  END_STONE:
+    name: "Иначе"
+    description: "Блок для альтернативного выполнения"
+    actions:
+      - "else"
+  
+  NETHERITE_BLOCK:
+    name: "Игровое действие"
+    description: "Действия с игровым миром"
+    actions:
+      - "setTime"
+      - "setWeather"
+      - "setBlock"
+      - "explosion"
+      - "playSound"
+      - "effect"
+      - "playParticle"
+  
+  POLISHED_GRANITE:
+    name: "Получить данные"
+    description: "Получение различных данных"
+    actions:
+      - "getPlayerName"
+      - "getVar"
+      - "getGlobalVar"
+      - "getServerVar"
+      - "randomNumber"
+
+# Настройки по умолчанию
+defaults:
+  max_blocks_per_script: 100
+  max_recursion_depth: 50
+  execution_timeout_seconds: 30 
