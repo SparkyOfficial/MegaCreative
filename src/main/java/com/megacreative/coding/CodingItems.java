@@ -10,7 +10,7 @@ import java.util.Arrays;
  * Класс для создания и выдачи предметов-блоков кодирования игрокам.
  */
 public class CodingItems {
-Иы    
+    
     // Константы названий предметов для защиты от потери
     public static final String EVENT_BLOCK_NAME = "§b§lСобытие игрока";
     public static final String CONDITION_BLOCK_NAME = "§6§lУсловие игрока";
