@@ -35,9 +35,9 @@ public class BlockFactory {
         actionRegistry.put("wait", new WaitAction());
         actionRegistry.put("setBlock", new SetBlockAction());
         actionRegistry.put("broadcast", new BroadcastAction());
+        actionRegistry.put("command", new CommandAction());
         
         // TODO: Добавить остальные действия по мере их рефакторинга
-        // actionRegistry.put("command", new CommandAction());
         // actionRegistry.put("effect", new EffectAction());
         // actionRegistry.put("playSound", new PlaySoundAction());
         // и так далее...

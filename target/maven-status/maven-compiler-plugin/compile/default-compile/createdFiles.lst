@@ -123,7 +123,6 @@ com\megacreative\coding\CodingParameterGUI.class
 com\megacreative\coding\actions\SetGlobalVariableAction.class
 com\megacreative\listeners\PlayerJoinListener.class
 com\megacreative\coding\BlockConfiguration$ActionGroupConfig.class
-com\megacreative\coding\blocks\BlockFactory.class
 com\megacreative\coding\conditions\IsNightCondition$TimeType.class
 com\megacreative\coding\conditions\IsRidingCondition.class
 com\megacreative\listeners\PlayerWorldChangeListener.class
@@ -177,7 +176,6 @@ com\megacreative\coding\actions\CallFunctionAction.class
 com\megacreative\coding\BlockConnectionVisualizer$2.class
 com\megacreative\coding\conditions\PlayerGameModeCondition.class
 com\megacreative\coding\blocks\events\EventManager.class
-com\megacreative\coding\EnhancedScriptExecutor.class
 com\megacreative\coding\actions\IsInWorldCondition.class
 com\megacreative\coding\conditions\IsNearEntityCondition.class
 com\megacreative\coding\actions\IsOpCondition.class

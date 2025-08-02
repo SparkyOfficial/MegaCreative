@@ -74,6 +74,7 @@ public class HybridScriptExecutor {
      * ✅ randomNumber → RandomNumberAction (blocks/actions/)
      * ✅ wait → WaitAction (blocks/actions/)
      * ✅ setBlock → SetBlockAction (blocks/actions/)
+     * ✅ command → CommandAction (blocks/actions/)
      */
     private void registerOldActions() {
         // Базовые действия (мигрированы в новую систему)
@@ -98,7 +99,7 @@ public class HybridScriptExecutor {
         // Действия с миром
         oldActionRegistry.put("playSound", new PlaySoundAction());
         oldActionRegistry.put("effect", new EffectAction());
-        oldActionRegistry.put("command", new CommandAction());
+        // oldActionRegistry.put("command", new CommandAction()); // МИГРИРОВАН
         oldActionRegistry.put("healPlayer", new HealPlayerAction());
         oldActionRegistry.put("setGameMode", new SetGameModeAction());
         
@@ -367,10 +368,10 @@ public class HybridScriptExecutor {
             "  ⚠️ Старые блоки: %d действий, %d условий\n" +
             "  📈 Всего: %d действий, %d условий\n" +
             "🎯 Прогресс миграции: %.1f%%\n" +
-            "📋 Мигрированные блоки:\n" +
-            "  ✅ sendMessage, giveItem, randomNumber, setVar\n" +
-            "  ✅ teleport, wait, setBlock, broadcast\n" +
-            "  ✅ isOp, hasItem, ifVarEquals, playerHealth",
+                           "📋 Мигрированные блоки:\n" +
+               "  ✅ sendMessage, giveItem, randomNumber, setVar\n" +
+               "  ✅ teleport, wait, setBlock, broadcast, command\n" +
+               "  ✅ isOp, hasItem, ifVarEquals, playerHealth",
             newActions, newConditions, oldActions, oldConditions,
             totalActions, totalConditions, migrationProgress
         );
