@@ -7,6 +7,7 @@ com\megacreative\commands\BuildCommand.class
 com\megacreative\coding\data\DataType.class
 com\megacreative\coding\actions\HasItemCondition.class
 com\megacreative\models\CreativeWorldType.class
+com\megacreative\MegaCreative$1.class
 com\megacreative\listeners\GuiListener.class
 com\megacreative\coding\actions\PlayerHealthCondition.class
 com\megacreative\coding\conditions\IfVarEqualsCondition.class
@@ -48,6 +49,7 @@ com\megacreative\managers\PlayerManager.class
 com\megacreative\coding\ScriptDebugger.class
 com\megacreative\coding\conditions\IsOpCondition.class
 com\megacreative\commands\StopRepeatCommand.class
+com\megacreative\listeners\DevWorldProtectionListener.class
 com\megacreative\managers\TemplateManager.class
 com\megacreative\coding\actions\SubVarAction.class
 com\megacreative\coding\actions\GetServerVariableAction.class

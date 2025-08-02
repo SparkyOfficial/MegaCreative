@@ -71,12 +71,52 @@ public class BlockPlacementHandler implements Listener {
         if (!isCodingBlock(event.getItemInHand())) return;
         if (!isInDevWorld(player)) return;
         
-        // НЕ отменяем событие, позволяем блоку установиться
+        // --- НАЧАЛО ИСПРАВЛЕНИЯ ---
         
-        // Запускаем настройку через 1 тик, чтобы сервер успел обработать установку
+        // 1. НЕ отменяем событие. Позволяем блоку установиться.
+        // event.setCancelled(true); // <--- УБЕДИТЕСЬ, ЧТО ЭТОЙ СТРОКИ НЕТ!
+        
+        // 2. Создаем "заготовку" блока кода сразу.
+        CodeBlock newCodeBlock = new CodeBlock(mat, "Настройка..."); // Временное действие
+        blockCodeBlocks.put(block.getLocation(), newCodeBlock);
+        
+        var world = plugin.getWorldManager().getWorldByName(player.getWorld().getName());
+        if (world != null) {
+            plugin.getBlockConnectionVisualizer().addBlock(world, block.getLocation(), newCodeBlock);
+        }
+        setSignOnBlock(block.getLocation(), "Настройка...");
+        
+        // 3. Открываем GUI для выбора действия, передавая уже созданный блок.
+        // Запускаем через 1 тик, чтобы игрок увидел, что блок поставился.
         plugin.getServer().getScheduler().runTaskLater(plugin, () -> {
-            handleBlockConfiguration(player, mat, block.getLocation(), false);
+            
+            List<String> actions = ACTIONS.get(mat);
+            if (actions == null) {
+                player.sendMessage("§cДля этого блока нет доступных действий.");
+                blockCodeBlocks.remove(block.getLocation()); // Убираем, если что-то пошло не так
+                block.setType(Material.AIR); // Удаляем физический блок
+                return;
+            }
+            
+            new CodingActionGUI(player, mat, block.getLocation(), actions, action -> {
+                // Теперь открываем GUI для параметров
+                new CodingParameterGUI(player, action, block.getLocation(), parameters -> {
+                    // Обновляем наш уже существующий CodeBlock
+                    newCodeBlock.setAction(action);
+                    newCodeBlock.getParameters().clear();
+                    newCodeBlock.getParameters().putAll(parameters);
+                    
+                    // Обновляем табличку
+                    updateSignOnBlock(block.getLocation(), newCodeBlock);
+                    
+                    player.sendMessage("§aДействие установлено: §e" + action);
+                    player.sendMessage("§7Параметры: §f" + parameters);
+                }).open();
+            }).open();
+            
         }, 1L);
+        
+        // --- КОНЕЦ ИСПРАВЛЕНИЯ ---
     }
 
     /**

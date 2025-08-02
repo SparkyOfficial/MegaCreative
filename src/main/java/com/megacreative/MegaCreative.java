@@ -6,10 +6,13 @@ import com.megacreative.coding.BlockPlacementHandler;
 import com.megacreative.coding.CodingManager;
 import com.megacreative.coding.BlockConnectionVisualizer;
 import com.megacreative.coding.ScriptDebugger;
+import com.megacreative.coding.CodingItems;
 import com.megacreative.managers.*;
 import com.megacreative.models.CreativeWorld;
 import com.megacreative.utils.ConfigManager;
 import org.bukkit.Bukkit;
+import org.bukkit.entity.Player;
+import org.bukkit.inventory.ItemStack;
 import org.bukkit.plugin.java.JavaPlugin;
 
 import java.util.HashMap;
@@ -57,6 +60,9 @@ public class MegaCreative extends JavaPlugin {
         // Регистрируем команды и события
         registerCommands();
         registerEvents();
+        
+        // ЗАПУСК ПРОВЕРКИ ИНВЕНТАРЕЙ
+        startInventoryChecker();
         
         getLogger().info("MegaCreative включен!");
     }
@@ -114,6 +120,9 @@ public class MegaCreative extends JavaPlugin {
         getServer().getPluginManager().registerEvents(new BlockBreakListener(this), this);
         getServer().getPluginManager().registerEvents(new PlayerDeathListener(this), this);
         getServer().getPluginManager().registerEvents(new CommandListener(this), this);
+        
+        // РЕГИСТРАЦИЯ НОВОГО СЛУШАТЕЛЯ ДЛЯ ЗАЩИТЫ ПРЕДМЕТОВ
+        getServer().getPluginManager().registerEvents(new DevWorldProtectionListener(this), this);
     }
     
     public static MegaCreative getInstance() {
@@ -162,5 +171,40 @@ public class MegaCreative extends JavaPlugin {
     
     public ConfigManager getConfigManager() {
         return configManager;
+    }
+    
+    private void startInventoryChecker() {
+        new org.bukkit.scheduler.BukkitRunnable() {
+            @Override
+            public void run() {
+                for (Player player : Bukkit.getOnlinePlayers()) {
+                    if (player.getWorld().getName().endsWith("_dev")) {
+                        if (!hasAllCodingItems(player)) {
+                            player.getInventory().clear();
+                            CodingItems.giveCodingItems(player);
+                            player.sendMessage("§e§l!§r §eВаш инвентарь был обновлен, чтобы содержать все инструменты для кодинга.");
+                        }
+                    }
+                }
+            }
+        }.runTaskTimer(this, 100L, 100L); // Проверка каждые 5 секунд (100 тиков)
+    }
+
+    // Этот метод-хелпер нужно тоже добавить в MegaCreative.java
+    private boolean hasAllCodingItems(Player player) {
+        // Упрощенная проверка. Проверяем наличие хотя бы нескольких ключевых предметов.
+        // Для 100% точности нужно проверять каждый предмет из giveCodingItems
+        boolean hasLinker = false;
+        boolean hasInspector = false;
+        boolean hasEventBlock = false;
+        for (ItemStack item : player.getInventory().getContents()) {
+            if (item != null && item.hasItemMeta()) {
+                String name = item.getItemMeta().getDisplayName();
+                if (name.contains("Связующий жезл")) hasLinker = true;
+                if (name.contains("Инспектор блоков")) hasInspector = true;
+                if (name.contains("Событие игрока")) hasEventBlock = true;
+            }
+        }
+        return hasLinker && hasInspector && hasEventBlock;
     }
 }
