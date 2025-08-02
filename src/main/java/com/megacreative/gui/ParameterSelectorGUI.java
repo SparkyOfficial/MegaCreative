@@ -17,7 +17,7 @@ import java.util.Arrays;
 import java.util.List;
 import java.util.function.Consumer;
 
-public class ParameterSelectorGUI implements Listener {
+public class ParameterSelectorGUI {
     
     private final MegaCreative plugin;
     private final Player player;
@@ -86,7 +86,6 @@ public class ParameterSelectorGUI implements Listener {
         player.openInventory(inventory);
     }
     
-    @EventHandler
     public void onInventoryClick(InventoryClickEvent event) {
         if (!event.getInventory().equals(inventory)) return;
         

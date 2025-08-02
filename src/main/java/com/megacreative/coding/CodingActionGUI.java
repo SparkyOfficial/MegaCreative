@@ -16,7 +16,7 @@ import java.util.List;
 import java.util.function.Consumer;
 import java.util.Arrays;
 
-public class CodingActionGUI implements Listener {
+public class CodingActionGUI {
     private final Player player;
     private final Material material;
     private final Location blockLocation;
@@ -169,7 +169,6 @@ public class CodingActionGUI implements Listener {
         player.openInventory(inventory);
     }
 
-    @EventHandler
     public void onInventoryClick(InventoryClickEvent event) {
         if (!event.getWhoClicked().equals(player)) return;
         if (!event.getInventory().equals(inventory)) return;

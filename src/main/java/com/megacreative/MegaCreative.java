@@ -142,7 +142,7 @@ public class MegaCreative extends JavaPlugin {
         getServer().getPluginManager().registerEvents(new DataItemListener(), this);
         getServer().getPluginManager().registerEvents(blockPlacementHandler, this);
         getServer().getPluginManager().registerEvents(new WorldInteractListener(this), this);
-        getServer().getPluginManager().registerEvents(new InventoryClickListener(this), this);
+        // InventoryClickListener удален - логика перенесена в GuiListener
         
         // Новые слушатели для расширенных событий
         getServer().getPluginManager().registerEvents(new BlockBreakListener(this), this);

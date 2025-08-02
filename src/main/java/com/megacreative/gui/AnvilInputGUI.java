@@ -17,7 +17,7 @@ import org.bukkit.inventory.meta.ItemMeta;
 import java.util.Arrays;
 import java.util.function.Consumer;
 
-public class AnvilInputGUI implements Listener {
+public class AnvilInputGUI {
     
     private final MegaCreative plugin;
     private final Player player;
@@ -51,7 +51,6 @@ public class AnvilInputGUI implements Listener {
         player.openInventory(anvil);
     }
     
-    @EventHandler
     public void onInventoryClick(InventoryClickEvent event) {
         if (!event.getInventory().equals(player.getOpenInventory().getTopInventory())) return;
         

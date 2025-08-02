@@ -18,7 +18,7 @@ import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
 
-public class TemplateBrowserGUI implements Listener {
+public class TemplateBrowserGUI {
     
     private final MegaCreative plugin;
     private final Player player;
@@ -116,7 +116,6 @@ public class TemplateBrowserGUI implements Listener {
         player.openInventory(inventory);
     }
     
-    @EventHandler
     public void onInventoryClick(InventoryClickEvent event) {
         if (!event.getInventory().equals(inventory)) return;
         

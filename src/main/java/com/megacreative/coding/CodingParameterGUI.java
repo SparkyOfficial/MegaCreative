@@ -20,7 +20,7 @@ import java.util.Map;
 import java.util.function.Consumer;
 import java.util.Arrays;
 
-public class CodingParameterGUI implements Listener {
+public class CodingParameterGUI {
     private final Player player;
     private final String action;
     private final Location blockLocation;
@@ -276,7 +276,6 @@ public class CodingParameterGUI implements Listener {
         setupInventory(); // Просто перестраиваем иконки с обновленными параметрами
     }
 
-    @EventHandler
     public void onInventoryClick(InventoryClickEvent event) {
         if (!event.getWhoClicked().equals(player)) return;
         if (!event.getInventory().equals(inventory)) return;

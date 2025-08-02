@@ -17,7 +17,7 @@ import org.bukkit.inventory.meta.ItemMeta;
 import java.util.Arrays;
 import java.util.List;
 
-public class MyWorldsGUI implements Listener {
+public class MyWorldsGUI {
     
     private final MegaCreative plugin;
     private final Player player;
@@ -89,7 +89,6 @@ public class MyWorldsGUI implements Listener {
         player.openInventory(inventory);
     }
     
-    @EventHandler
     public void onInventoryClick(InventoryClickEvent event) {
         if (!event.getInventory().equals(inventory)) return;
         

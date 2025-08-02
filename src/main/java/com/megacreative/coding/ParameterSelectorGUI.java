@@ -5,9 +5,8 @@ import com.megacreative.coding.data.DataItemFactory.DataItem;
 import org.bukkit.Bukkit;
 import org.bukkit.Material;
 import org.bukkit.entity.Player;
-import org.bukkit.event.EventHandler;
-import org.bukkit.event.Listener;
 import org.bukkit.event.inventory.InventoryClickEvent;
+import com.megacreative.listeners.GuiListener;
 import org.bukkit.inventory.Inventory;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.inventory.meta.ItemMeta;
@@ -17,7 +16,7 @@ import java.util.Arrays;
 import java.util.List;
 import java.util.function.Consumer;
 
-public class ParameterSelectorGUI implements Listener {
+public class ParameterSelectorGUI {
     private final Player player;
     private final CodeBlock targetBlock;
     private final DataItem dataItem;
@@ -30,7 +29,8 @@ public class ParameterSelectorGUI implements Listener {
         this.dataItem = dataItem;
         this.onParameterSelected = onParameterSelected;
         this.inventory = Bukkit.createInventory(null, 9, "§bВыберите параметр для вставки данных");
-        Bukkit.getPluginManager().registerEvents(this, com.megacreative.MegaCreative.getInstance());
+        // Регистрируем GUI в централизованной системе
+        GuiListener.registerOpenGui(player, this);
         setupInventory();
     }
 
@@ -152,7 +152,6 @@ public class ParameterSelectorGUI implements Listener {
         player.openInventory(inventory);
     }
 
-    @EventHandler
     public void onInventoryClick(InventoryClickEvent event) {
         if (!event.getWhoClicked().equals(player)) return;
         if (!event.getInventory().equals(inventory)) return;
@@ -166,7 +165,7 @@ public class ParameterSelectorGUI implements Listener {
         // Обработка "Отмена"
         if (displayName.contains("Отмена")) {
             player.closeInventory();
-            InventoryClickEvent.getHandlerList().unregister(this);
+            GuiListener.unregisterOpenGui(player);
             return;
         }
         
@@ -185,7 +184,7 @@ public class ParameterSelectorGUI implements Listener {
             
             player.sendMessage("§a✓ Данные вставлены в параметр '" + selectedParameter + "'");
             player.closeInventory();
-            InventoryClickEvent.getHandlerList().unregister(this);
+            GuiListener.unregisterOpenGui(player);
         }
     }
 } 

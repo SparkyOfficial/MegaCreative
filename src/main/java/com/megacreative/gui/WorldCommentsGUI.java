@@ -19,7 +19,7 @@ import java.util.Arrays;
 import java.util.Date;
 import java.util.List;
 
-public class WorldCommentsGUI implements Listener {
+public class WorldCommentsGUI {
     
     private final MegaCreative plugin;
     private final Player player;
@@ -124,7 +124,6 @@ public class WorldCommentsGUI implements Listener {
         player.openInventory(inventory);
     }
     
-    @EventHandler
     public void onInventoryClick(InventoryClickEvent event) {
         if (!event.getInventory().equals(inventory)) return;
         

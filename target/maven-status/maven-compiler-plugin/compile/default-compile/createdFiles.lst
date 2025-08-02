@@ -24,7 +24,6 @@ com\megacreative\coding\blocks\actions\TeleportAction.class
 com\megacreative\gui\DataGUI$1.class
 com\megacreative\coding\actions\SetTimeAction.class
 com\megacreative\commands\DevCommand.class
-com\megacreative\listeners\InventoryClickListener.class
 com\megacreative\models\WorldComment.class
 com\megacreative\coding\blocks\events\OnBlockBreakEvent.class
 com\megacreative\gui\WorldSettingsGUI.class
@@ -123,6 +122,7 @@ com\megacreative\coding\CodingParameterGUI.class
 com\megacreative\coding\actions\SetGlobalVariableAction.class
 com\megacreative\listeners\PlayerJoinListener.class
 com\megacreative\coding\BlockConfiguration$ActionGroupConfig.class
+com\megacreative\coding\blocks\BlockFactory.class
 com\megacreative\coding\conditions\IsNightCondition$TimeType.class
 com\megacreative\coding\conditions\IsRidingCondition.class
 com\megacreative\listeners\PlayerWorldChangeListener.class
@@ -169,6 +169,7 @@ com\megacreative\coding\actions\PlaySoundAction.class
 com\megacreative\commands\JoinCommand.class
 com\megacreative\coding\actions\EffectAction.class
 com\megacreative\coding\actions\ExplosionAction.class
+com\megacreative\coding\blocks\actions\CommandAction.class
 com\megacreative\listeners\PlayerQuitListener.class
 com\megacreative\gui\ParameterSelectorGUI.class
 com\megacreative\listeners\PlayerDeathListener.class
@@ -176,6 +177,7 @@ com\megacreative\coding\actions\CallFunctionAction.class
 com\megacreative\coding\BlockConnectionVisualizer$2.class
 com\megacreative\coding\conditions\PlayerGameModeCondition.class
 com\megacreative\coding\blocks\events\EventManager.class
+com\megacreative\coding\EnhancedScriptExecutor.class
 com\megacreative\coding\actions\IsInWorldCondition.class
 com\megacreative\coding\conditions\IsNearEntityCondition.class
 com\megacreative\coding\actions\IsOpCondition.class
