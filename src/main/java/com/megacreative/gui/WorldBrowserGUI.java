@@ -2,6 +2,7 @@ package com.megacreative.gui;
 
 import com.megacreative.MegaCreative;
 import com.megacreative.models.CreativeWorld;
+import com.megacreative.listeners.GuiListener;
 import org.bukkit.Bukkit;
 import org.bukkit.Material;
 import org.bukkit.entity.Player;
@@ -27,7 +28,8 @@ public class WorldBrowserGUI implements Listener {
         this.player = player;
         this.inventory = Bukkit.createInventory(null, 54, "§8§lБраузер миров");
         
-        Bukkit.getPluginManager().registerEvents(this, plugin);
+        // Регистрируем GUI в централизованной системе
+        GuiListener.registerOpenGui(player, this);
         setupInventory();
     }
     
@@ -99,10 +101,13 @@ public class WorldBrowserGUI implements Listener {
         // Информация
         ItemStack infoItem = new ItemStack(Material.BOOK);
         ItemMeta infoMeta = infoItem.getItemMeta();
-        infoMeta.setDisplayName("§b§lИнформация");
+        infoMeta.setDisplayName("§e§lИнформация");
         infoMeta.setLore(Arrays.asList(
-            "§7Всего публичных миров: §f" + publicWorlds.size(),
-            "§7Страница: §f" + (page + 1) + "/" + Math.max(1, (publicWorlds.size() + 27) / 28)
+            "§7Всего миров: §f" + publicWorlds.size(),
+            "§7Страница: §f" + (page + 1) + "/" + ((publicWorlds.size() - 1) / 28 + 1),
+            "",
+            "§7Здесь отображаются все публичные миры",
+            "§7Вы можете войти в любой из них"
         ));
         infoItem.setItemMeta(infoMeta);
         inventory.setItem(49, infoItem);
@@ -128,21 +133,22 @@ public class WorldBrowserGUI implements Listener {
         String displayName = clicked.getItemMeta().getDisplayName();
         
         // Навигация
-        if (clicked.getType() == Material.ARROW) {
-            if (displayName.contains("Предыдущая")) {
-                page--;
-                setupInventory();
-            } else if (displayName.contains("Следующая")) {
-                page++;
-                setupInventory();
-            }
+        if (displayName.contains("Предыдущая страница")) {
+            page--;
+            setupInventory();
+            return;
+        }
+        
+        if (displayName.contains("Следующая страница")) {
+            page++;
+            setupInventory();
             return;
         }
         
         // Клик по миру
         List<CreativeWorld> publicWorlds = plugin.getWorldManager().getAllPublicWorlds();
         int slot = event.getSlot();
-        int worldIndex = getWorldIndexFromSlot(slot) + (page * 28);
+        int worldIndex = getWorldIndexFromSlot(slot);
         
         if (worldIndex >= 0 && worldIndex < publicWorlds.size()) {
             CreativeWorld world = publicWorlds.get(worldIndex);
@@ -150,10 +156,14 @@ public class WorldBrowserGUI implements Listener {
             if (event.isLeftClick()) {
                 // Вход в мир
                 player.closeInventory();
+                // Удаляем регистрацию GUI
+                GuiListener.unregisterOpenGui(player);
                 player.performCommand("join " + world.getId());
             } else if (event.isRightClick()) {
                 // Действия с миром
                 player.closeInventory();
+                // Удаляем регистрацию GUI
+                GuiListener.unregisterOpenGui(player);
                 new WorldActionsGUI(plugin, player, world).open();
             }
         }
@@ -167,6 +177,6 @@ public class WorldBrowserGUI implements Listener {
         
         if (col == 0 || col == 8) return -1;
         
-        return (row - 1) * 7 + (col - 1);
+        return (row - 1) * 7 + (col - 1) + page * 28;
     }
 }

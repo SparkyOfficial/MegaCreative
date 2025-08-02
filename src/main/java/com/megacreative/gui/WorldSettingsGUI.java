@@ -2,6 +2,8 @@ package com.megacreative.gui;
 
 import com.megacreative.MegaCreative;
 import com.megacreative.models.CreativeWorld;
+import com.megacreative.models.WorldFlags;
+import com.megacreative.listeners.GuiListener;
 import org.bukkit.Bukkit;
 import org.bukkit.Material;
 import org.bukkit.entity.Player;
@@ -25,104 +27,77 @@ public class WorldSettingsGUI implements Listener {
         this.plugin = plugin;
         this.player = player;
         this.world = world;
-        this.inventory = Bukkit.createInventory(null, 54, "§8§lНастройки: " + world.getName());
+        this.inventory = Bukkit.createInventory(null, 27, "§8§lНастройки мира: " + world.getName());
         
-        Bukkit.getPluginManager().registerEvents(this, plugin);
+        // Регистрируем GUI в централизованной системе
+        GuiListener.registerOpenGui(player, this);
         setupInventory();
     }
     
     private void setupInventory() {
+        inventory.clear();
+        
         // Заполнение стеклом
         ItemStack glass = new ItemStack(Material.GRAY_STAINED_GLASS_PANE);
         ItemMeta glassMeta = glass.getItemMeta();
         glassMeta.setDisplayName(" ");
         glass.setItemMeta(glassMeta);
         
-        for (int i = 0; i < 54; i++) {
+        for (int i = 0; i < 27; i++) {
             inventory.setItem(i, glass);
         }
         
-        // Информация о мире
-        ItemStack infoItem = new ItemStack(world.getWorldType().getIcon());
-        ItemMeta infoMeta = infoItem.getItemMeta();
-        infoMeta.setDisplayName("§f§l" + world.getName());
-        infoMeta.setLore(Arrays.asList(
-            "§7ID: §f" + world.getId(),
-            "§7Тип: §f" + world.getWorldType().getDisplayName(),
-            "§7Режим: §f" + world.getMode().getDisplayName(),
-            "§7Приватность: " + (world.isPrivate() ? "§cПриватный" : "§aПубличный"),
-            "§7Онлайн: §f" + world.getOnlineCount(),
-            "§7Рейтинг: " + (world.getRating() >= 0 ? "§a+" : "§c") + world.getRating()
-        ));
-        infoItem.setItemMeta(infoMeta);
-        inventory.setItem(13, infoItem);
+        WorldFlags flags = world.getFlags();
         
-        // Приватность
-        ItemStack privacyItem = new ItemStack(world.isPrivate() ? Material.RED_CONCRETE : Material.GREEN_CONCRETE);
-        ItemMeta privacyMeta = privacyItem.getItemMeta();
-        privacyMeta.setDisplayName(world.isPrivate() ? "§c§lПриватный мир" : "§a§lПубличный мир");
-        privacyMeta.setLore(Arrays.asList(
-            world.isPrivate() ? "§7Мир доступен только вам и доверенным игрокам" : "§7Мир доступен всем игрокам",
+        // Настройки флагов
+        ItemStack mobSpawning = new ItemStack(flags.isMobSpawning() ? Material.ZOMBIE_HEAD : Material.BARRIER);
+        ItemMeta mobMeta = mobSpawning.getItemMeta();
+        mobMeta.setDisplayName("§e§lСпавн мобов");
+        mobMeta.setLore(Arrays.asList(
+            "§7Текущее состояние: " + (flags.isMobSpawning() ? "§aВключено" : "§cВыключено"),
             "§e▶ Нажмите для изменения"
         ));
-        privacyItem.setItemMeta(privacyMeta);
-        inventory.setItem(20, privacyItem);
+        mobSpawning.setItemMeta(mobMeta);
+        inventory.setItem(10, mobSpawning);
         
-        // Флаги мира
-        setupFlags();
-        
-        // Доверенные игроки
-        ItemStack trustItem = new ItemStack(Material.PLAYER_HEAD);
-        ItemMeta trustMeta = trustItem.getItemMeta();
-        trustMeta.setDisplayName("§b§lДоверенные игроки");
-        trustMeta.setLore(Arrays.asList(
-            "§7Строители: §f" + world.getTrustedBuilders().size(),
-            "§7Кодеры: §f" + world.getTrustedCoders().size(),
-            "§e▶ Нажмите для управления"
+        ItemStack pvp = new ItemStack(flags.isPvp() ? Material.DIAMOND_SWORD : Material.SHIELD);
+        ItemMeta pvpMeta = pvp.getItemMeta();
+        pvpMeta.setDisplayName("§c§lPvP");
+        pvpMeta.setLore(Arrays.asList(
+            "§7Текущее состояние: " + (flags.isPvp() ? "§aВключено" : "§cВыключено"),
+            "§e▶ Нажмите для изменения"
         ));
-        trustItem.setItemMeta(trustMeta);
-        inventory.setItem(24, trustItem);
+        pvp.setItemMeta(pvpMeta);
+        inventory.setItem(11, pvp);
         
-        // Удаление мира
-        ItemStack deleteItem = new ItemStack(Material.TNT);
-        ItemMeta deleteMeta = deleteItem.getItemMeta();
+        ItemStack explosions = new ItemStack(flags.isExplosions() ? Material.TNT : Material.BARRIER);
+        ItemMeta expMeta = explosions.getItemMeta();
+        expMeta.setDisplayName("§6§lВзрывы");
+        expMeta.setLore(Arrays.asList(
+            "§7Текущее состояние: " + (flags.isExplosions() ? "§aВключено" : "§cВыключено"),
+            "§e▶ Нажмите для изменения"
+        ));
+        explosions.setItemMeta(expMeta);
+        inventory.setItem(12, explosions);
+        
+        // Кнопка удаления мира
+        ItemStack deleteButton = new ItemStack(Material.RED_STAINED_GLASS);
+        ItemMeta deleteMeta = deleteButton.getItemMeta();
         deleteMeta.setDisplayName("§c§lУдалить мир");
         deleteMeta.setLore(Arrays.asList(
-            "§7Полностью удалить этот мир",
-            "§c⚠ Это действие необратимо!"
+            "§7⚠ ВНИМАНИЕ! Это действие",
+            "§7нельзя отменить!",
+            "§c▶ Нажмите для удаления"
         ));
-        deleteItem.setItemMeta(deleteMeta);
-        inventory.setItem(49, deleteItem);
+        deleteButton.setItemMeta(deleteMeta);
+        inventory.setItem(16, deleteButton);
         
-        // Назад
+        // Кнопка назад
         ItemStack backButton = new ItemStack(Material.ARROW);
         ItemMeta backMeta = backButton.getItemMeta();
-        backMeta.setDisplayName("§c§lНазад");
+        backMeta.setDisplayName("§e§lНазад");
         backButton.setItemMeta(backMeta);
-        inventory.setItem(45, backButton);
-    }
-    
-    private void setupFlags() {
-        // Мобы
-        ItemStack mobItem = new ItemStack(world.getFlags().isMobSpawning() ? Material.ZOMBIE_HEAD : Material.BARRIER);
-        ItemMeta mobMeta = mobItem.getItemMeta();
-        mobMeta.setDisplayName("§6§lСпавн мобов: " + (world.getFlags().isMobSpawning() ? "§aВКЛ" : "§cВЫКЛ"));
-        mobItem.setItemMeta(mobMeta);
-        inventory.setItem(29, mobItem);
-        
-        // PvP
-        ItemStack pvpItem = new ItemStack(world.getFlags().isPvp() ? Material.DIAMOND_SWORD : Material.WOODEN_SWORD);
-        ItemMeta pvpMeta = pvpItem.getItemMeta();
-        pvpMeta.setDisplayName("§6§lPvP: " + (world.getFlags().isPvp() ? "§aВКЛ" : "§cВЫКЛ"));
-        pvpItem.setItemMeta(pvpMeta);
-        inventory.setItem(31, pvpItem);
-        
-        // Взрывы
-        ItemStack explosionItem = new ItemStack(world.getFlags().isExplosions() ? Material.TNT : Material.COBBLESTONE);
-        ItemMeta explosionMeta = explosionItem.getItemMeta();
-        explosionMeta.setDisplayName("§6§lВзрывы: " + (world.getFlags().isExplosions() ? "§aВКЛ" : "§cВЫКЛ"));
-        explosionItem.setItemMeta(explosionMeta);
-        inventory.setItem(33, explosionItem);
+        inventory.setItem(22, backButton);
     }
     
     public void open() {
@@ -143,53 +118,41 @@ public class WorldSettingsGUI implements Listener {
         if (clicked == null || !clicked.hasItemMeta()) return;
         
         String displayName = clicked.getItemMeta().getDisplayName();
-        int slot = event.getSlot();
         
-        // Назад
-        if (clicked.getType() == Material.ARROW && displayName.contains("Назад")) {
+        // Кнопка назад
+        if (displayName.contains("Назад")) {
             player.closeInventory();
+            // Удаляем регистрацию GUI
+            GuiListener.unregisterOpenGui(player);
             new MyWorldsGUI(plugin, player).open();
             return;
         }
         
-        // Приватность
-        if (slot == 20) {
-            world.setPrivate(!world.isPrivate());
-            player.sendMessage("§7Мир теперь " + (world.isPrivate() ? "§cприватный" : "§aпубличный"));
-            plugin.getWorldManager().saveWorld(world);
-            setupInventory();
-        }
-        
-        // Флаги
-        else if (slot == 29) { // Мобы
-            world.getFlags().setMobSpawning(!world.getFlags().isMobSpawning());
-            player.sendMessage("§7Спавн мобов: " + (world.getFlags().isMobSpawning() ? "§aвключен" : "§cотключен"));
-            plugin.getWorldManager().saveWorld(world);
-            setupInventory();
-        }
-        else if (slot == 31) { // PvP
-            world.getFlags().setPvp(!world.getFlags().isPvp());
-            player.sendMessage("§7PvP: " + (world.getFlags().isPvp() ? "§aвключен" : "§cотключен"));
-            plugin.getWorldManager().saveWorld(world);
-            setupInventory();
-        }
-        else if (slot == 33) { // Взрывы
-            world.getFlags().setExplosions(!world.getFlags().isExplosions());
-            player.sendMessage("§7Взрывы: " + (world.getFlags().isExplosions() ? "§aвключены" : "§cотключены"));
-            plugin.getWorldManager().saveWorld(world);
-            setupInventory();
-        }
-        
-        // Доверенные игроки
-        else if (slot == 24) {
-            player.sendMessage("§eФункция управления доверенными игроками пока в разработке!");
-        }
-        
         // Удаление мира
-        else if (slot == 49) {
+        if (displayName.contains("Удалить мир")) {
             player.closeInventory();
-            player.sendMessage("§cВведите в чат 'УДАЛИТЬ' для подтверждения удаления мира");
+            // Удаляем регистрацию GUI
+            GuiListener.unregisterOpenGui(player);
+            player.sendMessage("§cДля удаления мира напишите в чат: §eУДАЛИТЬ");
             plugin.getDeleteConfirmations().put(player.getUniqueId(), world.getId());
+            return;
+        }
+        
+        // Изменение флагов
+        WorldFlags flags = world.getFlags();
+        
+        if (displayName.contains("Спавн мобов")) {
+            flags.setMobSpawning(!flags.isMobSpawning());
+            plugin.getWorldManager().saveWorld(world);
+            setupInventory();
+        } else if (displayName.contains("PvP")) {
+            flags.setPvp(!flags.isPvp());
+            plugin.getWorldManager().saveWorld(world);
+            setupInventory();
+        } else if (displayName.contains("Взрывы")) {
+            flags.setExplosions(!flags.isExplosions());
+            plugin.getWorldManager().saveWorld(world);
+            setupInventory();
         }
     }
 }

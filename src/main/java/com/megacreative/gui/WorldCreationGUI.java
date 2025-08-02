@@ -1,8 +1,8 @@
 package com.megacreative.gui;
 
 import com.megacreative.MegaCreative;
-import com.megacreative.models.CreativeWorld;
 import com.megacreative.models.CreativeWorldType;
+import com.megacreative.listeners.GuiListener;
 import org.bukkit.Bukkit;
 import org.bukkit.Material;
 import org.bukkit.entity.Player;
@@ -24,15 +24,18 @@ public class WorldCreationGUI implements Listener {
     public WorldCreationGUI(MegaCreative plugin, Player player) {
         this.plugin = plugin;
         this.player = player;
-        this.inventory = Bukkit.createInventory(null, 27, "§8§lСоздание мира");
+        this.inventory = Bukkit.createInventory(null, 27, "§a§lСоздание мира");
         
-        Bukkit.getPluginManager().registerEvents(this, plugin);
+        // Регистрируем GUI в централизованной системе
+        GuiListener.registerOpenGui(player, this);
         setupInventory();
     }
     
     private void setupInventory() {
+        inventory.clear();
+        
         // Заполнение стеклом
-        ItemStack glass = new ItemStack(Material.BLACK_STAINED_GLASS_PANE);
+        ItemStack glass = new ItemStack(Material.GRAY_STAINED_GLASS_PANE);
         ItemMeta glassMeta = glass.getItemMeta();
         glassMeta.setDisplayName(" ");
         glass.setItemMeta(glassMeta);
@@ -42,30 +45,78 @@ public class WorldCreationGUI implements Listener {
         }
         
         // Типы миров
-        int[] slots = {10, 11, 12, 13, 14, 15};
-        CreativeWorldType[] types = CreativeWorldType.values();
+        ItemStack normalWorld = new ItemStack(Material.GRASS_BLOCK);
+        ItemMeta normalMeta = normalWorld.getItemMeta();
+        normalMeta.setDisplayName("§a§lОбычный мир");
+        normalMeta.setLore(Arrays.asList(
+            "§7Стандартный мир с горами,",
+            "§7лесами и океанами",
+            "§e▶ Нажмите для создания"
+        ));
+        normalWorld.setItemMeta(normalMeta);
+        inventory.setItem(10, normalWorld);
         
-        for (int i = 0; i < Math.min(slots.length, types.length); i++) {
-            CreativeWorldType type = types[i];
-            ItemStack typeItem = new ItemStack(type.getIcon());
-            ItemMeta typeMeta = typeItem.getItemMeta();
-            typeMeta.setDisplayName("§f§l" + type.getDisplayName());
-            typeMeta.setLore(Arrays.asList(
-                "§7Создать мир типа " + type.getDisplayName(),
-                "§7Окружение: §f" + type.getEnvironment().name(),
-                "§e▶ Нажмите для создания"
-            ));
-            typeItem.setItemMeta(typeMeta);
-            inventory.setItem(slots[i], typeItem);
-        }
+        ItemStack flatWorld = new ItemStack(Material.STONE);
+        ItemMeta flatMeta = flatWorld.getItemMeta();
+        flatMeta.setDisplayName("§e§lПлоский мир");
+        flatMeta.setLore(Arrays.asList(
+            "§7Мир с плоской поверхностью,",
+            "§7идеален для строительства",
+            "§e▶ Нажмите для создания"
+        ));
+        flatWorld.setItemMeta(flatMeta);
+        inventory.setItem(11, flatWorld);
         
-        // Кнопка назад
-        ItemStack backButton = new ItemStack(Material.ARROW);
-        ItemMeta backMeta = backButton.getItemMeta();
-        backMeta.setDisplayName("§c§lНазад");
-        backMeta.setLore(Arrays.asList("§7Вернуться к списку миров"));
-        backButton.setItemMeta(backMeta);
-        inventory.setItem(18, backButton);
+        ItemStack voidWorld = new ItemStack(Material.BARRIER);
+        ItemMeta voidMeta = voidWorld.getItemMeta();
+        voidMeta.setDisplayName("§c§lПустой мир");
+        voidMeta.setLore(Arrays.asList(
+            "§7Полностью пустой мир,",
+            "§7только спавн платформа",
+            "§e▶ Нажмите для создания"
+        ));
+        voidWorld.setItemMeta(voidMeta);
+        inventory.setItem(12, voidWorld);
+        
+        ItemStack oceanWorld = new ItemStack(Material.WATER_BUCKET);
+        ItemMeta oceanMeta = oceanWorld.getItemMeta();
+        oceanMeta.setDisplayName("§b§lОкеанский мир");
+        oceanMeta.setLore(Arrays.asList(
+            "§7Мир, покрытый океанами,",
+            "§7с островами",
+            "§e▶ Нажмите для создания"
+        ));
+        oceanWorld.setItemMeta(oceanMeta);
+        inventory.setItem(13, oceanWorld);
+        
+        ItemStack netherWorld = new ItemStack(Material.NETHERRACK);
+        ItemMeta netherMeta = netherWorld.getItemMeta();
+        netherMeta.setDisplayName("§6§lАдский мир");
+        netherMeta.setLore(Arrays.asList(
+            "§7Мир в стиле Нижнего мира,",
+            "§7с лавой и адским камнем",
+            "§e▶ Нажмите для создания"
+        ));
+        netherWorld.setItemMeta(netherMeta);
+        inventory.setItem(14, netherWorld);
+        
+        ItemStack endWorld = new ItemStack(Material.END_STONE);
+        ItemMeta endMeta = endWorld.getItemMeta();
+        endMeta.setDisplayName("§d§lКраевой мир");
+        endMeta.setLore(Arrays.asList(
+            "§7Мир в стиле Края,",
+            "§7с краевым камнем",
+            "§e▶ Нажмите для создания"
+        ));
+        endWorld.setItemMeta(endMeta);
+        inventory.setItem(15, endWorld);
+        
+        // Кнопка отмены
+        ItemStack cancelButton = new ItemStack(Material.RED_STAINED_GLASS);
+        ItemMeta cancelMeta = cancelButton.getItemMeta();
+        cancelMeta.setDisplayName("§c§lОтмена");
+        cancelButton.setItemMeta(cancelMeta);
+        inventory.setItem(22, cancelButton);
     }
     
     public void open() {
@@ -87,25 +138,36 @@ public class WorldCreationGUI implements Listener {
         
         String displayName = clicked.getItemMeta().getDisplayName();
         
-        // Кнопка назад
-        if (clicked.getType() == Material.ARROW && displayName.contains("Назад")) {
+        // Отмена
+        if (displayName.contains("Отмена")) {
             player.closeInventory();
-            new MyWorldsGUI(plugin, player).open();
+            // Удаляем регистрацию GUI
+            GuiListener.unregisterOpenGui(player);
             return;
         }
         
         // Выбор типа мира
-        for (CreativeWorldType type : CreativeWorldType.values()) {
-            if (clicked.getType() == type.getIcon() && displayName.contains(type.getDisplayName())) {
-                createWorld(type);
-                return;
-            }
+        CreativeWorldType worldType = null;
+        
+        if (displayName.contains("Обычный мир")) {
+            worldType = CreativeWorldType.SURVIVAL;
+        } else if (displayName.contains("Плоский мир")) {
+            worldType = CreativeWorldType.FLAT;
+        } else if (displayName.contains("Пустой мир")) {
+            worldType = CreativeWorldType.VOID;
+        } else if (displayName.contains("Океанский мир")) {
+            worldType = CreativeWorldType.OCEAN;
+        } else if (displayName.contains("Адский мир")) {
+            worldType = CreativeWorldType.NETHER;
+        } else if (displayName.contains("Краевой мир")) {
+            worldType = CreativeWorldType.END;
         }
-    }
-    
-    private void createWorld(CreativeWorldType type) {
-        String worldName = "Мир " + player.getName();
-        // WorldManager теперь сам обрабатывает лимиты, сообщения и телепортацию асинхронно.
-        plugin.getWorldManager().createWorld(player, worldName, type);
+        
+        if (worldType != null) {
+            player.closeInventory();
+            // Удаляем регистрацию GUI
+            GuiListener.unregisterOpenGui(player);
+            player.performCommand("create " + worldType.name().toLowerCase());
+        }
     }
 }

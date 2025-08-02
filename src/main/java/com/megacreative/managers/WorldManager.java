@@ -151,8 +151,11 @@ public class WorldManager {
                 creator.type(org.bukkit.WorldType.FLAT);
                 break;
             case VOID:
-                creator.generateStructures(false);
+                // Создаем плоский мир без структур для пустоты
                 creator.type(org.bukkit.WorldType.FLAT);
+                creator.generateStructures(false);
+                // Настройка генератора для создания только спавн платформы
+                creator.generatorSettings("minecraft:flat;minecraft:bedrock,2*minecraft:stone,minecraft:grass_block;minecraft:plains");
                 break;
             case OCEAN:
                 creator.type(org.bukkit.WorldType.NORMAL);

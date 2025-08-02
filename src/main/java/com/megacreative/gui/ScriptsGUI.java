@@ -2,15 +2,15 @@ package com.megacreative.gui;
 
 import com.megacreative.MegaCreative;
 import com.megacreative.coding.CodeScript;
+import com.megacreative.listeners.GuiListener;
 import com.megacreative.models.CreativeWorld;
+import java.util.ArrayList;
 import org.bukkit.Bukkit;
 import org.bukkit.Material;
 import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
-import org.bukkit.event.HandlerList;
 import org.bukkit.event.Listener;
 import org.bukkit.event.inventory.InventoryClickEvent;
-import org.bukkit.event.inventory.InventoryCloseEvent;
 import org.bukkit.inventory.Inventory;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.inventory.meta.ItemMeta;
@@ -19,116 +19,183 @@ import java.util.Arrays;
 import java.util.List;
 
 public class ScriptsGUI implements Listener {
-    private final Player player;
-    private final CreativeWorld creativeWorld;
-    private final Inventory inventory;
+    
     private final MegaCreative plugin;
-
-    public ScriptsGUI(Player player, CreativeWorld creativeWorld, MegaCreative plugin) {
-        this.player = player;
-        this.creativeWorld = creativeWorld;
+    private final Player player;
+    private final Inventory inventory;
+    private int page = 0;
+    
+    public ScriptsGUI(MegaCreative plugin, Player player) {
         this.plugin = plugin;
-        this.inventory = Bukkit.createInventory(null, 54, "§8Библиотека скриптов");
-        Bukkit.getPluginManager().registerEvents(this, plugin);
-        setupItems();
-    }
-
-    private void setupItems() {
-        List<CodeScript> scripts = creativeWorld.getScripts();
+        this.player = player;
+        this.inventory = Bukkit.createInventory(null, 54, "§8§lМои скрипты");
         
-        for (int i = 0; i < scripts.size() && i < 45; i++) {
-            CodeScript script = scripts.get(i);
-            inventory.setItem(i, createScriptItem(script));
+        // Регистрируем GUI в централизованной системе
+        GuiListener.registerOpenGui(player, this);
+        setupInventory();
+    }
+    
+    private void setupInventory() {
+        inventory.clear();
+        
+        // Заполнение стеклом
+        ItemStack glass = new ItemStack(Material.GRAY_STAINED_GLASS_PANE);
+        ItemMeta glassMeta = glass.getItemMeta();
+        glassMeta.setDisplayName(" ");
+        glass.setItemMeta(glassMeta);
+        
+        for (int i = 0; i < 54; i++) {
+            inventory.setItem(i, glass);
         }
         
-        // Кнопка "Закрыть"
-        ItemStack closeButton = new ItemStack(Material.BARRIER);
-        ItemMeta closeMeta = closeButton.getItemMeta();
-        closeMeta.setDisplayName("§cЗакрыть");
-        closeButton.setItemMeta(closeMeta);
-        inventory.setItem(49, closeButton);
-    }
-
-    private ItemStack createScriptItem(CodeScript script) {
-        Material material = script.isEnabled() ? Material.LIME_DYE : Material.GRAY_DYE;
-        ItemStack item = new ItemStack(material);
-        ItemMeta meta = item.getItemMeta();
+        // Получение скриптов текущего мира
+        CreativeWorld currentWorld = plugin.getWorldManager().findCreativeWorldByBukkit(player.getWorld());
+        List<CodeScript> worldScripts = currentWorld != null ? currentWorld.getScripts() : new ArrayList<>();
+        int startIndex = page * 28;
+        int endIndex = Math.min(startIndex + 28, worldScripts.size());
         
-        String status = script.isEnabled() ? "§aВключен" : "§cВыключен";
-        meta.setDisplayName("§e" + script.getName());
-        meta.setLore(Arrays.asList(
-            "§7Статус: " + status,
-            "§7ID: " + script.getId().toString().substring(0, 8) + "...",
-            "",
-            "§eЛКМ: §fПереключить статус",
-            "§cПКМ: §fУдалить скрипт"
+        // Отображение скриптов
+        int slot = 10;
+        for (int i = startIndex; i < endIndex; i++) {
+            if (slot > 43) break;
+            
+            CodeScript script = worldScripts.get(i);
+            ItemStack scriptItem = new ItemStack(Material.BOOK);
+            ItemMeta scriptMeta = scriptItem.getItemMeta();
+            scriptMeta.setDisplayName("§f§l" + script.getName());
+            scriptMeta.setLore(Arrays.asList(
+                "§7Статус: " + (script.isEnabled() ? "§aВключен" : "§cВыключен"),
+                "§7Блоков: §f" + countBlocks(script),
+                "",
+                "§a▶ ЛКМ - Редактировать",
+                "§e▶ ПКМ - Настройки"
+            ));
+            scriptItem.setItemMeta(scriptMeta);
+            inventory.setItem(slot, scriptItem);
+            
+            slot++;
+            if (slot % 9 == 8) slot += 2;
+        }
+        
+        // Кнопка создания нового скрипта
+        ItemStack createButton = new ItemStack(Material.EMERALD);
+        ItemMeta createMeta = createButton.getItemMeta();
+        createMeta.setDisplayName("§a§lСоздать новый скрипт");
+        createMeta.setLore(Arrays.asList(
+            "§7Создайте новый скрипт",
+            "§7для автоматизации",
+            "§e▶ Нажмите для создания"
         ));
+        createButton.setItemMeta(createMeta);
+        inventory.setItem(49, createButton);
         
-        item.setItemMeta(meta);
-        return item;
+        // Навигация
+        if (page > 0) {
+            ItemStack prevButton = new ItemStack(Material.ARROW);
+            ItemMeta prevMeta = prevButton.getItemMeta();
+            prevMeta.setDisplayName("§a§lПредыдущая страница");
+            prevButton.setItemMeta(prevMeta);
+            inventory.setItem(45, prevButton);
+        }
+        
+        if (endIndex < worldScripts.size()) {
+            ItemStack nextButton = new ItemStack(Material.ARROW);
+            ItemMeta nextMeta = nextButton.getItemMeta();
+            nextMeta.setDisplayName("§a§lСледующая страница");
+            nextButton.setItemMeta(nextMeta);
+            inventory.setItem(53, nextButton);
+        }
     }
-
+    
+    private int countBlocks(CodeScript script) {
+        if (script.getRootBlock() == null) return 0;
+        return countBlocksRecursive(script.getRootBlock());
+    }
+    
+    private int countBlocksRecursive(com.megacreative.coding.CodeBlock block) {
+        if (block == null) return 0;
+        int count = 1;
+        count += countBlocksRecursive(block.getNextBlock());
+        for (com.megacreative.coding.CodeBlock child : block.getChildren()) {
+            count += countBlocksRecursive(child);
+        }
+        return count;
+    }
+    
     public void open() {
         player.openInventory(inventory);
     }
-
+    
     @EventHandler
     public void onInventoryClick(InventoryClickEvent event) {
-        if (!event.getWhoClicked().equals(player) || !event.getInventory().equals(inventory)) return;
+        if (!event.getInventory().equals(inventory)) return;
+        
         event.setCancelled(true);
+        
+        if (!(event.getWhoClicked() instanceof Player clicker) || !clicker.equals(player)) {
+            return;
+        }
         
         ItemStack clicked = event.getCurrentItem();
         if (clicked == null || !clicked.hasItemMeta()) return;
         
         String displayName = clicked.getItemMeta().getDisplayName();
         
-        if (displayName.contains("Закрыть")) {
+        // Создание нового скрипта
+        if (clicked.getType() == Material.EMERALD && displayName.contains("Создать")) {
             player.closeInventory();
+            // Удаляем регистрацию GUI
+            GuiListener.unregisterOpenGui(player);
+            player.performCommand("createscript");
             return;
         }
         
-        // Находим скрипт по имени
-        String scriptName = displayName.replace("§e", "");
-        CodeScript targetScript = null;
-        for (CodeScript script : creativeWorld.getScripts()) {
-            if (script.getName().equals(scriptName)) {
-                targetScript = script;
-                break;
-            }
+        // Навигация
+        if (displayName.contains("Предыдущая страница")) {
+            page--;
+            setupInventory();
+            return;
         }
         
-        if (targetScript == null) return;
+        if (displayName.contains("Следующая страница")) {
+            page++;
+            setupInventory();
+            return;
+        }
         
-        if (event.isLeftClick()) {
-            // Переключаем статус
-            targetScript.setEnabled(!targetScript.isEnabled());
-            player.sendMessage("§a✓ Скрипт '" + scriptName + "' " + 
-                (targetScript.isEnabled() ? "включен" : "выключен"));
+        // Клик по скрипту
+        CreativeWorld currentWorld = plugin.getWorldManager().findCreativeWorldByBukkit(player.getWorld());
+        List<CodeScript> worldScripts = currentWorld != null ? currentWorld.getScripts() : new ArrayList<>();
+        int slot = event.getSlot();
+        int scriptIndex = getScriptIndexFromSlot(slot);
+        
+        if (scriptIndex >= 0 && scriptIndex < worldScripts.size()) {
+            CodeScript script = worldScripts.get(scriptIndex);
             
-            // Обновляем GUI
-            setupItems();
-            
-        } else if (event.isRightClick()) {
-            // Удаляем скрипт
-            creativeWorld.getScripts().remove(targetScript);
-            player.sendMessage("§c✓ Скрипт '" + scriptName + "' удален");
-            
-            // Сохраняем мир
-            try {
-                plugin.getWorldManager().saveWorld(creativeWorld);
-            } catch (Exception e) {
-                player.sendMessage("§cОшибка при сохранении: " + e.getMessage());
+            if (event.isLeftClick()) {
+                // Редактирование скрипта
+                player.closeInventory();
+                // Удаляем регистрацию GUI
+                GuiListener.unregisterOpenGui(player);
+                player.performCommand("editscript " + script.getName());
+            } else if (event.isRightClick()) {
+                // Настройки скрипта
+                player.closeInventory();
+                // Удаляем регистрацию GUI
+                GuiListener.unregisterOpenGui(player);
+                player.performCommand("scriptsettings " + script.getName());
             }
-            
-            // Обновляем GUI
-            setupItems();
         }
     }
-
-    @EventHandler
-    public void onInventoryClose(InventoryCloseEvent event) {
-        if (event.getInventory().equals(inventory) && event.getPlayer().equals(player)) {
-            HandlerList.unregisterAll(this);
-        }
+    
+    private int getScriptIndexFromSlot(int slot) {
+        if (slot < 10 || slot > 43) return -1;
+        
+        int row = slot / 9;
+        int col = slot % 9;
+        
+        if (col == 0 || col == 8) return -1;
+        
+        return (row - 1) * 7 + (col - 1) + page * 28;
     }
 } 
