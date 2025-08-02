@@ -50,6 +50,7 @@ public class MegaCreative extends JavaPlugin {
     // Maps для хранения состояния
     private Map<UUID, CreativeWorld> commentInputs = new HashMap<>();
     private Map<UUID, String> deleteConfirmations = new HashMap<>();
+    private Map<UUID, Long> lastItemCheckTime = new HashMap<>(); // Для предотвращения спама
     
     @Override
     public void onEnable() {
@@ -226,14 +227,23 @@ public class MegaCreative extends JavaPlugin {
                         // Проверяем, каких предметов не хватает
                         List<String> missingItems = getMissingCodingItems(player);
                         if (!missingItems.isEmpty()) {
-                            // Добавляем только недостающие предметы
-                            CodingItems.giveMissingItems(player, missingItems);
-                            player.sendMessage("§e§l!§r §eДобавлены недостающие инструменты для кодинга: " + String.join(", ", missingItems));
+                            // Проверяем, не отправляли ли мы уже сообщение этому игроку недавно
+                            UUID playerId = player.getUniqueId();
+                            long currentTime = System.currentTimeMillis();
+                            long lastCheck = lastItemCheckTime.getOrDefault(playerId, 0L);
+                            
+                            // Отправляем сообщение только раз в минуту
+                            if (currentTime - lastCheck > 60000) {
+                                // Добавляем только недостающие предметы
+                                CodingItems.giveMissingItems(player, missingItems);
+                                player.sendMessage("§e§l!§r §eДобавлены недостающие инструменты для кодинга: " + String.join(", ", missingItems));
+                                lastItemCheckTime.put(playerId, currentTime);
+                            }
                         }
                     }
                 }
             }
-        }.runTaskTimer(this, 100L, 100L); // Проверка каждые 5 секунд (100 тиков)
+        }.runTaskTimer(this, 200L, 600L); // Проверка каждые 30 секунд (600 тиков) вместо 5 секунд
     }
 
     // Этот метод-хелпер нужно тоже добавить в MegaCreative.java
@@ -280,13 +290,16 @@ public class MegaCreative extends JavaPlugin {
             }
         }
         
+        // Проверяем только самые важные предметы, чтобы избежать спама
         if (!hasLinker) missingItems.add("Связующий жезл");
         if (!hasInspector) missingItems.add("Инспектор блоков");
         if (!hasEventBlock) missingItems.add("Блок события");
-        if (!hasActionBlock) missingItems.add("Блок действия");
-        if (!hasConditionBlock) missingItems.add("Блок условия");
-        if (!hasVariableBlock) missingItems.add("Блок переменной");
-        if (!hasRepeatBlock) missingItems.add("Блок повтора");
+        
+        // Добавляем остальные только если их действительно нет
+        if (!hasActionBlock && missingItems.size() < 3) missingItems.add("Блок действия");
+        if (!hasConditionBlock && missingItems.size() < 3) missingItems.add("Блок условия");
+        if (!hasVariableBlock && missingItems.size() < 3) missingItems.add("Блок переменной");
+        if (!hasRepeatBlock && missingItems.size() < 3) missingItems.add("Блок повтора");
         
         return missingItems;
     }
