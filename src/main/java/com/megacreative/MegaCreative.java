@@ -60,6 +60,10 @@ public class MegaCreative extends JavaPlugin {
         this.templateManager = new TemplateManager(this);
         this.scoreboardManager = new ScoreboardManager(this);
         
+        // --- ВОТ ГЛАВНОЕ ИСПРАВЛЕНИЕ ---
+        // Теперь мы загружаем миры, когда все остальные системы готовы
+        this.worldManager.initialize();
+        
         // Регистрируем команды и события
         registerCommands();
         registerEvents();

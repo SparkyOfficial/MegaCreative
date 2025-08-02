@@ -26,6 +26,14 @@ public class WorldManager {
         this.plugin = plugin;
         this.worlds = new HashMap<>();
         this.playerWorlds = new HashMap<>();
+        // loadWorlds(); // Убираем вызов из конструктора!
+    }
+    
+    /**
+     * Инициализация менеджера миров - загружает все миры из файлов
+     * Должен вызываться ПОСЛЕ создания всех остальных менеджеров
+     */
+    public void initialize() {
         loadWorlds();
     }
     
