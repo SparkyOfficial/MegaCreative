@@ -36,10 +36,16 @@ public class BlockFactory {
         actionRegistry.put("setBlock", new SetBlockAction());
         actionRegistry.put("broadcast", new BroadcastAction());
         actionRegistry.put("command", new CommandAction());
+        actionRegistry.put("playSound", new PlaySoundAction());
+        actionRegistry.put("effect", new EffectAction());
+        
+        // Математические операции
+        actionRegistry.put("addVar", new AddVarAction());
+        actionRegistry.put("subVar", new SubVarAction());
+        actionRegistry.put("mulVar", new MulVarAction());
+        actionRegistry.put("divVar", new DivVarAction());
         
         // TODO: Добавить остальные действия по мере их рефакторинга
-        // actionRegistry.put("effect", new EffectAction());
-        // actionRegistry.put("playSound", new PlaySoundAction());
         // и так далее...
     }
     

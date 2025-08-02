@@ -90,15 +90,15 @@ public class HybridScriptExecutor {
         // Оставшиеся блоки для миграции
         oldActionRegistry.put("spawnMob", new SpawnMobAction());
         
-        // Математические операции
-        oldActionRegistry.put("addVar", new AddVarAction());
-        oldActionRegistry.put("subVar", new SubVarAction());
-        oldActionRegistry.put("mulVar", new MulVarAction());
-        oldActionRegistry.put("divVar", new DivVarAction());
+        // Математические операции (мигрированы в новую систему)
+        // oldActionRegistry.put("addVar", new AddVarAction()); // МИГРИРОВАН
+        // oldActionRegistry.put("subVar", new SubVarAction()); // МИГРИРОВАН
+        // oldActionRegistry.put("mulVar", new MulVarAction()); // МИГРИРОВАН
+        // oldActionRegistry.put("divVar", new DivVarAction()); // МИГРИРОВАН
         
         // Действия с миром
-        oldActionRegistry.put("playSound", new PlaySoundAction());
-        oldActionRegistry.put("effect", new EffectAction());
+        // oldActionRegistry.put("playSound", new PlaySoundAction()); // МИГРИРОВАН
+        // oldActionRegistry.put("effect", new EffectAction()); // МИГРИРОВАН
         // oldActionRegistry.put("command", new CommandAction()); // МИГРИРОВАН
         oldActionRegistry.put("healPlayer", new HealPlayerAction());
         oldActionRegistry.put("setGameMode", new SetGameModeAction());
@@ -370,7 +370,8 @@ public class HybridScriptExecutor {
             "🎯 Прогресс миграции: %.1f%%\n" +
                            "📋 Мигрированные блоки:\n" +
                "  ✅ sendMessage, giveItem, randomNumber, setVar\n" +
-               "  ✅ teleport, wait, setBlock, broadcast, command\n" +
+               "  ✅ teleport, wait, setBlock, broadcast, command, playSound, effect\n" +
+               "  ✅ addVar, subVar, mulVar, divVar (математические операции)\n" +
                "  ✅ isOp, hasItem, ifVarEquals, playerHealth",
             newActions, newConditions, oldActions, oldConditions,
             totalActions, totalConditions, migrationProgress
