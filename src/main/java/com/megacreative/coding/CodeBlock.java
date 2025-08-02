@@ -1,5 +1,6 @@
 package com.megacreative.coding;
 
+import com.megacreative.MegaCreative;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
@@ -33,6 +34,9 @@ public class CodeBlock implements Cloneable {
     // --- СИСТЕМА ГРУППИРОВКИ ПРЕДМЕТОВ ---
     // Группы предметов для сложных конфигураций
     private transient Map<String, List<Integer>> itemGroups = new HashMap<>();
+    
+    // --- ДОСТУП К ПЛАГИНУ ДЛЯ КОНФИГУРАЦИИ ---
+    private transient MegaCreative plugin;
 
     public CodeBlock(Material material, String action) {
         this.id = UUID.randomUUID();
@@ -74,6 +78,20 @@ public class CodeBlock implements Cloneable {
      */
     public void setNext(CodeBlock next) {
         this.nextBlock = next;
+    }
+    
+    /**
+     * Устанавливает ссылку на плагин для доступа к конфигурации
+     */
+    public void setPlugin(MegaCreative plugin) {
+        this.plugin = plugin;
+    }
+    
+    /**
+     * Получает ссылку на плагин
+     */
+    public MegaCreative getPlugin() {
+        return plugin;
     }
     
     // --- НОВЫЕ МЕТОДЫ ДЛЯ РАБОТЫ С ВИРТУАЛЬНЫМИ ИНВЕНТАРЯМИ ---
@@ -141,14 +159,16 @@ public class CodeBlock implements Cloneable {
      * @return Список предметов в группе
      */
     public List<ItemStack> getItemsFromGroup(String groupName) {
+        List<Integer> groupSlots = itemGroups.get(groupName);
+        if (groupSlots == null) {
+            return new ArrayList<>();
+        }
+        
         List<ItemStack> items = new ArrayList<>();
-        List<Integer> slots = itemGroups.get(groupName);
-        if (slots != null) {
-            for (Integer slot : slots) {
-                ItemStack item = configItems.get(slot);
-                if (item != null) {
-                    items.add(item);
-                }
+        for (Integer slot : groupSlots) {
+            ItemStack item = configItems.get(slot);
+            if (item != null) {
+                items.add(item);
             }
         }
         return items;
@@ -159,7 +179,7 @@ public class CodeBlock implements Cloneable {
      * @return Карта групп
      */
     public Map<String, List<Integer>> getItemGroups() {
-        return itemGroups;
+        return new HashMap<>(itemGroups);
     }
     
     /**
@@ -184,6 +204,86 @@ public class CodeBlock implements Cloneable {
      */
     public void clearItemGroups() {
         itemGroups.clear();
+    }
+    
+    // --- НОВЫЕ МЕТОДЫ ДЛЯ ИМЕНОВАННЫХ СЛОТОВ ---
+    
+    /**
+     * Получает предмет из именованного слота
+     * @param slotName Имя слота (например, "entity_slot", "radius_slot")
+     * @return Предмет из слота или null, если слот не найден
+     */
+    public ItemStack getItemFromSlot(String slotName) {
+        // Получаем номер слота по имени из конфигурации
+        Integer slotNumber = plugin.getBlockConfiguration().getSlotNumber(this.getAction(), slotName);
+        if (slotNumber != null) {
+            return getConfigItem(slotNumber);
+        }
+        return null;
+    }
+    
+    /**
+     * Получает предметы из именованной группы
+     * @param groupName Имя группы (например, "items_to_give")
+     * @return Список предметов из группы
+     */
+    public List<ItemStack> getItemsFromNamedGroup(String groupName) {
+        // Получаем слоты для группы из конфигурации
+        List<Integer> groupSlots = plugin.getBlockConfiguration().getSlotsForGroup(this.getAction(), groupName);
+        if (groupSlots.isEmpty()) {
+            return new ArrayList<>();
+        }
+        
+        List<ItemStack> items = new ArrayList<>();
+        for (Integer slot : groupSlots) {
+            ItemStack item = configItems.get(slot);
+            if (item != null) {
+                items.add(item);
+            }
+        }
+        return items;
+    }
+    
+    /**
+     * Проверяет, есть ли конфигурация слотов для данного действия
+     */
+    public boolean hasSlotConfiguration() {
+        return plugin.getBlockConfiguration().getActionSlotConfig(this.getAction()) != null;
+    }
+    
+    /**
+     * Проверяет, есть ли конфигурация групп для данного действия
+     */
+    public boolean hasGroupConfiguration() {
+        return plugin.getBlockConfiguration().getActionGroupConfig(this.getAction()) != null;
+    }
+    
+    /**
+     * Получает все именованные слоты для данного действия
+     */
+    public Map<String, Integer> getNamedSlots() {
+        Map<String, Integer> namedSlots = new HashMap<>();
+        var slotConfig = plugin.getBlockConfiguration().getActionSlotConfig(this.getAction());
+        if (slotConfig != null) {
+            for (Map.Entry<Integer, BlockConfiguration.SlotConfig> entry : slotConfig.getSlots().entrySet()) {
+                namedSlots.put(entry.getValue().getSlotName(), entry.getKey());
+            }
+        }
+        return namedSlots;
+    }
+    
+    /**
+     * Получает все именованные группы для данного действия
+     */
+    public Map<String, List<Integer>> getNamedGroups() {
+        Map<String, List<Integer>> namedGroups = new HashMap<>();
+        var groupConfig = plugin.getBlockConfiguration().getActionGroupConfig(this.getAction());
+        if (groupConfig != null) {
+            for (Map.Entry<String, BlockConfiguration.GroupConfig> entry : groupConfig.getGroups().entrySet()) {
+                namedGroups.put(entry.getKey(), entry.getValue().getSlots());
+            }
+        }
+        return namedGroups;
     }
 
     @Override

@@ -27,6 +27,7 @@ com\megacreative\coding\actions\SetGlobalVariableAction.class
 com\megacreative\coding\ParameterResolver$1.class
 com\megacreative\coding\actions\MulVarAction.class
 com\megacreative\listeners\PlayerJoinListener.class
+com\megacreative\coding\BlockConfiguration$ActionGroupConfig.class
 com\megacreative\gui\DataGUI$1.class
 com\megacreative\coding\actions\SetTimeAction.class
 com\megacreative\listeners\PlayerWorldChangeListener.class
@@ -54,6 +55,7 @@ com\megacreative\coding\actions\GetVarAction.class
 com\megacreative\commands\PlayCommand.class
 com\megacreative\coding\actions\SpawnEntityAction.class
 com\megacreative\gui\ScriptsGUI.class
+com\megacreative\coding\BlockConfiguration$ActionSlotConfig.class
 com\megacreative\coding\actions\HasPermissionCondition.class
 com\megacreative\commands\HubCommand.class
 com\megacreative\managers\PlayerManager.class
@@ -74,6 +76,7 @@ com\megacreative\coding\data\DataItemFactory.class
 com\megacreative\coding\actions\SpawnMobAction.class
 com\megacreative\coding\conditions\HasArmorCondition$1.class
 com\megacreative\coding\ExecutionContext$ExecutionContextBuilder.class
+com\megacreative\coding\BlockConfiguration$SlotConfig.class
 com\megacreative\commands\WorldBrowserCommand.class
 com\megacreative\coding\ScriptDebugger$2.class
 com\megacreative\listeners\WorldInteractListener.class
@@ -101,6 +104,7 @@ com\megacreative\coding\actions\SetVarAction.class
 com\megacreative\utils\JsonSerializer.class
 com\megacreative\coding\ExecutionContext.class
 com\megacreative\coding\actions\SetBlockAction.class
+com\megacreative\coding\BlockConfiguration$GroupConfig.class
 com\megacreative\coding\conditions\HasArmorCondition.class
 com\megacreative\managers\WorldManager$1.class
 com\megacreative\utils\TabListManager.class

@@ -32,11 +32,15 @@ public class IsNearEntityCondition implements BlockCondition {
         CodeBlock conditionBlock = context.getCurrentBlock();
         if (conditionBlock == null) return false;
 
-        // 3. Получаем предмет-образец из слота 0 нашего виртуального GUI
-        ItemStack sampleItem = conditionBlock.getConfigItem(0);
+        // 3. Получаем предмет-образец из именованного слота "entity_slot"
+        ItemStack sampleItem = conditionBlock.getItemFromSlot("entity_slot");
         if (sampleItem == null) {
-            // Если в GUI ничего не положили, условие не выполняется
-            return false; 
+            // Fallback на старый способ для совместимости
+            sampleItem = conditionBlock.getConfigItem(0);
+            if (sampleItem == null) {
+                // Если в GUI ничего не положили, условие не выполняется
+                return false; 
+            }
         }
 
         // 4. Определяем тип существа по предмету
@@ -45,9 +49,14 @@ public class IsNearEntityCondition implements BlockCondition {
             return false;
         }
 
-        // 5. Получаем радиус поиска из слота 1 (по умолчанию 5 блоков)
-        double radius = 5.0;
-        ItemStack radiusItem = conditionBlock.getConfigItem(1);
+        // 5. Получаем радиус поиска из именованного слота "radius_slot"
+        double radius = 5.0; // Default
+        ItemStack radiusItem = conditionBlock.getItemFromSlot("radius_slot");
+        if (radiusItem == null) {
+            // Fallback на старый способ для совместимости
+            radiusItem = conditionBlock.getConfigItem(1);
+        }
+        
         if (radiusItem != null && radiusItem.getType() == Material.PAPER) {
             try {
                 String radiusStr = radiusItem.getItemMeta().getDisplayName();

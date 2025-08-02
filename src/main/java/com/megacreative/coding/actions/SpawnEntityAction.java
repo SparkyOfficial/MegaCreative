@@ -33,10 +33,14 @@ public class SpawnEntityAction implements BlockAction {
         CodeBlock actionBlock = context.getCurrentBlock();
         if (actionBlock == null) return;
 
-        // 3. Получаем предмет-образец из слота 0 нашего виртуального GUI
-        ItemStack sampleItem = actionBlock.getConfigItem(0);
+        // 3. Получаем предмет-образец из именованного слота "entity_slot"
+        ItemStack sampleItem = actionBlock.getItemFromSlot("entity_slot");
         if (sampleItem == null) {
-            return;
+            // Fallback на старый способ для совместимости
+            sampleItem = actionBlock.getConfigItem(0);
+            if (sampleItem == null) {
+                return;
+            }
         }
 
         // 4. Определяем тип существа по предмету
@@ -46,9 +50,14 @@ public class SpawnEntityAction implements BlockAction {
             return;
         }
 
-        // 5. Получаем количество существ для спавна
+        // 5. Получаем количество существ для спавна из именованного слота "count_slot"
         int count = 1;
-        ItemStack countItem = actionBlock.getConfigItem(1);
+        ItemStack countItem = actionBlock.getItemFromSlot("count_slot");
+        if (countItem == null) {
+            // Fallback на старый способ для совместимости
+            countItem = actionBlock.getConfigItem(1);
+        }
+        
         if (countItem != null && countItem.getType() == Material.PAPER) {
             try {
                 String countStr = countItem.getItemMeta().getDisplayName();
@@ -60,9 +69,14 @@ public class SpawnEntityAction implements BlockAction {
             }
         }
 
-        // 6. Получаем радиус спавна
+        // 6. Получаем радиус спавна из именованного слота "radius_slot"
         double radius = 3.0;
-        ItemStack radiusItem = actionBlock.getConfigItem(2);
+        ItemStack radiusItem = actionBlock.getItemFromSlot("radius_slot");
+        if (radiusItem == null) {
+            // Fallback на старый способ для совместимости
+            radiusItem = actionBlock.getConfigItem(2);
+        }
+        
         if (radiusItem != null && radiusItem.getType() == Material.PAPER) {
             try {
                 String radiusStr = radiusItem.getItemMeta().getDisplayName();

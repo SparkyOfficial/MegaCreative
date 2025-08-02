@@ -29,15 +29,19 @@ public class GiveItemsAction implements BlockAction {
         CodeBlock actionBlock = context.getCurrentBlock();
         if (actionBlock == null) return;
 
-        // 3. Получаем все предметы из виртуального инвентаря
-        List<ItemStack> itemsToGive = actionBlock.getItemsFromGroup("items");
+        // 3. Получаем все предметы из именованной группы "items_to_give"
+        List<ItemStack> itemsToGive = actionBlock.getItemsFromNamedGroup("items_to_give");
         
-        // Если группа не найдена, берем все предметы из слотов 0-8
+        // Если группа не найдена, используем старый способ для совместимости
         if (itemsToGive.isEmpty()) {
-            for (int i = 0; i < 9; i++) {
-                ItemStack item = actionBlock.getConfigItem(i);
-                if (item != null) {
-                    itemsToGive.add(item);
+            itemsToGive = actionBlock.getItemsFromGroup("items");
+            if (itemsToGive.isEmpty()) {
+                // Fallback на слоты 0-8
+                for (int i = 0; i < 9; i++) {
+                    ItemStack item = actionBlock.getConfigItem(i);
+                    if (item != null) {
+                        itemsToGive.add(item);
+                    }
                 }
             }
         }

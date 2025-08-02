@@ -161,6 +161,68 @@ blocks:
       - "getServerVar"
       - "randomNumber"
 
+# --- НОВАЯ СИСТЕМА: ИМЕНОВАННЫЕ СЛОТЫ И ГРУППЫ ---
+action_configurations:
+  # Конфигурация для условия isNearEntity
+  isNearEntity:
+    slots:
+      0:
+        name: "§aСущество для поиска"
+        description: "§7Положите предмет, символизирующий существо (например, гнилую плоть для зомби)"
+        placeholder_item: "PLAYER_HEAD"
+        slot_name: "entity_slot"
+      1:
+        name: "§bРадиус поиска"
+        description: "§7Положите бумагу, переименованную в число (например, 10)"
+        placeholder_item: "COMPASS"
+        slot_name: "radius_slot"
+  
+  # Конфигурация для условия isPlayerHolding
+  isPlayerHolding:
+    slots:
+      0:
+        name: "§aПредмет в руке"
+        description: "§7Положите предмет, который должен быть в руке игрока"
+        placeholder_item: "STONE"
+        slot_name: "item_slot"
+  
+  # Конфигурация для условия hasArmor
+  hasArmor:
+    slots:
+      0:
+        name: "§aТребуемая броня"
+        description: "§7Положите предмет брони, которую должен носить игрок"
+        placeholder_item: "DIAMOND_HELMET"
+        slot_name: "armor_slot"
+  
+  # Конфигурация для действия giveItems
+  giveItems:
+    item_groups:
+      items_to_give:
+        slots: [0, 1, 2, 3, 4, 5, 6, 7, 8]
+        name: "§aПредметы для выдачи"
+        description: "§7Положите сюда все предметы, которые нужно выдать игроку"
+        placeholder_item: "CHEST"
+  
+  # Конфигурация для действия spawnEntity
+  spawnEntity:
+    slots:
+      0:
+        name: "§aТип существа"
+        description: "§7Положите предмет, символизирующий существо для спавна"
+        placeholder_item: "ZOMBIE_HEAD"
+        slot_name: "entity_slot"
+      1:
+        name: "§bКоличество"
+        description: "§7Положите бумагу с названием 'количество:X'"
+        placeholder_item: "PAPER"
+        slot_name: "count_slot"
+      2:
+        name: "§cРадиус спавна"
+        description: "§7Положите бумагу с названием 'радиус:X'"
+        placeholder_item: "PAPER"
+        slot_name: "radius_slot"
+
 # Настройки по умолчанию
 defaults:
   max_blocks_per_script: 100

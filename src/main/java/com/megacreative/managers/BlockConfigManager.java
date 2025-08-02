@@ -1,6 +1,7 @@
 package com.megacreative.managers;
 
 import com.megacreative.MegaCreative;
+import com.megacreative.coding.BlockConfiguration;
 import com.megacreative.coding.CodeBlock;
 import org.bukkit.Bukkit;
 import org.bukkit.Location;
@@ -12,6 +13,7 @@ import org.bukkit.inventory.Inventory;
 import org.bukkit.inventory.ItemStack;
 
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 import java.util.UUID;
 
@@ -42,6 +44,9 @@ public class BlockConfigManager implements Listener {
             return;
         }
 
+        // Устанавливаем ссылку на плагин для доступа к конфигурации
+        codeBlock.setPlugin(plugin);
+
         // Создаем инвентарь (сундук на 27 слотов - 3 ряда)
         Inventory configInventory = Bukkit.createInventory(null, 27, "§8Настройка: " + codeBlock.getAction());
 
@@ -54,6 +59,9 @@ public class BlockConfigManager implements Listener {
             }
         }
         
+        // --- НОВАЯ ЛОГИКА: ДОБАВЛЯЕМ PLACEHOLDER ПРЕДМЕТЫ ---
+        addPlaceholderItems(configInventory, codeBlock);
+        
         // Запоминаем, что игрок настраивает этот блок
         configuringBlocks.put(player.getUniqueId(), blockLocation);
         player.openInventory(configInventory);
@@ -61,6 +69,47 @@ public class BlockConfigManager implements Listener {
         player.sendMessage("§e§l!§r §eНастройте блок, поместив предметы в инвентарь.");
         player.sendMessage("§7Предметы будут использоваться как параметры для действия '" + codeBlock.getAction() + "'");
         player.sendMessage("§7§oПодсказка: Используйте 27 слотов для сложных конфигураций");
+    }
+    
+    /**
+     * Добавляет placeholder предметы в инвентарь на основе конфигурации
+     */
+    private void addPlaceholderItems(Inventory inventory, CodeBlock codeBlock) {
+        String actionName = codeBlock.getAction();
+        
+        // Добавляем placeholder предметы для именованных слотов
+        var slotConfig = plugin.getBlockConfiguration().getActionSlotConfig(actionName);
+        if (slotConfig != null) {
+            for (Map.Entry<Integer, BlockConfiguration.SlotConfig> entry : slotConfig.getSlots().entrySet()) {
+                int slotNumber = entry.getKey();
+                BlockConfiguration.SlotConfig slotConfigData = entry.getValue();
+                
+                // Проверяем, есть ли уже предмет в этом слоте
+                if (inventory.getItem(slotNumber) == null || inventory.getItem(slotNumber).getType().isAir()) {
+                    ItemStack placeholder = plugin.getBlockConfiguration().createPlaceholderItem(actionName, slotNumber);
+                    inventory.setItem(slotNumber, placeholder);
+                }
+            }
+        }
+        
+        // Добавляем placeholder предметы для групп
+        var groupConfig = plugin.getBlockConfiguration().getActionGroupConfig(actionName);
+        if (groupConfig != null) {
+            for (Map.Entry<String, BlockConfiguration.GroupConfig> entry : groupConfig.getGroups().entrySet()) {
+                String groupName = entry.getKey();
+                BlockConfiguration.GroupConfig groupConfigData = entry.getValue();
+                
+                // Добавляем placeholder в первый слот группы, если он пустой
+                List<Integer> groupSlots = groupConfigData.getSlots();
+                if (!groupSlots.isEmpty()) {
+                    int firstSlot = groupSlots.get(0);
+                    if (inventory.getItem(firstSlot) == null || inventory.getItem(firstSlot).getType().isAir()) {
+                        ItemStack placeholder = plugin.getBlockConfiguration().createGroupPlaceholderItem(actionName, groupName);
+                        inventory.setItem(firstSlot, placeholder);
+                    }
+                }
+            }
+        }
     }
 
     /**

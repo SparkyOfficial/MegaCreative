@@ -29,11 +29,15 @@ public class HasArmorCondition implements BlockCondition {
         CodeBlock conditionBlock = context.getCurrentBlock();
         if (conditionBlock == null) return false;
 
-        // 3. Получаем предмет-образец из слота 0 нашего виртуального GUI
-        ItemStack sampleItem = conditionBlock.getConfigItem(0);
+        // 3. Получаем предмет-образец из именованного слота "armor_slot"
+        ItemStack sampleItem = conditionBlock.getItemFromSlot("armor_slot");
         if (sampleItem == null) {
-            // Если в GUI ничего не положили, условие не выполняется
-            return false; 
+            // Fallback на старый способ для совместимости
+            sampleItem = conditionBlock.getConfigItem(0);
+            if (sampleItem == null) {
+                // Если в GUI ничего не положили, условие не выполняется
+                return false; 
+            }
         }
 
         // 4. Определяем тип брони по предмету
