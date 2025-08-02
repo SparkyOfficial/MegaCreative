@@ -4,6 +4,7 @@ import com.megacreative.MegaCreative;
 import com.megacreative.coding.data.DataItemFactory;
 import com.megacreative.coding.data.DataItemFactory.DataItem;
 import com.megacreative.coding.ParameterSelectorGUI;
+import org.bukkit.Bukkit;
 import org.bukkit.Location;
 import org.bukkit.Material;
 import org.bukkit.block.Block;
@@ -67,9 +68,19 @@ public class BlockPlacementHandler implements Listener {
         Block block = event.getBlockPlaced();
         Material mat = block.getType();
         
+        Bukkit.getLogger().info("[DEBUG] BlockPlaceEvent triggered for player " + player.getName());
+        
         // Проверяем, является ли предмет "блоком кода" по названию, а не просто по материалу.
-        if (!isCodingBlock(event.getItemInHand())) return;
-        if (!isInDevWorld(player)) return;
+        if (!isCodingBlock(event.getItemInHand())) {
+            Bukkit.getLogger().info("[DEBUG] Canceled: Not a coding block.");
+            return;
+        }
+        if (!isInDevWorld(player)) {
+            Bukkit.getLogger().info("[DEBUG] Canceled: Not in a dev world.");
+            return;
+        }
+
+        Bukkit.getLogger().info("[DEBUG] Checks passed! Placing block...");
         
         // --- НАЧАЛО ИСПРАВЛЕНИЯ ---
         
@@ -80,7 +91,7 @@ public class BlockPlacementHandler implements Listener {
         CodeBlock newCodeBlock = new CodeBlock(mat, "Настройка..."); // Временное действие
         blockCodeBlocks.put(block.getLocation(), newCodeBlock);
         
-        var world = plugin.getWorldManager().getWorldByName(player.getWorld().getName());
+        var world = plugin.getWorldManager().findCreativeWorldByBukkit(player.getWorld());
         if (world != null) {
             plugin.getBlockConnectionVisualizer().addBlock(world, block.getLocation(), newCodeBlock);
         }
