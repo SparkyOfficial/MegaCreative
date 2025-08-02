@@ -23,6 +23,8 @@ public class CodingManager implements Listener {
     private final MegaCreative plugin;
     private final ScriptExecutor scriptExecutor;
     private final Map<String, List<CodeScript>> worldScripts = new HashMap<>();
+    private final Map<String, Object> globalVariables = new HashMap<>();
+    private final Map<String, Object> serverVariables = new HashMap<>();
     
     /**
      * Получает исполнитель скриптов.
@@ -161,5 +163,23 @@ public class CodingManager implements Listener {
                 }
             }
         }
+    }
+
+    /**
+     * Получает глобальную переменную
+     * @param name Имя переменной
+     * @return Значение переменной или null
+     */
+    public Object getGlobalVariable(String name) {
+        return globalVariables.get(name);
+    }
+    
+    /**
+     * Получает серверную переменную
+     * @param name Имя переменной
+     * @return Значение переменной или null
+     */
+    public Object getServerVariable(String name) {
+        return serverVariables.get(name);
     }
 }

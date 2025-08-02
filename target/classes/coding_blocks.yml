@@ -29,6 +29,8 @@ blocks:
       - "broadcast"
       - "giveItems"
       - "spawnEntity"
+      - "removeItems"
+      - "setArmor"
       - "setVar"
       - "spawnMob"
       - "healPlayer"
@@ -68,6 +70,8 @@ blocks:
       - "isPlayerHolding"
       - "isNearEntity"
       - "hasArmor"
+      - "isNight"
+      - "isRiding"
   
   IRON_BLOCK:
     name: "Переменная"
@@ -163,6 +167,33 @@ blocks:
 
 # --- НОВАЯ СИСТЕМА: ИМЕНОВАННЫЕ СЛОТЫ И ГРУППЫ ---
 action_configurations:
+  # Конфигурация для действия sendMessage
+  sendMessage:
+    slots:
+      0:
+        name: "§aСообщение для отправки"
+        description: "§7Положите бумагу с названием сообщения. Поддерживает плейсхолдеры: %player%, %world%, %x%, %y%, %z%"
+        placeholder_item: "PAPER"
+        slot_name: "message_slot"
+  
+  # Конфигурация для условия isNight
+  isNight:
+    slots:
+      0:
+        name: "§aВремя суток"
+        description: "§7Положите предмет, символизирующий время (черная шерсть = ночь, желтая = день)"
+        placeholder_item: "BLACK_WOOL"
+        slot_name: "time_slot"
+  
+  # Конфигурация для условия isRiding
+  isRiding:
+    slots:
+      0:
+        name: "§aТип существа для езды"
+        description: "§7Положите предмет, символизирующий существо (седло = лошадь, лодка = лодка)"
+        placeholder_item: "SADDLE"
+        slot_name: "entity_slot"
+  
   # Конфигурация для условия isNearEntity
   isNearEntity:
     slots:
@@ -194,6 +225,39 @@ action_configurations:
         description: "§7Положите предмет брони, которую должен носить игрок"
         placeholder_item: "DIAMOND_HELMET"
         slot_name: "armor_slot"
+  
+  # Конфигурация для действия removeItems
+  removeItems:
+    item_groups:
+      items_to_remove:
+        slots: [0, 1, 2, 3, 4, 5, 6, 7, 8]
+        name: "§cПредметы для удаления"
+        description: "§7Положите сюда все предметы, которые нужно удалить у игрока"
+        placeholder_item: "BARRIER"
+  
+  # Конфигурация для действия setArmor
+  setArmor:
+    slots:
+      0:
+        name: "§aШлем"
+        description: "§7Положите шлем для установки"
+        placeholder_item: "DIAMOND_HELMET"
+        slot_name: "helmet_slot"
+      1:
+        name: "§bНагрудник"
+        description: "§7Положите нагрудник для установки"
+        placeholder_item: "DIAMOND_CHESTPLATE"
+        slot_name: "chestplate_slot"
+      2:
+        name: "§cПоножи"
+        description: "§7Положите поножи для установки"
+        placeholder_item: "DIAMOND_LEGGINGS"
+        slot_name: "leggings_slot"
+      3:
+        name: "§dБотинки"
+        description: "§7Положите ботинки для установки"
+        placeholder_item: "DIAMOND_BOOTS"
+        slot_name: "boots_slot"
   
   # Конфигурация для действия giveItems
   giveItems:

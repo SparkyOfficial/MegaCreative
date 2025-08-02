@@ -15,6 +15,8 @@ import com.megacreative.coding.conditions.IsBlockTypeCondition;
 import com.megacreative.coding.conditions.IsPlayerHoldingCondition;
 import com.megacreative.coding.conditions.IsNearEntityCondition;
 import com.megacreative.coding.conditions.HasArmorCondition;
+import com.megacreative.coding.conditions.IsNightCondition;
+import com.megacreative.coding.conditions.IsRidingCondition;
 import com.megacreative.coding.actions.PlayerHealthCondition;
 import com.megacreative.coding.actions.HasItemCondition;
 import com.megacreative.coding.actions.HasPermissionCondition;
@@ -24,6 +26,8 @@ import com.megacreative.coding.actions.GiveItemsAction;
 import com.megacreative.coding.actions.SpawnEntityAction;
 import com.megacreative.coding.actions.RandomNumberAction;
 import com.megacreative.coding.actions.PlayParticleEffectAction;
+import com.megacreative.coding.actions.RemoveItemsAction;
+import com.megacreative.coding.actions.SetArmorAction;
 import org.bukkit.Location;
 import org.bukkit.Material;
 import org.bukkit.entity.Player;
@@ -94,6 +98,8 @@ public class ScriptExecutor {
         // Новые действия с виртуальными инвентарями
         actionRegistry.put("giveItems", new GiveItemsAction());
         actionRegistry.put("spawnEntity", new SpawnEntityAction());
+        actionRegistry.put("removeItems", new RemoveItemsAction());
+        actionRegistry.put("setArmor", new SetArmorAction());
         
         // Действия, которые были в конфигурации, но не зарегистрированы
         actionRegistry.put("randomNumber", new RandomNumberAction());
@@ -139,6 +145,8 @@ public class ScriptExecutor {
         conditionRegistry.put("isPlayerHolding", new IsPlayerHoldingCondition());
         conditionRegistry.put("isNearEntity", new IsNearEntityCondition());
         conditionRegistry.put("hasArmor", new HasArmorCondition());
+        conditionRegistry.put("isNight", new IsNightCondition());
+        conditionRegistry.put("isRiding", new IsRidingCondition());
     }
 
     public void execute(CodeScript script, ExecutionContext context, String triggerAction) {

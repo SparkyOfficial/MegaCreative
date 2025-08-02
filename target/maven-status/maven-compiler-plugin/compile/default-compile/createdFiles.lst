@@ -13,10 +13,12 @@ com\megacreative\listeners\GuiListener.class
 com\megacreative\coding\actions\PlayerHealthCondition.class
 com\megacreative\coding\conditions\IfVarEqualsCondition.class
 com\megacreative\coding\actions\CommandAction.class
+com\megacreative\coding\actions\SetArmorAction$ArmorType.class
 com\megacreative\gui\TrustedPlayersGUI.class
 com\megacreative\coding\CodeScript$ScriptType.class
 com\megacreative\coding\actions\GiveItemAction.class
 com\megacreative\commands\CreateScriptCommand.class
+com\megacreative\coding\conditions\IsRidingCondition$1.class
 com\megacreative\coding\actions\GiveItemsAction.class
 com\megacreative\gui\TemplateBrowserGUI.class
 com\megacreative\coding\ScriptDebugger$1.class
@@ -29,6 +31,8 @@ com\megacreative\coding\actions\MulVarAction.class
 com\megacreative\listeners\PlayerJoinListener.class
 com\megacreative\coding\BlockConfiguration$ActionGroupConfig.class
 com\megacreative\gui\DataGUI$1.class
+com\megacreative\coding\conditions\IsNightCondition$TimeType.class
+com\megacreative\coding\conditions\IsRidingCondition.class
 com\megacreative\coding\actions\SetTimeAction.class
 com\megacreative\listeners\PlayerWorldChangeListener.class
 com\megacreative\listeners\DataItemListener.class
@@ -38,6 +42,7 @@ com\megacreative\coding\CodingActionGUI.class
 com\megacreative\commands\MyWorldsCommand.class
 com\megacreative\models\WorldComment.class
 com\megacreative\gui\WorldSettingsGUI.class
+com\megacreative\coding\actions\SetArmorAction.class
 com\megacreative\managers\ScoreboardManager.class
 com\megacreative\coding\ScriptExecutor.class
 com\megacreative\coding\CodingManager.class
@@ -48,6 +53,7 @@ com\megacreative\coding\ParameterResolver.class
 com\megacreative\coding\BlockAction.class
 com\megacreative\coding\conditions\HasArmorCondition$ArmorType.class
 com\megacreative\managers\TrustedPlayerManager.class
+com\megacreative\coding\actions\RemoveItemsAction.class
 com\megacreative\coding\actions\AddVarAction.class
 com\megacreative\coding\actions\SetWeatherAction.class
 com\megacreative\coding\actions\GetGlobalVariableAction.class
@@ -78,6 +84,7 @@ com\megacreative\coding\conditions\HasArmorCondition$1.class
 com\megacreative\coding\ExecutionContext$ExecutionContextBuilder.class
 com\megacreative\coding\BlockConfiguration$SlotConfig.class
 com\megacreative\commands\WorldBrowserCommand.class
+com\megacreative\coding\conditions\IsNightCondition.class
 com\megacreative\coding\ScriptDebugger$2.class
 com\megacreative\listeners\WorldInteractListener.class
 com\megacreative\commands\WorldSettingsCommand.class
@@ -89,6 +96,7 @@ com\megacreative\coding\conditions\MobNearCondition.class
 com\megacreative\coding\conditions\IsNearBlockCondition.class
 com\megacreative\coding\actions\SetGameModeAction.class
 com\megacreative\coding\CodeScript.class
+com\megacreative\coding\conditions\IsNightCondition$1.class
 com\megacreative\coding\actions\BlockAction.class
 com\megacreative\models\WorldFlags.class
 com\megacreative\coding\BlockCondition.class
@@ -137,6 +145,7 @@ com\megacreative\coding\actions\RandomNumberAction.class
 com\megacreative\commands\TrustedPlayerCommand.class
 com\megacreative\coding\BlockPlacementHandler.class
 com\megacreative\coding\CodingItems.class
+com\megacreative\coding\PlaceholderResolver.class
 com\megacreative\coding\actions\RepeatAction.class
 com\megacreative\gui\WorldActionsGUI.class
 com\megacreative\coding\actions\DivVarAction.class
