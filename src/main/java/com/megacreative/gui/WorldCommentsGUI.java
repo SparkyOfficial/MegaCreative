@@ -3,19 +3,19 @@ package com.megacreative.gui;
 import com.megacreative.MegaCreative;
 import com.megacreative.models.CreativeWorld;
 import com.megacreative.models.WorldComment;
-import org.bukkit.event.HandlerList;
+import com.megacreative.listeners.GuiListener;
 import org.bukkit.Bukkit;
 import org.bukkit.Material;
 import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.Listener;
 import org.bukkit.event.inventory.InventoryClickEvent;
-import org.bukkit.event.inventory.InventoryCloseEvent;
 import org.bukkit.inventory.Inventory;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.inventory.meta.ItemMeta;
+
 import java.text.SimpleDateFormat;
-import java.util.*;
+import java.util.Arrays;
 import java.util.Date;
 import java.util.List;
 
@@ -24,127 +24,155 @@ public class WorldCommentsGUI implements Listener {
     private final MegaCreative plugin;
     private final Player player;
     private final CreativeWorld world;
+    private final Inventory inventory;
     private final int page;
-    private final int commentsPerPage = 21; // 3 rows of 7 comments each
-    private Inventory inventory;
-    private boolean isRegistered = false;
-
+    private static final int COMMENTS_PER_PAGE = 21;
+    
     public WorldCommentsGUI(MegaCreative plugin, Player player, CreativeWorld world, int page) {
         this.plugin = plugin;
         this.player = player;
         this.world = world;
-        this.page = Math.max(0, page); // Ensure page is not negative
+        this.page = page;
+        this.inventory = Bukkit.createInventory(null, 54, "§6§lКомментарии: " + world.getName());
         
-        // Register this class as an event listener
-        Bukkit.getPluginManager().registerEvents(this, plugin);
-        isRegistered = true;
-        
-        createInventory();
+        // Регистрируем GUI в централизованной системе
+        GuiListener.registerOpenGui(player, this);
+        setupInventory();
     }
     
-    private void createInventory() {
-        List<WorldComment> comments = world.getComments();
-        int totalPages = Math.max(1, (int) Math.ceil((double) comments.size() / commentsPerPage));
-        int currentPage = Math.min(page, totalPages - 1);
-        int startIndex = currentPage * commentsPerPage;
-        int endIndex = Math.min(startIndex + commentsPerPage, comments.size());
+    private void setupInventory() {
+        inventory.clear();
         
-        // Create inventory with 4 rows (36 slots) - 3 for comments, 1 for navigation
-        inventory = Bukkit.createInventory(null, 36, "§6§lКомментарии: " + world.getName());
+        // Заполнение стеклом
+        ItemStack glass = new ItemStack(Material.GRAY_STAINED_GLASS_PANE);
+        ItemMeta glassMeta = glass.getItemMeta();
+        glassMeta.setDisplayName(" ");
+        glass.setItemMeta(glassMeta);
         
-        // Add comments to the inventory
-        for (int i = startIndex; i < endIndex; i++) {
-            WorldComment comment = comments.get(i);
-            int slot = i - startIndex;
-            
-            try {
-                ItemStack commentItem = new ItemStack(Material.PAPER);
-                ItemMeta meta = commentItem.getItemMeta();
-                
-                SimpleDateFormat sdf = new SimpleDateFormat("dd.MM.yyyy HH:mm");
-                String date = sdf.format(new Date(comment.getTimestamp()));
-                
-                meta.setDisplayName("§e" + comment.getAuthorName());
-                meta.setLore(Arrays.asList(
-                    "§7" + (comment.getText().length() > 30 ? 
-                        comment.getText().substring(0, 27) + "..." : 
-                        comment.getText()),
-                    "",
-                    "§8" + date
-                ));
-                
-                commentItem.setItemMeta(meta);
-                inventory.setItem(slot, commentItem);
-            } catch (Exception e) {
-                plugin.getLogger().warning("Error creating comment item: " + e.getMessage());
-            }
+        for (int i = 0; i < 54; i++) {
+            inventory.setItem(i, glass);
         }
         
-        // Add navigation buttons
-        if (currentPage > 0) {
-            ItemStack prevPage = new ItemStack(Material.ARROW);
-            ItemMeta prevMeta = prevPage.getItemMeta();
-            prevMeta.setDisplayName("§e§lПредыдущая страница");
-            prevMeta.setLore(Collections.singletonList("§7Страница: " + currentPage));
-            prevPage.setItemMeta(prevMeta);
-            inventory.setItem(27, prevPage);
+        List<WorldComment> comments = world.getComments();
+        int startIndex = page * COMMENTS_PER_PAGE;
+        int endIndex = Math.min(startIndex + COMMENTS_PER_PAGE, comments.size());
+        
+        // Отображение комментариев
+        int slot = 10;
+        for (int i = startIndex; i < endIndex; i++) {
+            if (slot > 43) break;
+            
+            WorldComment comment = comments.get(i);
+            ItemStack commentItem = new ItemStack(Material.PAPER);
+            ItemMeta commentMeta = commentItem.getItemMeta();
+            commentMeta.setDisplayName("§f§l" + comment.getAuthorName());
+            
+            SimpleDateFormat sdf = new SimpleDateFormat("dd.MM.yyyy HH:mm");
+            String date = sdf.format(new Date(comment.getTimestamp()));
+            
+                         commentMeta.setLore(Arrays.asList(
+                 "§7" + comment.getText(),
+                 "",
+                 "§7Дата: §f" + date,
+                 "§7Автор: §f" + comment.getAuthorName()
+             ));
+            commentItem.setItemMeta(commentMeta);
+            inventory.setItem(slot, commentItem);
+            
+            slot++;
+            if (slot % 9 == 8) slot += 2;
+        }
+        
+        // Кнопка добавления комментария
+        ItemStack addButton = new ItemStack(Material.EMERALD);
+        ItemMeta addMeta = addButton.getItemMeta();
+        addMeta.setDisplayName("§a§lДобавить комментарий");
+        addMeta.setLore(Arrays.asList(
+            "§7Написать новый комментарий",
+            "§7к этому миру",
+            "§e▶ Нажмите для добавления"
+        ));
+        addButton.setItemMeta(addMeta);
+        inventory.setItem(49, addButton);
+        
+        // Навигация
+        if (page > 0) {
+            ItemStack prevButton = new ItemStack(Material.ARROW);
+            ItemMeta prevMeta = prevButton.getItemMeta();
+            prevMeta.setDisplayName("§a§lПредыдущая страница");
+            prevButton.setItemMeta(prevMeta);
+            inventory.setItem(45, prevButton);
         }
         
         if (endIndex < comments.size()) {
-            ItemStack nextPage = new ItemStack(Material.ARROW);
-            ItemMeta nextMeta = nextPage.getItemMeta();
-            nextMeta.setDisplayName("§e§lСледующая страница");
-            nextMeta.setLore(Collections.singletonList("§7Страница: " + (currentPage + 2)));
-            nextPage.setItemMeta(nextMeta);
-            inventory.setItem(35, nextPage);
+            ItemStack nextButton = new ItemStack(Material.ARROW);
+            ItemMeta nextMeta = nextButton.getItemMeta();
+            nextMeta.setDisplayName("§a§lСледующая страница");
+            nextButton.setItemMeta(nextMeta);
+            inventory.setItem(53, nextButton);
         }
         
-        // Add "Add Comment" button
-        ItemStack addComment = new ItemStack(Material.WRITABLE_BOOK);
-        ItemMeta addMeta = addComment.getItemMeta();
-        addMeta.setDisplayName("§a§lДобавить комментарий");
-        addMeta.setLore(Collections.singletonList("§7Нажмите, чтобы написать комментарий"));
-        addComment.setItemMeta(addMeta);
-        inventory.setItem(31, addComment);
+        // Кнопка назад
+        ItemStack backButton = new ItemStack(Material.BARRIER);
+        ItemMeta backMeta = backButton.getItemMeta();
+        backMeta.setDisplayName("§c§lНазад");
+        backButton.setItemMeta(backMeta);
+        inventory.setItem(46, backButton);
     }
     
     public void open() {
-        if (inventory != null) {
-            player.openInventory(inventory);
-        }
+        player.openInventory(inventory);
     }
     
     @EventHandler
     public void onInventoryClick(InventoryClickEvent event) {
         if (!event.getInventory().equals(inventory)) return;
-        if (!event.getWhoClicked().equals(player)) return;
         
         event.setCancelled(true);
         
-        ItemStack clicked = event.getCurrentItem();
-        if (clicked == null) return;
-        
-        if (clicked.getType() == Material.ARROW) {
-            if (event.getSlot() == 27) {
-                // Previous page
-                new WorldCommentsGUI(plugin, player, world, page - 1).open();
-            } else if (event.getSlot() == 35) {
-                // Next page
-                new WorldCommentsGUI(plugin, player, world, page + 1).open();
-            }
-        } else if (clicked.getType() == Material.WRITABLE_BOOK) {
-            // Add comment
-            player.closeInventory();
-            player.sendMessage("§aНапишите ваш комментарий в чат:");
-            plugin.getCommentInputs().put(player.getUniqueId(), world);
+        if (!(event.getWhoClicked() instanceof Player clicker) || !clicker.equals(player)) {
+            return;
         }
-    }
-    
-    @EventHandler
-    public void onInventoryClose(InventoryCloseEvent event) {
-        if (event.getInventory().equals(inventory) && event.getPlayer().equals(player)) {
-            // Unregister this listener to prevent memory leaks
-            HandlerList.unregisterAll(this);
+        
+        ItemStack clicked = event.getCurrentItem();
+        if (clicked == null || !clicked.hasItemMeta()) return;
+        
+        String displayName = clicked.getItemMeta().getDisplayName();
+        
+        // Кнопка назад
+        if (displayName.contains("Назад")) {
+            player.closeInventory();
+            // Удаляем регистрацию GUI
+            GuiListener.unregisterOpenGui(player);
+            new WorldActionsGUI(plugin, player, world).open();
+            return;
+        }
+        
+        // Добавление комментария
+        if (displayName.contains("Добавить комментарий")) {
+            player.closeInventory();
+            // Удаляем регистрацию GUI
+            GuiListener.unregisterOpenGui(player);
+            player.sendMessage("§aНапишите ваш комментарий в чат или §eотмена§a для отмены:");
+            plugin.getCommentInputs().put(player.getUniqueId(), world);
+            return;
+        }
+        
+        // Навигация
+        if (displayName.contains("Предыдущая страница")) {
+            player.closeInventory();
+            // Удаляем регистрацию GUI
+            GuiListener.unregisterOpenGui(player);
+            new WorldCommentsGUI(plugin, player, world, page - 1).open();
+            return;
+        }
+        
+        if (displayName.contains("Следующая страница")) {
+            player.closeInventory();
+            // Удаляем регистрацию GUI
+            GuiListener.unregisterOpenGui(player);
+            new WorldCommentsGUI(plugin, player, world, page + 1).open();
+            return;
         }
     }
 }

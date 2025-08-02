@@ -2,6 +2,7 @@ package com.megacreative.gui;
 
 import com.megacreative.MegaCreative;
 import com.megacreative.models.CreativeWorld;
+import com.megacreative.listeners.GuiListener;
 import org.bukkit.Bukkit;
 import org.bukkit.Material;
 import org.bukkit.entity.Player;
@@ -25,15 +26,18 @@ public class WorldActionsGUI implements Listener {
         this.plugin = plugin;
         this.player = player;
         this.world = world;
-        this.inventory = Bukkit.createInventory(null, 27, "§8§lДействия: " + world.getName());
+        this.inventory = Bukkit.createInventory(null, 27, "§8§lДействия с миром: " + world.getName());
         
-        Bukkit.getPluginManager().registerEvents(this, plugin);
+        // Регистрируем GUI в централизованной системе
+        GuiListener.registerOpenGui(player, this);
         setupInventory();
     }
     
     private void setupInventory() {
+        inventory.clear();
+        
         // Заполнение стеклом
-        ItemStack glass = new ItemStack(Material.BLACK_STAINED_GLASS_PANE);
+        ItemStack glass = new ItemStack(Material.GRAY_STAINED_GLASS_PANE);
         ItemMeta glassMeta = glass.getItemMeta();
         glassMeta.setDisplayName(" ");
         glass.setItemMeta(glassMeta);
@@ -42,60 +46,60 @@ public class WorldActionsGUI implements Listener {
             inventory.setItem(i, glass);
         }
         
-        // Лайк
-        boolean hasLiked = world.getLikedBy().contains(player.getUniqueId());
-        ItemStack likeItem = new ItemStack(hasLiked ? Material.LIME_DYE : Material.GREEN_DYE);
-        ItemMeta likeMeta = likeItem.getItemMeta();
-        likeMeta.setDisplayName(hasLiked ? "§a§lУбрать лайк" : "§a§lПоставить лайк");
-        likeMeta.setLore(Arrays.asList(
-            "§7Лайков: §f" + world.getLikes(),
-            hasLiked ? "§7Вы уже поставили лайк" : "§7Нажмите, чтобы поставить лайк"
+        // Войти в мир
+        ItemStack joinButton = new ItemStack(Material.EMERALD);
+        ItemMeta joinMeta = joinButton.getItemMeta();
+        joinMeta.setDisplayName("§a§lВойти в мир");
+        joinMeta.setLore(Arrays.asList(
+            "§7Перейти в мир для",
+            "§7строительства и кодинга",
+            "§e▶ Нажмите для входа"
         ));
-        likeItem.setItemMeta(likeMeta);
-        inventory.setItem(11, likeItem);
+        joinButton.setItemMeta(joinMeta);
+        inventory.setItem(10, joinButton);
         
-        // Дизлайк
-        boolean hasDisliked = world.getDislikedBy().contains(player.getUniqueId());
-        ItemStack dislikeItem = new ItemStack(hasDisliked ? Material.RED_DYE : Material.ORANGE_DYE);
-        ItemMeta dislikeMeta = dislikeItem.getItemMeta();
-        dislikeMeta.setDisplayName(hasDisliked ? "§c§lУбрать дизлайк" : "§c§lПоставить дизлайк");
-        dislikeMeta.setLore(Arrays.asList(
-            "§7Дизлайков: §f" + world.getDislikes(),
-            hasDisliked ? "§7Вы уже поставили дизлайк" : "§7Нажмите, чтобы поставить дизлайк"
+        // Настройки мира
+        ItemStack settingsButton = new ItemStack(Material.COMPARATOR);
+        ItemMeta settingsMeta = settingsButton.getItemMeta();
+        settingsMeta.setDisplayName("§e§lНастройки мира");
+        settingsMeta.setLore(Arrays.asList(
+            "§7Изменить флаги и",
+            "§7параметры мира",
+            "§e▶ Нажмите для настроек"
         ));
-        dislikeItem.setItemMeta(dislikeMeta);
-        inventory.setItem(13, dislikeItem);
-        
-        // Избранное
-        boolean isFavorite = plugin.getPlayerManager().isFavorite(player.getUniqueId(), world.getId());
-        ItemStack favoriteItem = new ItemStack(isFavorite ? Material.NETHER_STAR : Material.NETHER_STAR);
-        ItemMeta favoriteMeta = favoriteItem.getItemMeta();
-        favoriteMeta.setDisplayName(isFavorite ? "§e§lУбрать из избранного" : "§e§lДобавить в избранное");
-        favoriteMeta.setLore(Arrays.asList(
-            isFavorite ? "§7Мир в вашем избранном" : "§7Добавить мир в избранное"
-        ));
-        favoriteItem.setItemMeta(favoriteMeta);
-        inventory.setItem(15, favoriteItem);
+        settingsButton.setItemMeta(settingsMeta);
+        inventory.setItem(11, settingsButton);
         
         // Комментарии
-        int commentsCount = world.getComments().size();
-        ItemStack commentsItem = new ItemStack(Material.BOOK);
-        ItemMeta commentsMeta = commentsItem.getItemMeta();
+        ItemStack commentsButton = new ItemStack(Material.BOOK);
+        ItemMeta commentsMeta = commentsButton.getItemMeta();
         commentsMeta.setDisplayName("§b§lКомментарии");
         commentsMeta.setLore(Arrays.asList(
-            "§7Количество: " + commentsCount,
-            "§7Нажмите, чтобы просмотреть",
-            "§7и добавить комментарии"
+            "§7Просмотреть и добавить",
+            "§7комментарии к миру",
+            "§e▶ Нажмите для просмотра"
         ));
-        commentsItem.setItemMeta(commentsMeta);
-        inventory.setItem(22, commentsItem);
+        commentsButton.setItemMeta(commentsMeta);
+        inventory.setItem(12, commentsButton);
         
-        // Назад
+        // Скрипты
+        ItemStack scriptsButton = new ItemStack(Material.COMMAND_BLOCK);
+        ItemMeta scriptsMeta = scriptsButton.getItemMeta();
+        scriptsMeta.setDisplayName("§6§lСкрипты");
+        scriptsMeta.setLore(Arrays.asList(
+            "§7Управление скриптами",
+            "§7автоматизации",
+            "§e▶ Нажмите для управления"
+        ));
+        scriptsButton.setItemMeta(scriptsMeta);
+        inventory.setItem(13, scriptsButton);
+        
+        // Кнопка назад
         ItemStack backButton = new ItemStack(Material.ARROW);
         ItemMeta backMeta = backButton.getItemMeta();
-        backMeta.setDisplayName("§c§lНазад");
+        backMeta.setDisplayName("§e§lНазад");
         backButton.setItemMeta(backMeta);
-        inventory.setItem(18, backButton);
+        inventory.setItem(22, backButton);
     }
     
     public void open() {
@@ -117,57 +121,45 @@ public class WorldActionsGUI implements Listener {
         
         String displayName = clicked.getItemMeta().getDisplayName();
         
-        // Назад
-        if (clicked.getType() == Material.ARROW && displayName.contains("Назад")) {
+        // Кнопка назад
+        if (displayName.contains("Назад")) {
             player.closeInventory();
+            // Удаляем регистрацию GUI
+            GuiListener.unregisterOpenGui(player);
             new WorldBrowserGUI(plugin, player).open();
             return;
         }
         
-        // Лайк
-        if (displayName.contains("лайк") && !displayName.contains("дизлайк")) {
-            if (world.addLike(player.getUniqueId())) {
-                player.sendMessage("§aВы поставили лайк миру §f" + world.getName());
-            } else {
-                world.getLikedBy().remove(player.getUniqueId());
-                world.setLikes(world.getLikes() - 1);
-                player.sendMessage("§7Вы убрали лайк с мира §f" + world.getName());
-            }
-            plugin.getWorldManager().saveWorld(world);
-            setupInventory();
+        // Войти в мир
+        if (displayName.contains("Войти в мир")) {
+            player.closeInventory();
+            // Удаляем регистрацию GUI
+            GuiListener.unregisterOpenGui(player);
+            player.performCommand("join " + world.getId());
         }
         
-        // Дизлайк
-        else if (displayName.contains("дизлайк")) {
-            if (world.addDislike(player.getUniqueId())) {
-                player.sendMessage("§cВы поставили дизлайк миру §f" + world.getName());
-            } else {
-                world.getDislikedBy().remove(player.getUniqueId());
-                world.setDislikes(world.getDislikes() - 1);
-                player.sendMessage("§7Вы убрали дизлайк с мира §f" + world.getName());
-            }
-            plugin.getWorldManager().saveWorld(world);
-            setupInventory();
+        // Настройки мира
+        else if (displayName.contains("Настройки мира")) {
+            player.closeInventory();
+            // Удаляем регистрацию GUI
+            GuiListener.unregisterOpenGui(player);
+            new WorldSettingsGUI(plugin, player, world).open();
         }
         
-        // Избранное
-        else if (displayName.contains("избранное")) {
-            boolean isFavorite = plugin.getPlayerManager().isFavorite(player.getUniqueId(), world.getId());
-            if (isFavorite) {
-                plugin.getPlayerManager().removeFromFavorites(player.getUniqueId(), world.getId());
-                world.removeFromFavorites(player.getUniqueId());
-                player.sendMessage("§7Мир §f" + world.getName() + " §7убран из избранного");
-            } else {
-                plugin.getPlayerManager().addToFavorites(player.getUniqueId(), world.getId());
-                world.addToFavorites(player.getUniqueId());
-                player.sendMessage("§aMир §f" + world.getName() + " §aдобавлен в избранное");
-            }
-            setupInventory();
+        // Комментарии
+        else if (displayName.contains("Комментарии")) {
+            player.closeInventory();
+            // Удаляем регистрацию GUI
+            GuiListener.unregisterOpenGui(player);
+            new WorldCommentsGUI(plugin, player, world, 0).open();
         }
         
-        // Комментарий
-        else if (displayName.equals("§b§lКомментарии")) {
-            new WorldCommentsGUI(plugin, player, world, 0);
+        // Скрипты
+        else if (displayName.contains("Скрипты")) {
+            player.closeInventory();
+            // Удаляем регистрацию GUI
+            GuiListener.unregisterOpenGui(player);
+            new ScriptsGUI(plugin, player).open();
         }
     }
 }

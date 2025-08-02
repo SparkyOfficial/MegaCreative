@@ -23,6 +23,14 @@ public class CodingManager implements Listener {
     private final MegaCreative plugin;
     private final ScriptExecutor scriptExecutor;
     private final Map<String, List<CodeScript>> worldScripts = new HashMap<>();
+    
+    /**
+     * Получает исполнитель скриптов.
+     * @return ScriptExecutor для выполнения скриптов
+     */
+    public ScriptExecutor getScriptExecutor() {
+        return scriptExecutor;
+    }
 
     public CodingManager(MegaCreative plugin) {
         this.plugin = plugin;

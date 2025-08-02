@@ -1,17 +1,14 @@
 package com.megacreative.listeners;
 
 import com.megacreative.MegaCreative;
-import com.megacreative.coding.CodeScript;
-import com.megacreative.coding.ExecutionContext;
-import com.megacreative.coding.ScriptExecutor;
 import com.megacreative.models.CreativeWorld;
+import com.megacreative.coding.ExecutionContext;
 import org.bukkit.Location;
+import org.bukkit.Material;
 import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.Listener;
 import org.bukkit.event.block.BlockBreakEvent;
-
-import java.util.List;
 
 public class BlockBreakListener implements Listener {
     
@@ -24,42 +21,40 @@ public class BlockBreakListener implements Listener {
     @EventHandler
     public void onBlockBreak(BlockBreakEvent event) {
         Player player = event.getPlayer();
-        Location blockLocation = event.getBlock().getLocation();
+        CreativeWorld creativeWorld = plugin.getWorldManager().findCreativeWorldByBukkit(player.getWorld());
         
-        // Получаем все скрипты для этого мира
-        String worldName = player.getWorld().getName();
-        CreativeWorld creativeWorld = plugin.getWorldManager().getWorldByName(worldName);
-        
-        if (creativeWorld != null) {
-            // Проверяем, включен ли код в этом мире
-            if (!creativeWorld.getMode().isCodeEnabled()) {
-                return; // Пропускаем выполнение если код выключен
-            }
-            
-            List<CodeScript> scripts = creativeWorld.getScripts();
-            
-            for (CodeScript script : scripts) {
-                // Проверяем, есть ли триггер onBlockBreak
-                if (hasBlockBreakTrigger(script)) {
-                    // Создаем контекст выполнения
-                    ExecutionContext context = ExecutionContext.builder()
-                        .player(player)
-                        .plugin(plugin)
-                        .creativeWorld(creativeWorld)
-                        .blockLocation(blockLocation)
-                        .build();
-                    
-                    // Выполняем скрипт
-                    ScriptExecutor executor = new ScriptExecutor(plugin);
-                    executor.execute(script, context, "onBlockBreak");
-                }
-            }
+        if (creativeWorld == null || !creativeWorld.getMode().isCodeEnabled()) {
+            return; // Пропускаем выполнение если код выключен
         }
-    }
-    
-    private boolean hasBlockBreakTrigger(CodeScript script) {
-        // Проверяем, есть ли в скрипте триггер onBlockBreak
-        return script.getRootBlock() != null && 
-               script.getRootBlock().getAction().equals("onBlockBreak");
+        
+        // Проверяем, есть ли скрипты с событием onBlockBreak
+        creativeWorld.getScripts().stream()
+            .filter(script -> script.isEnabled() && script.getRootBlock() != null)
+            .filter(script -> script.getRootBlock().getMaterial() == Material.DIAMOND_BLOCK)
+            .filter(script -> "onBlockBreak".equals(script.getRootBlock().getAction()))
+            .forEach(script -> {
+                // Создаем контекст выполнения
+                ExecutionContext context = ExecutionContext.builder()
+                    .plugin(plugin)
+                    .player(player)
+                    .creativeWorld(creativeWorld)
+                    .event(event)
+                    .build();
+                
+                // Добавляем переменные события
+                Location blockLocation = event.getBlock().getLocation();
+                context.setVariable("blockType", event.getBlock().getType().name());
+                context.setVariable("blockLocation", 
+                    blockLocation.getWorld().getName() + "," + 
+                    blockLocation.getBlockX() + "," + 
+                    blockLocation.getBlockY() + "," + 
+                    blockLocation.getBlockZ());
+                context.setVariable("blockX", blockLocation.getBlockX());
+                context.setVariable("blockY", blockLocation.getBlockY());
+                context.setVariable("blockZ", blockLocation.getBlockZ());
+                
+                // Выполняем скрипт
+                plugin.getCodingManager().getScriptExecutor().execute(script, context, "onBlockBreak");
+            });
     }
 } 
