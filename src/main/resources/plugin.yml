@@ -72,6 +72,10 @@ commands:
     description: Тестирование гибридной системы выполнения скриптов
     usage: /<command> [info|test|list]
     permission: megacreative.admin
+  cleanworlds:
+    description: Очистка поврежденных миров
+    usage: /<command> [check|clean|backup]
+    permission: megacreative.admin
   trusted:
     description: Управление доверенными игроками
     usage: /<command> <add|remove|list|info> [игрок] [тип] [добавил]

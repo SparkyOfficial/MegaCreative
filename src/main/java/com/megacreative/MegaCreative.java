@@ -129,6 +129,7 @@ public class MegaCreative extends JavaPlugin {
         getCommand("stoprepeat").setExecutor(new StopRepeatCommand(this));
         getCommand("status").setExecutor(new StatusCommand(this));
         getCommand("testhybrid").setExecutor(new TestHybridCommand(this));
+        getCommand("cleanworlds").setExecutor(new CleanWorldsCommand(this));
     }
     
     private void registerEvents() {

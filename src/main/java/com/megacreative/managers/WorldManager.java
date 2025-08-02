@@ -377,6 +377,8 @@ public class WorldManager {
         String worldJson = config.getString("worldData");
         if (worldJson == null) {
             plugin.getLogger().warning("Файл мира " + worldFile.getName() + " не содержит данных worldData");
+            // Попытка восстановления поврежденного файла
+            attemptWorldRecovery(worldFile);
             return;
         }
         
@@ -406,6 +408,34 @@ public class WorldManager {
             }
         } catch (Exception e) {
             plugin.getLogger().severe("Ошибка загрузки мира " + worldFile.getName() + ": " + e.getMessage());
+            // Попытка восстановления поврежденного файла
+            attemptWorldRecovery(worldFile);
+        }
+    }
+    
+    /**
+     * Пытается восстановить поврежденный файл мира
+     */
+    private void attemptWorldRecovery(File worldFile) {
+        try {
+            String worldId = worldFile.getName().replace(".yml", "");
+            String worldName = "Восстановленный_мир_" + worldId;
+            
+            // Создаем новый мир с базовыми данными
+            CreativeWorld recoveredWorld = new CreativeWorld(
+                worldId, 
+                worldName, 
+                UUID.randomUUID(), // Временный владелец
+                "System", 
+                CreativeWorldType.SURVIVAL
+            );
+            
+            // Сохраняем восстановленный мир
+            saveWorld(recoveredWorld);
+            plugin.getLogger().info("Восстановлен поврежденный мир: " + worldId);
+            
+        } catch (Exception e) {
+            plugin.getLogger().severe("Не удалось восстановить мир " + worldFile.getName() + ": " + e.getMessage());
         }
     }
     

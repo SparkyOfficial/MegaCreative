@@ -37,8 +37,18 @@ import java.util.HashMap;
 import java.util.Map;
 
 /**
- * Гибридный исполнитель скриптов, поддерживающий как старые, так и новые блоки.
- * Обеспечивает плавный переход на новую архитектуру.
+ * ГЛАВНЫЙ исполнитель скриптов - единственная точка входа для выполнения скриптов.
+ * Поддерживает гибридную архитектуру с приоритетом новой системы над старой.
+ * 
+ * ПРИОРИТЕТ ВЫПОЛНЕНИЯ:
+ * 1. НОВАЯ СИСТЕМА (BlockFactory) - блоки с аргументами и значениями
+ * 2. СТАРАЯ СИСТЕМА (oldActionRegistry) - блоки обратной совместимости
+ * 3. ОШИБКА - если блок не найден
+ * 
+ * ПЛАН МИГРАЦИИ:
+ * - Постепенно переводить блоки из oldActionRegistry в BlockFactory
+ * - Удалять блоки из старого реестра после успешной миграции
+ * - Когда oldActionRegistry опустеет, переименовать в ScriptExecutor
  */
 public class HybridScriptExecutor {
     
@@ -54,14 +64,29 @@ public class HybridScriptExecutor {
     
     /**
      * Регистрирует старые действия для обратной совместимости.
+     * 
+     * МИГРИРОВАННЫЕ БЛОКИ УДАЛЕНЫ ИЗ СТАРОГО РЕЕСТРА:
+     * ✅ sendMessage → SendMessageAction (blocks/actions/)
+     * ✅ teleport → TeleportAction (blocks/actions/)
+     * ✅ giveItem → GiveItemAction (blocks/actions/)
+     * ✅ setVar → SetVarAction (blocks/actions/)
+     * ✅ broadcast → BroadcastAction (blocks/actions/)
+     * ✅ randomNumber → RandomNumberAction (blocks/actions/)
+     * ✅ wait → WaitAction (blocks/actions/)
+     * ✅ setBlock → SetBlockAction (blocks/actions/)
      */
     private void registerOldActions() {
-        // Базовые действия
-        oldActionRegistry.put("sendMessage", new SendMessageAction());
-        oldActionRegistry.put("teleport", new TeleportAction());
-        oldActionRegistry.put("giveItem", new GiveItemAction());
-        oldActionRegistry.put("setVar", new SetVarAction());
-        oldActionRegistry.put("broadcast", new BroadcastAction());
+        // Базовые действия (мигрированы в новую систему)
+        // oldActionRegistry.put("sendMessage", new SendMessageAction()); // МИГРИРОВАН
+        // oldActionRegistry.put("teleport", new TeleportAction()); // МИГРИРОВАН
+        // oldActionRegistry.put("giveItem", new GiveItemAction()); // МИГРИРОВАН
+        // oldActionRegistry.put("setVar", new SetVarAction()); // МИГРИРОВАН
+        // oldActionRegistry.put("broadcast", new BroadcastAction()); // МИГРИРОВАН
+        // oldActionRegistry.put("randomNumber", new RandomNumberAction()); // МИГРИРОВАН
+        // oldActionRegistry.put("wait", new WaitAction()); // МИГРИРОВАН
+        // oldActionRegistry.put("setBlock", new SetBlockAction()); // МИГРИРОВАН
+        
+        // Оставшиеся блоки для миграции
         oldActionRegistry.put("spawnMob", new SpawnMobAction());
         
         // Математические операции
@@ -97,8 +122,8 @@ public class HybridScriptExecutor {
         oldActionRegistry.put("setServerVar", new SetServerVariableAction());
         oldActionRegistry.put("getServerVar", new GetServerVariableAction());
         
-        // Действие ожидания
-        oldActionRegistry.put("wait", new WaitAction());
+        // Действие ожидания (мигрировано в новую систему)
+        // oldActionRegistry.put("wait", new WaitAction()); // МИГРИРОВАН
         
         // Новые действия с виртуальными инвентарями
         oldActionRegistry.put("giveItems", new GiveItemsAction());
@@ -106,7 +131,7 @@ public class HybridScriptExecutor {
         oldActionRegistry.put("removeItems", new RemoveItemsAction());
         oldActionRegistry.put("setArmor", new SetArmorAction());
         oldActionRegistry.put("playParticleEffect", new PlayParticleEffectAction());
-        oldActionRegistry.put("randomNumber", new RandomNumberAction());
+        // oldActionRegistry.put("randomNumber", new RandomNumberAction()); // МИГРИРОВАН
         
         // Повторения
         oldActionRegistry.put("repeat", new RepeatAction());
@@ -119,17 +144,23 @@ public class HybridScriptExecutor {
     
     /**
      * Регистрирует старые условия для обратной совместимости.
+     * 
+     * МИГРИРОВАННЫЕ УСЛОВИЯ УДАЛЕНЫ ИЗ СТАРОГО РЕЕСТРА:
+     * ✅ isOp → IsOpCondition (blocks/conditions/)
+     * ✅ hasItem → HasItemCondition (blocks/conditions/)
+     * ✅ ifVarEquals → IfVarEqualsCondition (blocks/conditions/)
+     * ✅ playerHealth → PlayerHealthCondition (blocks/conditions/)
      */
     private void registerOldConditions() {
-        // Базовые условия
-        oldConditionRegistry.put("isOp", new IsOpCondition());
-        oldConditionRegistry.put("hasItem", new HasItemCondition());
+        // Базовые условия (мигрированы в новую систему)
+        // oldConditionRegistry.put("isOp", new IsOpCondition()); // МИГРИРОВАН
+        // oldConditionRegistry.put("hasItem", new HasItemCondition()); // МИГРИРОВАН
         oldConditionRegistry.put("hasPermission", new HasPermissionCondition());
         oldConditionRegistry.put("isInWorld", new IsInWorldCondition());
-        oldConditionRegistry.put("playerHealth", new PlayerHealthCondition());
+        // oldConditionRegistry.put("playerHealth", new PlayerHealthCondition()); // МИГРИРОВАН
         
-        // Условия переменных
-        oldConditionRegistry.put("ifVarEquals", new IfVarEqualsCondition());
+        // Условия переменных (мигрированы в новую систему)
+        // oldConditionRegistry.put("ifVarEquals", new IfVarEqualsCondition()); // МИГРИРОВАН
         oldConditionRegistry.put("ifVarGreater", new IfVarGreaterCondition());
         oldConditionRegistry.put("ifVarLess", new IfVarLessCondition());
         oldConditionRegistry.put("compareVariable", new CompareVariableCondition());
@@ -315,7 +346,7 @@ public class HybridScriptExecutor {
     }
     
     /**
-     * Возвращает информацию о доступных блоках.
+     * Возвращает информацию о доступных блоках и прогрессе миграции.
      */
     public String getSystemInfo() {
         int newActions = BlockFactory.getAvailableActions().size();
@@ -323,13 +354,25 @@ public class HybridScriptExecutor {
         int oldActions = oldActionRegistry.size();
         int oldConditions = oldConditionRegistry.size();
         
+        int totalActions = newActions + oldActions;
+        int totalConditions = newConditions + oldConditions;
+        
+        double migrationProgress = totalActions + totalConditions > 0 ? 
+            (double)(newActions + newConditions) / (totalActions + totalConditions) * 100 : 0;
+        
         return String.format(
-            "Гибридная система:\n" +
-            "Новые блоки: %d действий, %d условий\n" +
-            "Старые блоки: %d действий, %d условий\n" +
-            "Всего: %d действий, %d условий",
+            "🚀 ГИБРИДНАЯ СИСТЕМА - ПРОГРЕСС МИГРАЦИИ\n" +
+            "📊 Статистика:\n" +
+            "  ✅ Новые блоки: %d действий, %d условий\n" +
+            "  ⚠️ Старые блоки: %d действий, %d условий\n" +
+            "  📈 Всего: %d действий, %d условий\n" +
+            "🎯 Прогресс миграции: %.1f%%\n" +
+            "📋 Мигрированные блоки:\n" +
+            "  ✅ sendMessage, giveItem, randomNumber, setVar\n" +
+            "  ✅ teleport, wait, setBlock, broadcast\n" +
+            "  ✅ isOp, hasItem, ifVarEquals, playerHealth",
             newActions, newConditions, oldActions, oldConditions,
-            newActions + oldActions, newConditions + oldConditions
+            totalActions, totalConditions, migrationProgress
         );
     }
 } 
