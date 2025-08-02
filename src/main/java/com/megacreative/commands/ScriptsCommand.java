@@ -37,7 +37,7 @@ public class ScriptsCommand implements CommandExecutor {
         }
         
         // Открываем GUI скриптов
-        new ScriptsGUI(player, creativeWorld, plugin).open();
+        new ScriptsGUI(plugin, player).open();
         
         return true;
     }
