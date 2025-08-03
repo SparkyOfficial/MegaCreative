@@ -4,8 +4,10 @@ import com.megacreative.coding.BlockAction;
 import com.megacreative.coding.CodeBlock;
 import com.megacreative.coding.ExecutionContext;
 import com.megacreative.coding.ParameterResolver;
-import com.megacreative.coding.ScriptExecutor;
+import org.bukkit.Location;
 import org.bukkit.entity.Player;
+
+import java.util.List;
 
 public class RepeatAction implements BlockAction {
     
@@ -45,22 +47,32 @@ public class RepeatAction implements BlockAction {
                 return;
             }
             
-            // Выполняем блок указанное количество раз
-            ScriptExecutor executor = new ScriptExecutor(context.getPlugin());
+            // Получаем дочерние блоки для выполнения цикла
+            List<CodeBlock> children = block.getChildren();
             
-            for (int i = 0; i < times; i++) {
-                // Создаем новый контекст для каждой итерации
-                ExecutionContext loopContext = context.withCurrentBlock(nextBlock, context.getBlockLocation());
+            if (children.isEmpty()) {
+                // Если дочерних блоков нет, просто идем дальше
+                player.sendMessage("§e⚠ Нет блоков для повторения");
+            } else {
+                // Выполняем цикл с дочерними блоками
+                var executor = context.getPlugin().getCodingManager().getScriptExecutor();
                 
-                // Добавляем переменную с номером итерации
-                loopContext.setVariable("loopIndex", i + 1);
-                loopContext.setVariable("loopCount", times);
-                
-                try {
-                    executor.processBlock(nextBlock, loopContext);
-                } catch (Exception e) {
-                    player.sendMessage("§cОшибка в итерации " + (i + 1) + ": " + e.getMessage());
-                    break;
+                for (int i = 0; i < times; i++) {
+                    // Добавляем переменные цикла
+                    context.setVariable("loopIndex", i + 1);
+                    context.setVariable("loopCount", times);
+                    
+                    // Выполняем каждый дочерний блок
+                    for (CodeBlock child : children) {
+                        try {
+                            Location childLocation = executor.findBlockLocation(child);
+                            ExecutionContext childContext = context.withCurrentBlock(child, childLocation);
+                            executor.processBlock(child, childContext);
+                        } catch (Exception e) {
+                            player.sendMessage("§cОшибка в итерации " + (i + 1) + ": " + e.getMessage());
+                            break;
+                        }
+                    }
                 }
             }
             

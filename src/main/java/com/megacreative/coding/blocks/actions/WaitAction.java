@@ -6,7 +6,7 @@ import com.megacreative.coding.ExecutionContext;
 import com.megacreative.coding.arguments.NumberParameterArgument;
 import com.megacreative.coding.arguments.Argument;
 import com.megacreative.coding.values.NumberValue;
-import com.megacreative.coding.ScriptExecutor;
+
 import org.bukkit.Bukkit;
 import org.bukkit.entity.Player;
 
@@ -45,7 +45,7 @@ public class WaitAction implements BlockAction {
             Bukkit.getScheduler().runTaskLater(context.getPlugin(), () -> {
                 CodeBlock nextBlock = context.getCurrentBlock().getNextBlock();
                 if (nextBlock != null) {
-                    ScriptExecutor executor = new ScriptExecutor(context.getPlugin());
+                    var executor = context.getPlugin().getCodingManager().getScriptExecutor();
                     ExecutionContext newContext = context.withCurrentBlock(nextBlock, context.getBlockLocation());
                     executor.processBlock(nextBlock, newContext);
                 }

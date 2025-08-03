@@ -375,8 +375,29 @@ public class HybridScriptExecutor {
     /**
      * Находит локацию блока в мире.
      */
-    private Location findBlockLocation(CodeBlock block) {
-        // TODO: Реализовать поиск локации блока
+    public Location findBlockLocation(CodeBlock block) {
+        if (block == null) return null;
+        
+        // Получаем карту блоков из BlockPlacementHandler
+        Map<Location, CodeBlock> blockCodeBlocks = plugin.getBlockPlacementHandler().getBlockCodeBlocks();
+        
+        // Ищем блок по ссылке (это работает для блоков в памяти)
+        for (Map.Entry<Location, CodeBlock> entry : blockCodeBlocks.entrySet()) {
+            if (entry.getValue() == block) {
+                return entry.getKey();
+            }
+        }
+        
+        // Если не найдено по ссылке, ищем по содержимому (для загруженных из файла)
+        for (Map.Entry<Location, CodeBlock> entry : blockCodeBlocks.entrySet()) {
+            CodeBlock storedBlock = entry.getValue();
+            if (storedBlock != null && 
+                storedBlock.getMaterial() == block.getMaterial() &&
+                storedBlock.getAction().equals(block.getAction())) {
+                return entry.getKey();
+            }
+        }
+        
         return null;
     }
     

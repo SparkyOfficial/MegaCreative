@@ -78,7 +78,7 @@ public class CallFunctionAction implements BlockAction {
             }
             
             if (function != null) {
-                new com.megacreative.coding.ScriptExecutor(plugin).execute(function, functionContext, "function");
+                plugin.getCodingManager().getScriptExecutor().execute(function, functionContext, "function");
                 player.sendMessage("§a✓ Функция '" + functionName + "' выполнена!");
             } else {
                 player.sendMessage("§cОшибка: функция '" + functionName + "' не найдена!");

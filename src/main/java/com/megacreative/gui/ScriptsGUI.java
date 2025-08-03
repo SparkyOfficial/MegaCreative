@@ -172,17 +172,31 @@ public class ScriptsGUI {
             CodeScript script = worldScripts.get(scriptIndex);
             
             if (event.isLeftClick()) {
-                // Редактирование скрипта
+                // Редактирование скрипта - открываем AnvilInputGUI для переименования
                 player.closeInventory();
-                // Удаляем регистрацию GUI
                 GuiListener.unregisterOpenGui(player);
-                player.performCommand("editscript " + script.getName());
+                
+                // Открываем GUI для переименования
+                new AnvilInputGUI(plugin, player, "Переименовать скрипт", (newName) -> {
+                    if (newName != null && !newName.trim().isEmpty()) {
+                        script.setName(newName.trim());
+                        plugin.getWorldManager().saveWorld(currentWorld);
+                        player.sendMessage("§a✓ Скрипт переименован в: " + newName.trim());
+                    }
+                }, () -> {
+                    // Отменено
+                });
+                
             } else if (event.isRightClick()) {
-                // Настройки скрипта
-                player.closeInventory();
-                // Удаляем регистрацию GUI
-                GuiListener.unregisterOpenGui(player);
-                player.performCommand("scriptsettings " + script.getName());
+                // Включение/выключение скрипта
+                script.setEnabled(!script.isEnabled());
+                plugin.getWorldManager().saveWorld(currentWorld);
+                
+                String status = script.isEnabled() ? "§aвключен" : "§cвыключен";
+                player.sendMessage("§a✓ Скрипт '" + script.getName() + "' " + status);
+                
+                // Обновляем GUI
+                setupInventory();
             }
         }
     }
