@@ -82,6 +82,10 @@ commands:
     permission: megacreative.create
   savefunction:
     description: Сохранение функции
+  scriptexport:
+    description: Экспорт и импорт скриптов
+    usage: /scriptexport <export|import|list> [параметры]
+    permission: megacreative.script.export
     usage: /<command> <имя_функции>
     permission: megacreative.user
   trusted:

@@ -315,27 +315,32 @@ public class CodingParameterGUI {
                 ParameterField field = fields.get(startIndex + clickedSlot);
                 String currentValue = parameters.getOrDefault(field.getKey(), field.getDefaultValue()).toString();
                 
-                // Открываем наковальню для ввода
-                new AnvilInputGUI(com.megacreative.MegaCreative.getInstance(), player, "Ввод параметра: " + field.getName(), (newValue) -> {
-                    try {
-                        // Этот код выполнится, когда игрок подтвердит ввод в наковальне
-                        parameters.put(field.getKey(), newValue);
-                        player.sendMessage("§a✅ Параметр '" + field.getName() + "' обновлен!");
+                // Проверяем, нужно ли использовать специальный GUI для этого параметра
+                if (shouldUseSelectionGUI(field)) {
+                    openSelectionGUI(field);
+                } else {
+                    // Открываем наковальню для ввода
+                    new AnvilInputGUI(com.megacreative.MegaCreative.getInstance(), player, "Ввод параметра: " + field.getName(), (newValue) -> {
+                        try {
+                            // Этот код выполнится, когда игрок подтвердит ввод в наковальне
+                            parameters.put(field.getKey(), newValue);
+                            player.sendMessage("§a✅ Параметр '" + field.getName() + "' обновлен!");
 
-                        // --- ИСПРАВЛЕНИЕ ---
-                        // Обновляем и открываем ТЕКУЩЕЕ GUI, а не создаем новое
-                        Bukkit.getScheduler().runTask(com.megacreative.MegaCreative.getInstance(), () -> {
-                            this.refresh(); // Обновляем иконки в инвентаре
-                            this.open();    // Показываем его игроку снова
-                        });
-                    } catch (Exception e) {
-                        player.sendMessage("§c❌ Ошибка при обновлении параметра: " + e.getMessage());
-                        com.megacreative.MegaCreative.getInstance().getLogger().warning("Ошибка в CodingParameterGUI: " + e.getMessage());
-                    }
-                }, () -> {
-                    // Callback для отмены
-                    player.sendMessage("§c❌ Ввод параметра отменен");
-                });
+                            // --- ИСПРАВЛЕНИЕ ---
+                            // Обновляем и открываем ТЕКУЩЕЕ GUI, а не создаем новое
+                            Bukkit.getScheduler().runTask(com.megacreative.MegaCreative.getInstance(), () -> {
+                                this.refresh(); // Обновляем иконки в инвентаре
+                                this.open();    // Показываем его игроку снова
+                            });
+                        } catch (Exception e) {
+                            player.sendMessage("§c❌ Ошибка при обновлении параметра: " + e.getMessage());
+                            com.megacreative.MegaCreative.getInstance().getLogger().warning("Ошибка в CodingParameterGUI: " + e.getMessage());
+                        }
+                    }, () -> {
+                        // Callback для отмены
+                        player.sendMessage("§c❌ Ввод параметра отменен");
+                    });
+                }
             } catch (Exception e) {
                 player.sendMessage("§c❌ Ошибка при выборе параметра: " + e.getMessage());
                 com.megacreative.MegaCreative.getInstance().getLogger().warning("Ошибка в CodingParameterGUI при выборе параметра: " + e.getMessage());
@@ -362,5 +367,59 @@ public class CodingParameterGUI {
         public String getDefaultValue() { return defaultValue; }
         public Material getIcon() { return icon; }
         public String getDescription() { return "Параметр: " + name; }
+    }
+    
+    /**
+     * Проверяет, нужно ли использовать специальный GUI для выбора параметра
+     */
+    private boolean shouldUseSelectionGUI(ParameterField field) {
+        String key = field.getKey().toLowerCase();
+        return key.contains("gamemode") || key.contains("sound") || 
+               key.contains("weather") || key.contains("effect") ||
+               key.contains("particle") || key.contains("potion");
+    }
+    
+    /**
+     * Открывает специальный GUI для выбора параметра
+     */
+    private void openSelectionGUI(ParameterField field) {
+        String key = field.getKey().toLowerCase();
+        com.megacreative.MegaCreative plugin = com.megacreative.MegaCreative.getInstance();
+        
+        if (key.contains("gamemode")) {
+            com.megacreative.gui.ParameterSelectionGUI.openGameModeSelection(plugin, player, (newValue) -> {
+                parameters.put(field.getKey(), newValue);
+                player.sendMessage("§a✅ Параметр '" + field.getName() + "' обновлен!");
+                refreshAndReopen();
+            });
+        } else if (key.contains("sound")) {
+            com.megacreative.gui.ParameterSelectionGUI.openSoundSelection(plugin, player, (newValue) -> {
+                parameters.put(field.getKey(), newValue);
+                player.sendMessage("§a✅ Параметр '" + field.getName() + "' обновлен!");
+                refreshAndReopen();
+            });
+        } else if (key.contains("weather")) {
+            com.megacreative.gui.ParameterSelectionGUI.openWeatherSelection(plugin, player, (newValue) -> {
+                parameters.put(field.getKey(), newValue);
+                player.sendMessage("§a✅ Параметр '" + field.getName() + "' обновлен!");
+                refreshAndReopen();
+            });
+        } else if (key.contains("effect") || key.contains("potion")) {
+            com.megacreative.gui.ParameterSelectionGUI.openEffectSelection(plugin, player, (newValue) -> {
+                parameters.put(field.getKey(), newValue);
+                player.sendMessage("§a✅ Параметр '" + field.getName() + "' обновлен!");
+                refreshAndReopen();
+            });
+        }
+    }
+    
+    /**
+     * Обновляет GUI и показывает его игроку снова
+     */
+    private void refreshAndReopen() {
+        Bukkit.getScheduler().runTask(com.megacreative.MegaCreative.getInstance(), () -> {
+            this.refresh();
+            this.open();
+        });
     }
 } 

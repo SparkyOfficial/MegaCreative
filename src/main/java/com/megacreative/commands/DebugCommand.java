@@ -54,6 +54,10 @@ public class DebugCommand implements CommandExecutor {
                 plugin.getScriptDebugger().stepExecution(player);
                 break;
                 
+            case "stepmode":
+                plugin.getScriptDebugger().toggleStepExecution(player);
+                break;
+                
             case "vars":
             case "variables":
                 showVariables(player);
@@ -79,7 +83,8 @@ public class DebugCommand implements CommandExecutor {
         player.sendMessage("§f/debug off §7- Отключить отладку");
         player.sendMessage("§f/debug toggle §7- Переключить отладку");
         player.sendMessage("§f/debug stats §7- Показать статистику");
-        player.sendMessage("§f/debug step §7- Пошаговое выполнение");
+        player.sendMessage("§f/debug step §7- Выполнить следующий блок");
+        player.sendMessage("§f/debug stepmode §7- Включить/выключить пошаговый режим");
         player.sendMessage("§f/debug vars §7- Показать переменные");
         player.sendMessage("§f/debug clear §7- Очистить данные отладки");
         player.sendMessage("§f/debug help §7- Показать эту справку");

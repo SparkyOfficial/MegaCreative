@@ -100,6 +100,7 @@ com\megacreative\coding\BlockPlacementHandler.class
 com\megacreative\gui\WorldActionsGUI.class
 com\megacreative\coding\actions\BlockCondition.class
 com\megacreative\coding\actions\SpawnEntityAction$1.class
+com\megacreative\coding\ScriptDebugger$3.class
 com\megacreative\gui\WorldBrowserGUI.class
 com\megacreative\commands\DebugCommand.class
 com\megacreative\coding\BlockConfiguration.class

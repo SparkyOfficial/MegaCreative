@@ -133,6 +133,7 @@ public class MegaCreative extends JavaPlugin {
         getCommand("cleanworlds").setExecutor(new CleanWorldsCommand(this));
         getCommand("create").setExecutor(new CreateWorldCommand(this));
         getCommand("savefunction").setExecutor(new SaveFunctionCommand(this));
+        getCommand("scriptexport").setExecutor(new ScriptExportCommand(this));
     }
     
     private void registerEvents() {

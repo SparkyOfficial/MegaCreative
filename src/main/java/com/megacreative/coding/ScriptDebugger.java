@@ -15,6 +15,8 @@ public class ScriptDebugger {
     private final MegaCreative plugin;
     private final Map<UUID, Boolean> playerDebugStates = new HashMap<>();
     private final Map<UUID, Map<Location, Long>> blockExecutionTimes = new HashMap<>();
+    private final Map<UUID, Boolean> playerStepStates = new HashMap<>();
+    private final Map<UUID, CodeBlock> playerNextStepBlocks = new HashMap<>();
 
     public ScriptDebugger(MegaCreative plugin) {
         this.plugin = plugin;
@@ -280,7 +282,23 @@ public class ScriptDebugger {
     }
     
     /**
-     * Пошаговое выполнение - выполняет только один следующий блок.
+     * Включает/выключает пошаговое выполнение для игрока.
+     */
+    public void toggleStepExecution(Player player) {
+        UUID playerId = player.getUniqueId();
+        boolean currentState = playerStepStates.getOrDefault(playerId, false);
+        playerStepStates.put(playerId, !currentState);
+        
+        if (!currentState) {
+            player.sendMessage("§a✓ Пошаговое выполнение включено");
+            player.sendMessage("§7Используйте §f/debug step §7для выполнения следующего блока");
+        } else {
+            player.sendMessage("§c✗ Пошаговое выполнение отключено");
+        }
+    }
+    
+    /**
+     * Выполняет следующий блок в пошаговом режиме.
      */
     public void stepExecution(Player player) {
         if (!playerDebugStates.getOrDefault(player.getUniqueId(), false)) {
@@ -288,9 +306,50 @@ public class ScriptDebugger {
             return;
         }
         
+        if (!playerStepStates.getOrDefault(player.getUniqueId(), false)) {
+            player.sendMessage("§cПошаговое выполнение должно быть включено!");
+            return;
+        }
+        
+        CodeBlock nextBlock = playerNextStepBlocks.get(player.getUniqueId());
+        if (nextBlock == null) {
+            player.sendMessage("§e⚠ Нет блоков для выполнения");
+            return;
+        }
+        
         player.sendMessage("§a⏭️ Выполняется следующий блок...");
-        // TODO: Реализовать пошаговое выполнение
-        // Это потребует изменения логики HybridScriptExecutor
+        
+        // Выполняем следующий блок
+        var executor = plugin.getCodingManager().getScriptExecutor();
+        Location blockLocation = executor.findBlockLocation(nextBlock);
+        var context = new ExecutionContext.ExecutionContextBuilder()
+            .plugin(plugin)
+            .player(player)
+            .currentBlock(nextBlock)
+            .blockLocation(blockLocation)
+            .build();
+        
+        executor.processBlock(nextBlock, context);
+    }
+    
+    /**
+     * Устанавливает следующий блок для пошагового выполнения.
+     */
+    public void setNextStepBlock(Player player, CodeBlock nextBlock) {
+        if (playerStepStates.getOrDefault(player.getUniqueId(), false)) {
+            playerNextStepBlocks.put(player.getUniqueId(), nextBlock);
+            if (nextBlock != null) {
+                player.sendMessage("§e⏸️ Следующий блок готов к выполнению: §f" + nextBlock.getAction());
+                player.sendMessage("§7Используйте §f/debug step §7для выполнения");
+            }
+        }
+    }
+    
+    /**
+     * Проверяет, включено ли пошаговое выполнение для игрока.
+     */
+    public boolean isStepExecutionEnabled(Player player) {
+        return playerStepStates.getOrDefault(player.getUniqueId(), false);
     }
     
     /**
@@ -322,5 +381,7 @@ public class ScriptDebugger {
         UUID playerId = player.getUniqueId();
         playerDebugStates.remove(playerId);
         blockExecutionTimes.remove(playerId);
+        playerStepStates.remove(playerId);
+        playerNextStepBlocks.remove(playerId);
     }
 } 

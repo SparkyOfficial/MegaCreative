@@ -280,6 +280,13 @@ public class HybridScriptExecutor {
                 plugin.getScriptDebugger().onBlockTransition(currentContext.getPlayer(), block, nextBlock);
             }
             
+            // Проверяем пошаговое выполнение
+            if (currentContext.getPlayer() != null && plugin.getScriptDebugger().isStepExecutionEnabled(currentContext.getPlayer())) {
+                // Устанавливаем следующий блок для пошагового выполнения
+                plugin.getScriptDebugger().setNextStepBlock(currentContext.getPlayer(), nextBlock);
+                return; // Останавливаем выполнение до следующего шага
+            }
+            
             Location nextBlockLocation = findBlockLocation(nextBlock);
             ExecutionContext nextContext = currentContext.withCurrentBlock(nextBlock, nextBlockLocation);
             processBlock(nextBlock, nextContext);
