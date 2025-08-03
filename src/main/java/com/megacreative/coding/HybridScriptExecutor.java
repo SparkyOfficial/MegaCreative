@@ -193,12 +193,12 @@ public class HybridScriptExecutor {
         }
         
         CodeBlock root = script.getRootBlock();
-        if (root.getMaterial() == Material.DIAMOND_BLOCK && root.getAction().equals(triggerAction)) {
-            CodeBlock nextBlock = root.getNextBlock();
-            if (nextBlock != null) {
-                Location firstBlockLocation = findBlockLocation(nextBlock);
-                ExecutionContext startContext = context.withCurrentBlock(nextBlock, firstBlockLocation);
-                processBlock(nextBlock, startContext);
+        if ("function".equals(triggerAction) || (root.getMaterial() == Material.DIAMOND_BLOCK && root.getAction().equals(triggerAction))) {
+             CodeBlock firstBlock = "function".equals(triggerAction) ? root : root.getNextBlock();
+            if (firstBlock != null) {
+                Location firstBlockLocation = findBlockLocation(firstBlock);
+                ExecutionContext startContext = context.withCurrentBlock(firstBlock, firstBlockLocation);
+                processBlock(firstBlock, startContext);
             }
         }
 
@@ -259,17 +259,20 @@ public class HybridScriptExecutor {
         }
         // 3. Проверяем условия
         else if (isConditionBlock(block.getMaterial())) {
+            // Условие не выполняет действие само по себе, оно лишь определяет следующий шаг
+            // Поэтому передаем управление в handleCondition и выходим
             handleCondition(block, currentContext);
+            return; // Важно! Логика ветвления обрабатывается в handleCondition
         }
         // 4. Если ничего не найдено
         else {
             Player player = currentContext.getPlayer();
             if (player != null) {
-                player.sendMessage("§cДействие '" + actionName + "' не найдено ни в новой, ни в старой системе");
+                player.sendMessage("§cДействие '" + actionName + "' не найдено!");
             }
         }
 
-        // Переход к следующему блоку
+        // Переходим к следующему блоку, только если это не условие
         CodeBlock nextBlock = block.getNextBlock();
         if (nextBlock != null) {
             Location nextBlockLocation = findBlockLocation(nextBlock);
@@ -279,101 +282,84 @@ public class HybridScriptExecutor {
     }
     
     /**
-     * Обрабатывает условие с гибридной системой и поддержкой IF/ELSE.
+     * Обрабатывает условие с полноценной логикой IF/ELSE.
      */
-    private void handleCondition(CodeBlock block, ExecutionContext context) {
+    private void handleCondition(CodeBlock ifBlock, ExecutionContext context) {
         Player player = context.getPlayer();
         if (player == null) return;
         
-        String conditionName = block.getAction();
+        String conditionName = ifBlock.getAction();
+        boolean result = false;
         
-        // Специальная обработка для ELSE блока
-        if ("else".equals(conditionName)) {
-            // ELSE блок выполняется только если он был вызван из IF/ELSE логики
-            // Здесь мы просто выполняем дочерние блоки
-            for (CodeBlock child : block.getChildren()) {
-                Location childLocation = findBlockLocation(child);
-                ExecutionContext childContext = context.withCurrentBlock(child, childLocation);
-                processBlock(child, childContext);
+        // Определяем условие (новая или старая система)
+        BlockCondition condition = BlockFactory.getCondition(conditionName) != null 
+            ? BlockFactory.getCondition(conditionName) 
+            : oldConditionRegistry.get(conditionName);
+
+        if (condition != null) {
+            try {
+                result = condition.evaluate(context);
+                if (plugin.getScriptDebugger().isDebugEnabled(player)) {
+                    plugin.getScriptDebugger().onConditionResult(player, ifBlock, result);
+                }
+                if (player != null) {
+                    player.sendMessage("§a[УСЛОВИЕ] '" + conditionName + "' = " + result);
+                }
+            } catch (Exception e) {
+                player.sendMessage("§cОшибка в условии '" + conditionName + "': " + e.getMessage());
+                return;
             }
-            if (player != null) {
-                player.sendMessage("§b[IF/ELSE] Выполняется ELSE блок");
-            }
+        } else {
+            player.sendMessage("§cУсловие '" + conditionName + "' не найдено!");
             return;
         }
-        
-        // 1. Пытаемся найти в НОВОЙ системе
-        BlockCondition newCondition = BlockFactory.getCondition(conditionName);
-        if (newCondition != null) {
-            try {
-                boolean result = newCondition.evaluate(context);
-                if (result) {
-                    // Выполняем дочерние блоки IF
-                    for (CodeBlock child : block.getChildren()) {
-                        Location childLocation = findBlockLocation(child);
-                        ExecutionContext childContext = context.withCurrentBlock(child, childLocation);
-                        processBlock(child, childContext);
-                    }
-                } else {
-                    // IF условие ложно - ищем и выполняем ELSE блок
-                    handleElseBlock(block, context);
-                }
-                if (player != null) {
-                    player.sendMessage("§a[НОВАЯ СИСТЕМА] Условие '" + conditionName + "' = " + result);
-                }
-            } catch (Exception e) {
-                player.sendMessage("§cОшибка в новом условии '" + conditionName + "': " + e.getMessage());
-            }
-        } 
-        // 2. Если не найдено в новой системе, ищем в СТАРОЙ
-        else if (oldConditionRegistry.containsKey(conditionName)) {
-            try {
-                BlockCondition oldCondition = oldConditionRegistry.get(conditionName);
-                boolean result = oldCondition.evaluate(context);
-                if (result) {
-                    // Выполняем дочерние блоки IF
-                    for (CodeBlock child : block.getChildren()) {
-                        Location childLocation = findBlockLocation(child);
-                        ExecutionContext childContext = context.withCurrentBlock(child, childLocation);
-                        processBlock(child, childContext);
-                    }
-                } else {
-                    // IF условие ложно - ищем и выполняем ELSE блок
-                    handleElseBlock(block, context);
-                }
-                if (player != null) {
-                    player.sendMessage("§e[СТАРАЯ СИСТЕМА] Условие '" + conditionName + "' = " + result);
-                }
-            } catch (Exception e) {
-                player.sendMessage("§cОшибка в старом условии '" + conditionName + "': " + e.getMessage());
-            }
-        } else {
-            player.sendMessage("§cУсловие '" + conditionName + "' не найдено ни в новой, ни в старой системе");
+
+        // Ищем ELSE блок
+        CodeBlock nextInChain = ifBlock.getNextBlock();
+        CodeBlock elseBlock = null;
+
+        if (nextInChain != null && "else".equals(nextInChain.getAction())) {
+            elseBlock = nextInChain;
         }
-    }
-    
-    /**
-     * Обрабатывает ELSE блок после ложного IF условия.
-     */
-    private void handleElseBlock(CodeBlock ifBlock, ExecutionContext context) {
-        Player player = context.getPlayer();
-        if (player == null) return;
-        
-        // Ищем следующий блок после IF
-        CodeBlock nextBlock = ifBlock.getNextBlock();
-        if (nextBlock != null && "else".equals(nextBlock.getAction())) {
-            // Нашли ELSE блок - выполняем его дочерние блоки
-            for (CodeBlock child : nextBlock.getChildren()) {
+
+        if (result) {
+            // Условие истинно: выполняем дочерние блоки IF
+            for (CodeBlock child : ifBlock.getChildren()) {
                 Location childLocation = findBlockLocation(child);
                 ExecutionContext childContext = context.withCurrentBlock(child, childLocation);
                 processBlock(child, childContext);
             }
-            if (player != null) {
-                player.sendMessage("§b[IF/ELSE] Выполняется ELSE блок");
+            // После выполнения ветки IF, переходим к блоку, который идет ПОСЛЕ ELSE (если он есть)
+            // или к следующему после IF (если ELSE нет)
+            CodeBlock blockAfterBranch = (elseBlock != null) ? elseBlock.getNextBlock() : ifBlock.getNextBlock();
+            if (blockAfterBranch != null) {
+                Location nextLocation = findBlockLocation(blockAfterBranch);
+                ExecutionContext nextContext = context.withCurrentBlock(blockAfterBranch, nextLocation);
+                processBlock(blockAfterBranch, nextContext);
             }
         } else {
-            if (player != null) {
-                player.sendMessage("§7[IF/ELSE] ELSE блок не найден");
+            // Условие ложно: проверяем наличие ELSE
+            if (elseBlock != null) {
+                // Выполняем дочерние блоки ELSE
+                for (CodeBlock child : elseBlock.getChildren()) {
+                    Location childLocation = findBlockLocation(child);
+                    ExecutionContext childContext = context.withCurrentBlock(child, childLocation);
+                    processBlock(child, childContext);
+                }
+                // После выполнения ветки ELSE, переходим к следующему за ним блоку
+                CodeBlock blockAfterBranch = elseBlock.getNextBlock();
+                if (blockAfterBranch != null) {
+                    Location nextLocation = findBlockLocation(blockAfterBranch);
+                    ExecutionContext nextContext = context.withCurrentBlock(blockAfterBranch, nextLocation);
+                    processBlock(blockAfterBranch, nextContext);
+                }
+            } else {
+                // ELSE нет, просто переходим к следующему блоку после IF
+                if (ifBlock.getNextBlock() != null) {
+                    Location nextLocation = findBlockLocation(ifBlock.getNextBlock());
+                    ExecutionContext nextContext = context.withCurrentBlock(ifBlock.getNextBlock(), nextLocation);
+                    processBlock(ifBlock.getNextBlock(), nextContext);
+                }
             }
         }
     }
@@ -382,9 +368,8 @@ public class HybridScriptExecutor {
      * Проверяет, является ли блок условием.
      */
     private boolean isConditionBlock(Material material) {
-        return material == Material.REDSTONE_BLOCK || 
-               material == Material.EMERALD_BLOCK ||
-               material == Material.LAPIS_BLOCK;
+         // OAK_PLANKS - основной блок условий
+        return material == Material.OAK_PLANKS;
     }
     
     /**
