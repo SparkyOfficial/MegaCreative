@@ -1,12 +1,14 @@
 package com.megacreative.coding;
 
 import com.megacreative.MegaCreative;
+import com.megacreative.models.CreativeWorld;
 import com.megacreative.coding.data.DataItemFactory;
 import com.megacreative.coding.data.DataItemFactory.DataItem;
 import com.megacreative.coding.ParameterSelectorGUI;
 import org.bukkit.Bukkit;
 import org.bukkit.Location;
 import org.bukkit.Material;
+import org.bukkit.World;
 import org.bukkit.block.Block;
 import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
@@ -34,18 +36,83 @@ public class BlockPlacementHandler implements Listener {
 
     private final MegaCreative plugin;
     
-    // Хранилище: Location -> CodeBlock (содержит действие и параметры)
-    private final Map<Location, CodeBlock> blockCodeBlocks = new HashMap<>();
+    // Визуализация и отладка
     private final Map<UUID, Boolean> playerVisualizationStates = new HashMap<>();
     private final Map<UUID, Boolean> playerDebugStates = new HashMap<>();
     private final Map<UUID, Location> playerSelections = new HashMap<>();
     private final Map<UUID, CodeBlock> clipboard = new HashMap<>(); // Буфер обмена для копирования
 
-    // Удаляем жестко закодированную карту ACTIONS - теперь используем BlockConfiguration
-    // private static final Map<Material, List<String>> ACTIONS = Map.ofEntries(...);
-
     public BlockPlacementHandler(MegaCreative plugin) {
         this.plugin = plugin;
+    }
+    
+    /**
+     * Получает блоки кода для мира игрока
+     */
+    private Map<Location, CodeBlock> getBlocksForWorld(Player player) {
+        CreativeWorld world = plugin.getWorldManager().findCreativeWorldByBukkit(player.getWorld());
+        if (world == null) {
+            return new HashMap<>();
+        }
+        
+        Map<Location, CodeBlock> blocks = new HashMap<>();
+        Map<String, CodeBlock> devBlocks = world.getDevWorldBlocks();
+        
+        for (Map.Entry<String, CodeBlock> entry : devBlocks.entrySet()) {
+            Location loc = parseLocation(entry.getKey());
+            if (loc != null) {
+                blocks.put(loc, entry.getValue());
+            }
+        }
+        
+        return blocks;
+    }
+    
+    /**
+     * Сохраняет блок в мире
+     */
+    private void saveBlockToWorld(Player player, Location location, CodeBlock block) {
+        CreativeWorld world = plugin.getWorldManager().findCreativeWorldByBukkit(player.getWorld());
+        if (world != null) {
+            String locationKey = locationToString(location);
+            world.addDevWorldBlock(locationKey, block);
+            plugin.getWorldManager().saveWorld(world);
+        }
+    }
+    
+    /**
+     * Удаляет блок из мира
+     */
+    private void removeBlockFromWorld(Player player, Location location) {
+        CreativeWorld world = plugin.getWorldManager().findCreativeWorldByBukkit(player.getWorld());
+        if (world != null) {
+            String locationKey = locationToString(location);
+            world.removeDevWorldBlock(locationKey);
+            plugin.getWorldManager().saveWorld(world);
+        }
+    }
+    
+    /**
+     * Парсит строку локации обратно в Location
+     */
+    private Location parseLocation(String locationString) {
+        try {
+            String[] parts = locationString.split(",");
+            if (parts.length == 4) {
+                String worldName = parts[0];
+                double x = Double.parseDouble(parts[1]);
+                double y = Double.parseDouble(parts[2]);
+                double z = Double.parseDouble(parts[3]);
+                
+                World world = Bukkit.getWorld(worldName);
+                if (world != null) {
+                    return new Location(world, x, y, z);
+                }
+            }
+        } catch (Exception e) {
+            plugin.getLogger().warning("Ошибка парсинга локации: " + locationString);
+        }
+        return null;
     }
 
     /**
@@ -78,14 +145,9 @@ public class BlockPlacementHandler implements Listener {
 
         Bukkit.getLogger().info("[DEBUG] Checks passed! Placing block...");
         
-        // --- НАЧАЛО ИСПРАВЛЕНИЯ ---
-        
-        // 1. НЕ отменяем событие. Позволяем блоку установиться.
-        // event.setCancelled(true); // <--- УБЕДИТЕСЬ, ЧТО ЭТОЙ СТРОКИ НЕТ!
-        
         // 2. Создаем "заготовку" блока кода сразу.
         CodeBlock newCodeBlock = new CodeBlock(mat, "Настройка..."); // Временное действие
-        blockCodeBlocks.put(block.getLocation(), newCodeBlock);
+        saveBlockToWorld(player, block.getLocation(), newCodeBlock);
         
         var world = plugin.getWorldManager().findCreativeWorldByBukkit(player.getWorld());
         if (world != null) {
@@ -100,7 +162,7 @@ public class BlockPlacementHandler implements Listener {
             List<String> actions = plugin.getBlockConfiguration().getActionsForMaterial(mat);
             if (actions == null || actions.isEmpty()) {
                 player.sendMessage("§cДля этого блока нет доступных действий.");
-                blockCodeBlocks.remove(block.getLocation()); // Убираем, если что-то пошло не так
+                removeBlockFromWorld(player, block.getLocation()); // Убираем, если что-то пошло не так
                 block.setType(Material.AIR); // Удаляем физический блок
                 return;
             }
@@ -122,8 +184,6 @@ public class BlockPlacementHandler implements Listener {
             }).open();
             
         }, 1L);
-        
-        // --- КОНЕЦ ИСПРАВЛЕНИЯ ---
     }
 
     /**
@@ -141,8 +201,10 @@ public class BlockPlacementHandler implements Listener {
         }
         
         Location loc = event.getBlock().getLocation();
-        if (blockCodeBlocks.containsKey(loc)) {
-            CodeBlock removedBlock = blockCodeBlocks.remove(loc);
+        Map<Location, CodeBlock> blocks = getBlocksForWorld(event.getPlayer());
+        if (blocks.containsKey(loc)) {
+            CodeBlock removedBlock = blocks.get(loc);
+            removeBlockFromWorld(event.getPlayer(), loc);
             event.getPlayer().sendMessage("§c❌ Блок кода удален: " + removedBlock.getAction());
             
             // Удаляем табличку над блоком
@@ -182,7 +244,8 @@ public class BlockPlacementHandler implements Listener {
         // Проверяем права доверенного игрока для взаимодействия с блоками кода
         if (event.getAction() == Action.RIGHT_CLICK_BLOCK && event.getClickedBlock() != null) {
             Location clickedLocation = event.getClickedBlock().getLocation();
-            if (blockCodeBlocks.containsKey(clickedLocation) && 
+            Map<Location, CodeBlock> blocks = getBlocksForWorld(player);
+            if (blocks.containsKey(clickedLocation) && 
                 !plugin.getTrustedPlayerManager().canCodeInDevWorld(player)) {
                 event.setCancelled(true);
                 player.sendMessage("§c❌ У вас нет прав для взаимодействия с блоками кода в этом мире!");
@@ -195,9 +258,10 @@ public class BlockPlacementHandler implements Listener {
         // Инспектор блоков (DEBUG_STICK)
         if (itemInHand.getType() == Material.DEBUG_STICK && itemInHand.hasItemMeta() && event.getAction().isRightClick()) {
             Block clickedBlock = event.getClickedBlock();
-            if (clickedBlock != null && blockCodeBlocks.containsKey(clickedBlock.getLocation())) {
+            Map<Location, CodeBlock> blocks = getBlocksForWorld(player);
+            if (clickedBlock != null && blocks.containsKey(clickedBlock.getLocation())) {
                 event.setCancelled(true);
-                displayBlockInfo(player, blockCodeBlocks.get(clickedBlock.getLocation()));
+                displayBlockInfo(player, blocks.get(clickedBlock.getLocation()));
                 return;
             }
         }
@@ -215,7 +279,8 @@ public class BlockPlacementHandler implements Listener {
         // Предметы-данные (DataItem) - Взаимодействие с уже поставленным блоком
         if (DataItemFactory.isDataItem(itemInHand) && event.getAction().isRightClick()) {
             Block clickedBlock = event.getClickedBlock();
-            if (clickedBlock != null && blockCodeBlocks.containsKey(clickedBlock.getLocation())) {
+            Map<Location, CodeBlock> blocks = getBlocksForWorld(player);
+            if (clickedBlock != null && blocks.containsKey(clickedBlock.getLocation())) {
                 event.setCancelled(true);
                 handleDataItemInsertion(player, clickedBlock, itemInHand);
                 return;
@@ -246,7 +311,8 @@ public class BlockPlacementHandler implements Listener {
         Location location = clickedBlock.getLocation();
         
         // Проверяем, есть ли уже блок кода на этой локации
-        if (blockCodeBlocks.containsKey(location)) {
+        Map<Location, CodeBlock> blocks = getBlocksForWorld(player);
+        if (blocks.containsKey(location)) {
             // Предотвращаем открытие GUI, если в руке связующий жезл или другой инструмент
             if (isTool(itemInHand)) {
                 return;
@@ -256,9 +322,6 @@ public class BlockPlacementHandler implements Listener {
             // ВЫЗЫВАЕМ НАШ НОВЫЙ МЕНЕДЖЕР ВМЕСТО СТАРОГО GUI
             plugin.getBlockConfigManager().openConfigGUI(player, location);
         }
-
-        // --- ПРОБЛЕМНЫЙ КОД БЫЛ УДАЛЕН ОТСЮДА ---
-        // Больше нет проверки "if (isCodingBlock(itemInHand))" для установки блока
     }
 
     /**
@@ -279,12 +342,13 @@ public class BlockPlacementHandler implements Listener {
         
         Action action = event.getAction();
         Block clickedBlock = event.getClickedBlock();
+        Map<Location, CodeBlock> blocks = getBlocksForWorld(player);
 
         // --- ЛЕВЫЙ КЛИК: ВЫБОР ПЕРВОГО БЛОКА ---
         if (action == Action.LEFT_CLICK_BLOCK) {
-            if (clickedBlock != null && blockCodeBlocks.containsKey(clickedBlock.getLocation())) {
+            if (clickedBlock != null && blocks.containsKey(clickedBlock.getLocation())) {
                 playerSelections.put(player.getUniqueId(), clickedBlock.getLocation());
-                CodeBlock selectedBlock = blockCodeBlocks.get(clickedBlock.getLocation());
+                CodeBlock selectedBlock = blocks.get(clickedBlock.getLocation());
                 player.sendMessage("§a✅ Начальный блок выбран: §f" + selectedBlock.getAction());
                 player.sendMessage("§7Теперь нажмите §eПКМ§7 по конечному блоку для соединения.");
             } else {
@@ -300,7 +364,7 @@ public class BlockPlacementHandler implements Listener {
                 return;
             }
 
-            if (clickedBlock != null && blockCodeBlocks.containsKey(clickedBlock.getLocation())) {
+            if (clickedBlock != null && blocks.containsKey(clickedBlock.getLocation())) {
                 Location secondBlockLoc = clickedBlock.getLocation();
 
                 if (firstBlockLoc.equals(secondBlockLoc)) {
@@ -308,8 +372,8 @@ public class BlockPlacementHandler implements Listener {
                     return;
                 }
 
-                CodeBlock firstBlock = blockCodeBlocks.get(firstBlockLoc);
-                CodeBlock secondBlock = blockCodeBlocks.get(secondBlockLoc);
+                CodeBlock firstBlock = blocks.get(firstBlockLoc);
+                CodeBlock secondBlock = blocks.get(secondBlockLoc);
 
                 if (firstBlock != null && secondBlock != null) {
                     firstBlock.setNext(secondBlock);
@@ -317,11 +381,11 @@ public class BlockPlacementHandler implements Listener {
                     player.sendMessage("§7§f" + firstBlock.getAction() + " §7→ §f" + secondBlock.getAction());
                     playerSelections.remove(player.getUniqueId());
                     
-                            // Обновляем визуализацию
-        var creativeWorld = plugin.getWorldManager().getWorldByName(player.getWorld().getName());
-        if(creativeWorld != null) {
-             plugin.getBlockConnectionVisualizer().addBlock(creativeWorld, firstBlockLoc, firstBlock);
-        }
+                    // Обновляем визуализацию
+                    var creativeWorld = plugin.getWorldManager().getWorldByName(player.getWorld().getName());
+                    if(creativeWorld != null) {
+                         plugin.getBlockConnectionVisualizer().addBlock(creativeWorld, firstBlockLoc, firstBlock);
+                    }
                 }
             } else {
                 player.sendMessage("§c❌ Это не блок кода! Выберите блок кода для соединения.");
@@ -341,7 +405,7 @@ public class BlockPlacementHandler implements Listener {
             new CodingParameterGUI(player, action, location, parameters -> {
                 // Создаем CodeBlock с параметрами
                 CodeBlock codeBlock = createCodeBlockWithParameters(material, action, parameters);
-                blockCodeBlocks.put(location, codeBlock);
+                saveBlockToWorld(player, location, codeBlock);
                 
                 // Добавляем/обновляем блок в визуализации
                 var world = plugin.getWorldManager().getWorldByName(player.getWorld().getName());
@@ -373,7 +437,8 @@ public class BlockPlacementHandler implements Listener {
      * Преобразует Location в строку
      */
     private String locationToString(Location location) {
-        return String.format("(%d, %d, %d)", 
+        return String.format("%s,%d,%d,%d", 
+            location.getWorld().getName(),
             location.getBlockX(), 
             location.getBlockY(), 
             location.getBlockZ());
@@ -383,7 +448,7 @@ public class BlockPlacementHandler implements Listener {
      * Возвращает карту соединений блоков (для отладки)
      */
     public Map<Location, CodeBlock> getBlockCodeBlocks() {
-        return new HashMap<>(blockCodeBlocks);
+        return new HashMap<>(); // Теперь блоки хранятся в CreativeWorld
     }
 
     // Установить табличку с действием на блок (НОВАЯ ВЕРСИЯ)
@@ -528,10 +593,12 @@ public class BlockPlacementHandler implements Listener {
      * Обрабатывает копирование и вставку блоков
      */
     private void handleBlockCopying(Player player, Action action, Block clickedBlock, BlockFace blockFace) {
+        Map<Location, CodeBlock> blocks = getBlocksForWorld(player);
+        
         // ЛКМ по блоку кода - Копировать
-        if (action == Action.LEFT_CLICK_BLOCK && blockCodeBlocks.containsKey(clickedBlock.getLocation())) {
+        if (action == Action.LEFT_CLICK_BLOCK && blocks.containsKey(clickedBlock.getLocation())) {
             try {
-                CodeBlock original = blockCodeBlocks.get(clickedBlock.getLocation());
+                CodeBlock original = blocks.get(clickedBlock.getLocation());
                 clipboard.put(player.getUniqueId(), (CodeBlock) original.clone());
                 player.sendMessage("§a✓ Блок скопирован в буфер обмена.");
             } catch (CloneNotSupportedException e) {
@@ -549,7 +616,7 @@ public class BlockPlacementHandler implements Listener {
             Location placeLocation = clickedBlock.getRelative(blockFace).getLocation();
             placeLocation.getBlock().setType(copied.getMaterial());
             try {
-                blockCodeBlocks.put(placeLocation, (CodeBlock) copied.clone());
+                saveBlockToWorld(player, placeLocation, (CodeBlock) copied.clone());
             } catch (CloneNotSupportedException e) {
                 player.sendMessage("§cОшибка при вставке блока.");
                 return;
@@ -563,7 +630,8 @@ public class BlockPlacementHandler implements Listener {
      * Обрабатывает вставку данных из DataItem в блок кода
      */
     private void handleDataItemInsertion(Player player, Block clickedBlock, ItemStack dataItemStack) {
-        CodeBlock targetBlock = blockCodeBlocks.get(clickedBlock.getLocation());
+        Map<Location, CodeBlock> blocks = getBlocksForWorld(player);
+        CodeBlock targetBlock = blocks.get(clickedBlock.getLocation());
         if (targetBlock == null) return;
         
         // Получаем DataItem из предмета

@@ -8,11 +8,14 @@ com\megacreative\models\CreativeWorldType.class
 com\megacreative\coding\blocks\actions\RandomNumberAction.class
 com\megacreative\MegaCreative$1.class
 com\megacreative\coding\actions\PlayerHealthCondition.class
+com\megacreative\coding\blocks\actions\ShowMessageInTitleAction.class
 com\megacreative\coding\conditions\IfVarEqualsCondition.class
 com\megacreative\coding\actions\SetArmorAction$ArmorType.class
 com\megacreative\coding\blocks\actions\SetGameModeAction.class
 com\megacreative\coding\CodeScript$ScriptType.class
+com\megacreative\commands\SaveFunctionCommand.class
 com\megacreative\coding\actions\GiveItemAction.class
+com\megacreative\coding\blocks\conditions\IsNearLocationCondition.class
 com\megacreative\coding\blocks\events\EventBlock.class
 com\megacreative\coding\blocks\actions\WaitAction.class
 com\megacreative\coding\ScriptDebugger$1.class
@@ -25,6 +28,7 @@ com\megacreative\coding\blocks\actions\TeleportAction.class
 com\megacreative\gui\DataGUI$1.class
 com\megacreative\coding\actions\SetTimeAction.class
 com\megacreative\commands\DevCommand.class
+com\megacreative\coding\blocks\actions\CreateExplosionAction.class
 com\megacreative\models\WorldComment.class
 com\megacreative\coding\blocks\events\OnBlockBreakEvent.class
 com\megacreative\gui\WorldSettingsGUI.class
@@ -59,7 +63,9 @@ com\megacreative\coding\blocks\actions\SetTimeAction.class
 com\megacreative\coding\values\NumberValue.class
 com\megacreative\coding\data\DataItemFactory.class
 com\megacreative\coding\ExecutionContext$ExecutionContextBuilder.class
+com\megacreative\commands\ScriptExportCommand.class
 com\megacreative\coding\BlockConfiguration$SlotConfig.class
+com\megacreative\coding\blocks\conditions\ElseCondition.class
 com\megacreative\coding\conditions\IsNightCondition.class
 com\megacreative\coding\ScriptDebugger$2.class
 com\megacreative\listeners\WorldInteractListener.class
@@ -70,6 +76,7 @@ com\megacreative\models\WorldFlags.class
 com\megacreative\coding\BlockCondition.class
 com\megacreative\coding\actions\SetServerVariableAction.class
 com\megacreative\commands\TemplatesCommand.class
+com\megacreative\coding\blocks\actions\WhileLoopAction.class
 com\megacreative\coding\actions\PlayParticleEffectAction.class
 com\megacreative\coding\conditions\IsNearEntityCondition$1.class
 com\megacreative\coding\actions\SetVarAction.class
@@ -105,6 +112,7 @@ com\megacreative\gui\WorldBrowserGUI.class
 com\megacreative\commands\DebugCommand.class
 com\megacreative\coding\BlockConfiguration.class
 com\megacreative\commands\TestScriptCommand.class
+com\megacreative\coding\blocks\actions\CallFunctionAction.class
 com\megacreative\managers\WorldManager.class
 com\megacreative\coding\blocks\conditions\IsOpCondition.class
 com\megacreative\coding\blocks\actions\MulVarAction.class
@@ -142,16 +150,21 @@ com\megacreative\coding\blocks\actions\HealPlayerAction.class
 com\megacreative\coding\CodingActionGUI.class
 com\megacreative\commands\MyWorldsCommand.class
 com\megacreative\coding\ScriptExecutor.class
+com\megacreative\coding\blocks\actions\OpenChestGUIAction.class
+com\megacreative\gui\ScriptEditorGUI.class
 com\megacreative\coding\CodingManager.class
 com\megacreative\commands\StatusCommand.class
 com\megacreative\gui\MyWorldsGUI.class
 com\megacreative\coding\ParameterResolver.class
 com\megacreative\coding\arguments\NumberArgument.class
+com\megacreative\gui\ParameterSelectionGUI.class
 com\megacreative\coding\actions\GetGlobalVariableAction.class
 com\megacreative\commands\PlayCommand.class
 com\megacreative\gui\ScriptsGUI.class
 com\megacreative\coding\BlockConfiguration$ActionSlotConfig.class
 com\megacreative\coding\ScriptDebugger.class
+com\megacreative\coding\blocks\actions\ForLoopAction.class
+com\megacreative\coding\blocks\actions\RemoveItemAction.class
 com\megacreative\commands\CleanWorldsCommand.class
 com\megacreative\commands\ScriptsCommand.class
 com\megacreative\managers\BlockConfigManager.class
@@ -175,6 +188,7 @@ com\megacreative\coding\CodeBlock.class
 com\megacreative\coding\arguments\ItemNameArgument.class
 com\megacreative\coding\actions\TeleportAction.class
 com\megacreative\coding\BlockConnectionVisualizer$1.class
+com\megacreative\coding\blocks\actions\SpawnParticleAction.class
 com\megacreative\managers\WorldManager$1.class
 com\megacreative\coding\blocks\actions\GetVarAction.class
 com\megacreative\utils\TabListManager.class
@@ -187,6 +201,7 @@ com\megacreative\listeners\PlayerQuitListener.class
 com\megacreative\gui\ParameterSelectorGUI.class
 com\megacreative\listeners\PlayerDeathListener.class
 com\megacreative\coding\actions\CallFunctionAction.class
+com\megacreative\coding\blocks\conditions\PlayerHasEffectCondition.class
 com\megacreative\coding\BlockConnectionVisualizer$2.class
 com\megacreative\coding\blocks\actions\SetWeatherAction.class
 com\megacreative\coding\conditions\PlayerGameModeCondition.class
@@ -194,6 +209,7 @@ com\megacreative\coding\blocks\events\EventManager.class
 com\megacreative\coding\EnhancedScriptExecutor.class
 com\megacreative\coding\actions\IsInWorldCondition.class
 com\megacreative\coding\conditions\IsNearEntityCondition.class
+com\megacreative\coding\blocks\conditions\HasItemInSlotCondition.class
 com\megacreative\coding\actions\IsOpCondition.class
 com\megacreative\coding\ParameterSelectorGUI.class
 com\megacreative\gui\AnvilInputGUI.class
@@ -207,9 +223,11 @@ com\megacreative\coding\actions\RepeatAction.class
 com\megacreative\coding\actions\DivVarAction.class
 com\megacreative\coding\BlockType.class
 com\megacreative\models\CreativeWorld.class
+com\megacreative\commands\TestBlockPersistenceCommand.class
 com\megacreative\MegaCreative.class
 com\megacreative\coding\blocks\actions\SetVarAction.class
 com\megacreative\coding\conditions\IfVarLessCondition.class
+com\megacreative\coding\blocks\actions\ClearInventoryAction.class
 com\megacreative\coding\blocks\actions\SpawnMobAction.class
 com\megacreative\commands\VisualizeCommand.class
 com\megacreative\listeners\CommandListener.class

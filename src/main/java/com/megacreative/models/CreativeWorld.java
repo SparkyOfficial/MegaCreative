@@ -5,6 +5,7 @@ import lombok.Data;
 import org.bukkit.entity.Player;
 
 import com.megacreative.coding.CodeScript;
+import com.megacreative.coding.CodeBlock;
 
 import java.util.*;
 
@@ -42,6 +43,9 @@ public class CreativeWorld {
     // Скрипты
     private List<CodeScript> scripts;
     
+    // Блоки кода в мире разработки
+    private Map<String, CodeBlock> devWorldBlocks;
+    
     // Онлайн игроки
     private Set<UUID> onlinePlayers;
     
@@ -66,6 +70,7 @@ public class CreativeWorld {
         this.favoriteBy = new HashSet<>();
         this.comments = new ArrayList<>();
         this.scripts = new ArrayList<>();
+        this.devWorldBlocks = new HashMap<>();
         this.onlinePlayers = new HashSet<>();
     }
     
@@ -158,5 +163,47 @@ public class CreativeWorld {
     
     public int getRating() {
         return likes - dislikes;
+    }
+    
+    // Методы для работы с блоками кода
+    public void addDevWorldBlock(String locationKey, CodeBlock block) {
+        if (devWorldBlocks == null) {
+            devWorldBlocks = new HashMap<>();
+        }
+        devWorldBlocks.put(locationKey, block);
+    }
+    
+    public CodeBlock getDevWorldBlock(String locationKey) {
+        if (devWorldBlocks == null) {
+            return null;
+        }
+        return devWorldBlocks.get(locationKey);
+    }
+    
+    public void removeDevWorldBlock(String locationKey) {
+        if (devWorldBlocks != null) {
+            devWorldBlocks.remove(locationKey);
+        }
+    }
+    
+    public Map<String, CodeBlock> getDevWorldBlocks() {
+        if (devWorldBlocks == null) {
+            devWorldBlocks = new HashMap<>();
+        }
+        return devWorldBlocks;
+    }
+    
+    public void clearDevWorldBlocks() {
+        if (devWorldBlocks != null) {
+            devWorldBlocks.clear();
+        }
+    }
+    
+    public WorldMode getMode() {
+        return mode;
+    }
+    
+    public void setMode(WorldMode mode) {
+        this.mode = mode;
     }
 }

@@ -1,6 +1,8 @@
 package com.megacreative.coding;
 
 import com.megacreative.MegaCreative;
+import com.megacreative.models.CreativeWorld;
+import com.megacreative.models.WorldMode;
 import com.megacreative.coding.blocks.BlockFactory;
 import com.megacreative.coding.actions.*;
 import com.megacreative.coding.conditions.IsOpCondition;
@@ -29,8 +31,10 @@ import com.megacreative.coding.actions.RandomNumberAction;
 import com.megacreative.coding.actions.PlayParticleEffectAction;
 import com.megacreative.coding.actions.RemoveItemsAction;
 import com.megacreative.coding.actions.SetArmorAction;
+import org.bukkit.Bukkit;
 import org.bukkit.Location;
 import org.bukkit.Material;
+import org.bukkit.World;
 import org.bukkit.entity.Player;
 
 import java.util.HashMap;
@@ -390,26 +394,57 @@ public class HybridScriptExecutor {
     public Location findBlockLocation(CodeBlock block) {
         if (block == null) return null;
         
-        // Получаем карту блоков из BlockPlacementHandler
-        Map<Location, CodeBlock> blockCodeBlocks = plugin.getBlockPlacementHandler().getBlockCodeBlocks();
-        
-        // Ищем блок по ссылке (это работает для блоков в памяти)
-        for (Map.Entry<Location, CodeBlock> entry : blockCodeBlocks.entrySet()) {
-            if (entry.getValue() == block) {
-                return entry.getKey();
+        // Ищем во всех мирах разработки
+        for (CreativeWorld world : plugin.getWorldManager().getAllPublicWorlds()) {
+            if (world.getMode() == WorldMode.DEV) {
+                Map<String, CodeBlock> devBlocks = world.getDevWorldBlocks();
+                for (Map.Entry<String, CodeBlock> entry : devBlocks.entrySet()) {
+                    CodeBlock storedBlock = entry.getValue();
+                    if (storedBlock == block) {
+                        return parseLocation(entry.getKey());
+                    }
+                }
             }
         }
         
         // Если не найдено по ссылке, ищем по содержимому (для загруженных из файла)
-        for (Map.Entry<Location, CodeBlock> entry : blockCodeBlocks.entrySet()) {
-            CodeBlock storedBlock = entry.getValue();
-            if (storedBlock != null && 
-                storedBlock.getMaterial() == block.getMaterial() &&
-                storedBlock.getAction().equals(block.getAction())) {
-                return entry.getKey();
+        for (CreativeWorld world : plugin.getWorldManager().getAllPublicWorlds()) {
+            if (world.getMode() == WorldMode.DEV) {
+                Map<String, CodeBlock> devBlocks = world.getDevWorldBlocks();
+                for (Map.Entry<String, CodeBlock> entry : devBlocks.entrySet()) {
+                    CodeBlock storedBlock = entry.getValue();
+                    if (storedBlock != null && 
+                        storedBlock.getMaterial() == block.getMaterial() &&
+                        storedBlock.getAction().equals(block.getAction())) {
+                        return parseLocation(entry.getKey());
+                    }
+                }
             }
         }
         
+        return null;
+    }
+    
+    /**
+     * Парсит строку локации обратно в Location
+     */
+    private Location parseLocation(String locationString) {
+        try {
+            String[] parts = locationString.split(",");
+            if (parts.length == 4) {
+                String worldName = parts[0];
+                double x = Double.parseDouble(parts[1]);
+                double y = Double.parseDouble(parts[2]);
+                double z = Double.parseDouble(parts[3]);
+                
+                World world = Bukkit.getWorld(worldName);
+                if (world != null) {
+                    return new Location(world, x, y, z);
+                }
+            }
+        } catch (Exception e) {
+            plugin.getLogger().warning("Ошибка парсинга локации: " + locationString);
+        }
         return null;
     }
     
