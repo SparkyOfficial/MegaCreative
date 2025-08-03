@@ -64,6 +64,18 @@ public class BlockFactory {
         // Функции
         actionRegistry.put("callFunction", new CallFunctionAction());
         
+        // Действия с инвентарем
+        actionRegistry.put("clearInventory", new ClearInventoryAction());
+        actionRegistry.put("removeItem", new RemoveItemAction());
+        
+        // Действия с миром
+        actionRegistry.put("spawnParticle", new SpawnParticleAction());
+        actionRegistry.put("createExplosion", new CreateExplosionAction());
+        
+        // GUI-действия
+        actionRegistry.put("openChestGUI", new OpenChestGUIAction());
+        actionRegistry.put("showMessageInTitle", new ShowMessageInTitleAction());
+        
         // TODO: Добавить остальные действия по мере их рефакторинга
         // и так далее...
     }
@@ -78,6 +90,11 @@ public class BlockFactory {
         conditionRegistry.put("ifVarEquals", new IfVarEqualsCondition());
         conditionRegistry.put("playerHealth", new PlayerHealthCondition());
         conditionRegistry.put("else", new ElseCondition());
+        
+        // Новые условия
+        conditionRegistry.put("hasItemInSlot", new HasItemInSlotCondition());
+        conditionRegistry.put("isNearLocation", new IsNearLocationCondition());
+        conditionRegistry.put("playerHasEffect", new PlayerHasEffectCondition());
         
         // TODO: Добавить остальные условия по мере их рефакторинга
         // conditionRegistry.put("isInWorld", new IsInWorldCondition());
