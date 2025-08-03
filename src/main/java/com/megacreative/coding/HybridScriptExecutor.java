@@ -275,6 +275,11 @@ public class HybridScriptExecutor {
         // Переходим к следующему блоку, только если это не условие
         CodeBlock nextBlock = block.getNextBlock();
         if (nextBlock != null) {
+            // Логируем переход между блоками
+            if (currentContext.getPlayer() != null && plugin.getScriptDebugger().isDebugEnabled(currentContext.getPlayer())) {
+                plugin.getScriptDebugger().onBlockTransition(currentContext.getPlayer(), block, nextBlock);
+            }
+            
             Location nextBlockLocation = findBlockLocation(nextBlock);
             ExecutionContext nextContext = currentContext.withCurrentBlock(nextBlock, nextBlockLocation);
             processBlock(nextBlock, nextContext);

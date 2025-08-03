@@ -1,8 +1,13 @@
 package com.megacreative.gui;
 
 import com.megacreative.MegaCreative;
+import com.megacreative.listeners.GuiListener;
 import org.bukkit.Bukkit;
+import org.bukkit.GameMode;
 import org.bukkit.Material;
+import org.bukkit.Sound;
+import org.bukkit.WeatherType;
+import org.bukkit.potion.PotionEffectType;
 import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.Listener;
@@ -16,6 +21,10 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.function.Consumer;
 
+/**
+ * GUI для выбора параметров из предопределенных списков.
+ * Заменяет наковальню для параметров с ограниченным набором вариантов.
+ */
 public class ParameterSelectionGUI implements Listener {
     
     private final MegaCreative plugin;
@@ -31,77 +40,45 @@ public class ParameterSelectionGUI implements Listener {
         this.parameterName = parameterName;
         this.options = options;
         this.onSelect = onSelect;
-        
-        // Создаем инвентарь с заголовком
         this.inventory = Bukkit.createInventory(null, 27, "§8Выбор: " + parameterName);
         
-        // Заполняем опциями
         fillOptions();
-        
-        // Регистрируем слушатель
         plugin.getServer().getPluginManager().registerEvents(this, plugin);
+        GuiListener.registerOpenGui(player, this);
     }
     
     private void fillOptions() {
-        // Очищаем инвентарь
         inventory.clear();
         
-        // Добавляем опции
-        for (int i = 0; i < options.length && i < 18; i++) {
-            ItemStack item = createOptionItem(options[i], i);
-            inventory.setItem(i + 9, item); // Размещаем в центре
-        }
+        // Заполняем границы стеклом
+        ItemStack glass = new ItemStack(Material.GRAY_STAINED_GLASS_PANE);
+        ItemMeta glassMeta = glass.getItemMeta();
+        glassMeta.setDisplayName(" ");
+        glass.setItemMeta(glassMeta);
         
-        // Добавляем заголовок
-        ItemStack header = new ItemStack(Material.BOOK);
-        ItemMeta headerMeta = header.getItemMeta();
-        headerMeta.setDisplayName("§e" + parameterName);
-        headerMeta.setLore(Arrays.asList(
-            "§7Выберите значение для параметра",
-            "§7Кликните на нужный вариант"
-        ));
-        header.setItemMeta(headerMeta);
-        inventory.setItem(4, header);
-    }
-    
-    private ItemStack createOptionItem(String option, int index) {
-        Material material = getMaterialForOption(option);
-        ItemStack item = new ItemStack(material);
-        ItemMeta meta = item.getItemMeta();
-        meta.setDisplayName("§f" + option);
-        meta.setLore(Arrays.asList(
-            "§7Кликните для выбора",
-            "§7Значение: §e" + option
-        ));
-        item.setItemMeta(meta);
-        return item;
-    }
-    
-    private Material getMaterialForOption(String option) {
-        // Определяем материал в зависимости от типа параметра
-        if (parameterName.toLowerCase().contains("gamemode")) {
-            switch (option.toLowerCase()) {
-                case "survival": return Material.IRON_SWORD;
-                case "creative": return Material.DIAMOND_PICKAXE;
-                case "adventure": return Material.LEATHER_BOOTS;
-                case "spectator": return Material.GLASS;
-                default: return Material.STONE;
-            }
-        } else if (parameterName.toLowerCase().contains("sound")) {
-            return Material.NOTE_BLOCK;
-        } else if (parameterName.toLowerCase().contains("effect")) {
-            return Material.POTION;
-        } else if (parameterName.toLowerCase().contains("weather")) {
-            switch (option.toLowerCase()) {
-                case "clear": return Material.SUNFLOWER;
-                case "rain": return Material.WATER_BUCKET;
-                case "thunder": return Material.LIGHTNING_ROD;
-                default: return Material.STONE;
-            }
-        } else if (parameterName.toLowerCase().contains("time")) {
-            return Material.CLOCK;
-        } else {
-            return Material.PAPER;
+        for (int i = 0; i < 9; i++) {
+            inventory.setItem(i, glass);
+            inventory.setItem(18 + i, glass);
+        }
+        inventory.setItem(9, glass);
+        inventory.setItem(17, glass);
+        
+        // Размещаем опции
+        int slot = 10;
+        for (String option : options) {
+            if (slot >= 17) break;
+            
+            ItemStack optionItem = new ItemStack(Material.PAPER);
+            ItemMeta optionMeta = optionItem.getItemMeta();
+            optionMeta.setDisplayName("§f" + option);
+            optionMeta.setLore(Arrays.asList(
+                "§7Параметр: §f" + parameterName,
+                "",
+                "§a▶ Нажмите для выбора"
+            ));
+            optionItem.setItemMeta(optionMeta);
+            inventory.setItem(slot, optionItem);
+            slot++;
         }
     }
     
@@ -111,92 +88,99 @@ public class ParameterSelectionGUI implements Listener {
     
     @EventHandler
     public void onInventoryClick(InventoryClickEvent event) {
-        if (event.getInventory() != inventory) return;
-        if (event.getWhoClicked() != player) return;
+        if (!event.getInventory().equals(inventory)) return;
         
         event.setCancelled(true);
         
-        int slot = event.getRawSlot();
-        if (slot < 9 || slot >= 27) return; // Только центральная область
+        if (!(event.getWhoClicked() instanceof Player clicker) || !clicker.equals(player)) {
+            return;
+        }
         
-        int optionIndex = slot - 9;
-        if (optionIndex >= 0 && optionIndex < options.length) {
-            String selectedOption = options[optionIndex];
+        ItemStack clicked = event.getCurrentItem();
+        if (clicked == null || !clicked.hasItemMeta()) return;
+        
+        String displayName = clicked.getItemMeta().getDisplayName();
+        if (displayName.startsWith("§f")) {
+            String selectedOption = displayName.substring(2); // Убираем "§f"
+            
+            player.closeInventory();
+            GuiListener.unregisterOpenGui(player);
             
             // Вызываем callback
             onSelect.accept(selectedOption);
-            
-            // Закрываем инвентарь
-            player.closeInventory();
-            
-            // Отправляем сообщение
-            player.sendMessage("§a✓ Выбрано: §f" + selectedOption);
         }
     }
     
     // Статические методы для создания GUI для разных типов параметров
     
-    public static void showGameModeSelection(Player player, Consumer<String> onSelect) {
-        String[] gameModes = {"SURVIVAL", "CREATIVE", "ADVENTURE", "SPECTATOR"};
-        ParameterSelectionGUI gui = new ParameterSelectionGUI(
-            MegaCreative.getInstance(), 
-            player, 
-            "GameMode", 
-            gameModes, 
-            onSelect
-        );
-        gui.open();
+    public static void openGameModeSelection(MegaCreative plugin, Player player, Consumer<String> onSelect) {
+        String[] gameModes = {
+            GameMode.SURVIVAL.name(),
+            GameMode.CREATIVE.name(),
+            GameMode.ADVENTURE.name(),
+            GameMode.SPECTATOR.name()
+        };
+        new ParameterSelectionGUI(plugin, player, "GameMode", gameModes, onSelect).open();
     }
     
-    public static void showSoundSelection(Player player, Consumer<String> onSelect) {
+    public static void openSoundSelection(MegaCreative plugin, Player player, Consumer<String> onSelect) {
         String[] sounds = {
-            "BLOCK_NOTE_BLOCK_PLING",
-            "ENTITY_PLAYER_LEVELUP", 
-            "ENTITY_EXPERIENCE_ORB_PICKUP",
-            "BLOCK_ANVIL_LAND",
-            "ENTITY_VILLAGER_YES",
-            "ENTITY_VILLAGER_NO"
+            Sound.BLOCK_NOTE_BLOCK_PLING.name(),
+            Sound.ENTITY_PLAYER_LEVELUP.name(),
+            Sound.BLOCK_ANVIL_LAND.name(),
+            Sound.ENTITY_EXPERIENCE_ORB_PICKUP.name(),
+            Sound.BLOCK_CHEST_OPEN.name(),
+            Sound.ENTITY_VILLAGER_YES.name(),
+            Sound.BLOCK_GLASS_BREAK.name(),
+            Sound.ENTITY_GENERIC_EXPLODE.name()
         };
-        ParameterSelectionGUI gui = new ParameterSelectionGUI(
-            MegaCreative.getInstance(), 
-            player, 
-            "Sound", 
-            sounds, 
-            onSelect
-        );
-        gui.open();
+        new ParameterSelectionGUI(plugin, player, "Sound", sounds, onSelect).open();
     }
     
-    public static void showWeatherSelection(Player player, Consumer<String> onSelect) {
-        String[] weathers = {"CLEAR", "RAIN", "THUNDER"};
-        ParameterSelectionGUI gui = new ParameterSelectionGUI(
-            MegaCreative.getInstance(), 
-            player, 
-            "Weather", 
-            weathers, 
-            onSelect
-        );
-        gui.open();
+    public static void openWeatherSelection(MegaCreative plugin, Player player, Consumer<String> onSelect) {
+        String[] weathers = {
+            "CLEAR",
+            "RAIN",
+            "THUNDER"
+        };
+        new ParameterSelectionGUI(plugin, player, "Weather", weathers, onSelect).open();
     }
     
-    public static void showEffectSelection(Player player, Consumer<String> onSelect) {
+    public static void openEffectSelection(MegaCreative plugin, Player player, Consumer<String> onSelect) {
         String[] effects = {
-            "SPEED", "SLOW", "FAST_DIGGING", "SLOW_DIGGING",
-            "INCREASE_DAMAGE", "HEAL", "HARM", "JUMP",
-            "CONFUSION", "REGENERATION", "DAMAGE_RESISTANCE",
-            "FIRE_RESISTANCE", "WATER_BREATHING", "INVISIBILITY",
-            "BLINDNESS", "NIGHT_VISION", "HUNGER", "WEAKNESS",
-            "POISON", "WITHER", "HEALTH_BOOST", "ABSORPTION",
-            "SATURATION", "GLOWING", "LEVITATION", "LUCK",
-            "UNLUCK", "SLOW_FALLING", "CONDUIT_POWER", "DOLPHINS_GRACE"
+            PotionEffectType.SPEED.name(),
+            PotionEffectType.SLOW.name(),
+            PotionEffectType.FAST_DIGGING.name(),
+            PotionEffectType.SLOW_DIGGING.name(),
+            PotionEffectType.INCREASE_DAMAGE.name(),
+            PotionEffectType.HEAL.name(),
+            PotionEffectType.HARM.name(),
+            PotionEffectType.JUMP.name(),
+            PotionEffectType.CONFUSION.name(),
+            PotionEffectType.REGENERATION.name(),
+            PotionEffectType.DAMAGE_RESISTANCE.name(),
+            PotionEffectType.FIRE_RESISTANCE.name(),
+            PotionEffectType.WATER_BREATHING.name(),
+            PotionEffectType.INVISIBILITY.name(),
+            PotionEffectType.BLINDNESS.name(),
+            PotionEffectType.NIGHT_VISION.name(),
+            PotionEffectType.HUNGER.name(),
+            PotionEffectType.WEAKNESS.name(),
+            PotionEffectType.POISON.name(),
+            PotionEffectType.WITHER.name(),
+            PotionEffectType.HEALTH_BOOST.name(),
+            PotionEffectType.ABSORPTION.name(),
+            PotionEffectType.SATURATION.name(),
+            PotionEffectType.GLOWING.name(),
+            PotionEffectType.LEVITATION.name(),
+            PotionEffectType.LUCK.name(),
+            PotionEffectType.UNLUCK.name(),
+            PotionEffectType.SLOW_FALLING.name(),
+            PotionEffectType.CONDUIT_POWER.name(),
+            PotionEffectType.DOLPHINS_GRACE.name(),
+            PotionEffectType.BAD_OMEN.name(),
+            PotionEffectType.HERO_OF_THE_VILLAGE.name()
         };
-        ParameterSelectionGUI gui = new ParameterSelectionGUI(
-            MegaCreative.getInstance(), 
-            player, 
-            "Effect", 
-            effects, 
-            onSelect
-        );
-        gui.open();
+        new ParameterSelectionGUI(plugin, player, "Effect", effects, onSelect).open();
     }
 } 

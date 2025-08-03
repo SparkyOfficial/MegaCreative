@@ -71,13 +71,25 @@ public class ExecutionContext {
      */
     public void setVariable(String name, Object value) {
         variables.put(name, value);
+        
+        // Логируем изменение переменной для отладки
+        if (player != null && plugin != null && plugin.getScriptDebugger().isDebugEnabled(player)) {
+            plugin.getScriptDebugger().onVariableAccess(player, name, value, "set");
+        }
     }
     
     /**
      * Получает переменную
      */
     public Object getVariable(String name) {
-        return variables.get(name);
+        Object value = variables.get(name);
+        
+        // Логируем чтение переменной для отладки
+        if (player != null && plugin != null && plugin.getScriptDebugger().isDebugEnabled(player)) {
+            plugin.getScriptDebugger().onVariableAccess(player, name, value, "get");
+        }
+        
+        return value;
     }
     
     /**
@@ -85,6 +97,18 @@ public class ExecutionContext {
      */
     public Map<String, Object> getVariables() {
         return new HashMap<>(variables);
+    }
+    
+    /**
+     * Удаляет переменную
+     */
+    public void removeVariable(String name) {
+        Object value = variables.remove(name);
+        
+        // Логируем удаление переменной для отладки
+        if (player != null && plugin != null && plugin.getScriptDebugger().isDebugEnabled(player)) {
+            plugin.getScriptDebugger().onVariableAccess(player, name, value, "delete");
+        }
     }
     
     // --- МЕТОДЫ ДЛЯ РАБОТЫ СО СПИСКАМИ ---

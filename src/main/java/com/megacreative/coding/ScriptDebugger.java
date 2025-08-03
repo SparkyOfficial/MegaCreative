@@ -236,8 +236,47 @@ public class ScriptDebugger {
      * Показывает визуальный путь между блоками.
      */
     private void showTransitionPath(Player player, CodeBlock fromBlock, CodeBlock toBlock) {
-        // TODO: Реализовать визуализацию пути между блоками
-        // Это потребует получения реальных локаций блоков
+        // Получаем локации блоков
+        Location fromLocation = plugin.getCodingManager().getScriptExecutor().findBlockLocation(fromBlock);
+        Location toLocation = plugin.getCodingManager().getScriptExecutor().findBlockLocation(toBlock);
+        
+        if (fromLocation == null || toLocation == null) {
+            return; // Не можем показать путь без локаций
+        }
+        
+        // Создаем эффект частиц между блоками
+        new BukkitRunnable() {
+            int step = 0;
+            @Override
+            public void run() {
+                if (step >= 20) {
+                    this.cancel();
+                    return;
+                }
+                
+                // Интерполируем позицию между блоками
+                double progress = (double) step / 20.0;
+                double x = fromLocation.getX() + (toLocation.getX() - fromLocation.getX()) * progress;
+                double y = fromLocation.getY() + (toLocation.getY() - fromLocation.getY()) * progress + 1.0;
+                double z = fromLocation.getZ() + (toLocation.getZ() - fromLocation.getZ()) * progress;
+                
+                Location particleLoc = new Location(fromLocation.getWorld(), x, y, z);
+                
+                // Создаем частицы разных цветов для разных типов переходов
+                Particle particleType = Particle.END_ROD;
+                if (toBlock.getMaterial() == Material.OAK_PLANKS) {
+                    particleType = Particle.VILLAGER_HAPPY; // Условия
+                } else if (toBlock.getMaterial() == Material.REDSTONE_BLOCK) {
+                    particleType = Particle.FLAME; // Действия
+                } else if (toBlock.getMaterial() == Material.BOOKSHELF) {
+                    particleType = Particle.ENCHANTMENT_TABLE; // Функции
+                }
+                
+                player.spawnParticle(particleType, particleLoc, 3, 0.1, 0.1, 0.1, 0);
+                
+                step++;
+            }
+        }.runTaskTimer(plugin, 0L, 2L);
     }
     
     /**
@@ -274,5 +313,14 @@ public class ScriptDebugger {
         } else {
             player.sendMessage("§c  ↳ Выполняется ELSE ветка (если есть)");
         }
+    }
+    
+    /**
+     * Очищает данные отладки для игрока.
+     */
+    public void clearDebugData(Player player) {
+        UUID playerId = player.getUniqueId();
+        playerDebugStates.remove(playerId);
+        blockExecutionTimes.remove(playerId);
     }
 } 
