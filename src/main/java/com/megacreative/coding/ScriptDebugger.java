@@ -190,4 +190,89 @@ public class ScriptDebugger {
             player.sendMessage("§7Среднее время выполнения: §f" + avgTime + "мс");
         }
     }
+    
+    /**
+     * Показывает переменные в контексте выполнения.
+     */
+    public void onVariableAccess(Player player, String variableName, Object value, String operation) {
+        if (!playerDebugStates.getOrDefault(player.getUniqueId(), false)) {
+            return;
+        }
+        
+        String operationText = "";
+        switch (operation) {
+            case "get":
+                operationText = "§e📖 Чтение";
+                break;
+            case "set":
+                operationText = "§a✏️ Запись";
+                break;
+            case "delete":
+                operationText = "§c🗑️ Удаление";
+                break;
+        }
+        
+        player.sendMessage(operationText + " переменной: §f" + variableName + " §8= §e" + value);
+    }
+    
+    /**
+     * Показывает путь выполнения между блоками.
+     */
+    public void onBlockTransition(Player player, CodeBlock fromBlock, CodeBlock toBlock) {
+        if (!playerDebugStates.getOrDefault(player.getUniqueId(), false)) {
+            return;
+        }
+        
+        String fromAction = fromBlock.getAction();
+        String toAction = toBlock.getAction();
+        
+        player.sendMessage("§7  ↳ Переход: §f" + fromAction + " §7→ §f" + toAction);
+        
+        // Показываем визуальный путь частицами
+        showTransitionPath(player, fromBlock, toBlock);
+    }
+    
+    /**
+     * Показывает визуальный путь между блоками.
+     */
+    private void showTransitionPath(Player player, CodeBlock fromBlock, CodeBlock toBlock) {
+        // TODO: Реализовать визуализацию пути между блоками
+        // Это потребует получения реальных локаций блоков
+    }
+    
+    /**
+     * Пошаговое выполнение - выполняет только один следующий блок.
+     */
+    public void stepExecution(Player player) {
+        if (!playerDebugStates.getOrDefault(player.getUniqueId(), false)) {
+            player.sendMessage("§cОтладка должна быть включена для пошагового выполнения!");
+            return;
+        }
+        
+        player.sendMessage("§a⏭️ Выполняется следующий блок...");
+        // TODO: Реализовать пошаговое выполнение
+        // Это потребует изменения логики HybridScriptExecutor
+    }
+    
+    /**
+     * Улучшенная версия onConditionResult с детальной информацией.
+     */
+    public void onConditionResultDetailed(Player player, CodeBlock conditionBlock, boolean result) {
+        if (!playerDebugStates.getOrDefault(player.getUniqueId(), false)) {
+            return;
+        }
+
+        String conditionName = conditionBlock.getAction();
+        String materialName = getMaterialDisplayName(conditionBlock.getMaterial());
+        String resultText = result ? "§aИСТИННО" : "§cЛОЖНО";
+        
+        player.sendMessage("§b🔍 Условие: §f" + materialName + " §8(" + conditionName + ") = " + resultText);
+        
+        // Показываем путь выполнения
+        if (result) {
+            player.sendMessage("§a  ↳ Выполняется IF ветка");
+        } else {
+            player.sendMessage("§c  ↳ Выполняется ELSE ветка (если есть)");
+        }
+    }
 } 

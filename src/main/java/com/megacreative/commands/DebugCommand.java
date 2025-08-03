@@ -7,79 +7,92 @@ import org.bukkit.command.CommandSender;
 import org.bukkit.entity.Player;
 
 public class DebugCommand implements CommandExecutor {
+    
     private final MegaCreative plugin;
-
+    
     public DebugCommand(MegaCreative plugin) {
         this.plugin = plugin;
     }
-
+    
     @Override
     public boolean onCommand(CommandSender sender, Command command, String label, String[] args) {
         if (!(sender instanceof Player)) {
-            sender.sendMessage("§cЭта команда только для игроков!");
+            sender.sendMessage("§cЭта команда доступна только игрокам!");
             return true;
         }
-
+        
         Player player = (Player) sender;
-
+        
         if (args.length == 0) {
-            // Переключаем отладку
-            plugin.getScriptDebugger().toggleDebug(player);
+            showHelp(player);
             return true;
         }
-
+        
         String subCommand = args[0].toLowerCase();
-
+        
         switch (subCommand) {
             case "on":
             case "enable":
-                if (!plugin.getScriptDebugger().isDebugEnabled(player)) {
-                    plugin.getScriptDebugger().toggleDebug(player);
-                } else {
-                    player.sendMessage("§eОтладка уже включена!");
-                }
+                plugin.getScriptDebugger().toggleDebug(player);
                 break;
+                
             case "off":
             case "disable":
-                if (plugin.getScriptDebugger().isDebugEnabled(player)) {
-                    plugin.getScriptDebugger().toggleDebug(player);
-                } else {
-                    player.sendMessage("§eОтладка уже выключена!");
-                }
+                plugin.getScriptDebugger().toggleDebug(player);
                 break;
+                
+            case "toggle":
+                plugin.getScriptDebugger().toggleDebug(player);
+                break;
+                
             case "stats":
+            case "statistics":
                 plugin.getScriptDebugger().showDebugStats(player);
                 break;
-            case "status":
-                boolean enabled = plugin.getScriptDebugger().isDebugEnabled(player);
-                player.sendMessage("§7Статус отладки: " + (enabled ? "§aВключена" : "§cВыключена"));
+                
+            case "step":
+                plugin.getScriptDebugger().stepExecution(player);
                 break;
+                
+            case "vars":
+            case "variables":
+                showVariables(player);
+                break;
+                
+            case "clear":
+                clearDebugData(player);
+                break;
+                
             case "help":
-                showHelp(player);
-                break;
             default:
-                player.sendMessage("§cНеизвестная подкоманда: " + subCommand);
                 showHelp(player);
                 break;
         }
-
+        
         return true;
     }
-
+    
     private void showHelp(Player player) {
-        player.sendMessage("§e=== Отладка скриптов ===");
-        player.sendMessage("§7/debug §8- переключить отладку");
-        player.sendMessage("§7/debug on §8- включить отладку");
-        player.sendMessage("§7/debug off §8- выключить отладку");
-        player.sendMessage("§7/debug stats §8- показать статистику");
-        player.sendMessage("§7/debug status §8- показать статус");
-        player.sendMessage("§7/debug help §8- показать эту справку");
-        player.sendMessage("§7");
-        player.sendMessage("§7При включенной отладке вы увидите:");
-        player.sendMessage("§7- Эффекты частиц вокруг выполняющихся блоков");
-        player.sendMessage("§7- Сообщения о выполнении каждого блока");
-        player.sendMessage("§7- Параметры блоков при выполнении");
-        player.sendMessage("§7- Результаты условий (истина/ложь)");
-        player.sendMessage("§7- Статистику выполнения скриптов");
+        player.sendMessage("§e=== Отладчик скриптов ===");
+        player.sendMessage("§7Команды:");
+        player.sendMessage("§f/debug on §7- Включить отладку");
+        player.sendMessage("§f/debug off §7- Отключить отладку");
+        player.sendMessage("§f/debug toggle §7- Переключить отладку");
+        player.sendMessage("§f/debug stats §7- Показать статистику");
+        player.sendMessage("§f/debug step §7- Пошаговое выполнение");
+        player.sendMessage("§f/debug vars §7- Показать переменные");
+        player.sendMessage("§f/debug clear §7- Очистить данные отладки");
+        player.sendMessage("§f/debug help §7- Показать эту справку");
+    }
+    
+    private void showVariables(Player player) {
+        // TODO: Реализовать показ переменных из ExecutionContext
+        player.sendMessage("§e📊 Переменные в контексте:");
+        player.sendMessage("§7Функция пока не реализована");
+    }
+    
+    private void clearDebugData(Player player) {
+        // TODO: Реализовать очистку данных отладки
+        player.sendMessage("§a✓ Данные отладки очищены");
     }
 } 

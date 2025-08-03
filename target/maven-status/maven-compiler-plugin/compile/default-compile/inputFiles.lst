@@ -14,6 +14,7 @@ C:\Users\Богдан\Desktop\MegaCreativeCURSOR\src\main\java\com\megacreative\
 C:\Users\Богдан\Desktop\MegaCreativeCURSOR\src\main\java\com\megacreative\coding\blocks\events\EventManager.java
 C:\Users\Богдан\Desktop\MegaCreativeCURSOR\src\main\java\com\megacreative\commands\WorldBrowserCommand.java
 C:\Users\Богдан\Desktop\MegaCreativeCURSOR\src\main\java\com\megacreative\managers\DataManager.java
+C:\Users\Богдан\Desktop\MegaCreativeCURSOR\src\main\java\com\megacreative\gui\ScriptEditorGUI.java
 C:\Users\Богдан\Desktop\MegaCreativeCURSOR\src\main\java\com\megacreative\coding\CodingItems.java
 C:\Users\Богдан\Desktop\MegaCreativeCURSOR\src\main\java\com\megacreative\listeners\GuiListener.java
 C:\Users\Богдан\Desktop\MegaCreativeCURSOR\src\main\java\com\megacreative\coding\blocks\actions\AddVarAction.java
@@ -66,6 +67,7 @@ C:\Users\Богдан\Desktop\MegaCreativeCURSOR\src\main\java\com\megacreative\
 C:\Users\Богдан\Desktop\MegaCreativeCURSOR\src\main\java\com\megacreative\coding\conditions\IsPlayerHoldingCondition.java
 C:\Users\Богдан\Desktop\MegaCreativeCURSOR\src\main\java\com\megacreative\commands\HubCommand.java
 C:\Users\Богдан\Desktop\MegaCreativeCURSOR\src\main\java\com\megacreative\coding\conditions\IsRidingCondition.java
+C:\Users\Богдан\Desktop\MegaCreativeCURSOR\src\main\java\com\megacreative\gui\ParameterSelectionGUI.java
 C:\Users\Богдан\Desktop\MegaCreativeCURSOR\src\main\java\com\megacreative\coding\blocks\actions\ForLoopAction.java
 C:\Users\Богдан\Desktop\MegaCreativeCURSOR\src\main\java\com\megacreative\coding\actions\SetVarAction.java
 C:\Users\Богдан\Desktop\MegaCreativeCURSOR\src\main\java\com\megacreative\coding\actions\SaveFunctionAction.java
