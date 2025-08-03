@@ -60,10 +60,10 @@ public class MegaCreative extends JavaPlugin {
         configManager = new ConfigManager(this);
         configManager.loadConfig();
         
-        // Инициализируем менеджеры
+        // Инициализируем менеджеры в правильном порядке
+        this.codingManager = new CodingManager(this);
         this.worldManager = new WorldManager(this);
         this.playerManager = new PlayerManager(this);
-        this.codingManager = new CodingManager(this);
         this.blockPlacementHandler = new BlockPlacementHandler(this);
         this.blockConnectionVisualizer = new BlockConnectionVisualizer(this);
         this.scriptDebugger = new ScriptDebugger(this);
