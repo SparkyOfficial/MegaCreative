@@ -279,7 +279,7 @@ public class HybridScriptExecutor {
     }
     
     /**
-     * Обрабатывает условие с гибридной системой.
+     * Обрабатывает условие с гибридной системой и поддержкой IF/ELSE.
      */
     private void handleCondition(CodeBlock block, ExecutionContext context) {
         Player player = context.getPlayer();
@@ -287,17 +287,36 @@ public class HybridScriptExecutor {
         
         String conditionName = block.getAction();
         
+        // Специальная обработка для ELSE блока
+        if ("else".equals(conditionName)) {
+            // ELSE блок выполняется только если он был вызван из IF/ELSE логики
+            // Здесь мы просто выполняем дочерние блоки
+            for (CodeBlock child : block.getChildren()) {
+                Location childLocation = findBlockLocation(child);
+                ExecutionContext childContext = context.withCurrentBlock(child, childLocation);
+                processBlock(child, childContext);
+            }
+            if (player != null) {
+                player.sendMessage("§b[IF/ELSE] Выполняется ELSE блок");
+            }
+            return;
+        }
+        
         // 1. Пытаемся найти в НОВОЙ системе
         BlockCondition newCondition = BlockFactory.getCondition(conditionName);
         if (newCondition != null) {
             try {
                 boolean result = newCondition.evaluate(context);
                 if (result) {
+                    // Выполняем дочерние блоки IF
                     for (CodeBlock child : block.getChildren()) {
                         Location childLocation = findBlockLocation(child);
                         ExecutionContext childContext = context.withCurrentBlock(child, childLocation);
                         processBlock(child, childContext);
                     }
+                } else {
+                    // IF условие ложно - ищем и выполняем ELSE блок
+                    handleElseBlock(block, context);
                 }
                 if (player != null) {
                     player.sendMessage("§a[НОВАЯ СИСТЕМА] Условие '" + conditionName + "' = " + result);
@@ -312,11 +331,15 @@ public class HybridScriptExecutor {
                 BlockCondition oldCondition = oldConditionRegistry.get(conditionName);
                 boolean result = oldCondition.evaluate(context);
                 if (result) {
+                    // Выполняем дочерние блоки IF
                     for (CodeBlock child : block.getChildren()) {
                         Location childLocation = findBlockLocation(child);
                         ExecutionContext childContext = context.withCurrentBlock(child, childLocation);
                         processBlock(child, childContext);
                     }
+                } else {
+                    // IF условие ложно - ищем и выполняем ELSE блок
+                    handleElseBlock(block, context);
                 }
                 if (player != null) {
                     player.sendMessage("§e[СТАРАЯ СИСТЕМА] Условие '" + conditionName + "' = " + result);
@@ -326,6 +349,32 @@ public class HybridScriptExecutor {
             }
         } else {
             player.sendMessage("§cУсловие '" + conditionName + "' не найдено ни в новой, ни в старой системе");
+        }
+    }
+    
+    /**
+     * Обрабатывает ELSE блок после ложного IF условия.
+     */
+    private void handleElseBlock(CodeBlock ifBlock, ExecutionContext context) {
+        Player player = context.getPlayer();
+        if (player == null) return;
+        
+        // Ищем следующий блок после IF
+        CodeBlock nextBlock = ifBlock.getNextBlock();
+        if (nextBlock != null && "else".equals(nextBlock.getAction())) {
+            // Нашли ELSE блок - выполняем его дочерние блоки
+            for (CodeBlock child : nextBlock.getChildren()) {
+                Location childLocation = findBlockLocation(child);
+                ExecutionContext childContext = context.withCurrentBlock(child, childLocation);
+                processBlock(child, childContext);
+            }
+            if (player != null) {
+                player.sendMessage("§b[IF/ELSE] Выполняется ELSE блок");
+            }
+        } else {
+            if (player != null) {
+                player.sendMessage("§7[IF/ELSE] ELSE блок не найден");
+            }
         }
     }
     
@@ -374,7 +423,8 @@ public class HybridScriptExecutor {
                "  ✅ addVar, subVar, mulVar, divVar (математические операции)\n" +
                "  ✅ spawnMob, healPlayer, setGameMode, setTime, setWeather (простые действия)\n" +
                "  ✅ explosion, getVar, getPlayerName (получение данных)\n" +
-               "  ✅ isOp, hasItem, ifVarEquals, playerHealth",
+               "  ✅ forLoop, whileLoop, callFunction (циклы и функции)\n" +
+               "  ✅ isOp, hasItem, ifVarEquals, playerHealth, else (условия)",
             newActions, newConditions, oldActions, oldConditions,
             totalActions, totalConditions, migrationProgress
         );

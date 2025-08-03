@@ -57,6 +57,13 @@ public class BlockFactory {
         actionRegistry.put("getVar", new GetVarAction());
         actionRegistry.put("getPlayerName", new GetPlayerNameAction());
         
+        // Циклы
+        actionRegistry.put("forLoop", new ForLoopAction());
+        actionRegistry.put("whileLoop", new WhileLoopAction());
+        
+        // Функции
+        actionRegistry.put("callFunction", new CallFunctionAction());
+        
         // TODO: Добавить остальные действия по мере их рефакторинга
         // и так далее...
     }
@@ -70,6 +77,7 @@ public class BlockFactory {
         conditionRegistry.put("hasItem", new HasItemCondition());
         conditionRegistry.put("ifVarEquals", new IfVarEqualsCondition());
         conditionRegistry.put("playerHealth", new PlayerHealthCondition());
+        conditionRegistry.put("else", new ElseCondition());
         
         // TODO: Добавить остальные условия по мере их рефакторинга
         // conditionRegistry.put("isInWorld", new IsInWorldCondition());

@@ -80,6 +80,10 @@ commands:
     description: Создание нового мира
     usage: /<command> <тип_мира> [имя_мира]
     permission: megacreative.create
+  savefunction:
+    description: Сохранение функции
+    usage: /<command> <имя_функции>
+    permission: megacreative.user
   trusted:
     description: Управление доверенными игроками
     usage: /<command> <add|remove|list|info> [игрок] [тип] [добавил]

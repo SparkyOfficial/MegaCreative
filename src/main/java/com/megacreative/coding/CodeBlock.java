@@ -27,15 +27,16 @@ public class CodeBlock implements Cloneable {
     private List<CodeBlock> children; // Для вложенных блоков (например, внутри условия IF)
     private CodeBlock nextBlock; // Следующий блок в последовательности
     
-    // --- НОВОЕ ПОЛЕ ДЛЯ ВИРТУАЛЬНЫХ ИНВЕНТАРЕЙ ---
-    // Будет хранить предметы-конфигурации. transient, если используете Gson
-    private transient Map<Integer, ItemStack> configItems = new HashMap<>();
+    // --- ИЗМЕНЕНИЕ: Убираем 'transient' и меняем тип для правильного сохранения ---
+    // Теперь мы храним не сам ItemStack, а его сериализованное представление.
+    private Map<Integer, Map<String, Object>> configItems = new HashMap<>();
     
     // --- СИСТЕМА ГРУППИРОВКИ ПРЕДМЕТОВ ---
     // Группы предметов для сложных конфигураций
     private transient Map<String, List<Integer>> itemGroups = new HashMap<>();
     
     // --- ДОСТУП К ПЛАГИНУ ДЛЯ КОНФИГУРАЦИИ ---
+    // Это поле не нужно сохранять, оно устанавливается при загрузке.
     private transient MegaCreative plugin;
 
     public CodeBlock(Material material, String action) {
@@ -97,26 +98,31 @@ public class CodeBlock implements Cloneable {
     // --- НОВЫЕ МЕТОДЫ ДЛЯ РАБОТЫ С ВИРТУАЛЬНЫМИ ИНВЕНТАРЯМИ ---
     
     /**
-     * Устанавливает предмет конфигурации в указанный слот
-     * @param slot Слот в инвентаре (0-8)
-     * @param item Предмет для сохранения
+     * Сохраняет ItemStack в виде, готовом для записи в JSON.
+     * @param slot Слот
+     * @param item Предмет
      */
     public void setConfigItem(int slot, ItemStack item) {
         if (item == null || item.getType().isAir()) {
             configItems.remove(slot);
         } else {
-            // Сохраняем копию, чтобы избежать проблем с изменением оригинала
-            configItems.put(slot, item.clone());
+            // Сериализуем ItemStack в Map<String, Object>, который Gson может сохранить
+            configItems.put(slot, item.serialize());
         }
     }
-    
+
     /**
-     * Получает предмет конфигурации из указанного слота
-     * @param slot Слот в инвентаре (0-8)
-     * @return Предмет или null, если слот пустой
+     * Восстанавливает ItemStack из сохраненных данных.
+     * @param slot Слот
+     * @return Восстановленный предмет или null
      */
     public ItemStack getConfigItem(int slot) {
-        return configItems.get(slot);
+        Map<String, Object> serializedItem = configItems.get(slot);
+        if (serializedItem == null) {
+            return null;
+        }
+        // Десериализуем Map обратно в ItemStack
+        return ItemStack.deserialize(serializedItem);
     }
     
     /**
@@ -124,7 +130,14 @@ public class CodeBlock implements Cloneable {
      * @return Карта слотов и предметов
      */
     public Map<Integer, ItemStack> getConfigItems() {
-        return configItems;
+        Map<Integer, ItemStack> items = new HashMap<>();
+        for (Map.Entry<Integer, Map<String, Object>> entry : configItems.entrySet()) {
+            ItemStack item = ItemStack.deserialize(entry.getValue());
+            if (item != null) {
+                items.put(entry.getKey(), item);
+            }
+        }
+        return items;
     }
     
     /**
@@ -166,7 +179,7 @@ public class CodeBlock implements Cloneable {
         
         List<ItemStack> items = new ArrayList<>();
         for (Integer slot : groupSlots) {
-            ItemStack item = configItems.get(slot);
+            ItemStack item = getConfigItem(slot);
             if (item != null) {
                 items.add(item);
             }
@@ -214,6 +227,9 @@ public class CodeBlock implements Cloneable {
      * @return Предмет из слота или null, если слот не найден
      */
     public ItemStack getItemFromSlot(String slotName) {
+         if (plugin == null) {
+             this.plugin = MegaCreative.getInstance();
+        }
         // Получаем номер слота по имени из конфигурации
         Integer slotNumber = plugin.getBlockConfiguration().getSlotNumber(this.getAction(), slotName);
         if (slotNumber != null) {
@@ -228,16 +244,14 @@ public class CodeBlock implements Cloneable {
      * @return Список предметов из группы
      */
     public List<ItemStack> getItemsFromNamedGroup(String groupName) {
-        // Получаем слоты для группы из конфигурации
-        List<Integer> groupSlots = plugin.getBlockConfiguration().getSlotsForGroup(this.getAction(), groupName);
-        if (groupSlots.isEmpty()) {
-            return new ArrayList<>();
+         if (plugin == null) {
+             this.plugin = MegaCreative.getInstance();
         }
-        
+        List<Integer> groupSlots = plugin.getBlockConfiguration().getSlotsForGroup(this.getAction(), groupName);
         List<ItemStack> items = new ArrayList<>();
-        for (Integer slot : groupSlots) {
-            ItemStack item = configItems.get(slot);
-            if (item != null) {
+        for (Integer slotNumber : groupSlots) {
+            ItemStack item = getConfigItem(slotNumber);
+            if (item != null && !item.getType().isAir()) {
                 items.add(item);
             }
         }
@@ -248,6 +262,9 @@ public class CodeBlock implements Cloneable {
      * Проверяет, есть ли конфигурация слотов для данного действия
      */
     public boolean hasSlotConfiguration() {
+        if (plugin == null) {
+            this.plugin = MegaCreative.getInstance();
+        }
         return plugin.getBlockConfiguration().getActionSlotConfig(this.getAction()) != null;
     }
     
@@ -255,6 +272,9 @@ public class CodeBlock implements Cloneable {
      * Проверяет, есть ли конфигурация групп для данного действия
      */
     public boolean hasGroupConfiguration() {
+        if (plugin == null) {
+            this.plugin = MegaCreative.getInstance();
+        }
         return plugin.getBlockConfiguration().getActionGroupConfig(this.getAction()) != null;
     }
     
@@ -262,6 +282,9 @@ public class CodeBlock implements Cloneable {
      * Получает все именованные слоты для данного действия
      */
     public Map<String, Integer> getNamedSlots() {
+        if (plugin == null) {
+            this.plugin = MegaCreative.getInstance();
+        }
         Map<String, Integer> namedSlots = new HashMap<>();
         var slotConfig = plugin.getBlockConfiguration().getActionSlotConfig(this.getAction());
         if (slotConfig != null) {
@@ -276,6 +299,9 @@ public class CodeBlock implements Cloneable {
      * Получает все именованные группы для данного действия
      */
     public Map<String, List<Integer>> getNamedGroups() {
+        if (plugin == null) {
+            this.plugin = MegaCreative.getInstance();
+        }
         Map<String, List<Integer>> namedGroups = new HashMap<>();
         var groupConfig = plugin.getBlockConfiguration().getActionGroupConfig(this.getAction());
         if (groupConfig != null) {
