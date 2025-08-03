@@ -10,6 +10,7 @@ com\megacreative\MegaCreative$1.class
 com\megacreative\coding\actions\PlayerHealthCondition.class
 com\megacreative\coding\conditions\IfVarEqualsCondition.class
 com\megacreative\coding\actions\SetArmorAction$ArmorType.class
+com\megacreative\coding\blocks\actions\SetGameModeAction.class
 com\megacreative\coding\CodeScript$ScriptType.class
 com\megacreative\coding\actions\GiveItemAction.class
 com\megacreative\coding\blocks\events\EventBlock.class
@@ -50,8 +51,11 @@ com\megacreative\coding\actions\SubVarAction.class
 com\megacreative\coding\actions\GetServerVariableAction.class
 com\megacreative\coding\conditions\IsPlayerHoldingCondition.class
 com\megacreative\gui\WorldCreationGUI.class
+com\megacreative\coding\blocks\actions\EffectAction.class
 com\megacreative\managers\DataManager.class
 com\megacreative\coding\BlockConfiguration$BlockConfig.class
+com\megacreative\coding\blocks\actions\ExplosionAction.class
+com\megacreative\coding\blocks\actions\SetTimeAction.class
 com\megacreative\coding\values\NumberValue.class
 com\megacreative\coding\data\DataItemFactory.class
 com\megacreative\coding\ExecutionContext$ExecutionContextBuilder.class
@@ -79,13 +83,16 @@ com\megacreative\coding\arguments\Argument.class
 com\megacreative\listeners\BlockBreakListener.class
 com\megacreative\coding\actions\SendMessageAction.class
 com\megacreative\coding\actions\HealPlayerAction.class
+com\megacreative\coding\blocks\actions\DivVarAction.class
 com\megacreative\coding\conditions\IsBlockTypeCondition.class
 com\megacreative\coding\actions\BroadcastAction.class
+com\megacreative\coding\blocks\actions\GetPlayerNameAction.class
 com\megacreative\coding\arguments\NumberParameterArgument.class
 com\megacreative\coding\arguments\LocationArgument.class
 com\megacreative\coding\data\DataItemFactory$DataItem.class
 com\megacreative\models\WorldMode.class
 com\megacreative\coding\blocks\conditions\HasItemCondition.class
+com\megacreative\coding\blocks\actions\PlaySoundAction.class
 com\megacreative\utils\ConfigManager.class
 com\megacreative\coding\BlockConnectionVisualizer.class
 com\megacreative\coding\values\LocationValue.class
@@ -99,10 +106,12 @@ com\megacreative\coding\BlockConfiguration.class
 com\megacreative\commands\TestScriptCommand.class
 com\megacreative\managers\WorldManager.class
 com\megacreative\coding\blocks\conditions\IsOpCondition.class
+com\megacreative\coding\blocks\actions\MulVarAction.class
 com\megacreative\coding\actions\SaveFunctionAction.class
 com\megacreative\coding\arguments\ItemLoreArgument.class
 com\megacreative\gui\WorldCommentsGUI.class
 com\megacreative\commands\SaveScriptCommand.class
+com\megacreative\coding\blocks\actions\AddVarAction.class
 com\megacreative\commands\BuildCommand.class
 com\megacreative\coding\data\DataType.class
 com\megacreative\coding\arguments\BooleanArgument.class
@@ -121,12 +130,14 @@ com\megacreative\models\TrustedPlayer$TrustedPlayerType.class
 com\megacreative\coding\CodingParameterGUI.class
 com\megacreative\coding\actions\SetGlobalVariableAction.class
 com\megacreative\listeners\PlayerJoinListener.class
+com\megacreative\coding\blocks\actions\SubVarAction.class
 com\megacreative\coding\BlockConfiguration$ActionGroupConfig.class
 com\megacreative\coding\blocks\BlockFactory.class
 com\megacreative\coding\conditions\IsNightCondition$TimeType.class
 com\megacreative\coding\conditions\IsRidingCondition.class
 com\megacreative\listeners\PlayerWorldChangeListener.class
 com\megacreative\listeners\DataItemListener.class
+com\megacreative\coding\blocks\actions\HealPlayerAction.class
 com\megacreative\coding\CodingActionGUI.class
 com\megacreative\commands\MyWorldsCommand.class
 com\megacreative\coding\ScriptExecutor.class
@@ -164,6 +175,7 @@ com\megacreative\coding\arguments\ItemNameArgument.class
 com\megacreative\coding\actions\TeleportAction.class
 com\megacreative\coding\BlockConnectionVisualizer$1.class
 com\megacreative\managers\WorldManager$1.class
+com\megacreative\coding\blocks\actions\GetVarAction.class
 com\megacreative\utils\TabListManager.class
 com\megacreative\coding\actions\PlaySoundAction.class
 com\megacreative\commands\JoinCommand.class
@@ -175,6 +187,7 @@ com\megacreative\gui\ParameterSelectorGUI.class
 com\megacreative\listeners\PlayerDeathListener.class
 com\megacreative\coding\actions\CallFunctionAction.class
 com\megacreative\coding\BlockConnectionVisualizer$2.class
+com\megacreative\coding\blocks\actions\SetWeatherAction.class
 com\megacreative\coding\conditions\PlayerGameModeCondition.class
 com\megacreative\coding\blocks\events\EventManager.class
 com\megacreative\coding\EnhancedScriptExecutor.class
@@ -196,5 +209,6 @@ com\megacreative\models\CreativeWorld.class
 com\megacreative\MegaCreative.class
 com\megacreative\coding\blocks\actions\SetVarAction.class
 com\megacreative\coding\conditions\IfVarLessCondition.class
+com\megacreative\coding\blocks\actions\SpawnMobAction.class
 com\megacreative\commands\VisualizeCommand.class
 com\megacreative\listeners\CommandListener.class

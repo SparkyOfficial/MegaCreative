@@ -45,6 +45,18 @@ public class BlockFactory {
         actionRegistry.put("mulVar", new MulVarAction());
         actionRegistry.put("divVar", new DivVarAction());
         
+        // Простые действия
+        actionRegistry.put("spawnMob", new SpawnMobAction());
+        actionRegistry.put("healPlayer", new HealPlayerAction());
+        actionRegistry.put("setGameMode", new SetGameModeAction());
+        actionRegistry.put("setTime", new SetTimeAction());
+        actionRegistry.put("setWeather", new SetWeatherAction());
+        
+        // Получение данных
+        actionRegistry.put("explosion", new ExplosionAction());
+        actionRegistry.put("getVar", new GetVarAction());
+        actionRegistry.put("getPlayerName", new GetPlayerNameAction());
+        
         // TODO: Добавить остальные действия по мере их рефакторинга
         // и так далее...
     }

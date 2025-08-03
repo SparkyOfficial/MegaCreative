@@ -88,7 +88,7 @@ public class HybridScriptExecutor {
         // oldActionRegistry.put("setBlock", new SetBlockAction()); // МИГРИРОВАН
         
         // Оставшиеся блоки для миграции
-        oldActionRegistry.put("spawnMob", new SpawnMobAction());
+        // oldActionRegistry.put("spawnMob", new SpawnMobAction()); // МИГРИРОВАН
         
         // Математические операции (мигрированы в новую систему)
         // oldActionRegistry.put("addVar", new AddVarAction()); // МИГРИРОВАН
@@ -100,20 +100,20 @@ public class HybridScriptExecutor {
         // oldActionRegistry.put("playSound", new PlaySoundAction()); // МИГРИРОВАН
         // oldActionRegistry.put("effect", new EffectAction()); // МИГРИРОВАН
         // oldActionRegistry.put("command", new CommandAction()); // МИГРИРОВАН
-        oldActionRegistry.put("healPlayer", new HealPlayerAction());
-        oldActionRegistry.put("setGameMode", new SetGameModeAction());
+        // oldActionRegistry.put("healPlayer", new HealPlayerAction()); // МИГРИРОВАН
+        // oldActionRegistry.put("setGameMode", new SetGameModeAction()); // МИГРИРОВАН
         
         // Действия с временем и погодой
-        oldActionRegistry.put("setTime", new SetTimeAction());
-        oldActionRegistry.put("setWeather", new SetWeatherAction());
+        // oldActionRegistry.put("setTime", new SetTimeAction()); // МИГРИРОВАН
+        // oldActionRegistry.put("setWeather", new SetWeatherAction()); // МИГРИРОВАН
         
         // Действия с блоками и взрывами
-        oldActionRegistry.put("explosion", new ExplosionAction());
+        // oldActionRegistry.put("explosion", new ExplosionAction()); // МИГРИРОВАН
         oldActionRegistry.put("setBlock", new SetBlockAction());
         
         // Получение данных
-        oldActionRegistry.put("getVar", new GetVarAction());
-        oldActionRegistry.put("getPlayerName", new GetPlayerNameAction());
+        // oldActionRegistry.put("getVar", new GetVarAction()); // МИГРИРОВАН
+        // oldActionRegistry.put("getPlayerName", new GetPlayerNameAction()); // МИГРИРОВАН
         
         // Глобальные переменные игрока
         oldActionRegistry.put("setGlobalVar", new SetGlobalVariableAction());
@@ -372,6 +372,8 @@ public class HybridScriptExecutor {
                "  ✅ sendMessage, giveItem, randomNumber, setVar\n" +
                "  ✅ teleport, wait, setBlock, broadcast, command, playSound, effect\n" +
                "  ✅ addVar, subVar, mulVar, divVar (математические операции)\n" +
+               "  ✅ spawnMob, healPlayer, setGameMode, setTime, setWeather (простые действия)\n" +
+               "  ✅ explosion, getVar, getPlayerName (получение данных)\n" +
                "  ✅ isOp, hasItem, ifVarEquals, playerHealth",
             newActions, newConditions, oldActions, oldConditions,
             totalActions, totalConditions, migrationProgress
