@@ -36,6 +36,14 @@ public class CodingParameterGUI {
         this.blockLocation = blockLocation;
         this.onComplete = onComplete;
         this.inventory = Bukkit.createInventory(null, 9, "§bНастройка: " + action);
+        
+        // DEBUG: Логируем создание GUI
+        System.out.println("=== DEBUG: СОЗДАНИЕ CodingParameterGUI ===");
+        System.out.println("DEBUG: Игрок: " + player.getName());
+        System.out.println("DEBUG: Действие: " + action);
+        System.out.println("DEBUG: Локация: " + blockLocation);
+        System.out.println("DEBUG: onComplete: " + (onComplete != null));
+        
         // Регистрируем GUI в централизованной системе
         GuiListener.registerOpenGui(player, this);
         setupInventory();
@@ -266,7 +274,16 @@ public class CodingParameterGUI {
     }
 
     public void open() {
+        // DEBUG: Логируем открытие GUI
+        System.out.println("=== DEBUG: ОТКРЫТИЕ CodingParameterGUI ===");
+        System.out.println("DEBUG: Игрок: " + player.getName());
+        System.out.println("DEBUG: Действие: " + action);
+        System.out.println("DEBUG: Инвентарь создан: " + (inventory != null));
+        
         player.openInventory(inventory);
+        
+        // DEBUG: Проверяем, что инвентарь открылся
+        System.out.println("DEBUG: Инвентарь открыт: " + (player.getOpenInventory().getTopInventory().equals(inventory)));
     }
     
     /**
@@ -298,10 +315,20 @@ public class CodingParameterGUI {
         
         // Обработка "Готово"
         if (displayName.contains("Готово")) {
+            // DEBUG: Логируем завершение настройки
+            System.out.println("=== DEBUG: ЗАВЕРШЕНИЕ CodingParameterGUI ===");
+            System.out.println("DEBUG: Игрок: " + player.getName());
+            System.out.println("DEBUG: Действие: " + action);
+            System.out.println("DEBUG: Параметры: " + parameters);
+            System.out.println("DEBUG: onComplete: " + (onComplete != null));
+            
             onComplete.accept(parameters);
             player.closeInventory();
             // Удаляем регистрацию GUI
             GuiListener.unregisterOpenGui(player);
+            
+            // DEBUG: Подтверждаем завершение
+            System.out.println("DEBUG: CodingParameterGUI завершен успешно");
             return;
         }
         
