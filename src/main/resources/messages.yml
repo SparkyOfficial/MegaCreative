@@ -1,0 +1,97 @@
+# Сообщения плагина MegaCreative Coding
+# Все сообщения поддерживают цветовые коды (используйте & для обозначения кодов)
+
+errors:
+  no-permission: "&cУ вас нет прав на использование этой команды!"
+  player-only: "&cЭту команду можно использовать только в игре!"
+  invalid-usage: "&cИспользование: %usage%"
+  block-not-found: "&cБлок не найден!"
+  script-error: "&cОшибка выполнения скрипта: %error%"
+
+success:
+  block-placed: "&aБлок успешно размещен!"
+  block-removed: "&aБлок успешно удален!"
+  script-saved: "&aСкрипт успешно сохранен!"
+  script-loaded: "&aСкрипт успешно загружен!"
+  script-executed: "&aСкрипт успешно выполнен!"
+  block-connected: "&aБлоки успешно соединены!"
+
+commands:
+  block:
+    help:
+      - "&6=== Помощь по командам блоков ==="
+      - "&e/block &7- Открыть меню блоков"
+      - "&e/block give <тип> [количество] &7- Получить блок"
+      - "&e/block list &7- Список доступных блоков"
+      - "&e/block help &7- Показать эту справку"
+    list:
+      - "&6=== Доступные типы блоков ==="
+      - "&e- EVENT: &fБлок-событие"
+      - "&e- ACTION: &fБлок-действие"
+      - "&e- CONDITION: &fУсловный блок"
+      - "&e- LOOP: &fЦиклический блок"
+      - "&e- FUNCTION: &fФункциональный блок"
+      - "&e- VARIABLE: &fБлок переменной"
+      - "&e- VALUE: &fБлок значения"
+    give:
+      usage: "&cИспользование: /block give <тип> [количество]"
+      invalid-amount: "&cНеверное количество: %amount%"
+      success: "&aВыдано %amount% блоков типа %type%"
+      unknown-type: "&cНеизвестный тип блока: %type%"
+
+inventory:
+  select-block: "&aВыберите тип блока"
+  block-added: "&aБлок добавлен в инвентарь!"
+  block-removed: "&aБлок удален из инвентаря!"
+
+block-types:
+  event: "&aБлок-событие"
+  action: "&aБлок-действие"
+  condition: "&aУсловный блок"
+  loop: "&aЦиклический блок"
+  function: "&aФункциональный блок"
+  variable: "&aБлок переменной"
+  value: "&aБлок значения"
+
+validation:
+  script-valid: "&aСкрипт валиден!"
+  script-invalid: "&cОшибка валидации скрипта: %error%"
+  max-depth: "&cПревышена максимальная глубина вложенности блоков: %depth%"
+  max-blocks: "&cПревышено максимальное количество блоков: %count%"
+  missing-param: "&cОтсутствует обязательный параметр: %param%"
+  invalid-param: "&cНедопустимое значение параметра: %param%"
+
+events:
+  registered: "&aСобытие зарегистрировано!"
+  unregistered: "&aСобытие отменено!"
+  triggered: "&aСобытие сработало!"
+
+variables:
+  set: "&aПеременная установлена: %name% = %value%"
+  get: "&aЗначение переменной %name%: %value%"
+  not-found: "&cПеременная не найдена: %name%"
+  deleted: "&aПеременная удалена: %name%"
+
+script:
+  started: "&aСкрипт запущен!"
+  stopped: "&aСкрипт остановлен!"
+  paused: "&aСкрипт приостановлен!"
+  resumed: "&aСкрипт возобновлен!"
+  timeout: "&cПревышено время выполнения скрипта!"
+  error: "&cОшибка в строке %line%: %error%"
+
+debug:
+  block-placed: "&7[DEBUG] Блок размещен: %type%"
+  block-removed: "&7[DEBUG] Блок удален: %type%"
+  script-executed: "&7[DEBUG] Выполнен скрипт: %id%"
+  event-triggered: "&7[DEBUG] Сработало событие: %event%"
+  variable-changed: "&7[DEBUG] Изменена переменная: %name% = %value%"
+
+tutorial:
+  welcome:
+    - "&6=== Добро пожаловать в MegaCreative Coding! ==="
+    - "&eИспользуйте &6/block &eдля открытия меню блоков"
+    - "&eПеретащите блоки из инвентаря, чтобы создать скрипт"
+    - "&eНажмите ПКМ по блоку, чтобы настроить его параметры"
+    - "&eНажмите Shift+ПКМ, чтобы соединить блоки"
+    - "&eИспользуйте &6/block help &eдля получения справки"

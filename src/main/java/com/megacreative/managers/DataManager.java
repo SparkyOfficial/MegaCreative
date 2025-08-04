@@ -6,7 +6,7 @@ import org.bukkit.entity.Player;
 
 import java.io.File;
 import java.io.IOException;
-import java.util.HashMap;
+import java.util.concurrent.ConcurrentHashMap;
 import java.util.Map;
 import java.util.UUID;
 
@@ -21,13 +21,13 @@ public class DataManager {
     private final MegaCreative plugin;
     
     // Локальные переменные (ExecutionContext)
-    private final Map<UUID, Map<String, Object>> localVariables = new HashMap<>();
+    private final Map<UUID, Map<String, Object>> localVariables = new ConcurrentHashMap<>();
     
     // Глобальные переменные игроков (сохраняются между сессиями)
-    private final Map<UUID, Map<String, Object>> playerVariables = new HashMap<>();
+    private final Map<UUID, Map<String, Object>> playerVariables = new ConcurrentHashMap<>();
     
     // Серверные переменные (общие для всего сервера)
-    private final Map<String, Object> serverVariables = new HashMap<>();
+    private final Map<String, Object> serverVariables = new ConcurrentHashMap<>();
     
     public DataManager(MegaCreative plugin) {
         this.plugin = plugin;
@@ -48,7 +48,7 @@ public class DataManager {
      * Установить локальную переменную игрока
      */
     public void setLocalVariable(UUID playerId, String key, Object value) {
-        localVariables.computeIfAbsent(playerId, k -> new HashMap<>()).put(key, value);
+        localVariables.computeIfAbsent(playerId, k -> new ConcurrentHashMap<>()).put(key, value);
     }
     
     /**
@@ -72,7 +72,7 @@ public class DataManager {
      * Установить глобальную переменную игрока
      */
     public void setPlayerVariable(UUID playerId, String key, Object value) {
-        playerVariables.computeIfAbsent(playerId, k -> new HashMap<>()).put(key, value);
+        playerVariables.computeIfAbsent(playerId, k -> new ConcurrentHashMap<>()).put(key, value);
     }
     
     /**
@@ -139,7 +139,7 @@ public class DataManager {
         
         if (playerFile.exists()) {
             YamlConfiguration config = YamlConfiguration.loadConfiguration(playerFile);
-            Map<String, Object> vars = new HashMap<>();
+            Map<String, Object> vars = new ConcurrentHashMap<>();
             
             if (config.contains("variables")) {
                 for (String key : config.getConfigurationSection("variables").getKeys(false)) {
@@ -218,7 +218,18 @@ public class DataManager {
      * Сохранить все данные (вызывается при выключении сервера)
      */
     public void saveAllData() {
+        // Сохраняем данные всех онлайн игроков
+        plugin.getServer().getOnlinePlayers().forEach(this::savePlayerData);
+        // Сохраняем серверные переменные
         saveServerVariables();
-        plugin.getLogger().info("Все данные сохранены");
+        plugin.getLogger().info("Все данные игроков и сервера сохранены.");
     }
-} 
+
+    /**
+     * Корректное завершение работы менеджера данных.
+     */
+    public void shutdown() {
+        plugin.getLogger().info("Начало сохранения всех данных...");
+        saveAllData();
+    }
+}

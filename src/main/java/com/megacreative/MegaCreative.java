@@ -16,8 +16,8 @@ import org.bukkit.entity.Player;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.plugin.java.JavaPlugin;
 
-import java.util.HashMap;
 import java.util.Map;
+import java.util.concurrent.ConcurrentHashMap;
 import java.util.UUID;
 import java.util.logging.Logger;
 import com.megacreative.commands.CreateScriptCommand;
@@ -39,7 +39,7 @@ public class MegaCreative extends JavaPlugin {
     private TemplateManager templateManager;
     private ScoreboardManager scoreboardManager;
     private TrustedPlayerManager trustedPlayerManager;
-    private Logger logger;
+
     
     // --- НОВЫЙ МЕНЕДЖЕР ДЛЯ ВИРТУАЛЬНЫХ ИНВЕНТАРЕЙ ---
     private BlockConfigManager blockConfigManager;
@@ -48,9 +48,9 @@ public class MegaCreative extends JavaPlugin {
     private BlockConfiguration blockConfiguration;
 
     // Maps для хранения состояния
-    private Map<UUID, CreativeWorld> commentInputs = new HashMap<>();
-    private Map<UUID, String> deleteConfirmations = new HashMap<>();
-    private Map<UUID, Long> lastItemCheckTime = new HashMap<>(); // Для предотвращения спама
+    private Map<UUID, CreativeWorld> commentInputs = new ConcurrentHashMap<>();
+    private Map<UUID, String> deleteConfirmations = new ConcurrentHashMap<>();
+    private Map<UUID, Long> lastItemCheckTime = new ConcurrentHashMap<>(); // Для предотвращения спама
     
     @Override
     public void onEnable() {
@@ -93,20 +93,20 @@ public class MegaCreative extends JavaPlugin {
     
     @Override
     public void onDisable() {
-        // Останавливаем все повторяющиеся задачи
+        // 1. Останавливаем все повторяющиеся задачи
         com.megacreative.coding.actions.RepeatTriggerAction.stopAllRepeatingTasks();
         
-        // Сохраняем все данные
-        if (dataManager != null) {
-            dataManager.saveAllData();
-        }
-        
-        // Сохраняем миры
+        // 2. Завершаем работу менеджеров (это должно включать сохранение данных)
         if (worldManager != null) {
-            worldManager.saveAllWorlds();
+            worldManager.shutdown(); // Предполагается, что этот метод сохраняет миры и останавливает сервисы
+        }
+        if (dataManager != null) {
+            dataManager.shutdown(); // Предполагается, что этот метод сохраняет данные и останавливает сервисы
         }
         
-        logger.info("MegaCreative отключен!");
+        // Очищаем остальные ресурсы, если необходимо
+        
+        getLogger().info("MegaCreative отключен!");
     }
     
     private void registerCommands() {

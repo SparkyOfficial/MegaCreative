@@ -1,0 +1,216 @@
+# MegaCreative Configuration File
+
+# Основные настройки плагина
+settings:
+  # Включить/выключить плагин
+  enabled: true
+  
+  # Режим отладки (дополнительное логирование)
+  debug: false
+  
+  # Язык интерфейса (доступно: ru_RU, en_US)
+  language: ru_RU
+  
+  # Автосохранение (в секундах, 0 для отключения)
+  auto-save: 300
+
+# Настройки безопасности
+security:
+  # Максимальное количество блоков в скрипте
+  max-blocks: 1000
+  
+  # Максимальная глубина вложенности блоков
+  max-nesting: 20
+  
+  # Максимальное время выполнения скрипта (в тиках, 20 тиков = 1 секунда)
+  max-execution-time: 100
+  
+  # Максимальное количество выполняемых скриптов на игрока
+  max-scripts-per-player: 10
+  
+  # Разрешить выполнение скриптов с консоли
+  allow-console-scripts: false
+  
+  # Разрешенные команды в скриптах (если пусто, разрешены все)
+  allowed-commands: []
+  
+  # Запрещенные команды в скриптах
+  blocked-commands:
+    - "op"
+    - "stop"
+    - "reload"
+    - "pl"
+    - "plugins"
+    - "version"
+    - "ver"
+    - "?"
+    - "about"
+
+# Настройки визуализации
+visual:
+  # Показывать частицы при соединении блоков
+  show-connection-particles: true
+  
+  # Цвет частиц (формат: R,G,B)
+  particle-color: "0,255,0"
+  
+  # Размер частиц (от 0.1 до 5.0)
+  particle-size: 0.5
+  
+  # Показывать подсказки при наведении на блоки
+  show-tooltips: true
+
+# Настройки миров (унаследовано из предыдущей версии)
+worlds:
+  maxPerPlayer: 5          # Максимум миров на игрока
+  borderSize: 300          # Размер границы мира в блоках
+  autoSave: true           # Автосохранение миров
+  autoSaveInterval: 300    # Интервал автосохранения в секундах
+  defaultGamemode: CREATIVE # Режим игры по умолчанию
+  allowNether: true        # Разрешить Нижний мир
+  allowEnd: true           # Разрешить Эндер
+
+# Сообщения плагина (унаследовано из предыдущей версии)
+messages:
+  prefix: "§8[§bMegaCreative§8] "
+  noPermission: "§cУ вас нет прав на это действие!"
+  worldNotFound: "§cМир не найден!"
+  worldLimitReached: "§cВы достигли лимита миров!"
+  worldCreated: "§aМир успешно создан!"
+  worldDeleted: "§aМир успешно удален!"
+  playerNotFound: "§cИгрок не найден!"
+  alreadyInWorld: "§cВы уже находитесь в этом мире!"
+  worldPrivate: "§cЭтот мир приватный!"
+
+# Настройки GUI (унаследовано из предыдущей версии с дополнениями)
+gui:
+  updateInterval: 20       # Интервал обновления GUI в тиках
+  enableAnimations: true   # Включить анимации в интерфейсе
+  defaultSize: 45          # Размер инвентаря по умолчанию
+  
+# Настройки базы данных
+database:
+  # Тип базы данных (SQLite, MySQL)
+  type: SQLite
+  
+  # Настройки MySQL (используются только если type: MySQL)
+  mysql:
+    host: localhost
+    port: 3306
+    database: minecraft
+    username: user
+    password: password
+    
+  # Настройки SQLite
+  sqlite:
+    # Имя файла базы данных (будет создан в папке плагина)
+    filename: blocks.db
+
+# Настройки API
+api:
+  # Включить REST API
+  enabled: false
+  
+  # Порт для REST API
+  port: 8080
+  
+  # Аутентификация для API (если пусто, отключена)
+  auth-token: ""
+  
+  # Разрешенные IP-адреса для доступа к API (если пусто, разрешены все)
+  allowed-ips: []
+
+# Настройки обновлений
+updates:
+  # Проверять обновления при запуске
+  check-updates: true
+  
+  # Скачивать обновления автоматически
+  auto-download: false
+  
+  # Тип обновлений (RELEASE, BETA, ALPHA)
+  channel: RELEASE
+
+# Настройки логгирования
+logging:
+  # Уровень логирования (SEVERE, WARNING, INFO, CONFIG, FINE, FINER, FINEST)
+  level: INFO
+  
+  # Логировать ошибки скриптов
+  log-script-errors: true
+  
+  # Логировать успешное выполнение скриптов
+  log-script-success: false
+  
+  # Сохранять логи в файл
+  log-to-file: true
+  
+  # Максимальный размер лог-файла в МБ
+  max-log-size: 10
+  
+  # Количество сохраняемых лог-файлов
+  max-log-files: 5
+
+# Настройки производительности
+performance:
+  # Кэшировать загруженные скрипты
+  cache-scripts: true
+  
+  # Максимальный размер кэша скриптов
+  max-cache-size: 100
+  
+  # Использовать асинхронную загрузку миров
+  async-world-loading: true
+  
+  # Оптимизировать загрузку чанков
+  optimize-chunk-loading: true
+
+# Настройки команд
+commands:
+  # Алиасы для команды /block
+  aliases:
+    - "codeblock"
+    - "cb"
+    
+  # Разрешить использование команды /block в консоли
+  allow-console: true
+  
+  # Требовать права на использование команд
+  require-permissions: true
+
+# Настройки интеграций
+integrations:
+  # Интеграция с PlaceholderAPI
+  placeholderapi:
+    enabled: true
+    
+  # Интеграция с WorldEdit
+  worldedit:
+    enabled: true
+    
+  # Интеграция с Vault (экономика, права)
+  vault:
+    enabled: true
+
+# Настройки бэкапов
+backup:
+  # Автоматически создавать бэкапы
+  enabled: true
+  
+  # Интервал между бэкапами (в минутах)
+  interval: 1440  # 24 часа
+  
+  # Максимальное количество бэкапов
+  max-backups: 7
+  
+  # Папка для хранения бэкапов (относительно папки плагина)
+  folder: "backups"
+  
+  # Сжимать бэкапы в ZIP
+  compress: true
+
+# Настройки разработки (унаследовано из предыдущей версии)
+development:
+  enableDebug: false       # Включить отладочные сообщения
+  logWorldActions: true    # Логировать действия с мирами
+  logScriptExecutions: true # Логировать выполнение скриптов

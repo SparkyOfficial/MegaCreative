@@ -12,20 +12,22 @@ import org.bukkit.configuration.file.YamlConfiguration;
 import java.io.File;
 import java.io.IOException;
 import java.util.*;
+import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.CopyOnWriteArrayList;
 import java.util.concurrent.ThreadLocalRandom;
 
 public class WorldManager {
     
     private final MegaCreative plugin;
-    private final Map<String, CreativeWorld> worlds;
-    private final Map<UUID, List<String>> playerWorlds;
+    private final Map<String, CreativeWorld> worlds; // ID -> World
+    private final Map<UUID, List<String>> playerWorlds; // Player UUID -> List of World IDs
     private final int maxWorldsPerPlayer = 5;
     private final int worldBorderSize = 300;
     
     public WorldManager(MegaCreative plugin) {
         this.plugin = plugin;
-        this.worlds = new HashMap<>();
-        this.playerWorlds = new HashMap<>();
+        this.worlds = new ConcurrentHashMap<>();
+        this.playerWorlds = new ConcurrentHashMap<>();
         // loadWorlds(); // Убираем вызов из конструктора!
     }
     
@@ -76,7 +78,7 @@ public class WorldManager {
 
                     // Регистрация мира в памяти
                     worlds.put(worldId, creativeWorld);
-                    playerWorlds.computeIfAbsent(player.getUniqueId(), k -> new ArrayList<>()).add(worldId);
+                    playerWorlds.computeIfAbsent(player.getUniqueId(), k -> new CopyOnWriteArrayList<>()).add(worldId);
 
                     // Загрузка скриптов для мира (тоже синхронно, т.к. связано с миром)
                     plugin.getCodingManager().loadScriptsForWorld(creativeWorld);
@@ -370,6 +372,12 @@ public class WorldManager {
         }
     }
     
+    public void shutdown() {
+        plugin.getLogger().info("Сохранение всех миров перед выключением...");
+        saveAllWorlds();
+        plugin.getLogger().info("Все миры сохранены.");
+    }
+
     private void loadWorld(File worldFile) {
         YamlConfiguration config = YamlConfiguration.loadConfiguration(worldFile);
         
@@ -386,7 +394,7 @@ public class WorldManager {
             CreativeWorld world = com.megacreative.utils.JsonSerializer.deserializeWorld(worldJson);
             if (world != null) {
                 worlds.put(world.getId(), world);
-                playerWorlds.computeIfAbsent(world.getOwnerId(), k -> new ArrayList<>()).add(world.getId());
+                playerWorlds.computeIfAbsent(world.getOwnerId(), k -> new CopyOnWriteArrayList<>()).add(world.getId());
 
                 // Автоматическая загрузка мира и скриптов, если он уже существует
                 World bukkitWorld = Bukkit.getWorld(world.getWorldName());
