@@ -166,6 +166,11 @@ public class CodingActionGUI {
     }
 
     public void open() {
+        // DEBUG: Логируем открытие GUI
+        com.megacreative.MegaCreative.getInstance().getLogger().info("=== DEBUG: ОТКРЫТИЕ CodingActionGUI ===");
+        com.megacreative.MegaCreative.getInstance().getLogger().info("DEBUG: Игрок: " + player.getName());
+        com.megacreative.MegaCreative.getInstance().getLogger().info("DEBUG: Доступные действия: " + actions);
+        
         player.openInventory(inventory);
     }
 
@@ -192,6 +197,12 @@ public class CodingActionGUI {
         // Обработка выбора действия
         String action = displayName.replace("§a", "");
         if (actions.contains(action)) {
+            // DEBUG: Логируем выбор действия
+            com.megacreative.MegaCreative.getInstance().getLogger().info("=== DEBUG: ВЫБОР ДЕЙСТВИЯ ===");
+            com.megacreative.MegaCreative.getInstance().getLogger().info("DEBUG: Игрок: " + player.getName());
+            com.megacreative.MegaCreative.getInstance().getLogger().info("DEBUG: Выбрано действие: " + action);
+            com.megacreative.MegaCreative.getInstance().getLogger().info("DEBUG: Локация: " + blockLocation);
+            
             onSelect.accept(action);
             player.closeInventory();
             // Удаляем регистрацию GUI
