@@ -74,11 +74,17 @@ public class CodingParameterGUI {
             inventory.setItem(i, item);
         }
         
-        // Кнопка "Готово"
+        // Кнопка "Готово" - всегда показываем для действий с параметрами
         if (currentPage == 0) {
             ItemStack doneButton = new ItemStack(Material.EMERALD);
             ItemMeta doneMeta = doneButton.getItemMeta();
-            doneMeta.setDisplayName("§a§lГотово");
+            if (fields.isEmpty()) {
+                doneMeta.setDisplayName("§a§lГотово (автоматически)");
+                doneMeta.setLore(Arrays.asList("§7Нажмите или подождите", "§7для автоматического завершения"));
+            } else {
+                doneMeta.setDisplayName("§a§lГотово");
+                doneMeta.setLore(Arrays.asList("§7Нажмите для завершения", "§7настройки параметров"));
+            }
             doneButton.setItemMeta(doneMeta);
             inventory.setItem(8, doneButton);
         }
@@ -296,6 +302,15 @@ public class CodingParameterGUI {
                     completeGUI();
                 }
             }, 5L); // 5 тиков = 0.25 секунды
+        } else {
+            // ИСПРАВЛЕНИЕ: Автоматическое завершение для действий с параметрами через 10 секунд
+            com.megacreative.MegaCreative.getInstance().getLogger().info("DEBUG: Действие с параметрами - автоматическое завершение через 10 секунд");
+            Bukkit.getScheduler().runTaskLater(com.megacreative.MegaCreative.getInstance(), () -> {
+                if (!isCompleted) {
+                    com.megacreative.MegaCreative.getInstance().getLogger().info("DEBUG: Автоматическое завершение GUI по таймауту");
+                    completeGUI();
+                }
+            }, 200L); // 200 тиков = 10 секунд
         }
     }
     

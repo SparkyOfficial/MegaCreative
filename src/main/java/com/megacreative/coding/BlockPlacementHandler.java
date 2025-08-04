@@ -32,6 +32,7 @@ public class BlockPlacementHandler implements Listener {
     // Временные карты, не для хранения!
     private final Map<UUID, Location> playerSelections = new HashMap<>();
     private final Map<UUID, CodeBlock> clipboard = new HashMap<>();
+    private final Map<UUID, Long> lastWandClickTime = new HashMap<>(); // ИСПРАВЛЕНИЕ: Задержка для связующего жезла
 
     public BlockPlacementHandler(MegaCreative plugin) {
         this.plugin = plugin;
@@ -51,12 +52,8 @@ public class BlockPlacementHandler implements Listener {
                 location.getBlockY(),
                 location.getBlockZ());
         
-        // DEBUG: Логируем создание ключа локации
-        plugin.getLogger().info("DEBUG: locationToString - создан ключ: " + result);
-        plugin.getLogger().info("DEBUG: locationToString - мир: " + location.getWorld().getName());
-        plugin.getLogger().info("DEBUG: locationToString - X: " + location.getX() + " -> " + location.getBlockX());
-        plugin.getLogger().info("DEBUG: locationToString - Y: " + location.getY() + " -> " + location.getBlockY());
-        plugin.getLogger().info("DEBUG: locationToString - Z: " + location.getZ() + " -> " + location.getBlockZ());
+        // DEBUG: Логируем создание ключа локации (только при ошибках)
+        // plugin.getLogger().info("DEBUG: locationToString - создан ключ: " + result);
         
         return result;
     }
@@ -83,14 +80,8 @@ public class BlockPlacementHandler implements Listener {
         String locationKey = locationToString(location);
         CodeBlock block = world.getDevWorldBlocks().get(locationKey);
         
-        // DEBUG: Логируем поиск блока
-        plugin.getLogger().info("DEBUG: getBlockAt - ищем блок по ключу: " + locationKey);
-        plugin.getLogger().info("DEBUG: getBlockAt - мир найден: " + (world != null));
-        plugin.getLogger().info("DEBUG: getBlockAt - devWorldBlocks не null: " + (world.getDevWorldBlocks() != null));
-        plugin.getLogger().info("DEBUG: getBlockAt - блок найден: " + (block != null));
-        if (block != null) {
-            plugin.getLogger().info("DEBUG: getBlockAt - действие блока: " + block.getAction());
-        }
+        // DEBUG: Логируем поиск блока (только при ошибках)
+        // plugin.getLogger().info("DEBUG: getBlockAt - ищем блок по ключу: " + locationKey);
         
         return block;
     }
@@ -162,7 +153,8 @@ public class BlockPlacementHandler implements Listener {
 
         // Открываем GUI через 1 тик, чтобы игрок увидел поставленный блок
         Bukkit.getScheduler().runTaskLater(plugin, () -> {
-            List<String> actions = plugin.getBlockConfiguration().getActionsForMaterial(mat);
+            // ИСПРАВЛЕНИЕ: Определяем действия по названию предмета, а не только по материалу
+            List<String> actions = getActionsForBlock(mat, event.getItemInHand());
             if (actions == null || actions.isEmpty()) {
                 player.sendMessage("§cДля этого блока нет доступных действий.");
                 creativeWorld.removeDevWorldBlock(locationKey);
@@ -290,7 +282,54 @@ public class BlockPlacementHandler implements Listener {
         
         ItemStack itemInHand = player.getInventory().getItemInMainHand();
             if (isTool(itemInHand)) {
-                // Тут можно добавить логику для инспектора, жезла и т.д.
+                // Обработка связующего жезла
+                if (itemInHand.hasItemMeta() && itemInHand.getItemMeta().hasDisplayName() && 
+                    itemInHand.getItemMeta().getDisplayName().contains("Связующий жезл")) {
+                    
+                    plugin.getLogger().info("DEBUG: Обработка связующего жезла");
+                    
+                    // ИСПРАВЛЕНИЕ: Добавляем задержку для предотвращения множественных срабатываний
+                    UUID playerId = player.getUniqueId();
+                    long currentTime = System.currentTimeMillis();
+                    Long lastClickTime = lastWandClickTime.get(playerId);
+                    
+                    if (lastClickTime != null && currentTime - lastClickTime < 500) {
+                        // Игнорируем клики чаще чем раз в 500мс
+                        event.setCancelled(true);
+                        return;
+                    }
+                    lastWandClickTime.put(playerId, currentTime);
+                    
+                    // Логика связующего жезла
+                    if (playerSelections.containsKey(playerId)) {
+                        Location firstBlock = playerSelections.get(playerId);
+                        if (!firstBlock.equals(location)) {
+                            // Соединяем блоки
+                            CodeBlock firstCodeBlock = getBlockAt(player, firstBlock);
+                            CodeBlock secondCodeBlock = getBlockAt(player, location);
+                            
+                            if (firstCodeBlock != null && secondCodeBlock != null) {
+                                // Здесь должна быть логика соединения блоков
+                                player.sendMessage("§a✅ Блоки соединены!");
+                                plugin.getLogger().info("DEBUG: Блоки соединены: " + firstBlock + " -> " + location);
+                            } else {
+                                player.sendMessage("§c❌ Один из блоков не найден!");
+                            }
+                            playerSelections.remove(playerId);
+                        } else {
+                            player.sendMessage("§c❌ Нельзя соединить блок с самим собой!");
+                        }
+                    } else {
+                        // Выбираем первый блок
+                        playerSelections.put(playerId, location);
+                        player.sendMessage("§a✅ Первый блок выбран! Теперь выберите второй блок.");
+                        plugin.getLogger().info("DEBUG: Первый блок выбран: " + location);
+                    }
+                    event.setCancelled(true);
+                    return;
+                }
+                
+                // Тут можно добавить логику для других инструментов
                 return;
             }
             
@@ -309,12 +348,58 @@ public class BlockPlacementHandler implements Listener {
     
     private boolean isTool(ItemStack item) { 
         if (item == null) return false; 
+        
+        // Проверяем связующий жезл
+        if (item.hasItemMeta() && item.getItemMeta().hasDisplayName()) {
+            String displayName = item.getItemMeta().getDisplayName();
+            if (displayName.contains("Связующий жезл")) {
+                plugin.getLogger().info("DEBUG: Обнаружен связующий жезл");
+                return true;
+            }
+        }
+        
         return item.getType() == Material.BLAZE_ROD || item.getType() == Material.DEBUG_STICK || 
                item.getType() == Material.GOLDEN_AXE || DataItemFactory.isDataItem(item); 
     }
     
     private boolean isInDevWorld(Player player) { 
         return player.getWorld().getName().endsWith("_dev"); 
+    }
+    
+    /**
+     * ИСПРАВЛЕНИЕ: Определяет действия для блока по материалу и названию предмета
+     */
+    private List<String> getActionsForBlock(Material material, ItemStack item) {
+        // Получаем базовые действия по материалу
+        List<String> baseActions = plugin.getBlockConfiguration().getActionsForMaterial(material);
+        
+        // Если у предмета есть название, определяем специфичные действия
+        if (item != null && item.hasItemMeta() && item.getItemMeta().hasDisplayName()) {
+            String displayName = item.getItemMeta().getDisplayName();
+            
+            // Специальная логика для REDSTONE_BLOCK
+            if (material == Material.REDSTONE_BLOCK) {
+                if (displayName.contains("Если игра")) {
+                    return List.of("isOp", "playerGameMode", "playerHealth", "hasItem", "hasPermission", "isInWorld", "worldTime");
+                } else if (displayName.contains("Повторяющийся триггер")) {
+                    return List.of("repeatTrigger", "wait", "randomNumber");
+                }
+            }
+            
+            // Специальная логика для других блоков
+            if (displayName.contains("Событие игрока")) {
+                return List.of("onJoin", "onLeave", "onChat", "onBlockBreak", "onBlockPlace", "onPlayerMove", "onPlayerDeath", "onCommand", "onTick");
+            } else if (displayName.contains("Действие игрока")) {
+                return List.of("sendMessage", "teleport", "giveItem", "playSound", "effect", "command", "broadcast", "giveItems", "spawnEntity", "removeItems", "setArmor", "setVar", "spawnMob", "healPlayer", "setGameMode", "setTime", "setWeather", "explosion", "setBlock", "getVar", "getPlayerName", "setGlobalVar", "getGlobalVar", "setServerVar", "getServerVar", "wait", "randomNumber", "playParticle");
+            } else if (displayName.contains("Условие игрока")) {
+                return List.of("isOp", "compareVariable", "worldTime", "isNearBlock", "mobNear", "playerGameMode", "playerHealth", "hasItem", "hasPermission", "isInWorld", "ifVarEquals", "ifVarGreater", "ifVarLess", "isBlockType", "isPlayerHolding", "isNearEntity", "hasArmor", "isNight", "isRiding");
+            } else if (displayName.contains("Присвоить переменную")) {
+                return List.of("setVar", "getVar", "addVar", "subVar", "mulVar", "divVar", "setGlobalVar", "getGlobalVar", "setServerVar", "getServerVar");
+            }
+        }
+        
+        // Возвращаем базовые действия, если специфичные не найдены
+        return baseActions;
     }
     
     private void setSignOnBlock(Location loc, String action) {

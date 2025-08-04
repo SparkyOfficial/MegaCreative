@@ -32,7 +32,7 @@ public class CodingActionGUI {
         this.blockLocation = blockLocation;
         this.actions = actions;
         this.onSelect = onSelect;
-        this.inventory = Bukkit.createInventory(null, 9, "§bВыберите действие");
+        this.inventory = Bukkit.createInventory(null, 9, "§bВыберите действие или условие");
         // Регистрируем GUI в централизованной системе
         GuiListener.registerOpenGui(player, this);
         setupInventory();

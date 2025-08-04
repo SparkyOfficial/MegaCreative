@@ -98,37 +98,15 @@ public class CodingItems {
      * Выдаёт игроку только недостающие предметы для кодинга
      */
     public static void giveMissingItems(Player player, List<String> missingItems) {
-        for (String itemName : missingItems) {
-            switch (itemName) {
-                case "Связующий жезл":
-                    player.getInventory().addItem(getLinkingTool());
-                    break;
-                case "Инспектор блоков":
-                    player.getInventory().addItem(getInspectorTool());
-                    break;
-                case "Блок события":
-                    player.getInventory().addItem(createSimpleBlock(Material.DIAMOND_BLOCK, EVENT_BLOCK_NAME));
-                    break;
-                case "Блок действия":
-                    player.getInventory().addItem(createSimpleBlock(Material.COBBLESTONE, ACTION_BLOCK_NAME));
-                    break;
-                case "Блок условия":
-                    player.getInventory().addItem(createSimpleBlock(Material.OAK_PLANKS, CONDITION_BLOCK_NAME));
-                    break;
-                case "Блок переменной":
-                    player.getInventory().addItem(createSimpleBlock(Material.IRON_BLOCK, VARIABLE_BLOCK_NAME));
-                    break;
-                case "Блок повтора":
-                    player.getInventory().addItem(createSimpleBlock(Material.EMERALD_BLOCK, REPEAT_BLOCK_NAME));
-                    break;
-                default:
-                    // Для неизвестных предметов выдаем базовый набор
-                    if (itemName.contains("блок") || itemName.contains("Блок")) {
-                        player.getInventory().addItem(createSimpleBlock(Material.STONE, "§7" + itemName));
-                    }
-                    break;
-            }
-        }
+        // Устаревший метод - оставляем для совместимости
+        giveCodingItems(player);
+    }
+    
+    /**
+     * ИСПРАВЛЕНИЕ: Выдаёт игроку ВСЕ предметы для кодинга
+     */
+    public static void giveAllCodingItems(Player player) {
+        giveCodingItems(player);
     }
 
     /**

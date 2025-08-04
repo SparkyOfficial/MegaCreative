@@ -227,26 +227,41 @@ public class MegaCreative extends JavaPlugin {
             public void run() {
                 for (Player player : Bukkit.getOnlinePlayers()) {
                     if (player.getWorld().getName().endsWith("_dev")) {
-                        // Проверяем, каких предметов не хватает
-                        List<String> missingItems = getMissingCodingItems(player);
-                        if (!missingItems.isEmpty()) {
-                            // Проверяем, не отправляли ли мы уже сообщение этому игроку недавно
-                            UUID playerId = player.getUniqueId();
-                            long currentTime = System.currentTimeMillis();
-                            long lastCheck = lastItemCheckTime.getOrDefault(playerId, 0L);
-                            
-                            // Отправляем сообщение только раз в минуту
-                            if (currentTime - lastCheck > 60000) {
-                                // Добавляем только недостающие предметы
-                                CodingItems.giveMissingItems(player, missingItems);
-                                player.sendMessage("§e§l!§r §eДобавлены недостающие инструменты для кодинга: " + String.join(", ", missingItems));
-                                lastItemCheckTime.put(playerId, currentTime);
-                            }
+                        // ИСПРАВЛЕНИЕ: Перевыдаем ВСЕ предметы для кодинга
+                        UUID playerId = player.getUniqueId();
+                        long currentTime = System.currentTimeMillis();
+                        long lastCheck = lastItemCheckTime.getOrDefault(playerId, 0L);
+                        
+                        // Перевыдаем предметы только раз в 2 минуты
+                        if (currentTime - lastCheck > 120000) {
+                            // Очищаем инвентарь от старых предметов кодинга
+                            clearOldCodingItems(player);
+                            // Выдаем все предметы заново
+                            CodingItems.giveAllCodingItems(player);
+                            player.sendMessage("§a§l!§r §aИнструменты для кодинга обновлены!");
+                            lastItemCheckTime.put(playerId, currentTime);
                         }
                     }
                 }
             }
-        }.runTaskTimer(this, 200L, 600L); // Проверка каждые 30 секунд (600 тиков) вместо 5 секунд
+        }.runTaskTimer(this, 200L, 1200L); // Проверка каждые 60 секунд
+    }
+    
+    // ИСПРАВЛЕНИЕ: Очищаем старые предметы кодинга
+    private void clearOldCodingItems(Player player) {
+        ItemStack[] contents = player.getInventory().getContents();
+        for (int i = 0; i < contents.length; i++) {
+            ItemStack item = contents[i];
+            if (item != null && item.hasItemMeta() && item.getItemMeta().hasDisplayName()) {
+                String name = item.getItemMeta().getDisplayName();
+                if (name.contains("Связующий жезл") || name.contains("Инспектор блоков") || 
+                    name.contains("Событие игрока") || name.contains("Действие игрока") || 
+                    name.contains("Условие игрока") || name.contains("Присвоить переменную") || 
+                    name.contains("Повторить N раз") || name.contains("Блок кода")) {
+                    player.getInventory().setItem(i, null);
+                }
+            }
+        }
     }
 
     // Этот метод-хелпер нужно тоже добавить в MegaCreative.java
