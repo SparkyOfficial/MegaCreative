@@ -223,7 +223,6 @@ com\megacreative\coding\actions\RepeatAction.class
 com\megacreative\coding\actions\DivVarAction.class
 com\megacreative\coding\BlockType.class
 com\megacreative\models\CreativeWorld.class
-com\megacreative\commands\TestBlockPersistenceCommand.class
 com\megacreative\MegaCreative.class
 com\megacreative\coding\blocks\actions\SetVarAction.class
 com\megacreative\coding\conditions\IfVarLessCondition.class

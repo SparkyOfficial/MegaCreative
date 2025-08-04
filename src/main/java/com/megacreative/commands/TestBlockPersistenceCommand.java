@@ -143,7 +143,7 @@ public class TestBlockPersistenceCommand implements CommandExecutor {
         }
 
         int blockCount = world.getDevWorldBlocks().size();
-        world.clearDevWorldBlocks();
+        world.getDevWorldBlocks().clear();
         plugin.getWorldManager().saveWorld(world);
         
         player.sendMessage("§a✅ Очищено §f" + blockCount + " §aблоков!");
