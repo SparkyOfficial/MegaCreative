@@ -16,6 +16,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.UUID;
+import com.megacreative.models.CreativeWorld;
 
 /**
  * Менеджер для управления виртуальными инвентарями конфигурации блоков.
@@ -38,7 +39,19 @@ public class BlockConfigManager implements Listener {
      * @param blockLocation Локация блока для настройки
      */
     public void openConfigGUI(Player player, Location blockLocation) {
-        CodeBlock codeBlock = plugin.getBlockPlacementHandler().getBlockCodeBlocks().get(blockLocation);
+        CreativeWorld creativeWorld = plugin.getWorldManager().findCreativeWorldByBukkit(player.getWorld());
+        if (creativeWorld == null) {
+            player.sendMessage("§cОшибка: не удалось найти данные мира.");
+            return;
+        }
+        
+        String locationKey = String.format("%s,%.0f,%.0f,%.0f",
+                blockLocation.getWorld().getName(),
+                blockLocation.getX(),
+                blockLocation.getY(),
+                blockLocation.getZ());
+        
+        CodeBlock codeBlock = creativeWorld.getDevWorldBlock(locationKey);
         if (codeBlock == null) {
             player.sendMessage("§cОшибка: блок кода не найден.");
             return;
@@ -135,7 +148,19 @@ public class BlockConfigManager implements Listener {
         }
 
         Location blockLocation = configuringBlocks.get(playerId);
-        CodeBlock codeBlock = plugin.getBlockPlacementHandler().getBlockCodeBlocks().get(blockLocation);
+        CreativeWorld creativeWorld = plugin.getWorldManager().findCreativeWorldByBukkit(player.getWorld());
+        if (creativeWorld == null) {
+            player.sendMessage("§cОшибка: не удалось найти данные мира.");
+            return;
+        }
+        
+        String locationKey = String.format("%s,%.0f,%.0f,%.0f",
+                blockLocation.getWorld().getName(),
+                blockLocation.getX(),
+                blockLocation.getY(),
+                blockLocation.getZ());
+        
+        CodeBlock codeBlock = creativeWorld.getDevWorldBlock(locationKey);
         
         if (codeBlock != null) {
             // Очищаем старую конфигурацию
@@ -158,10 +183,7 @@ public class BlockConfigManager implements Listener {
             }
             
             // Сохраняем весь мир, чтобы изменения не потерялись после перезагрузки
-            var creativeWorld = plugin.getWorldManager().findCreativeWorldByBukkit(player.getWorld());
-            if (creativeWorld != null) {
-                plugin.getWorldManager().saveWorld(creativeWorld);
-            }
+            plugin.getWorldManager().saveWorld(creativeWorld);
         }
         
         // Убираем игрока из списка настраивающих

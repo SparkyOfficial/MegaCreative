@@ -43,11 +43,12 @@ public class CreativeWorld {
     // Скрипты
     private List<CodeScript> scripts;
     
-    // Блоки кода в мире разработки
+    // --- НОВОЕ ПОЛЕ ДЛЯ ХРАНЕНИЯ БЛОКОВ В DEV-МИРЕ ---
+    // Ключ - это сериализованная локация (world,x,y,z), Значение - сам блок
     private Map<String, CodeBlock> devWorldBlocks;
     
-    // Онлайн игроки
-    private Set<UUID> onlinePlayers;
+    // Онлайн игроки (transient, чтобы не сохранялось в JSON)
+    private transient Set<UUID> onlinePlayers;
     
     public CreativeWorld(String id, String name, UUID ownerId, String ownerName, CreativeWorldType worldType) {
         this.id = id;
@@ -70,8 +71,8 @@ public class CreativeWorld {
         this.favoriteBy = new HashSet<>();
         this.comments = new ArrayList<>();
         this.scripts = new ArrayList<>();
-        this.devWorldBlocks = new HashMap<>();
-        this.onlinePlayers = new HashSet<>();
+        this.devWorldBlocks = new HashMap<>(); // <-- Инициализируем
+        this.onlinePlayers = new HashSet<>(); // <-- Инициализируем
     }
     
     public String getWorldName() {
@@ -84,6 +85,48 @@ public class CreativeWorld {
     
     public boolean isOwner(Player player) {
         return player.getUniqueId().equals(ownerId);
+    }
+    
+    // --- НОВЫЕ МЕТОДЫ ДЛЯ РАБОТЫ С БЛОКАМИ ---
+    
+    public void addDevWorldBlock(String locationKey, CodeBlock block) {
+        if (devWorldBlocks == null) {
+            devWorldBlocks = new HashMap<>();
+        }
+        devWorldBlocks.put(locationKey, block);
+    }
+
+    public void removeDevWorldBlock(String locationKey) {
+        if (devWorldBlocks != null) {
+            devWorldBlocks.remove(locationKey);
+        }
+    }
+    
+    public void clearDevWorldBlocks() {
+        if (devWorldBlocks != null) {
+            devWorldBlocks.clear();
+        }
+    }
+    
+    public CodeBlock getDevWorldBlock(String locationKey) {
+        if (devWorldBlocks == null) {
+            return null;
+        }
+        return devWorldBlocks.get(locationKey);
+    }
+    
+    public boolean hasDevWorldBlock(String locationKey) {
+        if (devWorldBlocks == null) {
+            return false;
+        }
+        return devWorldBlocks.containsKey(locationKey);
+    }
+    
+    public int getDevWorldBlockCount() {
+        if (devWorldBlocks == null) {
+            return 0;
+        }
+        return devWorldBlocks.size();
     }
     
     public boolean isTrustedBuilder(Player player) {
@@ -103,16 +146,17 @@ public class CreativeWorld {
     }
     
     public void addOnlinePlayer(UUID playerId) {
+        if (onlinePlayers == null) onlinePlayers = new HashSet<>();
         onlinePlayers.add(playerId);
         updateActivity();
     }
     
     public void removeOnlinePlayer(UUID playerId) {
-        onlinePlayers.remove(playerId);
+        if (onlinePlayers != null) onlinePlayers.remove(playerId);
     }
     
     public int getOnlineCount() {
-        return onlinePlayers.size();
+        return onlinePlayers != null ? onlinePlayers.size() : 0;
     }
     
     public void updateActivity() {
@@ -165,38 +209,11 @@ public class CreativeWorld {
         return likes - dislikes;
     }
     
-    // Методы для работы с блоками кода
-    public void addDevWorldBlock(String locationKey, CodeBlock block) {
-        if (devWorldBlocks == null) {
-            devWorldBlocks = new HashMap<>();
-        }
-        devWorldBlocks.put(locationKey, block);
-    }
-    
-    public CodeBlock getDevWorldBlock(String locationKey) {
-        if (devWorldBlocks == null) {
-            return null;
-        }
-        return devWorldBlocks.get(locationKey);
-    }
-    
-    public void removeDevWorldBlock(String locationKey) {
-        if (devWorldBlocks != null) {
-            devWorldBlocks.remove(locationKey);
-        }
-    }
-    
     public Map<String, CodeBlock> getDevWorldBlocks() {
         if (devWorldBlocks == null) {
             devWorldBlocks = new HashMap<>();
         }
         return devWorldBlocks;
-    }
-    
-    public void clearDevWorldBlocks() {
-        if (devWorldBlocks != null) {
-            devWorldBlocks.clear();
-        }
     }
     
     public WorldMode getMode() {
