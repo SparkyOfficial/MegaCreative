@@ -1,11 +1,9 @@
 package com.megacreative.models;
 
-import lombok.Data;
-
-import org.bukkit.entity.Player;
-
-import com.megacreative.coding.CodeScript;
 import com.megacreative.coding.CodeBlock;
+import com.megacreative.coding.CodeScript;
+import lombok.Data;
+import org.bukkit.entity.Player;
 
 import java.util.*;
 
@@ -23,31 +21,23 @@ public class CreativeWorld {
     private long createdTime;
     private long lastActivity;
     
-    // Настройки мира
     private WorldFlags flags;
-    
-    // Доверенные игроки
     private Set<UUID> trustedBuilders;
     private Set<UUID> trustedCoders;
     
-    // Статистика
     private int likes;
     private int dislikes;
     private Set<UUID> likedBy;
     private Set<UUID> dislikedBy;
     private Set<UUID> favoriteBy;
     
-    // Комментарии
     private List<WorldComment> comments;
-
-    // Скрипты
     private List<CodeScript> scripts;
     
-    // --- НОВОЕ ПОЛЕ ДЛЯ ХРАНЕНИЯ БЛОКОВ В DEV-МИРЕ ---
     // Ключ - это сериализованная локация (world,x,y,z), Значение - сам блок
     private Map<String, CodeBlock> devWorldBlocks;
     
-    // Онлайн игроки (transient, чтобы не сохранялось в JSON)
+    // transient, чтобы не сохранялось в JSON
     private transient Set<UUID> onlinePlayers;
     
     public CreativeWorld(String id, String name, UUID ownerId, String ownerName, CreativeWorldType worldType) {
@@ -60,7 +50,6 @@ public class CreativeWorld {
         this.isPrivate = false;
         this.createdTime = System.currentTimeMillis();
         this.lastActivity = System.currentTimeMillis();
-        
         this.flags = new WorldFlags();
         this.trustedBuilders = new HashSet<>();
         this.trustedCoders = new HashSet<>();
@@ -71,78 +60,29 @@ public class CreativeWorld {
         this.favoriteBy = new HashSet<>();
         this.comments = new ArrayList<>();
         this.scripts = new ArrayList<>();
-        this.devWorldBlocks = new HashMap<>(); // <-- Инициализируем
-        this.onlinePlayers = new HashSet<>(); // <-- Инициализируем
+        this.devWorldBlocks = new HashMap<>();
+        this.onlinePlayers = new HashSet<>();
     }
     
-    public String getWorldName() {
-        return "megacreative_" + id;
-    }
-    
-    public String getDevWorldName() {
-        return "megacreative_" + id + "_dev";
-    }
-    
-    public boolean isOwner(Player player) {
-        return player.getUniqueId().equals(ownerId);
-    }
-    
-    // --- НОВЫЕ МЕТОДЫ ДЛЯ РАБОТЫ С БЛОКАМИ ---
-    
+    public String getWorldName() { return "megacreative_" + id; }
+    public String getDevWorldName() { return "megacreative_" + id + "_dev"; }
+    public boolean isOwner(Player player) { return player.getUniqueId().equals(ownerId); }
+    public boolean isTrustedBuilder(Player player) { return trustedBuilders.contains(player.getUniqueId()) || isOwner(player); }
+    public boolean isTrustedCoder(Player player) { return trustedCoders.contains(player.getUniqueId()) || isOwner(player); }
+    public boolean canEdit(Player player) { return isOwner(player) || isTrustedBuilder(player); }
+    public boolean canCode(Player player) { return isOwner(player) || isTrustedCoder(player); }
+
     public void addDevWorldBlock(String locationKey, CodeBlock block) {
-        if (devWorldBlocks == null) {
-            devWorldBlocks = new HashMap<>();
-        }
+        if (devWorldBlocks == null) devWorldBlocks = new HashMap<>();
         devWorldBlocks.put(locationKey, block);
     }
 
     public void removeDevWorldBlock(String locationKey) {
-        if (devWorldBlocks != null) {
-            devWorldBlocks.remove(locationKey);
-        }
-    }
-    
-    public void clearDevWorldBlocks() {
-        if (devWorldBlocks != null) {
-            devWorldBlocks.clear();
-        }
+        if (devWorldBlocks != null) devWorldBlocks.remove(locationKey);
     }
     
     public CodeBlock getDevWorldBlock(String locationKey) {
-        if (devWorldBlocks == null) {
-            return null;
-        }
-        return devWorldBlocks.get(locationKey);
-    }
-    
-    public boolean hasDevWorldBlock(String locationKey) {
-        if (devWorldBlocks == null) {
-            return false;
-        }
-        return devWorldBlocks.containsKey(locationKey);
-    }
-    
-    public int getDevWorldBlockCount() {
-        if (devWorldBlocks == null) {
-            return 0;
-        }
-        return devWorldBlocks.size();
-    }
-    
-    public boolean isTrustedBuilder(Player player) {
-        return trustedBuilders.contains(player.getUniqueId()) || isOwner(player);
-    }
-    
-    public boolean isTrustedCoder(Player player) {
-        return trustedCoders.contains(player.getUniqueId()) || isOwner(player);
-    }
-    
-    public boolean canEdit(Player player) {
-        return isOwner(player) || isTrustedBuilder(player);
-    }
-    
-    public boolean canCode(Player player) {
-        return isOwner(player) || isTrustedCoder(player);
+        return (devWorldBlocks != null) ? devWorldBlocks.get(locationKey) : null;
     }
     
     public void addOnlinePlayer(UUID playerId) {
@@ -151,76 +91,14 @@ public class CreativeWorld {
         updateActivity();
     }
     
-    public void removeOnlinePlayer(UUID playerId) {
-        if (onlinePlayers != null) onlinePlayers.remove(playerId);
-    }
-    
-    public int getOnlineCount() {
-        return onlinePlayers != null ? onlinePlayers.size() : 0;
-    }
-    
-    public void updateActivity() {
-        this.lastActivity = System.currentTimeMillis();
-    }
-    
-    public boolean addLike(UUID playerId) {
-        if (likedBy.contains(playerId)) {
-            return false;
-        }
-        if (dislikedBy.contains(playerId)) {
-            dislikedBy.remove(playerId);
-            dislikes--;
-        }
-        likedBy.add(playerId);
-        likes++;
-        return true;
-    }
-    
-    public boolean addDislike(UUID playerId) {
-        if (dislikedBy.contains(playerId)) {
-            return false;
-        }
-        if (likedBy.contains(playerId)) {
-            likedBy.remove(playerId);
-            likes--;
-        }
-        dislikedBy.add(playerId);
-        dislikes++;
-        return true;
-    }
-    
-    public void addToFavorites(UUID playerId) {
-        favoriteBy.add(playerId);
-    }
-    
-    public void removeFromFavorites(UUID playerId) {
-        favoriteBy.remove(playerId);
-    }
-    
-    public boolean isFavorite(UUID playerId) {
-        return favoriteBy.contains(playerId);
-    }
-    
-    public void addComment(WorldComment comment) {
-        comments.add(comment);
-    }
-    
-    public int getRating() {
-        return likes - dislikes;
-    }
-    
-    public Map<String, CodeBlock> getDevWorldBlocks() {
-        if (devWorldBlocks == null) {
-            devWorldBlocks = new HashMap<>();
-        }
-        return devWorldBlocks;
-    }
-    
-    public WorldMode getMode() {
-        return mode;
-    }
-    
-    public void setMode(WorldMode mode) {
-        this.mode = mode;
-    }
+    public void removeOnlinePlayer(UUID playerId) { if (onlinePlayers != null) onlinePlayers.remove(playerId); }
+    public int getOnlineCount() { return onlinePlayers != null ? onlinePlayers.size() : 0; }
+    public void updateActivity() { this.lastActivity = System.currentTimeMillis(); }
+    public boolean addLike(UUID playerId) { if (likedBy.contains(playerId)) return false; if (dislikedBy.contains(playerId)) { dislikedBy.remove(playerId); dislikes--; } likedBy.add(playerId); likes++; return true; }
+    public boolean addDislike(UUID playerId) { if (dislikedBy.contains(playerId)) return false; if (likedBy.contains(playerId)) { likedBy.remove(playerId); likes--; } dislikedBy.add(playerId); dislikes++; return true; }
+    public void addToFavorites(UUID playerId) { favoriteBy.add(playerId); }
+    public void removeFromFavorites(UUID playerId) { favoriteBy.remove(playerId); }
+    public boolean isFavorite(UUID playerId) { return favoriteBy.contains(playerId); }
+    public void addComment(WorldComment comment) { comments.add(comment); }
+    public int getRating() { return likes - dislikes; }
 }
