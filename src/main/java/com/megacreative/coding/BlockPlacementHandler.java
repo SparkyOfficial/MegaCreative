@@ -45,11 +45,20 @@ public class BlockPlacementHandler implements Listener {
 
     private String locationToString(Location location) {
         // Убираем дробную часть для консистентности
-        return String.format("%s,%d,%d,%d",
+        String result = String.format("%s,%d,%d,%d",
                 location.getWorld().getName(),
                 location.getBlockX(),
                 location.getBlockY(),
                 location.getBlockZ());
+        
+        // DEBUG: Логируем создание ключа локации
+        System.out.println("DEBUG: locationToString - создан ключ: " + result);
+        System.out.println("DEBUG: locationToString - мир: " + location.getWorld().getName());
+        System.out.println("DEBUG: locationToString - X: " + location.getX() + " -> " + location.getBlockX());
+        System.out.println("DEBUG: locationToString - Y: " + location.getY() + " -> " + location.getBlockY());
+        System.out.println("DEBUG: locationToString - Z: " + location.getZ() + " -> " + location.getBlockZ());
+        
+        return result;
     }
 
     private Location stringToLocation(String locString) {
@@ -70,7 +79,20 @@ public class BlockPlacementHandler implements Listener {
     public CodeBlock getBlockAt(Player player, Location location) {
         CreativeWorld world = getCurrentCreativeWorld(player);
         if (world == null || world.getDevWorldBlocks() == null) return null;
-        return world.getDevWorldBlocks().get(locationToString(location));
+        
+        String locationKey = locationToString(location);
+        CodeBlock block = world.getDevWorldBlocks().get(locationKey);
+        
+        // DEBUG: Логируем поиск блока
+        System.out.println("DEBUG: getBlockAt - ищем блок по ключу: " + locationKey);
+        System.out.println("DEBUG: getBlockAt - мир найден: " + (world != null));
+        System.out.println("DEBUG: getBlockAt - devWorldBlocks не null: " + (world.getDevWorldBlocks() != null));
+        System.out.println("DEBUG: getBlockAt - блок найден: " + (block != null));
+        if (block != null) {
+            System.out.println("DEBUG: getBlockAt - действие блока: " + block.getAction());
+        }
+        
+        return block;
     }
     
     public Map<Location, CodeBlock> getBlockCodeBlocks() {
@@ -115,9 +137,22 @@ public class BlockPlacementHandler implements Listener {
         Location location = block.getLocation();
         Material mat = block.getType();
 
+        // DEBUG: Логируем создание блока
+        String locationKey = locationToString(location);
+        System.out.println("=== DEBUG: СОЗДАНИЕ БЛОКА ===");
+        System.out.println("DEBUG: Игрок: " + player.getName());
+        System.out.println("DEBUG: Локация: " + locationKey);
+        System.out.println("DEBUG: Материал: " + mat);
+        System.out.println("DEBUG: Мир: " + location.getWorld().getName());
+
         // Сразу создаем "заготовку" блока
         CodeBlock newCodeBlock = new CodeBlock(mat, "Настройка...");
-        creativeWorld.addDevWorldBlock(locationToString(location), newCodeBlock);
+        creativeWorld.addDevWorldBlock(locationKey, newCodeBlock);
+        
+        // DEBUG: Проверяем, что блок добавился
+        CodeBlock addedBlock = creativeWorld.getDevWorldBlocks().get(locationKey);
+        System.out.println("DEBUG: Блок добавлен в мир: " + (addedBlock != null));
+        System.out.println("DEBUG: Всего блоков в мире: " + creativeWorld.getDevWorldBlocks().size());
         
         // Визуализируем и ставим табличку
         setSignOnBlock(location, "Настройка...");
@@ -130,33 +165,68 @@ public class BlockPlacementHandler implements Listener {
             List<String> actions = plugin.getBlockConfiguration().getActionsForMaterial(mat);
             if (actions == null || actions.isEmpty()) {
                 player.sendMessage("§cДля этого блока нет доступных действий.");
-                creativeWorld.removeDevWorldBlock(locationToString(location));
+                creativeWorld.removeDevWorldBlock(locationKey);
                 block.setType(Material.AIR);
                 removeSignFromBlock(location);
                 return;
             }
 
+            // DEBUG: Логируем открытие GUI
+            System.out.println("=== DEBUG: ОТКРЫТИЕ GUI ===");
+            System.out.println("DEBUG: Доступные действия: " + actions);
+
             // Открываем GUI выбора действия
             new CodingActionGUI(player, mat, location, actions, action -> {
+                // DEBUG: Логируем выбор действия
+                System.out.println("=== DEBUG: ВЫБОР ДЕЙСТВИЯ ===");
+                System.out.println("DEBUG: Выбрано действие: " + action);
+                System.out.println("DEBUG: Локация: " + locationKey);
+                
                 // После выбора действия открываем GUI параметров
                 new CodingParameterGUI(player, action, location, parameters -> {
+                    // DEBUG: Логируем выбор параметров
+                    System.out.println("=== DEBUG: ВЫБОР ПАРАМЕТРОВ ===");
+                    System.out.println("DEBUG: Действие: " + action);
+                    System.out.println("DEBUG: Параметры: " + parameters);
+                    System.out.println("DEBUG: Локация: " + locationKey);
+                    
                     // **КЛЮЧЕВОЙ МОМЕНТ:** Получаем блок из мира заново
                     CreativeWorld currentWorld = getCurrentCreativeWorld(player);
-                    CodeBlock blockToUpdate = currentWorld.getDevWorldBlocks().get(locationToString(location));
+                    System.out.println("DEBUG: Текущий мир найден: " + (currentWorld != null));
+                    System.out.println("DEBUG: Всего блоков в текущем мире: " + currentWorld.getDevWorldBlocks().size());
+                    
+                    CodeBlock blockToUpdate = currentWorld.getDevWorldBlocks().get(locationKey);
+                    System.out.println("DEBUG: Блок найден для обновления: " + (blockToUpdate != null));
                     
                     if (blockToUpdate != null) {
+                        System.out.println("DEBUG: Старое действие блока: " + blockToUpdate.getAction());
+                        System.out.println("DEBUG: Старые параметры блока: " + blockToUpdate.getParameters());
+                        
                         // Обновляем его
                         blockToUpdate.setAction(action);
                         blockToUpdate.setParameters(new HashMap<>(parameters));
+                        
+                        System.out.println("DEBUG: Новое действие блока: " + blockToUpdate.getAction());
+                        System.out.println("DEBUG: Новые параметры блока: " + blockToUpdate.getParameters());
+                        
                         // Сохраняем мир с обновленным блоком
                         plugin.getWorldManager().saveWorld(currentWorld);
+                        System.out.println("DEBUG: Мир сохранен");
                         
                         // Обновляем табличку
                         updateSignOnBlock(location, blockToUpdate);
                         player.sendMessage("§aДействие установлено: §e" + action);
+                        System.out.println("DEBUG: Табличка обновлена, сообщение отправлено");
                     } else {
+                        System.out.println("=== DEBUG: ОШИБКА - БЛОК НЕ НАЙДЕН ===");
+                        System.out.println("DEBUG: Ищем по ключу: " + locationKey);
+                        System.out.println("DEBUG: Доступные ключи в мире:");
+                        for (String key : currentWorld.getDevWorldBlocks().keySet()) {
+                            System.out.println("DEBUG:   - " + key);
+                        }
                         player.sendMessage("§cПроизошла ошибка при настройке блока (блок не найден).");
                     }
+                    System.out.println("=== DEBUG: ЗАВЕРШЕНИЕ ОБНОВЛЕНИЯ ===");
                 }).open();
             }).open();
         }, 1L);
@@ -201,6 +271,16 @@ public class BlockPlacementHandler implements Listener {
         Location location = clickedBlock.getLocation();
         CodeBlock codeBlock = getBlockAt(player, location);
 
+        // DEBUG: Логируем взаимодействие с блоком
+        System.out.println("=== DEBUG: ВЗАИМОДЕЙСТВИЕ С БЛОКОМ ===");
+        System.out.println("DEBUG: Игрок: " + player.getName());
+        System.out.println("DEBUG: Локация: " + locationToString(location));
+        System.out.println("DEBUG: Блок найден: " + (codeBlock != null));
+        if (codeBlock != null) {
+            System.out.println("DEBUG: Действие блока: " + codeBlock.getAction());
+            System.out.println("DEBUG: Параметры блока: " + codeBlock.getParameters());
+        }
+
         if (codeBlock != null) {
              if (!getCurrentCreativeWorld(player).canCode(player)) {
                 event.setCancelled(true);
@@ -215,6 +295,7 @@ public class BlockPlacementHandler implements Listener {
             }
             
             event.setCancelled(true);
+            System.out.println("DEBUG: Открываем GUI конфигурации для блока");
             plugin.getBlockConfigManager().openConfigGUI(player, location);
         }
     }
