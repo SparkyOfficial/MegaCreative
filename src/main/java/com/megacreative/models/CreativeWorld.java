@@ -45,6 +45,21 @@ public class CreativeWorld {
     // Онлайн игроки
     private Set<UUID> onlinePlayers;
     
+    public CreativeWorld() {
+        // Конструктор по умолчанию для десериализации
+        this.flags = new WorldFlags();
+        this.trustedBuilders = new HashSet<>();
+        this.trustedCoders = new HashSet<>();
+        this.likes = 0;
+        this.dislikes = 0;
+        this.likedBy = new HashSet<>();
+        this.dislikedBy = new HashSet<>();
+        this.favoriteBy = new HashSet<>();
+        this.comments = new ArrayList<>();
+        this.scripts = new ArrayList<>();
+        this.onlinePlayers = new HashSet<>();
+    }
+    
     public CreativeWorld(String id, String name, UUID ownerId, String ownerName, CreativeWorldType worldType) {
         this.id = id;
         this.name = name;
@@ -158,5 +173,90 @@ public class CreativeWorld {
     
     public int getRating() {
         return likes - dislikes;
+    }
+    
+    // Дополнительные геттеры для совместимости
+    public String getId() {
+        return id;
+    }
+    
+    public String getName() {
+        return name;
+    }
+    
+    public String getDescription() {
+        return description;
+    }
+    
+    public UUID getOwnerId() {
+        return ownerId;
+    }
+    
+    public String getOwnerName() {
+        return ownerName;
+    }
+    
+    public CreativeWorldType getWorldType() {
+        return worldType;
+    }
+    
+    public WorldMode getMode() {
+        return mode;
+    }
+    
+    public boolean isPrivate() {
+        return isPrivate;
+    }
+    
+    public long getCreatedTime() {
+        return createdTime;
+    }
+    
+    public long getLastActivity() {
+        return lastActivity;
+    }
+    
+    public WorldFlags getFlags() {
+        return flags;
+    }
+    
+    public Set<UUID> getTrustedBuilders() {
+        return trustedBuilders;
+    }
+    
+    public Set<UUID> getTrustedCoders() {
+        return trustedCoders;
+    }
+    
+    public int getLikes() {
+        return likes;
+    }
+    
+    public int getDislikes() {
+        return dislikes;
+    }
+    
+    public Set<UUID> getLikedBy() {
+        return likedBy;
+    }
+    
+    public Set<UUID> getDislikedBy() {
+        return dislikedBy;
+    }
+    
+    public Set<UUID> getFavoriteBy() {
+        return favoriteBy;
+    }
+    
+    public List<WorldComment> getComments() {
+        return comments;
+    }
+    
+    public List<CodeScript> getScripts() {
+        return scripts;
+    }
+    
+    public Set<UUID> getOnlinePlayers() {
+        return onlinePlayers;
     }
 }

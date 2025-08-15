@@ -38,6 +38,8 @@ public class CodeBlock implements Cloneable {
     // --- ДОСТУП К ПЛАГИНУ ДЛЯ КОНФИГУРАЦИИ ---
     private transient MegaCreative plugin;
 
+
+    
     public CodeBlock(Material material, String action) {
         this.id = UUID.randomUUID();
         this.material = material;
@@ -296,5 +298,58 @@ public class CodeBlock implements Cloneable {
         cloned.nextBlock = null;
         cloned.children = new ArrayList<>();
         return cloned;
+    }
+    
+    // Дополнительные геттеры и сеттеры
+    public UUID getId() {
+        return id;
+    }
+    
+    public void setId(UUID id) {
+        this.id = id;
+    }
+    
+    public Material getMaterial() {
+        return material;
+    }
+    
+    public void setMaterial(Material material) {
+        this.material = material;
+    }
+    
+    public String getAction() {
+        return action;
+    }
+    
+    public void setAction(String action) {
+        this.action = action;
+    }
+    
+    public void setParameters(Map<String, Object> parameters) {
+        this.parameters = parameters;
+    }
+    
+    public List<CodeBlock> getChildren() {
+        return children;
+    }
+    
+    public void setChildren(List<CodeBlock> children) {
+        this.children = children;
+    }
+    
+    public CodeBlock getNextBlock() {
+        return nextBlock;
+    }
+    
+    public void setNextBlock(CodeBlock nextBlock) {
+        this.nextBlock = nextBlock;
+    }
+    
+    public void setConfigItems(Map<Integer, ItemStack> configItems) {
+        this.configItems = configItems;
+    }
+    
+    public void setItemGroups(Map<String, List<Integer>> itemGroups) {
+        this.itemGroups = itemGroups;
     }
 }

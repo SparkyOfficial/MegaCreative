@@ -31,5 +31,8 @@ public class PlayerQuitListener implements Listener {
         plugin.getWorldManager().getPlayerWorlds(event.getPlayer()).forEach(world -> 
             world.removeOnlinePlayer(event.getPlayer().getUniqueId())
         );
+        
+        // Очищаем данные из обработчика блоков
+        plugin.getBlockPlacementHandler().cleanUpPlayerData(event.getPlayer().getUniqueId());
     }
 }

@@ -3,14 +3,16 @@ package com.megacreative;
 import com.megacreative.commands.*;
 import com.megacreative.listeners.*;
 import com.megacreative.coding.BlockPlacementHandler;
-import com.megacreative.coding.CodingManager;
+import com.megacreative.coding.CodingManagerImpl;
 import com.megacreative.coding.BlockConnectionVisualizer;
 import com.megacreative.coding.ScriptDebugger;
 import com.megacreative.coding.CodingItems;
 import com.megacreative.coding.BlockConfiguration;
 import com.megacreative.managers.*;
+import com.megacreative.interfaces.*;
 import com.megacreative.models.CreativeWorld;
 import com.megacreative.utils.ConfigManager;
+import com.megacreative.core.DependencyContainer;
 import org.bukkit.Bukkit;
 import org.bukkit.entity.Player;
 import org.bukkit.inventory.ItemStack;
@@ -28,10 +30,11 @@ import com.megacreative.managers.BlockConfigManager;
 public class MegaCreative extends JavaPlugin {
     
     private static MegaCreative instance;
+    private DependencyContainer dependencyContainer;
     private ConfigManager configManager;
-    private WorldManager worldManager;
-    private PlayerManager playerManager;
-    private CodingManager codingManager;
+    private IWorldManager worldManager;
+    private IPlayerManager playerManager;
+    private ICodingManager codingManager;
     private BlockPlacementHandler blockPlacementHandler;
     private BlockConnectionVisualizer blockConnectionVisualizer;
     private ScriptDebugger scriptDebugger;
@@ -55,14 +58,22 @@ public class MegaCreative extends JavaPlugin {
     public void onEnable() {
         instance = this;
         
+        // Инициализация Dependency Container
+        this.dependencyContainer = new DependencyContainer();
+        
         // Инициализация конфигурации
         configManager = new ConfigManager(this);
         configManager.loadConfig();
         
-        // Инициализируем менеджеры
-        this.worldManager = new WorldManager(this);
-        this.playerManager = new PlayerManager(this);
-        this.codingManager = new CodingManager(this);
+        // Инициализируем менеджеры через DI контейнер
+        this.worldManager = new WorldManagerImpl(this);
+        this.playerManager = new PlayerManagerImpl(this);
+        this.codingManager = new CodingManagerImpl(this);
+        
+        // Регистрируем сервисы в DI контейнере
+        dependencyContainer.register(IWorldManager.class, worldManager);
+        dependencyContainer.register(IPlayerManager.class, playerManager);
+        dependencyContainer.register(ICodingManager.class, codingManager);
         this.blockPlacementHandler = new BlockPlacementHandler(this);
         this.blockConnectionVisualizer = new BlockConnectionVisualizer(this);
         this.scriptDebugger = new ScriptDebugger(this);
@@ -154,15 +165,15 @@ public class MegaCreative extends JavaPlugin {
         return instance;
     }
     
-    public WorldManager getWorldManager() {
+    public IWorldManager getWorldManager() {
         return worldManager;
     }
     
-    public PlayerManager getPlayerManager() {
+    public IPlayerManager getPlayerManager() {
         return playerManager;
     }
 
-    public CodingManager getCodingManager() {
+    public ICodingManager getCodingManager() {
         return codingManager;
     }
 
@@ -214,23 +225,14 @@ public class MegaCreative extends JavaPlugin {
         return configManager;
     }
     
+    public DependencyContainer getDependencyContainer() {
+        return dependencyContainer;
+    }
+    
     private void startInventoryChecker() {
-        new org.bukkit.scheduler.BukkitRunnable() {
-            @Override
-            public void run() {
-                for (Player player : Bukkit.getOnlinePlayers()) {
-                    if (player.getWorld().getName().endsWith("_dev")) {
-                        // Проверяем, каких предметов не хватает
-                        List<String> missingItems = getMissingCodingItems(player);
-                        if (!missingItems.isEmpty()) {
-                            // Добавляем только недостающие предметы
-                            CodingItems.giveMissingItems(player, missingItems);
-                            player.sendMessage("§e§l!§r §eДобавлены недостающие инструменты для кодинга: " + String.join(", ", missingItems));
-                        }
-                    }
-                }
-            }
-        }.runTaskTimer(this, 100L, 100L); // Проверка каждые 5 секунд (100 тиков)
+        // Убираем неэффективную проверку каждые 5 секунд
+        // Вместо этого будем проверять при входе в dev-мир через PlayerWorldChangeListener
+        getLogger().info("Проверка инвентаря перенесена на событие смены мира");
     }
 
     // Этот метод-хелпер нужно тоже добавить в MegaCreative.java

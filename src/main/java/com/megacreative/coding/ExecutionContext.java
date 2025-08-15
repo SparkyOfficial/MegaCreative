@@ -2,8 +2,6 @@ package com.megacreative.coding;
 
 import com.megacreative.MegaCreative;
 import com.megacreative.models.CreativeWorld;
-import lombok.Builder;
-import lombok.Getter;
 import org.bukkit.Location;
 import org.bukkit.entity.Player;
 import org.bukkit.event.Event;
@@ -17,8 +15,6 @@ import java.util.Map;
  * Хранит всю информацию, необходимую для выполнения одного скрипта.
  * Передается между блоками во время исполнения.
  */
-@Getter
-@Builder
 public class ExecutionContext {
 
     private final MegaCreative plugin; // Ссылка на основной плагин
@@ -29,20 +25,16 @@ public class ExecutionContext {
     private final CodeBlock currentBlock; // Текущий выполняемый блок (может быть null)
 
     // Переменные скрипта (String -> Object)
-    @Builder.Default
     private Map<String, Object> variables = new HashMap<>();
     
     // --- РАСШИРЕННЫЕ ТИПЫ ДАННЫХ ---
     // Списки (массивы) для хранения коллекций данных
-    @Builder.Default
     private Map<String, List<Object>> lists = new HashMap<>();
     
     // Булевы переменные для логических операций
-    @Builder.Default
     private Map<String, Boolean> booleans = new HashMap<>();
     
     // Числовые переменные с поддержкой int и double
-    @Builder.Default
     private Map<String, Number> numbers = new HashMap<>();
 
     /**
@@ -52,18 +44,12 @@ public class ExecutionContext {
      * @return Новый контекст с обновленным блоком и локацией
      */
     public ExecutionContext withCurrentBlock(CodeBlock currentBlock, Location newLocation) {
-        return ExecutionContext.builder()
-                .plugin(this.plugin)
-                .player(this.player)
-                .creativeWorld(this.creativeWorld)
-                .event(this.event)
-                .blockLocation(newLocation) // Обновляем локацию
-                .currentBlock(currentBlock)
-                .variables(new HashMap<>(this.variables))
-                .lists(new HashMap<>(this.lists))
-                .booleans(new HashMap<>(this.booleans))
-                .numbers(new HashMap<>(this.numbers))
-                .build();
+        ExecutionContext newContext = new ExecutionContext(this.plugin, this.player, this.creativeWorld, this.event, newLocation, currentBlock);
+        newContext.variables = new HashMap<>(this.variables);
+        newContext.lists = new HashMap<>(this.lists);
+        newContext.booleans = new HashMap<>(this.booleans);
+        newContext.numbers = new HashMap<>(this.numbers);
+        return newContext;
     }
 
     /**
@@ -166,5 +152,88 @@ public class ExecutionContext {
     public double getDouble(String name) {
         Number number = numbers.get(name);
         return number != null ? number.doubleValue() : 0.0;
+    }
+    
+    // Конструктор
+    public ExecutionContext(MegaCreative plugin, Player player, CreativeWorld creativeWorld, Event event, Location blockLocation, CodeBlock currentBlock) {
+        this.plugin = plugin;
+        this.player = player;
+        this.creativeWorld = creativeWorld;
+        this.event = event;
+        this.blockLocation = blockLocation;
+        this.currentBlock = currentBlock;
+    }
+    
+    // Геттеры
+    public MegaCreative getPlugin() {
+        return plugin;
+    }
+    
+    public Player getPlayer() {
+        return player;
+    }
+    
+    public CreativeWorld getCreativeWorld() {
+        return creativeWorld;
+    }
+    
+    public Event getEvent() {
+        return event;
+    }
+    
+    public Location getBlockLocation() {
+        return blockLocation;
+    }
+    
+    public CodeBlock getCurrentBlock() {
+        return currentBlock;
+    }
+    
+    // Builder pattern
+    public static Builder builder() {
+        return new Builder();
+    }
+    
+    public static class Builder {
+        private MegaCreative plugin;
+        private Player player;
+        private CreativeWorld creativeWorld;
+        private Event event;
+        private Location blockLocation;
+        private CodeBlock currentBlock;
+        
+        public Builder plugin(MegaCreative plugin) {
+            this.plugin = plugin;
+            return this;
+        }
+        
+        public Builder player(Player player) {
+            this.player = player;
+            return this;
+        }
+        
+        public Builder creativeWorld(CreativeWorld creativeWorld) {
+            this.creativeWorld = creativeWorld;
+            return this;
+        }
+        
+        public Builder event(Event event) {
+            this.event = event;
+            return this;
+        }
+        
+        public Builder blockLocation(Location blockLocation) {
+            this.blockLocation = blockLocation;
+            return this;
+        }
+        
+        public Builder currentBlock(CodeBlock currentBlock) {
+            this.currentBlock = currentBlock;
+            return this;
+        }
+        
+        public ExecutionContext build() {
+            return new ExecutionContext(plugin, player, creativeWorld, event, blockLocation, currentBlock);
+        }
     }
 }

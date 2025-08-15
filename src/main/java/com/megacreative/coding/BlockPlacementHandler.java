@@ -47,6 +47,18 @@ public class BlockPlacementHandler implements Listener {
     public BlockPlacementHandler(MegaCreative plugin) {
         this.plugin = plugin;
     }
+    
+    /**
+     * Очищает данные игрока при отключении
+     * @param playerId UUID игрока
+     */
+    public void cleanUpPlayerData(UUID playerId) {
+        playerVisualizationStates.remove(playerId);
+        playerDebugStates.remove(playerId);
+        playerSelections.remove(playerId);
+        clipboard.remove(playerId);
+        plugin.getLogger().info("Очищены данные для игрока " + playerId);
+    }
 
     /**
      * Обрабатывает размещение блоков кодирования

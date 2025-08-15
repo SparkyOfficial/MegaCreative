@@ -4,7 +4,7 @@ import com.megacreative.coding.BlockAction;
 import com.megacreative.coding.CodeBlock;
 import com.megacreative.coding.ExecutionContext;
 import com.megacreative.coding.ParameterResolver;
-import org.bukkit.Bukkit;
+import com.megacreative.utils.SafeCommandExecutor;
 import org.bukkit.entity.Player;
 
 public class CommandAction implements BlockAction {
@@ -28,14 +28,13 @@ public class CommandAction implements BlockAction {
                 .replace("%player%", player.getName())
                 .replace("%world%", player.getWorld().getName());
             
-            // Выполняем команду от имени консоли
-            boolean success = Bukkit.dispatchCommand(Bukkit.getConsoleSender(), finalCommand);
+            // Безопасное выполнение команды от имени игрока
+            boolean success = SafeCommandExecutor.executeCommand(player, finalCommand);
             
             if (success) {
                 player.sendMessage("§a✓ Команда выполнена: " + finalCommand);
-            } else {
-                player.sendMessage("§c✗ Ошибка выполнения команды: " + finalCommand);
             }
+            // Сообщения об ошибках уже отправляются в SafeCommandExecutor
             
         } catch (Exception e) {
             player.sendMessage("§cОшибка выполнения команды: " + e.getMessage());

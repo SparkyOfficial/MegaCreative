@@ -4,6 +4,7 @@ import com.megacreative.MegaCreative;
 import com.megacreative.coding.BlockType;
 import com.megacreative.coding.CodeBlock;
 import com.megacreative.coding.CodeScript;
+import com.megacreative.interfaces.IWorldManager;
 import com.megacreative.models.*;
 import org.bukkit.*;
 import org.bukkit.entity.Player;
@@ -14,7 +15,7 @@ import java.io.IOException;
 import java.util.*;
 import java.util.concurrent.ThreadLocalRandom;
 
-public class WorldManager {
+public class WorldManagerImpl implements IWorldManager {
     
     private final MegaCreative plugin;
     private final Map<String, CreativeWorld> worlds;
@@ -22,7 +23,11 @@ public class WorldManager {
     private final int maxWorldsPerPlayer = 5;
     private final int worldBorderSize = 300;
     
-    public WorldManager(MegaCreative plugin) {
+    // Синхронизация для операций с мирами
+    private final Object worldSaveLock = new Object();
+    private final Object worldCreationLock = new Object();
+    
+    public WorldManagerImpl(MegaCreative plugin) {
         this.plugin = plugin;
         this.worlds = new HashMap<>();
         this.playerWorlds = new HashMap<>();
@@ -85,17 +90,8 @@ public class WorldManager {
                     player.teleport(newWorld.getSpawnLocation());
                     player.sendMessage("§aМир '" + name + "' успешно создан!");
 
-                    // Асинхронное сохранение файла
-                    Bukkit.getScheduler().runTaskAsynchronously(plugin, () -> {
-                        try {
-                            saveWorld(creativeWorld);
-                        } catch (Exception e) {
-                            plugin.getLogger().warning("Не удалось сохранить данные мира: " + e.getMessage());
-                            // Уведомление об ошибке в главном потоке
-                            Bukkit.getScheduler().runTask(plugin, () -> 
-                                player.sendMessage("§cНе удалось сохранить данные мира. Обратитесь к администратору."));
-                        }
-                    });
+                    // Асинхронное сохранение файла с синхронизацией
+                    saveWorldAsync(creativeWorld, player);
                     
                 } else {
                     throw new RuntimeException("Не удалось создать мир (Bukkit.createWorld вернул null)");
@@ -326,6 +322,28 @@ public class WorldManager {
             id = String.valueOf(ThreadLocalRandom.current().nextInt(100000, 999999));
         } while (worlds.containsKey(id));
         return id;
+    }
+    
+    /**
+     * Асинхронное сохранение мира с синхронизацией
+     */
+    public void saveWorldAsync(CreativeWorld world, Player player) {
+        Bukkit.getScheduler().runTaskAsynchronously(plugin, () -> {
+            synchronized (worldSaveLock) {
+                try {
+                    saveWorld(world);
+                    // Уведомление об успехе в главном потоке
+                    Bukkit.getScheduler().runTask(plugin, () -> 
+                        player.sendMessage("§aМир '" + world.getName() + "' успешно сохранен!"));
+                } catch (Exception e) {
+                    plugin.getLogger().severe("Критическая ошибка при сохранении мира " + world.getId() + ": " + e.getMessage());
+                    e.printStackTrace();
+                    // Уведомление об ошибке в главном потоке
+                    Bukkit.getScheduler().runTask(plugin, () -> 
+                        player.sendMessage("§cПроизошла ошибка при сохранении мира."));
+                }
+            }
+        });
     }
     
     public void saveWorld(CreativeWorld world) {

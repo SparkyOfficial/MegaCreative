@@ -1,8 +1,10 @@
 package com.megacreative.coding;
 
 import com.megacreative.MegaCreative;
+import com.megacreative.interfaces.ICodingManager;
 import com.megacreative.models.CreativeWorld;
 import org.bukkit.Bukkit;
+import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.Listener;
 import org.bukkit.event.player.PlayerJoinEvent;
@@ -10,6 +12,7 @@ import org.bukkit.event.player.AsyncPlayerChatEvent;
 import org.bukkit.event.player.PlayerQuitEvent;
 import org.bukkit.event.player.PlayerInteractEvent;
 
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -18,7 +21,7 @@ import java.util.UUID;
 /**
  * Управляет всеми аспектами системы кодирования: загрузкой, сохранением и выполнением скриптов.
  */
-public class CodingManager implements Listener {
+public class CodingManagerImpl implements ICodingManager, Listener {
 
     private final MegaCreative plugin;
     private final ScriptExecutor scriptExecutor;
@@ -34,26 +37,20 @@ public class CodingManager implements Listener {
         return scriptExecutor;
     }
 
-    public CodingManager(MegaCreative plugin) {
+    public CodingManagerImpl(MegaCreative plugin) {
         this.plugin = plugin;
         this.scriptExecutor = new ScriptExecutor(plugin);
         Bukkit.getPluginManager().registerEvents(this, plugin);
     }
-
-    /**
-     * Загружает скрипты для мира и делает их активными.
-     * @param world Мир, скрипты которого нужно загрузить.
-     */
+    
+    @Override
     public void loadScriptsForWorld(CreativeWorld world) {
         UUID worldUniqueId = Bukkit.getWorld(world.getWorldName()).getUID();
         worldScripts.put(world.getId(), world.getScripts());
         plugin.getLogger().info("Загружено " + world.getScripts().size() + " скриптов для мира " + world.getName());
     }
 
-    /**
-     * Выгружает скрипты мира, делая их неактивными.
-     * @param world Мир, скрипты которого нужно выгрузить.
-     */
+    @Override
     public void unloadScriptsForWorld(CreativeWorld world) {
         UUID worldUniqueId = Bukkit.getWorld(world.getWorldName()).getUID();
         if (worldScripts.containsKey(world.getId())) {
@@ -62,6 +59,82 @@ public class CodingManager implements Listener {
             plugin.getLogger().info("Выгружено " + count + " скриптов для мира " + world.getName());
         }
     }
+    
+    @Override
+    public void executeScript(CodeScript script, Player player, String trigger) {
+        ExecutionContext context = ExecutionContext.builder()
+                .plugin(plugin)
+                .player(player)
+                .creativeWorld(plugin.getWorldManager().findCreativeWorldByBukkit(player.getWorld()))
+                .build();
+        scriptExecutor.execute(script, context, trigger);
+    }
+    
+    @Override
+    public CodeScript getScript(String name) {
+        // Поиск скрипта по имени
+        for (List<CodeScript> scripts : worldScripts.values()) {
+            for (CodeScript script : scripts) {
+                if (script.getName().equals(name)) {
+                    return script;
+                }
+            }
+        }
+        return null;
+    }
+    
+    @Override
+    public List<CodeScript> getWorldScripts(CreativeWorld world) {
+        return worldScripts.getOrDefault(world.getId(), new ArrayList<>());
+    }
+    
+    @Override
+    public void saveScript(CodeScript script) {
+        // Сохранение скрипта
+    }
+    
+    @Override
+    public void deleteScript(String scriptName) {
+        // Удаление скрипта
+    }
+    
+    @Override
+    public Object getGlobalVariable(String name) {
+        return globalVariables.get(name);
+    }
+    
+    @Override
+    public void setGlobalVariable(String name, Object value) {
+        globalVariables.put(name, value);
+    }
+    
+    @Override
+    public Object getServerVariable(String name) {
+        return serverVariables.get(name);
+    }
+    
+    @Override
+    public void setServerVariable(String name, Object value) {
+        serverVariables.put(name, value);
+    }
+    
+    @Override
+    public Map<String, Object> getGlobalVariables() {
+        return new HashMap<>(globalVariables);
+    }
+    
+    @Override
+    public Map<String, Object> getServerVariables() {
+        return new HashMap<>(serverVariables);
+    }
+    
+    @Override
+    public void clearVariables() {
+        globalVariables.clear();
+        serverVariables.clear();
+    }
+
+
 
     // --- Обработчики событий для выполнения скриптов ---
 
@@ -165,21 +238,4 @@ public class CodingManager implements Listener {
         }
     }
 
-    /**
-     * Получает глобальную переменную
-     * @param name Имя переменной
-     * @return Значение переменной или null
-     */
-    public Object getGlobalVariable(String name) {
-        return globalVariables.get(name);
-    }
-    
-    /**
-     * Получает серверную переменную
-     * @param name Имя переменной
-     * @return Значение переменной или null
-     */
-    public Object getServerVariable(String name) {
-        return serverVariables.get(name);
-    }
 }
