@@ -1,0 +1,117 @@
+name: MegaCreative
+main: com.megacreative.MegaCreative
+version: 1.0.0
+api-version: 1.20
+description: Advanced Minecraft plugin for world creation and visual programming
+author: MegaCreative Team
+website: https://github.com/megacreative
+
+commands:
+  megacreative:
+    description: Main plugin command
+    aliases: [mc, mega]
+  myworlds:
+    description: Open my worlds menu
+    aliases: [mw, worlds]
+  worldbrowser:
+    description: Open world browser
+    aliases: [wb, browser]
+  join:
+    description: Join world by ID
+    aliases: [j]
+  play:
+    description: Switch to play mode
+  build:
+    description: Switch to build mode
+  dev:
+    description: Switch to dev mode
+  hub:
+    description: Return to hub world
+    aliases: [lobby, spawn]
+  savescript:
+    description: Save current code blocks as a script
+    usage: /<command> <script_name> [template]
+    permission: megacreative.user
+  templates:
+    description: Open template browser
+    aliases: [template, tpl]
+    permission: megacreative.user
+  scripts:
+    description: Open scripts management GUI
+    aliases: [script, scriptlist]
+    permission: megacreative.user
+  worldsettings:
+    description: Open world settings
+    usage: /<command>
+    permission: megacreative.user
+  testscript:
+    description: Создает тестовый скрипт для проверки системы кодирования.
+    usage: /<command>
+    permission: megacreative.admin
+  createscript:
+    description: Создает готовый скрипт указанного типа.
+    usage: /<command> <тип>
+    permission: megacreative.admin
+  visualize:
+    description: Управление визуализацией соединений между блоками кода.
+    usage: /<command> [on|off|status|help]
+    permission: megacreative.user
+  debug:
+    description: Управление отладкой скриптов.
+    usage: /<command> [on|off|stats|status|help]
+    permission: megacreative.user
+  stoprepeat:
+    description: Остановка повторяющихся задач.
+    usage: /<command> [all]
+    permission: megacreative.user
+  status:
+    description: Проверка статуса режима мира.
+    usage: /<command>
+    permission: megacreative.user
+  testhybrid:
+    description: Тестирование гибридной системы выполнения скриптов
+    usage: /<command> [info|test|list]
+    permission: megacreative.admin
+  cleanworlds:
+    description: Очистка поврежденных миров
+    usage: /<command> [check|clean|backup]
+    permission: megacreative.admin
+  create:
+    description: Создание нового мира
+    usage: /<command> <тип_мира> [имя_мира]
+    permission: megacreative.create
+  savefunction:
+    description: Сохранение функции
+  scriptexport:
+    description: Экспорт и импорт скриптов
+    usage: /scriptexport <export|import|list> [параметры]
+    permission: megacreative.script.export
+  testblockpersistence:
+    description: Тестирование системы сохранения блоков
+    usage: /<command> <info|test|clear>
+    permission: megacreative.admin
+  trusted:
+    description: Управление доверенными игроками
+    usage: /<command> <add|remove|list|info> [игрок] [тип] [добавил]
+    permission: megacreative.trusted
+
+permissions:
+  megacreative.*:
+    description: All MegaCreative permissions
+    default: op
+    children:
+      megacreative.admin: true
+      megacreative.create: true
+      megacreative.join: true
+  megacreative.admin:
+    description: Admin permissions
+    default: op
+  megacreative.create:
+    description: Create worlds
+    default: true
+  megacreative.join:
+    description: Join worlds
+    default: true
+  megacreative.trusted:
+    description: Manage trusted players
+    default: op

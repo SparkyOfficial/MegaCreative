@@ -1,0 +1,29 @@
+# MegaCreative Configuration File
+
+# Настройки миров
+worlds:
+  maxPerPlayer: 5          # Максимум миров на игрока
+  borderSize: 300          # Размер границы мира в блоках
+  autoSave: true           # Автосохранение миров
+  autoSaveInterval: 300    # Интервал автосохранения в секундах
+
+# Сообщения плагина
+messages:
+  prefix: "§8[§bMegaCreative§8] "
+  noPermission: "§cУ вас нет прав на это действие!"
+  worldNotFound: "§cМир не найден!"
+  worldLimitReached: "§cВы достигли лимита миров!"
+  worldCreated: "§aМир успешно создан!"
+  worldDeleted: "§aМир успешно удален!"
+  playerNotFound: "§cИгрок не найден!"
+  alreadyInWorld: "§cВы уже находитесь в этом мире!"
+  worldPrivate: "§cЭтот мир приватный!"
+  
+# Настройки GUI
+gui:
+  updateInterval: 20       # Интервал обновления GUI в тиках
+  
+# Настройки разработки
+development:
+  enableDebug: false       # Включить отладочные сообщения
+  logWorldActions: true    # Логировать действия с мирами
