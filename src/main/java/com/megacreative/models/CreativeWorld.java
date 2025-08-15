@@ -97,10 +97,16 @@ public class CreativeWorld {
     }
     
     public boolean isTrustedBuilder(Player player) {
+        if (trustedBuilders == null) {
+            trustedBuilders = new HashSet<>();
+        }
         return trustedBuilders.contains(player.getUniqueId()) || isOwner(player);
     }
     
     public boolean isTrustedCoder(Player player) {
+        if (trustedCoders == null) {
+            trustedCoders = new HashSet<>();
+        }
         return trustedCoders.contains(player.getUniqueId()) || isOwner(player);
     }
     
@@ -113,15 +119,24 @@ public class CreativeWorld {
     }
     
     public void addOnlinePlayer(UUID playerId) {
+        if (onlinePlayers == null) {
+            onlinePlayers = new HashSet<>();
+        }
         onlinePlayers.add(playerId);
         updateActivity();
     }
     
     public void removeOnlinePlayer(UUID playerId) {
+        if (onlinePlayers == null) {
+            onlinePlayers = new HashSet<>();
+        }
         onlinePlayers.remove(playerId);
     }
     
     public int getOnlineCount() {
+        if (onlinePlayers == null) {
+            onlinePlayers = new HashSet<>();
+        }
         return onlinePlayers.size();
     }
     
