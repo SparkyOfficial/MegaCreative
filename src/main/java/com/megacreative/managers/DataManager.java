@@ -6,8 +6,12 @@ import org.bukkit.entity.Player;
 
 import java.io.File;
 import java.io.IOException;
+import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.HashSet;
+import java.util.List;
 import java.util.Map;
+import java.util.Set;
 import java.util.UUID;
 
 /**
@@ -78,6 +82,36 @@ public class DataManager {
     /**
      * Увеличить числовую переменную игрока
      */
+    @SuppressWarnings("unchecked")
+    public Set<String> getFavorites(UUID playerId) {
+        Map<String, Object> playerVars = playerVariables.get(playerId);
+        if (playerVars != null) {
+            Object favoritesObj = playerVars.get("favorites");
+            if (favoritesObj instanceof List) {
+                return new HashSet<>((List<String>) favoritesObj);
+            }
+        }
+        return new HashSet<>();
+    }
+
+    public void addToFavorites(UUID playerId, String worldId) {
+        Set<String> favorites = getFavorites(playerId);
+        if (favorites.add(worldId)) {
+            setPlayerVariable(playerId, "favorites", new ArrayList<>(favorites));
+        }
+    }
+
+    public void removeFromFavorites(UUID playerId, String worldId) {
+        Set<String> favorites = getFavorites(playerId);
+        if (favorites.remove(worldId)) {
+            setPlayerVariable(playerId, "favorites", new ArrayList<>(favorites));
+        }
+    }
+
+    public boolean isFavorite(UUID playerId, String worldId) {
+        return getFavorites(playerId).contains(worldId);
+    }
+
     public void incrementPlayerVariable(UUID playerId, String key, double amount) {
         Object current = getPlayerVariable(playerId, key);
         double currentValue = 0.0;
@@ -219,6 +253,12 @@ public class DataManager {
      */
     public void saveAllData() {
         saveServerVariables();
+        
+        // Сохраняем данные всех онлайн игроков
+        for (Player player : plugin.getServer().getOnlinePlayers()) {
+            savePlayerData(player);
+        }
+        
         plugin.getLogger().info("Все данные сохранены");
     }
-} 
+}

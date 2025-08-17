@@ -9,7 +9,11 @@ import org.bukkit.entity.Player;
 
 import java.io.File;
 import java.io.IOException;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Map;
+import java.util.UUID;
+import java.util.concurrent.ConcurrentHashMap;
 import java.util.stream.Collectors;
 
 /**
@@ -18,7 +22,7 @@ import java.util.stream.Collectors;
 public class TrustedPlayerManager {
     
     private final MegaCreative plugin;
-    private final Map<UUID, TrustedPlayer> trustedPlayers = new HashMap<>();
+    private final Map<UUID, TrustedPlayer> trustedPlayers = new ConcurrentHashMap<>();
     private final File trustedPlayersFile;
     private final FileConfiguration config;
 
@@ -35,7 +39,6 @@ public class TrustedPlayerManager {
     public boolean addTrustedPlayer(Player player, TrustedPlayer.TrustedPlayerType type, String addedBy) {
         TrustedPlayer trustedPlayer = new TrustedPlayer(player.getUniqueId(), player.getName(), type, addedBy);
         trustedPlayers.put(player.getUniqueId(), trustedPlayer);
-        saveTrustedPlayers();
         
         plugin.getLogger().info("Добавлен доверенный игрок: " + player.getName() + " (" + type.getDisplayName() + ")");
         return true;
@@ -47,7 +50,6 @@ public class TrustedPlayerManager {
     public boolean addTrustedPlayer(UUID playerId, String playerName, TrustedPlayer.TrustedPlayerType type, String addedBy) {
         TrustedPlayer trustedPlayer = new TrustedPlayer(playerId, playerName, type, addedBy);
         trustedPlayers.put(playerId, trustedPlayer);
-        saveTrustedPlayers();
         
         plugin.getLogger().info("Добавлен доверенный игрок: " + playerName + " (" + type.getDisplayName() + ")");
         return true;
@@ -59,7 +61,6 @@ public class TrustedPlayerManager {
     public boolean removeTrustedPlayer(UUID playerId) {
         TrustedPlayer removed = trustedPlayers.remove(playerId);
         if (removed != null) {
-            saveTrustedPlayers();
             plugin.getLogger().info("Удален доверенный игрок: " + removed.getPlayerName());
             return true;
         }
@@ -155,7 +156,7 @@ public class TrustedPlayerManager {
     /**
      * Сохраняет доверенных игроков в конфигурацию
      */
-    private void saveTrustedPlayers() {
+    public void save() {
         config.set("trusted_players", null); // Очищаем секцию
         
         ConfigurationSection section = config.createSection("trusted_players");

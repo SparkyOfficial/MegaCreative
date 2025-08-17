@@ -6,16 +6,18 @@ import org.bukkit.entity.Player;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.inventory.meta.ItemMeta;
 
-import java.util.*;
+import java.util.Arrays;
+import java.util.Set;
+import java.util.UUID;
 
 public class PlayerManager {
     
     private final MegaCreative plugin;
-    private final Map<UUID, Set<String>> playerFavorites;
-    
+    private final DataManager dataManager;
+
     public PlayerManager(MegaCreative plugin) {
         this.plugin = plugin;
-        this.playerFavorites = new HashMap<>();
+        this.dataManager = plugin.getDataManager();
     }
     
     public void giveStarterItems(Player player) {
@@ -48,22 +50,18 @@ public class PlayerManager {
     }
     
     public void addToFavorites(UUID playerId, String worldId) {
-        playerFavorites.computeIfAbsent(playerId, k -> new HashSet<>()).add(worldId);
+        dataManager.addToFavorites(playerId, worldId);
     }
     
     public void removeFromFavorites(UUID playerId, String worldId) {
-        Set<String> favorites = playerFavorites.get(playerId);
-        if (favorites != null) {
-            favorites.remove(worldId);
-        }
+        dataManager.removeFromFavorites(playerId, worldId);
     }
     
     public boolean isFavorite(UUID playerId, String worldId) {
-        Set<String> favorites = playerFavorites.get(playerId);
-        return favorites != null && favorites.contains(worldId);
+        return dataManager.isFavorite(playerId, worldId);
     }
     
     public Set<String> getFavorites(UUID playerId) {
-        return playerFavorites.getOrDefault(playerId, new HashSet<>());
+        return dataManager.getFavorites(playerId);
     }
 }

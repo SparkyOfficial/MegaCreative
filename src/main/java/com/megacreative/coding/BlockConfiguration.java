@@ -6,6 +6,8 @@ import org.bukkit.configuration.ConfigurationSection;
 import org.bukkit.configuration.file.YamlConfiguration;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.inventory.meta.ItemMeta;
+import org.bukkit.persistence.PersistentDataType;
+import org.bukkit.NamespacedKey;
 
 import java.io.File;
 import java.io.InputStream;
@@ -29,6 +31,8 @@ public class BlockConfiguration {
     // --- НОВЫЕ ПОЛЯ ДЛЯ ИМЕНОВАННЫХ СЛОТОВ И ГРУПП ---
     private final Map<String, ActionSlotConfig> actionSlotConfigs = new HashMap<>();
     private final Map<String, ActionGroupConfig> actionGroupConfigs = new HashMap<>();
+    
+    public static final NamespacedKey PLACEHOLDER_KEY = new NamespacedKey("megacreative", "placeholder");
     
     private int maxBlocksPerScript = 100;
     private int maxRecursionDepth = 50;

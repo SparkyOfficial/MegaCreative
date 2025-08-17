@@ -1,36 +1,11 @@
 package com.megacreative.coding;
 
 import com.megacreative.MegaCreative;
+import com.megacreative.coding.actions.*;
+import com.megacreative.coding.blocks.BlockFactory;
+import com.megacreative.coding.conditions.*;
 import com.megacreative.models.CreativeWorld;
 import com.megacreative.models.WorldMode;
-import com.megacreative.coding.blocks.BlockFactory;
-import com.megacreative.coding.actions.*;
-import com.megacreative.coding.conditions.IsOpCondition;
-import com.megacreative.coding.conditions.CompareVariableCondition;
-import com.megacreative.coding.conditions.WorldTimeCondition;
-import com.megacreative.coding.conditions.IsNearBlockCondition;
-import com.megacreative.coding.conditions.MobNearCondition;
-import com.megacreative.coding.conditions.PlayerGameModeCondition;
-import com.megacreative.coding.conditions.IfVarEqualsCondition;
-import com.megacreative.coding.conditions.IfVarGreaterCondition;
-import com.megacreative.coding.conditions.IfVarLessCondition;
-import com.megacreative.coding.conditions.IsBlockTypeCondition;
-import com.megacreative.coding.conditions.IsPlayerHoldingCondition;
-import com.megacreative.coding.conditions.IsNearEntityCondition;
-import com.megacreative.coding.conditions.HasArmorCondition;
-import com.megacreative.coding.conditions.IsNightCondition;
-import com.megacreative.coding.conditions.IsRidingCondition;
-import com.megacreative.coding.actions.PlayerHealthCondition;
-import com.megacreative.coding.actions.HasItemCondition;
-import com.megacreative.coding.actions.HasPermissionCondition;
-import com.megacreative.coding.actions.IsInWorldCondition;
-import com.megacreative.coding.actions.WaitAction;
-import com.megacreative.coding.actions.GiveItemsAction;
-import com.megacreative.coding.actions.SpawnEntityAction;
-import com.megacreative.coding.actions.RandomNumberAction;
-import com.megacreative.coding.actions.PlayParticleEffectAction;
-import com.megacreative.coding.actions.RemoveItemsAction;
-import com.megacreative.coding.actions.SetArmorAction;
 import org.bukkit.Bukkit;
 import org.bukkit.Location;
 import org.bukkit.Material;
@@ -166,12 +141,12 @@ public class HybridScriptExecutor {
         
         // Условия переменных (мигрированы в новую систему)
         // oldConditionRegistry.put("ifVarEquals", new IfVarEqualsCondition()); // МИГРИРОВАН
-        oldConditionRegistry.put("ifVarGreater", new IfVarGreaterCondition());
-        oldConditionRegistry.put("ifVarLess", new IfVarLessCondition());
-        oldConditionRegistry.put("compareVariable", new CompareVariableCondition());
+        oldConditionRegistry.put("ifVarGreater", new com.megacreative.coding.conditions.IfVarGreaterCondition());
+        oldConditionRegistry.put("ifVarLess", new com.megacreative.coding.conditions.IfVarLessCondition());
+        oldConditionRegistry.put("compareVariable", new com.megacreative.coding.conditions.CompareVariableCondition());
         
         // Условия мира
-        oldConditionRegistry.put("worldTime", new WorldTimeCondition());
+        oldConditionRegistry.put("worldTime", new com.megacreative.coding.conditions.WorldTimeCondition());
         oldConditionRegistry.put("isNearBlock", new IsNearBlockCondition());
         oldConditionRegistry.put("isBlockType", new IsBlockTypeCondition());
         oldConditionRegistry.put("isNight", new IsNightCondition());

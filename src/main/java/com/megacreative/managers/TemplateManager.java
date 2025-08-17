@@ -30,16 +30,17 @@ public class TemplateManager {
      * Сохраняет шаблон
      */
     public void saveTemplate(CodeScript template) {
-        // Устанавливаем уникальный ID для шаблона
+        // Устанавливаем уникальный ID для шаблона, если его нет
         if (template.getId() == null) {
             template.setId(UUID.randomUUID());
         }
-        
-        // Добавляем в список, если его там нет
-        if (!templates.contains(template)) {
-            templates.add(template);
-        }
-        
+
+        // Удаляем старую версию шаблона с таким же именем, чтобы избежать дубликатов
+        templates.removeIf(t -> t.getName().equals(template.getName()));
+
+        // Добавляем новую или обновленную версию
+        templates.add(template);
+
         saveTemplates();
     }
     
@@ -71,29 +72,23 @@ public class TemplateManager {
     /**
      * Загружает шаблоны из файла
      */
+    @SuppressWarnings("unchecked")
     private void loadTemplates() {
         if (!templatesFile.exists()) {
             return;
         }
-        
         try {
             YamlConfiguration config = YamlConfiguration.loadConfiguration(templatesFile);
-            
-            if (config.contains("templatesData")) {
-                String templatesJson = config.getString("templatesData");
-                if (templatesJson != null && !templatesJson.isEmpty()) {
-                    // Используем Gson для десериализации шаблонов
-                    List<CodeScript> loadedTemplates = com.megacreative.utils.JsonSerializer.fromJson(templatesJson, List.class);
-                    if (loadedTemplates != null) {
-                        templates.clear();
-                        templates.addAll(loadedTemplates);
-                        plugin.getLogger().info("Загружено " + templates.size() + " шаблонов");
-                    } else {
-                        plugin.getLogger().warning("Не удалось загрузить шаблоны из файла templates.yml");
-                    }
+            if (config.contains("templates")) {
+                List<CodeScript> loadedTemplates = (List<CodeScript>) config.getList("templates");
+                if (loadedTemplates != null) {
+                    templates.clear();
+                    templates.addAll(loadedTemplates);
+                    plugin.getLogger().info("Загружено " + templates.size() + " шаблонов");
+                } else {
+                    plugin.getLogger().warning("Не удалось загрузить шаблоны из файла templates.yml (список пуст).");
                 }
             }
-            
         } catch (Exception e) {
             plugin.getLogger().severe("Ошибка загрузки шаблонов: " + e.getMessage());
         }
@@ -105,13 +100,8 @@ public class TemplateManager {
     private void saveTemplates() {
         try {
             YamlConfiguration config = new YamlConfiguration();
-            
-            // Используем Gson для сериализации всех шаблонов в JSON
-            String templatesJson = com.megacreative.utils.JsonSerializer.toJson(templates);
-            config.set("templatesData", templatesJson);
-            
+            config.set("templates", templates);
             config.save(templatesFile);
-            
         } catch (IOException e) {
             plugin.getLogger().severe("Ошибка сохранения шаблонов: " + e.getMessage());
         }

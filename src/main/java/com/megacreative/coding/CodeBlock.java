@@ -1,24 +1,26 @@
 package com.megacreative.coding;
 
 import com.megacreative.MegaCreative;
-import lombok.Data;
-import lombok.NoArgsConstructor;
+import org.bukkit.Material;
+import org.bukkit.configuration.serialization.ConfigurationSerializable;
+import org.bukkit.inventory.ItemStack;
 
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.UUID;
-import org.bukkit.Material;
-import org.bukkit.inventory.ItemStack;
+import java.util.stream.Collectors;
 
 /**
  * Представляет один блок в скрипте.
  * Содержит тип, параметры и ссылки на другие блоки.
  */
-@Data
-@NoArgsConstructor
-public class CodeBlock implements Cloneable {
+public class CodeBlock implements Cloneable, ConfigurationSerializable {
+
+    public CodeBlock() {
+        // Default constructor
+    }
 
     private UUID id;
     private Material material; // Тип блока (DIAMOND_BLOCK и т.д.)
@@ -55,6 +57,14 @@ public class CodeBlock implements Cloneable {
      */
     public void setParameter(String key, Object value) {
         parameters.put(key, value);
+    }
+
+    public void setParameters(Map<String, Object> parameters) {
+        this.parameters = parameters;
+    }
+
+    public void setAction(String action) {
+        this.action = action;
     }
 
     public Object getParameter(String key) {
@@ -312,7 +322,26 @@ public class CodeBlock implements Cloneable {
         return namedGroups;
     }
 
-    @Override
+    public Material getMaterial() {
+        return material;
+    }
+
+    public String getAction() {
+        return action;
+    }
+
+    public UUID getId() {
+        return id;
+    }
+
+    public List<CodeBlock> getChildren() {
+        return children;
+    }
+
+    public CodeBlock getNextBlock() {
+        return nextBlock;
+    }
+
     public CodeBlock clone() throws CloneNotSupportedException {
         CodeBlock cloned = (CodeBlock) super.clone();
         cloned.id = UUID.randomUUID(); // У нового блока новый ID
@@ -322,5 +351,49 @@ public class CodeBlock implements Cloneable {
         cloned.nextBlock = null;
         cloned.children = new ArrayList<>();
         return cloned;
+    }
+
+    @Override
+    public Map<String, Object> serialize() {
+        Map<String, Object> map = new HashMap<>();
+        map.put("id", this.id.toString());
+        map.put("material", this.material.name());
+        map.put("action", this.action);
+        map.put("parameters", this.parameters);
+        map.put("configItems", this.configItems);
+
+        if (this.nextBlock != null) {
+            map.put("nextBlock", this.nextBlock.serialize());
+        }
+
+        if (this.children != null && !this.children.isEmpty()) {
+            map.put("children", this.children.stream().map(CodeBlock::serialize).collect(Collectors.toList()));
+        }
+
+        return map;
+    }
+
+    public static CodeBlock deserialize(Map<String, Object> map) {
+        Material material = Material.valueOf((String) map.get("material"));
+        String action = (String) map.get("action");
+        CodeBlock block = new CodeBlock(material, action);
+
+        block.id = UUID.fromString((String) map.get("id"));
+        block.parameters = (Map<String, Object>) map.get("parameters");
+
+        if (map.containsKey("configItems")) {
+            block.configItems = (Map<Integer, Map<String, Object>>) map.get("configItems");
+        }
+
+        if (map.containsKey("nextBlock")) {
+            block.nextBlock = CodeBlock.deserialize((Map<String, Object>) map.get("nextBlock"));
+        }
+
+        if (map.containsKey("children")) {
+            List<Map<String, Object>> childrenMaps = (List<Map<String, Object>>) map.get("children");
+            block.children = childrenMaps.stream().map(CodeBlock::deserialize).collect(Collectors.toList());
+        }
+
+        return block;
     }
 }

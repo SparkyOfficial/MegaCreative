@@ -37,7 +37,7 @@ public class BlockConnectionVisualizer {
     }
 
     public void startVisualization(Player player) {
-        CreativeWorld world = plugin.getWorldManager().getWorld(player.getWorld().getName());
+        CreativeWorld world = plugin.getWorldManager().findCreativeWorldByBukkit(player.getWorld());
         if (world == null) return;
 
         // Загружаем блоки для мира

@@ -2,8 +2,6 @@ package com.megacreative.coding;
 
 import com.megacreative.MegaCreative;
 import com.megacreative.models.CreativeWorld;
-import lombok.Builder;
-import lombok.Getter;
 import org.bukkit.Location;
 import org.bukkit.entity.Player;
 import org.bukkit.event.Event;
@@ -17,47 +15,50 @@ import java.util.Map;
  * Хранит всю информацию, необходимую для выполнения одного скрипта.
  * Передается между блоками во время исполнения.
  */
-@Getter
-@Builder
 public class ExecutionContext {
 
-    private final MegaCreative plugin; // Ссылка на основной плагин
-    private final Player player; // Игрок, который вызвал событие (может быть null)
-    private final CreativeWorld creativeWorld; // Мир, в котором выполняется скрипт
-    private final Event event; // Само событие, которое вызвало скрипт
-    private final Location blockLocation; // Локация выполняемого блока (может быть null)
-    private final CodeBlock currentBlock; // Текущий выполняемый блок (может быть null)
+    private final MegaCreative plugin;
+    private final Player player;
+    private final CreativeWorld creativeWorld;
+    private final Event event;
+    private final Location blockLocation;
+    private final CodeBlock currentBlock;
+    private final Map<String, Object> variables;
+    private final Map<String, List<Object>> lists;
+    private final Map<String, Boolean> booleans;
+    private final Map<String, Number> numbers;
 
-    // Переменные скрипта (String -> Object)
-    @Builder.Default
-    private Map<String, Object> variables = new HashMap<>();
-    
-    // --- РАСШИРЕННЫЕ ТИПЫ ДАННЫХ ---
-    // Списки (массивы) для хранения коллекций данных
-    @Builder.Default
-    private Map<String, List<Object>> lists = new HashMap<>();
-    
-    // Булевы переменные для логических операций
-    @Builder.Default
-    private Map<String, Boolean> booleans = new HashMap<>();
-    
-    // Числовые переменные с поддержкой int и double
-    @Builder.Default
-    private Map<String, Number> numbers = new HashMap<>();
+    private ExecutionContext(ExecutionContextBuilder builder) {
+        this.plugin = builder.plugin;
+        this.player = builder.player;
+        this.creativeWorld = builder.creativeWorld;
+        this.event = builder.event;
+        this.blockLocation = builder.blockLocation;
+        this.currentBlock = builder.currentBlock;
+        this.variables = builder.variables != null ? builder.variables : new HashMap<>();
+        this.lists = builder.lists != null ? builder.lists : new HashMap<>();
+        this.booleans = builder.booleans != null ? builder.booleans : new HashMap<>();
+        this.numbers = builder.numbers != null ? builder.numbers : new HashMap<>();
+    }
 
-    /**
-     * Создает новый контекст с указанным текущим блоком.
-     * @param currentBlock Текущий блок для выполнения
-     * @param newLocation Новая локация блока
-     * @return Новый контекст с обновленным блоком и локацией
-     */
+    public static ExecutionContextBuilder builder() {
+        return new ExecutionContextBuilder();
+    }
+
+    public MegaCreative getPlugin() { return plugin; }
+    public Player getPlayer() { return player; }
+    public CreativeWorld getCreativeWorld() { return creativeWorld; }
+    public Event getEvent() { return event; }
+    public Location getBlockLocation() { return blockLocation; }
+    public CodeBlock getCurrentBlock() { return currentBlock; }
+
     public ExecutionContext withCurrentBlock(CodeBlock currentBlock, Location newLocation) {
         return ExecutionContext.builder()
                 .plugin(this.plugin)
                 .player(this.player)
                 .creativeWorld(this.creativeWorld)
                 .event(this.event)
-                .blockLocation(newLocation) // Обновляем локацию
+                .blockLocation(newLocation)
                 .currentBlock(currentBlock)
                 .variables(new HashMap<>(this.variables))
                 .lists(new HashMap<>(this.lists))
@@ -190,5 +191,72 @@ public class ExecutionContext {
     public double getDouble(String name) {
         Number number = numbers.get(name);
         return number != null ? number.doubleValue() : 0.0;
+    }
+
+    public static class ExecutionContextBuilder {
+        private MegaCreative plugin;
+        private Player player;
+        private CreativeWorld creativeWorld;
+        private Event event;
+        private Location blockLocation;
+        private CodeBlock currentBlock;
+        private Map<String, Object> variables;
+        private Map<String, List<Object>> lists;
+        private Map<String, Boolean> booleans;
+        private Map<String, Number> numbers;
+
+        public ExecutionContextBuilder plugin(MegaCreative plugin) {
+            this.plugin = plugin;
+            return this;
+        }
+
+        public ExecutionContextBuilder player(Player player) {
+            this.player = player;
+            return this;
+        }
+
+        public ExecutionContextBuilder creativeWorld(CreativeWorld creativeWorld) {
+            this.creativeWorld = creativeWorld;
+            return this;
+        }
+
+        public ExecutionContextBuilder event(Event event) {
+            this.event = event;
+            return this;
+        }
+
+        public ExecutionContextBuilder blockLocation(Location blockLocation) {
+            this.blockLocation = blockLocation;
+            return this;
+        }
+
+        public ExecutionContextBuilder currentBlock(CodeBlock currentBlock) {
+            this.currentBlock = currentBlock;
+            return this;
+        }
+
+        public ExecutionContextBuilder variables(Map<String, Object> variables) {
+            this.variables = variables;
+            return this;
+        }
+
+        public ExecutionContextBuilder lists(Map<String, List<Object>> lists) {
+            this.lists = lists;
+            return this;
+        }
+
+        public ExecutionContextBuilder booleans(Map<String, Boolean> booleans) {
+            this.booleans = booleans;
+            return this;
+        }
+
+        public ExecutionContextBuilder numbers(Map<String, Number> numbers) {
+            this.numbers = numbers;
+            return this;
+        }
+
+        public ExecutionContext build() {
+            return new ExecutionContext(this);
+        }
     }
 }

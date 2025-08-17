@@ -1,17 +1,21 @@
 package com.megacreative.managers;
 
 import com.megacreative.MegaCreative;
-import com.megacreative.coding.BlockType;
 import com.megacreative.coding.CodeBlock;
 import com.megacreative.coding.CodeScript;
 import com.megacreative.models.*;
 import org.bukkit.*;
-import org.bukkit.entity.Player;
 import org.bukkit.configuration.file.YamlConfiguration;
+import org.bukkit.entity.Player;
 
 import java.io.File;
 import java.io.IOException;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.Objects;
+import java.util.UUID;
 import java.util.concurrent.ThreadLocalRandom;
 
 public class WorldManager {
@@ -337,9 +341,8 @@ public class WorldManager {
         File worldFile = new File(dataFolder, world.getId() + ".yml");
         YamlConfiguration config = new YamlConfiguration();
         
-        // Используем Gson для сериализации всего мира в JSON
-        String worldJson = com.megacreative.utils.JsonSerializer.serializeWorld(world);
-        config.set("worldData", worldJson);
+        // Сериализуем мир напрямую в конфиг
+        config.set("world", world);
         
         try {
             config.save(worldFile);
@@ -373,17 +376,8 @@ public class WorldManager {
     private void loadWorld(File worldFile) {
         YamlConfiguration config = YamlConfiguration.loadConfiguration(worldFile);
         
-        // Используем Gson для десериализации мира из JSON
-        String worldJson = config.getString("worldData");
-        if (worldJson == null) {
-            plugin.getLogger().warning("Файл мира " + worldFile.getName() + " не содержит данных worldData");
-            // Попытка восстановления поврежденного файла
-            attemptWorldRecovery(worldFile);
-            return;
-        }
-        
         try {
-            CreativeWorld world = com.megacreative.utils.JsonSerializer.deserializeWorld(worldJson);
+            CreativeWorld world = (CreativeWorld) config.get("world");
             if (world != null) {
                 worlds.put(world.getId(), world);
                 playerWorlds.computeIfAbsent(world.getOwnerId(), k -> new ArrayList<>()).add(world.getId());

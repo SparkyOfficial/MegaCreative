@@ -11,6 +11,7 @@ import org.bukkit.event.Listener;
 import org.bukkit.event.inventory.InventoryCloseEvent;
 import org.bukkit.inventory.Inventory;
 import org.bukkit.inventory.ItemStack;
+import org.bukkit.persistence.PersistentDataType;
 
 import java.util.HashMap;
 import java.util.List;
@@ -171,6 +172,10 @@ public class BlockConfigManager implements Listener {
             for (int i = 0; i < event.getInventory().getSize(); i++) {
                 ItemStack item = event.getInventory().getItem(i);
                 if (item != null && !item.getType().isAir()) {
+                    // Проверяем, что это не placeholder
+                    if (item.hasItemMeta() && item.getItemMeta().getPersistentDataContainer().has(BlockConfiguration.PLACEHOLDER_KEY, PersistentDataType.BYTE)) {
+                        continue;
+                    }
                     codeBlock.setConfigItem(i, item);
                     savedItems++;
                 }
@@ -182,8 +187,8 @@ public class BlockConfigManager implements Listener {
                 player.sendMessage("§eℹ Конфигурация блока очищена.");
             }
             
-            // Сохраняем весь мир, чтобы изменения не потерялись после перезагрузки
-            plugin.getWorldManager().saveWorld(creativeWorld);
+            // TODO: Реализовать более эффективный механизм сохранения, например, периодический или при выгрузке мира.
+            // plugin.getWorldManager().saveWorld(creativeWorld);
         }
         
         // Убираем игрока из списка настраивающих

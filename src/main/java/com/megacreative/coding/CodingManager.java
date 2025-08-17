@@ -5,8 +5,8 @@ import com.megacreative.models.CreativeWorld;
 import org.bukkit.Bukkit;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.Listener;
+import io.papermc.paper.event.player.AsyncChatEvent;
 import org.bukkit.event.player.PlayerJoinEvent;
-import org.bukkit.event.player.AsyncPlayerChatEvent;
 import org.bukkit.event.player.PlayerQuitEvent;
 import org.bukkit.event.player.PlayerInteractEvent;
 
@@ -45,7 +45,6 @@ public class CodingManager implements Listener {
      * @param world Мир, скрипты которого нужно загрузить.
      */
     public void loadScriptsForWorld(CreativeWorld world) {
-        UUID worldUniqueId = Bukkit.getWorld(world.getWorldName()).getUID();
         worldScripts.put(world.getId(), world.getScripts());
         plugin.getLogger().info("Загружено " + world.getScripts().size() + " скриптов для мира " + world.getName());
     }
@@ -55,7 +54,6 @@ public class CodingManager implements Listener {
      * @param world Мир, скрипты которого нужно выгрузить.
      */
     public void unloadScriptsForWorld(CreativeWorld world) {
-        UUID worldUniqueId = Bukkit.getWorld(world.getWorldName()).getUID();
         if (worldScripts.containsKey(world.getId())) {
             int count = worldScripts.get(world.getId()).size();
             worldScripts.remove(world.getId());
@@ -67,17 +65,18 @@ public class CodingManager implements Listener {
 
     @EventHandler
     public void onPlayerJoin(PlayerJoinEvent event) {
-        String worldId = event.getPlayer().getWorld().getName();
+        CreativeWorld creativeWorld = plugin.getWorldManager().findCreativeWorldByBukkit(event.getPlayer().getWorld());
+        if (creativeWorld == null || !creativeWorld.getMode().isCodeEnabled()) {
+            return;
+        }
+
+        String worldId = creativeWorld.getId();
         if (worldScripts.containsKey(worldId)) {
             List<CodeScript> scripts = worldScripts.get(worldId);
             for (CodeScript script : scripts) {
                 if (script.isEnabled() && script.getRootBlock() != null &&
                     script.getRootBlock().getMaterial() == org.bukkit.Material.DIAMOND_BLOCK &&
                     "onJoin".equals(script.getRootBlock().getAction())) {
-                    CreativeWorld creativeWorld = plugin.getWorldManager().getWorldByName(worldId);
-                    if (creativeWorld == null || !creativeWorld.getMode().isCodeEnabled()) {
-                        continue; // Пропускаем выполнение если код выключен
-                    }
                     ExecutionContext context = ExecutionContext.builder()
                             .plugin(plugin)
                             .player(event.getPlayer())
@@ -91,43 +90,48 @@ public class CodingManager implements Listener {
     }
 
     @EventHandler
-    public void onPlayerChat(AsyncPlayerChatEvent event) {
-        String worldId = event.getPlayer().getWorld().getName();
-        if (worldScripts.containsKey(worldId)) {
-            List<CodeScript> scripts = worldScripts.get(worldId);
-            for (CodeScript script : scripts) {
-                if (script.isEnabled() && script.getRootBlock() != null &&
-                    script.getRootBlock().getMaterial() == org.bukkit.Material.DIAMOND_BLOCK &&
-                    "onChat".equals(script.getRootBlock().getAction())) {
-                    CreativeWorld creativeWorld = plugin.getWorldManager().getWorldByName(worldId);
-                    if (creativeWorld == null || !creativeWorld.getMode().isCodeEnabled()) {
-                        continue; // Пропускаем выполнение если код выключен
+    public void onPlayerChat(AsyncChatEvent event) {
+        // Переключаемся на основной поток для безопасности
+        Bukkit.getScheduler().runTask(plugin, () -> {
+            CreativeWorld creativeWorld = plugin.getWorldManager().findCreativeWorldByBukkit(event.getPlayer().getWorld());
+            if (creativeWorld == null || !creativeWorld.getMode().isCodeEnabled()) {
+                return;
+            }
+
+            String worldId = creativeWorld.getId();
+            if (worldScripts.containsKey(worldId)) {
+                List<CodeScript> scripts = worldScripts.get(worldId);
+                for (CodeScript script : scripts) {
+                    if (script.isEnabled() && script.getRootBlock() != null &&
+                        script.getRootBlock().getMaterial() == org.bukkit.Material.DIAMOND_BLOCK &&
+                        "onChat".equals(script.getRootBlock().getAction())) {
+                        ExecutionContext context = ExecutionContext.builder()
+                                .plugin(plugin)
+                                .player(event.getPlayer())
+                                .creativeWorld(creativeWorld)
+                                .event(event)
+                                .build();
+                        scriptExecutor.execute(script, context, "onChat");
                     }
-                    ExecutionContext context = ExecutionContext.builder()
-                            .plugin(plugin)
-                            .player(event.getPlayer())
-                            .creativeWorld(creativeWorld)
-                            .event(event)
-                            .build();
-                    scriptExecutor.execute(script, context, "onChat");
                 }
             }
-        }
+        });
     }
 
     @EventHandler
     public void onPlayerQuit(PlayerQuitEvent event) {
-        String worldId = event.getPlayer().getWorld().getName();
+        CreativeWorld creativeWorld = plugin.getWorldManager().findCreativeWorldByBukkit(event.getPlayer().getWorld());
+        if (creativeWorld == null || !creativeWorld.getMode().isCodeEnabled()) {
+            return;
+        }
+
+        String worldId = creativeWorld.getId();
         if (worldScripts.containsKey(worldId)) {
             List<CodeScript> scripts = worldScripts.get(worldId);
             for (CodeScript script : scripts) {
                 if (script.isEnabled() && script.getRootBlock() != null &&
                     script.getRootBlock().getMaterial() == org.bukkit.Material.DIAMOND_BLOCK &&
                     "onLeave".equals(script.getRootBlock().getAction())) {
-                    CreativeWorld creativeWorld = plugin.getWorldManager().getWorldByName(worldId);
-                    if (creativeWorld == null || !creativeWorld.getMode().isCodeEnabled()) {
-                        continue; // Пропускаем выполнение если код выключен
-                    }
                     ExecutionContext context = ExecutionContext.builder()
                             .plugin(plugin)
                             .player(event.getPlayer())
@@ -142,17 +146,18 @@ public class CodingManager implements Listener {
 
     @EventHandler
     public void onPlayerInteract(PlayerInteractEvent event) {
-        String worldId = event.getPlayer().getWorld().getName();
+        CreativeWorld creativeWorld = plugin.getWorldManager().findCreativeWorldByBukkit(event.getPlayer().getWorld());
+        if (creativeWorld == null || !creativeWorld.getMode().isCodeEnabled()) {
+            return;
+        }
+
+        String worldId = creativeWorld.getId();
         if (worldScripts.containsKey(worldId)) {
             List<CodeScript> scripts = worldScripts.get(worldId);
             for (CodeScript script : scripts) {
                 if (script.isEnabled() && script.getRootBlock() != null &&
                     script.getRootBlock().getMaterial() == org.bukkit.Material.DIAMOND_BLOCK &&
                     "onInteract".equals(script.getRootBlock().getAction())) {
-                    CreativeWorld creativeWorld = plugin.getWorldManager().getWorldByName(worldId);
-                    if (creativeWorld == null || !creativeWorld.getMode().isCodeEnabled()) {
-                        continue; // Пропускаем выполнение если код выключен
-                    }
                     ExecutionContext context = ExecutionContext.builder()
                             .plugin(plugin)
                             .player(event.getPlayer())

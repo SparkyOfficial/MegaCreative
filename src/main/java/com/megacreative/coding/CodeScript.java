@@ -1,15 +1,61 @@
 package com.megacreative.coding;
 
-import lombok.Data;
+import org.bukkit.configuration.serialization.ConfigurationSerializable;
 
+import java.util.HashMap;
+import java.util.Map;
 import java.util.UUID;
 
 /**
  * Представляет собой полный скрипт, состоящий из блоков кода.
  * Хранит информацию о скрипте и его корневой блок.
  */
-@Data
-public class CodeScript {
+public class CodeScript implements ConfigurationSerializable {
+
+    public String getName() {
+        return name;
+    }
+
+    public void setName(String name) {
+        this.name = name;
+    }
+
+    public String getAuthor() {
+        return author;
+    }
+
+    public void setAuthor(String author) {
+        this.author = author;
+    }
+
+    public String getDescription() {
+        return description;
+    }
+
+    public ScriptType getType() {
+        return type;
+    }
+
+    public void setEnabled(boolean enabled) {
+        this.enabled = enabled;
+    }
+
+    public void setDescription(String description) {
+        this.description = description;
+    }
+
+    public void setType(ScriptType type) {
+        this.type = type;
+    }
+
+    public UUID getId() {
+        return id;
+    }
+    
+    public void setId(UUID id) {
+        this.id = id;
+    }
+
 
     /**
      * Типы скриптов
@@ -68,7 +114,44 @@ public class CodeScript {
     /**
      * Устанавливает, является ли скрипт шаблоном
      */
+    public boolean isEnabled() {
+        return enabled;
+    }
+
+    public CodeBlock getRootBlock() {
+        return rootBlock;
+    }
+
     public void setTemplate(boolean isTemplate) {
         this.isTemplate = isTemplate;
+    }
+
+    @Override
+    public Map<String, Object> serialize() {
+        Map<String, Object> map = new HashMap<>();
+        map.put("id", id.toString());
+        map.put("name", name);
+        map.put("enabled", enabled);
+        map.put("type", type.name());
+        map.put("rootBlock", rootBlock.serialize());
+        map.put("isTemplate", isTemplate);
+        map.put("author", author);
+        map.put("description", description);
+        return map;
+    }
+
+    public static CodeScript deserialize(Map<String, Object> map) {
+        CodeBlock rootBlock = CodeBlock.deserialize((Map<String, Object>) map.get("rootBlock"));
+        CodeScript script = new CodeScript(
+                (String) map.get("name"),
+                (boolean) map.get("enabled"),
+                rootBlock,
+                ScriptType.valueOf((String) map.get("type"))
+        );
+        script.id = UUID.fromString((String) map.get("id"));
+        script.isTemplate = (boolean) map.getOrDefault("isTemplate", false);
+        script.author = (String) map.get("author");
+        script.description = (String) map.get("description");
+        return script;
     }
 }

@@ -1,29 +1,30 @@
 package com.megacreative;
 
+import com.megacreative.coding.*;
 import com.megacreative.commands.*;
 import com.megacreative.listeners.*;
-import com.megacreative.coding.BlockPlacementHandler;
-import com.megacreative.coding.CodingManager;
-import com.megacreative.coding.BlockConnectionVisualizer;
-import com.megacreative.coding.ScriptDebugger;
-import com.megacreative.coding.CodingItems;
-import com.megacreative.coding.BlockConfiguration;
 import com.megacreative.managers.*;
+import com.megacreative.coding.CodingManager;
+import com.megacreative.coding.CodeBlock;
+import com.megacreative.coding.CodeScript;
 import com.megacreative.models.CreativeWorld;
-import com.megacreative.utils.ConfigManager;
+import com.megacreative.models.WorldComment;
+import com.megacreative.models.WorldFlags;
+import com.megacreative.utils.MessageManager;
+import com.megacreative.utils.VirtualInventoryManager;
 import org.bukkit.Bukkit;
-import org.bukkit.entity.Player;
-import org.bukkit.inventory.ItemStack;
+import org.bukkit.configuration.serialization.ConfigurationSerialization;
 import org.bukkit.plugin.java.JavaPlugin;
+import org.bukkit.inventory.ItemStack;
 
+import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 import java.util.UUID;
 import java.util.logging.Logger;
-import com.megacreative.commands.CreateScriptCommand;
-import java.util.ArrayList;
-import java.util.List;
 import com.megacreative.managers.BlockConfigManager;
+import org.bukkit.entity.Player;
 
 public class MegaCreative extends JavaPlugin {
     
@@ -54,7 +55,14 @@ public class MegaCreative extends JavaPlugin {
     
     @Override
     public void onEnable() {
+        ConfigurationSerialization.registerClass(CreativeWorld.class);
+        ConfigurationSerialization.registerClass(WorldFlags.class);
+        ConfigurationSerialization.registerClass(WorldComment.class);
+        ConfigurationSerialization.registerClass(CodeScript.class);
+        ConfigurationSerialization.registerClass(CodeBlock.class);
+
         instance = this;
+        this.logger = getLogger();
         
         // Инициализация конфигурации
         configManager = new ConfigManager(this);
@@ -96,10 +104,9 @@ public class MegaCreative extends JavaPlugin {
         // Останавливаем все повторяющиеся задачи
         com.megacreative.coding.actions.RepeatTriggerAction.stopAllRepeatingTasks();
         
-        // Сохраняем все данные
-        if (dataManager != null) {
-            dataManager.saveAllData();
-        }
+        // Сохранение всех данных
+        dataManager.saveAllData();
+        trustedPlayerManager.save();
         
         // Сохраняем миры
         if (worldManager != null) {
@@ -164,6 +171,10 @@ public class MegaCreative extends JavaPlugin {
     public WorldManager getWorldManager() {
         return worldManager;
     }
+
+    public DataManager getDataManager() {
+        return dataManager;
+    }
     
     public PlayerManager getPlayerManager() {
         return playerManager;
@@ -185,10 +196,6 @@ public class MegaCreative extends JavaPlugin {
         return scriptDebugger;
     }
     
-    public DataManager getDataManager() {
-        return dataManager;
-    }
-    
     public TemplateManager getTemplateManager() {
         return templateManager;
     }
@@ -200,7 +207,7 @@ public class MegaCreative extends JavaPlugin {
     public TrustedPlayerManager getTrustedPlayerManager() {
         return trustedPlayerManager;
     }
-    
+
     public BlockConfigManager getBlockConfigManager() {
         return blockConfigManager;
     }

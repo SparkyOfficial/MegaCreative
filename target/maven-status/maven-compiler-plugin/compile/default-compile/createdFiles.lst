@@ -64,7 +64,9 @@ com\megacreative\coding\values\NumberValue.class
 com\megacreative\coding\data\DataItemFactory.class
 com\megacreative\coding\ExecutionContext$ExecutionContextBuilder.class
 com\megacreative\commands\ScriptExportCommand.class
+com\megacreative\managers\ConfigManager.class
 com\megacreative\coding\BlockConfiguration$SlotConfig.class
+com\megacreative\utils\VirtualInventoryManager.class
 com\megacreative\coding\blocks\conditions\ElseCondition.class
 com\megacreative\coding\conditions\IsNightCondition.class
 com\megacreative\coding\ScriptDebugger$2.class
@@ -80,7 +82,6 @@ com\megacreative\coding\blocks\actions\WhileLoopAction.class
 com\megacreative\coding\actions\PlayParticleEffectAction.class
 com\megacreative\coding\conditions\IsNearEntityCondition$1.class
 com\megacreative\coding\actions\SetVarAction.class
-com\megacreative\utils\JsonSerializer.class
 com\megacreative\coding\ExecutionContext.class
 com\megacreative\coding\actions\SetBlockAction.class
 com\megacreative\coding\BlockConfiguration$GroupConfig.class
@@ -226,6 +227,7 @@ com\megacreative\models\CreativeWorld.class
 com\megacreative\commands\TestBlockPersistenceCommand.class
 com\megacreative\MegaCreative.class
 com\megacreative\coding\blocks\actions\SetVarAction.class
+com\megacreative\utils\MessageManager.class
 com\megacreative\coding\conditions\IfVarLessCondition.class
 com\megacreative\coding\blocks\actions\ClearInventoryAction.class
 com\megacreative\coding\blocks\actions\SpawnMobAction.class
