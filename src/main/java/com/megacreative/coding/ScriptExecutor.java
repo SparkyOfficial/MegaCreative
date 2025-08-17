@@ -43,6 +43,7 @@ public class ScriptExecutor {
     private final MegaCreative plugin;
     private final Map<String, BlockAction> actionRegistry = new HashMap<>();
     private final Map<String, BlockCondition> conditionRegistry = new HashMap<>();
+    private final Map<String, Location> blockLocationCache = new HashMap<>();
 
     public ScriptExecutor(MegaCreative plugin) {
         this.plugin = plugin;
@@ -286,19 +287,42 @@ public class ScriptExecutor {
 
     /**
      * Находит локацию блока в мире по его объекту CodeBlock.
-     * Это медленная операция, используйте ее в основном для отладки.
+     * Использует кэширование для оптимизации производительности.
      * @return Location блока или null, если не найден.
      */
     private Location findBlockLocation(CodeBlock block) {
         if (block == null) return null;
-        // Мы берем карту всех блоков из обработчика
+        
+        // Проверяем кэш сначала
+        String blockId = block.getId().toString();
+        if (blockLocationCache.containsKey(blockId)) {
+            return blockLocationCache.get(blockId);
+        }
+        
+        // Если нет в кэше, ищем в мире
         Map<Location, CodeBlock> allBlocks = plugin.getBlockPlacementHandler().getBlockCodeBlocks();
         for (Map.Entry<Location, CodeBlock> entry : allBlocks.entrySet()) {
-            // Сравниваем по ID, т.к. объекты могут быть разными экземплярами после сериализации
-            if (entry.getValue().getId().equals(block.getId())) {
-                return entry.getKey();
+            if (entry.getValue().getId().equals(blockId)) {
+                Location location = entry.getKey();
+                // Сохраняем в кэш
+                blockLocationCache.put(blockId, location);
+                return location;
             }
         }
         return null;
+    }
+    
+    /**
+     * Очищает кэш локаций блоков
+     */
+    public void clearLocationCache() {
+        blockLocationCache.clear();
+    }
+    
+    /**
+     * Удаляет локацию блока из кэша
+     */
+    public void removeFromLocationCache(String blockId) {
+        blockLocationCache.remove(blockId);
     }
 }

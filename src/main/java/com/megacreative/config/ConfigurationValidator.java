@@ -1,162 +1,193 @@
 package com.megacreative.config;
 
+import com.megacreative.MegaCreative;
 import com.megacreative.exceptions.ConfigurationException;
 import org.bukkit.configuration.file.FileConfiguration;
+import org.bukkit.configuration.file.YamlConfiguration;
+
+import java.io.File;
+import java.io.IOException;
+import java.util.List;
 
 /**
- * Валидатор конфигурации плагина
+ * Валидатор конфигурации плагина MegaCreative
  */
 public class ConfigurationValidator {
     
+    private final MegaCreative plugin;
+    
+    public ConfigurationValidator(MegaCreative plugin) {
+        this.plugin = plugin;
+    }
+    
     /**
      * Валидирует основную конфигурацию
-     * @param config Конфигурация для валидации
-     * @throws ConfigurationException если конфигурация неверна
      */
-    public static void validateConfig(FileConfiguration config) throws ConfigurationException {
-        validateWorldsSection(config);
-        validateMessagesSection(config);
-        validateGUISection(config);
-        validateDevelopmentSection(config);
+    public void validateMainConfig() throws ConfigurationException {
+        FileConfiguration config = plugin.getConfig();
+        
+        // Проверяем обязательные секции
+        if (!config.contains("worlds")) {
+            throw new ConfigurationException("Отсутствует секция 'worlds' в конфигурации");
+        }
+        
+        if (!config.contains("coding")) {
+            throw new ConfigurationException("Отсутствует секция 'coding' в конфигурации");
+        }
+        
+        // Проверяем настройки миров
+        validateWorldSettings(config);
+        
+        // Проверяем настройки кодинга
+        validateCodingSettings(config);
+        
+        // Проверяем настройки безопасности
+        validateSecuritySettings(config);
     }
     
     /**
-     * Валидирует секцию миров
-     * @param config Конфигурация
-     * @throws ConfigurationException если секция неверна
+     * Валидирует настройки миров
      */
-    private static void validateWorldsSection(FileConfiguration config) throws ConfigurationException {
-        if (!config.contains("worlds.maxPerPlayer")) {
-            throw new ConfigurationException("Missing worlds.maxPerPlayer");
+    private void validateWorldSettings(FileConfiguration config) throws ConfigurationException {
+        if (!config.contains("worlds.max_worlds_per_player")) {
+            throw new ConfigurationException("Отсутствует настройка 'worlds.max_worlds_per_player'");
         }
         
-        int maxWorlds = config.getInt("worlds.maxPerPlayer");
+        int maxWorlds = config.getInt("worlds.max_worlds_per_player");
         if (maxWorlds <= 0 || maxWorlds > 100) {
-            throw new ConfigurationException("Invalid maxPerPlayer value: " + maxWorlds + ". Must be between 1 and 100");
+            throw new ConfigurationException("Некорректное значение 'worlds.max_worlds_per_player': " + maxWorlds);
         }
         
-        if (!config.contains("worlds.borderSize")) {
-            throw new ConfigurationException("Missing worlds.borderSize");
+        if (!config.contains("worlds.world_border_size")) {
+            throw new ConfigurationException("Отсутствует настройка 'worlds.world_border_size'");
         }
         
-        int borderSize = config.getInt("worlds.borderSize");
+        int borderSize = config.getInt("worlds.world_border_size");
         if (borderSize <= 0 || borderSize > 10000) {
-            throw new ConfigurationException("Invalid borderSize value: " + borderSize + ". Must be between 1 and 10000");
-        }
-        
-        if (!config.contains("worlds.autoSaveInterval")) {
-            throw new ConfigurationException("Missing worlds.autoSaveInterval");
-        }
-        
-        int autoSaveInterval = config.getInt("worlds.autoSaveInterval");
-        if (autoSaveInterval <= 0 || autoSaveInterval > 3600) {
-            throw new ConfigurationException("Invalid autoSaveInterval value: " + autoSaveInterval + ". Must be between 1 and 3600 seconds");
+            throw new ConfigurationException("Некорректное значение 'worlds.world_border_size': " + borderSize);
         }
     }
     
     /**
-     * Валидирует секцию сообщений
-     * @param config Конфигурация
-     * @throws ConfigurationException если секция неверна
+     * Валидирует настройки кодинга
      */
-    private static void validateMessagesSection(FileConfiguration config) throws ConfigurationException {
-        if (!config.contains("messages.prefix")) {
-            throw new ConfigurationException("Missing messages.prefix");
+    private void validateCodingSettings(FileConfiguration config) throws ConfigurationException {
+        if (!config.contains("coding.max_script_size")) {
+            throw new ConfigurationException("Отсутствует настройка 'coding.max_script_size'");
         }
         
-        String prefix = config.getString("messages.prefix");
-        if (prefix == null || prefix.trim().isEmpty()) {
-            throw new ConfigurationException("Prefix cannot be empty");
+        int maxScriptSize = config.getInt("coding.max_script_size");
+        if (maxScriptSize <= 0 || maxScriptSize > 1000) {
+            throw new ConfigurationException("Некорректное значение 'coding.max_script_size': " + maxScriptSize);
         }
         
-        // Проверяем наличие основных сообщений
-        String[] requiredMessages = {
-            "messages.worldCreated",
-            "messages.worldDeleted",
-            "messages.worldNotFound",
-            "messages.noPermission",
-            "messages.playerNotFound"
-        };
+        if (!config.contains("coding.max_execution_time")) {
+            throw new ConfigurationException("Отсутствует настройка 'coding.max_execution_time'");
+        }
         
-        for (String messagePath : requiredMessages) {
-            if (!config.contains(messagePath)) {
-                throw new ConfigurationException("Missing message: " + messagePath);
+        int maxExecutionTime = config.getInt("coding.max_execution_time");
+        if (maxExecutionTime <= 0 || maxExecutionTime > 30000) {
+            throw new ConfigurationException("Некорректное значение 'coding.max_execution_time': " + maxExecutionTime);
+        }
+    }
+    
+    /**
+     * Валидирует настройки безопасности
+     */
+    private void validateSecuritySettings(FileConfiguration config) throws ConfigurationException {
+        if (!config.contains("security.allowed_commands")) {
+            throw new ConfigurationException("Отсутствует настройка 'security.allowed_commands'");
+        }
+        
+        List<String> allowedCommands = config.getStringList("security.allowed_commands");
+        if (allowedCommands.isEmpty()) {
+            throw new ConfigurationException("Список разрешенных команд пуст");
+        }
+        
+        // Проверяем, что нет опасных команд
+        for (String command : allowedCommands) {
+            if (isDangerousCommand(command)) {
+                throw new ConfigurationException("Обнаружена опасная команда в списке разрешенных: " + command);
             }
         }
     }
     
     /**
-     * Валидирует секцию GUI
-     * @param config Конфигурация
-     * @throws ConfigurationException если секция неверна
+     * Проверяет, является ли команда опасной
      */
-    private static void validateGUISection(FileConfiguration config) throws ConfigurationException {
-        if (!config.contains("gui.updateInterval")) {
-            throw new ConfigurationException("Missing gui.updateInterval");
+    private boolean isDangerousCommand(String command) {
+        String lowerCommand = command.toLowerCase();
+        return lowerCommand.startsWith("op") ||
+               lowerCommand.startsWith("deop") ||
+               lowerCommand.startsWith("ban") ||
+               lowerCommand.startsWith("kick") ||
+               lowerCommand.startsWith("stop") ||
+               lowerCommand.startsWith("restart") ||
+               lowerCommand.startsWith("reload") ||
+               lowerCommand.startsWith("save-all") ||
+               lowerCommand.startsWith("save-off") ||
+               lowerCommand.startsWith("save-on");
+    }
+    
+    /**
+     * Валидирует файл конфигурации блоков кодинга
+     */
+    public void validateCodingBlocksConfig() throws ConfigurationException {
+        File codingBlocksFile = new File(plugin.getDataFolder(), "coding_blocks.yml");
+        if (!codingBlocksFile.exists()) {
+            throw new ConfigurationException("Файл coding_blocks.yml не найден");
         }
         
-        int updateInterval = config.getInt("gui.updateInterval");
-        if (updateInterval <= 0 || updateInterval > 100) {
-            throw new ConfigurationException("Invalid gui.updateInterval value: " + updateInterval + ". Must be between 1 and 100 ticks");
+        try {
+            FileConfiguration config = YamlConfiguration.loadConfiguration(codingBlocksFile);
+            
+            if (!config.contains("blocks")) {
+                throw new ConfigurationException("Отсутствует секция 'blocks' в coding_blocks.yml");
+            }
+            
+            // Проверяем, что есть хотя бы несколько блоков
+            if (config.getConfigurationSection("blocks") == null) {
+                throw new ConfigurationException("Секция 'blocks' пуста в coding_blocks.yml");
+            }
+            
+        } catch (Exception e) {
+            throw new ConfigurationException("Ошибка чтения coding_blocks.yml: " + e.getMessage());
         }
     }
     
     /**
-     * Валидирует секцию разработки
-     * @param config Конфигурация
-     * @throws ConfigurationException если секция неверна
+     * Создает резервную копию конфигурации
      */
-    private static void validateDevelopmentSection(FileConfiguration config) throws ConfigurationException {
-        if (!config.contains("development.enableDebug")) {
-            throw new ConfigurationException("Missing development.enableDebug");
-        }
-        
-        if (!config.contains("development.logWorldActions")) {
-            throw new ConfigurationException("Missing development.logWorldActions");
+    public void createBackup() {
+        try {
+            File configFile = new File(plugin.getDataFolder(), "config.yml");
+            File backupFile = new File(plugin.getDataFolder(), "config.yml.backup");
+            
+            if (configFile.exists()) {
+                org.apache.commons.io.FileUtils.copyFile(configFile, backupFile);
+                plugin.getLogger().info("Создана резервная копия конфигурации");
+            }
+        } catch (IOException e) {
+            plugin.getLogger().warning("Не удалось создать резервную копию конфигурации: " + e.getMessage());
         }
     }
     
     /**
-     * Валидирует конфигурацию блоков кодинга
-     * @param config Конфигурация блоков
-     * @throws ConfigurationException если конфигурация неверна
+     * Восстанавливает конфигурацию из резервной копии
      */
-    public static void validateCodingBlocksConfig(FileConfiguration config) throws ConfigurationException {
-        if (config == null) {
-            throw new ConfigurationException("Coding blocks configuration is null");
-        }
-        
-        if (!config.contains("blocks")) {
-            throw new ConfigurationException("Missing 'blocks' section in coding_blocks.yml");
-        }
-        
-        // Проверяем наличие хотя бы одного блока
-        if (config.getConfigurationSection("blocks") == null) {
-            throw new ConfigurationException("No blocks defined in coding_blocks.yml");
-        }
-        
-        // Проверяем каждый блок
-        for (String blockKey : config.getConfigurationSection("blocks").getKeys(false)) {
-            String materialPath = "blocks." + blockKey + ".material";
-            String actionsPath = "blocks." + blockKey + ".actions";
+    public void restoreFromBackup() throws ConfigurationException {
+        try {
+            File configFile = new File(plugin.getDataFolder(), "config.yml");
+            File backupFile = new File(plugin.getDataFolder(), "config.yml.backup");
             
-            if (!config.contains(materialPath)) {
-                throw new ConfigurationException("Missing material for block: " + blockKey);
+            if (backupFile.exists()) {
+                org.apache.commons.io.FileUtils.copyFile(backupFile, configFile);
+                plugin.getLogger().info("Конфигурация восстановлена из резервной копии");
+            } else {
+                throw new ConfigurationException("Резервная копия не найдена");
             }
-            
-            if (!config.contains(actionsPath)) {
-                throw new ConfigurationException("Missing actions for block: " + blockKey);
-            }
-            
-            String material = config.getString(materialPath);
-            if (material == null || material.trim().isEmpty()) {
-                throw new ConfigurationException("Invalid material for block: " + blockKey);
-            }
-            
-            // Проверяем, что actions - это список
-            if (!config.isList(actionsPath)) {
-                throw new ConfigurationException("Actions for block " + blockKey + " must be a list");
-            }
+        } catch (IOException e) {
+            throw new ConfigurationException("Не удалось восстановить конфигурацию: " + e.getMessage());
         }
     }
 }

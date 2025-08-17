@@ -65,6 +65,28 @@ public class MegaCreative extends JavaPlugin {
         configManager = new ConfigManager(this);
         configManager.loadConfig();
         
+        // Инициализация системы логирования
+        com.megacreative.utils.LogUtils.initialize(this);
+        
+        // Валидация конфигурации
+        try {
+            ConfigurationValidator validator = new ConfigurationValidator(this);
+            validator.validateMainConfig();
+            validator.validateCodingBlocksConfig();
+            com.megacreative.utils.LogUtils.info("Конфигурация успешно валидирована");
+        } catch (ConfigurationException e) {
+            com.megacreative.utils.LogUtils.error("Ошибка валидации конфигурации: " + e.getMessage());
+            // Создаем резервную копию и пытаемся восстановить
+            ConfigurationValidator validator = new ConfigurationValidator(this);
+            validator.createBackup();
+            try {
+                validator.restoreFromBackup();
+                com.megacreative.utils.LogUtils.info("Конфигурация восстановлена из резервной копии");
+            } catch (ConfigurationException restoreEx) {
+                com.megacreative.utils.LogUtils.error("Не удалось восстановить конфигурацию: " + restoreEx.getMessage());
+            }
+        }
+        
         // Инициализируем менеджеры через DI контейнер
         this.worldManager = new WorldManagerImpl(this);
         this.playerManager = new PlayerManagerImpl(this);
@@ -95,10 +117,15 @@ public class MegaCreative extends JavaPlugin {
         registerCommands();
         registerEvents();
         
-        // ЗАПУСК ПРОВЕРКИ ИНВЕНТАРЕЙ
-        startInventoryChecker();
-        
-        getLogger().info("MegaCreative включен!");
+        this.logger = getLogger();
+        this.logger.info("=== MEGACREATIVE ЗАГРУЖЕН ===");
+        this.logger.info("Версия: 1.0.0");
+        this.logger.info("Команды зарегистрированы: " + getDescription().getCommands().size());
+        this.logger.info("Менеджеры инициализированы:");
+        this.logger.info("  - WorldManager: " + (worldManager != null ? "✓" : "✗"));
+        this.logger.info("  - PlayerManager: " + (playerManager != null ? "✓" : "✗"));
+        this.logger.info("  - CodingManager: " + (codingManager != null ? "✓" : "✗"));
+        this.logger.info("MegaCreative готов к работе!");
     }
     
     @Override
@@ -116,7 +143,10 @@ public class MegaCreative extends JavaPlugin {
             worldManager.saveAllWorlds();
         }
         
-        logger.info("MegaCreative отключен!");
+        if (logger != null) {
+            logger.info("=== MEGACREATIVE ОТКЛЮЧЕН ===");
+            logger.info("Все данные сохранены.");
+        }
     }
     
     private void registerCommands() {
