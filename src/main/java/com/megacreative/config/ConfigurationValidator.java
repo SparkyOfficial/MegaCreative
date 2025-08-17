@@ -164,7 +164,7 @@ public class ConfigurationValidator {
             File backupFile = new File(plugin.getDataFolder(), "config.yml.backup");
             
             if (configFile.exists()) {
-                org.apache.commons.io.FileUtils.copyFile(configFile, backupFile);
+                java.nio.file.Files.copy(configFile.toPath(), backupFile.toPath(), java.nio.file.StandardCopyOption.REPLACE_EXISTING);
                 plugin.getLogger().info("Создана резервная копия конфигурации");
             }
         } catch (IOException e) {
@@ -181,7 +181,7 @@ public class ConfigurationValidator {
             File backupFile = new File(plugin.getDataFolder(), "config.yml.backup");
             
             if (backupFile.exists()) {
-                org.apache.commons.io.FileUtils.copyFile(backupFile, configFile);
+                java.nio.file.Files.copy(backupFile.toPath(), configFile.toPath(), java.nio.file.StandardCopyOption.REPLACE_EXISTING);
                 plugin.getLogger().info("Конфигурация восстановлена из резервной копии");
             } else {
                 throw new ConfigurationException("Резервная копия не найдена");

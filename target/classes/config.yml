@@ -2,10 +2,33 @@
 
 # Настройки миров
 worlds:
-  maxPerPlayer: 5          # Максимум миров на игрока
-  borderSize: 300          # Размер границы мира в блоках
-  autoSave: true           # Автосохранение миров
-  autoSaveInterval: 300    # Интервал автосохранения в секундах
+  max_worlds_per_player: 5     # Максимум миров на игрока
+  world_border_size: 300       # Размер границы мира в блоках
+  autoSave: true               # Автосохранение миров
+  autoSaveInterval: 300        # Интервал автосохранения в секундах
+
+# Настройки кодинга
+coding:
+  max_script_size: 100         # Максимальный размер скрипта (в блоках)
+  max_execution_time: 5000     # Максимальное время выполнения (мс)
+  enable_debug: false          # Включить отладку скриптов
+
+# Настройки безопасности
+security:
+  allowed_commands:
+    - "say"
+    - "tell"
+    - "msg"
+    - "me"
+    - "gamemode"
+    - "tp"
+    - "teleport"
+    - "give"
+    - "effect"
+    - "playsound"
+    - "particle"
+    - "title"
+    - "actionbar"
 
 # Сообщения плагина
 messages:
@@ -21,9 +44,9 @@ messages:
   
 # Настройки GUI
 gui:
-  updateInterval: 20       # Интервал обновления GUI в тиках
+  updateInterval: 20           # Интервал обновления GUI в тиках
   
 # Настройки разработки
 development:
-  enableDebug: false       # Включить отладочные сообщения
-  logWorldActions: true    # Логировать действия с мирами
+  enableDebug: false           # Включить отладочные сообщения
+  logWorldActions: true        # Логировать действия с мирами
