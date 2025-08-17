@@ -13,6 +13,8 @@ import com.megacreative.interfaces.*;
 import com.megacreative.models.CreativeWorld;
 import com.megacreative.utils.ConfigManager;
 import com.megacreative.core.DependencyContainer;
+import com.megacreative.config.ConfigurationValidator;
+import com.megacreative.exceptions.ConfigurationException;
 import org.bukkit.Bukkit;
 import org.bukkit.entity.Player;
 import org.bukkit.inventory.ItemStack;
@@ -120,7 +122,7 @@ public class MegaCreative extends JavaPlugin {
         this.logger = getLogger();
         this.logger.info("=== MEGACREATIVE ЗАГРУЖЕН ===");
         this.logger.info("Версия: 1.0.0");
-        this.logger.info("Команды зарегистрированы: " + getDescription().getCommands().size());
+        this.logger.info("Команды зарегистрированы: " + getServer().getPluginCommand("megacreative") != null ? "✓" : "✗");
         this.logger.info("Менеджеры инициализированы:");
         this.logger.info("  - WorldManager: " + (worldManager != null ? "✓" : "✗"));
         this.logger.info("  - PlayerManager: " + (playerManager != null ? "✓" : "✗"));
