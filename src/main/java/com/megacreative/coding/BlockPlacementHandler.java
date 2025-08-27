@@ -41,9 +41,12 @@ public class BlockPlacementHandler implements Listener {
     private final Map<UUID, Location> playerSelections = new HashMap<>();
     private final Map<UUID, CodeBlock> clipboard = new HashMap<>(); // Буфер обмена для копирования
 
+<<<<<<< HEAD
     // Удаляем жестко закодированную карту ACTIONS - теперь используем BlockConfiguration
     // private static final Map<Material, List<String>> ACTIONS = Map.ofEntries(...);
 
+=======
+>>>>>>> ba7215a (Я вернулся)
     public BlockPlacementHandler(MegaCreative plugin) {
         this.plugin = plugin;
     }
@@ -57,7 +60,10 @@ public class BlockPlacementHandler implements Listener {
         playerDebugStates.remove(playerId);
         playerSelections.remove(playerId);
         clipboard.remove(playerId);
+<<<<<<< HEAD
         plugin.getLogger().info("Очищены данные для игрока " + playerId);
+=======
+>>>>>>> ba7215a (Я вернулся)
     }
 
     /**
@@ -69,6 +75,7 @@ public class BlockPlacementHandler implements Listener {
         Block block = event.getBlockPlaced();
         Material mat = block.getType();
         
+<<<<<<< HEAD
         Bukkit.getLogger().info("[DEBUG] BlockPlaceEvent triggered for player " + player.getName());
         
         // Проверяем, является ли предмет "блоком кода" по названию, а не просто по материалу.
@@ -78,12 +85,20 @@ public class BlockPlacementHandler implements Listener {
         }
         if (!isInDevWorld(player)) {
             Bukkit.getLogger().info("[DEBUG] Canceled: Not in a dev world.");
+=======
+        // Проверяем, является ли предмет "блоком кода" по названию, а не просто по материалу.
+        if (!isCodingBlock(event.getItemInHand())) {
+            return;
+        }
+        if (!isInDevWorld(player)) {
+>>>>>>> ba7215a (Я вернулся)
             return;
         }
         
         // Проверяем права доверенного игрока
         if (!plugin.getTrustedPlayerManager().canCodeInDevWorld(player)) {
             event.setCancelled(true);
+<<<<<<< HEAD
             player.sendMessage("§c❌ У вас нет прав для размещения блоков кода в этом мире!");
             return;
         }
@@ -176,15 +191,49 @@ public class BlockPlacementHandler implements Listener {
             }
         } catch (Exception e) {
             plugin.getLogger().warning("Не удалось удалить табличку: " + e.getMessage());
+=======
+            return;
+        }
+        
+        // Создаем "заготовку" блока кода сразу.
+        CodeBlock newCodeBlock = new CodeBlock(mat, "Настройка..."); // Временное действие
+        blockCodeBlocks.put(block.getLocation(), newCodeBlock);
+        
+        // Устанавливаем табличку на блок
+        setSignOnBlock(block.getLocation(), "Настройка...");
+        
+        // Открываем GUI для настройки блока
+        handleBlockConfiguration(player, mat, block.getLocation(), false);
+    }
+
+    /**
+     * Обрабатывает разрушение блоков кодирования
+     */
+    @EventHandler
+    public void onBlockBreak(BlockBreakEvent event) {
+        Location loc = event.getBlock().getLocation();
+        
+        // Удаляем блок из нашей карты
+        if (blockCodeBlocks.containsKey(loc)) {
+            blockCodeBlocks.remove(loc);
+            
+            // Удаляем табличку, если она есть
+            removeSignFromBlock(loc);
+>>>>>>> ba7215a (Я вернулся)
         }
     }
 
     /**
+<<<<<<< HEAD
      * Обрабатывает клики по размещенным блокам кодирования
+=======
+     * Обрабатывает взаимодействие с блоками
+>>>>>>> ba7215a (Я вернулся)
      */
     @EventHandler
     public void onPlayerInteract(PlayerInteractEvent event) {
         Player player = event.getPlayer();
+<<<<<<< HEAD
         
         // Проверяем, что игрок в мире разработки
         if (!isInDevWorld(player)) {
@@ -240,12 +289,19 @@ public class BlockPlacementHandler implements Listener {
             return; // Пропускаем, если используется связующий жезл
         }
         
+=======
+        ItemStack itemInHand = player.getInventory().getItemInMainHand();
+        
+>>>>>>> ba7215a (Я вернулся)
         // Проверяем железный слиток для создания данных
         if (itemInHand.getType() == Material.IRON_INGOT && itemInHand.hasItemMeta() &&
             itemInHand.getItemMeta().getDisplayName().contains(CodingItems.DATA_CREATOR_NAME)) {
             event.setCancelled(true);
             new com.megacreative.gui.DataGUI(plugin, player).open();
+<<<<<<< HEAD
             player.sendMessage("§a✅ Открыто меню создания данных!");
+=======
+>>>>>>> ba7215a (Я вернулся)
             return;
         }
         
@@ -259,7 +315,11 @@ public class BlockPlacementHandler implements Listener {
         
         // Проверяем, есть ли уже блок кода на этой локации
         if (blockCodeBlocks.containsKey(location)) {
+<<<<<<< HEAD
             // Предотвращаем открытие GUI, если в руке связующий жезл или другой инструмент
+=======
+            // Предотвращаем открытие GUI, если в руке инструмент
+>>>>>>> ba7215a (Я вернулся)
             if (isTool(itemInHand)) {
                 return;
             }
@@ -268,6 +328,7 @@ public class BlockPlacementHandler implements Listener {
             // ВЫЗЫВАЕМ НАШ НОВЫЙ МЕНЕДЖЕР ВМЕСТО СТАРОГО GUI
             plugin.getBlockConfigManager().openConfigGUI(player, location);
         }
+<<<<<<< HEAD
 
         // --- ПРОБЛЕМНЫЙ КОД БЫЛ УДАЛЕН ОТСЮДА ---
         // Больше нет проверки "if (isCodingBlock(itemInHand))" для установки блока
@@ -339,6 +400,8 @@ public class BlockPlacementHandler implements Listener {
                 player.sendMessage("§c❌ Это не блок кода! Выберите блок кода для соединения.");
             }
         }
+=======
+>>>>>>> ba7215a (Я вернулся)
     }
 
     /**
@@ -355,6 +418,7 @@ public class BlockPlacementHandler implements Listener {
                 CodeBlock codeBlock = createCodeBlockWithParameters(material, action, parameters);
                 blockCodeBlocks.put(location, codeBlock);
                 
+<<<<<<< HEAD
                 // Добавляем/обновляем блок в визуализации
                 var world = plugin.getWorldManager().getWorldByName(player.getWorld().getName());
                 if (world != null) {
@@ -366,6 +430,9 @@ public class BlockPlacementHandler implements Listener {
                 String message = isUpdate ? "§aДействие обновлено: §e" : "§aДействие установлено: §e";
                 player.sendMessage(message + action);
                 player.sendMessage("§7Параметры: §f" + parameters.toString());
+=======
+                setSignOnBlock(location, action);
+>>>>>>> ba7215a (Я вернулся)
             }).open();
         }).open();
     }
@@ -376,6 +443,7 @@ public class BlockPlacementHandler implements Listener {
     private boolean isInDevWorld(Player player) {
         String worldName = player.getWorld().getName();
         // Проверяем разные варианты названий миров разработки
+<<<<<<< HEAD
         return worldName.startsWith("megacreative_") && worldName.endsWith("_dev") ||
                worldName.endsWith("_dev") ||
                worldName.contains("_dev");
@@ -654,5 +722,121 @@ public class BlockPlacementHandler implements Listener {
     // Метод для проверки, является ли предмет инструментом
     private boolean isTool(ItemStack item) {
         return item.getType() == Material.BLAZE_ROD || item.getType() == Material.GOLDEN_AXE || DataItemFactory.isDataItem(item);
+=======
+        return worldName.contains("dev") || worldName.contains("Dev") || 
+               worldName.contains("разработка") || worldName.contains("Разработка") ||
+               worldName.contains("creative") || worldName.contains("Creative");
+    }
+
+    /**
+     * Проверяет, является ли предмет блоком кодирования
+     */
+    private boolean isCodingBlock(ItemStack item) {
+        if (item == null || !item.hasItemMeta()) return false;
+        
+        ItemMeta meta = item.getItemMeta();
+        if (meta == null || !meta.hasDisplayName()) return false;
+        
+        String displayName = meta.getDisplayName();
+        return CodingItems.isDisplayNameACodingItem(displayName);
+    }
+
+    /**
+     * Проверяет, является ли предмет инструментом
+     */
+    private boolean isTool(ItemStack item) {
+        if (item == null) return false;
+        
+        Material type = item.getType();
+        return type == Material.WOODEN_AXE || type == Material.STONE_AXE || 
+               type == Material.IRON_AXE || type == Material.DIAMOND_AXE || 
+               type == Material.NETHERITE_AXE || type == Material.WOODEN_PICKAXE || 
+               type == Material.STONE_PICKAXE || type == Material.IRON_PICKAXE || 
+               type == Material.DIAMOND_PICKAXE || type == Material.NETHERITE_PICKAXE ||
+               type == Material.WOODEN_SHOVEL || type == Material.STONE_SHOVEL || 
+               type == Material.IRON_SHOVEL || type == Material.DIAMOND_SHOVEL || 
+               type == Material.NETHERITE_SHOVEL || type == Material.WOODEN_HOE || 
+               type == Material.STONE_HOE || type == Material.IRON_HOE || 
+               type == Material.DIAMOND_HOE || type == Material.NETHERITE_HOE;
+    }
+
+    /**
+     * Создает CodeBlock с параметрами
+     */
+    private CodeBlock createCodeBlockWithParameters(Material material, String action, Map<String, Object> parameters) {
+        CodeBlock codeBlock = new CodeBlock(material, action);
+        codeBlock.setParameters(parameters);
+        return codeBlock;
+    }
+
+    /**
+     * Устанавливает табличку на блок
+     */
+    private void setSignOnBlock(Location location, String text) {
+        // Удаляем существующую табличку
+        removeSignFromBlock(location);
+        
+        // Создаем новую табличку
+        Block block = location.getBlock();
+        BlockFace[] faces = {BlockFace.NORTH, BlockFace.SOUTH, BlockFace.EAST, BlockFace.WEST};
+        
+        for (BlockFace face : faces) {
+            Location signLocation = location.clone().add(face.getDirection());
+            Block signBlock = signLocation.getBlock();
+            
+            if (signBlock.getType().isAir()) {
+                signBlock.setType(Material.OAK_WALL_SIGN);
+                
+                if (signBlock.getState() instanceof WallSign) {
+                    org.bukkit.block.data.type.WallSign wallSignData = (org.bukkit.block.data.type.WallSign) signBlock.getBlockData();
+                    wallSignData.setFacing(face.getOppositeFace());
+                    signBlock.setBlockData(wallSignData);
+                    
+                    Sign sign = (Sign) signBlock.getState();
+                    sign.setLine(0, text);
+                    sign.update();
+                    break;
+                }
+            }
+        }
+    }
+
+    /**
+     * Удаляет табличку с блока
+     */
+    private void removeSignFromBlock(Location location) {
+        Block block = location.getBlock();
+        BlockFace[] faces = {BlockFace.NORTH, BlockFace.SOUTH, BlockFace.EAST, BlockFace.WEST};
+        
+        for (BlockFace face : faces) {
+            Location signLocation = location.clone().add(face.getDirection());
+            Block signBlock = signLocation.getBlock();
+            
+            if (signBlock.getType().name().contains("SIGN")) {
+                signBlock.setType(Material.AIR);
+            }
+        }
+    }
+
+    /**
+     * Получает CodeBlock по локации
+     */
+    public CodeBlock getCodeBlock(Location location) {
+        return blockCodeBlocks.get(location);
+    }
+
+    /**
+     * Проверяет, есть ли CodeBlock по локации
+     */
+    public boolean hasCodeBlock(Location location) {
+        return blockCodeBlocks.containsKey(location);
+    }
+
+    /**
+     * Получает все CodeBlock'и
+     */
+    public Map<Location, CodeBlock> getAllCodeBlocks() {
+        return new HashMap<>(blockCodeBlocks);
+>>>>>>> ba7215a (Я вернулся)
     }
 }

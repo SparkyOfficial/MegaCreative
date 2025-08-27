@@ -29,8 +29,11 @@ public class CodingItems {
     public static final String CALL_FUNCTION_BLOCK_NAME = "§b📞 Вызвать функцию";
     public static final String SAVE_FUNCTION_BLOCK_NAME = "§d💾 Сохранить функцию";
     public static final String REPEAT_TRIGGER_BLOCK_NAME = "§e⏰ Повторяющийся триггер";
+<<<<<<< HEAD
     public static final String LINKER_TOOL_NAME = "§e§lСвязующий жезл";
     public static final String INSPECTOR_TOOL_NAME = "§b🔍 Инспектор блоков";
+=======
+>>>>>>> ba7215a (Я вернулся)
     public static final String COPIER_TOOL_NAME = "§6📋 Копировщик блоков";
     public static final String DATA_CREATOR_NAME = "§b§lСоздать данные";
 
@@ -52,8 +55,11 @@ public class CodingItems {
         CODING_ITEM_NAMES.add(CALL_FUNCTION_BLOCK_NAME);
         CODING_ITEM_NAMES.add(SAVE_FUNCTION_BLOCK_NAME);
         CODING_ITEM_NAMES.add(REPEAT_TRIGGER_BLOCK_NAME);
+<<<<<<< HEAD
         CODING_ITEM_NAMES.add(LINKER_TOOL_NAME);
         CODING_ITEM_NAMES.add(INSPECTOR_TOOL_NAME);
+=======
+>>>>>>> ba7215a (Я вернулся)
         CODING_ITEM_NAMES.add(COPIER_TOOL_NAME);
         CODING_ITEM_NAMES.add(DATA_CREATOR_NAME);
     }
@@ -63,6 +69,7 @@ public class CodingItems {
     }
     // --- КОНЕЦ БЛОКА ---
 
+<<<<<<< HEAD
     /**
      * Создает связующий жезл для соединения блоков
      */
@@ -93,6 +100,9 @@ public class CodingItems {
         inspector.setItemMeta(inspectorMeta);
         return inspector;
     }
+=======
+
+>>>>>>> ba7215a (Я вернулся)
 
     /**
      * Выдаёт игроку только недостающие предметы для кодинга
@@ -100,12 +110,15 @@ public class CodingItems {
     public static void giveMissingItems(Player player, List<String> missingItems) {
         for (String itemName : missingItems) {
             switch (itemName) {
+<<<<<<< HEAD
                 case "Связующий жезл":
                     player.getInventory().addItem(getLinkingTool());
                     break;
                 case "Инспектор блоков":
                     player.getInventory().addItem(getInspectorTool());
                     break;
+=======
+>>>>>>> ba7215a (Я вернулся)
                 case "Блок события":
                     player.getInventory().addItem(createSimpleBlock(Material.DIAMOND_BLOCK, EVENT_BLOCK_NAME));
                     break;
@@ -154,6 +167,7 @@ public class CodingItems {
         // Железный слиток для создания данных
         player.getInventory().addItem(getDataCreator());
         
+<<<<<<< HEAD
         // Связующий жезл
         player.getInventory().setItem(8, getLinkingTool());
         
@@ -167,6 +181,9 @@ public class CodingItems {
         ));
         inspector.setItemMeta(inspectorMeta);
         player.getInventory().addItem(inspector);
+=======
+
+>>>>>>> ba7215a (Я вернулся)
         
         ItemStack copier = new ItemStack(Material.GOLDEN_AXE);
         ItemMeta copierMeta = copier.getItemMeta();
@@ -178,9 +195,13 @@ public class CodingItems {
         copier.setItemMeta(copierMeta);
         player.getInventory().addItem(copier);
 
+<<<<<<< HEAD
         player.sendMessage("§a✓ Вы получили универсальные блоки для кодинга!");
         player.sendMessage("§7Используйте §eСвязующий жезл§7 для их соединения.");
         player.sendMessage("§7Используйте §eЖелезный слиток§7 для создания данных.");
+=======
+
+>>>>>>> ba7215a (Я вернулся)
     }
     
     public static ItemStack getDataCreator() {

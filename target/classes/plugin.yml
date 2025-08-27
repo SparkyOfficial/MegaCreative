@@ -52,10 +52,14 @@ commands:
     description: Создает готовый скрипт указанного типа.
     usage: /<command> <тип>
     permission: megacreative.admin
+<<<<<<< HEAD
   visualize:
     description: Управление визуализацией соединений между блоками кода.
     usage: /<command> [on|off|status|help]
     permission: megacreative.user
+=======
+
+>>>>>>> ba7215a (Я вернулся)
   debug:
     description: Управление отладкой скриптов.
     usage: /<command> [on|off|stats|status|help]

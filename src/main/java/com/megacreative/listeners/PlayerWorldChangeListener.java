@@ -31,7 +31,10 @@ public class PlayerWorldChangeListener implements Listener {
             List<String> missingItems = getMissingCodingItems(player);
             if (!missingItems.isEmpty()) {
                 CodingItems.giveMissingItems(player, missingItems);
+<<<<<<< HEAD
                 player.sendMessage("§e§l!§r §eДобавлены недостающие инструменты для кодинга: " + String.join(", ", missingItems));
+=======
+>>>>>>> ba7215a (Я вернулся)
             }
         }
     }
@@ -43,8 +46,11 @@ public class PlayerWorldChangeListener implements Listener {
         List<String> missingItems = new ArrayList<>();
         
         // Проверяем наличие ключевых предметов
+<<<<<<< HEAD
         boolean hasLinker = false;
         boolean hasInspector = false;
+=======
+>>>>>>> ba7215a (Я вернулся)
         boolean hasEventBlock = false;
         boolean hasActionBlock = false;
         boolean hasConditionBlock = false;
@@ -54,8 +60,11 @@ public class PlayerWorldChangeListener implements Listener {
         for (var item : player.getInventory().getContents()) {
             if (item != null && item.hasItemMeta() && item.getItemMeta().hasDisplayName()) {
                 String name = item.getItemMeta().getDisplayName();
+<<<<<<< HEAD
                 if (name.contains("Связующий жезл")) hasLinker = true;
                 if (name.contains("Инспектор блоков")) hasInspector = true;
+=======
+>>>>>>> ba7215a (Я вернулся)
                 if (name.contains("Событие игрока")) hasEventBlock = true;
                 if (name.contains("Действие игрока")) hasActionBlock = true;
                 if (name.contains("Условие")) hasConditionBlock = true;
@@ -64,8 +73,11 @@ public class PlayerWorldChangeListener implements Listener {
             }
         }
         
+<<<<<<< HEAD
         if (!hasLinker) missingItems.add("Связующий жезл");
         if (!hasInspector) missingItems.add("Инспектор блоков");
+=======
+>>>>>>> ba7215a (Я вернулся)
         if (!hasEventBlock) missingItems.add("Блок события");
         if (!hasActionBlock) missingItems.add("Блок действия");
         if (!hasConditionBlock) missingItems.add("Блок условия");
