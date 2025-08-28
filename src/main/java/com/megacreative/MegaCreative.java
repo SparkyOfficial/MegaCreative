@@ -132,7 +132,8 @@ public class MegaCreative extends JavaPlugin {
         getServer().getPluginManager().registerEvents(new BlockBreakListener(this), this);
         getServer().getPluginManager().registerEvents(new PlayerDeathListener(this), this);
         getServer().getPluginManager().registerEvents(new CommandListener(this), this);
-        getServer().getPluginManager().registerEvents(new DevWorldProtectionListener(this), this);
+        // Use DevWorldProtectionListener from ServiceRegistry instead of creating new instance
+        getServer().getPluginManager().registerEvents(serviceRegistry.getDevWorldProtectionListener(), this);
         getServer().getPluginManager().registerEvents(new PlayerWorldChangeListener(this), this);
         
         // Service-specific listeners
@@ -202,26 +203,6 @@ public class MegaCreative extends JavaPlugin {
     }
     
     @Deprecated
-    public com.megacreative.coding.BlockPlacementHandler getBlockPlacementHandler() {
-        return serviceRegistry.getBlockPlacementHandler();
-    }
-    
-    @Deprecated
-    public com.megacreative.managers.TemplateManager getTemplateManager() {
-        return serviceRegistry.getTemplateManager();
-    }
-    
-    @Deprecated
-    public com.megacreative.coding.BlockConfiguration getBlockConfiguration() {
-        return serviceRegistry.getBlockConfiguration();
-    }
-    
-    @Deprecated
-    public com.megacreative.coding.debug.VisualDebugger getScriptDebugger() {
-        return serviceRegistry.getVisualDebugger();
-    }
-    
-    @Deprecated
     public com.megacreative.managers.TrustedPlayerManager getTrustedPlayerManager() {
         return serviceRegistry.getTrustedPlayerManager();
     }
@@ -232,19 +213,10 @@ public class MegaCreative extends JavaPlugin {
     }
     
     @Deprecated
-    public com.megacreative.coding.monitoring.ScriptPerformanceMonitor getScriptPerformanceMonitor() {
-        return serviceRegistry.getScriptPerformanceMonitor();
+    public com.megacreative.coding.debug.VisualDebugger getScriptDebugger() {
+        return serviceRegistry.getScriptDebugger();
     }
     
-    @Deprecated
-    public java.util.Map<java.util.UUID, String> getDeleteConfirmations() {
-        // Method no longer exists in new GUIManager architecture
-        return new java.util.HashMap<>();
-    }
-    
-    @Deprecated
-    public java.util.Map<java.util.UUID, String> getCommentInputs() {
-        // Method no longer exists in new GUIManager architecture
-        return new java.util.HashMap<>();
-    }
+    // Remove deprecated methods that are no longer used
+    // These have been moved to GUIManager
 }

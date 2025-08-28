@@ -14,6 +14,7 @@ import com.megacreative.coding.errors.VisualErrorHandler;
 import com.megacreative.coding.groups.BlockGroupManager;
 import com.megacreative.coding.monitoring.ScriptPerformanceMonitor;
 import com.megacreative.interfaces.*;
+import com.megacreative.listeners.DevWorldProtectionListener;
 import com.megacreative.managers.*;
 import com.megacreative.services.BlockConfigService;
 import com.megacreative.tools.CodeBlockClipboard;
@@ -71,6 +72,7 @@ public class ServiceRegistry {
     private VisualErrorHandler visualErrorHandler;
     private CodeBlockClipboard codeBlockClipboard;
     private BlockGroupManager blockGroupManager;
+    private DevWorldProtectionListener devWorldProtectionListener; // Add this field
     
     public ServiceRegistry(Plugin plugin, DependencyContainer dependencyContainer) {
         this.plugin = plugin;
@@ -185,6 +187,7 @@ public class ServiceRegistry {
     public VisualErrorHandler getVisualErrorHandler() { return visualErrorHandler; }
     public CodeBlockClipboard getCodeBlockClipboard() { return codeBlockClipboard; }
     public BlockGroupManager getBlockGroupManager() { return blockGroupManager; }
+    public DevWorldProtectionListener getDevWorldProtectionListener() { return devWorldProtectionListener; } // Add getter
     
     // Private initialization methods
     
@@ -309,6 +312,10 @@ public class ServiceRegistry {
         // GUI manager with proper dependencies
         guiManager = new GUIManager(playerManager, dataManager);
         registerService(GUIManager.class, guiManager);
+        
+        // DevWorldProtectionListener with proper dependencies
+        devWorldProtectionListener = new DevWorldProtectionListener((com.megacreative.MegaCreative) plugin, trustedPlayerManager, blockConfigService);
+        registerService(DevWorldProtectionListener.class, devWorldProtectionListener);
     }
     
     private void registerServicesInDI() {
@@ -326,6 +333,12 @@ public class ServiceRegistry {
         // Services that need initialization after all dependencies are available
         if (worldManager instanceof WorldManagerImpl) {
             ((WorldManagerImpl) worldManager).initialize();
+        }
+        
+        // Initialize DevWorldProtectionListener after BlockConfigService is fully loaded
+        if (devWorldProtectionListener != null) {
+            devWorldProtectionListener.initializeAllowedBlocks();
+            plugin.getLogger().info("DevWorldProtectionListener initialized with dynamic block list");
         }
     }
     
