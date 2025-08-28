@@ -68,7 +68,7 @@ public class AdvancedCustomEventTest {
     @Test
     public void testEventInheritance() {
         // Create a base player event
-        CustomEvent basePlayerEvent = new CustomEventBuilder.playerEvent("basePlayerEvent")
+        CustomEvent basePlayerEvent = new CustomEventBuilder("basePlayerEvent")
             .description("Base player event")
             .requiredField("player", Player.class, "The player")
             .buildAndRegister(eventManager);
