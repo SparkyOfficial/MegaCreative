@@ -3,6 +3,7 @@ package com.megacreative.managers;
 import com.megacreative.MegaCreative;
 import com.megacreative.coding.BlockConfiguration;
 import com.megacreative.coding.CodeBlock;
+import com.megacreative.coding.CodingActionGUI;
 import com.megacreative.coding.values.DataValue;
 import com.megacreative.coding.values.types.*;
 import org.bukkit.Bukkit;
@@ -60,6 +61,54 @@ public class BlockConfigManager implements Listener {
         // Устанавливаем ссылку на плагин для доступа к конфигурации
         codeBlock.setPlugin(plugin);
 
+        // Check if block needs action selection first
+        String currentAction = codeBlock.getAction();
+        if (currentAction == null || currentAction.equals("Настройка...") || currentAction.isEmpty()) {
+            // Show action selection GUI first
+            showActionSelectionGUI(player, codeBlock, blockLocation);
+        } else {
+            // Show parameter configuration GUI
+            showParameterConfigGUI(player, codeBlock, blockLocation);
+        }
+    }
+    
+    /**
+     * Shows action selection GUI for the block
+     */
+    private void showActionSelectionGUI(Player player, CodeBlock codeBlock, Location blockLocation) {
+        // Get available actions from BlockConfigService
+        var blockConfigService = plugin.getServiceRegistry().getBlockConfigService();
+        List<String> availableActions = blockConfigService.getAvailableActions(codeBlock.getMaterial());
+        
+        if (availableActions.isEmpty()) {
+            player.sendMessage("§cОшибка: нет доступных действий для данного типа блока.");
+            return;
+        }
+        
+        player.sendMessage("§eВыберите действие для блока...");
+        
+        // Create and open CodingActionGUI
+        CodingActionGUI actionGUI = new CodingActionGUI(
+            player, 
+            codeBlock.getMaterial(), 
+            blockLocation, 
+            availableActions,
+            (selectedAction) -> {
+                // Callback when action is selected
+                codeBlock.setAction(selectedAction);
+                player.sendMessage("§aВыбрано действие: §e" + selectedAction);
+                
+                // Now open parameter configuration
+                showParameterConfigGUI(player, codeBlock, blockLocation);
+            }
+        );
+        actionGUI.open();
+    }
+    
+    /**
+     * Shows parameter configuration GUI for the block
+     */
+    private void showParameterConfigGUI(Player player, CodeBlock codeBlock, Location blockLocation) {
         // Создаем инвентарь (сундук на 27 слотов - 3 ряда)
         Inventory configInventory = Bukkit.createInventory(null, 27, "§8Настройка: " + codeBlock.getAction());
 
