@@ -217,6 +217,37 @@ public class MegaCreative extends JavaPlugin {
         return serviceRegistry.getScriptDebugger();
     }
     
-    // Remove deprecated methods that are no longer used
-    // These have been moved to GUIManager
+    @Deprecated
+    public com.megacreative.coding.BlockConfiguration getBlockConfiguration() {
+        return serviceRegistry.getBlockConfiguration();
+    }
+    
+    @Deprecated
+    public com.megacreative.coding.monitoring.ScriptPerformanceMonitor getScriptPerformanceMonitor() {
+        return serviceRegistry.getScriptPerformanceMonitor();
+    }
+    
+    @Deprecated
+    public com.megacreative.coding.BlockPlacementHandler getBlockPlacementHandler() {
+        return serviceRegistry.getBlockPlacementHandler();
+    }
+    
+    @Deprecated
+    public com.megacreative.managers.TemplateManager getTemplateManager() {
+        return serviceRegistry.getTemplateManager();
+    }
+    
+    // Legacy methods for backward compatibility - these should be migrated to use GUIManager
+    private final Map<java.util.UUID, String> deleteConfirmations = new java.util.HashMap<>();
+    private final Map<java.util.UUID, String> commentInputs = new java.util.HashMap<>();
+    
+    @Deprecated
+    public Map<java.util.UUID, String> getDeleteConfirmations() {
+        return deleteConfirmations;
+    }
+    
+    @Deprecated
+    public Map<java.util.UUID, String> getCommentInputs() {
+        return commentInputs;
+    }
 }
