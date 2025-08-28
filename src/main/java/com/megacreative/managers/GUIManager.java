@@ -209,6 +209,70 @@ public class GUIManager implements Listener {
         playerMetadata.remove(playerId);
     }
     
+    // === Методы для работы с подтверждением удаления мира ===
+    
+    /**
+     * Устанавливает флаг ожидания подтверждения удаления мира
+     */
+    public void setAwaitingDeleteConfirmation(Player player, String worldId) {
+        setPlayerMetadata(player, "delete_confirmation_world_id", worldId);
+        setPlayerMetadata(player, "awaiting_delete_confirmation", true);
+    }
+    
+    /**
+     * Получает ID мира для подтверждения удаления
+     */
+    public String getDeleteConfirmationWorldId(Player player) {
+        return getPlayerMetadata(player, "delete_confirmation_world_id", String.class);
+    }
+    
+    /**
+     * Проверяет, ожидает ли игрок подтверждения удаления мира
+     */
+    public boolean isAwaitingDeleteConfirmation(Player player) {
+        return Boolean.TRUE.equals(getPlayerMetadata(player, "awaiting_delete_confirmation", Boolean.class));
+    }
+    
+    /**
+     * Очищает данные подтверждения удаления мира
+     */
+    public void clearDeleteConfirmation(Player player) {
+        removePlayerMetadata(player, "delete_confirmation_world_id");
+        removePlayerMetadata(player, "awaiting_delete_confirmation");
+    }
+    
+    // === Методы для работы с вводом комментариев ===
+    
+    /**
+     * Устанавливает флаг ожидания ввода комментария
+     */
+    public void setAwaitingCommentInput(Player player, String worldId) {
+        setPlayerMetadata(player, "comment_input_world_id", worldId);
+        setPlayerMetadata(player, "awaiting_comment_input", true);
+    }
+    
+    /**
+     * Получает ID мира для ввода комментария
+     */
+    public String getCommentInputWorldId(Player player) {
+        return getPlayerMetadata(player, "comment_input_world_id", String.class);
+    }
+    
+    /**
+     * Проверяет, ожидает ли игрок ввода комментария
+     */
+    public boolean isAwaitingCommentInput(Player player) {
+        return Boolean.TRUE.equals(getPlayerMetadata(player, "awaiting_comment_input", Boolean.class));
+    }
+    
+    /**
+     * Очищает данные ввода комментария
+     */
+    public void clearCommentInput(Player player) {
+        removePlayerMetadata(player, "comment_input_world_id");
+        removePlayerMetadata(player, "awaiting_comment_input");
+    }
+    
     @EventHandler
     public void onInventoryClick(InventoryClickEvent event) {
         Player player = (Player) event.getWhoClicked();

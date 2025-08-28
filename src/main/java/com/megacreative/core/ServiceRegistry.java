@@ -337,8 +337,15 @@ public class ServiceRegistry {
         
         // Initialize DevWorldProtectionListener after BlockConfigService is fully loaded
         if (devWorldProtectionListener != null) {
-            devWorldProtectionListener.initializeAllowedBlocks();
+            devWorldProtectionListener.initializeDynamicAllowedBlocks();
             plugin.getLogger().info("DevWorldProtectionListener initialized with dynamic block list");
+        }
+        
+        // Connect CodeBlockClipboard with BlockPlacementHandler and AutoConnectionManager
+        if (codeBlockClipboard != null && blockPlacementHandler != null && autoConnectionManager != null) {
+            codeBlockClipboard.setPlacementHandler(blockPlacementHandler);
+            codeBlockClipboard.setConnectionManager(autoConnectionManager);
+            plugin.getLogger().info("CodeBlockClipboard connected to BlockPlacementHandler and AutoConnectionManager");
         }
     }
     

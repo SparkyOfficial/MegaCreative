@@ -15,6 +15,7 @@ import org.bukkit.event.block.BlockPlaceEvent;
 import org.bukkit.event.player.PlayerInteractEvent;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.Location;
+import org.bukkit.World;
 
 import java.util.HashMap;
 import java.util.Map;
@@ -248,5 +249,12 @@ public class BlockPlacementHandler implements Listener {
     public Map<Location, CodeBlock> getBlockCodeBlocks() {
         return new HashMap<>(blockCodeBlocks);
     }
+    
+    /**
+     * Очищает все CodeBlock'и в мире
+     */
+    public void clearAllCodeBlocksInWorld(World world) {
+        blockCodeBlocks.entrySet().removeIf(entry -> entry.getKey().getWorld().equals(world));
+        plugin.getLogger().info("Cleared all code blocks from world: " + world.getName() + " in BlockPlacementHandler.");
+    }
 }
-

@@ -32,11 +32,8 @@ public class DevWorldProtectionListener implements Listener {
     private final TrustedPlayerManager trustedPlayerManager;
     private final BlockConfigService blockConfigService;
     
-    // Разрешенные материалы для размещения в dev-мире (будет динамически обновлен)
-    private final Set<Material> allowedDevWorldBlocks = new HashSet<>();
-    
     // Жестко закодированные разрешенные материалы для инструментов разработчика
-    private static final Set<Material> ALLOWED_BLOCKS_INITIAL_HARDCODED = Set.of(
+    private static final Set<Material> ALLOWED_TOOLS_AND_UTILITIES_HARDCODED = Set.of(
         Material.ENDER_CHEST,    // Эндер сундук
         Material.ANVIL,          // Наковальня
         Material.CHIPPED_ANVIL,  // Поврежденная наковальня
@@ -50,6 +47,9 @@ public class DevWorldProtectionListener implements Listener {
         Material.COMPARATOR,     // Редстоун компаратор
         Material.TORCH,          // Факел
         Material.REDSTONE_TORCH, // Редстоун факел
+        Material.LIGHT_BLUE_STAINED_GLASS, // Платформа для размещения блоков кода
+        Material.GRAY_STAINED_GLASS_PANE,  // Платформа для размещения блоков кода
+        Material.WHITE_STAINED_GLASS,      // Платформа для размещения блоков кода
         
         // Шалкеры
         Material.SHULKER_BOX, Material.WHITE_SHULKER_BOX, Material.ORANGE_SHULKER_BOX,
@@ -59,6 +59,9 @@ public class DevWorldProtectionListener implements Listener {
         Material.BLUE_SHULKER_BOX, Material.BROWN_SHULKER_BOX, Material.GREEN_SHULKER_BOX,
         Material.RED_SHULKER_BOX, Material.BLACK_SHULKER_BOX
     );
+    
+    // Этот сет будет содержать ВСЕ разрешенные материалы (инструменты + кодовые блоки)
+    private final Set<Material> allPermittedPlaceAndBreakBlocks = new HashSet<>();
     
     // Разрешенные материалы для взаимодействия
     private static final Set<Material> ALLOWED_INTERACT = Set.of(
@@ -78,7 +81,7 @@ public class DevWorldProtectionListener implements Listener {
         this.plugin = plugin;
         this.trustedPlayerManager = trustedPlayerManager;
         this.blockConfigService = blockConfigService;
-        initializeAllowedBlocks(); // Вызвать метод инициализации
+        // Здесь не инициализируем allowedDevWorldBlocks. Инициализируем после загрузки всех сервисов.
     }
 
     public boolean isInDevWorld(Player player) {
@@ -112,29 +115,27 @@ public class DevWorldProtectionListener implements Listener {
         Player player = event.getPlayer();
         if (!isInDevWorld(player)) return;
         
-        Material blockType = event.getBlockPlaced().getType(); // Важно: getBlockPlaced(), а не getBlock()
+        Material placedMaterial = event.getBlockPlaced().getType();
         
-        // Debug message - можно удалить позже
-        // player.sendMessage("§a[DEBUG] DevWorldProtectionListener: Попытка размещения блока: " + blockType.name());
-        
-        // Проверяем, разрешен ли этот материал
-        if (!isMaterialPermittedInDevWorld(blockType)) {
+        // 1. Сначала проверьте, можно ли поставить это вообще, используя динамически созданный список
+        if (!isMaterialAllowedInDevWorldForAction(placedMaterial)) {
             event.setCancelled(true);
-            player.sendMessage("§cВ мире разработки можно размещать только разрешенные блоки и инструменты!");
-            plugin.getLogger().fine("Placement denied for " + blockType.name() + " in dev world.");
+            player.sendMessage("§cВы не можете размещать этот блок в мире разработки!");
             return;
         }
-        
-        // Для блоков кода проверяем права на кодирование
-        if (isMaterialAConfiguredCodeBlock(blockType)) {
+
+        // 2. Для *настоящих блоков кодинга* из `coding_blocks.yml`, проверьте права игрока на кодирование
+        if (isMaterialAConfiguredCodeBlock(placedMaterial)) {
             CreativeWorld creativeWorld = plugin.getWorldManager().findCreativeWorldByBukkit(player.getWorld());
             if (creativeWorld != null && !creativeWorld.canCode(player)) {
                 event.setCancelled(true);
                 player.sendMessage("§cУ вас нет прав на размещение блоков кода в этом мире!");
-                plugin.getLogger().warning("Player " + player.getName() + " attempted to place code block " + blockType.name() + " without permissions.");
-                return;
             }
         }
+        // Если блок является одним из `ALLOWED_TOOLS_AND_UTILITIES_HARDCODED`
+        // (сундук, наковальня и т.д.), он будет разрешен уже первой проверкой и не попадет сюда.
+        // `BlockPlacementHandler` затем создаст `CodeBlock` для настоящих блоков кода,
+        // а для остальных - просто разместит их как есть.
     }
     
     // === ЗАЩИТА ОТ РАЗРУШЕНИЯ БЛОКОВ ===
@@ -143,31 +144,29 @@ public class DevWorldProtectionListener implements Listener {
     public void onBlockBreak(BlockBreakEvent event) {
         Player player = event.getPlayer();
         if (!isInDevWorld(player)) return;
+
+        Material brokenBlockType = event.getBlock().getType();
         
-        Material blockType = event.getBlock().getType();
-        
-        // Запрещаем ломать блоки платформы (стекло, маяки, барьеры)
-        if ((blockType.name().contains("GLASS") && blockType.name().contains("STAINED")) || 
-            blockType == Material.BEACON || blockType == Material.BARRIER) {
+        // 1. Не даем ломать саму структуру платформы (стены из барьера, стекло линий)
+        if (brokenBlockType == Material.BARRIER || brokenBlockType == Material.BEACON || 
+            (brokenBlockType.name().contains("GLASS") && brokenBlockType.name().contains("STAINED"))) {
             event.setCancelled(true);
             player.sendMessage("§cНельзя ломать элементы платформы разработки!");
             return;
         }
-        
-        // Если это наш разрешенный CodeBlock или инструмент разработчика
-        if (isMaterialAConfiguredCodeBlock(blockType) || isMaterialPermittedInDevWorld(blockType)) {
-            // Дополнительная проверка прав для кодинг-блоков/инструментов
-            CreativeWorld creativeWorld = plugin.getWorldManager().findCreativeWorldByBukkit(player.getWorld());
+
+        // 2. Проверяем, можно ли ломать этот блок вообще
+        // Разрешаем ломать И настоящие блоки кодинга, И утилиты/контейнеры.
+        if (isMaterialAConfiguredCodeBlock(brokenBlockType) || ALLOWED_TOOLS_AND_UTILITIES_HARDCODED.contains(brokenBlockType)) {
+             CreativeWorld creativeWorld = plugin.getWorldManager().findCreativeWorldByBukkit(player.getWorld());
             if (creativeWorld != null && !creativeWorld.canCode(player)) {
                 event.setCancelled(true);
                 player.sendMessage("§cУ вас нет прав на удаление блоков в этом мире!");
-                plugin.getLogger().warning("Player " + player.getName() + " attempted to break block " + blockType.name() + " without permissions.");
-                return;
             }
         } else {
-            // Все остальные блоки, которые не разрешены и не являются частью платформы, ЗАПРЕЩЕНО ломать
+            // Если это не CodeBlock, не инструмент и не часть платформы, значит, это что-то нежелательное.
             event.setCancelled(true);
-            player.sendMessage("§cВ мире разработки можно ломать только блоки кода и инструменты разработчика!");
+            player.sendMessage("§cВы не можете ломать этот блок в мире разработки!");
         }
     }
     
@@ -177,26 +176,27 @@ public class DevWorldProtectionListener implements Listener {
     public void onPlayerInteract(PlayerInteractEvent event) {
         Player player = event.getPlayer();
         if (!isInDevWorld(player)) return;
-        
-        if (event.getClickedBlock() != null) {
-            Material blockType = event.getClickedBlock().getType();
-            
-            // Разрешаем взаимодействие только с определенными блоками
-            if (!isMaterialPermittedInDevWorld(blockType) && !isMaterialAConfiguredCodeBlock(blockType)) {
-                // Проверяем, не является ли это блоком платформы
-                if ((blockType.name().contains("GLASS") && blockType.name().contains("STAINED")) || 
-                    blockType == Material.BEACON || blockType == Material.BARRIER) {
-                    event.setCancelled(true);
-                    return;
-                }
-                
-                // Для всех остальных блоков, которые не разрешены, отменяем взаимодействие
-                if (!ALLOWED_INTERACT.contains(blockType)) {
-                    event.setCancelled(true);
-                    return;
-                }
+
+        // Не отменяем событие, если это AIR
+        if (event.getClickedBlock() == null) return; 
+
+        Material clickedBlockType = event.getClickedBlock().getType();
+
+        // 1. Если блок НЕ является разрешенным для взаимодействия
+        //    (т.е. не является контейнером, наковальней, книжной полкой и т.д., И не является блоком кодинга)
+        if (!ALLOWED_INTERACT.contains(clickedBlockType) && !isMaterialAConfiguredCodeBlock(clickedBlockType)) {
+             // И при этом он не является блоком-основой платформы
+            if (!((clickedBlockType.name().contains("GLASS") && clickedBlockType.name().contains("STAINED")) ||
+                 clickedBlockType == Material.BEACON || clickedBlockType == Material.BARRIER)) {
+                event.setCancelled(true);
+                //player.sendMessage("§cВзаимодействие с этим блоком в мире разработки запрещено!");
+                return;
             }
         }
+        // Если взаимодействие разрешено, то BlockPlacementHandler или BlockContainerManager могут дальше обработать.
+        // НЕ ставим тут setCancelled(true), чтобы дать возможность другим слушателям (нашим) сработать
+        // Но `BlockPlacementHandler` и `BlockContainerManager` (которые будут слушателями на NORMAL)
+        // должны уметь обрабатывать и отменять событие, если они хотят управлять им.
     }
     
     // === ЗАЩИТА ПРЕДМЕТОВ КОДИНГА ===
@@ -234,16 +234,14 @@ public class DevWorldProtectionListener implements Listener {
      * Инициализирует список разрешенных блоков
      * Должен вызываться после полной инициализации BlockConfigService
      */
-    public void initializeAllowedBlocks() {
-        allowedDevWorldBlocks.clear();
-        allowedDevWorldBlocks.addAll(ALLOWED_BLOCKS_INITIAL_HARDCODED); // Добавляем основные
-        
-        // Получаем материалы блоков кода из BlockConfigService
+    public void initializeDynamicAllowedBlocks() {
+        allPermittedPlaceAndBreakBlocks.clear();
+        allPermittedPlaceAndBreakBlocks.addAll(ALLOWED_TOOLS_AND_UTILITIES_HARDCODED); 
         if (blockConfigService != null) {
-            allowedDevWorldBlocks.addAll(blockConfigService.getCodeBlockMaterials());
-            plugin.getLogger().info("DevWorldProtectionListener: Добавлено " + blockConfigService.getCodeBlockMaterials().size() + " блоков кода к разрешенным.");
+            allPermittedPlaceAndBreakBlocks.addAll(blockConfigService.getCodeBlockMaterials());
+            plugin.getLogger().info("DevWorldProtectionListener: Dynamically added " + blockConfigService.getCodeBlockMaterials().size() + " code blocks to permitted list.");
         } else {
-            plugin.getLogger().warning("DevWorldProtectionListener: BlockConfigService не доступен при инициализации ALLOWED_BLOCKS.");
+            plugin.getLogger().severe("DevWorldProtectionListener: BlockConfigService is null during dynamic initialization. This indicates a ServiceRegistry initialization order issue.");
         }
     }
     
@@ -255,16 +253,17 @@ public class DevWorldProtectionListener implements Listener {
     }
     
     /**
-     * Проверяет, разрешен ли материал для использования в dev-мире
+     * Переименуем для ясности: этот метод определяет, МОЖНО ли _поместить_ или _сломать_ блок этого типа.
      */
-    public boolean isMaterialPermittedInDevWorld(Material material) {
-        return allowedDevWorldBlocks.contains(material);
+    public boolean isMaterialAllowedInDevWorldForAction(Material material) {
+        // Мы хотим, чтобы ЛЮБОЙ код-блок можно было ставить, а также любые utility-блоки
+        return isMaterialAConfiguredCodeBlock(material) || ALLOWED_TOOLS_AND_UTILITIES_HARDCODED.contains(material);
     }
     
     /**
      * Получает список разрешенных блоков
      */
     public Set<Material> getAllowedBlocks() {
-        return new HashSet<>(allowedDevWorldBlocks);
+        return new HashSet<>(allPermittedPlaceAndBreakBlocks);
     }
 }

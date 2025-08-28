@@ -177,11 +177,10 @@ public class GuiListener implements Listener {
         }
 
         // Handle удаление мира
-        if (plugin.getDeleteConfirmations().containsKey(player.getUniqueId())) {
+        if (plugin.getGuiManager().isAwaitingDeleteConfirmation(player)) {
             event.setCancelled(true);
             if (message.equalsIgnoreCase("УДАЛИТЬ")) {
-                // Получаем worldId
-                String worldId = plugin.getDeleteConfirmations().get(player.getUniqueId());
+                String worldId = plugin.getGuiManager().getDeleteConfirmationWorldId(player);
                 var world = plugin.getWorldManager().getWorld(worldId);
                 if (world != null) {
                     plugin.getWorldManager().deleteWorld(world.getId(), player);
@@ -192,20 +191,20 @@ public class GuiListener implements Listener {
             } else {
                 player.sendMessage("§cУдаление отменено.");
             }
-            plugin.getDeleteConfirmations().remove(player.getUniqueId());
+            plugin.getGuiManager().clearDeleteConfirmation(player);
             return;
         }
 
         // Handle comment input
-        if (plugin.getCommentInputs().containsKey(player.getUniqueId())) {
+        if (plugin.getGuiManager().isAwaitingCommentInput(player)) {
             event.setCancelled(true);
-            
-            CreativeWorld world = plugin.getWorldManager().getWorld(plugin.getCommentInputs().get(player.getUniqueId()));
+            String worldId = plugin.getGuiManager().getCommentInputWorldId(player);
+            CreativeWorld world = plugin.getWorldManager().getWorld(worldId);
             
             // Check for cancel command
             if (message.equalsIgnoreCase("отмена")) {
                 player.sendMessage("§cДобавление комментария отменено.");
-                plugin.getCommentInputs().remove(player.getUniqueId());
+                plugin.getGuiManager().clearCommentInput(player);
                 return;
             }
             
@@ -229,7 +228,7 @@ public class GuiListener implements Listener {
             plugin.getWorldManager().saveWorld(world);
             
             // Remove from inputs and show the updated comments GUI
-            plugin.getCommentInputs().remove(player.getUniqueId());
+            plugin.getGuiManager().clearCommentInput(player);
             
             // Open the comments GUI on the first page
             new WorldCommentsGUI(plugin, player, world, 0).open();

@@ -3,7 +3,6 @@ package com.megacreative.managers;
 import com.megacreative.MegaCreative;
 import com.megacreative.coding.BlockType;
 import com.megacreative.coding.CodeBlock;
-import com.megacreative.coding.CodeScript;
 import com.megacreative.interfaces.IWorldManager;
 import com.megacreative.interfaces.ICodingManager;
 import com.megacreative.models.*;
@@ -242,59 +241,110 @@ public class WorldManagerImpl implements IWorldManager {
             return;
         }
         
-        // Кик всех игроков из мира
+        // Сначала убеждаемся, что мир полностью выгружен
+        boolean unloadedMain = true;
         World bukkitWorld = Bukkit.getWorld(world.getWorldName());
+        if (bukkitWorld != null) {
+            if (!bukkitWorld.getPlayers().isEmpty()) { // Сначала кикаем игроков, если они там есть.
+                bukkitWorld.getPlayers().forEach(p -> p.teleport(plugin.getServer().getWorlds().get(0).getSpawnLocation()));
+            }
+            unloadedMain = Bukkit.unloadWorld(bukkitWorld, false); // Сохранять изменения в момент удаления - не всегда хорошая идея, т.к. может сохранить ошибки
+            if (!unloadedMain) {
+                plugin.getLogger().warning("Failed to unload main world: " + world.getWorldName() + ". Files might be locked.");
+                requester.sendMessage("§cНе удалось полностью выгрузить основной мир. Возможно, требуется перезагрузка сервера.");
+                return; // Не можем удалить файлы, если мир не выгружен
+            }
+        }
+
+        boolean unloadedDev = true;
+        World devWorld = Bukkit.getWorld(world.getDevWorldName());
+        if (devWorld != null) {
+            if (!devWorld.getPlayers().isEmpty()) { // Кикаем игроков
+                devWorld.getPlayers().forEach(p -> p.teleport(plugin.getServer().getWorlds().get(0).getSpawnLocation()));
+            }
+            unloadedDev = Bukkit.unloadWorld(devWorld, false);
+             if (!unloadedDev) {
+                plugin.getLogger().warning("Failed to unload dev world: " + world.getDevWorldName() + ". Files might be locked.");
+                requester.sendMessage("§cНе удалось полностью выгрузить мир разработки. Возможно, требуется перезагрузка сервера.");
+                return; // Не можем удалить файлы, если мир не выгружен
+            }
+        }
+
+        if (!unloadedMain || !unloadedDev) {
+            requester.sendMessage("§cНекоторые миры не удалось выгрузить полностью. Пожалуйста, повторите команду или свяжитесь с администратором.");
+            plugin.getLogger().severe("Cannot proceed with deleting world files as world unload failed.");
+            return;
+        }
+
+        // Удаление из памяти
+        worlds.remove(worldId);
+        if (playerWorlds.containsKey(world.getOwnerId())) {
+            playerWorlds.get(world.getOwnerId()).remove(worldId);
+        }
         if (codingManager != null) {
             codingManager.unloadScriptsForWorld(world);
         }
+        // Также очистите все связанные блоки кодинга, если они хранятся вне самого мира.
+        plugin.getServiceRegistry().getBlockPlacementHandler().clearAllCodeBlocksInWorld(Bukkit.getWorld(world.getWorldName())); // Убедитесь, что такой метод есть или реализуйте.
+        plugin.getServiceRegistry().getBlockPlacementHandler().clearAllCodeBlocksInWorld(Bukkit.getWorld(world.getDevWorldName()));
 
-        if (bukkitWorld != null) {
-            bukkitWorld.getPlayers().forEach(player -> 
-                player.teleport(Bukkit.getWorlds().get(0).getSpawnLocation())
-            );
-            Bukkit.unloadWorld(bukkitWorld, false);
-        }
-        
-        // Удаление dev мира
-        World devWorld = Bukkit.getWorld(world.getDevWorldName());
-        if (devWorld != null) {
-            devWorld.getPlayers().forEach(player -> 
-                player.teleport(Bukkit.getWorlds().get(0).getSpawnLocation())
-            );
-            Bukkit.unloadWorld(devWorld, false);
-        }
-        
-        // Удаление из памяти
-        worlds.remove(worldId);
-        playerWorlds.get(world.getOwnerId()).remove(worldId);
-        
-        // Удаление файлов
-        deleteWorldFiles(world);
+        // Удаление файлов мира - асинхронно
+        // Переместим deleteWorldFiles(world); сюда:
+        Bukkit.getScheduler().runTaskAsynchronously(plugin, () -> deleteWorldFilesInternal(world, requester));
+
+        requester.sendMessage("§aМир '" + world.getName() + "' успешно помечен к удалению файлов!");
+        requester.sendMessage("§7Файлы мира будут удалены в фоновом режиме.");
     }
     
-    private void deleteWorldFiles(CreativeWorld world) {
+    private void deleteWorldFilesInternal(CreativeWorld world, Player requester) {
         File worldFolder = new File(Bukkit.getWorldContainer(), world.getWorldName());
         File devWorldFolder = new File(Bukkit.getWorldContainer(), world.getDevWorldName());
         File dataFile = new File(plugin.getDataFolder(), "worlds/" + world.getId() + ".yml");
         
-        deleteFolder(worldFolder);
-        deleteFolder(devWorldFolder);
-        dataFile.delete();
+        try {
+            boolean successMain = deleteFolderRecursive(worldFolder);
+            boolean successDev = deleteFolderRecursive(devWorldFolder);
+            boolean successDataFile = dataFile.delete();
+            
+            if (successMain && successDev && successDataFile) {
+                plugin.getLogger().info("Successfully deleted world files for world ID " + world.getId());
+                requester.sendMessage("§a✓ Файлы мира '" + world.getName() + "' полностью удалены.");
+            } else {
+                plugin.getLogger().warning("Failed to fully delete world files for world ID " + world.getId() + 
+                                            ". Main: " + successMain + ", Dev: " + successDev + ", Data: " + successDataFile);
+                requester.sendMessage("§c⚠ Ошибка удаления всех файлов мира. Возможно, они были заблокированы. Проверьте логи сервера.");
+            }
+        } catch (Exception e) {
+            plugin.getLogger().severe("Error deleting world files for world ID " + world.getId() + ": " + e.getMessage(), e);
+            requester.sendMessage("§c❌ Непредвиденная ошибка при удалении файлов мира: " + e.getMessage());
+        }
     }
-    
-    private void deleteFolder(File folder) {
-        if (folder.exists()) {
-            File[] files = folder.listFiles();
-            if (files != null) {
-                for (File file : files) {
-                    if (file.isDirectory()) {
-                        deleteFolder(file);
-                    } else {
-                        file.delete();
+
+    // Агрессивная рекурсивная функция удаления папки
+    private boolean deleteFolderRecursive(File folder) {
+        if (!folder.exists()) {
+            return true;
+        }
+        
+        // ВАЖНО: нужно очищать только те файлы, которые реально принадлежат миру.
+        // Здесь используется очень агрессивное удаление. 
+        // ВНИМАНИЕ: НЕ ИСПОЛЬЗУЙТЕ ЕГО НА ПАПКАХ ВАЖНЕЕ МИРОВОЙ ПАПКИ, иначе можете удалить важные данные.
+        // Также удостоверьтесь, что это папка точно для мира.
+        
+        try {
+            if (folder.isDirectory()) {
+                File[] files = folder.listFiles();
+                if (files != null) {
+                    for (File file : files) {
+                        deleteFolderRecursive(file); // Рекурсивный вызов для подпапок и файлов
                     }
                 }
             }
-            folder.delete();
+            // Удаляем саму папку или файл после того, как ее содержимое удалено
+            return folder.delete();
+        } catch (Exception e) {
+            plugin.getLogger().severe("Failed to delete " + folder.getName() + ": " + e.getMessage(), e);
+            return false;
         }
     }
     
