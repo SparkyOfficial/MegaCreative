@@ -1,6 +1,7 @@
 package com.megacreative.gui;
 
 import com.megacreative.MegaCreative;
+import com.megacreative.managers.GUIManager;
 import com.megacreative.models.CreativeWorldType;
 import org.bukkit.Bukkit;
 import org.bukkit.Material;
@@ -12,7 +13,7 @@ import org.bukkit.inventory.meta.ItemMeta;
 
 import java.util.Arrays;
 
-public class WorldCreationGUI {
+public class WorldCreationGUI implements GUIManager.ManagedGUIInterface {
     
     private final MegaCreative plugin;
     private final Player player;
@@ -114,11 +115,17 @@ public class WorldCreationGUI {
         inventory.setItem(22, cancelButton);
     }
     
+    @Override
+    public String getGUITitle() {
+        return "World Creation";
+    }
+    
     public void open() {
         plugin.getGuiManager().registerGUI(player, this, inventory);
         player.openInventory(inventory);
     }
     
+    @Override
     public void onInventoryClick(InventoryClickEvent event) {
         if (!event.getInventory().equals(inventory)) return;
         

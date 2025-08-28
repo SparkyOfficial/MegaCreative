@@ -1,6 +1,7 @@
 package com.megacreative.gui;
 
 import com.megacreative.MegaCreative;
+import com.megacreative.managers.GUIManager;
 import com.megacreative.models.CreativeWorld;
 
 import org.bukkit.Bukkit;
@@ -15,9 +16,9 @@ import java.util.Arrays;
 import java.util.List;
 
 /**
- * My Worlds GUI - Fixed to use new GUIManager system
+ * My Worlds GUI - Implements ManagedGUIInterface for proper GUIManager integration
  */
-public class MyWorldsGUI {
+public class MyWorldsGUI implements GUIManager.ManagedGUIInterface {
     
     private final MegaCreative plugin;
     private final Player player;
@@ -89,6 +90,12 @@ public class MyWorldsGUI {
         player.openInventory(inventory);
     }
     
+    @Override
+    public String getGUITitle() {
+        return "My Worlds";
+    }
+    
+    @Override
     public void onInventoryClick(InventoryClickEvent event) {
         if (!event.getInventory().equals(inventory)) return;
         

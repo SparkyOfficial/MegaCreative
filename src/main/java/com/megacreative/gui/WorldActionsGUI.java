@@ -1,12 +1,11 @@
 package com.megacreative.gui;
 
 import com.megacreative.MegaCreative;
+import com.megacreative.managers.GUIManager;
 import com.megacreative.models.CreativeWorld;
 import org.bukkit.Bukkit;
 import org.bukkit.Material;
 import org.bukkit.entity.Player;
-import org.bukkit.event.EventHandler;
-import org.bukkit.event.Listener;
 import org.bukkit.event.inventory.InventoryClickEvent;
 import org.bukkit.inventory.Inventory;
 import org.bukkit.inventory.ItemStack;
@@ -15,9 +14,9 @@ import org.bukkit.inventory.meta.ItemMeta;
 import java.util.Arrays;
 
 /**
- * World Actions GUI - Fixed to use new GUIManager system
+ * World Actions GUI - Implements ManagedGUIInterface for proper GUIManager integration
  */
-public class WorldActionsGUI implements Listener {
+public class WorldActionsGUI implements GUIManager.ManagedGUIInterface {
     
     private final MegaCreative plugin;
     private final Player player;
@@ -108,7 +107,12 @@ public class WorldActionsGUI implements Listener {
         player.openInventory(inventory);
     }
     
-    @EventHandler
+    @Override
+    public String getGUITitle() {
+        return "World Actions: " + world.getName();
+    }
+    
+    @Override
     public void onInventoryClick(InventoryClickEvent event) {
         if (!event.getInventory().equals(inventory)) return;
         

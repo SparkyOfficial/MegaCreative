@@ -1,6 +1,7 @@
 package com.megacreative.gui;
 
 import com.megacreative.MegaCreative;
+import com.megacreative.managers.GUIManager;
 import com.megacreative.models.CreativeWorld;
 import org.bukkit.Bukkit;
 import org.bukkit.Material;
@@ -16,7 +17,7 @@ import java.util.List;
 /**
  * World Browser GUI - Fixed to use new GUIManager system
  */
-public class WorldBrowserGUI {
+public class WorldBrowserGUI implements GUIManager.ManagedGUIInterface {
     
     private final MegaCreative plugin;
     private final Player player;
@@ -111,12 +112,18 @@ public class WorldBrowserGUI {
         inventory.setItem(49, infoItem);
     }
     
+    @Override
+    public String getGUITitle() {
+        return "World Browser";
+    }
+    
     public void open() {
         // Use the new GUIManager system instead of old GuiListener
         plugin.getGuiManager().registerGUI(player, this, inventory);
         player.openInventory(inventory);
     }
     
+    @Override
     public void onInventoryClick(InventoryClickEvent event) {
         if (!event.getInventory().equals(inventory)) return;
         

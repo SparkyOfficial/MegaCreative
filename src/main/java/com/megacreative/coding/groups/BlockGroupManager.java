@@ -46,6 +46,152 @@ public class BlockGroupManager {
     }
     
     /**
+     * Adds a block to the current selection
+     */
+    public void selectBlock(Player player, Location blockLocation, CodeBlock codeBlock) {
+        GroupSelectionState state = playerSelections.get(player.getUniqueId());
+        if (state == null) {
+            player.sendMessage("§cYou are not in group selection mode!");
+            return;
+        }
+        
+        if (state.getSelectedBlocks().containsKey(blockLocation)) {
+            // Deselect block
+            state.getSelectedBlocks().remove(blockLocation);
+            player.sendMessage("§e- Deselected block: " + codeBlock.getAction());
+        } else {
+            // Select block
+            state.getSelectedBlocks().put(blockLocation, codeBlock);
+            player.sendMessage("§a+ Selected block: " + codeBlock.getAction());
+        }
+        
+        player.sendMessage("§7Selected: " + state.getSelectedBlocks().size() + " blocks");
+    }
+    
+    /**
+     * Cancels group selection for a player
+     */
+    public void cancelSelection(Player player) {
+        playerSelections.remove(player.getUniqueId());
+        player.sendMessage("§e✖ Group selection cancelled");
+    }
+    
+    /**
+     * Checks if player is in selection mode
+     */
+    public boolean isInSelectionMode(Player player) {
+        return playerSelections.containsKey(player.getUniqueId());
+    }
+    
+    /**
+     * Gets selection state for a player
+     */
+    public GroupSelectionState getSelectionState(Player player) {
+        return playerSelections.get(player.getUniqueId());
+    }
+    
+    /**
+     * Collapses a group by name
+     */
+    public void collapseGroup(Player player, String groupName) {
+        BlockGroup group = findGroupByName(player, groupName);
+        if (group == null) {
+            player.sendMessage("§cGroup not found: " + groupName);
+            return;
+        }
+        
+        group.setCollapsed(true);
+        player.sendMessage("§a✓ Collapsed group: " + groupName);
+    }
+    
+    /**
+     * Expands a group by name
+     */
+    public void expandGroup(Player player, String groupName) {
+        BlockGroup group = findGroupByName(player, groupName);
+        if (group == null) {
+            player.sendMessage("§cGroup not found: " + groupName);
+            return;
+        }
+        
+        group.setCollapsed(false);
+        player.sendMessage("§a✓ Expanded group: " + groupName);
+    }
+    
+    /**
+     * Deletes a group by name
+     */
+    public void deleteGroup(Player player, String groupName) {
+        String worldName = player.getWorld().getName();
+        Map<UUID, BlockGroup> groups = worldGroups.get(worldName);
+        if (groups == null) {
+            player.sendMessage("§cGroup not found: " + groupName);
+            return;
+        }
+        
+        BlockGroup group = findGroupByName(player, groupName);
+        if (group != null) {
+            groups.remove(group.getId());
+            player.sendMessage("§a✓ Deleted group: " + groupName);
+        } else {
+            player.sendMessage("§cGroup not found: " + groupName);
+        }
+    }
+    
+    /**
+     * Lists all groups for a player
+     */
+    public void listGroups(Player player) {
+        String worldName = player.getWorld().getName();
+        Map<UUID, BlockGroup> groups = worldGroups.get(worldName);
+        if (groups == null || groups.isEmpty()) {
+            player.sendMessage("§eNo groups found in this world");
+            return;
+        }
+        
+        player.sendMessage("§a§lYour Groups:");
+        for (BlockGroup group : groups.values()) {
+            if (group.getOwner().equals(player.getUniqueId())) {
+                String status = group.isCollapsed() ? "§c[Collapsed]" : "§a[Expanded]";
+                player.sendMessage("§7- " + status + " §f" + group.getName() + " §7(" + group.getBlocks().size() + " blocks)");
+            }
+        }
+    }
+    
+    /**
+     * Handles click on collapsed group display
+     */
+    public void handleCollapsedGroupClick(Player player, Location location) {
+        // Find group at this location and expand it
+        String worldName = player.getWorld().getName();
+        Map<UUID, BlockGroup> groups = worldGroups.get(worldName);
+        if (groups == null) return;
+        
+        for (BlockGroup group : groups.values()) {
+            if (group.getOwner().equals(player.getUniqueId()) && group.isCollapsed()) {
+                // Simple location-based matching - can be enhanced
+                expandGroup(player, group.getName());
+                break;
+            }
+        }
+    }
+    
+    /**
+     * Finds a group by name for a specific player
+     */
+    private BlockGroup findGroupByName(Player player, String groupName) {
+        String worldName = player.getWorld().getName();
+        Map<UUID, BlockGroup> groups = worldGroups.get(worldName);
+        if (groups == null) return null;
+        
+        return groups.values().stream()
+            .filter(group -> group.getOwner().equals(player.getUniqueId()))
+            .filter(group -> group.getName().equalsIgnoreCase(groupName))
+            .findFirst()
+            .orElse(null);
+    }
+    
+    /**
      * Creates a group from the current selection
      */
     public void createGroupFromSelection(Player player, String groupName) {
