@@ -2,6 +2,7 @@ package com.megacreative.coding;
 
 import com.megacreative.MegaCreative;
 import com.megacreative.models.CreativeWorld;
+import com.megacreative.services.BlockConfigService;
 import com.megacreative.worlds.DevWorldGenerator;
 import org.bukkit.Location;
 import org.bukkit.Material;
@@ -23,11 +24,13 @@ import java.util.*;
 public class AutoConnectionManager implements Listener {
     
     private final MegaCreative plugin;
+    private final BlockConfigService blockConfigService;
     private final Map<Location, CodeBlock> locationToBlock = new HashMap<>();
     private final Map<UUID, List<CodeBlock>> playerScriptBlocks = new HashMap<>();
     
-    public AutoConnectionManager(MegaCreative plugin) {
+    public AutoConnectionManager(MegaCreative plugin, BlockConfigService blockConfigService) {
         this.plugin = plugin;
+        this.blockConfigService = blockConfigService;
     }
     
     @EventHandler(priority = EventPriority.HIGH)
@@ -42,7 +45,7 @@ public class AutoConnectionManager implements Listener {
         if (!isDevWorld(block.getWorld())) return;
         
         // Проверяем, что это блок кода
-        if (!isCodeBlock(block.getType())) return;
+        if (!blockConfigService.isCodeBlock(block.getType())) return;
         
         // Проверяем, что блок размещен на валидной позиции
         if (!DevWorldGenerator.isValidCodePosition(location.getBlockX(), location.getBlockZ())) {
@@ -198,53 +201,18 @@ public class AutoConnectionManager implements Listener {
     
     /**
      * Определяет действие блока на основе его материала
+     * Теперь использует конфигурацию из coding_blocks.yml
      */
     private String determineActionFromMaterial(Material material) {
-        // На основе coding_blocks.yml определяем действие
-        switch (material) {
-            case DIAMOND_BLOCK:
-                return "onJoin"; // По умолчанию, можно настроить через GUI
-            case COBBLESTONE:
-                return "sendMessage";
-            case OAK_PLANKS:
-                return "isOp";
-            case IRON_BLOCK:
-                return "setVar";
-            case OBSIDIAN:
-                return "ifVarEquals";
-            case REDSTONE_BLOCK:
-                return "playerGameMode";
-            case BRICKS:
-                return "mobNear";
-            case EMERALD_BLOCK:
-                return "repeat";
-            case LAPIS_BLOCK:
-                return "callFunction";
-            case BOOKSHELF:
-                return "saveFunction";
-            case END_STONE:
-                return "else";
-            case NETHERITE_BLOCK:
-                return "setTime";
-            case POLISHED_GRANITE:
-                return "getPlayerName";
-            default:
-                return null;
-        }
+        return blockConfigService.getDefaultAction(material);
     }
     
     /**
      * Проверяет, является ли материал блоком кода
+     * Теперь использует конфигурацию из coding_blocks.yml
      */
     private boolean isCodeBlock(Material material) {
-        Set<Material> codeBlocks = Set.of(
-            Material.DIAMOND_BLOCK, Material.COBBLESTONE, Material.OAK_PLANKS,
-            Material.IRON_BLOCK, Material.OBSIDIAN, Material.REDSTONE_BLOCK,
-            Material.BRICKS, Material.EMERALD_BLOCK, Material.LAPIS_BLOCK,
-            Material.BOOKSHELF, Material.END_STONE, Material.NETHERITE_BLOCK,
-            Material.POLISHED_GRANITE
-        );
-        return codeBlocks.contains(material);
+        return blockConfigService.isCodeBlock(material);
     }
     
     /**
@@ -340,5 +308,34 @@ public class AutoConnectionManager implements Listener {
             }
         }
         return worldBlocks;
+    }
+    
+    /**
+     * Получает все доступные действия для материала
+     */
+    public List<String> getAvailableActions(Material material) {
+        return blockConfigService.getAvailableActions(material);
+    }
+    
+    /**
+     * Получает конфигурацию блока
+     */
+    public BlockConfigService.BlockConfig getBlockConfig(Material material) {
+        return blockConfigService.getBlockConfig(material);
+    }
+    
+    /**
+     * Получает все доступные материалы блоков кода
+     */
+    public Set<Material> getCodeBlockMaterials() {
+        return blockConfigService.getCodeBlockMaterials();
+    }
+    
+    /**
+     * Перезагружает конфигурацию блоков
+     */
+    public void reloadBlockConfig() {
+        blockConfigService.reload();
+        plugin.getLogger().info("Конфигурация блоков перезагружена");
     }
 }

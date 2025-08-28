@@ -1,88 +1,60 @@
 package com.megacreative.coding.values.types;
 
 import com.megacreative.coding.values.DataValue;
-import com.megacreative.coding.values.ValueType;
+import lombok.Data;
+import lombok.EqualsAndHashCode;
 
-import java.util.*;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Objects;
 
 /**
- * List value with type-safe operations
+ * Data value representing a list/array of values
+ * Supports operations like add, remove, get, size, etc.
  */
-public class ListValue implements DataValue {
-    private List<DataValue> value;
+@Data
+@EqualsAndHashCode(callSuper = true)
+public class ListValue extends DataValue {
     
-    public ListValue(List<?> value) {
-        this.value = new ArrayList<>();
-        if (value != null) {
-            for (Object item : value) {
-                this.value.add(DataValue.fromObject(item));
-            }
+    private final List<DataValue> values;
+    
+    public ListValue() {
+        super(DataValue.Type.LIST);
+        this.values = new ArrayList<>();
+    }
+    
+    public ListValue(List<DataValue> values) {
+        super(DataValue.Type.LIST);
+        this.values = new ArrayList<>(values);
+    }
+    
+    /**
+     * Adds a value to the end of the list
+     */
+    public void add(DataValue value) {
+        values.add(value);
+    }
+    
+    /**
+     * Adds a value at a specific index
+     */
+    public void add(int index, DataValue value) {
+        if (index >= 0 && index <= values.size()) {
+            values.add(index, value);
         }
     }
     
-    @Override
-    public ValueType getType() { return ValueType.LIST; }
-    
-    @Override
-    public Object getValue() { return value; }
-    
-    @Override
-    public void setValue(Object value) {
-        if (value instanceof List) {
-            this.value = new ArrayList<>();
-            for (Object item : (List<?>) value) {
-                this.value.add(DataValue.fromObject(item));
-            }
-        } else {
-            throw new IllegalArgumentException("Cannot set list from: " + value);
+    /**
+     * Removes a value at a specific index
+     */
+    public DataValue remove(int index) {
+        if (index >= 0 && index < values.size()) {
+            return values.remove(index);
         }
+        return null;
     }
     
-    @Override
-    public String asString() { 
-        return "[" + value.size() + " items]";
-    }
-    
-    @Override
-    public Number asNumber() { return value.size(); }
-    
-    @Override
-    public boolean asBoolean() { return !value.isEmpty(); }
-    
-    @Override
-    public boolean isEmpty() { return value.isEmpty(); }
-    
-    @Override
-    public boolean isValid() { return value != null; }
-    
-    @Override
-    public String getDescription() { return "List: " + asString(); }
-    
-    @Override
-    public DataValue clone() { 
-        List<Object> cloned = new ArrayList<>();
-        for (DataValue item : value) {
-            cloned.add(item.getValue());
-        }
-        return new ListValue(cloned);
-    }
-    
-    @Override
-    public Map<String, Object> serialize() {
-        Map<String, Object> map = new HashMap<>();
-        map.put("type", getType().name());
-        
-        List<Map<String, Object>> serializedItems = new ArrayList<>();
-        for (DataValue item : value) {
-            serializedItems.add(item.serialize());
-        }
-        map.put("value", serializedItems);
-        return map;
-    }
-    
-    // List-specific methods
-    public void add(DataValue item) { value.add(item); }
-    public void remove(int index) { value.remove(index); }
-    public DataValue get(int index) { return value.get(index); }
-    public int size() { return value.size(); }
-}
+    /**
+     * Removes the first occurrence of a value
+     */
+    public boolean remove(DataValue value) {\n        return values.remove(value);\n    }\n    \n    /**\n     * Gets a value at a specific index\n     */\n    public DataValue get(int index) {\n        if (index >= 0 && index < values.size()) {\n            return values.get(index);\n        }\n        return null;\n    }\n    \n    /**\n     * Sets a value at a specific index\n     */\n    public void set(int index, DataValue value) {\n        if (index >= 0 && index < values.size()) {\n            values.set(index, value);\n        }\n    }\n    \n    /**\n     * Gets the size of the list\n     */\n    public int size() {\n        return values.size();\n    }\n    \n    /**\n     * Checks if the list is empty\n     */\n    public boolean isEmpty() {\n        return values.isEmpty();\n    }\n    \n    /**\n     * Checks if the list contains a value\n     */\n    public boolean contains(DataValue value) {\n        return values.contains(value);\n    }\n    \n    /**\n     * Clears all values from the list\n     */\n    public void clear() {\n        values.clear();\n    }\n    \n    /**\n     * Gets the index of the first occurrence of a value\n     */\n    public int indexOf(DataValue value) {\n        return values.indexOf(value);\n    }\n    \n    /**\n     * Gets a copy of the internal list\n     */\n    public List<DataValue> getValues() {\n        return new ArrayList<>(values);\n    }\n    \n    @Override\n    public String asString() {\n        StringBuilder sb = new StringBuilder();\n        sb.append(\"[\");\n        for (int i = 0; i < values.size(); i++) {\n            if (i > 0) sb.append(\", \");\n            sb.append(values.get(i).asString());\n        }\n        sb.append(\"]\");\n        return sb.toString();\n    }\n    \n    @Override\n    public double asNumber() {\n        return size();\n    }\n    \n    @Override\n    public boolean asBoolean() {\n        return !isEmpty();\n    }\n    \n    @Override\n    public DataValue copy() {\n        List<DataValue> copiedValues = new ArrayList<>();\n        for (DataValue value : values) {\n            copiedValues.add(value.copy());\n        }\n        return new ListValue(copiedValues);\n    }\n    \n    @Override\n    public boolean equals(Object obj) {\n        if (this == obj) return true;\n        if (obj == null || getClass() != obj.getClass()) return false;\n        ListValue listValue = (ListValue) obj;\n        return Objects.equals(values, listValue.values);\n    }\n    \n    @Override\n    public int hashCode() {\n        return Objects.hash(values);\n    }\n    \n    @Override\n    public String toString() {\n        return \"ListValue{size=\" + size() + \", values=\" + asString() + \"}\";\n    }\n}
