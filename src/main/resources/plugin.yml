@@ -84,6 +84,11 @@ commands:
     usage: /<command> <copy|paste|preview|clear|info|save|load|list|pos1|pos2>
     permission: megacreative.user
     aliases: [cb, copy]
+  group:
+    description: Group and organize code blocks
+    usage: /<command> <select|create|collapse|expand|delete|list|cancel> [name]
+    permission: megacreative.user
+    aliases: [grp, organize]
 
 permissions:
   megacreative.*:

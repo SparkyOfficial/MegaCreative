@@ -113,6 +113,7 @@ public class MegaCreative extends JavaPlugin {
         getCommand("workspace").setExecutor(new WorkspaceCommand(serviceRegistry));
         getCommand("create").setExecutor(new CreateWorldCommand(serviceRegistry));
         getCommand("clipboard").setExecutor(new ClipboardCommand(this, serviceRegistry.getCodeBlockClipboard()));
+        getCommand("group").setExecutor(new GroupCommand(serviceRegistry));
     }
     
     /**
