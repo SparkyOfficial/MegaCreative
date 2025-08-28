@@ -2,8 +2,8 @@ package com.megacreative.coding.monitoring;
 
 import com.megacreative.coding.CodeBlock;
 import com.megacreative.coding.CodeScript;
-import com.megacreative.coding.actions.Action;
-import com.megacreative.coding.conditions.Condition;
+import com.megacreative.coding.actions.CodingAction;
+import com.megacreative.coding.BlockCondition;
 import lombok.Data;
 
 import java.util.*;

@@ -303,6 +303,18 @@ public class ScriptPerformanceMonitor {
     }
     
     /**
+     * Gets global system performance statistics
+     */
+    public SystemPerformanceReport getSystemReport() {
+        return new SystemPerformanceReport(
+            totalExecutions.get(),
+            totalExecutionTime.get(),
+            playerMetrics.size(),
+            actionPerformance.size()
+        );
+    }
+    
+    /**
      * Gets global system performance statistics with advanced metrics
      */
     public AdvancedSystemPerformanceReport getAdvancedSystemReport() {
@@ -315,6 +327,34 @@ public class ScriptPerformanceMonitor {
             memoryMonitor.getCurrentUsage(),
             bottleneckDetector.getDetectedBottlenecks()
         );
+    }
+    
+    /**
+     * System performance report
+     */
+    public static class SystemPerformanceReport {
+        private final long totalExecutions;
+        private final long totalExecutionTime;
+        private final int activePlayerCount;
+        private final int uniqueActionTypes;
+        
+        public SystemPerformanceReport(long totalExecutions, long totalExecutionTime, 
+                                     int activePlayerCount, int uniqueActionTypes) {
+            this.totalExecutions = totalExecutions;
+            this.totalExecutionTime = totalExecutionTime;
+            this.activePlayerCount = activePlayerCount;
+            this.uniqueActionTypes = uniqueActionTypes;
+        }
+        
+        public double getAverageExecutionTime() {
+            return totalExecutions > 0 ? totalExecutionTime / (double) totalExecutions : 0;
+        }
+        
+        // Getters
+        public long getTotalExecutions() { return totalExecutions; }
+        public long getTotalExecutionTime() { return totalExecutionTime; }
+        public int getActivePlayerCount() { return activePlayerCount; }
+        public int getUniqueActionTypes() { return uniqueActionTypes; }
     }
     
     /**
