@@ -92,26 +92,26 @@ public class MegaCreative extends JavaPlugin {
      * Registers all plugin commands
      */
     private void registerCommands() {
-        getCommand("megacreative").setExecutor(new MainCommand(serviceRegistry));
-        getCommand("myworlds").setExecutor(new MyWorldsCommand(serviceRegistry));
-        getCommand("worldbrowser").setExecutor(new WorldBrowserCommand(serviceRegistry));
-        getCommand("join").setExecutor(new JoinCommand(serviceRegistry));
-        getCommand("play").setExecutor(new PlayCommand(serviceRegistry));
-        getCommand("trusted").setExecutor(new TrustedPlayerCommand(serviceRegistry));
-        getCommand("build").setExecutor(new BuildCommand(serviceRegistry));
-        getCommand("dev").setExecutor(new DevCommand(serviceRegistry));
-        getCommand("hub").setExecutor(new HubCommand(serviceRegistry));
-        getCommand("savescript").setExecutor(new SaveScriptCommand(serviceRegistry));
-        getCommand("templates").setExecutor(new TemplatesCommand(serviceRegistry));
-        getCommand("scripts").setExecutor(new ScriptsCommand(serviceRegistry));
-        getCommand("worldsettings").setExecutor(new WorldSettingsCommand(serviceRegistry));
-        getCommand("debug").setExecutor(new DebugCommand(serviceRegistry));
-        getCommand("createscript").setExecutor(new CreateScriptCommand(serviceRegistry));
-        getCommand("stoprepeat").setExecutor(new StopRepeatCommand(serviceRegistry));
-        getCommand("status").setExecutor(new StatusCommand(serviceRegistry));
-        getCommand("addfloor").setExecutor(new AddFloorCommand(serviceRegistry));
-        getCommand("workspace").setExecutor(new WorkspaceCommand(serviceRegistry));
-        getCommand("create").setExecutor(new CreateWorldCommand(serviceRegistry));
+        getCommand("megacreative").setExecutor(new MainCommand(this));
+        getCommand("myworlds").setExecutor(new MyWorldsCommand(this));
+        getCommand("worldbrowser").setExecutor(new WorldBrowserCommand(this));
+        getCommand("join").setExecutor(new JoinCommand(this));
+        getCommand("play").setExecutor(new PlayCommand(this));
+        getCommand("trusted").setExecutor(new TrustedPlayerCommand(this));
+        getCommand("build").setExecutor(new BuildCommand(this));
+        getCommand("dev").setExecutor(new DevCommand(this));
+        getCommand("hub").setExecutor(new HubCommand(this));
+        getCommand("savescript").setExecutor(new SaveScriptCommand(this));
+        getCommand("templates").setExecutor(new TemplatesCommand(this));
+        getCommand("scripts").setExecutor(new ScriptsCommand(this));
+        getCommand("worldsettings").setExecutor(new WorldSettingsCommand(this));
+        getCommand("debug").setExecutor(new DebugCommand(this));
+        getCommand("createscript").setExecutor(new CreateScriptCommand(this));
+        getCommand("stoprepeat").setExecutor(new StopRepeatCommand(this));
+        getCommand("status").setExecutor(new StatusCommand(this));
+        getCommand("addfloor").setExecutor(new AddFloorCommand(this));
+        getCommand("workspace").setExecutor(new WorkspaceCommand(this));
+        getCommand("create").setExecutor(new CreateWorldCommand(this));
         getCommand("clipboard").setExecutor(new ClipboardCommand(this, serviceRegistry.getCodeBlockClipboard()));
         getCommand("group").setExecutor(new GroupCommand(serviceRegistry));
     }
@@ -121,19 +121,19 @@ public class MegaCreative extends JavaPlugin {
      */
     private void registerEvents() {
         // Core listeners
-        getServer().getPluginManager().registerEvents(new PlayerJoinListener(serviceRegistry), this);
-        getServer().getPluginManager().registerEvents(new PlayerQuitListener(serviceRegistry), this);
-        getServer().getPluginManager().registerEvents(new GuiListener(serviceRegistry), this);
+        getServer().getPluginManager().registerEvents(new PlayerJoinListener(this), this);
+        getServer().getPluginManager().registerEvents(new PlayerQuitListener(this), this);
+        getServer().getPluginManager().registerEvents(new GuiListener(this), this);
         getServer().getPluginManager().registerEvents(new DataItemListener(), this);
-        getServer().getPluginManager().registerEvents(new WorldInteractListener(serviceRegistry), this);
-        getServer().getPluginManager().registerEvents(new InventoryClickListener(serviceRegistry), this);
+        getServer().getPluginManager().registerEvents(new WorldInteractListener(this), this);
+        getServer().getPluginManager().registerEvents(new InventoryClickListener(this), this);
         
         // Extended event listeners
-        getServer().getPluginManager().registerEvents(new BlockBreakListener(serviceRegistry), this);
-        getServer().getPluginManager().registerEvents(new PlayerDeathListener(serviceRegistry), this);
-        getServer().getPluginManager().registerEvents(new CommandListener(serviceRegistry), this);
-        getServer().getPluginManager().registerEvents(new DevWorldProtectionListener(serviceRegistry), this);
-        getServer().getPluginManager().registerEvents(new PlayerWorldChangeListener(serviceRegistry), this);
+        getServer().getPluginManager().registerEvents(new BlockBreakListener(this), this);
+        getServer().getPluginManager().registerEvents(new PlayerDeathListener(this), this);
+        getServer().getPluginManager().registerEvents(new CommandListener(this), this);
+        getServer().getPluginManager().registerEvents(new DevWorldProtectionListener(this), this);
+        getServer().getPluginManager().registerEvents(new PlayerWorldChangeListener(this), this);
         
         // Service-specific listeners
         getServer().getPluginManager().registerEvents(serviceRegistry.getBlockPlacementHandler(), this);
@@ -189,5 +189,55 @@ public class MegaCreative extends JavaPlugin {
     @Deprecated
     public com.megacreative.managers.GUIManager getGuiManager() {
         return serviceRegistry.getGuiManager();
+    }
+    
+    @Deprecated
+    public com.megacreative.utils.ConfigManager getConfigManager() {
+        return serviceRegistry.getConfigManager();
+    }
+    
+    @Deprecated
+    public com.megacreative.managers.ScoreboardManager getScoreboardManager() {
+        return serviceRegistry.getScoreboardManager();
+    }
+    
+    @Deprecated
+    public com.megacreative.coding.BlockPlacementHandler getBlockPlacementHandler() {
+        return serviceRegistry.getBlockPlacementHandler();
+    }
+    
+    @Deprecated
+    public com.megacreative.managers.TemplateManager getTemplateManager() {
+        return serviceRegistry.getTemplateManager();
+    }
+    
+    @Deprecated
+    public com.megacreative.services.BlockConfigService getBlockConfiguration() {
+        return serviceRegistry.getBlockConfigService();
+    }
+    
+    @Deprecated
+    public com.megacreative.coding.debug.VisualDebugger getScriptDebugger() {
+        return serviceRegistry.getVisualDebugger();
+    }
+    
+    @Deprecated
+    public com.megacreative.managers.TrustedPlayerManager getTrustedPlayerManager() {
+        return serviceRegistry.getTrustedPlayerManager();
+    }
+    
+    @Deprecated
+    public com.megacreative.coding.variables.VariableManager getVariableManager() {
+        return serviceRegistry.getVariableManager();
+    }
+    
+    @Deprecated
+    public java.util.Map<java.util.UUID, String> getDeleteConfirmations() {
+        return serviceRegistry.getGuiManager().getDeleteConfirmations();
+    }
+    
+    @Deprecated
+    public java.util.Map<java.util.UUID, String> getCommentInputs() {
+        return serviceRegistry.getGuiManager().getCommentInputs();
     }
 }

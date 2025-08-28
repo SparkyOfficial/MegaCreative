@@ -85,7 +85,7 @@ public class VariableManager {
     
     public void setGlobalVariable(String worldId, String name, DataValue value) {
         globalVariables.computeIfAbsent(worldId, k -> new ConcurrentHashMap<>()).put(name, value);
-        updateMetadata(name, VariableScope.GLOBAL, value.getType());
+       updateMetadata(name, VariableScope.WORLD, value.getType());
         
         // Notify all players in world about variable change
         notifyPlayersInWorld(worldId, name, value);
@@ -135,7 +135,7 @@ public class VariableManager {
                 Map<String, Object> serialized = persistentConfig.getConfigurationSection("variables." + name).getValues(false);
                 DataValue value = DataValue.deserialize(serialized);
                 persistentVariables.put(name, value);
-                updateMetadata(name, VariableScope.PERSISTENT, value.getType());
+               updateMetadata(name, VariableScope.SERVER, value.getType());
             } catch (Exception e) {
                 plugin.getLogger().warning("Failed to load persistent variable " + name + ": " + e.getMessage());
             }
@@ -172,7 +172,7 @@ public class VariableManager {
     
     public void registerDynamicVariable(String name, DynamicVariable.ValueSupplier supplier) {
         dynamicVariables.put(name, new DynamicVariable(name, supplier));
-        updateMetadata(name, VariableScope.DYNAMIC, ValueType.ANY);
+       updateMetadata(name, VariableScope.LOCAL, ValueType.ANY);
     }
     
     public DataValue getDynamicVariable(String name) {
@@ -222,10 +222,10 @@ public class VariableManager {
     public void setVariable(String name, DataValue value, String scriptId, String worldId) {
         if (name.startsWith("local.")) {
             setLocalVariable(scriptId, name.substring(6), value);
-        } else if (name.startsWith("global.")) {
-            setGlobalVariable(worldId, name.substring(7), value);
-        } else if (name.startsWith("persist.")) {
-            setPersistentVariable(name.substring(8), value);
+        } else if (name.startsWith("world.")) {
+            setGlobalVariable(worldId, name.substring(6), value);
+        } else if (name.startsWith("server.")) {
+            setPersistentVariable(name.substring(7), value);
         } else {
             // Default to local scope
             setLocalVariable(scriptId, name, value);

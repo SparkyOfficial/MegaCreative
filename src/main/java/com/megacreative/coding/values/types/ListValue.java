@@ -21,19 +21,20 @@ public class ListValue implements DataValue {
         this.values = new ArrayList<>(values);
     }
     
-    // Constructor for compatibility with existing code
+    // Static factory method for compatibility with existing code
     @SuppressWarnings("unchecked")
-    public ListValue(List<?> rawValues) {
-        this.values = new ArrayList<>();
+    public static ListValue fromRawList(List<?> rawValues) {
+        List<DataValue> convertedValues = new ArrayList<>();
         if (rawValues != null) {
             for (Object obj : rawValues) {
                 if (obj instanceof DataValue) {
-                    this.values.add((DataValue) obj);
+                    convertedValues.add((DataValue) obj);
                 } else {
-                    this.values.add(DataValue.fromObject(obj));
+                    convertedValues.add(DataValue.fromObject(obj));
                 }
             }
         }
+        return new ListValue(convertedValues);
     }
     
     @Override
