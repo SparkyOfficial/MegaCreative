@@ -1,12 +1,14 @@
 package com.megacreative.coding.monitoring;
 
+import com.megacreative.coding.CodeBlock;
+import com.megacreative.coding.CodeScript;
 import org.bukkit.entity.Player;
 import org.bukkit.plugin.Plugin;
 
-import java.util.Map;
-import java.util.UUID;
+import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.atomic.AtomicLong;
+import java.util.stream.Collectors;
 
 /**
  * Advanced performance monitoring system for visual programming scripts
@@ -43,16 +45,6 @@ public class ScriptPerformanceMonitor {
     }
     
     /**
-     * Starts performance tracking for a script execution
-     */
-    public ExecutionTracker startTracking(Player player, String scriptName, String actionType) {
-        UUID playerId = player.getUniqueId();
-        PlayerScriptMetrics metrics = playerMetrics.computeIfAbsent(playerId, k -> new PlayerScriptMetrics());
-        
-        return new ExecutionTracker(this, player, scriptName, actionType, System.currentTimeMillis());
-    }
-    
-    /**
      * Starts performance tracking for a script execution with profiling
      */
     public ExecutionTracker startTracking(Player player, String scriptName, String actionType) {
@@ -64,32 +56,6 @@ public class ScriptPerformanceMonitor {
             k -> new ScriptPerformanceProfile(scriptName));
         
         return new ExecutionTracker(this, player, scriptName, actionType, System.currentTimeMillis(), profile);
-    }
-    
-    /**
-     * Records the completion of a script execution
-     */
-    public void recordExecution(Player player, String scriptName, String actionType, 
-                               long executionTime, boolean success, String errorMessage) {
-        UUID playerId = player.getUniqueId();
-        
-        // Update player metrics
-        PlayerScriptMetrics playerMetrics = this.playerMetrics.get(playerId);
-        if (playerMetrics != null) {
-            playerMetrics.recordExecution(scriptName, actionType, executionTime, success);
-        }
-        
-        // Update action performance data
-        ActionPerformanceData actionData = actionPerformance.computeIfAbsent(actionType, 
-            k -> new ActionPerformanceData(actionType));
-        actionData.recordExecution(executionTime, success);
-        
-        // Update global metrics
-        totalExecutions.incrementAndGet();
-        totalExecutionTime.addAndGet(executionTime);
-        
-        // Check for performance issues
-        checkPerformanceIssues(player, actionType, executionTime, errorMessage);
     }
     
     /**
@@ -137,7 +103,7 @@ public class ScriptPerformanceMonitor {
         // Check for slow execution
         if (executionTime > slowExecutionThreshold) {
             if (player.hasPermission("megacreative.debug")) {
-                player.sendMessage("§e⚠ Slow execution detected: " + + actionType + 
+                player.sendMessage("§e⚠ Slow execution detected: " + actionType + 
                                  " took " + executionTime + "ms");
             }
         }
