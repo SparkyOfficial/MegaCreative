@@ -58,7 +58,11 @@ public class AutoConnectionManager implements Listener {
         plugin.getLogger().info("Synchronized " + placementBlocks.size() + " blocks with AutoConnectionManager");
     }
     
-    @EventHandler(priority = EventPriority.HIGH)
+    /**
+     * Enhanced block placement handler with BlockPlacementHandler integration
+     * Processes auto-connection AFTER BlockPlacementHandler has created the CodeBlock
+     */
+    @EventHandler(priority = EventPriority.MONITOR) // Use MONITOR to run after BlockPlacementHandler
     public void onBlockPlace(BlockPlaceEvent event) {
         if (event.isCancelled()) return;
         
@@ -66,36 +70,48 @@ public class AutoConnectionManager implements Listener {
         Block block = event.getBlock();
         Location location = block.getLocation();
         
-        // Проверяем, что это dev-мир
+        // Check if this is a dev world
         if (!isDevWorld(block.getWorld())) return;
         
-        // Проверяем, что это блок кода
+        // Check if this is a code block
         if (!blockConfigService.isCodeBlock(block.getType())) return;
         
-        // Проверяем, что блок размещен на валидной позиции
-        if (!DevWorldGenerator.isValidCodePosition(location.getBlockX(), location.getBlockZ())) {
-            event.setCancelled(true);
-            player.sendMessage("§cБлоки кода можно размещать только на специальных позициях!");
-            return;
+        // Get the CodeBlock that was created by BlockPlacementHandler
+        BlockPlacementHandler placementHandler = plugin.getBlockPlacementHandler();
+        if (placementHandler != null && placementHandler.hasCodeBlock(location)) {
+            CodeBlock codeBlock = placementHandler.getCodeBlock(location);
+            if (codeBlock != null) {
+                // Add to our tracking map
+                locationToBlock.put(location, codeBlock);
+                
+                // Add to player's script blocks
+                addBlockToPlayerScript(player, codeBlock);
+                
+                // Auto-connect with neighboring blocks
+                autoConnectBlock(codeBlock, location);
+                
+                player.sendMessage("§aCode block placed and auto-connected!");
+                plugin.getLogger().info("Auto-connected CodeBlock at " + location + " for player " + player.getName());
+            }
+        } else {
+            // Fallback: create CodeBlock if BlockPlacementHandler didn't handle it
+            plugin.getLogger().warning("BlockPlacementHandler didn't create CodeBlock at " + location + ", creating fallback");
+            
+            CodeBlock codeBlock = createCodeBlockFromMaterial(block.getType(), location);
+            if (codeBlock == null) return;
+            
+            locationToBlock.put(location, codeBlock);
+            addBlockToPlayerScript(player, codeBlock);
+            autoConnectBlock(codeBlock, location);
+            
+            player.sendMessage("§aCode block created and connected!");
         }
-        
-        // Создаем новый CodeBlock
-        CodeBlock codeBlock = createCodeBlockFromMaterial(block.getType(), location);
-        if (codeBlock == null) return;
-        
-        // Сохраняем связь между позицией и блоком
-        locationToBlock.put(location, codeBlock);
-        
-        // Добавляем блок к скрипту игрока
-        addBlockToPlayerScript(player, codeBlock);
-        
-        // Автоматически соединяем с соседними блоками
-        autoConnectBlock(codeBlock, location);
-        
-        player.sendMessage("§aБлок кода размещен и автоматически подключен!");
     }
     
-    @EventHandler(priority = EventPriority.HIGH)
+    /**
+     * Enhanced block break handler with proper disconnection and synchronization
+     */
+    @EventHandler(priority = EventPriority.MONITOR)
     public void onBlockBreak(BlockBreakEvent event) {
         if (event.isCancelled()) return;
         
@@ -103,16 +119,23 @@ public class AutoConnectionManager implements Listener {
         CodeBlock codeBlock = locationToBlock.get(location);
         
         if (codeBlock != null) {
-            // Удаляем связи с соседними блоками
+            // Disconnect from neighboring blocks
             disconnectBlock(codeBlock, location);
             
-            // Удаляем из хранилища
+            // Remove from our tracking
             locationToBlock.remove(location);
             
-            // Удаляем из скрипта игрока
+            // Remove from player script
             removeBlockFromPlayerScript(event.getPlayer(), codeBlock);
             
-            event.getPlayer().sendMessage("§cБлок кода удален и отключен от цепочки!");
+            // Also ensure BlockPlacementHandler is synchronized
+            BlockPlacementHandler placementHandler = plugin.getBlockPlacementHandler();
+            if (placementHandler != null) {
+                // The BlockPlacementHandler should handle this in its own event handler
+                plugin.getLogger().info("CodeBlock disconnected at " + location);
+            }
+            
+            event.getPlayer().sendMessage("§cCode block removed and disconnected from chain!");
         }
     }
     
@@ -459,17 +482,82 @@ public class AutoConnectionManager implements Listener {
     }
     
     /**
-     * Получает все доступные материалы блоков кода
+     * Rebuilds all connections for blocks in a specific world
+     * Useful for initializing connections when loading existing worlds
+     */
+    public void rebuildWorldConnections(World world) {
+        plugin.getLogger().info("Rebuilding connections for world: " + world.getName());
+        
+        // Get all blocks in the world
+        Map<Location, CodeBlock> worldBlocks = getWorldBlocks(world);
+        
+        // Clear existing connections
+        for (CodeBlock block : worldBlocks.values()) {
+            block.setNextBlock(null);
+            block.getChildren().clear();
+        }
+        
+        // Rebuild connections
+        for (Map.Entry<Location, CodeBlock> entry : worldBlocks.entrySet()) {
+            autoConnectBlock(entry.getValue(), entry.getKey());
+        }
+        
+        plugin.getLogger().info("Rebuilt connections for " + worldBlocks.size() + " blocks");
+    }
+    
+    /**
+     * Forces synchronization with BlockPlacementHandler and rebuilds connections
+     * Should be called during plugin initialization or world loading
+     */
+    public void forceSynchronization() {
+        BlockPlacementHandler placementHandler = plugin.getBlockPlacementHandler();
+        if (placementHandler != null) {
+            synchronizeWithPlacementHandler(placementHandler);
+            
+            // Rebuild connections for all loaded worlds
+            for (World world : plugin.getServer().getWorlds()) {
+                if (isDevWorld(world)) {
+                    rebuildWorldConnections(world);
+                }
+            }
+        }
+    }
+    
+    /**
+     * Gets connection statistics for debugging
+     */
+    public String getConnectionStats() {
+        int totalBlocks = locationToBlock.size();
+        int connectedBlocks = 0;
+        int parentBlocks = 0;
+        int childBlocks = 0;
+        
+        for (CodeBlock block : locationToBlock.values()) {
+            if (block.getNextBlock() != null) {
+                connectedBlocks++;
+            }
+            if (!block.getChildren().isEmpty()) {
+                parentBlocks++;
+                childBlocks += block.getChildren().size();
+            }
+        }
+        
+        return String.format("Blocks: %d, Connected: %d, Parents: %d, Total Children: %d", 
+                            totalBlocks, connectedBlocks, parentBlocks, childBlocks);
+    }
+    
+    /**
+     * Gets all available materials for code blocks
      */
     public Set<Material> getCodeBlockMaterials() {
         return blockConfigService.getCodeBlockMaterials();
     }
     
     /**
-     * Перезагружает конфигурацию блоков
+     * Reloads block configuration
      */
     public void reloadBlockConfig() {
         blockConfigService.reload();
-        plugin.getLogger().info("Конфигурация блоков перезагружена");
+        plugin.getLogger().info("Block configuration reloaded");
     }
 }
