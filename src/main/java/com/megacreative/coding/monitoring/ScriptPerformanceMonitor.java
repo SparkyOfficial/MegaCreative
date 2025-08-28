@@ -318,39 +318,6 @@ public class ScriptPerformanceMonitor {
     }
     
     /**
-     * Execution tracker for measuring individual script performance
-     */
-    public static class ExecutionTracker implements AutoCloseable {
-        private final ScriptPerformanceMonitor monitor;
-        private final Player player;
-        private final String scriptName;
-        private final String actionType;
-        private final long startTime;
-        private boolean success = true;
-        private String errorMessage;
-        
-        public ExecutionTracker(ScriptPerformanceMonitor monitor, Player player, 
-                              String scriptName, String actionType, long startTime) {
-            this.monitor = monitor;
-            this.player = player;
-            this.scriptName = scriptName;
-            this.actionType = actionType;
-            this.startTime = startTime;
-        }
-        
-        public void markError(String errorMessage) {
-            this.success = false;
-            this.errorMessage = errorMessage;
-        }
-        
-        @Override
-        public void close() {
-            long executionTime = System.currentTimeMillis() - startTime;
-            monitor.recordExecution(player, scriptName, actionType, executionTime, success, errorMessage);
-        }
-    }
-    
-    /**
      * Execution tracker for measuring individual script performance with profiling
      */
     public static class ExecutionTracker implements AutoCloseable {
