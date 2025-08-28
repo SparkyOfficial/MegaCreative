@@ -2,6 +2,7 @@ package com.megacreative.listeners;
 
 import com.megacreative.MegaCreative;
 import com.megacreative.coding.ExecutionContext;
+import com.megacreative.coding.events.EventDataExtractorRegistry;
 import com.megacreative.models.CreativeWorld;
 import org.bukkit.Material;
 import org.bukkit.entity.Player;
@@ -42,11 +43,9 @@ public class CommandListener implements Listener {
                     .event(event)
                     .build();
                 
-                // Добавляем переменные события
-                context.setVariable("command", command);
-                context.setVariable("commandName", command.split(" ")[0]);
-                context.setVariable("commandArgs", command.substring(command.indexOf(" ") + 1));
-                context.setVariable("fullCommand", command);
+                // Используем унифицированную систему извлечения данных
+                EventDataExtractorRegistry extractorRegistry = plugin.getServiceRegistry().getEventDataExtractorRegistry();
+                extractorRegistry.populateContext(event, context);
                 
                 // Выполняем скрипт
                 plugin.getCodingManager().getScriptExecutor().execute(script, context, "onCommand");

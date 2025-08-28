@@ -177,7 +177,6 @@ public class TemplateBrowserGUI implements GUIManager.ManagedGUIInterface {
                 // GUIManager will handle automatic cleanup
                 player.performCommand("previewtemplate " + template.getName());
             }
-            }
         }
     }
     

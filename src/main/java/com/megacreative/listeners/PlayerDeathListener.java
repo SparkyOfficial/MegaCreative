@@ -3,6 +3,7 @@ package com.megacreative.listeners;
 import com.megacreative.MegaCreative;
 import com.megacreative.models.CreativeWorld;
 import com.megacreative.coding.ExecutionContext;
+import com.megacreative.coding.events.EventDataExtractorRegistry;
 import org.bukkit.Location;
 import org.bukkit.Material;
 import org.bukkit.entity.Player;
@@ -41,19 +42,9 @@ public class PlayerDeathListener implements Listener {
                     .event(event)
                     .build();
                 
-                // Добавляем переменные события
-                Location deathLocation = player.getLocation();
-                context.setVariable("deathLocation", 
-                    deathLocation.getWorld().getName() + "," + 
-                    deathLocation.getBlockX() + "," + 
-                    deathLocation.getBlockY() + "," + 
-                    deathLocation.getBlockZ());
-                context.setVariable("deathX", deathLocation.getBlockX());
-                context.setVariable("deathY", deathLocation.getBlockY());
-                context.setVariable("deathZ", deathLocation.getBlockZ());
-                context.setVariable("deathMessage", event.getDeathMessage());
-                context.setVariable("deathCause", event.getEntity().getLastDamageCause() != null ? 
-                    event.getEntity().getLastDamageCause().getCause().name() : "UNKNOWN");
+                // Используем унифицированную систему извлечения данных
+                EventDataExtractorRegistry extractorRegistry = plugin.getServiceRegistry().getEventDataExtractorRegistry();
+                extractorRegistry.populateContext(event, context);
                 
                 // Выполняем скрипт
                 plugin.getCodingManager().getScriptExecutor().execute(script, context, "onPlayerDeath");

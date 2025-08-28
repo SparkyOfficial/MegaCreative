@@ -8,6 +8,7 @@ import com.megacreative.coding.containers.BlockContainerManager;
 import com.megacreative.coding.executors.ExecutorEngine;
 import com.megacreative.coding.variables.VariableManager;
 import com.megacreative.coding.events.CustomEventManager;
+import com.megacreative.coding.events.EventDataExtractorRegistry;
 import com.megacreative.coding.debug.VisualDebugger;
 import com.megacreative.coding.errors.VisualErrorHandler;
 import com.megacreative.coding.groups.BlockGroupManager;
@@ -65,6 +66,7 @@ public class ServiceRegistry {
     // New architecture services
     private BlockConfigService blockConfigService;
     private CustomEventManager customEventManager;
+    private EventDataExtractorRegistry eventDataExtractorRegistry;
     private VisualDebugger visualDebugger;
     private VisualErrorHandler visualErrorHandler;
     private CodeBlockClipboard codeBlockClipboard;
@@ -178,6 +180,7 @@ public class ServiceRegistry {
     public ScriptPerformanceMonitor getScriptPerformanceMonitor() { return scriptPerformanceMonitor; }
     public BlockConfigService getBlockConfigService() { return blockConfigService; }
     public CustomEventManager getCustomEventManager() { return customEventManager; }
+    public EventDataExtractorRegistry getEventDataExtractorRegistry() { return eventDataExtractorRegistry; }
     public VisualDebugger getVisualDebugger() { return visualDebugger; }
     public VisualErrorHandler getVisualErrorHandler() { return visualErrorHandler; }
     public CodeBlockClipboard getCodeBlockClipboard() { return codeBlockClipboard; }
@@ -272,6 +275,10 @@ public class ServiceRegistry {
     }
     
     private void initializeNewArchitectureServices() {
+        // Event data extraction system
+        eventDataExtractorRegistry = new EventDataExtractorRegistry();
+        registerService(EventDataExtractorRegistry.class, eventDataExtractorRegistry);
+        
         // Advanced debugging and error handling
         visualDebugger = new VisualDebugger((com.megacreative.MegaCreative) plugin);
         registerService(VisualDebugger.class, visualDebugger);

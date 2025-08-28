@@ -1,13 +1,13 @@
 package com.megacreative.gui;
 
 import com.megacreative.MegaCreative;
-import com.megacreative.listeners.GuiListener;
+import com.megacreative.managers.GUIManager;
 import org.bukkit.Bukkit;
 import org.bukkit.Material;
 import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
-import org.bukkit.event.Listener;
 import org.bukkit.event.inventory.InventoryClickEvent;
+import org.bukkit.event.inventory.InventoryCloseEvent;
 import org.bukkit.event.inventory.PrepareAnvilEvent;
 import org.bukkit.inventory.AnvilInventory;
 import org.bukkit.inventory.Inventory;
@@ -17,13 +17,15 @@ import org.bukkit.inventory.meta.ItemMeta;
 import java.util.Arrays;
 import java.util.function.Consumer;
 
-public class AnvilInputGUI implements Listener {
+public class AnvilInputGUI implements GUIManager.ManagedGUIInterface {
     
     private final MegaCreative plugin;
     private final Player player;
     private final String title;
     private final Consumer<String> onComplete;
     private final Runnable onCancel;
+    private final GUIManager guiManager;
+    private Inventory anvilInventory;
     
     public AnvilInputGUI(MegaCreative plugin, Player player, String title, Consumer<String> onComplete, Runnable onCancel) {
         this.plugin = plugin;
@@ -31,29 +33,35 @@ public class AnvilInputGUI implements Listener {
         this.title = title;
         this.onComplete = onComplete;
         this.onCancel = onCancel;
+        this.guiManager = plugin.getGuiManager();
         
-        // Регистрируем GUI в централизованной системе
-        GuiListener.registerOpenGui(player, this);
         openAnvil();
     }
     
     private void openAnvil() {
         // Создаем наковальню
-        Inventory anvil = Bukkit.createInventory(player, 3, title);
+        anvilInventory = Bukkit.createInventory(player, 3, title);
         
         // Устанавливаем начальный предмет
         ItemStack inputItem = new ItemStack(Material.PAPER);
         ItemMeta inputMeta = inputItem.getItemMeta();
         inputMeta.setDisplayName("§7Введите текст здесь");
         inputItem.setItemMeta(inputMeta);
-        anvil.setItem(0, inputItem);
+        anvilInventory.setItem(0, inputItem);
         
-        player.openInventory(anvil);
+        // Register with GUIManager and open inventory
+        guiManager.registerGUI(player, this, anvilInventory);
+        player.openInventory(anvilInventory);
     }
     
-    @EventHandler
+    @Override
+    public String getGUITitle() {
+        return "Anvil Input GUI: " + title;
+    }
+    
+    @Override
     public void onInventoryClick(InventoryClickEvent event) {
-        if (!event.getInventory().equals(player.getOpenInventory().getTopInventory())) return;
+        if (!event.getInventory().equals(anvilInventory)) return;
         
         if (!(event.getWhoClicked() instanceof Player clicker) || !clicker.equals(player)) {
             return;
@@ -74,8 +82,7 @@ public class AnvilInputGUI implements Listener {
                     String cleanText = inputText.replaceAll("§[0-9a-fk-or]", "");
                     
                     player.closeInventory();
-                    // Удаляем регистрацию GUI
-                    GuiListener.unregisterOpenGui(player);
+                    // GUIManager will handle automatic cleanup
                     
                     // Вызываем callback
                     onComplete.accept(cleanText);
@@ -88,10 +95,19 @@ public class AnvilInputGUI implements Listener {
             // Проверяем, закрыл ли игрок инвентарь
             Bukkit.getScheduler().runTaskLater(plugin, () -> {
                 if (!player.getOpenInventory().getTitle().equals(title)) {
-                    // Удаляем регистрацию GUI
-                    GuiListener.unregisterOpenGui(player);
+                    // GUIManager will handle automatic cleanup
                     onCancel.run();
                 }
+            }, 1L);
+        }
+    }
+    
+    @Override
+    public void onInventoryClose(InventoryCloseEvent event) {
+        // Handle anvil close - run cancel callback if not already processed
+        if (onCancel != null) {
+            Bukkit.getScheduler().runTaskLater(plugin, () -> {
+                onCancel.run();
             }, 1L);
         }
     }
@@ -116,5 +132,11 @@ public class AnvilInputGUI implements Listener {
                 event.setResult(result);
             }
         }
+    }
+    
+    @Override
+    public void onCleanup() {
+        // Called when GUI is being cleaned up by GUIManager
+        // No special cleanup needed for this GUI
     }
 } 

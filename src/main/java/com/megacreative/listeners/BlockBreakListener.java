@@ -3,6 +3,7 @@ package com.megacreative.listeners;
 import com.megacreative.MegaCreative;
 import com.megacreative.models.CreativeWorld;
 import com.megacreative.coding.ExecutionContext;
+import com.megacreative.coding.events.EventDataExtractorRegistry;
 import org.bukkit.Location;
 import org.bukkit.Material;
 import org.bukkit.entity.Player;
@@ -41,17 +42,9 @@ public class BlockBreakListener implements Listener {
                     .event(event)
                     .build();
                 
-                // Добавляем переменные события
-                Location blockLocation = event.getBlock().getLocation();
-                context.setVariable("blockType", event.getBlock().getType().name());
-                context.setVariable("blockLocation", 
-                    blockLocation.getWorld().getName() + "," + 
-                    blockLocation.getBlockX() + "," + 
-                    blockLocation.getBlockY() + "," + 
-                    blockLocation.getBlockZ());
-                context.setVariable("blockX", blockLocation.getBlockX());
-                context.setVariable("blockY", blockLocation.getBlockY());
-                context.setVariable("blockZ", blockLocation.getBlockZ());
+                // Используем унифицированную систему извлечения данных
+                EventDataExtractorRegistry extractorRegistry = plugin.getServiceRegistry().getEventDataExtractorRegistry();
+                extractorRegistry.populateContext(event, context);
                 
                 // Выполняем скрипт
                 plugin.getCodingManager().getScriptExecutor().execute(script, context, "onBlockBreak");

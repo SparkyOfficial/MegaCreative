@@ -1,6 +1,7 @@
 package com.megacreative.coding;
 
 import com.megacreative.MegaCreative;
+import com.megacreative.coding.events.EventDataExtractorRegistry;
 import com.megacreative.interfaces.ICodingManager;
 import com.megacreative.models.CreativeWorld;
 import org.bukkit.Bukkit;
@@ -157,6 +158,11 @@ public class CodingManagerImpl implements ICodingManager, Listener {
                             .creativeWorld(creativeWorld)
                             .event(event)
                             .build();
+                    
+                    // Use unified event data extraction system
+                    EventDataExtractorRegistry extractorRegistry = plugin.getServiceRegistry().getEventDataExtractorRegistry();
+                    extractorRegistry.populateContext(event, context);
+                    
                     scriptExecutor.execute(script, context, "onJoin");
                 }
             }
@@ -182,6 +188,11 @@ public class CodingManagerImpl implements ICodingManager, Listener {
                             .creativeWorld(creativeWorld)
                             .event(event)
                             .build();
+                    
+                    // Use unified event data extraction system
+                    EventDataExtractorRegistry extractorRegistry = plugin.getServiceRegistry().getEventDataExtractorRegistry();
+                    extractorRegistry.populateContext(event, context);
+                    
                     scriptExecutor.execute(script, context, "onChat");
                 }
             }
@@ -207,6 +218,11 @@ public class CodingManagerImpl implements ICodingManager, Listener {
                             .creativeWorld(creativeWorld)
                             .event(event)
                             .build();
+                    
+                    // Use unified event data extraction system
+                    EventDataExtractorRegistry extractorRegistry = plugin.getServiceRegistry().getEventDataExtractorRegistry();
+                    extractorRegistry.populateContext(event, context);
+                    
                     scriptExecutor.execute(script, context, "onLeave");
                 }
             }
@@ -232,6 +248,11 @@ public class CodingManagerImpl implements ICodingManager, Listener {
                             .creativeWorld(creativeWorld)
                             .event(event)
                             .build();
+                    
+                    // Use unified event data extraction system
+                    EventDataExtractorRegistry extractorRegistry = plugin.getServiceRegistry().getEventDataExtractorRegistry();
+                    extractorRegistry.populateContext(event, context);
+                    
                     scriptExecutor.execute(script, context, "onInteract");
                 }
             }
