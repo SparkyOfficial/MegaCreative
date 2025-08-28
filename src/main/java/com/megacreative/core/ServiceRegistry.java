@@ -219,16 +219,16 @@ public class ServiceRegistry {
         dataManager = new DataManager(plugin);
         registerService(DataManager.class, dataManager);
         
-        templateManager = new TemplateManager(dataManager);
+        templateManager = new TemplateManager(plugin);
         registerService(TemplateManager.class, templateManager);
         
-        scoreboardManager = new ScoreboardManager(playerManager);
+        scoreboardManager = new ScoreboardManager(plugin);
         registerService(ScoreboardManager.class, scoreboardManager);
         
         trustedPlayerManager = new TrustedPlayerManager(dataManager);
         registerService(TrustedPlayerManager.class, trustedPlayerManager);
         
-        blockConfigManager = new BlockConfigManager(configManager);
+        blockConfigManager = new BlockConfigManager(plugin);
         registerService(BlockConfigManager.class, blockConfigManager);
     }
     
@@ -292,7 +292,9 @@ public class ServiceRegistry {
         // Register all services in the dependency container for auto-injection
         for (var entry : services.entrySet()) {
             if (!dependencyContainer.isRegistered(entry.getKey())) {
-                dependencyContainer.registerSingleton(entry.getKey(), entry.getValue());
+                @SuppressWarnings("unchecked")
+                Class<Object> keyClass = (Class<Object>) entry.getKey();
+                dependencyContainer.registerSingleton(keyClass, entry.getValue());
             }
         }
     }

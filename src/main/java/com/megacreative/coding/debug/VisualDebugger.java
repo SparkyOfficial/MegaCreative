@@ -64,6 +64,80 @@ public class VisualDebugger {
         activeSessions.clear();
     }
     
+    /**
+     * Toggles debug mode for a player
+     */
+    public boolean toggleDebug(Player player) {
+        DebugSession session = activeSessions.get(player.getUniqueId());
+        if (session != null) {
+            stopDebugSession(player);
+            return false;
+        } else {
+            startDebugSession(player, "Debug Session");
+            return true;
+        }
+    }
+    
+    /**
+     * Checks if debug is enabled for a player
+     */
+    public boolean isDebugEnabled(Player player) {
+        return activeSessions.containsKey(player.getUniqueId());
+    }
+    
+    /**
+     * Called when a script starts execution
+     */
+    public void onScriptStart(Player player, com.megacreative.coding.CodeScript script) {
+        DebugSession session = activeSessions.get(player.getUniqueId());
+        if (session == null) return;
+        
+        player.sendMessage("§a▶ Starting script: " + script.getName());
+    }
+    
+    /**
+     * Called when a script ends execution
+     */
+    public void onScriptEnd(Player player, com.megacreative.coding.CodeScript script) {
+        DebugSession session = activeSessions.get(player.getUniqueId());
+        if (session == null) return;
+        
+        player.sendMessage("§c▣ Script ended: " + script.getName());
+    }
+    
+    /**
+     * Called when a block is executed
+     */
+    public void onBlockExecute(Player player, CodeBlock block, Location blockLocation) {
+        highlightBlockExecution(player, blockLocation, block);
+    }
+    
+    /**
+     * Called when a condition is evaluated
+     */
+    public void onConditionResult(Player player, CodeBlock block, boolean result) {
+        DebugSession session = activeSessions.get(player.getUniqueId());
+        if (session == null) return;
+        
+        player.sendMessage("§e? Condition " + block.getAction() + ": " + (result ? "§aTrue" : "§cFalse"));
+    }
+    
+    /**
+     * Shows debug statistics for a player
+     */
+    public void showDebugStats(Player player) {
+        DebugSession session = activeSessions.get(player.getUniqueId());
+        if (session == null) {
+            player.sendMessage("§cDebug not enabled!");
+            return;
+        }
+        
+        player.sendMessage("§6=== Debug Statistics ===");
+        player.sendMessage("§fExecution Steps: " + session.executionStep);
+        player.sendMessage("§fErrors: " + session.errorCount);
+        player.sendMessage("§fSession: " + session.sessionName);
+    }
+    
     private static class DebugSession {
         final String sessionName;
         final Player player;

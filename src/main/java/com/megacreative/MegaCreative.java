@@ -212,8 +212,8 @@ public class MegaCreative extends JavaPlugin {
     }
     
     @Deprecated
-    public com.megacreative.services.BlockConfigService getBlockConfiguration() {
-        return serviceRegistry.getBlockConfigService();
+    public com.megacreative.coding.BlockConfiguration getBlockConfiguration() {
+        return serviceRegistry.getBlockConfiguration();
     }
     
     @Deprecated
