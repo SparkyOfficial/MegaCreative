@@ -285,8 +285,11 @@ public class WorldManagerImpl implements IWorldManager {
             codingManager.unloadScriptsForWorld(world);
         }
         // Также очистите все связанные блоки кодинга, если они хранятся вне самого мира.
-        plugin.getServiceRegistry().getBlockPlacementHandler().clearAllCodeBlocksInWorld(Bukkit.getWorld(world.getWorldName())); // Убедитесь, что такой метод есть или реализуйте.
-        plugin.getServiceRegistry().getBlockPlacementHandler().clearAllCodeBlocksInWorld(Bukkit.getWorld(world.getDevWorldName()));
+        if (plugin instanceof MegaCreative) {
+            MegaCreative megaPlugin = (MegaCreative) plugin;
+            megaPlugin.getServiceRegistry().getBlockPlacementHandler().clearAllCodeBlocksInWorld(Bukkit.getWorld(world.getWorldName()));
+            megaPlugin.getServiceRegistry().getBlockPlacementHandler().clearAllCodeBlocksInWorld(Bukkit.getWorld(world.getDevWorldName()));
+        }
 
         // Удаление файлов мира - асинхронно
         // Переместим deleteWorldFiles(world); сюда:
@@ -315,7 +318,7 @@ public class WorldManagerImpl implements IWorldManager {
                 requester.sendMessage("§c⚠ Ошибка удаления всех файлов мира. Возможно, они были заблокированы. Проверьте логи сервера.");
             }
         } catch (Exception e) {
-            plugin.getLogger().severe("Error deleting world files for world ID " + world.getId() + ": " + e.getMessage(), e);
+            plugin.getLogger().severe("Error deleting world files for world ID " + world.getId() + ": " + e.getMessage());
             requester.sendMessage("§c❌ Непредвиденная ошибка при удалении файлов мира: " + e.getMessage());
         }
     }
@@ -343,8 +346,24 @@ public class WorldManagerImpl implements IWorldManager {
             // Удаляем саму папку или файл после того, как ее содержимое удалено
             return folder.delete();
         } catch (Exception e) {
-            plugin.getLogger().severe("Failed to delete " + folder.getName() + ": " + e.getMessage(), e);
+            plugin.getLogger().severe("Failed to delete " + folder.getName() + ": " + e.getMessage());
             return false;
+        }
+    }
+    
+    private void deleteFolder(File folder) {
+        if (folder.exists()) {
+            File[] files = folder.listFiles();
+            if (files != null) {
+                for (File file : files) {
+                    if (file.isDirectory()) {
+                        deleteFolder(file);
+                    } else {
+                        file.delete();
+                    }
+                }
+            }
+            folder.delete();
         }
     }
     
