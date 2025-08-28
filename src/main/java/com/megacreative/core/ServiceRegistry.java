@@ -193,6 +193,11 @@ public class ServiceRegistry {
         configManager = new ConfigManager((com.megacreative.MegaCreative) plugin);
         configManager.loadConfig();
         registerService(ConfigManager.class, configManager);
+        
+        // Register type mappings for interfaces to prevent DI issues
+        dependencyContainer.registerType(IWorldManager.class, WorldManagerImpl.class);
+        dependencyContainer.registerType(IPlayerManager.class, PlayerManagerImpl.class);
+        dependencyContainer.registerType(ICodingManager.class, com.megacreative.coding.CodingManagerImpl.class);
     }
     
     private void initializeManagers() {
