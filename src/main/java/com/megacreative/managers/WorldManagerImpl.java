@@ -486,7 +486,7 @@ public class WorldManagerImpl implements IWorldManager {
         return name != null && 
                name.length() >= 3 && 
                name.length() <= 20 && 
-               name.matches("^[a-zA-Z0-9_]+$");
+               name.matches("^[a-zA-Z0-9_\\sА-Яа-яЁё]+$");
     }
     
     /**
