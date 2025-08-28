@@ -74,6 +74,11 @@ commands:
     usage: /<command> [open|close|info]
     permission: megacreative.user
     aliases: [ws, coding]
+  create:
+    description: Создать новый мир
+    usage: /<command> <тип_мира>
+    permission: megacreative.create
+    aliases: [createworld, newworld]
 
 permissions:
   megacreative.*:

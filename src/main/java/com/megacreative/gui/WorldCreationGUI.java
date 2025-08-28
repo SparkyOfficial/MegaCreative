@@ -2,12 +2,9 @@ package com.megacreative.gui;
 
 import com.megacreative.MegaCreative;
 import com.megacreative.models.CreativeWorldType;
-import com.megacreative.listeners.GuiListener;
 import org.bukkit.Bukkit;
 import org.bukkit.Material;
 import org.bukkit.entity.Player;
-import org.bukkit.event.EventHandler;
-import org.bukkit.event.Listener;
 import org.bukkit.event.inventory.InventoryClickEvent;
 import org.bukkit.inventory.Inventory;
 import org.bukkit.inventory.ItemStack;
@@ -15,7 +12,7 @@ import org.bukkit.inventory.meta.ItemMeta;
 
 import java.util.Arrays;
 
-public class WorldCreationGUI implements Listener {
+public class WorldCreationGUI {
     
     private final MegaCreative plugin;
     private final Player player;
@@ -26,8 +23,6 @@ public class WorldCreationGUI implements Listener {
         this.player = player;
         this.inventory = Bukkit.createInventory(null, 27, "§a§lСоздание мира");
         
-        // Регистрируем GUI в централизованной системе
-        GuiListener.registerOpenGui(player, this);
         setupInventory();
     }
     
@@ -120,10 +115,10 @@ public class WorldCreationGUI implements Listener {
     }
     
     public void open() {
+        plugin.getGuiManager().registerGUI(player, this, inventory);
         player.openInventory(inventory);
     }
     
-    @EventHandler
     public void onInventoryClick(InventoryClickEvent event) {
         if (!event.getInventory().equals(inventory)) return;
         
@@ -141,8 +136,6 @@ public class WorldCreationGUI implements Listener {
         // Отмена
         if (displayName.contains("Отмена")) {
             player.closeInventory();
-            // Удаляем регистрацию GUI
-            GuiListener.unregisterOpenGui(player);
             return;
         }
         
@@ -165,8 +158,6 @@ public class WorldCreationGUI implements Listener {
         
         if (worldType != null) {
             player.closeInventory();
-            // Удаляем регистрацию GUI
-            GuiListener.unregisterOpenGui(player);
             player.performCommand("create " + worldType.name().toLowerCase());
         }
     }

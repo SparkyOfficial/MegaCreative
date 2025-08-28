@@ -47,6 +47,7 @@ public class MegaCreative extends JavaPlugin {
     private TemplateManager templateManager;
     private ScoreboardManager scoreboardManager;
     private TrustedPlayerManager trustedPlayerManager;
+    private GUIManager guiManager;
 
     // === НОВЫЕ СИСТЕМЫ РАЗРАБОТКИ ===
     private AutoConnectionManager autoConnectionManager;
@@ -109,6 +110,7 @@ public class MegaCreative extends JavaPlugin {
         this.templateManager = new TemplateManager(this);
         this.scoreboardManager = new ScoreboardManager(this);
         this.trustedPlayerManager = new TrustedPlayerManager(this);
+        this.guiManager = new GUIManager(this);
         
         // --- ИНИЦИАЛИЗАЦИЯ НОВОГО МЕНЕДЖЕРА ---
         this.blockConfigManager = new BlockConfigManager(this);
@@ -173,6 +175,7 @@ public class MegaCreative extends JavaPlugin {
         // === НОВЫЕ КОМАНДЫ ===
         getCommand("addfloor").setExecutor(new AddFloorCommand(this));
         getCommand("workspace").setExecutor(new WorkspaceCommand(this));
+        getCommand("create").setExecutor(new CreateWorldCommand(this));
     }
     
     private void registerEvents() {
@@ -197,6 +200,7 @@ public class MegaCreative extends JavaPlugin {
         // === РЕГИСТРАЦИЯ НОВЫХ СИСТЕМ ===
         getServer().getPluginManager().registerEvents(autoConnectionManager, this);
         getServer().getPluginManager().registerEvents(devInventoryManager, this);
+        getServer().getPluginManager().registerEvents(guiManager, this);
     }
     
     public static MegaCreative getInstance() {
@@ -239,6 +243,10 @@ public class MegaCreative extends JavaPlugin {
 
     public TrustedPlayerManager getTrustedPlayerManager() {
         return trustedPlayerManager;
+    }
+    
+    public GUIManager getGuiManager() {
+        return guiManager;
     }
     
     public BlockConfigManager getBlockConfigManager() {

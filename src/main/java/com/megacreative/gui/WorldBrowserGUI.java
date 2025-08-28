@@ -2,12 +2,9 @@ package com.megacreative.gui;
 
 import com.megacreative.MegaCreative;
 import com.megacreative.models.CreativeWorld;
-import com.megacreative.listeners.GuiListener;
 import org.bukkit.Bukkit;
 import org.bukkit.Material;
 import org.bukkit.entity.Player;
-import org.bukkit.event.EventHandler;
-import org.bukkit.event.Listener;
 import org.bukkit.event.inventory.InventoryClickEvent;
 import org.bukkit.inventory.Inventory;
 import org.bukkit.inventory.ItemStack;
@@ -16,7 +13,7 @@ import org.bukkit.inventory.meta.ItemMeta;
 import java.util.Arrays;
 import java.util.List;
 
-public class WorldBrowserGUI implements Listener {
+public class WorldBrowserGUI {
     
     private final MegaCreative plugin;
     private final Player player;
@@ -28,8 +25,6 @@ public class WorldBrowserGUI implements Listener {
         this.player = player;
         this.inventory = Bukkit.createInventory(null, 54, "§8§lБраузер миров");
         
-        // Регистрируем GUI в централизованной системе
-        GuiListener.registerOpenGui(player, this);
         setupInventory();
     }
     
@@ -114,10 +109,10 @@ public class WorldBrowserGUI implements Listener {
     }
     
     public void open() {
+        plugin.getGuiManager().registerGUI(player, this, inventory);
         player.openInventory(inventory);
     }
     
-    @EventHandler
     public void onInventoryClick(InventoryClickEvent event) {
         if (!event.getInventory().equals(inventory)) return;
         
@@ -156,14 +151,10 @@ public class WorldBrowserGUI implements Listener {
             if (event.isLeftClick()) {
                 // Вход в мир
                 player.closeInventory();
-                // Удаляем регистрацию GUI
-                GuiListener.unregisterOpenGui(player);
                 player.performCommand("join " + world.getId());
             } else if (event.isRightClick()) {
                 // Действия с миром
                 player.closeInventory();
-                // Удаляем регистрацию GUI
-                GuiListener.unregisterOpenGui(player);
                 new WorldActionsGUI(plugin, player, world).open();
             }
         }
