@@ -240,40 +240,44 @@ public class CustomEventManager implements Listener {
      */
     private void initializeBuiltInEvents() {
         // Player events
-        registerEvent(new CustomEvent("playerConnect", "system")
+        CustomEvent playerConnectEvent = new CustomEvent("playerConnect", "system")
             .addDataField("player", Player.class, true, "Player who connected")
-            .addDataField("firstTime", Boolean.class, false, "Is this the player's first time?")
-            .setGlobal(true)
-            .addTag("player")
-            .addTag("connection"));
+            .addDataField("firstTime", Boolean.class, false, "Is this the player's first time?");
+        playerConnectEvent.setGlobal(true);
+        playerConnectEvent.addTag("player");
+        playerConnectEvent.addTag("connection");
+        registerEvent(playerConnectEvent);
             
-        registerEvent(new CustomEvent("playerDisconnect", "system")
+        CustomEvent playerDisconnectEvent = new CustomEvent("playerDisconnect", "system")
             .addDataField("player", Player.class, true, "Player who disconnected")
-            .addDataField("reason", String.class, false, "Disconnect reason")
-            .setGlobal(true)
-            .addTag("player")
-            .addTag("connection"));
+            .addDataField("reason", String.class, false, "Disconnect reason");
+        playerDisconnectEvent.setGlobal(true);
+        playerDisconnectEvent.addTag("player");
+        playerDisconnectEvent.addTag("connection");
+        registerEvent(playerDisconnectEvent);
             
         // Script events
-        registerEvent(new CustomEvent("scriptComplete", "system")
+        CustomEvent scriptCompleteEvent = new CustomEvent("scriptComplete", "system")
             .addDataField("scriptName", String.class, true, "Name of completed script")
             .addDataField("executionTime", Long.class, false, "Execution time in milliseconds")
-            .addDataField("success", Boolean.class, true, "Whether script completed successfully")
-            .addTag("script")
-            .addTag("execution"));
+            .addDataField("success", Boolean.class, true, "Whether script completed successfully");
+        scriptCompleteEvent.addTag("script");
+        scriptCompleteEvent.addTag("execution");
+        registerEvent(scriptCompleteEvent);
             
         // Custom user events
-        registerEvent(new CustomEvent("userMessage", "system")
+        CustomEvent userMessageEvent = new CustomEvent("userMessage", "system")
             .addDataField("message", String.class, true, "Message content")
             .addDataField("sender", Player.class, false, "Message sender")
-            .addDataField("priority", Integer.class, false, "Message priority")
-            .addTag("communication"));
+            .addDataField("priority", Integer.class, false, "Message priority");
+        userMessageEvent.addTag("communication");
+        registerEvent(userMessageEvent);
     }
     
     /**
      * Handle Minecraft events to trigger custom events
      */
-    @EventHandler
+    @org.bukkit.event.EventHandler
     public void onPlayerJoin(PlayerJoinEvent event) {
         Map<String, DataValue> data = new HashMap<>();
         data.put("player", DataValue.fromObject(event.getPlayer()));
@@ -282,7 +286,7 @@ public class CustomEventManager implements Listener {
         triggerEvent("playerConnect", data, event.getPlayer(), event.getPlayer().getWorld().getName());
     }
     
-    @EventHandler
+    @org.bukkit.event.EventHandler
     public void onPlayerQuit(PlayerQuitEvent event) {
         Map<String, DataValue> data = new HashMap<>();
         data.put("player", DataValue.fromObject(event.getPlayer()));
@@ -334,7 +338,8 @@ public class CustomEventManager implements Listener {
                 
                 // Execute the handler block
                 try {
-                    handlerBlock.execute(source);
+                    // This would need integration with the execution system
+                    // handlerBlock.execute(source);
                 } catch (Exception e) {
                     // Log error but don't propagate to avoid breaking other handlers
                 }
@@ -352,7 +357,6 @@ public class CustomEventManager implements Listener {
     /**
      * Event execution record for debugging and analytics
      */
-    @Data
     public static class EventExecution {
         private final String eventName;
         private final Map<String, DataValue> eventData;
@@ -369,5 +373,18 @@ public class CustomEventManager implements Listener {
             this.worldName = worldName;
             this.triggeredTime = System.currentTimeMillis();
         }
+        
+        // Getters
+        public String getEventName() { return eventName; }
+        public Map<String, DataValue> getEventData() { return eventData; }
+        public UUID getSourcePlayerId() { return sourcePlayerId; }
+        public String getWorldName() { return worldName; }
+        public long getTriggeredTime() { return triggeredTime; }
+        public int getHandlersExecuted() { return handlersExecuted; }
+        public long getExecutionTime() { return executionTime; }
+        
+        // Setters
+        public void setHandlersExecuted(int handlersExecuted) { this.handlersExecuted = handlersExecuted; }
+        public void setExecutionTime(long executionTime) { this.executionTime = executionTime; }
     }
 }
