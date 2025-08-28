@@ -165,8 +165,16 @@ public class WorldCreationGUI implements GUIManager.ManagedGUIInterface {
         }
         
         if (worldType != null) {
+            // Close the current GUI and prompt for world name
             player.closeInventory();
-            player.performCommand("create " + worldType.name().toLowerCase());
+            
+            // Send a message with template name suggestions
+            player.sendMessage("§aВведите название для вашего нового мира в чат:");
+            player.sendMessage("§7Примеры: §f" + player.getName() + "'s World, My Awesome Build, Creative Paradise");
+            
+            // Store the selected world type in metadata for later use
+            plugin.getGuiManager().setPlayerMetadata(player, "pending_world_type", worldType);
+            plugin.getGuiManager().setPlayerMetadata(player, "awaiting_world_name", true);
         }
     }
     

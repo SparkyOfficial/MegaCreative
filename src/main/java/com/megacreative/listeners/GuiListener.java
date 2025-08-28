@@ -143,6 +143,39 @@ public class GuiListener implements Listener {
         Player player = event.getPlayer();
         String message = event.getMessage();
 
+        // Handle world name input after selecting world type in GUI
+        if (Boolean.TRUE.equals(plugin.getGuiManager().getPlayerMetadata(player, "awaiting_world_name", Boolean.class))) {
+            event.setCancelled(true);
+            
+            // Remove the metadata flag
+            plugin.getGuiManager().removePlayerMetadata(player, "awaiting_world_name");
+            
+            // Get the selected world type
+            com.megacreative.models.CreativeWorldType worldType = 
+                plugin.getGuiManager().getPlayerMetadata(player, "pending_world_type", com.megacreative.models.CreativeWorldType.class);
+            
+            // Remove the world type metadata
+            plugin.getGuiManager().removePlayerMetadata(player, "pending_world_type");
+            
+            // Validate the world name
+            if (message.length() < 3 || message.length() > 20) {
+                player.sendMessage("§cНазвание мира должно содержать от 3 до 20 символов!");
+                player.sendMessage("§7Попробуйте снова: §f/create " + (worldType != null ? worldType.name().toLowerCase() : ""));
+                return;
+            }
+            
+            if (!message.matches("^[a-zA-Z0-9_\\sА-Яа-яЁё]+$")) {
+                player.sendMessage("§cНазвание мира может содержать только буквы, цифры, пробелы и подчеркивания!");
+                player.sendMessage("§7Попробуйте снова: §f/create " + (worldType != null ? worldType.name().toLowerCase() : ""));
+                return;
+            }
+            
+            // Create the world
+            player.sendMessage("§a⏳ Создание мира \"" + message + "\"...");
+            plugin.getWorldManager().createWorld(player, message, worldType);
+            return;
+        }
+
         // Handle удаление мира
         if (plugin.getDeleteConfirmations().containsKey(player.getUniqueId())) {
             event.setCancelled(true);

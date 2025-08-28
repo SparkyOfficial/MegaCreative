@@ -28,6 +28,9 @@ public class GUIManager implements Listener {
     private final Map<UUID, ManagedGUI> activeGUIs = new ConcurrentHashMap<>();
     private final Map<Inventory, ManagedGUI> inventoryToGUI = new ConcurrentHashMap<>();
     
+    // Player metadata storage
+    private final Map<UUID, Map<String, Object>> playerMetadata = new ConcurrentHashMap<>();
+    
     /**
      * Constructor with specific dependencies
      */
@@ -160,6 +163,52 @@ public class GUIManager implements Listener {
         return activeGUIs.containsKey(player.getUniqueId());
     }
     
+    /**
+     * Sets metadata for a player
+     */
+    public <T> void setPlayerMetadata(Player player, String key, T value) {
+        UUID playerId = player.getUniqueId();
+        playerMetadata.computeIfAbsent(playerId, k -> new ConcurrentHashMap<>()).put(key, value);
+    }
+    
+    /**
+     * Gets metadata for a player
+     */
+    @SuppressWarnings("unchecked")
+    public <T> T getPlayerMetadata(Player player, String key, Class<T> type) {
+        UUID playerId = player.getUniqueId();
+        Map<String, Object> metadata = playerMetadata.get(playerId);
+        if (metadata == null) {
+            return null;
+        }
+        
+        Object value = metadata.get(key);
+        if (value != null && type.isInstance(value)) {
+            return (T) value;
+        }
+        
+        return null;
+    }
+    
+    /**
+     * Removes metadata for a player
+     */
+    public void removePlayerMetadata(Player player, String key) {
+        UUID playerId = player.getUniqueId();
+        Map<String, Object> metadata = playerMetadata.get(playerId);
+        if (metadata != null) {
+            metadata.remove(key);
+        }
+    }
+    
+    /**
+     * Clears all metadata for a player
+     */
+    public void clearPlayerMetadata(Player player) {
+        UUID playerId = player.getUniqueId();
+        playerMetadata.remove(playerId);
+    }
+    
     @EventHandler
     public void onInventoryClick(InventoryClickEvent event) {
         Player player = (Player) event.getWhoClicked();
@@ -183,10 +232,12 @@ public class GUIManager implements Listener {
     @EventHandler
     public void onPlayerQuit(PlayerQuitEvent event) {
         unregisterGUI(event.getPlayer());
+        clearPlayerMetadata(event.getPlayer());
     }
     
     public void cleanup() {
         activeGUIs.clear();
         inventoryToGUI.clear();
+        playerMetadata.clear();
     }
 }

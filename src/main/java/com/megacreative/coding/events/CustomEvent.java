@@ -292,9 +292,37 @@ public class CustomEvent {
          */
         public boolean isCompatible(DataValue value) {
             if (value == null) return !required;
-            return expectedType.isAssignableFrom(value.getClass()) || 
-                   expectedType.equals(Object.class) || 
-                   value.getClass().equals(Object.class);
+            
+            // Handle direct type matching
+            if (expectedType.isAssignableFrom(value.getClass())) {
+                return true;
+            }
+            
+            // Handle primitive type matching (e.g., Boolean.class with BooleanValue.class)
+            if (expectedType == Boolean.class && value instanceof com.megacreative.coding.values.types.BooleanValue) {
+                return true;
+            }
+            if (expectedType == String.class && value instanceof com.megacreative.coding.values.types.TextValue) {
+                return true;
+            }
+            if (expectedType == Number.class && value instanceof com.megacreative.coding.values.types.NumberValue) {
+                return true;
+            }
+            if (expectedType == Integer.class && value instanceof com.megacreative.coding.values.types.NumberValue) {
+                return true;
+            }
+            if (expectedType == Long.class && value instanceof com.megacreative.coding.values.types.NumberValue) {
+                return true;
+            }
+            if (expectedType == Double.class && value instanceof com.megacreative.coding.values.types.NumberValue) {
+                return true;
+            }
+            if (expectedType == org.bukkit.entity.Player.class && value instanceof com.megacreative.coding.values.types.PlayerValue) {
+                return true;
+            }
+            
+            // Handle generic object matching
+            return expectedType.equals(Object.class) || value.getClass().equals(Object.class);
         }
     }
 }
