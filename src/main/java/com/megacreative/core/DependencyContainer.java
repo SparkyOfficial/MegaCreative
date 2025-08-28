@@ -160,6 +160,15 @@ public class DependencyContainer {
     }
     
     /**
+     * Alias for has() method for better readability
+     * @param type Service type
+     * @return true if service is registered
+     */
+    public boolean isRegistered(Class<?> type) {
+        return has(type);
+    }
+    
+    /**
      * Removes a service from container
      * @param type Service type
      */

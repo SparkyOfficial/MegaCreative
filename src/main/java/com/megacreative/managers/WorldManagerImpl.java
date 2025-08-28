@@ -1,13 +1,15 @@
 package com.megacreative.managers;
 
-import com.megacreative.MegaCreative;
 import com.megacreative.coding.BlockType;
 import com.megacreative.coding.CodeBlock;
 import com.megacreative.coding.CodeScript;
 import com.megacreative.interfaces.IWorldManager;
+import com.megacreative.interfaces.ICodingManager;
 import com.megacreative.models.*;
+import com.megacreative.utils.ConfigManager;
 import org.bukkit.*;
 import org.bukkit.entity.Player;
+import org.bukkit.plugin.Plugin;
 import org.bukkit.configuration.file.YamlConfiguration;
 
 import java.io.File;
@@ -17,21 +19,66 @@ import java.util.concurrent.ThreadLocalRandom;
 
 public class WorldManagerImpl implements IWorldManager {
     
-    private final MegaCreative plugin;
+    private final Plugin plugin;
+    private ICodingManager codingManager;
+    private final ConfigManager configManager;
     private final Map<String, CreativeWorld> worlds;
     private final Map<UUID, List<String>> playerWorlds;
-    private final int maxWorldsPerPlayer = 5;
-    private final int worldBorderSize = 300;
+    private final int maxWorldsPerPlayer;
+    private final int worldBorderSize;
     
     // Синхронизация для операций с мирами
     private final Object worldSaveLock = new Object();
     private final Object worldCreationLock = new Object();
     
-    public WorldManagerImpl(MegaCreative plugin) {
+    /**
+     * Constructor with specific dependencies (no God Object)
+     */
+    public WorldManagerImpl(Plugin plugin, ICodingManager codingManager, ConfigManager configManager) {
         this.plugin = plugin;
+        this.codingManager = codingManager;
+        this.configManager = configManager;
         this.worlds = new HashMap<>();
         this.playerWorlds = new HashMap<>();
-        // loadWorlds(); // Убираем вызов из конструктора!
+        
+        // Load settings from config
+        this.maxWorldsPerPlayer = configManager.getMaxWorldsPerPlayer();
+        this.worldBorderSize = configManager.getWorldBorderSize();
+    }
+    
+    /**
+     * Legacy constructor for backward compatibility
+     * @deprecated Use constructor with specific dependencies
+     */
+    @Deprecated
+    public WorldManagerImpl(com.megacreative.MegaCreative plugin) {
+        this.plugin = plugin;
+        this.codingManager = plugin.getCodingManager();
+        this.configManager = plugin.getConfigManager();
+        this.worlds = new HashMap<>();
+        this.playerWorlds = new HashMap<>();
+        this.maxWorldsPerPlayer = 5; // Default value
+        this.worldBorderSize = 300; // Default value
+    }
+    
+    /**
+     * Constructor for ServiceRegistry (uses ConfigManager)
+     */
+    public WorldManagerImpl(ConfigManager configManager) {
+        this.plugin = null; // Will be injected by ServiceRegistry if needed
+        this.codingManager = null; // Will be injected by ServiceRegistry
+        this.configManager = configManager;
+        this.worlds = new HashMap<>();
+        this.playerWorlds = new HashMap<>();
+        this.maxWorldsPerPlayer = configManager.getMaxWorldsPerPlayer();
+        this.worldBorderSize = configManager.getWorldBorderSize();
+    }
+    
+    /**
+     * Sets the coding manager for dependency injection
+     */
+    public void setCodingManager(ICodingManager codingManager) {
+        this.codingManager = codingManager;
     }
     
     /**
@@ -84,7 +131,9 @@ public class WorldManagerImpl implements IWorldManager {
                     playerWorlds.computeIfAbsent(player.getUniqueId(), k -> new ArrayList<>()).add(worldId);
 
                     // Загрузка скриптов для мира (тоже синхронно, т.к. связано с миром)
-                    plugin.getCodingManager().loadScriptsForWorld(creativeWorld);
+                    if (codingManager != null) {
+                        codingManager.loadScriptsForWorld(creativeWorld);
+                    }
                     
                     // Телепортация - синхронно
                     player.teleport(newWorld.getSpawnLocation());
@@ -194,7 +243,9 @@ public class WorldManagerImpl implements IWorldManager {
         
         // Кик всех игроков из мира
         World bukkitWorld = Bukkit.getWorld(world.getWorldName());
-        plugin.getCodingManager().unloadScriptsForWorld(world);
+        if (codingManager != null) {
+            codingManager.unloadScriptsForWorld(world);
+        }
 
         if (bukkitWorld != null) {
             bukkitWorld.getPlayers().forEach(player -> 
