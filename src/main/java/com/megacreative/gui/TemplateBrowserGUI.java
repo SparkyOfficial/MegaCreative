@@ -3,13 +3,12 @@ package com.megacreative.gui;
 import com.megacreative.MegaCreative;
 import com.megacreative.coding.CodeBlock;
 import com.megacreative.coding.CodeScript;
-import com.megacreative.listeners.GuiListener;
+import com.megacreative.managers.GUIManager;
 import org.bukkit.Bukkit;
 import org.bukkit.Material;
 import org.bukkit.entity.Player;
-import org.bukkit.event.EventHandler;
-import org.bukkit.event.Listener;
 import org.bukkit.event.inventory.InventoryClickEvent;
+import org.bukkit.event.inventory.InventoryCloseEvent;
 import org.bukkit.inventory.Inventory;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.inventory.meta.ItemMeta;
@@ -18,20 +17,20 @@ import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
 
-public class TemplateBrowserGUI implements Listener {
+public class TemplateBrowserGUI implements GUIManager.ManagedGUIInterface {
     
     private final MegaCreative plugin;
     private final Player player;
     private final Inventory inventory;
+    private final GUIManager guiManager;
     private int page = 0;
     
     public TemplateBrowserGUI(MegaCreative plugin, Player player) {
         this.plugin = plugin;
         this.player = player;
+        this.guiManager = plugin.getGuiManager();
         this.inventory = Bukkit.createInventory(null, 54, "§8§lБиблиотека шаблонов");
         
-        // Регистрируем GUI в централизованной системе
-        GuiListener.registerOpenGui(player, this);
         setupInventory();
     }
     
@@ -113,10 +112,17 @@ public class TemplateBrowserGUI implements Listener {
     }
     
     public void open() {
+        // Register with GUIManager and open inventory
+        guiManager.registerGUI(player, this, inventory);
         player.openInventory(inventory);
     }
     
-    @EventHandler
+    @Override
+    public String getGUITitle() {
+        return "Template Browser GUI";
+    }
+    
+    @Override
     public void onInventoryClick(InventoryClickEvent event) {
         if (!event.getInventory().equals(inventory)) return;
         
@@ -134,8 +140,7 @@ public class TemplateBrowserGUI implements Listener {
         // Кнопка назад
         if (displayName.contains("Назад")) {
             player.closeInventory();
-            // Удаляем регистрацию GUI
-            GuiListener.unregisterOpenGui(player);
+            // GUIManager will handle automatic cleanup
             new ScriptsGUI(plugin, player).open();
             return;
         }
@@ -164,15 +169,14 @@ public class TemplateBrowserGUI implements Listener {
             if (event.isLeftClick()) {
                 // Импорт шаблона
                 player.closeInventory();
-                // Удаляем регистрацию GUI
-                GuiListener.unregisterOpenGui(player);
+                // GUIManager will handle automatic cleanup
                 player.performCommand("importtemplate " + template.getName());
             } else if (event.isRightClick()) {
                 // Предварительный просмотр
                 player.closeInventory();
-                // Удаляем регистрацию GUI
-                GuiListener.unregisterOpenGui(player);
+                // GUIManager will handle automatic cleanup
                 player.performCommand("previewtemplate " + template.getName());
+            }
             }
         }
     }
@@ -186,5 +190,17 @@ public class TemplateBrowserGUI implements Listener {
         if (col == 0 || col == 8) return -1;
         
         return (row - 1) * 7 + (col - 1) + page * 28;
+    }
+    
+    @Override
+    public void onInventoryClose(InventoryCloseEvent event) {
+        // Optional cleanup when GUI is closed
+        // GUIManager handles automatic unregistration
+    }
+    
+    @Override
+    public void onCleanup() {
+        // Called when GUI is being cleaned up by GUIManager
+        // No special cleanup needed for this GUI
     }
 } 

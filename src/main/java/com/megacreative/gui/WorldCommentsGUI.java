@@ -3,13 +3,12 @@ package com.megacreative.gui;
 import com.megacreative.MegaCreative;
 import com.megacreative.models.CreativeWorld;
 import com.megacreative.models.WorldComment;
-import com.megacreative.listeners.GuiListener;
+import com.megacreative.managers.GUIManager;
 import org.bukkit.Bukkit;
 import org.bukkit.Material;
 import org.bukkit.entity.Player;
-import org.bukkit.event.EventHandler;
-import org.bukkit.event.Listener;
 import org.bukkit.event.inventory.InventoryClickEvent;
+import org.bukkit.event.inventory.InventoryCloseEvent;
 import org.bukkit.inventory.Inventory;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.inventory.meta.ItemMeta;
@@ -19,12 +18,13 @@ import java.util.Arrays;
 import java.util.Date;
 import java.util.List;
 
-public class WorldCommentsGUI implements Listener {
+public class WorldCommentsGUI implements GUIManager.ManagedGUIInterface {
     
     private final MegaCreative plugin;
     private final Player player;
     private final CreativeWorld world;
     private final Inventory inventory;
+    private final GUIManager guiManager;
     private final int page;
     private static final int COMMENTS_PER_PAGE = 21;
     
@@ -33,10 +33,9 @@ public class WorldCommentsGUI implements Listener {
         this.player = player;
         this.world = world;
         this.page = page;
+        this.guiManager = plugin.getGuiManager();
         this.inventory = Bukkit.createInventory(null, 54, "§6§lКомментарии: " + world.getName());
         
-        // Регистрируем GUI в централизованной системе
-        GuiListener.registerOpenGui(player, this);
         setupInventory();
     }
     
@@ -121,10 +120,17 @@ public class WorldCommentsGUI implements Listener {
     }
     
     public void open() {
+        // Register with GUIManager and open inventory
+        guiManager.registerGUI(player, this, inventory);
         player.openInventory(inventory);
     }
     
-    @EventHandler
+    @Override
+    public String getGUITitle() {
+        return "World Comments GUI for " + world.getName();
+    }
+    
+    @Override
     public void onInventoryClick(InventoryClickEvent event) {
         if (!event.getInventory().equals(inventory)) return;
         
@@ -142,8 +148,7 @@ public class WorldCommentsGUI implements Listener {
         // Кнопка назад
         if (displayName.contains("Назад")) {
             player.closeInventory();
-            // Удаляем регистрацию GUI
-            GuiListener.unregisterOpenGui(player);
+            // GUIManager will handle automatic cleanup
             new WorldActionsGUI(plugin, player, world).open();
             return;
         }
@@ -151,8 +156,7 @@ public class WorldCommentsGUI implements Listener {
         // Добавление комментария
         if (displayName.contains("Добавить комментарий")) {
             player.closeInventory();
-            // Удаляем регистрацию GUI
-            GuiListener.unregisterOpenGui(player);
+            // GUIManager will handle automatic cleanup
             player.sendMessage("§aНапишите ваш комментарий в чат или §eотмена§a для отмены:");
             plugin.getCommentInputs().put(player.getUniqueId(), world.getId());
             return;
@@ -161,18 +165,28 @@ public class WorldCommentsGUI implements Listener {
         // Навигация
         if (displayName.contains("Предыдущая страница")) {
             player.closeInventory();
-            // Удаляем регистрацию GUI
-            GuiListener.unregisterOpenGui(player);
+            // GUIManager will handle automatic cleanup
             new WorldCommentsGUI(plugin, player, world, page - 1).open();
             return;
         }
         
         if (displayName.contains("Следующая страница")) {
             player.closeInventory();
-            // Удаляем регистрацию GUI
-            GuiListener.unregisterOpenGui(player);
+            // GUIManager will handle automatic cleanup
             new WorldCommentsGUI(plugin, player, world, page + 1).open();
             return;
         }
+    }
+    
+    @Override
+    public void onInventoryClose(InventoryCloseEvent event) {
+        // Optional cleanup when GUI is closed
+        // GUIManager handles automatic unregistration
+    }
+    
+    @Override
+    public void onCleanup() {
+        // Called when GUI is being cleaned up by GUIManager
+        // No special cleanup needed for this GUI
     }
 }
