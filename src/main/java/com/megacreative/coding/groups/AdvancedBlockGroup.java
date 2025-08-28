@@ -214,6 +214,18 @@ public class AdvancedBlockGroup extends BlockGroup {
         return copy;
     }
     
+    // Explicit getters for Lombok compatibility
+    public String getName() { return name; }
+    public UUID getOwner() { return owner; }
+    public Map<Location, CodeBlock> getBlocks() { return blocks; }
+    public BlockGroupManager.GroupBounds getBounds() { return bounds; }
+    public List<UUID> getNestedGroups() { return nestedGroups; }
+    public Set<String> getTags() { return tags; }
+    public List<UUID> getDependencies() { return dependencies; }
+    public Map<String, Object> getMetadata() { return metadata; }
+    public String getVersion() { return version; }
+    public boolean isLocked() { return isLocked; }
+    
     /**
      * Execution modes for block groups
      */

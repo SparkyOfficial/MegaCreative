@@ -303,18 +303,6 @@ public class ScriptPerformanceMonitor {
     }
     
     /**
-     * Gets global system performance statistics
-     */
-    public SystemPerformanceReport getSystemReport() {
-        return new SystemPerformanceReport(
-            totalExecutions.get(),
-            totalExecutionTime.get(),
-            playerMetrics.size(),
-            actionPerformance.size()
-        );
-    }
-    
-    /**
      * Gets global system performance statistics with advanced metrics
      */
     public AdvancedSystemPerformanceReport getAdvancedSystemReport() {
@@ -509,7 +497,7 @@ public class ScriptPerformanceMonitor {
     /**
      * Individual action metrics with enhanced tracking
      */
-    private static class ActionMetrics {
+    public static class ActionMetrics {
         private final String actionType;
         private long executionCount = 0;
         private long successCount = 0;

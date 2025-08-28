@@ -97,4 +97,14 @@ public class BlockGroup {
         String status = collapsed ? "Collapsed" : "Expanded";
         return String.format("%s [%s] - %d blocks", name, status, getBlockCount());
     }
+    
+    // Explicit getters for Lombok compatibility
+    public UUID getId() { return id; }
+    public String getName() { return name; }
+    public UUID getOwner() { return owner; }
+    public Map<Location, CodeBlock> getBlocks() { return blocks; }
+    public BlockGroupManager.GroupBounds getBounds() { return bounds; }
+    public boolean isCollapsed() { return collapsed; }
+    public long getCreatedTime() { return createdTime; }
+    public long getLastModified() { return lastModified; }
 }

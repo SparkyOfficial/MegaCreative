@@ -124,4 +124,30 @@ public class CodeScript {
     public void setDescription(String description) {
         this.description = description;
     }
+    
+    /**
+     * Gets all blocks in this script
+     */
+    public java.util.List<CodeBlock> getBlocks() {
+        java.util.List<CodeBlock> blocks = new java.util.ArrayList<>();
+        collectBlocks(rootBlock, blocks);
+        return blocks;
+    }
+    
+    /**
+     * Recursively collects all blocks in the script
+     */
+    private void collectBlocks(CodeBlock block, java.util.List<CodeBlock> blocks) {
+        if (block == null) return;
+        
+        blocks.add(block);
+        
+        // Add children
+        for (CodeBlock child : block.getChildren()) {
+            collectBlocks(child, blocks);
+        }
+        
+        // Add next block
+        collectBlocks(block.getNextBlock(), blocks);
+    }
 }

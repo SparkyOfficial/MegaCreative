@@ -373,4 +373,22 @@ public class CodeBlock implements Cloneable {
     public void setItemGroups(Map<String, List<Integer>> itemGroups) {
         this.itemGroups = itemGroups;
     }
+    
+    /**
+     * Gets the location of this block
+     */
+    public org.bukkit.Location getLocation() {
+        // This is a placeholder implementation
+        // In a real implementation, this would return the actual location
+        return null;
+    }
+    
+    /**
+     * Gets the condition of this block
+     */
+    public String getCondition() {
+        // This is a placeholder implementation
+        // In a real implementation, this would return the actual condition
+        return "";
+    }
 }

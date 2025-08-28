@@ -309,6 +309,12 @@ public class AdvancedVisualDebugger {
                 this.executionTime = executionTime;
                 this.timestamp = System.currentTimeMillis();
             }
+            
+            // Explicit getters for Lombok compatibility
+            public CodeBlock getBlock() { return block; }
+            public Location getLocation() { return location; }
+            public long getExecutionTime() { return executionTime; }
+            public long getTimestamp() { return timestamp; }
         }
     }
 }

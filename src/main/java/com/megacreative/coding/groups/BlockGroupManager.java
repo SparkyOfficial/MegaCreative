@@ -30,6 +30,9 @@ public class BlockGroupManager {
     // Group templates manager
     private final GroupTemplateManager templateManager;
     
+    // Templates
+    private final Map<String, AdvancedBlockGroup> templates = new ConcurrentHashMap<>();
+    
     // Player selection state for creating groups
     private final Map<UUID, GroupSelectionState> playerSelections = new ConcurrentHashMap<>();
     
@@ -474,27 +477,17 @@ public class BlockGroupManager {
     public static class GroupBounds {
         private final int minX, minY, minZ, maxX, maxY, maxZ;
         
+        public GroupBounds(int minX, int minY, int minZ, int maxX, int maxY, int maxZ) {
+            this.minX = minX;
+            this.minY = minY;
+            this.minZ = minZ;
+            this.maxX = maxX;
+            this.maxY = maxY;
+            this.maxZ = maxZ;
+        }
+        
         public int getWidth() { return maxX - minX + 1; }
         public int getHeight() { return maxY - minY + 1; }
         public int getDepth() { return maxZ - minZ + 1; }
-    }
-    
-    @Data
-    public static class BlockGroup {
-        private final UUID id;
-        private final String name;
-        private final UUID owner;
-        private final Map<Location, CodeBlock> blocks;
-        private final GroupBounds bounds;
-        private boolean collapsed = false;
-        
-        public BlockGroup(UUID id, String name, UUID owner, Map<Location, CodeBlock> blocks, GroupBounds bounds) {
-            this.id = id;
-            this.name = name;
-            this.owner = owner;
-            this.blocks = blocks;
-            this.bounds = bounds;
-            this.collapsed = false;
-        }
     }
 }
