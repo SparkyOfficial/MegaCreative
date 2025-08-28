@@ -18,6 +18,7 @@ import org.bukkit.inventory.ItemStack;
 
 import java.util.List;
 import java.util.Set;
+import java.util.HashSet;
 
 /**
  * Защита dev-мира от нежелательных действий
@@ -29,12 +30,7 @@ public class DevWorldProtectionListener implements Listener {
     
     // Разрешенные материалы для размещения в dev-мире
     private static final Set<Material> ALLOWED_BLOCKS = Set.of(
-        // Блоки кода
-        Material.DIAMOND_BLOCK, Material.COBBLESTONE, Material.OAK_PLANKS,
-        Material.IRON_BLOCK, Material.OBSIDIAN, Material.REDSTONE_BLOCK,
-        Material.BRICKS, Material.EMERALD_BLOCK, Material.LAPIS_BLOCK,
-        Material.BOOKSHELF, Material.END_STONE, Material.NETHERITE_BLOCK,
-        Material.POLISHED_GRANITE,
+        // Блоки кода (будут динамически обновлены из конфигурации)
         
         // Инструменты разработчика
         Material.ENDER_CHEST,    // Эндер сундук
@@ -62,7 +58,7 @@ public class DevWorldProtectionListener implements Listener {
         this.plugin = plugin;
     }
 
-    private boolean isInDevWorld(Player player) {
+    public boolean isInDevWorld(Player player) {
         return player.getWorld().getName().endsWith("_dev");
     }
 
@@ -88,15 +84,18 @@ public class DevWorldProtectionListener implements Listener {
 
     // === ЗАЩИТА ОТ РАЗМЕЩЕНИЯ НЕРАЗРЕШЕННЫХ БЛОКОВ ===
     
-    @EventHandler(priority = EventPriority.HIGH)
+    @EventHandler(priority = EventPriority.HIGHEST)
     public void onBlockPlace(BlockPlaceEvent event) {
         Player player = event.getPlayer();
         if (!isInDevWorld(player)) return;
         
         Material blockType = event.getBlock().getType();
         
+        // Debug message - можно удалить позже
+        player.sendMessage("§a[DEBUG] DevWorldProtectionListener: Попытка размещения блока: " + blockType.name());
+        
         // Проверяем, разрешен ли этот материал
-        if (!ALLOWED_BLOCKS.contains(blockType)) {
+        if (!isBlockAllowed(blockType)) {
             event.setCancelled(true);
             player.sendMessage("§cВ мире разработки можно размещать только блоки кода и инструменты разработчика!");
             return;
@@ -115,7 +114,7 @@ public class DevWorldProtectionListener implements Listener {
     
     // === ЗАЩИТА ОТ РАЗРУШЕНИЯ БЛОКОВ ===
     
-    @EventHandler(priority = EventPriority.HIGH)
+    @EventHandler(priority = EventPriority.HIGHEST)
     public void onBlockBreak(BlockBreakEvent event) {
         Player player = event.getPlayer();
         if (!isInDevWorld(player)) return;
@@ -130,7 +129,7 @@ public class DevWorldProtectionListener implements Listener {
         }
         
         // Для блоков кода проверяем права
-        if (isCodeBlock(blockType) || ALLOWED_BLOCKS.contains(blockType)) {
+        if (isCodeBlock(blockType) || isBlockAllowed(blockType)) {
             CreativeWorld creativeWorld = plugin.getWorldManager().findCreativeWorldByBukkit(player.getWorld());
             if (creativeWorld != null && !creativeWorld.canCode(player)) {
                 event.setCancelled(true);
@@ -146,7 +145,7 @@ public class DevWorldProtectionListener implements Listener {
     
     // === ЗАЩИТА ВЗАИМОДЕЙСТВИЙ ===
     
-    @EventHandler(priority = EventPriority.HIGH)
+    @EventHandler(priority = EventPriority.HIGHEST)
     public void onPlayerInteract(PlayerInteractEvent event) {
         Player player = event.getPlayer();
         if (!isInDevWorld(player)) return;
@@ -200,14 +199,8 @@ public class DevWorldProtectionListener implements Listener {
      * Проверяет, является ли материал блоком кода
      */
     private boolean isCodeBlock(Material material) {
-        Set<Material> codeBlocks = Set.of(
-            Material.DIAMOND_BLOCK, Material.COBBLESTONE, Material.OAK_PLANKS,
-            Material.IRON_BLOCK, Material.OBSIDIAN, Material.REDSTONE_BLOCK,
-            Material.BRICKS, Material.EMERALD_BLOCK, Material.LAPIS_BLOCK,
-            Material.BOOKSHELF, Material.END_STONE, Material.NETHERITE_BLOCK,
-            Material.POLISHED_GRANITE
-        );
-        return codeBlocks.contains(material);
+        // Используем BlockConfigService для проверки
+        return plugin.getServiceRegistry().getBlockConfigService().isCodeBlock(material);
     }
     
     /**
@@ -221,6 +214,15 @@ public class DevWorldProtectionListener implements Listener {
      * Проверяет, разрешен ли блок для размещения в dev-мире
      */
     public static boolean isBlockAllowed(Material material) {
+        // Проверяем, является ли материал кодовым блоком
+        MegaCreative plugin = MegaCreative.getInstance();
+        if (plugin != null && plugin.getServiceRegistry() != null) {
+            if (plugin.getServiceRegistry().getBlockConfigService().isCodeBlock(material)) {
+                return true;
+            }
+        }
+        
+        // Проверяем в статическом списке разрешенных блоков
         return ALLOWED_BLOCKS.contains(material);
     }
-} 
+}
