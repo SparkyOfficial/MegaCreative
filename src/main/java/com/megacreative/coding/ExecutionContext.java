@@ -189,6 +189,27 @@ public class ExecutionContext {
         return currentBlock;
     }
     
+    /**
+     * Gets script ID for variable resolution
+     */
+    public String getScriptId() {
+        // Generate script ID based on current block or world
+        if (currentBlock != null) {
+            return "script_" + currentBlock.getId().toString();
+        }
+        if (creativeWorld != null) {
+            return "script_" + creativeWorld.getId();
+        }
+        return "script_unknown";
+    }
+    
+    /**
+     * Gets world ID for variable resolution  
+     */
+    public String getWorldId() {
+        return creativeWorld != null ? creativeWorld.getId() : "unknown_world";
+    }
+    
     // Builder pattern
     public static Builder builder() {
         return new Builder();

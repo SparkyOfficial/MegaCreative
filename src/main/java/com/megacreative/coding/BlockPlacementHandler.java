@@ -128,7 +128,9 @@ public class BlockPlacementHandler implements Listener {
             }
             
             event.setCancelled(true); // Важно, чтобы не открылся, например, верстак
-            // Убираем ссылку на несуществующий BlockConfigManager
+            
+            // Открываем GUI конфигурации блока
+            plugin.getBlockConfigManager().openConfigGUI(player, location);
         }
     }
 

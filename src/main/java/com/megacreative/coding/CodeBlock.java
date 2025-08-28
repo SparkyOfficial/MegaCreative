@@ -1,6 +1,7 @@
 package com.megacreative.coding;
 
 import com.megacreative.MegaCreative;
+import com.megacreative.coding.values.DataValue;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
@@ -23,7 +24,7 @@ public class CodeBlock implements Cloneable {
     private UUID id;
     private Material material; // Тип блока (DIAMOND_BLOCK и т.д.)
     private String action;     // Выбранное действие (например, onJoin, sendMessage)
-    private Map<String, Object> parameters;
+    private Map<String, DataValue> parameters;
     private List<CodeBlock> children; // Для вложенных блоков (например, внутри условия IF)
     private CodeBlock nextBlock; // Следующий блок в последовательности
     
@@ -52,17 +53,37 @@ public class CodeBlock implements Cloneable {
     /**
      * Устанавливает параметр для блока.
      * @param key Ключ параметра (например, "material" или "message")
-     * @param value Значение параметра
+     * @param value Значение параметра (DataValue)
      */
-    public void setParameter(String key, Object value) {
+    public void setParameter(String key, DataValue value) {
         parameters.put(key, value);
     }
-
-    public Object getParameter(String key) {
-        return parameters.get(key);
+    
+    /**
+     * Устанавливает параметр для блока с автоматическим преобразованием.
+     * @param key Ключ параметра
+     * @param value Значение для автоматического преобразования в DataValue
+     */
+    public void setParameter(String key, Object value) {
+        parameters.put(key, DataValue.fromObject(value));
     }
 
-    public Map<String, Object> getParameters() {
+    public DataValue getParameter(String key) {
+        return parameters.get(key);
+    }
+    
+    /**
+     * Получает параметр с значением по умолчанию
+     * @param key Ключ параметра
+     * @param defaultValue Значение по умолчанию
+     * @return Значение параметра или значение по умолчанию
+     */
+    public DataValue getParameter(String key, DataValue defaultValue) {
+        DataValue value = parameters.get(key);
+        return value != null ? value : defaultValue;
+    }
+
+    public Map<String, DataValue> getParameters() {
         return parameters;
     }
 
@@ -325,7 +346,7 @@ public class CodeBlock implements Cloneable {
         this.action = action;
     }
     
-    public void setParameters(Map<String, Object> parameters) {
+    public void setParameters(Map<String, DataValue> parameters) {
         this.parameters = parameters;
     }
     

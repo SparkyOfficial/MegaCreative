@@ -5,15 +5,17 @@ import com.megacreative.coding.CodeBlock;
 import com.megacreative.coding.ExecutionContext;
 import com.megacreative.coding.PlaceholderResolver;
 import com.megacreative.coding.ParameterResolver;
+import com.megacreative.coding.values.DataValue;
+import com.megacreative.coding.values.types.TextValue;
 import org.bukkit.entity.Player;
 
 /**
  * Действие для отправки сообщения игроку.
- * Поддерживает плейсхолдеры в сообщениях.
+ * Поддерживает плейсхолдеры в сообщениях и использует типобезопасную систему DataValue.
  * 
  * Примеры использования:
  * - sendMessage("Привет, %player%!") - отправляет "Привет, ИмяИгрока!"
- * - sendMessage("У вас %num:money% монет") - отправляет "У вас 100 монет"
+ * - sendMessage("У вас ${money} монет") - отправляет "У вас 100 монет"
  * - sendMessage("Координаты: %x%, %y%, %z%") - отправляет координаты игрока
  */
 public class SendMessageAction implements BlockAction {
@@ -25,30 +27,43 @@ public class SendMessageAction implements BlockAction {
         
         if (player == null || block == null) return;
         
-        // Получаем сообщение из параметра
-        Object rawMessage = block.getParameter("message");
-        String message = ParameterResolver.resolve(context, rawMessage);
+        // Создаем ParameterResolver с доступом к VariableManager
+        ParameterResolver resolver = new ParameterResolver(context.getPlugin().getVariableManager());
         
-        if (message == null || message.isEmpty()) {
-            // Попробуем получить сообщение из виртуального инвентаря
+        String message = null;
+        
+        // Получаем сообщение из параметра (приоритет 1)
+        DataValue messageValue = block.getParameter("message");
+        if (messageValue != null && !messageValue.isEmpty()) {
+            DataValue resolved = resolver.resolve(context, messageValue);
+            message = resolved.asString();
+        }
+        
+        // Если параметра нет, получаем из виртуального инвентаря (приоритет 2)
+        if ((message == null || message.isEmpty())) {
             var messageItem = block.getItemFromSlot("message_slot");
             if (messageItem != null && messageItem.hasItemMeta() && messageItem.getItemMeta().hasDisplayName()) {
-                message = messageItem.getItemMeta().getDisplayName();
+                DataValue itemNameValue = new TextValue(messageItem.getItemMeta().getDisplayName());
+                DataValue resolved = resolver.resolve(context, itemNameValue);
+                message = resolved.asString();
             } else {
-                // Fallback на старый способ
+                // Fallback на старый способ (слот 0)
                 messageItem = block.getConfigItem(0);
                 if (messageItem != null && messageItem.hasItemMeta() && messageItem.getItemMeta().hasDisplayName()) {
-                    message = messageItem.getItemMeta().getDisplayName();
+                    DataValue itemNameValue = new TextValue(messageItem.getItemMeta().getDisplayName());
+                    DataValue resolved = resolver.resolve(context, itemNameValue);
+                    message = resolved.asString();
                 }
             }
         }
         
+        // Если сообщение все еще не найдено, показываем ошибку
         if (message == null || message.isEmpty()) {
-            player.sendMessage("§cОшибка: не указано сообщение!");
+            player.sendMessage("§cОшибка: не указано сообщение для отправки!");
             return;
         }
         
-        // Разрешаем плейсхолдеры в сообщении
+        // Разрешаем плейсхолдеры в сообщении (для совместимости)
         String resolvedMessage = PlaceholderResolver.resolve(message, context);
         
         // Отправляем сообщение игроку
