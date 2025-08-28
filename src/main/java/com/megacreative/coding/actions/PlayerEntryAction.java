@@ -24,6 +24,15 @@ import java.util.ArrayList;
  * Action that handles player entry events and can automatically give items
  * This action is specifically designed for the workflow: Entry -> Give Item
  * Integrates with the container system where items are configured in chests above blocks
+ * 
+ * Workflow:
+ * 1. Player enters dev mode
+ * 2. Places a blue block as an event
+ * 3. Adds a player action like "PlayerEntryAction" 
+ * 4. Configures autoGiveItem=true
+ * 5. System automatically creates a chest above the action block
+ * 6. Player configures items in that chest
+ * 7. When player writes /play, they receive the items from the chest
  */
 public class PlayerEntryAction implements BlockAction {
     
@@ -77,6 +86,8 @@ public class PlayerEntryAction implements BlockAction {
             } else {
                 // Standard entry message when auto-give is enabled but no items configured
                 player.sendMessage("§a✓ Добро пожаловать в мир творчества!");
+                player.sendMessage("§eПодсказка: Настройте предметы в сундуке над этим блоком!");
+                player.sendMessage("§eКликните по сундуку над блоком для открытия интуитивного интерфейса перетаскивания.");
             }
         } else {
             // Standard entry message
@@ -105,6 +116,19 @@ public class PlayerEntryAction implements BlockAction {
             // Get items from the container inventory directly using the container manager's methods
             List<ItemStack> itemsToGive = getItemsFromContainer(containerManager, context.getCurrentBlock().getLocation());
             if (itemsToGive.isEmpty()) {
+                // Check if container exists but is empty
+                Location blockLocation = context.getCurrentBlock().getLocation();
+                if (blockLocation != null) {
+                    Location containerLocation = blockLocation.clone().add(0, 1, 0);
+                    Block containerBlock = containerLocation.getBlock();
+                    if (containerBlock.getState() instanceof Container) {
+                        // Container exists but is empty
+                        player.sendMessage("§eСундук над блоком пуст. Поместите предметы в него для выдачи.");
+                        return false;
+                    }
+                }
+                // No container exists
+                player.sendMessage("§eСундук над блоком не найден. Он будет создан автоматически при настройке.");
                 return false;
             }
             
@@ -118,6 +142,7 @@ public class PlayerEntryAction implements BlockAction {
             return true;
         } catch (Exception e) {
             logger.warning("Error giving items from container in PlayerEntryAction: " + e.getMessage());
+            player.sendMessage("§cОшибка при выдаче предметов из контейнера: " + e.getMessage());
             return false;
         }
     }

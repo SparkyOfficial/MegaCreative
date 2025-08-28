@@ -3,6 +3,7 @@ package com.megacreative.coding.containers;
 import com.megacreative.MegaCreative;
 import com.megacreative.coding.values.DataValue;
 import com.megacreative.coding.values.ValueType;
+import com.megacreative.coding.containers.ContainerType;
 import org.bukkit.Location;
 import org.bukkit.Material;
 import org.bukkit.block.Block;
@@ -278,10 +279,17 @@ public class BlockContainerManager {
      * Opens inventory editor
      */
     private void openInventoryEditor(Player player, BlockContainer container) {
+        // Use custom drag and drop GUI for container configuration
+        com.megacreative.gui.ContainerConfigGUI gui = new com.megacreative.gui.ContainerConfigGUI(
+            plugin, player, container.getBlockLocation());
+        gui.open();
+        
+        /*
         Block containerBlock = container.getContainerLocation().getBlock();
         if (containerBlock.getState() instanceof Container containerState) {
             player.openInventory(containerState.getInventory());
         }
+        */
     }
     
     /**
@@ -423,30 +431,6 @@ public class BlockContainerManager {
         // Get description from action registry
         return "Performs the " + action + " operation with the specified parameters.";
     }
-}
-
-/**
- * Container types
- */
-enum ContainerType {
-    SIGN("Sign", "§eТабличка", "Text-based parameter display"),
-    CHEST("Chest", "§6Сундук", "Item-based parameter storage"),
-    BARREL("Barrel", "§8Бочка", "Compact parameter storage"),
-    SHULKER_BOX("Shulker Box", "§5Шалкер", "Portable parameter storage");
-    
-    private final String name;
-    private final String displayName;
-    private final String description;
-    
-    ContainerType(String name, String displayName, String description) {
-        this.name = name;
-        this.displayName = displayName;
-        this.description = description;
-    }
-    
-    public String getName() { return name; }
-    public String getDisplayName() { return displayName; }
-    public String getDescription() { return description; }
 }
 
 /**

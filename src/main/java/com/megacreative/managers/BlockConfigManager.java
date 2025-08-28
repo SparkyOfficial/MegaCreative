@@ -220,6 +220,16 @@ public class BlockConfigManager implements Listener {
                 }
             }
             
+            // NEW: Automatically create container for PlayerEntryAction with autoGiveItem=true
+            if ("PlayerEntryAction".equals(codeBlock.getAction())) {
+                // Check if autoGiveItem parameter is set to true
+                DataValue autoGiveItem = codeBlock.getParameter("autoGiveItem");
+                if (autoGiveItem != null && autoGiveItem.asBoolean()) {
+                    // Create container automatically
+                    createAutomaticContainer(blockLocation, codeBlock);
+                }
+            }
+            
             if (savedItems > 0) {
                 player.sendMessage("§a✓ Конфигурация блока сохранена! (" + savedItems + " предметов)");
             } else {
@@ -235,6 +245,38 @@ public class BlockConfigManager implements Listener {
         
         // Убираем игрока из списка настраивающих
         configuringBlocks.remove(playerId);
+    }
+    
+    /**
+     * Automatically creates a container above the code block for item configuration
+     * This implements the workflow where players can configure items in a chest above the action block
+     */
+    private void createAutomaticContainer(Location blockLocation, CodeBlock codeBlock) {
+        try {
+            // Get the container manager from the service registry
+            var containerManager = plugin.getServiceRegistry().getContainerManager();
+            if (containerManager == null) {
+                plugin.getLogger().warning("Container manager is not available for automatic container creation");
+                return;
+            }
+            
+            // Create a chest container above the block
+            containerManager.createContainer(blockLocation, com.megacreative.coding.containers.ContainerType.CHEST, "PlayerEntryAction");
+            
+            // Notify the player
+            var player = Bukkit.getPlayer(configuringBlocks.entrySet().stream()
+                .filter(entry -> entry.getValue().equals(blockLocation))
+                .map(Map.Entry::getKey)
+                .findFirst()
+                .orElse(null));
+                
+            if (player != null) {
+                player.sendMessage("§a✓ Автоматически создан контейнер над блоком для настройки предметов!");
+                player.sendMessage("§eКликните по сундуку над блоком, чтобы настроить предметы для выдачи.");
+            }
+        } catch (Exception e) {
+            plugin.getLogger().warning("Error creating automatic container: " + e.getMessage());
+        }
     }
     
     /**

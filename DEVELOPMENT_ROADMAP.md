@@ -3,6 +3,8 @@
 ## Overview
 This document outlines a comprehensive development plan for the MegaCreative Minecraft plugin, focusing on enhancing its visual programming capabilities, improving user experience, and expanding its feature set while maintaining stability and performance.
 
+For the big development initiatives, please refer to the [BIG_DEVELOPMENT_ROADMAP.md](BIG_DEVELOPMENT_ROADMAP.md) document.
+
 ## Phase 1: Stability and Core Improvements (Months 1-2)
 
 ### 1.1 Container System Enhancement
@@ -13,15 +15,19 @@ This document outlines a comprehensive development plan for the MegaCreative Min
 - Create methods to extract item data from container inventories
 - Update PlayerEntryAction to read items from chests placed above blocks
 - Add comprehensive error handling for container access
+- Implement automatic container creation when PlayerEntryAction is configured
+- Create custom drag and drop GUI for container configuration
 
 **Deliverables**:
 - Enhanced PlayerEntryAction that reads items from containers
 - Documentation on container-based parameter configuration
 - Unit tests for container integration
+- Automatic container creation feature
+- Intuitive drag and drop configuration interface
 
 **Status**: COMPLETE
 **Completion Date**: August 2025
-**Notes**: The PlayerEntryAction has been successfully enhanced to integrate with the container system. Players can now configure automatic item giving by placing items in chests above their action blocks. Comprehensive tests have been implemented and all tests are passing.
+**Notes**: The PlayerEntryAction has been successfully enhanced to integrate with the container system. Players can now configure automatic item giving by placing items in chests above their action blocks. Comprehensive tests have been implemented and all tests are passing. Automatic container creation and drag and drop GUI have been implemented.
 
 ### 1.2 Performance Optimization
 **Objective**: Optimize the script execution engine for better performance with complex scripts.
