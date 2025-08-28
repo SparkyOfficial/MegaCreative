@@ -167,7 +167,7 @@ public class GuiListener implements Listener {
         if (plugin.getCommentInputs().containsKey(player.getUniqueId())) {
             event.setCancelled(true);
             
-            CreativeWorld world = plugin.getCommentInputs().get(player.getUniqueId());
+            CreativeWorld world = plugin.getWorldManager().getWorld(plugin.getCommentInputs().get(player.getUniqueId()));
             
             // Check for cancel command
             if (message.equalsIgnoreCase("отмена")) {

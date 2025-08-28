@@ -154,7 +154,7 @@ public class WorldCommentsGUI implements Listener {
             // Удаляем регистрацию GUI
             GuiListener.unregisterOpenGui(player);
             player.sendMessage("§aНапишите ваш комментарий в чат или §eотмена§a для отмены:");
-            plugin.getCommentInputs().put(player.getUniqueId(), world);
+            plugin.getCommentInputs().put(player.getUniqueId(), world.getId());
             return;
         }
         

@@ -250,16 +250,16 @@ public class ServiceRegistry {
         devInventoryManager = new DevInventoryManager((com.megacreative.MegaCreative) plugin);
         registerService(DevInventoryManager.class, devInventoryManager);
         
-        variableManager = new VariableManager(dataManager);
+        variableManager = new VariableManager((com.megacreative.MegaCreative) plugin);
         registerService(VariableManager.class, variableManager);
         
-        containerManager = new BlockContainerManager(codingManager);
+        containerManager = new BlockContainerManager((com.megacreative.MegaCreative) plugin);
         registerService(BlockContainerManager.class, containerManager);
         
         executorEngine = new ExecutorEngine((com.megacreative.MegaCreative) plugin);
         registerService(ExecutorEngine.class, executorEngine);
         
-        blockConfiguration = new BlockConfiguration(configManager);
+        blockConfiguration = new BlockConfiguration((com.megacreative.MegaCreative) plugin);
         registerService(BlockConfiguration.class, blockConfiguration);
     }
     

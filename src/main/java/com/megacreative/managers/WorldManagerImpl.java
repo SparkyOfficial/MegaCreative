@@ -1,5 +1,6 @@
 package com.megacreative.managers;
 
+import com.megacreative.MegaCreative;
 import com.megacreative.coding.BlockType;
 import com.megacreative.coding.CodeBlock;
 import com.megacreative.coding.CodeScript;
@@ -470,7 +471,7 @@ public class WorldManagerImpl implements IWorldManager {
                     bukkitWorld = creator.createWorld();
                 }
                 if (bukkitWorld != null) {
-                    plugin.getCodingManager().loadScriptsForWorld(world);
+                    ((MegaCreative) plugin).getCodingManager().loadScriptsForWorld(world);
                 }
             }
         } catch (Exception e) {
