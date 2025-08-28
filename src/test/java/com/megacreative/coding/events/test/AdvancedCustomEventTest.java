@@ -1,5 +1,6 @@
 package com.megacreative.coding.events.test;
 
+import com.megacreative.MegaCreative;
 import com.megacreative.coding.events.*;
 import com.megacreative.coding.values.DataValue;
 import org.bukkit.entity.Player;
@@ -25,7 +26,7 @@ public class AdvancedCustomEventTest {
     
     @BeforeEach
     public void setUp() {
-        mockPlugin = Mockito.mock(Plugin.class);
+        mockPlugin = Mockito.mock(MegaCreative.class);
         eventManager = new CustomEventManager(mockPlugin);
     }
     

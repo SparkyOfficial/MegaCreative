@@ -26,7 +26,7 @@ public class AdvancedPerformanceMonitoringTest {
     @BeforeEach
     public void setUp() {
         mockPlugin = Mockito.mock(Plugin.class);
-        when(mockPlugin.getConfig()).thenReturn(mock(org.bukkit.configuration.Configuration.class));
+        when(mockPlugin.getConfig()).thenReturn(mock(org.bukkit.configuration.file.FileConfiguration.class));
         performanceMonitor = new ScriptPerformanceMonitor(mockPlugin);
     }
     
