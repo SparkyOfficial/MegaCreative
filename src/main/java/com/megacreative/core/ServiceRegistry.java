@@ -183,7 +183,7 @@ public class ServiceRegistry {
     
     private void initializeCoreServices() {
         // Config manager first
-        configManager = new ConfigManager(plugin);
+        configManager = new ConfigManager((com.megacreative.MegaCreative) plugin);
         configManager.loadConfig();
         registerService(ConfigManager.class, configManager);
     }
@@ -192,19 +192,19 @@ public class ServiceRegistry {
         // Interface-based managers with proper dependency injection
         worldManager = dependencyContainer.resolve(IWorldManager.class);
         if (worldManager == null) {
-            worldManager = new WorldManagerImpl(plugin, null, configManager); // CodingManager will be set later
+            worldManager = new WorldManagerImpl((com.megacreative.MegaCreative) plugin, null, configManager); // CodingManager will be set later
             registerService(IWorldManager.class, worldManager);
         }
         
         playerManager = dependencyContainer.resolve(IPlayerManager.class);
         if (playerManager == null) {
-            playerManager = new PlayerManagerImpl(configManager);
+            playerManager = new PlayerManagerImpl((com.megacreative.MegaCreative) plugin);
             registerService(IPlayerManager.class, playerManager);
         }
         
         codingManager = dependencyContainer.resolve(ICodingManager.class);
         if (codingManager == null) {
-            codingManager = new com.megacreative.coding.CodingManagerImpl(plugin);
+            codingManager = new com.megacreative.coding.CodingManagerImpl((com.megacreative.MegaCreative) plugin);
             registerService(ICodingManager.class, codingManager);
         }
         
@@ -216,38 +216,38 @@ public class ServiceRegistry {
     
     private void initializeImplementationManagers() {
         // Services that depend on the interface managers
-        dataManager = new DataManager(plugin);
+        dataManager = new DataManager((com.megacreative.MegaCreative) plugin);
         registerService(DataManager.class, dataManager);
         
-        templateManager = new TemplateManager(plugin);
+        templateManager = new TemplateManager((com.megacreative.MegaCreative) plugin);
         registerService(TemplateManager.class, templateManager);
         
-        scoreboardManager = new ScoreboardManager(plugin);
+        scoreboardManager = new ScoreboardManager((com.megacreative.MegaCreative) plugin);
         registerService(ScoreboardManager.class, scoreboardManager);
         
-        trustedPlayerManager = new TrustedPlayerManager(dataManager);
+        trustedPlayerManager = new TrustedPlayerManager((com.megacreative.MegaCreative) plugin);
         registerService(TrustedPlayerManager.class, trustedPlayerManager);
         
-        blockConfigManager = new BlockConfigManager(plugin);
+        blockConfigManager = new BlockConfigManager((com.megacreative.MegaCreative) plugin);
         registerService(BlockConfigManager.class, blockConfigManager);
     }
     
     private void initializeCodingServices() {
         // Block configuration service (new architecture)
-        blockConfigService = new BlockConfigService(plugin);
+        blockConfigService = new BlockConfigService((com.megacreative.MegaCreative) plugin);
         registerService(BlockConfigService.class, blockConfigService);
         
         // Coding system components
-        blockPlacementHandler = new BlockPlacementHandler(plugin);
+        blockPlacementHandler = new BlockPlacementHandler((com.megacreative.MegaCreative) plugin);
         registerService(BlockPlacementHandler.class, blockPlacementHandler);
         
-        scriptDebugger = new VisualDebugger(plugin);
+        scriptDebugger = new VisualDebugger((com.megacreative.MegaCreative) plugin);
         registerService(VisualDebugger.class, scriptDebugger);
         
-        autoConnectionManager = new AutoConnectionManager(plugin, blockConfigService);
+        autoConnectionManager = new AutoConnectionManager((com.megacreative.MegaCreative) plugin, blockConfigService);
         registerService(AutoConnectionManager.class, autoConnectionManager);
         
-        devInventoryManager = new DevInventoryManager(playerManager);
+        devInventoryManager = new DevInventoryManager((com.megacreative.MegaCreative) plugin);
         registerService(DevInventoryManager.class, devInventoryManager);
         
         variableManager = new VariableManager(dataManager);
@@ -256,7 +256,7 @@ public class ServiceRegistry {
         containerManager = new BlockContainerManager(codingManager);
         registerService(BlockContainerManager.class, containerManager);
         
-        executorEngine = new ExecutorEngine(plugin);
+        executorEngine = new ExecutorEngine((com.megacreative.MegaCreative) plugin);
         registerService(ExecutorEngine.class, executorEngine);
         
         blockConfiguration = new BlockConfiguration(configManager);
@@ -265,14 +265,14 @@ public class ServiceRegistry {
     
     private void initializeNewArchitectureServices() {
         // Advanced debugging and error handling
-        visualDebugger = new VisualDebugger(plugin);
+        visualDebugger = new VisualDebugger((com.megacreative.MegaCreative) plugin);
         registerService(VisualDebugger.class, visualDebugger);
         
-        visualErrorHandler = new VisualErrorHandler(plugin);
+        visualErrorHandler = new VisualErrorHandler((com.megacreative.MegaCreative) plugin);
         registerService(VisualErrorHandler.class, visualErrorHandler);
         
         // Custom events system
-        customEventManager = new CustomEventManager(plugin);
+        customEventManager = new CustomEventManager((com.megacreative.MegaCreative) plugin);
         registerService(CustomEventManager.class, customEventManager);
         
         // Code manipulation tools
@@ -280,7 +280,7 @@ public class ServiceRegistry {
         registerService(CodeBlockClipboard.class, codeBlockClipboard);
         
         // Block grouping system
-        blockGroupManager = new BlockGroupManager(plugin, playerManager);
+        blockGroupManager = new BlockGroupManager((com.megacreative.MegaCreative) plugin, playerManager);
         registerService(BlockGroupManager.class, blockGroupManager);
         
         // GUI manager with proper dependencies

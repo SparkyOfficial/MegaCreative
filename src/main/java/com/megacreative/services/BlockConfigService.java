@@ -154,6 +154,78 @@ public class BlockConfigService {
     }
     
     /**
+     * Gets slot number for action and group
+     */
+    public int getSlotNumber(String action, String group) {
+        // Default slot assignment logic
+        int hash = (action + group).hashCode();
+        return Math.abs(hash % 54); // GUI has 54 slots
+    }
+    
+    /**
+     * Gets available slots for a group
+     */
+    public List<Integer> getSlotsForGroup(String action, String group) {
+        List<Integer> slots = new ArrayList<>();
+        int baseSlot = getSlotNumber(action, group);
+        // Return 9 consecutive slots for the group
+        for (int i = 0; i < 9; i++) {
+            slots.add((baseSlot + i) % 54);
+        }
+        return slots;
+    }
+    
+    /**
+     * Gets action slot configuration
+     */
+    public Map<String, Object> getActionSlotConfig(String action) {
+        Map<String, Object> config = new HashMap<>();
+        config.put("name", action);
+        config.put("slot", getSlotNumber(action, "default"));
+        config.put("material", "STONE");
+        return config;
+    }
+    
+    /**
+     * Gets action group configuration
+     */
+    public Map<String, Object> getActionGroupConfig(String action) {
+        Map<String, Object> config = new HashMap<>();
+        config.put("name", action + " Group");
+        config.put("actions", Arrays.asList(action));
+        config.put("slots", getSlotsForGroup(action, "group"));
+        return config;
+    }
+    
+    /**
+     * Creates placeholder item for slot configuration
+     */
+    public org.bukkit.inventory.ItemStack createPlaceholderItem(String name, int slot) {
+        org.bukkit.inventory.ItemStack item = new org.bukkit.inventory.ItemStack(org.bukkit.Material.GRAY_STAINED_GLASS_PANE);
+        org.bukkit.inventory.meta.ItemMeta meta = item.getItemMeta();
+        if (meta != null) {
+            meta.setDisplayName("§7" + name);
+            meta.setLore(Arrays.asList("§8Slot: " + slot));
+            item.setItemMeta(meta);
+        }
+        return item;
+    }
+    
+    /**
+     * Creates group placeholder item
+     */
+    public org.bukkit.inventory.ItemStack createGroupPlaceholderItem(String groupName, String action) {
+        org.bukkit.inventory.ItemStack item = new org.bukkit.inventory.ItemStack(org.bukkit.Material.YELLOW_STAINED_GLASS_PANE);
+        org.bukkit.inventory.meta.ItemMeta meta = item.getItemMeta();
+        if (meta != null) {
+            meta.setDisplayName("§e" + groupName);
+            meta.setLore(Arrays.asList("§8Action: " + action, "§8Group placeholder"));
+            item.setItemMeta(meta);
+        }
+        return item;
+    }
+    
+    /**
      * Block configuration data class
      */
     public static class BlockConfig {

@@ -77,7 +77,14 @@ public interface DataValue extends ConfigurationSerializable, Cloneable {
             case TEXT: return new TextValue((String) value);
             case NUMBER: return new NumberValue((Number) value);
             case BOOLEAN: return new BooleanValue((Boolean) value);
-            case LIST: return new ListValue((java.util.List<?>) value);
+            case LIST: {
+                java.util.List<?> rawList = (java.util.List<?>) value;
+                java.util.List<DataValue> convertedList = new java.util.ArrayList<>();
+                for (Object item : rawList) {
+                    convertedList.add(fromObject(item));
+                }
+                return new ListValue(convertedList);
+            }
             case DICTIONARY: return new MapValue((java.util.Map<String, DataValue>) value);
             case LOCATION: return new LocationValue((org.bukkit.Location) value);
             case ITEM: return new ItemValue((org.bukkit.inventory.ItemStack) value);
@@ -98,7 +105,14 @@ public interface DataValue extends ConfigurationSerializable, Cloneable {
         if (object instanceof org.bukkit.Location) return new LocationValue((org.bukkit.Location) object);
         if (object instanceof org.bukkit.inventory.ItemStack) return new ItemValue((org.bukkit.inventory.ItemStack) object);
         if (object instanceof org.bukkit.entity.Player) return new PlayerValue((org.bukkit.entity.Player) object);
-        if (object instanceof java.util.List) return new ListValue((java.util.List<?>) object);
+        if (object instanceof java.util.List) {
+            java.util.List<?> list = (java.util.List<?>) object;
+            java.util.List<DataValue> convertedList = new java.util.ArrayList<>();
+            for (Object item : list) {
+                convertedList.add(fromObject(item));
+            }
+            return new ListValue(convertedList);
+        }
         if (object instanceof java.util.Map) {
             Map<?, ?> map = (Map<?, ?>) object;
             Map<String, DataValue> convertedMap = new HashMap<>();

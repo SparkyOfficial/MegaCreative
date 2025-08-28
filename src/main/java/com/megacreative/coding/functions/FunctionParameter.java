@@ -58,6 +58,6 @@ public class FunctionParameter {
             throw new IllegalArgumentException("Required parameter '" + name + "' not provided");
         }
         
-        return expectedType.getDefaultValue();
+        return DataValue.fromObject(expectedType.getDefaultValue());
     }
 }

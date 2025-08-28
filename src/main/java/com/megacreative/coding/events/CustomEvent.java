@@ -189,8 +189,8 @@ public class CustomEvent {
         public boolean isCompatible(DataValue value) {
             if (value == null) return !required;
             return expectedType.isAssignableFrom(value.getClass()) || 
-                   expectedType == Object.class || 
-                   value.getClass() == Object.class;
+                   expectedType.equals(Object.class) || 
+                   value.getClass().equals(Object.class);
         }
     }
 }
