@@ -49,7 +49,7 @@ public class BlockPlacementHandler implements Listener {
     /**
      * Обрабатывает размещение блоков кодирования
      */
-    @EventHandler
+    @EventHandler(priority = EventPriority.HIGH) // Run before AutoConnectionManager (MONITOR)
     public void onBlockPlace(BlockPlaceEvent event) {
         Player player = event.getPlayer();
         Block block = event.getBlockPlaced();

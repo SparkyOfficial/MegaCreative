@@ -85,12 +85,13 @@ public class BlockConfigService {
     private BlockConfig parseBlockConfig(Material material, ConfigurationSection section) {
         String name = section.getString("name", material.name());
         String description = section.getString("description", "");
+        String type = section.getString("type", "ACTION"); // Default to ACTION if not specified
         List<String> actions = section.getStringList("actions");
         
         // Get default action (first action in the list)
         String defaultAction = actions.isEmpty() ? null : actions.get(0);
         
-        return new BlockConfig(material, name, description, actions, defaultAction);
+        return new BlockConfig(material, name, description, type, actions, defaultAction);
     }
     
     /**
@@ -139,11 +140,26 @@ public class BlockConfigService {
     }
     
     /**
-     * Gets the description for a material
+     * Gets the block category/type for a material
      */
-    public String getBlockDescription(Material material) {
+    public String getBlockCategory(Material material) {
         BlockConfig config = materialToConfig.get(material);
-        return config != null ? config.getDescription() : "";
+        return config != null ? config.getType() : "ACTION";
+    }
+    
+    /**
+     * Checks if a block category is a control or event block
+     */
+    public boolean isControlOrEventBlock(String category) {
+        return "EVENT".equals(category) || "CONTROL".equals(category) || "FUNCTION".equals(category);
+    }
+    
+    /**
+     * Checks if a material is a control or event block
+     */
+    public boolean isControlOrEventBlock(Material material) {
+        String category = getBlockCategory(material);
+        return isControlOrEventBlock(category);
     }
     
     /**
@@ -232,14 +248,16 @@ public class BlockConfigService {
         private final Material material;
         private final String name;
         private final String description;
+        private final String type;
         private final List<String> actions;
         private final String defaultAction;
         
-        public BlockConfig(Material material, String name, String description, 
+        public BlockConfig(Material material, String name, String description, String type,
                           List<String> actions, String defaultAction) {
             this.material = material;
             this.name = name;
             this.description = description;
+            this.type = type;
             this.actions = new ArrayList<>(actions);
             this.defaultAction = defaultAction;
         }
@@ -247,6 +265,7 @@ public class BlockConfigService {
         public Material getMaterial() { return material; }
         public String getName() { return name; }
         public String getDescription() { return description; }
+        public String getType() { return type; }
         public List<String> getActions() { return actions; }
         public String getDefaultAction() { return defaultAction; }
         
@@ -262,6 +281,7 @@ public class BlockConfigService {
             return "BlockConfig{" +
                     "material=" + material +
                     ", name='" + name + '\'' +
+                    ", type='" + type + '\'' +
                     ", defaultAction='" + defaultAction + '\'' +
                     ", actions=" + actions.size() +
                     '}';

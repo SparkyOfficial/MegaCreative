@@ -76,6 +76,30 @@ public class AutoConnectionManager implements Listener {
         // Check if this is a code block
         if (!blockConfigService.isCodeBlock(block.getType())) return;
         
+        // BLOCK PLACEMENT VALIDATION
+        String blockCategory = blockConfigService.getBlockCategory(block.getType());
+        int blockX = location.getBlockX();
+        
+        // Check position validation based on block category
+        if (blockX == 0) { // This is the "blue" line (start of coding line)
+            if (!blockConfigService.isControlOrEventBlock(blockCategory)) {
+                event.setCancelled(true);
+                player.sendMessage("§cЭтот тип блока можно ставить только на серые линии!");
+                player.sendMessage("§7Подсказка: EVENT, CONTROL и FUNCTION блоки должны быть в начале линии (на синем блоке)");
+                return;
+            }
+        } else { // This is a "gray" line (continuation of coding line)
+            if (blockConfigService.isControlOrEventBlock(blockCategory)) {
+                event.setCancelled(true);
+                player.sendMessage("§cЭтот тип блока можно ставить только в начало линии (на синий блок)!");
+                player.sendMessage("§7Подсказка: ACTION и CONDITION блоки должны быть на серых линиях");
+                return;
+            }
+        }
+        
+        // Log placement validation success
+        plugin.getLogger().info("Block placement validated: " + blockCategory + " at X=" + blockX + " (line start: " + (blockX == 0) + ")");
+        
         // Get the CodeBlock that was created by BlockPlacementHandler
         BlockPlacementHandler placementHandler = plugin.getBlockPlacementHandler();
         if (placementHandler != null && placementHandler.hasCodeBlock(location)) {
