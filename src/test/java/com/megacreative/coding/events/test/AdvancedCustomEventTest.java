@@ -22,7 +22,7 @@ import static org.mockito.Mockito.*;
 public class AdvancedCustomEventTest {
     
     private CustomEventManager eventManager;
-    private Plugin mockPlugin;
+    private MegaCreative mockPlugin;
     
     @BeforeEach
     public void setUp() {
@@ -33,11 +33,11 @@ public class AdvancedCustomEventTest {
     @Test
     public void testAdvancedEventTrigger() {
         // Create a simple event
-        CustomEvent testEvent = new CustomEventBuilder("testEvent")
+        CustomEventBuilder eventBuilder = new CustomEventBuilder("testEvent")
             .description("A test event for advanced triggering")
             .category("test")
-            .requiredField("message", String.class, "Test message")
-            .buildAndRegister(eventManager);
+            .requiredField("message", String.class, "Test message");
+        CustomEvent testEvent = eventBuilder.buildAndRegister(eventManager);
         
         // Create an advanced trigger
         Map<String, DataValue> triggerData = new HashMap<>();
@@ -68,16 +68,16 @@ public class AdvancedCustomEventTest {
     @Test
     public void testEventInheritance() {
         // Create a base player event
-        CustomEvent basePlayerEvent = new CustomEventBuilder("basePlayerEvent")
+        CustomEventBuilder baseEventBuilder = new CustomEventBuilder("basePlayerEvent")
             .description("Base player event")
-            .requiredField("player", Player.class, "The player")
-            .buildAndRegister(eventManager);
+            .requiredField("player", Player.class, "The player");
+        CustomEvent basePlayerEvent = baseEventBuilder.buildAndRegister(eventManager);
         
         // Create a derived event that inherits from basePlayerEvent
-        CustomEvent derivedEvent = new CustomEvent("derivedPlayerEvent", "test")
-            .setDescription("Derived player event")
-            .inheritFrom(basePlayerEvent)
-            .addDataField("action", String.class, true, "Player action");
+        CustomEvent derivedEvent = new CustomEvent("derivedPlayerEvent", "test");
+        derivedEvent.setDescription("Derived player event");
+        derivedEvent.inheritFrom(basePlayerEvent);
+        derivedEvent.addDataField("action", String.class, true, "Player action");
         
         eventManager.registerEvent(derivedEvent);
         
@@ -115,10 +115,10 @@ public class AdvancedCustomEventTest {
     @Test
     public void testEventFiltering() {
         // Create test event
-        CustomEvent testEvent = new CustomEventBuilder("filterTestEvent")
+        CustomEventBuilder eventBuilder = new CustomEventBuilder("filterTestEvent")
             .description("Event for testing filters")
-            .requiredField("value", Integer.class, "Test value")
-            .buildAndRegister(eventManager);
+            .requiredField("value", Integer.class, "Test value");
+        CustomEvent testEvent = eventBuilder.buildAndRegister(eventManager);
         
         // Test data transformation
         Map<String, DataValue> originalData = new HashMap<>();
