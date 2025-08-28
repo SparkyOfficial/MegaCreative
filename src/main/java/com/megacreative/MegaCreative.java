@@ -5,6 +5,9 @@ import com.megacreative.listeners.*;
 import com.megacreative.coding.BlockPlacementHandler;
 import com.megacreative.coding.CodingManagerImpl;
 import com.megacreative.coding.AutoConnectionManager;
+import com.megacreative.coding.variables.VariableManager;
+import com.megacreative.coding.containers.BlockContainerManager;
+import com.megacreative.coding.executors.ExecutorEngine;
 import com.megacreative.coding.ScriptDebugger;
 import com.megacreative.coding.CodingItems;
 import com.megacreative.coding.BlockConfiguration;
@@ -48,6 +51,9 @@ public class MegaCreative extends JavaPlugin {
     // === НОВЫЕ СИСТЕМЫ РАЗРАБОТКИ ===
     private AutoConnectionManager autoConnectionManager;
     private DevInventoryManager devInventoryManager;
+    private VariableManager variableManager;
+    private BlockContainerManager containerManager;
+    private ExecutorEngine executorEngine;
     
     // --- НОВЫЙ МЕНЕДЖЕР ДЛЯ ВИРТУАЛЬНЫХ ИНВЕНТАРЕЙ ---
     private BlockConfigManager blockConfigManager;
@@ -113,6 +119,9 @@ public class MegaCreative extends JavaPlugin {
         // === ИНИЦИАЛИЗАЦИЯ НОВЫХ СИСТЕМ РАЗРАБОТКИ ===
         this.autoConnectionManager = new AutoConnectionManager(this);
         this.devInventoryManager = new DevInventoryManager(this);
+        this.variableManager = new VariableManager(this);
+        this.containerManager = new BlockContainerManager(this);
+        this.executorEngine = new ExecutorEngine(this);
         
         // Инициализация после создания всех менеджеров
         this.worldManager.initialize();
@@ -164,6 +173,7 @@ public class MegaCreative extends JavaPlugin {
         
         // === НОВЫЕ КОМАНДЫ ===
         getCommand("addfloor").setExecutor(new AddFloorCommand(this));
+        getCommand("workspace").setExecutor(new WorkspaceCommand(this));
     }
     
     private void registerEvents() {
@@ -248,6 +258,18 @@ public class MegaCreative extends JavaPlugin {
     
     public DevInventoryManager getDevInventoryManager() {
         return devInventoryManager;
+    }
+    
+    public VariableManager getVariableManager() {
+        return variableManager;
+    }
+    
+    public BlockContainerManager getContainerManager() {
+        return containerManager;
+    }
+    
+    public ExecutorEngine getExecutorEngine() {
+        return executorEngine;
     }
     
     public Map<UUID, CreativeWorld> getCommentInputs() {

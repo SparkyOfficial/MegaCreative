@@ -73,6 +73,11 @@ commands:
     description: Добавить новый этаж кодинга в dev-мир
     usage: /<command> [номер_этажа]
     permission: megacreative.admin
+  workspace:
+    description: Открыть продвинутую среду кодирования MegaCreative
+    usage: /<command> [open|close|info]
+    permission: megacreative.user
+    aliases: [ws, coding]
 
 permissions:
   megacreative.*:
