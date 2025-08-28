@@ -24,12 +24,19 @@ public class BlockGroupManager {
     // Active block groups by world
     private final Map<String, Map<UUID, BlockGroup>> worldGroups = new ConcurrentHashMap<>();
     
+    // Advanced block groups
+    private final Map<String, Map<UUID, AdvancedBlockGroup>> worldAdvancedGroups = new ConcurrentHashMap<>();
+    
+    // Group templates manager
+    private final GroupTemplateManager templateManager;
+    
     // Player selection state for creating groups
     private final Map<UUID, GroupSelectionState> playerSelections = new ConcurrentHashMap<>();
     
     public BlockGroupManager(Plugin plugin, IPlayerManager playerManager) {
         this.plugin = plugin;
         this.playerManager = playerManager;
+        this.templateManager = new GroupTemplateManager(this);
     }
     
     /**
@@ -230,10 +237,193 @@ public class BlockGroupManager {
     }
     
     /**
+     * Creates an advanced group from the current selection
+     */
+    public void createAdvancedGroupFromSelection(Player player, String groupName, 
+                                               AdvancedBlockGroup.ExecutionMode executionMode) {
+        GroupSelectionState state = playerSelections.get(player.getUniqueId());
+        if (state == null) {
+            player.sendMessage("§cYou are not in group selection mode!");
+            return;
+        }
+        
+        if (state.getSelectedBlocks().isEmpty()) {
+            player.sendMessage("§cNo blocks selected for grouping!");
+            return;
+        }
+        
+        // Create the advanced group
+        AdvancedBlockGroup group = new AdvancedBlockGroup(
+            UUID.randomUUID(),
+            groupName != null ? groupName : "Group " + (getPlayerGroupCount(player) + 1),
+            player.getUniqueId(),
+            new HashMap<>(state.getSelectedBlocks()),
+            calculateGroupBounds(state.getSelectedBlocks().keySet())
+        );
+        
+        group.setExecutionMode(executionMode != null ? executionMode : AdvancedBlockGroup.ExecutionMode.SEQUENTIAL);
+        
+        // Add to world advanced groups
+        String worldName = player.getWorld().getName();
+        worldAdvancedGroups.computeIfAbsent(worldName, k -> new ConcurrentHashMap<>())
+                          .put(group.getId(), group);
+        
+        // Clear selection
+        clearSelection(player);
+        
+        player.sendMessage("§a✓ Created advanced group: " + group.getName() + " (" + group.getBlocks().size() + " blocks)");
+        player.sendMessage("§7Execution mode: " + executionMode);
+        
+        log.info("Player " + player.getName() + " created advanced group: " + group.getName() + 
+                " with " + group.getBlocks().size() + " blocks");
+    }
+    
+    /**
+     * Converts a regular group to an advanced group
+     */
+    public AdvancedBlockGroup convertToAdvancedGroup(Player player, String groupName) {
+        BlockGroup regularGroup = findGroupByName(player, groupName);
+        if (regularGroup == null) {
+            player.sendMessage("§cGroup not found: " + groupName);
+            return null;
+        }
+        
+        // Create advanced group from regular group
+        AdvancedBlockGroup advancedGroup = new AdvancedBlockGroup(
+            regularGroup.getId(),
+            regularGroup.getName(),
+            regularGroup.getOwner(),
+            new HashMap<>(regularGroup.getBlocks()),
+            regularGroup.getBounds()
+        );
+        
+        // Copy properties
+        advancedGroup.setCollapsed(regularGroup.isCollapsed());
+        
+        // Replace in world groups
+        String worldName = player.getWorld().getName();
+        Map<UUID, BlockGroup> groups = worldGroups.get(worldName);
+        if (groups != null) {
+            groups.remove(regularGroup.getId());
+        }
+        
+        // Add to advanced groups
+        worldAdvancedGroups.computeIfAbsent(worldName, k -> new ConcurrentHashMap<>())
+                          .put(advancedGroup.getId(), advancedGroup);
+        
+        player.sendMessage("§a✓ Converted group to advanced: " + groupName);
+        return advancedGroup;
+    }
+    
+    /**
+     * Gets the template manager
+     */
+    public GroupTemplateManager getTemplateManager() {
+        return templateManager;
+    }
+    
+    /**
+     * Lists all templates
+     */
+    public void listTemplates(Player player) {
+        if (templates.isEmpty()) {
+            player.sendMessage("§eNo templates found");
+            return;
+        }
+        
+        player.sendMessage("§a§lAvailable Templates:");
+        for (AdvancedBlockGroup template : templates.values()) {
+            player.sendMessage("§7- §f" + template.getName() + " §7(" + template.getBlocks().size() + " blocks)");
+        }
+    }
+    
+    /**
+     * Locks/unlocks a group
+     */
+    public void toggleGroupLock(Player player, String groupName) {
+        AdvancedBlockGroup group = findAdvancedGroupByName(player, groupName);
+        if (group == null) {
+            player.sendMessage("§cAdvanced group not found: " + groupName);
+            return;
+        }
+        
+        group.setLocked(!group.isLocked());
+        player.sendMessage("§a✓ Group " + groupName + " is now " + (group.isLocked() ? "§clocked" : "§aunlocked"));
+    }
+    
+    /**
+     * Sets execution limit for a group
+     */
+    public void setGroupExecutionLimit(Player player, String groupName, int limit) {
+        AdvancedBlockGroup group = findAdvancedGroupByName(player, groupName);
+        if (group == null) {
+            player.sendMessage("§cAdvanced group not found: " + groupName);
+            return;
+        }
+        
+        group.setExecutionLimit(limit);
+        player.sendMessage("§a✓ Set execution limit for " + groupName + " to " + 
+                          (limit > 0 ? limit : "unlimited"));
+    }
+    
+    /**
+     * Adds a tag to a group
+     */
+    public void addGroupTag(Player player, String groupName, String tag) {
+        AdvancedBlockGroup group = findAdvancedGroupByName(player, groupName);
+        if (group == null) {
+            player.sendMessage("§cAdvanced group not found: " + groupName);
+            return;
+        }
+        
+        group.addTag(tag);
+        player.sendMessage("§a✓ Added tag '" + tag + "' to group " + groupName);
+    }
+    
+    /**
+     * Finds an advanced group by name for a specific player
+     */
+    private AdvancedBlockGroup findAdvancedGroupByName(Player player, String groupName) {
+        String worldName = player.getWorld().getName();
+        Map<UUID, AdvancedBlockGroup> groups = worldAdvancedGroups.get(worldName);
+        if (groups == null) return null;
+        
+        return groups.values().stream()
+            .filter(group -> group.getOwner().equals(player.getUniqueId()))
+            .filter(group -> group.getName().equalsIgnoreCase(groupName))
+            .findFirst()
+            .orElse(null);
+    }
+    
+    /**
+     * Gets all advanced groups for a player
+     */
+    public List<AdvancedBlockGroup> getPlayerAdvancedGroups(Player player) {
+        String worldName = player.getWorld().getName();
+        Map<UUID, AdvancedBlockGroup> groups = worldAdvancedGroups.get(worldName);
+        if (groups == null) return new ArrayList<>();
+        
+        return groups.values().stream()
+            .filter(group -> group.getOwner().equals(player.getUniqueId()))
+            .collect(ArrayList::new, (list, item) -> list.add(item), (list1, list2) -> list1.addAll(list2));
+    }
+    
+    /**
+     * Gets advanced groups by tag
+     */
+    public List<AdvancedBlockGroup> getGroupsByTag(Player player, String tag) {
+        return getPlayerAdvancedGroups(player).stream()
+            .filter(group -> group.hasTag(tag))
+            .collect(ArrayList::new, (list, item) -> list.add(item), (list1, list2) -> list1.addAll(list2));
+    }
+    
+    /**
      * Cleans up resources when plugin disables
      */
     public void cleanup() {
         worldGroups.clear();
+        worldAdvancedGroups.clear();
+        templates.clear();
         playerSelections.clear();
     }
     

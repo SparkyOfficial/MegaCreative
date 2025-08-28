@@ -4,6 +4,7 @@ import com.megacreative.MegaCreative;
 import com.megacreative.coding.CodeBlock;
 import com.megacreative.coding.values.DataValue;
 import lombok.extern.java.Log;
+import org.bukkit.Bukkit;
 import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.Listener;
@@ -38,9 +39,20 @@ public class CustomEventManager implements Listener {
     // Event categories for organization
     private final Map<String, Set<String>> eventCategories = new ConcurrentHashMap<>();
     
+    // Advanced event triggers
+    private final Map<String, AdvancedEventTrigger> advancedTriggers = new ConcurrentHashMap<>();
+    
+    // Scheduled triggers
+    private final Map<String, ScheduledTrigger> scheduledTriggers = new ConcurrentHashMap<>();
+    
+    // Event correlation engine
+    private final EventCorrelationEngine correlationEngine;
+    
     public CustomEventManager(MegaCreative plugin) {
         this.plugin = plugin;
+        this.correlationEngine = new EventCorrelationEngine(this);
         initializeBuiltInEvents();
+        startCorrelationCleanupTask();
     }
     
     /**
@@ -122,6 +134,86 @@ public class CustomEventManager implements Listener {
      * Triggers a custom event
      */
     public void triggerEvent(String eventName, Map<String, DataValue> eventData, Player source, String worldName) {
+        CustomEvent event = getEventByName(eventName);
+        if (event == null) {
+            throw new IllegalArgumentException("Event not defined: " + eventName);
+        }
+        
+        // Check if event is abstract
+        if (event.isAbstract()) {
+            throw new IllegalArgumentException("Cannot trigger abstract event: " + eventName);
+        }
+        
+        try {
+            // Validate and prepare event data
+            event.validateEventData(eventData);
+            Map<String, DataValue> effectiveData = event.prepareEventData(eventData);
+            
+            // Process event through correlation engine
+            correlationEngine.processEvent(eventName, effectiveData, source, worldName);
+            
+            // Create event execution record
+            EventExecution execution = new EventExecution(eventName, effectiveData, source, worldName);
+            
+            // Get applicable handlers
+            List<EventHandler> applicableHandlers = new ArrayList<>();
+            
+            // Add global handlers
+            List<EventHandler> globalHandlers = globalEventHandlers.get(eventName);
+            if (globalHandlers != null) {
+                applicableHandlers.addAll(globalHandlers);
+            }
+            
+            // Add world-specific handlers
+            if (!event.isGlobal()) {
+                List<EventHandler> worldHandlers = eventHandlers.get(eventName);
+                if (worldHandlers != null) {
+                    applicableHandlers.addAll(worldHandlers.stream()
+                        .filter(h -> h.getWorldName() == null || h.getWorldName().equals(worldName))
+                        .toList());
+                }
+            }
+            
+            // Sort handlers by priority (highest first)
+            applicableHandlers.sort((a, b) -> Integer.compare(b.getPriority(), a.getPriority()));
+            
+            // Execute handlers
+            int executedCount = 0;
+            for (EventHandler handler : applicableHandlers) {
+                try {
+                    if (handler.canHandle(source, worldName, effectiveData)) {
+                        handler.handle(effectiveData, source, worldName);
+                        executedCount++;
+                        
+                        // Stop if this is a one-time event and it was handled
+                        if (event.isOneTime()) {
+                            unregisterEvent(eventName);
+                            break;
+                        }
+                    }
+                } catch (Exception e) {
+                    log.log(Level.WARNING, "Error executing event handler for " + eventName, e);
+                }
+            }
+            
+            execution.setHandlersExecuted(executedCount);
+            execution.setExecutionTime(System.currentTimeMillis() - execution.getTriggeredTime());
+            
+            // Store execution history
+            executionHistory.computeIfAbsent(eventName, k -> new ArrayList<>()).add(execution);
+            
+            log.fine("Triggered event: " + eventName + " (executed " + executedCount + " handlers)");
+            
+        } catch (Exception e) {
+            log.log(Level.WARNING, "Failed to trigger event: " + eventName, e);
+        }
+    }
+    
+    /**
+     * Triggers a custom event with filtering
+     */
+    public void triggerEvent(String eventName, Map<String, DataValue> eventData, Player source, String worldName, 
+                           java.util.function.Predicate<EventHandler> filter) {
         CustomEvent event = eventDefinitions.get(eventName);
         if (event == null) {
             throw new IllegalArgumentException("Event not defined: " + eventName);
@@ -152,6 +244,11 @@ public class CustomEventManager implements Listener {
                         .filter(h -> h.getWorldName() == null || h.getWorldName().equals(worldName))
                         .toList());
                 }
+            }
+            
+            // Apply custom filter if provided
+            if (filter != null) {
+                applicableHandlers.removeIf(handler -> !filter.test(handler));
             }
             
             // Sort handlers by priority (highest first)
@@ -236,6 +333,67 @@ public class CustomEventManager implements Listener {
     }
     
     /**
+     * Transforms event data using a mapping function
+     */
+    public Map<String, DataValue> transformEventData(Map<String, DataValue> originalData, 
+                                                   Map<String, java.util.function.Function<DataValue, DataValue>> transformations) {
+        Map<String, DataValue> transformedData = new HashMap<>(originalData);
+        
+        for (Map.Entry<String, java.util.function.Function<DataValue, DataValue>> entry : transformations.entrySet()) {
+            String fieldName = entry.getKey();
+            java.util.function.Function<DataValue, DataValue> transformer = entry.getValue();
+            
+            if (originalData.containsKey(fieldName)) {
+                DataValue originalValue = originalData.get(fieldName);
+                DataValue transformedValue = transformer.apply(originalValue);
+                transformedData.put(fieldName, transformedValue);
+            }
+        }
+        
+        return transformedData;
+    }
+    
+    /**
+     * Merges multiple event data maps
+     */
+    public Map<String, DataValue> mergeEventData(Map<String, DataValue>... dataMaps) {
+        Map<String, DataValue> merged = new HashMap<>();
+        for (Map<String, DataValue> dataMap : dataMaps) {
+            merged.putAll(dataMap);
+        }
+        return merged;
+    }
+    
+    /**
+     * Creates a data filter for event handlers
+     */
+    public java.util.function.Predicate<EventHandler> createPlayerFilter(UUID playerId) {
+        return handler -> handler.getPlayerId() == null || handler.getPlayerId().equals(playerId);
+    }
+    
+    /**
+     * Creates a world filter for event handlers
+     */
+    public java.util.function.Predicate<EventHandler> createWorldFilter(String worldName) {
+        return handler -> handler.getWorldName() == null || handler.getWorldName().equals(worldName);
+    }
+    
+    /**
+     * Creates a combined filter for event handlers
+     */
+    public java.util.function.Predicate<EventHandler> createCombinedFilter(
+            java.util.function.Predicate<EventHandler>... filters) {
+        return handler -> {
+            for (java.util.function.Predicate<EventHandler> filter : filters) {
+                if (!filter.test(handler)) {
+                    return false;
+                }
+            }
+            return true;
+        };
+    }
+    
+    /**
      * Initializes built-in events
      */
     private void initializeBuiltInEvents() {
@@ -293,6 +451,32 @@ public class CustomEventManager implements Listener {
         data.put("reason", DataValue.fromObject(event.getQuitMessage()));
         
         triggerEvent("playerDisconnect", data, event.getPlayer(), event.getPlayer().getWorld().getName());
+    }
+    
+    /**
+     * Gets the event correlation engine
+     */
+    public EventCorrelationEngine getCorrelationEngine() {
+        return correlationEngine;
+    }
+    
+    /**
+     * Starts the correlation cleanup task
+     */
+    private void startCorrelationCleanupTask() {
+        // In a real implementation, this would use Bukkit's scheduler
+        // For now, we'll simulate with a simple periodic cleanup
+        new Thread(() -> {
+            while (!Thread.currentThread().isInterrupted()) {
+                try {
+                    Thread.sleep(60000); // Every minute
+                    correlationEngine.cleanupExpiredInstances();
+                } catch (InterruptedException e) {
+                    Thread.currentThread().interrupt();
+                    break;
+                }
+            }
+        }).start();
     }
     
     /**
@@ -386,5 +570,153 @@ public class CustomEventManager implements Listener {
         // Setters
         public void setHandlersExecuted(int handlersExecuted) { this.handlersExecuted = handlersExecuted; }
         public void setExecutionTime(long executionTime) { this.executionTime = executionTime; }
+    }
+    
+    /**
+     * Registers an advanced event trigger
+     */
+    public void registerAdvancedTrigger(AdvancedEventTrigger trigger) {
+        advancedTriggers.put(trigger.getTriggerId(), trigger);
+        log.info("Registered advanced event trigger: " + trigger.getTriggerId() + " for event: " + trigger.getEventName());
+    }
+    
+    /**
+     * Unregisters an advanced event trigger
+     */
+    public void unregisterAdvancedTrigger(String triggerId) {
+        AdvancedEventTrigger trigger = advancedTriggers.remove(triggerId);
+        if (trigger != null) {
+            log.info("Unregistered advanced event trigger: " + triggerId);
+        }
+    }
+    
+    /**
+     * Gets an advanced event trigger by ID
+     */
+    public AdvancedEventTrigger getAdvancedTrigger(String triggerId) {
+        return advancedTriggers.get(triggerId);
+    }
+    
+    /**
+     * Gets all advanced triggers for an event
+     */
+    public List<AdvancedEventTrigger> getAdvancedTriggersForEvent(String eventName) {
+        return advancedTriggers.values().stream()
+            .filter(trigger -> trigger.getEventName().equals(eventName))
+            .collect(ArrayList::new, (list, item) -> list.add(item), (list1, list2) -> list1.addAll(list2));
+    }
+    
+    /**
+     * Schedules an event trigger
+     */
+    public void scheduleTrigger(String triggerId, long delayMs, Player player, String world) {
+        ScheduledTrigger scheduled = new ScheduledTrigger(triggerId, delayMs, player, world);
+        scheduledTriggers.put(triggerId, scheduled);
+        scheduled.schedule(this);
+    }
+    
+    /**
+     * Cancels a scheduled trigger
+     */
+    public void cancelScheduledTrigger(String triggerId) {
+        ScheduledTrigger scheduled = scheduledTriggers.remove(triggerId);
+        if (scheduled != null) {
+            scheduled.cancel();
+        }
+    }
+    
+    /**
+     * Executes an advanced trigger
+     */
+    public void executeAdvancedTrigger(String triggerId, Player player, String world) {
+        AdvancedEventTrigger trigger = advancedTriggers.get(triggerId);
+        if (trigger != null) {
+            trigger.execute(this, player, world);
+        }
+    }
+    
+    /**
+     * Scheduled trigger wrapper
+     */
+    private static class ScheduledTrigger {
+        private final String triggerId;
+        private final long delayMs;
+        private final UUID playerId;
+        private final String worldName;
+        private boolean cancelled = false;
+        
+        public ScheduledTrigger(String triggerId, long delayMs, Player player, String worldName) {
+            this.triggerId = triggerId;
+            this.delayMs = delayMs;
+            this.playerId = player != null ? player.getUniqueId() : null;
+            this.worldName = worldName;
+        }
+        
+        public void schedule(CustomEventManager manager) {
+            // In a real implementation, this would use Bukkit's scheduler
+            // For now, we'll simulate with a simple delayed execution
+            new Thread(() -> {
+                try {
+                    Thread.sleep(delayMs);
+                    if (!cancelled) {
+                        Player player = playerId != null ? 
+                            Bukkit.getPlayer(playerId) : null;
+                        manager.executeAdvancedTrigger(triggerId, player, worldName);
+                    }
+                } catch (InterruptedException e) {
+                    Thread.currentThread().interrupt();
+                }
+            }).start();
+        }
+        
+        public void cancel() {
+            this.cancelled = true;
+        }
+    }
+    
+    /**
+     * Gets an event by name, checking aliases and inheritance
+     */
+    public CustomEvent getEventByName(String eventName) {
+        // Direct match
+        if (eventDefinitions.containsKey(eventName)) {
+            return eventDefinitions.get(eventName);
+        }
+        
+        // Check aliases
+        for (CustomEvent event : eventDefinitions.values()) {
+            if (event.getAliases().contains(eventName)) {
+                return event;
+            }
+        }
+        
+        return null;
+    }
+    
+    /**
+     * Gets events by tag
+     */
+    public List<CustomEvent> getEventsByTag(String tag) {
+        List<CustomEvent> result = new ArrayList<>();
+        for (CustomEvent event : eventDefinitions.values()) {
+            if (event.hasTag(tag)) {
+                result.add(event);
+            }
+        }
+        return result;
+    }
+    
+    /**
+     * Gets events by metadata
+     */
+    public List<CustomEvent> getEventsByMetadata(String key, Object value) {
+        List<CustomEvent> result = new ArrayList<>();
+        for (CustomEvent event : eventDefinitions.values()) {
+            Object metadataValue = event.getMetadata().get(key);
+            if (metadataValue != null && metadataValue.equals(value)) {
+                result.add(event);
+            }
+        }
+        return result;
     }
 }

@@ -28,6 +28,12 @@ public class CustomEvent {
     private int priority = 0; // Higher priority events are handled first
     private Set<String> tags = new HashSet<>();
     
+    // Advanced features
+    private String parentEvent; // Parent event for inheritance
+    private boolean isAbstract = false; // Abstract events cannot be directly triggered
+    private Map<String, Object> metadata = new HashMap<>(); // Custom metadata
+    private List<String> aliases = new ArrayList<>(); // Event name aliases
+    
     public CustomEvent(String name, String author) {
         this.id = UUID.randomUUID();
         this.name = name;
@@ -149,6 +155,10 @@ public class CustomEvent {
         copy.setGlobal(this.isGlobal);
         copy.setOneTime(this.isOneTime);
         copy.setPriority(this.priority);
+        copy.setParentEvent(this.parentEvent);
+        copy.setAbstract(this.isAbstract);
+        copy.getMetadata().putAll(this.metadata);
+        copy.getAliases().addAll(this.aliases);
         
         // Copy data fields
         for (EventDataField field : this.dataFields.values()) {
@@ -162,6 +172,100 @@ public class CustomEvent {
         copy.tags.addAll(this.tags);
         
         return copy;
+    }
+    
+    /**
+     * Inherits from a parent event, copying its fields and properties
+     */
+    public CustomEvent inheritFrom(CustomEvent parent) {
+        this.parentEvent = parent.getName();
+        
+        // Copy parent's data fields
+        for (EventDataField field : parent.getDataFields().values()) {
+            // Only add if not already defined (allow overriding)
+            if (!this.dataFields.containsKey(field.getName())) {
+                EventDataField copiedField = new EventDataField(
+                    field.getName(), 
+                    field.getExpectedType(), 
+                    field.isRequired(), 
+                    field.getDescription()
+                );
+                if (field.getDefaultValue() != null) {
+                    copiedField.setDefaultValue(field.getDefaultValue());
+                }
+                this.dataFields.put(field.getName(), copiedField);
+            }
+        }
+        
+        // Copy parent's tags
+        this.tags.addAll(parent.getTags());
+        
+        // Copy parent's metadata if not already present
+        for (Map.Entry<String, Object> entry : parent.getMetadata().entrySet()) {
+            if (!this.metadata.containsKey(entry.getKey())) {
+                this.metadata.put(entry.getKey(), entry.getValue());
+            }
+        }
+        
+        return this;
+    }
+    
+    /**
+     * Adds an alias for this event
+     */
+    public CustomEvent addAlias(String alias) {
+        this.aliases.add(alias);
+        return this;
+    }
+    
+    /**
+     * Sets a metadata value
+     */
+    public CustomEvent setMetadata(String key, Object value) {
+        this.metadata.put(key, value);
+        return this;
+    }
+    
+    /**
+     * Gets a metadata value
+     */
+    @SuppressWarnings("unchecked")
+    public <T> T getMetadata(String key, Class<T> type) {
+        Object value = this.metadata.get(key);
+        if (value != null && type.isInstance(value)) {
+            return (T) value;
+        }
+        return null;
+    }
+    
+    /**
+     * Checks if this event is compatible with another event (inheritance check)
+     */
+    public boolean isCompatibleWith(String eventName) {
+        if (this.name.equals(eventName)) return true;
+        if (this.aliases.contains(eventName)) return true;
+        if (this.parentEvent != null && this.parentEvent.equals(eventName)) return true;
+        return false;
+    }
+    
+    /**
+     * Gets the full inheritance chain
+     */
+    public List<String> getInheritanceChain(CustomEventManager eventManager) {
+        List<String> chain = new ArrayList<>();
+        CustomEvent current = this;
+        
+        while (current != null) {
+            chain.add(current.getName());
+            if (current.getParentEvent() != null) {
+                CustomEvent parent = eventManager.getEvents().get(current.getParentEvent());
+                current = parent;
+            } else {
+                current = null;
+            }
+        }
+        
+        return chain;
     }
     
     /**
