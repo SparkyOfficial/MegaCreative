@@ -2,6 +2,7 @@ package com.megacreative.coding.values;
 
 import com.megacreative.coding.values.types.*;
 import org.bukkit.configuration.serialization.ConfigurationSerializable;
+import java.util.HashMap;
 import java.util.Map;
 
 /**
@@ -77,6 +78,7 @@ public interface DataValue extends ConfigurationSerializable, Cloneable {
             case NUMBER: return new NumberValue((Number) value);
             case BOOLEAN: return new BooleanValue((Boolean) value);
             case LIST: return new ListValue((java.util.List<?>) value);
+            case DICTIONARY: return new MapValue((java.util.Map<String, DataValue>) value);
             case LOCATION: return new LocationValue((org.bukkit.Location) value);
             case ITEM: return new ItemValue((org.bukkit.inventory.ItemStack) value);
             case PLAYER: return new PlayerValue((org.bukkit.entity.Player) value);
@@ -97,6 +99,16 @@ public interface DataValue extends ConfigurationSerializable, Cloneable {
         if (object instanceof org.bukkit.inventory.ItemStack) return new ItemValue((org.bukkit.inventory.ItemStack) object);
         if (object instanceof org.bukkit.entity.Player) return new PlayerValue((org.bukkit.entity.Player) object);
         if (object instanceof java.util.List) return new ListValue((java.util.List<?>) object);
+        if (object instanceof java.util.Map) {
+            Map<?, ?> map = (Map<?, ?>) object;
+            Map<String, DataValue> convertedMap = new HashMap<>();
+            for (Map.Entry<?, ?> entry : map.entrySet()) {
+                String key = entry.getKey().toString();
+                DataValue value = fromObject(entry.getValue());
+                convertedMap.put(key, value);
+            }
+            return new MapValue(convertedMap);
+        }
         
         return new AnyValue(object);
     }
