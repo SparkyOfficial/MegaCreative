@@ -1,7 +1,6 @@
 package com.megacreative.coding;
 
 import com.megacreative.MegaCreative;
-import com.megacreative.gui.DataGUI;
 import org.bukkit.Material;
 import org.bukkit.block.Block;
 import org.bukkit.block.BlockFace;
@@ -51,30 +50,24 @@ public class BlockPlacementHandler implements Listener {
     /**
      * Обрабатывает размещение блоков кодирования
      */
-    @EventHandler(priority = EventPriority.NORMAL)
+    @EventHandler(priority = EventPriority.HIGH) // Run before AutoConnectionManager (MONITOR)
     public void onBlockPlace(BlockPlaceEvent event) {
         Player player = event.getPlayer();
         Block block = event.getBlockPlaced();
         Material mat = block.getType();
         
-        // Debug message - можно удалить позже
-        player.sendMessage("§a[DEBUG] BlockPlacementHandler: Попытка размещения блока " + mat.name());
-        
         // Проверяем, является ли блок кодовым блоком через BlockConfigService
         var blockConfigService = plugin.getServiceRegistry().getBlockConfigService();
         if (!blockConfigService.isCodeBlock(mat)) {
-            player.sendMessage("§a[DEBUG] BlockPlacementHandler: Блок " + mat.name() + " не является кодовым блоком");
             return;
         }
         
         if (!isInDevWorld(player)) {
-            player.sendMessage("§a[DEBUG] BlockPlacementHandler: Игрок не в dev мире");
             return;
         }
         
         // Проверяем права доверенного игрока
         if (!plugin.getTrustedPlayerManager().canCodeInDevWorld(player)) {
-            player.sendMessage("§a[DEBUG] BlockPlacementHandler: У игрока нет прав на кодирование");
             event.setCancelled(true);
             return;
         }
@@ -93,18 +86,6 @@ public class BlockPlacementHandler implements Listener {
         
         player.sendMessage("§a✓ Блок кода размещен: " + blockName);
         player.sendMessage("§7Кликните правой кнопкой для настройки");
-    }
-
-    /**
-     * Проверяет, находится ли игрок в мире разработки
-     */
-    public boolean isInDevWorld(Player player) {
-        String worldName = player.getWorld().getName();
-        // Проверяем разные варианты названий миров разработки
-        return worldName.contains("dev") || worldName.contains("Dev") || 
-               worldName.contains("разработка") || worldName.contains("Разработка") ||
-               worldName.contains("creative") || worldName.contains("Creative") ||
-               worldName.endsWith("_dev"); // Добавляем проверку на стандартное окончание
     }
 
     /**
@@ -133,12 +114,9 @@ public class BlockPlacementHandler implements Listener {
         
         // Проверяем железный слиток для создания данных
         if (itemInHand.getType() == Material.IRON_INGOT && itemInHand.hasItemMeta() &&
-            itemInHand.getItemMeta().hasDisplayName() && 
             itemInHand.getItemMeta().getDisplayName().contains(CodingItems.DATA_CREATOR_NAME)) {
             event.setCancelled(true);
-            // Открываем GUI создания данных
-            openDataCreationGUI(player);
-            player.sendMessage("§aОткрытие меню создания данных..."); // Debug message
+            // Убираем ссылку на несуществующий DataGUI
             return;
         }
         
@@ -165,11 +143,14 @@ public class BlockPlacementHandler implements Listener {
     }
 
     /**
-     * Открывает GUI создания данных
+     * Проверяет, находится ли игрок в мире разработки
      */
-    private void openDataCreationGUI(Player player) {
-        DataGUI dataGUI = new DataGUI(plugin, player);
-        dataGUI.open();
+    private boolean isInDevWorld(Player player) {
+        String worldName = player.getWorld().getName();
+        // Проверяем разные варианты названий миров разработки
+        return worldName.contains("dev") || worldName.contains("Dev") || 
+               worldName.contains("разработка") || worldName.contains("Разработка") ||
+               worldName.contains("creative") || worldName.contains("Creative");
     }
 
     /**
