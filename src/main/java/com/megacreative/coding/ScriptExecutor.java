@@ -84,6 +84,9 @@ public class ScriptExecutor {
         actionRegistry.put("broadcast", new BroadcastAction());
         actionRegistry.put("spawnMob", new SpawnMobAction());
         
+        // Новое действие для обработки входа игрока
+        actionRegistry.put("playerEntry", new PlayerEntryAction());
+        
         // Математические операции
         actionRegistry.put("addVar", new AddVarAction());
         actionRegistry.put("subVar", new SubVarAction());
@@ -200,43 +203,24 @@ public class ScriptExecutor {
                 plugin.getScriptDebugger().onScriptStart(player, script);
             }
             
-            CodeBlock root = script.getRootBlock();
-            if (root.getMaterial() == Material.DIAMOND_BLOCK && root.getAction().equals(triggerAction)) {
-                CodeBlock nextBlock = root.getNextBlock();
-                if (nextBlock != null) {
-                    // Находим локацию первого блока ОДИН РАЗ при запуске скрипта
-                    Location firstBlockLocation = findBlockLocation(nextBlock);
-                    // Создаем контекст с локацией первого блока
-                    ExecutionContext startContext = context.withCurrentBlock(nextBlock, firstBlockLocation);
-                    // Запускаем выполнение с уже известной локацией
-                    processBlock(nextBlock, startContext, 0); // Start with recursion depth 0
-                }
+            // Execute the script starting from the root block
+            if (script.getRootBlock() != null) {
+                processBlock(script.getRootBlock(), context, 0);
             }
             
             if (player != null && plugin.getScriptDebugger().isDebugEnabled(player)) {
                 plugin.getScriptDebugger().onScriptEnd(player, script);
             }
-            
-        } catch (ScriptExecutionException e) {
-            // Handle script execution errors (timeouts, limits exceeded, etc.)
-            if (player != null) {
-                player.sendMessage("§c[MegaCreative] Script execution stopped: " + e.getMessage());
-            }
-            
-            if (scriptTracker != null) {
-                scriptTracker.markError(e.getMessage());
-            }
-            
         } finally {
-            // Clean up tracking data
-            if (playerId != null) {
-                scriptStartTimes.remove(playerId);
-                playerExecutionCounts.remove(playerId);
-            }
-            
-            // Close performance tracker
+            // Clean up performance tracking
             if (scriptTracker != null) {
                 scriptTracker.close();
+            }
+            
+            if (playerId != null) {
+                // Reset execution count after script completion
+                playerExecutionCounts.remove(playerId);
+                scriptStartTimes.remove(playerId);
             }
         }
     }
