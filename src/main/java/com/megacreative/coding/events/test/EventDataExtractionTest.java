@@ -66,7 +66,7 @@ public class EventDataExtractionTest {
         log.info("=== Event Data Extractor Registry Info ===");
         log.info("Total extractors registered: " + registry.getExtractorCount());
         
-        for (Class<?> eventType : registry.getRegisteredEventTypes()) {
+        for (Class<? extends org.bukkit.event.Event> eventType : registry.getRegisteredEventTypes()) {
             log.info("Event: " + eventType.getSimpleName());
             
             var variables = registry.getProvidedVariables(eventType);
