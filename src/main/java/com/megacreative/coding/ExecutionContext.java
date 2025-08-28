@@ -210,6 +210,20 @@ public class ExecutionContext {
         return creativeWorld != null ? creativeWorld.getId() : "unknown_world";
     }
     
+    /**
+     * Checks if debug mode is enabled for this execution context
+     * Debug mode provides additional logging and feedback during script execution
+     */
+    public boolean isDebugMode() {
+        // Check if player has debug permissions
+        if (player != null && player.hasPermission("megacreative.debug")) {
+            return true;
+        }
+        
+        // Default to false for safety
+        return false;
+    }
+    
     // Builder pattern
     public static Builder builder() {
         return new Builder();

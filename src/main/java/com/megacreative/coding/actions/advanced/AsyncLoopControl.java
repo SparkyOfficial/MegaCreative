@@ -220,8 +220,11 @@ public class AsyncLoopControl implements BlockAction {
                 try {
                     // Create a new execution context for each iteration
                     ExecutionContext childContext = new ExecutionContext(
+                        context.getPlugin(),
                         context.getPlayer(), 
-                        context.getPlugin(), 
+                        context.getCreativeWorld(),
+                        context.getEvent(),
+                        context.getBlockLocation(),
                         childBlock
                     );
                     
