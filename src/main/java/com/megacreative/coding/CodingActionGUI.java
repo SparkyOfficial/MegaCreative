@@ -1,12 +1,13 @@
 package com.megacreative.coding;
 
-import com.megacreative.listeners.GuiListener;
+import com.megacreative.managers.GUIManager;
 import org.bukkit.Bukkit;
 import org.bukkit.Material;
 import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.Listener;
 import org.bukkit.event.inventory.InventoryClickEvent;
+import org.bukkit.event.inventory.InventoryCloseEvent;
 import org.bukkit.inventory.Inventory;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.inventory.meta.ItemMeta;
@@ -16,25 +17,25 @@ import java.util.List;
 import java.util.function.Consumer;
 import java.util.Arrays;
 
-public class CodingActionGUI implements Listener {
+public class CodingActionGUI implements GUIManager.ManagedGUIInterface {
     private final Player player;
     private final Material material;
     private final Location blockLocation;
     private final Consumer<String> onSelect;
     private final List<String> actions;
     private final Inventory inventory;
+    private final GUIManager guiManager;
     private int currentPage = 0;
     private static final int ITEMS_PER_PAGE = 7; // 7 слотов для действий, 2 для навигации
 
-    public CodingActionGUI(Player player, Material material, Location blockLocation, List<String> actions, Consumer<String> onSelect) {
+    public CodingActionGUI(Player player, Material material, Location blockLocation, List<String> actions, Consumer<String> onSelect, GUIManager guiManager) {
         this.player = player;
         this.material = material;
         this.blockLocation = blockLocation;
         this.actions = actions;
         this.onSelect = onSelect;
+        this.guiManager = guiManager;
         this.inventory = Bukkit.createInventory(null, 9, "§bВыберите действие");
-        // Регистрируем GUI в централизованной системе
-        GuiListener.registerOpenGui(player, this);
         setupInventory();
     }
 
@@ -166,10 +167,17 @@ public class CodingActionGUI implements Listener {
     }
 
     public void open() {
+        // Register with GUIManager and open inventory
+        guiManager.registerGUI(player, this, inventory);
         player.openInventory(inventory);
     }
-
-    @EventHandler
+    
+    @Override
+    public String getGUITitle() {
+        return "Action Selection GUI for " + material.name();
+    }
+    
+    @Override
     public void onInventoryClick(InventoryClickEvent event) {
         if (!event.getWhoClicked().equals(player)) return;
         if (!event.getInventory().equals(inventory)) return;
@@ -195,8 +203,19 @@ public class CodingActionGUI implements Listener {
         if (actions.contains(action)) {
             onSelect.accept(action);
             player.closeInventory();
-            // Удаляем регистрацию GUI
-            GuiListener.unregisterOpenGui(player);
+            // GUIManager automatically unregisters on close
         }
+    }
+    
+    @Override
+    public void onInventoryClose(InventoryCloseEvent event) {
+        // Optional cleanup when GUI is closed
+        // GUIManager handles automatic unregistration
+    }
+    
+    @Override
+    public void onCleanup() {
+        // Called when GUI is being cleaned up by GUIManager
+        // No special cleanup needed for this GUI
     }
 }

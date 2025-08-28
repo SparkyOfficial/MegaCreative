@@ -100,7 +100,8 @@ public class BlockConfigManager implements Listener {
                 
                 // Now open parameter configuration
                 showParameterConfigGUI(player, codeBlock, blockLocation);
-            }
+            },
+            plugin.getServiceRegistry().getGuiManager()
         );
         actionGUI.open();
     }

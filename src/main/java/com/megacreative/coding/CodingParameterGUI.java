@@ -1,7 +1,7 @@
 package com.megacreative.coding;
 
 import com.megacreative.gui.AnvilInputGUI;
-import com.megacreative.listeners.GuiListener;
+import com.megacreative.managers.GUIManager;
 import org.bukkit.Bukkit;
 import org.bukkit.Material;
 import org.bukkit.entity.Player;
@@ -20,24 +20,24 @@ import java.util.Map;
 import java.util.function.Consumer;
 import java.util.Arrays;
 
-public class CodingParameterGUI implements Listener {
+public class CodingParameterGUI implements GUIManager.ManagedGUIInterface {
     private final Player player;
     private final String action;
     private final Location blockLocation;
     private final Consumer<Map<String, Object>> onComplete;
     private final Inventory inventory;
+    private final GUIManager guiManager;
     private final Map<String, Object> parameters = new HashMap<>();
     private int currentPage = 0;
     private static final int ITEMS_PER_PAGE = 7;
 
-    public CodingParameterGUI(Player player, String action, Location blockLocation, Consumer<Map<String, Object>> onComplete) {
+    public CodingParameterGUI(Player player, String action, Location blockLocation, Consumer<Map<String, Object>> onComplete, GUIManager guiManager) {
         this.player = player;
         this.action = action;
         this.blockLocation = blockLocation;
         this.onComplete = onComplete;
+        this.guiManager = guiManager;
         this.inventory = Bukkit.createInventory(null, 9, "§bНастройка: " + action);
-        // Регистрируем GUI в централизованной системе
-        GuiListener.registerOpenGui(player, this);
         setupInventory();
     }
 
@@ -266,7 +266,14 @@ public class CodingParameterGUI implements Listener {
     }
 
     public void open() {
+        // Register with GUIManager and open inventory
+        guiManager.registerGUI(player, this, inventory);
         player.openInventory(inventory);
+    }
+    
+    @Override
+    public String getGUITitle() {
+        return "Parameter Config GUI for " + action;
     }
     
     /**
@@ -276,7 +283,7 @@ public class CodingParameterGUI implements Listener {
         setupInventory(); // Просто перестраиваем иконки с обновленными параметрами
     }
 
-    @EventHandler
+    @Override
     public void onInventoryClick(InventoryClickEvent event) {
         if (!event.getWhoClicked().equals(player)) return;
         if (!event.getInventory().equals(inventory)) return;
@@ -301,8 +308,7 @@ public class CodingParameterGUI implements Listener {
         if (displayName.contains("Готово")) {
             onComplete.accept(parameters);
             player.closeInventory();
-            // Удаляем регистрацию GUI
-            GuiListener.unregisterOpenGui(player);
+            // GUIManager automatically unregisters on close
             return;
         }
         
@@ -342,6 +348,18 @@ public class CodingParameterGUI implements Listener {
                 com.megacreative.MegaCreative.getInstance().getLogger().warning("Ошибка в CodingParameterGUI при выборе параметра: " + e.getMessage());
             }
         }
+    }
+    
+    @Override
+    public void onInventoryClose(InventoryCloseEvent event) {
+        // Optional cleanup when GUI is closed
+        // GUIManager handles automatic unregistration
+    }
+    
+    @Override
+    public void onCleanup() {
+        // Called when GUI is being cleaned up by GUIManager
+        // No special cleanup needed for this GUI
     }
 
     // Вспомогательный класс для описания параметра
