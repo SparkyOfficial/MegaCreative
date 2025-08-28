@@ -32,13 +32,13 @@ public class IfVarEqualsCondition implements BlockCondition {
             String varName = varNameValue.asString();
             if (varName == null || varName.isEmpty()) return false;
 
-            // Получаем значение переменной
-            Object variableValue = context.getVariable(varName);
+            // Получаем значение переменной через VariableManager для типобезопасности
+            DataValue variableValue = variableManager.getVariable(varName, context.getScriptId(), context.getWorldId());
             
-            if (variableValue == null) return false;
+            if (variableValue == null || variableValue.isEmpty()) return false;
 
-            // Сравниваем значения
-            return variableValue.toString().equals(expectedValue.asString());
+            // Сравниваем значения через DataValue систему
+            return variableValue.asString().equals(expectedValue.asString());
 
         } catch (Exception e) {
             player.sendMessage("§cОшибка проверки ifVarEquals: " + e.getMessage());

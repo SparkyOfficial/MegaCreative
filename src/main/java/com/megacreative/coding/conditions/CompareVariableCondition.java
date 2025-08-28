@@ -37,20 +37,20 @@ public class CompareVariableCondition implements BlockCondition {
 
             if (var1Str == null || operatorStr == null || var2Str == null) return false;
 
-            // Получаем значения переменных
-            Object value1 = context.getVariable(var1Str);
-            Object value2 = context.getVariable(var2Str);
+            // Получаем значения переменных через VariableManager для типобезопасности
+            DataValue value1Obj = variableManager.getVariable(var1Str, context.getScriptId(), context.getWorldId());
+            DataValue value2Obj = variableManager.getVariable(var2Str, context.getScriptId(), context.getWorldId());
 
-            if (value1 == null || value2 == null) return false;
+            if (value1Obj == null || value1Obj.isEmpty() || value2Obj == null || value2Obj.isEmpty()) return false;
 
             // Пытаемся сравнить как числа
             try {
-                double num1 = Double.parseDouble(value1.toString());
-                double num2 = Double.parseDouble(value2.toString());
+                double num1 = value1Obj.asNumber().doubleValue();
+                double num2 = value2Obj.asNumber().doubleValue();
                 return compareNumbers(num1, operatorStr, num2);
             } catch (NumberFormatException e) {
                 // Если не числа, сравниваем как строки
-                return compareStrings(value1.toString(), operatorStr, value2.toString());
+                return compareStrings(value1Obj.asString(), operatorStr, value2Obj.asString());
             }
 
         } catch (Exception e) {

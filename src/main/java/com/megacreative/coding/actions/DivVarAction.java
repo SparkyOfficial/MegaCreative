@@ -33,13 +33,13 @@ public class DivVarAction implements BlockAction {
         if (varName == null || valueStr == null) return;
 
         try {
-            // Получаем текущее значение переменной
-            Object currentValue = context.getVariable(varName);
+            // Получаем текущее значение переменной через VariableManager для типобезопасности
+            DataValue currentValueObj = variableManager.getVariable(varName, context.getScriptId(), context.getWorldId());
             double currentNum = 0.0;
             
-            if (currentValue != null) {
+            if (currentValueObj != null && !currentValueObj.isEmpty()) {
                 try {
-                    currentNum = Double.parseDouble(currentValue.toString());
+                    currentNum = currentValueObj.asNumber().doubleValue();
                 } catch (NumberFormatException e) {
                     // Если не число, начинаем с 0
                 }
@@ -54,7 +54,9 @@ public class DivVarAction implements BlockAction {
             }
             
             double result = currentNum / divValue;
-            context.setVariable(varName, result);
+            
+            // Сохраняем результат через VariableManager
+            variableManager.setVariable(varName, DataValue.fromObject(result), context.getScriptId(), context.getWorldId());
             player.sendMessage("§a✓ Переменная '" + varName + "' разделена на " + divValue + " = " + result);
             
         } catch (NumberFormatException e) {

@@ -32,19 +32,19 @@ public class IfVarGreaterCondition implements BlockCondition {
             String varName = varNameValue.asString();
             if (varName == null || varName.isEmpty()) return false;
 
-            // Получаем значение переменной
-            Object variableValue = context.getVariable(varName);
+            // Получаем значение переменной через VariableManager для типобезопасности
+            DataValue variableValueObj = variableManager.getVariable(varName, context.getScriptId(), context.getWorldId());
             
-            if (variableValue == null) return false;
+            if (variableValueObj == null || variableValueObj.isEmpty()) return false;
 
             // Пытаемся сравнить как числа
             try {
-                double varNum = Double.parseDouble(variableValue.toString());
-                double compareNum = Double.parseDouble(compareValue.asString());
+                double varNum = variableValueObj.asNumber().doubleValue();
+                double compareNum = compareValue.asNumber().doubleValue();
                 return varNum > compareNum;
             } catch (NumberFormatException e) {
                 // Если не числа, сравниваем как строки
-                return variableValue.toString().compareTo(compareValue.asString()) > 0;
+                return variableValueObj.asString().compareTo(compareValue.asString()) > 0;
             }
 
         } catch (Exception e) {

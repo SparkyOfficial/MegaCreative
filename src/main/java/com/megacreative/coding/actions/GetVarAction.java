@@ -30,8 +30,9 @@ public class GetVarAction implements BlockAction {
 
         if (varName == null) return;
 
-        Object value = context.getVariable(varName);
-        String displayValue = value != null ? value.toString() : "не установлена";
+        // Получаем значение переменной через VariableManager для типобезопасности
+        DataValue valueObj = variableManager.getVariable(varName, context.getScriptId(), context.getWorldId());
+        String displayValue = valueObj != null && !valueObj.isEmpty() ? valueObj.asString() : "не установлена";
         
         player.sendMessage("§a📖 Переменная '" + varName + "' = " + displayValue);
     }
