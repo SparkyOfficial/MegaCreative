@@ -21,14 +21,15 @@ import org.bukkit.plugin.Plugin;
 
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.logging.Level;
+import java.util.logging.Logger;
 
 /**
  * Central service registry that manages all plugin services and dependencies
  * Replaces the God Object pattern with proper dependency injection
  */
-@Log
 public class ServiceRegistry {
     
+    private static final Logger log = Logger.getLogger(ServiceRegistry.class.getName());
     private final Plugin plugin;
     private final DependencyContainer dependencyContainer;
     private final ConcurrentHashMap<Class<?>, Object> services = new ConcurrentHashMap<>();

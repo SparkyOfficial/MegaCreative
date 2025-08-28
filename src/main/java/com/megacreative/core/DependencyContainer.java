@@ -6,13 +6,14 @@ import java.lang.reflect.Constructor;
 import java.lang.reflect.Parameter;
 import java.util.*;
 import java.util.logging.Level;
+import java.util.logging.Logger;
 
 /**
  * Advanced Dependency Injection Container with automatic resolution
  */
-@Log
 public class DependencyContainer {
     
+    private static final Logger log = Logger.getLogger(DependencyContainer.class.getName());
     private final Map<Class<?>, Object> singletons = new HashMap<>();
     private final Map<Class<?>, Class<?>> implementations = new HashMap<>();
     private final Set<Class<?>> creating = new HashSet<>();
