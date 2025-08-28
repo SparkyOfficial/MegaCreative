@@ -198,7 +198,7 @@ public class DevWorldProtectionListener implements Listener {
     /**
      * Проверяет, является ли материал блоком кода
      */
-    private boolean isCodeBlock(Material material) {
+    public boolean isCodeBlock(Material material) {
         // Используем BlockConfigService для проверки
         return plugin.getServiceRegistry().getBlockConfigService().isCodeBlock(material);
     }

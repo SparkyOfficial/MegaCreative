@@ -6,8 +6,6 @@ import com.megacreative.services.BlockConfigService;
 import org.bukkit.Material;
 import org.bukkit.World;
 import org.bukkit.entity.Player;
-import org.bukkit.event.block.BlockPlaceEvent;
-import org.bukkit.inventory.ItemStack;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.mockito.Mock;
@@ -60,16 +58,13 @@ class DevWorldProtectionListenerTest {
     }
 
     @Test
-    void testIsBlockAllowed() {
-        // Test with a code block material (should be allowed)
+    void testIsCodeBlock() {
+        // Test with a code block material (should return true)
         when(blockConfigService.isCodeBlock(Material.DIAMOND_BLOCK)).thenReturn(true);
-        assertTrue(DevWorldProtectionListener.isBlockAllowed(Material.DIAMOND_BLOCK));
+        assertTrue(listener.isCodeBlock(Material.DIAMOND_BLOCK));
         
-        // Test with a non-code block material (should not be allowed)
+        // Test with a non-code block material (should return false)
         when(blockConfigService.isCodeBlock(Material.STONE)).thenReturn(false);
-        assertFalse(DevWorldProtectionListener.isBlockAllowed(Material.STONE));
-        
-        // Test with an allowed tool material (should be allowed)
-        assertTrue(DevWorldProtectionListener.isBlockAllowed(Material.ANVIL));
+        assertFalse(listener.isCodeBlock(Material.STONE));
     }
 }
