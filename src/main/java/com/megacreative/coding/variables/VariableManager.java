@@ -106,7 +106,7 @@ public class VariableManager {
     
     public void setPersistentVariable(String name, DataValue value) {
         persistentVariables.put(name, value);
-        updateMetadata(name, VariableScope.PERSISTENT, value.getType());
+        updateMetadata(name, VariableScope.SERVER, value.getType());
         
         // Save to file immediately for persistence
         savePersistentVariable(name, value);

@@ -233,11 +233,13 @@ public class MegaCreative extends JavaPlugin {
     
     @Deprecated
     public java.util.Map<java.util.UUID, String> getDeleteConfirmations() {
-        return serviceRegistry.getGuiManager().getDeleteConfirmations();
+        // Method no longer exists in new GUIManager architecture
+        return new java.util.HashMap<>();
     }
     
     @Deprecated
     public java.util.Map<java.util.UUID, String> getCommentInputs() {
-        return serviceRegistry.getGuiManager().getCommentInputs();
+        // Method no longer exists in new GUIManager architecture
+        return new java.util.HashMap<>();
     }
 }

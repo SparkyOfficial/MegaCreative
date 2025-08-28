@@ -51,7 +51,7 @@ public class ServiceRegistry {
     
     // Coding system services
     private BlockPlacementHandler blockPlacementHandler;
-    private ScriptDebugger scriptDebugger;
+    private VisualDebugger scriptDebugger;
     private AutoConnectionManager autoConnectionManager;
     private DevInventoryManager devInventoryManager;
     private VariableManager variableManager;
@@ -165,7 +165,7 @@ public class ServiceRegistry {
     public GUIManager getGuiManager() { return guiManager; }
     public BlockConfigManager getBlockConfigManager() { return blockConfigManager; }
     public BlockPlacementHandler getBlockPlacementHandler() { return blockPlacementHandler; }
-    public ScriptDebugger getScriptDebugger() { return scriptDebugger; }
+    public VisualDebugger getScriptDebugger() { return scriptDebugger; }
     public AutoConnectionManager getAutoConnectionManager() { return autoConnectionManager; }
     public DevInventoryManager getDevInventoryManager() { return devInventoryManager; }
     public VariableManager getVariableManager() { return variableManager; }
@@ -204,7 +204,7 @@ public class ServiceRegistry {
         
         codingManager = dependencyContainer.resolve(ICodingManager.class);
         if (codingManager == null) {
-            codingManager = new CodingManagerImpl(configManager);
+            codingManager = new com.megacreative.coding.CodingManagerImpl(plugin);
             registerService(ICodingManager.class, codingManager);
         }
         
@@ -216,7 +216,7 @@ public class ServiceRegistry {
     
     private void initializeImplementationManagers() {
         // Services that depend on the interface managers
-        dataManager = new DataManager(worldManager, playerManager);
+        dataManager = new DataManager(plugin);
         registerService(DataManager.class, dataManager);
         
         templateManager = new TemplateManager(dataManager);
@@ -238,11 +238,11 @@ public class ServiceRegistry {
         registerService(BlockConfigService.class, blockConfigService);
         
         // Coding system components
-        blockPlacementHandler = new BlockPlacementHandler(codingManager, blockConfigService);
+        blockPlacementHandler = new BlockPlacementHandler(plugin);
         registerService(BlockPlacementHandler.class, blockPlacementHandler);
         
-        scriptDebugger = new ScriptDebugger(codingManager);
-        registerService(ScriptDebugger.class, scriptDebugger);
+        scriptDebugger = new VisualDebugger(plugin);
+        registerService(VisualDebugger.class, scriptDebugger);
         
         autoConnectionManager = new AutoConnectionManager(plugin, blockConfigService);
         registerService(AutoConnectionManager.class, autoConnectionManager);
@@ -256,7 +256,7 @@ public class ServiceRegistry {
         containerManager = new BlockContainerManager(codingManager);
         registerService(BlockContainerManager.class, containerManager);
         
-        executorEngine = new ExecutorEngine(codingManager, variableManager);
+        executorEngine = new ExecutorEngine(plugin);
         registerService(ExecutorEngine.class, executorEngine);
         
         blockConfiguration = new BlockConfiguration(configManager);
