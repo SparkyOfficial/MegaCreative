@@ -239,6 +239,10 @@ public class AdvancedVisualDebugger {
         public void update() {
             this.lastUpdate = System.currentTimeMillis();
         }
+        
+        public VisualizationMode getMode() {
+            return mode;
+        }
     }
     
     /**

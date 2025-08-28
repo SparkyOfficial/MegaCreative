@@ -1,6 +1,7 @@
 package com.megacreative.managers;
 
 import com.megacreative.interfaces.IPlayerManager;
+import com.megacreative.managers.DataManager;
 import lombok.extern.java.Log;
 import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
