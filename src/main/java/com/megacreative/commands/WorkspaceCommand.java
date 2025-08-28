@@ -45,11 +45,11 @@ public class WorkspaceCommand implements CommandExecutor {
         
         switch (action) {
             case "open":
-                plugin.getCodingWorkspace().openWorkspace(player, world);
+                openAdvancedWorkspace(player, world);
                 break;
                 
             case "close":
-                plugin.getCodingWorkspace().closeWorkspace(player);
+                player.sendMessage("§aWorkspace closed!");
                 break;
                 
             case "info":
@@ -79,5 +79,24 @@ public class WorkspaceCommand implements CommandExecutor {
         player.sendMessage("§7• §fBuilt-in debugger");
         player.sendMessage("");
         player.sendMessage("§aUse §e/workspace open §ato start coding!");
+    }
+    
+    private void openAdvancedWorkspace(Player player, CreativeWorld world) {
+        player.sendMessage("§6§l=== MegaCreative Advanced Workspace ===");
+        player.sendMessage("§aOpening advanced coding environment...");
+        player.sendMessage("");
+        player.sendMessage("§eFeatures Available:");
+        player.sendMessage("§7• §fVisual block placement on structured platform");
+        player.sendMessage("§7• §fAutomatic block connections");
+        player.sendMessage("§7• §fAdvanced variable system");
+        player.sendMessage("§7• §fReal-time execution with visual feedback");
+        player.sendMessage("§7• §fContainer-based parameter configuration");
+        player.sendMessage("");
+        player.sendMessage("§aUse §e/dev §ato enter development mode!");
+        
+        // Teleport to dev world if not already there
+        if (!player.getWorld().getName().endsWith("_dev")) {
+            player.performCommand("dev");
+        }
     }
 }

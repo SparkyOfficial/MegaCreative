@@ -198,7 +198,7 @@ public class ExecutorEngine {
         player.getInventory().addItem(item);
         
         // Visual effect
-        player.spawnParticle(Particle.HAPPY_VILLAGER, player.getLocation().add(0, 2, 0), 5);
+        player.spawnParticle(Particle.VILLAGER_HAPPY, player.getLocation().add(0, 2, 0), 5);
         player.playSound(player.getLocation(), Sound.ENTITY_ITEM_PICKUP, 1.0f, 1.2f);
         
         return ExecutionResult.success("Item given: " + item.getType().name());
@@ -285,7 +285,7 @@ public class ExecutorEngine {
         
         if (result.isSuccess()) {
             // Success effects
-            player.spawnParticle(Particle.HAPPY_VILLAGER, player.getLocation().add(0, 2, 0), 15);
+            player.spawnParticle(Particle.VILLAGER_HAPPY, player.getLocation().add(0, 2, 0), 15);
             player.playSound(player.getLocation(), Sound.ENTITY_PLAYER_LEVELUP, 0.5f, 1.2f);
             player.sendActionBar("§a§lScript Completed Successfully!");
         } else {
@@ -381,7 +381,7 @@ public class ExecutorEngine {
                             location.add(0.5, 1, 0.5), 2);
                     break;
                 case COMPLETED:
-                    location.getWorld().spawnParticle(Particle.HAPPY_VILLAGER, 
+                    location.getWorld().spawnParticle(Particle.VILLAGER_HAPPY, 
                             location.add(0.5, 1, 0.5), 1);
                     break;
                 case ERROR:
