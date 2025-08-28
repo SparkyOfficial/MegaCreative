@@ -8,6 +8,10 @@ import com.megacreative.config.ConfigurationValidator;
 import com.megacreative.exceptions.ConfigurationException;
 import org.bukkit.plugin.java.JavaPlugin;
 
+import java.util.Map;
+import java.util.HashMap;
+import java.util.UUID;
+
 /**
  * Main plugin class - now lightweight and focused on plugin lifecycle
  * Uses ServiceRegistry to avoid God Object pattern
