@@ -141,6 +141,7 @@ public class MegaCreative extends JavaPlugin {
         getServer().getPluginManager().registerEvents(serviceRegistry.getDevInventoryManager(), this);
         getServer().getPluginManager().registerEvents(serviceRegistry.getGuiManager(), this);
         getServer().getPluginManager().registerEvents(serviceRegistry.getCustomEventManager(), this);
+        getServer().getPluginManager().registerEvents(new BlockGroupListener(serviceRegistry), this);
     }
     
     // Static access and service delegation
