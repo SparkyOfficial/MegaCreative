@@ -1,5 +1,6 @@
 package com.megacreative.coding.values;
 
+import com.megacreative.coding.values.types.*;
 import org.bukkit.configuration.serialization.ConfigurationSerializable;
 import java.util.Map;
 

@@ -165,7 +165,6 @@ public class MegaCreative extends JavaPlugin {
         getCommand("templates").setExecutor(new TemplatesCommand(this));
         getCommand("scripts").setExecutor(new ScriptsCommand(this));
         getCommand("worldsettings").setExecutor(new WorldSettingsCommand(this));
-        getCommand("testscript").setExecutor(new TestScriptCommand(this));
         getCommand("debug").setExecutor(new DebugCommand(this));
         getCommand("createscript").setExecutor(new CreateScriptCommand(this));
         getCommand("stoprepeat").setExecutor(new StopRepeatCommand(this));

@@ -4,7 +4,6 @@ import lombok.Data;
 import lombok.NoArgsConstructor;
 
 @Data
-@NoArgsConstructor
 public class WorldFlags {
     private boolean mobSpawning = true;
     private boolean pvp = false;
@@ -13,6 +12,10 @@ public class WorldFlags {
     private boolean mobGriefing = false;
     private boolean weatherCycle = true;
     private boolean dayNightCycle = true;
+    
+    public WorldFlags() {
+        this(true, false, false);
+    }
     
 
     
@@ -49,5 +52,34 @@ public class WorldFlags {
     
     public boolean isDayNightCycle() {
         return dayNightCycle;
+    }
+    
+    // Setter methods
+    public void setMobSpawning(boolean mobSpawning) {
+        this.mobSpawning = mobSpawning;
+    }
+    
+    public void setPvp(boolean pvp) {
+        this.pvp = pvp;
+    }
+    
+    public void setExplosions(boolean explosions) {
+        this.explosions = explosions;
+    }
+    
+    public void setFireSpread(boolean fireSpread) {
+        this.fireSpread = fireSpread;
+    }
+    
+    public void setMobGriefing(boolean mobGriefing) {
+        this.mobGriefing = mobGriefing;
+    }
+    
+    public void setWeatherCycle(boolean weatherCycle) {
+        this.weatherCycle = weatherCycle;
+    }
+    
+    public void setDayNightCycle(boolean dayNightCycle) {
+        this.dayNightCycle = dayNightCycle;
     }
 }

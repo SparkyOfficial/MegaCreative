@@ -71,4 +71,57 @@ public class CodeScript {
     public void setTemplate(boolean isTemplate) {
         this.isTemplate = isTemplate;
     }
+    
+    // Additional getters for compatibility
+    public UUID getId() {
+        return id;
+    }
+    
+    public void setId(UUID id) {
+        this.id = id;
+    }
+    
+    public String getName() {
+        return name;
+    }
+    
+    public void setName(String name) {
+        this.name = name;
+    }
+    
+    public boolean isEnabled() {
+        return enabled;
+    }
+    
+    public void setEnabled(boolean enabled) {
+        this.enabled = enabled;
+    }
+    
+    public CodeBlock getRootBlock() {
+        return rootBlock;
+    }
+    
+    public ScriptType getType() {
+        return type;
+    }
+    
+    public void setType(ScriptType type) {
+        this.type = type;
+    }
+    
+    public String getAuthor() {
+        return author;
+    }
+    
+    public void setAuthor(String author) {
+        this.author = author;
+    }
+    
+    public String getDescription() {
+        return description;
+    }
+    
+    public void setDescription(String description) {
+        this.description = description;
+    }
 }

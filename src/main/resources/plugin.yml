@@ -44,10 +44,6 @@ commands:
     description: Open world settings
     usage: /<command>
     permission: megacreative.user
-  testscript:
-    description: Создает тестовый скрипт для проверки системы кодирования.
-    usage: /<command>
-    permission: megacreative.admin
   createscript:
     description: Создает готовый скрипт указанного типа.
     usage: /<command> <тип>

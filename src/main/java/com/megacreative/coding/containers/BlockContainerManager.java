@@ -185,7 +185,7 @@ public class BlockContainerManager {
             case SOUND: return Material.MUSIC_DISC_CAT;
             case PARTICLE: return Material.FIREWORK_ROCKET;
             case POTION: return Material.POTION;
-            case COLOR: return Material.DYE;
+            case COLOR: return Material.WHITE_DYE;
             default: return Material.BARRIER;
         }
     }
@@ -268,9 +268,10 @@ public class BlockContainerManager {
      * Opens sign editor GUI
      */
     private void openSignEditor(Player player, BlockContainer container) {
-        // Create custom GUI for sign editing
-        var gui = plugin.getGuiManager().createSignEditorGUI(player, container);
-        gui.open();
+        // TODO: Implement GUI manager
+        // var gui = plugin.getGuiManager().createSignEditorGUI(player, container);
+        // gui.open();
+        player.sendMessage("§eSign editor GUI not yet implemented");
     }
     
     /**

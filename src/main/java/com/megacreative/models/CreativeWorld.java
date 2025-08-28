@@ -274,4 +274,8 @@ public class CreativeWorld {
     public Set<UUID> getOnlinePlayers() {
         return onlinePlayers;
     }
+    
+    public void setMode(WorldMode mode) {
+        this.mode = mode;
+    }
 }
