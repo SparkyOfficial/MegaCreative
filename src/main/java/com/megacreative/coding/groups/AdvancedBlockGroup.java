@@ -197,13 +197,13 @@ public class AdvancedBlockGroup extends BlockGroup {
         );
         
         // Copy advanced properties
-        copy.setTemplateId(this.templateId);
-        copy.setTemplate(this.isTemplate);
-        copy.setLocked(this.isLocked);
-        copy.setExecutionMode(this.executionMode);
-        copy.setExecutionLimit(this.executionLimit);
-        copy.setConditionExpression(this.conditionExpression);
-        copy.setVersion(this.version);
+        copy.setTemplateId(this.getTemplateId());
+        copy.setTemplate(this.isTemplate());
+        copy.setLocked(this.isLocked());
+        copy.setExecutionMode(this.getExecutionMode());
+        copy.setExecutionLimit(this.getExecutionLimit());
+        copy.setConditionExpression(this.getConditionExpression());
+        copy.setVersion(this.getVersion());
         
         // Copy collections
         copy.getNestedGroups().addAll(this.nestedGroups);
@@ -215,16 +215,15 @@ public class AdvancedBlockGroup extends BlockGroup {
     }
     
     // Explicit getters for Lombok compatibility
-    public String getName() { return name; }
-    public UUID getOwner() { return owner; }
-    public Map<Location, CodeBlock> getBlocks() { return blocks; }
-    public BlockGroupManager.GroupBounds getBounds() { return bounds; }
+    public String getTemplateId() { return templateId; }
+    public boolean isTemplate() { return isTemplate; }
+    public ExecutionMode getExecutionMode() { return executionMode; }
+    public int getExecutionLimit() { return executionLimit; }
+    public String getConditionExpression() { return conditionExpression; }
     public List<UUID> getNestedGroups() { return nestedGroups; }
     public Set<String> getTags() { return tags; }
     public List<UUID> getDependencies() { return dependencies; }
     public Map<String, Object> getMetadata() { return metadata; }
-    public String getVersion() { return version; }
-    public boolean isLocked() { return isLocked; }
     
     /**
      * Execution modes for block groups

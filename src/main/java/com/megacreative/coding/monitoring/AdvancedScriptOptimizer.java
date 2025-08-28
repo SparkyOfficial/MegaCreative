@@ -158,7 +158,7 @@ public class AdvancedScriptOptimizer {
         // Track variable usage
         for (CodeBlock block : script.getBlocks()) {
             // Check for variable declarations
-            Map<String, Object> parameters = block.getParameters();
+            Map<String, com.megacreative.coding.values.DataValue> parameters = block.getParameters();
             if (parameters.containsKey("variableName")) {
                 declaredVariables.add(parameters.get("variableName").toString());
             }
