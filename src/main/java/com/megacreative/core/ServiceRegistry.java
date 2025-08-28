@@ -194,6 +194,9 @@ public class ServiceRegistry {
         configManager.loadConfig();
         registerService(ConfigManager.class, configManager);
         
+        // Register the existing plugin instance to prevent circular dependency issues
+        dependencyContainer.registerSingleton(com.megacreative.MegaCreative.class, (com.megacreative.MegaCreative) plugin);
+        
         // Register type mappings for interfaces to prevent DI issues
         dependencyContainer.registerType(IWorldManager.class, WorldManagerImpl.class);
         dependencyContainer.registerType(IPlayerManager.class, PlayerManagerImpl.class);

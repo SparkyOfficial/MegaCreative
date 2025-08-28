@@ -66,7 +66,7 @@ public class WorldManagerImpl implements IWorldManager {
      * Constructor for ServiceRegistry (uses ConfigManager)
      */
     public WorldManagerImpl(ConfigManager configManager) {
-        this.plugin = null; // Will be injected by ServiceRegistry if needed
+        this.plugin = com.megacreative.MegaCreative.getInstance(); // Get the singleton instance
         this.codingManager = null; // Will be injected by ServiceRegistry
         this.configManager = configManager;
         this.worlds = new HashMap<>();
