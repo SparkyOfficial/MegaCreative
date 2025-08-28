@@ -1,4 +1,5 @@
 package com.megacreative.managers;
+package com.megacreative.managers;
 
 import com.megacreative.interfaces.IPlayerManager;
 import lombok.extern.java.Log;

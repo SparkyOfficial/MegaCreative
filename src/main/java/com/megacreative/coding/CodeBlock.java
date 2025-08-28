@@ -29,12 +29,12 @@ public class CodeBlock implements Cloneable {
     private CodeBlock nextBlock; // Следующий блок в последовательности
     
     // --- НОВОЕ ПОЛЕ ДЛЯ ВИРТУАЛЬНЫХ ИНВЕНТАРЕЙ ---
-    // Будет хранить предметы-конфигурации. transient, если используете Gson
-    private transient Map<Integer, ItemStack> configItems = new HashMap<>();
+    // Хранит предметы-конфигурации. Теперь сериализуется с помощью кастомного TypeAdapter
+    private Map<Integer, ItemStack> configItems = new HashMap<>();
     
     // --- СИСТЕМА ГРУППИРОВКИ ПРЕДМЕТОВ ---
     // Группы предметов для сложных конфигураций
-    private transient Map<String, List<Integer>> itemGroups = new HashMap<>();
+    private Map<String, List<Integer>> itemGroups = new HashMap<>();
     
     // --- ДОСТУП К ПЛАГИНУ ДЛЯ КОНФИГУРАЦИИ ---
     private transient MegaCreative plugin;

@@ -12,10 +12,14 @@ import com.megacreative.models.CreativeWorld;
  */
 public class JsonSerializer {
     
+    // Standard Gson for objects without ItemStack serialization needs
     private static final Gson gson = new GsonBuilder()
             .setPrettyPrinting()
             .serializeNulls()
             .create();
+    
+    // Enhanced Gson with ItemStack serialization support for CodeBlocks
+    private static final Gson gsonWithItemStacks = ConfigItemsTypeAdapters.createGsonWithAdapters();
     
     /**
      * Сериализует объект в JSON строку
@@ -60,16 +64,16 @@ public class JsonSerializer {
     }
     
     /**
-     * Сериализует CodeBlock в JSON
+     * Сериализует CodeBlock в JSON с поддержкой ItemStack
      */
     public static String serializeBlock(CodeBlock block) {
-        return toJson(block);
+        return gsonWithItemStacks.toJson(block);
     }
     
     /**
-     * Десериализует CodeBlock из JSON
+     * Десериализует CodeBlock из JSON с поддержкой ItemStack
      */
     public static CodeBlock deserializeBlock(String json) {
-        return fromJson(json, CodeBlock.class);
+        return gsonWithItemStacks.fromJson(json, CodeBlock.class);
     }
 } 
