@@ -2,15 +2,14 @@ package com.megacreative.gui;
 
 import com.megacreative.MegaCreative;
 import com.megacreative.coding.CodeScript;
-import com.megacreative.listeners.GuiListener;
+import com.megacreative.managers.GUIManager;
 import com.megacreative.models.CreativeWorld;
 import java.util.ArrayList;
 import org.bukkit.Bukkit;
 import org.bukkit.Material;
 import org.bukkit.entity.Player;
-import org.bukkit.event.EventHandler;
-import org.bukkit.event.Listener;
 import org.bukkit.event.inventory.InventoryClickEvent;
+import org.bukkit.event.inventory.InventoryCloseEvent;
 import org.bukkit.inventory.Inventory;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.inventory.meta.ItemMeta;
@@ -18,20 +17,20 @@ import org.bukkit.inventory.meta.ItemMeta;
 import java.util.Arrays;
 import java.util.List;
 
-public class ScriptsGUI implements Listener {
+public class ScriptsGUI implements GUIManager.ManagedGUIInterface {
     
     private final MegaCreative plugin;
     private final Player player;
     private final Inventory inventory;
+    private final GUIManager guiManager;
     private int page = 0;
     
     public ScriptsGUI(MegaCreative plugin, Player player) {
         this.plugin = plugin;
         this.player = player;
+        this.guiManager = plugin.getGuiManager();
         this.inventory = Bukkit.createInventory(null, 54, "§8§lМои скрипты");
         
-        // Регистрируем GUI в централизованной системе
-        GuiListener.registerOpenGui(player, this);
         setupInventory();
     }
     
@@ -123,10 +122,17 @@ public class ScriptsGUI implements Listener {
     }
     
     public void open() {
+        // Register with GUIManager and open inventory
+        guiManager.registerGUI(player, this, inventory);
         player.openInventory(inventory);
     }
     
-    @EventHandler
+    @Override
+    public String getGUITitle() {
+        return "Scripts Management GUI";
+    }
+    
+    @Override
     public void onInventoryClick(InventoryClickEvent event) {
         if (!event.getInventory().equals(inventory)) return;
         
@@ -144,8 +150,7 @@ public class ScriptsGUI implements Listener {
         // Создание нового скрипта
         if (clicked.getType() == Material.EMERALD && displayName.contains("Создать")) {
             player.closeInventory();
-            // Удаляем регистрацию GUI
-            GuiListener.unregisterOpenGui(player);
+            // GUIManager will handle automatic cleanup
             player.performCommand("createscript");
             return;
         }
@@ -175,14 +180,12 @@ public class ScriptsGUI implements Listener {
             if (event.isLeftClick()) {
                 // Редактирование скрипта
                 player.closeInventory();
-                // Удаляем регистрацию GUI
-                GuiListener.unregisterOpenGui(player);
+                // GUIManager will handle automatic cleanup
                 player.performCommand("editscript " + script.getName());
             } else if (event.isRightClick()) {
                 // Настройки скрипта
                 player.closeInventory();
-                // Удаляем регистрацию GUI
-                GuiListener.unregisterOpenGui(player);
+                // GUIManager will handle automatic cleanup
                 player.performCommand("scriptsettings " + script.getName());
             }
         }
@@ -197,5 +200,17 @@ public class ScriptsGUI implements Listener {
         if (col == 0 || col == 8) return -1;
         
         return (row - 1) * 7 + (col - 1) + page * 28;
+    }
+    
+    @Override
+    public void onInventoryClose(InventoryCloseEvent event) {
+        // Optional cleanup when GUI is closed
+        // GUIManager handles automatic unregistration
+    }
+    
+    @Override
+    public void onCleanup() {
+        // Called when GUI is being cleaned up by GUIManager
+        // No special cleanup needed for this GUI
     }
 } 

@@ -22,13 +22,18 @@ public class ScriptPerformanceMonitor {
     private final AtomicLong totalExecutions = new AtomicLong(0);
     private final AtomicLong totalExecutionTime = new AtomicLong(0);
     
-    // Performance thresholds
-    private static final long SLOW_EXECUTION_THRESHOLD = 50; // milliseconds
-    private static final long MEMORY_WARNING_THRESHOLD = 100 * 1024 * 1024; // 100MB
-    private static final int MAX_CONCURRENT_SCRIPTS = 20; // Per player
+    // Performance thresholds (loaded from config)
+    private final long slowExecutionThreshold;
+    private final long memoryWarningThreshold;
+    private final int maxConcurrentScripts;
     
     public ScriptPerformanceMonitor(Plugin plugin) {
         this.plugin = plugin;
+        
+        // Load performance thresholds from config
+        this.slowExecutionThreshold = plugin.getConfig().getLong("coding.performance.slow_execution_threshold", 50);
+        this.memoryWarningThreshold = plugin.getConfig().getLong("coding.performance.memory_warning_threshold", 100 * 1024 * 1024);
+        this.maxConcurrentScripts = plugin.getConfig().getInt("coding.max_concurrent_scripts", 20);
     }
     
     /**
@@ -72,7 +77,7 @@ public class ScriptPerformanceMonitor {
      */
     private void checkPerformanceIssues(Player player, String actionType, long executionTime, String errorMessage) {
         // Check for slow execution
-        if (executionTime > SLOW_EXECUTION_THRESHOLD) {
+        if (executionTime > slowExecutionThreshold) {
             if (player.hasPermission("megacreative.debug")) {
                 player.sendMessage("§e⚠ Slow execution detected: " + actionType + 
                                  " took " + executionTime + "ms");
@@ -82,7 +87,7 @@ public class ScriptPerformanceMonitor {
         // Check memory usage
         Runtime runtime = Runtime.getRuntime();
         long usedMemory = runtime.totalMemory() - runtime.freeMemory();
-        if (usedMemory > MEMORY_WARNING_THRESHOLD) {
+        if (usedMemory > memoryWarningThreshold) {
             if (player.hasPermission("megacreative.admin")) {
                 player.sendMessage("§c⚠ High memory usage: " + (usedMemory / 1024 / 1024) + "MB");
             }

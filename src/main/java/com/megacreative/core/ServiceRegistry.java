@@ -11,6 +11,7 @@ import com.megacreative.coding.events.CustomEventManager;
 import com.megacreative.coding.debug.VisualDebugger;
 import com.megacreative.coding.errors.VisualErrorHandler;
 import com.megacreative.coding.groups.BlockGroupManager;
+import com.megacreative.coding.monitoring.ScriptPerformanceMonitor;
 import com.megacreative.interfaces.*;
 import com.megacreative.managers.*;
 import com.megacreative.services.BlockConfigService;
@@ -59,6 +60,7 @@ public class ServiceRegistry {
     private BlockContainerManager containerManager;
     private ExecutorEngine executorEngine;
     private BlockConfiguration blockConfiguration;
+    private ScriptPerformanceMonitor scriptPerformanceMonitor;
     
     // New architecture services
     private BlockConfigService blockConfigService;
@@ -173,6 +175,7 @@ public class ServiceRegistry {
     public BlockContainerManager getContainerManager() { return containerManager; }
     public ExecutorEngine getExecutorEngine() { return executorEngine; }
     public BlockConfiguration getBlockConfiguration() { return blockConfiguration; }
+    public ScriptPerformanceMonitor getScriptPerformanceMonitor() { return scriptPerformanceMonitor; }
     public BlockConfigService getBlockConfigService() { return blockConfigService; }
     public CustomEventManager getCustomEventManager() { return customEventManager; }
     public VisualDebugger getVisualDebugger() { return visualDebugger; }
@@ -262,6 +265,10 @@ public class ServiceRegistry {
         
         blockConfiguration = new BlockConfiguration((com.megacreative.MegaCreative) plugin);
         registerService(BlockConfiguration.class, blockConfiguration);
+        
+        // Performance monitoring system
+        scriptPerformanceMonitor = new ScriptPerformanceMonitor(plugin);
+        registerService(ScriptPerformanceMonitor.class, scriptPerformanceMonitor);
     }
     
     private void initializeNewArchitectureServices() {

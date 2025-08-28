@@ -28,6 +28,7 @@ import com.megacreative.coding.actions.RandomNumberAction;
 import com.megacreative.coding.actions.PlayParticleEffectAction;
 import com.megacreative.coding.actions.RemoveItemsAction;
 import com.megacreative.coding.actions.SetArmorAction;
+import com.megacreative.coding.monitoring.ScriptPerformanceMonitor;
 import com.megacreative.coding.values.DataValue;
 import org.bukkit.Location;
 import org.bukkit.Material;
@@ -35,19 +36,41 @@ import org.bukkit.entity.Player;
 
 import java.util.HashMap;
 import java.util.Map;
+import java.util.UUID;
+import java.util.concurrent.ConcurrentHashMap;
 
 /**
  * "Движок" для выполнения скриптов.
  * Использует паттерн "Стратегия" для выполнения действий.
+ * Интегрирован с системой мониторинга производительности для контроля лимитов.
  */
 public class ScriptExecutor {
     private final MegaCreative plugin;
     private final Map<String, BlockAction> actionRegistry = new HashMap<>();
     private final Map<String, BlockCondition> conditionRegistry = new HashMap<>();
     private final Map<String, Location> blockLocationCache = new HashMap<>();
+    
+    // Performance monitoring and limits
+    private final Map<UUID, Integer> playerExecutionCounts = new ConcurrentHashMap<>();
+    private final Map<UUID, Long> scriptStartTimes = new ConcurrentHashMap<>();
+    
+    // Configuration-based limits (loaded from config.yml)
+    private final int maxExecutionTime; // Maximum execution time in ms
+    private final int maxScriptSize; // Maximum script size in blocks
+    private final int maxRecursionDepth; // Maximum recursion depth for processBlock
+    private final int maxIterations; // Maximum iterations for loops
+    private final int maxConcurrentScripts; // Per player
 
     public ScriptExecutor(MegaCreative plugin) {
         this.plugin = plugin;
+        
+        // Load performance limits from config
+        this.maxExecutionTime = plugin.getConfig().getInt("coding.max_execution_time", 5000);
+        this.maxScriptSize = plugin.getConfig().getInt("coding.max_script_size", 100);
+        this.maxRecursionDepth = plugin.getConfig().getInt("coding.max_recursion_depth", 50);
+        this.maxConcurrentScripts = plugin.getConfig().getInt("coding.max_concurrent_scripts", 20);
+        this.maxIterations = plugin.getConfig().getInt("coding.performance.max_iterations", 1000);
+        
         registerActions();
         registerConditions();
     }
@@ -153,74 +176,171 @@ public class ScriptExecutor {
 
     public void execute(CodeScript script, ExecutionContext context, String triggerAction) {
         Player player = context.getPlayer();
-        if (player != null && plugin.getScriptDebugger().isDebugEnabled(player)) {
-            plugin.getScriptDebugger().onScriptStart(player, script);
+        UUID playerId = player != null ? player.getUniqueId() : null;
+        
+        // Check if player has reached script execution limits
+        if (playerId != null && !canExecuteScript(playerId, script)) {
+            return;
         }
         
-        CodeBlock root = script.getRootBlock();
-        if (root.getMaterial() == Material.DIAMOND_BLOCK && root.getAction().equals(triggerAction)) {
-            CodeBlock nextBlock = root.getNextBlock();
-            if (nextBlock != null) {
-                // Находим локацию первого блока ОДИН РАЗ при запуске скрипта
-                Location firstBlockLocation = findBlockLocation(nextBlock);
-                // Создаем контекст с локацией первого блока
-                ExecutionContext startContext = context.withCurrentBlock(nextBlock, firstBlockLocation);
-                // Запускаем выполнение с уже известной локацией
-                processBlock(nextBlock, startContext);
+        // Start performance tracking for the entire script
+        ScriptPerformanceMonitor.ExecutionTracker scriptTracker = null;
+        if (playerId != null) {
+            scriptStartTimes.put(playerId, System.currentTimeMillis());
+            playerExecutionCounts.put(playerId, playerExecutionCounts.getOrDefault(playerId, 0) + 1);
+            
+            ScriptPerformanceMonitor monitor = plugin.getScriptPerformanceMonitor();
+            if (monitor != null) {
+                scriptTracker = monitor.startTracking(player, script.getId().toString(), "script_execution");
             }
         }
-
-        if (player != null && plugin.getScriptDebugger().isDebugEnabled(player)) {
-            plugin.getScriptDebugger().onScriptEnd(player, script);
+        
+        try {
+            if (player != null && plugin.getScriptDebugger().isDebugEnabled(player)) {
+                plugin.getScriptDebugger().onScriptStart(player, script);
+            }
+            
+            CodeBlock root = script.getRootBlock();
+            if (root.getMaterial() == Material.DIAMOND_BLOCK && root.getAction().equals(triggerAction)) {
+                CodeBlock nextBlock = root.getNextBlock();
+                if (nextBlock != null) {
+                    // Находим локацию первого блока ОДИН РАЗ при запуске скрипта
+                    Location firstBlockLocation = findBlockLocation(nextBlock);
+                    // Создаем контекст с локацией первого блока
+                    ExecutionContext startContext = context.withCurrentBlock(nextBlock, firstBlockLocation);
+                    // Запускаем выполнение с уже известной локацией
+                    processBlock(nextBlock, startContext, 0); // Start with recursion depth 0
+                }
+            }
+            
+            if (player != null && plugin.getScriptDebugger().isDebugEnabled(player)) {
+                plugin.getScriptDebugger().onScriptEnd(player, script);
+            }
+            
+        } catch (ScriptExecutionException e) {
+            // Handle script execution errors (timeouts, limits exceeded, etc.)
+            if (player != null) {
+                player.sendMessage("§c[MegaCreative] Script execution stopped: " + e.getMessage());
+            }
+            
+            if (scriptTracker != null) {
+                scriptTracker.markError(e.getMessage());
+            }
+            
+        } finally {
+            // Clean up tracking data
+            if (playerId != null) {
+                scriptStartTimes.remove(playerId);
+                playerExecutionCounts.remove(playerId);
+            }
+            
+            // Close performance tracker
+            if (scriptTracker != null) {
+                scriptTracker.close();
+            }
         }
     }
     
-    // ЭТОТ МЕТОД - НАШ НОВЫЙ ДВИЖОК
+    // ЭТОТ МЕТОД - НАШ НОВЫЙ ДВИЖОК С КОНТРОЛЕМ ПРОИЗВОДИТЕЛЬНОСТИ
     public void processBlock(CodeBlock block, ExecutionContext context) {
+        processBlock(block, context, 0);
+    }
+    
+    /**
+     * Enhanced processBlock with performance monitoring and limits
+     * @param block CodeBlock to execute
+     * @param context Execution context
+     * @param recursionDepth Current recursion depth for stack overflow prevention
+     */
+    public void processBlock(CodeBlock block, ExecutionContext context, int recursionDepth) {
         if (block == null) return;
+        
+        Player player = context.getPlayer();
+        UUID playerId = player != null ? player.getUniqueId() : null;
+        
+        // 1. Performance and safety checks
+        if (!performSafetyChecks(playerId, recursionDepth)) {
+            return;
+        }
 
-        // 1. Используем локацию из контекста (уже передана из предыдущего вызова)
+        // 2. Используем локацию из контекста (уже передана из предыдущего вызова)
         Location blockLocation = context.getBlockLocation();
         
-        // 2. Создаем контекст для текущего шага
+        // 3. Создаем контекст для текущего шага
         ExecutionContext currentContext = context.withCurrentBlock(block, blockLocation);
-
-        // 3. Отладка
-        if (currentContext.getPlayer() != null && plugin.getScriptDebugger().isDebugEnabled(currentContext.getPlayer())) {
-            plugin.getScriptDebugger().onBlockExecute(currentContext.getPlayer(), block, blockLocation != null ? blockLocation : currentContext.getPlayer().getLocation());
-        }
-
-        // 4. Логика выполнения (вся магия здесь)
-        BlockAction action = actionRegistry.get(block.getAction());
-        if (action != null) {
-            action.execute(currentContext);
-        } 
-        // Если у нас нет зарегистрированного действия (например, для условий), обрабатываем отдельно
-        else if (isConditionBlock(block.getMaterial())) {
-            handleCondition(block, currentContext);
-        }
-        // Если действие не найдено, логируем это
-        else {
-            Player player = currentContext.getPlayer();
-            if (player != null) {
-                player.sendMessage("§cДействие '" + block.getAction() + "' не реализовано");
+        
+        // 4. Start performance tracking for this block
+        ScriptPerformanceMonitor.ExecutionTracker blockTracker = null;
+        if (playerId != null) {
+            ScriptPerformanceMonitor monitor = plugin.getScriptPerformanceMonitor();
+            if (monitor != null) {
+                blockTracker = monitor.startTracking(player, block.getId().toString(), block.getAction());
             }
         }
+        
+        try {
+            // 5. Отладка
+            if (currentContext.getPlayer() != null && plugin.getScriptDebugger().isDebugEnabled(currentContext.getPlayer())) {
+                plugin.getScriptDebugger().onBlockExecute(currentContext.getPlayer(), block, blockLocation != null ? blockLocation : currentContext.getPlayer().getLocation());
+            }
 
-        // 5. Переход к следующему блоку с оптимизацией
-        CodeBlock nextBlock = block.getNextBlock();
-        if (nextBlock != null) {
-            // Находим локацию СЛЕДУЮЩЕГО блока ОДИН РАЗ
-            Location nextBlockLocation = findBlockLocation(nextBlock);
-            // Создаем новый контекст для следующего шага с уже известной локацией
-            ExecutionContext nextContext = currentContext.withCurrentBlock(nextBlock, nextBlockLocation);
-            // Рекурсивно обрабатываем следующий блок с уже известной локацией
-            processBlock(nextBlock, nextContext);
+            // 6. Логика выполнения (вся магия здесь)
+            BlockAction action = actionRegistry.get(block.getAction());
+            if (action != null) {
+                action.execute(currentContext);
+            } 
+            // Если у нас нет зарегистрированного действия (например, для условий), обрабатываем отдельно
+            else if (isConditionBlock(block.getMaterial())) {
+                handleCondition(block, currentContext, recursionDepth);
+            }
+            // Если действие не найдено, логируем это
+            else {
+                if (player != null) {
+                    player.sendMessage("§cДействие '" + block.getAction() + "' не реализовано");
+                }
+                if (blockTracker != null) {
+                    blockTracker.markError("Action not implemented: " + block.getAction());
+                }
+            }
+
+            // 7. Переход к следующему блоку с контролем глубины рекурсии
+            CodeBlock nextBlock = block.getNextBlock();
+            if (nextBlock != null) {
+                // Находим локацию СЛЕДУЮЩЕГО блока ОДИН РАЗ
+                Location nextBlockLocation = findBlockLocation(nextBlock);
+                // Создаем новый контекст для следующего шага с уже известной локацией
+                ExecutionContext nextContext = currentContext.withCurrentBlock(nextBlock, nextBlockLocation);
+                // Рекурсивно обрабатываем следующий блок с увеличенной глубиной рекурсии
+                processBlock(nextBlock, nextContext, recursionDepth + 1);
+            }
+            
+        } catch (Exception e) {
+            // Handle execution errors
+            if (player != null) {
+                player.sendMessage("§c[MegaCreative] Error executing block: " + e.getMessage());
+            }
+            
+            if (blockTracker != null) {
+                blockTracker.markError(e.getMessage());
+            }
+            
+            // Log for debugging
+            plugin.getLogger().warning("Error executing block " + block.getAction() + ": " + e.getMessage());
+            
+        } finally {
+            // Close performance tracker
+            if (blockTracker != null) {
+                blockTracker.close();
+            }
         }
     }
     
-    // Обработка условий (можно тоже вынести в отдельные классы)
+    // Обработка условий с контролем производительности
     private void handleCondition(CodeBlock block, ExecutionContext context) {
+        handleCondition(block, context, 0);
+    }
+    
+    private void handleCondition(CodeBlock block, ExecutionContext context, int recursionDepth) {
         Player player = context.getPlayer();
         if (player == null) return;
         
@@ -266,7 +386,7 @@ public class ScriptExecutor {
         
         if (result) {
             for (CodeBlock child : block.getChildren()) {
-                processBlock(child, context);
+                processBlock(child, context, recursionDepth + 1);
             }
         } else {
             // Ищем блок "Иначе" (END_STONE)
@@ -274,7 +394,7 @@ public class ScriptExecutor {
             while (next != null) {
                 if (next.getMaterial() == Material.END_STONE) {
                     for (CodeBlock child : next.getChildren()) {
-                        processBlock(child, context);
+                        processBlock(child, context, recursionDepth + 1);
                     }
                     break; 
                 }
@@ -329,5 +449,117 @@ public class ScriptExecutor {
      */
     public void removeFromLocationCache(String blockId) {
         blockLocationCache.remove(blockId);
+    }
+    
+    /**
+     * Performs safety checks before executing a block
+     * @param playerId Player UUID
+     * @param recursionDepth Current recursion depth
+     * @return true if execution can continue, false if limits exceeded
+     */
+    private boolean performSafetyChecks(UUID playerId, int recursionDepth) {
+        // Check recursion depth limit
+        if (recursionDepth >= maxRecursionDepth) {
+            if (playerId != null) {
+                Player player = plugin.getServer().getPlayer(playerId);
+                if (player != null) {
+                    player.sendMessage("§c[MegaCreative] Script stopped: Maximum recursion depth exceeded (" + maxRecursionDepth + ")");
+                }
+            }
+            throw new ScriptExecutionException("Maximum recursion depth exceeded");
+        }
+        
+        // Check execution time limit
+        if (playerId != null) {
+            Long startTime = scriptStartTimes.get(playerId);
+            if (startTime != null) {
+                long executionTime = System.currentTimeMillis() - startTime;
+                if (executionTime > maxExecutionTime) {
+                    Player player = plugin.getServer().getPlayer(playerId);
+                    if (player != null) {
+                        player.sendMessage("§c[MegaCreative] Script stopped: Maximum execution time exceeded (" + maxExecutionTime + "ms)");
+                    }
+                    throw new ScriptExecutionException("Maximum execution time exceeded");
+                }
+            }
+        }
+        
+        return true;
+    }
+    
+    /**
+     * Checks if a player can execute a script based on performance limits
+     * @param playerId Player UUID
+     * @param script Script to execute
+     * @return true if player can execute the script
+     */
+    private boolean canExecuteScript(UUID playerId, CodeScript script) {
+        Player player = plugin.getServer().getPlayer(playerId);
+        
+        // Check if player is already running too many scripts
+        Integer currentExecutions = playerExecutionCounts.get(playerId);
+        if (currentExecutions != null && currentExecutions >= maxConcurrentScripts) {
+            if (player != null) {
+                player.sendMessage("§c[MegaCreative] Too many scripts running simultaneously. Please wait.");
+            }
+            return false;
+        }
+        
+        // Check script size limit
+        int scriptSize = countBlocksInScript(script.getRootBlock());
+        if (scriptSize > maxScriptSize) {
+            if (player != null) {
+                player.sendMessage("§c[MegaCreative] Script too large (" + scriptSize + " blocks, max: " + maxScriptSize + ")");
+            }
+            return false;
+        }
+        
+        return true;
+    }
+    
+    /**
+     * Recursively counts all blocks in a script
+     * @param block Root block to start counting from
+     * @return Total number of blocks in the script
+     */
+    private int countBlocksInScript(CodeBlock block) {
+        if (block == null) return 0;
+        
+        int count = 1; // Count current block
+        
+        // Count children
+        for (CodeBlock child : block.getChildren()) {
+            count += countBlocksInScript(child);
+        }
+        
+        // Count next block
+        if (block.getNextBlock() != null) {
+            count += countBlocksInScript(block.getNextBlock());
+        }
+        
+        return count;
+    }
+    
+    /**
+     * Gets the maximum execution time from configuration
+     */
+    public int getMaxExecutionTime() {
+        return maxExecutionTime;
+    }
+    
+    /**
+     * Gets the maximum script size from configuration
+     */
+    public int getMaxScriptSize() {
+        return maxScriptSize;
+    }
+    
+    /**
+     * Exception thrown when script execution limits are exceeded
+     */
+    public static class ScriptExecutionException extends RuntimeException {
+        public ScriptExecutionException(String message) {
+            super(message);
+        }
     }
 }

@@ -232,6 +232,11 @@ public class MegaCreative extends JavaPlugin {
     }
     
     @Deprecated
+    public com.megacreative.coding.monitoring.ScriptPerformanceMonitor getScriptPerformanceMonitor() {
+        return serviceRegistry.getScriptPerformanceMonitor();
+    }
+    
+    @Deprecated
     public java.util.Map<java.util.UUID, String> getDeleteConfirmations() {
         // Method no longer exists in new GUIManager architecture
         return new java.util.HashMap<>();
