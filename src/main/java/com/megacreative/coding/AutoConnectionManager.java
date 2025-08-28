@@ -18,8 +18,9 @@ import org.bukkit.event.block.BlockBreakEvent;
 import java.util.*;
 
 /**
- * Менеджер автоматических соединений блоков кода
- * Автоматически связывает блоки в соответствии с линиями кода в dev-генераторе
+ * Enhanced AutoConnectionManager with CodeBlock structure integration
+ * Automatically connects blocks according to dev world lines and maintains proper nextBlock/children relationships
+ * Integrates with BlockPlacementHandler for consistent CodeBlock management
  */
 public class AutoConnectionManager implements Listener {
     
@@ -31,6 +32,30 @@ public class AutoConnectionManager implements Listener {
     public AutoConnectionManager(MegaCreative plugin, BlockConfigService blockConfigService) {
         this.plugin = plugin;
         this.blockConfigService = blockConfigService;
+    }
+    
+    /**
+     * Synchronizes with BlockPlacementHandler's CodeBlock map
+     * This ensures both systems work with the same CodeBlock instances
+     */
+    public void synchronizeWithPlacementHandler(BlockPlacementHandler placementHandler) {
+        Map<Location, CodeBlock> placementBlocks = placementHandler.getBlockCodeBlocks();
+        
+        // Sync existing blocks from placement handler
+        for (Map.Entry<Location, CodeBlock> entry : placementBlocks.entrySet()) {
+            Location location = entry.getKey();
+            CodeBlock codeBlock = entry.getValue();
+            
+            if (!locationToBlock.containsKey(location)) {
+                locationToBlock.put(location, codeBlock);
+                // Auto-connect this block if it's in a dev world
+                if (isDevWorld(location.getWorld())) {
+                    autoConnectBlock(codeBlock, location);
+                }
+            }
+        }
+        
+        plugin.getLogger().info("Synchronized " + placementBlocks.size() + " blocks with AutoConnectionManager");
     }
     
     @EventHandler(priority = EventPriority.HIGH)
@@ -92,55 +117,164 @@ public class AutoConnectionManager implements Listener {
     }
     
     /**
-     * Автоматически соединяет блок с соседними блоками в той же линии
+     * Enhanced automatic block connection with proper CodeBlock structure integration
+     * Properly sets nextBlock and children relationships for execution flow
      */
     private void autoConnectBlock(CodeBlock codeBlock, Location location) {
         int line = DevWorldGenerator.getCodeLineFromZ(location.getBlockZ());
         if (line == -1) return;
         
-        // Ищем предыдущий блок в той же линии
+        plugin.getLogger().info("Auto-connecting block at " + location + " (line " + line + ")");
+        
+        // Step 1: Connect with previous block in the same line (horizontal connection)
         Location prevLocation = getPreviousLocationInLine(location);
         if (prevLocation != null) {
             CodeBlock prevBlock = locationToBlock.get(prevLocation);
             if (prevBlock != null) {
                 prevBlock.setNextBlock(codeBlock);
-                plugin.getLogger().info("Автосоединение: блок на " + prevLocation + " -> " + location);
+                plugin.getLogger().info("Connected horizontal: " + prevLocation + " -> " + location);
             }
         }
         
-        // Ищем следующий блок в той же линии
+        // Step 2: Connect with next block in the same line (for validation)
         Location nextLocation = getNextLocationInLine(location);
         if (nextLocation != null) {
             CodeBlock nextBlock = locationToBlock.get(nextLocation);
             if (nextBlock != null) {
                 codeBlock.setNextBlock(nextBlock);
-                plugin.getLogger().info("Автосоединение: блок на " + location + " -> " + nextLocation);
+                plugin.getLogger().info("Connected horizontal: " + location + " -> " + nextLocation);
             }
         }
         
-        // Если это начало линии (X=0), проверяем дочерние блоки
-        if (location.getBlockX() == 0) {
+        // Step 3: Handle parent-child relationships (vertical connections)
+        handleParentChildConnections(codeBlock, location, line);
+        
+        // Step 4: Update player's script blocks
+        updatePlayerScriptBlocks(codeBlock, location);
+    }
+    
+    /**
+     * Handles parent-child relationships for conditional blocks and loops
+     * Creates proper hierarchical structure for execution flow
+     */
+    private void handleParentChildConnections(CodeBlock codeBlock, Location location, int line) {
+        // Check if this block should be a child of a parent block (indented blocks)
+        if (location.getBlockX() > 0) {
+            CodeBlock parentBlock = findParentBlock(location, line);
+            if (parentBlock != null) {
+                parentBlock.addChild(codeBlock);
+                plugin.getLogger().info("Added child relationship: parent at line " + line + " -> child at " + location);
+            }
+        }
+        
+        // If this is a conditional/loop block at start of line, look for children in next lines
+        if (location.getBlockX() == 0 && isConditionalOrLoopBlock(codeBlock)) {
             connectChildBlocks(codeBlock, location);
         }
     }
     
     /**
-     * Соединяет дочерние блоки для условий и циклов
+     * Finds the parent block for a child block based on indentation and proximity
+     */
+    private CodeBlock findParentBlock(Location childLocation, int childLine) {
+        // Look for parent in previous lines with less indentation
+        for (int parentLine = childLine - 1; parentLine >= 0; parentLine--) {
+            int parentZ = DevWorldGenerator.getZForCodeLine(parentLine);
+            
+            // Look for blocks with less X coordinate (less indentation)
+            for (int parentX = 0; parentX < childLocation.getBlockX(); parentX++) {
+                Location parentLocation = new Location(childLocation.getWorld(), parentX, childLocation.getBlockY(), parentZ);
+                CodeBlock parentBlock = locationToBlock.get(parentLocation);
+                
+                if (parentBlock != null && isConditionalOrLoopBlock(parentBlock)) {
+                    return parentBlock;
+                }
+            }
+        }
+        return null;
+    }
+    
+    /**
+     * Checks if a block is conditional or loop block that can have children
+     */
+    private boolean isConditionalOrLoopBlock(CodeBlock block) {
+        String action = block.getAction();
+        return action != null && (action.toLowerCase().contains("if") || 
+                                  action.toLowerCase().contains("loop") ||
+                                  action.toLowerCase().contains("while") ||
+                                  action.toLowerCase().contains("for") ||
+                                  action.toLowerCase().contains("condition"));
+    }
+    
+    /**
+     * Updates player script blocks and maintains execution order
+     */
+    private void updatePlayerScriptBlocks(CodeBlock codeBlock, Location location) {
+        // Find the player who owns this block (simplified approach)
+        for (Map.Entry<UUID, List<CodeBlock>> entry : playerScriptBlocks.entrySet()) {
+            List<CodeBlock> blocks = entry.getValue();
+            
+            // Add to player's blocks if not already present
+            if (!blocks.contains(codeBlock)) {
+                blocks.add(codeBlock);
+                
+                // Sort blocks by location for proper execution order
+                blocks.sort((a, b) -> {
+                    Location locA = getLocationForBlock(a);
+                    Location locB = getLocationForBlock(b);
+                    if (locA == null || locB == null) return 0;
+                    
+                    // Sort by Z (line) first, then by X (position in line)
+                    int lineCompare = Integer.compare(locA.getBlockZ(), locB.getBlockZ());
+                    if (lineCompare != 0) return lineCompare;
+                    return Integer.compare(locA.getBlockX(), locB.getBlockX());
+                });
+                
+                plugin.getLogger().info("Updated player script blocks for: " + entry.getKey());
+                break;
+            }
+        }
+    }
+    
+    /**
+     * Enhanced child block connection with proper hierarchy management
+     * Connects child blocks for conditionals and loops with better logic
      */
     private void connectChildBlocks(CodeBlock parentBlock, Location parentLocation) {
-        int line = DevWorldGenerator.getCodeLineFromZ(parentLocation.getBlockZ());
+        int parentLine = DevWorldGenerator.getCodeLineFromZ(parentLocation.getBlockZ());
         
-        // Ищем блоки в следующих линиях, которые могут быть дочерними
-        for (int nextLine = line + 1; nextLine < line + 10 && nextLine < DevWorldGenerator.getLinesCount(); nextLine++) {
-            int childZ = DevWorldGenerator.getZForCodeLine(nextLine);
-            Location childLocation = new Location(parentLocation.getWorld(), 2, parentLocation.getBlockY(), childZ);
+        plugin.getLogger().info("Looking for child blocks for parent at line " + parentLine);
+        
+        // Look for indented blocks in subsequent lines
+        for (int childLine = parentLine + 1; childLine < parentLine + 10 && childLine < DevWorldGenerator.getLinesCount(); childLine++) {
+            int childZ = DevWorldGenerator.getZForCodeLine(childLine);
             
-            CodeBlock childBlock = locationToBlock.get(childLocation);
-            if (childBlock != null) {
-                parentBlock.addChild(childBlock);
-                plugin.getLogger().info("Автосоединение дочернего блока: " + parentLocation + " -> " + childLocation);
-            } else {
-                break; // Прерываем поиск если нет блока
+            // Check different indentation levels (X > 0 means indented)
+            boolean foundChildInLine = false;
+            
+            for (int childX = 1; childX <= 5; childX++) { // Check indentation levels 1-5
+                Location childLocation = new Location(parentLocation.getWorld(), childX, parentLocation.getBlockY(), childZ);
+                CodeBlock childBlock = locationToBlock.get(childLocation);
+                
+                if (childBlock != null) {
+                    // Only add as child if not already connected
+                    if (!parentBlock.getChildren().contains(childBlock)) {
+                        parentBlock.addChild(childBlock);
+                        plugin.getLogger().info("Connected child: parent line " + parentLine + " -> child at (" + childX + ", " + childLine + ")");
+                        foundChildInLine = true;
+                    }
+                }
+            }
+            
+            // If no indented blocks found in this line and it's not empty, stop searching
+            // (This handles the case where the conditional/loop block ends)
+            if (!foundChildInLine) {
+                // Check if there's any block at X=0 (non-indented) which would end the child section
+                Location endLocation = new Location(parentLocation.getWorld(), 0, parentLocation.getBlockY(), childZ);
+                if (locationToBlock.containsKey(endLocation)) {
+                    plugin.getLogger().info("Found non-indented block at line " + childLine + ", ending child search");
+                    break;
+                }
             }
         }
     }
