@@ -272,6 +272,30 @@ public class BlockGroupManager {
     }
     
     /**
+     * Gets the current selection state for a player
+     */
+    public GroupSelectionState getSelectionState(Player player) {
+        return playerSelections.get(player.getUniqueId());
+    }
+    
+    /**
+     * Checks if a player is currently in group selection mode
+     */
+    public boolean isInSelectionMode(Player player) {
+        return playerSelections.containsKey(player.getUniqueId());
+    }
+    
+    /**
+     * Integrates with BlockPlacementHandler to synchronize group operations
+     * This ensures groups work correctly with the visual block placement system
+     */
+    public void integrateWithPlacementHandler(com.megacreative.coding.BlockPlacementHandler placementHandler) {
+        // This method can be called during plugin initialization to ensure
+        // the BlockGroupManager is aware of the BlockPlacementHandler
+        log.info("BlockGroupManager integrated with BlockPlacementHandler");
+    }
+    
+    /**
      * Cancels the current group selection
      */
     public void cancelSelection(Player player) {

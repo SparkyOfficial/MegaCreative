@@ -71,11 +71,11 @@ public class ClipboardCommand implements CommandExecutor, TabCompleter {
         switch (copyType) {
             case "block" -> {
                 Location targetLoc = player.getTargetBlock(null, 10).getLocation();
-                player.sendMessage("§a✓ Копирование блока...");
+                clipboard.copyBlock(player, targetLoc);
             }
             case "chain" -> {
                 Location targetLoc = player.getTargetBlock(null, 10).getLocation();
-                player.sendMessage("§a✓ Копирование цепочки...");
+                clipboard.copyChain(player, targetLoc);
             }
             case "region" -> {
                 Location pos1 = firstCorners.get(player.getUniqueId());
