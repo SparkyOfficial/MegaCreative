@@ -106,6 +106,9 @@ public class DevCommand implements CommandExecutor {
             creator.type(WorldType.FLAT);
             creator.environment(World.Environment.NORMAL);
             
+            // Используем наш кастомный генератор для мира разработки
+            creator.generator(new com.megacreative.worlds.DevWorldGenerator());
+            
             // Для плоского мира достаточно указать тип, generatorSettings не требуется
             // и вызывает ошибки на новых версиях
             creator.generateStructures(false);
@@ -123,6 +126,8 @@ public class DevCommand implements CommandExecutor {
                 fallbackCreator.environment(World.Environment.NORMAL);
                 fallbackCreator.type(WorldType.NORMAL);
                 fallbackCreator.generateStructures(false);
+                // Используем наш кастомный генератор для мира разработки
+                fallbackCreator.generator(new com.megacreative.worlds.DevWorldGenerator());
                 
                 // Настройка (setupDevWorld) должна происходить в основном потоке
                 return Bukkit.createWorld(fallbackCreator);
@@ -152,20 +157,12 @@ public class DevCommand implements CommandExecutor {
             // Устанавливаем спавн в безопасное место
             Location spawnLocation = new Location(devWorld, 0, 70, 0);
             
-            // Заполняем область вокруг спавна стеклом, если мир только что создан
             // Проверяем по флагу, чтобы не делать это каждый раз
             if (!devWorld.getPersistentDataContainer().has(new NamespacedKey(plugin, "initialized"), PersistentDataType.BYTE)) {
                 plugin.getLogger().info("Производится первичная настройка мира разработки...");
                 
-                // Создаем платформу 50x50 блоков на высоте 60
-                Location center = new Location(devWorld, 0, 60, 0);
-                for (int x = -50; x <= 50; x++) {
-                    for (int z = -50; z <= 50; z++) {
-                        center.clone().add(x, 0, z).getBlock().setType(Material.WHITE_STAINED_GLASS);
-                    }
-                }
-                
-                spawnLocation = new Location(devWorld, 0, 62, 0);
+                // Спавн над платформой
+                spawnLocation = new Location(devWorld, 0, 66, 0);
                 // Ставим флаг, что мир настроен
                 devWorld.getPersistentDataContainer().set(new NamespacedKey(plugin, "initialized"), PersistentDataType.BYTE, (byte)1);
             }

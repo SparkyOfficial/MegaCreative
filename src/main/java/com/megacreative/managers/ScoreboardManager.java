@@ -81,7 +81,7 @@ public class ScoreboardManager {
             }
             String description = creativeWorld.getDescription();
             // Обрезаем длинное описание
-            if (description.isEmpty()) {
+            if (description == null || description.isEmpty()) {
                 description = "Нет описания";
             } else if (description.length() > 24) {
                 description = description.substring(0, 23) + "…";
