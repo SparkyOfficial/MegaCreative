@@ -263,19 +263,43 @@ public class BlockConfigManager implements Listener {
      */
     private void loadParametersFromGui(Inventory inventory, CodeBlock codeBlock) {
         Map<String, DataValue> parameters = codeBlock.getParameters();
-        if (parameters.isEmpty()) return;
+        if (parameters.isEmpty()) {
+            plugin.getLogger().info("No parameters to load for action: " + codeBlock.getAction());
+            return;
+        }
+        
+        plugin.getLogger().info("Loading " + parameters.size() + " parameters for action: " + codeBlock.getAction());
         
         // Convert each parameter to ItemStack representation
         for (Map.Entry<String, DataValue> entry : parameters.entrySet()) {
             String paramName = entry.getKey();
             DataValue paramValue = entry.getValue();
             
-            // Try to find appropriate slot for this parameter
+            if (paramValue == null) continue;
+            
+            // Find the appropriate slot for this parameter
             Integer slot = findSlotForParameter(codeBlock.getAction(), paramName);
-            if (slot != null && slot < inventory.getSize()) {
+            if (slot != null && slot >= 0 && slot < inventory.getSize()) {
                 ItemStack paramItem = convertDataValueToItemStack(paramName, paramValue);
                 if (paramItem != null) {
                     inventory.setItem(slot, paramItem);
+                    plugin.getLogger().info("Loaded parameter '" + paramName + "' into slot " + slot + " with value: " + paramValue.asString());
+                } else {
+                    plugin.getLogger().warning("Failed to convert DataValue to ItemStack for parameter: " + paramName);
+                }
+            } else {
+                plugin.getLogger().warning("No slot found for parameter: " + paramName + " (action: " + codeBlock.getAction() + ")");
+                
+                // Try to put in first available slot as fallback
+                for (int i = 0; i < inventory.getSize(); i++) {
+                    if (inventory.getItem(i) == null || inventory.getItem(i).getType().isAir()) {
+                        ItemStack paramItem = convertDataValueToItemStack(paramName, paramValue);
+                        if (paramItem != null) {
+                            inventory.setItem(i, paramItem);
+                            plugin.getLogger().info("Loaded parameter '" + paramName + "' into fallback slot " + i);
+                            break;
+                        }
+                    }
                 }
             }
         }
@@ -395,94 +419,330 @@ public class BlockConfigManager implements Listener {
             return new AnyValue(null);
         }
         
-        // Try to extract value from item name or lore
         ItemMeta meta = item.getItemMeta();
-        if (meta != null && meta.hasDisplayName()) {
-            String displayName = meta.getDisplayName();
-            
-            // Try to parse number from display name
-            if (item.getType() == Material.GOLD_NUGGET) {
-                try {
-                    String numberStr = displayName.replaceAll("[^0-9.-]", "");
-                    if (!numberStr.isEmpty()) {
-                        return new NumberValue(Double.parseDouble(numberStr));
-                    }
-                } catch (NumberFormatException ignored) {}
-            }
-            
-            // Try to parse boolean
-            if (item.getType() == Material.LIME_DYE) {
-                return new BooleanValue(true);
-            } else if (item.getType() == Material.RED_DYE) {
-                return new BooleanValue(false);
-            }
-            
-            // For text items (paper), extract the text content
-            if (item.getType() == Material.PAPER) {
-                String text = displayName.replaceAll("§[0-9a-fk-or]", ""); // Remove color codes
-                return new TextValue(text);
-            }
-            
-            // Default: use display name as text
-            return new TextValue(displayName);
-        }
+        String displayName = meta != null && meta.hasDisplayName() ? meta.getDisplayName() : "";
         
-        // Fallback: create value based on item type and amount
-        if (item.getAmount() > 1) {
-            return new NumberValue(item.getAmount());
-        }
+        // Clean display name from color codes for processing
+        String cleanName = displayName.replaceAll("§[0-9a-fk-or]", "");
         
-        // Default: use item type name as text
-        return new TextValue(item.getType().name().toLowerCase());
-    }
-    
-    /**
-     * Finds the appropriate slot for a parameter name
-     */
-    private Integer findSlotForParameter(String action, String paramName) {
-        // Check named slots configuration
-        var slotConfig = plugin.getBlockConfiguration().getActionSlotConfig(action);
-        if (slotConfig != null) {
-            for (Map.Entry<Integer, BlockConfiguration.SlotConfig> entry : slotConfig.getSlots().entrySet()) {
-                if (entry.getValue().getSlotName().equals(paramName)) {
-                    return entry.getKey();
+        // 1. Try to extract value from existing parameter items (our converted items)
+        if (meta != null && meta.hasLore()) {
+            List<String> lore = meta.getLore();
+            for (String line : lore) {
+                if (line.startsWith("§8Parameter: ")) {
+                    // This is a parameter item we created - extract the value
+                    return extractValueFromParameterItem(item, lore);
                 }
             }
         }
         
-        // Fallback: use standard parameter name mapping
-        return switch (paramName) {
-            case "message", "text" -> 0;
-            case "amount", "value", "number" -> 1;
-            case "target", "player" -> 2;
-            case "item", "material" -> 3;
-            case "location", "world" -> 4;
-            default -> null;
-        };
+        // 2. Try to detect type from material
+        switch (item.getType()) {
+            case PAPER:
+                // Extract text from display name or use item name
+                if (!cleanName.isEmpty()) {
+                    return new TextValue(cleanName);
+                } else {
+                    return new TextValue("Текст");
+                }
+            
+            case GOLD_NUGGET:
+            case GOLD_INGOT:
+                // Try to parse number from name or use amount
+                if (!cleanName.isEmpty()) {
+                    try {
+                        String numberStr = cleanName.replaceAll("[^0-9.-]", "");
+                        if (!numberStr.isEmpty()) {
+                            return new NumberValue(Double.parseDouble(numberStr));
+                        }
+                    } catch (NumberFormatException ignored) {}
+                }
+                return new NumberValue(item.getAmount());
+            
+            case LIME_DYE:
+                return new BooleanValue(true);
+            case RED_DYE:
+                return new BooleanValue(false);
+            
+            case CHEST:
+            case BARREL:
+                // Consider these as lists or containers
+                return new ListValue();
+            
+            default:
+                // For other items, create text value from name or material
+                if (!cleanName.isEmpty()) {
+                    return new TextValue(cleanName);
+                } else {
+                    // Use material name as text value
+                    return new TextValue(item.getType().name().toLowerCase().replace("_", " "));
+                }
+        }
     }
     
     /**
-     * Gets parameter name for a specific slot
+     * Extracts value from a parameter item we created
      */
-    private String getParameterNameForSlot(String action, int slot) {
-        // Check named slots configuration  
-        var slotConfig = plugin.getBlockConfiguration().getActionSlotConfig(action);
-        if (slotConfig != null) {
-            BlockConfiguration.SlotConfig config = slotConfig.getSlots().get(slot);
-            if (config != null) {
-                return config.getSlotName();
+    private DataValue extractValueFromParameterItem(ItemStack item, List<String> lore) {
+        // Look for "Value: " line in lore
+        for (String line : lore) {
+            String cleanLine = line.replaceAll("§[0-9a-fk-or]", "");
+            if (cleanLine.startsWith("Value: ")) {
+                String valueStr = cleanLine.substring(7); // Remove "Value: "
+                
+                // Check type from the previous line
+                int index = lore.indexOf(line);
+                if (index > 0) {
+                    String typeLine = lore.get(index - 1).replaceAll("§[0-9a-fk-or]", "");
+                    
+                    if (typeLine.contains("Number")) {
+                        try {
+                            return new NumberValue(Double.parseDouble(valueStr));
+                        } catch (NumberFormatException e) {
+                            return new TextValue(valueStr);
+                        }
+                    } else if (typeLine.contains("Boolean")) {
+                        return new BooleanValue("True".equalsIgnoreCase(valueStr));
+                    } else if (typeLine.contains("List")) {
+                        return new ListValue(); // TODO: Implement list parsing
+                    }
+                }
+                
+                // Default to text
+                return new TextValue(valueStr);
             }
         }
         
-        // Fallback mapping
-        return switch (slot) {
-            case 0 -> "message";
-            case 1 -> "amount";
-            case 2 -> "target";
-            case 3 -> "item";
-            case 4 -> "location";
-            default -> "param_" + slot;
-        };
+        // Fallback
+        return new TextValue(item.getType().name().toLowerCase());
+    }
+    
+    /**
+     * Finds the appropriate slot for a parameter name (reverse mapping)
+     */
+    private Integer findSlotForParameter(String action, String paramName) {
+        // Use reverse mapping based on our getParameterNameForSlot logic
+        
+        // Action-specific parameter mapping
+        switch (action) {
+            case "sendMessage":
+                if ("message".equals(paramName)) return 0;
+                break;
+            case "teleport":
+                if ("coords".equals(paramName)) return 0;
+                break;
+            case "giveItem":
+                if ("item".equals(paramName)) return 0;
+                if ("amount".equals(paramName)) return 1;
+                break;
+            case "playSound":
+                if ("sound".equals(paramName)) return 0;
+                if ("volume".equals(paramName)) return 1;
+                if ("pitch".equals(paramName)) return 2;
+                break;
+            case "effect":
+                if ("effect".equals(paramName)) return 0;
+                if ("duration".equals(paramName)) return 1;
+                if ("amplifier".equals(paramName)) return 2;
+                break;
+            case "setVar":
+            case "addVar":
+            case "subVar":
+            case "mulVar":
+            case "divVar":
+                if ("var".equals(paramName)) return 0;
+                if ("value".equals(paramName)) return 1;
+                break;
+            case "spawnMob":
+                if ("mob".equals(paramName)) return 0;
+                if ("amount".equals(paramName)) return 1;
+                break;
+            case "wait":
+                if ("ticks".equals(paramName)) return 0;
+                break;
+            case "randomNumber":
+                if ("min".equals(paramName)) return 0;
+                if ("max".equals(paramName)) return 1;
+                if ("var".equals(paramName)) return 2;
+                break;
+            case "setTime":
+                if ("time".equals(paramName)) return 0;
+                break;
+            case "setWeather":
+                if ("weather".equals(paramName)) return 0;
+                break;
+            case "command":
+                if ("command".equals(paramName)) return 0;
+                break;
+            case "broadcast":
+                if ("message".equals(paramName)) return 0;
+                break;
+            case "healPlayer":
+                if ("amount".equals(paramName)) return 0;
+                break;
+            case "explosion":
+                if ("power".equals(paramName)) return 0;
+                if ("breakBlocks".equals(paramName)) return 1;
+                break;
+            case "setBlock":
+                if ("material".equals(paramName)) return 0;
+                if ("coords".equals(paramName)) return 1;
+                break;
+            // Conditions
+            case "ifVarEquals":
+            case "ifVarGreater":
+            case "ifVarLess":
+                if ("var".equals(paramName)) return 0;
+                if ("value".equals(paramName)) return 1;
+                break;
+            case "hasItem":
+                if ("item".equals(paramName)) return 0;
+                break;
+            case "isNearBlock":
+                if ("block".equals(paramName)) return 0;
+                if ("radius".equals(paramName)) return 1;
+                break;
+            case "mobNear":
+                if ("mob".equals(paramName)) return 0;
+                if ("radius".equals(paramName)) return 1;
+                break;
+        }
+        
+        // Generic fallback mapping
+        switch (paramName) {
+            case "message", "text" -> { return 0; }
+            case "amount", "value", "number" -> { return 1; }
+            case "target", "player" -> { return 2; }
+            case "item", "material" -> { return 3; }
+            case "location", "world", "coords" -> { return 4; }
+        }
+        
+        // Try to extract slot number from param_X format
+        if (paramName.startsWith("param_")) {
+            try {
+                return Integer.parseInt(paramName.substring(6));
+            } catch (NumberFormatException ignored) {}
+        }
+        
+        // No mapping found
+        return null;
+    }
+    
+    /**
+     * Gets parameter name for a specific slot based on action type
+     */
+    private String getParameterNameForSlot(String action, int slot) {
+        // Check named slots configuration from coding_blocks.yml
+        var blockConfigService = plugin.getServiceRegistry().getBlockConfigService();
+        
+        // Action-specific parameter mapping based on coding_blocks.yml
+        switch (action) {
+            case "sendMessage":
+                return slot == 0 ? "message" : "param_" + slot;
+            case "teleport":
+                return slot == 0 ? "coords" : "param_" + slot;
+            case "giveItem":
+                return switch (slot) {
+                    case 0 -> "item";
+                    case 1 -> "amount";
+                    default -> "param_" + slot;
+                };
+            case "playSound":
+                return switch (slot) {
+                    case 0 -> "sound";
+                    case 1 -> "volume";
+                    case 2 -> "pitch";
+                    default -> "param_" + slot;
+                };
+            case "effect":
+                return switch (slot) {
+                    case 0 -> "effect";
+                    case 1 -> "duration";
+                    case 2 -> "amplifier";
+                    default -> "param_" + slot;
+                };
+            case "setVar":
+            case "addVar":
+            case "subVar":
+            case "mulVar":
+            case "divVar":
+                return switch (slot) {
+                    case 0 -> "var";
+                    case 1 -> "value";
+                    default -> "param_" + slot;
+                };
+            case "spawnMob":
+                return switch (slot) {
+                    case 0 -> "mob";
+                    case 1 -> "amount";
+                    default -> "param_" + slot;
+                };
+            case "wait":
+                return slot == 0 ? "ticks" : "param_" + slot;
+            case "randomNumber":
+                return switch (slot) {
+                    case 0 -> "min";
+                    case 1 -> "max";
+                    case 2 -> "var";
+                    default -> "param_" + slot;
+                };
+            case "setTime":
+                return slot == 0 ? "time" : "param_" + slot;
+            case "setWeather":
+                return slot == 0 ? "weather" : "param_" + slot;
+            case "command":
+                return slot == 0 ? "command" : "param_" + slot;
+            case "broadcast":
+                return slot == 0 ? "message" : "param_" + slot;
+            case "healPlayer":
+                return slot == 0 ? "amount" : "param_" + slot;
+            case "explosion":
+                return switch (slot) {
+                    case 0 -> "power";
+                    case 1 -> "breakBlocks";
+                    default -> "param_" + slot;
+                };
+            case "setBlock":
+                return switch (slot) {
+                    case 0 -> "material";
+                    case 1 -> "coords";
+                    default -> "param_" + slot;
+                };
+            // Conditions
+            case "ifVarEquals":
+            case "ifVarGreater":
+            case "ifVarLess":
+                return switch (slot) {
+                    case 0 -> "var";
+                    case 1 -> "value";
+                    default -> "param_" + slot;
+                };
+            case "hasItem":
+                return slot == 0 ? "item" : "param_" + slot;
+            case "isNearBlock":
+                return switch (slot) {
+                    case 0 -> "block";
+                    case 1 -> "radius";
+                    default -> "param_" + slot;
+                };
+            case "mobNear":
+                return switch (slot) {
+                    case 0 -> "mob";
+                    case 1 -> "radius";
+                    default -> "param_" + slot;
+                };
+            
+            // Generic fallback
+            default:
+                return switch (slot) {
+                    case 0 -> "message";
+                    case 1 -> "amount";
+                    case 2 -> "target";
+                    case 3 -> "item";
+                    case 4 -> "location";
+                    default -> "param_" + slot;
+                };
+        }
     }
     
     /**

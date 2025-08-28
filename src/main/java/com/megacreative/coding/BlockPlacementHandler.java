@@ -56,10 +56,12 @@ public class BlockPlacementHandler implements Listener {
         Block block = event.getBlockPlaced();
         Material mat = block.getType();
         
-        // Проверяем, является ли предмет "блоком кода" по названию, а не просто по материалу.
-        if (!isCodingBlock(event.getItemInHand())) {
+        // Проверяем, является ли блок кодовым блоком через BlockConfigService
+        var blockConfigService = plugin.getServiceRegistry().getBlockConfigService();
+        if (!blockConfigService.isCodeBlock(mat)) {
             return;
         }
+        
         if (!isInDevWorld(player)) {
             return;
         }
@@ -70,15 +72,20 @@ public class BlockPlacementHandler implements Listener {
             return;
         }
         
-        // Создаем "заготовку" блока кода сразу.
-        CodeBlock newCodeBlock = new CodeBlock(mat, "Настройка..."); // Временное действие
+        // Создаем "заготовку" блока кода с правильным действием по умолчанию
+        String defaultAction = blockConfigService.getDefaultAction(mat);
+        if (defaultAction == null) defaultAction = "Настройка..."; // Fallback
+        
+        CodeBlock newCodeBlock = new CodeBlock(mat, defaultAction);
+        newCodeBlock.setPlugin(plugin); // Устанавливаем ссылку на плагин
         blockCodeBlocks.put(block.getLocation(), newCodeBlock);
         
         // Устанавливаем табличку на блок
-        setSignOnBlock(block.getLocation(), "Настройка...");
+        String blockName = blockConfigService.getBlockName(mat);
+        setSignOnBlock(block.getLocation(), blockName);
         
-        // Простая настройка блока без GUI
-        handleSimpleBlockConfiguration(player, mat, block.getLocation());
+        player.sendMessage("§a✓ Блок кода размещен: " + blockName);
+        player.sendMessage("§7Кликните правой кнопкой для настройки");
     }
 
     /**
@@ -136,18 +143,6 @@ public class BlockPlacementHandler implements Listener {
     }
 
     /**
-     * Простая настройка блока без GUI
-     */
-    private void handleSimpleBlockConfiguration(Player player, Material material, Location location) {
-        // Создаем простой CodeBlock с базовыми параметрами
-        CodeBlock codeBlock = new CodeBlock(material, "Блок кода");
-        blockCodeBlocks.put(location, codeBlock);
-        
-        // Обновляем табличку
-        setSignOnBlock(location, "Блок кода готов");
-    }
-
-    /**
      * Проверяет, находится ли игрок в мире разработки
      */
     private boolean isInDevWorld(Player player) {
@@ -156,29 +151,6 @@ public class BlockPlacementHandler implements Listener {
         return worldName.contains("dev") || worldName.contains("Dev") || 
                worldName.contains("разработка") || worldName.contains("Разработка") ||
                worldName.contains("creative") || worldName.contains("Creative");
-    }
-
-    /**
-     * Проверяет, является ли предмет блоком кода
-     */
-    private boolean isCodingBlock(ItemStack item) {
-        if (item == null || !item.hasItemMeta() || !item.getItemMeta().hasDisplayName()) {
-            return false;
-        }
-        
-        String displayName = item.getItemMeta().getDisplayName();
-        
-        // Проверяем все возможные названия блоков кода
-        return displayName.contains(CodingItems.EVENT_BLOCK_NAME) ||
-               displayName.contains(CodingItems.ACTION_BLOCK_NAME) ||
-               displayName.contains(CodingItems.CONDITION_BLOCK_NAME) ||
-               displayName.contains(CodingItems.VARIABLE_BLOCK_NAME) ||
-               displayName.contains(CodingItems.REPEAT_TRIGGER_BLOCK_NAME) ||
-               displayName.contains(CodingItems.SAVE_FUNCTION_BLOCK_NAME) ||
-               displayName.contains(CodingItems.IF_MOB_BLOCK_NAME) ||
-               displayName.contains(CodingItems.GET_DATA_BLOCK_NAME) ||
-               displayName.contains(CodingItems.COPIER_TOOL_NAME) ||
-               displayName.contains(CodingItems.DATA_CREATOR_NAME);
     }
 
     /**
