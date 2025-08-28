@@ -66,7 +66,7 @@ public class CreateGuiAction implements BlockAction {
             if (sizeValue != null && !sizeValue.isEmpty()) {
                 DataValue resolvedSize = resolver.resolve(context, sizeValue);
                 if (resolvedSize instanceof NumberValue) {
-                    size = ((NumberValue) resolvedSize).asInt();
+                    size = ((NumberValue) resolvedSize).asNumber().intValue();
                 }
             }
             
@@ -90,7 +90,7 @@ public class CreateGuiAction implements BlockAction {
             }
             
             // Register click handlers for child blocks
-            registerClickHandlers(player, block, autoClose);
+            registerClickHandlers(context, player, block, autoClose);
             
             // Open GUI for player
             player.openInventory(gui);
@@ -243,7 +243,7 @@ public class CreateGuiAction implements BlockAction {
     /**
      * Registers click handlers for child blocks
      */
-    private void registerClickHandlers(Player player, CodeBlock block, boolean autoClose) {
+    private void registerClickHandlers(ExecutionContext context, Player player, CodeBlock block, boolean autoClose) {
         UUID playerId = player.getUniqueId();
         Map<Integer, CodeBlock> handlers = new HashMap<>();
         

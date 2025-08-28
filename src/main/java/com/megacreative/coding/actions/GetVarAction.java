@@ -4,6 +4,8 @@ import com.megacreative.coding.BlockAction;
 import com.megacreative.coding.CodeBlock;
 import com.megacreative.coding.ExecutionContext;
 import com.megacreative.coding.ParameterResolver;
+import com.megacreative.coding.values.DataValue;
+import com.megacreative.coding.variables.VariableManager;
 import org.bukkit.entity.Player;
 
 public class GetVarAction implements BlockAction {
@@ -14,10 +16,17 @@ public class GetVarAction implements BlockAction {
 
         if (player == null || block == null) return;
 
-        // Получаем и разрешаем параметры
-        Object rawVarName = block.getParameter("var");
+        VariableManager variableManager = context.getPlugin().getVariableManager();
+        if (variableManager == null) return;
+        
+        ParameterResolver resolver = new ParameterResolver(variableManager);
 
-        String varName = ParameterResolver.resolve(context, rawVarName);
+        // Получаем и разрешаем параметры
+        DataValue rawVarName = block.getParameter("var");
+
+        if (rawVarName == null) return;
+
+        String varName = resolver.resolve(context, rawVarName).asString();
 
         if (varName == null) return;
 

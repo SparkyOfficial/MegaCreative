@@ -4,6 +4,8 @@ import com.megacreative.coding.BlockAction;
 import com.megacreative.coding.CodeBlock;
 import com.megacreative.coding.ExecutionContext;
 import com.megacreative.coding.ParameterResolver;
+import com.megacreative.coding.values.DataValue;
+import com.megacreative.coding.variables.VariableManager;
 import org.bukkit.entity.Player;
 
 public class SetServerVariableAction implements BlockAction {
@@ -11,19 +13,25 @@ public class SetServerVariableAction implements BlockAction {
     public void execute(ExecutionContext context) {
         Player player = context.getPlayer();
         CodeBlock block = context.getCurrentBlock();
+        VariableManager variableManager = context.getPlugin().getVariableManager();
 
-        if (player == null || block == null) return;
+        if (player == null || block == null || variableManager == null) return;
+
+        ParameterResolver resolver = new ParameterResolver(variableManager);
 
         // Получаем и разрешаем параметры
-        Object rawVarName = block.getParameter("var");
-        Object rawValue = block.getParameter("value");
+        DataValue rawVarName = block.getParameter("var");
+        DataValue rawValue = block.getParameter("value");
 
-        String varName = ParameterResolver.resolve(context, rawVarName);
-        String value = ParameterResolver.resolve(context, rawValue);
+        if (rawVarName == null || rawValue == null) return;
 
+        DataValue varNameValue = resolver.resolve(context, rawVarName);
+        DataValue value = resolver.resolve(context, rawValue);
+
+        String varName = varNameValue.asString();
         if (varName != null && !varName.isEmpty()) {
-            context.getPlugin().getDataManager().setServerVariable(varName, value);
-            player.sendMessage("§a✓ Серверная переменная '" + varName + "' установлена в: " + value);
+            context.getPlugin().getDataManager().setServerVariable(varName, value.asString());
+            player.sendMessage("§a✓ Серверная переменная '" + varName + "' установлена в: " + value.asString());
         }
     }
 } 

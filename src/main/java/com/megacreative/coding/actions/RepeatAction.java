@@ -5,6 +5,8 @@ import com.megacreative.coding.CodeBlock;
 import com.megacreative.coding.ExecutionContext;
 import com.megacreative.coding.ParameterResolver;
 import com.megacreative.coding.ScriptExecutor;
+import com.megacreative.coding.values.DataValue;
+import com.megacreative.coding.variables.VariableManager;
 import org.bukkit.entity.Player;
 
 public class RepeatAction implements BlockAction {
@@ -17,13 +19,19 @@ public class RepeatAction implements BlockAction {
         if (player == null || block == null) return;
 
         // Получаем и разрешаем параметры
-        Object rawTimes = block.getParameter("times");
-        String timesStr = ParameterResolver.resolve(context, rawTimes);
-
-        if (timesStr == null) {
+        VariableManager variableManager = context.getPlugin().getVariableManager();
+        if (variableManager == null) return;
+        
+        ParameterResolver resolver = new ParameterResolver(variableManager);
+        
+        DataValue rawTimes = block.getParameter("times");
+        if (rawTimes == null) {
             player.sendMessage("§cОшибка: параметр 'times' не указан");
             return;
         }
+        
+        DataValue timesValue = resolver.resolve(context, rawTimes);
+        String timesStr = timesValue.asString();
 
         try {
             int times = Integer.parseInt(timesStr);

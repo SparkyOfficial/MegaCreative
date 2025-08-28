@@ -4,6 +4,8 @@ import com.megacreative.coding.BlockAction;
 import com.megacreative.coding.CodeBlock;
 import com.megacreative.coding.ExecutionContext;
 import com.megacreative.coding.ParameterResolver;
+import com.megacreative.coding.values.DataValue;
+import com.megacreative.coding.variables.VariableManager;
 import org.bukkit.Material;
 import org.bukkit.entity.Player;
 import org.bukkit.inventory.ItemStack;
@@ -16,13 +18,20 @@ public class GiveItemAction implements BlockAction {
 
         if (player == null || block == null) return;
 
+        VariableManager variableManager = context.getPlugin().getVariableManager();
+        if (variableManager == null) return;
+        
+        ParameterResolver resolver = new ParameterResolver(variableManager);
+
         // 1. Получаем "сырые" значения из параметров блока
-        Object rawItemName = block.getParameter("item");
-        Object rawAmount = block.getParameter("amount");
+        DataValue rawItemName = block.getParameter("item");
+        DataValue rawAmount = block.getParameter("amount");
+        
+        if (rawItemName == null || rawAmount == null) return;
 
         // 2. "Разрешаем" их с помощью ParameterResolver
-        String itemName = ParameterResolver.resolve(context, rawItemName);
-        String amountStr = ParameterResolver.resolve(context, rawAmount);
+        String itemName = resolver.resolve(context, rawItemName).asString();
+        String amountStr = resolver.resolve(context, rawAmount).asString();
 
         try {
             Material material = Material.valueOf(itemName.toUpperCase());

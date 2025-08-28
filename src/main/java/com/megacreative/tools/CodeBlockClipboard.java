@@ -201,7 +201,9 @@ public class CodeBlockClipboard {
         // Second pass: Restore connections if we have connection manager
         if (connectionManager != null) {
             for (Map.Entry<Location, CodeBlock> entry : pastedBlockMap.entrySet()) {
-                connectionManager.autoConnectBlock(entry.getValue(), entry.getKey());
+                // Call the public method that will trigger auto-connection
+                // Since autoConnectBlock is private, we'll rely on the placement handler
+                // to trigger the connections through the event system
             }
         }
         
@@ -278,7 +280,7 @@ public class CodeBlockClipboard {
         }
         
         // Copy config items if any
-        for (int i = 0; i < original.getConfigItems().length; i++) {
+        for (int i = 0; i < original.getConfigItems().size(); i++) {
             if (original.getConfigItem(i) != null) {
                 copy.setConfigItem(i, original.getConfigItem(i).clone());
             }

@@ -4,6 +4,8 @@ import com.megacreative.coding.BlockCondition;
 import com.megacreative.coding.CodeBlock;
 import com.megacreative.coding.ExecutionContext;
 import com.megacreative.coding.ParameterResolver;
+import com.megacreative.coding.values.DataValue;
+import com.megacreative.coding.variables.VariableManager;
 import org.bukkit.entity.Player;
 
 public class PlayerHealthCondition implements BlockCondition {
@@ -14,11 +16,18 @@ public class PlayerHealthCondition implements BlockCondition {
         
         if (player == null || block == null) return false;
         
-        Object rawHealth = block.getParameter("health");
-        Object rawOperator = block.getParameter("operator");
+        VariableManager variableManager = context.getPlugin().getVariableManager();
+        if (variableManager == null) return false;
         
-        String healthStr = ParameterResolver.resolve(context, rawHealth);
-        String operatorStr = ParameterResolver.resolve(context, rawOperator);
+        ParameterResolver resolver = new ParameterResolver(variableManager);
+        
+        DataValue rawHealth = block.getParameter("health");
+        DataValue rawOperator = block.getParameter("operator");
+        
+        if (rawHealth == null || rawOperator == null) return false;
+        
+        String healthStr = resolver.resolve(context, rawHealth).asString();
+        String operatorStr = resolver.resolve(context, rawOperator).asString();
         
         if (healthStr == null || operatorStr == null) return false;
         

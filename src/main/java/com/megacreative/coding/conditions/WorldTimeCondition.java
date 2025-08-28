@@ -4,6 +4,8 @@ import com.megacreative.coding.BlockCondition;
 import com.megacreative.coding.CodeBlock;
 import com.megacreative.coding.ExecutionContext;
 import com.megacreative.coding.ParameterResolver;
+import com.megacreative.coding.values.DataValue;
+import com.megacreative.coding.variables.VariableManager;
 import org.bukkit.entity.Player;
 
 public class WorldTimeCondition implements BlockCondition {
@@ -14,12 +16,15 @@ public class WorldTimeCondition implements BlockCondition {
 
         if (player == null || block == null) return false;
 
-        // Получаем и разрешаем параметры
-        Object rawTime = block.getParameter("time");
-        Object rawOperator = block.getParameter("operator");
+        VariableManager variableManager = context.getPlugin().getVariableManager();
+        ParameterResolver resolver = new ParameterResolver(variableManager);
 
-        String timeStr = ParameterResolver.resolve(context, rawTime);
-        String operatorStr = ParameterResolver.resolve(context, rawOperator);
+        // Получаем и разрешаем параметры
+        DataValue rawTime = block.getParameter("time");
+        DataValue rawOperator = block.getParameter("operator");
+
+        String timeStr = resolver.resolve(context, rawTime).asString();
+        String operatorStr = resolver.resolve(context, rawOperator).asString();
 
         if (timeStr == null) return false;
 

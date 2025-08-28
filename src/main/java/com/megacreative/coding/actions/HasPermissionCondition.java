@@ -4,6 +4,8 @@ import com.megacreative.coding.BlockCondition;
 import com.megacreative.coding.CodeBlock;
 import com.megacreative.coding.ExecutionContext;
 import com.megacreative.coding.ParameterResolver;
+import com.megacreative.coding.values.DataValue;
+import com.megacreative.coding.variables.VariableManager;
 import org.bukkit.entity.Player;
 
 public class HasPermissionCondition implements BlockCondition {
@@ -14,8 +16,15 @@ public class HasPermissionCondition implements BlockCondition {
         
         if (player == null || block == null) return false;
         
-        Object rawPermission = block.getParameter("permission");
-        String permission = ParameterResolver.resolve(context, rawPermission);
+        VariableManager variableManager = context.getPlugin().getVariableManager();
+        if (variableManager == null) return false;
+        
+        ParameterResolver resolver = new ParameterResolver(variableManager);
+        
+        DataValue rawPermission = block.getParameter("permission");
+        if (rawPermission == null) return false;
+        
+        String permission = resolver.resolve(context, rawPermission).asString();
         
         return permission != null && player.hasPermission(permission);
     }

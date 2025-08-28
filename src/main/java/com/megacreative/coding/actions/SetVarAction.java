@@ -72,7 +72,9 @@ public class SetVarAction implements BlockAction {
                     break;
                 case PLAYER:
                     if (player != null) {
-                        variableManager.setPlayerVariable(player.getUniqueId(), varName, resolvedValue);
+                        // Use the scoped variable approach for player variables
+                        String playerScopedName = "player." + varName;
+                        variableManager.setVariable(playerScopedName, resolvedValue, context.getScriptId(), context.getWorldId());
                     }
                     break;
                 case SERVER:

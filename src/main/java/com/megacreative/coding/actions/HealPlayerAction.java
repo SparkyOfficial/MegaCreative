@@ -4,6 +4,8 @@ import com.megacreative.coding.BlockAction;
 import com.megacreative.coding.CodeBlock;
 import com.megacreative.coding.ExecutionContext;
 import com.megacreative.coding.ParameterResolver;
+import com.megacreative.coding.values.DataValue;
+import com.megacreative.coding.variables.VariableManager;
 import org.bukkit.entity.Player;
 
 public class HealPlayerAction implements BlockAction {
@@ -14,10 +16,17 @@ public class HealPlayerAction implements BlockAction {
 
         if (player == null || block == null) return;
 
-        // Получаем и разрешаем параметры
-        Object rawAmount = block.getParameter("amount");
+        VariableManager variableManager = context.getPlugin().getVariableManager();
+        if (variableManager == null) return;
+        
+        ParameterResolver resolver = new ParameterResolver(variableManager);
 
-        String amountStr = ParameterResolver.resolve(context, rawAmount);
+        // Получаем и разрешаем параметры
+        DataValue rawAmount = block.getParameter("amount");
+        
+        if (rawAmount == null) return;
+        
+        String amountStr = resolver.resolve(context, rawAmount).asString();
 
         try {
             double amount = amountStr != null ? Double.parseDouble(amountStr) : player.getMaxHealth();

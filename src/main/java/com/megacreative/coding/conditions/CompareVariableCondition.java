@@ -4,6 +4,8 @@ import com.megacreative.coding.BlockCondition;
 import com.megacreative.coding.CodeBlock;
 import com.megacreative.coding.ExecutionContext;
 import com.megacreative.coding.ParameterResolver;
+import com.megacreative.coding.values.DataValue;
+import com.megacreative.coding.variables.VariableManager;
 import org.bukkit.entity.Player;
 
 public class CompareVariableCondition implements BlockCondition {
@@ -11,21 +13,30 @@ public class CompareVariableCondition implements BlockCondition {
     public boolean evaluate(ExecutionContext context) {
         Player player = context.getPlayer();
         CodeBlock block = context.getCurrentBlock();
+        VariableManager variableManager = context.getPlugin().getVariableManager();
 
-        if (player == null || block == null) return false;
+        if (player == null || block == null || variableManager == null) return false;
 
-        // Получаем и разрешаем параметры
-        Object rawVar1 = block.getParameter("var1");
-        Object rawOperator = block.getParameter("operator");
-        Object rawVar2 = block.getParameter("var2");
-
-        String var1Str = ParameterResolver.resolve(context, rawVar1);
-        String operatorStr = ParameterResolver.resolve(context, rawOperator);
-        String var2Str = ParameterResolver.resolve(context, rawVar2);
-
-        if (var1Str == null || operatorStr == null || var2Str == null) return false;
+        ParameterResolver resolver = new ParameterResolver(variableManager);
 
         try {
+            // Получаем и разрешаем параметры
+            DataValue rawVar1 = block.getParameter("var1");
+            DataValue rawOperator = block.getParameter("operator");
+            DataValue rawVar2 = block.getParameter("var2");
+
+            if (rawVar1 == null || rawOperator == null || rawVar2 == null) return false;
+
+            DataValue var1Value = resolver.resolve(context, rawVar1);
+            DataValue operatorValue = resolver.resolve(context, rawOperator);
+            DataValue var2Value = resolver.resolve(context, rawVar2);
+
+            String var1Str = var1Value.asString();
+            String operatorStr = operatorValue.asString();
+            String var2Str = var2Value.asString();
+
+            if (var1Str == null || operatorStr == null || var2Str == null) return false;
+
             // Получаем значения переменных
             Object value1 = context.getVariable(var1Str);
             Object value2 = context.getVariable(var2Str);

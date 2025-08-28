@@ -28,6 +28,7 @@ import com.megacreative.coding.actions.RandomNumberAction;
 import com.megacreative.coding.actions.PlayParticleEffectAction;
 import com.megacreative.coding.actions.RemoveItemsAction;
 import com.megacreative.coding.actions.SetArmorAction;
+import com.megacreative.coding.values.DataValue;
 import org.bukkit.Location;
 import org.bukkit.Material;
 import org.bukkit.entity.Player;
@@ -237,18 +238,22 @@ public class ScriptExecutor {
                     result = player.isOp();
                     break;
                 case "isInWorld":
-                    String worldName = (String) block.getParameter("world");
-                    result = player.getWorld().getName().equals(worldName);
+                    DataValue worldNameValue = block.getParameter("world");
+                    if (worldNameValue != null) {
+                        result = player.getWorld().getName().equals(worldNameValue.asString());
+                    }
                     break;
                 case "hasItem":
-                    String itemName = (String) block.getParameter("item");
-                    if (itemName != null) {
-                        result = player.getInventory().contains(org.bukkit.Material.valueOf(itemName.toUpperCase()));
+                    DataValue itemNameValue = block.getParameter("item");
+                    if (itemNameValue != null) {
+                        result = player.getInventory().contains(org.bukkit.Material.valueOf(itemNameValue.asString().toUpperCase()));
                     }
                     break;
                 case "hasPermission":
-                    String permission = (String) block.getParameter("permission");
-                    result = player.hasPermission(permission);
+                    DataValue permissionValue = block.getParameter("permission");
+                    if (permissionValue != null) {
+                        result = player.hasPermission(permissionValue.asString());
+                    }
                     break;
                 // Добавьте другие условия по необходимости
             }

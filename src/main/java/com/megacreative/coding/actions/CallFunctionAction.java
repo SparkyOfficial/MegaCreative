@@ -4,6 +4,9 @@ import com.megacreative.coding.BlockAction;
 import com.megacreative.coding.CodeBlock;
 import com.megacreative.coding.CodeScript;
 import com.megacreative.coding.ExecutionContext;
+import com.megacreative.coding.ParameterResolver;
+import com.megacreative.coding.values.DataValue;
+import com.megacreative.coding.variables.VariableManager;
 import com.megacreative.MegaCreative;
 import org.bukkit.entity.Player;
 import org.bukkit.inventory.ItemStack;
@@ -28,29 +31,40 @@ public class CallFunctionAction implements BlockAction {
         CodeBlock actionBlock = context.getCurrentBlock();
         if (actionBlock == null) return;
 
+        VariableManager variableManager = context.getPlugin().getVariableManager();
+        if (variableManager == null) return;
+        
+        ParameterResolver resolver = new ParameterResolver(variableManager);
+
         // Получаем имя функции из параметра
-        String functionName = (String) actionBlock.getParameter("functionName");
+        DataValue functionNameValue = actionBlock.getParameter("functionName");
+        if (functionNameValue == null) {
+            player.sendMessage("§cОшибка: не указано имя функции!");
+            return;
+        }
+        
+        String functionName = resolver.resolve(context, functionNameValue).asString();
         if (functionName == null || functionName.isEmpty()) {
             player.sendMessage("§cОшибка: не указано имя функции!");
             return;
         }
 
         // Получаем параметры из виртуального инвентаря
-        Map<String, Object> functionParams = new HashMap<>();
+        Map<String, DataValue> functionParams = new HashMap<>();
         
         // Добавляем стандартные параметры
-        for (Map.Entry<String, Object> entry : actionBlock.getParameters().entrySet()) {
+        for (Map.Entry<String, DataValue> entry : actionBlock.getParameters().entrySet()) {
             if (!entry.getKey().equals("functionName")) {
                 functionParams.put(entry.getKey(), entry.getValue());
             }
         }
         
-        // Добавляем параметры из виртуального инвентаря
+        // Получаем параметры из виртуального инвентаря
         for (int i = 0; i < 27; i++) {
             ItemStack item = actionBlock.getConfigItem(i);
             if (item != null) {
-                functionParams.put("param_" + i, item.getType().name());
-                functionParams.put("param_" + i + "_amount", item.getAmount());
+                functionParams.put("param_" + i, DataValue.fromObject(item.getType().name()));
+                functionParams.put("param_" + i + "_amount", DataValue.fromObject(item.getAmount()));
             }
         }
 
@@ -58,7 +72,7 @@ public class CallFunctionAction implements BlockAction {
         ExecutionContext functionContext = context.withCurrentBlock(context.getCurrentBlock(), context.getBlockLocation());
         
         // Добавляем параметры в контекст функции
-        for (Map.Entry<String, Object> entry : functionParams.entrySet()) {
+        for (Map.Entry<String, DataValue> entry : functionParams.entrySet()) {
             functionContext.setVariable(entry.getKey(), entry.getValue());
         }
         

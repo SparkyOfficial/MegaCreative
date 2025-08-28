@@ -4,6 +4,8 @@ import com.megacreative.coding.BlockAction;
 import com.megacreative.coding.CodeBlock;
 import com.megacreative.coding.ExecutionContext;
 import com.megacreative.coding.ParameterResolver;
+import com.megacreative.coding.values.DataValue;
+import com.megacreative.coding.variables.VariableManager;
 import org.bukkit.Location;
 import org.bukkit.Material;
 import org.bukkit.entity.Player;
@@ -16,12 +18,19 @@ public class SetBlockAction implements BlockAction {
 
         if (player == null || block == null) return;
 
-        // Получаем и разрешаем параметры
-        Object rawMaterial = block.getParameter("material");
-        Object rawCoords = block.getParameter("coords");
+        VariableManager variableManager = context.getPlugin().getVariableManager();
+        if (variableManager == null) return;
+        
+        ParameterResolver resolver = new ParameterResolver(variableManager);
 
-        String materialStr = ParameterResolver.resolve(context, rawMaterial);
-        String coordsStr = ParameterResolver.resolve(context, rawCoords);
+        // Получаем и разрешаем параметры
+        DataValue rawMaterial = block.getParameter("material");
+        DataValue rawCoords = block.getParameter("coords");
+
+        if (rawMaterial == null) return;
+
+        String materialStr = resolver.resolve(context, rawMaterial).asString();
+        String coordsStr = rawCoords != null ? resolver.resolve(context, rawCoords).asString() : null;
 
         if (materialStr == null) return;
 

@@ -4,6 +4,8 @@ import com.megacreative.coding.BlockCondition;
 import com.megacreative.coding.CodeBlock;
 import com.megacreative.coding.ExecutionContext;
 import com.megacreative.coding.ParameterResolver;
+import com.megacreative.coding.values.DataValue;
+import com.megacreative.coding.variables.VariableManager;
 import org.bukkit.GameMode;
 import org.bukkit.entity.Player;
 
@@ -12,21 +14,27 @@ public class PlayerGameModeCondition implements BlockCondition {
     public boolean evaluate(ExecutionContext context) {
         Player player = context.getPlayer();
         CodeBlock block = context.getCurrentBlock();
+        VariableManager variableManager = context.getPlugin().getVariableManager();
 
-        if (player == null || block == null) return false;
+        if (player == null || block == null || variableManager == null) return false;
+
+        ParameterResolver resolver = new ParameterResolver(variableManager);
 
         // Получаем и разрешаем параметры
-        Object rawMode = block.getParameter("mode");
-
-        String modeStr = ParameterResolver.resolve(context, rawMode);
-
-        if (modeStr == null) return false;
-
+        DataValue rawMode = block.getParameter("mode");
+        
         try {
+            if (rawMode == null) return false;
+
+            DataValue modeValue = resolver.resolve(context, rawMode);
+            String modeStr = modeValue.asString();
+
+            if (modeStr == null || modeStr.isEmpty()) return false;
+
             GameMode requiredMode = GameMode.valueOf(modeStr.toUpperCase());
             return player.getGameMode() == requiredMode;
         } catch (IllegalArgumentException e) {
-            player.sendMessage("§cНеизвестный режим игры: " + modeStr);
+            player.sendMessage("§cНеизвестный режим игры: " + (rawMode != null ? rawMode.asString() : "null"));
             return false;
         }
     }

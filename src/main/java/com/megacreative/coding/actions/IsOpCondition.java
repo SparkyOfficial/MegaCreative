@@ -4,6 +4,8 @@ import com.megacreative.coding.BlockCondition;
 import com.megacreative.coding.CodeBlock;
 import com.megacreative.coding.ExecutionContext;
 import com.megacreative.coding.ParameterResolver;
+import com.megacreative.coding.values.DataValue;
+import com.megacreative.coding.variables.VariableManager;
 import org.bukkit.entity.Player;
 
 public class IsOpCondition implements BlockCondition {
@@ -14,8 +16,13 @@ public class IsOpCondition implements BlockCondition {
         
         if (player == null || block == null) return false;
         
-        Object rawRequired = block.getParameter("required");
-        String requiredStr = ParameterResolver.resolve(context, rawRequired);
+        VariableManager variableManager = context.getPlugin().getVariableManager();
+        if (variableManager == null) return false;
+        
+        ParameterResolver resolver = new ParameterResolver(variableManager);
+        
+        DataValue rawRequired = block.getParameter("required");
+        String requiredStr = rawRequired != null ? resolver.resolve(context, rawRequired).asString() : null;
         
         // Если параметр не указан, проверяем просто на OP
         if (requiredStr == null) {

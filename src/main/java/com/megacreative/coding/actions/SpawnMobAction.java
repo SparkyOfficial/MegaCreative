@@ -4,6 +4,8 @@ import com.megacreative.coding.BlockAction;
 import com.megacreative.coding.CodeBlock;
 import com.megacreative.coding.ExecutionContext;
 import com.megacreative.coding.ParameterResolver;
+import com.megacreative.coding.values.DataValue;
+import com.megacreative.coding.variables.VariableManager;
 import org.bukkit.Location;
 import org.bukkit.entity.EntityType;
 import org.bukkit.entity.Player;
@@ -16,7 +18,15 @@ public class SpawnMobAction implements BlockAction {
 
         if (player == null || block == null) return;
         
-        String mobType = (String) block.getParameter("mob");
+        VariableManager variableManager = context.getPlugin().getVariableManager();
+        if (variableManager == null) return;
+        
+        ParameterResolver resolver = new ParameterResolver(variableManager);
+        
+        DataValue rawMobType = block.getParameter("mob");
+        if (rawMobType == null) return;
+        
+        String mobType = resolver.resolve(context, rawMobType).asString();
         if (mobType != null) {
             try {
                 EntityType entityType = EntityType.valueOf(mobType.toUpperCase());

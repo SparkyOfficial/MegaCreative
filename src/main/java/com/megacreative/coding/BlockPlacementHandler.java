@@ -130,7 +130,7 @@ public class BlockPlacementHandler implements Listener {
             event.setCancelled(true); // Важно, чтобы не открылся, например, верстак
             
             // Открываем GUI конфигурации блока
-            plugin.getBlockConfigManager().openConfigGUI(player, location);
+            plugin.getServiceRegistry().getBlockConfigManager().openConfigGUI(player, location);
         }
     }
 

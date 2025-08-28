@@ -14,6 +14,9 @@ import org.bukkit.inventory.meta.ItemMeta;
 import java.util.Arrays;
 import java.util.List;
 
+/**
+ * My Worlds GUI - Fixed to use new GUIManager system
+ */
 public class MyWorldsGUI {
     
     private final MegaCreative plugin;
@@ -81,6 +84,7 @@ public class MyWorldsGUI {
     }
     
     public void open() {
+        // Use the new GUIManager system instead of old GuiListener
         plugin.getGuiManager().registerGUI(player, this, inventory);
         player.openInventory(inventory);
     }

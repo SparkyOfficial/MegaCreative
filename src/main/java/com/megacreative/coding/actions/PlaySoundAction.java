@@ -4,6 +4,8 @@ import com.megacreative.coding.BlockAction;
 import com.megacreative.coding.CodeBlock;
 import com.megacreative.coding.ExecutionContext;
 import com.megacreative.coding.ParameterResolver;
+import com.megacreative.coding.values.DataValue;
+import com.megacreative.coding.variables.VariableManager;
 import org.bukkit.Sound;
 import org.bukkit.entity.Player;
 
@@ -15,14 +17,21 @@ public class PlaySoundAction implements BlockAction {
 
         if (player == null || block == null) return;
 
-        // Получаем и разрешаем параметры
-        Object rawSound = block.getParameter("sound");
-        Object rawVolume = block.getParameter("volume");
-        Object rawPitch = block.getParameter("pitch");
+        VariableManager variableManager = context.getPlugin().getVariableManager();
+        if (variableManager == null) return;
+        
+        ParameterResolver resolver = new ParameterResolver(variableManager);
 
-        String soundStr = ParameterResolver.resolve(context, rawSound);
-        String volumeStr = ParameterResolver.resolve(context, rawVolume);
-        String pitchStr = ParameterResolver.resolve(context, rawPitch);
+        // Получаем и разрешаем параметры
+        DataValue rawSound = block.getParameter("sound");
+        DataValue rawVolume = block.getParameter("volume");
+        DataValue rawPitch = block.getParameter("pitch");
+
+        if (rawSound == null) return;
+
+        String soundStr = resolver.resolve(context, rawSound).asString();
+        String volumeStr = rawVolume != null ? resolver.resolve(context, rawVolume).asString() : "1.0";
+        String pitchStr = rawPitch != null ? resolver.resolve(context, rawPitch).asString() : "1.0";
 
         if (soundStr == null) return;
 

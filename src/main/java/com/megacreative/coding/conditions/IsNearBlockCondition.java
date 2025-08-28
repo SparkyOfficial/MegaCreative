@@ -4,6 +4,8 @@ import com.megacreative.coding.BlockCondition;
 import com.megacreative.coding.CodeBlock;
 import com.megacreative.coding.ExecutionContext;
 import com.megacreative.coding.ParameterResolver;
+import com.megacreative.coding.values.DataValue;
+import com.megacreative.coding.variables.VariableManager;
 import org.bukkit.Material;
 import org.bukkit.entity.Player;
 
@@ -12,19 +14,27 @@ public class IsNearBlockCondition implements BlockCondition {
     public boolean evaluate(ExecutionContext context) {
         Player player = context.getPlayer();
         CodeBlock block = context.getCurrentBlock();
+        VariableManager variableManager = context.getPlugin().getVariableManager();
 
-        if (player == null || block == null) return false;
+        if (player == null || block == null || variableManager == null) return false;
 
-        // Получаем и разрешаем параметры
-        Object rawBlockType = block.getParameter("block");
-        Object rawRadius = block.getParameter("radius");
-
-        String blockTypeStr = ParameterResolver.resolve(context, rawBlockType);
-        String radiusStr = ParameterResolver.resolve(context, rawRadius);
-
-        if (blockTypeStr == null || radiusStr == null) return false;
+        ParameterResolver resolver = new ParameterResolver(variableManager);
 
         try {
+            // Получаем и разрешаем параметры
+            DataValue rawBlockType = block.getParameter("block");
+            DataValue rawRadius = block.getParameter("radius");
+
+            if (rawBlockType == null || rawRadius == null) return false;
+
+            DataValue blockTypeValue = resolver.resolve(context, rawBlockType);
+            DataValue radiusValue = resolver.resolve(context, rawRadius);
+
+            String blockTypeStr = blockTypeValue.asString();
+            String radiusStr = radiusValue.asString();
+
+            if (blockTypeStr == null || radiusStr == null) return false;
+
             Material blockType = Material.valueOf(blockTypeStr.toUpperCase());
             int radius = Integer.parseInt(radiusStr);
 
@@ -40,7 +50,7 @@ public class IsNearBlockCondition implements BlockCondition {
             }
             return false;
         } catch (IllegalArgumentException e) {
-            player.sendMessage("§cОшибка в параметрах блока: " + blockTypeStr);
+            player.sendMessage("§cОшибка в параметрах блока: " + (block.getParameter("block") != null ? block.getParameter("block").asString() : "null"));
             return false;
         }
     }

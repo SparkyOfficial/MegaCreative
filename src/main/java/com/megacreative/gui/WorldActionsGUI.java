@@ -2,7 +2,6 @@ package com.megacreative.gui;
 
 import com.megacreative.MegaCreative;
 import com.megacreative.models.CreativeWorld;
-import com.megacreative.listeners.GuiListener;
 import org.bukkit.Bukkit;
 import org.bukkit.Material;
 import org.bukkit.entity.Player;
@@ -15,6 +14,9 @@ import org.bukkit.inventory.meta.ItemMeta;
 
 import java.util.Arrays;
 
+/**
+ * World Actions GUI - Fixed to use new GUIManager system
+ */
 public class WorldActionsGUI implements Listener {
     
     private final MegaCreative plugin;
@@ -28,8 +30,6 @@ public class WorldActionsGUI implements Listener {
         this.world = world;
         this.inventory = Bukkit.createInventory(null, 27, "§8§lДействия с миром: " + world.getName());
         
-        // Регистрируем GUI в централизованной системе
-        GuiListener.registerOpenGui(player, this);
         setupInventory();
     }
     
@@ -103,6 +103,8 @@ public class WorldActionsGUI implements Listener {
     }
     
     public void open() {
+        // Use the new GUIManager system
+        plugin.getGuiManager().registerGUI(player, this, inventory);
         player.openInventory(inventory);
     }
     
@@ -124,8 +126,7 @@ public class WorldActionsGUI implements Listener {
         // Кнопка назад
         if (displayName.contains("Назад")) {
             player.closeInventory();
-            // Удаляем регистрацию GUI
-            GuiListener.unregisterOpenGui(player);
+            // GUIManager will handle cleanup automatically
             new WorldBrowserGUI(plugin, player).open();
             return;
         }
@@ -133,32 +134,28 @@ public class WorldActionsGUI implements Listener {
         // Войти в мир
         if (displayName.contains("Войти в мир")) {
             player.closeInventory();
-            // Удаляем регистрацию GUI
-            GuiListener.unregisterOpenGui(player);
+            // GUIManager will handle cleanup automatically
             player.performCommand("join " + world.getId());
         }
         
         // Настройки мира
         else if (displayName.contains("Настройки мира")) {
             player.closeInventory();
-            // Удаляем регистрацию GUI
-            GuiListener.unregisterOpenGui(player);
+            // GUIManager will handle cleanup automatically
             new WorldSettingsGUI(plugin, player, world).open();
         }
         
         // Комментарии
         else if (displayName.contains("Комментарии")) {
             player.closeInventory();
-            // Удаляем регистрацию GUI
-            GuiListener.unregisterOpenGui(player);
+            // GUIManager will handle cleanup automatically
             new WorldCommentsGUI(plugin, player, world, 0).open();
         }
         
         // Скрипты
         else if (displayName.contains("Скрипты")) {
             player.closeInventory();
-            // Удаляем регистрацию GUI
-            GuiListener.unregisterOpenGui(player);
+            // GUIManager will handle cleanup automatically
             new ScriptsGUI(plugin, player).open();
         }
     }

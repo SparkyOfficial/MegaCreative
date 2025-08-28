@@ -4,6 +4,8 @@ import com.megacreative.coding.BlockAction;
 import com.megacreative.coding.CodeBlock;
 import com.megacreative.coding.ExecutionContext;
 import com.megacreative.coding.ParameterResolver;
+import com.megacreative.coding.values.DataValue;
+import com.megacreative.coding.variables.VariableManager;
 import com.megacreative.utils.SafeCommandExecutor;
 import org.bukkit.entity.Player;
 
@@ -12,13 +14,19 @@ public class CommandAction implements BlockAction {
     public void execute(ExecutionContext context) {
         Player player = context.getPlayer();
         CodeBlock block = context.getCurrentBlock();
+        VariableManager variableManager = context.getPlugin().getVariableManager();
 
-        if (player == null || block == null) return;
+        if (player == null || block == null || variableManager == null) return;
+
+        ParameterResolver resolver = new ParameterResolver(variableManager);
 
         // Получаем и разрешаем параметры
-        Object rawCommand = block.getParameter("command");
+        DataValue rawCommand = block.getParameter("command");
 
-        String commandStr = ParameterResolver.resolve(context, rawCommand);
+        if (rawCommand == null) return;
+
+        DataValue commandValue = resolver.resolve(context, rawCommand);
+        String commandStr = commandValue.asString();
 
         if (commandStr == null || commandStr.isEmpty()) return;
 

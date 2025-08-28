@@ -5,6 +5,8 @@ import com.megacreative.coding.CodeBlock;
 import com.megacreative.coding.ExecutionContext;
 import com.megacreative.coding.ParameterResolver;
 import com.megacreative.coding.ScriptExecutor;
+import com.megacreative.coding.values.DataValue;
+import com.megacreative.coding.variables.VariableManager;
 import org.bukkit.Bukkit;
 import org.bukkit.entity.Player;
 
@@ -23,13 +25,26 @@ public class RepeatTriggerAction implements BlockAction {
         if (player == null || block == null) return;
 
         // Получаем и разрешаем параметры
-        Object rawTicks = block.getParameter("ticks");
-        Object rawAction = block.getParameter("action");
+        VariableManager variableManager = context.getPlugin().getVariableManager();
+        if (variableManager == null) return;
+        
+        ParameterResolver resolver = new ParameterResolver(variableManager);
+        
+        DataValue rawTicks = block.getParameter("ticks");
+        DataValue rawAction = block.getParameter("action");
 
-        String ticksStr = ParameterResolver.resolve(context, rawTicks);
-        String actionStr = ParameterResolver.resolve(context, rawAction);
+        if (rawTicks == null) return;
+        
+        DataValue ticksValue = resolver.resolve(context, rawTicks);
+        String ticksStr = ticksValue.asString();
+        
+        String actionStr = null;
+        if (rawAction != null) {
+            DataValue actionValue = resolver.resolve(context, rawAction);
+            actionStr = actionValue.asString();
+        }
 
-        if (ticksStr == null || actionStr == null) return;
+        if (ticksStr == null) return;
 
         try {
             int ticks = Integer.parseInt(ticksStr);

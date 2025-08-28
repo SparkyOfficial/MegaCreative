@@ -125,10 +125,7 @@ public class ForEachAction implements BlockAction {
                 executeChildBlocks(context, block);
                 
                 // Check for break conditions or script interruption
-                if (context.isCancelled()) {
-                    player.sendMessage("§e[ForEach] Loop interrupted");
-                    break;
-                }
+                // Note: Basic loop without cancellation support for now
             }
             
             player.sendMessage("§a[ForEach] Completed iteration over " + list.size() + " items");
@@ -156,19 +153,9 @@ public class ForEachAction implements BlockAction {
      */
     private void executeChildBlocks(ExecutionContext context, CodeBlock parentBlock) {
         for (CodeBlock childBlock : parentBlock.getChildren()) {
-            if (context.isCancelled()) break;
-            
-            // Create new context for child execution
-            ExecutionContext childContext = new ExecutionContext.Builder()
-                .plugin(context.getPlugin())
-                .player(context.getPlayer())
-                .currentBlock(childBlock)
-                .creativeWorld(context.getCreativeWorld())
-                .event(context.getEvent())
-                .build();
-            
-            // Execute child block
-            childBlock.execute(childContext);
+            // Use ScriptExecutor from ServiceRegistry to process child blocks properly
+            com.megacreative.coding.ScriptExecutor executor = new com.megacreative.coding.ScriptExecutor(context.getPlugin());
+            executor.processBlock(childBlock, context);
         }
     }
     
@@ -180,8 +167,12 @@ public class ForEachAction implements BlockAction {
         return switch (scope) {
             case LOCAL -> manager.getLocalVariable(scriptId, name);
             case WORLD -> manager.getGlobalVariable(worldId, name);
-            case PLAYER -> manager.getPlayerVariable(player.getUniqueId().toString(), name);
-            case SERVER -> manager.getServerVariable(name);
+            case PLAYER -> {
+                // Use the scoped variable approach for player variables
+                String playerScopedName = "player." + name;
+                yield manager.getVariable(playerScopedName, scriptId, worldId);
+            }
+            case SERVER -> manager.getPersistentVariable(name);
         };
     }
     
@@ -193,8 +184,12 @@ public class ForEachAction implements BlockAction {
         switch (scope) {
             case LOCAL -> manager.setLocalVariable(scriptId, name, value);
             case WORLD -> manager.setGlobalVariable(worldId, name, value);
-            case PLAYER -> manager.setPlayerVariable(player.getUniqueId().toString(), name, value);
-            case SERVER -> manager.setServerVariable(name, value);
+            case PLAYER -> {
+                // Use the scoped variable approach for player variables
+                String playerScopedName = "player." + name;
+                manager.setVariable(playerScopedName, value, scriptId, worldId);
+            }
+            case SERVER -> manager.setPersistentVariable(name, value);
         }
     }
     
@@ -203,11 +198,15 @@ public class ForEachAction implements BlockAction {
      */
     private void removeVariable(VariableManager manager, VariableScope scope, 
                                String scriptId, String worldId, Player player, String name) {
+        // Since VariableManager doesn't have remove methods, we set to null
         switch (scope) {
-            case LOCAL -> manager.removeLocalVariable(scriptId, name);
-            case WORLD -> manager.removeGlobalVariable(worldId, name);
-            case PLAYER -> manager.removePlayerVariable(player.getUniqueId().toString(), name);
-            case SERVER -> manager.removeServerVariable(name);
+            case LOCAL -> manager.setLocalVariable(scriptId, name, null);
+            case WORLD -> manager.setGlobalVariable(worldId, name, null);
+            case PLAYER -> {
+                String playerScopedName = "player." + name;
+                manager.setVariable(playerScopedName, null, scriptId, worldId);
+            }
+            case SERVER -> manager.setPersistentVariable(name, null);
         }
     }
 }

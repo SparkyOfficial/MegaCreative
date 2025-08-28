@@ -4,6 +4,8 @@ import com.megacreative.coding.BlockAction;
 import com.megacreative.coding.CodeBlock;
 import com.megacreative.coding.ExecutionContext;
 import com.megacreative.coding.ParameterResolver;
+import com.megacreative.coding.values.DataValue;
+import com.megacreative.coding.variables.VariableManager;
 import org.bukkit.entity.Player;
 
 public class GetGlobalVariableAction implements BlockAction {
@@ -14,12 +16,19 @@ public class GetGlobalVariableAction implements BlockAction {
 
         if (player == null || block == null) return;
 
-        // Получаем и разрешаем параметры
-        Object rawVarName = block.getParameter("var");
-        Object rawLocalVar = block.getParameter("localVar");
+        VariableManager variableManager = context.getPlugin().getVariableManager();
+        if (variableManager == null) return;
+        
+        ParameterResolver resolver = new ParameterResolver(variableManager);
 
-        String varName = ParameterResolver.resolve(context, rawVarName);
-        String localVarName = ParameterResolver.resolve(context, rawLocalVar);
+        // Получаем и разрешаем параметры
+        DataValue rawVarName = block.getParameter("var");
+        DataValue rawLocalVar = block.getParameter("localVar");
+        
+        if (rawVarName == null || rawLocalVar == null) return;
+
+        String varName = resolver.resolve(context, rawVarName).asString();
+        String localVarName = resolver.resolve(context, rawLocalVar).asString();
 
         if (varName != null && !varName.isEmpty() && localVarName != null && !localVarName.isEmpty()) {
             Object globalValue = context.getPlugin().getDataManager().getPlayerVariable(player.getUniqueId(), varName);

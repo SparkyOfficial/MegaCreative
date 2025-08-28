@@ -6,7 +6,6 @@ import com.megacreative.coding.ExecutionContext;
 import com.megacreative.coding.ParameterResolver;
 import com.megacreative.coding.events.CustomEvent;
 import com.megacreative.coding.events.CustomEventManager;
-import com.megacreative.coding.events.EventDataField;
 import com.megacreative.coding.values.DataValue;
 import com.megacreative.coding.values.ValueType;
 import com.megacreative.coding.values.types.ListValue;
@@ -74,7 +73,8 @@ public class TriggerCustomEventAction implements BlockAction {
             }
             
             // Check if event exists
-            CustomEvent customEvent = eventManager.getEvent(eventName);
+            Map<String, CustomEvent> events = eventManager.getEvents();
+            CustomEvent customEvent = events.get(eventName);
             if (customEvent == null) {
                 player.sendMessage("§c[TriggerEvent] Custom event not found: " + eventName);
                 return;
@@ -124,7 +124,7 @@ public class TriggerCustomEventAction implements BlockAction {
         }
         
         // Collect data for each field defined in the custom event
-        for (EventDataField field : customEvent.getDataFields().values()) {
+        for (CustomEvent.EventDataField field : customEvent.getDataFields().values()) {
             String fieldName = field.getName();
             DataValue fieldValue = block.getParameter("data_" + fieldName);
             
@@ -152,7 +152,7 @@ public class TriggerCustomEventAction implements BlockAction {
      * Validates event data against event definition
      */
     private String validateEventData(CustomEvent customEvent, Map<String, DataValue> eventData) {
-        for (EventDataField field : customEvent.getDataFields().values()) {
+        for (CustomEvent.EventDataField field : customEvent.getDataFields().values()) {
             String fieldName = field.getName();
             
             if (field.isRequired() && (!eventData.containsKey(fieldName) || eventData.get(fieldName).isEmpty())) {
@@ -161,11 +161,12 @@ public class TriggerCustomEventAction implements BlockAction {
             
             if (eventData.containsKey(fieldName)) {
                 DataValue value = eventData.get(fieldName);
-                ValueType expectedType = field.getExpectedType();
+                Class<?> expectedType = field.getExpectedType();
                 
-                // Type validation
-                if (expectedType != null && value.getType() != expectedType) {
-                    return "Field " + fieldName + " expects " + expectedType + " but got " + value.getType();
+                // Basic type validation - check if the value is compatible
+                if (expectedType != null && !field.isCompatible(value)) {
+                    return "Field " + fieldName + " expects " + expectedType.getSimpleName() + 
+                           " but got " + (value != null ? value.getClass().getSimpleName() : "null");
                 }
             }
         }
@@ -198,12 +199,9 @@ public class TriggerCustomEventAction implements BlockAction {
     private void doTriggerEvent(CustomEventManager eventManager, CustomEvent customEvent, 
                                Map<String, DataValue> eventData, ExecutionContext context, boolean isGlobal) {
         
-        if (isGlobal) {
-            eventManager.triggerGlobalEvent(customEvent.getName(), eventData, context);
-        } else {
-            String worldId = context.getPlayer().getWorld().getName();
-            eventManager.triggerWorldEvent(worldId, customEvent.getName(), eventData, context);
-        }
+        // Use the actual CustomEventManager.triggerEvent method
+        String worldName = context.getPlayer().getWorld().getName();
+        eventManager.triggerEvent(customEvent.getName(), eventData, context.getPlayer(), worldName);
     }
     
     /**

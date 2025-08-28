@@ -4,6 +4,8 @@ import com.megacreative.coding.BlockAction;
 import com.megacreative.coding.CodeBlock;
 import com.megacreative.coding.ExecutionContext;
 import com.megacreative.coding.ParameterResolver;
+import com.megacreative.coding.values.DataValue;
+import com.megacreative.coding.variables.VariableManager;
 import org.bukkit.Location;
 import org.bukkit.Particle;
 import org.bukkit.entity.Player;
@@ -13,17 +15,34 @@ public class PlayParticleEffectAction implements BlockAction {
     public void execute(ExecutionContext context) {
         Player player = context.getPlayer();
         CodeBlock block = context.getCurrentBlock();
+        VariableManager variableManager = context.getPlugin().getVariableManager();
 
-        if (player == null || block == null) return;
+        if (player == null || block == null || variableManager == null) return;
+
+        ParameterResolver resolver = new ParameterResolver(variableManager);
 
         // Получаем и разрешаем параметры
-        Object rawParticle = block.getParameter("particle");
-        Object rawCount = block.getParameter("count");
-        Object rawOffset = block.getParameter("offset");
+        DataValue rawParticle = block.getParameter("particle");
+        DataValue rawCount = block.getParameter("count");
+        DataValue rawOffset = block.getParameter("offset");
 
-        String particleStr = ParameterResolver.resolve(context, rawParticle);
-        String countStr = ParameterResolver.resolve(context, rawCount);
-        String offsetStr = ParameterResolver.resolve(context, rawOffset);
+        if (rawParticle == null) return;
+
+        DataValue particleValue = resolver.resolve(context, rawParticle);
+        String particleStr = particleValue.asString();
+        
+        String countStr = null;
+        String offsetStr = null;
+        
+        if (rawCount != null) {
+            DataValue countValue = resolver.resolve(context, rawCount);
+            countStr = countValue.asString();
+        }
+        
+        if (rawOffset != null) {
+            DataValue offsetValue = resolver.resolve(context, rawOffset);
+            offsetStr = offsetValue.asString();
+        }
 
         if (particleStr == null) return;
 

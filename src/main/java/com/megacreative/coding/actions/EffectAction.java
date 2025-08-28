@@ -4,6 +4,8 @@ import com.megacreative.coding.BlockAction;
 import com.megacreative.coding.CodeBlock;
 import com.megacreative.coding.ExecutionContext;
 import com.megacreative.coding.ParameterResolver;
+import com.megacreative.coding.values.DataValue;
+import com.megacreative.coding.variables.VariableManager;
 import org.bukkit.potion.PotionEffect;
 import org.bukkit.potion.PotionEffectType;
 import org.bukkit.entity.Player;
@@ -16,14 +18,21 @@ public class EffectAction implements BlockAction {
 
         if (player == null || block == null) return;
 
-        // Получаем и разрешаем параметры
-        Object rawEffect = block.getParameter("effect");
-        Object rawDuration = block.getParameter("duration");
-        Object rawAmplifier = block.getParameter("amplifier");
+        VariableManager variableManager = context.getPlugin().getVariableManager();
+        if (variableManager == null) return;
+        
+        ParameterResolver resolver = new ParameterResolver(variableManager);
 
-        String effectStr = ParameterResolver.resolve(context, rawEffect);
-        String durationStr = ParameterResolver.resolve(context, rawDuration);
-        String amplifierStr = ParameterResolver.resolve(context, rawAmplifier);
+        // Получаем и разрешаем параметры
+        DataValue rawEffect = block.getParameter("effect");
+        DataValue rawDuration = block.getParameter("duration");
+        DataValue rawAmplifier = block.getParameter("amplifier");
+
+        if (rawEffect == null) return;
+
+        String effectStr = resolver.resolve(context, rawEffect).asString();
+        String durationStr = rawDuration != null ? resolver.resolve(context, rawDuration).asString() : "100";
+        String amplifierStr = rawAmplifier != null ? resolver.resolve(context, rawAmplifier).asString() : "1";
 
         if (effectStr == null) return;
 

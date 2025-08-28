@@ -3,7 +3,6 @@ package com.megacreative.gui;
 import com.megacreative.MegaCreative;
 import com.megacreative.models.CreativeWorld;
 import com.megacreative.models.WorldFlags;
-import com.megacreative.listeners.GuiListener;
 import org.bukkit.Bukkit;
 import org.bukkit.Material;
 import org.bukkit.entity.Player;
@@ -16,6 +15,9 @@ import org.bukkit.inventory.meta.ItemMeta;
 
 import java.util.Arrays;
 
+/**
+ * World Settings GUI - Fixed to use new GUIManager system
+ */
 public class WorldSettingsGUI implements Listener {
     
     private final MegaCreative plugin;
@@ -29,8 +31,6 @@ public class WorldSettingsGUI implements Listener {
         this.world = world;
         this.inventory = Bukkit.createInventory(null, 27, "§8§lНастройки мира: " + world.getName());
         
-        // Регистрируем GUI в централизованной системе
-        GuiListener.registerOpenGui(player, this);
         setupInventory();
     }
     
@@ -101,6 +101,8 @@ public class WorldSettingsGUI implements Listener {
     }
     
     public void open() {
+        // Use the new GUIManager system
+        plugin.getGuiManager().registerGUI(player, this, inventory);
         player.openInventory(inventory);
     }
     
@@ -122,8 +124,7 @@ public class WorldSettingsGUI implements Listener {
         // Кнопка назад
         if (displayName.contains("Назад")) {
             player.closeInventory();
-            // Удаляем регистрацию GUI
-            GuiListener.unregisterOpenGui(player);
+            // GUIManager will handle cleanup automatically
             new MyWorldsGUI(plugin, player).open();
             return;
         }
@@ -131,8 +132,7 @@ public class WorldSettingsGUI implements Listener {
         // Удаление мира
         if (displayName.contains("Удалить мир")) {
             player.closeInventory();
-            // Удаляем регистрацию GUI
-            GuiListener.unregisterOpenGui(player);
+            // GUIManager will handle cleanup automatically
             player.sendMessage("§cДля удаления мира напишите в чат: §eУДАЛИТЬ");
             plugin.getDeleteConfirmations().put(player.getUniqueId(), world.getId());
             return;

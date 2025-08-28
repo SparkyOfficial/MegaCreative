@@ -5,6 +5,8 @@ import com.megacreative.coding.CodeBlock;
 import com.megacreative.coding.CodeScript;
 import com.megacreative.coding.ExecutionContext;
 import com.megacreative.coding.ParameterResolver;
+import com.megacreative.coding.values.DataValue;
+import com.megacreative.coding.variables.VariableManager;
 import com.megacreative.MegaCreative;
 import org.bukkit.entity.Player;
 
@@ -17,9 +19,12 @@ public class SaveFunctionAction implements BlockAction {
 
         if (player == null || block == null) return;
 
+        VariableManager variableManager = context.getPlugin().getVariableManager();
+        ParameterResolver resolver = new ParameterResolver(variableManager);
+
         // Получаем и разрешаем параметры
-        Object rawFunctionName = block.getParameter("name");
-        String functionName = ParameterResolver.resolve(context, rawFunctionName);
+        DataValue rawFunctionName = block.getParameter("name");
+        String functionName = resolver.resolve(context, rawFunctionName).asString();
 
         if (functionName == null) {
             player.sendMessage("§cОшибка: параметр 'name' не указан");

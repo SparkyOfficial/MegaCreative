@@ -13,6 +13,9 @@ import org.bukkit.inventory.meta.ItemMeta;
 import java.util.Arrays;
 import java.util.List;
 
+/**
+ * World Browser GUI - Fixed to use new GUIManager system
+ */
 public class WorldBrowserGUI {
     
     private final MegaCreative plugin;
@@ -109,6 +112,7 @@ public class WorldBrowserGUI {
     }
     
     public void open() {
+        // Use the new GUIManager system instead of old GuiListener
         plugin.getGuiManager().registerGUI(player, this, inventory);
         player.openInventory(inventory);
     }

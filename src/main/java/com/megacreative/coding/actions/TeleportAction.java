@@ -4,6 +4,8 @@ import com.megacreative.coding.BlockAction;
 import com.megacreative.coding.CodeBlock;
 import com.megacreative.coding.ExecutionContext;
 import com.megacreative.coding.ParameterResolver;
+import com.megacreative.coding.values.DataValue;
+import com.megacreative.coding.variables.VariableManager;
 import org.bukkit.Location;
 import org.bukkit.entity.Player;
 
@@ -15,9 +17,12 @@ public class TeleportAction implements BlockAction {
 
         if (player == null || block == null) return;
 
+        VariableManager variableManager = context.getPlugin().getVariableManager();
+        ParameterResolver resolver = new ParameterResolver(variableManager);
+
         // Получаем и разрешаем координаты
-        Object rawCoords = block.getParameter("coords");
-        String coordsStr = ParameterResolver.resolve(context, rawCoords);
+        DataValue rawCoords = block.getParameter("coords");
+        String coordsStr = resolver.resolve(context, rawCoords).asString();
 
         try {
             String[] parts = coordsStr.split(" ");

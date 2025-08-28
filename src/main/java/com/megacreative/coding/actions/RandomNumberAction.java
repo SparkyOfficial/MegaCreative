@@ -4,6 +4,8 @@ import com.megacreative.coding.BlockAction;
 import com.megacreative.coding.CodeBlock;
 import com.megacreative.coding.ExecutionContext;
 import com.megacreative.coding.ParameterResolver;
+import com.megacreative.coding.values.DataValue;
+import com.megacreative.coding.variables.VariableManager;
 import org.bukkit.entity.Player;
 
 import java.util.Random;
@@ -18,16 +20,21 @@ public class RandomNumberAction implements BlockAction {
 
         if (player == null || block == null) return;
 
+        VariableManager variableManager = context.getPlugin().getVariableManager();
+        if (variableManager == null) return;
+        
+        ParameterResolver resolver = new ParameterResolver(variableManager);
+
         // Получаем и разрешаем параметры
-        Object rawMin = block.getParameter("min");
-        Object rawMax = block.getParameter("max");
-        Object rawVar = block.getParameter("var");
+        DataValue rawMin = block.getParameter("min");
+        DataValue rawMax = block.getParameter("max");
+        DataValue rawVar = block.getParameter("var");
+        
+        if (rawMin == null || rawMax == null || rawVar == null) return;
 
-        String minStr = ParameterResolver.resolve(context, rawMin);
-        String maxStr = ParameterResolver.resolve(context, rawMax);
-        String varName = ParameterResolver.resolve(context, rawVar);
-
-        if (minStr == null || maxStr == null || varName == null) return;
+        String minStr = resolver.resolve(context, rawMin).asString();
+        String maxStr = resolver.resolve(context, rawMax).asString();
+        String varName = resolver.resolve(context, rawVar).asString();
 
         try {
             int min = Integer.parseInt(minStr);

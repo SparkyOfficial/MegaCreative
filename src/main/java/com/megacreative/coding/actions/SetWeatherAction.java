@@ -4,6 +4,8 @@ import com.megacreative.coding.BlockAction;
 import com.megacreative.coding.CodeBlock;
 import com.megacreative.coding.ExecutionContext;
 import com.megacreative.coding.ParameterResolver;
+import com.megacreative.coding.values.DataValue;
+import com.megacreative.coding.variables.VariableManager;
 import org.bukkit.WeatherType;
 import org.bukkit.entity.Player;
 
@@ -15,10 +17,16 @@ public class SetWeatherAction implements BlockAction {
 
         if (player == null || block == null) return;
 
-        // Получаем и разрешаем параметры
-        Object rawWeather = block.getParameter("weather");
+        VariableManager variableManager = context.getPlugin().getVariableManager();
+        if (variableManager == null) return;
+        
+        ParameterResolver resolver = new ParameterResolver(variableManager);
 
-        String weatherStr = ParameterResolver.resolve(context, rawWeather);
+        // Получаем и разрешаем параметры
+        DataValue rawWeather = block.getParameter("weather");
+        if (rawWeather == null) return;
+
+        String weatherStr = resolver.resolve(context, rawWeather).asString();
 
         if (weatherStr == null) return;
 

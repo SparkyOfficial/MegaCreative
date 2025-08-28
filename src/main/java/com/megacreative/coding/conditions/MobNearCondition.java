@@ -4,6 +4,8 @@ import com.megacreative.coding.BlockCondition;
 import com.megacreative.coding.CodeBlock;
 import com.megacreative.coding.ExecutionContext;
 import com.megacreative.coding.ParameterResolver;
+import com.megacreative.coding.values.DataValue;
+import com.megacreative.coding.variables.VariableManager;
 import org.bukkit.entity.EntityType;
 import org.bukkit.entity.Player;
 
@@ -17,12 +19,19 @@ public class MobNearCondition implements BlockCondition {
 
         if (player == null || block == null) return false;
 
-        // Получаем и разрешаем параметры
-        Object rawMobType = block.getParameter("mob");
-        Object rawRadius = block.getParameter("radius");
+        VariableManager variableManager = context.getPlugin().getVariableManager();
+        if (variableManager == null) return false;
+        
+        ParameterResolver resolver = new ParameterResolver(variableManager);
 
-        String mobTypeStr = ParameterResolver.resolve(context, rawMobType);
-        String radiusStr = ParameterResolver.resolve(context, rawRadius);
+        // Получаем и разрешаем параметры
+        DataValue rawMobType = block.getParameter("mob");
+        DataValue rawRadius = block.getParameter("radius");
+        
+        if (rawRadius == null) return false;
+
+        String mobTypeStr = rawMobType != null ? resolver.resolve(context, rawMobType).asString() : null;
+        String radiusStr = resolver.resolve(context, rawRadius).asString();
 
         if (radiusStr == null) return false;
 

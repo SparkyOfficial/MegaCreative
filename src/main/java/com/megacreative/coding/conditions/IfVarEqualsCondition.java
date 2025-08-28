@@ -4,6 +4,8 @@ import com.megacreative.coding.BlockCondition;
 import com.megacreative.coding.CodeBlock;
 import com.megacreative.coding.ExecutionContext;
 import com.megacreative.coding.ParameterResolver;
+import com.megacreative.coding.values.DataValue;
+import com.megacreative.coding.variables.VariableManager;
 import org.bukkit.entity.Player;
 
 public class IfVarEqualsCondition implements BlockCondition {
@@ -11,26 +13,32 @@ public class IfVarEqualsCondition implements BlockCondition {
     public boolean evaluate(ExecutionContext context) {
         Player player = context.getPlayer();
         CodeBlock block = context.getCurrentBlock();
+        VariableManager variableManager = context.getPlugin().getVariableManager();
 
-        if (player == null || block == null) return false;
+        if (player == null || block == null || variableManager == null) return false;
 
-        // Получаем и разрешаем параметры
-        Object rawVarName = block.getParameter("variable");
-        Object rawValue = block.getParameter("value");
-
-        String varName = ParameterResolver.resolve(context, rawVarName);
-        String expectedValue = ParameterResolver.resolve(context, rawValue);
-
-        if (varName == null || expectedValue == null) return false;
+        ParameterResolver resolver = new ParameterResolver(variableManager);
 
         try {
+            // Получаем и разрешаем параметры
+            DataValue rawVarName = block.getParameter("variable");
+            DataValue rawValue = block.getParameter("value");
+
+            if (rawVarName == null || rawValue == null) return false;
+
+            DataValue varNameValue = resolver.resolve(context, rawVarName);
+            DataValue expectedValue = resolver.resolve(context, rawValue);
+
+            String varName = varNameValue.asString();
+            if (varName == null || varName.isEmpty()) return false;
+
             // Получаем значение переменной
             Object variableValue = context.getVariable(varName);
             
             if (variableValue == null) return false;
 
             // Сравниваем значения
-            return variableValue.toString().equals(expectedValue);
+            return variableValue.toString().equals(expectedValue.asString());
 
         } catch (Exception e) {
             player.sendMessage("§cОшибка проверки ifVarEquals: " + e.getMessage());

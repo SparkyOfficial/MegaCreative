@@ -4,6 +4,8 @@ import com.megacreative.coding.BlockCondition;
 import com.megacreative.coding.CodeBlock;
 import com.megacreative.coding.ExecutionContext;
 import com.megacreative.coding.ParameterResolver;
+import com.megacreative.coding.values.DataValue;
+import com.megacreative.coding.variables.VariableManager;
 
 public class CompareVariableCondition implements BlockCondition {
     @Override
@@ -11,13 +13,16 @@ public class CompareVariableCondition implements BlockCondition {
         CodeBlock block = context.getCurrentBlock();
         if (block == null) return false;
         
-        Object rawVar1 = block.getParameter("var1");
-        Object rawVar2 = block.getParameter("var2");
-        Object rawOperator = block.getParameter("operator");
+        VariableManager variableManager = context.getPlugin().getVariableManager();
+        ParameterResolver resolver = new ParameterResolver(variableManager);
         
-        String var1Str = ParameterResolver.resolve(context, rawVar1);
-        String var2Str = ParameterResolver.resolve(context, rawVar2);
-        String operator = ParameterResolver.resolve(context, rawOperator);
+        DataValue rawVar1 = block.getParameter("var1");
+        DataValue rawVar2 = block.getParameter("var2");
+        DataValue rawOperator = block.getParameter("operator");
+        
+        String var1Str = resolver.resolve(context, rawVar1).asString();
+        String var2Str = resolver.resolve(context, rawVar2).asString();
+        String operator = resolver.resolve(context, rawOperator).asString();
         
         if (var1Str == null || var2Str == null || operator == null) return false;
         

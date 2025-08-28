@@ -5,6 +5,8 @@ import com.megacreative.coding.CodeBlock;
 import com.megacreative.coding.ExecutionContext;
 import com.megacreative.coding.ParameterResolver;
 import com.megacreative.coding.ScriptExecutor;
+import com.megacreative.coding.values.DataValue;
+import com.megacreative.coding.variables.VariableManager;
 import org.bukkit.Bukkit;
 import org.bukkit.entity.Player;
 
@@ -13,13 +15,19 @@ public class WaitAction implements BlockAction {
     public void execute(ExecutionContext context) {
         Player player = context.getPlayer();
         CodeBlock block = context.getCurrentBlock();
+        VariableManager variableManager = context.getPlugin().getVariableManager();
 
-        if (player == null || block == null) return;
+        if (player == null || block == null || variableManager == null) return;
+
+        ParameterResolver resolver = new ParameterResolver(variableManager);
 
         // Получаем и разрешаем параметры
-        Object rawTicks = block.getParameter("ticks");
+        DataValue rawTicks = block.getParameter("ticks");
 
-        String ticksStr = ParameterResolver.resolve(context, rawTicks);
+        if (rawTicks == null) return;
+
+        DataValue ticksValue = resolver.resolve(context, rawTicks);
+        String ticksStr = ticksValue.asString();
 
         if (ticksStr == null) return;
 

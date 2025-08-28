@@ -4,6 +4,8 @@ import com.megacreative.coding.BlockAction;
 import com.megacreative.coding.CodeBlock;
 import com.megacreative.coding.ExecutionContext;
 import com.megacreative.coding.ParameterResolver;
+import com.megacreative.coding.values.DataValue;
+import com.megacreative.coding.variables.VariableManager;
 import org.bukkit.Bukkit;
 import org.bukkit.World;
 import org.bukkit.entity.Player;
@@ -16,10 +18,16 @@ public class SetTimeAction implements BlockAction {
 
         if (player == null || block == null) return;
 
-        // Получаем и разрешаем параметры
-        Object rawTime = block.getParameter("time");
+        VariableManager variableManager = context.getPlugin().getVariableManager();
+        if (variableManager == null) return;
+        
+        ParameterResolver resolver = new ParameterResolver(variableManager);
 
-        String timeStr = ParameterResolver.resolve(context, rawTime);
+        // Получаем и разрешаем параметры
+        DataValue rawTime = block.getParameter("time");
+        if (rawTime == null) return;
+
+        String timeStr = resolver.resolve(context, rawTime).asString();
 
         if (timeStr == null) return;
 
