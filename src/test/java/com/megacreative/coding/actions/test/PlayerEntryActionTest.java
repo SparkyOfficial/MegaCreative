@@ -7,11 +7,17 @@ import com.megacreative.coding.ExecutionContext;
 import com.megacreative.coding.variables.VariableManager;
 import com.megacreative.coding.values.DataValue;
 import com.megacreative.coding.values.ValueType;
-import com.megacreative.coding.values.types.TextValue;
+import com.megacreative.core.ServiceRegistry;
+import com.megacreative.coding.containers.BlockContainerManager;
 import org.bukkit.Material;
 import org.bukkit.World;
 import org.bukkit.entity.Player;
 import org.bukkit.inventory.PlayerInventory;
+import org.bukkit.inventory.ItemStack;
+import org.bukkit.Location;
+import org.bukkit.block.Block;
+import org.bukkit.block.Chest;
+import org.bukkit.inventory.Inventory;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.mockito.Mockito;
@@ -29,25 +35,31 @@ public class PlayerEntryActionTest {
     private PlayerEntryAction playerEntryAction;
     private Player mockPlayer;
     private MegaCreative mockPlugin;
+    private ServiceRegistry mockServiceRegistry;
     private VariableManager mockVariableManager;
     private CodeBlock mockBlock;
     private World mockWorld;
+    private Location mockLocation;
     
     @BeforeEach
     public void setUp() {
         playerEntryAction = new PlayerEntryAction();
         mockPlayer = Mockito.mock(Player.class);
         mockPlugin = Mockito.mock(MegaCreative.class);
+        mockServiceRegistry = Mockito.mock(ServiceRegistry.class);
         mockVariableManager = Mockito.mock(VariableManager.class);
         mockBlock = Mockito.mock(CodeBlock.class);
         mockWorld = Mockito.mock(World.class);
+        mockLocation = Mockito.mock(Location.class);
         
+        when(mockPlugin.getServiceRegistry()).thenReturn(mockServiceRegistry);
         when(mockPlugin.getVariableManager()).thenReturn(mockVariableManager);
         when(mockPlayer.getUniqueId()).thenReturn(UUID.randomUUID());
         when(mockPlayer.getName()).thenReturn("TestPlayer");
         when(mockPlayer.getDisplayName()).thenReturn("TestPlayer");
         when(mockPlayer.getWorld()).thenReturn(mockWorld);
         when(mockWorld.getName()).thenReturn("test_world");
+        when(mockBlock.getLocation()).thenReturn(mockLocation);
         
         // Mock VariableManager to return the same value (no resolution needed for simple values)
         when(mockVariableManager.getVariable(anyString(), anyString(), anyString())).thenAnswer(invocation -> {
@@ -95,6 +107,31 @@ public class PlayerEntryActionTest {
         verify(mockInventory).addItem(any());
         verify(mockPlayer).sendMessage(contains("Добро пожаловать"));
         verify(mockPlayer).sendMessage(contains("получили 5x STONE"));
+    }
+    
+    @Test
+    public void testPlayerEntryWithContainerItems() {
+        // Setup
+        ExecutionContext context = ExecutionContext.builder()
+                .plugin(mockPlugin)
+                .player(mockPlayer)
+                .currentBlock(mockBlock)
+                .build();
+        
+        // Mock the container manager
+        BlockContainerManager mockContainerManager = Mockito.mock(BlockContainerManager.class);
+        when(mockServiceRegistry.getContainerManager()).thenReturn(mockContainerManager);
+        
+        PlayerInventory mockInventory = Mockito.mock(PlayerInventory.class);
+        when(mockPlayer.getInventory()).thenReturn(mockInventory);
+        when(mockBlock.getParameter("autoGiveItem")).thenReturn(DataValue.fromObject(true));
+        
+        // Execute
+        playerEntryAction.execute(context);
+        
+        // Verify that container manager was accessed
+        verify(mockServiceRegistry).getContainerManager();
+        verify(mockPlayer).sendMessage(contains("Добро пожаловать"));
     }
     
     // Simple implementation of AnyValue for testing
