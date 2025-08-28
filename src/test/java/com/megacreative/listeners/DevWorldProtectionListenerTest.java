@@ -77,11 +77,11 @@ class DevWorldProtectionListenerTest {
     }
     
     @Test
-    void testIsMaterialPermittedInDevWorld() {
+    void testIsMaterialAllowedInDevWorldForAction() {
         // Test with a hardcoded allowed material
-        assertTrue(listener.isMaterialPermittedInDevWorld(Material.ANVIL));
+        assertTrue(listener.isMaterialAllowedInDevWorldForAction(Material.ANVIL));
         
         // Test with a non-allowed material
-        assertFalse(listener.isMaterialPermittedInDevWorld(Material.STONE));
+        assertFalse(listener.isMaterialAllowedInDevWorldForAction(Material.STONE));
     }
 }

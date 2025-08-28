@@ -146,7 +146,7 @@ public class BlockPlacementHandler implements Listener {
     /**
      * Проверяет, находится ли игрок в мире разработки
      */
-    private boolean isInDevWorld(Player player) {
+    public boolean isInDevWorld(Player player) {  // Changed from private to public
         String worldName = player.getWorld().getName();
         // Проверяем разные варианты названий миров разработки
         return worldName.contains("dev") || worldName.contains("Dev") || 
