@@ -23,7 +23,7 @@ public class FunctionParameter {
         this.name = name;
         this.expectedType = expectedType;
         this.required = required;
-        this.description = \"\";
+        this.description = "";
     }
     
     public FunctionParameter(String name, ValueType expectedType, DataValue defaultValue, String description) {
@@ -31,7 +31,7 @@ public class FunctionParameter {
         this.expectedType = expectedType;
         this.defaultValue = defaultValue;
         this.required = defaultValue == null;
-        this.description = description != null ? description : \"\";
+        this.description = description != null ? description : "";
     }
     
     /**
@@ -55,7 +55,7 @@ public class FunctionParameter {
         }
         
         if (required) {
-            throw new IllegalArgumentException(\"Required parameter '\" + name + \"' not provided\");
+            throw new IllegalArgumentException("Required parameter '" + name + "' not provided");
         }
         
         return expectedType.getDefaultValue();

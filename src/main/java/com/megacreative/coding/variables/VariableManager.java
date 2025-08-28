@@ -326,30 +326,6 @@ public class VariableManager {
 }
 
 /**
- * Variable scope enumeration
- */
-enum VariableScope {
-    LOCAL("Local", "§aЛокальная", "Script-specific variables"),
-    GLOBAL("Global", "§bГлобальная", "World-specific variables"),
-    PERSISTENT("Persistent", "§cПостоянная", "Server-wide persistent variables"),
-    DYNAMIC("Dynamic", "§dДинамическая", "Computed variables");
-    
-    private final String name;
-    private final String displayName;
-    private final String description;
-    
-    VariableScope(String name, String displayName, String description) {
-        this.name = name;
-        this.displayName = displayName;
-        this.description = description;
-    }
-    
-    public String getName() { return name; }
-    public String getDisplayName() { return displayName; }
-    public String getDescription() { return description; }
-}
-
-/**
  * Variable metadata for introspection
  */
 class VariableMetadata {

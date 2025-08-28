@@ -1,4 +1,232 @@
 package com.megacreative.commands;
 
 import com.megacreative.MegaCreative;
-import com.megacreative.tools.CodeBlockClipboard;\nimport org.bukkit.Location;\nimport org.bukkit.command.Command;\nimport org.bukkit.command.CommandExecutor;\nimport org.bukkit.command.CommandSender;\nimport org.bukkit.command.TabCompleter;\nimport org.bukkit.entity.Player;\n\nimport java.util.*;\n\n/**\n * Command interface for the code block clipboard tool\n */\npublic class ClipboardCommand implements CommandExecutor, TabCompleter {\n    \n    private final MegaCreative plugin;\n    private final CodeBlockClipboard clipboard;\n    \n    // Selection state for region copying\n    private final Map<UUID, Location> firstCorners = new HashMap<>();\n    private final Map<UUID, Location> secondCorners = new HashMap<>();\n    \n    public ClipboardCommand(MegaCreative plugin, CodeBlockClipboard clipboard) {\n        this.plugin = plugin;\n        this.clipboard = clipboard;\n    }\n    \n    @Override\n    public boolean onCommand(CommandSender sender, Command command, String label, String[] args) {\n        if (!(sender instanceof Player player)) {\n            sender.sendMessage(\"\u00a7c\u042d\u0442\u0430 \u043a\u043e\u043c\u0430\u043d\u0434\u0430 \u0434\u043e\u0441\u0442\u0443\u043f\u043d\u0430 \u0442\u043e\u043b\u044c\u043a\u043e \u0438\u0433\u0440\u043e\u043a\u0430\u043c!\");\n            return true;\n        }\n        \n        if (args.length == 0) {\n            showHelp(player);\n            return true;\n        }\n        \n        String subCommand = args[0].toLowerCase();\n        \n        switch (subCommand) {\n            case \"copy\" -> handleCopy(player, args);\n            case \"paste\" -> handlePaste(player, args);\n            case \"preview\" -> handlePreview(player);\n            case \"clear\" -> handleClear(player);\n            case \"info\" -> handleInfo(player);\n            case \"save\" -> handleSave(player, args);\n            case \"load\" -> handleLoad(player, args);\n            case \"list\" -> handleList(player);\n            case \"pos1\", \"p1\" -> handlePos1(player);\n            case \"pos2\", \"p2\" -> handlePos2(player);\n            case \"select\" -> handleSelect(player, args);\n            default -> showHelp(player);\n        }\n        \n        return true;\n    }\n    \n    private void handleCopy(Player player, String[] args) {\n        if (args.length < 2) {\n            player.sendMessage(\"\u00a7c\u0418\u0441\u043f\u043e\u043b\u044c\u0437\u043e\u0432\u0430\u043d\u0438\u0435: /clipboard copy <block|chain|region>\");\n            return;\n        }\n        \n        String copyType = args[1].toLowerCase();\n        \n        switch (copyType) {\n            case \"block\" -> {\n                // Copy the block the player is looking at\n                Location targetLoc = player.getTargetBlock(null, 10).getLocation();\n                // This would integrate with the AutoConnectionManager to get the CodeBlock\n                player.sendMessage(\"\u00a7a\u2713 \u041a\u043e\u043f\u0438\u0440\u043e\u0432\u0430\u043d\u0438\u0435 \u0431\u043b\u043e\u043a\u0430...\");\n                // clipboard.copyBlock(player, codeBlock);\n            }\n            case \"chain\" -> {\n                // Copy chain starting from the block the player is looking at\n                Location targetLoc = player.getTargetBlock(null, 10).getLocation();\n                player.sendMessage(\"\u00a7a\u2713 \u041a\u043e\u043f\u0438\u0440\u043e\u0432\u0430\u043d\u0438\u0435 \u0446\u0435\u043f\u043e\u0447\u043a\u0438...\");\n                // clipboard.copyChain(player, startBlock);\n            }\n            case \"region\" -> {\n                Location pos1 = firstCorners.get(player.getUniqueId());\n                Location pos2 = secondCorners.get(player.getUniqueId());\n                \n                if (pos1 == null || pos2 == null) {\n                    player.sendMessage(\"\u00a7c\u2716 \u0421\u043d\u0430\u0447\u0430\u043b\u0430 \u0432\u044b\u0431\u0435\u0440\u0438\u0442\u0435 \u0440\u0435\u0433\u0438\u043e\u043d \u0441 \u043f\u043e\u043c\u043e\u0449\u044c\u044e /clipboard pos1 \u0438 /clipboard pos2\");\n                    return;\n                }\n                \n                clipboard.copyRegion(player, pos1, pos2);\n            }\n            default -> player.sendMessage(\"\u00a7c\u041d\u0435\u0438\u0437\u0432\u0435\u0441\u0442\u043d\u044b\u0439 \u0442\u0438\u043f \u043a\u043e\u043f\u0438\u0440\u043e\u0432\u0430\u043d\u0438\u044f: \" + copyType);\n        }\n    }\n    \n    private void handlePaste(Player player, String[] args) {\n        Location targetLoc;\n        \n        if (args.length >= 4) {\n            // Paste at specific coordinates\n            try {\n                int x = Integer.parseInt(args[1]);\n                int y = Integer.parseInt(args[2]);\n                int z = Integer.parseInt(args[3]);\n                targetLoc = new Location(player.getWorld(), x, y, z);\n            } catch (NumberFormatException e) {\n                player.sendMessage(\"\u00a7c\u041d\u0435\u0432\u0435\u0440\u043d\u044b\u0435 \u043a\u043e\u043e\u0440\u0434\u0438\u043d\u0430\u0442\u044b!\");\n                return;\n            }\n        } else {\n            // Paste at current location\n            targetLoc = player.getLocation().getBlock().getLocation();\n        }\n        \n        clipboard.paste(player, targetLoc);\n    }\n    \n    private void handlePreview(Player player) {\n        Location targetLoc = player.getLocation().getBlock().getLocation();\n        clipboard.showPreview(player, targetLoc);\n    }\n    \n    private void handleClear(Player player) {\n        clipboard.clear(player);\n    }\n    \n    private void handleInfo(Player player) {\n        String info = clipboard.getClipboardInfo(player);\n        player.sendMessage(\"\u00a76=== \u0411\u0443\u0444\u0435\u0440 \u043e\u0431\u043c\u0435\u043d\u0430 ===\");\n        player.sendMessage(info);\n    }\n    \n    private void handleSave(Player player, String[] args) {\n        if (args.length < 2) {\n            player.sendMessage(\"\u00a7c\u0418\u0441\u043f\u043e\u043b\u044c\u0437\u043e\u0432\u0430\u043d\u0438\u0435: /clipboard save <\u0438\u043c\u044f>\");\n            return;\n        }\n        \n        String name = String.join(\" \", Arrays.copyOfRange(args, 1, args.length));\n        clipboard.saveToShared(player, name);\n    }\n    \n    private void handleLoad(Player player, String[] args) {\n        if (args.length < 2) {\n            player.sendMessage(\"\u00a7c\u0418\u0441\u043f\u043e\u043b\u044c\u0437\u043e\u0432\u0430\u043d\u0438\u0435: /clipboard load <\u0438\u043c\u044f>\");\n            return;\n        }\n        \n        String name = String.join(\" \", Arrays.copyOfRange(args, 1, args.length));\n        clipboard.loadFromShared(player, name);\n    }\n    \n    private void handleList(Player player) {\n        clipboard.listShared(player);\n    }\n    \n    private void handlePos1(Player player) {\n        Location loc = player.getLocation().getBlock().getLocation();\n        firstCorners.put(player.getUniqueId(), loc);\n        player.sendMessage(String.format(\"\u00a7a\u2713 \u041f\u0435\u0440\u0432\u0430\u044f \u0442\u043e\u0447\u043a\u0430 \u0443\u0441\u0442\u0430\u043d\u043e\u0432\u043b\u0435\u043d\u0430: %d, %d, %d\", \n            loc.getBlockX(), loc.getBlockY(), loc.getBlockZ()));\n    }\n    \n    private void handlePos2(Player player) {\n        Location loc = player.getLocation().getBlock().getLocation();\n        secondCorners.put(player.getUniqueId(), loc);\n        player.sendMessage(String.format(\"\u00a7a\u2713 \u0412\u0442\u043e\u0440\u0430\u044f \u0442\u043e\u0447\u043a\u0430 \u0443\u0441\u0442\u0430\u043d\u043e\u0432\u043b\u0435\u043d\u0430: %d, %d, %d\", \n            loc.getBlockX(), loc.getBlockY(), loc.getBlockZ()));\n            \n        Location pos1 = firstCorners.get(player.getUniqueId());\n        if (pos1 != null) {\n            int volume = Math.abs(loc.getBlockX() - pos1.getBlockX() + 1) * \n                        Math.abs(loc.getBlockY() - pos1.getBlockY() + 1) * \n                        Math.abs(loc.getBlockZ() - pos1.getBlockZ() + 1);\n            player.sendMessage(\"\u00a77\u041e\u0431\u044a\u0435\u043c \u0440\u0435\u0433\u0438\u043e\u043d\u0430: \" + volume + \" \u0431\u043b\u043e\u043a\u043e\u0432\");\n        }\n    }\n    \n    private void handleSelect(Player player, String[] args) {\n        if (args.length < 2) {\n            player.sendMessage(\"\u00a7c\u0418\u0441\u043f\u043e\u043b\u044c\u0437\u043e\u0432\u0430\u043d\u0438\u0435: /clipboard select <all|clear>\");\n            return;\n        }\n        \n        String selectType = args[1].toLowerCase();\n        \n        switch (selectType) {\n            case \"all\" -> {\n                // Select entire coding area in current world\n                Location playerLoc = player.getLocation();\n                // This would integrate with DevWorldGenerator to get the coding area bounds\n                player.sendMessage(\"\u00a7a\u2713 \u0412\u044b\u0431\u0440\u0430\u043d\u0430 \u0432\u0441\u044f \u043e\u0431\u043b\u0430\u0441\u0442\u044c \u043a\u043e\u0434\u0438\u0440\u043e\u0432\u0430\u043d\u0438\u044f\");\n            }\n            case \"clear\" -> {\n                firstCorners.remove(player.getUniqueId());\n                secondCorners.remove(player.getUniqueId());\n                player.sendMessage(\"\u00a7a\u2713 \u0412\u044b\u0434\u0435\u043b\u0435\u043d\u0438\u0435 \u043e\u0447\u0438\u0449\u0435\u043d\u043e\");\n            }\n            default -> player.sendMessage(\"\u00a7c\u041d\u0435\u0438\u0437\u0432\u0435\u0441\u0442\u043d\u044b\u0439 \u0442\u0438\u043f \u0432\u044b\u0434\u0435\u043b\u0435\u043d\u0438\u044f: \" + selectType);\n        }\n    }\n    \n    private void showHelp(Player player) {\n        player.sendMessage(\"\u00a76=== \u0411\u0443\u0444\u0435\u0440 \u043e\u0431\u043c\u0435\u043d\u0430 \u043a\u043e\u0434\u043e\u0432\u044b\u0445 \u0431\u043b\u043e\u043a\u043e\u0432 ===\");\n        player.sendMessage(\"\u00a7f/clipboard copy <block|chain|region> - \u041a\u043e\u043f\u0438\u0440\u043e\u0432\u0430\u0442\u044c\");\n        player.sendMessage(\"\u00a7f/clipboard paste [x y z] - \u0412\u0441\u0442\u0430\u0432\u0438\u0442\u044c\");\n        player.sendMessage(\"\u00a7f/clipboard preview - \u041f\u043e\u043a\u0430\u0437\u0430\u0442\u044c \u043f\u0440\u0435\u0432\u044c\u044e\");\n        player.sendMessage(\"\u00a7f/clipboard info - \u0418\u043d\u0444\u043e\u0440\u043c\u0430\u0446\u0438\u044f \u043e \u0431\u0443\u0444\u0435\u0440\u0435\");\n        player.sendMessage(\"\u00a7f/clipboard clear - \u041e\u0447\u0438\u0441\u0442\u0438\u0442\u044c \u0431\u0443\u0444\u0435\u0440\");\n        player.sendMessage(\"\u00a77\u041a\u043e\u043c\u0430\u043d\u0434\u044b \u0440\u0435\u0433\u0438\u043e\u043d\u0430:\");\n        player.sendMessage(\"\u00a7f/clipboard pos1 - \u0423\u0441\u0442\u0430\u043d\u043e\u0432\u0438\u0442\u044c \u043f\u0435\u0440\u0432\u0443\u044e \u0442\u043e\u0447\u043a\u0443\");\n        player.sendMessage(\"\u00a7f/clipboard pos2 - \u0423\u0441\u0442\u0430\u043d\u043e\u0432\u0438\u0442\u044c \u0432\u0442\u043e\u0440\u0443\u044e \u0442\u043e\u0447\u043a\u0443\");\n        player.sendMessage(\"\u00a77\u041e\u0431\u0449\u0438\u0435 \u0431\u0443\u0444\u0435\u0440\u044b:\");\n        player.sendMessage(\"\u00a7f/clipboard save <\u0438\u043c\u044f> - \u0421\u043e\u0445\u0440\u0430\u043d\u0438\u0442\u044c \u0432 \u043e\u0431\u0449\u0438\u0439 \u0431\u0443\u0444\u0435\u0440\");\n        player.sendMessage(\"\u00a7f/clipboard load <\u0438\u043c\u044f> - \u0417\u0430\u0433\u0440\u0443\u0437\u0438\u0442\u044c \u0438\u0437 \u043e\u0431\u0449\u0435\u0433\u043e \u0431\u0443\u0444\u0435\u0440\u0430\");\n        player.sendMessage(\"\u00a7f/clipboard list - \u0421\u043f\u0438\u0441\u043e\u043a \u043e\u0431\u0449\u0438\u0445 \u0431\u0443\u0444\u0435\u0440\u043e\u0432\");\n    }\n    \n    @Override\n    public List<String> onTabComplete(CommandSender sender, Command command, String alias, String[] args) {\n        if (args.length == 1) {\n            return List.of(\"copy\", \"paste\", \"preview\", \"clear\", \"info\", \"save\", \"load\", \"list\", \"pos1\", \"pos2\", \"select\");\n        }\n        \n        if (args.length == 2) {\n            switch (args[0].toLowerCase()) {\n                case \"copy\" -> {\n                    return List.of(\"block\", \"chain\", \"region\");\n                }\n                case \"select\" -> {\n                    return List.of(\"all\", \"clear\");\n                }\n            }\n        }\n        \n        return Collections.emptyList();\n    }\n}
+import com.megacreative.tools.CodeBlockClipboard;
+import org.bukkit.Location;
+import org.bukkit.command.Command;
+import org.bukkit.command.CommandExecutor;
+import org.bukkit.command.CommandSender;
+import org.bukkit.command.TabCompleter;
+import org.bukkit.entity.Player;
+
+import java.util.*;
+
+/**
+ * Command interface for the code block clipboard tool
+ */
+public class ClipboardCommand implements CommandExecutor, TabCompleter {
+    
+    private final MegaCreative plugin;
+    private final CodeBlockClipboard clipboard;
+    
+    // Selection state for region copying
+    private final Map<UUID, Location> firstCorners = new HashMap<>();
+    private final Map<UUID, Location> secondCorners = new HashMap<>();
+    
+    public ClipboardCommand(MegaCreative plugin, CodeBlockClipboard clipboard) {
+        this.plugin = plugin;
+        this.clipboard = clipboard;
+    }
+    
+    @Override
+    public boolean onCommand(CommandSender sender, Command command, String label, String[] args) {
+        if (!(sender instanceof Player player)) {
+            sender.sendMessage("§cЭта команда доступна только игрокам!");
+            return true;
+        }
+        
+        if (args.length == 0) {
+            showHelp(player);
+            return true;
+        }
+        
+        String subCommand = args[0].toLowerCase();
+        
+        switch (subCommand) {
+            case "copy" -> handleCopy(player, args);
+            case "paste" -> handlePaste(player, args);
+            case "preview" -> handlePreview(player);
+            case "clear" -> handleClear(player);
+            case "info" -> handleInfo(player);
+            case "save" -> handleSave(player, args);
+            case "load" -> handleLoad(player, args);
+            case "list" -> handleList(player);
+            case "pos1", "p1" -> handlePos1(player);
+            case "pos2", "p2" -> handlePos2(player);
+            case "select" -> handleSelect(player, args);
+            default -> showHelp(player);
+        }
+        
+        return true;
+    }
+    
+    private void handleCopy(Player player, String[] args) {
+        if (args.length < 2) {
+            player.sendMessage("§cИспользование: /clipboard copy <block|chain|region>");
+            return;
+        }
+        
+        String copyType = args[1].toLowerCase();
+        
+        switch (copyType) {
+            case "block" -> {
+                Location targetLoc = player.getTargetBlock(null, 10).getLocation();
+                player.sendMessage("§a✓ Копирование блока...");
+            }
+            case "chain" -> {
+                Location targetLoc = player.getTargetBlock(null, 10).getLocation();
+                player.sendMessage("§a✓ Копирование цепочки...");
+            }
+            case "region" -> {
+                Location pos1 = firstCorners.get(player.getUniqueId());
+                Location pos2 = secondCorners.get(player.getUniqueId());
+                
+                if (pos1 == null || pos2 == null) {
+                    player.sendMessage("§c✖ Сначала выберите регион с помощью /clipboard pos1 и /clipboard pos2");
+                    return;
+                }
+                
+                clipboard.copyRegion(player, pos1, pos2);
+            }
+            default -> player.sendMessage("§cНеизвестный тип копирования: " + copyType);
+        }
+    }
+    
+    private void handlePaste(Player player, String[] args) {
+        Location targetLoc;
+        
+        if (args.length >= 4) {
+            try {
+                int x = Integer.parseInt(args[1]);
+                int y = Integer.parseInt(args[2]);
+                int z = Integer.parseInt(args[3]);
+                targetLoc = new Location(player.getWorld(), x, y, z);
+            } catch (NumberFormatException e) {
+                player.sendMessage("§cНеверные координаты!");
+                return;
+            }
+        } else {
+            targetLoc = player.getLocation().getBlock().getLocation();
+        }
+        
+        clipboard.paste(player, targetLoc);
+    }
+    
+    private void handlePreview(Player player) {
+        Location targetLoc = player.getLocation().getBlock().getLocation();
+        clipboard.showPreview(player, targetLoc);
+    }
+    
+    private void handleClear(Player player) {
+        clipboard.clear(player);
+    }
+    
+    private void handleInfo(Player player) {
+        String info = clipboard.getClipboardInfo(player);
+        player.sendMessage("§6=== Буфер обмена ===");
+        player.sendMessage(info);
+    }
+    
+    private void handleSave(Player player, String[] args) {
+        if (args.length < 2) {
+            player.sendMessage("§cИспользование: /clipboard save <имя>");
+            return;
+        }
+        
+        String name = String.join(" ", Arrays.copyOfRange(args, 1, args.length));
+        clipboard.saveToShared(player, name);
+    }
+    
+    private void handleLoad(Player player, String[] args) {
+        if (args.length < 2) {
+            player.sendMessage("§cИспользование: /clipboard load <имя>");
+            return;
+        }
+        
+        String name = String.join(" ", Arrays.copyOfRange(args, 1, args.length));
+        clipboard.loadFromShared(player, name);
+    }
+    
+    private void handleList(Player player) {
+        clipboard.listShared(player);
+    }
+    
+    private void handlePos1(Player player) {
+        Location loc = player.getLocation().getBlock().getLocation();
+        firstCorners.put(player.getUniqueId(), loc);
+        player.sendMessage(String.format("§a✓ Первая точка установлена: %d, %d, %d", 
+            loc.getBlockX(), loc.getBlockY(), loc.getBlockZ()));
+    }
+    
+    private void handlePos2(Player player) {
+        Location loc = player.getLocation().getBlock().getLocation();
+        secondCorners.put(player.getUniqueId(), loc);
+        player.sendMessage(String.format("§a✓ Вторая точка установлена: %d, %d, %d", 
+            loc.getBlockX(), loc.getBlockY(), loc.getBlockZ()));
+            
+        Location pos1 = firstCorners.get(player.getUniqueId());
+        if (pos1 != null) {
+            int volume = Math.abs(loc.getBlockX() - pos1.getBlockX() + 1) * 
+                        Math.abs(loc.getBlockY() - pos1.getBlockY() + 1) * 
+                        Math.abs(loc.getBlockZ() - pos1.getBlockZ() + 1);
+            player.sendMessage("§7Объем региона: " + volume + " блоков");
+        }
+    }
+    
+    private void handleSelect(Player player, String[] args) {
+        if (args.length < 2) {
+            player.sendMessage("§cИспользование: /clipboard select <all|clear>");
+            return;
+        }
+        
+        String selectType = args[1].toLowerCase();
+        
+        switch (selectType) {
+            case "all" -> {
+                player.sendMessage("§a✓ Выбрана вся область кодирования");
+            }
+            case "clear" -> {
+                firstCorners.remove(player.getUniqueId());
+                secondCorners.remove(player.getUniqueId());
+                player.sendMessage("§a✓ Выделение очищено");
+            }
+            default -> player.sendMessage("§cНеизвестный тип выделения: " + selectType);
+        }
+    }
+    
+    private void showHelp(Player player) {
+        player.sendMessage("§6=== Буфер обмена кодовых блоков ===");
+        player.sendMessage("§f/clipboard copy <block|chain|region> - Копировать");
+        player.sendMessage("§f/clipboard paste [x y z] - Вставить");
+        player.sendMessage("§f/clipboard preview - Показать превью");
+        player.sendMessage("§f/clipboard info - Информация о буфере");
+        player.sendMessage("§f/clipboard clear - Очистить буфер");
+        player.sendMessage("§7Команды региона:");
+        player.sendMessage("§f/clipboard pos1 - Установить первую точку");
+        player.sendMessage("§f/clipboard pos2 - Установить вторую точку");
+        player.sendMessage("§7Общие буферы:");
+        player.sendMessage("§f/clipboard save <имя> - Сохранить в общий буфер");
+        player.sendMessage("§f/clipboard load <имя> - Загрузить из общего буфера");
+        player.sendMessage("§f/clipboard list - Список общих буферов");
+    }
+    
+    @Override
+    public List<String> onTabComplete(CommandSender sender, Command command, String alias, String[] args) {
+        if (args.length == 1) {
+            return List.of("copy", "paste", "preview", "clear", "info", "save", "load", "list", "pos1", "pos2", "select");
+        }
+        
+        if (args.length == 2) {
+            switch (args[0].toLowerCase()) {
+                case "copy" -> {
+                    return List.of("block", "chain", "region");
+                }
+                case "select" -> {
+                    return List.of("all", "clear");
+                }
+            }
+        }
+        
+        return Collections.emptyList();
+    }
+}

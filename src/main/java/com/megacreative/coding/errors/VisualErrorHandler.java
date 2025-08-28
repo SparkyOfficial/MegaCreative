@@ -1,42 +1,74 @@
 package com.megacreative.coding.errors;
 
 import lombok.extern.java.Log;
-import org.bukkit.*;
-import org.bukkit.block.Block;
-import org.bukkit.entity.ArmorStand;
-import org.bukkit.entity.EntityType;
+import org.bukkit.Location;
 import org.bukkit.entity.Player;
 import org.bukkit.plugin.Plugin;
-import org.bukkit.scheduler.BukkitRunnable;
-import org.bukkit.scheduler.BukkitTask;
 
 import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
-import java.util.logging.Level;
 
-/**
- * Visual error handling system that shows errors with colored blocks, particles, and floating text
- */
 @Log
 public class VisualErrorHandler {
     
     private final Plugin plugin;
-    
-    // Active error displays
     private final Map<Location, ErrorDisplay> activeErrors = new ConcurrentHashMap<>();
-    
-    // Error history for debugging
-    private final Map<UUID, List<ErrorRecord>> playerErrorHistory = new ConcurrentHashMap<>();
-    
-    // Error display settings
-    private static final int ERROR_DISPLAY_DURATION = 100; // 5 seconds
-    private static final int WARNING_DISPLAY_DURATION = 60; // 3 seconds
-    private static final int INFO_DISPLAY_DURATION = 40; // 2 seconds
     
     public VisualErrorHandler(Plugin plugin) {
         this.plugin = plugin;
     }
     
-    /**
-     * Shows an error at a specific block location
-     */\n    public void showError(Location blockLocation, String errorMessage, ErrorSeverity severity, Player... viewers) {\n        // Clear any existing error at this location\n        clearErrorAt(blockLocation);\n        \n        // Create error display\n        ErrorDisplay display = new ErrorDisplay(blockLocation, errorMessage, severity);\n        activeErrors.put(blockLocation, display);\n        \n        // Visual effects based on severity\n        switch (severity) {\n            case ERROR -> showErrorEffects(blockLocation, errorMessage, viewers);\n            case WARNING -> showWarningEffects(blockLocation, errorMessage, viewers);\n            case INFO -> showInfoEffects(blockLocation, errorMessage, viewers);\n        }\n        \n        // Record error in history\n        for (Player viewer : viewers) {\n            recordError(viewer, blockLocation, errorMessage, severity);\n        }\n        \n        // Schedule cleanup\n        int duration = switch (severity) {\n            case ERROR -> ERROR_DISPLAY_DURATION;\n            case WARNING -> WARNING_DISPLAY_DURATION;\n            case INFO -> INFO_DISPLAY_DURATION;\n        };\n        \n        display.setCleanupTask(new BukkitRunnable() {\n            @Override\n            public void run() {\n                clearErrorAt(blockLocation);\n            }\n        }.runTaskLater(plugin, duration));\n        \n        log.log(Level.INFO, String.format(\"Showing %s at %s: %s\", \n            severity.name().toLowerCase(), blockLocation, errorMessage));\n    }\n    \n    /**\n     * Shows a syntax error with code highlighting\n     */\n    public void showSyntaxError(Location blockLocation, String errorMessage, String problematicCode, Player... viewers) {\n        showError(blockLocation, \"Syntax Error: \" + errorMessage, ErrorSeverity.ERROR, viewers);\n        \n        // Additional syntax-specific effects\n        for (Player viewer : viewers) {\n            // Show problematic code in chat with highlighting\n            viewer.sendMessage(\"\u00a7c\u274c Syntax Error:\");\n            viewer.sendMessage(\"\u00a77Code: \u00a7f\" + highlightProblematicCode(problematicCode));\n            viewer.sendMessage(\"\u00a7c\" + errorMessage);\n            \n            // Show additional particles for syntax errors\n            viewer.spawnParticle(Particle.SMOKE_LARGE, blockLocation.clone().add(0.5, 1, 0.5), \n                               10, 0.3, 0.3, 0.3, 0.1);\n        }\n    }\n    \n    /**\n     * Shows a runtime error with stack trace information\n     */\n    public void showRuntimeError(Location blockLocation, String errorMessage, Exception exception, Player... viewers) {\n        showError(blockLocation, \"Runtime Error: \" + errorMessage, ErrorSeverity.ERROR, viewers);\n        \n        // Additional runtime-specific effects\n        for (Player viewer : viewers) {\n            viewer.sendMessage(\"\u00a7c\u274c Runtime Error:\");\n            viewer.sendMessage(\"\u00a7c\" + errorMessage);\n            \n            if (exception != null) {\n                viewer.sendMessage(\"\u00a77Exception: \u00a7f\" + exception.getClass().getSimpleName());\n                if (exception.getMessage() != null) {\n                    viewer.sendMessage(\"\u00a77Details: \u00a7f\" + exception.getMessage());\n                }\n            }\n            \n            // Show explosion particles for runtime errors\n            viewer.spawnParticle(Particle.EXPLOSION_NORMAL, blockLocation.clone().add(0.5, 1, 0.5), \n                               15, 0.4, 0.4, 0.4, 0.1);\n        }\n    }\n    \n    /**\n     * Shows a validation warning\n     */\n    public void showValidationWarning(Location blockLocation, String warningMessage, String suggestion, Player... viewers) {\n        showError(blockLocation, warningMessage, ErrorSeverity.WARNING, viewers);\n        \n        for (Player viewer : viewers) {\n            viewer.sendMessage(\"\u00a7e\u26a0 Warning:\");\n            viewer.sendMessage(\"\u00a7e\" + warningMessage);\n            if (suggestion != null && !suggestion.isEmpty()) {\n                viewer.sendMessage(\"\u00a77Suggestion: \u00a7f\" + suggestion);\n            }\n        }\n    }\n    \n    /**\n     * Shows an info message\n     */\n    public void showInfo(Location blockLocation, String infoMessage, Player... viewers) {\n        showError(blockLocation, infoMessage, ErrorSeverity.INFO, viewers);\n        \n        for (Player viewer : viewers) {\n            viewer.sendMessage(\"\u00a7b\u2139 Info: \u00a7f\" + infoMessage);\n        }\n    }\n    \n    /**\n     * Clears an error display at a specific location\n     */\n    public void clearErrorAt(Location location) {\n        ErrorDisplay display = activeErrors.remove(location);\n        if (display != null) {\n            display.cleanup();\n        }\n    }\n    \n    /**\n     * Clears all error displays in a world\n     */\n    public void clearAllErrors(World world) {\n        activeErrors.entrySet().removeIf(entry -> {\n            Location loc = entry.getKey();\n            if (loc.getWorld().equals(world)) {\n                entry.getValue().cleanup();\n                return true;\n            }\n            return false;\n        });\n    }\n    \n    /**\n     * Gets error history for a player\n     */\n    public List<ErrorRecord> getErrorHistory(Player player) {\n        return playerErrorHistory.getOrDefault(player.getUniqueId(), new ArrayList<>());\n    }\n    \n    /**\n     * Clears error history for a player\n     */\n    public void clearErrorHistory(Player player) {\n        playerErrorHistory.remove(player.getUniqueId());\n    }\n    \n    /**\n     * Gets statistics about errors\n     */\n    public ErrorStatistics getErrorStatistics(Player player) {\n        List<ErrorRecord> history = getErrorHistory(player);\n        \n        int totalErrors = 0;\n        int totalWarnings = 0;\n        int totalInfos = 0;\n        \n        long oldestError = System.currentTimeMillis();\n        long newestError = 0;\n        \n        for (ErrorRecord record : history) {\n            switch (record.getSeverity()) {\n                case ERROR -> totalErrors++;\n                case WARNING -> totalWarnings++;\n                case INFO -> totalInfos++;\n            }\n            \n            oldestError = Math.min(oldestError, record.getTimestamp());\n            newestError = Math.max(newestError, record.getTimestamp());\n        }\n        \n        return new ErrorStatistics(totalErrors, totalWarnings, totalInfos, oldestError, newestError);\n    }\n    \n    // Private helper methods\n    \n    private void showErrorEffects(Location location, String message, Player... viewers) {\n        // Replace block with red wool temporarily\n        Block block = location.getBlock();\n        Material originalMaterial = block.getType();\n        block.setType(Material.RED_WOOL);\n        \n        // Restore block after delay\n        new BukkitRunnable() {\n            @Override\n            public void run() {\n                if (block.getType() == Material.RED_WOOL) {\n                    block.setType(originalMaterial);\n                }\n            }\n        }.runTaskLater(plugin, ERROR_DISPLAY_DURATION);\n        \n        // Show error particles and hologram\n        for (Player viewer : viewers) {\n            // Error particles\n            viewer.spawnParticle(Particle.VILLAGER_ANGRY, location.clone().add(0.5, 1, 0.5), \n                               20, 0.5, 0.5, 0.5, 0.1);\n            \n            // Error sound\n            viewer.playSound(location, Sound.BLOCK_NOTE_BLOCK_BASS, 1.0f, 0.5f);\n        }\n        \n        // Create error hologram\n        createErrorHologram(location, \"\u00a7c\u274c ERROR\", \"\u00a7c\" + message, ERROR_DISPLAY_DURATION);\n    }\n    \n    private void showWarningEffects(Location location, String message, Player... viewers) {\n        // Replace block with orange wool temporarily\n        Block block = location.getBlock();\n        Material originalMaterial = block.getType();\n        block.setType(Material.ORANGE_WOOL);\n        \n        // Restore block after delay\n        new BukkitRunnable() {\n            @Override\n            public void run() {\n                if (block.getType() == Material.ORANGE_WOOL) {\n                    block.setType(originalMaterial);\n                }\n            }\n        }.runTaskLater(plugin, WARNING_DISPLAY_DURATION);\n        \n        // Show warning particles\n        for (Player viewer : viewers) {\n            // Warning particles\n            Particle.DustOptions dustOptions = new Particle.DustOptions(Color.ORANGE, 1.0f);\n            viewer.spawnParticle(Particle.REDSTONE, location.clone().add(0.5, 1, 0.5), \n                               15, 0.4, 0.4, 0.4, dustOptions);\n            \n            // Warning sound\n            viewer.playSound(location, Sound.BLOCK_NOTE_BLOCK_PLING, 1.0f, 0.8f);\n        }\n        \n        // Create warning hologram\n        createErrorHologram(location, \"\u00a7e\u26a0 WARNING\", \"\u00a7e\" + message, WARNING_DISPLAY_DURATION);\n    }\n    \n    private void showInfoEffects(Location location, String message, Player... viewers) {\n        // Show info particles\n        for (Player viewer : viewers) {\n            // Info particles\n            Particle.DustOptions dustOptions = new Particle.DustOptions(Color.AQUA, 1.0f);\n            viewer.spawnParticle(Particle.REDSTONE, location.clone().add(0.5, 1, 0.5), \n                               10, 0.3, 0.3, 0.3, dustOptions);\n            \n            // Info sound\n            viewer.playSound(location, Sound.BLOCK_NOTE_BLOCK_CHIME, 1.0f, 1.2f);\n        }\n        \n        // Create info hologram\n        createErrorHologram(location, \"\u00a7b\u2139 INFO\", \"\u00a7b\" + message, INFO_DISPLAY_DURATION);\n    }\n    \n    private void createErrorHologram(Location location, String title, String message, int duration) {\n        // Create main hologram\n        ArmorStand titleStand = (ArmorStand) location.getWorld().spawnEntity(\n            location.clone().add(0.5, 2.5, 0.5), EntityType.ARMOR_STAND);\n        titleStand.setVisible(false);\n        titleStand.setGravity(false);\n        titleStand.setMarker(true);\n        titleStand.setCustomNameVisible(true);\n        titleStand.setCustomName(title);\n        \n        // Create message hologram\n        ArmorStand messageStand = (ArmorStand) location.getWorld().spawnEntity(\n            location.clone().add(0.5, 2.2, 0.5), EntityType.ARMOR_STAND);\n        messageStand.setVisible(false);\n        messageStand.setGravity(false);\n        messageStand.setMarker(true);\n        messageStand.setCustomNameVisible(true);\n        messageStand.setCustomName(message);\n        \n        // Schedule removal\n        new BukkitRunnable() {\n            @Override\n            public void run() {\n                titleStand.remove();\n                messageStand.remove();\n            }\n        }.runTaskLater(plugin, duration);\n    }\n    \n    private String highlightProblematicCode(String code) {\n        // Simple highlighting - could be enhanced with more sophisticated parsing\n        return code.replace(\"{\", \"\u00a7c{\u00a7f\")\n                  .replace(\"}\", \"\u00a7c}\u00a7f\")\n                  .replace(\"(\", \"\u00a7e(\u00a7f\")\n                  .replace(\")\", \"\u00a7e)\u00a7f\");\n    }\n    \n    private void recordError(Player player, Location location, String message, ErrorSeverity severity) {\n        ErrorRecord record = new ErrorRecord(location, message, severity, System.currentTimeMillis());\n        playerErrorHistory.computeIfAbsent(player.getUniqueId(), k -> new ArrayList<>()).add(record);\n        \n        // Limit history size\n        List<ErrorRecord> history = playerErrorHistory.get(player.getUniqueId());\n        if (history.size() > 100) {\n            history.remove(0);\n        }\n    }\n    \n    /**\n     * Cleanup method called on plugin disable\n     */\n    public void cleanup() {\n        activeErrors.values().forEach(ErrorDisplay::cleanup);\n        activeErrors.clear();\n        playerErrorHistory.clear();\n    }\n    \n    // Data classes\n    \n    public enum ErrorSeverity {\n        ERROR(\"\u00a7c\u274c\", \"Error\"),\n        WARNING(\"\u00a7e\u26a0\", \"Warning\"),\n        INFO(\"\u00a7b\u2139\", \"Info\");\n        \n        private final String icon;\n        private final String displayName;\n        \n        ErrorSeverity(String icon, String displayName) {\n            this.icon = icon;\n            this.displayName = displayName;\n        }\n        \n        public String getIcon() { return icon; }\n        public String getDisplayName() { return displayName; }\n    }\n    \n    private static class ErrorDisplay {\n        private final Location location;\n        private final String message;\n        private final ErrorSeverity severity;\n        private BukkitTask cleanupTask;\n        \n        public ErrorDisplay(Location location, String message, ErrorSeverity severity) {\n            this.location = location;\n            this.message = message;\n            this.severity = severity;\n        }\n        \n        public void setCleanupTask(BukkitTask task) {\n            this.cleanupTask = task;\n        }\n        \n        public void cleanup() {\n            if (cleanupTask != null && !cleanupTask.isCancelled()) {\n                cleanupTask.cancel();\n            }\n        }\n        \n        // Getters\n        public Location getLocation() { return location; }\n        public String getMessage() { return message; }\n        public ErrorSeverity getSeverity() { return severity; }\n    }\n    \n    public static class ErrorRecord {\n        private final Location location;\n        private final String message;\n        private final ErrorSeverity severity;\n        private final long timestamp;\n        \n        public ErrorRecord(Location location, String message, ErrorSeverity severity, long timestamp) {\n            this.location = location;\n            this.message = message;\n            this.severity = severity;\n            this.timestamp = timestamp;\n        }\n        \n        // Getters\n        public Location getLocation() { return location; }\n        public String getMessage() { return message; }\n        public ErrorSeverity getSeverity() { return severity; }\n        public long getTimestamp() { return timestamp; }\n    }\n    \n    public static class ErrorStatistics {\n        private final int totalErrors;\n        private final int totalWarnings;\n        private final int totalInfos;\n        private final long oldestError;\n        private final long newestError;\n        \n        public ErrorStatistics(int totalErrors, int totalWarnings, int totalInfos, \n                             long oldestError, long newestError) {\n            this.totalErrors = totalErrors;\n            this.totalWarnings = totalWarnings;\n            this.totalInfos = totalInfos;\n            this.oldestError = oldestError;\n            this.newestError = newestError;\n        }\n        \n        // Getters\n        public int getTotalErrors() { return totalErrors; }\n        public int getTotalWarnings() { return totalWarnings; }\n        public int getTotalInfos() { return totalInfos; }\n        public long getOldestError() { return oldestError; }\n        public long getNewestError() { return newestError; }\n        public int getTotalMessages() { return totalErrors + totalWarnings + totalInfos; }\n    }\n}
+    public void showError(Location blockLocation, String errorMessage, ErrorSeverity severity, Player... viewers) {
+        ErrorDisplay display = new ErrorDisplay(blockLocation, errorMessage, severity);
+        activeErrors.put(blockLocation, display);
+        
+        for (Player viewer : viewers) {
+            viewer.sendMessage(severity.getIcon() + " " + errorMessage);
+        }
+    }
+    
+    public void showSyntaxError(Location blockLocation, String errorMessage, String problematicCode, Player... viewers) {
+        showError(blockLocation, "Syntax Error: " + errorMessage, ErrorSeverity.ERROR, viewers);
+    }
+    
+    public void showRuntimeError(Location blockLocation, String errorMessage, Exception exception, Player... viewers) {
+        showError(blockLocation, "Runtime Error: " + errorMessage, ErrorSeverity.ERROR, viewers);
+    }
+    
+    public void clearErrorAt(Location location) {
+        activeErrors.remove(location);
+    }
+    
+    public void cleanup() {
+        activeErrors.clear();
+    }
+    
+    public enum ErrorSeverity {
+        ERROR("§c✖", "Error"),
+        WARNING("§e⚠", "Warning"),
+        INFO("§b⁇", "Info");
+        
+        private final String icon;
+        private final String displayName;
+        
+        ErrorSeverity(String icon, String displayName) {
+            this.icon = icon;
+            this.displayName = displayName;
+        }
+        
+        public String getIcon() { return icon; }
+        public String getDisplayName() { return displayName; }
+    }
+    
+    private static class ErrorDisplay {
+        private final Location location;
+        private final String message;
+        private final ErrorSeverity severity;
+        
+        public ErrorDisplay(Location location, String message, ErrorSeverity severity) {
+            this.location = location;
+            this.message = message;
+            this.severity = severity;
+        }
+    }
+}

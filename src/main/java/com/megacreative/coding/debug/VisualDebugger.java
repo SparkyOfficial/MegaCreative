@@ -5,58 +5,74 @@ import com.megacreative.coding.CodeBlock;
 import com.megacreative.coding.values.DataValue;
 import com.megacreative.coding.variables.VariableScope;
 import lombok.extern.java.Log;
-import net.kyori.adventure.text.Component;
-import net.kyori.adventure.text.format.NamedTextColor;
-import org.bukkit.Color;
 import org.bukkit.Location;
-import org.bukkit.Material;
-import org.bukkit.Particle;
-import org.bukkit.entity.ArmorStand;
-import org.bukkit.entity.EntityType;
 import org.bukkit.entity.Player;
-import org.bukkit.scheduler.BukkitRunnable;
-import org.bukkit.scheduler.BukkitTask;
 
 import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
-import java.util.logging.Level;
 
-/**
- * Visual debugger that shows code execution with particles, colors, and floating text
- */
 @Log
 public class VisualDebugger {
     
     private final MegaCreative plugin;
-    
-    // Active debug sessions
     private final Map<UUID, DebugSession> activeSessions = new ConcurrentHashMap<>();
-    
-    // Visual effect settings
-    private static final int PARTICLE_COUNT = 10;
-    private static final double PARTICLE_OFFSET = 0.5;
-    private static final int HOLOGRAM_DURATION = 100; // 5 seconds
     
     public VisualDebugger(MegaCreative plugin) {
         this.plugin = plugin;
     }
     
-    /**
-     * Starts a debug session for a player
-     */
     public void startDebugSession(Player player, String sessionName) {
-        UUID playerId = player.getUniqueId();
-        
-        // Stop existing session if any
-        stopDebugSession(player);
-        
         DebugSession session = new DebugSession(player, sessionName);
-        activeSessions.put(playerId, session);
-        
+        activeSessions.put(player.getUniqueId(), session);
         player.sendMessage("§a✓ Visual debugger started: " + sessionName);
-        log.info("Started debug session for " + player.getName() + ": " + sessionName);
     }
     
-    /**
-     * Stops debug session for a player
-     */\n    public void stopDebugSession(Player player) {\n        UUID playerId = player.getUniqueId();\n        DebugSession session = activeSessions.remove(playerId);\n        \n        if (session != null) {\n            session.cleanup();\n            player.sendMessage(\"\u00a7c\u2716 Visual debugger stopped\");\n            log.info(\"Stopped debug session for \" + player.getName());\n        }\n    }\n    \n    /**\n     * Highlights a block being executed\n     */\n    public void highlightBlockExecution(Player player, Location blockLocation, CodeBlock block) {\n        DebugSession session = activeSessions.get(player.getUniqueId());\n        if (session == null) return;\n        \n        // Show execution particles\n        showExecutionParticles(player, blockLocation, getBlockColor(block));\n        \n        // Create floating text with block info\n        showBlockInfo(player, blockLocation, block);\n        \n        // Draw connection line if previous block exists\n        if (session.lastBlockLocation != null) {\n            drawConnectionLine(player, session.lastBlockLocation, blockLocation);\n        }\n        \n        session.lastBlockLocation = blockLocation.clone();\n        session.executionStep++;\n    }\n    \n    /**\n     * Shows variable value changes\n     */\n    public void showVariableChange(Player player, Location blockLocation, String variableName, \n                                 DataValue oldValue, DataValue newValue, VariableScope scope) {\n        DebugSession session = activeSessions.get(player.getUniqueId());\n        if (session == null) return;\n        \n        // Create floating text showing variable change\n        Location textLocation = blockLocation.clone().add(0, 2.5, 0);\n        \n        String changeText = String.format(\"\u00a7b%s\u00a77: \u00a7c%s \u00a77\u2192 \u00a7a%s\",\n            variableName,\n            oldValue != null ? oldValue.asString() : \"null\",\n            newValue != null ? newValue.asString() : \"null\"\n        );\n        \n        createFloatingText(player, textLocation, changeText, scope.getDisplayName(), HOLOGRAM_DURATION);\n        \n        // Show scope-colored particles\n        Particle.DustOptions dustOptions = new Particle.DustOptions(\n            getScopeColor(scope), 1.0f\n        );\n        \n        player.spawnParticle(Particle.REDSTONE, blockLocation.clone().add(0.5, 1, 0.5), \n                           15, 0.3, 0.3, 0.3, dustOptions);\n    }\n    \n    /**\n     * Shows error at specific block\n     */\n    public void showError(Player player, Location blockLocation, String errorMessage) {\n        DebugSession session = activeSessions.get(player.getUniqueId());\n        if (session == null) return;\n        \n        // Replace block temporarily with red wool\n        Material originalMaterial = blockLocation.getBlock().getType();\n        blockLocation.getBlock().setType(Material.RED_WOOL);\n        \n        // Restore block after delay\n        new BukkitRunnable() {\n            @Override\n            public void run() {\n                blockLocation.getBlock().setType(originalMaterial);\n            }\n        }.runTaskLater(plugin, 60L); // 3 seconds\n        \n        // Show error particles\n        player.spawnParticle(Particle.VILLAGER_ANGRY, blockLocation.clone().add(0.5, 1, 0.5), \n                           20, 0.5, 0.5, 0.5, 0.1);\n        \n        // Create error hologram\n        createFloatingText(player, blockLocation.clone().add(0, 2, 0), \n                         \"\u00a7c\u274c ERROR\", \"\u00a7c\" + errorMessage, HOLOGRAM_DURATION * 2);\n        \n        session.errorCount++;\n    }\n    \n    /**\n     * Shows function call\n     */\n    public void showFunctionCall(Player player, Location blockLocation, String functionName, \n                               Map<String, DataValue> parameters) {\n        DebugSession session = activeSessions.get(player.getUniqueId());\n        if (session == null) return;\n        \n        // Show special function call particles\n        Particle.DustOptions dustOptions = new Particle.DustOptions(Color.PURPLE, 1.5f);\n        player.spawnParticle(Particle.REDSTONE, blockLocation.clone().add(0.5, 1, 0.5), \n                           25, 0.4, 0.4, 0.4, dustOptions);\n        \n        // Create function call info\n        StringBuilder paramText = new StringBuilder();\n        parameters.forEach((name, value) -> {\n            if (paramText.length() > 0) paramText.append(\", \");\n            paramText.append(name).append(\"=\").append(value.asString());\n        });\n        \n        String callInfo = String.format(\"\u00a7d\u25b6 %s(%s)\", functionName, paramText.toString());\n        createFloatingText(player, blockLocation.clone().add(0, 2.2, 0), callInfo, \"\", HOLOGRAM_DURATION);\n        \n        session.functionCallCount++;\n    }\n    \n    /**\n     * Gets debug statistics for a player\n     */\n    public DebugStats getDebugStats(Player player) {\n        DebugSession session = activeSessions.get(player.getUniqueId());\n        if (session == null) return null;\n        \n        return new DebugStats(\n            session.sessionName,\n            session.executionStep,\n            session.errorCount,\n            session.functionCallCount,\n            System.currentTimeMillis() - session.startTime\n        );\n    }\n    \n    // Helper methods\n    \n    private void showExecutionParticles(Player player, Location location, Color color) {\n        Particle.DustOptions dustOptions = new Particle.DustOptions(color, 1.0f);\n        player.spawnParticle(Particle.REDSTONE, location.clone().add(0.5, 0.5, 0.5), \n                           PARTICLE_COUNT, PARTICLE_OFFSET, PARTICLE_OFFSET, PARTICLE_OFFSET, dustOptions);\n    }\n    \n    private void showBlockInfo(Player player, Location location, CodeBlock block) {\n        String blockInfo = String.format(\"\u00a7e\u25b6 %s\", block.getAction());\n        String details = String.format(\"\u00a77Step: %d | ID: %s\", \n            activeSessions.get(player.getUniqueId()).executionStep,\n            block.getId().toString().substring(0, 8)\n        );\n        \n        createFloatingText(player, location.clone().add(0, 2, 0), blockInfo, details, HOLOGRAM_DURATION);\n    }\n    \n    private void drawConnectionLine(Player player, Location from, Location to) {\n        // Draw particle line between blocks\n        double distance = from.distance(to);\n        int particles = (int) Math.max(5, distance * 3);\n        \n        for (int i = 0; i < particles; i++) {\n            double ratio = (double) i / particles;\n            Location point = from.clone().add(\n                (to.getX() - from.getX()) * ratio,\n                (to.getY() - from.getY()) * ratio + 0.5,\n                (to.getZ() - from.getZ()) * ratio\n            );\n            \n            player.spawnParticle(Particle.END_ROD, point, 1, 0, 0, 0, 0);\n        }\n    }\n    \n    private void createFloatingText(Player player, Location location, String mainText, \n                                  String subText, int durationTicks) {\n        // Create armor stand for floating text\n        ArmorStand hologram = (ArmorStand) location.getWorld().spawnEntity(location, EntityType.ARMOR_STAND);\n        hologram.setVisible(false);\n        hologram.setGravity(false);\n        hologram.setMarker(true);\n        hologram.setCustomNameVisible(true);\n        hologram.customName(Component.text(mainText));\n        \n        ArmorStand subHologram = null;\n        if (!subText.isEmpty()) {\n            subHologram = (ArmorStand) location.clone().add(0, -0.3, 0).getWorld()\n                .spawnEntity(location.clone().add(0, -0.3, 0), EntityType.ARMOR_STAND);\n            subHologram.setVisible(false);\n            subHologram.setGravity(false);\n            subHologram.setMarker(true);\n            subHologram.setCustomNameVisible(true);\n            subHologram.customName(Component.text(subText));\n        }\n        \n        // Schedule removal\n        ArmorStand finalSubHologram = subHologram;\n        new BukkitRunnable() {\n            @Override\n            public void run() {\n                hologram.remove();\n                if (finalSubHologram != null) {\n                    finalSubHologram.remove();\n                }\n            }\n        }.runTaskLater(plugin, durationTicks);\n    }\n    \n    private Color getBlockColor(CodeBlock block) {\n        return switch (block.getMaterial()) {\n            case DIAMOND_BLOCK -> Color.AQUA;      // Events\n            case COBBLESTONE -> Color.GRAY;        // Actions  \n            case OAK_PLANKS -> Color.ORANGE;       // Conditions\n            case IRON_BLOCK -> Color.WHITE;        // Variables\n            case OBSIDIAN -> Color.BLACK;          // Control\n            case REDSTONE_BLOCK -> Color.RED;      // Triggers\n            default -> Color.YELLOW;\n        };\n    }\n    \n    private Color getScopeColor(VariableScope scope) {\n        return switch (scope) {\n            case LOCAL -> Color.GRAY;\n            case WORLD -> Color.GREEN;\n            case PLAYER -> Color.BLUE;\n            case SERVER -> Color.YELLOW;\n        };\n    }\n    \n    /**\n     * Cleanup method called on plugin disable\n     */\n    public void cleanup() {\n        activeSessions.values().forEach(DebugSession::cleanup);\n        activeSessions.clear();\n    }\n    \n    // Debug session data\n    private static class DebugSession {\n        final String sessionName;\n        final long startTime;\n        final Player player;\n        Location lastBlockLocation;\n        int executionStep = 0;\n        int errorCount = 0;\n        int functionCallCount = 0;\n        final List<BukkitTask> activeTasks = new ArrayList<>();\n        \n        DebugSession(Player player, String sessionName) {\n            this.player = player;\n            this.sessionName = sessionName;\n            this.startTime = System.currentTimeMillis();\n        }\n        \n        void cleanup() {\n            activeTasks.forEach(BukkitTask::cancel);\n            activeTasks.clear();\n        }\n    }\n    \n    // Debug statistics\n    public record DebugStats(\n        String sessionName,\n        int executionSteps,\n        int errorCount,\n        int functionCalls,\n        long durationMs\n    ) {\n        public String getFormattedDuration() {\n            return String.format(\"%.2f seconds\", durationMs / 1000.0);\n        }\n    }\n}
+    public void stopDebugSession(Player player) {
+        DebugSession session = activeSessions.remove(player.getUniqueId());
+        if (session != null) {
+            player.sendMessage("§c✖ Visual debugger stopped");
+        }
+    }
+    
+    public void highlightBlockExecution(Player player, Location blockLocation, CodeBlock block) {
+        DebugSession session = activeSessions.get(player.getUniqueId());
+        if (session == null) return;
+        
+        session.executionStep++;
+        player.sendMessage("§e▶ Executing: " + block.getAction());
+    }
+    
+    public void showVariableChange(Player player, Location blockLocation, String variableName, 
+                                 DataValue oldValue, DataValue newValue, VariableScope scope) {
+        DebugSession session = activeSessions.get(player.getUniqueId());
+        if (session == null) return;
+        
+        player.sendMessage("§b" + variableName + "§7: §c" + 
+            (oldValue != null ? oldValue.asString() : "null") + " §7→ §a" + 
+            (newValue != null ? newValue.asString() : "null"));
+    }
+    
+    public void showError(Player player, Location blockLocation, String errorMessage) {
+        DebugSession session = activeSessions.get(player.getUniqueId());
+        if (session == null) return;
+        
+        session.errorCount++;
+        player.sendMessage("§c✖ ERROR: " + errorMessage);
+    }
+    
+    public void cleanup() {
+        activeSessions.clear();
+    }
+    
+    private static class DebugSession {
+        final String sessionName;
+        final Player player;
+        int executionStep = 0;
+        int errorCount = 0;
+        
+        DebugSession(Player player, String sessionName) {
+            this.player = player;
+            this.sessionName = sessionName;
+        }
+    }
+}
