@@ -4,7 +4,7 @@ import com.megacreative.commands.*;
 import com.megacreative.listeners.*;
 import com.megacreative.coding.BlockPlacementHandler;
 import com.megacreative.coding.CodingManagerImpl;
-
+import com.megacreative.coding.AutoConnectionManager;
 import com.megacreative.coding.ScriptDebugger;
 import com.megacreative.coding.CodingItems;
 import com.megacreative.coding.BlockConfiguration;
@@ -45,6 +45,9 @@ public class MegaCreative extends JavaPlugin {
     private ScoreboardManager scoreboardManager;
     private TrustedPlayerManager trustedPlayerManager;
 
+    // === НОВЫЕ СИСТЕМЫ РАЗРАБОТКИ ===
+    private AutoConnectionManager autoConnectionManager;
+    private DevInventoryManager devInventoryManager;
     
     // --- НОВЫЙ МЕНЕДЖЕР ДЛЯ ВИРТУАЛЬНЫХ ИНВЕНТАРЕЙ ---
     private BlockConfigManager blockConfigManager;
@@ -107,6 +110,10 @@ public class MegaCreative extends JavaPlugin {
         // --- ИНИЦИАЛИЗАЦИЯ КОНФИГУРАЦИИ БЛОКОВ ---
         this.blockConfiguration = new BlockConfiguration(this);
         
+        // === ИНИЦИАЛИЗАЦИЯ НОВЫХ СИСТЕМ РАЗРАБОТКИ ===
+        this.autoConnectionManager = new AutoConnectionManager(this);
+        this.devInventoryManager = new DevInventoryManager(this);
+        
         // Инициализация после создания всех менеджеров
         this.worldManager.initialize();
         
@@ -151,10 +158,12 @@ public class MegaCreative extends JavaPlugin {
         getCommand("worldsettings").setExecutor(new WorldSettingsCommand(this));
         getCommand("testscript").setExecutor(new TestScriptCommand(this));
         getCommand("debug").setExecutor(new DebugCommand(this));
-
         getCommand("createscript").setExecutor(new CreateScriptCommand(this));
         getCommand("stoprepeat").setExecutor(new StopRepeatCommand(this));
         getCommand("status").setExecutor(new StatusCommand(this));
+        
+        // === НОВЫЕ КОМАНДЫ ===
+        getCommand("addfloor").setExecutor(new AddFloorCommand(this));
     }
     
     private void registerEvents() {
@@ -175,6 +184,10 @@ public class MegaCreative extends JavaPlugin {
         // РЕГИСТРАЦИЯ НОВОГО СЛУШАТЕЛЯ ДЛЯ ЗАЩИТЫ ПРЕДМЕТОВ
         getServer().getPluginManager().registerEvents(new DevWorldProtectionListener(this), this);
         getServer().getPluginManager().registerEvents(new PlayerWorldChangeListener(this), this);
+        
+        // === РЕГИСТРАЦИЯ НОВЫХ СИСТЕМ ===
+        getServer().getPluginManager().registerEvents(autoConnectionManager, this);
+        getServer().getPluginManager().registerEvents(devInventoryManager, this);
     }
     
     public static MegaCreative getInstance() {
@@ -225,6 +238,16 @@ public class MegaCreative extends JavaPlugin {
     
     public BlockConfiguration getBlockConfiguration() {
         return blockConfiguration;
+    }
+    
+    // === ГЕТТЕРЫ ДЛЯ НОВЫХ СИСТЕМ ===
+    
+    public AutoConnectionManager getAutoConnectionManager() {
+        return autoConnectionManager;
+    }
+    
+    public DevInventoryManager getDevInventoryManager() {
+        return devInventoryManager;
     }
     
     public Map<UUID, CreativeWorld> getCommentInputs() {

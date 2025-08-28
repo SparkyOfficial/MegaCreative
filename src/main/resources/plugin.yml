@@ -69,6 +69,10 @@ commands:
     description: Управление доверенными игроками
     usage: /<command> <add|remove|list|info> [игрок] [тип] [добавил]
     permission: megacreative.trusted
+  addfloor:
+    description: Добавить новый этаж кодинга в dev-мир
+    usage: /<command> [номер_этажа]
+    permission: megacreative.admin
 
 permissions:
   megacreative.*:

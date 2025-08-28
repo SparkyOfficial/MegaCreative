@@ -2,19 +2,61 @@ package com.megacreative.listeners;
 
 import com.megacreative.MegaCreative;
 import com.megacreative.coding.CodingItems;
+import com.megacreative.models.CreativeWorld;
+import com.megacreative.worlds.DevWorldGenerator;
 import org.bukkit.Material;
 import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
+import org.bukkit.event.EventPriority;
 import org.bukkit.event.Listener;
+import org.bukkit.event.block.BlockBreakEvent;
+import org.bukkit.event.block.BlockPlaceEvent;
 import org.bukkit.event.inventory.InventoryClickEvent;
 import org.bukkit.event.player.PlayerDropItemEvent;
+import org.bukkit.event.player.PlayerInteractEvent;
 import org.bukkit.inventory.ItemStack;
 
 import java.util.List;
+import java.util.Set;
 
+/**
+ * Защита dev-мира от нежелательных действий
+ * Разрешает только размещение блоков кода и специальных инструментов
+ */
 public class DevWorldProtectionListener implements Listener {
 
     private final MegaCreative plugin;
+    
+    // Разрешенные материалы для размещения в dev-мире
+    private static final Set<Material> ALLOWED_BLOCKS = Set.of(
+        // Блоки кода
+        Material.DIAMOND_BLOCK, Material.COBBLESTONE, Material.OAK_PLANKS,
+        Material.IRON_BLOCK, Material.OBSIDIAN, Material.REDSTONE_BLOCK,
+        Material.BRICKS, Material.EMERALD_BLOCK, Material.LAPIS_BLOCK,
+        Material.BOOKSHELF, Material.END_STONE, Material.NETHERITE_BLOCK,
+        Material.POLISHED_GRANITE,
+        
+        // Инструменты разработчика
+        Material.ENDER_CHEST,    // Эндер сундук
+        Material.ANVIL,          // Наковальня
+        Material.CHIPPED_ANVIL,  // Поврежденная наковальня
+        Material.DAMAGED_ANVIL,  // Сильно поврежденная наковальня
+        Material.CRAFTING_TABLE, // Верстак
+        
+        // Шалкеры
+        Material.SHULKER_BOX, Material.WHITE_SHULKER_BOX, Material.ORANGE_SHULKER_BOX,
+        Material.MAGENTA_SHULKER_BOX, Material.LIGHT_BLUE_SHULKER_BOX, Material.YELLOW_SHULKER_BOX,
+        Material.LIME_SHULKER_BOX, Material.PINK_SHULKER_BOX, Material.GRAY_SHULKER_BOX,
+        Material.LIGHT_GRAY_SHULKER_BOX, Material.CYAN_SHULKER_BOX, Material.PURPLE_SHULKER_BOX,
+        Material.BLUE_SHULKER_BOX, Material.BROWN_SHULKER_BOX, Material.GREEN_SHULKER_BOX,
+        Material.RED_SHULKER_BOX, Material.BLACK_SHULKER_BOX
+    );
+    
+    // Разрешенные материалы для взаимодействия
+    private static final Set<Material> ALLOWED_INTERACT = Set.of(
+        Material.ENDER_CHEST, Material.ANVIL, Material.CHIPPED_ANVIL, 
+        Material.DAMAGED_ANVIL, Material.CRAFTING_TABLE
+    );
 
     public DevWorldProtectionListener(MegaCreative plugin) {
         this.plugin = plugin;
@@ -44,13 +86,94 @@ public class DevWorldProtectionListener implements Listener {
                displayName.contains(CodingItems.DATA_CREATOR_NAME);
     }
 
+    // === ЗАЩИТА ОТ РАЗМЕЩЕНИЯ НЕРАЗРЕШЕННЫХ БЛОКОВ ===
+    
+    @EventHandler(priority = EventPriority.HIGH)
+    public void onBlockPlace(BlockPlaceEvent event) {
+        Player player = event.getPlayer();
+        if (!isInDevWorld(player)) return;
+        
+        Material blockType = event.getBlock().getType();
+        
+        // Проверяем, разрешен ли этот материал
+        if (!ALLOWED_BLOCKS.contains(blockType)) {
+            event.setCancelled(true);
+            player.sendMessage("§cВ мире разработки можно размещать только блоки кода и инструменты разработчика!");
+            return;
+        }
+        
+        // Для блоков кода проверяем права на кодирование
+        if (isCodeBlock(blockType)) {
+            CreativeWorld creativeWorld = plugin.getWorldManager().findCreativeWorldByBukkit(player.getWorld());
+            if (creativeWorld != null && !creativeWorld.canCode(player)) {
+                event.setCancelled(true);
+                player.sendMessage("§cУ вас нет прав на размещение блоков кода в этом мире!");
+                return;
+            }
+        }
+    }
+    
+    // === ЗАЩИТА ОТ РАЗРУШЕНИЯ БЛОКОВ ===
+    
+    @EventHandler(priority = EventPriority.HIGH)
+    public void onBlockBreak(BlockBreakEvent event) {
+        Player player = event.getPlayer();
+        if (!isInDevWorld(player)) return;
+        
+        Material blockType = event.getBlock().getType();
+        
+        // Запрещаем ломать блоки платформы (стекло)
+        if (blockType.name().contains("GLASS") || blockType == Material.BEACON || blockType == Material.BARRIER) {
+            event.setCancelled(true);
+            player.sendMessage("§cНельзя ломать элементы платформы разработки!");
+            return;
+        }
+        
+        // Для блоков кода проверяем права
+        if (isCodeBlock(blockType) || ALLOWED_BLOCKS.contains(blockType)) {
+            CreativeWorld creativeWorld = plugin.getWorldManager().findCreativeWorldByBukkit(player.getWorld());
+            if (creativeWorld != null && !creativeWorld.canCode(player)) {
+                event.setCancelled(true);
+                player.sendMessage("§cУ вас нет прав на удаление блоков в этом мире!");
+                return;
+            }
+        } else {
+            // Запрещаем ломать любые другие блоки
+            event.setCancelled(true);
+            player.sendMessage("§cВ мире разработки можно ломать только блоки кода и инструменты разработчика!");
+        }
+    }
+    
+    // === ЗАЩИТА ВЗАИМОДЕЙСТВИЙ ===
+    
+    @EventHandler(priority = EventPriority.HIGH)
+    public void onPlayerInteract(PlayerInteractEvent event) {
+        Player player = event.getPlayer();
+        if (!isInDevWorld(player)) return;
+        
+        if (event.getClickedBlock() != null) {
+            Material blockType = event.getClickedBlock().getType();
+            
+            // Разрешаем взаимодействие только с определенными блоками
+            if (!ALLOWED_INTERACT.contains(blockType) && !isCodeBlock(blockType)) {
+                // Проверяем, не является ли это блоком платформы
+                if (blockType.name().contains("GLASS") || blockType == Material.BEACON) {
+                    event.setCancelled(true);
+                    return;
+                }
+            }
+        }
+    }
+    
+    // === ЗАЩИТА ПРЕДМЕТОВ КОДИНГА ===
+    
     // Запрещаем выкидывать предметы кодинга
     @EventHandler
     public void onPlayerDropItem(PlayerDropItemEvent event) {
         Player player = event.getPlayer();
         if (isInDevWorld(player) && isCodingItem(event.getItemDrop().getItemStack())) {
             event.setCancelled(true);
-
+            player.sendMessage("§cНельзя выбрасывать инструменты разработчика!");
         }
     }
 
@@ -66,8 +189,38 @@ public class DevWorldProtectionListener implements Listener {
             // Разрешаем клики в своем инвентаре (hotbar/main), но отменяем любые другие
             if (event.getClickedInventory() != player.getInventory()) {
                 event.setCancelled(true);
-
+                player.sendMessage("§cНельзя перемещать инструменты разработчика в другие инвентари!");
             }
         }
+    }
+    
+    // === ВСПОМОГАТЕЛЬНЫЕ МЕТОДЫ ===
+    
+    /**
+     * Проверяет, является ли материал блоком кода
+     */
+    private boolean isCodeBlock(Material material) {
+        Set<Material> codeBlocks = Set.of(
+            Material.DIAMOND_BLOCK, Material.COBBLESTONE, Material.OAK_PLANKS,
+            Material.IRON_BLOCK, Material.OBSIDIAN, Material.REDSTONE_BLOCK,
+            Material.BRICKS, Material.EMERALD_BLOCK, Material.LAPIS_BLOCK,
+            Material.BOOKSHELF, Material.END_STONE, Material.NETHERITE_BLOCK,
+            Material.POLISHED_GRANITE
+        );
+        return codeBlocks.contains(material);
+    }
+    
+    /**
+     * Получает список разрешенных блоков
+     */
+    public static Set<Material> getAllowedBlocks() {
+        return ALLOWED_BLOCKS;
+    }
+    
+    /**
+     * Проверяет, разрешен ли блок для размещения в dev-мире
+     */
+    public static boolean isBlockAllowed(Material material) {
+        return ALLOWED_BLOCKS.contains(material);
     }
 } 
