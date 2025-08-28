@@ -97,6 +97,7 @@ public class AdvancedCustomEventTest {
         eventManager.getCorrelationEngine().addCompletionListener(listener);
         
         EventCorrelationEngine.EventPattern pattern = new EventCorrelationEngine.EventPattern.Builder("joinThenChat")
+            .patternId("joinThenChat") // Set explicit pattern ID
             .description("Player joins then chats")
             .addStep("playerJoin")
             .addStep("playerChat")
