@@ -4,11 +4,7 @@ import com.megacreative.commands.*;
 import com.megacreative.listeners.*;
 import com.megacreative.coding.BlockPlacementHandler;
 import com.megacreative.coding.CodingManagerImpl;
-<<<<<<< HEAD
-import com.megacreative.coding.BlockConnectionVisualizer;
-=======
 
->>>>>>> ba7215a (Я вернулся)
 import com.megacreative.coding.ScriptDebugger;
 import com.megacreative.coding.CodingItems;
 import com.megacreative.coding.BlockConfiguration;
@@ -27,11 +23,7 @@ import org.bukkit.plugin.java.JavaPlugin;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.UUID;
-<<<<<<< HEAD
-import java.util.logging.Logger;
-=======
 
->>>>>>> ba7215a (Я вернулся)
 import com.megacreative.commands.CreateScriptCommand;
 import java.util.ArrayList;
 import java.util.List;
@@ -46,21 +38,13 @@ public class MegaCreative extends JavaPlugin {
     private IPlayerManager playerManager;
     private ICodingManager codingManager;
     private BlockPlacementHandler blockPlacementHandler;
-<<<<<<< HEAD
-    private BlockConnectionVisualizer blockConnectionVisualizer;
-=======
 
->>>>>>> ba7215a (Я вернулся)
     private ScriptDebugger scriptDebugger;
     private DataManager dataManager;
     private TemplateManager templateManager;
     private ScoreboardManager scoreboardManager;
     private TrustedPlayerManager trustedPlayerManager;
-<<<<<<< HEAD
-    private Logger logger;
-=======
 
->>>>>>> ba7215a (Я вернулся)
     
     // --- НОВЫЙ МЕНЕДЖЕР ДЛЯ ВИРТУАЛЬНЫХ ИНВЕНТАРЕЙ ---
     private BlockConfigManager blockConfigManager;
@@ -83,37 +67,20 @@ public class MegaCreative extends JavaPlugin {
         configManager = new ConfigManager(this);
         configManager.loadConfig();
         
-<<<<<<< HEAD
-        // Инициализация системы логирования
-        com.megacreative.utils.LogUtils.initialize(this);
-        
-=======
->>>>>>> ba7215a (Я вернулся)
+
         // Валидация конфигурации
         try {
             ConfigurationValidator validator = new ConfigurationValidator(this);
             validator.validateMainConfig();
             validator.validateCodingBlocksConfig();
-<<<<<<< HEAD
-            com.megacreative.utils.LogUtils.info("Конфигурация успешно валидирована");
         } catch (ConfigurationException e) {
-            com.megacreative.utils.LogUtils.error("Ошибка валидации конфигурации: " + e.getMessage());
-=======
-        } catch (ConfigurationException e) {
->>>>>>> ba7215a (Я вернулся)
             // Создаем резервную копию и пытаемся восстановить
             ConfigurationValidator validator = new ConfigurationValidator(this);
             validator.createBackup();
             try {
                 validator.restoreFromBackup();
-<<<<<<< HEAD
-                com.megacreative.utils.LogUtils.info("Конфигурация восстановлена из резервной копии");
-            } catch (ConfigurationException restoreEx) {
-                com.megacreative.utils.LogUtils.error("Не удалось восстановить конфигурацию: " + restoreEx.getMessage());
-=======
             } catch (ConfigurationException restoreEx) {
                 // Игнорируем ошибки восстановления
->>>>>>> ba7215a (Я вернулся)
             }
         }
         
@@ -127,11 +94,7 @@ public class MegaCreative extends JavaPlugin {
         dependencyContainer.register(IPlayerManager.class, playerManager);
         dependencyContainer.register(ICodingManager.class, codingManager);
         this.blockPlacementHandler = new BlockPlacementHandler(this);
-<<<<<<< HEAD
-        this.blockConnectionVisualizer = new BlockConnectionVisualizer(this);
-=======
 
->>>>>>> ba7215a (Я вернулся)
         this.scriptDebugger = new ScriptDebugger(this);
         this.dataManager = new DataManager(this);
         this.templateManager = new TemplateManager(this);
@@ -151,19 +114,7 @@ public class MegaCreative extends JavaPlugin {
         registerCommands();
         registerEvents();
         
-<<<<<<< HEAD
-        this.logger = getLogger();
-        this.logger.info("=== MEGACREATIVE ЗАГРУЖЕН ===");
-        this.logger.info("Версия: 1.0.0");
-        this.logger.info("Команды зарегистрированы: " + getServer().getPluginCommand("megacreative") != null ? "✓" : "✗");
-        this.logger.info("Менеджеры инициализированы:");
-        this.logger.info("  - WorldManager: " + (worldManager != null ? "✓" : "✗"));
-        this.logger.info("  - PlayerManager: " + (playerManager != null ? "✓" : "✗"));
-        this.logger.info("  - CodingManager: " + (codingManager != null ? "✓" : "✗"));
-        this.logger.info("MegaCreative готов к работе!");
-=======
 
->>>>>>> ba7215a (Я вернулся)
     }
     
     @Override
@@ -181,14 +132,7 @@ public class MegaCreative extends JavaPlugin {
             worldManager.saveAllWorlds();
         }
         
-<<<<<<< HEAD
-        if (logger != null) {
-            logger.info("=== MEGACREATIVE ОТКЛЮЧЕН ===");
-            logger.info("Все данные сохранены.");
-        }
-=======
 
->>>>>>> ba7215a (Я вернулся)
     }
     
     private void registerCommands() {
@@ -207,11 +151,7 @@ public class MegaCreative extends JavaPlugin {
         getCommand("worldsettings").setExecutor(new WorldSettingsCommand(this));
         getCommand("testscript").setExecutor(new TestScriptCommand(this));
         getCommand("debug").setExecutor(new DebugCommand(this));
-<<<<<<< HEAD
-        getCommand("visualize").setExecutor(new VisualizeCommand(this));
-=======
 
->>>>>>> ba7215a (Я вернулся)
         getCommand("createscript").setExecutor(new CreateScriptCommand(this));
         getCommand("stoprepeat").setExecutor(new StopRepeatCommand(this));
         getCommand("status").setExecutor(new StatusCommand(this));
@@ -257,13 +197,7 @@ public class MegaCreative extends JavaPlugin {
         return blockPlacementHandler;
     }
 
-<<<<<<< HEAD
-    public BlockConnectionVisualizer getBlockConnectionVisualizer() {
-        return blockConnectionVisualizer;
-    }
-=======
 
->>>>>>> ba7215a (Я вернулся)
     
     public ScriptDebugger getScriptDebugger() {
         return scriptDebugger;
@@ -312,67 +246,5 @@ public class MegaCreative extends JavaPlugin {
     private void startInventoryChecker() {
         // Убираем неэффективную проверку каждые 5 секунд
         // Вместо этого будем проверять при входе в dev-мир через PlayerWorldChangeListener
-<<<<<<< HEAD
-        getLogger().info("Проверка инвентаря перенесена на событие смены мира");
     }
-
-    // Этот метод-хелпер нужно тоже добавить в MegaCreative.java
-    private boolean hasAllCodingItems(Player player) {
-        // Упрощенная проверка. Проверяем наличие хотя бы нескольких ключевых предметов.
-        // Для 100% точности нужно проверять каждый предмет из giveCodingItems
-        boolean hasLinker = false;
-        boolean hasInspector = false;
-        boolean hasEventBlock = false;
-        for (ItemStack item : player.getInventory().getContents()) {
-            if (item != null && item.hasItemMeta()) {
-                String name = item.getItemMeta().getDisplayName();
-                if (name.contains("Связующий жезл")) hasLinker = true;
-                if (name.contains("Инспектор блоков")) hasInspector = true;
-                if (name.contains("Событие игрока")) hasEventBlock = true;
-            }
-        }
-        return hasLinker && hasInspector && hasEventBlock;
-    }
-    
-    // Новый метод для определения недостающих предметов
-    private List<String> getMissingCodingItems(Player player) {
-        List<String> missingItems = new ArrayList<>();
-        
-        // Проверяем наличие ключевых предметов
-        boolean hasLinker = false;
-        boolean hasInspector = false;
-        boolean hasEventBlock = false;
-        boolean hasActionBlock = false;
-        boolean hasConditionBlock = false;
-        boolean hasVariableBlock = false;
-        boolean hasRepeatBlock = false;
-        
-        for (ItemStack item : player.getInventory().getContents()) {
-            if (item != null && item.hasItemMeta()) {
-                String name = item.getItemMeta().getDisplayName();
-                if (name.contains("Связующий жезл")) hasLinker = true;
-                if (name.contains("Инспектор блоков")) hasInspector = true;
-                if (name.contains("Событие игрока")) hasEventBlock = true;
-                if (name.contains("Действие игрока")) hasActionBlock = true;
-                if (name.contains("Условие")) hasConditionBlock = true;
-                if (name.contains("Переменная")) hasVariableBlock = true;
-                if (name.contains("Повторить")) hasRepeatBlock = true;
-            }
-        }
-        
-        if (!hasLinker) missingItems.add("Связующий жезл");
-        if (!hasInspector) missingItems.add("Инспектор блоков");
-        if (!hasEventBlock) missingItems.add("Блок события");
-        if (!hasActionBlock) missingItems.add("Блок действия");
-        if (!hasConditionBlock) missingItems.add("Блок условия");
-        if (!hasVariableBlock) missingItems.add("Блок переменной");
-        if (!hasRepeatBlock) missingItems.add("Блок повтора");
-        
-        return missingItems;
-    }
-=======
-    }
-
-
->>>>>>> ba7215a (Я вернулся)
 }

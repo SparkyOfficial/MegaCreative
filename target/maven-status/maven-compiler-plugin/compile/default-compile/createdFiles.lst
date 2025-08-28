@@ -112,7 +112,6 @@ com\megacreative\coding\actions\SetServerVariableAction.class
 com\megacreative\coding\CodeBlock.class
 com\megacreative\commands\TemplatesCommand.class
 com\megacreative\coding\actions\TeleportAction.class
-com\megacreative\coding\BlockConnectionVisualizer$1.class
 com\megacreative\exceptions\MegaCreativeException.class
 com\megacreative\coding\actions\PlayParticleEffectAction.class
 com\megacreative\coding\conditions\IsNearEntityCondition$1.class
@@ -141,7 +140,6 @@ com\megacreative\utils\SafeCommandExecutor.class
 com\megacreative\coding\actions\HealPlayerAction.class
 com\megacreative\coding\conditions\IsBlockTypeCondition.class
 com\megacreative\coding\actions\BroadcastAction.class
-com\megacreative\coding\BlockConnectionVisualizer$2.class
 com\megacreative\coding\conditions\PlayerGameModeCondition.class
 com\megacreative\exceptions\WorldException.class
 com\megacreative\coding\actions\IsInWorldCondition.class
@@ -151,7 +149,6 @@ com\megacreative\models\WorldMode.class
 com\megacreative\coding\actions\IsOpCondition.class
 com\megacreative\utils\ConfigManager.class
 com\megacreative\coding\ParameterSelectorGUI.class
-com\megacreative\coding\BlockConnectionVisualizer.class
 com\megacreative\gui\AnvilInputGUI.class
 com\megacreative\commands\MainCommand.class
 com\megacreative\coding\actions\RandomNumberAction.class
@@ -177,5 +174,4 @@ com\megacreative\commands\TestScriptCommand.class
 com\megacreative\managers\WorldManagerImpl$1.class
 com\megacreative\coding\conditions\IfVarLessCondition.class
 com\megacreative\coding\actions\SaveFunctionAction.class
-com\megacreative\commands\VisualizeCommand.class
 com\megacreative\listeners\CommandListener.class

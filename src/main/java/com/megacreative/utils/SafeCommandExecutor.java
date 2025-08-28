@@ -27,19 +27,13 @@ public class SafeCommandExecutor {
      */
     public static boolean executeCommand(Player player, String command) {
         if (command == null || command.trim().isEmpty()) {
-<<<<<<< HEAD
-            player.sendMessage("§cКоманда не может быть пустой.");
-=======
->>>>>>> ba7215a (Я вернулся)
+
             return false;
         }
         
         String[] parts = command.trim().split("\\s+");
         if (parts.length == 0) {
-<<<<<<< HEAD
-            player.sendMessage("§cНекорректная команда.");
-=======
->>>>>>> ba7215a (Я вернулся)
+
             return false;
         }
         
@@ -47,45 +41,27 @@ public class SafeCommandExecutor {
         
         // Проверяем, разрешена ли команда
         if (!ALLOWED_COMMANDS.contains(baseCommand)) {
-<<<<<<< HEAD
-            player.sendMessage("§cКоманда '" + baseCommand + "' не разрешена для выполнения через блоки кода.");
-=======
->>>>>>> ba7215a (Я вернулся)
+
             return false;
         }
         
         // Дополнительная проверка прав
         if (!player.hasPermission("megacreative.script.command." + baseCommand)) {
-<<<<<<< HEAD
-            player.sendMessage("§cУ вас нет прав на выполнение команды '" + baseCommand + "' через скрипты.");
-=======
->>>>>>> ba7215a (Я вернулся)
+
             return false;
         }
         
         // Дополнительные проверки безопасности для критических команд
         if (!isCommandSafe(baseCommand, parts)) {
-<<<<<<< HEAD
-            player.sendMessage("§cКоманда '" + baseCommand + "' заблокирована по соображениям безопасности.");
-=======
->>>>>>> ba7215a (Я вернулся)
+
             return false;
         }
         
         try {
             // Безопасное выполнение команды
             boolean success = Bukkit.dispatchCommand(player, command);
-<<<<<<< HEAD
-            if (!success) {
-                player.sendMessage("§cКоманда '" + baseCommand + "' не выполнена.");
-            }
             return success;
         } catch (Exception e) {
-            player.sendMessage("§cОшибка выполнения команды: " + e.getMessage());
-=======
-            return success;
-        } catch (Exception e) {
->>>>>>> ba7215a (Я вернулся)
             return false;
         }
     }
