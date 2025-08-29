@@ -34,6 +34,10 @@ public class VariableManager {
     // Player-specific variables (from DataManager functionality)
     private final Map<UUID, Map<String, DataValue>> playerVariables = new ConcurrentHashMap<>();
     
+    // Server variables storage
+    private final Map<String, DataValue> serverVariables = new ConcurrentHashMap<>();
+    private File serverVarsFile;
+    
     // Variable metadata
     private final Map<String, VariableMetadata> variableMetadata = new ConcurrentHashMap<>();
     
@@ -54,6 +58,7 @@ public class VariableManager {
             dataFolder.mkdirs();
         }
         
+        // Initialize persistent variables file
         persistentFile = new File(dataFolder, "persistent.yml");
         if (!persistentFile.exists()) {
             try {
@@ -62,8 +67,17 @@ public class VariableManager {
                 plugin.getLogger().severe("Failed to create persistent variables file: " + e.getMessage());
             }
         }
-        
         persistentConfig = YamlConfiguration.loadConfiguration(persistentFile);
+        
+        // Initialize server variables file
+        serverVarsFile = new File(dataFolder, "server_vars.yml");
+        if (!serverVarsFile.exists()) {
+            try {
+                serverVarsFile.createNewFile();
+            } catch (IOException e) {
+                plugin.getLogger().severe("Failed to create server variables file: " + e.getMessage());
+            }
+        }
     }
     
     // === LOCAL VARIABLES (SCRIPT SCOPE) ===
@@ -89,7 +103,7 @@ public class VariableManager {
     
     public void setGlobalVariable(String worldId, String name, DataValue value) {
         globalVariables.computeIfAbsent(worldId, k -> new ConcurrentHashMap<>()).put(name, value);
-       updateMetadata(name, VariableScope.WORLD, value.getType());
+        updateMetadata(name, VariableScope.WORLD, value.getType());
         
         // Notify all players in world about variable change
         notifyPlayersInWorld(worldId, name, value);
@@ -106,13 +120,65 @@ public class VariableManager {
         return new HashMap<>(globalVariables.getOrDefault(worldId, new HashMap<>()));
     }
     
+    // === PLAYER VARIABLES ===
+    
+    public void setPlayerVariable(UUID playerId, String name, DataValue value) {
+        playerVariables.computeIfAbsent(playerId, k -> new ConcurrentHashMap<>()).put(name, value);
+        updateMetadata("player." + name, VariableScope.PLAYER, value.getType());
+        savePlayerVariables(playerId);
+    }
+    
+    public DataValue getPlayerVariable(UUID playerId, String name) {
+        Map<String, DataValue> vars = playerVariables.get(playerId);
+        return vars != null ? vars.get(name) : null;
+    }
+    
+    public void incrementPlayerVariable(UUID playerId, String name, double amount) {
+        DataValue current = getPlayerVariable(playerId, name);
+        double currentValue = 0.0;
+        
+        if (current != null && current.getType() == ValueType.NUMBER) {
+            currentValue = current.asNumber().doubleValue();
+        }
+        
+        setPlayerVariable(playerId, name, DataValue.of(currentValue + amount));
+    }
+    
+    public void savePlayerVariables(UUID playerId) {
+        // Implementation to save player variables to file
+        // This will be called periodically and on server shutdown
+    }
+    
+    public void loadPlayerVariables(UUID playerId) {
+        // Implementation to load player variables from file
+    }
+    
+    // === SERVER VARIABLES ===
+    
+    public void setServerVariable(String name, DataValue value) {
+        serverVariables.put(name, value);
+        updateMetadata("server." + name, VariableScope.SERVER, value.getType());
+        saveServerVariables();
+    }
+    
+    public DataValue getServerVariable(String name) {
+        return serverVariables.get(name);
+    }
+    
+    public void saveServerVariables() {
+        // Implementation to save server variables to file
+        // This will be called when variables change and on server shutdown
+    }
+    
+    public void loadServerVariables() {
+        // Implementation to load server variables from file
+    }
+    
     // === PERSISTENT VARIABLES (SERVER SCOPE) ===
     
     public void setPersistentVariable(String name, DataValue value) {
         persistentVariables.put(name, value);
         updateMetadata(name, VariableScope.SERVER, value.getType());
-        
-        // Save to file immediately for persistence
         savePersistentVariable(name, value);
         
         plugin.getLogger().info("Set persistent variable: " + name + " = " + value.asString());
@@ -265,28 +331,181 @@ public class VariableManager {
     }
     
     /**
+     * Get all player variables as a map
+     */
+    public Map<String, DataValue> getPlayerVariables(UUID playerId) {
+        Map<String, DataValue> vars = playerVariables.get(playerId);
+        return vars != null ? new ConcurrentHashMap<>(vars) : new ConcurrentHashMap<>();
+    }
+    
+    /**
+     * Get all local variables for a script
+     */
+    public Map<String, DataValue> getLocalVariables(String scriptId) {
+        Map<String, DataValue> vars = localVariables.get(scriptId);
+        return vars != null ? new ConcurrentHashMap<>(vars) : new ConcurrentHashMap<>();
+    }
+    
+    /**
+     * Get all global variables for a world
+     */
+    public Map<String, DataValue> getGlobalVariables(String worldId) {
+        Map<String, DataValue> vars = globalVariables.get(worldId);
+        return vars != null ? new ConcurrentHashMap<>(vars) : new ConcurrentHashMap<>();
+    }
+    
+    /**
+     * Get all server variables
+     */
+    public Map<String, DataValue> getServerVariables() {
+        return new ConcurrentHashMap<>(serverVariables);
+    }
+    
+    /**
+     * Get all persistent variables
+     */
+    public Map<String, DataValue> getPersistentVariables() {
+        return new ConcurrentHashMap<>(persistentVariables);
+    }
+    
+    /**
+     * Remove a player variable
+     */
+    public void removePlayerVariable(UUID playerId, String name) {
+        Map<String, DataValue> playerVars = playerVariables.get(playerId);
+        if (playerVars != null) {
+            playerVars.remove(name);
+            savePlayerVariables(playerId);
+        }
+    }
+    
+    /**
+     * Remove a local variable
+     */
+    public void removeLocalVariable(String scriptId, String name) {
+        Map<String, DataValue> scriptVars = localVariables.get(scriptId);
+        if (scriptVars != null) {
+            scriptVars.remove(name);
+        }
+    }
+    
+    /**
+     * Remove a global variable
+     */
+    public void removeGlobalVariable(String worldId, String name) {
+        Map<String, DataValue> worldVars = globalVariables.get(worldId);
+        if (worldVars != null) {
+            worldVars.remove(name);
+            // Notify players about variable removal
+            notifyPlayersInWorld(worldId, name, null);
+        }
+    }
+    
+    /**
+     * Remove a server variable
+     */
+    public void removeServerVariable(String name) {
+        serverVariables.remove(name);
+        saveServerVariables();
+    }
+    
+    /**
+     * Remove a persistent variable
+     */
+    public void removePersistentVariable(String name) {
+        persistentVariables.remove(name);
+        persistentConfig.set("variables." + name, null);
+        try {
+            persistentConfig.save(persistentFile);
+        } catch (IOException e) {
+            plugin.getLogger().severe("Failed to remove persistent variable " + name + ": " + e.getMessage());
+        }
+    }
+    
+    /**
      * Save player data to file (migrated from DataManager)
      */
     public void savePlayerData(Player player) {
-        UUID playerId = player.getUniqueId();
+        savePlayerVariables(player.getUniqueId());
+    }
+    
+    /**
+     * Save player variables to file
+     */
+    public void savePlayerVariables(UUID playerId) {
         Map<String, DataValue> vars = playerVariables.get(playerId);
+        if (vars == null || vars.isEmpty()) {
+            return;
+        }
         
-        if (vars != null && !vars.isEmpty()) {
-            File playerFile = new File(plugin.getDataFolder(), "players/" + playerId + ".yml");
-            playerFile.getParentFile().mkdirs();
+        File playerFile = new File(plugin.getDataFolder(), "players/" + playerId + ".yml");
+        playerFile.getParentFile().mkdirs();
+        
+        YamlConfiguration config = new YamlConfiguration();
+        for (Map.Entry<String, DataValue> entry : vars.entrySet()) {
+            config.set("variables." + entry.getKey(), entry.getValue().getValue());
+        }
+        
+        try {
+            config.save(playerFile);
+            plugin.getLogger().fine("Saved player variables: " + playerId + " (" + vars.size() + " variables)");
+        } catch (IOException e) {
+            plugin.getLogger().severe("Error saving player variables for " + playerId + ": " + e.getMessage());
+        }
+    }
+    
+    /**
+     * Save all modified player variables to disk
+     */
+    public void saveAllPlayerVariables() {
+        for (UUID playerId : playerVariables.keySet()) {
+            savePlayerVariables(playerId);
+        }
+    }
+    
+    /**
+     * Save server variables to file
+     */
+    public void saveServerVariables() {
+        try {
+            File dataFolder = new File(plugin.getDataFolder(), "variables");
+            if (!dataFolder.exists()) {
+                dataFolder.mkdirs();
+            }
             
             YamlConfiguration config = new YamlConfiguration();
-            for (Map.Entry<String, DataValue> entry : vars.entrySet()) {
-                config.set("variables." + entry.getKey(), entry.getValue().getValue());
+            for (Map.Entry<String, DataValue> entry : serverVariables.entrySet()) {
+                config.set(entry.getKey(), entry.getValue().getValue());
             }
             
+            config.save(serverVarsFile);
+            plugin.getLogger().fine("Saved " + serverVariables.size() + " server variables");
+        } catch (IOException e) {
+            plugin.getLogger().severe("Error saving server variables: " + e.getMessage());
+        }
+    }
+    
+    /**
+     * Load server variables from file
+     */
+    public void loadServerVariables() {
+        if (!serverVarsFile.exists()) {
+            return;
+        }
+        
+        YamlConfiguration config = YamlConfiguration.loadConfiguration(serverVarsFile);
+        for (String key : config.getKeys(true)) {
             try {
-                config.save(playerFile);
-                plugin.getLogger().info("Saved player data: " + player.getName() + " (" + vars.size() + " variables)");
-            } catch (IOException e) {
-                plugin.getLogger().severe("Error saving player data for " + player.getName() + ": " + e.getMessage());
+                Object value = config.get(key);
+                if (value != null) {
+                    serverVariables.put(key, DataValue.fromObject(value));
+                }
+            } catch (Exception e) {
+                plugin.getLogger().warning("Failed to load server variable " + key + ": " + e.getMessage());
             }
         }
+        
+        plugin.getLogger().info("Loaded " + serverVariables.size() + " server variables");
     }
     
     /**

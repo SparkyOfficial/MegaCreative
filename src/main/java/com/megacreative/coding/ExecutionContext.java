@@ -24,18 +24,12 @@ public class ExecutionContext {
     private final Location blockLocation; // Локация выполняемого блока (может быть null)
     private final CodeBlock currentBlock; // Текущий выполняемый блок (может быть null)
 
-    // Переменные скрипта (String -> Object)
-    private Map<String, Object> variables = new HashMap<>();
+    // Ссылка на менеджер переменных
+    private final VariableManager variableManager;
     
-    // --- РАСШИРЕННЫЕ ТИПЫ ДАННЫХ ---
-    // Списки (массивы) для хранения коллекций данных
-    private Map<String, List<Object>> lists = new HashMap<>();
-    
-    // Булевы переменные для логических операций
-    private Map<String, Boolean> booleans = new HashMap<>();
-    
-    // Числовые переменные с поддержкой int и double
-    private Map<String, Number> numbers = new HashMap<>();
+    // Идентификаторы для доступа к переменным
+    private final String scriptId; // Идентификатор скрипта
+    private final String worldId;  // Идентификатор мира
 
     /**
      * Создает новый контекст с указанным текущим блоком.
@@ -43,64 +37,135 @@ public class ExecutionContext {
      * @param newLocation Новая локация блока
      * @return Новый контекст с обновленным блоком и локацией
      */
+    public ExecutionContext(MegaCreative plugin, Player player, CreativeWorld creativeWorld, Event event, Location blockLocation, CodeBlock currentBlock) {
+        this.plugin = plugin;
+        this.player = player;
+        this.creativeWorld = creativeWorld;
+        this.event = event;
+        this.blockLocation = blockLocation;
+        this.currentBlock = currentBlock;
+        this.variableManager = plugin.getVariableManager();
+        this.scriptId = currentBlock != null ? currentBlock.getId() : "global";
+        this.worldId = creativeWorld != null ? creativeWorld.getId() : "global";
+    }
+    
     public ExecutionContext withCurrentBlock(CodeBlock currentBlock, Location newLocation) {
-        ExecutionContext newContext = new ExecutionContext(this.plugin, this.player, this.creativeWorld, this.event, newLocation, currentBlock);
-        newContext.variables = new HashMap<>(this.variables);
-        newContext.lists = new HashMap<>(this.lists);
-        newContext.booleans = new HashMap<>(this.booleans);
-        newContext.numbers = new HashMap<>(this.numbers);
-        return newContext;
+        return new ExecutionContext(this.plugin, this.player, this.creativeWorld, this.event, newLocation, currentBlock);
     }
 
     /**
-     * Устанавливает переменную
+     * Устанавливает локальную переменную скрипта
      */
     public void setVariable(String name, Object value) {
-        variables.put(name, value);
+        if (scriptId == null) {
+            throw new IllegalStateException("Cannot set variable: script ID is not available");
+        }
+        variableManager.setLocalVariable(scriptId, name, DataValue.fromObject(value));
     }
     
     /**
-     * Получает переменную
+     * Получает локальную переменную скрипта
      */
     public Object getVariable(String name) {
-        return variables.get(name);
+        if (scriptId == null) {
+            return null;
+        }
+        DataValue value = variableManager.getLocalVariable(scriptId, name);
+        return value != null ? value.getValue() : null;
     }
     
     /**
-     * Получает все переменные
+     * Получает все переменные текущего скрипта
      */
     public Map<String, Object> getVariables() {
-        return new HashMap<>(variables);
+        if (scriptId == null) {
+            return new HashMap<>();
+        }
+        Map<String, DataValue> scriptVars = variableManager.getLocalVariables(scriptId);
+        Map<String, Object> result = new HashMap<>();
+        scriptVars.forEach((k, v) -> result.put(k, v.getValue()));
+        return result;
     }
     
-    // --- МЕТОДЫ ДЛЯ РАБОТЫ СО СПИСКАМИ ---
+    /**
+     * Устанавливает глобальную переменную мира
+     */
+    public void setGlobalVariable(String name, Object value) {
+        if (worldId == null) {
+            throw new IllegalStateException("Cannot set global variable: world ID is not available");
+        }
+        variableManager.setGlobalVariable(worldId, name, DataValue.fromObject(value));
+    }
+    
+    /**
+     * Получает глобальную переменную мира
+     */
+    public Object getGlobalVariable(String name) {
+        if (worldId == null) {
+            return null;
+        }
+        DataValue value = variableManager.getGlobalVariable(worldId, name);
+        return value != null ? value.getValue() : null;
+    }
+    
+    /**
+     * Устанавливает переменную игрока
+     */
+    public void setPlayerVariable(String name, Object value) {
+        if (player == null) {
+            throw new IllegalStateException("Cannot set player variable: player is not available");
+        }
+        variableManager.setPlayerVariable(player.getUniqueId(), name, DataValue.fromObject(value));
+    }
+    
+    /**
+     * Получает переменную игрока
+     */
+    public Object getPlayerVariable(String name) {
+        if (player == null) {
+            return null;
+        }
+        DataValue value = variableManager.getPlayerVariable(player.getUniqueId(), name);
+        return value != null ? value.getValue() : null;
+    }
+    
+    // === МЕТОДЫ ДЛЯ РАБОТЫ СО СПИСКАМИ ===
     
     /**
      * Создает или обновляет список
      */
     public void setList(String name, List<Object> list) {
-        lists.put(name, new ArrayList<>(list));
+        setVariable(name, new ArrayList<>(list));
     }
     
     /**
      * Получает список
      */
+    @SuppressWarnings("unchecked")
     public List<Object> getList(String name) {
-        return lists.get(name);
+        Object value = getVariable(name);
+        return value instanceof List ? (List<Object>) value : null;
     }
     
     /**
      * Добавляет элемент в список
      */
+    @SuppressWarnings("unchecked")
     public void addToList(String name, Object element) {
-        lists.computeIfAbsent(name, k -> new ArrayList<>()).add(element);
+        List<Object> list = getList(name);
+        if (list == null) {
+            list = new ArrayList<>();
+            setVariable(name, list);
+        }
+        list.add(element);
     }
     
     /**
      * Удаляет элемент из списка
      */
+    @SuppressWarnings("unchecked")
     public void removeFromList(String name, Object element) {
-        List<Object> list = lists.get(name);
+        List<Object> list = getList(name);
         if (list != null) {
             list.remove(element);
         }
@@ -119,7 +184,7 @@ public class ExecutionContext {
      * Получает булеву переменную
      */
     public Boolean getBoolean(String name) {
-        return booleans.get(name);
+        return (Boolean) getVariable(name);
     }
     
     // --- МЕТОДЫ ДЛЯ РАБОТЫ С ЧИСЛАМИ ---
@@ -128,21 +193,21 @@ public class ExecutionContext {
      * Устанавливает числовую переменную
      */
     public void setNumber(String name, Number value) {
-        numbers.put(name, value);
+        setVariable(name, value);
     }
     
     /**
      * Получает числовую переменную
      */
     public Number getNumber(String name) {
-        return numbers.get(name);
+        return (Number) getVariable(name);
     }
     
     /**
      * Получает число как int
      */
     public int getInt(String name) {
-        Number number = numbers.get(name);
+        Number number = getNumber(name);
         return number != null ? number.intValue() : 0;
     }
     

@@ -3,7 +3,6 @@ package com.megacreative.coding;
 import com.megacreative.coding.values.DataValue;
 import com.megacreative.coding.values.ValueType;
 import com.megacreative.coding.values.types.*;
-import com.megacreative.coding.variables.VariableManager;
 import org.bukkit.entity.Player;
 
 /**
@@ -12,42 +11,50 @@ import org.bukkit.entity.Player;
  */
 public class ParameterResolver {
     
-    private final VariableManager variableManager;
+    private final ExecutionContext context;
     
-    public ParameterResolver(VariableManager variableManager) {
-        this.variableManager = variableManager;
+    public ParameterResolver(ExecutionContext context) {
+        this.context = context;
     }
     
     /**
      * Resolves a parameter value with full DataValue support
-     * @param context Execution context
      * @param parameterValue Raw parameter value (can be DataValue, String, or Object)
      * @return Resolved DataValue
      */
-    public DataValue resolve(ExecutionContext context, Object parameterValue) {
+    public DataValue resolve(Object parameterValue) {
         if (parameterValue == null) {
             return new AnyValue(null);
         }
         
         // If already DataValue, process for variables and placeholders
         if (parameterValue instanceof DataValue dataValue) {
-            return resolveDataValue(context, dataValue);
+            return resolveDataValue(dataValue);
         }
         
         // Convert to DataValue and resolve
         DataValue dataValue = DataValue.fromObject(parameterValue);
-        return resolveDataValue(context, dataValue);
+        return resolveDataValue(dataValue);
+    }
+    
+    /**
+     * Resolves a parameter value with full DataValue support (legacy method)
+     * @deprecated Use resolve(Object) instead
+     */
+    @Deprecated
+    public DataValue resolve(ExecutionContext context, Object parameterValue) {
+        return resolve(parameterValue);
     }
     
     /**
      * Resolves DataValue with variable substitution and placeholder processing
      */
-    private DataValue resolveDataValue(ExecutionContext context, DataValue value) {
+    private DataValue resolveDataValue(DataValue value) {
         if (value == null) return new AnyValue(null);
         
         // Handle text values with placeholders and variables
         if (value instanceof TextValue textValue) {
-            String resolved = resolveString(context, textValue.asString());
+            String resolved = resolveString(textValue.asString());
             return new TextValue(resolved);
         }
         
@@ -62,7 +69,7 @@ public class ParameterResolver {
     /**
      * Resolves string with placeholders and variable substitution
      */
-    private String resolveString(ExecutionContext context, String input) {
+    private String resolveString(String input) {
         if (input == null) return "";
         
         String result = input;
@@ -77,7 +84,7 @@ public class ParameterResolver {
         }
         
         // Replace variable references ${varName}
-        result = resolveVariableReferences(context, result);
+        result = resolveVariableReferences(result);
         
         return result;
     }
@@ -85,7 +92,7 @@ public class ParameterResolver {
     /**
      * Resolves variable references in format ${variableName}
      */
-    private String resolveVariableReferences(ExecutionContext context, String input) {
+    private String resolveVariableReferences(String input) {
         // Pattern: ${variableName} or ${scope:variableName}
         String result = input;
         
@@ -96,8 +103,8 @@ public class ParameterResolver {
             
             if (end > start) {
                 String varRef = result.substring(start + 2, end);
-                DataValue varValue = getVariable(context, varRef);
-                String replacement = varValue != null ? varValue.asString() : "";
+                Object varValue = getVariable(varRef);
+                String replacement = varValue != null ? varValue.toString() : "";
                 
                 result = result.substring(0, start) + replacement + result.substring(end + 1);
             } else {
@@ -120,15 +127,16 @@ public class ParameterResolver {
      */
     private DataValue resolveVariableReference(ExecutionContext context, String reference) {
         String varName = reference.substring(2, reference.length() - 1);
-        return getVariable(context, varName);
+        Object value = getVariable(varName);
+        return DataValue.fromObject(value);
     }
     
     /**
-     * Gets a variable value from VariableManager
+     * Gets a variable value from ExecutionContext
      */
-    private DataValue getVariable(ExecutionContext context, String variableName) {
-        if (variableManager == null) {
-            return new AnyValue(null);
+    private Object getVariable(String variableName) {
+        if (context == null) {
+            return null;
         }
         
         // Parse scope:name format
@@ -140,19 +148,19 @@ public class ParameterResolver {
             
             switch (scope) {
                 case "local":
-                    return variableManager.getVariable(name, context.getScriptId(), null);
+                    return context.getVariable(name);
                 case "world":
-                    return variableManager.getVariable(name, null, context.getWorldId());
+                    return context.getGlobalVariable(name);
                 case "player":
-                    return variableManager.getVariable(name, context.getPlayer().getUniqueId().toString(), null);
+                    return context.getPlayerVariable(name);
                 case "server":
-                    return variableManager.getPersistentVariable(name);
+                    return context.getPersistentVariable(name);
                 default:
-                    return variableManager.getVariable(name, context.getScriptId(), context.getWorldId());
+                    return context.getVariable(name);
             }
         } else {
-            // Unscoped variable - use priority order
-            return variableManager.getVariable(variableName, context.getScriptId(), context.getWorldId());
+            // Unscoped variable - use default scope
+            return context.getVariable(variableName);
         }
     }
     
@@ -160,9 +168,11 @@ public class ParameterResolver {
      * Static method for backward compatibility
      */
     public static String resolveString(ExecutionContext context, Object parameterValue) {
-        // Create temporary resolver without variable manager for legacy support
-        ParameterResolver resolver = new ParameterResolver(null);
-        DataValue result = resolver.resolve(context, parameterValue);
+        if (context == null) {
+            return parameterValue != null ? parameterValue.toString() : "";
+        }
+        ParameterResolver resolver = new ParameterResolver(context);
+        DataValue result = resolver.resolve(parameterValue);
         return result.asString();
     }
     
