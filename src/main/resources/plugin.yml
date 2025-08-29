@@ -28,34 +28,18 @@ commands:
   hub:
     description: Return to hub world
     aliases: [lobby, spawn]
-  savescript:
-    description: Save current code blocks as a script
-    usage: /<command> <script_name> [template]
-    permission: megacreative.user
   templates:
     description: Open template browser
     aliases: [template, tpl]
-    permission: megacreative.user
-  scripts:
-    description: Open scripts management GUI
-    aliases: [script, scriptlist]
     permission: megacreative.user
   worldsettings:
     description: Open world settings
     usage: /<command>
     permission: megacreative.user
-  createscript:
-    description: Создает готовый скрипт указанного типа.
-    usage: /<command> <тип>
-    permission: megacreative.admin
 
   debug:
     description: Управление отладкой скриптов.
     usage: /<command> [on|off|stats|status|help]
-    permission: megacreative.user
-  stoprepeat:
-    description: Остановка повторяющихся задач.
-    usage: /<command> [all]
     permission: megacreative.user
   status:
     description: Проверка статуса режима мира.
