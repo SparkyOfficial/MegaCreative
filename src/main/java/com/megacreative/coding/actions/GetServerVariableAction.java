@@ -5,7 +5,6 @@ import com.megacreative.coding.CodeBlock;
 import com.megacreative.coding.ExecutionContext;
 import com.megacreative.coding.ParameterResolver;
 import com.megacreative.coding.values.DataValue;
-import com.megacreative.coding.variables.VariableManager;
 import org.bukkit.entity.Player;
 
 public class GetServerVariableAction implements BlockAction {
@@ -13,11 +12,10 @@ public class GetServerVariableAction implements BlockAction {
     public void execute(ExecutionContext context) {
         Player player = context.getPlayer();
         CodeBlock block = context.getCurrentBlock();
-        VariableManager variableManager = context.getPlugin().getVariableManager();
 
-        if (player == null || block == null || variableManager == null) return;
+        if (player == null || block == null) return;
 
-        ParameterResolver resolver = new ParameterResolver(variableManager);
+        ParameterResolver resolver = new ParameterResolver(context);
 
         // Получаем и разрешаем параметры
         DataValue rawVarName = block.getParameter("var");
@@ -25,14 +23,11 @@ public class GetServerVariableAction implements BlockAction {
 
         if (rawVarName == null || rawLocalVar == null) return;
 
-        DataValue varNameValue = resolver.resolve(context, rawVarName);
-        DataValue localVarValue = resolver.resolve(context, rawLocalVar);
-
-        String varName = varNameValue.asString();
-        String localVarName = localVarValue.asString();
+        String varName = resolver.resolve(rawVarName).asString();
+        String localVarName = resolver.resolve(rawLocalVar).asString();
 
         if (varName != null && !varName.isEmpty() && localVarName != null && !localVarName.isEmpty()) {
-            Object serverValue = variableManager.getServerVariable(varName);
+            Object serverValue = context.getPersistentVariable(varName);
             context.setVariable(localVarName, serverValue != null ? serverValue : "");
             player.sendMessage("§a✓ Серверная переменная '" + varName + "' загружена в локальную '" + localVarName + "'");
         }

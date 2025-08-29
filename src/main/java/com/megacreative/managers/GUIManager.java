@@ -1,7 +1,7 @@
 package com.megacreative.managers;
 
 import com.megacreative.interfaces.IPlayerManager;
-import com.megacreative.managers.DataManager;
+import com.megacreative.coding.variables.VariableManager;
 import lombok.extern.java.Log;
 import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
@@ -22,7 +22,7 @@ import java.util.concurrent.ConcurrentHashMap;
 public class GUIManager implements Listener {
     
     private final IPlayerManager playerManager;
-    private final DataManager dataManager;
+    private final VariableManager variableManager;
     
     // Thread-safe maps to prevent memory leaks
     private final Map<UUID, ManagedGUI> activeGUIs = new ConcurrentHashMap<>();
@@ -34,9 +34,9 @@ public class GUIManager implements Listener {
     /**
      * Constructor with specific dependencies
      */
-    public GUIManager(IPlayerManager playerManager, DataManager dataManager) {
+    public GUIManager(IPlayerManager playerManager, VariableManager variableManager) {
         this.playerManager = playerManager;
-        this.dataManager = dataManager;
+        this.variableManager = variableManager;
     }
     
     /**

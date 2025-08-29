@@ -229,20 +229,12 @@ public class ServiceRegistry {
         
         // Now update WorldManager with CodingManager dependency
         if (worldManager instanceof WorldManagerImpl) {
-            ((WorldManagerImpl) worldManager).setCodingManager(codingManager);
-        }
     }
-    
-    private void initializeImplementationManagers() {
-        // Services that depend on the interface managers
-        dataManager = new DataManager((com.megacreative.MegaCreative) plugin);
-        registerService(DataManager.class, dataManager);
         
-        templateManager = new TemplateManager((com.megacreative.MegaCreative) plugin);
-        registerService(TemplateManager.class, templateManager);
-        
-        scoreboardManager = new ScoreboardManager((com.megacreative.MegaCreative) plugin);
-        registerService(ScoreboardManager.class, scoreboardManager);
+    playerManager = dependencyContainer.resolve(IPlayerManager.class);
+    if (playerManager == null) {
+        playerManager = new PlayerManagerImpl((com.megacreative.MegaCreative) plugin);
+        registerService(IPlayerManager.class, playerManager);
         
         trustedPlayerManager = new TrustedPlayerManager((com.megacreative.MegaCreative) plugin);
         registerService(TrustedPlayerManager.class, trustedPlayerManager);
@@ -306,18 +298,9 @@ public class ServiceRegistry {
         codeBlockClipboard = new CodeBlockClipboard();
         registerService(CodeBlockClipboard.class, codeBlockClipboard);
         
-        // Block grouping system
-        blockGroupManager = new BlockGroupManager((com.megacreative.MegaCreative) plugin, playerManager);
-        registerService(BlockGroupManager.class, blockGroupManager);
-        
-        // GUI manager with proper dependencies
-        guiManager = new GUIManager(playerManager, dataManager);
+        // GUI Manager with VariableManager
+        guiManager = new GUIManager(playerManager, variableManager);
         registerService(GUIManager.class, guiManager);
-        
-        // DevWorldProtectionListener with proper dependencies
-        devWorldProtectionListener = new DevWorldProtectionListener((com.megacreative.MegaCreative) plugin, trustedPlayerManager, blockConfigService);
-        registerService(DevWorldProtectionListener.class, devWorldProtectionListener);
-    }
     
     private void registerServicesInDI() {
         // Register all services in the dependency container for auto-injection

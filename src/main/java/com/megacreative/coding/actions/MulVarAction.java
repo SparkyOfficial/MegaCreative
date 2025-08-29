@@ -5,7 +5,6 @@ import com.megacreative.coding.CodeBlock;
 import com.megacreative.coding.ExecutionContext;
 import com.megacreative.coding.ParameterResolver;
 import com.megacreative.coding.values.DataValue;
-import com.megacreative.coding.variables.VariableManager;
 import org.bukkit.entity.Player;
 
 public class MulVarAction implements BlockAction {
@@ -15,11 +14,8 @@ public class MulVarAction implements BlockAction {
         CodeBlock block = context.getCurrentBlock();
 
         if (player == null || block == null) return;
-
-        VariableManager variableManager = context.getPlugin().getVariableManager();
-        if (variableManager == null) return;
         
-        ParameterResolver resolver = new ParameterResolver(variableManager);
+        ParameterResolver resolver = new ParameterResolver(context);
 
         // Получаем и разрешаем параметры
         DataValue rawVarName = block.getParameter("var");
@@ -27,30 +23,26 @@ public class MulVarAction implements BlockAction {
 
         if (rawVarName == null || rawValue == null) return;
 
-        String varName = resolver.resolve(context, rawVarName).asString();
-        String valueStr = resolver.resolve(context, rawValue).asString();
+        String varName = resolver.resolve(rawVarName).asString();
+        String valueStr = resolver.resolve(rawValue).asString();
 
         if (varName == null || valueStr == null) return;
 
         try {
-            // Получаем текущее значение переменной через VariableManager для типобезопасности
-            DataValue currentValueObj = variableManager.getVariable(varName, context.getScriptId(), context.getWorldId());
+            // Получаем текущее значение переменной
+            Object currentValue = context.getVariable(varName);
             double currentNum = 0.0;
             
-            if (currentValueObj != null && !currentValueObj.isEmpty()) {
-                try {
-                    currentNum = currentValueObj.asNumber().doubleValue();
-                } catch (NumberFormatException e) {
-                    // Если не число, начинаем с 0
-                }
+            if (currentValue instanceof Number) {
+                currentNum = ((Number) currentValue).doubleValue();
             }
             
             // Умножаем на новое значение
             double mulValue = Double.parseDouble(valueStr);
             double result = currentNum * mulValue;
             
-            // Сохраняем результат через VariableManager
-            variableManager.setVariable(varName, DataValue.fromObject(result), context.getScriptId(), context.getWorldId());
+            // Сохраняем результат через контекст
+            context.setVariable(varName, result);
             player.sendMessage("§a✓ Переменная '" + varName + "' умножена на " + mulValue + " = " + result);
             
         } catch (NumberFormatException e) {
