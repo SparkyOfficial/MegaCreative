@@ -46,7 +46,6 @@ public class ServiceRegistry {
     private ICodingManager codingManager;
     
     // Implementation managers
-    private DataManager dataManager;
     private TemplateManager templateManager;
     private ScoreboardManager scoreboardManager;
     private TrustedPlayerManager trustedPlayerManager;
@@ -166,7 +165,6 @@ public class ServiceRegistry {
     public IWorldManager getWorldManager() { return worldManager; }
     public IPlayerManager getPlayerManager() { return playerManager; }
     public ICodingManager getCodingManager() { return codingManager; }
-    public DataManager getDataManager() { return dataManager; }
     public TemplateManager getTemplateManager() { return templateManager; }
     public ScoreboardManager getScoreboardManager() { return scoreboardManager; }
     public TrustedPlayerManager getTrustedPlayerManager() { return trustedPlayerManager; }
@@ -229,15 +227,13 @@ public class ServiceRegistry {
         
         // Now update WorldManager with CodingManager dependency
         if (worldManager instanceof WorldManagerImpl) {
-    }
+        }
         
-    playerManager = dependencyContainer.resolve(IPlayerManager.class);
-    if (playerManager == null) {
-        playerManager = new PlayerManagerImpl((com.megacreative.MegaCreative) plugin);
-        registerService(IPlayerManager.class, playerManager);
-        
-        trustedPlayerManager = new TrustedPlayerManager((com.megacreative.MegaCreative) plugin);
-        registerService(TrustedPlayerManager.class, trustedPlayerManager);
+        playerManager = dependencyContainer.resolve(IPlayerManager.class);
+        if (playerManager == null) {
+            playerManager = new PlayerManagerImpl((com.megacreative.MegaCreative) plugin);
+            registerService(IPlayerManager.class, playerManager);
+        }
         
         blockConfigManager = new BlockConfigManager((com.megacreative.MegaCreative) plugin);
         registerService(BlockConfigManager.class, blockConfigManager);
@@ -336,9 +332,6 @@ public class ServiceRegistry {
     // Shutdown methods
     
     private void shutdownCoreServices() {
-        if (dataManager != null) {
-            dataManager.saveAllData();
-        }
         if (worldManager != null) {
             worldManager.saveAllWorlds();
         }

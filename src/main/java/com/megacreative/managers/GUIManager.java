@@ -40,15 +40,6 @@ public class GUIManager implements Listener {
     }
     
     /**
-     * Legacy constructor for backward compatibility
-     */
-    @Deprecated
-    public GUIManager(com.megacreative.MegaCreative plugin) {
-        this.playerManager = plugin.getPlayerManager();
-        this.dataManager = plugin.getDataManager();
-    }
-    
-    /**
      * Interface for manageable GUIs
      */
     public interface ManagedGUIInterface {
