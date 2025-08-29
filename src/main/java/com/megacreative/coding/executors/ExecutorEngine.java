@@ -35,9 +35,9 @@ public class ExecutorEngine {
     // Visual feedback
     private final Map<Location, VisualIndicator> visualIndicators = new ConcurrentHashMap<>();
     
-    public ExecutorEngine(MegaCreative plugin) {
+    public ExecutorEngine(MegaCreative plugin, VariableManager variableManager) {
         this.plugin = plugin;
-        this.variableManager = plugin.getVariableManager();
+        this.variableManager = variableManager;
         startVisualUpdater();
     }
     

@@ -185,10 +185,11 @@ public class CodingParameterGUI implements GUIManager.ManagedGUIInterface {
                 return Arrays.asList(
                     new ParameterField("timeRange", "Время дня", "DAY", Material.SUNFLOWER)
                 );
-            case "ifVar":
-            case "ifNotVar":
+            case "ifVarEquals":
+            case "ifVarGreater":
+            case "ifVarLess":
                 return Arrays.asList(
-                    new ParameterField("var", "Переменная", "myVar", Material.OBSIDIAN),
+                    new ParameterField("variable", "Переменная", "myVar", Material.OBSIDIAN),
                     new ParameterField("value", "Значение", "0", Material.GOLD_INGOT)
                 );
             case "compareVariable":

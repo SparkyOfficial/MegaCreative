@@ -50,6 +50,7 @@ public class ServiceRegistry {
     private TemplateManager templateManager;
     private ScoreboardManager scoreboardManager;
     private TrustedPlayerManager trustedPlayerManager;
+    private ITrustedPlayerManager trustedPlayerManagerInterface; // Interface reference
     private GUIManager guiManager;
     private BlockConfigManager blockConfigManager;
     
@@ -222,7 +223,7 @@ public class ServiceRegistry {
         
         codingManager = dependencyContainer.resolve(ICodingManager.class);
         if (codingManager == null) {
-            codingManager = new com.megacreative.coding.CodingManagerImpl((com.megacreative.MegaCreative) plugin);
+            codingManager = new com.megacreative.coding.CodingManagerImpl((com.megacreative.MegaCreative) plugin, worldManager);
             registerService(ICodingManager.class, codingManager);
         }
         
@@ -256,7 +257,7 @@ public class ServiceRegistry {
         registerService(BlockConfigService.class, blockConfigService);
         
         // Coding system components
-        blockPlacementHandler = new BlockPlacementHandler((com.megacreative.MegaCreative) plugin);
+        blockPlacementHandler = new BlockPlacementHandler((com.megacreative.MegaCreative) plugin, trustedPlayerManagerInterface);
         registerService(BlockPlacementHandler.class, blockPlacementHandler);
         
         scriptDebugger = new VisualDebugger((com.megacreative.MegaCreative) plugin);
@@ -274,7 +275,7 @@ public class ServiceRegistry {
         containerManager = new BlockContainerManager((com.megacreative.MegaCreative) plugin);
         registerService(BlockContainerManager.class, containerManager);
         
-        executorEngine = new ExecutorEngine((com.megacreative.MegaCreative) plugin);
+        executorEngine = new ExecutorEngine((com.megacreative.MegaCreative) plugin, variableManager);
         registerService(ExecutorEngine.class, executorEngine);
         
         blockConfiguration = new BlockConfiguration((com.megacreative.MegaCreative) plugin);

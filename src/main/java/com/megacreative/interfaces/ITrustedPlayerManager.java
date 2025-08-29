@@ -83,4 +83,11 @@ public interface ITrustedPlayerManager {
      * @param playerId UUID игрока
      */
     void removePlayerFromAllTrustedLists(UUID playerId);
+    
+    /**
+     * Проверяет, может ли игрок программировать в мире разработки
+     * @param player Игрок
+     * @return true если игрок может программировать
+     */
+    boolean canCodeInDevWorld(Player player);
 }

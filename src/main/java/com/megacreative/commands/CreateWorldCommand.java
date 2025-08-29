@@ -1,6 +1,7 @@
 package com.megacreative.commands;
 
 import com.megacreative.MegaCreative;
+import com.megacreative.interfaces.IWorldManager;
 import com.megacreative.models.CreativeWorldType;
 import org.bukkit.command.Command;
 import org.bukkit.command.CommandExecutor;
@@ -10,9 +11,11 @@ import org.bukkit.entity.Player;
 public class CreateWorldCommand implements CommandExecutor {
     
     private final MegaCreative plugin;
+    private final IWorldManager worldManager;
     
-    public CreateWorldCommand(MegaCreative plugin) {
+    public CreateWorldCommand(MegaCreative plugin, IWorldManager worldManager) {
         this.plugin = plugin;
+        this.worldManager = worldManager;
     }
     
     @Override
@@ -23,7 +26,7 @@ public class CreateWorldCommand implements CommandExecutor {
         }
         
         // Check if player can create more worlds
-        if (plugin.getWorldManager().getPlayerWorldCount(player) >= 5) {
+        if (worldManager.getPlayerWorldCount(player) >= 5) {
             player.sendMessage("§c❌ Вы уже создали максимальное количество миров (5)!");
             return true;
         }
@@ -61,7 +64,7 @@ public class CreateWorldCommand implements CommandExecutor {
             worldName = nameBuilder.toString();
         } else {
             // Generate default world name
-            worldName = player.getName() + "'s World " + (plugin.getWorldManager().getPlayerWorldCount(player) + 1);
+            worldName = player.getName() + "'s World " + (worldManager.getPlayerWorldCount(player) + 1);
         }
         
         // Validate world name
@@ -78,7 +81,7 @@ public class CreateWorldCommand implements CommandExecutor {
         // Create the world
         player.sendMessage("§a⏳ Создание мира \"" + worldName + "\"...");
         
-        plugin.getWorldManager().createWorld(player, worldName, worldType);
+        worldManager.createWorld(player, worldName, worldType);
         
         // The world creation is handled in the WorldManager
         // It will send appropriate messages to the player

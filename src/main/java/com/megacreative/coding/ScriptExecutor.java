@@ -2,15 +2,16 @@ package com.megacreative.coding;
 
 import com.megacreative.MegaCreative;
 import com.megacreative.coding.actions.*;
+import com.megacreative.coding.actions.HandleEventAction;
+import com.megacreative.coding.actions.TriggerEventAction;
+import com.megacreative.coding.events.CustomEventManager;
 import com.megacreative.coding.conditions.IsOpCondition;
 import com.megacreative.coding.conditions.CompareVariableCondition;
 import com.megacreative.coding.conditions.WorldTimeCondition;
 import com.megacreative.coding.conditions.IsNearBlockCondition;
 import com.megacreative.coding.conditions.MobNearCondition;
 import com.megacreative.coding.conditions.PlayerGameModeCondition;
-import com.megacreative.coding.conditions.IfVarEqualsCondition;
-import com.megacreative.coding.conditions.IfVarGreaterCondition;
-import com.megacreative.coding.conditions.IfVarLessCondition;
+// Removed duplicate condition imports - using unified CompareVariableCondition
 import com.megacreative.coding.conditions.IsBlockTypeCondition;
 import com.megacreative.coding.conditions.IsPlayerHoldingCondition;
 import com.megacreative.coding.conditions.IsNearEntityCondition;
@@ -140,6 +141,16 @@ public class ScriptExecutor {
         actionRegistry.put("repeat", new RepeatAction());
         actionRegistry.put("callFunction", new CallFunctionAction());
         actionRegistry.put("saveFunction", new SaveFunctionAction());
+        
+        // Advanced loop control
+        actionRegistry.put("asyncLoop", new com.megacreative.coding.actions.advanced.AsyncLoopControl());
+        
+        // Custom event system actions
+        CustomEventManager eventManager = plugin.getServiceRegistry().getCustomEventManager();
+        if (eventManager != null) {
+            actionRegistry.put("handleEvent", new HandleEventAction(eventManager));
+            actionRegistry.put("triggerEvent", new TriggerEventAction(eventManager));
+        }
     }
 
     private void registerConditions() {
@@ -161,10 +172,11 @@ public class ScriptExecutor {
         conditionRegistry.put("hasPermission", new HasPermissionCondition());
         conditionRegistry.put("isInWorld", new IsInWorldCondition());
         
-        // Новые условия для переменных
-        conditionRegistry.put("ifVarEquals", new IfVarEqualsCondition());
-        conditionRegistry.put("ifVarGreater", new IfVarGreaterCondition());
-        conditionRegistry.put("ifVarLess", new IfVarLessCondition());
+        // Variable comparison conditions (unified under compareVariable)
+        // Legacy support: map old condition names to CompareVariableCondition
+        conditionRegistry.put("ifVarEquals", new CompareVariableCondition());
+        conditionRegistry.put("ifVarGreater", new CompareVariableCondition());
+        conditionRegistry.put("ifVarLess", new CompareVariableCondition());
         
         // Условие для проверки типа блока
         conditionRegistry.put("isBlockType", new IsBlockTypeCondition());

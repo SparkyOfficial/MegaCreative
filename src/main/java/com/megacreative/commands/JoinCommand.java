@@ -1,6 +1,7 @@
 package com.megacreative.commands;
 
 import com.megacreative.MegaCreative;
+import com.megacreative.interfaces.IWorldManager;
 import com.megacreative.models.CreativeWorld;
 import org.bukkit.Bukkit;
 import org.bukkit.World;
@@ -12,9 +13,11 @@ import org.bukkit.entity.Player;
 public class JoinCommand implements CommandExecutor {
     
     private final MegaCreative plugin;
+    private final IWorldManager worldManager;
     
-    public JoinCommand(MegaCreative plugin) {
+    public JoinCommand(MegaCreative plugin, IWorldManager worldManager) {
         this.plugin = plugin;
+        this.worldManager = worldManager;
     }
     
     @Override
@@ -30,7 +33,7 @@ public class JoinCommand implements CommandExecutor {
         }
         
         String worldId = args[0];
-        CreativeWorld creativeWorld = plugin.getWorldManager().getWorld(worldId);
+        CreativeWorld creativeWorld = worldManager.getWorld(worldId);
         
         if (creativeWorld == null) {
             player.sendMessage("§cМир с ID §f" + worldId + " §cне найден!");

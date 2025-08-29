@@ -80,7 +80,7 @@ public class CallFunctionAction implements BlockAction {
         MegaCreative plugin = context.getPlugin();
         if (plugin != null) {
             // Ищем функцию в текущем мире
-            var creativeWorld = plugin.getWorldManager().findCreativeWorldByBukkit(player.getWorld());
+            var creativeWorld = plugin.getServiceRegistry().getWorldManager().findCreativeWorldByBukkit(player.getWorld());
             CodeScript function = null;
             if (creativeWorld != null) {
                 for (CodeScript script : creativeWorld.getScripts()) {

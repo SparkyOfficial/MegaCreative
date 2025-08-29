@@ -3,6 +3,7 @@ package com.megacreative.coding;
 import com.megacreative.MegaCreative;
 import com.megacreative.coding.events.EventDataExtractorRegistry;
 import com.megacreative.interfaces.ICodingManager;
+import com.megacreative.interfaces.IWorldManager;
 import com.megacreative.models.CreativeWorld;
 import org.bukkit.Bukkit;
 import org.bukkit.entity.Player;
@@ -25,6 +26,7 @@ import java.util.UUID;
 public class CodingManagerImpl implements ICodingManager, Listener {
 
     private final MegaCreative plugin;
+    private final IWorldManager worldManager;
     private final ScriptExecutor scriptExecutor;
     private final Map<String, List<CodeScript>> worldScripts = new HashMap<>();
     private final Map<String, Object> globalVariables = new HashMap<>();
@@ -38,8 +40,9 @@ public class CodingManagerImpl implements ICodingManager, Listener {
         return scriptExecutor;
     }
 
-    public CodingManagerImpl(MegaCreative plugin) {
+    public CodingManagerImpl(MegaCreative plugin, IWorldManager worldManager) {
         this.plugin = plugin;
+        this.worldManager = worldManager;
         this.scriptExecutor = new ScriptExecutor(plugin);
         Bukkit.getPluginManager().registerEvents(this, plugin);
     }
@@ -66,7 +69,7 @@ public class CodingManagerImpl implements ICodingManager, Listener {
         ExecutionContext context = ExecutionContext.builder()
                 .plugin(plugin)
                 .player(player)
-                .creativeWorld(plugin.getWorldManager().findCreativeWorldByBukkit(player.getWorld()))
+                .creativeWorld(worldManager.findCreativeWorldByBukkit(player.getWorld()))
                 .build();
         scriptExecutor.execute(script, context, trigger);
     }
@@ -148,7 +151,7 @@ public class CodingManagerImpl implements ICodingManager, Listener {
                 if (script.isEnabled() && script.getRootBlock() != null &&
                     script.getRootBlock().getMaterial() == org.bukkit.Material.DIAMOND_BLOCK &&
                     "onJoin".equals(script.getRootBlock().getAction())) {
-                    CreativeWorld creativeWorld = plugin.getWorldManager().getWorldByName(worldId);
+                    CreativeWorld creativeWorld = worldManager.getWorldByName(worldId);
                     if (creativeWorld == null || !creativeWorld.getMode().isCodeEnabled()) {
                         continue; // Пропускаем выполнение если код выключен
                     }
@@ -178,7 +181,7 @@ public class CodingManagerImpl implements ICodingManager, Listener {
                 if (script.isEnabled() && script.getRootBlock() != null &&
                     script.getRootBlock().getMaterial() == org.bukkit.Material.DIAMOND_BLOCK &&
                     "onChat".equals(script.getRootBlock().getAction())) {
-                    CreativeWorld creativeWorld = plugin.getWorldManager().getWorldByName(worldId);
+                    CreativeWorld creativeWorld = worldManager.getWorldByName(worldId);
                     if (creativeWorld == null || !creativeWorld.getMode().isCodeEnabled()) {
                         continue; // Пропускаем выполнение если код выключен
                     }
@@ -208,7 +211,7 @@ public class CodingManagerImpl implements ICodingManager, Listener {
                 if (script.isEnabled() && script.getRootBlock() != null &&
                     script.getRootBlock().getMaterial() == org.bukkit.Material.DIAMOND_BLOCK &&
                     "onLeave".equals(script.getRootBlock().getAction())) {
-                    CreativeWorld creativeWorld = plugin.getWorldManager().getWorldByName(worldId);
+                    CreativeWorld creativeWorld = worldManager.getWorldByName(worldId);
                     if (creativeWorld == null || !creativeWorld.getMode().isCodeEnabled()) {
                         continue; // Пропускаем выполнение если код выключен
                     }
@@ -238,7 +241,7 @@ public class CodingManagerImpl implements ICodingManager, Listener {
                 if (script.isEnabled() && script.getRootBlock() != null &&
                     script.getRootBlock().getMaterial() == org.bukkit.Material.DIAMOND_BLOCK &&
                     "onInteract".equals(script.getRootBlock().getAction())) {
-                    CreativeWorld creativeWorld = plugin.getWorldManager().getWorldByName(worldId);
+                    CreativeWorld creativeWorld = worldManager.getWorldByName(worldId);
                     if (creativeWorld == null || !creativeWorld.getMode().isCodeEnabled()) {
                         continue; // Пропускаем выполнение если код выключен
                     }

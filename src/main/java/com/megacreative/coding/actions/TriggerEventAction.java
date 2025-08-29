@@ -1,8 +1,12 @@
 package com.megacreative.coding.actions;
 
+import com.megacreative.coding.BlockAction;
+import com.megacreative.coding.CodeBlock;
+import com.megacreative.coding.ExecutionContext;
+import com.megacreative.coding.ParameterResolver;
 import com.megacreative.coding.events.CustomEventManager;
 import com.megacreative.coding.values.DataValue;
-import com.megacreative.coding.values.types.TextValue;
+import com.megacreative.coding.variables.VariableManager;
 import org.bukkit.entity.Player;
 
 import java.util.HashMap;
@@ -11,36 +15,51 @@ import java.util.Map;
 /**
  * Action that triggers a custom event with data
  */
-public class TriggerEventAction extends CodingAction {
+public class TriggerEventAction implements BlockAction {
     
     private final CustomEventManager eventManager;
     
     public TriggerEventAction(CustomEventManager eventManager) {
-        super("triggerEvent", "Trigger Event", 
-              "Triggers a custom event with the specified data");
         this.eventManager = eventManager;
     }
     
     @Override
-    public void execute(Player player, Map<String, DataValue> parameters) {
+    public void execute(ExecutionContext context) {
+        Player player = context.getPlayer();
+        CodeBlock block = context.getCurrentBlock();
+        VariableManager variableManager = context.getPlugin().getVariableManager();
+        
+        if (player == null || block == null || variableManager == null) return;
+        
+        ParameterResolver resolver = new ParameterResolver(variableManager);
+        
         try {
             // Get event name from parameters
-            DataValue eventNameValue = parameters.get("eventName");
-            if (eventNameValue == null) {
-                throw new IllegalArgumentException("Event name is required");
+            DataValue rawEventName = block.getParameter("eventName");
+            if (rawEventName == null) {
+                player.sendMessage("§cEvent name is required");
+                return;
             }
             
-            String eventName = eventNameValue.asString();
+            String eventName = resolver.resolve(context, rawEventName).asString();
+            if (eventName == null || eventName.trim().isEmpty()) {
+                player.sendMessage("§cInvalid event name");
+                return;
+            }
             
-            // Collect event data from additional parameters
+            // Collect event data from parameters that start with "data_"
             Map<String, DataValue> eventData = new HashMap<>();
             
-            // Look for parameters that start with "data_" to use as event data
-            for (Map.Entry<String, DataValue> entry : parameters.entrySet()) {
-                String paramName = entry.getKey();
-                if (paramName.startsWith("data_")) {
-                    String dataFieldName = paramName.substring(5); // Remove "data_" prefix
-                    eventData.put(dataFieldName, entry.getValue());
+            // Get all block parameters
+            Map<String, DataValue> allParams = block.getParameters();
+            if (allParams != null) {
+                for (Map.Entry<String, DataValue> entry : allParams.entrySet()) {
+                    String paramName = entry.getKey();
+                    if (paramName.startsWith("data_")) {
+                        String dataFieldName = paramName.substring(5); // Remove "data_" prefix
+                        DataValue resolvedValue = resolver.resolve(context, entry.getValue());
+                        eventData.put(dataFieldName, resolvedValue);
+                    }
                 }
             }
             
@@ -56,22 +75,5 @@ public class TriggerEventAction extends CodingAction {
         } catch (Exception e) {
             player.sendMessage("§c✗ Failed to trigger event: " + e.getMessage());
         }
-    }
-    
-    @Override
-    public boolean validate(Map<String, DataValue> parameters) {
-        DataValue eventNameValue = parameters.get("eventName");
-        return eventNameValue != null && !eventNameValue.asString().trim().isEmpty();
-    }
-    
-    /**
-     * Helper method to create a trigger event action with specific event name
-     */
-    public static TriggerEventAction createForEvent(CustomEventManager eventManager, String eventName) {
-        TriggerEventAction action = new TriggerEventAction(eventManager);
-        action.setName("trigger_" + eventName);
-        action.setDisplayName("Trigger " + eventName);
-        action.setDescription("Triggers the '" + eventName + "' event");
-        return action;
     }
 }

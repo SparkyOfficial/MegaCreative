@@ -1,6 +1,7 @@
 package com.megacreative.commands;
 
 import com.megacreative.MegaCreative;
+import com.megacreative.interfaces.IPlayerManager;
 import org.bukkit.Bukkit;
 import org.bukkit.World;
 import org.bukkit.command.Command;
@@ -11,9 +12,11 @@ import org.bukkit.entity.Player;
 public class HubCommand implements CommandExecutor {
     
     private final MegaCreative plugin;
+    private final IPlayerManager playerManager;
     
-    public HubCommand(MegaCreative plugin) {
+    public HubCommand(MegaCreative plugin, IPlayerManager playerManager) {
         this.plugin = plugin;
+        this.playerManager = playerManager;
     }
     
     @Override
@@ -31,7 +34,7 @@ public class HubCommand implements CommandExecutor {
         
         // Очищаем инвентарь и выдаем стартовые предметы
         player.getInventory().clear();
-        plugin.getPlayerManager().giveStarterItems(player);
+        playerManager.giveStarterItems(player);
         
         return true;
     }

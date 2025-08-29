@@ -1,6 +1,8 @@
 package com.megacreative.managers;
 
 import com.megacreative.MegaCreative;
+import com.megacreative.interfaces.ITrustedPlayerManager;
+import com.megacreative.models.CreativeWorld;
 import com.megacreative.models.TrustedPlayer;
 import org.bukkit.configuration.ConfigurationSection;
 import org.bukkit.configuration.file.FileConfiguration;

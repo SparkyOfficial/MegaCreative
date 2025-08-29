@@ -1,6 +1,7 @@
 package com.megacreative.commands;
 
 import com.megacreative.MegaCreative;
+import com.megacreative.interfaces.IWorldManager;
 import com.megacreative.models.CreativeWorld;
 import com.megacreative.models.WorldMode;
 import org.bukkit.Bukkit;
@@ -14,9 +15,11 @@ import org.bukkit.entity.Player;
 public class BuildCommand implements CommandExecutor {
     
     private final MegaCreative plugin;
+    private final IWorldManager worldManager;
     
-    public BuildCommand(MegaCreative plugin) {
+    public BuildCommand(MegaCreative plugin, IWorldManager worldManager) {
         this.plugin = plugin;
+        this.worldManager = worldManager;
     }
     
     @Override
@@ -56,7 +59,7 @@ public class BuildCommand implements CommandExecutor {
         player.sendMessage("§7❌ Код отключен, скрипты не будут выполняться");
         player.sendMessage("§7Креатив для строителей");
         
-        plugin.getWorldManager().saveWorld(creativeWorld);
+        worldManager.saveWorld(creativeWorld);
         return true;
     }
     
@@ -64,7 +67,7 @@ public class BuildCommand implements CommandExecutor {
         String worldName = bukkitWorld.getName();
         if (worldName.startsWith("megacreative_")) {
             String id = worldName.replace("megacreative_", "").replace("_dev", "");
-            return plugin.getWorldManager().getWorld(id);
+            return worldManager.getWorld(id);
         }
         return null;
     }

@@ -39,7 +39,7 @@ public class SaveFunctionAction implements BlockAction {
         }
 
         // Получаем текущий мир игрока
-        var creativeWorld = plugin.getWorldManager().findCreativeWorldByBukkit(player.getWorld());
+        var creativeWorld = plugin.getServiceRegistry().getWorldManager().findCreativeWorldByBukkit(player.getWorld());
         if (creativeWorld == null) {
             player.sendMessage("§cОшибка: вы не находитесь в творческом мире");
             return;
@@ -72,7 +72,7 @@ public class SaveFunctionAction implements BlockAction {
         creativeWorld.getScripts().add(function);
 
         // Сохраняем мир
-        plugin.getWorldManager().saveWorld(creativeWorld);
+        plugin.getServiceRegistry().getWorldManager().saveWorld(creativeWorld);
 
         player.sendMessage("§a💾 Функция '" + functionName + "' сохранена");
     }

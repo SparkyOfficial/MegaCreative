@@ -630,11 +630,16 @@ public class BlockConfigManager implements Listener {
                 if ("material".equals(paramName)) return 0;
                 if ("coords".equals(paramName)) return 1;
                 break;
-            // Conditions
+            // Variable conditions (unified handling)
+            case "compareVariable":
+                if ("var1".equals(paramName)) return 0;
+                if ("operator".equals(paramName)) return 1;
+                if ("var2".equals(paramName)) return 2;
+                break;
             case "ifVarEquals":
             case "ifVarGreater":
             case "ifVarLess":
-                if ("var".equals(paramName)) return 0;
+                if ("variable".equals(paramName)) return 0; // Legacy parameter name
                 if ("value".equals(paramName)) return 1;
                 break;
             case "hasItem":
@@ -750,12 +755,19 @@ public class BlockConfigManager implements Listener {
                     case 1 -> "coords";
                     default -> "param_" + slot;
                 };
-            // Conditions
+            // Variable conditions (unified handling)
+            case "compareVariable":
+                return switch (slot) {
+                    case 0 -> "var1";
+                    case 1 -> "operator";
+                    case 2 -> "var2";
+                    default -> "param_" + slot;
+                };
             case "ifVarEquals":
             case "ifVarGreater":
             case "ifVarLess":
                 return switch (slot) {
-                    case 0 -> "var";
+                    case 0 -> "variable"; // Legacy parameter name for backward compatibility
                     case 1 -> "value";
                     default -> "param_" + slot;
                 };

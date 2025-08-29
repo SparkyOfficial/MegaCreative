@@ -1,6 +1,7 @@
 package com.megacreative.coding;
 
 import com.megacreative.MegaCreative;
+import com.megacreative.interfaces.ITrustedPlayerManager;
 import org.bukkit.Material;
 import org.bukkit.block.Block;
 import org.bukkit.block.BlockFace;
@@ -27,14 +28,16 @@ import java.util.UUID;
 public class BlockPlacementHandler implements Listener {
     
     private final MegaCreative plugin;
+    private final TrustedPlayerManager trustedPlayerManager;
     private final Map<Location, CodeBlock> blockCodeBlocks = new HashMap<>();
     private final Map<UUID, Boolean> playerVisualizationStates = new HashMap<>();
     private final Map<UUID, Boolean> playerDebugStates = new HashMap<>();
     private final Map<UUID, Location> playerSelections = new HashMap<>();
     private final Map<UUID, CodeBlock> clipboard = new HashMap<>(); // Буфер обмена для копирования
 
-    public BlockPlacementHandler(MegaCreative plugin) {
+    public BlockPlacementHandler(MegaCreative plugin, TrustedPlayerManager trustedPlayerManager) {
         this.plugin = plugin;
+        this.trustedPlayerManager = trustedPlayerManager;
     }
     
     /**
@@ -68,7 +71,7 @@ public class BlockPlacementHandler implements Listener {
         }
         
         // Проверяем права доверенного игрока
-        if (!plugin.getTrustedPlayerManager().canCodeInDevWorld(player)) {
+        if (!trustedPlayerManager.canCodeInDevWorld(player)) {
             event.setCancelled(true);
             return;
         }

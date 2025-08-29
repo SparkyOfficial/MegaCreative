@@ -99,12 +99,12 @@ public class MegaCreative extends JavaPlugin {
         getCommand("megacreative").setExecutor(new MainCommand(this));
         getCommand("myworlds").setExecutor(new MyWorldsCommand(this));
         getCommand("worldbrowser").setExecutor(new WorldBrowserCommand(this));
-        getCommand("join").setExecutor(new JoinCommand(this));
+        getCommand("join").setExecutor(new JoinCommand(this, serviceRegistry.getWorldManager()));
         getCommand("play").setExecutor(new PlayCommand(this));
         getCommand("trusted").setExecutor(new TrustedPlayerCommand(this));
-        getCommand("build").setExecutor(new BuildCommand(this));
+        getCommand("build").setExecutor(new BuildCommand(this, serviceRegistry.getWorldManager()));
         getCommand("dev").setExecutor(new DevCommand(this));
-        getCommand("hub").setExecutor(new HubCommand(this));
+        getCommand("hub").setExecutor(new HubCommand(this, serviceRegistry.getPlayerManager()));
         
         getCommand("templates").setExecutor(new TemplatesCommand(this));
         getCommand("worldsettings").setExecutor(new WorldSettingsCommand(this));
@@ -113,7 +113,7 @@ public class MegaCreative extends JavaPlugin {
         getCommand("status").setExecutor(new StatusCommand(this));
         getCommand("addfloor").setExecutor(new AddFloorCommand(this));
         getCommand("workspace").setExecutor(new WorkspaceCommand(this));
-        getCommand("create").setExecutor(new CreateWorldCommand(this));
+        getCommand("create").setExecutor(new CreateWorldCommand(this, serviceRegistry.getWorldManager()));
         getCommand("clipboard").setExecutor(new ClipboardCommand(this, serviceRegistry.getCodeBlockClipboard()));
         getCommand("group").setExecutor(new GroupCommand(serviceRegistry));
     }
@@ -165,78 +165,6 @@ public class MegaCreative extends JavaPlugin {
      */
     public DependencyContainer getDependencyContainer() {
         return dependencyContainer;
-    }
-    
-    // Legacy getters for backward compatibility (delegate to ServiceRegistry)
-    
-    @Deprecated
-    public com.megacreative.interfaces.IWorldManager getWorldManager() {
-        return serviceRegistry.getWorldManager();
-    }
-    
-    @Deprecated
-    public com.megacreative.interfaces.IPlayerManager getPlayerManager() {
-        return serviceRegistry.getPlayerManager();
-    }
-    
-    @Deprecated
-    public com.megacreative.interfaces.ICodingManager getCodingManager() {
-        return serviceRegistry.getCodingManager();
-    }
-    
-    @Deprecated
-    public com.megacreative.managers.DataManager getDataManager() {
-        return serviceRegistry.getDataManager();
-    }
-    
-    @Deprecated
-    public com.megacreative.managers.GUIManager getGuiManager() {
-        return serviceRegistry.getGuiManager();
-    }
-    
-    @Deprecated
-    public com.megacreative.utils.ConfigManager getConfigManager() {
-        return serviceRegistry.getConfigManager();
-    }
-    
-    @Deprecated
-    public com.megacreative.managers.ScoreboardManager getScoreboardManager() {
-        return serviceRegistry.getScoreboardManager();
-    }
-    
-    @Deprecated
-    public com.megacreative.managers.TrustedPlayerManager getTrustedPlayerManager() {
-        return serviceRegistry.getTrustedPlayerManager();
-    }
-    
-    @Deprecated
-    public com.megacreative.coding.variables.VariableManager getVariableManager() {
-        return serviceRegistry.getVariableManager();
-    }
-    
-    @Deprecated
-    public com.megacreative.coding.debug.VisualDebugger getScriptDebugger() {
-        return serviceRegistry.getScriptDebugger();
-    }
-    
-    @Deprecated
-    public com.megacreative.coding.BlockConfiguration getBlockConfiguration() {
-        return serviceRegistry.getBlockConfiguration();
-    }
-    
-    @Deprecated
-    public com.megacreative.coding.monitoring.ScriptPerformanceMonitor getScriptPerformanceMonitor() {
-        return serviceRegistry.getScriptPerformanceMonitor();
-    }
-    
-    @Deprecated
-    public com.megacreative.coding.BlockPlacementHandler getBlockPlacementHandler() {
-        return serviceRegistry.getBlockPlacementHandler();
-    }
-    
-    @Deprecated
-    public com.megacreative.managers.TemplateManager getTemplateManager() {
-        return serviceRegistry.getTemplateManager();
     }
     
     // Legacy methods for backward compatibility - these should be migrated to use GUIManager
