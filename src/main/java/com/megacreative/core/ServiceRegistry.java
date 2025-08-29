@@ -297,6 +297,7 @@ public class ServiceRegistry {
         // GUI Manager with VariableManager
         guiManager = new GUIManager(playerManager, variableManager);
         registerService(GUIManager.class, guiManager);
+    }
     
     private void registerServicesInDI() {
         // Register all services in the dependency container for auto-injection
