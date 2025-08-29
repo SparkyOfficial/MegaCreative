@@ -35,6 +35,11 @@ public interface IPlayerManager {
     Map<String, Object> getPlayerData(UUID playerId);
     
     /**
+     * Завершает работу менеджера игроков
+     */
+    void shutdown();
+    
+    /**
      * Устанавливает данные игрока
      * @param playerId UUID игрока
      * @param data Данные игрока

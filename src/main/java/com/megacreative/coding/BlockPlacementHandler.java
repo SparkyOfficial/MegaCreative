@@ -1,7 +1,10 @@
 package com.megacreative.coding;
 
 import com.megacreative.MegaCreative;
+import com.megacreative.core.ServiceRegistry;
 import com.megacreative.interfaces.ITrustedPlayerManager;
+import com.megacreative.services.BlockConfigService;
+import lombok.extern.slf4j.Slf4j;
 import org.bukkit.Material;
 import org.bukkit.block.Block;
 import org.bukkit.block.BlockFace;
@@ -25,19 +28,23 @@ import java.util.UUID;
 /**
  * Обрабатывает размещение и взаимодействие с блоками кодирования
  */
+@Slf4j
 public class BlockPlacementHandler implements Listener {
     
     private final MegaCreative plugin;
-    private final TrustedPlayerManager trustedPlayerManager;
+    private final ITrustedPlayerManager trustedPlayerManager;
+    private final BlockConfigService blockConfigService;
     private final Map<Location, CodeBlock> blockCodeBlocks = new HashMap<>();
     private final Map<UUID, Boolean> playerVisualizationStates = new HashMap<>();
     private final Map<UUID, Boolean> playerDebugStates = new HashMap<>();
     private final Map<UUID, Location> playerSelections = new HashMap<>();
     private final Map<UUID, CodeBlock> clipboard = new HashMap<>(); // Буфер обмена для копирования
 
-    public BlockPlacementHandler(MegaCreative plugin, TrustedPlayerManager trustedPlayerManager) {
+    public BlockPlacementHandler(MegaCreative plugin) {
         this.plugin = plugin;
-        this.trustedPlayerManager = trustedPlayerManager;
+        ServiceRegistry registry = plugin.getServiceRegistry();
+        this.trustedPlayerManager = registry.getTrustedPlayerManager();
+        this.blockConfigService = registry.getBlockConfigService();
     }
     
     /**
@@ -61,7 +68,6 @@ public class BlockPlacementHandler implements Listener {
         Material mat = block.getType();
         
         // Проверяем, является ли блок кодовым блоком через BlockConfigService
-        var blockConfigService = plugin.getServiceRegistry().getBlockConfigService();
         if (!blockConfigService.isCodeBlock(mat)) {
             return;
         }

@@ -193,10 +193,30 @@ public class AdvancedVisualDebugger {
     
     /**
      * Cleans up resources when plugin disables
+     * @deprecated Use shutdown() instead
      */
+    @Deprecated
     public void cleanup() {
+        shutdown();
+    }
+    
+    /**
+     * Shuts down the advanced visual debugger and cleans up resources
+     */
+    public void shutdown() {
+        // Stop all visualization sessions
+        for (UUID playerId : new HashSet<>(visualizationSessions.keySet())) {
+            Player player = plugin.getServer().getPlayer(playerId);
+            if (player != null) {
+                stopVisualizationSession(player);
+            }
+        }
+        
+        // Clear all collections
         visualizationSessions.clear();
         performanceAnalyzers.clear();
+        
+        plugin.getLogger().info("Advanced visual debugger has been shut down");
     }
     
     /**
@@ -305,12 +325,12 @@ public class AdvancedVisualDebugger {
             
             public ExecutionRecord(CodeBlock block, Location location, long executionTime) {
                 this.block = block;
-                this.location = location.clone();
+                this.location = location != null ? location.clone() : null;
                 this.executionTime = executionTime;
                 this.timestamp = System.currentTimeMillis();
             }
             
-            // Explicit getters for Lombok compatibility
+            // Getters
             public CodeBlock getBlock() { return block; }
             public Location getLocation() { return location; }
             public long getExecutionTime() { return executionTime; }

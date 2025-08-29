@@ -45,6 +45,16 @@ public class BlockConfigManager implements Listener {
         this.plugin = plugin;
         Bukkit.getPluginManager().registerEvents(this, plugin);
     }
+    
+    /**
+     * Shuts down the BlockConfigManager and cleans up resources
+     */
+    public void shutdown() {
+        // Clear all configuring blocks to prevent memory leaks
+        configuringBlocks.clear();
+        
+        // Any other cleanup if needed
+    }
 
     /**
      * Открывает GUI для настройки блока

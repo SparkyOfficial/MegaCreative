@@ -123,4 +123,12 @@ public class PlayerManagerImpl implements IPlayerManager {
     public Set<String> getFavorites(UUID playerId) {
         return playerFavorites.getOrDefault(playerId, new HashSet<>());
     }
+    
+    @Override
+    public void shutdown() {
+        // Clear player favorites to free memory
+        playerFavorites.clear();
+        
+        // Any other cleanup needed for player data
+    }
 }

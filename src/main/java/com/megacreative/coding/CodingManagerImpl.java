@@ -36,6 +36,19 @@ public class CodingManagerImpl implements ICodingManager, Listener {
      * Получает исполнитель скриптов.
      * @return ScriptExecutor для выполнения скриптов
      */
+    @Override
+    public void shutdown() {
+        // Stop all running scripts
+        if (scriptExecutor != null) {
+            scriptExecutor.shutdown();
+        }
+        
+        // Clear all caches and variables
+        worldScripts.clear();
+        globalVariables.clear();
+        serverVariables.clear();
+    }
+    
     public ScriptExecutor getScriptExecutor() {
         return scriptExecutor;
     }

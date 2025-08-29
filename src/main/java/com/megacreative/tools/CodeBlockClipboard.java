@@ -5,7 +5,7 @@ import com.megacreative.coding.BlockPlacementHandler;
 import com.megacreative.coding.AutoConnectionManager;
 import com.megacreative.coding.values.DataValue;
 import lombok.Data;
-import lombok.extern.java.Log;
+import lombok.extern.slf4j.Slf4j;
 import org.bukkit.Location;
 import org.bukkit.Material;
 import org.bukkit.World;
@@ -14,7 +14,7 @@ import org.bukkit.entity.Player;
 import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
 
-@Log
+@Slf4j
 public class CodeBlockClipboard {
     
     private final Map<UUID, ClipboardData> playerClipboards = new ConcurrentHashMap<>();

@@ -400,13 +400,45 @@ public class VisualDebugger {
     
     /**
      * Cleans up resources when plugin disables
+     * @deprecated Use shutdown() instead
      */
+    @Deprecated
     public void cleanup() {
+        shutdown();
+    }
+    
+    /**
+     * Shuts down the visual debugger and cleans up resources
+     */
+    public void shutdown() {
+        // Stop all debug sessions
+        for (UUID playerId : new HashSet<>(activeSessions.keySet())) {
+            Player player = plugin.getServer().getPlayer(playerId);
+            if (player != null) {
+                stopDebugSession(player);
+            }
+        }
+        
+        // Stop all visualization sessions
+        for (UUID playerId : new HashSet<>(breakpointManagers.keySet())) {
+            Player player = plugin.getServer().getPlayer(playerId);
+            if (player != null) {
+                stopTracing(player);
+            }
+        }
+        
+        // Clear all collections
         activeSessions.clear();
         breakpointManagers.clear();
         executionTracers.clear();
         variableWatchers.clear();
-        advancedDebugger.cleanup();
+        
+        // Shutdown advanced debugger
+        if (advancedDebugger != null) {
+            advancedDebugger.shutdown();
+        }
+        
+        plugin.getLogger().info("Visual debugger has been shut down");
     }
     
     private static class DebugSession {

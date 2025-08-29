@@ -54,6 +54,17 @@ public interface ICodingManager {
     void saveScript(CodeScript script);
     
     /**
+     * Отменяет выполнение скрипта
+     * @param scriptId ID скрипта
+     */
+    void cancelScriptExecution(String scriptId);
+    
+    /**
+     * Завершает работу менеджера кодинга
+     */
+    void shutdown();
+    
+    /**
      * Удаляет скрипт
      * @param scriptName Имя скрипта
      */

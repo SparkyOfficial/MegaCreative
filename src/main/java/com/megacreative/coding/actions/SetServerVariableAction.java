@@ -5,19 +5,19 @@ import com.megacreative.coding.CodeBlock;
 import com.megacreative.coding.ExecutionContext;
 import com.megacreative.coding.ParameterResolver;
 import com.megacreative.coding.values.DataValue;
-import com.megacreative.coding.variables.VariableManager;
 import org.bukkit.entity.Player;
 
 public class SetServerVariableAction implements BlockAction {
     @Override
     public void execute(ExecutionContext context) {
+        if (context == null) return;
+        
         Player player = context.getPlayer();
         CodeBlock block = context.getCurrentBlock();
-        VariableManager variableManager = context.getPlugin().getVariableManager();
 
-        if (player == null || block == null || variableManager == null) return;
+        if (player == null || block == null) return;
 
-        ParameterResolver resolver = new ParameterResolver(variableManager);
+        ParameterResolver resolver = new ParameterResolver(context);
 
         // Получаем и разрешаем параметры
         DataValue rawVarName = block.getParameter("var");
@@ -25,13 +25,13 @@ public class SetServerVariableAction implements BlockAction {
 
         if (rawVarName == null || rawValue == null) return;
 
-        DataValue varNameValue = resolver.resolve(context, rawVarName);
-        DataValue value = resolver.resolve(context, rawValue);
+        DataValue varNameValue = resolver.resolve(rawVarName);
+        DataValue value = resolver.resolve(rawValue);
 
         String varName = varNameValue.asString();
         if (varName != null && !varName.isEmpty()) {
-            variableManager.setServerVariable(varName, value.getValue());
+            context.setServerVariable(varName, value);
             player.sendMessage("§a✓ Серверная переменная '" + varName + "' установлена в: " + value.asString());
         }
     }
-} 
+}

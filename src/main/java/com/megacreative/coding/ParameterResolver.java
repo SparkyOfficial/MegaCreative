@@ -38,12 +38,16 @@ public class ParameterResolver {
     }
     
     /**
-     * Resolves a parameter value with full DataValue support (legacy method)
-     * @deprecated Use resolve(Object) instead
+     * Resolves a parameter value with full DataValue support using the provided context
+     * @param context The execution context
+     * @param parameterValue The parameter value to resolve
+     * @return Resolved DataValue
      */
-    @Deprecated
-    public DataValue resolve(ExecutionContext context, Object parameterValue) {
-        return resolve(parameterValue);
+    public DataValue resolve(ExecutionContext context, DataValue parameterValue) {
+        if (parameterValue == null) {
+            return new AnyValue(null);
+        }
+        return resolveDataValue(parameterValue);
     }
     
     /**
@@ -149,14 +153,17 @@ public class ParameterResolver {
             switch (scope) {
                 case "local":
                     return context.getVariable(name);
+                case "global":
                 case "world":
                     return context.getGlobalVariable(name);
                 case "player":
                     return context.getPlayerVariable(name);
                 case "server":
-                    return context.getPersistentVariable(name);
+                    return context.getServerVariable(name);
                 default:
-                    return context.getVariable(name);
+                    // Try to get from context first, then fall back to global
+                    Object value = context.getVariable(name);
+                    return value != null ? value : context.getGlobalVariable(name);
             }
         } else {
             // Unscoped variable - use default scope
@@ -165,22 +172,41 @@ public class ParameterResolver {
     }
     
     /**
-     * Static method for backward compatibility
+     * Static method for resolving a parameter value to a string
      */
     public static String resolveString(ExecutionContext context, Object parameterValue) {
-        if (context == null) {
-            return parameterValue != null ? parameterValue.toString() : "";
+        if (parameterValue == null) return "";
+        if (parameterValue instanceof DataValue dataValue) {
+            return dataValue.asString();
         }
-        ParameterResolver resolver = new ParameterResolver(context);
-        DataValue result = resolver.resolve(parameterValue);
-        return result.asString();
+        // If it's a string, resolve any variables or placeholders
+        if (parameterValue instanceof String strValue) {
+            ParameterResolver resolver = new ParameterResolver(context);
+            return resolver.resolveString(strValue);
+        }
+        return parameterValue.toString();
     }
     
     /**
-     * Checks if value contains variables or placeholders
+     * Checks if value contains variables or placeholders that need resolution
      */
     public static boolean requiresResolution(Object value) {
-        if (!(value instanceof String str)) return false;
-        return str.contains("%") || str.contains("${");
+        if (value == null) return false;
+        
+        // Handle DataValue
+        if (value instanceof DataValue dataValue) {
+            if (dataValue.isText()) {
+                String str = dataValue.asString();
+                return str != null && (str.contains("%") || str.contains("${"));
+            }
+            return false;
+        }
+        
+        // Handle String
+        if (value instanceof String str) {
+            return str.contains("%") || str.contains("${");
+        }
+        
+        return false;
     }
 }

@@ -565,4 +565,16 @@ public class WorldManagerImpl implements IWorldManager {
         return worlds.values().stream()
                 .anyMatch(world -> world.getName().equalsIgnoreCase(name));
     }
+    
+    @Override
+    public void shutdown() {
+        // Save all worlds before shutdown
+        saveAllWorlds();
+        
+        // Clear caches to free memory
+        worlds.clear();
+        playerWorlds.clear();
+        
+        // Any other cleanup needed for world management
+    }
 }

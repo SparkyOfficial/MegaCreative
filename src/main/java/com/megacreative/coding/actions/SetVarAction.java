@@ -21,11 +21,10 @@ public class SetVarAction implements BlockAction {
     public void execute(ExecutionContext context) {
         Player player = context.getPlayer();
         CodeBlock block = context.getCurrentBlock();
-        VariableManager variableManager = context.getPlugin().getVariableManager();
         
-        if (player == null || block == null || variableManager == null) return;
+        if (player == null || block == null) return;
         
-        ParameterResolver resolver = new ParameterResolver(variableManager);
+        ParameterResolver resolver = new ParameterResolver(context);
         
         // Get variable name (required)
         DataValue varNameValue = block.getParameter("var");

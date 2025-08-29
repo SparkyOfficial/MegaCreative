@@ -2,7 +2,7 @@ package com.megacreative.coding.monitoring;
 
 import com.megacreative.coding.CodeBlock;
 import com.megacreative.coding.CodeScript;
-import com.megacreative.coding.actions.CodingAction;
+import com.megacreative.coding.actions.BlockAction;
 import com.megacreative.coding.BlockCondition;
 import lombok.Data;
 

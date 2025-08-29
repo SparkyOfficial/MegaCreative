@@ -27,6 +27,17 @@ public class TemplateManager {
     }
     
     /**
+     * Shuts down the TemplateManager and cleans up resources
+     */
+    public void shutdown() {
+        // Save all templates before shutdown
+        saveTemplates();
+        
+        // Clear the templates list to free memory
+        templates.clear();
+    }
+    
+    /**
      * Сохраняет шаблон
      */
     public void saveTemplate(CodeScript template) {

@@ -1,0 +1,319 @@
+package com.megacreative.coding.monitoring;
+
+import com.megacreative.coding.CodeBlock;
+import com.megacreative.coding.CodeScript;
+import org.bukkit.entity.Player;
+import org.bukkit.plugin.Plugin;
+
+import java.util.*;
+import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.atomic.AtomicLong;
+import java.util.stream.Collectors;
+
+/**
+ * Advanced performance monitoring system for visual programming scripts
+ * Tracks execution times, memory usage, and provides optimization recommendations
+ */
+public class ScriptPerformanceMonitor {
+    
+    private final Plugin plugin;
+    
+    // Performance tracking data structures
+    private final Map<UUID, PlayerScriptMetrics> playerMetrics = new ConcurrentHashMap<>();
+    private final Map<String, ActionPerformanceData> actionPerformance = new ConcurrentHashMap<>();
+    private final Map<String, ScriptPerformanceProfile> scriptProfiles = new ConcurrentHashMap<>();
+    private final AtomicLong totalExecutions = new AtomicLong(0);
+    private final AtomicLong totalExecutionTime = new AtomicLong(0);
+    
+    // Advanced monitoring features
+    private final ExecutionSampler executionSampler = new ExecutionSampler();
+    private final MemoryMonitor memoryMonitor = new MemoryMonitor();
+    private final BottleneckDetector bottleneckDetector = new BottleneckDetector();
+    
+    // Performance thresholds (loaded from config)
+    private final long slowExecutionThreshold;
+    private final long memoryWarningThreshold;
+    private final int maxConcurrentScripts;
+    
+    public ScriptPerformanceMonitor(Plugin plugin) {
+        this.plugin = plugin;
+        
+        // Load performance thresholds from config
+        this.slowExecutionThreshold = plugin.getConfig().getLong("coding.performance.slow_execution_threshold", 50);
+        this.memoryWarningThreshold = plugin.getConfig().getLong("coding.performance.memory_warning_threshold", 100 * 1024 * 1024);
+        this.maxConcurrentScripts = plugin.getConfig().getInt("coding.max_concurrent_scripts", 20);
+    }
+    
+    // ... [previous methods remain the same] ...
+    
+    /**
+     * Shuts down the performance monitor and cleans up resources
+     */
+    public void shutdown() {
+        // Save any pending performance data
+        savePerformanceData();
+        
+        // Clean up resources
+        playerMetrics.clear();
+        actionPerformance.clear();
+        scriptProfiles.clear();
+        
+        // Shutdown monitoring components
+        executionSampler.shutdown();
+        memoryMonitor.shutdown();
+        bottleneckDetector.shutdown();
+        
+        plugin.getLogger().info("Script performance monitor has been shut down");
+    }
+    
+    /**
+     * Saves performance data to persistent storage
+     */
+    private void savePerformanceData() {
+        // TODO: Implement saving performance data to a file or database
+        plugin.getLogger().info("Saving performance monitoring data...");
+    }
+    
+    /**
+     * Cleans up resources (legacy method for backward compatibility)
+     */
+    public void cleanup() {
+        shutdown();
+    }
+    
+    /**
+     * Bottleneck detector for identifying performance issues
+     */
+    public static class BottleneckDetector {
+        private final Map<String, Bottleneck> bottlenecks = new ConcurrentHashMap<>();
+        
+        public void analyzeExecution(String scriptName, String actionType, long executionTime) {
+            if (executionTime > 50) { // Only analyze slow executions
+                String key = scriptName + ":" + actionType;
+                Bottleneck bottleneck = bottlenecks.computeIfAbsent(key, 
+                    k -> new Bottleneck(scriptName, actionType));
+                bottleneck.recordExecution(executionTime);
+            }
+        }
+        
+        public List<Bottleneck> getTopBottlenecks(int limit) {
+            return bottlenecks.values().stream()
+                .sorted(Comparator.comparingDouble(Bottleneck::getAverageTime).reversed())
+                .limit(limit)
+                .collect(Collectors.toList());
+        }
+        
+        public Collection<Bottleneck> getDetectedBottlenecks() {
+            return new ArrayList<>(bottlenecks.values());
+        }
+        
+        public void shutdown() {
+            bottlenecks.clear();
+        }
+    }
+    
+    /**
+     * Represents a performance bottleneck
+     */
+    public static class Bottleneck {
+        private final String scriptName;
+        private final String actionType;
+        private int occurrenceCount = 0;
+        private long totalExecutionTime = 0;
+        private long maxExecutionTime = 0;
+        
+        public Bottleneck(String scriptName, String actionType) {
+            this.scriptName = scriptName;
+            this.actionType = actionType;
+        }
+        
+        public void recordExecution(long executionTime) {
+            occurrenceCount++;
+            totalExecutionTime += executionTime;
+            maxExecutionTime = Math.max(maxExecutionTime, executionTime);
+        }
+        
+        public double getAverageTime() {
+            return occurrenceCount > 0 ? totalExecutionTime / (double) occurrenceCount : 0;
+        }
+        
+        // Getters
+        public String getScriptName() { return scriptName; }
+        public String getActionType() { return actionType; }
+        public int getOccurrenceCount() { return occurrenceCount; }
+        public long getTotalExecutionTime() { return totalExecutionTime; }
+        public long getMaxExecutionTime() { return maxExecutionTime; }
+    }
+    
+    /**
+     * Memory monitor for tracking resource usage
+     */
+    public static class MemoryMonitor {
+        public MemoryUsage getCurrentUsage() {
+            Runtime runtime = Runtime.getRuntime();
+            long maxMemory = runtime.maxMemory();
+            long totalMemory = runtime.totalMemory();
+            long freeMemory = runtime.freeMemory();
+            long usedMemory = totalMemory - freeMemory;
+            
+            return new MemoryUsage(usedMemory, maxMemory, totalMemory);
+        }
+        
+        public void shutdown() {
+            // Cleanup if needed
+        }
+    }
+    
+    /**
+     * Memory usage data
+     */
+    public static class MemoryUsage {
+        private final long usedMemory;
+        private final long maxMemory;
+        private final long totalMemory;
+        
+        public MemoryUsage(long usedMemory, long maxMemory, long totalMemory) {
+            this.usedMemory = usedMemory;
+            this.maxMemory = maxMemory;
+            this.totalMemory = totalMemory;
+        }
+        
+        public double getUsagePercentage() {
+            return maxMemory > 0 ? (usedMemory * 100.0) / maxMemory : 0;
+        }
+        
+        public long getUsedMemoryMB() {
+            return usedMemory / (1024 * 1024);
+        }
+        
+        public long getMaxMemoryMB() {
+            return maxMemory / (1024 * 1024);
+        }
+        
+        public long getTotalMemoryMB() {
+            return totalMemory / (1024 * 1024);
+        }
+        
+        // Getters
+        public long getUsedMemory() { return usedMemory; }
+        public long getMaxMemory() { return maxMemory; }
+        public long getTotalMemory() { return totalMemory; }
+    }
+    
+    /**
+     * Execution sampler for collecting execution samples
+     */
+    public static class ExecutionSampler {
+        private final Map<String, ExecutionPattern> patterns = new ConcurrentHashMap<>();
+        
+        public void sampleExecution(String scriptName, String actionType, long executionTime, boolean success) {
+            String key = scriptName + ":" + actionType;
+            ExecutionPattern pattern = patterns.computeIfAbsent(key, 
+                k -> new ExecutionPattern(scriptName, actionType));
+            pattern.recordExecution(executionTime, success);
+        }
+        
+        public ExecutionPattern getMostCommonPattern() {
+            return patterns.values().stream()
+                .max(Comparator.comparingInt(ExecutionPattern::getFrequency))
+                .orElse(null);
+        }
+        
+        public Collection<ExecutionPattern> getAllPatterns() {
+            return new ArrayList<>(patterns.values());
+        }
+        
+        public void shutdown() {
+            patterns.clear();
+        }
+    }
+    
+    /**
+     * Represents an execution pattern for analysis
+     */
+    public static class ExecutionPattern {
+        private final String scriptName;
+        private final String actionType;
+        private int frequency = 0;
+        private long totalExecutionTime = 0;
+        private int successCount = 0;
+        
+        public ExecutionPattern(String scriptName, String actionType) {
+            this.scriptName = scriptName;
+            this.actionType = actionType;
+        }
+        
+        public void recordExecution(long executionTime, boolean success) {
+            frequency++;
+            totalExecutionTime += executionTime;
+            if (success) successCount++;
+        }
+        
+        public double getAverageTime() {
+            return frequency > 0 ? totalExecutionTime / (double) frequency : 0;
+        }
+        
+        public double getSuccessRate() {
+            return frequency > 0 ? (successCount * 100.0) / frequency : 0;
+        }
+        
+        public String getDescription() {
+            return scriptName + " -> " + actionType;
+        }
+        
+        // Getters
+        public String getScriptName() { return scriptName; }
+        public String getActionType() { return actionType; }
+        public int getFrequency() { return frequency; }
+        public long getTotalExecutionTime() { return totalExecutionTime; }
+        public int getSuccessCount() { return successCount; }
+    }
+    
+    // ... [other inner classes and methods] ...
+    
+    /**
+     * Advanced system performance report with detailed metrics
+     */
+    public static class AdvancedSystemPerformanceReport {
+        private final long totalExecutions;
+        private final long totalExecutionTime;
+        private final int activePlayerCount;
+        private final int uniqueActionTypes;
+        private final int scriptProfilesCount;
+        private final MemoryUsage memoryUsage;
+        private final Collection<Bottleneck> bottlenecks;
+        
+        public AdvancedSystemPerformanceReport(long totalExecutions, long totalExecutionTime, 
+                                             int activePlayerCount, int uniqueActionTypes,
+                                             int scriptProfilesCount, MemoryUsage memoryUsage,
+                                             Collection<Bottleneck> bottlenecks) {
+            this.totalExecutions = totalExecutions;
+            this.totalExecutionTime = totalExecutionTime;
+            this.activePlayerCount = activePlayerCount;
+            this.uniqueActionTypes = uniqueActionTypes;
+            this.scriptProfilesCount = scriptProfilesCount;
+            this.memoryUsage = memoryUsage;
+            this.bottlenecks = new ArrayList<>(bottlenecks);
+        }
+        
+        public double getAverageExecutionTime() {
+            return totalExecutions > 0 ? totalExecutionTime / (double) totalExecutions : 0;
+        }
+        
+        public List<Bottleneck> getTopBottlenecks(int limit) {
+            return bottlenecks.stream()
+                .sorted(Comparator.comparingDouble(Bottleneck::getAverageTime).reversed())
+                .limit(limit)
+                .collect(Collectors.toList());
+        }
+        
+        // Getters
+        public long getTotalExecutions() { return totalExecutions; }
+        public long getTotalExecutionTime() { return totalExecutionTime; }
+        public int getActivePlayerCount() { return activePlayerCount; }
+        public int getUniqueActionTypes() { return uniqueActionTypes; }
+        public int getScriptProfilesCount() { return scriptProfilesCount; }
+        public MemoryUsage getMemoryUsage() { return memoryUsage; }
+        public Collection<Bottleneck> getBottlenecks() { return new ArrayList<>(bottlenecks); }
+    }
+}

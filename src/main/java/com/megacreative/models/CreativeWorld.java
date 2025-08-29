@@ -195,6 +195,18 @@ public class CreativeWorld {
         return id;
     }
     
+    /**
+     * @return The world ID as a UUID
+     */
+    public UUID getWorldId() {
+        try {
+            return UUID.fromString(id);
+        } catch (IllegalArgumentException e) {
+            // Generate a consistent UUID from the string ID if it's not a valid UUID
+            return UUID.nameUUIDFromBytes(id.getBytes());
+        }
+    }
+    
     public String getName() {
         return name;
     }

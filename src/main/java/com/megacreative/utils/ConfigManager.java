@@ -57,4 +57,13 @@ public class ConfigManager {
     public String getPrefix() {
         return config.getString("messages.prefix", "§8[§bMegaCreative§8] ");
     }
+    
+    /**
+     * Shuts down the config manager and cleans up resources
+     */
+    public void shutdown() {
+        // Save any pending configuration changes
+        plugin.saveConfig();
+        config = null;
+    }
 }

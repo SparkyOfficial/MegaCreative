@@ -1,6 +1,8 @@
 package com.megacreative.coding;
 
 import com.megacreative.MegaCreative;
+import com.megacreative.coding.variables.VariableManager;
+import com.megacreative.coding.values.DataValue;
 import com.megacreative.models.CreativeWorld;
 import org.bukkit.Location;
 import org.bukkit.entity.Player;
@@ -30,23 +32,36 @@ public class ExecutionContext {
     // Идентификаторы для доступа к переменным
     private final String scriptId; // Идентификатор скрипта
     private final String worldId;  // Идентификатор мира
+    
+    // Cached values for performance
+    private final Map<String, Boolean> booleans = new HashMap<>();
+    private final Map<String, Number> numbers = new HashMap<>();
+    private final Map<String, String> strings = new HashMap<>();
 
     /**
-     * Создает новый контекст с указанным текущим блоком.
-     * @param currentBlock Текущий блок для выполнения
-     * @param newLocation Новая локация блока
-     * @return Новый контекст с обновленным блоком и локацией
+     * Creates a new execution context with all required parameters.
+     * @param plugin The main plugin instance (required)
+     * @param player The player associated with this context (can be null)
+     * @param creativeWorld The world where the script is executing (can be null)
+     * @param event The event that triggered the execution (can be null)
+     * @param blockLocation The location of the block being executed (can be null)
+     * @param currentBlock The current code block being executed (can be null)
+     * @throws IllegalArgumentException if plugin is null
      */
-    public ExecutionContext(MegaCreative plugin, Player player, CreativeWorld creativeWorld, Event event, Location blockLocation, CodeBlock currentBlock) {
+    public ExecutionContext(MegaCreative plugin, Player player, CreativeWorld creativeWorld, Event event, 
+                          Location blockLocation, CodeBlock currentBlock) {
+        if (plugin == null) {
+            throw new IllegalArgumentException("Plugin cannot be null");
+        }
         this.plugin = plugin;
         this.player = player;
         this.creativeWorld = creativeWorld;
         this.event = event;
-        this.blockLocation = blockLocation;
+        this.blockLocation = blockLocation != null ? blockLocation.clone() : null;
         this.currentBlock = currentBlock;
         this.variableManager = plugin.getVariableManager();
         this.scriptId = currentBlock != null ? currentBlock.getId() : "global";
-        this.worldId = creativeWorld != null ? creativeWorld.getId() : "global";
+        this.worldId = creativeWorld != null ? creativeWorld.getId().toString() : "global";
     }
     
     public ExecutionContext withCurrentBlock(CodeBlock currentBlock, Location newLocation) {
@@ -70,8 +85,26 @@ public class ExecutionContext {
         if (scriptId == null) {
             return null;
         }
+        // Check caches first
+        if (booleans.containsKey(name)) return booleans.get(name);
+        if (numbers.containsKey(name)) return numbers.get(name);
+        if (strings.containsKey(name)) return strings.get(name);
+        
+        // Get from variable manager if not in cache
         DataValue value = variableManager.getLocalVariable(scriptId, name);
-        return value != null ? value.getValue() : null;
+        if (value != null) {
+            Object val = value.getValue();
+            // Cache the value based on type
+            if (val instanceof Boolean) {
+                booleans.put(name, (Boolean) val);
+            } else if (val instanceof Number) {
+                numbers.put(name, (Number) val);
+            } else if (val instanceof String) {
+                strings.put(name, (String) val);
+            }
+            return val;
+        }
+        return null;
     }
     
     /**
@@ -95,6 +128,18 @@ public class ExecutionContext {
             throw new IllegalStateException("Cannot set global variable: world ID is not available");
         }
         variableManager.setGlobalVariable(worldId, name, DataValue.fromObject(value));
+    }
+    
+    /**
+     * Sets a server-wide persistent variable
+     * @param name The name of the variable
+     * @param value The value to set (must be a DataValue)
+     */
+    public void setServerVariable(String name, DataValue value) {
+        if (variableManager == null) {
+            throw new IllegalStateException("VariableManager is not available");
+        }
+        variableManager.setServerVariable(name, value);
     }
     
     /**
@@ -214,20 +259,14 @@ public class ExecutionContext {
     /**
      * Получает число как double
      */
+    /**
+     * Gets a number as a double
+     */
     public double getDouble(String name) {
-        Number number = numbers.get(name);
+        Number number = getNumber(name);
         return number != null ? number.doubleValue() : 0.0;
     }
     
-    // Конструктор
-    public ExecutionContext(MegaCreative plugin, Player player, CreativeWorld creativeWorld, Event event, Location blockLocation, CodeBlock currentBlock) {
-        this.plugin = plugin;
-        this.player = player;
-        this.creativeWorld = creativeWorld;
-        this.event = event;
-        this.blockLocation = blockLocation;
-        this.currentBlock = currentBlock;
-    }
     
     // Геттеры
     public MegaCreative getPlugin() {

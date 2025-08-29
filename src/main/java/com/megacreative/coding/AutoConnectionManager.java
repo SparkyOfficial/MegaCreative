@@ -423,41 +423,21 @@ public class AutoConnectionManager implements Listener {
     }
     
     /**
-     * Получает все блоки скрипта игрока
+     * Cleans up all player blocks for a specific player
      */
-    public List<CodeBlock> getPlayerScriptBlocks(Player player) {
-        return playerScriptBlocks.getOrDefault(player.getUniqueId(), new ArrayList<>());
+    public void cleanupPlayerBlocks(Player player) {
+        playerScriptBlocks.remove(player.getUniqueId());
     }
     
     /**
-     * Создает CodeScript из блоков игрока на определенной линии
+     * Shuts down the AutoConnectionManager and cleans up resources
      */
-    public CodeScript createScriptFromLine(Player player, int line) {
-        List<CodeBlock> allBlocks = getPlayerScriptBlocks(player);
-        List<CodeBlock> lineBlocks = new ArrayList<>();
-        
-        // Находим все блоки на указанной линии
-        for (Map.Entry<Location, CodeBlock> entry : locationToBlock.entrySet()) {
-            Location loc = entry.getKey();
-            if (DevWorldGenerator.getCodeLineFromZ(loc.getBlockZ()) == line) {
-                lineBlocks.add(entry.getValue());
-            }
-        }
-        
-        // Сортируем блоки по X координате
-        lineBlocks.sort((a, b) -> {
-            Location locA = getLocationForBlock(a);
-            Location locB = getLocationForBlock(b);
-            return Integer.compare(locA.getBlockX(), locB.getBlockX());
-        });
-        
-        if (lineBlocks.isEmpty()) return null;
-        
-        // Создаем скрипт с корректным конструктором
-        CodeScript script = new CodeScript("script_line_" + line, true, lineBlocks.get(0));
-        
-        return script;
+    public void shutdown() {
+        // Clear all block references
+        locationToBlock.clear();
+        playerScriptBlocks.clear();
     }
+
     
     /**
      * Получает позицию для блока

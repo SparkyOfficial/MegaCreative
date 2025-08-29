@@ -1,5 +1,8 @@
 package com.megacreative.managers;
 
+import com.megacreative.MegaCreative;
+import java.util.ArrayList;
+import com.megacreative.core.ServiceRegistry;
 import com.megacreative.interfaces.IPlayerManager;
 import com.megacreative.coding.variables.VariableManager;
 import lombok.extern.java.Log;
@@ -21,6 +24,7 @@ import java.util.concurrent.ConcurrentHashMap;
 @Log
 public class GUIManager implements Listener {
     
+    private final MegaCreative plugin;
     private final IPlayerManager playerManager;
     private final VariableManager variableManager;
     
@@ -32,11 +36,32 @@ public class GUIManager implements Listener {
     private final Map<UUID, Map<String, Object>> playerMetadata = new ConcurrentHashMap<>();
     
     /**
-     * Constructor with specific dependencies
+     * Constructor with required dependencies
+     * @param playerManager The player manager instance
+     * @param variableManager The variable manager instance
      */
     public GUIManager(IPlayerManager playerManager, VariableManager variableManager) {
+        this.plugin = MegaCreative.getInstance();
         this.playerManager = playerManager;
         this.variableManager = variableManager;
+    }
+    
+    /**
+     * Shuts down the GUIManager and cleans up resources
+     */
+    public void shutdown() {
+        // Close all open GUIs
+        for (UUID playerId : new ArrayList<>(activeGUIs.keySet())) {
+            Player player = plugin.getServer().getPlayer(playerId);
+            if (player != null && player.isOnline()) {
+                player.closeInventory();
+            }
+        }
+        
+        // Clear all references
+        activeGUIs.clear();
+        inventoryToGUI.clear();
+        playerMetadata.clear();
     }
     
     /**

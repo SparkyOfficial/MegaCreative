@@ -21,6 +21,27 @@ public class ScoreboardManager {
     public ScoreboardManager(MegaCreative plugin) {
         this.plugin = plugin;
     }
+    
+    /**
+     * Shuts down the ScoreboardManager and cleans up resources
+     */
+    public void shutdown() {
+        // Cancel all active tasks
+        for (BukkitTask task : activeTasks.values()) {
+            if (task != null && !task.isCancelled()) {
+                task.cancel();
+            }
+        }
+        activeTasks.clear();
+        
+        // Clear all scoreboards for online players
+        for (Player player : Bukkit.getOnlinePlayers()) {
+            if (player.getScoreboard() != null && 
+                !player.getScoreboard().equals(Bukkit.getScoreboardManager().getMainScoreboard())) {
+                player.setScoreboard(Bukkit.getScoreboardManager().getNewScoreboard());
+            }
+        }
+    }
 
     /**
      * Устанавливает и начинает обновлять скорборд для игрока.

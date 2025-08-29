@@ -62,6 +62,15 @@ public interface DataValue extends ConfigurationSerializable, Cloneable {
     DataValue clone();
     
     /**
+     * Creates a DataValue from an object
+     * @param value The value to convert
+     * @return A new DataValue instance
+     */
+    static DataValue of(Object value) {
+        return DataValue.fromObject(value);
+    }
+    
+    /**
      * Serializes this value to a map for storage
      */
     Map<String, Object> serialize();

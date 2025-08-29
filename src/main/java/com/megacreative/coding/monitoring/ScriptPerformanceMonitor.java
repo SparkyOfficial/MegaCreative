@@ -269,10 +269,9 @@ public class ScriptPerformanceMonitor {
         }
         
         // Advanced recommendations based on sampling
-        ExecutionPattern pattern = executionSampler.getMostCommonPattern();
-        if (pattern != null && pattern.getFrequency() > 10) {
-            player.sendMessage("§e• Detected pattern: " + pattern.getDescription() + 
-                             " (occurs " + pattern.getFrequency() + " times)");
+        String patternDesc = executionSampler.getMostCommonPattern();
+        if (patternDesc != null && !patternDesc.isEmpty()) {
+            player.sendMessage("§e• Detected pattern: " + patternDesc);
         }
         
         // Memory recommendations
@@ -318,6 +317,7 @@ public class ScriptPerformanceMonitor {
     }
     
     /**
+     * Shuts down the performance monitor and cleans up resources
      * System performance report
      */
     public static class SystemPerformanceReport {
@@ -597,34 +597,50 @@ public class ScriptPerformanceMonitor {
      */
     public static class ExecutionSampler {
         private final Map<String, ExecutionPattern> patterns = new ConcurrentHashMap<>();
-        private final int maxSamples = 1000;
-        private int sampleCount = 0;
+        private boolean isRunning = true;
         
         public void sampleExecution(String scriptName, String actionType, long executionTime, boolean success) {
-            if (sampleCount >= maxSamples) return;
+            if (!isRunning) {
+                return;
+            }
             
-            sampleCount++;
-            
-            // Create pattern key
-            String patternKey = scriptName + ":" + actionType;
-            ExecutionPattern pattern = patterns.computeIfAbsent(patternKey, 
+            String key = scriptName + ":" + actionType;
+            ExecutionPattern pattern = patterns.computeIfAbsent(key, 
                 k -> new ExecutionPattern(scriptName, actionType));
             pattern.recordExecution(executionTime, success);
         }
         
-        public ExecutionPattern getMostCommonPattern() {
+        public String getMostCommonPattern() {
+            if (!isRunning) {
+                return "Sampler is shut down";
+            }
             return patterns.values().stream()
                 .max(Comparator.comparingInt(ExecutionPattern::getFrequency))
-                .orElse(null);
+                .map(ExecutionPattern::getDescription)
+                .orElse("No patterns detected");
         }
         
-        public Collection<ExecutionPattern> getAllPatterns() {
-            return new ArrayList<>(patterns.values());
+        public List<String> getAllPatterns() {
+            if (!isRunning) {
+                return Collections.emptyList();
+            }
+            return patterns.values().stream()
+                .sorted(Comparator.comparingInt(ExecutionPattern::getFrequency).reversed())
+                .map(ExecutionPattern::getDescription)
+                .collect(Collectors.toList());
+        }
+        
+        /**
+         * Shuts down the execution sampler and cleans up resources
+         */
+        public void shutdown() {
+            isRunning = false;
+            patterns.clear();
         }
     }
     
     /**
-     * Represents an execution pattern for analysis
+     * Represents an execution pattern for sampling
      */
     public static class ExecutionPattern {
         private final String scriptName;
@@ -668,6 +684,8 @@ public class ScriptPerformanceMonitor {
      * Memory monitor for tracking resource usage
      */
     public static class MemoryMonitor {
+        private boolean isRunning = true;
+        
         public MemoryUsage getCurrentUsage() {
             Runtime runtime = Runtime.getRuntime();
             long maxMemory = runtime.maxMemory();
@@ -676,6 +694,14 @@ public class ScriptPerformanceMonitor {
             long usedMemory = totalMemory - freeMemory;
             
             return new MemoryUsage(usedMemory, maxMemory, totalMemory);
+        }
+        
+        /**
+         * Shuts down the memory monitor and cleans up resources
+         */
+        public void shutdown() {
+            isRunning = false;
+            // Add any additional cleanup code here if needed
         }
     }
     
@@ -709,7 +735,7 @@ public class ScriptPerformanceMonitor {
             return totalMemory / (1024 * 1024);
         }
         
-        // Getters
+        // Getters for memory fields
         public long getUsedMemory() { return usedMemory; }
         public long getMaxMemory() { return maxMemory; }
         public long getTotalMemory() { return totalMemory; }
@@ -720,6 +746,7 @@ public class ScriptPerformanceMonitor {
      */
     public static class BottleneckDetector {
         private final Map<String, Bottleneck> bottlenecks = new ConcurrentHashMap<>();
+        private boolean isRunning = true;
         
         public void analyzeExecution(String scriptName, String actionType, long executionTime) {
             if (executionTime > 50) { // Only analyze slow executions
@@ -740,12 +767,20 @@ public class ScriptPerformanceMonitor {
         public Collection<Bottleneck> getDetectedBottlenecks() {
             return new ArrayList<>(bottlenecks.values());
         }
+        
+        /**
+         * Shuts down the bottleneck detector and cleans up resources
+         */
+        public void shutdown() {
+            isRunning = false;
+            bottlenecks.clear();
+        }
     }
     
     /**
      * Represents a performance bottleneck
      */
-    public static class Bottleneck {
+    static class Bottleneck {
         private final String scriptName;
         private final String actionType;
         private int occurrenceCount = 0;
@@ -778,7 +813,7 @@ public class ScriptPerformanceMonitor {
     /**
      * Advanced system performance report with detailed metrics
      */
-    public static class AdvancedSystemPerformanceReport {
+    static class AdvancedSystemPerformanceReport {
         private final long totalExecutions;
         private final long totalExecutionTime;
         private final int activePlayerCount;
@@ -813,11 +848,85 @@ public class ScriptPerformanceMonitor {
         
         // Getters
         public long getTotalExecutions() { return totalExecutions; }
-        public long getTotalExecutionTime() { return totalExecutionTime; }
-        public int getActivePlayerCount() { return activePlayerCount; }
-        public int getUniqueActionTypes() { return uniqueActionTypes; }
-        public int getScriptProfilesCount() { return scriptProfilesCount; }
-        public MemoryUsage getMemoryUsage() { return memoryUsage; }
-        public Collection<Bottleneck> getBottlenecks() { return bottlenecks; }
+    }
+
+    // Memory-related methods
+    private final Runtime runtime = Runtime.getRuntime();
+    
+    /**
+     * Gets the current memory usage percentage
+     */
+    public double getUsagePercentage() {
+        long maxMemory = runtime.maxMemory();
+        long usedMemory = runtime.totalMemory() - runtime.freeMemory();
+        return maxMemory > 0 ? (usedMemory * 100.0) / maxMemory : 0;
+    }
+    
+    /**
+     * Gets the used memory in MB
+     */
+    public long getUsedMemoryMB() {
+        return (runtime.totalMemory() - runtime.freeMemory()) / (1024 * 1024);
+    }
+
+    /**
+     * Gets the maximum available memory in MB
+     */
+    public long getMaxMemoryMB() {
+        return runtime.maxMemory() / (1024 * 1024);
+    }
+
+    /**
+     * Gets the total allocated memory in MB
+     */
+    public long getTotalMemoryMB() {
+        return runtime.totalMemory() / (1024 * 1024);
+    }
+    
+    // Getters for system metrics
+    public int getUniqueActionTypes() { return actionPerformance.size(); }
+    public int getScriptProfilesCount() { return scriptProfiles.size(); }
+    public MemoryUsage getMemoryUsage() { 
+        return new MemoryUsage(runtime.totalMemory() - runtime.freeMemory(), 
+                             runtime.maxMemory(), 
+                             runtime.totalMemory()); 
+    }
+    public Collection<Bottleneck> getBottlenecks() { 
+        return bottleneckDetector.getDetectedBottlenecks(); 
+    }
+    
+    /**
+     * Shuts down the performance monitor and cleans up resources
+     */
+    public void shutdown() {
+        // Save any pending performance data
+        savePerformanceData();
+
+        // Clean up resources
+        playerMetrics.clear();
+        actionPerformance.clear();
+        scriptProfiles.clear();
+
+        // Shutdown monitoring components
+        executionSampler.shutdown();
+        memoryMonitor.shutdown();
+        bottleneckDetector.shutdown();
+
+        plugin.getLogger().info("Script performance monitor has been shut down");
+    }
+    
+    /**
+     * Saves performance data to persistent storage
+     */
+    private void savePerformanceData() {
+        // TODO: Implement saving performance data to a file or database
+        plugin.getLogger().info("Saving performance monitoring data...");
+    }
+    
+    /**
+     * Cleans up resources (legacy method for backward compatibility)
+     */
+    public void cleanup() {
+        shutdown();
     }
 }

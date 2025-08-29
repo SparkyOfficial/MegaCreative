@@ -9,8 +9,8 @@ public class TrustedPlayer {
     private final UUID playerId;
     private final String playerName;
     private final TrustedPlayerType type;
-    private final long addedAt;
-    private final String addedBy;
+    private final long timestamp;
+    private final UUID addedBy;
 
     public enum TrustedPlayerType {
         TRUSTED_BUILDER("Доверенный строитель"),
@@ -27,19 +27,19 @@ public class TrustedPlayer {
         }
     }
 
-    public TrustedPlayer(UUID playerId, String playerName, TrustedPlayerType type, String addedBy) {
+    public TrustedPlayer(UUID playerId, String playerName, TrustedPlayerType type, UUID addedBy) {
         this.playerId = playerId;
         this.playerName = playerName;
         this.type = type;
-        this.addedAt = System.currentTimeMillis();
+        this.timestamp = System.currentTimeMillis();
         this.addedBy = addedBy;
     }
 
-    public TrustedPlayer(UUID playerId, String playerName, TrustedPlayerType type, long addedAt, String addedBy) {
+    public TrustedPlayer(UUID playerId, String playerName, TrustedPlayerType type, long timestamp, UUID addedBy) {
         this.playerId = playerId;
         this.playerName = playerName;
         this.type = type;
-        this.addedAt = addedAt;
+        this.timestamp = timestamp;
         this.addedBy = addedBy;
     }
 
@@ -55,12 +55,23 @@ public class TrustedPlayer {
         return type;
     }
 
-    public long getAddedAt() {
-        return addedAt;
+    public long getTimestamp() {
+        return timestamp;
     }
 
-    public String getAddedBy() {
+    public UUID getAddedBy() {
         return addedBy;
+    }
+    
+    public String getAddedByName() {
+        if (addedBy == null) {
+            return "System";
+        }
+        try {
+            return org.bukkit.Bukkit.getOfflinePlayer(addedBy).getName();
+        } catch (Exception e) {
+            return addedBy.toString();
+        }
     }
 
     @Override
@@ -82,8 +93,8 @@ public class TrustedPlayer {
                 "playerId=" + playerId +
                 ", playerName='" + playerName + '\'' +
                 ", type=" + type +
-                ", addedAt=" + addedAt +
-                ", addedBy='" + addedBy + '\'' +
+                ", timestamp=" + timestamp +
+                ", addedBy=" + (addedBy != null ? addedBy.toString() : "System") +
                 '}';
     }
-} 
+}

@@ -95,6 +95,63 @@ public class MegaCreative extends JavaPlugin {
     /**
      * Registers all plugin commands
      */
+    // Getters for various managers
+    public com.megacreative.interfaces.IWorldManager getWorldManager() {
+        return serviceRegistry.getWorldManager();
+    }
+    
+    public com.megacreative.interfaces.IPlayerManager getPlayerManager() {
+        return serviceRegistry.getPlayerManager();
+    }
+    
+    public com.megacreative.interfaces.ICodingManager getCodingManager() {
+        return serviceRegistry.getCodingManager();
+    }
+    
+    public com.megacreative.managers.TemplateManager getTemplateManager() {
+        return serviceRegistry.getTemplateManager();
+    }
+    
+    public com.megacreative.managers.ScoreboardManager getScoreboardManager() {
+        return serviceRegistry.getScoreboardManager();
+    }
+    
+    public com.megacreative.interfaces.ITrustedPlayerManager getTrustedPlayerManager() {
+        return serviceRegistry.getTrustedPlayerManager();
+    }
+    
+    public com.megacreative.managers.GUIManager getGuiManager() {
+        return serviceRegistry.getGuiManager();
+    }
+    
+    public com.megacreative.managers.BlockConfigManager getBlockConfigManager() {
+        return serviceRegistry.getBlockConfigManager();
+    }
+    
+    public com.megacreative.coding.variables.VariableManager getVariableManager() {
+        return serviceRegistry.getVariableManager();
+    }
+    
+    public com.megacreative.coding.BlockPlacementHandler getBlockPlacementHandler() {
+        return serviceRegistry.getBlockPlacementHandler();
+    }
+    
+    public com.megacreative.coding.debug.VisualDebugger getScriptDebugger() {
+        return serviceRegistry.getScriptDebugger();
+    }
+    
+    public com.megacreative.coding.monitoring.ScriptPerformanceMonitor getScriptPerformanceMonitor() {
+        return serviceRegistry.getScriptPerformanceMonitor();
+    }
+    
+    public com.megacreative.coding.BlockConfiguration getBlockConfiguration() {
+        return serviceRegistry.getBlockConfiguration();
+    }
+    
+    public com.megacreative.utils.ConfigManager getConfigManager() {
+        return serviceRegistry.getConfigManager();
+    }
+    
     private void registerCommands() {
         getCommand("megacreative").setExecutor(new MainCommand(this));
         getCommand("myworlds").setExecutor(new MyWorldsCommand(this));

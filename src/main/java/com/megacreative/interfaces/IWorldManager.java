@@ -61,6 +61,11 @@ public interface IWorldManager {
     List<CreativeWorld> getPlayerWorlds(Player player);
     
     /**
+     * Завершает работу менеджера миров
+     */
+    void shutdown();
+    
+    /**
      * Получает все публичные миры
      * @return Список публичных миров
      */

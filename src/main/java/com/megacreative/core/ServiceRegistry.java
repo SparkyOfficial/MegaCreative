@@ -18,7 +18,6 @@ import com.megacreative.listeners.DevWorldProtectionListener;
 import com.megacreative.managers.*;
 import com.megacreative.services.BlockConfigService;
 import com.megacreative.tools.CodeBlockClipboard;
-import com.megacreative.utils.ConfigManager;
 import lombok.extern.java.Log;
 import org.bukkit.plugin.Plugin;
 
@@ -38,7 +37,7 @@ public class ServiceRegistry {
     private final ConcurrentHashMap<Class<?>, Object> services = new ConcurrentHashMap<>();
     
     // Core services
-    private ConfigManager configManager;
+    private com.megacreative.utils.ConfigManager configManager;
     
     // Interface-based managers
     private IWorldManager worldManager;
@@ -147,62 +146,218 @@ public class ServiceRegistry {
      * Shuts down all services gracefully
      */
     public void shutdown() {
-        log.info("Shutting down services...");
+        log.info("Shutting down MegaCreative services...");
         
-        // Shutdown in reverse order
-        shutdownNewArchitectureServices();
-        shutdownCodingServices();
-        shutdownImplementationManagers();
-        shutdownManagers();
-        shutdownCoreServices();
+        // Shutdown services in reverse order of initialization
+        if (scriptPerformanceMonitor != null) {
+            scriptPerformanceMonitor.shutdown();
+        }
         
-        services.clear();
-        log.info("All services shut down");
+        if (visualDebugger != null) {
+            visualDebugger.shutdown();
+        }
+        
+        if (executorEngine != null) {
+            executorEngine.shutdown();
+        }
+        
+        if (autoConnectionManager != null) {
+            autoConnectionManager.shutdown();
+        }
+        
+        if (codingManager != null) {
+            codingManager.shutdown();
+        }
+        
+        if (guiManager != null) {
+            guiManager.shutdown();
+        }
+        
+        if (trustedPlayerManager != null) {
+            trustedPlayerManager.shutdown();
+        }
+        
+        if (scoreboardManager != null) {
+            scoreboardManager.shutdown();
+        }
+        
+        if (templateManager != null) {
+            templateManager.shutdown();
+        }
+        
+        if (blockConfigManager != null) {
+            blockConfigManager.shutdown();
+        }
+        
+        if (worldManager != null) {
+            worldManager.shutdown();
+        }
+        
+        if (configManager != null) {
+            configManager.shutdown();
+        }
+        
+        log.info("All services shut down successfully");
     }
     
-    // Service getters with proper types
-    public ConfigManager getConfigManager() { return configManager; }
-    public IWorldManager getWorldManager() { return worldManager; }
-    public IPlayerManager getPlayerManager() { return playerManager; }
-    public ICodingManager getCodingManager() { return codingManager; }
-    public TemplateManager getTemplateManager() { return templateManager; }
-    public ScoreboardManager getScoreboardManager() { return scoreboardManager; }
-    public TrustedPlayerManager getTrustedPlayerManager() { return trustedPlayerManager; }
-    public GUIManager getGuiManager() { return guiManager; }
-    public BlockConfigManager getBlockConfigManager() { return blockConfigManager; }
-    public BlockPlacementHandler getBlockPlacementHandler() { return blockPlacementHandler; }
-    public VisualDebugger getScriptDebugger() { return scriptDebugger; }
-    public AutoConnectionManager getAutoConnectionManager() { return autoConnectionManager; }
-    public DevInventoryManager getDevInventoryManager() { return devInventoryManager; }
-    public VariableManager getVariableManager() { return variableManager; }
-    public BlockContainerManager getContainerManager() { return containerManager; }
-    public ExecutorEngine getExecutorEngine() { return executorEngine; }
-    public BlockConfiguration getBlockConfiguration() { return blockConfiguration; }
-    public ScriptPerformanceMonitor getScriptPerformanceMonitor() { return scriptPerformanceMonitor; }
-    public BlockConfigService getBlockConfigService() { return blockConfigService; }
-    public CustomEventManager getCustomEventManager() { return customEventManager; }
-    public EventDataExtractorRegistry getEventDataExtractorRegistry() { return eventDataExtractorRegistry; }
-    public VisualDebugger getVisualDebugger() { return visualDebugger; }
-    public VisualErrorHandler getVisualErrorHandler() { return visualErrorHandler; }
-    public CodeBlockClipboard getCodeBlockClipboard() { return codeBlockClipboard; }
-    public BlockGroupManager getBlockGroupManager() { return blockGroupManager; }
-    public DevWorldProtectionListener getDevWorldProtectionListener() { return devWorldProtectionListener; } // Add getter
+    // Service getters with proper types and null safety
+    /**
+     * Gets the BlockConfiguration service
+     * @return The BlockConfiguration instance
+     */
+    public com.megacreative.coding.BlockConfiguration getBlockConfiguration() {
+        if (blockConfiguration == null) {
+            blockConfiguration = new com.megacreative.coding.BlockConfiguration(
+                (com.megacreative.MegaCreative) plugin
+            );
+            registerService(com.megacreative.coding.BlockConfiguration.class, blockConfiguration);
+        }
+        return blockConfiguration;
+    }
+    
+    public com.megacreative.utils.ConfigManager getConfigManager() { 
+        return configManager; 
+    }
+    
+    public IWorldManager getWorldManager() { 
+        return worldManager != null ? worldManager : 
+            (worldManager = dependencyContainer.resolve(IWorldManager.class));
+    }
+    
+    public IPlayerManager getPlayerManager() { 
+        return playerManager != null ? playerManager : 
+            (playerManager = dependencyContainer.resolve(IPlayerManager.class));
+    }
+    
+    public ICodingManager getCodingManager() { 
+        return codingManager != null ? codingManager : 
+            (codingManager = dependencyContainer.resolve(ICodingManager.class));
+    }
+    
+    public TemplateManager getTemplateManager() { 
+        return templateManager != null ? templateManager : 
+            (templateManager = dependencyContainer.resolve(TemplateManager.class));
+    }
+    
+    public ScoreboardManager getScoreboardManager() { 
+        return scoreboardManager != null ? scoreboardManager : 
+            (scoreboardManager = dependencyContainer.resolve(ScoreboardManager.class));
+    }
+    
+    public ITrustedPlayerManager getTrustedPlayerManager() { 
+        return trustedPlayerManagerInterface != null ? trustedPlayerManagerInterface : 
+            (trustedPlayerManagerInterface = dependencyContainer.resolve(ITrustedPlayerManager.class));
+    }
+    
+    public GUIManager getGuiManager() {
+        return guiManager != null ? guiManager :
+            (guiManager = dependencyContainer.resolve(GUIManager.class));
+    }
+    
+    public VariableManager getVariableManager() {
+        return variableManager != null ? variableManager :
+            (variableManager = dependencyContainer.resolve(VariableManager.class));
+    }
+    
+    public BlockPlacementHandler getBlockPlacementHandler() {
+        return blockPlacementHandler != null ? blockPlacementHandler :
+            (blockPlacementHandler = dependencyContainer.resolve(BlockPlacementHandler.class));
+    }
+    
+    public VisualDebugger getScriptDebugger() {
+        return visualDebugger != null ? visualDebugger :
+            (visualDebugger = dependencyContainer.resolve(VisualDebugger.class));
+    }
+    
+    public ScriptPerformanceMonitor getScriptPerformanceMonitor() {
+        return scriptPerformanceMonitor != null ? scriptPerformanceMonitor :
+            (scriptPerformanceMonitor = dependencyContainer.resolve(ScriptPerformanceMonitor.class));
+    }
+    
+    public BlockConfigManager getBlockConfigManager() { 
+        return blockConfigManager != null ? blockConfigManager :
+            (blockConfigManager = dependencyContainer.resolve(BlockConfigManager.class));
+    }
+    
+    public AutoConnectionManager getAutoConnectionManager() {
+        return autoConnectionManager != null ? autoConnectionManager :
+            (autoConnectionManager = dependencyContainer.resolve(AutoConnectionManager.class));
+    }
+    
+    public DevInventoryManager getDevInventoryManager() {
+        return devInventoryManager != null ? devInventoryManager :
+            (devInventoryManager = dependencyContainer.resolve(DevInventoryManager.class));
+    }
+    
+    public BlockContainerManager getContainerManager() {
+        return containerManager != null ? containerManager :
+            (containerManager = dependencyContainer.resolve(BlockContainerManager.class));
+    }
+    
+    public ExecutorEngine getExecutorEngine() {
+        return executorEngine != null ? executorEngine :
+            (executorEngine = dependencyContainer.resolve(ExecutorEngine.class));
+    }
+    
+    public BlockConfigService getBlockConfigService() {
+        return blockConfigService != null ? blockConfigService :
+            (blockConfigService = dependencyContainer.resolve(BlockConfigService.class));
+    }
+    
+    public CustomEventManager getCustomEventManager() {
+        return customEventManager != null ? customEventManager :
+            (customEventManager = dependencyContainer.resolve(CustomEventManager.class));
+    }
+    
+    public EventDataExtractorRegistry getEventDataExtractorRegistry() {
+        return eventDataExtractorRegistry != null ? eventDataExtractorRegistry :
+            (eventDataExtractorRegistry = dependencyContainer.resolve(EventDataExtractorRegistry.class));
+    }
+    
+    public VisualErrorHandler getVisualErrorHandler() {
+        return visualErrorHandler != null ? visualErrorHandler :
+            (visualErrorHandler = dependencyContainer.resolve(VisualErrorHandler.class));
+    }
+    
+    public CodeBlockClipboard getCodeBlockClipboard() {
+        return codeBlockClipboard != null ? codeBlockClipboard :
+            (codeBlockClipboard = dependencyContainer.resolve(CodeBlockClipboard.class));
+    }
+    
+    public BlockGroupManager getBlockGroupManager() {
+        return blockGroupManager != null ? blockGroupManager :
+            (blockGroupManager = dependencyContainer.resolve(BlockGroupManager.class));
+    }
+    
+    public DevWorldProtectionListener getDevWorldProtectionListener() {
+        return devWorldProtectionListener != null ? devWorldProtectionListener :
+            (devWorldProtectionListener = dependencyContainer.resolve(DevWorldProtectionListener.class));
+    }
     
     // Private initialization methods
     
     private void initializeCoreServices() {
         // Config manager first
-        configManager = new ConfigManager((com.megacreative.MegaCreative) plugin);
+        configManager = new com.megacreative.utils.ConfigManager((com.megacreative.MegaCreative) plugin);
         configManager.loadConfig();
-        registerService(ConfigManager.class, configManager);
+        registerService(com.megacreative.utils.ConfigManager.class, configManager);
         
         // Register the existing plugin instance to prevent circular dependency issues
         dependencyContainer.registerSingleton(com.megacreative.MegaCreative.class, (com.megacreative.MegaCreative) plugin);
         
         // Register type mappings for interfaces to prevent DI issues
+        dependencyContainer.registerType(com.megacreative.utils.ConfigManager.class, com.megacreative.utils.ConfigManager.class);
         dependencyContainer.registerType(IWorldManager.class, WorldManagerImpl.class);
         dependencyContainer.registerType(IPlayerManager.class, PlayerManagerImpl.class);
         dependencyContainer.registerType(ICodingManager.class, com.megacreative.coding.CodingManagerImpl.class);
+        
+        // Initialize BlockConfigService early as it's a core service
+        this.blockConfigService = new BlockConfigService((com.megacreative.MegaCreative) plugin);
+        registerService(BlockConfigService.class, blockConfigService);
+        
+        // Initialize VariableManager early as it's a core service
+        this.variableManager = new VariableManager((com.megacreative.MegaCreative) plugin);
+        registerService(VariableManager.class, variableManager);
     }
     
     private void initializeManagers() {
@@ -227,25 +382,61 @@ public class ServiceRegistry {
         
         // Now update WorldManager with CodingManager dependency
         if (worldManager instanceof WorldManagerImpl) {
+            ((WorldManagerImpl) worldManager).setCodingManager(codingManager);
         }
+    }
+    
+    private void initializeImplementationManagers() {
+        log.info("Initializing implementation managers...");
         
-        playerManager = dependencyContainer.resolve(IPlayerManager.class);
-        if (playerManager == null) {
-            playerManager = new PlayerManagerImpl((com.megacreative.MegaCreative) plugin);
-            registerService(IPlayerManager.class, playerManager);
-        }
+        // Cast plugin to MegaCreative once
+        com.megacreative.MegaCreative megaCreative = (com.megacreative.MegaCreative) plugin;
         
-        blockConfigManager = new BlockConfigManager((com.megacreative.MegaCreative) plugin);
+        // Initialize BlockConfiguration with required dependencies
+        this.blockConfiguration = new BlockConfiguration(megaCreative);
+        registerService(BlockConfiguration.class, blockConfiguration);
+        
+        // Initialize CodeBlockClipboard
+        this.codeBlockClipboard = new CodeBlockClipboard();
+        registerService(CodeBlockClipboard.class, codeBlockClipboard);
+        
+        // Initialize BlockGroupManager with required dependencies
+        this.blockGroupManager = new BlockGroupManager(megaCreative, playerManager);
+        registerService(BlockGroupManager.class, blockGroupManager);
+        
+        // Initialize TemplateManager with required dependencies
+        this.templateManager = new TemplateManager(megaCreative);
+        registerService(TemplateManager.class, templateManager);
+        
+        // Initialize ScoreboardManager
+        this.scoreboardManager = new ScoreboardManager(megaCreative);
+        registerService(ScoreboardManager.class, scoreboardManager);
+        
+        // Initialize TrustedPlayerManager
+        this.trustedPlayerManager = new TrustedPlayerManager(megaCreative);
+        this.trustedPlayerManagerInterface = trustedPlayerManager; // Store both concrete and interface references
+        registerService(TrustedPlayerManager.class, trustedPlayerManager);
+        registerService(ITrustedPlayerManager.class, trustedPlayerManager); // Use the same instance for both
+        
+        // Initialize BlockConfigManager
+        this.blockConfigManager = new BlockConfigManager(megaCreative);
         registerService(BlockConfigManager.class, blockConfigManager);
+        
+        // Initialize DevWorldProtectionListener
+        this.devWorldProtectionListener = new DevWorldProtectionListener(
+            megaCreative, 
+            trustedPlayerManager,
+            blockConfigService
+        );
+        registerService(DevWorldProtectionListener.class, devWorldProtectionListener);
+        
+        log.info("All implementation managers initialized");
     }
     
     private void initializeCodingServices() {
-        // Block configuration service (new architecture)
-        blockConfigService = new BlockConfigService((com.megacreative.MegaCreative) plugin);
-        registerService(BlockConfigService.class, blockConfigService);
-        
-        // Coding system components
-        blockPlacementHandler = new BlockPlacementHandler((com.megacreative.MegaCreative) plugin, trustedPlayerManagerInterface);
+        // Initialize coding system components
+        // Initialize BlockPlacementHandler with just the plugin instance
+        this.blockPlacementHandler = new BlockPlacementHandler((com.megacreative.MegaCreative) plugin);
         registerService(BlockPlacementHandler.class, blockPlacementHandler);
         
         scriptDebugger = new VisualDebugger((com.megacreative.MegaCreative) plugin);
@@ -257,7 +448,7 @@ public class ServiceRegistry {
         devInventoryManager = new DevInventoryManager((com.megacreative.MegaCreative) plugin);
         registerService(DevInventoryManager.class, devInventoryManager);
         
-        variableManager = new VariableManager((com.megacreative.MegaCreative) plugin);
+        // VariableManager was already initialized in core services
         registerService(VariableManager.class, variableManager);
         
         containerManager = new BlockContainerManager((com.megacreative.MegaCreative) plugin);
@@ -294,8 +485,8 @@ public class ServiceRegistry {
         codeBlockClipboard = new CodeBlockClipboard();
         registerService(CodeBlockClipboard.class, codeBlockClipboard);
         
-        // GUI Manager with VariableManager
-        guiManager = new GUIManager(playerManager, variableManager);
+        // Initialize GUI Manager with required dependencies
+        this.guiManager = new GUIManager(playerManager, variableManager);
         registerService(GUIManager.class, guiManager);
     }
     
@@ -333,23 +524,26 @@ public class ServiceRegistry {
     // Shutdown methods
     
     private void shutdownCoreServices() {
+        log.info("Shutting down core services...");
+        
+        // Shutdown world manager first to save all worlds
         if (worldManager != null) {
-            worldManager.saveAllWorlds();
+            try {
+                worldManager.saveAllWorlds();
+                log.info("World manager shut down successfully");
+            } catch (Exception e) {
+                log.log(Level.SEVERE, "Error shutting down world manager", e);
+            }
         }
-    }
-    
-    private void shutdownManagers() {
-        // Shutdown managers that might need cleanup
-    }
-    
-    private void shutdownImplementationManagers() {
-        // Shutdown implementation-specific managers
-    }
-    
-    private void shutdownCodingServices() {
-        // Stop coding-related services
-        if (executorEngine != null) {
-            // Stop any running executions
+        
+        // Shutdown config manager last to ensure all services can save their configs
+        if (configManager != null) {
+            try {
+                configManager.shutdown();
+                log.info("ConfigManager shut down successfully");
+            } catch (Exception e) {
+                log.log(Level.SEVERE, "Error shutting down ConfigManager", e);
+            }
         }
     }
     

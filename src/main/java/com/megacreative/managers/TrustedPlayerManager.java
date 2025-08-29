@@ -16,11 +16,12 @@ import java.util.stream.Collectors;
 
 /**
  * Менеджер для управления доверенными игроками
+ * Отвечает за хранение и управление доверенными игроками в различных мирах
  */
-public class TrustedPlayerManager {
+public class TrustedPlayerManager implements ITrustedPlayerManager {
     
     private final MegaCreative plugin;
-    private final Map<UUID, TrustedPlayer> trustedPlayers = new HashMap<>();
+    private final Map<UUID, Map<UUID, TrustedPlayer>> worldTrustedPlayers = new HashMap<>();
     private final File trustedPlayersFile;
     private final FileConfiguration config;
 
@@ -30,181 +31,405 @@ public class TrustedPlayerManager {
         this.config = YamlConfiguration.loadConfiguration(trustedPlayersFile);
         loadTrustedPlayers();
     }
-
+    
     /**
-     * Добавляет игрока в список доверенных
+     * Shuts down the TrustedPlayerManager and cleans up resources
      */
-    public boolean addTrustedPlayer(Player player, TrustedPlayer.TrustedPlayerType type, String addedBy) {
-        TrustedPlayer trustedPlayer = new TrustedPlayer(player.getUniqueId(), player.getName(), type, addedBy);
-        trustedPlayers.put(player.getUniqueId(), trustedPlayer);
-        saveTrustedPlayers();
-        
-        plugin.getLogger().info("Добавлен доверенный игрок: " + player.getName() + " (" + type.getDisplayName() + ")");
-        return true;
+    @Override
+    public void initialize() {
+        loadTrustedPlayers();
+        plugin.getLogger().info("TrustedPlayerManager initialized");
     }
-
-    /**
-     * Добавляет игрока в список доверенных по UUID
-     */
-    public boolean addTrustedPlayer(UUID playerId, String playerName, TrustedPlayer.TrustedPlayerType type, String addedBy) {
-        TrustedPlayer trustedPlayer = new TrustedPlayer(playerId, playerName, type, addedBy);
-        trustedPlayers.put(playerId, trustedPlayer);
-        saveTrustedPlayers();
-        
-        plugin.getLogger().info("Добавлен доверенный игрок: " + playerName + " (" + type.getDisplayName() + ")");
-        return true;
-    }
-
-    /**
-     * Удаляет игрока из списка доверенных
-     */
-    public boolean removeTrustedPlayer(UUID playerId) {
-        TrustedPlayer removed = trustedPlayers.remove(playerId);
-        if (removed != null) {
-            saveTrustedPlayers();
-            plugin.getLogger().info("Удален доверенный игрок: " + removed.getPlayerName());
-            return true;
-        }
-        return false;
-    }
-
-    /**
-     * Проверяет, является ли игрок доверенным строителем
-     */
-    public boolean isTrustedBuilder(Player player) {
-        TrustedPlayer trustedPlayer = trustedPlayers.get(player.getUniqueId());
-        return trustedPlayer != null && trustedPlayer.getType() == TrustedPlayer.TrustedPlayerType.TRUSTED_BUILDER;
-    }
-
-    /**
-     * Проверяет, является ли игрок доверенным программистом
-     */
-    public boolean isTrustedCoder(Player player) {
-        TrustedPlayer trustedPlayer = trustedPlayers.get(player.getUniqueId());
-        return trustedPlayer != null && trustedPlayer.getType() == TrustedPlayer.TrustedPlayerType.TRUSTED_CODER;
-    }
-
-    /**
-     * Проверяет, является ли игрок доверенным (любого типа)
-     */
-    public boolean isTrustedPlayer(Player player) {
-        return trustedPlayers.containsKey(player.getUniqueId());
-    }
-
-    /**
-     * Получает тип доверенного игрока
-     */
-    public TrustedPlayer.TrustedPlayerType getTrustedPlayerType(Player player) {
-        TrustedPlayer trustedPlayer = trustedPlayers.get(player.getUniqueId());
-        return trustedPlayer != null ? trustedPlayer.getType() : null;
-    }
-
-    /**
-     * Получает список всех доверенных игроков
-     */
-    public List<TrustedPlayer> getAllTrustedPlayers() {
-        return new ArrayList<>(trustedPlayers.values());
-    }
-
-    /**
-     * Получает список доверенных строителей
-     */
-    public List<TrustedPlayer> getTrustedBuilders() {
-        return trustedPlayers.values().stream()
-                .filter(tp -> tp.getType() == TrustedPlayer.TrustedPlayerType.TRUSTED_BUILDER)
-                .collect(Collectors.toList());
-    }
-
-    /**
-     * Получает список доверенных программистов
-     */
-    public List<TrustedPlayer> getTrustedCoders() {
-        return trustedPlayers.values().stream()
-                .filter(tp -> tp.getType() == TrustedPlayer.TrustedPlayerType.TRUSTED_CODER)
-                .collect(Collectors.toList());
-    }
-
-    /**
-     * Загружает доверенных игроков из конфигурации
-     */
-    private void loadTrustedPlayers() {
-        ConfigurationSection section = config.getConfigurationSection("trusted_players");
-        if (section == null) return;
-
-        for (String key : section.getKeys(false)) {
-            try {
-                UUID playerId = UUID.fromString(key);
-                ConfigurationSection playerSection = section.getConfigurationSection(key);
-                
-                if (playerSection != null) {
-                    String playerName = playerSection.getString("name", "Unknown");
-                    String typeStr = playerSection.getString("type", "TRUSTED_BUILDER");
-                    long addedAt = playerSection.getLong("added_at", System.currentTimeMillis());
-                    String addedBy = playerSection.getString("added_by", "Unknown");
-
-                    TrustedPlayer.TrustedPlayerType type = TrustedPlayer.TrustedPlayerType.valueOf(typeStr);
-                    TrustedPlayer trustedPlayer = new TrustedPlayer(playerId, playerName, type, addedAt, addedBy);
-                    trustedPlayers.put(playerId, trustedPlayer);
-                }
-            } catch (IllegalArgumentException e) {
-                plugin.getLogger().warning("Неверный UUID в конфигурации доверенных игроков: " + key);
+    
+    
+    @Override
+    public void saveTrustedPlayers() {
+        try {
+            // Clear existing data
+            for (String key : config.getKeys(false)) {
+                config.set(key, null);
             }
-        }
-        
-        plugin.getLogger().info("Загружено доверенных игроков: " + trustedPlayers.size());
-    }
-
-    /**
-     * Сохраняет доверенных игроков в конфигурацию
-     */
-    private void saveTrustedPlayers() {
-        config.set("trusted_players", null); // Очищаем секцию
-        
-        ConfigurationSection section = config.createSection("trusted_players");
-        
-        for (TrustedPlayer trustedPlayer : trustedPlayers.values()) {
-            String key = trustedPlayer.getPlayerId().toString();
-            ConfigurationSection playerSection = section.createSection(key);
             
-            playerSection.set("name", trustedPlayer.getPlayerName());
-            playerSection.set("type", trustedPlayer.getType().name());
-            playerSection.set("added_at", trustedPlayer.getAddedAt());
-            playerSection.set("added_by", trustedPlayer.getAddedBy());
+            // Save trusted players by world
+            for (Map.Entry<UUID, Map<UUID, TrustedPlayer>> worldEntry : worldTrustedPlayers.entrySet()) {
+                String worldKey = worldEntry.getKey().toString();
+                ConfigurationSection worldSection = config.createSection(worldKey);
+                
+                for (Map.Entry<UUID, TrustedPlayer> playerEntry : worldEntry.getValue().entrySet()) {
+                    String playerKey = playerEntry.getKey().toString();
+                    TrustedPlayer trustedPlayer = playerEntry.getValue();
+                    
+                    ConfigurationSection playerSection = worldSection.createSection(playerKey);
+                    playerSection.set("name", trustedPlayer.getPlayerName());
+                    playerSection.set("type", trustedPlayer.getType().name());
+                    playerSection.set("timestamp", trustedPlayer.getTimestamp());
+                    playerSection.set("addedBy", trustedPlayer.getAddedBy() != null ? trustedPlayer.getAddedBy().toString() : null);
+                }
+            }
+            
+            // Save to file
+            config.save(trustedPlayersFile);
+        } catch (IOException e) {
+            plugin.getLogger().severe("Ошибка при сохранении доверенных игроков: " + e.getMessage());
+        }
+    }
+    
+    @Override
+    public void loadTrustedPlayers() {
+        worldTrustedPlayers.clear();
+        
+        if (!trustedPlayersFile.exists()) {
+            return;
         }
         
         try {
-            config.save(trustedPlayersFile);
-        } catch (IOException e) {
-            plugin.getLogger().severe("Не удалось сохранить доверенных игроков: " + e.getMessage());
+            // Load the configuration
+            config.load(trustedPlayersFile);
+            
+            // Load trusted players by world
+            for (String worldKey : config.getKeys(false)) {
+                try {
+                    UUID worldId = UUID.fromString(worldKey);
+                    ConfigurationSection worldSection = config.getConfigurationSection(worldKey);
+                    
+                    if (worldSection != null) {
+                        Map<UUID, TrustedPlayer> worldPlayers = new HashMap<>();
+                        
+                        for (String playerKey : worldSection.getKeys(false)) {
+                            try {
+                                UUID playerId = UUID.fromString(playerKey);
+                                ConfigurationSection playerSection = worldSection.getConfigurationSection(playerKey);
+                                
+                                if (playerSection != null) {
+                                    String name = playerSection.getString("name", "Unknown");
+                                    TrustedPlayer.TrustedPlayerType type = TrustedPlayer.TrustedPlayerType.valueOf(playerSection.getString("type"));
+                                    long timestamp = playerSection.getLong("timestamp", System.currentTimeMillis());
+                                    String addedByStr = playerSection.getString("addedBy");
+                                    UUID addedBy = addedByStr != null ? UUID.fromString(addedByStr) : null;
+                                    
+                                    worldPlayers.put(playerId, new TrustedPlayer(playerId, name, type, timestamp, addedBy));
+                                }
+                            } catch (IllegalArgumentException e) {
+                                plugin.getLogger().warning("Неверный формат UUID игрока: " + playerKey);
+                            }
+                        }
+                        
+                        worldTrustedPlayers.put(worldId, worldPlayers);
+                    }
+                } catch (IllegalArgumentException e) {
+                    plugin.getLogger().warning("Неверный формат UUID мира: " + worldKey);
+                }
+            }
+        } catch (Exception e) {
+            plugin.getLogger().severe("Ошибка при загрузке доверенных игроков: " + e.getMessage());
+        }
+    }
+    
+    @Override
+    public void removePlayerFromAllTrustedLists(UUID playerId) {
+        if (playerId == null) {
+            return;
+        }
+        
+        boolean modified = false;
+        
+        for (Map<UUID, TrustedPlayer> worldPlayers : worldTrustedPlayers.values()) {
+            if (worldPlayers != null && worldPlayers.remove(playerId) != null) {
+                modified = true;
+            }
+        }
+        
+        if (modified) {
+            saveTrustedPlayers();
+        }
+    }
+    
+    @Override
+    public boolean canCodeInDevWorld(Player player) {
+        // Ops can always code
+        if (player.isOp()) {
+            return true;
+        }
+        
+        // Check if player is a trusted coder in any world
+        for (Map<UUID, TrustedPlayer> worldPlayers : worldTrustedPlayers.values()) {
+            TrustedPlayer trustedPlayer = worldPlayers.get(player.getUniqueId());
+            if (trustedPlayer != null && trustedPlayer.getType() == TrustedPlayer.TrustedPlayerType.TRUSTED_CODER) {
+                return true;
+            }
+        }
+        
+        return false;
+    }
+    
+    @Override
+    public void addTrustedPlayer(CreativeWorld world, Player trustedPlayer, Player owner) {
+        if (world == null || trustedPlayer == null || owner == null) {
+            throw new IllegalArgumentException("World, trusted player and owner cannot be null");
+        }
+        
+        UUID worldId = world.getWorldId();
+        UUID playerId = trustedPlayer.getUniqueId();
+        
+        // Initialize world entry if it doesn't exist
+        worldTrustedPlayers.computeIfAbsent(worldId, k -> new HashMap<>());
+        
+        // Check if player is already trusted
+        if (worldTrustedPlayers.get(worldId).containsKey(playerId)) {
+            return; // Already trusted
+        }
+        
+        // Add the player as trusted for this world
+        TrustedPlayer trusted = new TrustedPlayer(
+            playerId,
+            trustedPlayer.getName(),
+            TrustedPlayer.TrustedPlayerType.TRUSTED_BUILDER, // Default to builder
+            System.currentTimeMillis(),
+            owner.getUniqueId()
+        );
+        
+        worldTrustedPlayers.get(worldId).put(playerId, trusted);
+        saveTrustedPlayers();
+    }
+    
+    @Override
+    public void removeTrustedPlayer(CreativeWorld world, Player trustedPlayer, Player owner) {
+        if (world == null || trustedPlayer == null) {
+            return;
+        }
+        
+        UUID worldId = world.getWorldId();
+        UUID playerId = trustedPlayer.getUniqueId();
+        
+        // Remove the player from the world's trusted players if they exist
+        if (worldTrustedPlayers.containsKey(worldId)) {
+            Map<UUID, TrustedPlayer> worldPlayers = worldTrustedPlayers.get(worldId);
+            if (worldPlayers != null && worldPlayers.remove(playerId) != null) {
+                saveTrustedPlayers();
+            }
+        }
+    }
+    
+    @Override
+    public boolean isTrustedPlayer(CreativeWorld world, Player player) {
+        if (world == null || player == null) {
+            return false;
+        }
+        
+        UUID worldId = world.getWorldId();
+        UUID playerId = player.getUniqueId();
+        
+        // Check if the world has any trusted players
+        if (!worldTrustedPlayers.containsKey(worldId)) {
+            return false;
+        }
+        
+        // Get the world's trusted players map
+        Map<UUID, TrustedPlayer> worldPlayers = worldTrustedPlayers.get(worldId);
+        
+        // Check if the player is in the trusted players map
+        return worldPlayers != null && worldPlayers.containsKey(playerId);
+    }
+    
+    @Override
+    public List<TrustedPlayer> getTrustedPlayers(CreativeWorld world) {
+        if (world == null) {
+            return new ArrayList<>();
+        }
+        
+        UUID worldId = world.getWorldId();
+        
+        // Return an empty list if the world has no trusted players
+        if (!worldTrustedPlayers.containsKey(worldId)) {
+            return new ArrayList<>();
+        }
+        
+        Map<UUID, TrustedPlayer> worldPlayers = worldTrustedPlayers.get(worldId);
+        return worldPlayers != null ? new ArrayList<>(worldPlayers.values()) : new ArrayList<>();
+    }
+    
+    @Override
+    public List<TrustedPlayer> getAllTrustedPlayers() {
+        List<TrustedPlayer> allPlayers = new ArrayList<>();
+        
+        for (Map<UUID, TrustedPlayer> worldPlayers : worldTrustedPlayers.values()) {
+            if (worldPlayers != null) {
+                allPlayers.addAll(worldPlayers.values());
+            }
+        }
+        
+        return allPlayers;
+    }
+    
+    @Override
+    public List<TrustedPlayer> getTrustedBuilders() {
+        List<TrustedPlayer> builders = new ArrayList<>();
+        
+        for (Map<UUID, TrustedPlayer> worldPlayers : worldTrustedPlayers.values()) {
+            if (worldPlayers != null) {
+                for (TrustedPlayer player : worldPlayers.values()) {
+                    if (player != null && player.getType() == TrustedPlayer.TrustedPlayerType.TRUSTED_BUILDER) {
+                        builders.add(player);
+                    }
+                }
+            }
+        }
+        
+        return builders;
+    }
+    
+    @Override
+    public List<TrustedPlayer> getTrustedCoders() {
+        List<TrustedPlayer> coders = new ArrayList<>();
+        
+        for (Map<UUID, TrustedPlayer> worldPlayers : worldTrustedPlayers.values()) {
+            if (worldPlayers != null) {
+                for (TrustedPlayer player : worldPlayers.values()) {
+                    if (player != null && player.getType() == TrustedPlayer.TrustedPlayerType.TRUSTED_CODER) {
+                        coders.add(player);
+                    }
+                }
+            }
+        }
+        
+        return coders;
+    }
+    
+    @Override
+    public List<CreativeWorld> getTrustedWorlds(Player player) {
+        List<CreativeWorld> trustedWorlds = new ArrayList<>();
+        
+        if (player == null) {
+            return trustedWorlds;
+        }
+        
+        UUID playerId = player.getUniqueId();
+        
+        for (Map.Entry<UUID, Map<UUID, TrustedPlayer>> entry : worldTrustedPlayers.entrySet()) {
+            if (entry.getValue() != null && entry.getValue().containsKey(playerId)) {
+                // Convert UUID to string for getWorld method
+                CreativeWorld world = plugin.getWorldManager().getWorld(entry.getKey().toString());
+                if (world != null) {
+                    trustedWorlds.add(world);
+                }
+            }
+        }
+        
+        return trustedWorlds;
+    }
+    
+    @Override
+    public void clearTrustedPlayers(CreativeWorld world, Player owner) {
+        if (world == null || owner == null) {
+            return;
+        }
+        
+        UUID worldId = world.getWorldId();
+        if (!worldTrustedPlayers.containsKey(worldId)) {
+            return;
+        }
+        
+        Map<UUID, TrustedPlayer> players = worldTrustedPlayers.get(worldId);
+        if (players != null && !players.isEmpty()) {
+            players.clear();
+            saveTrustedPlayers();
+        }
+    }
+    
+    @Override
+    public TrustedPlayer getTrustedPlayer(UUID playerId) {
+        if (playerId == null) {
+            return null;
+        }
+        
+        for (Map<UUID, TrustedPlayer> worldPlayers : worldTrustedPlayers.values()) {
+            if (worldPlayers != null) {
+                TrustedPlayer player = worldPlayers.get(playerId);
+                if (player != null) {
+                    return player;
+                }
+            }
+        }
+        return null;
+    }
+    
+    @Override
+    public int getTrustedPlayerCount(CreativeWorld world) {
+        if (world == null) {
+            return 0;
+        }
+        
+        UUID worldId = world.getWorldId();
+        if (!worldTrustedPlayers.containsKey(worldId)) {
+            return 0;
+        }
+        
+        Map<UUID, TrustedPlayer> worldPlayers = worldTrustedPlayers.get(worldId);
+        return worldPlayers != null ? worldPlayers.size() : 0;
+    }
+    
+    @Override
+    public void shutdown() {
+        try {
+            saveTrustedPlayers();
+        } catch (Exception e) {
+            plugin.getLogger().severe("Ошибка при сохранении доверенных игроков при выключении: " + e.getMessage());
+        } finally {
+            worldTrustedPlayers.clear();
         }
     }
 
     /**
-     * Получает информацию о доверенном игроке
+     * Gets trusted builders with their data for a specific world
+     * @param world The world to get trusted builders for
+     * @return List of trusted builders in the specified world
      */
-    public TrustedPlayer getTrustedPlayer(UUID playerId) {
-        return trustedPlayers.get(playerId);
-    }
-
-    /**
-     * Проверяет, может ли игрок строить в мире разработки
-     */
-    public boolean canBuildInDevWorld(Player player) {
-        // Операторы всегда могут строить
-        if (player.isOp()) return true;
+    public List<TrustedPlayer> getTrustedBuildersData(CreativeWorld world) {
+        if (world == null) {
+            return new ArrayList<>();
+        }
         
-        // Проверяем доверенных строителей
-        return isTrustedBuilder(player);
-    }
-
-    /**
-     * Проверяет, может ли игрок программировать в мире разработки
-     */
-    public boolean canCodeInDevWorld(Player player) {
-        // Операторы всегда могут программировать
-        if (player.isOp()) return true;
+        List<TrustedPlayer> builders = new ArrayList<>();
+        UUID worldId = world.getWorldId();
         
-        // Проверяем доверенных программистов
-        return isTrustedCoder(player);
+        if (worldTrustedPlayers.containsKey(worldId)) {
+            Map<UUID, TrustedPlayer> worldPlayers = worldTrustedPlayers.get(worldId);
+            if (worldPlayers != null) {
+                for (TrustedPlayer player : worldPlayers.values()) {
+                    if (player != null && player.getType() == TrustedPlayer.TrustedPlayerType.TRUSTED_BUILDER) {
+                        builders.add(player);
+                    }
+                }
+            }
+        }
+        
+        return builders;
     }
-} 
+    
+    /**
+     * Gets trusted coders with their data for a specific world
+     * @param world The world to get trusted coders for
+     * @return List of trusted coders in the specified world
+     */
+    public List<TrustedPlayer> getTrustedCodersData(CreativeWorld world) {
+        if (world == null) {
+            return new ArrayList<>();
+        }
+        
+        List<TrustedPlayer> coders = new ArrayList<>();
+        UUID worldId = world.getWorldId();
+        
+        if (worldTrustedPlayers.containsKey(worldId)) {
+            Map<UUID, TrustedPlayer> worldPlayers = worldTrustedPlayers.get(worldId);
+            if (worldPlayers != null) {
+                for (TrustedPlayer player : worldPlayers.values()) {
+                    if (player != null && player.getType() == TrustedPlayer.TrustedPlayerType.TRUSTED_CODER) {
+                        coders.add(player);
+                    }
+                }
+            }
+        }
+        
+        return coders;
+    }
+}
