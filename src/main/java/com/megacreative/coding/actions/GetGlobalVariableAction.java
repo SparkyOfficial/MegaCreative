@@ -31,7 +31,7 @@ public class GetGlobalVariableAction implements BlockAction {
         String localVarName = resolver.resolve(context, rawLocalVar).asString();
 
         if (varName != null && !varName.isEmpty() && localVarName != null && !localVarName.isEmpty()) {
-            Object globalValue = context.getPlugin().getDataManager().getPlayerVariable(player.getUniqueId(), varName);
+            Object globalValue = variableManager.getPlayerVariable(player.getUniqueId(), varName, null);
             context.setVariable(localVarName, globalValue != null ? globalValue : "");
             player.sendMessage("§a✓ Глобальная переменная '" + varName + "' загружена в локальную '" + localVarName + "'");
         }

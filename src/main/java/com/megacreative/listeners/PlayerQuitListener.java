@@ -20,7 +20,7 @@ public class PlayerQuitListener implements Listener {
         plugin.getScoreboardManager().removeScoreboard(event.getPlayer());
         
         // Сохраняем данные игрока
-        plugin.getDataManager().savePlayerData(event.getPlayer());
+        plugin.getVariableManager().savePlayerData(event.getPlayer());
         
         // Удаление игрока из онлайна всех миров
         plugin.getWorldManager().getAllPublicWorlds().forEach(world -> 

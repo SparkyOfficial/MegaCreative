@@ -30,7 +30,7 @@ public class SetGlobalVariableAction implements BlockAction {
 
         String varName = varNameValue.asString();
         if (varName != null && !varName.isEmpty()) {
-            context.getPlugin().getDataManager().setPlayerVariable(player.getUniqueId(), varName, value.asString());
+            variableManager.setPlayerVariable(player.getUniqueId(), varName, value.getValue());
             player.sendMessage("§a✓ Глобальная переменная '" + varName + "' установлена в: " + value.asString());
         }
     }

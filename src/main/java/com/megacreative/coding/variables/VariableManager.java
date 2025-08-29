@@ -10,6 +10,7 @@ import java.io.File;
 import java.io.IOException;
 import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.UUID;
 
 /**
  * Advanced variable management system with support for:
@@ -29,6 +30,9 @@ public class VariableManager {
     private final Map<String, Map<String, DataValue>> globalVariables = new ConcurrentHashMap<>();
     private final Map<String, DataValue> persistentVariables = new ConcurrentHashMap<>();
     private final Map<String, DynamicVariable> dynamicVariables = new ConcurrentHashMap<>();
+    
+    // Player-specific variables (from DataManager functionality)
+    private final Map<UUID, Map<String, DataValue>> playerVariables = new ConcurrentHashMap<>();
     
     // Variable metadata
     private final Map<String, VariableMetadata> variableMetadata = new ConcurrentHashMap<>();
@@ -183,16 +187,155 @@ public class VariableManager {
         return null;
     }
     
+    // === PLAYER VARIABLES (MIGRATED FROM DATAMANAGER) ===
+    
+    /**
+     * Get player-specific variable
+     */
+    public DataValue getPlayerVariable(UUID playerId, String name) {
+        Map<String, DataValue> playerVars = playerVariables.get(playerId);
+        return playerVars != null ? playerVars.get(name) : null;
+    }
+    
+    /**
+     * Set player-specific variable
+     */
+    public void setPlayerVariable(UUID playerId, String name, DataValue value) {
+        playerVariables.computeIfAbsent(playerId, k -> new ConcurrentHashMap<>()).put(name, value);
+        updateMetadata(name, VariableScope.PLAYER, value.getType());
+        plugin.getLogger().fine("Set player variable: " + playerId + "." + name + " = " + value.asString());
+    }
+    
+    /**
+     * Convenience method for setting player variable from Object (DataManager compatibility)
+     */
+    public void setPlayerVariable(UUID playerId, String name, Object value) {
+        setPlayerVariable(playerId, name, DataValue.fromObject(value));
+    }
+    
+    /**
+     * Get player variable as Object (DataManager compatibility)
+     */
+    public Object getPlayerVariable(UUID playerId, String name, Object defaultValue) {
+        DataValue value = getPlayerVariable(playerId, name);
+        return value != null ? value.getValue() : defaultValue;
+    }
+    
+    /**
+     * Increment numeric player variable
+     */
+    public void incrementPlayerVariable(UUID playerId, String name, double amount) {
+        DataValue current = getPlayerVariable(playerId, name);
+        double currentValue = 0.0;
+        
+        if (current != null && current.getType() == ValueType.NUMBER) {
+            currentValue = current.asNumber().doubleValue();
+        }
+        
+        setPlayerVariable(playerId, name, DataValue.fromObject(currentValue + amount));
+    }
+    
+    /**
+     * Load player data from file (migrated from DataManager)
+     */
+    public void loadPlayerData(Player player) {
+        UUID playerId = player.getUniqueId();
+        File playerFile = new File(plugin.getDataFolder(), "players/" + playerId + ".yml");
+        
+        if (playerFile.exists()) {
+            YamlConfiguration config = YamlConfiguration.loadConfiguration(playerFile);
+            Map<String, DataValue> vars = new ConcurrentHashMap<>();
+            
+            if (config.contains("variables")) {
+                for (String key : config.getConfigurationSection("variables").getKeys(false)) {
+                    try {
+                        Object rawValue = config.get("variables." + key);
+                        DataValue value = DataValue.fromObject(rawValue);
+                        vars.put(key, value);
+                        updateMetadata(key, VariableScope.PLAYER, value.getType());
+                    } catch (Exception e) {
+                        plugin.getLogger().warning("Failed to load player variable " + key + " for " + player.getName() + ": " + e.getMessage());
+                    }
+                }
+            }
+            
+            playerVariables.put(playerId, vars);
+            plugin.getLogger().info("Loaded player data: " + player.getName() + " (" + vars.size() + " variables)");
+        }
+    }
+    
+    /**
+     * Save player data to file (migrated from DataManager)
+     */
+    public void savePlayerData(Player player) {
+        UUID playerId = player.getUniqueId();
+        Map<String, DataValue> vars = playerVariables.get(playerId);
+        
+        if (vars != null && !vars.isEmpty()) {
+            File playerFile = new File(plugin.getDataFolder(), "players/" + playerId + ".yml");
+            playerFile.getParentFile().mkdirs();
+            
+            YamlConfiguration config = new YamlConfiguration();
+            for (Map.Entry<String, DataValue> entry : vars.entrySet()) {
+                config.set("variables." + entry.getKey(), entry.getValue().getValue());
+            }
+            
+            try {
+                config.save(playerFile);
+                plugin.getLogger().info("Saved player data: " + player.getName() + " (" + vars.size() + " variables)");
+            } catch (IOException e) {
+                plugin.getLogger().severe("Error saving player data for " + player.getName() + ": " + e.getMessage());
+            }
+        }
+    }
+    
+    /**
+     * Get server variable as Object (DataManager compatibility)
+     */
+    public Object getServerVariable(String name) {
+        DataValue value = getPersistentVariable(name);
+        return value != null ? value.getValue() : null;
+    }
+    
+    /**
+     * Set server variable from Object (DataManager compatibility)
+     */
+    public void setServerVariable(String name, Object value) {
+        setPersistentVariable(name, DataValue.fromObject(value));
+    }
+    
+    /**
+     * Increment numeric server variable
+     */
+    public void incrementServerVariable(String name, double amount) {
+        DataValue current = getPersistentVariable(name);
+        double currentValue = 0.0;
+        
+        if (current != null && current.getType() == ValueType.NUMBER) {
+            currentValue = current.asNumber().doubleValue();
+        }
+        
+        setPersistentVariable(name, DataValue.fromObject(currentValue + amount));
+    }
+    
     // === UNIFIED VARIABLE ACCESS ===
     
     /**
      * Gets a variable from any scope with priority order:
      * 1. Local variables
      * 2. Global variables  
-     * 3. Persistent variables
-     * 4. Dynamic variables
+     * 3. Player variables (if playerId provided)
+     * 4. Persistent variables
+     * 5. Dynamic variables
      */
     public DataValue getVariable(String name, String scriptId, String worldId) {
+        return getVariable(name, scriptId, worldId, null);
+    }
+    
+    /**
+     * Gets a variable from any scope with priority order (with optional player context)
+     */
+    public DataValue getVariable(String name, String scriptId, String worldId, UUID playerId) {
         // Check local first
         DataValue value = getLocalVariable(scriptId, name);
         if (value != null) return value;
@@ -200,6 +343,12 @@ public class VariableManager {
         // Check global
         value = getGlobalVariable(worldId, name);
         if (value != null) return value;
+        
+        // Check player variables if player context provided
+        if (playerId != null) {
+            value = getPlayerVariable(playerId, name);
+            if (value != null) return value;
+        }
         
         // Check persistent
         value = getPersistentVariable(name);
@@ -215,15 +364,25 @@ public class VariableManager {
     /**
      * Sets a variable in the appropriate scope based on prefix
      * - local.name -> local scope
-     * - global.name -> global scope  
-     * - persist.name -> persistent scope
+     * - world.name -> global scope  
+     * - player.name -> player scope
+     * - server.name -> persistent scope
      * - name -> local scope (default)
      */
     public void setVariable(String name, DataValue value, String scriptId, String worldId) {
+        setVariable(name, value, scriptId, worldId, null);
+    }
+    
+    /**
+     * Sets a variable in the appropriate scope (with optional player context)
+     */
+    public void setVariable(String name, DataValue value, String scriptId, String worldId, UUID playerId) {
         if (name.startsWith("local.")) {
             setLocalVariable(scriptId, name.substring(6), value);
         } else if (name.startsWith("world.")) {
             setGlobalVariable(worldId, name.substring(6), value);
+        } else if (name.startsWith("player.") && playerId != null) {
+            setPlayerVariable(playerId, name.substring(7), value);
         } else if (name.startsWith("server.")) {
             setPersistentVariable(name.substring(7), value);
         } else {
@@ -235,29 +394,41 @@ public class VariableManager {
     // === VARIABLE OPERATIONS ===
     
     public void incrementVariable(String name, String scriptId, String worldId, Number amount) {
-        DataValue current = getVariable(name, scriptId, worldId);
+        incrementVariable(name, scriptId, worldId, null, amount);
+    }
+    
+    public void incrementVariable(String name, String scriptId, String worldId, UUID playerId, Number amount) {
+        DataValue current = getVariable(name, scriptId, worldId, playerId);
         if (current != null && current.getType() == ValueType.NUMBER) {
             Number newValue = current.asNumber().doubleValue() + amount.doubleValue();
             DataValue newDataValue = DataValue.fromObject(newValue);
-            setVariable(name, newDataValue, scriptId, worldId);
+            setVariable(name, newDataValue, scriptId, worldId, playerId);
         }
     }
     
     public void multiplyVariable(String name, String scriptId, String worldId, Number factor) {
-        DataValue current = getVariable(name, scriptId, worldId);
+        multiplyVariable(name, scriptId, worldId, null, factor);
+    }
+    
+    public void multiplyVariable(String name, String scriptId, String worldId, UUID playerId, Number factor) {
+        DataValue current = getVariable(name, scriptId, worldId, playerId);
         if (current != null && current.getType() == ValueType.NUMBER) {
             Number newValue = current.asNumber().doubleValue() * factor.doubleValue();
             DataValue newDataValue = DataValue.fromObject(newValue);
-            setVariable(name, newDataValue, scriptId, worldId);
+            setVariable(name, newDataValue, scriptId, worldId, playerId);
         }
     }
     
     public void appendToVariable(String name, String scriptId, String worldId, String text) {
-        DataValue current = getVariable(name, scriptId, worldId);
+        appendToVariable(name, scriptId, worldId, null, text);
+    }
+    
+    public void appendToVariable(String name, String scriptId, String worldId, UUID playerId, String text) {
+        DataValue current = getVariable(name, scriptId, worldId, playerId);
         if (current != null) {
             String newValue = current.asString() + text;
             DataValue newDataValue = DataValue.fromObject(newValue);
-            setVariable(name, newDataValue, scriptId, worldId);
+            setVariable(name, newDataValue, scriptId, worldId, playerId);
         }
     }
     
@@ -275,6 +446,7 @@ public class VariableManager {
         Set<String> names = new HashSet<>();
         localVariables.values().forEach(map -> names.addAll(map.keySet()));
         globalVariables.values().forEach(map -> names.addAll(map.keySet()));
+        playerVariables.values().forEach(map -> names.addAll(map.keySet()));
         names.addAll(persistentVariables.keySet());
         names.addAll(dynamicVariables.keySet());
         return names;
@@ -313,6 +485,7 @@ public class VariableManager {
         // Clear memory
         localVariables.clear();
         globalVariables.clear();
+        playerVariables.clear();
         dynamicVariables.clear();
         variableMetadata.clear();
         

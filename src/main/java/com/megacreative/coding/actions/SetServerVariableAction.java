@@ -30,7 +30,7 @@ public class SetServerVariableAction implements BlockAction {
 
         String varName = varNameValue.asString();
         if (varName != null && !varName.isEmpty()) {
-            context.getPlugin().getDataManager().setServerVariable(varName, value.asString());
+            variableManager.setServerVariable(varName, value.getValue());
             player.sendMessage("§a✓ Серверная переменная '" + varName + "' установлена в: " + value.asString());
         }
     }

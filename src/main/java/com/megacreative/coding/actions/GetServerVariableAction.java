@@ -32,7 +32,7 @@ public class GetServerVariableAction implements BlockAction {
         String localVarName = localVarValue.asString();
 
         if (varName != null && !varName.isEmpty() && localVarName != null && !localVarName.isEmpty()) {
-            Object serverValue = context.getPlugin().getDataManager().getServerVariable(varName);
+            Object serverValue = variableManager.getServerVariable(varName);
             context.setVariable(localVarName, serverValue != null ? serverValue : "");
             player.sendMessage("§a✓ Серверная переменная '" + varName + "' загружена в локальную '" + localVarName + "'");
         }
