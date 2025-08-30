@@ -18,10 +18,7 @@ public class GiveItemAction implements BlockAction {
 
         if (player == null || block == null) return;
 
-        VariableManager variableManager = context.getPlugin().getVariableManager();
-        if (variableManager == null) return;
-        
-        ParameterResolver resolver = new ParameterResolver(variableManager);
+        ParameterResolver resolver = new ParameterResolver(context);
 
         // 1. Получаем "сырые" значения из параметров блока
         DataValue rawItemName = block.getParameter("item");

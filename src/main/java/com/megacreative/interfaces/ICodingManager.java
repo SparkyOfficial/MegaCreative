@@ -116,7 +116,8 @@ public interface ICodingManager {
     void clearVariables();
     
     /**
-     * Получает исполнитель скриптов
+     * Получает исполнитель скриптов.
+     * @return ScriptExecutor для выполнения скриптов
      */
     ScriptExecutor getScriptExecutor();
 }

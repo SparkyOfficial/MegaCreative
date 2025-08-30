@@ -1,8 +1,8 @@
 package com.megacreative.coding.groups;
 
 import com.megacreative.coding.CodeBlock;
-import lombok.extern.java.Log;
 import org.bukkit.Location;
+import java.util.logging.Logger;
 
 import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
@@ -10,8 +10,8 @@ import java.util.concurrent.ConcurrentHashMap;
 /**
  * Manages group templates for creating reusable block group configurations
  */
-@Log
 public class GroupTemplateManager {
+    private static final Logger log = Logger.getLogger(GroupTemplateManager.class.getName());
     
     private final BlockGroupManager groupManager;
     private final Map<String, GroupTemplate> templates = new ConcurrentHashMap<>();

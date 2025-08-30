@@ -3,7 +3,6 @@ package com.megacreative.coding.events;
 import com.megacreative.MegaCreative;
 import com.megacreative.coding.CodeBlock;
 import com.megacreative.coding.values.DataValue;
-import lombok.extern.java.Log;
 import org.bukkit.Bukkit;
 import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
@@ -19,8 +18,8 @@ import java.util.logging.Level;
 /**
  * Manages custom events - registration, triggering, and handling
  */
-@Log
 public class CustomEventManager implements Listener {
+    private static final java.util.logging.Logger log = java.util.logging.Logger.getLogger(CustomEventManager.class.getName());
     
     private final MegaCreative plugin;
     
@@ -709,10 +708,16 @@ public class CustomEventManager implements Listener {
     /**
      * Gets events by metadata
      */
+    /**
+     * Gets events by metadata
+     * @param key The metadata key to search for
+     * @param value The expected metadata value
+     * @return List of events with matching metadata
+     */
     public List<CustomEvent> getEventsByMetadata(String key, Object value) {
         List<CustomEvent> result = new ArrayList<>();
         for (CustomEvent event : eventDefinitions.values()) {
-            Object metadataValue = event.getMetadata().get(key);
+            Object metadataValue = event.getMetadata(key, Object.class);
             if (metadataValue != null && metadataValue.equals(value)) {
                 result.add(event);
             }

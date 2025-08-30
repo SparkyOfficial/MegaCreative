@@ -1,6 +1,6 @@
 package com.megacreative.services;
 
-import lombok.extern.java.Log;
+import java.util.logging.Logger;
 import org.bukkit.Material;
 import org.bukkit.configuration.ConfigurationSection;
 import org.bukkit.configuration.file.YamlConfiguration;
@@ -15,8 +15,9 @@ import java.util.logging.Level;
  * Service for loading and managing block configurations from coding_blocks.yml
  * Replaces hardcoded material mappings with config-driven approach
  */
-@Log
 public class BlockConfigService {
+    
+    private static final Logger log = Logger.getLogger(BlockConfigService.class.getName());
     
     private final Plugin plugin;
     private final Map<Material, BlockConfig> materialToConfig = new HashMap<>();

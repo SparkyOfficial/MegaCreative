@@ -19,10 +19,9 @@ public class MobNearCondition implements BlockCondition {
 
         if (player == null || block == null) return false;
 
-        VariableManager variableManager = context.getPlugin().getVariableManager();
-        if (variableManager == null) return false;
+        if (context == null) return false;
         
-        ParameterResolver resolver = new ParameterResolver(variableManager);
+        ParameterResolver resolver = new ParameterResolver(context);
 
         // Получаем и разрешаем параметры
         DataValue rawMobType = block.getParameter("mob");

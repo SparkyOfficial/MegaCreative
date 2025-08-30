@@ -52,6 +52,14 @@ public interface DataValue extends ConfigurationSerializable, Cloneable {
     boolean isValid();
     
     /**
+     * Checks if this value represents text
+     * @return true if this value is a string or can be converted to a string
+     */
+    default boolean isText() {
+        return getValue() instanceof String || getValue() instanceof CharSequence;
+    }
+    
+    /**
      * Gets a human-readable description of this value
      */
     String getDescription();

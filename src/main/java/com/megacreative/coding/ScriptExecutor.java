@@ -30,6 +30,7 @@ import com.megacreative.coding.actions.PlayParticleEffectAction;
 import com.megacreative.coding.actions.RemoveItemsAction;
 import com.megacreative.coding.actions.SetArmorAction;
 import com.megacreative.coding.monitoring.ScriptPerformanceMonitor;
+import com.megacreative.coding.monitoring.model.ExecutionTracker;
 import com.megacreative.coding.values.DataValue;
 import org.bukkit.Location;
 import org.bukkit.Material;
@@ -199,7 +200,7 @@ public class ScriptExecutor {
         }
         
         // Start performance tracking for the entire script
-        ScriptPerformanceMonitor.ExecutionTracker scriptTracker = null;
+        ExecutionTracker scriptTracker = null;
         if (playerId != null) {
             scriptStartTimes.put(playerId, System.currentTimeMillis());
             playerExecutionCounts.put(playerId, playerExecutionCounts.getOrDefault(playerId, 0) + 1);
@@ -266,7 +267,7 @@ public class ScriptExecutor {
         ExecutionContext currentContext = context.withCurrentBlock(block, blockLocation);
         
         // 4. Start performance tracking for this block
-        ScriptPerformanceMonitor.ExecutionTracker blockTracker = null;
+        ExecutionTracker blockTracker = null;
         if (playerId != null) {
             ScriptPerformanceMonitor monitor = plugin.getScriptPerformanceMonitor();
             if (monitor != null) {
@@ -548,6 +549,24 @@ public class ScriptExecutor {
      */
     public int getMaxScriptSize() {
         return maxScriptSize;
+    }
+    
+    /**
+     * Cancels a running script by its ID
+     * @param scriptId The ID of the script to cancel
+     */
+    public void cancelScript(String scriptId) {
+        // TODO: Implement script cancellation logic
+        plugin.getLogger().info("Requested cancellation of script: " + scriptId);
+    }
+    
+    /**
+     * Shuts down the script executor and cleans up resources
+     */
+    public void shutdown() {
+        // Stop all repeating tasks
+        plugin.getLogger().info("Shutting down ScriptExecutor...");
+        // Additional cleanup can be added here
     }
     
     /**

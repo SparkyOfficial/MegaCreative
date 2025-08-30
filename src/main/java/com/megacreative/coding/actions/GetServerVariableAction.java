@@ -5,6 +5,7 @@ import com.megacreative.coding.CodeBlock;
 import com.megacreative.coding.ExecutionContext;
 import com.megacreative.coding.ParameterResolver;
 import com.megacreative.coding.values.DataValue;
+import com.megacreative.coding.variables.VariableManager;
 import org.bukkit.entity.Player;
 
 public class GetServerVariableAction implements BlockAction {
@@ -16,6 +17,7 @@ public class GetServerVariableAction implements BlockAction {
         if (player == null || block == null) return;
 
         ParameterResolver resolver = new ParameterResolver(context);
+        VariableManager variableManager = context.getPlugin().getVariableManager();
 
         // Получаем и разрешаем параметры
         DataValue rawVarName = block.getParameter("var");
@@ -23,12 +25,12 @@ public class GetServerVariableAction implements BlockAction {
 
         if (rawVarName == null || rawLocalVar == null) return;
 
-        String varName = resolver.resolve(rawVarName).asString();
-        String localVarName = resolver.resolve(rawLocalVar).asString();
+        String varName = resolver.resolve(context, rawVarName).asString();
+        String localVarName = resolver.resolve(context, rawLocalVar).asString();
 
         if (varName != null && !varName.isEmpty() && localVarName != null && !localVarName.isEmpty()) {
-            Object serverValue = context.getPersistentVariable(varName);
-            context.setVariable(localVarName, serverValue != null ? serverValue : "");
+            DataValue serverValue = variableManager.getPersistentVariable(varName);
+            context.setVariable(localVarName, serverValue != null ? serverValue.getValue() : "");
             player.sendMessage("§a✓ Серверная переменная '" + varName + "' загружена в локальную '" + localVarName + "'");
         }
     }

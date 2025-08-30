@@ -18,11 +18,11 @@ public class BroadcastAction implements BlockAction {
 
         if (block == null || variableManager == null) return;
         
-        ParameterResolver resolver = new ParameterResolver(variableManager);
+        ParameterResolver resolver = new ParameterResolver(context);
         
         DataValue messageValue = block.getParameter("message");
         if (messageValue != null) {
-            DataValue resolvedMessage = resolver.resolve(context, messageValue);
+            DataValue resolvedMessage = resolver.resolve(messageValue);
             String message = resolvedMessage.asString();
             
             if (player != null) {

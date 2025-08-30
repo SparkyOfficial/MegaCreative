@@ -1,8 +1,9 @@
 package com.megacreative.coding.events;
 
 import com.megacreative.coding.values.DataValue;
-import lombok.Data;
 import org.bukkit.entity.Player;
+import java.util.Objects;
+import java.util.logging.Logger;
 
 import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
@@ -11,8 +12,8 @@ import java.util.function.Predicate;
 /**
  * Advanced event trigger system supporting event chaining, conditional triggering, and scheduled events
  */
-@Data
 public class AdvancedEventTrigger {
+    private static final Logger log = Logger.getLogger(AdvancedEventTrigger.class.getName());
     
     private final String triggerId;
     private final String eventName;
@@ -28,6 +29,45 @@ public class AdvancedEventTrigger {
     private final boolean isGlobal;
     
     private long createdTime;
+    
+    // Getters and Setters
+    public String getTriggerId() { return triggerId; }
+    public String getEventName() { return eventName; }
+    public Map<String, DataValue> getEventData() { return new HashMap<>(eventData); }
+    public TriggerCondition getCondition() { return condition; }
+    public List<EventChain> getEventChains() { return new ArrayList<>(eventChains); }
+    public long getDelayMs() { return delayMs; }
+    public int getRepeatCount() { return repeatCount; }
+    public long getRepeatIntervalMs() { return repeatIntervalMs; }
+    public UUID getOwnerId() { return ownerId; }
+    public String getWorldName() { return worldName; }
+    public boolean isGlobal() { return isGlobal; }
+    public long getCreatedTime() { return createdTime; }
+    public void setCreatedTime(long createdTime) { this.createdTime = createdTime; }
+    
+    // equals and hashCode
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) return true;
+        if (o == null || getClass() != o.getClass()) return false;
+        AdvancedEventTrigger that = (AdvancedEventTrigger) o;
+        return Objects.equals(triggerId, that.triggerId);
+    }
+    
+    @Override
+    public int hashCode() {
+        return Objects.hash(triggerId);
+    }
+    
+    @Override
+    public String toString() {
+        return "AdvancedEventTrigger{" +
+               "triggerId='" + triggerId + '\'' +
+               ", eventName='" + eventName + '\'' +
+               ", ownerId=" + ownerId +
+               ", isGlobal=" + isGlobal +
+               '}';
+    }
     private int executionCount = 0;
     private boolean isActive = true;
     
@@ -113,12 +153,16 @@ public class AdvancedEventTrigger {
     /**
      * Event chain that can be triggered after the main event
      */
-    @Data
     public static class EventChain {
         private final String chainedEventName;
         private final Map<String, Object> chainedEventData;
         private final long delayMs;
         private final TriggerCondition condition;
+        
+        public String getChainedEventName() { return chainedEventName; }
+        public Map<String, Object> getChainedEventData() { return new HashMap<>(chainedEventData); }
+        public long getDelayMs() { return delayMs; }
+        public TriggerCondition getCondition() { return condition; }
         
         public EventChain(String chainedEventName, Map<String, Object> chainedEventData, 
                          long delayMs, TriggerCondition condition) {

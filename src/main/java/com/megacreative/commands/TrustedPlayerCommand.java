@@ -286,7 +286,7 @@ public class TrustedPlayerCommand implements CommandExecutor, TabCompleter {
         
         // Open the GUI
         try {
-            new com.megacreative.gui.TrustedPlayersGUI(plugin, player, world).open();
+            new com.megacreative.gui.TrustedPlayersGUI(plugin, player).open();
             player.sendMessage("§a✅ Открыто меню управления доверенными игроками!");
         } catch (Exception e) {
             player.sendMessage("§c❌ Ошибка при открытии меню: " + e.getMessage());

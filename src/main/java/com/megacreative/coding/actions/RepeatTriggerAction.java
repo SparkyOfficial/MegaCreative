@@ -25,10 +25,9 @@ public class RepeatTriggerAction implements BlockAction {
         if (player == null || block == null) return;
 
         // Получаем и разрешаем параметры
-        VariableManager variableManager = context.getPlugin().getVariableManager();
-        if (variableManager == null) return;
+        if (context == null) return;
         
-        ParameterResolver resolver = new ParameterResolver(variableManager);
+        ParameterResolver resolver = new ParameterResolver(context);
         
         DataValue rawTicks = block.getParameter("ticks");
         DataValue rawAction = block.getParameter("action");

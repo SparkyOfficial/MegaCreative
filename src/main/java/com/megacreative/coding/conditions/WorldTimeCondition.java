@@ -16,8 +16,7 @@ public class WorldTimeCondition implements BlockCondition {
 
         if (player == null || block == null) return false;
 
-        VariableManager variableManager = context.getPlugin().getVariableManager();
-        ParameterResolver resolver = new ParameterResolver(variableManager);
+        ParameterResolver resolver = new ParameterResolver(context);
 
         // Получаем и разрешаем параметры
         DataValue rawTime = block.getParameter("time");

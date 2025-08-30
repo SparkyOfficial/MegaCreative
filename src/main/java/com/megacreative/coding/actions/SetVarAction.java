@@ -5,14 +5,11 @@ import com.megacreative.coding.CodeBlock;
 import com.megacreative.coding.ExecutionContext;
 import com.megacreative.coding.ParameterResolver;
 import com.megacreative.coding.values.DataValue;
-import com.megacreative.coding.values.types.TextValue;
-import com.megacreative.coding.variables.VariableManager;
-import com.megacreative.coding.variables.VariableScope;
 import org.bukkit.entity.Player;
 
 /**
- * Advanced variable setting action with full DataValue and VariableManager support
- * Supports multiple scopes: Local, World, Player, Server
+ * Advanced variable setting action with full DataValue and ExecutionContext support
+ * Supports multiple scopes: Local, Global, Player, Server
  * Uses type-safe DataValue system for proper variable handling
  */
 public class SetVarAction implements BlockAction {
@@ -24,65 +21,54 @@ public class SetVarAction implements BlockAction {
         
         if (player == null || block == null) return;
         
-        ParameterResolver resolver = new ParameterResolver(context);
-        
-        // Get variable name (required)
-        DataValue varNameValue = block.getParameter("var");
-        if (varNameValue == null || varNameValue.isEmpty()) {
-            player.sendMessage("§cОшибка: не указано имя переменной!");
-            return;
-        }
-        
-        String varName = resolver.resolve(context, varNameValue).asString();
-        if (varName.trim().isEmpty()) {
-            player.sendMessage("§cОшибка: имя переменной не может быть пустым!");
-            return;
-        }
-        
-        // Get variable value (required)
-        DataValue valueParam = block.getParameter("value");
-        if (valueParam == null) {
-            player.sendMessage("§cОшибка: не указано значение переменной!");
-            return;
-        }
-        
-        DataValue resolvedValue = resolver.resolve(context, valueParam);
-        
-        // Get scope (optional, defaults to LOCAL)
-        DataValue scopeValue = block.getParameter("scope", new TextValue("LOCAL"));
-        String scopeStr = resolver.resolve(context, scopeValue).asString().toUpperCase();
-        VariableScope scope;
-        
         try {
-            scope = VariableScope.valueOf(scopeStr);
-        } catch (IllegalArgumentException e) {
-            player.sendMessage("§cОшибка: неизвестная область видимости '" + scopeStr + "'. Доступные: LOCAL, WORLD, PLAYER, SERVER");
-            return;
-        }
-        
-        // Set variable in appropriate scope
-        try {
+            ParameterResolver resolver = new ParameterResolver(context);
+            
+            // Get variable name (required)
+            DataValue varNameValue = block.getParameter("var");
+            if (varNameValue == null || varNameValue.isEmpty()) {
+                player.sendMessage("§cОшибка: не указано имя переменной!");
+                return;
+            }
+            
+            String varName = resolver.resolve(context, varNameValue).asString();
+            if (varName.trim().isEmpty()) {
+                player.sendMessage("§cОшибка: имя переменной не может быть пустым!");
+                return;
+            }
+            
+            // Get variable value (required)
+            DataValue valueParam = block.getParameter("value");
+            if (valueParam == null) {
+                player.sendMessage("§cОшибка: не указано значение переменной!");
+                return;
+            }
+            
+            DataValue resolvedValue = resolver.resolve(context, valueParam);
+            
+            // Get scope (optional, defaults to LOCAL)
+            DataValue scopeValue = block.getParameter("scope");
+            String scope = scopeValue != null ? scopeValue.asString().toUpperCase() : "LOCAL";
+            
+            // Set variable in the appropriate scope
             switch (scope) {
-                case LOCAL:
-                    variableManager.setLocalVariable(context.getScriptId(), varName, resolvedValue);
+                case "GLOBAL":
+                    context.setGlobalVariable(varName, resolvedValue);
                     break;
-                case WORLD:
-                    variableManager.setGlobalVariable(context.getWorldId(), varName, resolvedValue);
+                case "PLAYER":
+                    context.setPlayerVariable(varName, resolvedValue);
                     break;
-                case PLAYER:
-                    if (player != null) {
-                        // Use the scoped variable approach for player variables
-                        String playerScopedName = "player." + varName;
-                        variableManager.setVariable(playerScopedName, resolvedValue, context.getScriptId(), context.getWorldId());
-                    }
+                case "SERVER":
+                    context.setServerVariable(varName, resolvedValue);
                     break;
-                case SERVER:
-                    variableManager.setPersistentVariable(varName, resolvedValue);
+                case "LOCAL":
+                default:
+                    context.setVariable(varName, resolvedValue);
                     break;
             }
             
             // Success message with type information
-            String typeInfo = resolvedValue.getType().getDisplayName();
+            String typeInfo = resolvedValue.getType().toString();
             String valueDisplay = resolvedValue.asString();
             if (valueDisplay.length() > 50) {
                 valueDisplay = valueDisplay.substring(0, 47) + "...";
@@ -92,7 +78,8 @@ public class SetVarAction implements BlockAction {
             
         } catch (Exception e) {
             player.sendMessage("§cОшибка при установке переменной: " + e.getMessage());
-            context.getPlugin().getLogger().warning("Error setting variable '" + varName + "': " + e.getMessage());
+            context.getPlugin().getLogger().warning("Error in SetVarAction: " + e.getMessage());
+            e.printStackTrace();
         }
     }
-} 
+}

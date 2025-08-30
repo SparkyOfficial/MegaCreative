@@ -37,6 +37,13 @@ public class CodingManagerImpl implements ICodingManager, Listener {
      * @return ScriptExecutor для выполнения скриптов
      */
     @Override
+    public void cancelScriptExecution(String scriptId) {
+        if (scriptExecutor != null) {
+            scriptExecutor.cancelScript(scriptId);
+        }
+    }
+    
+    @Override
     public void shutdown() {
         // Stop all running scripts
         if (scriptExecutor != null) {

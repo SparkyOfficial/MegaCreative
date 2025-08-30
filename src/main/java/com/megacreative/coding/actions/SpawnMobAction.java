@@ -18,10 +18,9 @@ public class SpawnMobAction implements BlockAction {
 
         if (player == null || block == null) return;
         
-        VariableManager variableManager = context.getPlugin().getVariableManager();
-        if (variableManager == null) return;
+        if (context == null) return;
         
-        ParameterResolver resolver = new ParameterResolver(variableManager);
+        ParameterResolver resolver = new ParameterResolver(context);
         
         DataValue rawMobType = block.getParameter("mob");
         if (rawMobType == null) return;

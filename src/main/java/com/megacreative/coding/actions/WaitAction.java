@@ -17,9 +17,9 @@ public class WaitAction implements BlockAction {
         CodeBlock block = context.getCurrentBlock();
         VariableManager variableManager = context.getPlugin().getVariableManager();
 
-        if (player == null || block == null || variableManager == null) return;
+        if (player == null || block == null) return;
 
-        ParameterResolver resolver = new ParameterResolver(variableManager);
+        ParameterResolver resolver = new ParameterResolver(context);
 
         // Получаем и разрешаем параметры
         DataValue rawTicks = block.getParameter("ticks");

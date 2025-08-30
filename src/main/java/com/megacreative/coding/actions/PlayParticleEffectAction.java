@@ -23,16 +23,16 @@ public class PlayParticleEffectAction implements BlockAction {
 
         if (player == null || block == null || variableManager == null) return;
 
-        ParameterResolver resolver = new ParameterResolver(variableManager);
+        ParameterResolver resolver = new ParameterResolver(context);
 
         try {
             // Enhanced parameter resolution with defaults for backward compatibility
-            String particleStr = resolveParameter(resolver, context, block, "particle", "VILLAGER_HAPPY");
-            int count = (int) resolveNumberParameter(resolver, context, block, "count", 10);
-            double offset = resolveNumberParameter(resolver, context, block, "offset", 0.5);
-            double spread = resolveNumberParameter(resolver, context, block, "spread", offset); // Use offset as spread for compatibility
-            double speed = resolveNumberParameter(resolver, context, block, "speed", 0.1);
-            String pattern = resolveParameter(resolver, context, block, "pattern", "basic");
+            String particleStr = resolveParameter(resolver, block, "particle", "VILLAGER_HAPPY");
+            int count = (int) resolveNumberParameter(resolver, block, "count", 10);
+            double offset = resolveNumberParameter(resolver, block, "offset", 0.5);
+            double spread = resolveNumberParameter(resolver, block, "spread", offset); // Use offset as spread for compatibility
+            double speed = resolveNumberParameter(resolver, block, "speed", 0.1);
+            String pattern = resolveParameter(resolver, block, "pattern", "basic");
 
             if (particleStr == null) return;
 
@@ -175,24 +175,24 @@ public class PlayParticleEffectAction implements BlockAction {
     /**
      * Resolves a text parameter with fallback default
      */
-    private String resolveParameter(ParameterResolver resolver, ExecutionContext context, 
+    private String resolveParameter(ParameterResolver resolver, 
                                   CodeBlock block, String paramName, String defaultValue) {
         DataValue rawValue = block.getParameter(paramName);
         if (rawValue == null) return defaultValue;
         
-        return resolver.resolve(context, rawValue).asString();
+        return resolver.resolve(rawValue).asString();
     }
     
     /**
      * Resolves a numeric parameter with fallback default
      */
-    private double resolveNumberParameter(ParameterResolver resolver, ExecutionContext context, 
+    private double resolveNumberParameter(ParameterResolver resolver, 
                                         CodeBlock block, String paramName, double defaultValue) {
         DataValue rawValue = block.getParameter(paramName);
         if (rawValue == null) return defaultValue;
         
         try {
-            return resolver.resolve(context, rawValue).asNumber().doubleValue();
+            return resolver.resolve(rawValue).asNumber().doubleValue();
         } catch (Exception e) {
             return defaultValue;
         }

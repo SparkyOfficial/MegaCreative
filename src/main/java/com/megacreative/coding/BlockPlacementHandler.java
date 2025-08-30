@@ -4,8 +4,8 @@ import com.megacreative.MegaCreative;
 import com.megacreative.core.ServiceRegistry;
 import com.megacreative.interfaces.ITrustedPlayerManager;
 import com.megacreative.services.BlockConfigService;
-import lombok.extern.slf4j.Slf4j;
 import org.bukkit.Material;
+import java.util.logging.Logger;
 import org.bukkit.block.Block;
 import org.bukkit.block.BlockFace;
 import org.bukkit.block.Sign;
@@ -28,8 +28,8 @@ import java.util.UUID;
 /**
  * Обрабатывает размещение и взаимодействие с блоками кодирования
  */
-@Slf4j
 public class BlockPlacementHandler implements Listener {
+    private static final Logger log = Logger.getLogger(BlockPlacementHandler.class.getName());
     
     private final MegaCreative plugin;
     private final ITrustedPlayerManager trustedPlayerManager;

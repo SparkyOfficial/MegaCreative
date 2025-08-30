@@ -4,15 +4,15 @@ import com.megacreative.MegaCreative;
 import com.megacreative.coding.CodeBlock;
 import com.megacreative.coding.values.DataValue;
 import com.megacreative.coding.variables.VariableScope;
-import lombok.extern.java.Log;
 import org.bukkit.Location;
 import org.bukkit.entity.Player;
+import java.util.logging.Logger;
 
 import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
 
-@Log
 public class VisualDebugger {
+    private static final Logger log = Logger.getLogger(VisualDebugger.class.getName());
     
     private final MegaCreative plugin;
     private final Map<UUID, DebugSession> activeSessions = new ConcurrentHashMap<>();
@@ -343,31 +343,43 @@ public class VisualDebugger {
     }
     
     /**
-     * Starts a visualization session
+     * Starts a visualization session with the specified mode
+     * @param player The player to start visualization for
+     * @param mode The visualization mode to use
      */
     public void startVisualization(Player player, AdvancedVisualDebugger.VisualizationMode mode) {
+        if (player == null || mode == null) {
+            throw new IllegalArgumentException("Player and mode cannot be null");
+        }
         advancedDebugger.startVisualizationSession(player, mode);
     }
     
     /**
-     * Stops a visualization session
+     * Stops the visualization session for a player
+     * @param player The player to stop visualization for
      */
     public void stopVisualization(Player player) {
-        advancedDebugger.stopVisualizationSession(player);
+        if (player != null) {
+            advancedDebugger.stopVisualizationSession(player);
+        }
     }
     
     /**
-     * Checks if visualization is enabled
+     * Checks if visualization is enabled for a player
+     * @param player The player to check
+     * @return true if visualization is enabled, false otherwise
      */
     public boolean isVisualizationEnabled(Player player) {
-        return advancedDebugger.isVisualizationEnabled(player);
+        return player != null && advancedDebugger.isVisualizationEnabled(player);
     }
     
     /**
-     * Gets the visualization mode
+     * Gets the current visualization mode for a player
+     * @param player The player to check
+     * @return The current visualization mode, or null if not in visualization mode
      */
     public AdvancedVisualDebugger.VisualizationMode getVisualizationMode(Player player) {
-        return advancedDebugger.getVisualizationMode(player);
+        return player != null ? advancedDebugger.getVisualizationMode(player) : null;
     }
     
     /**

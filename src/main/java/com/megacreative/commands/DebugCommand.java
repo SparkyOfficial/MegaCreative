@@ -299,13 +299,28 @@ public class DebugCommand implements CommandExecutor, TabCompleter {
         com.megacreative.coding.debug.AdvancedVisualDebugger.VisualizationMode vizMode = null;
         
         switch (mode) {
+            case "standard":
+                vizMode = com.megacreative.coding.debug.AdvancedVisualDebugger.VisualizationMode.STANDARD;
+                break;
+            case "step":
+                vizMode = com.megacreative.coding.debug.AdvancedVisualDebugger.VisualizationMode.STEP_BY_STEP;
+                break;
+            case "performance":
+                vizMode = com.megacreative.coding.debug.AdvancedVisualDebugger.VisualizationMode.PERFORMANCE;
+                break;
+            case "memory":
+                vizMode = com.megacreative.coding.debug.AdvancedVisualDebugger.VisualizationMode.MEMORY;
+                break;
+            case "variables":
+                vizMode = com.megacreative.coding.debug.AdvancedVisualDebugger.VisualizationMode.VARIABLES;
+                break;
             case "block":
                 vizMode = com.megacreative.coding.debug.AdvancedVisualDebugger.VisualizationMode.BLOCK_HIGHLIGHTING;
                 break;
             case "flow":
                 vizMode = com.megacreative.coding.debug.AdvancedVisualDebugger.VisualizationMode.FLOW_TRACING;
                 break;
-            case "performance":
+            case "perfmap":
                 vizMode = com.megacreative.coding.debug.AdvancedVisualDebugger.VisualizationMode.PERFORMANCE_MAPPING;
                 break;
             case "group":
@@ -313,6 +328,7 @@ public class DebugCommand implements CommandExecutor, TabCompleter {
                 break;
             default:
                 player.sendMessage("§cНеизвестный режим визуализации: " + mode);
+                player.sendMessage("§aДоступные режимы: standard, step, performance, memory, variables, block, flow, perfmap, group");
                 player.sendMessage("§7Доступные режимы: block, flow, performance, group");
                 return;
         }

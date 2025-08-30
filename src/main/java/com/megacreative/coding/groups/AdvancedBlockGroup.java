@@ -1,8 +1,7 @@
 package com.megacreative.coding.groups;
 
 import com.megacreative.coding.CodeBlock;
-import lombok.Data;
-import lombok.EqualsAndHashCode;
+import java.util.Objects;
 import org.bukkit.Location;
 
 import java.util.*;
@@ -11,9 +10,72 @@ import java.util.concurrent.ConcurrentHashMap;
 /**
  * Advanced block group with enhanced functionality including nesting, templates, and execution control
  */
-@Data
-@EqualsAndHashCode(callSuper = true)
 public class AdvancedBlockGroup extends BlockGroup {
+    
+    // Getters and Setters
+    public Map<String, Object> getMetadata() { return metadata; }
+    public void setMetadata(Map<String, Object> metadata) { this.metadata.clear(); this.metadata.putAll(metadata); }
+    
+    public List<UUID> getNestedGroups() { return new ArrayList<>(nestedGroups); }
+    public void setNestedGroups(List<UUID> nestedGroups) { this.nestedGroups.clear(); this.nestedGroups.addAll(nestedGroups); }
+    
+    public Set<String> getTags() { return new HashSet<>(tags); }
+    public void setTags(Set<String> tags) { this.tags.clear(); this.tags.addAll(tags); }
+    
+    public String getTemplateId() { return templateId; }
+    public void setTemplateId(String templateId) { this.templateId = templateId; }
+    
+    public boolean isTemplate() { return isTemplate; }
+    public void setTemplate(boolean template) { isTemplate = template; }
+    
+    public boolean isLocked() { return isLocked; }
+    public void setLocked(boolean locked) { isLocked = locked; }
+    
+    public ExecutionMode getExecutionMode() { return executionMode; }
+    public void setExecutionMode(ExecutionMode executionMode) { this.executionMode = executionMode; }
+    
+    public int getExecutionLimit() { return executionLimit; }
+    public void setExecutionLimit(int executionLimit) { this.executionLimit = executionLimit; }
+    
+    public int getExecutionCount() { return executionCount; }
+    public void setExecutionCount(int executionCount) { this.executionCount = executionCount; }
+    
+    public String getConditionExpression() { return conditionExpression; }
+    public void setConditionExpression(String conditionExpression) { this.conditionExpression = conditionExpression; }
+    
+    public List<UUID> getDependencies() { return new ArrayList<>(dependencies); }
+    public void setDependencies(List<UUID> dependencies) { this.dependencies.clear(); this.dependencies.addAll(dependencies); }
+    
+    public String getVersion() { return version; }
+    public void setVersion(String version) { this.version = version; }
+    
+    // equals and hashCode
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) return true;
+        if (o == null || getClass() != o.getClass()) return false;
+        if (!super.equals(o)) return false;
+        AdvancedBlockGroup that = (AdvancedBlockGroup) o;
+        return isTemplate == that.isTemplate && 
+               isLocked == that.isLocked && 
+               executionLimit == that.executionLimit && 
+               executionCount == that.executionCount &&
+               Objects.equals(metadata, that.metadata) &&
+               Objects.equals(nestedGroups, that.nestedGroups) &&
+               Objects.equals(tags, that.tags) &&
+               Objects.equals(templateId, that.templateId) &&
+               executionMode == that.executionMode &&
+               Objects.equals(conditionExpression, that.conditionExpression) &&
+               Objects.equals(dependencies, that.dependencies) &&
+               Objects.equals(version, that.version);
+    }
+    
+    @Override
+    public int hashCode() {
+        return Objects.hash(super.hashCode(), metadata, nestedGroups, tags, templateId, isTemplate, 
+                          isLocked, executionMode, executionLimit, executionCount, 
+                          conditionExpression, dependencies, version);
+    }
     
     // Advanced features
     private final Map<String, Object> metadata = new ConcurrentHashMap<>();
@@ -214,16 +276,6 @@ public class AdvancedBlockGroup extends BlockGroup {
         return copy;
     }
     
-    // Explicit getters for Lombok compatibility
-    public String getTemplateId() { return templateId; }
-    public boolean isTemplate() { return isTemplate; }
-    public ExecutionMode getExecutionMode() { return executionMode; }
-    public int getExecutionLimit() { return executionLimit; }
-    public String getConditionExpression() { return conditionExpression; }
-    public List<UUID> getNestedGroups() { return nestedGroups; }
-    public Set<String> getTags() { return tags; }
-    public List<UUID> getDependencies() { return dependencies; }
-    public Map<String, Object> getMetadata() { return metadata; }
     
     /**
      * Execution modes for block groups

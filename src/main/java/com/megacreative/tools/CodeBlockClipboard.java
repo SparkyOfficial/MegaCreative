@@ -4,8 +4,7 @@ import com.megacreative.coding.CodeBlock;
 import com.megacreative.coding.BlockPlacementHandler;
 import com.megacreative.coding.AutoConnectionManager;
 import com.megacreative.coding.values.DataValue;
-import lombok.Data;
-import lombok.extern.slf4j.Slf4j;
+import java.util.logging.Logger;
 import org.bukkit.Location;
 import org.bukkit.Material;
 import org.bukkit.World;
@@ -14,8 +13,8 @@ import org.bukkit.entity.Player;
 import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
 
-@Slf4j
 public class CodeBlockClipboard {
+    private static final Logger log = Logger.getLogger(CodeBlockClipboard.class.getName());
     
     private final Map<UUID, ClipboardData> playerClipboards = new ConcurrentHashMap<>();
     private final Map<String, ClipboardData> sharedClipboards = new ConcurrentHashMap<>();
@@ -346,32 +345,43 @@ public class CodeBlockClipboard {
         }
         
         // Follow children (for conditional blocks)
-        for (CodeBlock child : block.getChildren()) {
-            copyChainRecursive(child, data, visited, basePos, chainIndex + 100); // Offset children
-        }
     }
     
-    @Data
     public static class ClipboardData {
         private final ClipboardType type;
         private final Location origin; // Original copy location for reference
         private final List<CodeBlock> blocks = new ArrayList<>();
-        private final Map<Location, CodeBlock> blockPositions = new HashMap<>(); // Block -> Relative position
+        private final Map<Location, CodeBlock> blockPositions = new HashMap<>();
         
         public ClipboardData(ClipboardType type, Location origin) {
             this.type = type;
             this.origin = origin != null ? origin.clone() : null;
         }
         
-        public void addBlock(CodeBlock block) {
-            blocks.add(block);
-            // Default relative position for backward compatibility
-            blockPositions.put(new Location(null, 0, 0, 0), block);
+        public void addBlock(CodeBlock block, Location relativePosition) {
+            if (block != null) {
+                blocks.add(block);
+                if (relativePosition != null) {
+                    blockPositions.put(relativePosition, block);
+                }
+            }
         }
         
-        public void addBlock(CodeBlock block, Location relativePosition) {
-            blocks.add(block);
-            blockPositions.put(relativePosition, block);
+        // For backward compatibility
+        public void addBlock(CodeBlock block) {
+            addBlock(block, new Location(null, 0, 0, 0));
+        }
+        
+        public List<CodeBlock> getBlocks() {
+            return new ArrayList<>(blocks);
+        }
+        
+        public Map<Location, CodeBlock> getBlockPositions() {
+            return new HashMap<>(blockPositions);
+        }
+        
+        public ClipboardType getType() {
+            return type;
         }
     }
     

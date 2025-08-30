@@ -1,7 +1,5 @@
 package com.megacreative.core;
 
-import lombok.extern.java.Log;
-
 import java.lang.reflect.Constructor;
 import java.lang.reflect.Parameter;
 import java.util.*;
@@ -14,6 +12,9 @@ import java.util.logging.Logger;
 public class DependencyContainer {
     
     private static final Logger log = Logger.getLogger(DependencyContainer.class.getName());
+    static {
+        log.setLevel(Level.INFO);
+    }
     private final Map<Class<?>, Object> singletons = new HashMap<>();
     private final Map<Class<?>, Class<?>> implementations = new HashMap<>();
     private final Set<Class<?>> creating = new HashSet<>();

@@ -58,6 +58,13 @@ public class TrustedPlayer {
     public long getTimestamp() {
         return timestamp;
     }
+    
+    /**
+     * @return The timestamp when this player was added as a trusted player
+     */
+    public long getAddedAt() {
+        return timestamp;
+    }
 
     public UUID getAddedBy() {
         return addedBy;

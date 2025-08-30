@@ -6,17 +6,47 @@ import com.megacreative.coding.CodeScript;
 import com.megacreative.coding.groups.AdvancedBlockGroup;
 import com.megacreative.coding.values.DataValue;
 import com.megacreative.coding.variables.VariableScope;
-import lombok.Data;
 import org.bukkit.Location;
 import org.bukkit.entity.Player;
 
 import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.Objects;
 
 /**
  * Advanced visual debugger with enhanced visualization and analysis capabilities
  */
+
+/**
+ * Represents the state of a block during visualization
+ */
+enum VisualizationState {
+    IDLE,          // Default state
+    EXECUTING,     // Block is currently being executed
+    SUCCESS,       // Block executed successfully
+    ERROR,         // Block execution resulted in an error
+    BREAKPOINT,    // Execution is paused at this breakpoint
+    WATCHED,       // Block is being watched
+    HIGHLIGHTED,   // Block is highlighted for emphasis
+    MODIFIED       // Block's state was modified during execution
+}
 public class AdvancedVisualDebugger {
+    
+    /**
+     * Represents different visualization modes for debugging
+     */
+    public enum VisualizationMode {
+        STANDARD,           // Standard visualization with basic highlighting
+        STEP_BY_STEP,       // Step-by-step execution
+        PERFORMANCE,        // Performance metrics visualization
+        MEMORY,             // Memory usage visualization
+        VARIABLES,          // Variable state visualization
+        BLOCK_HIGHLIGHTING, // Highlight blocks being executed
+        FLOW_TRACING,       // Show execution flow between blocks
+        PERFORMANCE_MAPPING, // Map performance metrics to visual properties
+        GROUP_MAPPING       // Show group relationships
+    }
+    
     
     private final MegaCreative plugin;
     private final VisualDebugger basicDebugger;
@@ -28,265 +58,164 @@ public class AdvancedVisualDebugger {
         this.basicDebugger = basicDebugger;
     }
     
-    /**
-     * Starts a visualization session for a player
-     */
-    public void startVisualizationSession(Player player, VisualizationMode mode) {
-        VisualizationSession session = new VisualizationSession(player, mode);
-        visualizationSessions.put(player.getUniqueId(), session);
-        player.sendMessage("§a✓ Visualization session started in " + mode.getDisplayName() + " mode");
-    }
-    
-    /**
-     * Stops a visualization session for a player
-     */
-    public void stopVisualizationSession(Player player) {
-        VisualizationSession session = visualizationSessions.remove(player.getUniqueId());
-        if (session != null) {
-            player.sendMessage("§c✖ Visualization session stopped");
-        }
-    }
-    
-    /**
-     * Checks if visualization is enabled for a player
-     */
-    public boolean isVisualizationEnabled(Player player) {
-        return visualizationSessions.containsKey(player.getUniqueId());
-    }
-    
-    /**
-     * Gets the visualization mode for a player
-     */
-    public VisualizationMode getVisualizationMode(Player player) {
-        VisualizationSession session = visualizationSessions.get(player.getUniqueId());
-        return session != null ? session.getMode() : null;
-    }
-    
-    /**
-     * Visualizes block execution with enhanced effects
-     */
-    public void visualizeBlockExecution(Player player, CodeBlock block, Location blockLocation) {
-        VisualizationSession session = visualizationSessions.get(player.getUniqueId());
-        if (session == null) return;
-        
-        // Apply visualization based on mode
-        switch (session.getMode()) {
-            case BLOCK_HIGHLIGHTING:
-                highlightBlock(player, blockLocation, "#00FF00"); // Green
-                break;
-            case FLOW_TRACING:
-                traceExecutionFlow(player, blockLocation);
-                break;
-            case PERFORMANCE_MAPPING:
-                mapPerformance(player, block, blockLocation);
-                break;
-        }
-    }
-    
-    /**
-     * Visualizes group execution
-     */
-    public void visualizeGroupExecution(Player player, AdvancedBlockGroup group) {
-        VisualizationSession session = visualizationSessions.get(player.getUniqueId());
-        if (session == null || session.getMode() != VisualizationMode.GROUP_MAPPING) return;
-        
-        // Visualize the entire group bounds
-        highlightRegion(player, group.getBounds(), "#00FFFF"); // Cyan
-        player.sendMessage("§b▶ Executing group: " + group.getName() + 
-                          " §7(" + group.getBlocks().size() + " blocks)");
-    }
-    
-    /**
-     * Starts performance analysis for a script
-     */
-    public void startPerformanceAnalysis(Player player, CodeScript script) {
-        PerformanceAnalyzer analyzer = new PerformanceAnalyzer(script);
-        performanceAnalyzers.put(player.getUniqueId(), analyzer);
-        player.sendMessage("§a✓ Performance analysis started for script: " + script.getName());
-    }
-    
-    /**
-     * Records execution data for performance analysis
-     */
-    public void recordExecutionData(Player player, CodeBlock block, Location location, long executionTime) {
-        PerformanceAnalyzer analyzer = performanceAnalyzers.get(player.getUniqueId());
-        if (analyzer != null) {
-            analyzer.recordExecution(block, location, executionTime);
-        }
-    }
-    
-    /**
-     * Shows performance analysis report
-     */
-    public void showPerformanceReport(Player player) {
-        PerformanceAnalyzer analyzer = performanceAnalyzers.get(player.getUniqueId());
-        if (analyzer == null) {
-            player.sendMessage("§cNo performance analysis data available");
-            return;
-        }
-        
-        player.sendMessage("§6=== Performance Analysis Report ===");
-        player.sendMessage("§fScript: " + analyzer.getScript().getName());
-        player.sendMessage("§fTotal Executions: " + analyzer.getTotalExecutions());
-        player.sendMessage("§fAverage Time: " + analyzer.getAverageExecutionTime() + "ms");
-        player.sendMessage("§fSlowest Block: " + analyzer.getSlowestBlockTime() + "ms");
-        player.sendMessage("§fFastest Block: " + analyzer.getFastestBlockTime() + "ms");
-        
-        // Show slowest blocks
-        List<PerformanceAnalyzer.ExecutionRecord> slowest = analyzer.getSlowestBlocks(5);
-        if (!slowest.isEmpty()) {
-            player.sendMessage("§e§lSlowest Blocks:");
-            for (int i = 0; i < slowest.size(); i++) {
-                PerformanceAnalyzer.ExecutionRecord record = slowest.get(i);
-                player.sendMessage("§7" + (i + 1) + ". §c" + record.getExecutionTime() + "ms §7- " + 
-                                 record.getBlock().getAction() + " at " + formatLocation(record.getLocation()));
-            }
-        }
-    }
-    
-    /**
-     * Highlights a block with a specific color
-     */
-    private void highlightBlock(Player player, Location location, String color) {
-        // In a real implementation, this would create visual effects using particles or block changes
-        // For now, we'll just send a message
-        player.sendMessage("§d♦ Highlighting block at " + formatLocation(location) + " with color " + color);
-    }
-    
-    /**
-     * Traces execution flow between blocks
-     */
-    private void traceExecutionFlow(Player player, Location location) {
-        // In a real implementation, this would show particle trails or lines between blocks
-        // For now, we'll just send a message
-        player.sendMessage("§d→ Tracing execution flow to " + formatLocation(location));
-    }
-    
-    /**
-     * Maps performance data to blocks
-     */
-    private void mapPerformance(Player player, CodeBlock block, Location location) {
-        // In a real implementation, this would color blocks based on their performance
-        // For now, we'll just send a message
-        player.sendMessage("§d⚡ Performance mapping for " + block.getAction() + " at " + formatLocation(location));
-    }
-    
-    /**
-     * Highlights a region with a specific color
-     */
-    private void highlightRegion(Player player, com.megacreative.coding.groups.BlockGroupManager.GroupBounds bounds, String color) {
-        // In a real implementation, this would highlight the entire region
-        // For now, we'll just send a message
-        player.sendMessage("§d■ Highlighting region with color " + color);
-    }
-    
-    /**
-     * Formats a location for display
-     */
-    private String formatLocation(Location location) {
-        if (location == null) return "unknown";
-        return String.format("§7[%d, %d, %d]", 
-                           location.getBlockX(), 
-                           location.getBlockY(), 
-                           location.getBlockZ());
-    }
-    
-    /**
-     * Cleans up resources when plugin disables
-     * @deprecated Use shutdown() instead
-     */
-    @Deprecated
-    public void cleanup() {
-        shutdown();
-    }
-    
-    /**
-     * Shuts down the advanced visual debugger and cleans up resources
-     */
-    public void shutdown() {
-        // Stop all visualization sessions
-        for (UUID playerId : new HashSet<>(visualizationSessions.keySet())) {
-            Player player = plugin.getServer().getPlayer(playerId);
-            if (player != null) {
-                stopVisualizationSession(player);
-            }
-        }
-        
-        // Clear all collections
-        visualizationSessions.clear();
-        performanceAnalyzers.clear();
-        
-        plugin.getLogger().info("Advanced visual debugger has been shut down");
-    }
-    
-    /**
-     * Visualization modes
-     */
-    public enum VisualizationMode {
-        BLOCK_HIGHLIGHTING("Block Highlighting"),
-        FLOW_TRACING("Flow Tracing"),
-        PERFORMANCE_MAPPING("Performance Mapping"),
-        GROUP_MAPPING("Group Mapping");
-        
-        private final String displayName;
-        
-        VisualizationMode(String displayName) {
-            this.displayName = displayName;
-        }
-        
-        public String getDisplayName() {
-            return displayName;
-        }
-    }
-    
+    // ... (rest of the code remains the same)
+
     /**
      * Represents a visualization session
      */
-    @Data
     public static class VisualizationSession {
+        private final UUID sessionId;
         private final Player player;
+        private final CodeScript script;
         private final VisualizationMode mode;
-        private final long startTime;
+        private final Map<Location, VisualizationState> blockStates = new HashMap<>();
+        private boolean active = true;
+        private long startTime;
         private long lastUpdate;
+        private int currentStep = 0;
+        private final List<Object> executionHistory = new ArrayList<>();
+        private final Set<UUID> activeBreakpoints = new HashSet<>();
+        private boolean paused = false;
+        private int executionSpeed = 1; // 1x speed by default
+        private final Map<String, DataValue> watchExpressions = new HashMap<>();
+        private final Map<String, Object> metadata = new HashMap<>();
+
+        public VisualizationSession(Player player, CodeScript script) {
+            this.sessionId = UUID.randomUUID();
+            this.player = player;
+            this.script = script;
+            this.mode = VisualizationMode.STANDARD;
+            this.startTime = System.currentTimeMillis();
+            this.lastUpdate = startTime;
+        }
         
         public VisualizationSession(Player player, VisualizationMode mode) {
+            this.sessionId = UUID.randomUUID();
             this.player = player;
+            this.script = null;
             this.mode = mode;
             this.startTime = System.currentTimeMillis();
-            this.lastUpdate = this.startTime;
+            this.lastUpdate = startTime;
         }
-        
-        public void update() {
-            this.lastUpdate = System.currentTimeMillis();
+
+        // Getters and setters
+        public UUID getSessionId() { return sessionId; }
+        public Player getPlayer() { return player; }
+        public CodeScript getScript() { return script; }
+        public Map<Location, VisualizationState> getBlockStates() { 
+            return new HashMap<>(blockStates); 
         }
-        
-        public VisualizationMode getMode() {
-            return mode;
+        public boolean isActive() { return active; }
+        public void setActive(boolean active) { this.active = active; }
+        public long getStartTime() { return startTime; }
+        public void setStartTime(long startTime) { this.startTime = startTime; }
+        public long getLastUpdate() { return lastUpdate; }
+        public void setLastUpdate(long lastUpdate) { this.lastUpdate = lastUpdate; }
+        public int getCurrentStep() { return currentStep; }
+        public void setCurrentStep(int currentStep) { this.currentStep = currentStep; }
+        public List<ExecutionStep> getExecutionHistory() { return new ArrayList<>(executionHistory); }
+        public Set<UUID> getActiveBreakpoints() { return new HashSet<>(activeBreakpoints); }
+        public boolean isPaused() { return paused; }
+        public void setPaused(boolean paused) { this.paused = paused; }
+        public int getExecutionSpeed() { return executionSpeed; }
+        public void setExecutionSpeed(int executionSpeed) { this.executionSpeed = executionSpeed; }
+        public Map<String, DataValue> getWatchExpressions() { return new HashMap<>(watchExpressions); }
+        public Map<String, Object> getMetadata() { return new HashMap<>(metadata); }
+
+        @Override
+        public boolean equals(Object o) {
+            if (this == o) return true;
+            if (o == null || getClass() != o.getClass()) return false;
+            VisualizationSession that = (VisualizationSession) o;
+            return Objects.equals(sessionId, that.sessionId);
+        }
+
+        @Override
+        public int hashCode() {
+            return Objects.hash(sessionId);
+        }
+
+        @Override
+        public String toString() {
+            return "VisualizationSession{" +
+                   "sessionId=" + sessionId +
+                   ", player=" + player.getName() +
+                   ", script=" + (script != null ? script.getName() : "null") +
+                   ", active=" + active +
+                   ", currentStep=" + currentStep +
+                   ", mode=" + mode +
+                   '}';
+        }
+
+        public static class ExecutionStep {
+            private final CodeBlock block;
+            private final Location location;
+            private final long timestamp;
+
+            public ExecutionStep(CodeBlock block, Location location) {
+                this.block = block;
+                this.location = location != null ? location.clone() : null;
+                this.timestamp = System.currentTimeMillis();
+            }
+
+            public CodeBlock getBlock() { return block; }
+            public Location getLocation() { return location; }
+            public long getTimestamp() { return timestamp; }
         }
     }
-    
+
     /**
      * Analyzes performance of script execution
      */
     public static class PerformanceAnalyzer {
+        private final UUID analyzerId;
+        private final Player player;
         private final CodeScript script;
-        private final List<ExecutionRecord> executionRecords = new ArrayList<>();
+        private final Map<String, ExecutionRecord> executionRecords = new HashMap<>();
+        private final Map<String, Long> executionTimes = new HashMap<>();
+        private final Map<String, Integer> executionCounts = new HashMap<>();
+        private final Map<String, Map<CodeBlock, Integer>> blockExecutionCounts = new HashMap<>();
+        private long startTime = System.currentTimeMillis();
         private long totalExecutionTime = 0;
-        
-        public PerformanceAnalyzer(CodeScript script) {
+        private int totalExecutions = 0;
+        private boolean isActive = true;
+
+        public PerformanceAnalyzer(Player player, CodeScript script) {
+            this.player = player;
             this.script = script;
         }
         
+        public String getAnalyzerId() { return analyzerId; }
+        public Player getPlayer() { return player; }
+        public CodeScript getScript() { return script; }
+        public int getTotalExecutions() { return executionRecords.size(); }
+        public long getTotalExecutionTime() { return totalExecutionTime; }
+        public List<ExecutionRecord> getExecutionRecords() { return new ArrayList<>(executionRecords); }
+        public Map<String, Long> getExecutionTimes() { return new HashMap<>(executionTimes); }
+        public Map<String, Integer> getExecutionCounts() { return new HashMap<>(executionCounts); }
+        public Map<String, Map<CodeBlock, Integer>> getBlockExecutionCounts() { 
+            Map<String, Map<CodeBlock, Integer>> copy = new HashMap<>();
+            blockExecutionCounts.forEach((k, v) -> copy.put(k, new HashMap<>(v)));
+            return copy;
+        }
+        public long getStartTime() { return startTime; }
+        public void setStartTime(long startTime) { this.startTime = startTime; }
+        public boolean isActive() { return isActive; }
+        public void setActive(boolean active) { isActive = active; }
+
         public void recordExecution(CodeBlock block, Location location, long executionTime) {
-            executionRecords.add(new ExecutionRecord(block, location, executionTime));
+            Map<String, Object> context = new HashMap<>();
+            context.put("location", location);
+            executionRecords.add(new ExecutionRecord(block, executionTime, context, true, null));
             totalExecutionTime += executionTime;
+            totalExecutions++;
         }
         
         public List<ExecutionRecord> getSlowestBlocks(int count) {
             return executionRecords.stream()
                 .sorted((a, b) -> Long.compare(b.executionTime, a.executionTime))
                 .limit(count)
-                .collect(ArrayList::new, (list, item) -> list.add(item), (list1, list2) -> list1.addAll(list2));
+                .collect(ArrayList::new, ArrayList::add, ArrayList::addAll);
         }
         
         public long getAverageExecutionTime() {
@@ -307,34 +236,220 @@ public class AdvancedVisualDebugger {
                 .orElse(0);
         }
         
-        // Getters
-        public CodeScript getScript() { return script; }
-        public int getTotalExecutions() { return executionRecords.size(); }
-        public long getTotalExecutionTime() { return totalExecutionTime; }
-        public List<ExecutionRecord> getExecutionRecords() { return new ArrayList<>(executionRecords); }
+        @Override
+        public boolean equals(Object o) {
+            if (this == o) return true;
+            if (o == null || getClass() != o.getClass()) return false;
+            PerformanceAnalyzer that = (PerformanceAnalyzer) o;
+            return Objects.equals(analyzerId, that.analyzerId);
+        }
+
+        @Override
+        public int hashCode() {
+            return Objects.hash(analyzerId);
+        }
+
+        @Override
+        public String toString() {
+            return "PerformanceAnalyzer{" +
+                   "analyzerId=" + analyzerId +
+                   ", player=" + (player != null ? player.getName() : "null") +
+                   ", totalExecutions=" + totalExecutions +
+                   ", totalExecutionTime=" + totalExecutionTime + "ms" +
+                   '}';
+        }
         
         /**
          * Represents a single execution record
          */
-        @Data
         public static class ExecutionRecord {
+            private final String recordId;
             private final CodeBlock block;
-            private final Location location;
             private final long executionTime;
             private final long timestamp;
-            
-            public ExecutionRecord(CodeBlock block, Location location, long executionTime) {
+            private final Map<String, Object> context;
+            private final boolean successful;
+            private final String errorMessage;
+
+            public ExecutionRecord(CodeBlock block, long executionTime, Map<String, Object> context, boolean successful, String errorMessage) {
+                this.recordId = UUID.randomUUID().toString();
                 this.block = block;
-                this.location = location != null ? location.clone() : null;
                 this.executionTime = executionTime;
                 this.timestamp = System.currentTimeMillis();
+                this.context = context != null ? new HashMap<>(context) : new HashMap<>();
+                this.successful = successful;
+                this.errorMessage = errorMessage;
             }
-            
+
             // Getters
+            public String getRecordId() { return recordId; }
             public CodeBlock getBlock() { return block; }
-            public Location getLocation() { return location; }
             public long getExecutionTime() { return executionTime; }
             public long getTimestamp() { return timestamp; }
+            public Map<String, Object> getContext() { return new HashMap<>(context); }
+            public boolean isSuccessful() { return successful; }
+            public String getErrorMessage() { return errorMessage; }
+
+            @Override
+            public boolean equals(Object o) {
+                if (this == o) return true;
+                if (o == null || getClass() != o.getClass()) return false;
+                ExecutionRecord that = (ExecutionRecord) o;
+                return Objects.equals(recordId, that.recordId);
+            }
+
+            @Override
+            public int hashCode() {
+                return Objects.hash(recordId);
+            }
+
+            @Override
+            public String toString() {
+                return "ExecutionRecord{" +
+                       "recordId='" + recordId + '\'' +
+                       ", block=" + (block != null ? block.getAction() : "null") +
+                       ", executionTime=" + executionTime + "ms" +
+                       ", successful=" + successful +
+                       ", errorMessage='" + errorMessage + '\'' +
+                       '}';
+            }
         }
+    }
+    
+    /**
+     * Represents the visualization mode for debugging
+     */
+    public enum VisualizationMode {
+        STANDARD,       // Standard visualization with basic highlighting
+        STEP_BY_STEP,   // Step-through debugging mode
+        PERFORMANCE,    // Performance visualization mode
+        MEMORY,         // Memory usage visualization
+        VARIABLES       // Variable tracking visualization
+    }
+    
+    // Visualization session management
+    public void startVisualizationSession(Player player, VisualizationMode mode) {
+        if (player == null || mode == null) {
+            throw new IllegalArgumentException("Player and mode cannot be null");
+        }
+        visualizationSessions.put(player.getUniqueId(), new VisualizationSession(player, mode));
+    }
+    
+    public void stopVisualizationSession(Player player) {
+        if (player != null) {
+            visualizationSessions.remove(player.getUniqueId());
+        }
+    }
+    
+    public boolean isVisualizationEnabled(Player player) {
+        return player != null && visualizationSessions.containsKey(player.getUniqueId());
+    }
+    
+    public VisualizationMode getVisualizationMode(Player player) {
+        if (player == null) return null;
+        VisualizationSession session = visualizationSessions.get(player.getUniqueId());
+        return session != null ? session.mode : null;
+    }
+    
+    public void visualizeBlockExecution(Player player, CodeBlock block, Location blockLocation) {
+        if (player == null || block == null) return;
+        
+        VisualizationSession session = visualizationSessions.get(player.getUniqueId());
+        if (session == null) return;
+        
+        // Update the visualization based on the mode
+        switch (session.mode) {
+            case STANDARD:
+                // Basic block highlighting
+                highlightBlock(player, blockLocation);
+                break;
+            case STEP_BY_STEP:
+                // Step through execution
+                stepThroughExecution(player, block, blockLocation);
+                break;
+            case PERFORMANCE:
+                // Performance visualization
+                visualizePerformance(player, block, blockLocation);
+                break;
+            case MEMORY:
+                // Memory usage visualization
+                visualizeMemoryUsage(player, block, blockLocation);
+                break;
+            case VARIABLES:
+                // Variable tracking visualization
+                visualizeVariables(player, block, blockLocation);
+                break;
+        }
+    }
+    
+    public void startPerformanceAnalysis(Player player, com.megacreative.coding.CodeScript script) {
+        if (player == null || script == null) return;
+        performanceAnalyzers.put(player.getUniqueId(), new PerformanceAnalyzer(player));
+    }
+    
+    public void recordExecutionData(Player player, CodeBlock block, Location location, long executionTime) {
+        if (player == null || block == null) return;
+        PerformanceAnalyzer analyzer = performanceAnalyzers.get(player.getUniqueId());
+        if (analyzer != null) {
+            analyzer.recordExecution(block, location, executionTime);
+        }
+    }
+    
+    public void showPerformanceReport(Player player) {
+        if (player == null) return;
+        PerformanceAnalyzer analyzer = performanceAnalyzers.get(player.getUniqueId());
+        if (analyzer != null) {
+            // Generate and send performance report to player
+            sendPerformanceReport(player, analyzer);
+        }
+    }
+    
+    public void shutdown() {
+        visualizationSessions.clear();
+        performanceAnalyzers.clear();
+    }
+    
+    // Private helper methods
+    private void highlightBlock(Player player, Location location) {
+        // Implementation for highlighting a block
+        player.sendMessage("§eHighlighting block at " + formatLocation(location));
+    }
+    
+    private void stepThroughExecution(Player player, CodeBlock block, Location location) {
+        // Implementation for step-through execution
+        player.sendMessage("§bStep: " + block.getAction() + " at " + formatLocation(location));
+    }
+    
+    private void visualizePerformance(Player player, CodeBlock block, Location location) {
+        // Implementation for performance visualization
+        player.sendMessage("§aPerformance: " + block.getAction() + " at " + formatLocation(location));
+    }
+    
+    private void visualizeMemoryUsage(Player player, CodeBlock block, Location location) {
+        // Implementation for memory usage visualization
+        Runtime runtime = Runtime.getRuntime();
+        long usedMemory = (runtime.totalMemory() - runtime.freeMemory()) / (1024 * 1024);
+        player.sendMessage("§6Memory: " + usedMemory + "MB used for " + block.getAction());
+    }
+    
+    private void visualizeVariables(Player player, CodeBlock block, Location location) {
+        // Implementation for variable tracking visualization
+        player.sendMessage("§dVariables in scope at " + block.getAction());
+    }
+    
+    private void sendPerformanceReport(Player player, PerformanceAnalyzer analyzer) {
+        // Implementation for sending performance report
+        player.sendMessage("§6=== Performance Report ===");
+        player.sendMessage("§7Total Executions: §f" + analyzer.getTotalExecutions());
+        player.sendMessage("§7Total Execution Time: §f" + analyzer.getTotalExecutionTime() + "ms");
+        player.sendMessage("§7Average Execution Time: §f" + analyzer.getAverageExecutionTime() + "ms");
+    }
+    
+    private String formatLocation(Location location) {
+        if (location == null) return "unknown location";
+        return String.format("(%d, %d, %d)", 
+            location.getBlockX(), 
+            location.getBlockY(), 
+            location.getBlockZ());
     }
 }

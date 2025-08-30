@@ -18,10 +18,9 @@ public class SetTimeAction implements BlockAction {
 
         if (player == null || block == null) return;
 
-        VariableManager variableManager = context.getPlugin().getVariableManager();
-        if (variableManager == null) return;
+        if (context == null) return;
         
-        ParameterResolver resolver = new ParameterResolver(variableManager);
+        ParameterResolver resolver = new ParameterResolver(context);
 
         // Получаем и разрешаем параметры
         DataValue rawTime = block.getParameter("time");

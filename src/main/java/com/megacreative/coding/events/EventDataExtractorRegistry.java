@@ -3,7 +3,6 @@ package com.megacreative.coding.events;
 import com.megacreative.coding.ExecutionContext;
 import com.megacreative.coding.events.extractors.*;
 import com.megacreative.coding.values.DataValue;
-import lombok.extern.java.Log;
 import org.bukkit.event.Event;
 import org.bukkit.event.block.BlockBreakEvent;
 import org.bukkit.event.entity.PlayerDeathEvent;
@@ -16,13 +15,15 @@ import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.logging.Level;
+import java.util.logging.Logger;
 
 /**
  * Central registry for event data extractors
  * Manages registration and lookup of extractors for different event types
  */
-@Log
 public class EventDataExtractorRegistry {
+    
+    private static final Logger log = Logger.getLogger(EventDataExtractorRegistry.class.getName());
     
     private final Map<Class<? extends Event>, EventDataExtractor<? extends Event>> extractors = new ConcurrentHashMap<>();
     

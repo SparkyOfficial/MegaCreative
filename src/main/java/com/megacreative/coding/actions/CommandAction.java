@@ -18,14 +18,14 @@ public class CommandAction implements BlockAction {
 
         if (player == null || block == null || variableManager == null) return;
 
-        ParameterResolver resolver = new ParameterResolver(variableManager);
+        ParameterResolver resolver = new ParameterResolver(context);
 
         // Получаем и разрешаем параметры
         DataValue rawCommand = block.getParameter("command");
 
         if (rawCommand == null) return;
 
-        DataValue commandValue = resolver.resolve(context, rawCommand);
+        DataValue commandValue = resolver.resolve(rawCommand);
         String commandStr = commandValue.asString();
 
         if (commandStr == null || commandStr.isEmpty()) return;

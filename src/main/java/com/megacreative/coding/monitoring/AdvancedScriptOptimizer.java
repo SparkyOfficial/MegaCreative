@@ -2,18 +2,53 @@ package com.megacreative.coding.monitoring;
 
 import com.megacreative.coding.CodeBlock;
 import com.megacreative.coding.CodeScript;
-import com.megacreative.coding.actions.BlockAction;
+import com.megacreative.coding.monitoring.model.*;
+import com.megacreative.coding.BlockAction;
 import com.megacreative.coding.BlockCondition;
-import lombok.Data;
-
+import org.bukkit.Location;
 import java.util.*;
+import java.util.logging.Logger;
+import java.util.Objects;
 import java.util.concurrent.ConcurrentHashMap;
+
+/**
+ * Priority levels for optimization suggestions
+ */
+enum OptimizationPriority {
+    CRITICAL,  // Critical issues that should be fixed immediately
+    HIGH,      // High priority optimizations
+    MEDIUM,    // Medium priority optimizations
+    LOW        // Low priority or minor optimizations
+}
+
+/**
+ * Interface for defining optimization rules
+ */
+interface OptimizationRule {
+    /**
+     * Applies the optimization rule to a script
+     * @param script The script to optimize
+     * @return List of optimization suggestions
+     */
+    List<OptimizationSuggestion> apply(CodeScript script);
+    
+    /**
+     * Gets a description of the optimization rule
+     */
+    String getDescription();
+    
+    /**
+     * Gets the priority of this optimization rule
+     */
+    OptimizationPriority getPriority();
+}
 
 /**
  * Advanced script optimizer that provides automated optimization suggestions
  * and can automatically apply common optimizations
  */
 public class AdvancedScriptOptimizer {
+    private static final Logger log = Logger.getLogger(AdvancedScriptOptimizer.class.getName());
     
     private final ScriptPerformanceMonitor performanceMonitor;
     private final Map<String, OptimizationRule> optimizationRules = new ConcurrentHashMap<>();
@@ -30,7 +65,7 @@ public class AdvancedScriptOptimizer {
         List<OptimizationSuggestion> suggestions = new ArrayList<>();
         
         // Get performance profile
-        ScriptPerformanceMonitor.ScriptPerformanceProfile profile = 
+        ScriptPerformanceProfile profile = 
             performanceMonitor.getScriptProfile(script.getName());
         
         // Check for common optimization opportunities
@@ -63,12 +98,21 @@ public class AdvancedScriptOptimizer {
      * Checks for loop-related optimization opportunities
      */
     private void checkLoopOptimizations(CodeScript script, 
-                                      ScriptPerformanceMonitor.ScriptPerformanceProfile profile,
+                                      ScriptPerformanceProfile profile,
                                       List<OptimizationSuggestion> suggestions) {
+        if (script == null || profile == null) {
+            return;
+        }
+        
         // Check for inefficient loops
         List<CodeBlock> blocks = script.getBlocks();
+        if (blocks == null) {
+            return;
+        }
+        
         for (int i = 0; i < blocks.size(); i++) {
             CodeBlock block = blocks.get(i);
+            if (block == null) continue;
             
             // Check for nested loops
             if (isLoopBlock(block)) {
@@ -86,18 +130,20 @@ public class AdvancedScriptOptimizer {
             }
             
             // Check for loops with expensive operations
-            if (isLoopBlock(block) && profile != null) {
-                ScriptPerformanceMonitor.ActionMetrics metrics = 
-                    profile.getActionMetrics().get(block.getAction());
-                if (metrics != null && metrics.getAverageExecutionTime() > 100) {
-                    suggestions.add(new OptimizationSuggestion(
-                        "ExpensiveLoopOperation",
-                        "Loop contains expensive operation: " + block.getAction(),
-                        "Consider moving expensive operations outside the loop or caching results",
-                        OptimizationPriority.MEDIUM,
-                        false,
-                        block.getLocation()
-                    ));
+            if (isLoopBlock(block)) {
+                String action = block.getAction();
+                if (action != null) {
+                    ActionPerformanceData actionData = profile.getActionData(action);
+                    if (actionData != null && actionData.getAverageExecutionTime() > 100) {
+                        suggestions.add(new OptimizationSuggestion(
+                            "ExpensiveLoopOperation",
+                            "Loop contains expensive operation: " + block.getAction(),
+                            "Consider moving expensive operations outside the loop or caching results",
+                            OptimizationPriority.MEDIUM,
+                            false,
+                            block.getLocation()
+                        ));
+                    }
                 }
             }
         }
@@ -107,7 +153,7 @@ public class AdvancedScriptOptimizer {
      * Checks for conditional-related optimization opportunities
      */
     private void checkConditionalOptimizations(CodeScript script,
-                                             ScriptPerformanceMonitor.ScriptPerformanceProfile profile,
+                                             ScriptPerformanceProfile profile,
                                              List<OptimizationSuggestion> suggestions) {
         List<CodeBlock> blocks = script.getBlocks();
         for (int i = 0; i < blocks.size(); i++) {
@@ -150,7 +196,7 @@ public class AdvancedScriptOptimizer {
      * Checks for resource-related optimization opportunities
      */
     private void checkResourceOptimizations(CodeScript script,
-                                          ScriptPerformanceMonitor.ScriptPerformanceProfile profile,
+                                          ScriptPerformanceProfile profile,
                                           List<OptimizationSuggestion> suggestions) {
         Set<String> declaredVariables = new HashSet<>();
         Set<String> usedVariables = new HashSet<>();
@@ -203,7 +249,7 @@ public class AdvancedScriptOptimizer {
      * Checks for structural optimization opportunities
      */
     private void checkStructureOptimizations(CodeScript script,
-                                           ScriptPerformanceMonitor.ScriptPerformanceProfile profile,
+                                           ScriptPerformanceProfile profile,
                                            List<OptimizationSuggestion> suggestions) {
         List<CodeBlock> blocks = script.getBlocks();
         
@@ -271,6 +317,16 @@ public class AdvancedScriptOptimizer {
                 // Implementation would check for expensive operations in loops
                 return suggestions;
             }
+            
+            @Override
+            public String getDescription() {
+                return "Detects and suggests optimizations for expensive operations inside loops";
+            }
+            
+            @Override
+            public OptimizationPriority getPriority() {
+                return OptimizationPriority.HIGH;
+            }
         });
         
         optimizationRules.put("minimize-variable-lookups", new OptimizationRule() {
@@ -279,6 +335,16 @@ public class AdvancedScriptOptimizer {
                 List<OptimizationSuggestion> suggestions = new ArrayList<>();
                 // Implementation would check for repeated variable lookups
                 return suggestions;
+            }
+            
+            @Override
+            public String getDescription() {
+                return "Identifies repeated variable lookups that could be cached";
+            }
+            
+            @Override
+            public OptimizationPriority getPriority() {
+                return OptimizationPriority.MEDIUM;
             }
         });
     }
@@ -365,62 +431,57 @@ public class AdvancedScriptOptimizer {
     }
     
     /**
-     * Adds a custom optimization rule
+     * Represents a single optimization suggestion
      */
-    public void addOptimizationRule(String name, OptimizationRule rule) {
-        optimizationRules.put(name, rule);
-    }
-    
-    /**
-     * Removes an optimization rule
-     */
-    public void removeOptimizationRule(String name) {
-        optimizationRules.remove(name);
-    }
-    
-    /**
-     * Represents an optimization suggestion
-     */
-    @Data
     public static class OptimizationSuggestion {
         private final String type;
         private final String description;
         private final String recommendation;
         private final OptimizationPriority priority;
         private final boolean safeToApply;
-        private final Object location; // Block location or other identifier
-        private final long timestamp;
+        private final Location location;
         
-        public OptimizationSuggestion(String type, String description, String recommendation,
-                                    OptimizationPriority priority, boolean safeToApply, Object location) {
+        public OptimizationSuggestion(String type, String description, String recommendation, 
+                                    OptimizationPriority priority, boolean safeToApply, Location location) {
             this.type = type;
             this.description = description;
             this.recommendation = recommendation;
             this.priority = priority;
             this.safeToApply = safeToApply;
             this.location = location;
-            this.timestamp = System.currentTimeMillis();
         }
-    }
-    
-    /**
-     * Represents an optimization rule
-     */
-    public interface OptimizationRule {
-        List<OptimizationSuggestion> apply(CodeScript script);
-    }
-    
-    /**
-     * Optimization priorities
-     */
-    public enum OptimizationPriority {
-        LOW, MEDIUM, HIGH, CRITICAL
+        
+        // Getters
+        public String getType() { return type; }
+        public String getDescription() { return description; }
+        public String getRecommendation() { return recommendation; }
+        public OptimizationPriority getPriority() { return priority; }
+        public boolean isSafeToApply() { return safeToApply; }
+        public Location getLocation() { return location; }
+        
+        @Override
+        public boolean equals(Object o) {
+            if (this == o) return true;
+            if (o == null || getClass() != o.getClass()) return false;
+            
+            OptimizationSuggestion that = (OptimizationSuggestion) o;
+            return safeToApply == that.safeToApply &&
+                   Objects.equals(type, that.type) &&
+                   Objects.equals(description, that.description) &&
+                   Objects.equals(recommendation, that.recommendation) &&
+                   priority == that.priority &&
+                   Objects.equals(location, that.location);
+        }
+        
+        @Override
+        public int hashCode() {
+            return Objects.hash(type, description, recommendation, priority, safeToApply, location);
+        }
     }
     
     /**
      * Script optimization report
      */
-    @Data
     public static class ScriptOptimizationReport {
         private final String scriptName;
         private final List<OptimizationSuggestion> suggestions;
@@ -450,6 +511,14 @@ public class AdvancedScriptOptimizer {
             this.highPriorityIssues = high;
             this.mediumPriorityIssues = medium;
             this.lowPriorityIssues = low;
+        }
+        
+        /**
+         * Returns the list of optimization suggestions
+         * @return List of optimization suggestions
+         */
+        public List<OptimizationSuggestion> getSuggestions() {
+            return new ArrayList<>(suggestions);
         }
         
         public String getSummary() {

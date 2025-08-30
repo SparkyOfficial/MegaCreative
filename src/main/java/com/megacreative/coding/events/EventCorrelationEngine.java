@@ -1,9 +1,9 @@
 package com.megacreative.coding.events;
 
 import com.megacreative.coding.values.DataValue;
-import lombok.Data;
-import lombok.extern.java.Log;
 import org.bukkit.entity.Player;
+import java.util.logging.Logger;
+import java.util.Objects;
 
 import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
@@ -14,8 +14,8 @@ import java.util.logging.Level;
 /**
  * Event correlation engine for detecting complex event patterns and sequences
  */
-@Log
 public class EventCorrelationEngine {
+    private static final Logger log = Logger.getLogger(EventCorrelationEngine.class.getName());
     
     private final CustomEventManager eventManager;
     
@@ -188,13 +188,35 @@ public class EventCorrelationEngine {
     /**
      * Represents an event pattern definition
      */
-    @Data
     public static class EventPattern {
         private final String patternId;
         private final String name;
         private final String description;
         private final List<Step> steps;
         private final long timeoutMs; // Timeout for pattern completion
+        
+        public String getPatternId() { return patternId; }
+        public String getName() { return name; }
+        public String getDescription() { return description; }
+        public List<Step> getSteps() { return new ArrayList<>(steps); }
+        public long getTimeoutMs() { return timeoutMs; }
+        
+        @Override
+        public boolean equals(Object o) {
+            if (this == o) return true;
+            if (o == null || getClass() != o.getClass()) return false;
+            EventPattern that = (EventPattern) o;
+            return timeoutMs == that.timeoutMs &&
+                   Objects.equals(patternId, that.patternId) &&
+                   Objects.equals(name, that.name) &&
+                   Objects.equals(description, that.description) &&
+                   Objects.equals(steps, that.steps);
+        }
+        
+        @Override
+        public int hashCode() {
+            return Objects.hash(patternId, name, description, steps, timeoutMs);
+        }
         
         public EventPattern(String patternId, String name, String description, List<Step> steps, long timeoutMs) {
             this.patternId = patternId;
@@ -207,10 +229,26 @@ public class EventCorrelationEngine {
         /**
          * A step in the event pattern
          */
-        @Data
         public static class Step {
             private final String eventName;
             private final Predicate<Map<String, DataValue>> condition;
+            
+            public String getEventName() { return eventName; }
+            public Predicate<Map<String, DataValue>> getCondition() { return condition; }
+            
+            @Override
+            public boolean equals(Object o) {
+                if (this == o) return true;
+                if (o == null || getClass() != o.getClass()) return false;
+                Step step = (Step) o;
+                return Objects.equals(eventName, step.eventName) &&
+                       Objects.equals(condition, step.condition);
+            }
+            
+            @Override
+            public int hashCode() {
+                return Objects.hash(eventName, condition);
+            }
             
             public Step(String eventName) {
                 this(eventName, null);
@@ -270,7 +308,6 @@ public class EventCorrelationEngine {
     /**
      * Represents an active instance of a pattern being tracked
      */
-    @Data
     public static class PatternInstance {
         private final String instanceId;
         private final EventPattern pattern;
@@ -281,6 +318,15 @@ public class EventCorrelationEngine {
         private final List<CompletedStep> completedSteps = new ArrayList<>();
         private boolean completed = false;
         private long completionTime = 0;
+        
+        public String getInstanceId() { return instanceId; }
+        public EventPattern getPattern() { return pattern; }
+        public UUID getPlayerId() { return playerId; }
+        public String getWorldName() { return worldName; }
+        public long getStartTime() { return startTime; }
+        public List<CompletedStep> getCompletedSteps() { return new ArrayList<>(completedSteps); }
+        public boolean isCompleted() { return completed; }
+        public long getCompletionTime() { return completionTime; }
         
         public PatternInstance(String instanceId, EventPattern pattern, Player player, String worldName) {
             this.instanceId = instanceId;
@@ -326,12 +372,39 @@ public class EventCorrelationEngine {
         /**
          * Represents a completed step in the pattern
          */
-        @Data
         public static class CompletedStep {
             private final int stepIndex;
             private final String eventName;
             private final Map<String, DataValue> eventData;
             private final long timestamp;
+            
+            public int getStepIndex() { return stepIndex; }
+            public String getEventName() { return eventName; }
+            public Map<String, DataValue> getEventData() { return new HashMap<>(eventData); }
+            public long getTimestamp() { return timestamp; }
+            
+            public CompletedStep(int stepIndex, String eventName, Map<String, DataValue> eventData, long timestamp) {
+                this.stepIndex = stepIndex;
+                this.eventName = eventName;
+                this.eventData = new HashMap<>(eventData);
+                this.timestamp = timestamp;
+            }
+            
+            @Override
+            public boolean equals(Object o) {
+                if (this == o) return true;
+                if (o == null || getClass() != o.getClass()) return false;
+                CompletedStep that = (CompletedStep) o;
+                return stepIndex == that.stepIndex &&
+                       timestamp == that.timestamp &&
+                       Objects.equals(eventName, that.eventName) &&
+                       Objects.equals(eventData, that.eventData);
+            }
+            
+            @Override
+            public int hashCode() {
+                return Objects.hash(stepIndex, eventName, eventData, timestamp);
+            }
         }
     }
     
@@ -346,10 +419,34 @@ public class EventCorrelationEngine {
     /**
      * Statistics about pattern processing
      */
-    @Data
     public static class PatternStatistics {
         private final int registeredPatterns;
         private final int activeInstances;
         private final int completedPatterns;
+        
+        public int getRegisteredPatterns() { return registeredPatterns; }
+        public int getActiveInstances() { return activeInstances; }
+        public int getCompletedPatterns() { return completedPatterns; }
+        
+        public PatternStatistics(int registeredPatterns, int activeInstances, int completedPatterns) {
+            this.registeredPatterns = registeredPatterns;
+            this.activeInstances = activeInstances;
+            this.completedPatterns = completedPatterns;
+        }
+        
+        @Override
+        public boolean equals(Object o) {
+            if (this == o) return true;
+            if (o == null || getClass() != o.getClass()) return false;
+            PatternStatistics that = (PatternStatistics) o;
+            return registeredPatterns == that.registeredPatterns &&
+                   activeInstances == that.activeInstances &&
+                   completedPatterns == that.completedPatterns;
+        }
+        
+        @Override
+        public int hashCode() {
+            return Objects.hash(registeredPatterns, activeInstances, completedPatterns);
+        }
     }
 }

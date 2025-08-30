@@ -22,17 +22,14 @@ public class PlaySoundAction implements BlockAction {
 
         if (player == null || block == null) return;
 
-        VariableManager variableManager = context.getPlugin().getVariableManager();
-        if (variableManager == null) return;
-        
-        ParameterResolver resolver = new ParameterResolver(variableManager);
+        ParameterResolver resolver = new ParameterResolver(context);
 
         try {
             // Enhanced parameter resolution with defaults for backward compatibility
-            String soundStr = resolveParameter(resolver, context, block, "sound", "minecraft:block.note_block.harp");
-            float volume = (float) resolveNumberParameter(resolver, context, block, "volume", 1.0);
-            float pitch = (float) resolveNumberParameter(resolver, context, block, "pitch", 1.0);
-            String locationStr = resolveParameter(resolver, context, block, "location", "player");
+            String soundStr = resolveParameter(resolver, block, "sound", "minecraft:block.note_block.harp");
+            float volume = (float) resolveNumberParameter(resolver, block, "volume", 1.0);
+            float pitch = (float) resolveNumberParameter(resolver, block, "pitch", 1.0);
+            String locationStr = resolveParameter(resolver, block, "location", "player");
 
             if (soundStr == null) return;
 
@@ -70,24 +67,24 @@ public class PlaySoundAction implements BlockAction {
     /**
      * Resolves a text parameter with fallback default
      */
-    private String resolveParameter(ParameterResolver resolver, ExecutionContext context, 
+    private String resolveParameter(ParameterResolver resolver, 
                                   CodeBlock block, String paramName, String defaultValue) {
         DataValue rawValue = block.getParameter(paramName);
         if (rawValue == null) return defaultValue;
         
-        return resolver.resolve(context, rawValue).asString();
+        return resolver.resolve(rawValue).asString();
     }
     
     /**
      * Resolves a numeric parameter with fallback default
      */
-    private double resolveNumberParameter(ParameterResolver resolver, ExecutionContext context, 
+    private double resolveNumberParameter(ParameterResolver resolver, 
                                         CodeBlock block, String paramName, double defaultValue) {
         DataValue rawValue = block.getParameter(paramName);
         if (rawValue == null) return defaultValue;
         
         try {
-            return resolver.resolve(context, rawValue).asNumber().doubleValue();
+            return resolver.resolve(rawValue).asNumber().doubleValue();
         } catch (Exception e) {
             return defaultValue;
         }

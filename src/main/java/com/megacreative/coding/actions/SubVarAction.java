@@ -5,9 +5,13 @@ import com.megacreative.coding.CodeBlock;
 import com.megacreative.coding.ExecutionContext;
 import com.megacreative.coding.ParameterResolver;
 import com.megacreative.coding.values.DataValue;
-import com.megacreative.coding.variables.VariableManager;
+import com.megacreative.coding.values.types.NumberValue;
 import org.bukkit.entity.Player;
 
+/**
+ * Subtracts a numeric value from a variable.
+ * Supports LOCAL, GLOBAL, PLAYER, and SERVER scopes.
+ */
 public class SubVarAction implements BlockAction {
     @Override
     public void execute(ExecutionContext context) {
@@ -15,46 +19,112 @@ public class SubVarAction implements BlockAction {
         CodeBlock block = context.getCurrentBlock();
 
         if (player == null || block == null) return;
-
-        VariableManager variableManager = context.getPlugin().getVariableManager();
-        if (variableManager == null) return;
         
-        ParameterResolver resolver = new ParameterResolver(variableManager);
-
-        // Получаем и разрешаем параметры
-        DataValue rawVarName = block.getParameter("var");
-        DataValue rawValue = block.getParameter("value");
-
-        if (rawVarName == null || rawValue == null) return;
-
-        String varName = resolver.resolve(context, rawVarName).asString();
-        String valueStr = resolver.resolve(context, rawValue).asString();
-
-        if (varName == null || valueStr == null) return;
-
         try {
-            // Получаем текущее значение переменной через VariableManager для типобезопасности
-            DataValue currentValueObj = variableManager.getVariable(varName, context.getScriptId(), context.getWorldId());
-            double currentNum = 0.0;
+            ParameterResolver resolver = new ParameterResolver(context);
+
+            // Get variable name (required)
+            DataValue rawVarName = block.getParameter("var");
+            if (rawVarName == null || rawVarName.isEmpty()) {
+                player.sendMessage("§cОшибка: не указано имя переменной!");
+                return;
+            }
+
+            // Get value to subtract (required)
+            DataValue rawValue = block.getParameter("value");
+            if (rawValue == null || rawValue.isEmpty()) {
+                player.sendMessage("§cОшибка: не указано значение для вычитания!");
+                return;
+            }
             
-            if (currentValueObj != null && !currentValueObj.isEmpty()) {
-                try {
-                    currentNum = currentValueObj.asNumber().doubleValue();
-                } catch (NumberFormatException e) {
-                    // Если не число, начинаем с 0
+            // Resolve variable name and value
+            String varName = resolver.resolve(context, rawVarName).asString();
+            if (varName == null || varName.trim().isEmpty()) {
+                player.sendMessage("§cОшибка: имя переменной не может быть пустым!");
+                return;
+            }
+            
+            // Get scope (optional, defaults to LOCAL)
+            DataValue scopeValue = block.getParameter("scope");
+            String scope = scopeValue != null ? scopeValue.asString().toUpperCase() : "LOCAL";
+            
+            // Get current value from the appropriate scope
+            Object currentValue = null;
+            switch (scope) {
+                case "GLOBAL":
+                    currentValue = context.getGlobalVariable(varName);
+                    break;
+                case "PLAYER":
+                    currentValue = context.getPlayerVariable(varName);
+                    break;
+                case "SERVER":
+                    currentValue = context.getServerVariable(varName);
+                    break;
+                case "LOCAL":
+                default:
+                    currentValue = context.getVariable(varName);
+                    break;
+            }
+            
+            // Parse current value as double
+            double currentNum = 0.0;
+            if (currentValue != null) {
+                if (currentValue instanceof Number) {
+                    currentNum = ((Number) currentValue).doubleValue();
+                } else if (currentValue instanceof DataValue) {
+                    try {
+                        currentNum = ((DataValue) currentValue).asNumber().doubleValue();
+                    } catch (NumberFormatException e) {
+                        player.sendMessage("§cОшибка: текущее значение переменной не является числом!");
+                        return;
+                    }
+                } else {
+                    try {
+                        currentNum = Double.parseDouble(currentValue.toString());
+                    } catch (NumberFormatException e) {
+                        player.sendMessage("§cОшибка: текущее значение переменной не является числом!");
+                        return;
+                    }
                 }
             }
             
-            // Вычитаем новое значение
-            double subValue = Double.parseDouble(valueStr);
+            // Parse and subtract the value
+            DataValue resolvedValue = resolver.resolve(context, rawValue);
+            double subValue;
+            try {
+                subValue = resolvedValue.asNumber().doubleValue();
+            } catch (NumberFormatException e) {
+                player.sendMessage("§cОшибка: значение для вычитания должно быть числом!");
+                return;
+            }
+            
             double result = currentNum - subValue;
             
-            // Сохраняем результат через VariableManager
-            variableManager.setVariable(varName, DataValue.fromObject(result), context.getScriptId(), context.getWorldId());
-            player.sendMessage("§a✓ Переменная '" + varName + "' уменьшена на " + subValue + " = " + result);
+            // Save the result back to the appropriate scope
+            DataValue resultValue = new NumberValue(result);
+            switch (scope) {
+                case "GLOBAL":
+                    context.setGlobalVariable(varName, resultValue);
+                    break;
+                case "PLAYER":
+                    context.setPlayerVariable(varName, resultValue);
+                    break;
+                case "SERVER":
+                    context.setServerVariable(varName, resultValue);
+                    break;
+                case "LOCAL":
+                default:
+                    context.setVariable(varName, resultValue);
+                    break;
+            }
             
-        } catch (NumberFormatException e) {
-            player.sendMessage("§cОшибка: значение должно быть числом");
+            player.sendMessage("§a✓ Переменная '§f" + varName + "§a' (§b" + scope + 
+                "§a) уменьшена на §e" + subValue + "§a = §e" + result);
+            
+        } catch (Exception e) {
+            player.sendMessage("§cОшибка при изменении переменной: " + e.getMessage());
+            context.getPlugin().getLogger().warning("Error in SubVarAction: " + e.getMessage());
+            e.printStackTrace();
         }
     }
-} 
+}

@@ -1,14 +1,13 @@
 package com.megacreative.models;
 
-import lombok.Data;
-
 import org.bukkit.entity.Player;
-
 import com.megacreative.coding.CodeScript;
-
 import java.util.*;
+import java.util.Objects;
 
-@Data
+/**
+ * Represents a creative world in the plugin with all its properties and settings.
+ */
 public class CreativeWorld {
     
     private String id;
@@ -28,6 +27,7 @@ public class CreativeWorld {
     // Доверенные игроки
     private Set<UUID> trustedBuilders;
     private Set<UUID> trustedCoders;
+    private Set<UUID> trustedAdmins = new HashSet<>();
     
     // Статистика
     private int likes;
@@ -49,15 +49,19 @@ public class CreativeWorld {
         // Конструктор по умолчанию для десериализации
         this.flags = new WorldFlags();
         this.trustedBuilders = new HashSet<>();
+        this.trustedAdmins = new HashSet<>();
         this.trustedCoders = new HashSet<>();
-        this.likes = 0;
-        this.dislikes = 0;
-        this.likedBy = new HashSet<>();
-        this.dislikedBy = new HashSet<>();
-        this.favoriteBy = new HashSet<>();
+        this.trustedAdmins = new HashSet<>();
         this.comments = new ArrayList<>();
         this.scripts = new ArrayList<>();
         this.onlinePlayers = new HashSet<>();
+        this.likedBy = new HashSet<>();
+        this.dislikedBy = new HashSet<>();
+        this.favoriteBy = new HashSet<>();
+        this.createdTime = System.currentTimeMillis();
+        this.lastActivity = System.currentTimeMillis();
+        this.likes = 0;
+        this.dislikes = 0;
     }
     
     public CreativeWorld(String id, String name, UUID ownerId, String ownerName, CreativeWorldType worldType) {
@@ -250,31 +254,67 @@ public class CreativeWorld {
     public Set<UUID> getTrustedBuilders() {
         return trustedBuilders;
     }
-    
-    public Set<UUID> getTrustedCoders() {
-        return trustedCoders;
+
+    public void setTrustedBuilders(Set<UUID> trustedBuilders) {
+        this.trustedBuilders = trustedBuilders != null ? new HashSet<>(trustedBuilders) : new HashSet<>();
     }
-    
+
+    public Set<UUID> getTrustedCoders() {
+        return trustedCoders != null ? trustedCoders : (trustedCoders = new HashSet<>());
+    }
+
+    public void setTrustedCoders(Set<UUID> trustedCoders) {
+        this.trustedCoders = trustedCoders != null ? new HashSet<>(trustedCoders) : new HashSet<>();
+    }
+
+    public Set<UUID> getTrustedAdmins() {
+        return trustedAdmins != null ? trustedAdmins : (trustedAdmins = new HashSet<>());
+    }
+
+    public void setTrustedAdmins(Set<UUID> trustedAdmins) {
+        this.trustedAdmins = trustedAdmins;
+    }
+
     public int getLikes() {
         return likes;
     }
-    
+
+    public void setLikes(int likes) {
+        this.likes = likes;
+    }
+
     public int getDislikes() {
         return dislikes;
     }
-    
+
+    public void setDislikes(int dislikes) {
+        this.dislikes = dislikes;
+    }
+
     public Set<UUID> getLikedBy() {
         return likedBy;
     }
-    
+
+    public void setLikedBy(Set<UUID> likedBy) {
+        this.likedBy = likedBy;
+    }
+
     public Set<UUID> getDislikedBy() {
         return dislikedBy;
     }
-    
+
+    public void setDislikedBy(Set<UUID> dislikedBy) {
+        this.dislikedBy = dislikedBy;
+    }
+
     public Set<UUID> getFavoriteBy() {
         return favoriteBy;
     }
-    
+
+    public void setFavoriteBy(Set<UUID> favoriteBy) {
+        this.favoriteBy = favoriteBy;
+    }
+
     public List<WorldComment> getComments() {
         return comments;
     }
@@ -289,5 +329,118 @@ public class CreativeWorld {
     
     public void setMode(WorldMode mode) {
         this.mode = mode;
+    }
+    
+    public void setDescription(String description) {
+        this.description = description;
+    }
+    
+    public void setName(String name) {
+        this.name = name;
+    }
+    
+    public void setOwnerId(UUID ownerId) {
+        this.ownerId = ownerId;
+    }
+    
+    public void setOwnerName(String ownerName) {
+        this.ownerName = ownerName;
+    }
+    
+    public void setWorldType(CreativeWorldType worldType) {
+        this.worldType = worldType;
+    }
+    
+    public void setPrivate(boolean isPrivate) {
+        this.isPrivate = isPrivate;
+    }
+    
+    public void setCreatedTime(long createdTime) {
+        this.createdTime = createdTime;
+    }
+    
+    public void setLastActivity(long lastActivity) {
+        this.lastActivity = lastActivity;
+    }
+    
+    public void setFlags(WorldFlags flags) {
+        this.flags = flags;
+    }
+    
+    public void setComments(List<WorldComment> comments) {
+        this.comments = comments;
+    }
+    
+    public void setScripts(List<CodeScript> scripts) {
+        this.scripts = scripts;
+    }
+    
+    public void setOnlinePlayers(Set<UUID> onlinePlayers) {
+        this.onlinePlayers = onlinePlayers;
+    }
+    
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) return true;
+        if (o == null || getClass() != o.getClass()) return false;
+        CreativeWorld that = (CreativeWorld) o;
+        return isPrivate == that.isPrivate &&
+               createdTime == that.createdTime &&
+               lastActivity == that.lastActivity &&
+               likes == that.likes &&
+               dislikes == that.dislikes &&
+               Objects.equals(id, that.id) &&
+               Objects.equals(name, that.name) &&
+               Objects.equals(description, that.description) &&
+               Objects.equals(ownerId, that.ownerId) &&
+               Objects.equals(ownerName, that.ownerName) &&
+               worldType == that.worldType &&
+               mode == that.mode &&
+               Objects.equals(flags, that.flags) &&
+               Objects.equals(trustedBuilders, that.trustedBuilders) &&
+               Objects.equals(trustedCoders, that.trustedCoders) &&
+               Objects.equals(trustedAdmins, that.trustedAdmins) &&
+               Objects.equals(likedBy, that.likedBy) &&
+               Objects.equals(dislikedBy, that.dislikedBy) &&
+               Objects.equals(favoriteBy, that.favoriteBy) &&
+               Objects.equals(comments, that.comments) &&
+               Objects.equals(scripts, that.scripts) &&
+               Objects.equals(onlinePlayers, that.onlinePlayers);
+    }
+    
+    @Override
+    public int hashCode() {
+        return Objects.hash(id, name, description, ownerId, ownerName, worldType, mode, 
+                          isPrivate, createdTime, lastActivity, flags, trustedBuilders, 
+                          trustedCoders, trustedAdmins, likes, dislikes, likedBy, 
+                          dislikedBy, favoriteBy, comments, scripts, onlinePlayers);
+    }
+    
+    @Override
+    public String toString() {
+        return "CreativeWorld{" +
+               "id='" + id + '\'' +
+               ", name='" + name + '\'' +
+               ", description='" + description + '\'' +
+               ", ownerId=" + ownerId +
+               ", ownerName='" + ownerName + '\'' +
+               ", worldType=" + worldType +
+               ", mode=" + mode +
+               ", isPrivate=" + isPrivate +
+               ", createdTime=" + createdTime +
+               ", lastActivity=" + lastActivity +
+               ", flags=" + flags +
+               ", trustedBuilders=" + trustedBuilders.size() +
+               ", trustedCoders=" + trustedCoders.size() +
+               ", trustedAdmins=" + (trustedAdmins != null ? trustedAdmins.size() : 0) +
+               ", likes=" + likes +
+               ", dislikes=" + dislikes +
+               ", likedBy=" + (likedBy != null ? likedBy.size() : 0) +
+               ", dislikedBy=" + (dislikedBy != null ? dislikedBy.size() : 0) +
+               ", favoriteBy=" + (favoriteBy != null ? favoriteBy.size() : 0) +
+               ", comments=" + (comments != null ? comments.size() : 0) +
+               ", scripts=" + (scripts != null ? scripts.size() : 0) +
+               ", onlinePlayers=" + (onlinePlayers != null ? onlinePlayers.size() : 0) +
+               '}';
     }
 }

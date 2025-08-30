@@ -1,16 +1,15 @@
 package com.megacreative.coding.groups;
 
 import com.megacreative.coding.CodeBlock;
-import lombok.Data;
 import org.bukkit.Location;
 
 import java.util.Map;
 import java.util.UUID;
+import java.util.Objects;
 
 /**
  * Represents a group of code blocks that can be collapsed and expanded as a unit
  */
-@Data
 public class BlockGroup {
     
     private final UUID id;
@@ -98,7 +97,6 @@ public class BlockGroup {
         return String.format("%s [%s] - %d blocks", name, status, getBlockCount());
     }
     
-    // Explicit getters for Lombok compatibility
     public UUID getId() { return id; }
     public String getName() { return name; }
     public UUID getOwner() { return owner; }

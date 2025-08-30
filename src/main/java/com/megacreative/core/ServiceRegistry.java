@@ -18,9 +18,7 @@ import com.megacreative.listeners.DevWorldProtectionListener;
 import com.megacreative.managers.*;
 import com.megacreative.services.BlockConfigService;
 import com.megacreative.tools.CodeBlockClipboard;
-import lombok.extern.java.Log;
 import org.bukkit.plugin.Plugin;
-
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.logging.Level;
 import java.util.logging.Logger;
@@ -30,7 +28,6 @@ import java.util.logging.Logger;
  * Replaces the God Object pattern with proper dependency injection
  */
 public class ServiceRegistry {
-    
     private static final Logger log = Logger.getLogger(ServiceRegistry.class.getName());
     private final Plugin plugin;
     private final DependencyContainer dependencyContainer;

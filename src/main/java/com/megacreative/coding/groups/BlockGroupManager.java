@@ -2,12 +2,12 @@ package com.megacreative.coding.groups;
 
 import com.megacreative.coding.CodeBlock;
 import com.megacreative.interfaces.IPlayerManager;
-import lombok.Data;
-import lombok.extern.java.Log;
 import org.bukkit.Location;
 import org.bukkit.Material;
 import org.bukkit.entity.Player;
 import org.bukkit.plugin.Plugin;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 
 import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
@@ -15,8 +15,8 @@ import java.util.concurrent.ConcurrentHashMap;
 /**
  * Manages block grouping functionality for organizing code blocks into collapsible units
  */
-@Log
 public class BlockGroupManager {
+    private static final Logger log = Logger.getLogger(BlockGroupManager.class.getName());
     
     private final Plugin plugin;
     private final IPlayerManager playerManager;
@@ -468,12 +468,52 @@ public class BlockGroupManager {
     
     // Data classes
     
-    @Data
     public static class GroupSelectionState {
         private final Map<Location, CodeBlock> selectedBlocks = new HashMap<>();
+        
+        public GroupSelectionState() {}
+        
+        public Map<Location, CodeBlock> getSelectedBlocks() {
+            return new HashMap<>(selectedBlocks);
+        }
+        
+        public void addBlock(Location location, CodeBlock block) {
+            selectedBlocks.put(location, block);
+        }
+        
+        public void clear() {
+            selectedBlocks.clear();
+        }
+        
+        public int size() {
+            return selectedBlocks.size();
+        }
+        
+        public boolean isEmpty() {
+            return selectedBlocks.isEmpty();
+        }
+        
+        @Override
+        public boolean equals(Object o) {
+            if (this == o) return true;
+            if (o == null || getClass() != o.getClass()) return false;
+            GroupSelectionState that = (GroupSelectionState) o;
+            return Objects.equals(selectedBlocks, that.selectedBlocks);
+        }
+        
+        @Override
+        public int hashCode() {
+            return Objects.hash(selectedBlocks);
+        }
+        
+        @Override
+        public String toString() {
+            return "GroupSelectionState{" +
+                   "selectedBlocks=" + selectedBlocks.keySet() +
+                   '}';
+        }
     }
     
-    @Data
     public static class GroupBounds {
         private final int minX, minY, minZ, maxX, maxY, maxZ;
         
@@ -486,8 +526,40 @@ public class BlockGroupManager {
             this.maxZ = maxZ;
         }
         
+        public int getMinX() { return minX; }
+        public int getMinY() { return minY; }
+        public int getMinZ() { return minZ; }
+        public int getMaxX() { return maxX; }
+        public int getMaxY() { return maxY; }
+        public int getMaxZ() { return maxZ; }
         public int getWidth() { return maxX - minX + 1; }
         public int getHeight() { return maxY - minY + 1; }
         public int getDepth() { return maxZ - minZ + 1; }
+        
+        @Override
+        public boolean equals(Object o) {
+            if (this == o) return true;
+            if (o == null || getClass() != o.getClass()) return false;
+            GroupBounds that = (GroupBounds) o;
+            return minX == that.minX && 
+                   minY == that.minY && 
+                   minZ == that.minZ && 
+                   maxX == that.maxX && 
+                   maxY == that.maxY && 
+                   maxZ == that.maxZ;
+        }
+        
+        @Override
+        public int hashCode() {
+            return Objects.hash(minX, minY, minZ, maxX, maxY, maxZ);
+        }
+        
+        @Override
+        public String toString() {
+            return String.format(
+                "GroupBounds{minX=%d, minY=%d, minZ=%d, maxX=%d, maxY=%d, maxZ=%d, width=%d, height=%d, depth=%d}",
+                minX, minY, minZ, maxX, maxY, maxZ, getWidth(), getHeight(), getDepth()
+            );
+        }
     }
 }

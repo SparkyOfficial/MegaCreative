@@ -15,9 +15,9 @@ public class CompareVariableCondition implements BlockCondition {
         CodeBlock block = context.getCurrentBlock();
         VariableManager variableManager = context.getPlugin().getVariableManager();
 
-        if (player == null || block == null || variableManager == null) return false;
+        if (player == null || block == null) return false;
 
-        ParameterResolver resolver = new ParameterResolver(variableManager);
+        ParameterResolver resolver = new ParameterResolver(context);
 
         try {
             // Detect parameter format: new (var1, operator, var2) vs legacy (variable, value)

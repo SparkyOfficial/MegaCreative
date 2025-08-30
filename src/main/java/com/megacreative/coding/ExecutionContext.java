@@ -143,6 +143,19 @@ public class ExecutionContext {
     }
     
     /**
+     * Gets a server variable value by name
+     * @param name The name of the server variable
+     * @return The variable value or null if not found
+     */
+    public Object getServerVariable(String name) {
+        if (variableManager == null) {
+            return null;
+        }
+        DataValue value = variableManager.getServerVariable(name);
+        return value != null ? value.getValue() : null;
+    }
+    
+    /**
      * Получает глобальную переменную мира
      */
     public Object getGlobalVariable(String name) {
@@ -226,15 +239,6 @@ public class ExecutionContext {
     }
     
     /**
-     * Получает булеву переменную
-     */
-    public Boolean getBoolean(String name) {
-        return (Boolean) getVariable(name);
-    }
-    
-    // --- МЕТОДЫ ДЛЯ РАБОТЫ С ЧИСЛАМИ ---
-    
-    /**
      * Устанавливает числовую переменную
      */
     public void setNumber(String name, Number value) {
@@ -245,7 +249,28 @@ public class ExecutionContext {
      * Получает числовую переменную
      */
     public Number getNumber(String name) {
-        return (Number) getVariable(name);
+        Object value = getVariable(name);
+        if (value instanceof Number) {
+            return (Number) value;
+        }
+        return 0; // Default value
+    }
+    
+    /**
+     * Gets a boolean variable by name
+     * @param name The name of the boolean variable
+     * @return The boolean value or false if not found or not a boolean
+     */
+    public Boolean getBoolean(String name) {
+        Object value = getVariable(name);
+        if (value instanceof Boolean) {
+            return (Boolean) value;
+        } else if (value instanceof String) {
+            return Boolean.parseBoolean((String) value);
+        } else if (value instanceof Number) {
+            return ((Number) value).intValue() != 0;
+        }
+        return false; // Default value
     }
     
     /**

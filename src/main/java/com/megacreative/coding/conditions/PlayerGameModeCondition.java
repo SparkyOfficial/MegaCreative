@@ -16,9 +16,9 @@ public class PlayerGameModeCondition implements BlockCondition {
         CodeBlock block = context.getCurrentBlock();
         VariableManager variableManager = context.getPlugin().getVariableManager();
 
-        if (player == null || block == null || variableManager == null) return false;
+        if (player == null || block == null) return false;
 
-        ParameterResolver resolver = new ParameterResolver(variableManager);
+        ParameterResolver resolver = new ParameterResolver(context);
 
         // Получаем и разрешаем параметры
         DataValue rawMode = block.getParameter("mode");

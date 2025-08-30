@@ -27,8 +27,8 @@ public class SendMessageAction implements BlockAction {
         
         if (player == null || block == null) return;
         
-        // Создаем ParameterResolver с доступом к VariableManager
-        ParameterResolver resolver = new ParameterResolver(context.getPlugin().getVariableManager());
+        // Create ParameterResolver with ExecutionContext
+        ParameterResolver resolver = new ParameterResolver(context);
         
         String message = null;
         

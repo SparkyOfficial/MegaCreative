@@ -27,11 +27,9 @@ public class TriggerEventAction implements BlockAction {
     public void execute(ExecutionContext context) {
         Player player = context.getPlayer();
         CodeBlock block = context.getCurrentBlock();
-        VariableManager variableManager = context.getPlugin().getVariableManager();
+        if (player == null || block == null) return;
         
-        if (player == null || block == null || variableManager == null) return;
-        
-        ParameterResolver resolver = new ParameterResolver(variableManager);
+        ParameterResolver resolver = new ParameterResolver(context);
         
         try {
             // Get event name from parameters

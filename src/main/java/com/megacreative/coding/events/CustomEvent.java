@@ -1,17 +1,67 @@
 package com.megacreative.coding.events;
 
 import com.megacreative.coding.values.DataValue;
-import lombok.Data;
-import lombok.NoArgsConstructor;
 
 import java.util.*;
 
 /**
  * Represents a custom event that can be triggered and handled within scripts
  */
-@Data
-@NoArgsConstructor
 public class CustomEvent {
+    // No-args constructor
+    public CustomEvent() {
+        this.id = UUID.randomUUID();
+        this.createdTime = System.currentTimeMillis();
+        this.dataFields = new HashMap<>();
+        this.tags = new HashSet<>();
+        this.metadata = new HashMap<>();
+        this.aliases = new ArrayList<>();
+    }
+    // Getters and Setters
+    public UUID getId() { return id; }
+    public void setId(UUID id) { this.id = id; }
+    
+    public String getName() { return name; }
+    public void setName(String name) { this.name = name; }
+    
+    public String getDescription() { return description; }
+    public void setDescription(String description) { this.description = description; }
+    
+    public String getCategory() { return category; }
+    public void setCategory(String category) { this.category = category; }
+    
+    public long getCreatedTime() { return createdTime; }
+    public void setCreatedTime(long createdTime) { this.createdTime = createdTime; }
+    
+    public String getAuthor() { return author; }
+    public void setAuthor(String author) { this.author = author; }
+    
+    public Map<String, EventDataField> getDataFields() { return dataFields; }
+    public void setDataFields(Map<String, EventDataField> dataFields) { this.dataFields = dataFields; }
+    
+    public boolean isGlobal() { return isGlobal; }
+    public void setGlobal(boolean global) { isGlobal = global; }
+    
+    public boolean isOneTime() { return isOneTime; }
+    public void setOneTime(boolean oneTime) { isOneTime = oneTime; }
+    
+    public int getPriority() { return priority; }
+    public void setPriority(int priority) { this.priority = priority; }
+    
+    public Set<String> getTags() { return tags; }
+    public void setTags(Set<String> tags) { this.tags = tags; }
+    
+    public String getParentEvent() { return parentEvent; }
+    public void setParentEvent(String parentEvent) { this.parentEvent = parentEvent; }
+    
+    public boolean isAbstract() { return isAbstract; }
+    public void setAbstract(boolean anAbstract) { isAbstract = anAbstract; }
+    
+    public Map<String, Object> getMetadata() { return metadata; }
+    public void setMetadata(Map<String, Object> metadata) { this.metadata = metadata; }
+    
+    public List<String> getAliases() { return aliases; }
+    public void setAliases(List<String> aliases) { this.aliases = aliases; }
     private UUID id;
     private String name;
     private String description;
@@ -271,14 +321,37 @@ public class CustomEvent {
     /**
      * Event data field definition
      */
-    @Data
-    @NoArgsConstructor
+    
     public static class EventDataField {
+        // No-args constructor
+        public EventDataField() {
+            this.name = "";
+            this.expectedType = Object.class;
+            this.required = false;
+            this.description = "";
+        }
+        
+        // Getters and Setters
+        public String getName() { return name; }
+        public void setName(String name) { this.name = name; }
+        
+        public Class<?> getExpectedType() { return expectedType; }
+        public void setExpectedType(Class<?> expectedType) { this.expectedType = expectedType; }
+        
+        public boolean isRequired() { return required; }
+        public void setRequired(boolean required) { this.required = required; }
+        
+        public String getDescription() { return description; }
+        public void setDescription(String description) { this.description = description; }
+        
+        public DataValue getDefaultValue() { return defaultValue; }
+        public void setDefaultValue(DataValue defaultValue) { this.defaultValue = defaultValue; }
         private String name;
         private Class<?> expectedType;
         private boolean required;
         private String description;
         private DataValue defaultValue;
+
         
         public EventDataField(String name, Class<?> expectedType, boolean required, String description) {
             this.name = name;

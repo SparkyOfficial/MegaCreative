@@ -34,7 +34,7 @@ public class CallFunctionAction implements BlockAction {
         VariableManager variableManager = context.getPlugin().getVariableManager();
         if (variableManager == null) return;
         
-        ParameterResolver resolver = new ParameterResolver(variableManager);
+        ParameterResolver resolver = new ParameterResolver(context);
 
         // Получаем имя функции из параметра
         DataValue functionNameValue = actionBlock.getParameter("functionName");

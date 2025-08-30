@@ -1,0 +1,1134 @@
+package com.megacreative.coding.monitoring;
+
+import com.megacreative.coding.CodeBlock;
+import com.megacreative.coding.CodeScript;
+import org.bukkit.entity.Player;
+import org.bukkit.plugin.Plugin;
+
+import java.util.*;
+import java.util.concurrent.*;
+import java.util.concurrent.atomic.*;
+import java.util.function.Function;
+import java.util.stream.Collectors;
+import java.util.logging.Logger;
+import java.util.Objects;
+import java.util.stream.Collectors;
+
+/**
+ * Advanced performance monitoring system for visual programming scripts
+ * Tracks execution times, memory usage, and provides optimization recommendations
+ */
+public class ScriptPerformanceMonitor {
+    private static final Logger log = Logger.getLogger(ScriptPerformanceMonitor.class.getName());
+    
+    private final Plugin plugin;
+    
+    // Performance tracking data structures
+    private final Map<UUID, PlayerScriptMetrics> playerMetrics = new ConcurrentHashMap<>();
+    private final Map<String, ActionPerformanceData> actionPerformance = new ConcurrentHashMap<>();
+    private final Map<String, ScriptPerformanceProfile> scriptProfiles = new ConcurrentHashMap<>();
+    private final AtomicLong totalExecutions = new AtomicLong(0);
+    private final AtomicLong totalExecutionTime = new AtomicLong(0);
+    
+    // Advanced monitoring features
+    private final ExecutionSampler executionSampler = new ExecutionSampler();
+    private final MemoryMonitor memoryMonitor = new MemoryMonitor();
+    private final BottleneckDetector bottleneckDetector = new BottleneckDetector();
+    
+    // Performance thresholds (loaded from config)
+    private final long slowExecutionThreshold;
+    private final long memoryWarningThreshold;
+    private final int maxConcurrentScripts;
+    
+    public ScriptPerformanceMonitor(Plugin plugin) {
+        this.plugin = plugin;
+        
+        // Load performance thresholds from config
+        this.slowExecutionThreshold = plugin.getConfig().getLong("coding.performance.slow_execution_threshold", 50);
+        this.memoryWarningThreshold = plugin.getConfig().getLong("coding.performance.memory_warning_threshold", 100 * 1024 * 1024);
+        this.maxConcurrentScripts = plugin.getConfig().getInt("coding.max_concurrent_scripts", 20);
+    }
+    
+    /**
+     * Starts performance tracking for a script execution with profiling
+     */
+    public ExecutionTracker startTracking(Player player, String scriptName, String actionType) {
+        UUID playerId = player.getUniqueId();
+        PlayerScriptMetrics metrics = playerMetrics.computeIfAbsent(playerId, k -> new PlayerScriptMetrics(playerId));
+        
+        // Create or get script profile
+        ScriptPerformanceProfile profile = scriptProfiles.computeIfAbsent(scriptName, 
+            k -> new ScriptPerformanceProfile(scriptName));
+        
+        return new ExecutionTracker(this, player, scriptName, actionType, System.currentTimeMillis(), profile);
+    }
+    
+    /**
+     * Records the completion of a script execution with advanced profiling
+     */
+    public void recordExecution(Player player, String scriptName, String actionType, 
+                               long executionTime, boolean success, String errorMessage) {
+        UUID playerId = player.getUniqueId();
+        
+        // Update player metrics
+        PlayerScriptMetrics playerMetrics = this.playerMetrics.get(playerId);
+        if (playerMetrics != null) {
+            playerMetrics.recordExecution(scriptName, actionType, executionTime, success);
+        }
+        
+        // Update action performance data
+        ActionPerformanceData actionData = actionPerformance.computeIfAbsent(actionType, 
+            k -> new ActionPerformanceData(actionType));
+        actionData.recordExecution(executionTime, success);
+        
+        // Update script profile
+        ScriptPerformanceProfile profile = scriptProfiles.get(scriptName);
+        if (profile != null) {
+            profile.recordExecution(actionType, executionTime, success);
+        }
+        
+        // Update global metrics
+        totalExecutions.incrementAndGet();
+        totalExecutionTime.addAndGet(executionTime);
+        
+        // Sample execution for detailed analysis
+        executionSampler.sampleExecution(scriptName, actionType, executionTime, success);
+        
+        // Check for bottlenecks
+        bottleneckDetector.analyzeExecution(scriptName, actionType, executionTime);
+        
+        // Check for performance issues
+        checkPerformanceIssues(player, actionType, executionTime, errorMessage);
+    }
+    
+    /**
+     * Checks for performance issues and alerts players/admins
+     */
+    private void checkPerformanceIssues(Player player, String actionType, long executionTime, String errorMessage) {
+        // Check for slow execution
+        if (executionTime > slowExecutionThreshold) {
+            if (player.hasPermission("megacreative.debug")) {
+                player.sendMessage("§e⚠ Slow execution detected: " + actionType + 
+                                 " took " + executionTime + "ms");
+            }
+        }
+        
+        // Check memory usage
+        Runtime runtime = Runtime.getRuntime();
+        long usedMemory = runtime.totalMemory() - runtime.freeMemory();
+        if (usedMemory > memoryWarningThreshold) {
+            if (player.hasPermission("megacreative.admin")) {
+                player.sendMessage("§c⚠ High memory usage: " + (usedMemory / 1024 / 1024) + "MB");
+            }
+        }
+        
+        // Log errors for debugging
+        if (errorMessage != null && player.hasPermission("megacreative.debug")) {
+            player.sendMessage("§c✗ Script error in " + actionType + ": " + errorMessage);
+        }
+    }
+    
+    /**
+     * Gets performance statistics for a player
+     */
+    public PlayerScriptMetrics getPlayerMetrics(UUID playerId) {
+        return playerMetrics.get(playerId);
+    }
+    
+    /**
+     * Gets performance statistics for an action type
+     */
+    public ActionPerformanceData getActionPerformance(String actionType) {
+        return actionPerformance.get(actionType);
+    }
+    
+    /**
+     * Generates a performance report for a player
+     */
+    public void sendPerformanceReport(Player player) {
+        UUID playerId = player.getUniqueId();
+        PlayerScriptMetrics metrics = playerMetrics.get(playerId);
+        
+        if (metrics == null) {
+            player.sendMessage("§eNo performance data available yet.");
+            return;
+        }
+        
+        player.sendMessage("§a§l=== Script Performance Report ===");
+        player.sendMessage("§7Total Executions: §f" + metrics.getTotalExecutions());
+        player.sendMessage("§7Success Rate: §f" + String.format("%.1f%%", metrics.getSuccessRate()));
+        player.sendMessage("§7Average Execution Time: §f" + String.format("%.2fms", metrics.getAverageExecutionTime()));
+        player.sendMessage("§7Fastest Action: §f" + metrics.getFastestAction() + " (" + metrics.getFastestTime() + "ms)");
+        player.sendMessage("§7Slowest Action: §f" + metrics.getSlowestAction() + " (" + metrics.getSlowestTime() + "ms)");
+        
+        // Show top 5 most used actions
+        player.sendMessage("§7§l--- Most Used Actions ---");
+        metrics.getTopActions(5).forEach((action, count) -> 
+            player.sendMessage("§7- " + action + ": §f" + count + " times"));
+        
+        // Performance recommendations
+        generateRecommendations(player, metrics);
+    }
+    
+    /**
+     * Generates performance optimization recommendations
+     */
+    private void generateRecommendations(Player player, PlayerScriptMetrics metrics) {
+        player.sendMessage("§e§l--- Optimization Recommendations ---");
+        
+        if (metrics.getAverageExecutionTime() > 25) {
+            player.sendMessage("§e• Consider using async loops for repetitive tasks");
+        }
+        
+        if (metrics.getSuccessRate() < 90) {
+            player.sendMessage("§e• Check error conditions in your scripts");
+        }
+        
+        if (metrics.getUniqueActionsUsed() < 10) {
+            player.sendMessage("§e• Explore more action types to enhance your scripts");
+        }
+        
+        String slowestAction = metrics.getSlowestAction();
+        if (slowestAction != null && metrics.getSlowestTime() > 100) {
+            player.sendMessage("§e• Optimize usage of: " + slowestAction);
+        }
+    }
+    
+    /**
+     * Gets or creates a script performance profile
+     */
+    public ScriptPerformanceProfile getScriptProfile(String scriptName) {
+        return scriptProfiles.computeIfAbsent(scriptName, ScriptPerformanceProfile::new);
+    }
+    
+    /**
+     * Gets all script profiles
+     */
+    public Map<String, ScriptPerformanceProfile> getAllScriptProfiles() {
+        return new HashMap<>(scriptProfiles);
+    }
+    
+    /**
+     * Generates an advanced performance report for a player
+     */
+    public void sendAdvancedPerformanceReport(Player player) {
+        UUID playerId = player.getUniqueId();
+        PlayerScriptMetrics metrics = playerMetrics.get(playerId);
+        
+        if (metrics == null) {
+            player.sendMessage("§eNo performance data available yet.");
+            return;
+        }
+        
+        player.sendMessage("§a§l=== Advanced Performance Report ===");
+        player.sendMessage("§7Total Executions: §f" + metrics.getTotalExecutions());
+        player.sendMessage("§7Success Rate: §f" + String.format("%.1f%%", metrics.getSuccessRate()));
+        player.sendMessage("§7Average Execution Time: §f" + String.format("%.2fms", metrics.getAverageExecutionTime()));
+        player.sendMessage("§7Fastest Action: §f" + metrics.getFastestAction() + " (" + metrics.getFastestTime() + "ms)");
+        player.sendMessage("§7Slowest Action: §f" + metrics.getSlowestAction() + " (" + metrics.getSlowestTime() + "ms)");
+        
+        // Memory usage
+        MemoryUsage memoryUsage = memoryMonitor.getCurrentUsage();
+        player.sendMessage("§7Memory Usage: §f" + memoryUsage.getUsedMemoryMB() + "MB / " + memoryUsage.getMaxMemoryMB() + "MB");
+        
+        // Show top 5 most used actions
+        player.sendMessage("§7§l--- Most Used Actions ---");
+        metrics.getTopActions(5).forEach((action, count) -> 
+            player.sendMessage("§7- " + action + ": §f" + count + " times"));
+        
+        // Show slowest actions
+        player.sendMessage("§7§l--- Slowest Actions ---");
+        metrics.getSlowestActions(5).forEach((action, time) -> 
+            player.sendMessage("§7- " + action + ": §f" + time + "ms"));
+        
+        // Show bottlenecks
+        player.sendMessage("§7§l--- Detected Bottlenecks ---");
+        bottleneckDetector.getTopBottlenecks(3).forEach(bottleneck -> 
+            player.sendMessage("§7- " + bottleneck.getActionType() + ": §f" + bottleneck.getAverageTime() + "ms avg"));
+        
+        // Performance recommendations
+        generateAdvancedRecommendations(player, metrics);
+    }
+    
+    /**
+     * Generates advanced performance optimization recommendations
+     */
+    private void generateAdvancedRecommendations(Player player, PlayerScriptMetrics metrics) {
+        player.sendMessage("§e§l--- Advanced Optimization Recommendations ---");
+        
+        if (metrics.getAverageExecutionTime() > 25) {
+            player.sendMessage("§e• Consider using async loops for repetitive tasks");
+        }
+        
+        if (metrics.getSuccessRate() < 90) {
+            player.sendMessage("§e• Check error conditions in your scripts");
+        }
+        
+        if (metrics.getUniqueActionsUsed() < 10) {
+            player.sendMessage("§e• Explore more action types to enhance your scripts");
+        }
+        
+        String slowestAction = metrics.getSlowestAction();
+        if (slowestAction != null && metrics.getSlowestTime() > 100) {
+            player.sendMessage("§e• Optimize usage of: " + slowestAction);
+        }
+        
+        // Advanced recommendations based on sampling
+        String patternDesc = executionSampler.getMostCommonPattern();
+        if (patternDesc != null && !patternDesc.isEmpty()) {
+            player.sendMessage("§e• Detected pattern: " + patternDesc);
+        }
+        
+        // Memory recommendations
+        MemoryUsage memoryUsage = memoryMonitor.getCurrentUsage();
+        if (memoryUsage.getUsagePercentage() > 80) {
+            player.sendMessage("§e• Memory usage is high: " + memoryUsage.getUsagePercentage() + "%");
+            player.sendMessage("§e• Consider reducing variable scope or using cleanup actions");
+        }
+    }
+    
+    /**
+     * Cleans up metrics for a player (called on disconnect)
+     */
+    public void cleanupPlayer(UUID playerId) {
+        playerMetrics.remove(playerId);
+    }
+    
+    /**
+     * Gets global system performance statistics
+     */
+    public SystemPerformanceReport getSystemReport() {
+        return new SystemPerformanceReport(
+            totalExecutions.get(),
+            totalExecutionTime.get(),
+            playerMetrics.size(),
+            actionPerformance.size()
+        );
+    }
+    
+    /**
+     * Gets global system performance statistics with advanced metrics
+     */
+    public AdvancedSystemPerformanceReport getAdvancedSystemReport() {
+        return new AdvancedSystemPerformanceReport(
+            totalExecutions.get(),
+            totalExecutionTime.get(),
+            playerMetrics.size(),
+            actionPerformance.size(),
+            scriptProfiles.size(),
+            memoryMonitor.getCurrentUsage(),
+            bottleneckDetector.getDetectedBottlenecks()
+        );
+    }
+    
+    /**
+     * Shuts down the performance monitor and cleans up resources
+     * System performance report
+     */
+    public static class SystemPerformanceReport {
+        private final long totalExecutions;
+        private final long totalExecutionTime;
+        private final int activePlayerCount;
+        private final int scriptProfilesCount;
+        private final int uniqueActionTypes;
+        private final MemoryUsage memoryUsage;
+        private final Collection<Bottleneck> bottlenecks;
+        
+        public SystemPerformanceReport(long totalExecutions, long totalExecutionTime, 
+                                     int activePlayerCount, int uniqueActionTypes) {
+            this(totalExecutions, totalExecutionTime, activePlayerCount, 
+                0, new MemoryUsage(0, 0, 0), Collections.emptyList());
+        }
+        
+        public SystemPerformanceReport(long totalExecutions, long totalExecutionTime, 
+                                     int activePlayerCount, int scriptProfilesCount, 
+                                     MemoryUsage memoryUsage, Collection<Bottleneck> bottlenecks) {
+            this.totalExecutions = totalExecutions;
+            this.totalExecutionTime = totalExecutionTime;
+            this.activePlayerCount = activePlayerCount;
+            this.scriptProfilesCount = scriptProfilesCount;
+            this.uniqueActionTypes = 0; // Default value
+            this.memoryUsage = memoryUsage;
+            this.bottlenecks = bottlenecks != null ? new ArrayList<>(bottlenecks) : new ArrayList<>();
+        }
+        
+        public double getAverageExecutionTime() {
+            return totalExecutions > 0 ? totalExecutionTime / (double) totalExecutions : 0;
+        }
+        
+        // Getters
+        public long getTotalExecutions() { return totalExecutions; }
+        public long getTotalExecutionTime() { return totalExecutionTime; }
+        public int getActivePlayerCount() { return activePlayerCount; }
+        public int getUniqueActionTypes() { return uniqueActionTypes; }
+        
+        @Override
+        public boolean equals(Object o) {
+            if (this == o) return true;
+            if (o == null || getClass() != o.getClass()) return false;
+            SystemPerformanceReport that = (SystemPerformanceReport) o;
+            return totalExecutions == that.totalExecutions &&
+                   totalExecutionTime == that.totalExecutionTime &&
+                   activePlayerCount == that.activePlayerCount &&
+                   uniqueActionTypes == that.uniqueActionTypes &&
+                   Objects.equals(scriptProfilesCount, that.scriptProfilesCount) &&
+                   Objects.equals(memoryUsage, that.memoryUsage) &&
+                   Objects.equals(bottlenecks, that.bottlenecks);
+        }
+        
+        @Override
+        public int hashCode() {
+        public double getSuccessRate() {
+            return executionCount > 0 ? (successCount * 100.0) / executionCount : 0;
+        }
+        public List<Long> getExecutionTimes() { return new ArrayList<>(executionTimes); }
+    }
+
+    /**
+     * Tracks performance profile for a specific script
+     */
+    public static class ScriptPerformanceProfile {
+        private final String scriptName;
+        private final Map<String, ActionPerformanceData> actionData = new ConcurrentHashMap<>();
+        private long totalExecutions = 0;
+        private long totalExecutionTime = 0;
+        private long lastExecutionTime = 0;
+        private final List<Long> executionTimes = new CopyOnWriteArrayList<>();
+
+        public ScriptPerformanceProfile(String scriptName) {
+            this.scriptName = scriptName;
+        }
+
+        public void recordExecution(String actionType, long executionTime, boolean success) {
+            totalExecutions++;
+            totalExecutionTime += executionTime;
+            lastExecutionTime = System.currentTimeMillis();
+            executionTimes.add(executionTime);
+            
+            // Update action performance data
+            actionData.computeIfAbsent(actionType, ActionPerformanceData::new)
+                     .recordExecution(executionTime, success);
+        }
+
+        // Getters
+        public String getScriptName() { return scriptName; }
+        public long getTotalExecutions() { return totalExecutions; }
+        public long getTotalExecutionTime() { return totalExecutionTime; }
+        public double getAverageExecutionTime() {
+            return totalExecutions > 0 ? (double) totalExecutionTime / totalExecutions : 0;
+        }
+        public long getLastExecutionTime() { return lastExecutionTime; }
+        public List<Long> getExecutionTimes() { return new ArrayList<>(executionTimes); }
+        public Map<String, ActionPerformanceData> getActionData() { return new HashMap<>(actionData); }
+    }
+
+    /**
+     * Tracks performance data for a specific action
+     */
+    public static class ActionPerformanceData {
+        private final String actionType;
+        private long executionCount = 0;
+        private long totalExecutionTime = 0;
+        private int successCount = 0;
+        private long lastExecutionTime = 0;
+        private final List<Long> executionTimes = new CopyOnWriteArrayList<>();
+
+        public ActionPerformanceData(String actionType) {
+            this.actionType = actionType;
+        }
+
+        public void recordExecution(long executionTime, boolean success) {
+            executionCount++;
+            totalExecutionTime += executionTime;
+            if (success) successCount++;
+            lastExecutionTime = System.currentTimeMillis();
+            executionTimes.add(executionTime);
+        }
+
+        // Getters
+        public String getActionType() { return actionType; }
+        public long getExecutionCount() { return executionCount; }
+        public long getTotalExecutionTime() { return totalExecutionTime; }
+        public double getAverageExecutionTime() {
+            return executionCount > 0 ? (double) totalExecutionTime / executionCount : 0;
+        }
+        public int getSuccessCount() { return successCount; }
+        public double getSuccessRate() {
+            return executionCount > 0 ? (successCount * 100.0) / executionCount : 0;
+        }
+        public long getLastExecutionTime() { return lastExecutionTime; }
+        public List<Long> getExecutionTimes() { return new ArrayList<>(executionTimes); }
+    }
+
+    /**
+     * Tracks an individual script execution
+     */
+    public static class ExecutionTracker implements AutoCloseable {
+        private final ScriptPerformanceMonitor monitor;
+        private final Player player;
+        private final String scriptName;
+        private final String actionType;
+        private final long startTime;
+        private final ScriptPerformanceProfile profile;
+        private boolean success = true;
+        private String errorMessage;
+        
+        /**
+         * Creates a new execution tracker
+         * @param monitor The performance monitor instance
+         * @param player The player executing the script
+         * @param scriptName The name of the script being executed
+         * @param actionType The type of action being performed
+         * @param startTime The start time of the execution
+         * @param profile The performance profile for this execution
+         */
+        public ExecutionTracker(ScriptPerformanceMonitor monitor, Player player, 
+                              String scriptName, String actionType, 
+                              long startTime, ScriptPerformanceProfile profile) {
+            this.monitor = monitor;
+            this.player = player;
+            this.scriptName = scriptName;
+            this.actionType = actionType;
+            this.startTime = startTime;
+            this.profile = profile;
+        }
+        
+        public void markError(String errorMessage) {
+            this.success = false;
+            this.errorMessage = errorMessage;
+        }
+        
+        @Override
+        public void close() {
+            long executionTime = System.currentTimeMillis() - startTime;
+            monitor.recordExecution(player, scriptName, actionType, executionTime, success, errorMessage);
+        }
+        
+        @Override
+        public boolean equals(Object o) {
+            if (this == o) return true;
+            if (o == null || getClass() != o.getClass()) return false;
+            ExecutionTracker that = (ExecutionTracker) o;
+            return startTime == that.startTime &&
+                   Objects.equals(monitor, that.monitor) &&
+                   Objects.equals(player, that.player) &&
+                   Objects.equals(scriptName, that.scriptName) &&
+                   Objects.equals(actionType, that.actionType) &&
+                   Objects.equals(profile, that.profile) &&
+                   Objects.equals(errorMessage, that.errorMessage);
+        }
+        
+        @Override
+        public int hashCode() {
+            return Objects.hash(monitor, player, scriptName, actionType, startTime, profile, errorMessage);
+        }
+    }
+    
+    /**
+     * Enhanced PlayerScriptMetrics with additional analysis capabilities
+     */
+    public static class PlayerScriptMetrics {
+        private final UUID playerId;
+        private final Map<String, ScriptMetrics> scriptMetrics = new ConcurrentHashMap<>();
+        private final AtomicLong totalExecutions = new AtomicLong(0);
+        private final AtomicLong totalExecutionTime = new AtomicLong(0);
+        private volatile long lastUpdated = System.currentTimeMillis();
+        
+        public PlayerScriptMetrics(UUID playerId) {
+            this.playerId = playerId;
+        }
+        
+        // Add default constructor for compatibility
+        public PlayerScriptMetrics() {
+            this.playerId = null;
+        }
+        
+        public UUID getPlayerId() {
+            return playerId;
+        }
+        
+        public Map<String, ScriptMetrics> getScriptMetrics() {
+            return new HashMap<>(scriptMetrics);
+        }
+        
+        public long getLastUpdated() {
+            return lastUpdated;
+        }
+        
+        public void recordExecution(String scriptName, String actionType, long executionTime, boolean success) {
+            scriptMetrics.computeIfAbsent(scriptName, ScriptMetrics::new)
+                        .recordExecution(actionType, executionTime, success);
+            totalExecutions.incrementAndGet();
+            totalExecutionTime.addAndGet(executionTime);
+            updateLastUpdated();
+        }
+        
+        public ScriptMetrics getScriptMetrics(String scriptName) {
+            return scriptMetrics.get(scriptName);
+        }
+        
+        public void removeScriptMetrics(String scriptName) {
+            scriptMetrics.remove(scriptName);
+            updateLastUpdated();
+        }
+        
+        public long getTotalExecutions() {
+            return totalExecutions.get();
+        }
+        
+        public long getTotalExecutionTime() {
+            return totalExecutionTime.get();
+        }
+        
+        public double getAverageExecutionTime() {
+            return totalExecutions.get() > 0 ? 
+                   (double) totalExecutionTime.get() / totalExecutions.get() : 0;
+        }
+        
+        public double getSuccessRate() {
+            long total = scriptMetrics.values().stream()
+                .mapToLong(ScriptMetrics::getExecutionCount)
+                .sum();
+            long success = scriptMetrics.values().stream()
+                .mapToLong(ScriptMetrics::getSuccessCount)
+                .sum();
+            return total > 0 ? (double) success / total * 100 : 0;
+        }
+        
+        private void updateLastUpdated() {
+            this.lastUpdated = System.currentTimeMillis();
+        }
+        
+        @Override
+        public boolean equals(Object o) {
+            if (this == o) return true;
+            if (o == null || getClass() != o.getClass()) return false;
+            PlayerScriptMetrics that = (PlayerScriptMetrics) o;
+            return Objects.equals(playerId, that.playerId);
+        }
+        
+        @Override
+        public int hashCode() {
+            return Objects.hash(playerId);
+        }
+        
+        // Helper methods for metrics
+        public String getFastestAction() {
+            return scriptMetrics.values().stream()
+                .flatMap(script -> script.getActionMetrics().values().stream())
+                .min(Comparator.comparingLong(ActionMetrics::getAverageTime))
+                .map(ActionMetrics::getActionType)
+                .orElse("N/A");
+        }
+        
+        public long getFastestTime() {
+            return scriptMetrics.values().stream()
+                .flatMap(script -> script.getActionMetrics().values().stream())
+                .mapToLong(ActionMetrics::getAverageTime)
+                .min()
+                .orElse(0);
+        }
+        
+        public String getSlowestAction() {
+            return scriptMetrics.values().stream()
+                .flatMap(script -> script.getActionMetrics().values().stream())
+                .max(Comparator.comparingLong(ActionMetrics::getAverageTime))
+                .map(ActionMetrics::getActionType)
+                .orElse("N/A");
+        }
+        
+        public long getSlowestTime() {
+            return scriptMetrics.values().stream()
+                .flatMap(script -> script.getActionMetrics().values().stream())
+                .mapToLong(ActionMetrics::getAverageTime)
+                .max()
+                .orElse(0);
+        }
+        
+        public Map<String, Long> getTopActions(int limit) {
+            return scriptMetrics.values().stream()
+                .flatMap(script -> script.getActionMetrics().values().stream())
+                .collect(Collectors.toMap(
+                    ActionMetrics::getActionType,
+                    ActionMetrics::getAverageTime,
+                    Long::max
+                ))
+                .entrySet().stream()
+                .sorted(Map.Entry.<String, Long>comparingByValue().reversed())
+                .limit(limit)
+                .collect(Collectors.toMap(
+                    Map.Entry::getKey,
+                    Map.Entry::getValue,
+                    (e1, e2) -> e1,
+                    LinkedHashMap::new
+                ));
+        }
+        
+        public int getUniqueActionsUsed() {
+            return (int) scriptMetrics.values().stream()
+                .flatMap(script -> script.getActionMetrics().keySet().stream())
+                .distinct()
+                .count();
+        }
+    }
+    
+    /**
+     * Represents metrics for a specific script
+     */
+    public static class ScriptMetrics {
+        private final String scriptName;
+        private final AtomicLong executionCount = new AtomicLong(0);
+        private final AtomicLong totalExecutionTime = new AtomicLong(0);
+        private final AtomicLong successCount = new AtomicLong(0);
+        private final List<Long> executionTimes = new CopyOnWriteArrayList<>();
+        private final Map<String, ActionMetrics> actionMetrics = new ConcurrentHashMap<>();
+        
+        public ScriptMetrics(String scriptName) {
+            this.scriptName = scriptName;
+        }
+        
+        public String getScriptName() {
+            return scriptName;
+        }
+        
+        public long getExecutionCount() {
+            return executionCount.get();
+        }
+        
+        public long getTotalExecutionTime() {
+            return totalExecutionTime.get();
+        }
+        
+        public double getAverageExecutionTime() {
+            return executionCount.get() > 0 ? 
+                   (double) totalExecutionTime.get() / executionCount.get() : 0;
+        }
+        
+        public long getSuccessCount() {
+            return successCount.get();
+        }
+        
+        public double getSuccessRate() {
+            return executionCount.get() > 0 ? 
+                   (double) successCount.get() / executionCount.get() * 100 : 0;
+        }
+        
+        public List<Long> getExecutionTimes() {
+            return new ArrayList<>(executionTimes);
+        }
+        
+        public Map<String, ActionMetrics> getActionMetrics() {
+            return new HashMap<>(actionMetrics);
+        }
+        
+        public void recordExecution(long executionTime, boolean success) {
+            executionCount.incrementAndGet();
+            totalExecutionTime.addAndGet(executionTime);
+            executionTimes.add(executionTime);
+            if (success) {
+                successCount.incrementAndGet();
+            }
+        }
+        
+        public void recordActionExecution(String actionType, long executionTime, boolean success) {
+            actionMetrics.computeIfAbsent(actionType, ActionMetrics::new)
+                       .recordExecution(executionTime, success);
+        }
+        
+        public ActionMetrics getActionMetrics(String actionType) {
+            return actionMetrics.get(actionType);
+        }
+    }
+    
+    /**
+     * Represents metrics for a specific action type
+     */
+    public static class ActionMetrics {
+        private final String actionType;
+        private final AtomicLong executionCount = new AtomicLong(0);
+        private final AtomicLong totalExecutionTime = new AtomicLong(0);
+        private final AtomicLong successCount = new AtomicLong(0);
+        private final List<Long> executionTimes = new CopyOnWriteArrayList<>();
+        
+        public ActionMetrics(String actionType) {
+            this.actionType = actionType;
+        }
+        
+        public String getActionType() {
+            return actionType;
+        }
+        
+        public long getExecutionCount() {
+            return executionCount.get();
+        }
+        
+        public long getTotalExecutionTime() {
+            return totalExecutionTime.get();
+        }
+        
+        public double getAverageTime() {
+            return executionCount.get() > 0 ? 
+                   (double) totalExecutionTime.get() / executionCount.get() : 0;
+        }
+        
+        public long getSuccessCount() {
+            return successCount.get();
+        }
+        
+        public double getSuccessRate() {
+            return executionCount.get() > 0 ? 
+                   (double) successCount.get() / executionCount.get() * 100 : 0;
+        }
+        
+        public List<Long> getExecutionTimes() {
+            return new ArrayList<>(executionTimes);
+        }
+        
+        public void recordExecution(long executionTime, boolean success) {
+            executionCount.incrementAndGet();
+            totalExecutionTime.addAndGet(executionTime);
+            executionTimes.add(executionTime);
+            if (success) {
+                successCount.incrementAndGet();
+            }
+        }
+    }
+    
+    /**
+     * Execution sampler for pattern detection
+     */
+    public static class ExecutionSampler {
+        private final Map<String, ExecutionPattern> patterns = new ConcurrentHashMap<>();
+        private boolean isRunning = true;
+        
+        public void sampleExecution(String scriptName, String actionType, long executionTime, boolean success) {
+            if (!isRunning) {
+                return;
+            }
+            
+            String key = scriptName + ":" + actionType;
+            ExecutionPattern pattern = patterns.computeIfAbsent(key, 
+                k -> new ExecutionPattern(scriptName, actionType));
+            pattern.recordExecution(executionTime, success);
+        }
+        
+        public String getMostCommonPattern() {
+            if (!isRunning) {
+                return "Sampler is shut down";
+            }
+            return patterns.values().stream()
+                .max(Comparator.comparingInt(ExecutionPattern::getFrequency))
+                .map(ExecutionPattern::getDescription)
+                .orElse("No patterns detected");
+        }
+        
+        public List<String> getAllPatterns() {
+            if (!isRunning) {
+                return Collections.emptyList();
+            }
+            return patterns.values().stream()
+                .sorted(Comparator.comparingInt(ExecutionPattern::getFrequency).reversed())
+                .map(ExecutionPattern::getDescription)
+                .collect(Collectors.toList());
+        }
+        
+        /**
+         * Shuts down the execution sampler and cleans up resources
+         */
+        public void shutdown() {
+            isRunning = false;
+            patterns.clear();
+        }
+    }
+    
+    /**
+     * Represents an execution pattern for sampling
+     */
+    public static class ExecutionPattern {
+        private final String scriptName;
+        private final String actionType;
+        private int frequency = 0;
+        private long totalExecutionTime = 0;
+        private int successCount = 0;
+        
+        public ExecutionPattern(String scriptName, String actionType) {
+            this.scriptName = scriptName;
+            this.actionType = actionType;
+        }
+        
+        public void recordExecution(long executionTime, boolean success) {
+            frequency++;
+            totalExecutionTime += executionTime;
+            if (success) successCount++;
+        }
+        
+        public double getAverageTime() {
+            return frequency > 0 ? totalExecutionTime / (double) frequency : 0;
+        }
+        
+        public double getSuccessRate() {
+            return frequency > 0 ? (successCount * 100.0) / frequency : 0;
+        }
+        
+        public String getDescription() {
+            return scriptName + " -> " + actionType;
+        }
+        
+        // Getters
+        public String getScriptName() { return scriptName; }
+        public String getActionType() { return actionType; }
+        public int getFrequency() { return frequency; }
+        public long getTotalExecutionTime() { return totalExecutionTime; }
+        public int getSuccessCount() { return successCount; }
+    }
+    
+    /**
+     * Memory monitor for tracking resource usage
+     */
+    public static class MemoryMonitor {
+        private boolean isRunning = true;
+        
+        public MemoryUsage getCurrentUsage() {
+            Runtime runtime = Runtime.getRuntime();
+            long maxMemory = runtime.maxMemory();
+            long totalMemory = runtime.totalMemory();
+            long freeMemory = runtime.freeMemory();
+            long usedMemory = totalMemory - freeMemory;
+            
+            return new MemoryUsage(usedMemory, maxMemory, totalMemory);
+        }
+        
+        /**
+         * Shuts down the memory monitor and cleans up resources
+         */
+        public void shutdown() {
+            isRunning = false;
+            // Add any additional cleanup code here if needed
+        }
+    }
+    
+    /**
+     * Memory usage data
+     */
+    public static class MemoryUsage {
+        private final long usedMemory;
+        private final long maxMemory;
+        private final long totalMemory;
+        
+        public MemoryUsage(long usedMemory, long maxMemory, long totalMemory) {
+            this.usedMemory = usedMemory;
+            this.maxMemory = maxMemory;
+            this.totalMemory = totalMemory;
+        }
+        
+        public double getUsagePercentage() {
+            return maxMemory > 0 ? (usedMemory * 100.0) / maxMemory : 0;
+        }
+        
+        public long getUsedMemoryMB() {
+            return usedMemory / (1024 * 1024);
+        }
+        
+        public long getMaxMemoryMB() {
+            return maxMemory / (1024 * 1024);
+        }
+        
+        public long getTotalMemoryMB() {
+            return totalMemory / (1024 * 1024);
+        }
+        
+        // Getters for memory fields
+        public long getUsedMemory() { return usedMemory; }
+        public long getMaxMemory() { return maxMemory; }
+        public long getTotalMemory() { return totalMemory; }
+    }
+    
+    /**
+     * Bottleneck detector for identifying performance issues
+     */
+    public static class BottleneckDetector {
+        private final Map<String, Bottleneck> bottlenecks = new ConcurrentHashMap<>();
+        private boolean isRunning = true;
+        
+        public void analyzeExecution(String scriptName, String actionType, long executionTime) {
+            if (executionTime > 50) { // Only analyze slow executions
+                String key = scriptName + ":" + actionType;
+                Bottleneck bottleneck = bottlenecks.computeIfAbsent(key, 
+                    k -> new Bottleneck(scriptName, actionType));
+                bottleneck.recordExecution(executionTime);
+            }
+        }
+        
+        public List<Bottleneck> getTopBottlenecks(int limit) {
+            return bottlenecks.values().stream()
+                .sorted(Comparator.comparingDouble(Bottleneck::getAverageTime).reversed())
+                .limit(limit)
+                .collect(ArrayList::new, (list, item) -> list.add(item), (list1, list2) -> list1.addAll(list2));
+        }
+        
+        public Collection<Bottleneck> getDetectedBottlenecks() {
+            return new ArrayList<>(bottlenecks.values());
+        }
+        
+        /**
+         * Shuts down the bottleneck detector and cleans up resources
+         */
+        public void shutdown() {
+            isRunning = false;
+            bottlenecks.clear();
+        }
+    }
+    
+    /**
+     * Represents a performance bottleneck
+     */
+    static class Bottleneck {
+        private final String scriptName;
+        private final String actionType;
+        private int occurrenceCount = 0;
+        private long totalExecutionTime = 0;
+        private long maxExecutionTime = 0;
+        
+        public Bottleneck(String scriptName, String actionType) {
+            this.scriptName = scriptName;
+            this.actionType = actionType;
+        }
+        
+        public void recordExecution(long executionTime) {
+            occurrenceCount++;
+            totalExecutionTime += executionTime;
+            maxExecutionTime = Math.max(maxExecutionTime, executionTime);
+        }
+        
+        public double getAverageTime() {
+            return occurrenceCount > 0 ? totalExecutionTime / (double) occurrenceCount : 0;
+        }
+        
+        // Getters
+        public String getScriptName() { return scriptName; }
+        public String getActionType() { return actionType; }
+        public int getOccurrenceCount() { return occurrenceCount; }
+        public long getTotalExecutionTime() { return totalExecutionTime; }
+        public long getMaxExecutionTime() { return maxExecutionTime; }
+    }
+    
+    /**
+     * Advanced system performance report with detailed metrics
+     */
+    static class AdvancedSystemPerformanceReport {
+        private final long totalExecutions;
+        private final long totalExecutionTime;
+        private final int activePlayerCount;
+        private final int uniqueActionTypes;
+        private final int scriptProfilesCount;
+        private final MemoryUsage memoryUsage;
+        private final Collection<Bottleneck> bottlenecks;
+        
+        public AdvancedSystemPerformanceReport(long totalExecutions, long totalExecutionTime, 
+                                             int activePlayerCount, int uniqueActionTypes,
+                                             int scriptProfilesCount, MemoryUsage memoryUsage,
+                                             Collection<Bottleneck> bottlenecks) {
+            this.totalExecutions = totalExecutions;
+            this.totalExecutionTime = totalExecutionTime;
+            this.activePlayerCount = activePlayerCount;
+            this.uniqueActionTypes = uniqueActionTypes;
+            this.scriptProfilesCount = scriptProfilesCount;
+            this.memoryUsage = memoryUsage;
+            this.bottlenecks = bottlenecks;
+        }
+        
+        public double getAverageExecutionTime() {
+            return totalExecutions > 0 ? totalExecutionTime / (double) totalExecutions : 0;
+        }
+        
+        public List<Bottleneck> getTopBottlenecks(int limit) {
+            return bottlenecks.stream()
+                .sorted(Comparator.comparingDouble(Bottleneck::getAverageTime).reversed())
+                .limit(limit)
+                .collect(ArrayList::new, (list, item) -> list.add(item), (list1, list2) -> list1.addAll(list2));
+        }
+        
+        // Getters
+        public long getTotalExecutions() { return totalExecutions; }
+    }
+
+    // Memory-related methods
+    private final Runtime runtime = Runtime.getRuntime();
+    
+    /**
+     * Gets the current memory usage percentage
+     */
+    public double getUsagePercentage() {
+        long maxMemory = runtime.maxMemory();
+        long usedMemory = runtime.totalMemory() - runtime.freeMemory();
+        return maxMemory > 0 ? (usedMemory * 100.0) / maxMemory : 0;
+    }
+    
+    /**
+     * Gets the used memory in MB
+     */
+    public long getUsedMemoryMB() {
+        return (runtime.totalMemory() - runtime.freeMemory()) / (1024 * 1024);
+    }
+
+    /**
+     * Gets the maximum available memory in MB
+     */
+    public long getMaxMemoryMB() {
+        return runtime.maxMemory() / (1024 * 1024);
+    }
+
+    /**
+     * Gets the total allocated memory in MB
+     */
+    public long getTotalMemoryMB() {
+        return runtime.totalMemory() / (1024 * 1024);
+    }
+    
+    // Getters for system metrics
+    public int getUniqueActionTypes() { return actionPerformance.size(); }
+    public int getScriptProfilesCount() { return scriptProfiles.size(); }
+    public MemoryUsage getMemoryUsage() { 
+        return new MemoryUsage(runtime.totalMemory() - runtime.freeMemory(), 
+                             runtime.maxMemory(), 
+                             runtime.totalMemory()); 
+    }
+    public Collection<Bottleneck> getBottlenecks() { 
+        return bottleneckDetector.getDetectedBottlenecks(); 
+    }
+    
+    /**
+     * Shuts down the performance monitor and cleans up resources
+     */
+    public void shutdown() {
+        // Save any pending performance data
+        savePerformanceData();
+
+        // Clean up resources
+        playerMetrics.clear();
+        actionPerformance.clear();
+        scriptProfiles.clear();
+
+        // Shutdown monitoring components
+        executionSampler.shutdown();
+        memoryMonitor.shutdown();
+        bottleneckDetector.shutdown();
+
+        plugin.getLogger().info("Script performance monitor has been shut down");
+    }
+    
+    /**
+     * Saves performance data to persistent storage
+     */
+    private void savePerformanceData() {
+        // TODO: Implement saving performance data to a file or database
+        plugin.getLogger().info("Saving performance monitoring data...");
+    }
+    
+    /**
+     * Cleans up resources (legacy method for backward compatibility)
+     */
+    public void cleanup() {
+        shutdown();
+    }
+}

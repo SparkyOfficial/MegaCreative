@@ -5,8 +5,13 @@ import com.megacreative.coding.CodeBlock;
 import com.megacreative.coding.ExecutionContext;
 import com.megacreative.coding.ParameterResolver;
 import com.megacreative.coding.values.DataValue;
+import com.megacreative.coding.values.types.NumberValue;
 import org.bukkit.entity.Player;
 
+/**
+ * Adds a numeric value to an existing variable.
+ * Supports LOCAL, GLOBAL, PLAYER, and SERVER scopes.
+ */
 public class AddVarAction implements BlockAction {
     @Override
     public void execute(ExecutionContext context) {
@@ -15,38 +20,111 @@ public class AddVarAction implements BlockAction {
 
         if (player == null || block == null) return;
         
-        ParameterResolver resolver = new ParameterResolver(context);
-
-        // Получаем и разрешаем параметры
-        DataValue rawVarName = block.getParameter("var");
-        DataValue rawValue = block.getParameter("value");
-        
-        if (rawVarName == null || rawValue == null) return;
-
-        String varName = resolver.resolve(context, rawVarName).asString();
-        String valueStr = resolver.resolve(context, rawValue).asString();
-
-        if (varName == null || valueStr == null) return;
-
         try {
-            // Получаем текущее значение переменной
-            Object currentValue = context.getVariable(varName);
-            double currentNum = 0.0;
-            
-            if (currentValue instanceof Number) {
-                currentNum = ((Number) currentValue).doubleValue();
+            ParameterResolver resolver = new ParameterResolver(context);
+
+            // Get variable name (required)
+            DataValue rawVarName = block.getParameter("var");
+            if (rawVarName == null || rawVarName.isEmpty()) {
+                player.sendMessage("§cОшибка: не указано имя переменной!");
+                return;
+            }
+
+            // Get value to add (required)
+            DataValue rawValue = block.getParameter("value");
+            if (rawValue == null || rawValue.isEmpty()) {
+                player.sendMessage("§cОшибка: не указано значение для добавления!");
+                return;
             }
             
-            // Добавляем новое значение
-            double addValue = Double.parseDouble(valueStr);
+            // Resolve variable name and value
+            String varName = resolver.resolve(context, rawVarName).asString();
+            if (varName == null || varName.trim().isEmpty()) {
+                player.sendMessage("§cОшибка: имя переменной не может быть пустым!");
+                return;
+            }
+            
+            // Get scope (optional, defaults to LOCAL)
+            DataValue scopeValue = block.getParameter("scope");
+            String scope = scopeValue != null ? scopeValue.asString().toUpperCase() : "LOCAL";
+            
+            // Get current value from the appropriate scope
+            Object currentValue = null;
+            switch (scope) {
+                case "GLOBAL":
+                    currentValue = context.getGlobalVariable(varName);
+                    break;
+                case "PLAYER":
+                    currentValue = context.getPlayerVariable(varName);
+                    break;
+                case "SERVER":
+                    currentValue = context.getServerVariable(varName);
+                    break;
+                case "LOCAL":
+                default:
+                    currentValue = context.getVariable(varName);
+                    break;
+            }
+            
+            // Parse current value as double
+            double currentNum = 0.0;
+            if (currentValue != null) {
+                if (currentValue instanceof Number) {
+                    currentNum = ((Number) currentValue).doubleValue();
+                } else if (currentValue instanceof DataValue) {
+                    try {
+                        currentNum = ((DataValue) currentValue).asNumber().doubleValue();
+                    } catch (NumberFormatException e) {
+                        player.sendMessage("§cОшибка: текущее значение переменной не является числом!");
+                        return;
+                    }
+                } else {
+                    try {
+                        currentNum = Double.parseDouble(currentValue.toString());
+                    } catch (NumberFormatException e) {
+                        player.sendMessage("§cОшибка: текущее значение переменной не является числом!");
+                        return;
+                    }
+                }
+            }
+            
+            // Parse and add the value
+            DataValue resolvedValue = resolver.resolve(context, rawValue);
+            double addValue;
+            try {
+                addValue = resolvedValue.asNumber().doubleValue();
+            } catch (NumberFormatException e) {
+                player.sendMessage("§cОшибка: значение для добавления должно быть числом!");
+                return;
+            }
+            
             double result = currentNum + addValue;
             
-            // Сохраняем результат через контекст
-            context.setVariable(varName, result);
-            player.sendMessage("§a✓ Переменная '" + varName + "' увеличена на " + addValue + " = " + result);
+            // Save the result back to the appropriate scope
+            DataValue resultValue = new NumberValue(result);
+            switch (scope) {
+                case "GLOBAL":
+                    context.setGlobalVariable(varName, resultValue);
+                    break;
+                case "PLAYER":
+                    context.setPlayerVariable(varName, resultValue);
+                    break;
+                case "SERVER":
+                    context.setServerVariable(varName, resultValue);
+                    break;
+                case "LOCAL":
+                default:
+                    context.setVariable(varName, resultValue);
+                    break;
+            }
             
-        } catch (NumberFormatException e) {
-            player.sendMessage("§cОшибка: значение должно быть числом");
+            player.sendMessage("§a✓ Переменная '§f" + varName + "§a' (§b" + scope + "§a) увеличена на §e" + 
+                addValue + "§a = §e" + result);
+            
+        } catch (Exception e) {
+            player.sendMessage("§cОшибка при изменении переменной: " + e.getMessage());
+            context.getPlugin().getLogger().warning("Error in AddVarAction: " + e.getMessage());
+            e.printStackTrace();
         }
     }
 } 

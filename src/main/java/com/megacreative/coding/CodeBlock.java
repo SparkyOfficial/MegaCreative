@@ -2,54 +2,145 @@ package com.megacreative.coding;
 
 import com.megacreative.MegaCreative;
 import com.megacreative.coding.values.DataValue;
-import lombok.Data;
-import lombok.NoArgsConstructor;
-
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-import java.util.UUID;
 import org.bukkit.Material;
 import org.bukkit.inventory.ItemStack;
+
+import java.util.*;
 
 /**
  * Представляет один блок в скрипте.
  * Содержит тип, параметры и ссылки на другие блоки.
  */
-@Data
-@NoArgsConstructor
 public class CodeBlock implements Cloneable {
-
+    // ===== ПОЛЯ КЛАССА =====
+    
+    /** Уникальный идентификатор блока */
     private UUID id;
-    private Material material; // Тип блока (DIAMOND_BLOCK и т.д.)
-    private String action;     // Выбранное действие (например, onJoin, sendMessage)
+    
+    /** Тип блока (DIAMOND_BLOCK и т.д.) */
+    private Material material;
+    
+    /** Выбранное действие (например, onJoin, sendMessage) */
+    private String action;
+    
+    /** Параметры блока */
     private Map<String, DataValue> parameters;
-    private List<CodeBlock> children; // Для вложенных блоков (например, внутри условия IF)
-    private CodeBlock nextBlock; // Следующий блок в последовательности
     
-    // --- НОВОЕ ПОЛЕ ДЛЯ ВИРТУАЛЬНЫХ ИНВЕНТАРЕЙ ---
-    // Хранит предметы-конфигурации. Теперь сериализуется с помощью кастомного TypeAdapter
-    private Map<Integer, ItemStack> configItems = new HashMap<>();
+    /** Вложенные блоки (например, внутри условия IF) */
+    private List<CodeBlock> children;
     
-    // --- СИСТЕМА ГРУППИРОВКИ ПРЕДМЕТОВ ---
-    // Группы предметов для сложных конфигураций
-    private Map<String, List<Integer>> itemGroups = new HashMap<>();
+    /** Следующий блок в последовательности */
+    private CodeBlock nextBlock;
     
-    // --- ДОСТУП К ПЛАГИНУ ДЛЯ КОНФИГУРАЦИИ ---
+    /** Предметы-конфигурации */
+    private Map<Integer, ItemStack> configItems;
+    
+    /** Группы предметов для сложных конфигураций */
+    private Map<String, List<Integer>> itemGroups;
+    
+    /** Ссылка на основной плагин */
     private transient MegaCreative plugin;
-
-
     
-    public CodeBlock(Material material, String action) {
+    // ===== КОНСТРУКТОРЫ =====
+    
+    /**
+     * Конструктор по умолчанию
+     */
+    public CodeBlock() {
         this.id = UUID.randomUUID();
-        this.material = material;
-        this.action = action;
         this.parameters = new HashMap<>();
         this.children = new ArrayList<>();
         this.configItems = new HashMap<>();
+        this.itemGroups = new HashMap<>();
     }
-
+    
+    /**
+     * Конструктор с основными параметрами
+     * @param material Материал блока
+     * @param action Действие блока
+     */
+    public CodeBlock(Material material, String action) {
+        this();
+        this.material = material;
+        this.action = action;
+    }
+    
+    // ===== ГЕТТЕРЫ И СЕТТЕРЫ =====
+    
+    public UUID getId() { 
+        return id; 
+    }
+    
+    public void setId(UUID id) { 
+        this.id = id; 
+    }
+    
+    public Material getMaterial() { 
+        return material; 
+    }
+    
+    public void setMaterial(Material material) { 
+        this.material = material; 
+    }
+    
+    public String getAction() { 
+        return action; 
+    }
+    
+    public void setAction(String action) { 
+        this.action = action; 
+    }
+    
+    public Map<String, DataValue> getParameters() { 
+        return parameters; 
+    }
+    
+    public void setParameters(Map<String, DataValue> parameters) { 
+        this.parameters = parameters; 
+    }
+    
+    public List<CodeBlock> getChildren() { 
+        return children; 
+    }
+    
+    public void setChildren(List<CodeBlock> children) { 
+        this.children = children; 
+    }
+    
+    public CodeBlock getNextBlock() { 
+        return nextBlock; 
+    }
+    
+    public void setNextBlock(CodeBlock nextBlock) { 
+        this.nextBlock = nextBlock; 
+    }
+    
+    public Map<Integer, ItemStack> getConfigItems() { 
+        return configItems; 
+    }
+    
+    public void setConfigItems(Map<Integer, ItemStack> configItems) { 
+        this.configItems = configItems; 
+    }
+    
+    public Map<String, List<Integer>> getItemGroups() { 
+        return itemGroups; 
+    }
+    
+    public void setItemGroups(Map<String, List<Integer>> itemGroups) { 
+        this.itemGroups = itemGroups; 
+    }
+    
+    public MegaCreative getPlugin() { 
+        return plugin; 
+    }
+    
+    public void setPlugin(MegaCreative plugin) { 
+        this.plugin = plugin; 
+    }
+    
+    // ===== ОСНОВНЫЕ МЕТОДЫ =====
+    
     /**
      * Устанавливает параметр для блока.
      * @param key Ключ параметра (например, "material" или "message")
@@ -67,7 +158,12 @@ public class CodeBlock implements Cloneable {
     public void setParameter(String key, Object value) {
         parameters.put(key, DataValue.fromObject(value));
     }
-
+    
+    /**
+     * Получает параметр по ключу
+     * @param key Ключ параметра
+     * @return Значение параметра или null, если не найдено
+     */
     public DataValue getParameter(String key) {
         return parameters.get(key);
     }
@@ -82,19 +178,17 @@ public class CodeBlock implements Cloneable {
         DataValue value = parameters.get(key);
         return value != null ? value : defaultValue;
     }
-
-    public Map<String, DataValue> getParameters() {
-        return parameters;
-    }
-
+    
     /**
      * Добавляет дочерний блок (для условий).
      * @param child Блок, который будет выполнен внутри этого блока
      */
     public void addChild(CodeBlock child) {
-        children.add(child);
+        if (child != null) {
+            children.add(child);
+        }
     }
-
+    
     /**
      * Устанавливает следующий блок в цепочке.
      * @param next Следующий блок
@@ -103,21 +197,7 @@ public class CodeBlock implements Cloneable {
         this.nextBlock = next;
     }
     
-    /**
-     * Устанавливает ссылку на плагин для доступа к конфигурации
-     */
-    public void setPlugin(MegaCreative plugin) {
-        this.plugin = plugin;
-    }
-    
-    /**
-     * Получает ссылку на плагин
-     */
-    public MegaCreative getPlugin() {
-        return plugin;
-    }
-    
-    // --- НОВЫЕ МЕТОДЫ ДЛЯ РАБОТЫ С ВИРТУАЛЬНЫМИ ИНВЕНТАРЯМИ ---
+    // ===== МЕТОДЫ ДЛЯ РАБОТЫ С ПРЕДМЕТАМИ =====
     
     /**
      * Устанавливает предмет конфигурации в указанный слот
@@ -143,14 +223,6 @@ public class CodeBlock implements Cloneable {
     }
     
     /**
-     * Получает все предметы конфигурации
-     * @return Карта слотов и предметов
-     */
-    public Map<Integer, ItemStack> getConfigItems() {
-        return configItems;
-    }
-    
-    /**
      * Проверяет, есть ли предметы в конфигурации
      * @return true, если есть хотя бы один предмет
      */
@@ -165,7 +237,7 @@ public class CodeBlock implements Cloneable {
         configItems.clear();
     }
     
-    // --- МЕТОДЫ ДЛЯ РАБОТЫ С ГРУППАМИ ПРЕДМЕТОВ ---
+    // ===== МЕТОДЫ ДЛЯ РАБОТЫ С ГРУППАМИ ПРЕДМЕТОВ =====
     
     /**
      * Создает группу предметов
@@ -173,7 +245,9 @@ public class CodeBlock implements Cloneable {
      * @param slots Слоты, входящие в группу
      */
     public void createItemGroup(String groupName, List<Integer> slots) {
-        itemGroups.put(groupName, new ArrayList<>(slots));
+        if (groupName != null && slots != null) {
+            itemGroups.put(groupName, new ArrayList<>(slots));
+        }
     }
     
     /**
@@ -183,7 +257,7 @@ public class CodeBlock implements Cloneable {
      */
     public List<ItemStack> getItemsFromGroup(String groupName) {
         List<Integer> groupSlots = itemGroups.get(groupName);
-        if (groupSlots == null) {
+        if (groupSlots == null || groupSlots.isEmpty()) {
             return new ArrayList<>();
         }
         
@@ -195,14 +269,6 @@ public class CodeBlock implements Cloneable {
             }
         }
         return items;
-    }
-    
-    /**
-     * Получает все группы предметов
-     * @return Карта групп
-     */
-    public Map<String, List<Integer>> getItemGroups() {
-        return new HashMap<>(itemGroups);
     }
     
     /**
@@ -229,7 +295,7 @@ public class CodeBlock implements Cloneable {
         itemGroups.clear();
     }
     
-    // --- НОВЫЕ МЕТОДЫ ДЛЯ ИМЕНОВАННЫХ СЛОТОВ ---
+    // ===== МЕТОДЫ ДЛЯ РАБОТЫ С ИМЕНОВАННЫМИ СЛОТАМИ =====
     
     /**
      * Получает предмет из именованного слота
@@ -237,12 +303,11 @@ public class CodeBlock implements Cloneable {
      * @return Предмет из слота или null, если слот не найден
      */
     public ItemStack getItemFromSlot(String slotName) {
-        // Получаем номер слота по имени из конфигурации
-        Integer slotNumber = plugin.getBlockConfiguration().getSlotNumber(this.getAction(), slotName);
-        if (slotNumber != null) {
-            return getConfigItem(slotNumber);
+        if (plugin == null || slotName == null) {
+            return null;
         }
-        return null;
+        Integer slotNumber = plugin.getBlockConfiguration().getSlotNumber(this.getAction(), slotName);
+        return slotNumber != null ? getConfigItem(slotNumber) : null;
     }
     
     /**
@@ -251,7 +316,10 @@ public class CodeBlock implements Cloneable {
      * @return Список предметов из группы
      */
     public List<ItemStack> getItemsFromNamedGroup(String groupName) {
-        // Получаем слоты для группы из конфигурации
+        if (plugin == null || groupName == null) {
+            return new ArrayList<>();
+        }
+        
         List<Integer> groupSlots = plugin.getBlockConfiguration().getSlotsForGroup(this.getAction(), groupName);
         if (groupSlots.isEmpty()) {
             return new ArrayList<>();
@@ -269,27 +337,32 @@ public class CodeBlock implements Cloneable {
     
     /**
      * Проверяет, есть ли конфигурация слотов для данного действия
+     * @return true, если конфигурация слотов существует
      */
     public boolean hasSlotConfiguration() {
-        return plugin.getBlockConfiguration().getActionSlotConfig(this.getAction()) != null;
+        return plugin != null && plugin.getBlockConfiguration().getActionSlotConfig(this.getAction()) != null;
     }
     
     /**
      * Проверяет, есть ли конфигурация групп для данного действия
+     * @return true, если конфигурация групп существует
      */
     public boolean hasGroupConfiguration() {
-        return plugin.getBlockConfiguration().getActionGroupConfig(this.getAction()) != null;
+        return plugin != null && plugin.getBlockConfiguration().getActionGroupConfig(this.getAction()) != null;
     }
     
     /**
      * Получает все именованные слоты для данного действия
+     * @return Карта имен слотов и их номеров
      */
     public Map<String, Integer> getNamedSlots() {
         Map<String, Integer> namedSlots = new HashMap<>();
-        var slotConfig = plugin.getBlockConfiguration().getActionSlotConfig(this.getAction());
-        if (slotConfig != null) {
-            for (Map.Entry<Integer, BlockConfiguration.SlotConfig> entry : slotConfig.getSlots().entrySet()) {
-                namedSlots.put(entry.getValue().getSlotName(), entry.getKey());
+        if (plugin != null) {
+            var slotConfig = plugin.getBlockConfiguration().getActionSlotConfig(this.getAction());
+            if (slotConfig != null) {
+                for (Map.Entry<Integer, BlockConfiguration.SlotConfig> entry : slotConfig.getSlots().entrySet()) {
+                    namedSlots.put(entry.getValue().getSlotName(), entry.getKey());
+                }
             }
         }
         return namedSlots;
@@ -297,98 +370,105 @@ public class CodeBlock implements Cloneable {
     
     /**
      * Получает все именованные группы для данного действия
+     * @return Карта имен групп и списков слотов
      */
     public Map<String, List<Integer>> getNamedGroups() {
         Map<String, List<Integer>> namedGroups = new HashMap<>();
-        var groupConfig = plugin.getBlockConfiguration().getActionGroupConfig(this.getAction());
-        if (groupConfig != null) {
-            for (Map.Entry<String, BlockConfiguration.GroupConfig> entry : groupConfig.getGroups().entrySet()) {
-                namedGroups.put(entry.getKey(), entry.getValue().getSlots());
+        if (plugin != null) {
+            var groupConfig = plugin.getBlockConfiguration().getActionGroupConfig(this.getAction());
+            if (groupConfig != null) {
+                for (Map.Entry<String, BlockConfiguration.GroupConfig> entry : groupConfig.getGroups().entrySet()) {
+                    namedGroups.put(entry.getKey(), entry.getValue().getSlots());
+                }
             }
         }
         return namedGroups;
     }
-
+    
+    // ===== ПЕРЕОПРЕДЕЛЕННЫЕ МЕТОДЫ =====
+    
     @Override
-    public CodeBlock clone() throws CloneNotSupportedException {
-        CodeBlock cloned = (CodeBlock) super.clone();
-        cloned.id = UUID.randomUUID(); // У нового блока новый ID
-        cloned.parameters = new HashMap<>(this.parameters);
-        cloned.configItems = new HashMap<>(this.configItems);
-        // Важно: не копируем nextBlock и children, чтобы не создавать непредсказуемых связей
-        cloned.nextBlock = null;
-        cloned.children = new ArrayList<>();
-        return cloned;
+    public boolean equals(Object o) {
+        if (this == o) return true;
+        if (o == null || getClass() != o.getClass()) return false;
+        CodeBlock codeBlock = (CodeBlock) o;
+        return Objects.equals(id, codeBlock.id) &&
+               material == codeBlock.material &&
+               Objects.equals(action, codeBlock.action) &&
+               Objects.equals(parameters, codeBlock.parameters) &&
+               Objects.equals(children, codeBlock.children) &&
+               Objects.equals(nextBlock, codeBlock.nextBlock) &&
+               Objects.equals(configItems, codeBlock.configItems) &&
+               Objects.equals(itemGroups, codeBlock.itemGroups);
     }
     
-    // Дополнительные геттеры и сеттеры
-    public UUID getId() {
-        return id;
+    @Override
+    public int hashCode() {
+        return Objects.hash(id, material, action, parameters, children, nextBlock, configItems, itemGroups);
     }
     
-    public void setId(UUID id) {
-        this.id = id;
+    @Override
+    public CodeBlock clone() {
+        try {
+            CodeBlock cloned = (CodeBlock) super.clone();
+            cloned.id = UUID.randomUUID(); // У нового блока новый ID
+            cloned.parameters = new HashMap<>(this.parameters);
+            
+            // Глубокая копия configItems
+            cloned.configItems = new HashMap<>();
+            for (Map.Entry<Integer, ItemStack> entry : this.configItems.entrySet()) {
+                if (entry.getValue() != null) {
+                    cloned.configItems.put(entry.getKey(), entry.getValue().clone());
+                }
+            }
+            
+            // Важно: не копируем nextBlock и children, чтобы не создавать непредсказуемых связей
+            cloned.nextBlock = null;
+            cloned.children = new ArrayList<>();
+            
+            // Глубокая копия itemGroups
+            cloned.itemGroups = new HashMap<>();
+            for (Map.Entry<String, List<Integer>> entry : this.itemGroups.entrySet()) {
+                if (entry.getValue() != null) {
+                    cloned.itemGroups.put(entry.getKey(), new ArrayList<>(entry.getValue()));
+                }
+            }
+            
+            return cloned;
+        } catch (CloneNotSupportedException e) {
+            throw new AssertionError("CodeBlock cloning failed", e);
+        }
     }
     
-    public Material getMaterial() {
-        return material;
+    @Override
+    public String toString() {
+        return "CodeBlock{" +
+               "id=" + id +
+               ", material=" + material +
+               ", action='" + action + '\'' +
+               ", parameters=" + parameters.size() +
+               ", children=" + children.size() +
+               ", configItems=" + configItems.size() +
+               ", itemGroups=" + itemGroups.size() +
+               '}';
     }
     
-    public void setMaterial(Material material) {
-        this.material = material;
-    }
-    
-    public String getAction() {
-        return action;
-    }
-    
-    public void setAction(String action) {
-        this.action = action;
-    }
-    
-    public void setParameters(Map<String, DataValue> parameters) {
-        this.parameters = parameters;
-    }
-    
-    public List<CodeBlock> getChildren() {
-        return children;
-    }
-    
-    public void setChildren(List<CodeBlock> children) {
-        this.children = children;
-    }
-    
-    public CodeBlock getNextBlock() {
-        return nextBlock;
-    }
-    
-    public void setNextBlock(CodeBlock nextBlock) {
-        this.nextBlock = nextBlock;
-    }
-    
-    public void setConfigItems(Map<Integer, ItemStack> configItems) {
-        this.configItems = configItems;
-    }
-    
-    public void setItemGroups(Map<String, List<Integer>> itemGroups) {
-        this.itemGroups = itemGroups;
-    }
+    // ===== ВСПОМОГАТЕЛЬНЫЕ МЕТОДЫ =====
     
     /**
      * Gets the location of this block
+     * @return The location of the block or null if not defined
      */
     public org.bukkit.Location getLocation() {
-        // This is a placeholder implementation
-        // In a real implementation, this would return the actual location
+        // In a real implementation, this should return the actual location of the block
         return null;
     }
-    
+
     /**
      * Gets the condition of this block
+     * @return The execution condition or an empty string if not defined
      */
     public String getCondition() {
-        // This is a placeholder implementation
-        // In a real implementation, this would return the actual condition
         return "";
     }
 }

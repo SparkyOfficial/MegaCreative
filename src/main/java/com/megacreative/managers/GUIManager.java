@@ -5,8 +5,8 @@ import java.util.ArrayList;
 import com.megacreative.core.ServiceRegistry;
 import com.megacreative.interfaces.IPlayerManager;
 import com.megacreative.coding.variables.VariableManager;
-import lombok.extern.java.Log;
 import org.bukkit.entity.Player;
+import java.util.logging.Logger;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.Listener;
 import org.bukkit.event.inventory.InventoryClickEvent;
@@ -21,8 +21,8 @@ import java.util.concurrent.ConcurrentHashMap;
 /**
  * Enhanced GUI Manager with memory leak prevention and proper event handling
  */
-@Log
 public class GUIManager implements Listener {
+    private static final Logger log = Logger.getLogger(GUIManager.class.getName());
     
     private final MegaCreative plugin;
     private final IPlayerManager playerManager;

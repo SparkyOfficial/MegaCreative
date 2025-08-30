@@ -21,8 +21,8 @@ public class IsOpCondition implements BlockCondition {
         
         if (player == null || block == null) return false;
         
-        // Get VariableManager for parameter resolution
-        ParameterResolver resolver = new ParameterResolver(context.getPlugin().getVariableManager());
+        // Create ParameterResolver with ExecutionContext
+        ParameterResolver resolver = new ParameterResolver(context);
         
         // Get the 'required' parameter (optional, defaults to true)
         DataValue requiredValue = block.getParameter("required");
