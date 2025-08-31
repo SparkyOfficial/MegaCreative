@@ -183,11 +183,15 @@ public class GroupTemplateManager {
             group.setTemplateId(this.name);
             group.setVersion(this.version);
             
-            // Copy tags
-            group.getTags().addAll(this.tags);
+            // Copy all tags individually to ensure they're properly added
+            for (String tag : this.tags) {
+                group.addTag(tag);
+            }
             
-            // Copy metadata
-            group.getMetadata().putAll(this.metadata);
+            // Copy all metadata individually to ensure proper handling
+            for (Map.Entry<String, Object> entry : this.metadata.entrySet()) {
+                group.setMetadata(entry.getKey(), entry.getValue());
+            }
             
             return group;
         }
