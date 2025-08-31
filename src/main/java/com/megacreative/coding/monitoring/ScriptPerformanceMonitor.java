@@ -3,6 +3,7 @@ package com.megacreative.coding.monitoring;
 import com.megacreative.coding.CodeBlock;
 import com.megacreative.coding.CodeScript;
 import com.megacreative.coding.monitoring.model.*;
+import com.megacreative.coding.monitoring.model.ExecutionSampler;
 import org.bukkit.entity.Player;
 import org.bukkit.plugin.Plugin;
 
@@ -28,7 +29,8 @@ public class ScriptPerformanceMonitor {
     private final AtomicLong totalExecutionTime = new AtomicLong(0);
     
     // Advanced monitoring features
-    private final ExecutionSampler executionSampler = new ExecutionSampler();
+    private final com.megacreative.coding.monitoring.model.ExecutionSampler executionSampler = 
+        new com.megacreative.coding.monitoring.model.ExecutionSampler();
     private final MemoryMonitor memoryMonitor = new MemoryMonitor();
     private final BottleneckDetector bottleneckDetector = new BottleneckDetector();
     
@@ -36,6 +38,33 @@ public class ScriptPerformanceMonitor {
     private final long slowExecutionThreshold;
     private final long memoryWarningThreshold;
     private final int maxConcurrentScripts;
+    
+    /**
+     * Tracks the execution of a single script operation
+     */
+    public static class ExecutionTracker extends com.megacreative.coding.monitoring.model.ExecutionTracker {
+        private final ScriptPerformanceMonitor monitor;
+        private final String action;
+        private final ScriptPerformanceProfile profile;
+        private boolean completed = false;
+        
+        private ExecutionTracker(ScriptPerformanceMonitor monitor, Player player, 
+                               String scriptName, String action, long startTime,
+                               ScriptPerformanceProfile profile) {
+            super(monitor, player, scriptName, action, startTime, profile);
+            this.monitor = monitor;
+            this.action = action;
+            this.profile = profile;
+        }
+        
+        @Override
+        public void close() {
+            if (!completed) {
+                super.close();
+                completed = true;
+            }
+        }
+    }
     
     public ScriptPerformanceMonitor(Plugin plugin) {
         this.plugin = plugin;
@@ -62,40 +91,40 @@ public class ScriptPerformanceMonitor {
      */
     public void recordExecution(Player player, String scriptName, String actionType, 
                                long executionTime, boolean success, String errorMessage) {
-        UUID playerId = player != null ? player.getUniqueId() : null;
-        
-        // Update player metrics
-        if (playerId != null) {
-            playerMetrics.computeIfAbsent(playerId, PlayerScriptMetrics::new)
-                       .recordExecution(scriptName, actionType, executionTime, success);
-        }
-        
-        // Update action performance
-        actionPerformance.computeIfAbsent(actionType, ActionPerformanceData::new)
-                       .recordExecution(executionTime, success);
-        
-        // Update script profile
-        scriptProfiles.computeIfAbsent(scriptName, ScriptPerformanceProfile::new)
-                     .recordExecution(actionType, executionTime, success);
-        
-        // Update global metrics
-        totalExecutions.incrementAndGet();
-        totalExecutionTime.addAndGet(executionTime);
-        
-        // Sample execution for pattern detection
-        executionSampler.recordExecution(scriptName, actionType, executionTime);
-        
-        // Convert ScriptPerformanceProfile to ScriptMetrics and check for bottlenecks
-        List<ScriptMetrics> metricsList = new ArrayList<>();
-        for (ScriptPerformanceProfile profile : scriptProfiles.values()) {
-            metricsList.add(new ScriptMetrics(profile));
-        }
-        bottleneckDetector.detectBottlenecks(metricsList);
-        
-        // Log slow executions
-        if (executionTime > slowExecutionThreshold) {
-            log.warning(String.format("Slow execution detected: %s/%s took %dms", 
-                scriptName, actionType, executionTime));
+        if (player != null) {
+            // Update player metrics
+            PlayerScriptMetrics metrics = playerMetrics.computeIfAbsent(
+                player.getUniqueId(), PlayerScriptMetrics::new);
+            metrics.recordExecution(scriptName, actionType, executionTime, success);
+            
+            // Update global metrics
+            totalExecutions.incrementAndGet();
+            totalExecutionTime.addAndGet(executionTime);
+            
+            // Update action performance data
+            actionPerformance.computeIfAbsent(actionType, k -> new ActionPerformanceData(actionType))
+                .recordExecution(executionTime, success);
+            
+            // Update script profile with success status
+            ScriptPerformanceProfile profile = scriptProfiles.computeIfAbsent(
+                scriptName, ScriptPerformanceProfile::new);
+            profile.recordExecution(actionType, executionTime, success);
+            
+            // Sample execution for pattern detection
+            executionSampler.recordExecution(scriptName, actionType, executionTime);
+            
+            // Convert ScriptPerformanceProfile to ScriptMetrics and check for bottlenecks
+            List<ScriptMetrics> metricsList = new ArrayList<>();
+            for (ScriptPerformanceProfile scriptProfile : scriptProfiles.values()) {
+                metricsList.add(new ScriptMetrics(scriptProfile));
+            }
+            bottleneckDetector.detectBottlenecks(metricsList);
+            
+            // Log slow executions
+            if (executionTime > slowExecutionThreshold) {
+                log.warning(String.format("Slow execution detected: %s/%s took %dms (threshold: %dms)", 
+                    scriptName, actionType, executionTime, slowExecutionThreshold));
+            }
         }
     }
     
@@ -122,8 +151,15 @@ public class ScriptPerformanceMonitor {
      * @param action The action being performed
      * @return An ExecutionTracker for the execution
      */
-    public ExecutionTracker startTracking(Player player, String id, String action) {
-        String scriptName = id != null ? id : "unknown";
+    /**
+     * Starts tracking a script or block execution
+     * @param player The player who triggered the execution
+     * @param scriptId The ID of the script or block being executed
+     * @param action The action being performed
+     * @return An ExecutionTracker for the execution
+     */
+    public ExecutionTracker startTracking(Player player, String scriptId, String action) {
+        String scriptName = scriptId != null ? scriptId : "unknown";
         ScriptPerformanceProfile profile = scriptProfiles.computeIfAbsent(
             scriptName, ScriptPerformanceProfile::new);
             
