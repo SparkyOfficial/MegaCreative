@@ -30,7 +30,7 @@ import com.megacreative.coding.actions.PlayParticleEffectAction;
 import com.megacreative.coding.actions.RemoveItemsAction;
 import com.megacreative.coding.actions.SetArmorAction;
 import com.megacreative.coding.monitoring.ScriptPerformanceMonitor;
-import com.megacreative.coding.monitoring.model.ExecutionTracker;
+import com.megacreative.coding.monitoring.ScriptPerformanceMonitor.ExecutionTracker;
 import com.megacreative.coding.values.DataValue;
 import org.bukkit.Location;
 import org.bukkit.Material;
