@@ -32,26 +32,41 @@ enum VisualizationState {
 }
 public class AdvancedVisualDebugger {
     
-    /**
-     * Represents different visualization modes for debugging
-     */
-    public enum VisualizationMode {
-        STANDARD,           // Standard visualization with basic highlighting
-        STEP_BY_STEP,       // Step-by-step execution
-        PERFORMANCE,        // Performance metrics visualization
-        MEMORY,             // Memory usage visualization
-        VARIABLES,          // Variable state visualization
-        BLOCK_HIGHLIGHTING, // Highlight blocks being executed
-        FLOW_TRACING,       // Show execution flow between blocks
-        PERFORMANCE_MAPPING, // Map performance metrics to visual properties
-        GROUP_MAPPING       // Show group relationships
-    }
-    
-    
     private final MegaCreative plugin;
     private final VisualDebugger basicDebugger;
     private final Map<UUID, VisualizationSession> visualizationSessions = new ConcurrentHashMap<>();
     private final Map<UUID, PerformanceAnalyzer> performanceAnalyzers = new ConcurrentHashMap<>();
+    
+    /**
+     * Starts performance analysis for a player's script execution
+     * @param player The player to start analysis for
+     * @param script The script being analyzed
+     */
+    public void startPerformanceAnalysis(Player player, CodeScript script) {
+        if (player == null || script == null) return;
+        
+        PerformanceAnalyzer analyzer = new PerformanceAnalyzer(player, script);
+        analyzer.setStartTime(System.currentTimeMillis());
+        performanceAnalyzers.put(player.getUniqueId(), analyzer);
+        
+        player.sendMessage("§aStarted performance analysis for script: §e" + script.getName());
+    }
+    
+    /**
+     * Records execution data for performance analysis
+     * @param player The player whose execution is being recorded
+     * @param block The code block being executed
+     * @param location The location where the block is being executed
+     * @param executionTime The time taken to execute the block in milliseconds
+     */
+    public void recordExecutionData(Player player, CodeBlock block, Location location, long executionTime) {
+        if (player == null || block == null) return;
+        
+        PerformanceAnalyzer analyzer = performanceAnalyzers.get(player.getUniqueId());
+        if (analyzer != null) {
+            analyzer.recordExecution(block, location, executionTime);
+        }
+    }
     
     public AdvancedVisualDebugger(MegaCreative plugin, VisualDebugger basicDebugger) {
         this.plugin = plugin;
@@ -113,7 +128,16 @@ public class AdvancedVisualDebugger {
         public void setLastUpdate(long lastUpdate) { this.lastUpdate = lastUpdate; }
         public int getCurrentStep() { return currentStep; }
         public void setCurrentStep(int currentStep) { this.currentStep = currentStep; }
-        public List<ExecutionStep> getExecutionHistory() { return new ArrayList<>(executionHistory); }
+        @SuppressWarnings("unchecked")
+        public List<ExecutionStep> getExecutionHistory() {
+            List<ExecutionStep> result = new ArrayList<>();
+            for (Object item : executionHistory) {
+                if (item instanceof ExecutionStep) {
+                    result.add((ExecutionStep) item);
+                }
+            }
+            return result;
+        }
         public Set<UUID> getActiveBreakpoints() { return new HashSet<>(activeBreakpoints); }
         public boolean isPaused() { return paused; }
         public void setPaused(boolean paused) { this.paused = paused; }
@@ -181,16 +205,19 @@ public class AdvancedVisualDebugger {
         private boolean isActive = true;
 
         public PerformanceAnalyzer(Player player, CodeScript script) {
+            this.analyzerId = UUID.randomUUID();
             this.player = player;
             this.script = script;
+            this.startTime = System.currentTimeMillis();
+            this.isActive = true;
         }
         
-        public String getAnalyzerId() { return analyzerId; }
+        public UUID getAnalyzerId() { return analyzerId; }
         public Player getPlayer() { return player; }
         public CodeScript getScript() { return script; }
         public int getTotalExecutions() { return executionRecords.size(); }
         public long getTotalExecutionTime() { return totalExecutionTime; }
-        public List<ExecutionRecord> getExecutionRecords() { return new ArrayList<>(executionRecords); }
+        public List<ExecutionRecord> getExecutionRecords() { return new ArrayList<>(executionRecords.values()); }
         public Map<String, Long> getExecutionTimes() { return new HashMap<>(executionTimes); }
         public Map<String, Integer> getExecutionCounts() { return new HashMap<>(executionCounts); }
         public Map<String, Map<CodeBlock, Integer>> getBlockExecutionCounts() { 
@@ -206,13 +233,14 @@ public class AdvancedVisualDebugger {
         public void recordExecution(CodeBlock block, Location location, long executionTime) {
             Map<String, Object> context = new HashMap<>();
             context.put("location", location);
-            executionRecords.add(new ExecutionRecord(block, executionTime, context, true, null));
+            UUID recordId = UUID.randomUUID();
+            executionRecords.put(recordId.toString(), new ExecutionRecord(block, executionTime, context, true, null));
             totalExecutionTime += executionTime;
             totalExecutions++;
         }
         
         public List<ExecutionRecord> getSlowestBlocks(int count) {
-            return executionRecords.stream()
+            return executionRecords.values().stream()
                 .sorted((a, b) -> Long.compare(b.executionTime, a.executionTime))
                 .limit(count)
                 .collect(ArrayList::new, ArrayList::add, ArrayList::addAll);
@@ -223,14 +251,14 @@ public class AdvancedVisualDebugger {
         }
         
         public long getSlowestBlockTime() {
-            return executionRecords.stream()
+            return executionRecords.values().stream()
                 .mapToLong(ExecutionRecord::getExecutionTime)
                 .max()
                 .orElse(0);
         }
         
         public long getFastestBlockTime() {
-            return executionRecords.stream()
+            return executionRecords.values().stream()
                 .mapToLong(ExecutionRecord::getExecutionTime)
                 .min()
                 .orElse(0);
@@ -272,7 +300,11 @@ public class AdvancedVisualDebugger {
             private final String errorMessage;
 
             public ExecutionRecord(CodeBlock block, long executionTime, Map<String, Object> context, boolean successful, String errorMessage) {
-                this.recordId = UUID.randomUUID().toString();
+            this(UUID.randomUUID(), block, executionTime, context, successful, errorMessage);
+        }
+        
+        public ExecutionRecord(UUID id, CodeBlock block, long executionTime, Map<String, Object> context, boolean successful, String errorMessage) {
+                this.recordId = id.toString();
                 this.block = block;
                 this.executionTime = executionTime;
                 this.timestamp = System.currentTimeMillis();
@@ -379,19 +411,6 @@ public class AdvancedVisualDebugger {
                 // Variable tracking visualization
                 visualizeVariables(player, block, blockLocation);
                 break;
-        }
-    }
-    
-    public void startPerformanceAnalysis(Player player, com.megacreative.coding.CodeScript script) {
-        if (player == null || script == null) return;
-        performanceAnalyzers.put(player.getUniqueId(), new PerformanceAnalyzer(player));
-    }
-    
-    public void recordExecutionData(Player player, CodeBlock block, Location location, long executionTime) {
-        if (player == null || block == null) return;
-        PerformanceAnalyzer analyzer = performanceAnalyzers.get(player.getUniqueId());
-        if (analyzer != null) {
-            analyzer.recordExecution(block, location, executionTime);
         }
     }
     

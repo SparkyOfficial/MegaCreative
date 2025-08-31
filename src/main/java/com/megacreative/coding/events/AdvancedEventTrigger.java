@@ -4,6 +4,7 @@ import com.megacreative.coding.values.DataValue;
 import org.bukkit.entity.Player;
 import java.util.Objects;
 import java.util.logging.Logger;
+import java.util.concurrent.atomic.AtomicInteger;
 
 import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
@@ -29,6 +30,8 @@ public class AdvancedEventTrigger {
     private final boolean isGlobal;
     
     private long createdTime;
+    private final AtomicInteger executionCount = new AtomicInteger(0);
+    private boolean isActive = true;
     
     // Getters and Setters
     public String getTriggerId() { return triggerId; }
@@ -44,6 +47,8 @@ public class AdvancedEventTrigger {
     public boolean isGlobal() { return isGlobal; }
     public long getCreatedTime() { return createdTime; }
     public void setCreatedTime(long createdTime) { this.createdTime = createdTime; }
+    public int getExecutionCount() { return executionCount.get(); }
+    public void incrementExecutionCount() { executionCount.incrementAndGet(); }
     
     // equals and hashCode
     @Override
@@ -68,9 +73,6 @@ public class AdvancedEventTrigger {
                ", isGlobal=" + isGlobal +
                '}';
     }
-    private int executionCount = 0;
-    private boolean isActive = true;
-    
     public AdvancedEventTrigger(String triggerId, String eventName, Map<String, DataValue> eventData,
                                TriggerCondition condition, List<EventChain> eventChains,
                                long delayMs, int repeatCount, long repeatIntervalMs,
@@ -111,7 +113,7 @@ public class AdvancedEventTrigger {
         }
         
         // Check repeat limit
-        if (repeatCount > 0 && executionCount >= repeatCount) {
+        if (repeatCount > 0 && executionCount.get() >= repeatCount) {
             return false;
         }
         
@@ -126,8 +128,6 @@ public class AdvancedEventTrigger {
             return;
         }
         
-        executionCount++;
-        
         // Trigger the main event
         eventManager.triggerEvent(eventName, eventData, player, world);
         
@@ -137,7 +137,7 @@ public class AdvancedEventTrigger {
         }
         
         // Handle repeat logic
-        if (repeatCount > 0 && executionCount >= repeatCount) {
+        if (repeatCount > 0 && executionCount.incrementAndGet() >= repeatCount) {
             isActive = false;
         }
     }

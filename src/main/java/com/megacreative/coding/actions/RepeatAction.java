@@ -19,10 +19,7 @@ public class RepeatAction implements BlockAction {
         if (player == null || block == null) return;
 
         // Получаем и разрешаем параметры
-        VariableManager variableManager = context.getPlugin().getVariableManager();
-        if (variableManager == null) return;
-        
-        ParameterResolver resolver = new ParameterResolver(variableManager);
+        ParameterResolver resolver = new ParameterResolver(context);
         
         DataValue rawTimes = block.getParameter("times");
         if (rawTimes == null) {

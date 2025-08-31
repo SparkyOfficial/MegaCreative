@@ -30,7 +30,7 @@ interface OptimizationRule {
      * @param script The script to optimize
      * @return List of optimization suggestions
      */
-    List<OptimizationSuggestion> apply(CodeScript script);
+    List<AdvancedScriptOptimizer.OptimizationSuggestion> apply(CodeScript script);
     
     /**
      * Gets a description of the optimization rule
@@ -49,7 +49,6 @@ interface OptimizationRule {
  */
 public class AdvancedScriptOptimizer {
     private static final Logger log = Logger.getLogger(AdvancedScriptOptimizer.class.getName());
-    
     private final ScriptPerformanceMonitor performanceMonitor;
     private final Map<String, OptimizationRule> optimizationRules = new ConcurrentHashMap<>();
     

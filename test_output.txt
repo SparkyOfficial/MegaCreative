@@ -1,4 +1,4 @@
-package com.megacreative.coding.monitoring;
+﻿package com.megacreative.coding.monitoring;
 
 import com.megacreative.coding.CodeBlock;
 import com.megacreative.coding.CodeScript;
@@ -85,12 +85,8 @@ public class ScriptPerformanceMonitor {
         // Sample execution for pattern detection
         executionSampler.recordExecution(scriptName, actionType, executionTime);
         
-        // Convert ScriptPerformanceProfile to ScriptMetrics and check for bottlenecks
-        List<ScriptMetrics> metricsList = new ArrayList<>();
-        for (ScriptPerformanceProfile profile : scriptProfiles.values()) {
-            metricsList.add(new ScriptMetrics(profile));
-        }
-        bottleneckDetector.detectBottlenecks(metricsList);
+        // Check for bottlenecks
+        bottleneckDetector.detectBottlenecks(scriptProfiles.values());
         
         // Log slow executions
         if (executionTime > slowExecutionThreshold) {
@@ -151,18 +147,10 @@ public class ScriptPerformanceMonitor {
     
     /**
      * Gets performance data for all scripts
-     * @return Collection of script performance profiles
+     * @return Map of script names to their performance profiles
      */
-    /**
-     * Gets performance data for all scripts, converting it to the ScriptMetrics type.
-     * @return Collection of all script performance metrics.
-     */
-    public Collection<ScriptMetrics> getAllScriptProfiles() {
-        List<ScriptMetrics> metricsList = new ArrayList<>();
-        for (ScriptPerformanceProfile profile : scriptProfiles.values()) {
-            metricsList.add(new ScriptMetrics(profile));
-        }
-        return metricsList;
+    public Map<String, ScriptPerformanceProfile> getAllScriptProfiles() {
+        return new HashMap<>(scriptProfiles);
     }
     
     /**
@@ -200,3 +188,4 @@ public class ScriptPerformanceMonitor {
         bottleneckDetector.stop();
     }
 }
+

@@ -60,8 +60,8 @@ public class ExecutionContext {
         this.blockLocation = blockLocation != null ? blockLocation.clone() : null;
         this.currentBlock = currentBlock;
         this.variableManager = plugin.getVariableManager();
-        this.scriptId = currentBlock != null ? currentBlock.getId() : "global";
-        this.worldId = creativeWorld != null ? creativeWorld.getId().toString() : "global";
+        this.scriptId = currentBlock != null ? currentBlock.getId().toString() : "global";
+        this.worldId = creativeWorld != null ? creativeWorld.getId() : "global";
     }
     
     public ExecutionContext withCurrentBlock(CodeBlock currentBlock, Location newLocation) {

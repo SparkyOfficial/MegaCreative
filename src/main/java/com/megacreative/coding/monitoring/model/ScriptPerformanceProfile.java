@@ -56,10 +56,6 @@ public class ScriptPerformanceProfile {
         return totalExecutionTime;
     }
     
-    public double getAverageExecutionTime() {
-        return totalExecutions > 0 ? (double) totalExecutionTime / totalExecutions : 0.0;
-    }
-    
     public long getLastExecutionTime() {
         return lastExecutionTime;
     }
@@ -72,15 +68,27 @@ public class ScriptPerformanceProfile {
         return minExecutionTime == Long.MAX_VALUE ? 0 : minExecutionTime;
     }
     
-    public double getSuccessRate() {
-        return totalExecutions > 0 ? (successCount * 100.0) / totalExecutions : 0.0;
+    public double getAverageExecutionTime() {
+        return totalExecutions > 0 ? (double) totalExecutionTime / totalExecutions : 0.0;
     }
     
-    public Collection<ActionPerformanceData> getActionData() {
-        return actionData.values();
+    public double getSuccessRate() {
+        return totalExecutions > 0 ? (double) successCount / totalExecutions : 1.0;
+    }
+    
+    public double getErrorRate() {
+        return totalExecutions > 0 ? (double) failureCount / totalExecutions : 0.0;
+    }
+    
+    public Map<String, ActionPerformanceData> getActionData() {
+        return new ConcurrentHashMap<>(actionData);
     }
     
     public ActionPerformanceData getActionData(String actionType) {
         return actionData.get(actionType);
+    }
+    
+    public Collection<ActionPerformanceData> getAllActionData() {
+        return actionData.values();
     }
 }

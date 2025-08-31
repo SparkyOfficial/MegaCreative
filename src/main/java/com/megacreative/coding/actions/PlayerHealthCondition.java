@@ -19,7 +19,7 @@ public class PlayerHealthCondition implements BlockCondition {
         VariableManager variableManager = context.getPlugin().getVariableManager();
         if (variableManager == null) return false;
         
-        ParameterResolver resolver = new ParameterResolver(variableManager);
+        ParameterResolver resolver = new ParameterResolver(context);
         
         DataValue rawHealth = block.getParameter("health");
         DataValue rawOperator = block.getParameter("operator");

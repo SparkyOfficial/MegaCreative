@@ -20,7 +20,7 @@ public class ExplosionAction implements BlockAction {
         VariableManager variableManager = context.getPlugin().getVariableManager();
         if (variableManager == null) return;
         
-        ParameterResolver resolver = new ParameterResolver(variableManager);
+        ParameterResolver resolver = new ParameterResolver(context);
 
         // Получаем и разрешаем параметры
         DataValue rawPower = block.getParameter("power");

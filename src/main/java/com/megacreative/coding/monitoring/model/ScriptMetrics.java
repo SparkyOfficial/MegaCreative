@@ -22,6 +22,41 @@ public class ScriptMetrics {
         this.scriptName = scriptName;
     }
     
+    /**
+     * Constructor that creates ScriptMetrics from ScriptPerformanceProfile
+     * @param profile The profile to convert from
+     */
+    public ScriptMetrics(ScriptPerformanceProfile profile) {
+        this.scriptName = profile.getScriptName();
+        this.executionCount.set(profile.getTotalExecutions());
+        this.totalExecutionTime.set(profile.getTotalExecutionTime());
+        this.peakExecutionTime.set(profile.getPeakExecutionTime());
+        this.minExecutionTime.set(profile.getMinExecutionTime());
+        this.successCount.set((long)(profile.getTotalExecutions() * profile.getSuccessRate()));
+        this.failureCount.set(profile.getTotalExecutions() - successCount.get());
+
+        // Convert ActionPerformanceData to ActionMetrics
+        for (ActionPerformanceData actionData : profile.getAllActionData()) {
+            ActionMetrics actionMetrics = new ActionMetrics(actionData.getActionType());
+            // If needed, copy more data from actionData to actionMetrics
+            this.actionMetrics.put(actionData.getActionType(), actionMetrics);
+        }
+    }
+    
+    /**
+     * Creates a new ScriptMetrics instance with pre-populated values
+     */
+    public ScriptMetrics(long totalExecutions, double averageExecutionTime, 
+                        long totalExecutionTime, long lastExecutionTime,
+                        double successRate, double errorRate) {
+        this.scriptName = "";
+        this.executionCount.set(totalExecutions);
+        this.totalExecutionTime.set(totalExecutionTime);
+        this.peakExecutionTime.set(lastExecutionTime);
+        this.successCount.set((long)(totalExecutions * successRate));
+        this.failureCount.set((long)(totalExecutions * errorRate));
+    }
+    
     public void recordExecution(String actionType, long executionTime, boolean success) {
         executionCount.incrementAndGet();
         totalExecutionTime.addAndGet(executionTime);

@@ -107,11 +107,11 @@ public class AdvancedDebuggingTest {
         when(mockPlayer.getUniqueId()).thenReturn(playerId);
         
         // Start visualization session
-        visualDebugger.startVisualization(mockPlayer, AdvancedVisualDebugger.VisualizationMode.BLOCK_HIGHLIGHTING);
+        visualDebugger.startVisualization(mockPlayer, AdvancedVisualDebugger.VisualizationMode.STANDARD);
         
         // Verify visualization is enabled
         assertTrue(visualDebugger.isVisualizationEnabled(mockPlayer));
-        assertEquals(AdvancedVisualDebugger.VisualizationMode.BLOCK_HIGHLIGHTING, 
+        assertEquals(AdvancedVisualDebugger.VisualizationMode.STANDARD, 
                     visualDebugger.getVisualizationMode(mockPlayer));
         
         // Create mock block and location

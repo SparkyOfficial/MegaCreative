@@ -54,7 +54,7 @@ public class PlayerEntryAction implements BlockAction {
             return;
         }
         
-        ParameterResolver resolver = new ParameterResolver(variableManager);
+        ParameterResolver resolver = new ParameterResolver(context);
         
         // Check if this entry action should automatically give items
         DataValue autoGiveItem = block.getParameter("autoGiveItem");

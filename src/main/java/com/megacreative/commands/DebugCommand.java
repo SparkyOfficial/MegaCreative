@@ -315,16 +315,16 @@ public class DebugCommand implements CommandExecutor, TabCompleter {
                 vizMode = com.megacreative.coding.debug.AdvancedVisualDebugger.VisualizationMode.VARIABLES;
                 break;
             case "block":
-                vizMode = com.megacreative.coding.debug.AdvancedVisualDebugger.VisualizationMode.BLOCK_HIGHLIGHTING;
+                vizMode = com.megacreative.coding.debug.AdvancedVisualDebugger.VisualizationMode.STANDARD;
                 break;
             case "flow":
-                vizMode = com.megacreative.coding.debug.AdvancedVisualDebugger.VisualizationMode.FLOW_TRACING;
+                vizMode = com.megacreative.coding.debug.AdvancedVisualDebugger.VisualizationMode.STEP_BY_STEP;
                 break;
             case "perfmap":
-                vizMode = com.megacreative.coding.debug.AdvancedVisualDebugger.VisualizationMode.PERFORMANCE_MAPPING;
+                vizMode = com.megacreative.coding.debug.AdvancedVisualDebugger.VisualizationMode.PERFORMANCE;
                 break;
             case "group":
-                vizMode = com.megacreative.coding.debug.AdvancedVisualDebugger.VisualizationMode.GROUP_MAPPING;
+                vizMode = com.megacreative.coding.debug.AdvancedVisualDebugger.VisualizationMode.STANDARD;
                 break;
             default:
                 player.sendMessage("§cНеизвестный режим визуализации: " + mode);

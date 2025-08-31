@@ -19,8 +19,7 @@ public class SaveFunctionAction implements BlockAction {
 
         if (player == null || block == null) return;
 
-        VariableManager variableManager = context.getPlugin().getVariableManager();
-        ParameterResolver resolver = new ParameterResolver(variableManager);
+        ParameterResolver resolver = new ParameterResolver(context);
 
         // Получаем и разрешаем параметры
         DataValue rawFunctionName = block.getParameter("name");

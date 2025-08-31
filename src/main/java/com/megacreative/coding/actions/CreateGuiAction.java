@@ -49,7 +49,7 @@ public class CreateGuiAction implements BlockAction {
         
         if (player == null || block == null || variableManager == null) return;
         
-        ParameterResolver resolver = new ParameterResolver(variableManager);
+        ParameterResolver resolver = new ParameterResolver(context);
         
         try {
             // Get GUI title

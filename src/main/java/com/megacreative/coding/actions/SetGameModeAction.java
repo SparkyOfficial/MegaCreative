@@ -17,10 +17,7 @@ public class SetGameModeAction implements BlockAction {
 
         if (player == null || block == null) return;
 
-        VariableManager variableManager = context.getPlugin().getVariableManager();
-        if (variableManager == null) return;
-        
-        ParameterResolver resolver = new ParameterResolver(variableManager);
+        ParameterResolver resolver = new ParameterResolver(context);
 
         // Получаем и разрешаем параметры
         DataValue rawMode = block.getParameter("mode");
