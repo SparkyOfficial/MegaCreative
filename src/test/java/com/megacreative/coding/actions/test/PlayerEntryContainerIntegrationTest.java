@@ -52,6 +52,9 @@ public class PlayerEntryContainerIntegrationTest {
         mockBlockLocation = Mockito.mock(Location.class);
         mockContainerLocation = Mockito.mock(Location.class);
         
+        // Mock CodeBlock ID to prevent NPE
+        when(mockBlock.getId()).thenReturn(UUID.randomUUID());
+        
         when(mockPlugin.getServiceRegistry()).thenReturn(mockServiceRegistry);
         when(mockPlugin.getVariableManager()).thenReturn(mockVariableManager);
         when(mockPlayer.getUniqueId()).thenReturn(UUID.randomUUID());

@@ -48,13 +48,15 @@ class BlockPlacementHandlerTest {
     @BeforeEach
     void setUp() {
         MockitoAnnotations.openMocks(this);
-        handler = new BlockPlacementHandler(plugin);
         
-        // Mock plugin services
+        // Mock ServiceRegistry and its dependencies
         ServiceRegistry serviceRegistry = mock(ServiceRegistry.class);
         when(plugin.getServiceRegistry()).thenReturn(serviceRegistry);
         when(serviceRegistry.getBlockConfigService()).thenReturn(blockConfigService);
-        when(plugin.getTrustedPlayerManager()).thenReturn(trustedPlayerManager);
+        when(serviceRegistry.getTrustedPlayerManager()).thenReturn(trustedPlayerManager);
+        
+        // Initialize handler after mocks are set up
+        handler = new BlockPlacementHandler(plugin);
         
         // Mock player and world
         when(player.getWorld()).thenReturn(world);

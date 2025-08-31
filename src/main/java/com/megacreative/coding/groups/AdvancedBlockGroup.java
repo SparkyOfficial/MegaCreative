@@ -250,11 +250,18 @@ public class AdvancedBlockGroup extends BlockGroup {
      * Creates a copy of this group
      */
     public AdvancedBlockGroup copy(String newName, UUID newOwnerId) {
+        // Create a deep copy of the blocks map
+        Map<Location, CodeBlock> blocksCopy = new HashMap<>();
+        for (Map.Entry<Location, CodeBlock> entry : this.getBlocks().entrySet()) {
+            blocksCopy.put(entry.getKey().clone(), entry.getValue());
+        }
+        
+        // Create a new group with the copied blocks
         AdvancedBlockGroup copy = new AdvancedBlockGroup(
             UUID.randomUUID(),
             newName != null ? newName : this.getName() + "_copy",
             newOwnerId != null ? newOwnerId : this.getOwner(),
-            new HashMap<>(this.getBlocks()),
+            blocksCopy,
             this.getBounds()
         );
         
@@ -266,12 +273,29 @@ public class AdvancedBlockGroup extends BlockGroup {
         copy.setExecutionLimit(this.getExecutionLimit());
         copy.setConditionExpression(this.getConditionExpression());
         copy.setVersion(this.getVersion());
+        copy.setExecutionCount(0); // Reset execution count for the copy
         
-        // Copy collections
-        copy.getNestedGroups().addAll(this.nestedGroups);
-        copy.getTags().addAll(this.tags);
-        copy.getDependencies().addAll(this.dependencies);
-        copy.getMetadata().putAll(this.metadata);
+        // Copy collections (create new instances to avoid reference sharing)
+        copy.setNestedGroups(new ArrayList<>(this.nestedGroups));
+        copy.setTags(new HashSet<>(this.tags));
+        copy.setDependencies(new ArrayList<>(this.dependencies));
+        
+        // Deep copy metadata
+        Map<String, Object> metadataCopy = new ConcurrentHashMap<>();
+        for (Map.Entry<String, Object> entry : this.metadata.entrySet()) {
+            // For deep copying, we need to handle different types appropriately
+            Object value = entry.getValue();
+            if (value instanceof Collection) {
+                value = new ArrayList<>((Collection<?>) value);
+            } else if (value instanceof Map) {
+                value = new HashMap<>((Map<?, ?>) value);
+            }
+            metadataCopy.put(entry.getKey(), value);
+        }
+        copy.setMetadata(metadataCopy);
+        
+        // Copy last modified time
+        copy.lastModified = this.lastModified;
         
         return copy;
     }

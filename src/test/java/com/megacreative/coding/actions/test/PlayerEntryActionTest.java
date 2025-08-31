@@ -60,6 +60,7 @@ public class PlayerEntryActionTest {
         when(mockPlayer.getWorld()).thenReturn(mockWorld);
         when(mockWorld.getName()).thenReturn("test_world");
         when(mockBlock.getLocation()).thenReturn(mockLocation);
+        when(mockBlock.getId()).thenReturn(UUID.randomUUID());
         
         // Mock VariableManager to return the same value (no resolution needed for simple values)
         when(mockVariableManager.getVariable(anyString(), anyString(), anyString())).thenAnswer(invocation -> {

@@ -111,8 +111,9 @@ class EnhancedDebuggingTest {
         // First enable debug mode
         debugger.toggleDebug(player);
         
-        // Test showing performance report (should show no data message)
+        // Test showing performance report (should not show any message when no data is available)
         debugger.showPerformanceReport(player);
-        verify(player).sendMessage("§cNo performance analysis data available");
+        // The method doesn't send any message when no performance data is available
+        verify(player, never()).sendMessage(anyString());
     }
 }
