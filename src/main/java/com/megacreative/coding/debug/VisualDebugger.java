@@ -28,17 +28,47 @@ public class VisualDebugger {
     public VisualDebugger(MegaCreative plugin) {
         this.plugin = plugin;
         this.advancedDebugger = new AdvancedVisualDebugger(plugin, this);
+        
+        // Initialize breakpoint managers for online players
+        plugin.getServer().getScheduler().runTaskTimer(plugin, () -> {
+            for (Player player : plugin.getServer().getOnlinePlayers()) {
+                breakpointManagers.computeIfAbsent(player.getUniqueId(), k -> new BreakpointManager());
+                executionTracers.computeIfAbsent(player.getUniqueId(), k -> new ExecutionTracer());
+                variableWatchers.computeIfAbsent(player.getUniqueId(), k -> new VariableWatcher());
+            }
+        }, 20L, 6000L); // Check every 5 minutes
     }
     
+    /**
+     * Checks if a player is currently in a debug session
+     */
+    public boolean isDebugging(Player player) {
+        return activeSessions.containsKey(player.getUniqueId());
+    }
+    
+    /**
+     * Starts a new debug session for the player
+     */
     public void startDebugSession(Player player, String sessionName) {
         DebugSession session = new DebugSession(player, sessionName);
         activeSessions.put(player.getUniqueId(), session);
         player.sendMessage("§a✓ Visual debugger started: " + sessionName);
+        
+        // Initialize breakpoint manager for this player
+        breakpointManagers.computeIfAbsent(player.getUniqueId(), k -> new BreakpointManager());
     }
     
+    /**
+     * Stops the current debug session for a player
+     */
     public void stopDebugSession(Player player) {
         DebugSession session = activeSessions.remove(player.getUniqueId());
         if (session != null) {
+            // Clean up resources
+            breakpointManagers.remove(player.getUniqueId());
+            executionTracers.remove(player.getUniqueId());
+            variableWatchers.remove(player.getUniqueId());
+            
             player.sendMessage("§c✖ Visual debugger stopped");
         }
     }
@@ -72,32 +102,48 @@ public class VisualDebugger {
     /**
      * Sets a breakpoint at a specific block location
      */
-    public void setBreakpoint(Player player, Location blockLocation, String condition) {
+    /**
+     * Adds a breakpoint at the specified location
+     */
+    public void addBreakpoint(Player player, Location location, String condition) {
         BreakpointManager manager = breakpointManagers.computeIfAbsent(
             player.getUniqueId(), 
             k -> new BreakpointManager()
         );
         
-        Breakpoint breakpoint = new Breakpoint(blockLocation, condition);
+        Breakpoint breakpoint = new Breakpoint(location, condition);
         manager.addBreakpoint(breakpoint);
         
-        DebugSession session = activeSessions.get(player.getUniqueId());
-        if (session != null) {
-            player.sendMessage("§a✓ Breakpoint set at " + formatLocation(blockLocation));
-            if (condition != null && !condition.isEmpty()) {
-                player.sendMessage("§7Condition: " + condition);
-            }
+        player.sendMessage("§a✓ Breakpoint set at " + formatLocation(location));
+        if (condition != null && !condition.isEmpty()) {
+            player.sendMessage("§7Condition: " + condition);
         }
+    }
+    
+    /**
+     * Gets all breakpoints for a player
+     */
+    public List<Location> getBreakpoints(Player player) {
+        BreakpointManager manager = breakpointManagers.get(player.getUniqueId());
+        if (manager == null) {
+            return new ArrayList<>();
+        }
+        return manager.getBreakpoints().stream()
+            .map(Breakpoint::getLocation)
+            .collect(java.util.stream.Collectors.toList());
     }
     
     /**
      * Removes a breakpoint at a specific block location
      */
-    public void removeBreakpoint(Player player, Location blockLocation) {
+    /**
+     * Removes a breakpoint at the specified location
+     */
+    public void removeBreakpoint(Player player, Location location) {
         BreakpointManager manager = breakpointManagers.get(player.getUniqueId());
         if (manager != null) {
-            if (manager.removeBreakpoint(blockLocation)) {
-                player.sendMessage("§a✓ Breakpoint removed at " + formatLocation(blockLocation));
+            if (manager.removeBreakpoint(location)) {
+                player.sendMessage("§a✓ Breakpoint removed at " + formatLocation(location));
             } else {
                 player.sendMessage("§cNo breakpoint found at " + formatLocation(blockLocation));
             }
@@ -510,22 +556,6 @@ public class VisualDebugger {
             String key = formatLocationKey(location);
             return breakpoints.get(key);
         }
-        
-        public Collection<Breakpoint> getBreakpoints() {
-            return breakpoints.values();
-        }
-        
-        private String formatLocationKey(Location location) {
-            return location.getWorld().getName() + ":" + 
-                   location.getBlockX() + "," + 
-                   location.getBlockY() + "," + 
-                   location.getBlockZ();
-        }
-    }
-    
-    /**
-     * Represents a step in execution trace
-     */
     public static class ExecutionStep {
         private final String action;
         private final Location location;

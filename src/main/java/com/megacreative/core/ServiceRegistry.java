@@ -2,7 +2,8 @@ package com.megacreative.core;
 
 import com.megacreative.coding.AutoConnectionManager;
 import com.megacreative.coding.BlockPlacementHandler;
-import com.megacreative.coding.ScriptDebugger;
+import com.megacreative.coding.ScriptEngine;
+import com.megacreative.coding.DefaultScriptEngine;
 import com.megacreative.coding.BlockConfiguration;
 import com.megacreative.coding.containers.BlockContainerManager;
 import com.megacreative.coding.executors.ExecutorEngine;
@@ -51,12 +52,13 @@ public class ServiceRegistry {
     
     // Coding system services
     private BlockPlacementHandler blockPlacementHandler;
-    private VisualDebugger scriptDebugger;
+    private VisualDebugger visualDebugger;
     private AutoConnectionManager autoConnectionManager;
     private DevInventoryManager devInventoryManager;
     private VariableManager variableManager;
     private BlockContainerManager containerManager;
-    private ExecutorEngine executorEngine;
+    private ScriptEngine scriptEngine;
+    private DefaultScriptEngine defaultScriptEngine;
     private BlockConfiguration blockConfiguration;
     private ScriptPerformanceMonitor scriptPerformanceMonitor;
     
@@ -261,6 +263,10 @@ public class ServiceRegistry {
             (blockPlacementHandler = dependencyContainer.resolve(BlockPlacementHandler.class));
     }
     
+    /**
+     * Gets the VisualDebugger instance
+     * @return VisualDebugger instance
+     */
     public VisualDebugger getScriptDebugger() {
         return visualDebugger != null ? visualDebugger :
             (visualDebugger = dependencyContainer.resolve(VisualDebugger.class));
@@ -286,179 +292,15 @@ public class ServiceRegistry {
             (devInventoryManager = dependencyContainer.resolve(DevInventoryManager.class));
     }
     
-    public BlockContainerManager getContainerManager() {
-        return containerManager != null ? containerManager :
-            (containerManager = dependencyContainer.resolve(BlockContainerManager.class));
-    }
-    
-    public ExecutorEngine getExecutorEngine() {
-        return executorEngine != null ? executorEngine :
-            (executorEngine = dependencyContainer.resolve(ExecutorEngine.class));
-    }
-    
-    public BlockConfigService getBlockConfigService() {
-        return blockConfigService != null ? blockConfigService :
-            (blockConfigService = dependencyContainer.resolve(BlockConfigService.class));
-    }
-    
-    public CustomEventManager getCustomEventManager() {
-        return customEventManager != null ? customEventManager :
-            (customEventManager = dependencyContainer.resolve(CustomEventManager.class));
-    }
-    
-    public EventDataExtractorRegistry getEventDataExtractorRegistry() {
-        return eventDataExtractorRegistry != null ? eventDataExtractorRegistry :
-            (eventDataExtractorRegistry = dependencyContainer.resolve(EventDataExtractorRegistry.class));
-    }
-    
-    public VisualErrorHandler getVisualErrorHandler() {
-        return visualErrorHandler != null ? visualErrorHandler :
-            (visualErrorHandler = dependencyContainer.resolve(VisualErrorHandler.class));
-    }
-    
-    public CodeBlockClipboard getCodeBlockClipboard() {
-        return codeBlockClipboard != null ? codeBlockClipboard :
-            (codeBlockClipboard = dependencyContainer.resolve(CodeBlockClipboard.class));
-    }
-    
-    public BlockGroupManager getBlockGroupManager() {
-        return blockGroupManager != null ? blockGroupManager :
-            (blockGroupManager = dependencyContainer.resolve(BlockGroupManager.class));
-    }
-    
-    public DevWorldProtectionListener getDevWorldProtectionListener() {
-        return devWorldProtectionListener != null ? devWorldProtectionListener :
-            (devWorldProtectionListener = dependencyContainer.resolve(DevWorldProtectionListener.class));
-    }
-    
-    // Private initialization methods
-    
-    private void initializeCoreServices() {
-        // Config manager first
-        configManager = new com.megacreative.utils.ConfigManager((com.megacreative.MegaCreative) plugin);
-        configManager.loadConfig();
-        registerService(com.megacreative.utils.ConfigManager.class, configManager);
-        
-        // Register the existing plugin instance to prevent circular dependency issues
-        dependencyContainer.registerSingleton(com.megacreative.MegaCreative.class, (com.megacreative.MegaCreative) plugin);
-        
-        // Register type mappings for interfaces to prevent DI issues
-        dependencyContainer.registerType(com.megacreative.utils.ConfigManager.class, com.megacreative.utils.ConfigManager.class);
-        dependencyContainer.registerType(IWorldManager.class, WorldManagerImpl.class);
-        dependencyContainer.registerType(IPlayerManager.class, PlayerManagerImpl.class);
-        dependencyContainer.registerType(ICodingManager.class, com.megacreative.coding.CodingManagerImpl.class);
-        
-        // Initialize BlockConfigService early as it's a core service
-        this.blockConfigService = new BlockConfigService((com.megacreative.MegaCreative) plugin);
-        registerService(BlockConfigService.class, blockConfigService);
-        
-        // Initialize VariableManager early as it's a core service
-        this.variableManager = new VariableManager((com.megacreative.MegaCreative) plugin);
-        registerService(VariableManager.class, variableManager);
-    }
-    
-    private void initializeManagers() {
-        // Interface-based managers with proper dependency injection
-        worldManager = dependencyContainer.resolve(IWorldManager.class);
-        if (worldManager == null) {
-            worldManager = new WorldManagerImpl((com.megacreative.MegaCreative) plugin, null, configManager); // CodingManager will be set later
-            registerService(IWorldManager.class, worldManager);
-        }
-        
-        playerManager = dependencyContainer.resolve(IPlayerManager.class);
-        if (playerManager == null) {
-            playerManager = new PlayerManagerImpl((com.megacreative.MegaCreative) plugin);
-            registerService(IPlayerManager.class, playerManager);
-        }
-        
-        codingManager = dependencyContainer.resolve(ICodingManager.class);
-        if (codingManager == null) {
-            codingManager = new com.megacreative.coding.CodingManagerImpl((com.megacreative.MegaCreative) plugin, worldManager);
-            registerService(ICodingManager.class, codingManager);
-        }
-        
-        // Now update WorldManager with CodingManager dependency
-        if (worldManager instanceof WorldManagerImpl) {
-            ((WorldManagerImpl) worldManager).setCodingManager(codingManager);
-        }
-    }
-    
-    private void initializeImplementationManagers() {
-        log.info("Initializing implementation managers...");
-        
-        // Cast plugin to MegaCreative once
-        com.megacreative.MegaCreative megaCreative = (com.megacreative.MegaCreative) plugin;
-        
-        // Initialize BlockConfiguration with required dependencies
-        this.blockConfiguration = new BlockConfiguration(megaCreative);
-        registerService(BlockConfiguration.class, blockConfiguration);
-        
-        // Initialize CodeBlockClipboard
-        this.codeBlockClipboard = new CodeBlockClipboard();
-        registerService(CodeBlockClipboard.class, codeBlockClipboard);
-        
-        // Initialize BlockGroupManager with required dependencies
-        this.blockGroupManager = new BlockGroupManager(megaCreative, playerManager);
-        registerService(BlockGroupManager.class, blockGroupManager);
-        
-        // Initialize TemplateManager with required dependencies
-        this.templateManager = new TemplateManager(megaCreative);
-        registerService(TemplateManager.class, templateManager);
-        
-        // Initialize ScoreboardManager
-        this.scoreboardManager = new ScoreboardManager(megaCreative);
-        registerService(ScoreboardManager.class, scoreboardManager);
-        
-        // Initialize TrustedPlayerManager
-        this.trustedPlayerManager = new TrustedPlayerManager(megaCreative);
-        this.trustedPlayerManagerInterface = trustedPlayerManager; // Store both concrete and interface references
-        registerService(TrustedPlayerManager.class, trustedPlayerManager);
-        registerService(ITrustedPlayerManager.class, trustedPlayerManager); // Use the same instance for both
-        
-        // Initialize BlockConfigManager
-        this.blockConfigManager = new BlockConfigManager(megaCreative);
-        registerService(BlockConfigManager.class, blockConfigManager);
-        
-        // Initialize DevWorldProtectionListener
-        this.devWorldProtectionListener = new DevWorldProtectionListener(
-            megaCreative, 
-            trustedPlayerManager,
-            blockConfigService
         );
-        registerService(DevWorldProtectionListener.class, devWorldProtectionListener);
-        
-        log.info("All implementation managers initialized");
+        registerService(com.megacreative.coding.BlockConfiguration.class, blockConfiguration);
     }
+    return blockConfiguration;
+}
     
-    private void initializeCodingServices() {
-        // Initialize coding system components
-        // Initialize BlockPlacementHandler with just the plugin instance
-        this.blockPlacementHandler = new BlockPlacementHandler((com.megacreative.MegaCreative) plugin);
-        registerService(BlockPlacementHandler.class, blockPlacementHandler);
-        
-        scriptDebugger = new VisualDebugger((com.megacreative.MegaCreative) plugin);
-        registerService(VisualDebugger.class, scriptDebugger);
-        
-        autoConnectionManager = new AutoConnectionManager((com.megacreative.MegaCreative) plugin, blockConfigService);
-        registerService(AutoConnectionManager.class, autoConnectionManager);
-        
-        devInventoryManager = new DevInventoryManager((com.megacreative.MegaCreative) plugin);
-        registerService(DevInventoryManager.class, devInventoryManager);
-        
-        // VariableManager was already initialized in core services
-        registerService(VariableManager.class, variableManager);
-        
-        containerManager = new BlockContainerManager((com.megacreative.MegaCreative) plugin);
-        registerService(BlockContainerManager.class, containerManager);
-        
-        executorEngine = new ExecutorEngine((com.megacreative.MegaCreative) plugin, variableManager);
-        registerService(ExecutorEngine.class, executorEngine);
-        
-        blockConfiguration = new BlockConfiguration((com.megacreative.MegaCreative) plugin);
-        registerService(BlockConfiguration.class, blockConfiguration);
-        
-        // Performance monitoring system
-        scriptPerformanceMonitor = new ScriptPerformanceMonitor(plugin);
+public com.megacreative.utils.ConfigManager getConfigManager() { 
+    return configManager; 
+}
         registerService(ScriptPerformanceMonitor.class, scriptPerformanceMonitor);
     }
     

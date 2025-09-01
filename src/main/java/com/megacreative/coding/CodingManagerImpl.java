@@ -27,7 +27,7 @@ public class CodingManagerImpl implements ICodingManager, Listener {
 
     private final MegaCreative plugin;
     private final IWorldManager worldManager;
-    private final ScriptExecutor scriptExecutor;
+    private final ScriptEngine scriptEngine;
     private final Map<String, List<CodeScript>> worldScripts = new HashMap<>();
     private final Map<String, Object> globalVariables = new HashMap<>();
     private final Map<String, Object> serverVariables = new HashMap<>();
@@ -38,16 +38,16 @@ public class CodingManagerImpl implements ICodingManager, Listener {
      */
     @Override
     public void cancelScriptExecution(String scriptId) {
-        if (scriptExecutor != null) {
-            scriptExecutor.cancelScript(scriptId);
+        if (scriptEngine != null) {
+            scriptEngine.stopExecution(scriptId);
         }
     }
     
     @Override
     public void shutdown() {
         // Stop all running scripts
-        if (scriptExecutor != null) {
-            scriptExecutor.shutdown();
+        if (scriptEngine != null) {
+            // No explicit shutdown needed in ScriptEngine, handled by service registry
         }
         
         // Clear all caches and variables
@@ -56,14 +56,15 @@ public class CodingManagerImpl implements ICodingManager, Listener {
         serverVariables.clear();
     }
     
-    public ScriptExecutor getScriptExecutor() {
-        return scriptExecutor;
+    @Override
+    public ScriptEngine getScriptEngine() {
+        return scriptEngine;
     }
 
     public CodingManagerImpl(MegaCreative plugin, IWorldManager worldManager) {
         this.plugin = plugin;
         this.worldManager = worldManager;
-        this.scriptExecutor = new ScriptExecutor(plugin);
+        this.scriptEngine = new DefaultScriptEngine(plugin);
         Bukkit.getPluginManager().registerEvents(this, plugin);
     }
     

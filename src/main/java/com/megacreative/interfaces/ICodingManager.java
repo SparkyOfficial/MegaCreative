@@ -1,7 +1,7 @@
 package com.megacreative.interfaces;
 
 import com.megacreative.coding.CodeScript;
-import com.megacreative.coding.ScriptExecutor;
+import com.megacreative.coding.ScriptEngine;
 import com.megacreative.models.CreativeWorld;
 import org.bukkit.entity.Player;
 
@@ -116,8 +116,8 @@ public interface ICodingManager {
     void clearVariables();
     
     /**
-     * Получает исполнитель скриптов.
-     * @return ScriptExecutor для выполнения скриптов
+     * Получает движок выполнения скриптов.
+     * @return ScriptEngine для выполнения скриптов
      */
-    ScriptExecutor getScriptExecutor();
+    ScriptEngine getScriptEngine();
 }

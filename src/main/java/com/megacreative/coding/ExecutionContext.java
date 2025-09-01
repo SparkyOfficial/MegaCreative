@@ -25,6 +25,11 @@ public class ExecutionContext {
     private final Event event; // Само событие, которое вызвало скрипт
     private final Location blockLocation; // Локация выполняемого блока (может быть null)
     private final CodeBlock currentBlock; // Текущий выполняемый блок (может быть null)
+    
+    // Debugging control
+    private boolean paused = false;
+    private boolean stepping = false;
+    private boolean cancelled = false;
 
     // Ссылка на менеджер переменных
     private final VariableManager variableManager;
@@ -312,6 +317,32 @@ public class ExecutionContext {
     
     public Location getBlockLocation() {
         return blockLocation;
+    }
+    
+    // Debugging control methods
+    
+    public boolean isPaused() {
+        return paused;
+    }
+    
+    public void setPaused(boolean paused) {
+        this.paused = paused;
+    }
+    
+    public boolean isStepping() {
+        return stepping;
+    }
+    
+    public void setStepping(boolean stepping) {
+        this.stepping = stepping;
+    }
+    
+    public boolean isCancelled() {
+        return cancelled;
+    }
+    
+    public void setCancelled(boolean cancelled) {
+        this.cancelled = cancelled;
     }
     
     public CodeBlock getCurrentBlock() {

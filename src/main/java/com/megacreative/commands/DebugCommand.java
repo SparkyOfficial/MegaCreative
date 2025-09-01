@@ -28,35 +28,42 @@ public class DebugCommand implements CommandExecutor, TabCompleter {
         Player player = (Player) sender;
 
         if (args.length == 0) {
-            // Переключаем отладку
-            plugin.getScriptDebugger().toggleDebug(player);
+            // Toggle debug session
+            VisualDebugger debugger = plugin.getScriptDebugger();
+            if (debugger.isDebugging(player)) {
+                debugger.stopDebugSession(player);
+                player.sendMessage("§c✖ Отладка остановлена");
+            } else {
+                debugger.startDebugSession(player, "debug-session-" + System.currentTimeMillis());
+                player.sendMessage("§a✓ Отладка запущена");
+            }
             return true;
         }
 
         String subCommand = args[0].toLowerCase();
+        VisualDebugger debugger = plugin.getScriptDebugger();
 
         switch (subCommand) {
             case "on":
             case "enable":
-                if (!plugin.getScriptDebugger().isDebugEnabled(player)) {
-                    plugin.getScriptDebugger().toggleDebug(player);
+                if (!debugger.isDebugging(player)) {
+                    debugger.startDebugSession(player, "debug-session-" + System.currentTimeMillis());
+                    player.sendMessage("§a✓ Отладка включена");
                 } else {
                     player.sendMessage("§eОтладка уже включена!");
                 }
                 break;
             case "off":
             case "disable":
-                if (plugin.getScriptDebugger().isDebugEnabled(player)) {
-                    plugin.getScriptDebugger().toggleDebug(player);
+                if (debugger.isDebugging(player)) {
+                    debugger.stopDebugSession(player);
+                    player.sendMessage("§c✖ Отладка выключена");
                 } else {
                     player.sendMessage("§eОтладка уже выключена!");
                 }
                 break;
-            case "stats":
-                plugin.getScriptDebugger().showDebugStats(player);
-                break;
             case "status":
-                boolean enabled = plugin.getScriptDebugger().isDebugEnabled(player);
+                boolean enabled = debugger.isDebugging(player);
                 player.sendMessage("§7Статус отладки: " + (enabled ? "§aВключена" : "§cВыключена"));
                 break;
             case "breakpoint":
@@ -90,71 +97,6 @@ public class DebugCommand implements CommandExecutor, TabCompleter {
      * Handles breakpoint subcommands
      */
     private void handleBreakpointCommand(Player player, String[] args) {
-        if (args.length < 2) {
-            player.sendMessage("§cИспользование: /debug breakpoint <set|remove|list> [x] [y] [z] [condition]");
-            return;
-        }
-
-        String action = args[1].toLowerCase();
-        
-        switch (action) {
-            case "set":
-                if (args.length >= 5) {
-                    try {
-                        int x = Integer.parseInt(args[2]);
-                        int y = Integer.parseInt(args[3]);
-                        int z = Integer.parseInt(args[4]);
-                        Location location = new Location(player.getWorld(), x, y, z);
-                        
-                        String condition = null;
-                        if (args.length > 5) {
-                            // Join remaining arguments as condition
-                            StringBuilder conditionBuilder = new StringBuilder();
-                            for (int i = 5; i < args.length; i++) {
-                                if (conditionBuilder.length() > 0) {
-                                    conditionBuilder.append(" ");
-                                }
-                                conditionBuilder.append(args[i]);
-                            }
-                            condition = conditionBuilder.toString();
-                        }
-                        
-                        plugin.getScriptDebugger().setBreakpoint(player, location, condition);
-                    } catch (NumberFormatException e) {
-                        player.sendMessage("§cНеверный формат координат. Используйте целые числа.");
-                    }
-                } else {
-                    // Set breakpoint at player's current location
-                    plugin.getScriptDebugger().setBreakpoint(player, player.getLocation(), null);
-                    player.sendMessage("§aТочка останова установлена на вашей текущей позиции");
-                }
-                break;
-                
-            case "remove":
-                if (args.length >= 5) {
-                    try {
-                        int x = Integer.parseInt(args[2]);
-                        int y = Integer.parseInt(args[3]);
-                        int z = Integer.parseInt(args[4]);
-                        Location location = new Location(player.getWorld(), x, y, z);
-                        plugin.getScriptDebugger().removeBreakpoint(player, location);
-                    } catch (NumberFormatException e) {
-                        player.sendMessage("§cНеверный формат координат. Используйте целые числа.");
-                    }
-                } else {
-                    player.sendMessage("§cИспользование: /debug breakpoint remove <x> <y> <z>");
-                }
-                break;
-                
-            case "list":
-                plugin.getScriptDebugger().listBreakpoints(player);
-                break;
-                
-            default:
-                player.sendMessage("§cНеизвестное действие для точки останова: " + action);
-                player.sendMessage("§7Доступные действия: set, remove, list");
-                break;
-        }
     }
 
     /**

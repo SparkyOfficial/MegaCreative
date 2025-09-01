@@ -1,5 +1,12 @@
 package com.megacreative.coding;
 
+/**
+ * @deprecated This class is deprecated and will be removed in a future version.
+ * Please migrate to the new {@link ScriptEngine} interface and {@link DefaultScriptEngine} implementation.
+ * See the migration guide for more information.
+ */
+@Deprecated(forRemoval = true, since = "1.0.0")
+
 import com.megacreative.MegaCreative;
 import com.megacreative.coding.actions.*;
 import com.megacreative.coding.actions.HandleEventAction;
@@ -212,8 +219,9 @@ public class ScriptExecutor {
         }
         
         try {
-            if (player != null && plugin.getScriptDebugger().isDebugEnabled(player)) {
-                plugin.getScriptDebugger().onScriptStart(player, script);
+            VisualDebugger debugger = plugin.getScriptDebugger();
+            if (player != null && debugger.isDebugging(player)) {
+                debugger.onScriptStart(script, context);
             }
             
             // Execute the script starting from the root block
@@ -221,8 +229,8 @@ public class ScriptExecutor {
                 processBlock(script.getRootBlock(), context, 0);
             }
             
-            if (player != null && plugin.getScriptDebugger().isDebugEnabled(player)) {
-                plugin.getScriptDebugger().onScriptEnd(player, script);
+            if (player != null && debugger.isDebugging(player)) {
+                debugger.onScriptEnd(script, context);
             }
         } finally {
             // Clean up performance tracking
@@ -276,9 +284,13 @@ public class ScriptExecutor {
         }
         
         try {
-            // 5. Отладка
-            if (currentContext.getPlayer() != null && plugin.getScriptDebugger().isDebugEnabled(currentContext.getPlayer())) {
-                plugin.getScriptDebugger().onBlockExecute(currentContext.getPlayer(), block, blockLocation != null ? blockLocation : currentContext.getPlayer().getLocation());
+            // 5. Debugging
+            Player player = currentContext.getPlayer();
+            if (player != null) {
+                VisualDebugger debugger = plugin.getScriptDebugger();
+                if (debugger.isDebugging(player)) {
+                    debugger.onBlockExecute(block, currentContext, blockLocation);
+                }
             }
 
             // 6. Логика выполнения (вся магия здесь)
@@ -376,9 +388,10 @@ public class ScriptExecutor {
             }
         }
         
-        // Отладка результата условия
-        if (plugin.getScriptDebugger().isDebugEnabled(player)) {
-            plugin.getScriptDebugger().onConditionResult(player, block, result);
+        // Debug condition result
+        VisualDebugger debugger = plugin.getScriptDebugger();
+        if (player != null && debugger.isDebugging(player)) {
+            debugger.onConditionResult(block, result, context);
         }
         
         if (result) {

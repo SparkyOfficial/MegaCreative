@@ -136,8 +136,21 @@ public class MegaCreative extends JavaPlugin {
         return serviceRegistry.getBlockPlacementHandler();
     }
     
+    /**
+     * Gets the VisualDebugger instance
+     * @return VisualDebugger instance
+     */
     public com.megacreative.coding.debug.VisualDebugger getScriptDebugger() {
         return serviceRegistry.getScriptDebugger();
+    }
+    
+    /**
+     * Checks if a player is currently debugging
+     * @param player The player to check
+     * @return true if the player is in a debug session
+     */
+    public boolean isDebugging(Player player) {
+        return serviceRegistry.getScriptDebugger().isDebugging(player);
     }
     
     public com.megacreative.coding.monitoring.ScriptPerformanceMonitor getScriptPerformanceMonitor() {

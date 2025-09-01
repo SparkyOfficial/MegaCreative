@@ -1,5 +1,12 @@
 package com.megacreative.coding;
 
+/**
+ * @deprecated This class is deprecated and will be removed in a future version.
+ * Please migrate to the new {@link com.megacreative.coding.debug.VisualDebugger} class.
+ * See the migration guide for more information.
+ */
+@Deprecated(forRemoval = true, since = "1.0.0")
+
 import com.megacreative.MegaCreative;
 import org.bukkit.Location;
 import org.bukkit.Material;
