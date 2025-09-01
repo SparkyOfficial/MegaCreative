@@ -83,7 +83,12 @@ public class ServiceRegistry {
         this.visualDebugger = new VisualDebugger((MegaCreative) plugin);
         
         // Initialize ScriptEngine with its dependencies
-        this.scriptEngine = new DefaultScriptEngine((MegaCreative) plugin);
+        this.scriptEngine = new DefaultScriptEngine(
+            (MegaCreative) plugin, 
+            variableManager, 
+            visualDebugger,
+            blockConfigService
+        );
         initializeScriptEngine();
     }
     
@@ -98,7 +103,8 @@ public class ServiceRegistry {
             defaultEngine.initialize(
                 (MegaCreative) plugin,
                 variableManager,
-                visualDebugger
+                visualDebugger,
+                blockConfigService
             );
             
             log.info("ScriptEngine initialized with " + 
@@ -353,6 +359,13 @@ public com.megacreative.utils.ConfigManager getConfigManager() {
     }
     
     private void initializeNewArchitectureServices() {
+        // Initialize BlockConfigService first as it's a core dependency
+        this.blockConfigService = new BlockConfigService((com.megacreative.MegaCreative) plugin);
+        registerService(BlockConfigService.class, blockConfigService);
+        
+        // Load block configurations
+        blockConfigService.loadBlockConfigs();
+        
         // Event data extraction system
         eventDataExtractorRegistry = new EventDataExtractorRegistry();
         registerService(EventDataExtractorRegistry.class, eventDataExtractorRegistry);
@@ -375,6 +388,13 @@ public com.megacreative.utils.ConfigManager getConfigManager() {
         // Initialize GUI Manager with required dependencies
         this.guiManager = new GUIManager(playerManager, variableManager);
         registerService(GUIManager.class, guiManager);
+        
+        // Update ScriptEngine with BlockConfigService if it's DefaultScriptEngine
+        if (scriptEngine instanceof com.megacreative.coding.DefaultScriptEngine) {
+            ((com.megacreative.coding.DefaultScriptEngine) scriptEngine).setBlockConfigService(blockConfigService);
+        }
+        
+        log.info("BlockConfigService initialized with " + blockConfigService.getAllBlockConfigs().size() + " block configurations");
     }
     
     private void registerServicesInDI() {

@@ -22,6 +22,17 @@ public interface ScriptEngine {
      * @return A CompletableFuture that completes when execution finishes
      */
     CompletableFuture<ExecutionResult> executeScript(CodeScript script, Player player, String trigger);
+    
+    /**
+     * Executes a single code block asynchronously.
+     * This is used for executing individual blocks within a script.
+     *
+     * @param block The code block to execute
+     * @param player The player who triggered the execution (can be null)
+     * @param trigger The event or condition that triggered execution
+     * @return A CompletableFuture that completes when the block execution finishes
+     */
+    CompletableFuture<ExecutionResult> executeBlock(CodeBlock block, Player player, String trigger);
 
     /**
      * Registers a block action handler.
@@ -38,6 +49,16 @@ public interface ScriptEngine {
      * @param condition The condition implementation
      */
     void registerCondition(BlockType type, BlockCondition condition);
+    
+    /**
+     * Gets the block type for a given material and action name.
+     * This is used to map configuration-based block types to their enum representations.
+     *
+     * @param material The block material
+     * @param actionName The action name from configuration
+     * @return The corresponding BlockType, or null if not found
+     */
+    BlockType getBlockType(Material material, String actionName);
 
     /**
      * Gets the variable manager for this engine.
