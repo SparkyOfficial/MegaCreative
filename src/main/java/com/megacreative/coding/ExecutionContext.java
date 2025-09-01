@@ -38,10 +38,7 @@ public class ExecutionContext {
     private final String scriptId; // Идентификатор скрипта
     private final String worldId;  // Идентификатор мира
     
-    // Cached values for performance
-    private final Map<String, Boolean> booleans = new HashMap<>();
-    private final Map<String, Number> numbers = new HashMap<>();
-    private final Map<String, String> strings = new HashMap<>();
+    // No more redundant caches - using VariableManager directly
 
     /**
      * Creates a new execution context with all required parameters.
@@ -86,30 +83,19 @@ public class ExecutionContext {
     /**
      * Получает локальную переменную скрипта
      */
+    /**
+     * Gets a variable value by name.
+     * @param name The name of the variable
+     * @return The variable value, or null if not found
+     */
     public Object getVariable(String name) {
-        if (scriptId == null) {
+        if (name == null || name.isEmpty()) {
             return null;
         }
-        // Check caches first
-        if (booleans.containsKey(name)) return booleans.get(name);
-        if (numbers.containsKey(name)) return numbers.get(name);
-        if (strings.containsKey(name)) return strings.get(name);
         
-        // Get from variable manager if not in cache
+        // Get from variable manager
         DataValue value = variableManager.getLocalVariable(scriptId, name);
-        if (value != null) {
-            Object val = value.getValue();
-            // Cache the value based on type
-            if (val instanceof Boolean) {
-                booleans.put(name, (Boolean) val);
-            } else if (val instanceof Number) {
-                numbers.put(name, (Number) val);
-            } else if (val instanceof String) {
-                strings.put(name, (String) val);
-            }
-            return val;
-        }
-        return null;
+        return value != null ? value.getValue() : null;
     }
     
     /**
@@ -237,17 +223,27 @@ public class ExecutionContext {
     // --- МЕТОДЫ ДЛЯ РАБОТЫ С БУЛЕВЫМИ ПЕРЕМЕННЫМИ ---
     
     /**
-     * Устанавливает булеву переменную
+     * Sets a boolean variable in the execution context.
+     * @param name The name of the variable
+     * @param value The boolean value to set
      */
     public void setBoolean(String name, boolean value) {
-        booleans.put(name, value);
+        if (scriptId != null) {
+            variableManager.setLocalVariable(scriptId, name, DataValue.of(value));
+        }
     }
     
     /**
-     * Устанавливает числовую переменную
+     * Sets a number variable in the execution context.
+     * @param name The name of the variable
+     * @param value The number value to set (can be null to remove the variable)
      */
     public void setNumber(String name, Number value) {
-        setVariable(name, value);
+        if (value != null) {
+            setVariable(name, value);
+        } else if (scriptId != null) {
+            variableManager.removeLocalVariable(scriptId, name);
+        }
     }
     
     /**

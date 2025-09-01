@@ -5,9 +5,12 @@ import com.megacreative.coding.CodeBlock;
 import com.megacreative.coding.ExecutionContext;
 import com.megacreative.coding.PlaceholderResolver;
 import com.megacreative.coding.ParameterResolver;
+import com.megacreative.coding.executors.ExecutionResult;
 import com.megacreative.coding.values.DataValue;
 import com.megacreative.coding.values.types.TextValue;
 import org.bukkit.entity.Player;
+
+import javax.inject.Inject;
 
 /**
  * Действие для отправки сообщения игроку.
@@ -20,53 +23,58 @@ import org.bukkit.entity.Player;
  */
 public class SendMessageAction implements BlockAction {
     
+    private final ParameterResolver parameterResolver;
+    
+    @Inject
+    public SendMessageAction(ParameterResolver parameterResolver) {
+        this.parameterResolver = parameterResolver;
+    }
+    
     @Override
-    public void execute(ExecutionContext context) {
-        Player player = context.getPlayer();
-        CodeBlock block = context.getCurrentBlock();
-        
-        if (player == null || block == null) return;
-        
-        // Create ParameterResolver with ExecutionContext
-        ParameterResolver resolver = new ParameterResolver(context);
-        
-        String message = null;
-        
-        // Получаем сообщение из параметра (приоритет 1)
+    public ExecutionResult execute(CodeBlock block, ExecutionContext context) {
+        try {
+            Player player = context.getPlayer();
+            if (player == null) {
+                return ExecutionResult.failure("No player available to send message to");
+            }
+            
+            String message = getMessage(block, context);
+            if (message == null || message.isEmpty()) {
+                return ExecutionResult.failure("No message specified");
+            }
+            
+            player.sendMessage(message);
+            return ExecutionResult.success("Message sent: " + message);
+        } catch (Exception e) {
+            return ExecutionResult.failure("Error sending message: " + e.getMessage());
+        }
+    }
+    
+    private String getMessage(CodeBlock block, ExecutionContext context) {
+        // Check parameter first (priority 1)
         DataValue messageValue = block.getParameter("message");
         if (messageValue != null && !messageValue.isEmpty()) {
-            DataValue resolved = resolver.resolve(context, messageValue);
-            message = resolved.asString();
+            DataValue resolved = parameterResolver.resolve(context, messageValue);
+            return resolved.asString();
         }
         
-        // Если параметра нет, получаем из виртуального инвентаря (приоритет 2)
-        if ((message == null || message.isEmpty())) {
-            var messageItem = block.getItemFromSlot("message_slot");
-            if (messageItem != null && messageItem.hasItemMeta() && messageItem.getItemMeta().hasDisplayName()) {
-                DataValue itemNameValue = new TextValue(messageItem.getItemMeta().getDisplayName());
-                DataValue resolved = resolver.resolve(context, itemNameValue);
-                message = resolved.asString();
-            } else {
-                // Fallback на старый способ (слот 0)
-                messageItem = block.getConfigItem(0);
-                if (messageItem != null && messageItem.hasItemMeta() && messageItem.getItemMeta().hasDisplayName()) {
-                    DataValue itemNameValue = new TextValue(messageItem.getItemMeta().getDisplayName());
-                    DataValue resolved = resolver.resolve(context, itemNameValue);
-                    message = resolved.asString();
-                }
-            }
+        // Check virtual inventory (priority 2)
+        var messageItem = block.getItemFromSlot("message_slot");
+        if (messageItem != null && messageItem.hasItemMeta() && messageItem.getItemMeta().hasDisplayName()) {
+            DataValue itemNameValue = new TextValue(messageItem.getItemMeta().getDisplayName());
+            DataValue resolved = parameterResolver.resolve(context, itemNameValue);
+            return resolved.asString();
         }
         
-        // Если сообщение все еще не найдено, показываем ошибку
-        if (message == null || message.isEmpty()) {
-            player.sendMessage("§cОшибка: не указано сообщение для отправки!");
-            return;
+        // Fallback to config item (priority 3)
+        messageItem = block.getConfigItem(0);
+        if (messageItem != null && messageItem.hasItemMeta() && messageItem.getItemMeta().hasDisplayName()) {
+            DataValue itemNameValue = new TextValue(messageItem.getItemMeta().getDisplayName());
+            DataValue resolved = parameterResolver.resolve(context, itemNameValue);
+            return resolved.asString();
         }
         
-        // Разрешаем плейсхолдеры в сообщении (для совместимости)
-        String resolvedMessage = PlaceholderResolver.resolve(message, context);
-        
-        // Отправляем сообщение игроку
-        player.sendMessage(resolvedMessage);
+        // Message not found
+        return null;
     }
 } 

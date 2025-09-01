@@ -1,12 +1,5 @@
 package com.megacreative.coding;
 
-/**
- * @deprecated This class is deprecated and will be removed in a future version.
- * Please migrate to the new {@link com.megacreative.coding.debug.VisualDebugger} class.
- * See the migration guide for more information.
- */
-@Deprecated(forRemoval = true, since = "1.0.0")
-
 import com.megacreative.MegaCreative;
 import org.bukkit.Location;
 import org.bukkit.Material;
@@ -18,6 +11,12 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.UUID;
 
+/**
+ * @deprecated This class is deprecated and will be removed in a future version.
+ * Please migrate to the new {@link com.megacreative.coding.debug.VisualDebugger} class.
+ * See the migration guide for more information.
+ */
+@Deprecated(forRemoval = true, since = "1.0.0")
 public class ScriptDebugger {
     private final MegaCreative plugin;
     private final Map<UUID, Boolean> playerDebugStates = new HashMap<>();

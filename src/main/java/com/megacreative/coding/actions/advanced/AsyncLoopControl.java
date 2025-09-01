@@ -223,7 +223,15 @@ public class AsyncLoopControl implements BlockAction {
                         context.getPlugin(),
                         context.getPlayer(), 
                         context.getCreativeWorld(),
+                        context.getScriptId()
+                    );
+                    executeChildBlock(childContext, childBlock);
+                } catch (Exception e) {
+                    // Log error but continue with next block
+                    if (context.getPlayer() != null) {
+                        context.getPlayer().sendMessage("§cError in loop iteration: " + e.getMessage());
                     }
+                    plugin.getLogger().log(Level.SEVERE, "Error in AsyncLoopControl", e);
                 }
             }
         }

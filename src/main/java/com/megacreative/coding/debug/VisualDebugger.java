@@ -6,10 +6,11 @@ import com.megacreative.coding.values.DataValue;
 import com.megacreative.coding.variables.VariableScope;
 import org.bukkit.Location;
 import org.bukkit.entity.Player;
-import java.util.logging.Logger;
 
 import java.util.*;
+import java.util.UUID;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.logging.Logger;
 
 public class VisualDebugger {
     private static final Logger log = Logger.getLogger(VisualDebugger.class.getName());
@@ -432,7 +433,13 @@ public class VisualDebugger {
      * Visualizes block execution
      */
     public void visualizeBlockExecution(Player player, CodeBlock block, Location blockLocation) {
-        advancedDebugger.visualizeBlockExecution(player, block, blockLocation);
+        // Visualize the block execution using the advanced debugger
+        if (advancedDebugger != null) {
+            advancedDebugger.visualizeBlockExecution(player, block, blockLocation);
+        } else {
+            // Fallback visualization if advanced debugger is not available
+            player.sendBlockChange(blockLocation, blockLocation.getBlock().getBlockData());
+        }
     }
     
     /**
@@ -556,6 +563,19 @@ public class VisualDebugger {
             String key = formatLocationKey(location);
             return breakpoints.get(key);
         }
+        
+        public List<Breakpoint> getBreakpoints() {
+            return new ArrayList<>(breakpoints.values());
+        }
+        
+        private String formatLocationKey(Location location) {
+            if (location == null) return "";
+            return String.format("%d,%d,%d,%s", 
+                location.getBlockX(), 
+                location.getBlockY(), 
+                location.getBlockZ(),
+                location.getWorld() != null ? location.getWorld().getName() : "");
+        }
     public static class ExecutionStep {
         private final String action;
         private final Location location;
@@ -581,8 +601,12 @@ public class VisualDebugger {
         private final int maxSteps;
         private int tracedSteps = 0;
         
+        public ExecutionTracer() {
+            this(1000); // Default to 1000 steps
+        }
+        
         public ExecutionTracer(int maxSteps) {
-            this.maxSteps = maxSteps > 0 ? maxSteps : 1000; // Default to 1000 steps
+            this.maxSteps = maxSteps > 0 ? maxSteps : 1000; // Ensure positive value
         }
         
         public void addStep(ExecutionStep step) {

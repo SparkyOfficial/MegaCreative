@@ -346,16 +346,19 @@ public class ServiceRegistry {
             (devInventoryManager = dependencyContainer.resolve(DevInventoryManager.class));
     }
     
-        );
-        registerService(com.megacreative.coding.BlockConfiguration.class, blockConfiguration);
+    public com.megacreative.utils.ConfigManager getConfigManager() { 
+        if (configManager == null) {
+            configManager = dependencyContainer.resolve(com.megacreative.utils.ConfigManager.class);
+            registerService(com.megacreative.utils.ConfigManager.class, configManager);
+        }
+        return configManager;
     }
-    return blockConfiguration;
-}
     
-public com.megacreative.utils.ConfigManager getConfigManager() { 
-    return configManager; 
-}
-        registerService(ScriptPerformanceMonitor.class, scriptPerformanceMonitor);
+    private void initializeScriptPerformanceMonitor() {
+        if (scriptPerformanceMonitor == null) {
+            scriptPerformanceMonitor = new ScriptPerformanceMonitor();
+            registerService(ScriptPerformanceMonitor.class, scriptPerformanceMonitor);
+        }
     }
     
     private void initializeNewArchitectureServices() {

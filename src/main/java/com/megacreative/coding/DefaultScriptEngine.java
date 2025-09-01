@@ -25,6 +25,7 @@ public class DefaultScriptEngine implements ScriptEngine {
     private final MegaCreative plugin;
     private final VariableManager variableManager;
     private final VisualDebugger debugger;
+    private final ParameterResolver parameterResolver;
     private BlockConfigService blockConfigService;
     
     private final Map<BlockType, BlockAction> actionRegistry = new HashMap<>();
@@ -41,6 +42,7 @@ public class DefaultScriptEngine implements ScriptEngine {
         this.variableManager = variableManager;
         this.debugger = debugger;
         this.blockConfigService = blockConfigService;
+        this.parameterResolver = new ParameterResolver(variableManager);
     }
     
     /**
@@ -251,9 +253,17 @@ public class DefaultScriptEngine implements ScriptEngine {
      * Processes a single code block in the execution context.
      * Handles debugging, error handling, and block execution.
      */
-    private void processBlock(CodeBlock block, ExecutionContext context) {
-        if (block == null || context.isCancelled()) {
-            return;
+    /**
+     * Processes a single code block in the execution context.
+     * Handles debugging, error handling, and block execution.
+     */
+    private ExecutionResult processBlock(CodeBlock block, ExecutionContext context, int recursionDepth) {
+        if (block == null) {
+            return ExecutionResult.failure("Null block provided");
+        }
+        
+        if (context.isCancelled()) {
+            return ExecutionResult.failure("Execution was cancelled");
         }
 
         // Handle pausing for debugging
@@ -263,7 +273,11 @@ public class DefaultScriptEngine implements ScriptEngine {
                     context.wait();
                 } catch (InterruptedException e) {
                     Thread.currentThread().interrupt();
-                    return;
+                    return ExecutionResult.failure("Execution was interrupted");
+                }
+            }
+        }
+        
         try {
             // Check recursion depth
             if (recursionDepth > MAX_RECURSION_DEPTH) {
@@ -327,11 +341,11 @@ public class DefaultScriptEngine implements ScriptEngine {
                 debugger.onConditionEvaluate(block, context);
             }
             
-            // Evaluate the condition
-            boolean result = condition.evaluate(block, context);
+            // Evaluate the condition with the block and context
+            ExecutionResult result = condition.evaluate(block, context);
             
             // Handle the result
-            if (result) {
+            if (result.isSuccess() && result.getBooleanResult()) {
                 // Condition is true, execute the next block
                 CodeBlock nextBlock = block.getNextBlock();
                 if (nextBlock != null) {
@@ -339,7 +353,7 @@ public class DefaultScriptEngine implements ScriptEngine {
                 }
                 return ExecutionResult.success("Condition evaluated to true");
             } else {
-                // Condition is false, skip the next block
+                // Condition is false or failed, skip the next block
                 return ExecutionResult.success("Condition evaluated to false");
             }
         } catch (Exception e) {
@@ -392,8 +406,8 @@ public class DefaultScriptEngine implements ScriptEngine {
             // Clear existing actions
             actionRegistry.clear();
             
-            // Register static actions first
-            registerAction(BlockType.ACTION_SEND_MESSAGE, new SendMessageAction());
+            // Register static actions first with dependency injection
+            registerAction(BlockType.ACTION_SEND_MESSAGE, new SendMessageAction(parameterResolver));
             registerAction(BlockType.ACTION_TELEPORT_PLAYER, new TeleportAction());
             registerAction(BlockType.ACTION_GIVE_ITEM, new GiveItemAction());
             registerAction(BlockType.ACTION_SET_HEALTH, new SetHealthAction());
