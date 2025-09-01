@@ -223,20 +223,6 @@ public class AsyncLoopControl implements BlockAction {
                         context.getPlugin(),
                         context.getPlayer(), 
                         context.getCreativeWorld(),
-                        context.getEvent(),
-                        context.getBlockLocation(),
-                        childBlock
-                    );
-                    
-                    // Execute the child block (this should be done via ScriptExecutor)
-                    // For now, we'll use the action registry to find and execute the appropriate action
-                    executeChildBlock(childContext, childBlock);
-                    
-                } catch (Exception e) {
-                    // Log error but continue with next child block
-                    Player player = context.getPlayer();
-                    if (player != null && context.isDebugMode()) {
-                        player.sendMessage("§cError executing child block: " + e.getMessage());
                     }
                 }
             }

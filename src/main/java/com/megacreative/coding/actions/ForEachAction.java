@@ -152,10 +152,35 @@ public class ForEachAction implements BlockAction {
      * Executes all child blocks in sequence
      */
     private void executeChildBlocks(ExecutionContext context, CodeBlock parentBlock) {
+        // Get ScriptEngine from ServiceRegistry
+        ScriptEngine scriptEngine = context.getPlugin().getServiceRegistry().getService(ScriptEngine.class);
+        if (scriptEngine == null) {
+            Player player = context.getPlayer();
+            if (player != null) {
+                player.sendMessage("§cОшибка: не удалось получить ScriptEngine");
+            }
+            return;
+        }
+        
+        // Execute each child block
         for (CodeBlock childBlock : parentBlock.getChildren()) {
-            // Use ScriptExecutor from ServiceRegistry to process child blocks properly
-            com.megacreative.coding.ScriptExecutor executor = new com.megacreative.coding.ScriptExecutor(context.getPlugin());
-            executor.processBlock(childBlock, context);
+            try {
+                // Execute the child block using ScriptEngine
+                scriptEngine.executeScript(childBlock, context.getPlayer(), "foreach_loop")
+                    .exceptionally(throwable -> {
+                        Player player = context.getPlayer();
+                        if (player != null) {
+                            player.sendMessage("§cОшибка в цикле ForEach: " + throwable.getMessage());
+                        }
+                        return null;
+                    })
+                    .join(); // Wait for completion before next iteration
+            } catch (Exception e) {
+                Player player = context.getPlayer();
+                if (player != null) {
+                    player.sendMessage("§cОшибка при выполнении блока в цикле ForEach: " + e.getMessage());
+                }
+            }
         }
     }
     

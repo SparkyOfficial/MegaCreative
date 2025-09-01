@@ -116,8 +116,14 @@ public interface ICodingManager {
     void clearVariables();
     
     /**
-     * Получает движок выполнения скриптов.
+     * Получает движок выполнения скриптов
      * @return ScriptEngine для выполнения скриптов
      */
     ScriptEngine getScriptEngine();
+    
+    /**
+     * Отменяет выполнение скрипта по его ID
+     * @param scriptId ID скрипта для отмены
+     */
+    void cancelScriptExecution(String scriptId);
 }

@@ -47,8 +47,15 @@ public class CommandListener implements Listener {
                 EventDataExtractorRegistry extractorRegistry = plugin.getServiceRegistry().getEventDataExtractorRegistry();
                 extractorRegistry.populateContext(event, context);
                 
-                // Выполняем скрипт
-                plugin.getCodingManager().getScriptExecutor().execute(script, context, "onCommand");
+                // Выполняем скрипт через ScriptEngine
+                plugin.getCodingManager().getScriptEngine().executeScript(script, context.getPlayer(), "onCommand")
+                    .whenComplete((result, throwable) -> {
+                        if (throwable != null) {
+                            plugin.getLogger().severe("Error executing command script: " + throwable.getMessage());
+                        } else if (result != null && !result.isSuccess()) {
+                            plugin.getLogger().warning("Command script execution failed: " + result.getErrorMessage());
+                        }
+                    });
             });
     }
 } 

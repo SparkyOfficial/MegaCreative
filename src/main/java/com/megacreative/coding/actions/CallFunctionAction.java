@@ -92,8 +92,22 @@ public class CallFunctionAction implements BlockAction {
             }
             
             if (function != null) {
-                new com.megacreative.coding.ScriptExecutor(plugin).execute(function, functionContext, "function");
-                player.sendMessage("§a✓ Функция '" + functionName + "' выполнена!");
+                // Получаем ScriptEngine из ServiceRegistry
+                ScriptEngine scriptEngine = plugin.getServiceRegistry().getService(ScriptEngine.class);
+                if (scriptEngine != null) {
+                    scriptEngine.executeScript(function, player, "function")
+                        .whenComplete((result, throwable) -> {
+                            if (throwable != null) {
+                                player.sendMessage("§cОшибка при выполнении функции '" + functionName + "': " + throwable.getMessage());
+                            } else if (result != null && !result.isSuccess()) {
+                                player.sendMessage("§cОшибка в функции '" + functionName + "': " + result.getErrorMessage());
+                            } else {
+                                player.sendMessage("§a✓ Функция '" + functionName + "' выполнена!");
+                            }
+                        });
+                } else {
+                    player.sendMessage("§cОшибка: не удалось получить ScriptEngine");
+                }
             } else {
                 player.sendMessage("§cОшибка: функция '" + functionName + "' не найдена!");
             }

@@ -4,11 +4,12 @@ import com.megacreative.coding.BlockAction;
 import com.megacreative.coding.CodeBlock;
 import com.megacreative.coding.ExecutionContext;
 import com.megacreative.coding.ParameterResolver;
-import com.megacreative.coding.ScriptExecutor;
+import com.megacreative.coding.ScriptEngine;
 import com.megacreative.coding.values.DataValue;
 import com.megacreative.coding.variables.VariableManager;
 import org.bukkit.Bukkit;
 import org.bukkit.entity.Player;
+import com.megacreative.core.ServiceRegistry;
 
 public class WaitAction implements BlockAction {
     @Override
@@ -34,13 +35,25 @@ public class WaitAction implements BlockAction {
         try {
             int ticks = Integer.parseInt(ticksStr);
             
+            // Получаем ScriptEngine из ServiceRegistry
+            ServiceRegistry serviceRegistry = context.getPlugin().getServiceRegistry();
+            ScriptEngine scriptEngine = serviceRegistry.getService(ScriptEngine.class);
+            
+            if (scriptEngine == null) {
+                player.sendMessage("§cОшибка: не удалось получить ScriptEngine");
+                return;
+            }
+            
             // Запускаем выполнение следующего блока через указанное количество тиков
             Bukkit.getScheduler().runTaskLater(context.getPlugin(), () -> {
                 CodeBlock nextBlock = block.getNextBlock();
                 if (nextBlock != null) {
-                    ScriptExecutor executor = new ScriptExecutor(context.getPlugin());
-                    ExecutionContext newContext = context.withCurrentBlock(nextBlock, context.getBlockLocation());
-                    executor.processBlock(nextBlock, newContext);
+                    // Используем ScriptEngine для выполнения следующего блока
+                    scriptEngine.executeScript(nextBlock, player, "after_wait")
+                        .exceptionally(throwable -> {
+                            player.sendMessage("§cОшибка при выполнении после ожидания: " + throwable.getMessage());
+                            return null;
+                        });
                 }
             }, ticks);
             

@@ -46,9 +46,10 @@ public class ServiceRegistry {
     private TemplateManager templateManager;
     private ScoreboardManager scoreboardManager;
     private TrustedPlayerManager trustedPlayerManager;
-    private ITrustedPlayerManager trustedPlayerManagerInterface; // Interface reference
+    private ITrustedPlayerManager trustedPlayerManagerInterface;
     private GUIManager guiManager;
     private BlockConfigManager blockConfigManager;
+    private ExecutorEngine executorEngine;
     
     // Coding system services
     private BlockPlacementHandler blockPlacementHandler;
@@ -57,8 +58,7 @@ public class ServiceRegistry {
     private DevInventoryManager devInventoryManager;
     private VariableManager variableManager;
     private BlockContainerManager containerManager;
-    private ScriptEngine scriptEngine;
-    private DefaultScriptEngine defaultScriptEngine;
+    private final ScriptEngine scriptEngine;
     private BlockConfiguration blockConfiguration;
     private ScriptPerformanceMonitor scriptPerformanceMonitor;
     
@@ -66,15 +66,49 @@ public class ServiceRegistry {
     private BlockConfigService blockConfigService;
     private CustomEventManager customEventManager;
     private EventDataExtractorRegistry eventDataExtractorRegistry;
-    private VisualDebugger visualDebugger;
     private VisualErrorHandler visualErrorHandler;
     private CodeBlockClipboard codeBlockClipboard;
     private BlockGroupManager blockGroupManager;
-    private DevWorldProtectionListener devWorldProtectionListener; // Add this field
+    private DevWorldProtectionListener devWorldProtectionListener;
+    private VisualProgrammingSystem visualProgrammingSystem;
+    private LineBasedCompiler lineBasedCompiler;
+    private CollaborationManager collaborationManager;
     
     public ServiceRegistry(Plugin plugin, DependencyContainer dependencyContainer) {
         this.plugin = plugin;
         this.dependencyContainer = dependencyContainer;
+        
+        // Initialize core services first
+        this.variableManager = new VariableManagerImpl((MegaCreative) plugin);
+        this.visualDebugger = new VisualDebugger((MegaCreative) plugin);
+        
+        // Initialize ScriptEngine with its dependencies
+        this.scriptEngine = new DefaultScriptEngine((MegaCreative) plugin);
+        initializeScriptEngine();
+    }
+    
+    private void initializeScriptEngine() {
+        // Register core services
+        registerService(VariableManager.class, variableManager);
+        registerService(VisualDebugger.class, visualDebugger);
+        
+        // Initialize ScriptEngine with required dependencies
+        if (scriptEngine instanceof DefaultScriptEngine) {
+            DefaultScriptEngine defaultEngine = (DefaultScriptEngine) scriptEngine;
+            defaultEngine.initialize(
+                (MegaCreative) plugin,
+                variableManager,
+                visualDebugger
+            );
+            
+            log.info("ScriptEngine initialized with " + 
+                    defaultEngine.getActionCount() + " actions and " +
+                    defaultEngine.getConditionCount() + " conditions");
+        }
+        
+        // Register ScriptEngine services
+        registerService(ScriptEngine.class, scriptEngine);
+        registerService(DefaultScriptEngine.class, (DefaultScriptEngine) scriptEngine);
     }
     
     /**
@@ -84,32 +118,32 @@ public class ServiceRegistry {
         log.info("Initializing MegaCreative services...");
         
         try {
-            // 1. Core services first
+            // 1. Core services first (config, database, etc.)
             initializeCoreServices();
             
-            // 2. Interface-based managers
+            // 2. Interface-based managers (world, player, coding)
             initializeManagers();
             
-            // 3. Implementation managers that depend on interfaces
+            // 3. Implementation managers (templates, scoreboard, etc.)
             initializeImplementationManagers();
             
-            // 4. Coding system services
+            // 4. Coding system services (block placement, debugger, etc.)
             initializeCodingServices();
             
-            // 5. New architecture services
+            // 5. New architecture services (visual programming, collaboration, etc.)
             initializeNewArchitectureServices();
             
-            // 6. Register all services in DI container
+            // 6. Register all services in DI container for dependency injection
             registerServicesInDI();
             
             // 7. Initialize services that need post-construction setup
             postInitialize();
             
-            log.info("Successfully initialized " + services.size() + " services");
+            log.info(String.format("Successfully initialized %d services", services.size()));
             
         } catch (Exception e) {
-            log.log(Level.SEVERE, "Failed to initialize services", e);
-            throw new RuntimeException("Service initialization failed", e);
+            log.log(Level.SEVERE, "Failed to initialize services: " + e.getMessage(), e);
+            throw new RuntimeException("Service initialization failed: " + e.getMessage(), e);
         }
     }
     
@@ -228,9 +262,24 @@ public class ServiceRegistry {
             (playerManager = dependencyContainer.resolve(IPlayerManager.class));
     }
     
-    public ICodingManager getCodingManager() { 
-        return codingManager != null ? codingManager : 
-            (codingManager = dependencyContainer.resolve(ICodingManager.class));
+    public ICodingManager getCodingManager() {
+        if (codingManager == null) {
+            // Get required dependencies
+            IWorldManager worldManager = getWorldManager();
+            ScriptEngine scriptEngine = getService(ScriptEngine.class);
+            
+            // Create and initialize CodingManager
+            this.codingManager = new CodingManagerImpl((MegaCreative) plugin, worldManager);
+            registerService(ICodingManager.class, codingManager);
+            
+            // Verify ScriptEngine is properly set
+            if (scriptEngine == null) {
+                log.warning("ScriptEngine is not available when initializing CodingManager");
+            } else {
+                log.info("CodingManager initialized with ScriptEngine: " + scriptEngine.getClass().getSimpleName());
+            }
+        }
+        return codingManager;
     }
     
     public TemplateManager getTemplateManager() { 
@@ -253,9 +302,8 @@ public class ServiceRegistry {
             (guiManager = dependencyContainer.resolve(GUIManager.class));
     }
     
-    public VariableManager getVariableManager() {
-        return variableManager != null ? variableManager :
-            (variableManager = dependencyContainer.resolve(VariableManager.class));
+    public VariableManager getVariableManager() { 
+        return variableManager;
     }
     
     public BlockPlacementHandler getBlockPlacementHandler() {

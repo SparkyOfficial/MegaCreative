@@ -1,6 +1,8 @@
 package com.megacreative.coding;
 
 import com.megacreative.MegaCreative;
+import com.megacreative.core.ServiceRegistry;
+import com.megacreative.coding.debug.VisualDebugger;
 import com.megacreative.coding.events.EventDataExtractorRegistry;
 import com.megacreative.interfaces.ICodingManager;
 import com.megacreative.interfaces.IWorldManager;
@@ -19,6 +21,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.UUID;
+import java.util.concurrent.CompletableFuture;
 
 /**
  * Управляет всеми аспектами системы кодирования: загрузкой, сохранением и выполнением скриптов.
@@ -28,14 +31,43 @@ public class CodingManagerImpl implements ICodingManager, Listener {
     private final MegaCreative plugin;
     private final IWorldManager worldManager;
     private final ScriptEngine scriptEngine;
+    private final VariableManager variableManager;
+    private final VisualDebugger debugger;
     private final Map<String, List<CodeScript>> worldScripts = new HashMap<>();
-    private final Map<String, Object> globalVariables = new HashMap<>();
-    private final Map<String, Object> serverVariables = new HashMap<>();
+    // Global and server variables are now managed by VariableManager in ScriptEngine
     
     /**
-     * Получает исполнитель скриптов.
-     * @return ScriptExecutor для выполнения скриптов
+     * Выполняет скрипт с указанным триггером.
+     * @param script Скрипт для выполнения
+     * @param player Игрок, инициировавший выполнение
+     * @param trigger Триггер выполнения
      */
+    @Override
+    public void executeScript(CodeScript script, Player player, String trigger) {
+        if (scriptEngine == null) {
+            plugin.getLogger().severe("Cannot execute script: ScriptEngine is not available");
+            return;
+        }
+        
+        // Execute script asynchronously
+        scriptEngine.executeScript(script, player, trigger)
+            .whenComplete((result, throwable) -> {
+                if (throwable != null) {
+                    plugin.getLogger().severe("Error executing script " + script.getId() + ": " + throwable.getMessage());
+                    if (debugger != null) {
+                        debugger.logError(player, "Error executing script: " + throwable.getMessage());
+                    }
+                } else if (result != null && !result.isSuccess() && debugger != null) {
+                    debugger.logError(player, "Script execution failed: " + result.getErrorMessage());
+                }
+            });
+    }
+
+    @Override
+    public ScriptEngine getScriptEngine() {
+        return scriptEngine;
+    }
+    
     @Override
     public void cancelScriptExecution(String scriptId) {
         if (scriptEngine != null) {
@@ -45,15 +77,10 @@ public class CodingManagerImpl implements ICodingManager, Listener {
     
     @Override
     public void shutdown() {
-        // Stop all running scripts
-        if (scriptEngine != null) {
-            // No explicit shutdown needed in ScriptEngine, handled by service registry
-        }
-        
-        // Clear all caches and variables
+        // Clear world scripts cache
         worldScripts.clear();
-        globalVariables.clear();
-        serverVariables.clear();
+        
+        // ScriptEngine and its resources are managed by ServiceRegistry
     }
     
     @Override
@@ -64,7 +91,18 @@ public class CodingManagerImpl implements ICodingManager, Listener {
     public CodingManagerImpl(MegaCreative plugin, IWorldManager worldManager) {
         this.plugin = plugin;
         this.worldManager = worldManager;
-        this.scriptEngine = new DefaultScriptEngine(plugin);
+        
+        // Get services from ServiceRegistry
+        ServiceRegistry serviceRegistry = plugin.getServiceRegistry();
+        this.scriptEngine = serviceRegistry.getService(ScriptEngine.class);
+        this.variableManager = scriptEngine.getVariableManager();
+        this.debugger = serviceRegistry.getService(VisualDebugger.class);
+        
+        if (scriptEngine == null) {
+            throw new IllegalStateException("ScriptEngine service is not available");
+        }
+        
+        // Register event listeners
         Bukkit.getPluginManager().registerEvents(this, plugin);
     }
     
@@ -87,12 +125,14 @@ public class CodingManagerImpl implements ICodingManager, Listener {
     
     @Override
     public void executeScript(CodeScript script, Player player, String trigger) {
-        ExecutionContext context = ExecutionContext.builder()
-                .plugin(plugin)
-                .player(player)
-                .creativeWorld(worldManager.findCreativeWorldByBukkit(player.getWorld()))
-                .build();
-        scriptExecutor.execute(script, context, trigger);
+        if (scriptEngine != null) {
+            scriptEngine.executeScript(script, player, trigger)
+                .exceptionally(ex -> {
+                    plugin.getLogger().severe("Error executing script " + script.getName() + ": " + ex.getMessage());
+                    ex.printStackTrace();
+                    return null;
+                });
+        }
     }
     
     @Override
@@ -124,39 +164,39 @@ public class CodingManagerImpl implements ICodingManager, Listener {
     }
     
     @Override
-    public Object getGlobalVariable(String name) {
-        return globalVariables.get(name);
+    public Object getGlobalVariable(String key) {
+        return scriptEngine.getVariableManager().getGlobalVariable(key);
     }
-    
+
     @Override
-    public void setGlobalVariable(String name, Object value) {
-        globalVariables.put(name, value);
+    public void setGlobalVariable(String key, Object value) {
+        scriptEngine.getVariableManager().setGlobalVariable(key, value);
     }
-    
+
     @Override
-    public Object getServerVariable(String name) {
-        return serverVariables.get(name);
+    public Object getServerVariable(String key) {
+        return scriptEngine.getVariableManager().getServerVariable(key);
     }
-    
+
     @Override
-    public void setServerVariable(String name, Object value) {
-        serverVariables.put(name, value);
+    public void setServerVariable(String key, Object value) {
+        scriptEngine.getVariableManager().setServerVariable(key, value);
     }
     
     @Override
     public Map<String, Object> getGlobalVariables() {
-        return new HashMap<>(globalVariables);
+        return scriptEngine.getVariableManager().getGlobalVariables();
     }
     
     @Override
     public Map<String, Object> getServerVariables() {
-        return new HashMap<>(serverVariables);
+        return scriptEngine.getVariableManager().getServerVariables();
     }
     
     @Override
     public void clearVariables() {
-        globalVariables.clear();
-        serverVariables.clear();
+        scriptEngine.getVariableManager().clearGlobalVariables();
+        scriptEngine.getVariableManager().clearServerVariables();
     }
 
 

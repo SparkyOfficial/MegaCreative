@@ -9,6 +9,7 @@ import org.bukkit.entity.Player;
 import org.bukkit.plugin.java.JavaPlugin;
 
 import java.util.Map;
+import java.util.UUID;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ConcurrentHashMap;
 
@@ -21,7 +22,8 @@ public class DefaultScriptEngine implements ScriptEngine {
     
     private final MegaCreative plugin;
     private final VariableManager variableManager;
-    private final VisualDebugger debugger;
+    private VisualDebugger debugger;
+    private boolean initialized = false;
     
     // Registry for actions and conditions
     private final Map<BlockType, BlockAction> actionRegistry = new ConcurrentHashMap<>();
@@ -33,15 +35,43 @@ public class DefaultScriptEngine implements ScriptEngine {
     public DefaultScriptEngine(MegaCreative plugin) {
         this.plugin = plugin;
         this.variableManager = new VariableManagerImpl(plugin);
-        this.debugger = new VisualDebugger(plugin);
+        // Debugger will be initialized in the initialize() method
+    }
+    
+    /**
+     * Initializes the ScriptEngine with required dependencies
+     * @param plugin The plugin instance
+     * @param variableManager The variable manager to use (can be null to use default)
+     * @param debugger The visual debugger to use (can be null to use default)
+     */
+    public void initialize(MegaCreative plugin, VariableManager variableManager, VisualDebugger debugger) {
+        if (initialized) {
+            return;
+        }
+        
+        // Use provided debugger or create a default one
+        if (debugger != null) {
+            this.debugger = debugger;
+        } else {
+            this.debugger = new VisualDebugger(plugin);
+        }
         
         // Initialize default actions and conditions
         registerDefaultActions();
         registerDefaultConditions();
+        
+        initialized = true;
+        plugin.getLogger().info("ScriptEngine initialized with " + 
+            actionRegistry.size() + " actions and " + 
+            conditionRegistry.size() + " conditions");
     }
     
     @Override
     public CompletableFuture<ExecutionResult> executeScript(CodeScript script, Player player, String trigger) {
+        if (!initialized) {
+            throw new IllegalStateException("ScriptEngine has not been initialized. Call initialize() first.");
+        }
+        
         String executionId = UUID.randomUUID().toString();
         ExecutionContext context = new ExecutionContext(executionId, script, player, trigger);
         activeExecutions.put(executionId, context);
@@ -223,5 +253,21 @@ public class DefaultScriptEngine implements ScriptEngine {
     
     protected Map<String, ExecutionContext> getActiveExecutions() {
         return activeExecutions;
+    }
+    
+    /**
+     * Gets the number of registered actions
+     * @return count of registered actions
+     */
+    public int getActionCount() {
+        return actionRegistry.size();
+    }
+    
+    /**
+     * Gets the number of registered conditions
+     * @return count of registered conditions
+     */
+    public int getConditionCount() {
+        return conditionRegistry.size();
     }
 }

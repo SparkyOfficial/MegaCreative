@@ -46,8 +46,15 @@ public class PlayerDeathListener implements Listener {
                 EventDataExtractorRegistry extractorRegistry = plugin.getServiceRegistry().getEventDataExtractorRegistry();
                 extractorRegistry.populateContext(event, context);
                 
-                // Выполняем скрипт
-                plugin.getCodingManager().getScriptExecutor().execute(script, context, "onPlayerDeath");
+                // Выполняем скрипт через ScriptEngine
+                plugin.getCodingManager().getScriptEngine().executeScript(script, context.getPlayer(), "onPlayerDeath")
+                    .whenComplete((result, throwable) -> {
+                        if (throwable != null) {
+                            plugin.getLogger().severe("Error executing death script: " + throwable.getMessage());
+                        } else if (result != null && !result.isSuccess()) {
+                            plugin.getLogger().warning("Death script execution failed: " + result.getErrorMessage());
+                        }
+                    });
             });
     }
 } 

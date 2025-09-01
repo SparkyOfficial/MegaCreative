@@ -46,8 +46,15 @@ public class BlockBreakListener implements Listener {
                 EventDataExtractorRegistry extractorRegistry = plugin.getServiceRegistry().getEventDataExtractorRegistry();
                 extractorRegistry.populateContext(event, context);
                 
-                // Выполняем скрипт
-                plugin.getCodingManager().getScriptExecutor().execute(script, context, "onBlockBreak");
+                // Выполняем скрипт через ScriptEngine
+                plugin.getCodingManager().getScriptEngine().executeScript(script, context.getPlayer(), "onBlockBreak")
+                    .whenComplete((result, throwable) -> {
+                        if (throwable != null) {
+                            plugin.getLogger().severe("Error executing block break script: " + throwable.getMessage());
+                        } else if (result != null && !result.isSuccess()) {
+                            plugin.getLogger().warning("Block break script execution failed: " + result.getErrorMessage());
+                        }
+                    });
             });
     }
 } 
