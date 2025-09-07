@@ -5,6 +5,7 @@ import com.megacreative.coding.CodeBlock;
 import com.megacreative.coding.ExecutionContext;
 import com.megacreative.coding.ParameterResolver;
 import com.megacreative.coding.ScriptEngine;
+import com.megacreative.coding.executors.ExecutionResult;
 import com.megacreative.coding.values.DataValue;
 import com.megacreative.coding.variables.VariableManager;
 import com.megacreative.core.ServiceRegistry;
@@ -20,21 +21,26 @@ public class RepeatTriggerAction implements BlockAction {
     private static final Map<UUID, Integer> activeTasks = new HashMap<>();
     
     @Override
-    public void execute(ExecutionContext context) {
+    public ExecutionResult execute(CodeBlock block, ExecutionContext context) {
         Player player = context.getPlayer();
-        CodeBlock block = context.getCurrentBlock();
 
-        if (player == null || block == null) return;
+        if (player == null || block == null) {
+            return ExecutionResult.error("Player or block is null");
+        }
 
         // Получаем и разрешаем параметры
-        if (context == null) return;
+        if (context == null) {
+            return ExecutionResult.error("Context is null");
+        }
         
         ParameterResolver resolver = new ParameterResolver(context);
         
         DataValue rawTicks = block.getParameter("ticks");
         DataValue rawAction = block.getParameter("action");
 
-        if (rawTicks == null) return;
+        if (rawTicks == null) {
+            return ExecutionResult.error("Ticks parameter is missing");
+        }
         
         DataValue ticksValue = resolver.resolve(context, rawTicks);
         String ticksStr = ticksValue.asString();
@@ -45,7 +51,9 @@ public class RepeatTriggerAction implements BlockAction {
             actionStr = actionValue.asString();
         }
 
-        if (ticksStr == null) return;
+        if (ticksStr == null) {
+            return ExecutionResult.error("Ticks parameter is null");
+        }
 
         try {
             int ticks = Integer.parseInt(ticksStr);
@@ -72,7 +80,7 @@ public class RepeatTriggerAction implements BlockAction {
                     if (nextBlock != null) {
                         ExecutionContext newContext = context.withCurrentBlock(nextBlock, context.getBlockLocation());
                         // Используем ScriptEngine для выполнения следующего блока
-                        scriptEngine.executeScript(nextBlock, player, "repeat_trigger")
+                        scriptEngine.executeBlockChain(nextBlock, player, "repeat_trigger")
                             .exceptionally(throwable -> {
                                 player.sendMessage("§cОшибка в повторяющемся триггере: " + throwable.getMessage());
                                 stopRepeatingTask(player.getUniqueId());
@@ -90,8 +98,9 @@ public class RepeatTriggerAction implements BlockAction {
             
             player.sendMessage("§a🔄 Повторяющийся триггер запущен каждые " + ticks + " тиков");
             
+            return ExecutionResult.success("Repeat trigger action started");
         } catch (NumberFormatException e) {
-            player.sendMessage("§cОшибка в параметре ticks: " + ticksStr);
+            return ExecutionResult.error("Invalid ticks parameter: " + ticksStr);
         }
     }
     
@@ -125,4 +134,4 @@ public class RepeatTriggerAction implements BlockAction {
     public static boolean hasActiveTask(UUID playerId) {
         return activeTasks.containsKey(playerId);
     }
-} 
+}

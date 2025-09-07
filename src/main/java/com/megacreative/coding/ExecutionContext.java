@@ -2,6 +2,7 @@ package com.megacreative.coding;
 
 import com.megacreative.MegaCreative;
 import com.megacreative.coding.variables.VariableManager;
+import com.megacreative.coding.variables.VariableScope;
 import com.megacreative.coding.values.DataValue;
 import com.megacreative.models.CreativeWorld;
 import org.bukkit.Location;
@@ -12,6 +13,7 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.UUID;
 
 /**
  * Хранит всю информацию, необходимую для выполнения одного скрипта.
@@ -177,6 +179,7 @@ public class ExecutionContext {
         DataValue value = variableManager.getPlayerVariable(player.getUniqueId(), name);
         return value != null ? value.getValue() : null;
     }
+    
     
     // === МЕТОДЫ ДЛЯ РАБОТЫ СО СПИСКАМИ ===
     

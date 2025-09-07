@@ -5,6 +5,7 @@ import com.megacreative.coding.CodeBlock;
 import com.megacreative.coding.ExecutionContext;
 import com.megacreative.coding.ParameterResolver;
 import com.megacreative.coding.ScriptEngine;
+import com.megacreative.coding.executors.ExecutionResult;
 import com.megacreative.coding.values.DataValue;
 import com.megacreative.coding.variables.VariableManager;
 import org.bukkit.Bukkit;
@@ -13,24 +14,29 @@ import com.megacreative.core.ServiceRegistry;
 
 public class WaitAction implements BlockAction {
     @Override
-    public void execute(ExecutionContext context) {
+    public ExecutionResult execute(CodeBlock block, ExecutionContext context) {
         Player player = context.getPlayer();
-        CodeBlock block = context.getCurrentBlock();
         VariableManager variableManager = context.getPlugin().getVariableManager();
 
-        if (player == null || block == null) return;
+        if (player == null || block == null) {
+            return ExecutionResult.error("Player or block is null");
+        }
 
         ParameterResolver resolver = new ParameterResolver(context);
 
         // Получаем и разрешаем параметры
         DataValue rawTicks = block.getParameter("ticks");
 
-        if (rawTicks == null) return;
+        if (rawTicks == null) {
+            return ExecutionResult.error("Ticks parameter is missing");
+        }
 
         DataValue ticksValue = resolver.resolve(context, rawTicks);
         String ticksStr = ticksValue.asString();
 
-        if (ticksStr == null) return;
+        if (ticksStr == null) {
+            return ExecutionResult.error("Ticks parameter is null");
+        }
 
         try {
             int ticks = Integer.parseInt(ticksStr);
@@ -40,8 +46,7 @@ public class WaitAction implements BlockAction {
             ScriptEngine scriptEngine = serviceRegistry.getService(ScriptEngine.class);
             
             if (scriptEngine == null) {
-                player.sendMessage("§cОшибка: не удалось получить ScriptEngine");
-                return;
+                return ExecutionResult.error("Failed to get ScriptEngine");
             }
             
             // Запускаем выполнение следующего блока через указанное количество тиков
@@ -49,7 +54,7 @@ public class WaitAction implements BlockAction {
                 CodeBlock nextBlock = block.getNextBlock();
                 if (nextBlock != null) {
                     // Используем ScriptEngine для выполнения следующего блока
-                    scriptEngine.executeScript(nextBlock, player, "after_wait")
+                    scriptEngine.executeBlockChain(nextBlock, player, "after_wait")
                         .exceptionally(throwable -> {
                             player.sendMessage("§cОшибка при выполнении после ожидания: " + throwable.getMessage());
                             return null;
@@ -59,8 +64,9 @@ public class WaitAction implements BlockAction {
             
             player.sendMessage("§a⏱ Ожидание " + ticks + " тиков...");
             
+            return ExecutionResult.success("Wait action started");
         } catch (NumberFormatException e) {
-            player.sendMessage("§cОшибка в параметре ticks: " + ticksStr);
+            return ExecutionResult.error("Invalid ticks parameter: " + ticksStr);
         }
     }
-} 
+}

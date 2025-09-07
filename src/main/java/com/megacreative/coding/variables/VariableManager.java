@@ -79,7 +79,7 @@ public class VariableManager implements IVariableManager {
                 break;
         }
     }
-    
+
     @Override
     public DataValue getVariable(String name, VariableScope scope, String context) {
         if (name == null || scope == null) {
@@ -178,41 +178,101 @@ public class VariableManager implements IVariableManager {
     }
     
     @Override
-    public void saveAll() {
-        savePersistentData();
+    public void savePersistentData() {
+        savePersistentVariables();
+        saveServerVariables();
     }
     
     @Override
-    public void loadPlayerData(Player player) {
-        if (player == null) {
-            return;
+    public void loadPersistentData() {
+        loadPersistentVariables();
+        loadServerVariables();
+    }
+    
+    @Override
+    public boolean hasVariable(String name, VariableScope scope, String context) {
+        if (name == null || scope == null) {
+            return false;
         }
-        // Implementation for loading player data would go here
-        // This would typically load from a file or database
-    }
-    
-    @Override
-    public void savePlayerData(Player player) {
-        if (player == null) {
-            return;
-        }
-        // Implementation for saving player data would go here
-        // This would typically save to a file or database
-    }
-    
-    @Override
-    public void cleanup() {
-        // Save all data before cleanup
-        saveAll();
         
-        // Clear all variables
-        localVariables.clear();
-        globalVariables.clear();
-        playerVariables.clear();
-        serverVariables.clear();
-        persistentVariables.clear();
-        dynamicVariables.clear();
-        variableMetadata.clear();
+        switch (scope) {
+            case LOCAL:
+                return context != null && localVariables.containsKey(context) && 
+                       localVariables.get(context).containsKey(name);
+            case GLOBAL:
+                return globalVariables.values().stream()
+                    .anyMatch(map -> map.containsKey(name));
+            case PLAYER:
+                try {
+                    UUID playerId = UUID.fromString(context);
+                    return playerVariables.containsKey(playerId) && 
+                           playerVariables.get(playerId).containsKey(name);
+                } catch (IllegalArgumentException e) {
+                    return false;
+                }
+            case SERVER:
+                return serverVariables.containsKey(name);
+            case PERSISTENT:
+                return persistentVariables.containsKey(name);
+            case DYNAMIC:
+                return dynamicVariables.containsKey(name);
+            default:
+                return false;
+        }
+    }
+    
+    @Override
+    public void removeVariable(String name, VariableScope scope, String context) {
+        if (name == null || scope == null) {
+            return;
+        }
+        
+        switch (scope) {
+            case LOCAL:
+                if (context != null) {
+                    Map<String, DataValue> contextVars = localVariables.get(context);
+                    if (contextVars != null) {
+                        contextVars.remove(name);
+                        variableMetadata.remove("local_" + context + "_" + name);
+                    }
+                }
+                break;
+            case GLOBAL:
+                globalVariables.computeIfPresent("global", (k, v) -> {
+                    v.remove(name);
+                    return v.isEmpty() ? null : v;
+                });
+                variableMetadata.remove("global_" + name);
+                break;
+            case PLAYER:
+                try {
+                    UUID playerId = UUID.fromString(context);
+                    Map<String, DataValue> playerVars = playerVariables.get(playerId);
+                    if (playerVars != null) {
+                        playerVars.remove(name);
+                        if (playerVars.isEmpty()) {
+                            playerVariables.remove(playerId);
+                        }
+                        variableMetadata.remove("player_" + playerId + "_" + name);
+                    }
+                } catch (IllegalArgumentException e) {
+                    plugin.getLogger().warning("Invalid player UUID: " + context);
+                }
+                break;
+            case SERVER:
+                serverVariables.remove(name);
+                variableMetadata.remove("server_" + name);
+                saveServerVariables();
+                break;
+            case PERSISTENT:
+                persistentVariables.remove(name);
+                variableMetadata.remove("persistent_" + name);
+                savePersistentVariables();
+                break;
+            case DYNAMIC:
+                unregisterDynamicVariable(name);
+                break;
+        }
     }
     
     private void loadPersistentVariables() {
@@ -297,14 +357,7 @@ public class VariableManager implements IVariableManager {
         }
     }
     
-    private void registerDynamicVariables() {
-        // Register built-in dynamic variables
-        registerDynamicVariable("time", () -> DataValue.of(System.currentTimeMillis()), ValueType.NUMBER);
-        registerDynamicVariable("random", () -> DataValue.of(Math.random()), ValueType.NUMBER);
-        registerDynamicVariable("online_players", 
-            () -> DataValue.of(plugin.getServer().getOnlinePlayers().size()), 
-            ValueType.NUMBER);
-    }
+
     
     // Dynamic variable implementation
     private static class DynamicVariableImpl implements IVariableManager.DynamicVariable {
@@ -371,77 +424,7 @@ public class VariableManager implements IVariableManager {
         }
     }
     
-    // === PERSISTENCE METHODS ===
-    
-    private void loadPersistentVariables() {
-        if (!persistentFile.exists()) {
-            return;
-        }
-        
-        for (String key : persistentConfig.getKeys(false)) {
-            try {
-                Object value = persistentConfig.get(key);
-                if (value != null) {
-                    persistentVariables.put(key, DataValue.of(value));
-                    updateMetadata(key, VariableScope.PERSISTENT, ValueType.fromObject(value));
-                }
-            } catch (Exception e) {
-                plugin.getLogger().warning("Failed to load persistent variable '" + key + "': " + e.getMessage());
-            }
-        }
-        plugin.getLogger().info("Loaded " + persistentVariables.size() + " persistent variables");
-    }
-    
-    private void loadServerVariables() {
-        if (!serverVarsFile.exists()) {
-            return;
-        }
-        
-        YamlConfiguration config = YamlConfiguration.loadConfiguration(serverVarsFile);
-        for (String key : config.getKeys(false)) {
-            try {
-                Object value = config.get(key);
-                if (value != null) {
-                    serverVariables.put(key, DataValue.of(value));
-                    updateMetadata("server." + key, VariableScope.SERVER, ValueType.fromObject(value));
-                }
-            } catch (Exception e) {
-                plugin.getLogger().warning("Failed to load server variable '" + key + "': " + e.getMessage());
-            }
-        }
-        plugin.getLogger().info("Loaded " + serverVariables.size() + " server variables");
-    }
-    
-    private void savePersistentVariables() {
-        if (persistentFile == null || persistentConfig == null) {
-            return;
-        }
-        
-        try {
-            persistentConfig.save(persistentFile);
-            plugin.getLogger().fine("Saved " + persistentVariables.size() + " persistent variables");
-        } catch (IOException e) {
-            plugin.getLogger().severe("Error saving persistent variables: " + e.getMessage());
-        }
-    }
-    
-    private void saveServerVariables() {
-        if (serverVarsFile == null) {
-            return;
-        }
-        
-        YamlConfiguration config = new YamlConfiguration();
-        for (Map.Entry<String, DataValue> entry : serverVariables.entrySet()) {
-            config.set(entry.getKey(), entry.getValue().getValue());
-        }
-        
-        try {
-            config.save(serverVarsFile);
-            plugin.getLogger().fine("Saved " + serverVariables.size() + " server variables");
-        } catch (IOException e) {
-            plugin.getLogger().severe("Failed to save server variables: " + e.getMessage());
-        }
-    }
+
     
     // === LOCAL VARIABLES (SCRIPT SCOPE) ===
     
@@ -463,7 +446,7 @@ public class VariableManager implements IVariableManager {
             }
         } else {
             // Set the variable
-            localVariables.computeIfAbsent(context, k -> new ConcurrentHashMap<>()).put(name, value);
+            localVariables.computeIfAbsent(context, k -> new HashMap<>()).put(name, value);
             updateMetadata(name, VariableScope.LOCAL, value.getType());
         }
     }
@@ -500,7 +483,7 @@ public class VariableManager implements IVariableManager {
         // Use default world for global variables
         String worldId = "global";
         
-        globalVariables.computeIfAbsent(worldId, k -> new ConcurrentHashMap<>()).put(name, value);
+        globalVariables.computeIfAbsent(worldId, k -> new HashMap<>()).put(name, value);
         updateMetadata(name, VariableScope.GLOBAL, value.getType());
         notifyPlayersInWorld(worldId, name, value);
         plugin.getLogger().fine("Set global variable: " + name + " = " + value.asString());
@@ -548,7 +531,7 @@ public class VariableManager implements IVariableManager {
             return;
         }
         
-        playerVariables.computeIfAbsent(playerId, k -> new ConcurrentHashMap<>()).put(name, value);
+        playerVariables.computeIfAbsent(playerId, k -> new HashMap<>()).put(name, value);
         updateMetadata(name, VariableScope.PLAYER, value.getType());
         plugin.getLogger().fine("Set player variable: " + playerId + "." + name + " = " + value.asString());
     }
@@ -645,168 +628,6 @@ public class VariableManager implements IVariableManager {
             entry.getKey().startsWith("persistent_")
         );
         savePersistentVariables();
-    }
-    
-    @Override
-    public void savePersistentData() {
-        savePersistentVariables();
-        saveServerVariables();
-    }
-    
-    @Override
-    public void loadPersistentData() {
-        loadPersistentVariables();
-        loadServerVariables();
-    }
-    
-    @Override
-    public void setVariable(String name, DataValue value, VariableScope scope, String context) {
-        if (name == null || value == null || scope == null) {
-            return;
-        }
-        
-        switch (scope) {
-            case LOCAL:
-                setLocalVariable(context, name, value);
-                break;
-            case GLOBAL:
-                setGlobalVariable(name, value);
-                break;
-            case PLAYER:
-                try {
-                    UUID playerId = UUID.fromString(context);
-                    setPlayerVariable(playerId, name, value);
-                } catch (IllegalArgumentException e) {
-                    plugin.getLogger().warning("Invalid player UUID: " + context);
-                }
-                break;
-            case SERVER:
-                setServerVariable(name, value);
-                break;
-            case PERSISTENT:
-                setPersistentVariable(name, value);
-                break;
-            case DYNAMIC:
-                plugin.getLogger().warning("Cannot directly set dynamic variables");
-                break;
-        }
-    }
-    
-    @Override
-    public boolean hasVariable(String name, VariableScope scope, String context) {
-        if (name == null || scope == null) {
-            return false;
-        }
-        
-        switch (scope) {
-            case LOCAL:
-                return context != null && localVariables.containsKey(context) && 
-                       localVariables.get(context).containsKey(name);
-            case GLOBAL:
-                return globalVariables.values().stream()
-                    .anyMatch(map -> map.containsKey(name));
-            case PLAYER:
-                try {
-                    UUID playerId = UUID.fromString(context);
-                    return playerVariables.containsKey(playerId) && 
-                           playerVariables.get(playerId).containsKey(name);
-                } catch (IllegalArgumentException e) {
-                    return false;
-                }
-            case SERVER:
-                return serverVariables.containsKey(name);
-            case PERSISTENT:
-                return persistentVariables.containsKey(name);
-            case DYNAMIC:
-                return dynamicVariables.containsKey(name);
-            default:
-                return false;
-        }
-    }
-    
-    @Override
-    public DataValue getVariable(String name, VariableScope scope, String context) {
-        if (name == null || scope == null) {
-            return null;
-        }
-        
-        switch (scope) {
-            case LOCAL:
-                return getLocalVariable(context, name);
-            case GLOBAL:
-                return getGlobalVariable(name);
-            case PLAYER:
-                try {
-                    UUID playerId = UUID.fromString(context);
-                    return getPlayerVariable(playerId, name);
-                } catch (IllegalArgumentException e) {
-                    plugin.getLogger().warning("Invalid player UUID: " + context);
-                    return null;
-                }
-            case SERVER:
-                return getServerVariable(name);
-            case PERSISTENT:
-                return getPersistentVariable(name);
-            case DYNAMIC:
-                DynamicVariable dynamicVar = dynamicVariables.get(name);
-                return dynamicVar != null ? dynamicVar.getValue() : null;
-            default:
-                return null;
-        }
-    }
-    
-    @Override
-    public void removeVariable(String name, VariableScope scope, String context) {
-        if (name == null || scope == null) {
-            return;
-        }
-        
-        switch (scope) {
-            case LOCAL:
-                if (context != null) {
-                    Map<String, DataValue> contextVars = localVariables.get(context);
-                    if (contextVars != null) {
-                        contextVars.remove(name);
-                        variableMetadata.remove("local_" + context + "_" + name);
-                    }
-                }
-                break;
-            case GLOBAL:
-                globalVariables.computeIfPresent("global", (k, v) -> {
-                    v.remove(name);
-                    return v.isEmpty() ? null : v;
-                });
-                variableMetadata.remove("global_" + name);
-                break;
-            case PLAYER:
-                try {
-                    UUID playerId = UUID.fromString(context);
-                    Map<String, DataValue> playerVars = playerVariables.get(playerId);
-                    if (playerVars != null) {
-                        playerVars.remove(name);
-                        if (playerVars.isEmpty()) {
-                            playerVariables.remove(playerId);
-                        }
-                        variableMetadata.remove("player_" + playerId + "_" + name);
-                    }
-                } catch (IllegalArgumentException e) {
-                    plugin.getLogger().warning("Invalid player UUID: " + context);
-                }
-                break;
-            case SERVER:
-                serverVariables.remove(name);
-                variableMetadata.remove("server_" + name);
-                saveServerVariables();
-                break;
-            case PERSISTENT:
-                persistentVariables.remove(name);
-                variableMetadata.remove("persistent_" + name);
-                savePersistentVariables();
-                break;
-            case DYNAMIC:
-                unregisterDynamicVariable(name);
-                break;
-        }
     }
     
     private void registerDynamicVariables() {

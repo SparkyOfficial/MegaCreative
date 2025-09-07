@@ -3,6 +3,7 @@ package com.megacreative.coding.actions;
 import com.megacreative.coding.BlockAction;
 import com.megacreative.coding.CodeBlock;
 import com.megacreative.coding.ExecutionContext;
+import com.megacreative.services.BlockConfigService;
 import org.bukkit.Location;
 import org.bukkit.Material;
 import org.bukkit.entity.Entity;
@@ -10,14 +11,12 @@ import org.bukkit.entity.EntityType;
 import org.bukkit.entity.Player;
 import org.bukkit.inventory.ItemStack;
 
-import java.util.List;
-
 /**
  * Действие для спавна существ.
  * Использует предметы из виртуального инвентаря конфигурации блока.
  * 
  * Пример использования:
- * onInteract -> spawnEntity([зомби]) -> sendMessage("Зомби появился!")
+ * onInteract -> spawnEntity([голова зомби, бумага с "количество:5", бумага с "радиус:3"])
  */
 public class SpawnEntityAction implements BlockAction {
 
@@ -33,8 +32,14 @@ public class SpawnEntityAction implements BlockAction {
         CodeBlock actionBlock = context.getCurrentBlock();
         if (actionBlock == null) return;
 
-        // 3. Получаем предмет-образец из именованного слота "entity_slot"
-        ItemStack sampleItem = actionBlock.getItemFromSlot("entity_slot");
+        // 3. Получаем slot resolver из BlockConfigService
+        BlockConfigService configService = context.getPlugin().getServiceRegistry().getBlockConfigService();
+        java.util.function.Function<String, Integer> slotResolver = 
+            configService != null ? configService.getSlotResolver("spawnEntity") : null;
+
+        // 4. Получаем предмет-образец из именованного слота "entity_slot"
+        ItemStack sampleItem = slotResolver != null ? 
+            actionBlock.getItemFromSlot("entity_slot", slotResolver) : null;
         if (sampleItem == null) {
             // Fallback на старый способ для совместимости
             sampleItem = actionBlock.getConfigItem(0);
@@ -43,16 +48,17 @@ public class SpawnEntityAction implements BlockAction {
             }
         }
 
-        // 4. Определяем тип существа по предмету
+        // 5. Определяем тип существа по предмету
         EntityType entityType = getEntityTypeFromItem(sampleItem);
         if (entityType == null) {
             player.sendMessage("§cНе удалось определить тип существа по предмету!");
             return;
         }
 
-        // 5. Получаем количество существ для спавна из именованного слота "count_slot"
+        // 6. Получаем количество существ для спавна из именованного слота "count_slot"
         int count = 1;
-        ItemStack countItem = actionBlock.getItemFromSlot("count_slot");
+        ItemStack countItem = slotResolver != null ? 
+            actionBlock.getItemFromSlot("count_slot", slotResolver) : null;
         if (countItem == null) {
             // Fallback на старый способ для совместимости
             countItem = actionBlock.getConfigItem(1);
@@ -69,9 +75,10 @@ public class SpawnEntityAction implements BlockAction {
             }
         }
 
-        // 6. Получаем радиус спавна из именованного слота "radius_slot"
+        // 7. Получаем радиус спавна из именованного слота "radius_slot"
         double radius = 3.0;
-        ItemStack radiusItem = actionBlock.getItemFromSlot("radius_slot");
+        ItemStack radiusItem = slotResolver != null ? 
+            actionBlock.getItemFromSlot("radius_slot", slotResolver) : null;
         if (radiusItem == null) {
             // Fallback на старый способ для совместимости
             radiusItem = actionBlock.getConfigItem(2);
@@ -88,7 +95,7 @@ public class SpawnEntityAction implements BlockAction {
             }
         }
 
-        // 7. Спавним существ
+        // 8. Спавним существ
         int spawnedCount = 0;
         Location playerLocation = player.getLocation();
         
@@ -108,7 +115,7 @@ public class SpawnEntityAction implements BlockAction {
             }
         }
 
-        // 8. Уведомляем игрока
+        // 9. Уведомляем игрока
         if (spawnedCount > 0) {
             player.sendMessage("§a✓ Создано " + spawnedCount + " существ типа " + entityType.name());
         }
@@ -189,4 +196,4 @@ public class SpawnEntityAction implements BlockAction {
                 return null;
         }
     }
-} 
+}

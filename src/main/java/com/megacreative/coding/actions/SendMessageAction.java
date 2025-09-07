@@ -35,18 +35,18 @@ public class SendMessageAction implements BlockAction {
         try {
             Player player = context.getPlayer();
             if (player == null) {
-                return ExecutionResult.failure("No player available to send message to");
+                return ExecutionResult.error("No player available to send message to");
             }
             
             String message = getMessage(block, context);
             if (message == null || message.isEmpty()) {
-                return ExecutionResult.failure("No message specified");
+                return ExecutionResult.error("No message specified");
             }
             
             player.sendMessage(message);
             return ExecutionResult.success("Message sent: " + message);
         } catch (Exception e) {
-            return ExecutionResult.failure("Error sending message: " + e.getMessage());
+            return ExecutionResult.error("Error sending message: " + e.getMessage());
         }
     }
     
@@ -59,7 +59,14 @@ public class SendMessageAction implements BlockAction {
         }
         
         // Check virtual inventory (priority 2)
-        var messageItem = block.getItemFromSlot("message_slot");
+        // Get slot resolver from BlockConfigService
+        com.megacreative.services.BlockConfigService configService = 
+            context.getPlugin().getServiceRegistry().getBlockConfigService();
+        java.util.function.Function<String, Integer> slotResolver = 
+            configService != null ? configService.getSlotResolver("sendMessage") : null;
+            
+        var messageItem = slotResolver != null ? 
+            block.getItemFromSlot("message_slot", slotResolver) : null;
         if (messageItem != null && messageItem.hasItemMeta() && messageItem.getItemMeta().hasDisplayName()) {
             DataValue itemNameValue = new TextValue(messageItem.getItemMeta().getDisplayName());
             DataValue resolved = parameterResolver.resolve(context, itemNameValue);

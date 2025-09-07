@@ -5,6 +5,7 @@ import com.megacreative.coding.CodeBlock;
 import com.megacreative.coding.ExecutionContext;
 import com.megacreative.coding.ParameterResolver;
 import com.megacreative.coding.ScriptEngine;
+import com.megacreative.coding.executors.ExecutionResult;
 import com.megacreative.coding.values.DataValue;
 import com.megacreative.coding.variables.VariableManager;
 import org.bukkit.entity.Player;
@@ -13,19 +14,19 @@ import java.util.concurrent.CompletableFuture;
 public class RepeatAction implements BlockAction {
     
     @Override
-    public void execute(ExecutionContext context) {
+    public ExecutionResult execute(CodeBlock block, ExecutionContext context) {
         Player player = context.getPlayer();
-        CodeBlock block = context.getCurrentBlock();
 
-        if (player == null || block == null) return;
+        if (player == null || block == null) {
+            return ExecutionResult.error("Player or block is null");
+        }
 
         // Получаем и разрешаем параметры
         ParameterResolver resolver = new ParameterResolver(context);
         
         DataValue rawTimes = block.getParameter("times");
         if (rawTimes == null) {
-            player.sendMessage("§cОшибка: параметр 'times' не указан");
-            return;
+            return ExecutionResult.error("Parameter 'times' is missing");
         }
         
         DataValue timesValue = resolver.resolve(context, rawTimes);
@@ -35,27 +36,23 @@ public class RepeatAction implements BlockAction {
             int times = Integer.parseInt(timesStr);
             
             if (times <= 0) {
-                player.sendMessage("§cОшибка: количество повторений должно быть больше 0");
-                return;
+                return ExecutionResult.error("Repeat count must be greater than 0");
             }
             
             if (times > 1000) {
-                player.sendMessage("§cОшибка: максимальное количество повторений - 1000");
-                return;
+                return ExecutionResult.error("Maximum repeat count is 1000");
             }
             
             // Получаем следующий блок для выполнения
             CodeBlock nextBlock = block.getNextBlock();
             if (nextBlock == null) {
-                player.sendMessage("§cОшибка: нет блока для повторения");
-                return;
+                return ExecutionResult.error("No block to repeat");
             }
             
             // Получаем ScriptEngine из ServiceRegistry
             ScriptEngine scriptEngine = context.getPlugin().getServiceRegistry().getService(ScriptEngine.class);
             if (scriptEngine == null) {
-                player.sendMessage("§cОшибка: не удалось получить ScriptEngine");
-                return;
+                return ExecutionResult.error("Failed to get ScriptEngine");
             }
             
             // Запускаем выполнение в асинхронном контексте
@@ -71,7 +68,7 @@ public class RepeatAction implements BlockAction {
                         
                         // Выполняем блок синхронно в основном потоке
                         try {
-                            scriptEngine.executeScript(nextBlock, player, "repeat_loop")
+                            scriptEngine.executeBlockChain(nextBlock, player, "repeat_loop")
                                 .exceptionally(throwable -> {
                                     player.sendMessage("§cОшибка в итерации " + (i + 1) + ": " + throwable.getMessage());
                                     return null;
@@ -89,8 +86,9 @@ public class RepeatAction implements BlockAction {
                 }
             });
             
+            return ExecutionResult.success("Repeat action started");
         } catch (NumberFormatException e) {
-            player.sendMessage("§cОшибка в параметре times: " + timesStr);
+            return ExecutionResult.error("Invalid times parameter: " + timesStr);
         }
     }
-} 
+}

@@ -1,11 +1,11 @@
 package com.megacreative.managers;
 
 import com.megacreative.MegaCreative;
-import com.megacreative.coding.BlockConfiguration;
 import com.megacreative.coding.CodeBlock;
 import com.megacreative.coding.CodingActionGUI;
 import com.megacreative.coding.values.DataValue;
 import com.megacreative.coding.values.types.*;
+import com.megacreative.services.BlockConfigService;
 import org.bukkit.Bukkit;
 import org.bukkit.Location;
 import org.bukkit.Material;
@@ -67,9 +67,6 @@ public class BlockConfigManager implements Listener {
             player.sendMessage("§cОшибка: блок кода не найден.");
             return;
         }
-
-        // Устанавливаем ссылку на плагин для доступа к конфигурации
-        codeBlock.setPlugin(plugin);
 
         // Check if block needs action selection first
         String currentAction = codeBlock.getAction();
@@ -153,39 +150,11 @@ public class BlockConfigManager implements Listener {
     private void addPlaceholderItems(Inventory inventory, CodeBlock codeBlock) {
         String actionName = codeBlock.getAction();
         
-        // Добавляем placeholder предметы для именованных слотов
-        var slotConfig = plugin.getBlockConfiguration().getActionSlotConfig(actionName);
-        if (slotConfig != null) {
-            for (Map.Entry<Integer, BlockConfiguration.SlotConfig> entry : slotConfig.getSlots().entrySet()) {
-                int slotNumber = entry.getKey();
-                BlockConfiguration.SlotConfig slotConfigData = entry.getValue();
-                
-                // Проверяем, есть ли уже предмет в этом слоте
-                if (inventory.getItem(slotNumber) == null || inventory.getItem(slotNumber).getType().isAir()) {
-                    ItemStack placeholder = plugin.getBlockConfiguration().createPlaceholderItem(actionName, slotNumber);
-                    inventory.setItem(slotNumber, placeholder);
-                }
-            }
-        }
+        // Get BlockConfigService instead of BlockConfiguration
+        var blockConfigService = plugin.getServiceRegistry().getBlockConfigService();
         
-        // Добавляем placeholder предметы для групп
-        var groupConfig = plugin.getBlockConfiguration().getActionGroupConfig(actionName);
-        if (groupConfig != null) {
-            for (Map.Entry<String, BlockConfiguration.GroupConfig> entry : groupConfig.getGroups().entrySet()) {
-                String groupName = entry.getKey();
-                BlockConfiguration.GroupConfig groupConfigData = entry.getValue();
-                
-                // Добавляем placeholder в первый слот группы, если он пустой
-                List<Integer> groupSlots = groupConfigData.getSlots();
-                if (!groupSlots.isEmpty()) {
-                    int firstSlot = groupSlots.get(0);
-                    if (inventory.getItem(firstSlot) == null || inventory.getItem(firstSlot).getType().isAir()) {
-                        ItemStack placeholder = plugin.getBlockConfiguration().createGroupPlaceholderItem(actionName, groupName);
-                        inventory.setItem(firstSlot, placeholder);
-                    }
-                }
-            }
-        }
+        // In the new system, we would implement placeholder logic based on the new configuration
+        // For now, we'll keep it simple and not add placeholders
     }
 
     /**
@@ -264,7 +233,7 @@ public class BlockConfigManager implements Listener {
     private void createAutomaticContainer(Location blockLocation, CodeBlock codeBlock) {
         try {
             // Get the container manager from the service registry
-            var containerManager = plugin.getServiceRegistry().getContainerManager();
+            var containerManager = plugin.getServiceRegistry().getBlockContainerManager();
             if (containerManager == null) {
                 plugin.getLogger().warning("Container manager is not available for automatic container creation");
                 return;

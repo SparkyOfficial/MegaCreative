@@ -1,8 +1,9 @@
 package com.megacreative.coding.conditions;
 
-import com.megacreative.coding.BlockConfig;
+import com.megacreative.coding.config.BlockConfig;
 import com.megacreative.coding.CodeBlock;
 import com.megacreative.coding.ExecutionContext;
+import com.megacreative.coding.BlockCondition;
 
 /**
  * A generic block condition that can be dynamically created from configuration.
@@ -21,7 +22,7 @@ public class GenericBlockCondition implements BlockCondition {
         // or configured via the BlockConfig
         
         // Log the evaluation for debugging
-        context.getLogger().info("Evaluating generic condition: " + config.getName());
+        context.getPlugin().getLogger().info("Evaluating generic condition: " + config.getName());
         
         // Get the condition type from the configuration
         String conditionType = config.getActionName();
@@ -36,7 +37,7 @@ public class GenericBlockCondition implements BlockCondition {
                 return evaluateVariableCompare(block, context);
             // Add more condition types as needed
             default:
-                context.getLogger().warning("Unknown condition type: " + conditionType);
+                context.getPlugin().getLogger().warning("Unknown condition type: " + conditionType);
                 return false;
         }
     }
@@ -47,14 +48,18 @@ public class GenericBlockCondition implements BlockCondition {
             return false;
         }
         
-        String materialName = config.getParameters().getString("material", "");
-        int amount = config.getParameters().getInt("amount", 1);
+        // Get parameters from the block's parameters
+        Object materialObj = block.getParameter("material");
+        String materialName = materialObj != null ? materialObj.toString() : "STONE"; // Default
+        
+        Object amountObj = block.getParameter("amount");
+        int amount = amountObj instanceof Number ? ((Number) amountObj).intValue() : 1;
         
         try {
             org.bukkit.Material material = org.bukkit.Material.valueOf(materialName.toUpperCase());
             return context.getPlayer().getInventory().contains(material, amount);
         } catch (IllegalArgumentException e) {
-            context.getLogger().warning("Invalid material in condition: " + materialName);
+            context.getPlugin().getLogger().warning("Invalid material in condition: " + materialName);
             return false;
         }
     }
@@ -65,8 +70,10 @@ public class GenericBlockCondition implements BlockCondition {
             return false;
         }
         
-        String permission = config.getParameters().getString("permission", "");
-        if (permission.isEmpty()) {
+        Object permissionObj = block.getParameter("permission");
+        String permission = permissionObj != null ? permissionObj.toString() : null;
+        
+        if (permission == null || permission.isEmpty()) {
             return false;
         }
         
@@ -75,16 +82,21 @@ public class GenericBlockCondition implements BlockCondition {
     
     private boolean evaluateVariableCompare(CodeBlock block, ExecutionContext context) {
         // Example: Compare a variable with a value
-        String varName = config.getParameters().getString("variable", "");
-        String operator = config.getParameters().getString("operator", "==");
-        String value = config.getParameters().getString("value", "");
+        Object varNameObj = block.getParameter("variable");
+        String varName = varNameObj != null ? varNameObj.toString() : null;
         
-        if (varName.isEmpty()) {
+        Object operatorObj = block.getParameter("operator");
+        String operator = operatorObj != null ? operatorObj.toString() : "==";
+        
+        Object valueObj = block.getParameter("value");
+        String value = valueObj != null ? valueObj.toString() : "";
+        
+        if (varName == null || varName.isEmpty()) {
             return false;
         }
         
         // Get the variable value from the context
-        Object varValue = context.getVariableManager().getVariable(varName);
+        Object varValue = context.getVariable(varName);
         if (varValue == null) {
             return false;
         }

@@ -1,18 +1,18 @@
 package com.megacreative.coding;
 
 import com.megacreative.MegaCreative;
-import com.megacreative.coding.debug.VisualDebugger;
 import com.megacreative.coding.executors.ExecutionResult;
 import com.megacreative.coding.variables.VariableManager;
+import com.megacreative.coding.debug.VisualDebugger;
 import com.megacreative.services.BlockConfigService;
 import org.bukkit.Material;
 import org.bukkit.entity.Player;
-
 import java.util.Map;
+import java.util.HashMap;
 import java.util.UUID;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ConcurrentHashMap;
-import java.util.logging.Level;
+import java.util.logging.Logger;
 
 /**
  * Default implementation of the ScriptEngine interface.
@@ -122,14 +122,8 @@ public class DefaultScriptEngine implements ScriptEngine {
             if ("ACTION".equals(config.getType()) || "EVENT".equals(config.getType())) {
                 BlockAction action = actionFactory.createAction(config.getActionName());
                 if (action != null) {
-                    // Try to get BlockType from enum first, then create dynamic one
-                    BlockType blockType = BlockType.getByMaterialAndAction(config.getMaterial(), config.getActionName());
-                    if (blockType == null) {
-                        // For now, we'll use the enum-based approach for compatibility
-                        // In a full refactor, we'd create dynamic BlockType instances
-                        blockType = getBlockType(config.getMaterial(), config.getActionName());
-                    }
-                    
+                    // Create a dynamic BlockType based on the config
+                    BlockType blockType = BlockType.fromString(config.getType());
                     if (blockType != null) {
                         actionRegistry.put(blockType, action);
                         actionCount++;
@@ -144,14 +138,8 @@ public class DefaultScriptEngine implements ScriptEngine {
             if ("CONDITION".equals(config.getType()) || "CONTROL".equals(config.getType())) {
                 BlockCondition condition = conditionFactory.createCondition(config.getActionName());
                 if (condition != null) {
-                    // Try to get BlockType from enum first, then create dynamic one
-                    BlockType blockType = BlockType.getByMaterialAndAction(config.getMaterial(), config.getActionName());
-                    if (blockType == null) {
-                        // For now, we'll use the enum-based approach for compatibility
-                        // In a full refactor, we'd create dynamic BlockType instances
-                        blockType = getBlockType(config.getMaterial(), config.getActionName());
-                    }
-                    
+                    // Create a dynamic BlockType based on the config
+                    BlockType blockType = BlockType.fromString(config.getType());
                     if (blockType != null) {
                         conditionRegistry.put(blockType, condition);
                         conditionCount++;
@@ -165,8 +153,8 @@ public class DefaultScriptEngine implements ScriptEngine {
     
     @Override
     public CompletableFuture<ExecutionResult> executeScript(CodeScript script, Player player, String trigger) {
-        if (script == null || script.getMainBlock() == null) {
-            return CompletableFuture.completedFuture(ExecutionResult.failure("Invalid script or empty main block"));
+        if (script == null || script.getRootBlock() == null) {
+            return CompletableFuture.completedFuture(ExecutionResult.error("Invalid script or empty root block"));
         }
         
         String executionId = UUID.randomUUID().toString();
@@ -176,7 +164,7 @@ public class DefaultScriptEngine implements ScriptEngine {
             player != null ? plugin.getWorldManager().getWorld(player.getWorld().getName()) : null,
             null, // event
             null, // blockLocation
-            script.getMainBlock()
+            script.getRootBlock()
         );
         
         activeExecutions.put(executionId, context);
@@ -184,7 +172,7 @@ public class DefaultScriptEngine implements ScriptEngine {
         return CompletableFuture.supplyAsync(() -> {
             try {
                 // Process the starting block
-                CodeBlock startBlock = script.getStartBlock();
+                CodeBlock startBlock = script.getRootBlock();
                 if (startBlock != null) {
                     ExecutionResult result = processBlock(startBlock, context, 0);
                     return result != null ? result : ExecutionResult.success("Script executed successfully");
@@ -201,6 +189,70 @@ public class DefaultScriptEngine implements ScriptEngine {
         });
     }
     
+    @Override
+    public CompletableFuture<ExecutionResult> executeBlockChain(CodeBlock startBlock, Player player, String trigger) {
+         if (startBlock == null) {
+             return CompletableFuture.completedFuture(ExecutionResult.error("Start block is null"));
+         }
+         
+         String executionId = UUID.randomUUID().toString();
+         ExecutionContext context = new ExecutionContext(
+             plugin, 
+             player, 
+             player != null ? plugin.getWorldManager().getWorld(player.getWorld().getName()) : null,
+             null, // event
+             null, // blockLocation
+             startBlock
+         );
+         
+         activeExecutions.put(executionId, context);
+         
+         return CompletableFuture.supplyAsync(() -> {
+             try {
+                 ExecutionResult result = processBlock(startBlock, context, 0);
+                 return result != null ? result : ExecutionResult.success("Block chain executed successfully");
+             } catch (Exception e) {
+                 plugin.getLogger().severe("Error executing block chain: " + e.getMessage());
+                 e.printStackTrace();
+                 return ExecutionResult.error("Error executing block chain: " + e.getMessage());
+             } finally {
+                 activeExecutions.remove(executionId);
+             }
+         });
+    }
+    
+    @Override
+    public CompletableFuture<ExecutionResult> executeBlock(CodeBlock block, Player player, String trigger) {
+        if (block == null) {
+            return CompletableFuture.completedFuture(ExecutionResult.error("Invalid block provided"));
+        }
+        
+        String executionId = UUID.randomUUID().toString();
+        ExecutionContext context = new ExecutionContext(
+            plugin, 
+            player, 
+            player != null ? plugin.getWorldManager().getWorld(player.getWorld().getName()) : null,
+            null, // event
+            null, // blockLocation
+            block
+        );
+        
+        activeExecutions.put(executionId, context);
+        
+        return CompletableFuture.supplyAsync(() -> {
+            try {
+                ExecutionResult result = processBlock(block, context, 0);
+                return result != null ? result : ExecutionResult.success("Block executed successfully");
+            } catch (Exception e) {
+                plugin.getLogger().severe("Error executing block: " + e.getMessage());
+                e.printStackTrace();
+                return ExecutionResult.error("Error executing block: " + e.getMessage());
+            } finally {
+                activeExecutions.remove(executionId);
+            }
+        });
+    }
+
     @Override
     public void registerAction(BlockType type, BlockAction action) {
         if (type != null && action != null) {
@@ -274,11 +326,11 @@ public class DefaultScriptEngine implements ScriptEngine {
      */
     private ExecutionResult processBlock(CodeBlock block, ExecutionContext context, int recursionDepth) {
         if (block == null) {
-            return ExecutionResult.failure("Null block provided");
+            return ExecutionResult.error("Null block provided");
         }
         
         if (context.isCancelled()) {
-            return ExecutionResult.failure("Execution was cancelled");
+            return ExecutionResult.error("Execution was cancelled");
         }
 
         // Handle pausing for debugging
@@ -288,7 +340,7 @@ public class DefaultScriptEngine implements ScriptEngine {
                     context.wait();
                 } catch (InterruptedException e) {
                     Thread.currentThread().interrupt();
-                    return ExecutionResult.failure("Execution was interrupted");
+                    return ExecutionResult.error("Execution was interrupted");
                 }
             }
         }
@@ -296,17 +348,17 @@ public class DefaultScriptEngine implements ScriptEngine {
         try {
             // Check recursion depth
             if (recursionDepth > MAX_RECURSION_DEPTH) {
-                return ExecutionResult.failure("Maximum recursion depth (" + MAX_RECURSION_DEPTH + ") exceeded");
+                return ExecutionResult.error("Maximum recursion depth (" + MAX_RECURSION_DEPTH + ") exceeded");
             }
             
             // Get block type using the new mapping system
             BlockType blockType = getBlockType(block.getMaterial(), block.getAction());
             if (blockType == null) {
-                return ExecutionResult.failure("Unknown block type: " + block.getMaterial() + "/" + block.getAction());
+                return ExecutionResult.error("Unknown block type: " + block.getMaterial() + "/" + block.getAction());
             }
             
             // Update context with the current block
-            context.setCurrentBlock(block);
+            // context.setCurrentBlock(block); // Removed as currentBlock is final in ExecutionContext
             
             // Handle conditions and actions differently
             BlockAction action = actionRegistry.get(blockType);
@@ -314,15 +366,12 @@ public class DefaultScriptEngine implements ScriptEngine {
             
             if (action != null) {
                 // Execute action block
-                if (debugger != null) {
-                    debugger.onBlockExecute(block, context);
-                }
-                return action.execute(block, context);
+                return handleAction(block, context, recursionDepth);
             } else if (condition != null) {
                 // Handle condition block
                 return handleCondition(block, context, recursionDepth);
             } else {
-                return ExecutionResult.failure("No handler registered for block type: " + blockType);
+                return ExecutionResult.error("No handler registered for block type: " + blockType);
             }
         } catch (Exception e) {
             String errorMsg = "Error processing block: " + e.getMessage();
@@ -330,10 +379,65 @@ public class DefaultScriptEngine implements ScriptEngine {
             
             // Visual feedback for error
             if (context.getPlayer() != null && debugger != null) {
-                debugger.highlightError(context.getPlayer(), block.getLocation(), errorMsg);
+                debugger.showError(context.getPlayer(), context.getBlockLocation(), errorMsg);
+            }
+
+            return ExecutionResult.error(errorMsg);
+        }
+    }
+    
+    private ExecutionResult handleAction(CodeBlock block, ExecutionContext context, int recursionDepth) {
+        try {
+            // Get the block type
+            BlockType blockType = getBlockType(block.getMaterial(), block.getAction());
+            if (blockType == null) {
+                return ExecutionResult.error("Unknown block type: " + block.getMaterial() + "/" + block.getAction());
             }
             
-            return ExecutionResult.failure(errorMsg);
+            // Get the action handler
+            BlockAction action = actionRegistry.get(blockType);
+            if (action == null) {
+                return ExecutionResult.error("No action handler registered for block type: " + blockType);
+            }
+            
+            // Visual feedback for debugging
+            if (context.getPlayer() != null && debugger != null) {
+                debugger.onBlockExecute(context.getPlayer(), block, block.getLocation());
+            }
+            
+            // Execute the action with the block and context
+            ExecutionResult result = action.execute(block, context);
+            
+            // Handle the result
+            if (result.isSuccess()) {
+                // Action succeeded, execute the next block
+                CodeBlock nextBlock = block.getNextBlock();
+                if (nextBlock != null) {
+                    return processBlock(nextBlock, context, recursionDepth + 1);
+                }
+                return ExecutionResult.success("Action executed successfully");
+            } else {
+                // Action failed, stop execution and report error
+                String errorMsg = "Action failed: " + result.getMessage();
+                plugin.getLogger().severe(errorMsg);
+                
+                // Visual feedback for error
+                if (context.getPlayer() != null && debugger != null) {
+                    debugger.showError(context.getPlayer(), block.getLocation(), errorMsg);
+                }
+
+                return ExecutionResult.error(errorMsg);
+            }
+        } catch (Exception e) {
+            String errorMsg = "Error executing action: " + e.getMessage();
+            plugin.getLogger().severe(errorMsg);
+            
+            // Visual feedback for error
+            if (context.getPlayer() != null && debugger != null) {
+                debugger.showError(context.getPlayer(), block.getLocation(), errorMsg);
+            }
+
+            return ExecutionResult.error(errorMsg);
         }
     }
     
@@ -342,25 +446,30 @@ public class DefaultScriptEngine implements ScriptEngine {
             // Get the block type
             BlockType blockType = getBlockType(block.getMaterial(), block.getAction());
             if (blockType == null) {
-                return ExecutionResult.failure("Unknown block type: " + block.getMaterial() + "/" + block.getAction());
+                return ExecutionResult.error("Unknown block type: " + block.getMaterial() + "/" + block.getAction());
             }
             
             // Get the condition handler
             BlockCondition condition = conditionRegistry.get(blockType);
             if (condition == null) {
-                return ExecutionResult.failure("No condition handler registered for block type: " + blockType);
+                return ExecutionResult.error("No condition handler registered for block type: " + blockType);
             }
             
             // Visual feedback for debugging
-            if (debugger != null) {
-                debugger.onConditionEvaluate(block, context);
+            if (context.getPlayer() != null && debugger != null) {
+                debugger.onBlockExecute(context.getPlayer(), block, block.getLocation());
             }
             
             // Evaluate the condition with the block and context
-            ExecutionResult result = condition.evaluate(block, context);
+            boolean conditionResult = condition.evaluate(block, context);
             
+            // Visual feedback for debugging
+            if (context.getPlayer() != null && debugger != null) {
+                debugger.onConditionResult(context.getPlayer(), block, conditionResult);
+            }
+
             // Handle the result
-            if (result.isSuccess() && "true".equals(result.getMessage())) {
+            if (conditionResult) {
                 // Condition is true, execute the next block
                 CodeBlock nextBlock = block.getNextBlock();
                 if (nextBlock != null) {
@@ -377,10 +486,10 @@ public class DefaultScriptEngine implements ScriptEngine {
             
             // Visual feedback for error
             if (context.getPlayer() != null && debugger != null) {
-                debugger.highlightError(context.getPlayer(), block.getLocation(), errorMsg);
+                debugger.showError(context.getPlayer(), block.getLocation(), errorMsg);
             }
             
-            return ExecutionResult.failure(errorMsg);
+            return ExecutionResult.error(errorMsg);
         }
     }
     
@@ -392,19 +501,19 @@ public class DefaultScriptEngine implements ScriptEngine {
         
         String cacheKey = material.name() + ":" + actionName;
         return blockTypeCache.computeIfAbsent(cacheKey, k -> {
-            // First try to get from BlockType enum
-            BlockType blockType = BlockType.getByMaterialAndAction(material, actionName);
-            
-            // If not found, try to find a matching block config
-            if (blockType == null && blockConfigService != null) {
-                // In the new system, we might need to create a dynamic BlockType
-                // For now, we'll just return null if not found in enum
+            // In the new system, we determine BlockType from the configuration
+            if (blockConfigService != null) {
+                BlockConfigService.BlockConfig config = blockConfigService.getBlockConfig(actionName);
+                if (config != null) {
+                    return BlockType.fromString(config.getType());
+                }
             }
             
-            return blockType;
+            // Default fallback
+            return BlockType.UNKNOWN;
         });
     }
-    
+
     // Getters for internal use
     
     protected Map<BlockType, BlockAction> getActionRegistry() {

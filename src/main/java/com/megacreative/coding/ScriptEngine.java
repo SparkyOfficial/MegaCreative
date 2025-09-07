@@ -1,8 +1,12 @@
 package com.megacreative.coding;
 
+import com.megacreative.coding.BlockType;
+import com.megacreative.coding.CodeBlock;
+import com.megacreative.coding.CodeScript;
 import com.megacreative.coding.debug.VisualDebugger;
 import com.megacreative.coding.executors.ExecutionResult;
 import com.megacreative.coding.variables.VariableManager;
+import org.bukkit.Material;
 import org.bukkit.entity.Player;
 import java.util.concurrent.CompletableFuture;
 
@@ -33,6 +37,17 @@ public interface ScriptEngine {
      * @return A CompletableFuture that completes when the block execution finishes
      */
     CompletableFuture<ExecutionResult> executeBlock(CodeBlock block, Player player, String trigger);
+    
+    /**
+     * Executes a chain of code blocks starting from a specific block.
+     * This is used for executing blocks that trigger other blocks (like WaitAction, RepeatAction).
+     *
+     * @param startBlock The first block in the chain to execute
+     * @param player The player who triggered the execution (can be null)
+     * @param trigger The event or condition that triggered execution
+     * @return A CompletableFuture that completes when the block chain execution finishes
+     */
+    CompletableFuture<ExecutionResult> executeBlockChain(CodeBlock startBlock, Player player, String trigger);
 
     /**
      * Registers a block action handler.

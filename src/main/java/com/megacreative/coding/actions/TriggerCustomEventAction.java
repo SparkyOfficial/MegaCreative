@@ -36,23 +36,31 @@ public class TriggerCustomEventAction implements BlockAction {
     public void execute(ExecutionContext context) {
         Player player = context.getPlayer();
         CodeBlock block = context.getCurrentBlock();
-        VariableManager variableManager = context.getPlugin().getVariableManager();
         
-        if (player == null || block == null) return;
+        if (player == null || block == null) {
+            return;
+        }
         
         ParameterResolver resolver = new ParameterResolver(context);
         
         try {
-            // Get event name
-            DataValue eventNameValue = block.getParameter("event_name");
+            // Get event name from parameter
             String eventName = null;
+            DataValue eventNameValue = block.getParameter("event_name");
             
             if (eventNameValue != null && !eventNameValue.isEmpty()) {
                 DataValue resolvedName = resolver.resolve(context, eventNameValue);
                 eventName = resolvedName.asString();
             } else {
                 // Fallback to GUI slot
-                var nameItem = block.getItemFromSlot("event_name_slot");
+                // Get slot resolver from BlockConfigService
+                com.megacreative.services.BlockConfigService configService = 
+                    context.getPlugin().getServiceRegistry().getBlockConfigService();
+                java.util.function.Function<String, Integer> slotResolver = 
+                    configService != null ? configService.getSlotResolver("triggerCustomEvent") : null;
+                    
+                var nameItem = slotResolver != null ? 
+                    block.getItemFromSlot("event_name_slot", slotResolver) : null;
                 if (nameItem != null && nameItem.hasItemMeta()) {
                     eventName = nameItem.getItemMeta().getDisplayName();
                 }

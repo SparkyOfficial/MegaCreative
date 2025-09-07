@@ -15,10 +15,9 @@ public interface BlockCondition {
     default boolean evaluate(CodeBlock block, ExecutionContext context) {
         // Default implementation for backward compatibility
         try {
-            context.setCurrentBlock(block);
             return evaluate(context);
         } catch (Exception e) {
-            context.getLogger().severe("Error evaluating condition: " + e.getMessage());
+            context.getPlugin().getLogger().severe("Error evaluating condition: " + e.getMessage());
             return false;
         }
     }

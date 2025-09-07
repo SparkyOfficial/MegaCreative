@@ -5,6 +5,7 @@ import com.megacreative.coding.CodeBlock;
 import com.megacreative.coding.CodeScript;
 import com.megacreative.coding.ExecutionContext;
 import com.megacreative.coding.ParameterResolver;
+import com.megacreative.coding.ScriptEngine;
 import com.megacreative.coding.values.DataValue;
 import com.megacreative.coding.variables.VariableManager;
 import com.megacreative.MegaCreative;
@@ -100,7 +101,7 @@ public class CallFunctionAction implements BlockAction {
                             if (throwable != null) {
                                 player.sendMessage("§cОшибка при выполнении функции '" + functionName + "': " + throwable.getMessage());
                             } else if (result != null && !result.isSuccess()) {
-                                player.sendMessage("§cОшибка в функции '" + functionName + "': " + result.getErrorMessage());
+                                player.sendMessage("§cОшибка в функции '" + functionName + "': " + result.getMessage());
                             } else {
                                 player.sendMessage("§a✓ Функция '" + functionName + "' выполнена!");
                             }
@@ -113,4 +114,4 @@ public class CallFunctionAction implements BlockAction {
             }
         }
     }
-} 
+}

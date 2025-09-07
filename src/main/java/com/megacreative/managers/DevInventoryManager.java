@@ -3,6 +3,7 @@ package com.megacreative.managers;
 import com.megacreative.MegaCreative;
 import com.megacreative.coding.CodingItems;
 import com.megacreative.models.CreativeWorld;
+import com.megacreative.services.BlockConfigService;
 import org.bukkit.Bukkit;
 import org.bukkit.Material;
 import org.bukkit.entity.Player;
@@ -68,20 +69,43 @@ public class DevInventoryManager implements Listener {
     
     private void giveDevTools(Player player) {
         player.getInventory().clear();
+        int currentSlot = 0;
+
+        BlockConfigService configService = plugin.getServiceRegistry().getBlockConfigService();
+        if (configService == null) {
+            player.sendMessage("§cОшибка: сервис конфигурации блоков не загружен!");
+            return;
+        }
+
+        // Используем LinkedHashMap, чтобы сохранить порядок из конфига
+        Map<Material, BlockConfigService.BlockConfig> uniqueBlocks = new LinkedHashMap<>();
+
+        // Собираем по одному блоку для каждого уникального материала из конфига
+        for (BlockConfigService.BlockConfig config : configService.getAllBlockConfigs()) {
+            if (!uniqueBlocks.containsKey(config.getMaterial())) {
+                uniqueBlocks.put(config.getMaterial(), config);
+            }
+        }
         
-        // Основные блоки кода
-        player.getInventory().setItem(0, createDevItem(Material.DIAMOND_BLOCK, CodingItems.EVENT_BLOCK_NAME));
-        player.getInventory().setItem(1, createDevItem(Material.COBBLESTONE, CodingItems.ACTION_BLOCK_NAME));
-        player.getInventory().setItem(2, createDevItem(Material.OAK_PLANKS, CodingItems.CONDITION_BLOCK_NAME));
-        player.getInventory().setItem(3, createDevItem(Material.IRON_BLOCK, CodingItems.VARIABLE_BLOCK_NAME));
-        player.getInventory().setItem(4, createDevItem(Material.OBSIDIAN, CodingItems.IF_VAR_BLOCK_NAME));
-        player.getInventory().setItem(5, createDevItem(Material.REDSTONE_BLOCK, CodingItems.IF_GAME_BLOCK_NAME));
-        player.getInventory().setItem(6, createDevItem(Material.EMERALD_BLOCK, "§aПовторить N раз"));
-        player.getInventory().setItem(7, createDevItem(Material.END_STONE, CodingItems.ELSE_BLOCK_NAME));
-        player.getInventory().setItem(8, createDevItem(Material.STICK, CodingItems.COPIER_TOOL_NAME));
+        // Выдаем игроку предметы
+        for (BlockConfigService.BlockConfig config : uniqueBlocks.values()) {
+            if (currentSlot >= 36) break; // Не выходим за пределы инвентаря
+            
+            ItemStack item = new ItemStack(config.getMaterial());
+            ItemMeta meta = item.getItemMeta();
+            if (meta != null) {
+                meta.setDisplayName("§r" + config.getDisplayName()); // §r сбрасывает курсив
+                List<String> lore = new ArrayList<>();
+                lore.add("§7" + config.getDescription());
+                lore.add("§8Тип: " + config.getType());
+                meta.setLore(lore);
+                item.setItemMeta(meta);
+            }
+            player.getInventory().setItem(currentSlot++, item);
+        }
         
-        // Дополнительные инструменты
-        player.getInventory().setItem(9, createDevItem(Material.PAPER, CodingItems.DATA_CREATOR_NAME));
+        // Добавляем статические инструменты, если нужно
+        player.getInventory().setItem(35, createDevItem(Material.STICK, "§6📋 Копировщик блоков"));
         
         player.updateInventory();
     }
@@ -110,7 +134,7 @@ public class DevInventoryManager implements Listener {
         for (ItemStack item : player.getInventory().getContents()) {
             if (item != null && item.hasItemMeta() && item.getItemMeta().hasDisplayName()) {
                 String name = item.getItemMeta().getDisplayName();
-                if (name.contains(CodingItems.EVENT_BLOCK_NAME) || name.contains(CodingItems.COPIER_TOOL_NAME)) {
+                if (name.contains("Копировщик блоков") || name.contains(CodingItems.COPIER_TOOL_NAME)) {
                     hasDevTools = true;
                     break;
                 }

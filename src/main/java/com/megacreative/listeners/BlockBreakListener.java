@@ -1,18 +1,18 @@
 package com.megacreative.listeners;
 
 import com.megacreative.MegaCreative;
+import com.megacreative.coding.CodeScript;
+import com.megacreative.coding.ScriptEngine;
+import com.megacreative.coding.executors.ExecutionResult;
 import com.megacreative.models.CreativeWorld;
-import com.megacreative.coding.ExecutionContext;
-import com.megacreative.coding.events.EventDataExtractorRegistry;
-import org.bukkit.Location;
-import org.bukkit.Material;
-import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.Listener;
 import org.bukkit.event.block.BlockBreakEvent;
+import org.bukkit.entity.Player;
+
+import java.util.concurrent.CompletableFuture;
 
 public class BlockBreakListener implements Listener {
-    
     private final MegaCreative plugin;
     
     public BlockBreakListener(MegaCreative plugin) {
@@ -22,39 +22,36 @@ public class BlockBreakListener implements Listener {
     @EventHandler
     public void onBlockBreak(BlockBreakEvent event) {
         Player player = event.getPlayer();
-        CreativeWorld creativeWorld = plugin.getWorldManager().findCreativeWorldByBukkit(player.getWorld());
+        if (player == null) return;
         
-        if (creativeWorld == null || !creativeWorld.getMode().isCodeEnabled()) {
-            return; // Пропускаем выполнение если код выключен
+        // Find the creative world
+        CreativeWorld creativeWorld = plugin.getWorldManager().findCreativeWorldByBukkit(event.getBlock().getWorld());
+        if (creativeWorld == null) return;
+        
+        // Check if player can code in this world
+        if (!creativeWorld.canCode(player)) return;
+        
+        // Find scripts triggered by block break
+        for (CodeScript script : creativeWorld.getScripts()) {
+            // Check if the script's root block is an onBlockBreak event
+            if (script.getRootBlock() != null && 
+                "onBlockBreak".equals(script.getRootBlock().getAction())) {
+                
+                // Get script engine
+                ScriptEngine scriptEngine = plugin.getServiceRegistry().getService(ScriptEngine.class);
+                if (scriptEngine != null) {
+                    // Execute script
+                    scriptEngine.executeScript(script, player, "block_break")
+                        .whenComplete((result, throwable) -> {
+                            if (throwable != null) {
+                                plugin.getLogger().warning("Block break script execution failed with exception: " + throwable.getMessage());
+                            } else if (result != null && !result.isSuccess()) {
+                                plugin.getLogger().warning("Block break script execution failed: " + result.getMessage());
+                            }
+                        });
+                }
+                break;
+            }
         }
-        
-        // Проверяем, есть ли скрипты с событием onBlockBreak
-        creativeWorld.getScripts().stream()
-            .filter(script -> script.isEnabled() && script.getRootBlock() != null)
-            .filter(script -> script.getRootBlock().getMaterial() == Material.DIAMOND_BLOCK)
-            .filter(script -> "onBlockBreak".equals(script.getRootBlock().getAction()))
-            .forEach(script -> {
-                // Создаем контекст выполнения
-                ExecutionContext context = ExecutionContext.builder()
-                    .plugin(plugin)
-                    .player(player)
-                    .creativeWorld(creativeWorld)
-                    .event(event)
-                    .build();
-                
-                // Используем унифицированную систему извлечения данных
-                EventDataExtractorRegistry extractorRegistry = plugin.getServiceRegistry().getEventDataExtractorRegistry();
-                extractorRegistry.populateContext(event, context);
-                
-                // Выполняем скрипт через ScriptEngine
-                plugin.getCodingManager().getScriptEngine().executeScript(script, context.getPlayer(), "onBlockBreak")
-                    .whenComplete((result, throwable) -> {
-                        if (throwable != null) {
-                            plugin.getLogger().severe("Error executing block break script: " + throwable.getMessage());
-                        } else if (result != null && !result.isSuccess()) {
-                            plugin.getLogger().warning("Block break script execution failed: " + result.getErrorMessage());
-                        }
-                    });
-            });
     }
-} 
+}

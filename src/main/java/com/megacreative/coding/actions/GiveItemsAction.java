@@ -3,6 +3,7 @@ package com.megacreative.coding.actions;
 import com.megacreative.coding.BlockAction;
 import com.megacreative.coding.CodeBlock;
 import com.megacreative.coding.ExecutionContext;
+import com.megacreative.services.BlockConfigService;
 import org.bukkit.entity.Player;
 import org.bukkit.inventory.ItemStack;
 
@@ -29,24 +30,28 @@ public class GiveItemsAction implements BlockAction {
         CodeBlock actionBlock = context.getCurrentBlock();
         if (actionBlock == null) return;
 
-        // 3. Получаем все предметы из именованной группы "items_to_give"
-        List<ItemStack> itemsToGive = actionBlock.getItemsFromNamedGroup("items_to_give");
+        // 3. Получаем group slots resolver из BlockConfigService
+        BlockConfigService configService = context.getPlugin().getServiceRegistry().getBlockConfigService();
+        java.util.function.Function<String, List<Integer>> groupSlotsResolver = 
+            configService != null ? configService.getGroupSlotsResolver("giveItems") : null;
+
+        // 4. Получаем все предметы из именованной группы "items_to_give"
+        List<ItemStack> itemsToGive = groupSlotsResolver != null ? 
+            actionBlock.getItemsFromNamedGroup("items_to_give", groupSlotsResolver) : 
+            actionBlock.getItemsFromGroup("items");
         
         // Если группа не найдена, используем старый способ для совместимости
         if (itemsToGive.isEmpty()) {
-            itemsToGive = actionBlock.getItemsFromGroup("items");
-            if (itemsToGive.isEmpty()) {
-                // Fallback на слоты 0-8
-                for (int i = 0; i < 9; i++) {
-                    ItemStack item = actionBlock.getConfigItem(i);
-                    if (item != null) {
-                        itemsToGive.add(item);
-                    }
+            // Fallback на слоты 0-8
+            for (int i = 0; i < 9; i++) {
+                ItemStack item = actionBlock.getConfigItem(i);
+                if (item != null) {
+                    itemsToGive.add(item);
                 }
             }
         }
 
-        // 4. Выдаем предметы игроку
+        // 5. Выдаем предметы игроку
         int givenItems = 0;
         for (ItemStack item : itemsToGive) {
             if (item != null) {
@@ -72,9 +77,9 @@ public class GiveItemsAction implements BlockAction {
             }
         }
 
-        // 5. Уведомляем игрока
+        // 6. Уведомляем игрока
         if (givenItems > 0) {
             player.sendMessage("§a✓ Вам выдано " + givenItems + " предметов!");
         }
     }
-} 
+}

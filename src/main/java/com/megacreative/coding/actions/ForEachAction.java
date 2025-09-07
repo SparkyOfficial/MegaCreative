@@ -10,6 +10,7 @@ import com.megacreative.coding.values.types.TextValue;
 import com.megacreative.coding.variables.VariableManager;
 import com.megacreative.coding.variables.VariableScope;
 import org.bukkit.entity.Player;
+import java.util.UUID;
 
 /**
  * Advanced For Each loop action with DataValue and VariableManager integration
@@ -41,7 +42,14 @@ public class ForEachAction implements BlockAction {
             DataValue listValue = block.getParameter("list");
             if (listValue == null || listValue.isEmpty()) {
                 // Fallback to GUI slot
-                var listItem = block.getItemFromSlot("list_slot");
+                // Get slot resolver from BlockConfigService
+                com.megacreative.services.BlockConfigService configService = 
+                    context.getPlugin().getServiceRegistry().getBlockConfigService();
+                java.util.function.Function<String, Integer> slotResolver = 
+                    configService != null ? configService.getSlotResolver("forEach") : null;
+                    
+                var listItem = slotResolver != null ? 
+                    block.getItemFromSlot("list_slot", slotResolver) : null;
                 if (listItem != null && listItem.hasItemMeta()) {
                     listValue = new TextValue(listItem.getItemMeta().getDisplayName());
                 } else {
@@ -97,28 +105,87 @@ public class ForEachAction implements BlockAction {
         Player player = context.getPlayer();
         String scriptId = context.getScriptId();
         String worldId = context.getWorldId();
+        UUID playerId = player != null ? player.getUniqueId() : null;
         
         // Store original variable values to restore later
         DataValue originalItemValue = null;
         DataValue originalIndexValue = null;
         
         try {
-            // Save original values
-            originalItemValue = getVariableValue(variableManager, scope, scriptId, worldId, player, itemVariable);
-            if (indexVariable != null) {
-                originalIndexValue = getVariableValue(variableManager, scope, scriptId, worldId, player, indexVariable);
+            // Save original values based on scope
+            switch (scope) {
+                case LOCAL:
+                    originalItemValue = variableManager.getLocalVariable(scriptId, itemVariable);
+                    if (indexVariable != null) {
+                        originalIndexValue = variableManager.getLocalVariable(scriptId, indexVariable);
+                    }
+                    break;
+                case GLOBAL:
+                    originalItemValue = variableManager.getGlobalVariable(itemVariable);
+                    if (indexVariable != null) {
+                        originalIndexValue = variableManager.getGlobalVariable(indexVariable);
+                    }
+                    break;
+                case PLAYER:
+                    if (playerId != null) {
+                        originalItemValue = variableManager.getPlayerVariable(playerId, itemVariable);
+                        if (indexVariable != null) {
+                            originalIndexValue = variableManager.getPlayerVariable(playerId, indexVariable);
+                        }
+                    }
+                    break;
+                case SERVER:
+                    originalItemValue = variableManager.getServerVariable(itemVariable);
+                    if (indexVariable != null) {
+                        originalIndexValue = variableManager.getServerVariable(indexVariable);
+                    }
+                    break;
+                case PERSISTENT:
+                    originalItemValue = variableManager.getPersistentVariable(itemVariable);
+                    if (indexVariable != null) {
+                        originalIndexValue = variableManager.getPersistentVariable(indexVariable);
+                    }
+                    break;
             }
             
             // Iterate over the list
             for (int i = 0; i < list.size(); i++) {
                 DataValue currentItem = list.get(i);
                 
-                // Set loop variables
-                setVariableValue(variableManager, scope, scriptId, worldId, player, itemVariable, currentItem);
-                
-                if (indexVariable != null) {
-                    setVariableValue(variableManager, scope, scriptId, worldId, player, indexVariable, 
-                        DataValue.fromObject(i));
+                // Set loop variables based on scope
+                switch (scope) {
+                    case LOCAL:
+                        variableManager.setLocalVariable(scriptId, itemVariable, currentItem);
+                        if (indexVariable != null) {
+                            variableManager.setLocalVariable(scriptId, indexVariable, DataValue.of(i));
+                        }
+                        break;
+                    case GLOBAL:
+                        variableManager.setGlobalVariable(itemVariable, currentItem);
+                        if (indexVariable != null) {
+                            variableManager.setGlobalVariable(indexVariable, DataValue.of(i));
+                        }
+                        break;
+                    case PLAYER:
+                        if (playerId != null) {
+                            variableManager.setPlayerVariable(playerId, itemVariable, currentItem);
+                            if (indexVariable != null) {
+                                variableManager.setPlayerVariable(playerId, indexVariable, DataValue.of(i));
+                            }
+                        }
+                        break;
+                    case SERVER:
+                        variableManager.setServerVariable(itemVariable, currentItem);
+                        if (indexVariable != null) {
+                            variableManager.setServerVariable(indexVariable, DataValue.of(i));
+                        }
+                        break;
+                    case PERSISTENT:
+                        variableManager.setPersistentVariable(itemVariable, currentItem);
+                        if (indexVariable != null) {
+                            variableManager.setPersistentVariable(indexVariable, DataValue.of(i));
+                        }
+                        break;
                 }
                 
                 // Execute child blocks
@@ -153,7 +220,7 @@ public class ForEachAction implements BlockAction {
      */
     private void executeChildBlocks(ExecutionContext context, CodeBlock parentBlock) {
         // Get ScriptEngine from ServiceRegistry
-        ScriptEngine scriptEngine = context.getPlugin().getServiceRegistry().getService(ScriptEngine.class);
+        com.megacreative.coding.ScriptEngine scriptEngine = context.getPlugin().getServiceRegistry().getService(com.megacreative.coding.ScriptEngine.class);
         if (scriptEngine == null) {
             Player player = context.getPlayer();
             if (player != null) {
@@ -166,7 +233,7 @@ public class ForEachAction implements BlockAction {
         for (CodeBlock childBlock : parentBlock.getChildren()) {
             try {
                 // Execute the child block using ScriptEngine
-                scriptEngine.executeScript(childBlock, context.getPlayer(), "foreach_loop")
+                scriptEngine.executeBlockChain(childBlock, context.getPlayer(), "foreach_loop")
                     .exceptionally(throwable -> {
                         Player player = context.getPlayer();
                         if (player != null) {
@@ -185,53 +252,59 @@ public class ForEachAction implements BlockAction {
     }
     
     /**
-     * Helper method to get variable value based on scope
-     */
-    private DataValue getVariableValue(VariableManager manager, VariableScope scope, 
-                                      String scriptId, String worldId, Player player, String name) {
-        return switch (scope) {
-            case LOCAL -> manager.getLocalVariable(scriptId, name);
-            case WORLD -> manager.getGlobalVariable(worldId, name);
-            case PLAYER -> {
-                // Use the scoped variable approach for player variables
-                String playerScopedName = "player." + name;
-                yield manager.getVariable(playerScopedName, scriptId, worldId);
-            }
-            case SERVER -> manager.getPersistentVariable(name);
-        };
-    }
-    
-    /**
      * Helper method to set variable value based on scope
      */
     private void setVariableValue(VariableManager manager, VariableScope scope, 
                                  String scriptId, String worldId, Player player, String name, DataValue value) {
+        UUID playerId = player != null ? player.getUniqueId() : null;
+        
         switch (scope) {
-            case LOCAL -> manager.setLocalVariable(scriptId, name, value);
-            case WORLD -> manager.setGlobalVariable(worldId, name, value);
-            case PLAYER -> {
-                // Use the scoped variable approach for player variables
-                String playerScopedName = "player." + name;
-                manager.setVariable(playerScopedName, value, scriptId, worldId);
-            }
-            case SERVER -> manager.setPersistentVariable(name, value);
+            case LOCAL:
+                manager.setLocalVariable(scriptId, name, value);
+                break;
+            case GLOBAL:
+                manager.setGlobalVariable(name, value);
+                break;
+            case PLAYER:
+                if (playerId != null) {
+                    manager.setPlayerVariable(playerId, name, value);
+                }
+                break;
+            case SERVER:
+                manager.setServerVariable(name, value);
+                break;
+            case PERSISTENT:
+                manager.setPersistentVariable(name, value);
+                break;
         }
     }
     
     /**
-     * Helper method to remove variable based on scope
+     * Helper method to remove variable based on scope (by setting to null)
      */
     private void removeVariable(VariableManager manager, VariableScope scope, 
                                String scriptId, String worldId, Player player, String name) {
+        UUID playerId = player != null ? player.getUniqueId() : null;
+        
         // Since VariableManager doesn't have remove methods, we set to null
         switch (scope) {
-            case LOCAL -> manager.setLocalVariable(scriptId, name, null);
-            case WORLD -> manager.setGlobalVariable(worldId, name, null);
-            case PLAYER -> {
-                String playerScopedName = "player." + name;
-                manager.setVariable(playerScopedName, null, scriptId, worldId);
-            }
-            case SERVER -> manager.setPersistentVariable(name, null);
+            case LOCAL:
+                manager.setLocalVariable(scriptId, name, null);
+                break;
+            case GLOBAL:
+                manager.setGlobalVariable(name, null);
+                break;
+            case PLAYER:
+                if (playerId != null) {
+                    manager.setPlayerVariable(playerId, name, null);
+                }
+                break;
+            case SERVER:
+                manager.setServerVariable(name, null);
+                break;
+            case PERSISTENT:
+                manager.setPersistentVariable(name, null);
+                break;
         }
     }
 }

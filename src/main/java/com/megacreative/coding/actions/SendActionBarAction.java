@@ -15,17 +15,17 @@ public class SendActionBarAction implements BlockAction {
             DataValue durationValue = block.getParameter("duration");
             
             if (messageValue == null) {
-                return ExecutionResult.failure("No message specified");
+                return ExecutionResult.error("No message specified");
             }
             
             String message = messageValue.asString();
             if (message == null || message.trim().isEmpty()) {
-                return ExecutionResult.failure("Message cannot be empty");
+                return ExecutionResult.error("Message cannot be empty");
             }
             
             Player player = context.getPlayer();
             if (player == null) {
-                return ExecutionResult.failure("No player in execution context");
+                return ExecutionResult.error("No player in execution context");
             }
             
             // Отправляем сообщение в action bar
@@ -41,7 +41,7 @@ public class SendActionBarAction implements BlockAction {
             return ExecutionResult.success("Action bar message sent successfully");
             
         } catch (Exception e) {
-            return ExecutionResult.failure("Failed to send action bar message: " + e.getMessage());
+            return ExecutionResult.error("Failed to send action bar message: " + e.getMessage());
         }
     }
 }

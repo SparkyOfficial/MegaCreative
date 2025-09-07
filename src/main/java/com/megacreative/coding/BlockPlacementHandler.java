@@ -87,7 +87,6 @@ public class BlockPlacementHandler implements Listener {
         if (defaultAction == null) defaultAction = "Настройка..."; // Fallback
         
         CodeBlock newCodeBlock = new CodeBlock(mat, defaultAction);
-        newCodeBlock.setPlugin(plugin); // Устанавливаем ссылку на плагин
         blockCodeBlocks.put(block.getLocation(), newCodeBlock);
         
         // Устанавливаем табличку на блок

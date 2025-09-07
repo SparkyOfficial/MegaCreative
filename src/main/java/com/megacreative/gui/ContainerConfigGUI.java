@@ -40,7 +40,7 @@ public class ContainerConfigGUI implements GUIManager.ManagedGUIInterface {
         
         // Handle null service registry in test environment
         ServiceRegistry serviceRegistry = plugin.getServiceRegistry();
-        this.containerManager = serviceRegistry != null ? serviceRegistry.getContainerManager() : null;
+        this.containerManager = serviceRegistry != null ? serviceRegistry.getBlockContainerManager() : null;
         
         this.inventory = Bukkit.createInventory(null, 27, "§8§lКонфигурация предметов");
         

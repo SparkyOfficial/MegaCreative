@@ -1,6 +1,7 @@
 package com.megacreative.commands;
 
 import com.megacreative.MegaCreative;
+import com.megacreative.coding.debug.VisualDebugger;
 import org.bukkit.Location;
 import org.bukkit.command.Command;
 import org.bukkit.command.CommandExecutor;

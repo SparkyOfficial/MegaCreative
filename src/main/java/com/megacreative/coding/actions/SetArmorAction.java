@@ -3,6 +3,7 @@ package com.megacreative.coding.actions;
 import com.megacreative.coding.BlockAction;
 import com.megacreative.coding.CodeBlock;
 import com.megacreative.coding.ExecutionContext;
+import com.megacreative.services.BlockConfigService;
 import org.bukkit.Material;
 import org.bukkit.entity.Player;
 import org.bukkit.inventory.ItemStack;
@@ -28,11 +29,20 @@ public class SetArmorAction implements BlockAction {
         CodeBlock actionBlock = context.getCurrentBlock();
         if (actionBlock == null) return;
 
-        // 3. Получаем предметы брони из именованных слотов
-        ItemStack helmet = actionBlock.getItemFromSlot("helmet_slot");
-        ItemStack chestplate = actionBlock.getItemFromSlot("chestplate_slot");
-        ItemStack leggings = actionBlock.getItemFromSlot("leggings_slot");
-        ItemStack boots = actionBlock.getItemFromSlot("boots_slot");
+        // 3. Получаем slot resolver из BlockConfigService
+        BlockConfigService configService = context.getPlugin().getServiceRegistry().getBlockConfigService();
+        java.util.function.Function<String, Integer> slotResolver = 
+            configService != null ? configService.getSlotResolver("setArmor") : null;
+
+        // 4. Получаем предметы брони из именованных слотов
+        ItemStack helmet = slotResolver != null ? 
+            actionBlock.getItemFromSlot("helmet_slot", slotResolver) : null;
+        ItemStack chestplate = slotResolver != null ? 
+            actionBlock.getItemFromSlot("chestplate_slot", slotResolver) : null;
+        ItemStack leggings = slotResolver != null ? 
+            actionBlock.getItemFromSlot("leggings_slot", slotResolver) : null;
+        ItemStack boots = slotResolver != null ? 
+            actionBlock.getItemFromSlot("boots_slot", slotResolver) : null;
         
         // Fallback на старый способ для совместимости
         if (helmet == null) helmet = actionBlock.getConfigItem(0);
@@ -40,7 +50,7 @@ public class SetArmorAction implements BlockAction {
         if (leggings == null) leggings = actionBlock.getConfigItem(2);
         if (boots == null) boots = actionBlock.getConfigItem(3);
 
-        // 4. Устанавливаем броню
+        // 5. Устанавливаем броню
         int armorPieces = 0;
         
         if (helmet != null && isArmorPiece(helmet.getType(), ArmorType.HELMET)) {
@@ -63,7 +73,7 @@ public class SetArmorAction implements BlockAction {
             armorPieces++;
         }
 
-        // 5. Уведомляем игрока
+        // 6. Уведомляем игрока
         if (armorPieces > 0) {
             player.sendMessage("§a✓ Установлено " + armorPieces + " предметов брони!");
         } else {
@@ -98,4 +108,4 @@ public class SetArmorAction implements BlockAction {
         LEGGINGS,
         BOOTS
     }
-} 
+}

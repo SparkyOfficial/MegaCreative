@@ -3,6 +3,7 @@ package com.megacreative.coding.actions;
 import com.megacreative.coding.BlockAction;
 import com.megacreative.coding.CodeBlock;
 import com.megacreative.coding.ExecutionContext;
+import com.megacreative.services.BlockConfigService;
 import org.bukkit.Material;
 import org.bukkit.entity.Player;
 import org.bukkit.inventory.ItemStack;
@@ -30,24 +31,28 @@ public class RemoveItemsAction implements BlockAction {
         CodeBlock actionBlock = context.getCurrentBlock();
         if (actionBlock == null) return;
 
-        // 3. Получаем все предметы из именованной группы "items_to_remove"
-        List<ItemStack> itemsToRemove = actionBlock.getItemsFromNamedGroup("items_to_remove");
+        // 3. Получаем group slots resolver из BlockConfigService
+        BlockConfigService configService = context.getPlugin().getServiceRegistry().getBlockConfigService();
+        java.util.function.Function<String, List<Integer>> groupSlotsResolver = 
+            configService != null ? configService.getGroupSlotsResolver("removeItems") : null;
+
+        // 4. Получаем все предметы из именованной группы "items_to_remove"
+        List<ItemStack> itemsToRemove = groupSlotsResolver != null ? 
+            actionBlock.getItemsFromNamedGroup("items_to_remove", groupSlotsResolver) : 
+            actionBlock.getItemsFromGroup("items");
         
         // Если группа не найдена, используем старый способ для совместимости
         if (itemsToRemove.isEmpty()) {
-            itemsToRemove = actionBlock.getItemsFromGroup("items");
-            if (itemsToRemove.isEmpty()) {
-                // Fallback на слоты 0-8
-                for (int i = 0; i < 9; i++) {
-                    ItemStack item = actionBlock.getConfigItem(i);
-                    if (item != null) {
-                        itemsToRemove.add(item);
-                    }
+            // Fallback на слоты 0-8
+            for (int i = 0; i < 9; i++) {
+                ItemStack item = actionBlock.getConfigItem(i);
+                if (item != null) {
+                    itemsToRemove.add(item);
                 }
             }
         }
 
-        // 4. Удаляем предметы у игрока
+        // 5. Удаляем предметы у игрока
         int removedItems = 0;
         for (ItemStack item : itemsToRemove) {
             if (item != null) {
@@ -72,11 +77,11 @@ public class RemoveItemsAction implements BlockAction {
             }
         }
 
-        // 5. Уведомляем игрока
+        // 6. Уведомляем игрока
         if (removedItems > 0) {
             player.sendMessage("§c✓ Удалено " + removedItems + " предметов!");
         } else {
             player.sendMessage("§eℹ Нечего удалять.");
         }
     }
-} 
+}

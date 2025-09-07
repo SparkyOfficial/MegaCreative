@@ -4,23 +4,31 @@ import com.megacreative.coding.BlockCondition;
 import com.megacreative.coding.CodeBlock;
 import com.megacreative.coding.ExecutionContext;
 import com.megacreative.coding.executors.ExecutionResult;
+import com.megacreative.coding.values.DataValue;
 import org.bukkit.World;
 
 public class CheckWorldWeatherCondition implements BlockCondition {
     @Override
-    public ExecutionResult evaluate(CodeBlock block, ExecutionContext context) {
+    public boolean evaluate(CodeBlock block, ExecutionContext context) {
         try {
             // Получаем параметр 'weather' из блока
-            String requiredWeather = block.getParameter("weather").asString();
-            String worldName = block.getParameter("world").asString();
+            DataValue weatherValue = block.getParameter("weather");
+            String requiredWeather = weatherValue != null ? weatherValue.asString() : "clear";
+            
+            DataValue worldValue = block.getParameter("world");
+            String worldName = worldValue != null ? worldValue.asString() : null;
             
             // Если имя мира не указано, используем мир игрока
-            World world = context.getPlayer().getWorld();
+            World world = context.getPlayer() != null ? context.getPlayer().getWorld() : null;
             if (worldName != null && !worldName.isEmpty()) {
-                world = context.getPlayer().getServer().getWorld(worldName);
+                world = context.getPlugin().getServer().getWorld(worldName);
                 if (world == null) {
-                    return ExecutionResult.failure("World not found: " + worldName);
+                    context.getPlugin().getLogger().severe("World not found: " + worldName);
+                    return false;
                 }
+            } else if (world == null) {
+                context.getPlugin().getLogger().severe("No world available for weather check");
+                return false;
             }
             
             // Проверяем погоду в мире
@@ -36,10 +44,11 @@ public class CheckWorldWeatherCondition implements BlockCondition {
                 conditionMet = isThundering;
             }
             
-            return ExecutionResult.success(Boolean.toString(conditionMet));
+            return conditionMet;
             
         } catch (Exception e) {
-            return ExecutionResult.failure("Error checking weather condition: " + e.getMessage());
+            context.getPlugin().getLogger().severe("Error checking weather condition: " + e.getMessage());
+            return false;
         }
     }
 }

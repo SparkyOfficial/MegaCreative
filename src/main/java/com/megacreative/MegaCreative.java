@@ -7,6 +7,7 @@ import com.megacreative.core.ServiceRegistry;
 import com.megacreative.config.ConfigurationValidator;
 import com.megacreative.exceptions.ConfigurationException;
 import com.megacreative.coding.events.PlayerEventsListener;
+import org.bukkit.entity.Player;
 import org.bukkit.plugin.java.JavaPlugin;
 
 import java.util.Map;

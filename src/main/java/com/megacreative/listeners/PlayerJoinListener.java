@@ -17,7 +17,7 @@ public class PlayerJoinListener implements Listener {
     @EventHandler
     public void onPlayerJoin(PlayerJoinEvent event) {
         // Загружаем данные игрока
-        plugin.getVariableManager().loadPlayerData(event.getPlayer());
+        plugin.getVariableManager().loadPersistentData();
         
         // Устанавливаем скорборд и таб-лист
         plugin.getScoreboardManager().setScoreboard(event.getPlayer());

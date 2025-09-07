@@ -96,8 +96,10 @@ public class PlayerEntryAction implements BlockAction {
     }
     
     /**
-     * Tries to give items from the container (chest) above the block
-     * This implements the workflow where players configure items in a chest above the action block
+     * Attempts to give items to the player from a container placed above the block
+     * @param context The execution context
+     * @param player The player to give items to
+     * @return true if items were successfully given, false otherwise
      */
     private boolean tryGiveItemsFromContainer(ExecutionContext context, Player player) {
         try {
@@ -108,7 +110,7 @@ public class PlayerEntryAction implements BlockAction {
             }
             
             // Get the container manager
-            BlockContainerManager containerManager = serviceRegistry.getContainerManager();
+            BlockContainerManager containerManager = serviceRegistry.getBlockContainerManager();
             if (containerManager == null) {
                 return false;
             }

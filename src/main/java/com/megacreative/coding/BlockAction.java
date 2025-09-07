@@ -17,11 +17,10 @@ public interface BlockAction {
     default ExecutionResult execute(CodeBlock block, ExecutionContext context) {
         // Default implementation for backward compatibility
         try {
-            context.setCurrentBlock(block);
             execute(context);
             return ExecutionResult.success();
         } catch (Exception e) {
-            return ExecutionResult.failure("Error executing action: " + e.getMessage());
+            return ExecutionResult.error("Error executing action: " + e.getMessage());
         }
     }
     
