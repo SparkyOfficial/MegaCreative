@@ -4,12 +4,13 @@ import com.megacreative.coding.AutoConnectionManager;
 import com.megacreative.coding.BlockPlacementHandler;
 import com.megacreative.coding.ScriptEngine;
 import com.megacreative.coding.DefaultScriptEngine;
-import com.megacreative.coding.BlockConfiguration;
+import com.megacreative.coding.ActionFactory;
+import com.megacreative.coding.ConditionFactory;
+import com.megacreative.coding.events.PlayerEventsListener;
 import com.megacreative.coding.containers.BlockContainerManager;
 import com.megacreative.coding.executors.ExecutorEngine;
 import com.megacreative.coding.variables.VariableManager;
 import com.megacreative.coding.events.CustomEventManager;
-import com.megacreative.coding.events.EventDataExtractorRegistry;
 import com.megacreative.coding.debug.VisualDebugger;
 import com.megacreative.coding.errors.VisualErrorHandler;
 import com.megacreative.coding.groups.BlockGroupManager;
@@ -59,11 +60,11 @@ public class ServiceRegistry {
     private VariableManager variableManager;
     private BlockContainerManager containerManager;
     private final ScriptEngine scriptEngine;
-    private BlockConfiguration blockConfiguration;
-    private ScriptPerformanceMonitor scriptPerformanceMonitor;
     
     // New architecture services
     private BlockConfigService blockConfigService;
+    private ActionFactory actionFactory;
+    private ConditionFactory conditionFactory;
     private CustomEventManager customEventManager;
     private EventDataExtractorRegistry eventDataExtractorRegistry;
     private VisualErrorHandler visualErrorHandler;
@@ -73,6 +74,7 @@ public class ServiceRegistry {
     private VisualProgrammingSystem visualProgrammingSystem;
     private LineBasedCompiler lineBasedCompiler;
     private CollaborationManager collaborationManager;
+    private PlayerEventsListener playerEventsListener;
     
     public ServiceRegistry(Plugin plugin, DependencyContainer dependencyContainer) {
         this.plugin = plugin;
@@ -82,6 +84,10 @@ public class ServiceRegistry {
         this.variableManager = new VariableManager((MegaCreative) plugin);
         this.visualDebugger = new VisualDebugger((MegaCreative) plugin);
         this.blockConfigService = new BlockConfigService((MegaCreative) plugin);
+        
+        // Initialize factories
+        this.actionFactory = new ActionFactory(blockConfigService);
+        this.conditionFactory = new ConditionFactory(blockConfigService);
         
         // Initialize ScriptEngine with its dependencies
         this.scriptEngine = new DefaultScriptEngine(
@@ -93,6 +99,8 @@ public class ServiceRegistry {
         
         // Register services
         registerService(BlockConfigService.class, blockConfigService);
+        registerService(ActionFactory.class, actionFactory);
+        registerService(ConditionFactory.class, conditionFactory);
         initializeScriptEngine();
     }
     
@@ -104,12 +112,7 @@ public class ServiceRegistry {
         // Initialize ScriptEngine with required dependencies
         if (scriptEngine instanceof DefaultScriptEngine) {
             DefaultScriptEngine defaultEngine = (DefaultScriptEngine) scriptEngine;
-            defaultEngine.initialize(
-                (MegaCreative) plugin,
-                variableManager,
-                visualDebugger,
-                blockConfigService
-            );
+            defaultEngine.initialize();
             
             log.info("ScriptEngine initialized with " + 
                     defaultEngine.getActionCount() + " actions and " +
@@ -243,21 +246,6 @@ public class ServiceRegistry {
         log.info("All services shut down successfully");
     }
     
-    // Service getters with proper types and null safety
-    /**
-     * Gets the BlockConfiguration service
-     * @return The BlockConfiguration instance
-     */
-    public com.megacreative.coding.BlockConfiguration getBlockConfiguration() {
-        if (blockConfiguration == null) {
-            blockConfiguration = new com.megacreative.coding.BlockConfiguration(
-                (com.megacreative.MegaCreative) plugin
-            );
-            registerService(com.megacreative.coding.BlockConfiguration.class, blockConfiguration);
-        }
-        return blockConfiguration;
-    }
-    
     public com.megacreative.utils.ConfigManager getConfigManager() { 
         return configManager; 
     }
@@ -358,20 +346,36 @@ public class ServiceRegistry {
         return configManager;
     }
     
-    private void initializeScriptPerformanceMonitor() {
-        if (scriptPerformanceMonitor == null) {
-            scriptPerformanceMonitor = new ScriptPerformanceMonitor();
-            registerService(ScriptPerformanceMonitor.class, scriptPerformanceMonitor);
+    // Getters for new services
+    public BlockConfigService getBlockConfigService() {
+        return blockConfigService;
+    }
+    
+    public ActionFactory getActionFactory() {
+        return actionFactory;
+    }
+    
+    public ConditionFactory getConditionFactory() {
+        return conditionFactory;
+    }
+    
+    public PlayerEventsListener getPlayerEventsListener() {
+        if (playerEventsListener == null) {
+            playerEventsListener = new PlayerEventsListener((MegaCreative) plugin);
+            registerService(PlayerEventsListener.class, playerEventsListener);
         }
+        return playerEventsListener;
     }
     
     private void initializeNewArchitectureServices() {
         // Initialize BlockConfigService first as it's a core dependency
-        this.blockConfigService = new BlockConfigService((com.megacreative.MegaCreative) plugin);
-        registerService(BlockConfigService.class, blockConfigService);
+        if (blockConfigService == null) {
+            this.blockConfigService = new BlockConfigService((com.megacreative.MegaCreative) plugin);
+            registerService(BlockConfigService.class, blockConfigService);
+        }
         
         // Load block configurations
-        blockConfigService.loadBlockConfigs();
+        blockConfigService.load();
         
         // Event data extraction system
         eventDataExtractorRegistry = new EventDataExtractorRegistry();
@@ -396,10 +400,9 @@ public class ServiceRegistry {
         this.guiManager = new GUIManager(playerManager, variableManager);
         registerService(GUIManager.class, guiManager);
         
-        // Update ScriptEngine with BlockConfigService if it's DefaultScriptEngine
-        if (scriptEngine instanceof com.megacreative.coding.DefaultScriptEngine) {
-            ((com.megacreative.coding.DefaultScriptEngine) scriptEngine).setBlockConfigService(blockConfigService);
-        }
+        // Initialize PlayerEventsListener
+        this.playerEventsListener = new PlayerEventsListener((MegaCreative) plugin);
+        registerService(PlayerEventsListener.class, playerEventsListener);
         
         log.info("BlockConfigService initialized with " + blockConfigService.getAllBlockConfigs().size() + " block configurations");
     }
@@ -432,44 +435,6 @@ public class ServiceRegistry {
             codeBlockClipboard.setPlacementHandler(blockPlacementHandler);
             codeBlockClipboard.setConnectionManager(autoConnectionManager);
             plugin.getLogger().info("CodeBlockClipboard connected to BlockPlacementHandler and AutoConnectionManager");
-        }
-    }
-    
-    // Shutdown methods
-    
-    private void shutdownCoreServices() {
-        log.info("Shutting down core services...");
-        
-        // Shutdown world manager first to save all worlds
-        if (worldManager != null) {
-            try {
-                worldManager.saveAllWorlds();
-                log.info("World manager shut down successfully");
-            } catch (Exception e) {
-                log.log(Level.SEVERE, "Error shutting down world manager", e);
-            }
-        }
-        
-        // Shutdown config manager last to ensure all services can save their configs
-        if (configManager != null) {
-            try {
-                configManager.shutdown();
-                log.info("ConfigManager shut down successfully");
-            } catch (Exception e) {
-                log.log(Level.SEVERE, "Error shutting down ConfigManager", e);
-            }
-        }
-    }
-    
-    private void shutdownNewArchitectureServices() {
-        if (visualDebugger != null) {
-            visualDebugger.cleanup();
-        }
-        if (visualErrorHandler != null) {
-            visualErrorHandler.cleanup();
-        }
-        if (blockGroupManager != null) {
-            blockGroupManager.cleanup();
         }
     }
 }

@@ -1,27 +1,9 @@
 # Advanced Coding Blocks Configuration
-# This is the unified configuration file that replaces all previous block configuration files
-# It follows the Master Plan structure with proper typing, categories, and parameter definitions
+# This is the "master plan" for all coding blocks in the system
 
 # ============================================
-# EVENT BLOCKS
+# ADVANCED EVENT BLOCKS
 # ============================================
-
-# Player Events
-onPlayerJoin:
-  material: PLAYER_HEAD
-  type: "EVENT"
-  displayName: "Player Join"
-  description: "Triggers when a player joins the server"
-  category: "player_events"
-  parameters: {}
-
-onPlayerQuit:
-  material: LIME_CONCRETE
-  type: "EVENT"
-  displayName: "Player Quit"
-  description: "Triggers when a player leaves the server"
-  category: "player_events"
-  parameters: {}
 
 onPlayerMove:
   material: DIAMOND_BLOCK
@@ -33,42 +15,6 @@ onPlayerMove:
     distance: { type: "NUMBER", slot: 0, description: "Minimum movement distance" }
     world: { type: "TEXT", slot: 1, description: "World name filter (optional)" }
 
-onPlayerInteract:
-  material: STICK
-  type: "EVENT"
-  displayName: "Player Interact"
-  description: "Triggers when a player interacts with a block or item"
-  category: "player_events"
-  parameters:
-    block: { type: "TEXT", slot: 0, description: "Block type filter (any or specific)" }
-    action: { type: "TEXT", slot: 1, description: "Interaction type (RIGHT_CLICK/LEFT_CLICK/PHYSICAL)" }
-
-onPlayerChat:
-  material: PAPER
-  type: "EVENT"
-  displayName: "Player Chat"
-  description: "Triggers when a player sends a chat message"
-  category: "player_events"
-  parameters:
-    message: { type: "TEXT", slot: 0, description: "Message filter (optional)" }
-
-onPlayerDeath:
-  material: BONE
-  type: "EVENT"
-  displayName: "Player Death"
-  description: "Triggers when a player dies"
-  category: "player_events"
-  parameters: {}
-
-onPlayerRespawn:
-  material: END_STONE
-  type: "EVENT"
-  displayName: "Player Respawn"
-  description: "Triggers when a player respawns"
-  category: "player_events"
-  parameters: {}
-
-# Advanced Events
 onPlayerLevelUp:
   material: EMERALD_BLOCK
   type: "EVENT"
@@ -89,53 +35,9 @@ onServerTPS:
     condition: { type: "TEXT", slot: 1, description: "above/below" }
 
 # ============================================
-# ACTION BLOCKS
+# ADVANCED ACTION BLOCKS
 # ============================================
 
-# Player Actions
-sendMessage:
-  material: PAPER
-  type: "ACTION"
-  displayName: "Send Message"
-  description: "Sends a message to the player"
-  category: "player_actions"
-  parameters:
-    message: { type: "TEXT", slot: 0, description: "Message to send. Supports placeholders: %player%, %world%" }
-
-teleportPlayer:
-  material: ENDER_PEARL
-  type: "ACTION"
-  displayName: "Teleport Player"
-  description: "Teleports the player to a location"
-  category: "player_actions"
-  parameters:
-    x: { type: "NUMBER", slot: 0, description: "X coordinate" }
-    y: { type: "NUMBER", slot: 1, description: "Y coordinate" }
-    z: { type: "NUMBER", slot: 2, description: "Z coordinate" }
-    world: { type: "TEXT", slot: 3, description: "World name" }
-
-giveItem:
-  material: CHEST
-  type: "ACTION"
-  displayName: "Give Item"
-  description: "Gives an item to the player"
-  category: "player_actions"
-  parameters:
-    item: { type: "ITEM", slot: 0, description: "Item to give" }
-    amount: { type: "NUMBER", slot: 1, description: "Amount to give" }
-
-playSound:
-  material: NOTE_BLOCK
-  type: "ACTION"
-  displayName: "Play Sound"
-  description: "Plays a sound for the player"
-  category: "player_actions"
-  parameters:
-    sound: { type: "TEXT", slot: 0, description: "Sound name" }
-    volume: { type: "NUMBER", slot: 1, description: "Volume (0.0-1.0)" }
-    pitch: { type: "NUMBER", slot: 2, description: "Pitch (0.5-2.0)" }
-
-# Advanced Actions
 playCustomSound:
   material: NOTE_BLOCK
   type: "ACTION"
@@ -170,32 +72,20 @@ sendActionBar:
     message: { type: "TEXT", slot: 0, description: "Action bar message" }
     duration: { type: "NUMBER", slot: 1, description: "Display duration (ticks)" }
 
-# ============================================
-# CONDITION BLOCKS
-# ============================================
-
-# Basic Conditions
-hasPermission:
-  material: KNOWLEDGE_BOOK
-  type: "CONDITION"
-  displayName: "Has Permission"
-  description: "Checks if the player has a permission"
-  category: "player_conditions"
+executeAsyncCommand:
+  material: COMMAND_BLOCK
+  type: "ACTION"
+  displayName: "Execute Async Command"
+  description: "Executes commands asynchronously to prevent lag"
+  category: "system_actions"
   parameters:
-    permission: { type: "TEXT", slot: 0, description: "Permission node to check" }
+    command: { type: "TEXT", slot: 0, description: "Command to execute" }
+    delay: { type: "NUMBER", slot: 1, description: "Delay before execution (ticks)" }
 
-compareVariable:
-  material: COMPARATOR
-  type: "CONDITION"
-  displayName: "Compare Variable"
-  description: "Compares a variable to a value"
-  category: "variable_conditions"
-  parameters:
-    variable: { type: "TEXT", slot: 0, description: "Variable name" }
-    operator: { type: "TEXT", slot: 1, description: "Comparison operator (==, !=, >, <, >=, <=)" }
-    value: { type: "ANY", slot: 2, description: "Value to compare against" }
+# ============================================
+# ADVANCED CONDITION BLOCKS
+# ============================================
 
-# Advanced Conditions
 checkPlayerStats:
   material: PLAYER_HEAD
   type: "CONDITION"
@@ -217,28 +107,41 @@ checkWorldWeather:
     weather: { type: "TEXT", slot: 0, description: "clear/rain/thunder" }
     world: { type: "TEXT", slot: 1, description: "World name" }
 
+checkPlayerInventory:
+  material: CHEST
+  type: "CONDITION"
+  displayName: "Inventory Check"
+  description: "Checks player inventory contents"
+  category: "inventory_conditions"
+  parameters:
+    item: { type: "ITEM", slot: 0, description: "Item to check for" }
+    amount: { type: "NUMBER", slot: 1, description: "Required amount" }
+    check_type: { type: "TEXT", slot: 2, description: "has/missing/exact" }
+
+checkServerOnline:
+  material: COMPARATOR
+  type: "CONDITION"
+  displayName: "Server Player Count"
+  description: "Checks number of online players"
+  category: "server_conditions"
+  parameters:
+    count: { type: "NUMBER", slot: 0, description: "Player count threshold" }
+    operator: { type: "TEXT", slot: 1, description: "Comparison operator" }
+
 # ============================================
 # CONTROL FLOW BLOCKS
 # ============================================
 
-ifCondition:
-  material: STONE_BUTTON
+asyncLoop:
+  material: REPEATER
   type: "CONTROL"
-  displayName: "If Condition"
-  description: "Executes the next block if the condition is true"
+  displayName: "Async Loop"
+  description: "Executes contained blocks in a non-blocking loop"
   category: "control_flow"
   parameters:
-    condition: { type: "TEXT", slot: 0, description: "Condition to evaluate" }
+    iterations: { type: "NUMBER", slot: 0, description: "Number of iterations (-1 for infinite)" }
+    delay: { type: "NUMBER", slot: 1, description: "Delay between iterations (ticks)" }
 
-elseCondition:
-  material: STONE_PRESSURE_PLATE
-  type: "CONTROL"
-  displayName: "Else Condition"
-  description: "Executes if the previous if condition was false"
-  category: "control_flow"
-  parameters: {}
-
-# Advanced Control Flow
 conditionalBranch:
   material: COMPARATOR
   type: "CONTROL"
@@ -248,32 +151,29 @@ conditionalBranch:
   parameters:
     condition_count: { type: "NUMBER", slot: 0, description: "Number of conditions to check" }
 
-# ============================================
-# VARIABLE BLOCKS
-# ============================================
-
-setVariable:
-  material: REDSTONE_TORCH
-  type: "ACTION"
-  displayName: "Set Variable"
-  description: "Sets a variable to a value"
-  category: "variable_actions"
+timedExecution:
+  material: CLOCK
+  type: "CONTROL"
+  displayName: "Timed Execution"
+  description: "Executes blocks after a specified delay"
+  category: "control_flow"
   parameters:
-    variable: { type: "TEXT", slot: 0, description: "Variable name" }
-    value: { type: "ANY", slot: 1, description: "Value to set" }
-
-getVariable:
-  material: REPEATER
-  type: "ACTION"
-  displayName: "Get Variable"
-  description: "Gets a variable value"
-  category: "variable_actions"
-  parameters:
-    variable: { type: "TEXT", slot: 0, description: "Variable name" }
+    delay: { type: "NUMBER", slot: 0, description: "Delay in seconds" }
+    repeat: { type: "BOOLEAN", slot: 1, description: "Repeat execution" }
 
 # ============================================
 # FUNCTION BLOCKS
 # ============================================
+
+customFunction:
+  material: ENDER_CHEST
+  type: "FUNCTION"
+  displayName: "Custom Function"
+  description: "Defines a reusable function with parameters"
+  category: "functions"
+  parameters:
+    function_name: { type: "TEXT", slot: 0, description: "Function identifier" }
+    param_count: { type: "NUMBER", slot: 1, description: "Number of parameters" }
 
 callFunction:
   material: ENDER_EYE
@@ -286,7 +186,7 @@ callFunction:
     args: { type: "LIST", slot: 1, description: "Function arguments" }
 
 # ============================================
-# DATA STRUCTURE BLOCKS
+# DATA MANIPULATION BLOCKS
 # ============================================
 
 createList:
@@ -299,8 +199,77 @@ createList:
     list_name: { type: "TEXT", slot: 0, description: "List variable name" }
     initial_values: { type: "LIST", slot: 1, description: "Initial list contents" }
 
+listOperation:
+  material: WRITABLE_BOOK
+  type: "ACTION"
+  displayName: "List Operation"
+  description: "Performs operations on list variables"
+  category: "data_structures"
+  parameters:
+    list_name: { type: "TEXT", slot: 0, description: "Target list name" }
+    operation: { type: "TEXT", slot: 1, description: "add/remove/get/set/size" }
+    value: { type: "ANY", slot: 2, description: "Operation value" }
+    index: { type: "NUMBER", slot: 3, description: "List index (for get/set)" }
+
+createMap:
+  material: MAP
+  type: "ACTION"
+  displayName: "Create Map"
+  description: "Creates a new map (dictionary) variable"
+  category: "data_structures"
+  parameters:
+    map_name: { type: "TEXT", slot: 0, description: "Map variable name" }
+
+mapOperation:
+  material: FILLED_MAP
+  type: "ACTION"
+  displayName: "Map Operation"
+  description: "Performs operations on map variables"
+  category: "data_structures"
+  parameters:
+    map_name: { type: "TEXT", slot: 0, description: "Target map name" }
+    operation: { type: "TEXT", slot: 1, description: "put/get/remove/keys/values" }
+    key: { type: "TEXT", slot: 2, description: "Map key" }
+    value: { type: "ANY", slot: 3, description: "Map value (for put)" }
+
 # ============================================
-# DEBUGGING BLOCKS
+# INTEGRATION BLOCKS
+# ============================================
+
+worldGuardRegionCheck:
+  material: SHIELD
+  type: "CONDITION"
+  displayName: "WorldGuard Region"
+  description: "Checks if player is in a WorldGuard region"
+  category: "integration"
+  parameters:
+    region_name: { type: "TEXT", slot: 0, description: "Region identifier" }
+    world: { type: "TEXT", slot: 1, description: "World name" }
+
+economyTransaction:
+  material: GOLD_INGOT
+  type: "ACTION"
+  displayName: "Economy Transaction"
+  description: "Handles economy transactions (requires Vault)"
+  category: "integration"
+  parameters:
+    operation: { type: "TEXT", slot: 0, description: "give/take/check" }
+    amount: { type: "NUMBER", slot: 1, description: "Transaction amount" }
+    target: { type: "PLAYER", slot: 2, description: "Target player" }
+
+discordWebhook:
+  material: PAPER
+  type: "ACTION"
+  displayName: "Discord Webhook"
+  description: "Sends messages to Discord via webhook"
+  category: "integration"
+  parameters:
+    webhook_url: { type: "TEXT", slot: 0, description: "Discord webhook URL" }
+    message: { type: "TEXT", slot: 1, description: "Message to send" }
+    username: { type: "TEXT", slot: 2, description: "Bot username" }
+
+# ============================================
+# DEBUGGING AND MONITORING BLOCKS
 # ============================================
 
 debugLog:
@@ -312,3 +281,22 @@ debugLog:
   parameters:
     message: { type: "TEXT", slot: 0, description: "Debug message" }
     level: { type: "TEXT", slot: 1, description: "Log level (INFO/WARN/ERROR)" }
+
+performanceMeasure:
+  material: REDSTONE_COMPARATOR
+  type: "CONTROL"
+  displayName: "Performance Measure"
+  description: "Measures execution time of contained blocks"
+  category: "debugging"
+  parameters:
+    label: { type: "TEXT", slot: 0, description: "Performance measurement label" }
+
+variableInspector:
+  material: SPYGLASS
+  type: "ACTION"
+  displayName: "Variable Inspector"
+  description: "Displays current variable values for debugging"
+  category: "debugging"
+  parameters:
+    scope: { type: "TEXT", slot: 0, description: "Variable scope (local/world/player/server)" }
+    filter: { type: "TEXT", slot: 1, description: "Variable name filter (optional)" }

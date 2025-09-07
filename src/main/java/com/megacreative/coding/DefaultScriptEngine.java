@@ -25,7 +25,6 @@ public class DefaultScriptEngine implements ScriptEngine {
     private final MegaCreative plugin;
     private final VariableManager variableManager;
     private final VisualDebugger debugger;
-    private final ParameterResolver parameterResolver;
     private BlockConfigService blockConfigService;
     
     private final ActionFactory actionFactory;
@@ -45,10 +44,9 @@ public class DefaultScriptEngine implements ScriptEngine {
         this.variableManager = variableManager;
         this.debugger = debugger;
         this.blockConfigService = blockConfigService;
-        this.parameterResolver = new ParameterResolver(variableManager);
         
         // Initialize factories
-        this.actionFactory = new ActionFactory(blockConfigService, parameterResolver);
+        this.actionFactory = new ActionFactory(blockConfigService);
         this.conditionFactory = new ConditionFactory(blockConfigService);
     }
     
@@ -122,7 +120,7 @@ public class DefaultScriptEngine implements ScriptEngine {
         int actionCount = 0;
         for (BlockConfigService.BlockConfig config : blockConfigService.getAllBlockConfigs()) {
             if ("ACTION".equals(config.getType()) || "EVENT".equals(config.getType())) {
-                BlockAction action = actionFactory.createAction(config.getActionName(), config.getMaterial());
+                BlockAction action = actionFactory.createAction(config.getActionName());
                 if (action != null) {
                     // Try to get BlockType from enum first, then create dynamic one
                     BlockType blockType = BlockType.getByMaterialAndAction(config.getMaterial(), config.getActionName());
@@ -144,7 +142,7 @@ public class DefaultScriptEngine implements ScriptEngine {
         int conditionCount = 0;
         for (BlockConfigService.BlockConfig config : blockConfigService.getAllBlockConfigs()) {
             if ("CONDITION".equals(config.getType()) || "CONTROL".equals(config.getType())) {
-                BlockCondition condition = conditionFactory.createCondition(config.getActionName(), config.getMaterial());
+                BlockCondition condition = conditionFactory.createCondition(config.getActionName());
                 if (condition != null) {
                     // Try to get BlockType from enum first, then create dynamic one
                     BlockType blockType = BlockType.getByMaterialAndAction(config.getMaterial(), config.getActionName());
@@ -362,7 +360,7 @@ public class DefaultScriptEngine implements ScriptEngine {
             ExecutionResult result = condition.evaluate(block, context);
             
             // Handle the result
-            if (result.isSuccess() && result.getBooleanResult()) {
+            if (result.isSuccess() && "true".equals(result.getMessage())) {
                 // Condition is true, execute the next block
                 CodeBlock nextBlock = block.getNextBlock();
                 if (nextBlock != null) {

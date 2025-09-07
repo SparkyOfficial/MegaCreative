@@ -1,289 +1,152 @@
 package com.megacreative.services;
 
+import com.megacreative.MegaCreative;
 import org.bukkit.Material;
 import org.bukkit.configuration.ConfigurationSection;
 import org.bukkit.configuration.file.YamlConfiguration;
-import org.bukkit.plugin.Plugin;
-
 import java.io.File;
 import java.util.*;
-import java.util.logging.Level;
 import java.util.logging.Logger;
+import java.util.stream.Collectors;
 
 /**
- * Service for loading and managing block configurations from coding_blocks.yml
- * Replaces hardcoded material mappings with config-driven approach
- * Updated to work with the new advanced configuration format
+ * Единственный сервис для загрузки и управления конфигурацией всех блоков из coding_blocks.yml.
+ * Заменяет BlockConfiguration.java и старые системы.
  */
 public class BlockConfigService {
     
-    private static final Logger log = Logger.getLogger(BlockConfigService.class.getName());
-    
-    private final Plugin plugin;
-    private final Map<String, BlockConfig> actionToConfig = new HashMap<>(); // action name -> config
-    private final Map<Material, List<BlockConfig>> materialToConfigs = new HashMap<>(); // material -> list of configs
-    private final Set<Material> codeBlocks = new HashSet<>();
-    private YamlConfiguration config;
-    
-    public BlockConfigService(Plugin plugin) {
+    private final MegaCreative plugin;
+    private final Logger logger;
+    private final Map<String, BlockConfig> blockConfigs = new HashMap<>(); // Ключ - ID блока (onPlayerMove)
+    private final Map<Material, List<String>> materialToBlockIds = new HashMap<>(); // Ключ - Материал, значение - список ID блоков
+
+    public BlockConfigService(MegaCreative plugin) {
         this.plugin = plugin;
-        loadConfig();
+        this.logger = plugin.getLogger();
+        load();
     }
-    
-    /**
-     * Loads block configurations from coding_blocks.yml
-     */
-    public void loadConfig() {
-        try {
-            File configFile = new File(plugin.getDataFolder(), "coding_blocks.yml");
-            
-            if (!configFile.exists()) {
-                // Save the new configuration file
-                plugin.saveResource("new_coding_blocks.yml", false);
-                // Rename it to coding_blocks.yml
-                File newConfigFile = new File(plugin.getDataFolder(), "new_coding_blocks.yml");
-                newConfigFile.renameTo(configFile);
-            }
-            
-            config = YamlConfiguration.loadConfiguration(configFile);
-            parseBlockConfigurations();
-            
-            log.info("Loaded " + actionToConfig.size() + " block configurations from coding_blocks.yml");
-            
-        } catch (Exception e) {
-            log.log(Level.SEVERE, "Failed to load block configurations", e);
+
+    public void load() {
+        blockConfigs.clear();
+        materialToBlockIds.clear();
+
+        File configFile = new File(plugin.getDataFolder(), "coding_blocks.yml");
+        if (!configFile.exists()) {
+            plugin.saveResource("coding_blocks.yml", false); // Убедись, что твой "мастер-план" лежит в JAR
         }
-    }
-    
-    /**
-     * Parses block configurations from the YAML config
-     * Updated to work with the new advanced configuration format
-     */
-    private void parseBlockConfigurations() {
-        actionToConfig.clear();
-        materialToConfigs.clear();
-        codeBlocks.clear();
-        
-        // In the new format, each key is an action name, not a material
-        for (String actionName : config.getKeys(false)) {
-            // Skip non-block configuration sections
-            if (actionName.equals("defaults") || actionName.equals("blocks")) {
-                continue;
-            }
-            
-            ConfigurationSection blockSection = config.getConfigurationSection(actionName);
-            if (blockSection != null) {
-                try {
-                    BlockConfig blockConfig = parseAdvancedBlockConfig(actionName, blockSection);
-                    actionToConfig.put(actionName, blockConfig);
-                    
-                    // Add to material mapping
-                    materialToConfigs.computeIfAbsent(blockConfig.getMaterial(), k -> new ArrayList<>()).add(blockConfig);
-                    codeBlocks.add(blockConfig.getMaterial());
-                } catch (Exception e) {
-                    log.warning("Failed to parse block config for action: " + actionName + " - " + e.getMessage());
-                }
+
+        YamlConfiguration config = YamlConfiguration.loadConfiguration(configFile);
+
+        for (String id : config.getKeys(false)) {
+            ConfigurationSection section = config.getConfigurationSection(id);
+            if (section == null) continue;
+
+            try {
+                BlockConfig blockConfig = new BlockConfig(id, section);
+                blockConfigs.put(id, blockConfig);
+                materialToBlockIds.computeIfAbsent(blockConfig.getMaterial(), k -> new ArrayList<>()).add(id);
+            } catch (Exception e) {
+                logger.warning("Failed to load block configuration for '" + id + "': " + e.getMessage());
             }
         }
+        logger.info("Loaded " + blockConfigs.size() + " block definitions.");
     }
-    
+
+    // --- ОСНОВНЫЕ МЕТОДЫ ДОСТУПА ---
+
     /**
-     * Parses individual block configuration in the new advanced format
+     * Получает конфигурацию блока по его ID (например, "onPlayerMove").
      */
-    private BlockConfig parseAdvancedBlockConfig(String actionName, ConfigurationSection section) {
-        String materialName = section.getString("material");
-        Material material = Material.valueOf(materialName);
-        
-        String displayName = section.getString("displayName", actionName);
-        String description = section.getString("description", "");
-        String type = section.getString("type", "ACTION"); // Default to ACTION if not specified
-        String category = section.getString("category", "general");
-        
-        // Parse parameters
-        Map<String, ParameterConfig> parameters = new HashMap<>();
-        ConfigurationSection paramsSection = section.getConfigurationSection("parameters");
-        if (paramsSection != null) {
-            for (String paramName : paramsSection.getKeys(false)) {
-                ConfigurationSection paramSection = paramsSection.getConfigurationSection(paramName);
-                if (paramSection != null) {
-                    String paramType = paramSection.getString("type", "TEXT");
-                    int slot = paramSection.getInt("slot", -1);
-                    String paramDescription = paramSection.getString("description", "");
-                    
-                    parameters.put(paramName, new ParameterConfig(paramName, paramType, slot, paramDescription));
-                }
-            }
-        }
-        
-        return new BlockConfig(actionName, material, displayName, description, type, category, parameters);
+    public BlockConfig getBlockConfig(String id) {
+        return blockConfigs.get(id);
     }
-    
+
     /**
-     * Gets block configuration for an action name
-     */
-    public BlockConfig getBlockConfig(String actionName) {
-        return actionToConfig.get(actionName);
-    }
-    
-    /**
-     * Gets all block configurations for a material
+     * Получает список всех возможных блоков для данного материала.
      */
     public List<BlockConfig> getBlockConfigsForMaterial(Material material) {
-        return materialToConfigs.getOrDefault(material, new ArrayList<>());
+        List<String> ids = materialToBlockIds.getOrDefault(material, Collections.emptyList());
+        return ids.stream().map(this::getBlockConfig).filter(Objects::nonNull).collect(Collectors.toList());
     }
-    
+
     /**
-     * Gets the first block configuration for a material (for backward compatibility)
-     */
-    public BlockConfig getBlockConfig(Material material) {
-        List<BlockConfig> configs = materialToConfigs.get(material);
-        return configs != null && !configs.isEmpty() ? configs.get(0) : null;
-    }
-    
-    /**
-     * Gets all block configurations
-     */
-    public Collection<BlockConfig> getAllBlockConfigs() {
-        return actionToConfig.values();
-    }
-    
-    /**
-     * Checks if a material is a valid code block
+     * Проверяет, является ли материал блоком кода.
      */
     public boolean isCodeBlock(Material material) {
-        return codeBlocks.contains(material);
+        return materialToBlockIds.containsKey(material);
     }
-    
-    /**
-     * Gets all valid code block materials
-     */
+
     public Set<Material> getCodeBlockMaterials() {
-        return new HashSet<>(codeBlocks);
+        return materialToBlockIds.keySet();
     }
-    
-    /**
-     * Gets the display name for an action
-     */
-    public String getBlockName(String actionName) {
-        BlockConfig config = actionToConfig.get(actionName);
-        return config != null ? config.getDisplayName() : actionName;
+
+    public Collection<BlockConfig> getAllBlockConfigs() {
+        return blockConfigs.values();
     }
-    
-    /**
-     * Gets the block type for an action
-     */
-    public String getBlockType(String actionName) {
-        BlockConfig config = actionToConfig.get(actionName);
-        return config != null ? config.getType() : "ACTION";
-    }
-    
-    /**
-     * Checks if a block type is a control or event block
-     */
-    public boolean isControlOrEventBlock(String type) {
-        return "EVENT".equals(type) || "CONTROL".equals(type) || "FUNCTION".equals(type);
-    }
-    
-    /**
-     * Checks if an action is a control or event block
-     */
-    public boolean isControlOrEventBlock(String actionName) {
-        String type = getBlockType(actionName);
-        return isControlOrEventBlock(type);
-    }
-    
-    /**
-     * Reloads the configuration
-     */
-    public void reload() {
-        loadConfig();
-    }
-    
-    /**
-     * Block configuration data class for the new advanced format
-     */
+
+    // --- Внутренние классы для хранения данных ---
+
     public static class BlockConfig {
-        private final String actionName;
+        private final String id;
         private final Material material;
+        private final String type;
         private final String displayName;
         private final String description;
-        private final String type;
         private final String category;
+        private final String actionName;
         private final Map<String, ParameterConfig> parameters;
-        
-        public BlockConfig(String actionName, Material material, String displayName, String description, 
-                          String type, String category, Map<String, ParameterConfig> parameters) {
-            this.actionName = actionName;
-            this.material = material;
-            this.displayName = displayName;
-            this.description = description;
-            this.type = type;
-            this.category = category;
-            this.parameters = new HashMap<>(parameters);
+
+        public BlockConfig(String id, ConfigurationSection section) {
+            this.id = id;
+            this.material = Material.valueOf(section.getString("material"));
+            this.type = section.getString("type", "ACTION");
+            this.displayName = section.getString("displayName", id);
+            this.description = section.getString("description", "");
+            this.category = section.getString("category", "general");
+            this.actionName = id; // In the new system, ID and action name are the same
+            
+            // Parse parameters
+            this.parameters = new HashMap<>();
+            ConfigurationSection paramsSection = section.getConfigurationSection("parameters");
+            if (paramsSection != null) {
+                for (String paramName : paramsSection.getKeys(false)) {
+                    ConfigurationSection paramSection = paramsSection.getConfigurationSection(paramName);
+                    if (paramSection != null) {
+                        ParameterConfig paramConfig = new ParameterConfig(paramName, paramSection);
+                        this.parameters.put(paramName, paramConfig);
+                    }
+                }
+            }
         }
-        
-        public String getActionName() { return actionName; }
+
+        // Getters
+        public String getId() { return id; }
         public Material getMaterial() { return material; }
+        public String getType() { return type; }
         public String getDisplayName() { return displayName; }
         public String getDescription() { return description; }
-        public String getType() { return type; }
         public String getCategory() { return category; }
+        public String getActionName() { return actionName; }
         public Map<String, ParameterConfig> getParameters() { return parameters; }
-        
-        /**
-         * Checks if this block has a specific parameter
-         */
-        public boolean hasParameter(String paramName) {
-            return parameters.containsKey(paramName);
-        }
-        
-        /**
-         * Gets a parameter configuration
-         */
-        public ParameterConfig getParameter(String paramName) {
-            return parameters.get(paramName);
-        }
-        
-        @Override
-        public String toString() {
-            return "BlockConfig{" +
-                    "actionName='" + actionName + '\'' +
-                    ", material=" + material +
-                    ", displayName='" + displayName + '\'' +
-                    ", type='" + type + '\'' +
-                    ", parameters=" + parameters.size() +
-                    '}';
-        }
     }
-    
-    /**
-     * Parameter configuration data class
-     */
+
     public static class ParameterConfig {
         private final String name;
         private final String type;
         private final int slot;
         private final String description;
-        
-        public ParameterConfig(String name, String type, int slot, String description) {
+
+        public ParameterConfig(String name, ConfigurationSection section) {
             this.name = name;
-            this.type = type;
-            this.slot = slot;
-            this.description = description;
+            this.type = section.getString("type", "TEXT");
+            this.slot = section.getInt("slot", -1);
+            this.description = section.getString("description", "");
         }
-        
+
+        // Getters
         public String getName() { return name; }
         public String getType() { return type; }
         public int getSlot() { return slot; }
         public String getDescription() { return description; }
-        
-        @Override
-        public String toString() {
-            return "ParameterConfig{" +
-                    "name='" + name + '\'' +
-                    ", type='" + type + '\'' +
-                    ", slot=" + slot +
-                    '}';
-        }
     }
 }

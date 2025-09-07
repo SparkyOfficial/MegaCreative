@@ -6,6 +6,7 @@ import com.megacreative.core.DependencyContainer;
 import com.megacreative.core.ServiceRegistry;
 import com.megacreative.config.ConfigurationValidator;
 import com.megacreative.exceptions.ConfigurationException;
+import com.megacreative.coding.events.PlayerEventsListener;
 import org.bukkit.plugin.java.JavaPlugin;
 
 import java.util.Map;
@@ -157,10 +158,6 @@ public class MegaCreative extends JavaPlugin {
         return serviceRegistry.getScriptPerformanceMonitor();
     }
     
-    public com.megacreative.coding.BlockConfiguration getBlockConfiguration() {
-        return serviceRegistry.getBlockConfiguration();
-    }
-    
     public com.megacreative.utils.ConfigManager getConfigManager() {
         return serviceRegistry.getConfigManager();
     }
@@ -215,6 +212,9 @@ public class MegaCreative extends JavaPlugin {
         getServer().getPluginManager().registerEvents(serviceRegistry.getGuiManager(), this);
         getServer().getPluginManager().registerEvents(serviceRegistry.getCustomEventManager(), this);
         getServer().getPluginManager().registerEvents(new BlockGroupListener(serviceRegistry), this);
+        
+        // Register our new PlayerEventsListener
+        getServer().getPluginManager().registerEvents(serviceRegistry.getPlayerEventsListener(), this);
     }
     
     // Static access and service delegation
