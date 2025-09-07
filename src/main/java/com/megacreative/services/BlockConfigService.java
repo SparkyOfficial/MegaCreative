@@ -115,6 +115,13 @@ public class BlockConfigService {
     }
 
     /**
+     * Checks if a block type is a control or event block
+     */
+    public boolean isControlOrEventBlock(String blockType) {
+        return "CONTROL".equals(blockType) || "EVENT".equals(blockType);
+    }
+    
+    /**
      * Gets a block configuration by its ID
      */
     public BlockConfig getBlockConfig(String id) {
@@ -224,6 +231,18 @@ public class BlockConfigService {
      * Полезно для DevWorldProtectionListener и других мест, где нужна базовая информация.
      */
     public BlockConfig getFirstBlockConfig(Material material) {
+        List<String> ids = materialToBlockIds.get(material);
+        if (ids == null || ids.isEmpty()) {
+            return null;
+        }
+        return getBlockConfig(ids.get(0));
+    }
+    
+    /**
+     * Gets a block configuration by material
+     * This method gets the first block config for a material
+     */
+    public BlockConfig getBlockConfig(Material material) {
         List<String> ids = materialToBlockIds.get(material);
         if (ids == null || ids.isEmpty()) {
             return null;

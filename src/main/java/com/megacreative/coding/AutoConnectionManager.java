@@ -390,7 +390,7 @@ public class AutoConnectionManager implements Listener {
      */
     private String determineActionFromMaterial(Material material) {
         // Get the first block config for this material as a fallback
-        BlockConfigService.BlockConfig config = blockConfigService.getBlockConfig(material);
+        BlockConfigService.BlockConfig config = blockConfigService.getFirstBlockConfig(material);
         return config != null ? config.getActionName() : null;
     }
     
@@ -398,7 +398,7 @@ public class AutoConnectionManager implements Listener {
      * Gets the block type for a material using the new configuration system
      */
     private String getBlockType(Material material) {
-        BlockConfigService.BlockConfig config = blockConfigService.getBlockConfig(material);
+        BlockConfigService.BlockConfig config = blockConfigService.getFirstBlockConfig(material);
         return config != null ? config.getType() : "ACTION";
     }
     
@@ -562,5 +562,31 @@ public class AutoConnectionManager implements Listener {
     public void reloadBlockConfig() {
         blockConfigService.reload();
         plugin.getLogger().info("Block configuration reloaded");
+    }
+    
+    /**
+     * Determines if a block should auto-connect to the next block
+     * Control and event blocks don't auto-connect as they have special connection logic
+     */
+    private boolean shouldAutoConnect(String action, String blockType) {
+        // Get the block configuration
+        BlockConfigService.BlockConfig config = blockConfigService.getBlockConfig(action);
+        if (config == null) return true; // Default to auto-connect
+        
+        // Check if it's a control or event block
+        return !blockConfigService.isControlOrEventBlock(config.getType());
+    }
+    
+    /**
+     * Determines if a block should connect to child blocks (conditionals, loops)
+     * Only control and event blocks can have children
+     */
+    private boolean shouldConnectToChildren(String action, String blockType) {
+        // Get the block configuration
+        BlockConfigService.BlockConfig config = blockConfigService.getBlockConfig(action);
+        if (config == null) return false; // Default to no children
+        
+        // Check if it's a control or event block
+        return blockConfigService.isControlOrEventBlock(config.getType());
     }
 }

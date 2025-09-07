@@ -557,6 +557,7 @@ public class VariableManager implements IVariableManager {
         return vars != null ? new HashMap<>(vars) : Collections.emptyMap();
     }
     
+    @Override
     public void clearPlayerVariables(UUID playerId) {
         if (playerId != null) {
             playerVariables.remove(playerId);

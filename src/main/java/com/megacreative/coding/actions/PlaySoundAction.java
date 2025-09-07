@@ -26,10 +26,10 @@ public class PlaySoundAction implements BlockAction {
 
         try {
             // Enhanced parameter resolution with defaults for backward compatibility
-            String soundStr = resolveParameter(resolver, block, "sound", "minecraft:block.note_block.harp");
-            float volume = (float) resolveNumberParameter(resolver, block, "volume", 1.0);
-            float pitch = (float) resolveNumberParameter(resolver, block, "pitch", 1.0);
-            String locationStr = resolveParameter(resolver, block, "location", "player");
+            String soundStr = resolveParameter(resolver, context, block, "sound", "minecraft:block.note_block.harp");
+            float volume = (float) resolveNumberParameter(resolver, context, block, "volume", 1.0);
+            float pitch = (float) resolveNumberParameter(resolver, context, block, "pitch", 1.0);
+            String locationStr = resolveParameter(resolver, context, block, "location", "player");
 
             if (soundStr == null) return;
 
@@ -67,7 +67,7 @@ public class PlaySoundAction implements BlockAction {
     /**
      * Resolves a text parameter with fallback default
      */
-    private String resolveParameter(ParameterResolver resolver, 
+    private String resolveParameter(ParameterResolver resolver, ExecutionContext context,
                                   CodeBlock block, String paramName, String defaultValue) {
         DataValue rawValue = block.getParameter(paramName);
         if (rawValue == null) return defaultValue;
@@ -78,7 +78,7 @@ public class PlaySoundAction implements BlockAction {
     /**
      * Resolves a numeric parameter with fallback default
      */
-    private double resolveNumberParameter(ParameterResolver resolver, 
+    private double resolveNumberParameter(ParameterResolver resolver, ExecutionContext context,
                                         CodeBlock block, String paramName, double defaultValue) {
         DataValue rawValue = block.getParameter(paramName);
         if (rawValue == null) return defaultValue;

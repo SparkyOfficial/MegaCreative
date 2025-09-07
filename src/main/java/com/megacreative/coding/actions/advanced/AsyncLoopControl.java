@@ -6,6 +6,7 @@ import com.megacreative.coding.ExecutionContext;
 import com.megacreative.coding.ParameterResolver;
 import com.megacreative.coding.values.DataValue;
 import com.megacreative.coding.variables.VariableManager;
+import com.megacreative.models.CreativeWorld;
 import org.bukkit.Bukkit;
 import org.bukkit.entity.Player;
 import org.bukkit.plugin.Plugin;
@@ -15,6 +16,7 @@ import org.bukkit.scheduler.BukkitTask;
 import java.util.Map;
 import java.util.UUID;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.logging.Level;
 
 /**
  * Advanced async loop control that executes child blocks repeatedly without blocking the main thread
@@ -223,7 +225,9 @@ public class AsyncLoopControl implements BlockAction {
                         context.getPlugin(),
                         context.getPlayer(), 
                         context.getCreativeWorld(),
-                        context.getScriptId()
+                        context.getEvent(),
+                        context.getBlockLocation(),
+                        childBlock
                     );
                     executeChildBlock(childContext, childBlock);
                 } catch (Exception e) {
@@ -231,7 +235,7 @@ public class AsyncLoopControl implements BlockAction {
                     if (context.getPlayer() != null) {
                         context.getPlayer().sendMessage("§cError in loop iteration: " + e.getMessage());
                     }
-                    plugin.getLogger().log(Level.SEVERE, "Error in AsyncLoopControl", e);
+                    context.getPlugin().getLogger().log(Level.SEVERE, "Error in AsyncLoopControl", e);
                 }
             }
         }

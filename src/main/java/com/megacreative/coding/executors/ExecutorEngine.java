@@ -374,7 +374,7 @@ public class ExecutorEngine {
                 context.getPlayer().getWorld().getName() : "global";
             
             // Set the variable
-            variableManager.setVariable(varName, value, scriptId, worldName);
+            variableManager.setLocalVariable(scriptId, varName, value);
             
             return context.createResult(true, "Set variable " + varName + " to " + 
                 (value != null ? value.asString() : "null"));
@@ -406,7 +406,7 @@ public class ExecutorEngine {
                 context.getPlayer().getWorld().getName() : "global";
             
             // Get current variable value
-            DataValue currentValue = variableManager.getVariable(varName, scriptId, worldName);
+            DataValue currentValue = variableManager.getLocalVariable(scriptId, varName);
             
             // Check condition
             boolean condition = false;
