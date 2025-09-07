@@ -23,8 +23,8 @@ public class GetGlobalVariableAction implements BlockAction {
         
         if (rawVarName == null || rawLocalVar == null) return;
 
-        String varName = resolver.resolve(rawVarName).asString();
-        String localVarName = resolver.resolve(rawLocalVar).asString();
+        String varName = resolver.resolve(context, rawVarName).asString();
+        String localVarName = resolver.resolve(context, rawLocalVar).asString();
 
         if (varName != null && !varName.isEmpty() && localVarName != null && !localVarName.isEmpty()) {
             Object globalValue = context.getGlobalVariable(varName);
@@ -32,4 +32,4 @@ public class GetGlobalVariableAction implements BlockAction {
             player.sendMessage("§a✓ Глобальная переменная '" + varName + "' загружена в локальную '" + localVarName + "'");
         }
     }
-} 
+}

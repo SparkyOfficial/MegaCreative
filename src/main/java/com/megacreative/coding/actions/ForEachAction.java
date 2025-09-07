@@ -9,7 +9,7 @@ import com.megacreative.coding.values.DataValue;
 import com.megacreative.coding.values.types.ListValue;
 import com.megacreative.coding.values.types.TextValue;
 import com.megacreative.coding.variables.VariableManager;
-import com.megacreative.coding.variables.VariableScope;
+import com.megacreative.coding.variables.IVariableManager.VariableScope;
 import com.megacreative.services.BlockConfigService;
 import org.bukkit.entity.Player;
 import java.util.UUID;

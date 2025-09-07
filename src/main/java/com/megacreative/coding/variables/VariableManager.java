@@ -21,7 +21,7 @@ import java.util.logging.Level;
 public class VariableManager implements IVariableManager {
     
     private final MegaCreative plugin;
-    private final Map<String, DataValue> globalVariables = new ConcurrentHashMap<>();
+    private final Map<String, Map<String, DataValue>> globalVariables = new ConcurrentHashMap<>();
     private final Map<String, Map<String, DataValue>> localVariables = new ConcurrentHashMap<>();
     private final Map<UUID, Map<String, DataValue>> playerVariables = new ConcurrentHashMap<>();
     private final Map<String, DataValue> serverVariables = new ConcurrentHashMap<>();
@@ -233,6 +233,9 @@ public class VariableManager implements IVariableManager {
                     Map<String, DataValue> contextVars = localVariables.get(context);
                     if (contextVars != null) {
                         contextVars.remove(name);
+                        if (contextVars.isEmpty()) {
+                            localVariables.remove(context);
+                        }
                         variableMetadata.remove("local_" + context + "_" + name);
                     }
                 }
@@ -684,6 +687,4 @@ public class VariableManager implements IVariableManager {
                     player.sendMessage(message));
             });
     }
-    
-    // Removed duplicate method implementations
 }

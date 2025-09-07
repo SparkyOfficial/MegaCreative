@@ -72,7 +72,7 @@ public class PlaySoundAction implements BlockAction {
         DataValue rawValue = block.getParameter(paramName);
         if (rawValue == null) return defaultValue;
         
-        return resolver.resolve(rawValue).asString();
+        return resolver.resolve(context, rawValue).asString();
     }
     
     /**
@@ -84,7 +84,7 @@ public class PlaySoundAction implements BlockAction {
         if (rawValue == null) return defaultValue;
         
         try {
-            return resolver.resolve(rawValue).asNumber().doubleValue();
+            return resolver.resolve(context, rawValue).asNumber().doubleValue();
         } catch (Exception e) {
             return defaultValue;
         }
@@ -157,4 +157,4 @@ public class PlaySoundAction implements BlockAction {
             return null;
         }
     }
-} 
+}

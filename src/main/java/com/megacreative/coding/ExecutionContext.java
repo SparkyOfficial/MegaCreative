@@ -2,7 +2,7 @@ package com.megacreative.coding;
 
 import com.megacreative.MegaCreative;
 import com.megacreative.coding.variables.VariableManager;
-import com.megacreative.coding.variables.VariableScope;
+import com.megacreative.coding.variables.IVariableManager.VariableScope;
 import com.megacreative.coding.values.DataValue;
 import com.megacreative.models.CreativeWorld;
 import org.bukkit.Location;
@@ -82,9 +82,6 @@ public class ExecutionContext {
         variableManager.setLocalVariable(scriptId, name, DataValue.fromObject(value));
     }
     
-    /**
-     * Получает локальную переменную скрипта
-     */
     /**
      * Gets a variable value by name.
      * @param name The name of the variable
@@ -245,7 +242,7 @@ public class ExecutionContext {
         if (value != null) {
             setVariable(name, value);
         } else if (scriptId != null) {
-            variableManager.removeVariable(name, VariableScope.LOCAL, scriptId);
+            variableManager.setVariable(name, null, VariableScope.LOCAL, scriptId);
         }
     }
     

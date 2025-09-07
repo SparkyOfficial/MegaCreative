@@ -263,7 +263,7 @@ public class ServiceRegistry {
             ScriptEngine scriptEngine = getService(ScriptEngine.class);
             
             // Create and initialize CodingManager
-            this.codingManager = new CodingManagerImpl((MegaCreative) plugin, worldManager);
+            this.codingManager = new com.megacreative.coding.CodingManagerImpl((MegaCreative) plugin, worldManager);
             registerService(ICodingManager.class, codingManager);
             
             // Verify ScriptEngine is properly set
@@ -434,7 +434,7 @@ public class ServiceRegistry {
         }
         
         // Load block configurations
-        blockConfigService.load();
+        blockConfigService.reload();
         
         // Initialize GUI Manager with required dependencies
         if (guiManager == null) {
@@ -492,8 +492,8 @@ public class ServiceRegistry {
     
     private void postInitialize() {
         // Services that need initialization after all dependencies are available
-        if (worldManager instanceof WorldManagerImpl) {
-            ((WorldManagerImpl) worldManager).initialize();
+        if (worldManager instanceof com.megacreative.managers.WorldManagerImpl) {
+            ((com.megacreative.managers.WorldManagerImpl) worldManager).initialize();
         }
     }
 }

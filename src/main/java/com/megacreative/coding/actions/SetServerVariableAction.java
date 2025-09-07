@@ -25,8 +25,8 @@ public class SetServerVariableAction implements BlockAction {
 
         if (rawVarName == null || rawValue == null) return;
 
-        DataValue varNameValue = resolver.resolve(rawVarName);
-        DataValue value = resolver.resolve(rawValue);
+        DataValue varNameValue = resolver.resolve(context, rawVarName);
+        DataValue value = resolver.resolve(context, rawValue);
 
         String varName = varNameValue.asString();
         if (varName != null && !varName.isEmpty()) {

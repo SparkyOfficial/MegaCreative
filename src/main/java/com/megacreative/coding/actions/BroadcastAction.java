@@ -22,7 +22,7 @@ public class BroadcastAction implements BlockAction {
         
         DataValue messageValue = block.getParameter("message");
         if (messageValue != null) {
-            DataValue resolvedMessage = resolver.resolve(messageValue);
+            DataValue resolvedMessage = resolver.resolve(context, messageValue);
             String message = resolvedMessage.asString();
             
             if (player != null) {
@@ -31,4 +31,4 @@ public class BroadcastAction implements BlockAction {
             Bukkit.broadcastMessage(message);
         }
     }
-} 
+}

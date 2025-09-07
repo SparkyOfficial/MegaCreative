@@ -25,7 +25,7 @@ public class CommandAction implements BlockAction {
 
         if (rawCommand == null) return;
 
-        DataValue commandValue = resolver.resolve(rawCommand);
+        DataValue commandValue = resolver.resolve(context, rawCommand);
         String commandStr = commandValue.asString();
 
         if (commandStr == null || commandStr.isEmpty()) return;
@@ -48,4 +48,4 @@ public class CommandAction implements BlockAction {
             player.sendMessage("§cОшибка выполнения команды: " + e.getMessage());
         }
     }
-} 
+}
