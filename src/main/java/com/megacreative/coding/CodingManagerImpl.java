@@ -53,24 +53,11 @@ public class CodingManagerImpl implements ICodingManager {
                 // Handle the result
                 if (throwable != null) {
                     logger.warning("Script execution failed with exception: " + throwable.getMessage());
-                    if (player != null && player.isOnline()) {
-                        player.sendMessage("§cScript execution failed: " + throwable.getMessage());
-                    }
+                    logError(player, "Script execution failed: " + throwable.getMessage());
                 } else if (result != null) {
                     if (!result.isSuccess()) {
                         logger.warning("Script execution failed: " + result.getMessage());
-                        VisualDebugger debugger = serviceRegistry.getScriptDebugger();
-                        if (debugger != null) {
-                            debugger.logError(player, "Script execution failed: " + result.getMessage());
-                        }
-                        if (player != null && player.isOnline()) {
-                            player.sendMessage("§cScript execution failed: " + result.getMessage());
-                        }
-                    } else {
-                        // Success case - log if needed
-                        if (player != null && player.isOnline()) {
-                            player.sendMessage("§aScript executed successfully!");
-                        }
+                        logError(player, "Script execution failed: " + result.getMessage());
                     }
                 }
             });
@@ -165,5 +152,21 @@ public class CodingManagerImpl implements ICodingManager {
     public void shutdown() {
         // Cleanup resources if needed
         logger.info("CodingManager shutdown completed");
+    }
+    
+    private void logError(Player player, String message) {
+        logger.severe(message);
+        if (player != null && player.isOnline()) {
+            player.sendMessage("§cError: " + message);
+        }
+        
+        // Log to visual debugger if available
+        ServiceRegistry serviceRegistry = plugin.getServiceRegistry();
+        if (serviceRegistry != null) {
+            VisualDebugger debugger = serviceRegistry.getScriptDebugger();
+            if (debugger != null) {
+                debugger.logError(player, message);
+            }
+        }
     }
 }

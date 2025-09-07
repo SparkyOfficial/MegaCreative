@@ -19,6 +19,7 @@ import java.util.Map;
 import java.util.HashMap;
 import java.util.List;
 import java.util.ArrayList;
+import java.util.HashSet;
 import java.util.UUID;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.logging.Logger;
@@ -157,7 +158,7 @@ public class VisualDebugger {
             if (manager.removeBreakpoint(location)) {
                 player.sendMessage("§a✓ Breakpoint removed at " + formatLocation(location));
             } else {
-                player.sendMessage("§cNo breakpoint found at " + formatLocation(blockLocation));
+                player.sendMessage("§cNo breakpoint found at " + formatLocation(location));
             }
         }
     }

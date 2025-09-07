@@ -1,7 +1,6 @@
 package com.megacreative.coding;
 
 import com.megacreative.coding.actions.*;
-import com.megacreative.services.BlockConfigService;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.function.Supplier;
@@ -11,45 +10,43 @@ public class ActionFactory {
     // Используем Supplier для "ленивого" создания. Это эффективнее.
     private final Map<String, Supplier<BlockAction>> actionMap = new HashMap<>();
 
-    private final BlockConfigService blockConfigService;
-
-    public ActionFactory(BlockConfigService blockConfigService) {
-        this.blockConfigService = blockConfigService;
+    // Убираем зависимость от BlockConfigService, она здесь не нужна
+    public ActionFactory() {
         // РЕГИСТРИРУЕМ АБСОЛЮТНО ВСЕ ДЕЙСТВИЯ ИЗ coding_blocks.yml с type: "ACTION"
-        register("sendMessage", () -> new SendMessageAction(null));
-        register("teleport", () -> new TeleportAction());
-        register("giveItem", () -> new GiveItemAction());
-        register("playSound", () -> new PlaySoundAction());
-        register("effect", () -> new EffectAction());
-        register("command", () -> new CommandAction());
-        register("broadcast", () -> new BroadcastAction());
-        register("giveItems", () -> new GiveItemsAction());
-        register("spawnEntity", () -> new SpawnEntityAction());
-        register("removeItems", () -> new RemoveItemsAction());
-        register("setArmor", () -> new SetArmorAction());
-        register("setVar", () -> new SetVariableAction());
-        register("spawnMob", () -> new SpawnMobAction());
-        register("healPlayer", () -> new HealPlayerAction());
-        register("setGameMode", () -> new SetGameModeAction());
-        register("setTime", () -> new SetTimeAction());
-        register("setWeather", () -> new SetWeatherAction());
-        register("explosion", () -> new ExplosionAction());
-        register("setBlock", () -> new SetBlockAction());
-        register("getVar", () -> new GetVariableAction());
-        register("getPlayerName", () -> new GetPlayerNameAction());
-        register("setGlobalVar", () -> new SetGlobalVariableAction());
-        register("getGlobalVar", () -> new GetGlobalVariableAction());
-        register("setServerVar", () -> new SetServerVariableAction());
-        register("getServerVar", () -> new GetServerVariableAction());
-        register("wait", () -> new WaitAction());
-        register("randomNumber", () -> new RandomNumberAction());
-        register("playParticle", () -> new PlayParticleAction());
-        register("sendActionBar", () -> new SendActionBarAction());
-        register("callFunction", () -> new CallFunctionAction());
-        register("saveFunction", () -> new SaveFunctionAction());
-        register("repeat", () -> new RepeatAction());
-        register("repeatTrigger", () -> new RepeatTriggerAction());
-        register("else", () -> new ElseAction());
+        // For actions that don't require dependencies, we can use method references
+        register("teleport", TeleportAction::new);
+        register("giveItem", GiveItemAction::new);
+        register("playSound", PlaySoundAction::new);
+        register("effect", EffectAction::new);
+        register("command", CommandAction::new);
+        register("broadcast", BroadcastAction::new);
+        register("giveItems", GiveItemsAction::new);
+        register("spawnEntity", SpawnEntityAction::new);
+        register("removeItems", RemoveItemsAction::new);
+        register("setArmor", SetArmorAction::new);
+        register("setVar", SetVariableAction::new);
+        register("spawnMob", SpawnMobAction::new);
+        register("healPlayer", HealPlayerAction::new);
+        register("setGameMode", SetGameModeAction::new);
+        register("setTime", SetTimeAction::new);
+        register("setWeather", SetWeatherAction::new);
+        register("explosion", ExplosionAction::new);
+        register("setBlock", SetBlockAction::new);
+        register("getVar", GetVariableAction::new);
+        register("getPlayerName", GetPlayerNameAction::new);
+        register("setGlobalVar", SetGlobalVariableAction::new);
+        register("getGlobalVar", GetGlobalVariableAction::new);
+        register("setServerVar", SetServerVariableAction::new);
+        register("getServerVar", GetServerVariableAction::new);
+        register("wait", WaitAction::new);
+        register("randomNumber", RandomNumberAction::new);
+        register("playParticle", PlayParticleAction::new);
+        register("sendActionBar", SendActionBarAction::new);
+        register("callFunction", CallFunctionAction::new);
+        register("saveFunction", SaveFunctionAction::new);
+        register("repeat", RepeatAction::new);
+        register("repeatTrigger", RepeatTriggerAction::new);
+        register("else", ElseAction::new);
         // ... и т.д. для всех ACTION блоков...
     }
 

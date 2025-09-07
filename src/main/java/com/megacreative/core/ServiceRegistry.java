@@ -86,8 +86,8 @@ public class ServiceRegistry {
         this.blockConfigService = new BlockConfigService((MegaCreative) plugin);
         
         // Initialize factories
-        this.actionFactory = new ActionFactory(blockConfigService);
-        this.conditionFactory = new ConditionFactory(blockConfigService);
+        this.actionFactory = new ActionFactory();
+        this.conditionFactory = new ConditionFactory();
         
         // Initialize ScriptEngine with its dependencies
         this.scriptEngine = new DefaultScriptEngine(

@@ -1,7 +1,6 @@
 package com.megacreative.coding;
 
 import com.megacreative.coding.conditions.*;
-import com.megacreative.services.BlockConfigService;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.function.Supplier;
@@ -9,10 +8,9 @@ import java.util.function.Supplier;
 public class ConditionFactory {
 
     private final Map<String, Supplier<BlockCondition>> conditionMap = new HashMap<>();
-    private final BlockConfigService blockConfigService;
 
-    public ConditionFactory(BlockConfigService blockConfigService) {
-        this.blockConfigService = blockConfigService;
+    // Убираем зависимость от BlockConfigService, она здесь не нужна
+    public ConditionFactory() {
         // Регистрируем все наши условия
         register("isOp", IsOpCondition::new);
         register("compareVariable", CompareVariableCondition::new);

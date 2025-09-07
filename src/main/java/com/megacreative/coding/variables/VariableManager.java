@@ -463,7 +463,7 @@ public class VariableManager implements IVariableManager {
         return vars != null ? vars.get(name) : null;
     }
     
-    @Override
+    // Remove the @Override annotation since this method doesn't exist in the interface
     public void clearLocalVariables(String context) {
         if (context != null) {
             localVariables.remove(context);
@@ -504,7 +504,7 @@ public class VariableManager implements IVariableManager {
                 .orElse(null);
     }
     
-    @Override
+    // Remove the @Override annotation since this method doesn't exist in the interface
     public Map<String, DataValue> getAllGlobalVariables() {
         // Return all global variables from all worlds combined
         Map<String, DataValue> result = new HashMap<>();
@@ -516,7 +516,7 @@ public class VariableManager implements IVariableManager {
         return result;
     }
     
-    @Override
+    // Remove the @Override annotation since this method doesn't exist in the interface
     public void clearGlobalVariables() {
         // Clear all global variables from all worlds
         globalVariables.clear();

@@ -46,8 +46,8 @@ public class DefaultScriptEngine implements ScriptEngine {
         this.blockConfigService = blockConfigService;
         
         // Initialize factories
-        this.actionFactory = new ActionFactory(blockConfigService);
-        this.conditionFactory = new ConditionFactory(blockConfigService);
+        this.actionFactory = new ActionFactory();
+        this.conditionFactory = new ConditionFactory();
     }
     
     /**

@@ -204,7 +204,7 @@ public class ExecutorEngine {
             return result;
             
         } catch (Exception e) {
-            plugin.getLogger().severe("Unexpected error executing block: " + e.getMessage(), e);
+            plugin.getLogger().severe("Unexpected error executing block: " + e.getMessage() + ". Stack trace: " + java.util.Arrays.toString(e.getStackTrace()));
             return context.createErrorResult(e);
         }
     }

@@ -512,7 +512,7 @@ public class CustomEventManager implements Listener {
         public void handle(Map<String, DataValue> eventData, Player source, String sourceWorld) {
             // Execute the handler block with event data as variables
             // This would integrate with the existing script execution system
-            if (handlerBlock != null && handlerBlock.getPlugin() != null) {
+            if (handlerBlock != null) {
                 // Set event data as local variables for the handler
                 for (Map.Entry<String, DataValue> entry : eventData.entrySet()) {
                     // Set as local variable in the handler's execution context
