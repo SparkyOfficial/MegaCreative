@@ -77,19 +77,19 @@ public class AutoConnectionManager implements Listener {
         if (!blockConfigService.isCodeBlock(block.getType())) return;
         
         // BLOCK PLACEMENT VALIDATION
-        String blockCategory = blockConfigService.getBlockCategory(block.getType());
+        String blockType = getBlockType(block.getType());
         int blockX = location.getBlockX();
         
-        // Check position validation based on block category
+        // Check position validation based on block type
         if (blockX == 0) { // This is the "blue" line (start of coding line)
-            if (!blockConfigService.isControlOrEventBlock(blockCategory)) {
+            if (!isControlOrEventBlock(blockType)) {
                 event.setCancelled(true);
                 player.sendMessage("§cЭтот тип блока можно ставить только на серые линии!");
                 player.sendMessage("§7Подсказка: EVENT, CONTROL и FUNCTION блоки должны быть в начале линии (на синем блоке)");
                 return;
             }
         } else { // This is a "gray" line (continuation of coding line)
-            if (blockConfigService.isControlOrEventBlock(blockCategory)) {
+            if (isControlOrEventBlock(blockType)) {
                 event.setCancelled(true);
                 player.sendMessage("§cЭтот тип блока можно ставить только в начало линии (на синий блок)!");
                 player.sendMessage("§7Подсказка: ACTION и CONDITION блоки должны быть на серых линиях");
@@ -98,7 +98,7 @@ public class AutoConnectionManager implements Listener {
         }
         
         // Log placement validation success
-        plugin.getLogger().info("Block placement validated: " + blockCategory + " at X=" + blockX + " (line start: " + (blockX == 0) + ")");
+        plugin.getLogger().info("Block placement validated: " + blockType + " at X=" + blockX + " (line start: " + (blockX == 0) + ")");
         
         // Get the CodeBlock that was created by BlockPlacementHandler
         BlockPlacementHandler placementHandler = plugin.getBlockPlacementHandler();
@@ -215,7 +215,7 @@ public class AutoConnectionManager implements Listener {
         }
         
         // If this is a conditional/loop block at start of line, look for children in next lines
-        if (location.getBlockX() == 0 && isConditionalOrLoopBlock(codeBlock)) {
+        if (location.getBlockX() == 0 && isControlBlock(codeBlock)) {
             connectChildBlocks(codeBlock, location);
         }
     }
@@ -233,7 +233,7 @@ public class AutoConnectionManager implements Listener {
                 Location parentLocation = new Location(childLocation.getWorld(), parentX, childLocation.getBlockY(), parentZ);
                 CodeBlock parentBlock = locationToBlock.get(parentLocation);
                 
-                if (parentBlock != null && isConditionalOrLoopBlock(parentBlock)) {
+                if (parentBlock != null && isControlBlock(parentBlock)) {
                     return parentBlock;
                 }
             }
@@ -242,15 +242,19 @@ public class AutoConnectionManager implements Listener {
     }
     
     /**
-     * Checks if a block is conditional or loop block that can have children
+     * Checks if a block is a control block that can have children
+     * Uses the new BlockConfigService to determine this properly
      */
-    private boolean isConditionalOrLoopBlock(CodeBlock block) {
+    private boolean isControlBlock(CodeBlock block) {
         String action = block.getAction();
-        return action != null && (action.toLowerCase().contains("if") || 
-                                  action.toLowerCase().contains("loop") ||
-                                  action.toLowerCase().contains("while") ||
-                                  action.toLowerCase().contains("for") ||
-                                  action.toLowerCase().contains("condition"));
+        if (action == null) return false;
+        
+        // Get the block configuration from the service
+        BlockConfigService.BlockConfig config = blockConfigService.getBlockConfig(action);
+        if (config == null) return false;
+        
+        // Check if it's a control or event block
+        return blockConfigService.isControlOrEventBlock(config.getType());
     }
     
     /**
@@ -375,7 +379,7 @@ public class AutoConnectionManager implements Listener {
         if (action == null) return null;
         
         CodeBlock codeBlock = new CodeBlock(material, action);
-        codeBlock.setPlugin(plugin);
+        // Note: We're removing the plugin dependency from CodeBlock in a later step
         
         return codeBlock;
     }
@@ -385,15 +389,24 @@ public class AutoConnectionManager implements Listener {
      * Теперь использует конфигурацию из coding_blocks.yml
      */
     private String determineActionFromMaterial(Material material) {
-        return blockConfigService.getDefaultAction(material);
+        // Get the first block config for this material as a fallback
+        BlockConfigService.BlockConfig config = blockConfigService.getBlockConfig(material);
+        return config != null ? config.getActionName() : null;
     }
     
     /**
-     * Проверяет, является ли материал блоком кода
-     * Теперь использует конфигурацию из coding_blocks.yml
+     * Gets the block type for a material using the new configuration system
      */
-    private boolean isCodeBlock(Material material) {
-        return blockConfigService.isCodeBlock(material);
+    private String getBlockType(Material material) {
+        BlockConfigService.BlockConfig config = blockConfigService.getBlockConfig(material);
+        return config != null ? config.getType() : "ACTION";
+    }
+    
+    /**
+     * Checks if a block type is a control or event block using the new configuration system
+     */
+    private boolean isControlOrEventBlock(String blockType) {
+        return blockConfigService.isControlOrEventBlock(blockType);
     }
     
     /**
@@ -469,20 +482,6 @@ public class AutoConnectionManager implements Listener {
             }
         }
         return worldBlocks;
-    }
-    
-    /**
-     * Получает все доступные действия для материала
-     */
-    public List<String> getAvailableActions(Material material) {
-        return blockConfigService.getAvailableActions(material);
-    }
-    
-    /**
-     * Получает конфигурацию блока
-     */
-    public BlockConfigService.BlockConfig getBlockConfig(Material material) {
-        return blockConfigService.getBlockConfig(material);
     }
     
     /**

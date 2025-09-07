@@ -83,11 +83,6 @@ public class CodingManagerImpl implements ICodingManager, Listener {
         // ScriptEngine and its resources are managed by ServiceRegistry
     }
     
-    @Override
-    public ScriptEngine getScriptEngine() {
-        return scriptEngine;
-    }
-
     public CodingManagerImpl(MegaCreative plugin, IWorldManager worldManager) {
         this.plugin = plugin;
         this.worldManager = worldManager;
@@ -120,18 +115,6 @@ public class CodingManagerImpl implements ICodingManager, Listener {
             int count = worldScripts.get(world.getId()).size();
             worldScripts.remove(world.getId());
             plugin.getLogger().info("Выгружено " + count + " скриптов для мира " + world.getName());
-        }
-    }
-    
-    @Override
-    public void executeScript(CodeScript script, Player player, String trigger) {
-        if (scriptEngine != null) {
-            scriptEngine.executeScript(script, player, trigger)
-                .exceptionally(ex -> {
-                    plugin.getLogger().severe("Error executing script " + script.getName() + ": " + ex.getMessage());
-                    ex.printStackTrace();
-                    return null;
-                });
         }
     }
     

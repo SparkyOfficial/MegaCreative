@@ -1,307 +1,189 @@
 package com.megacreative.coding;
 
 import com.megacreative.MegaCreative;
+import com.megacreative.services.BlockConfigService;
 import org.bukkit.Material;
-import org.bukkit.configuration.ConfigurationSection;
-import org.bukkit.configuration.file.YamlConfiguration;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.inventory.meta.ItemMeta;
 
-import java.io.File;
-import java.io.InputStream;
-import java.io.InputStreamReader;
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 
 /**
- * Класс для загрузки и управления конфигурацией блоков кодинга.
- * Позволяет настраивать доступные блоки без перекомпиляции плагина.
- * Поддерживает именованные слоты и группы предметов.
+ * Wrapper class for BlockConfigService to maintain backward compatibility
+ * with the old BlockConfiguration API while using the new configuration system.
  */
 public class BlockConfiguration {
     
     private final MegaCreative plugin;
-    private final Map<Material, BlockConfig> blockConfigs = new HashMap<>();
-    private final Map<String, String> actionDescriptions = new HashMap<>();
-    
-    // --- НОВЫЕ ПОЛЯ ДЛЯ ИМЕНОВАННЫХ СЛОТОВ И ГРУПП ---
-    private final Map<String, ActionSlotConfig> actionSlotConfigs = new HashMap<>();
-    private final Map<String, ActionGroupConfig> actionGroupConfigs = new HashMap<>();
-    
-    private int maxBlocksPerScript = 100;
-    private int maxRecursionDepth = 50;
-    private int executionTimeoutSeconds = 30;
+    private BlockConfigService blockConfigService;
     
     public BlockConfiguration(MegaCreative plugin) {
         this.plugin = plugin;
-        loadConfiguration();
+        // Initialize with the new service
+        this.blockConfigService = plugin.getServiceRegistry().getService(BlockConfigService.class);
     }
     
     /**
-     * Загружает конфигурацию блоков из файла
+     * Reloads the configuration from the new service
      */
     public void loadConfiguration() {
-        try {
-            // Загружаем файл конфигурации
-            File configFile = new File(plugin.getDataFolder(), "coding_blocks.yml");
-            YamlConfiguration config;
-            
-            if (configFile.exists()) {
-                config = YamlConfiguration.loadConfiguration(configFile);
-            } else {
-                // Если файл не существует, копируем из ресурсов
-                plugin.saveResource("coding_blocks.yml", false);
-                config = YamlConfiguration.loadConfiguration(configFile);
-            }
-            
-            // Загружаем конфигурацию блоков
-            ConfigurationSection blocksSection = config.getConfigurationSection("blocks");
-            if (blocksSection != null) {
-                for (String materialName : blocksSection.getKeys(false)) {
-                    try {
-                        Material material = Material.valueOf(materialName);
-                        ConfigurationSection blockSection = blocksSection.getConfigurationSection(materialName);
-                        
-                        if (blockSection != null) {
-                            String name = blockSection.getString("name", "Неизвестный блок");
-                            String description = blockSection.getString("description", "");
-                            List<String> actions = blockSection.getStringList("actions");
-                            
-                            BlockConfig blockConfig = new BlockConfig(name, description, actions);
-                            blockConfigs.put(material, blockConfig);
-                            
-                            // Добавляем описания действий
-                            for (String action : actions) {
-                                actionDescriptions.put(action, description);
-                            }
-                        }
-                    } catch (IllegalArgumentException e) {
-                        plugin.getLogger().warning("Неизвестный материал: " + materialName);
-                    }
-                }
-            }
-            
-            // --- ЗАГРУЗКА КОНФИГУРАЦИИ ИМЕНОВАННЫХ СЛОТОВ И ГРУПП ---
-            ConfigurationSection actionConfigsSection = config.getConfigurationSection("action_configurations");
-            if (actionConfigsSection != null) {
-                for (String actionName : actionConfigsSection.getKeys(false)) {
-                    ConfigurationSection actionSection = actionConfigsSection.getConfigurationSection(actionName);
-                    if (actionSection != null) {
-                        loadActionSlotConfig(actionName, actionSection);
-                        loadActionGroupConfig(actionName, actionSection);
-                    }
-                }
-            }
-            
-            plugin.getLogger().info("Загружена конфигурация для " + blockConfigs.size() + " блоков кодинга");
-            plugin.getLogger().info("Загружено " + actionSlotConfigs.size() + " конфигураций слотов");
-            plugin.getLogger().info("Загружено " + actionGroupConfigs.size() + " конфигураций групп");
-            
-        } catch (Exception e) {
-            plugin.getLogger().severe("Ошибка загрузки конфигурации блоков: " + e.getMessage());
+        if (blockConfigService != null) {
+            blockConfigService.reload();
+            plugin.getLogger().info("Block configuration reloaded using new configuration system");
         }
     }
     
     /**
-     * Загружает конфигурацию слотов для действия
-     */
-    private void loadActionSlotConfig(String actionName, ConfigurationSection actionSection) {
-        ConfigurationSection slotsSection = actionSection.getConfigurationSection("slots");
-        if (slotsSection != null) {
-            Map<Integer, SlotConfig> slots = new HashMap<>();
-            
-            for (String slotNumberStr : slotsSection.getKeys(false)) {
-                try {
-                    int slotNumber = Integer.parseInt(slotNumberStr);
-                    ConfigurationSection slotSection = slotsSection.getConfigurationSection(slotNumberStr);
-                    
-                    if (slotSection != null) {
-                        String name = slotSection.getString("name", "Неизвестный слот");
-                        String description = slotSection.getString("description", "");
-                        String placeholderItem = slotSection.getString("placeholder_item", "STONE");
-                        String slotName = slotSection.getString("slot_name", "slot_" + slotNumber);
-                        
-                        slots.put(slotNumber, new SlotConfig(name, description, placeholderItem, slotName));
-                    }
-                } catch (NumberFormatException e) {
-                    plugin.getLogger().warning("Некорректный номер слота: " + slotNumberStr);
-                }
-            }
-            
-            if (!slots.isEmpty()) {
-                actionSlotConfigs.put(actionName, new ActionSlotConfig(slots));
-            }
-        }
-    }
-    
-    /**
-     * Загружает конфигурацию групп для действия
-     */
-    private void loadActionGroupConfig(String actionName, ConfigurationSection actionSection) {
-        ConfigurationSection groupsSection = actionSection.getConfigurationSection("item_groups");
-        if (groupsSection != null) {
-            Map<String, GroupConfig> groups = new HashMap<>();
-            
-            for (String groupName : groupsSection.getKeys(false)) {
-                ConfigurationSection groupSection = groupsSection.getConfigurationSection(groupName);
-                
-                if (groupSection != null) {
-                    List<Integer> slots = groupSection.getIntegerList("slots");
-                    String name = groupSection.getString("name", "Группа предметов");
-                    String description = groupSection.getString("description", "");
-                    String placeholderItem = groupSection.getString("placeholder_item", "CHEST");
-                    
-                    groups.put(groupName, new GroupConfig(slots, name, description, placeholderItem));
-                }
-            }
-            
-            if (!groups.isEmpty()) {
-                actionGroupConfigs.put(actionName, new ActionGroupConfig(groups));
-            }
-        }
-    }
-    
-    /**
-     * Получает конфигурацию для указанного материала
+     * Gets the block configuration for a material
+     * @param material The material to get configuration for
+     * @return The block configuration or null if not found
      */
     public BlockConfig getBlockConfig(Material material) {
-        return blockConfigs.get(material);
+        if (blockConfigService == null) return null;
+        
+        // Get the first block config for this material for backward compatibility
+        com.megacreative.services.BlockConfigService.BlockConfig config = blockConfigService.getBlockConfig(material);
+        if (config == null) return null;
+        
+        return new BlockConfig(
+            config.getDisplayName(),
+            config.getDescription(),
+            new ArrayList<>(config.getParameters().keySet()) // Use parameter names as actions for compatibility
+        );
     }
     
     /**
-     * Получает список действий для указанного материала
+     * Gets the list of actions for a material
+     * @param material The material to get actions for
+     * @return List of actions or null if not found
      */
     public List<String> getActionsForMaterial(Material material) {
-        BlockConfig config = getBlockConfig(material);
-        return config != null ? config.getActions() : null;
+        if (blockConfigService == null) return null;
+        
+        com.megacreative.services.BlockConfigService.BlockConfig config = blockConfigService.getBlockConfig(material);
+        if (config == null) return null;
+        
+        return new ArrayList<>(config.getParameters().keySet());
     }
     
     /**
-     * Получает номер слота по имени слота для действия
+     * Gets the slot number for an action and slot name
+     * @param actionName The action name
+     * @param slotName The slot name
+     * @return The slot number or null if not found
      */
     public Integer getSlotNumber(String actionName, String slotName) {
-        ActionSlotConfig config = actionSlotConfigs.get(actionName);
-        if (config != null) {
-            for (Map.Entry<Integer, SlotConfig> entry : config.getSlots().entrySet()) {
-                if (entry.getValue().getSlotName().equals(slotName)) {
-                    return entry.getKey();
-                }
-            }
-        }
-        return null;
+        if (blockConfigService == null) return null;
+        
+        com.megacreative.services.BlockConfigService.BlockConfig config = blockConfigService.getBlockConfig(actionName);
+        if (config == null) return null;
+        
+        com.megacreative.services.BlockConfigService.ParameterConfig paramConfig = config.getParameter(slotName);
+        if (paramConfig == null) return null;
+        
+        return paramConfig.getSlot();
     }
     
     /**
-     * Получает слоты для группы предметов
+     * Gets the slots for a group
+     * @param actionName The action name
+     * @param groupName The group name
+     * @return List of slot numbers
      */
     public List<Integer> getSlotsForGroup(String actionName, String groupName) {
-        ActionGroupConfig config = actionGroupConfigs.get(actionName);
-        if (config != null) {
-            GroupConfig group = config.getGroups().get(groupName);
-            return group != null ? group.getSlots() : new ArrayList<>();
+        // In the new system, we don't have groups in the same way, so we'll return a default list
+        // This is for backward compatibility only
+        List<Integer> slots = new ArrayList<>();
+        for (int i = 0; i < 9; i++) {
+            slots.add(i);
         }
-        return new ArrayList<>();
+        return slots;
     }
     
     /**
-     * Получает конфигурацию слотов для действия
-     */
-    public ActionSlotConfig getActionSlotConfig(String actionName) {
-        return actionSlotConfigs.get(actionName);
-    }
-    
-    /**
-     * Получает конфигурацию групп для действия
-     */
-    public ActionGroupConfig getActionGroupConfig(String actionName) {
-        return actionGroupConfigs.get(actionName);
-    }
-    
-    /**
-     * Создает placeholder предмет для слота
+     * Creates a placeholder item for a slot
+     * @param actionName The action name
+     * @param slotNumber The slot number
+     * @return The placeholder item
      */
     public ItemStack createPlaceholderItem(String actionName, int slotNumber) {
-        ActionSlotConfig config = actionSlotConfigs.get(actionName);
-        if (config != null) {
-            SlotConfig slotConfig = config.getSlots().get(slotNumber);
-            if (slotConfig != null) {
-                try {
-                    Material material = Material.valueOf(slotConfig.getPlaceholderItem());
-                    ItemStack item = new ItemStack(material);
-                    ItemMeta meta = item.getItemMeta();
-                    
-                    if (meta != null) {
-                        meta.setDisplayName(slotConfig.getName());
-                        
-                        List<String> lore = new ArrayList<>();
-                        lore.add(slotConfig.getDescription());
-                        meta.setLore(lore);
-                        
-                        item.setItemMeta(meta);
-                    }
-                    
-                    return item;
-                } catch (IllegalArgumentException e) {
-                    plugin.getLogger().warning("Неизвестный материал для placeholder: " + slotConfig.getPlaceholderItem());
-                }
-            }
-        }
-        
-        // Fallback
-        ItemStack fallback = new ItemStack(Material.STONE);
-        ItemMeta meta = fallback.getItemMeta();
+        // Create a simple placeholder item
+        ItemStack item = new ItemStack(Material.GRAY_STAINED_GLASS_PANE);
+        ItemMeta meta = item.getItemMeta();
         if (meta != null) {
-            meta.setDisplayName("§7Слот " + slotNumber);
-            fallback.setItemMeta(meta);
+            meta.setDisplayName("§7Slot " + slotNumber);
+            List<String> lore = new ArrayList<>();
+            lore.add("§8Action: " + actionName);
+            meta.setLore(lore);
+            item.setItemMeta(meta);
         }
-        return fallback;
+        return item;
     }
     
     /**
-     * Создает placeholder предмет для группы
+     * Creates a group placeholder item
+     * @param actionName The action name
+     * @param groupName The group name
+     * @return The group placeholder item
      */
     public ItemStack createGroupPlaceholderItem(String actionName, String groupName) {
-        ActionGroupConfig config = actionGroupConfigs.get(actionName);
-        if (config != null) {
-            GroupConfig groupConfig = config.getGroups().get(groupName);
-            if (groupConfig != null) {
-                try {
-                    Material material = Material.valueOf(groupConfig.getPlaceholderItem());
-                    ItemStack item = new ItemStack(material);
-                    ItemMeta meta = item.getItemMeta();
-                    
-                    if (meta != null) {
-                        meta.setDisplayName(groupConfig.getName());
-                        
-                        List<String> lore = new ArrayList<>();
-                        lore.add(groupConfig.getDescription());
-                        lore.add("§7Слоты: " + groupConfig.getSlots().toString());
-                        meta.setLore(lore);
-                        
-                        item.setItemMeta(meta);
-                    }
-                    
-                    return item;
-                } catch (IllegalArgumentException e) {
-                    plugin.getLogger().warning("Неизвестный материал для group placeholder: " + groupConfig.getPlaceholderItem());
-                }
-            }
-        }
-        
-        // Fallback
-        ItemStack fallback = new ItemStack(Material.CHEST);
-        ItemMeta meta = fallback.getItemMeta();
+        // Create a simple group placeholder item
+        ItemStack item = new ItemStack(Material.YELLOW_STAINED_GLASS_PANE);
+        ItemMeta meta = item.getItemMeta();
         if (meta != null) {
-            meta.setDisplayName("§7Группа " + groupName);
-            fallback.setItemMeta(meta);
+            meta.setDisplayName("§e" + groupName);
+            List<String> lore = new ArrayList<>();
+            lore.add("§8Action: " + actionName);
+            lore.add("§8Group placeholder");
+            meta.setLore(lore);
+            item.setItemMeta(meta);
         }
-        return fallback;
+        return item;
     }
     
     /**
-     * Внутренний класс для хранения конфигурации блока
+     * Gets the action slot configuration
+     * @param actionName The action name
+     * @return The action slot configuration
+     */
+    public ActionSlotConfig getActionSlotConfig(String actionName) {
+        if (blockConfigService == null) return null;
+        
+        com.megacreative.services.BlockConfigService.BlockConfig config = blockConfigService.getBlockConfig(actionName);
+        if (config == null) return null;
+        
+        Map<Integer, SlotConfig> slots = new HashMap<>();
+        for (com.megacreative.services.BlockConfigService.ParameterConfig param : config.getParameters().values()) {
+            slots.put(param.getSlot(), new SlotConfig(
+                param.getName(),
+                param.getDescription(),
+                "STONE", // Default material
+                param.getName()
+            ));
+        }
+        
+        return new ActionSlotConfig(slots);
+    }
+    
+    /**
+     * Gets the action group configuration
+     * @param actionName The action name
+     * @return The action group configuration
+     */
+    public ActionGroupConfig getActionGroupConfig(String actionName) {
+        // Return a simple group config for backward compatibility
+        Map<String, GroupConfig> groups = new HashMap<>();
+        groups.put("default", new GroupConfig(
+            Arrays.asList(0, 1, 2, 3, 4, 5, 6, 7, 8),
+            "Default Group",
+            "Default group for " + actionName,
+            "CHEST"
+        ));
+        return new ActionGroupConfig(groups);
+    }
+    
+    /**
+     * Inner class for block configuration
      */
     public static class BlockConfig {
         private final String name;
@@ -328,7 +210,7 @@ public class BlockConfiguration {
     }
     
     /**
-     * Внутренний класс для хранения конфигурации слота
+     * Inner class for slot configuration
      */
     public static class SlotConfig {
         private final String name;
@@ -361,7 +243,7 @@ public class BlockConfiguration {
     }
     
     /**
-     * Внутренний класс для хранения конфигурации группы
+     * Inner class for group configuration
      */
     public static class GroupConfig {
         private final List<Integer> slots;
@@ -394,7 +276,7 @@ public class BlockConfiguration {
     }
     
     /**
-     * Внутренний класс для хранения конфигурации слотов действия
+     * Inner class for action slot configuration
      */
     public static class ActionSlotConfig {
         private final Map<Integer, SlotConfig> slots;
@@ -409,7 +291,7 @@ public class BlockConfiguration {
     }
     
     /**
-     * Внутренний класс для хранения конфигурации групп действия
+     * Inner class for action group configuration
      */
     public static class ActionGroupConfig {
         private final Map<String, GroupConfig> groups;
@@ -422,4 +304,4 @@ public class BlockConfiguration {
             return groups;
         }
     }
-} 
+}

@@ -25,6 +25,7 @@ import java.util.HashSet;
 /**
  * Защита dev-мира от нежелательных действий
  * Разрешает только размещение блоков кода и специальных инструментов
+ * Updated to use the new dynamic configuration system
  */
 public class DevWorldProtectionListener implements Listener {
 
@@ -247,6 +248,7 @@ public class DevWorldProtectionListener implements Listener {
     
     /**
      * Проверяет, является ли материал блоком кода
+     * Uses the new BlockConfigService to determine this dynamically
      */
     public boolean isMaterialAConfiguredCodeBlock(Material material) {
         return blockConfigService != null && blockConfigService.isCodeBlock(material);
@@ -261,9 +263,22 @@ public class DevWorldProtectionListener implements Listener {
     }
     
     /**
-     * Получает список разрешенных блоков
+     * Gets the list of allowed blocks
+     * Returns a copy to prevent external modification
      */
     public Set<Material> getAllowedBlocks() {
         return new HashSet<>(allPermittedPlaceAndBreakBlocks);
+    }
+    
+    /**
+     * Reloads the block configuration
+     * Should be called when the block configuration changes
+     */
+    public void reloadBlockConfig() {
+        if (blockConfigService != null) {
+            blockConfigService.reload();
+            initializeDynamicAllowedBlocks();
+            plugin.getLogger().info("DevWorldProtectionListener: Block configuration reloaded and permissions updated.");
+        }
     }
 }

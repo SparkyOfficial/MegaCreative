@@ -1,53 +1,178 @@
 name: MegaCreative
 main: com.megacreative.MegaCreative
 version: 1.0.0
-api-version: 1.20
+api-version: '1.20'
 description: Advanced Minecraft plugin for world creation and visual programming
 author: MegaCreative Team
 website: https://github.com/megacreative
+
+# Dependencies
+softdepend: [WorldEdit, WorldGuard, Vault]
+depend: [ProtocolLib]
+
+# Load order
+load: POSTWORLD
+
+# Plugin configuration
+prefix: '&8[&6MegaCreative&8] '
+
+# Default permissions
+default-permissions:
+  megacreative.*:
+    description: Gives all permissions
+    children:
+      megacreative.user: true
+      megacreative.admin: true
+      megacreative.debug: true
+      megacreative.world.create: true
+      megacreative.world.delete: true
+      megacreative.world.manage: true
+
+# Permissions
+permissions:
+  megacreative.user:
+    description: Basic user permissions
+    default: true
+    children:
+      megacreative.command.megacreative: true
+      megacreative.command.myworlds: true
+      megacreative.command.worldbrowser: true
+      megacreative.command.join: true
+      megacreative.command.play: true
+      megacreative.command.build: true
+      megacreative.command.hub: true
+
+  megacreative.admin:
+    description: Admin permissions
+    default: op
+    children:
+      megacreative.command.reload: true
+      megacreative.command.debug: true
+      megacreative.command.status: true
+      megacreative.command.trusted: true
+      megacreative.world.bypass: true
+
+  megacreative.debug:
+    description: Debug permissions
+    default: op
+
+  megacreative.world.create:
+    description: Allow creating new worlds
+    default: true
+
+  megacreative.world.delete:
+    description: Allow deleting worlds
+    default: op
+
+  megacreative.world.manage:
+    description: Allow managing world settings
+    default: op
 
 commands:
   megacreative:
     description: Main plugin command
     aliases: [mc, mega]
+    permission: megacreative.command.megacreative
+    permission-message: '&cYou do not have permission to use this command.'
+    usage: |
+      &6/megacreative help &f- Show help
+      &6/megacreative reload &f- Reload configuration
+      &6/megacreative version &f- Show version info
+
   myworlds:
     description: Open my worlds menu
     aliases: [mw, worlds]
+    permission: megacreative.command.myworlds
+    permission-message: '&cYou do not have permission to view your worlds.'
+
   worldbrowser:
     description: Open world browser
     aliases: [wb, browser]
+    permission: megacreative.command.worldbrowser
+    permission-message: '&cYou do not have permission to browse worlds.'
+
   join:
     description: Join world by ID
     aliases: [j]
+    usage: /join <world_id>
+    permission: megacreative.command.join
+    permission-message: '&cYou do not have permission to join worlds.'
+
   play:
     description: Switch to play mode
+    permission: megacreative.command.play
+    permission-message: '&cYou do not have permission to switch to play mode.'
+
   build:
     description: Switch to build mode
+    permission: megacreative.command.build
+    permission-message: '&cYou do not have permission to switch to build mode.'
+
   dev:
     description: Switch to dev mode
+    permission: megacreative.command.dev
+    permission-message: '&cYou do not have developer permissions.'
+
   hub:
     description: Return to hub world
     aliases: [lobby, spawn]
+    permission: megacreative.command.hub
+    permission-message: '&cYou do not have permission to return to the hub.'
+
   templates:
     description: Open template browser
     aliases: [template, tpl]
-    permission: megacreative.user
+    permission: megacreative.command.templates
+    permission-message: '&cYou do not have permission to access templates.'
+
   worldsettings:
     description: Open world settings
     usage: /<command>
-    permission: megacreative.user
+    permission: megacreative.command.worldsettings
+    permission-message: '&cYou do not have permission to modify world settings.'
 
   debug:
     description: Управление отладкой скриптов.
-    usage: /<command> [on|off|stats|status|help]
-    permission: megacreative.user
+    usage: |
+      &6/debug on &f- Включить отладку
+      &6/debug off &f- Выключить отладку
+      &6/debug stats &f- Показать статистику
+      &6/debug status &f- Показать статус
+      &6/debug help &f- Показать справку
+    permission: megacreative.command.debug
+    permission-message: '&cУ вас нет прав на использование отладки.'
+    aliases: [dbg]
+
   status:
     description: Проверка статуса режима мира.
-    usage: /<command>
-    permission: megacreative.user
+    usage: /status
+    permission: megacreative.command.status
+    permission-message: '&cУ вас нет прав на просмотр статуса.'
+    aliases: [st]
+
   trusted:
     description: Управление доверенными игроками
-    usage: /<command> <add|remove|list|info> [игрок] [тип] [добавил]
+    usage: |
+      &6/trusted add <игрок> [тип] &f- Добавить доверенного игрока
+      &6/trusted remove <игрок> &f- Удалить доверенного игрока
+      &6/trusted list &f- Список доверенных игроков
+      &6/trusted info <игрок> &f- Информация о доверии
+    permission: megacreative.command.trusted
+    permission-message: '&cУ вас нет прав на управление доверенными игроками.'
+    aliases: [trust]
+
+  reload:
+    description: Перезагрузить конфигурацию плагина
+    usage: /megacreative reload
+    permission: megacreative.command.reload
+    permission-message: '&cУ вас нет прав на перезагрузку плагина.'
+
+  version:
+    description: Показать информацию о версии
+    usage: /megacreative version
+    permission: megacreative.command.version
+    permission-message: '&cУ вас нет прав на просмотр версии.'
+    aliases: [ver, about]
     permission: megacreative.trusted
   addfloor:
     description: Добавить новый этаж кодинга в dev-мир

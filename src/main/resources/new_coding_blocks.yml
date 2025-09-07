@@ -1,0 +1,314 @@
+# Advanced Coding Blocks Configuration
+# This is the unified configuration file that replaces all previous block configuration files
+# It follows the Master Plan structure with proper typing, categories, and parameter definitions
+
+# ============================================
+# EVENT BLOCKS
+# ============================================
+
+# Player Events
+onPlayerJoin:
+  material: PLAYER_HEAD
+  type: "EVENT"
+  displayName: "Player Join"
+  description: "Triggers when a player joins the server"
+  category: "player_events"
+  parameters: {}
+
+onPlayerQuit:
+  material: LIME_CONCRETE
+  type: "EVENT"
+  displayName: "Player Quit"
+  description: "Triggers when a player leaves the server"
+  category: "player_events"
+  parameters: {}
+
+onPlayerMove:
+  material: DIAMOND_BLOCK
+  type: "EVENT"
+  displayName: "Player Movement"
+  description: "Triggers when a player moves to a different block"
+  category: "player_events"
+  parameters:
+    distance: { type: "NUMBER", slot: 0, description: "Minimum movement distance" }
+    world: { type: "TEXT", slot: 1, description: "World name filter (optional)" }
+
+onPlayerInteract:
+  material: STICK
+  type: "EVENT"
+  displayName: "Player Interact"
+  description: "Triggers when a player interacts with a block or item"
+  category: "player_events"
+  parameters:
+    block: { type: "TEXT", slot: 0, description: "Block type filter (any or specific)" }
+    action: { type: "TEXT", slot: 1, description: "Interaction type (RIGHT_CLICK/LEFT_CLICK/PHYSICAL)" }
+
+onPlayerChat:
+  material: PAPER
+  type: "EVENT"
+  displayName: "Player Chat"
+  description: "Triggers when a player sends a chat message"
+  category: "player_events"
+  parameters:
+    message: { type: "TEXT", slot: 0, description: "Message filter (optional)" }
+
+onPlayerDeath:
+  material: BONE
+  type: "EVENT"
+  displayName: "Player Death"
+  description: "Triggers when a player dies"
+  category: "player_events"
+  parameters: {}
+
+onPlayerRespawn:
+  material: END_STONE
+  type: "EVENT"
+  displayName: "Player Respawn"
+  description: "Triggers when a player respawns"
+  category: "player_events"
+  parameters: {}
+
+# Advanced Events
+onPlayerLevelUp:
+  material: EMERALD_BLOCK
+  type: "EVENT"
+  displayName: "Player Level Up"
+  description: "Triggers when a player gains experience levels"
+  category: "player_events"
+  parameters:
+    min_level: { type: "NUMBER", slot: 0, description: "Minimum level reached" }
+
+onServerTPS:
+  material: REDSTONE_BLOCK
+  type: "EVENT"
+  displayName: "Server Performance"
+  description: "Triggers based on server TPS performance"
+  category: "server_events"
+  parameters:
+    tps_threshold: { type: "NUMBER", slot: 0, description: "TPS threshold (1-20)" }
+    condition: { type: "TEXT", slot: 1, description: "above/below" }
+
+# ============================================
+# ACTION BLOCKS
+# ============================================
+
+# Player Actions
+sendMessage:
+  material: PAPER
+  type: "ACTION"
+  displayName: "Send Message"
+  description: "Sends a message to the player"
+  category: "player_actions"
+  parameters:
+    message: { type: "TEXT", slot: 0, description: "Message to send. Supports placeholders: %player%, %world%" }
+
+teleportPlayer:
+  material: ENDER_PEARL
+  type: "ACTION"
+  displayName: "Teleport Player"
+  description: "Teleports the player to a location"
+  category: "player_actions"
+  parameters:
+    x: { type: "NUMBER", slot: 0, description: "X coordinate" }
+    y: { type: "NUMBER", slot: 1, description: "Y coordinate" }
+    z: { type: "NUMBER", slot: 2, description: "Z coordinate" }
+    world: { type: "TEXT", slot: 3, description: "World name" }
+
+giveItem:
+  material: CHEST
+  type: "ACTION"
+  displayName: "Give Item"
+  description: "Gives an item to the player"
+  category: "player_actions"
+  parameters:
+    item: { type: "ITEM", slot: 0, description: "Item to give" }
+    amount: { type: "NUMBER", slot: 1, description: "Amount to give" }
+
+playSound:
+  material: NOTE_BLOCK
+  type: "ACTION"
+  displayName: "Play Sound"
+  description: "Plays a sound for the player"
+  category: "player_actions"
+  parameters:
+    sound: { type: "TEXT", slot: 0, description: "Sound name" }
+    volume: { type: "NUMBER", slot: 1, description: "Volume (0.0-1.0)" }
+    pitch: { type: "NUMBER", slot: 2, description: "Pitch (0.5-2.0)" }
+
+# Advanced Actions
+playCustomSound:
+  material: NOTE_BLOCK
+  type: "ACTION"
+  displayName: "Play Custom Sound"
+  description: "Plays a custom sound with advanced options"
+  category: "audio_actions"
+  parameters:
+    sound: { type: "TEXT", slot: 0, description: "Sound name (minecraft:block.note_block.harp)" }
+    volume: { type: "NUMBER", slot: 1, description: "Volume (0.0-1.0)" }
+    pitch: { type: "NUMBER", slot: 2, description: "Pitch (0.5-2.0)" }
+    location: { type: "LOCATION", slot: 3, description: "Sound location" }
+
+spawnParticleEffect:
+  material: FIREWORK_ROCKET
+  type: "ACTION"
+  displayName: "Spawn Particle Effect"
+  description: "Creates advanced particle effects"
+  category: "visual_actions"
+  parameters:
+    particle: { type: "TEXT", slot: 0, description: "Particle type" }
+    count: { type: "NUMBER", slot: 1, description: "Number of particles" }
+    spread: { type: "NUMBER", slot: 2, description: "Spread radius" }
+    speed: { type: "NUMBER", slot: 3, description: "Particle speed" }
+
+sendActionBar:
+  material: EXPERIENCE_BOTTLE
+  type: "ACTION"
+  displayName: "Send Action Bar"
+  description: "Displays text in player's action bar"
+  category: "communication_actions"
+  parameters:
+    message: { type: "TEXT", slot: 0, description: "Action bar message" }
+    duration: { type: "NUMBER", slot: 1, description: "Display duration (ticks)" }
+
+# ============================================
+# CONDITION BLOCKS
+# ============================================
+
+# Basic Conditions
+hasPermission:
+  material: KNOWLEDGE_BOOK
+  type: "CONDITION"
+  displayName: "Has Permission"
+  description: "Checks if the player has a permission"
+  category: "player_conditions"
+  parameters:
+    permission: { type: "TEXT", slot: 0, description: "Permission node to check" }
+
+compareVariable:
+  material: COMPARATOR
+  type: "CONDITION"
+  displayName: "Compare Variable"
+  description: "Compares a variable to a value"
+  category: "variable_conditions"
+  parameters:
+    variable: { type: "TEXT", slot: 0, description: "Variable name" }
+    operator: { type: "TEXT", slot: 1, description: "Comparison operator (==, !=, >, <, >=, <=)" }
+    value: { type: "ANY", slot: 2, description: "Value to compare against" }
+
+# Advanced Conditions
+checkPlayerStats:
+  material: PLAYER_HEAD
+  type: "CONDITION"
+  displayName: "Player Statistics"
+  description: "Checks player statistics and achievements"
+  category: "player_conditions"
+  parameters:
+    stat_type: { type: "TEXT", slot: 0, description: "Statistic type" }
+    value: { type: "NUMBER", slot: 1, description: "Comparison value" }
+    operator: { type: "TEXT", slot: 2, description: "Comparison operator (>=, <=, ==)" }
+
+checkWorldWeather:
+  material: CLOCK
+  type: "CONDITION"
+  displayName: "Weather Condition"
+  description: "Checks current weather in world"
+  category: "world_conditions"
+  parameters:
+    weather: { type: "TEXT", slot: 0, description: "clear/rain/thunder" }
+    world: { type: "TEXT", slot: 1, description: "World name" }
+
+# ============================================
+# CONTROL FLOW BLOCKS
+# ============================================
+
+ifCondition:
+  material: STONE_BUTTON
+  type: "CONTROL"
+  displayName: "If Condition"
+  description: "Executes the next block if the condition is true"
+  category: "control_flow"
+  parameters:
+    condition: { type: "TEXT", slot: 0, description: "Condition to evaluate" }
+
+elseCondition:
+  material: STONE_PRESSURE_PLATE
+  type: "CONTROL"
+  displayName: "Else Condition"
+  description: "Executes if the previous if condition was false"
+  category: "control_flow"
+  parameters: {}
+
+# Advanced Control Flow
+conditionalBranch:
+  material: COMPARATOR
+  type: "CONTROL"
+  displayName: "Advanced If-Else"
+  description: "Multi-condition branching with else-if support"
+  category: "control_flow"
+  parameters:
+    condition_count: { type: "NUMBER", slot: 0, description: "Number of conditions to check" }
+
+# ============================================
+# VARIABLE BLOCKS
+# ============================================
+
+setVariable:
+  material: REDSTONE_TORCH
+  type: "ACTION"
+  displayName: "Set Variable"
+  description: "Sets a variable to a value"
+  category: "variable_actions"
+  parameters:
+    variable: { type: "TEXT", slot: 0, description: "Variable name" }
+    value: { type: "ANY", slot: 1, description: "Value to set" }
+
+getVariable:
+  material: REPEATER
+  type: "ACTION"
+  displayName: "Get Variable"
+  description: "Gets a variable value"
+  category: "variable_actions"
+  parameters:
+    variable: { type: "TEXT", slot: 0, description: "Variable name" }
+
+# ============================================
+# FUNCTION BLOCKS
+# ============================================
+
+callFunction:
+  material: ENDER_EYE
+  type: "ACTION"
+  displayName: "Call Function"
+  description: "Calls a previously defined function"
+  category: "functions"
+  parameters:
+    function_name: { type: "TEXT", slot: 0, description: "Function to call" }
+    args: { type: "LIST", slot: 1, description: "Function arguments" }
+
+# ============================================
+# DATA STRUCTURE BLOCKS
+# ============================================
+
+createList:
+  material: BOOK
+  type: "ACTION"
+  displayName: "Create List"
+  description: "Creates a new list variable"
+  category: "data_structures"
+  parameters:
+    list_name: { type: "TEXT", slot: 0, description: "List variable name" }
+    initial_values: { type: "LIST", slot: 1, description: "Initial list contents" }
+
+# ============================================
+# DEBUGGING BLOCKS
+# ============================================
+
+debugLog:
+  material: REDSTONE_TORCH
+  type: "ACTION"
+  displayName: "Debug Log"
+  description: "Logs debug information for script monitoring"
+  category: "debugging"
+  parameters:
+    message: { type: "TEXT", slot: 0, description: "Debug message" }
+    level: { type: "TEXT", slot: 1, description: "Log level (INFO/WARN/ERROR)" }

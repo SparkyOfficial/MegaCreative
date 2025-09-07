@@ -4,10 +4,21 @@ import com.megacreative.MegaCreative;
 import com.megacreative.coding.CodeBlock;
 import com.megacreative.coding.values.DataValue;
 import com.megacreative.coding.variables.VariableScope;
+import com.megacreative.coding.debug.AdvancedVisualDebugger;
 import org.bukkit.Location;
 import org.bukkit.entity.Player;
+import org.bukkit.Material;
+import org.bukkit.block.Block;
+import org.bukkit.block.BlockState;
+import org.bukkit.command.CommandSender;
+import org.bukkit.event.Event;
+import org.bukkit.inventory.ItemStack;
 
-import java.util.*;
+// Required for variable watching
+import java.util.Map;
+import java.util.HashMap;
+import java.util.List;
+import java.util.ArrayList;
 import java.util.UUID;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.logging.Logger;
@@ -383,7 +394,9 @@ public class VisualDebugger {
      */
     private String formatLocation(Location location) {
         if (location == null) return "unknown";
-        return String.format("§7[%d, %d, %d]", 
+        String worldName = location.getWorld() != null ? location.getWorld().getName() : "";
+        return String.format("§7[%s, %d, %d, %d]", 
+                           worldName,
                            location.getBlockX(), 
                            location.getBlockY(), 
                            location.getBlockZ());
@@ -433,12 +446,20 @@ public class VisualDebugger {
      * Visualizes block execution
      */
     public void visualizeBlockExecution(Player player, CodeBlock block, Location blockLocation) {
+        if (player == null || block == null || blockLocation == null) {
+            return;
+        }
+        
         // Visualize the block execution using the advanced debugger
         if (advancedDebugger != null) {
             advancedDebugger.visualizeBlockExecution(player, block, blockLocation);
         } else {
             // Fallback visualization if advanced debugger is not available
-            player.sendBlockChange(blockLocation, blockLocation.getBlock().getBlockData());
+            try {
+                player.sendBlockChange(blockLocation, blockLocation.getBlock().getBlockData());
+            } catch (Exception e) {
+                log.warning("Failed to visualize block execution: " + e.getMessage());
+            }
         }
     }
     
@@ -576,6 +597,7 @@ public class VisualDebugger {
                 location.getBlockZ(),
                 location.getWorld() != null ? location.getWorld().getName() : "");
         }
+    }
     public static class ExecutionStep {
         private final String action;
         private final Location location;

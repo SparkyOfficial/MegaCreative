@@ -121,9 +121,4 @@ public interface ICodingManager {
      */
     ScriptEngine getScriptEngine();
     
-    /**
-     * Отменяет выполнение скрипта по его ID
-     * @param scriptId ID скрипта для отмены
-     */
-    void cancelScriptExecution(String scriptId);
 }

@@ -79,8 +79,9 @@ public class ServiceRegistry {
         this.dependencyContainer = dependencyContainer;
         
         // Initialize core services first
-        this.variableManager = new VariableManagerImpl((MegaCreative) plugin);
+        this.variableManager = new VariableManager((MegaCreative) plugin);
         this.visualDebugger = new VisualDebugger((MegaCreative) plugin);
+        this.blockConfigService = new BlockConfigService((MegaCreative) plugin);
         
         // Initialize ScriptEngine with its dependencies
         this.scriptEngine = new DefaultScriptEngine(
@@ -89,6 +90,9 @@ public class ServiceRegistry {
             visualDebugger,
             blockConfigService
         );
+        
+        // Register services
+        registerService(BlockConfigService.class, blockConfigService);
         initializeScriptEngine();
     }
     

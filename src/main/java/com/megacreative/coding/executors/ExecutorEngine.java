@@ -2,8 +2,10 @@ package com.megacreative.coding.executors;
 
 import com.megacreative.MegaCreative;
 import com.megacreative.coding.CodeScript;
+import com.megacreative.coding.CodeBlock;
 import com.megacreative.coding.values.DataValue;
 import com.megacreative.coding.variables.VariableManager;
+import com.megacreative.coding.executors.ExecutionResult;
 import org.bukkit.Location;
 import org.bukkit.Particle;
 import org.bukkit.Sound;
@@ -55,6 +57,7 @@ public class ExecutorEngine {
                 // Show start visual effect
                 showExecutionStart(context);
                 
+                // Execute with monitoring and get result
                 ExecutionResult result = executeWithMonitoring(context);
                 
                 // Show completion visual effect
@@ -66,7 +69,8 @@ public class ExecutorEngine {
                 return result;
                 
             } catch (Exception e) {
-                ExecutionResult errorResult = ExecutionResult.error("Execution failed: " + e.getMessage());
+                // Create error result with context
+                ExecutionResult errorResult = context.createErrorResult("Execution failed: " + e.getMessage(), e);
                 showExecutionError(context, e);
                 return errorResult;
                 
@@ -80,22 +84,27 @@ public class ExecutorEngine {
      * Executes script with detailed monitoring and visual feedback
      */
     private ExecutionResult executeWithMonitoring(ExecutionContext context) {
-        long startTime = System.currentTimeMillis();
-        
         try {
+            // Set start time in context
+            context.setStartTime(System.currentTimeMillis());
+            
             // Validate script before execution
             if (!validateScript(context.getScript())) {
-                return ExecutionResult.error("Script validation failed");
+                return context.createErrorResult("Script validation failed", null);
             }
             
             // Execute blocks sequentially with visual feedback
             var rootBlock = context.getScript().getRootBlock();
+            if (rootBlock == null) {
+                return context.createErrorResult("No root block found in script", null);
+            }
+            
             return executeBlockChain(rootBlock, context);
             
         } catch (Exception e) {
-            long duration = System.currentTimeMillis() - startTime;
+            long duration = System.currentTimeMillis() - context.getStartTime();
             plugin.getLogger().warning("Script execution failed after " + duration + "ms: " + e.getMessage());
-            return ExecutionResult.error("Execution error: " + e.getMessage());
+            return context.createErrorResult("Execution error: " + e.getMessage(), e);
         }
     }
     
@@ -104,30 +113,49 @@ public class ExecutorEngine {
      */
     private ExecutionResult executeBlockChain(com.megacreative.coding.CodeBlock block, ExecutionContext context) {
         var currentBlock = block;
-        ExecutionResult lastResult = ExecutionResult.success();
+        ExecutionResult lastResult = context.createResult(true, "Block chain execution completed");
         
-        while (currentBlock != null && !context.isCancelled()) {
-            // Show visual indicator for current block
-            showBlockExecution(currentBlock, context);
-            
-            // Execute current block
-            ExecutionResult blockResult = executeBlock(currentBlock, context);
-            
-            // Handle execution result
-            if (!blockResult.isSuccess()) {
-                showBlockError(currentBlock, context, blockResult.getError());
-                return blockResult;
+        try {
+            while (currentBlock != null && !context.isCancelled()) {
+                // Set current block in context for error reporting
+                context.setCurrentBlock(currentBlock);
+                
+                // Show visual indicator for current block
+                showBlockExecution(currentBlock, context);
+                
+                try {
+                    // Execute current block
+                    ExecutionResult blockResult = executeBlock(currentBlock, context);
+                    
+                    // Handle execution result
+                    if (!blockResult.isSuccess()) {
+                        showBlockError(currentBlock, context, blockResult.getMessage());
+                        return blockResult;
+                    }
+                    
+                    // Show block completion
+                    showBlockComplete(currentBlock, context);
+                    
+                    // Store last successful result
+                    lastResult = blockResult;
+                    
+                    // Move to next block
+                    currentBlock = currentBlock.getNextBlock();
+                    
+                } catch (Exception e) {
+                    // Create error result with current block context
+                    ExecutionResult errorResult = context.createErrorResult("Block execution failed: " + e.getMessage(), e);
+                    showBlockError(currentBlock, context, errorResult.getMessage());
+                    return errorResult;
+                }
             }
             
-            // Show block completion
-            showBlockComplete(currentBlock, context);
+            return lastResult;
             
-            // Move to next block
-            currentBlock = currentBlock.getNextBlock();
-            lastResult = blockResult;
+        } finally {
+            // Clear current block from context
+            context.setCurrentBlock(null);
         }
-        
-        return lastResult;
     }
     
     /**
@@ -136,152 +164,286 @@ public class ExecutorEngine {
     private ExecutionResult executeBlock(com.megacreative.coding.CodeBlock block, ExecutionContext context) {
         try {
             String action = block.getAction();
-            Map<String, DataValue> parameters = block.getParameters();
+            Map<String, DataValue> parameters = block.getParameters() != null ? block.getParameters() : new HashMap<>();
             
+            // Log block execution
+            plugin.getLogger().fine("Executing block: " + action + " with params: " + parameters);
+            
+            // Execute the appropriate action
+            ExecutionResult result;
             switch (action) {
                 case "sendMessage":
-                    return executeSendMessage(parameters, context);
+                    result = executeSendMessage(parameters, context);
+                    break;
                 case "teleport":
-                    return executeTeleport(parameters, context);
+                    result = executeTeleport(parameters, context);
+                    break;
                 case "giveItem":
-                    return executeGiveItem(parameters, context);
+                    result = executeGiveItem(parameters, context);
+                    break;
                 case "playSound":
-                    return executePlaySound(parameters, context);
+                    result = executePlaySound(parameters, context);
+                    break;
                 case "setVar":
-                    return executeSetVariable(parameters, context);
+                    result = executeSetVariable(parameters, context);
+                    break;
                 case "ifVarEquals":
-                    return executeIfVariable(block, parameters, context);
+                    result = executeIfVariable(block, parameters, context);
+                    break;
                 default:
-                    return ExecutionResult.error("Unknown action: " + action);
+                    return context.createErrorResult("Unknown action: " + action);
             }
             
+            // Log the result
+            if (result.isSuccess()) {
+                plugin.getLogger().fine("Block executed successfully: " + action);
+            } else {
+                plugin.getLogger().warning("Block execution failed: " + action + ". Error: " + result.getMessage());
+            }
+            
+            return result;
+            
         } catch (Exception e) {
-            return ExecutionResult.error("Block execution failed: " + e.getMessage());
+            plugin.getLogger().severe("Unexpected error executing block: " + e.getMessage(), e);
+            return context.createErrorResult(e);
         }
     }
     
     // === SPECIFIC ACTION EXECUTORS ===
     
     private ExecutionResult executeSendMessage(Map<String, DataValue> params, ExecutionContext context) {
-        DataValue messageValue = params.get("message");
-        String message = messageValue != null ? messageValue.asString() : "Hello World!";
-        
-        // Resolve placeholders
-        message = resolvePlaceholders(message, context);
-        
-        context.getPlayer().sendMessage(message);
-        return ExecutionResult.success("Message sent: " + message);
+        try {
+            DataValue messageValue = params.get("message");
+            if (messageValue == null) {
+                return context.createErrorResult("No message specified");
+            }
+            
+            String message = messageValue.asString();
+            if (message == null || message.trim().isEmpty()) {
+                return context.createErrorResult("Message cannot be empty");
+            }
+            
+            // Resolve placeholders and send message
+            message = resolvePlaceholders(message, context);
+            context.getPlayer().sendMessage(message);
+            
+            return context.createResult(true, "Message sent");
+            
+        } catch (Exception e) {
+            return context.createErrorResult("Failed to send message: " + e.getMessage(), e);
+        }
     }
     
     private ExecutionResult executeTeleport(Map<String, DataValue> params, ExecutionContext context) {
-        DataValue locationValue = params.get("location");
-        if (locationValue == null) {
-            return ExecutionResult.error("No location specified for teleport");
+        try {
+            DataValue locationValue = params.get("location");
+            if (locationValue == null) {
+                return context.createErrorResult("No location specified for teleport");
+            }
+            
+            // In a real implementation, you'd parse the location string
+            // For now, we'll just show an effect at the current location
+            Player player = context.getPlayer();
+            Location currentLoc = player.getLocation();
+            
+            // Visual effects
+            player.spawnParticle(Particle.PORTAL, currentLoc, 20);
+            player.playSound(currentLoc, Sound.ENTITY_ENDERMAN_TELEPORT, 1.0f, 1.0f);
+            
+            // In a real implementation, you'd do the actual teleport here
+            // player.teleport(targetLocation);
+            
+            return context.createResult(true, "Teleport effect played");
+            
+        } catch (Exception e) {
+            return context.createErrorResult("Teleport failed: " + e.getMessage(), e);
         }
-        
-        // For now, assume location is stored as a string and needs parsing
-        // In a real implementation, you'd parse the location string
-        Player player = context.getPlayer();
-        
-        // Visual effect
-        player.spawnParticle(Particle.PORTAL, player.getLocation(), 20);
-        player.playSound(player.getLocation(), Sound.ENTITY_ENDERMAN_TELEPORT, 1.0f, 1.0f);
-        
-        return ExecutionResult.success("Player teleport attempted");
     }
     
     private ExecutionResult executeGiveItem(Map<String, DataValue> params, ExecutionContext context) {
-        DataValue itemValue = params.get("item");
-        if (itemValue == null) {
-            return ExecutionResult.error("No item specified");
-        }
-        
-        // For now, assume item is a material name string
         try {
-            org.bukkit.Material material = org.bukkit.Material.valueOf(itemValue.asString().toUpperCase());
+            DataValue itemValue = params.get("item");
+            if (itemValue == null) {
+                return context.createErrorResult("No item specified");
+            }
+        
+            String materialName = itemValue.asString();
+            if (materialName == null || materialName.trim().isEmpty()) {
+                return context.createErrorResult("Item name cannot be empty");
+            }
+            
+            // Try to get the material
+            org.bukkit.Material material;
+            try {
+                material = org.bukkit.Material.valueOf(materialName.toUpperCase());
+            } catch (IllegalArgumentException e) {
+                return context.createErrorResult("Invalid item material: " + materialName);
+            }
+            
+            // Create and give the item
             org.bukkit.inventory.ItemStack item = new org.bukkit.inventory.ItemStack(material, 1);
-            
             Player player = context.getPlayer();
-            player.getInventory().addItem(item);
             
-            // Visual effect
+            // Add to inventory or drop if full
+            if (player.getInventory().firstEmpty() == -1) {
+                player.getWorld().dropItemNaturally(player.getLocation(), item);
+                player.sendMessage("§eYour inventory is full, the item was dropped at your feet!");
+            } else {
+                player.getInventory().addItem(item);
+            }
+            
+            // Visual effects
             player.spawnParticle(Particle.VILLAGER_HAPPY, player.getLocation().add(0, 2, 0), 5);
             player.playSound(player.getLocation(), Sound.ENTITY_ITEM_PICKUP, 1.0f, 1.2f);
             
-            return ExecutionResult.success("Item given: " + material.name());
-        } catch (IllegalArgumentException e) {
-            return ExecutionResult.error("Invalid item material: " + itemValue.asString());
+            return context.createResult(true, "Given " + material.name().toLowerCase().replace("_", " "));
+            
+        } catch (Exception e) {
+            return context.createErrorResult("Failed to give item: " + e.getMessage(), e);
         }
     }
     
     private ExecutionResult executePlaySound(Map<String, DataValue> params, ExecutionContext context) {
-        DataValue soundValue = params.get("sound");
-        DataValue volumeValue = params.get("volume");
-        DataValue pitchValue = params.get("pitch");
-        
-        if (soundValue == null) {
-            return ExecutionResult.error("No sound specified");
-        }
-        
-        String soundName = soundValue.asString();
-        float volume = volumeValue != null ? Float.parseFloat(volumeValue.asString()) : 1.0f;
-        float pitch = pitchValue != null ? Float.parseFloat(pitchValue.asString()) : 1.0f;
-        
         try {
-            Sound sound = Sound.valueOf(soundName.toUpperCase());
-            context.getPlayer().playSound(context.getPlayer().getLocation(), sound, volume, pitch);
-            return ExecutionResult.success("Sound played: " + soundName);
-        } catch (IllegalArgumentException e) {
-            return ExecutionResult.error("Invalid sound: " + soundName);
+            DataValue soundValue = params.get("sound");
+            if (soundValue == null) {
+                return context.createErrorResult("No sound specified");
+            }
+            
+            String soundName = soundValue.asString();
+            if (soundName == null || soundName.trim().isEmpty()) {
+                return context.createErrorResult("Sound name cannot be empty");
+            }
+            
+            // Get volume and pitch with defaults
+            float volume = 1.0f;
+            float pitch = 1.0f;
+            
+            try {
+                if (params.containsKey("volume")) {
+                    volume = Float.parseFloat(params.get("volume").asString());
+                }
+                if (params.containsKey("pitch")) {
+                    pitch = Float.parseFloat(params.get("pitch").asString());
+                }
+            } catch (NumberFormatException e) {
+                return context.createErrorResult("Invalid number format for volume or pitch");
+            }
+            
+            // Try to get the sound
+            Sound sound;
+            try {
+                sound = Sound.valueOf(soundName.toUpperCase());
+            } catch (IllegalArgumentException e) {
+                return context.createErrorResult("Invalid sound: " + soundName);
+            }
+            
+            // Play the sound
+            Player player = context.getPlayer();
+            Location location = player.getLocation();
+            player.playSound(location, sound, volume, pitch);
+            
+            // Visual effect
+            player.spawnParticle(Particle.NOTE, location.add(0, 2, 0), 5);
+            
+            return context.createResult(true, "Played sound: " + sound.name().toLowerCase().replace("_", " "));
+            
+        } catch (Exception e) {
+            return context.createErrorResult("Failed to play sound: " + e.getMessage(), e);
         }
     }
     
     private ExecutionResult executeSetVariable(Map<String, DataValue> params, ExecutionContext context) {
-        DataValue varNameValue = params.get("variable");
-        DataValue value = params.get("value");
-        
-        if (varNameValue == null) {
-            return ExecutionResult.error("Variable name not specified");
+        try {
+            DataValue varNameValue = params.get("variable");
+            DataValue value = params.get("value");
+            
+            if (varNameValue == null) {
+                return context.createErrorResult("Variable name not specified");
+            }
+            
+            String varName = varNameValue.asString();
+            if (varName == null || varName.trim().isEmpty()) {
+                return context.createErrorResult("Variable name cannot be empty");
+            }
+            
+            // Get world and script IDs for variable scoping
+            String scriptId = context.getScript() != null ? 
+                context.getScript().getId().toString() : "global";
+            String worldName = context.getPlayer() != null ? 
+                context.getPlayer().getWorld().getName() : "global";
+            
+            // Set the variable
+            variableManager.setVariable(varName, value, scriptId, worldName);
+            
+            return context.createResult(true, "Set variable " + varName + " to " + 
+                (value != null ? value.asString() : "null"));
+                
+        } catch (Exception e) {
+            return context.createErrorResult("Failed to set variable: " + e.getMessage(), e);
         }
-        
-        String varName = varNameValue.asString();
-        
-        variableManager.setVariable(varName, value, context.getScript().getId().toString(), 
-                                   context.getPlayer().getWorld().getName());
-        
-        return ExecutionResult.success("Variable set: " + varName + " = " + (value != null ? value.asString() : "null"));
     }
     
     private ExecutionResult executeIfVariable(com.megacreative.coding.CodeBlock block, 
                                             Map<String, DataValue> params, ExecutionContext context) {
-        DataValue varNameValue = params.get("variable");
-        DataValue expectedValue = params.get("value");
-        
-        if (varNameValue == null) {
-            return ExecutionResult.error("Variable name not specified");
-        }
-        
-        String varName = varNameValue.asString();
-        
-        DataValue currentValue = variableManager.getVariable(varName, 
-                context.getScript().getId().toString(), context.getPlayer().getWorld().getName());
-        
-        boolean condition = false;
-        if (currentValue != null && expectedValue != null) {
-            condition = Objects.equals(currentValue.getValue(), expectedValue.getValue());
-        }
-        
-        // Execute child blocks if condition is true
-        if (condition && !block.getChildren().isEmpty()) {
-            for (var childBlock : block.getChildren()) {
-                ExecutionResult childResult = executeBlockChain(childBlock, context);
-                if (!childResult.isSuccess()) {
-                    return childResult;
+        try {
+            DataValue varNameValue = params.get("variable");
+            DataValue expectedValue = params.get("value");
+            
+            if (varNameValue == null) {
+                return context.createErrorResult("Variable name not specified");
+            }
+            
+            String varName = varNameValue.asString();
+            if (varName == null || varName.trim().isEmpty()) {
+                return context.createErrorResult("Variable name cannot be empty");
+            }
+            
+            // Get world and script IDs for variable scoping
+            String scriptId = context.getScript() != null ? 
+                context.getScript().getId().toString() : "global";
+            String worldName = context.getPlayer() != null ? 
+                context.getPlayer().getWorld().getName() : "global";
+            
+            // Get current variable value
+            DataValue currentValue = variableManager.getVariable(varName, scriptId, worldName);
+            
+            // Check condition
+            boolean condition = false;
+            if (currentValue != null && expectedValue != null) {
+                condition = Objects.equals(currentValue.getValue(), expectedValue.getValue());
+            } else if (currentValue == null && expectedValue == null) {
+                condition = true; // Both null is considered equal
+            }
+            
+            // Log the condition check
+            plugin.getLogger().fine(String.format("Condition check: %s == %s -> %s",
+                currentValue != null ? currentValue.asString() : "null",
+                expectedValue != null ? expectedValue.asString() : "null",
+                condition));
+            
+            // Execute child blocks if condition is true and there are children
+            if (condition && block.getChildren() != null && !block.getChildren().isEmpty()) {
+                for (var childBlock : block.getChildren()) {
+                    if (childBlock == null) continue;
+                    
+                    ExecutionResult childResult = executeBlockChain(childBlock, context);
+                    if (!childResult.isSuccess()) {
+                        return childResult; // Return first failure
+                    }
+                    
+                    // Stop if execution was cancelled
+                    if (context.isCancelled()) {
+                        return context.createResult(false, "Execution cancelled");
+                    }
                 }
             }
+            
+            return context.createResult(true, "Condition evaluated: " + condition);
+            
+        } catch (Exception e) {
+            return context.createErrorResult("Failed to evaluate condition: " + e.getMessage(), e);
         }
-        
-        return ExecutionResult.success("Condition evaluated: " + condition);
     }
     
     // === VISUAL FEEDBACK SYSTEM ===
@@ -505,33 +667,14 @@ class ExecutionStats {
     }
 }
 
-class ExecutionResult {
-    private final boolean success;
-    private final String message;
-    private final String error;
-    
-    private ExecutionResult(boolean success, String message, String error) {
-        this.success = success;
-        this.message = message;
-        this.error = error;
-    }
-    
-    public static ExecutionResult success() { return new ExecutionResult(true, "Success", null); }
-    public static ExecutionResult success(String message) { return new ExecutionResult(true, message, null); }
-    public static ExecutionResult error(String error) { return new ExecutionResult(false, null, error); }
-    
-    public boolean isSuccess() { return success; }
-    public String getMessage() { return message; }
-    public String getError() { return error; }
-}
-
 class ExecutionContext {
     private final String executionId;
     private final CodeScript script;
     private final Player player;
     private final String trigger;
-    private final long startTime;
+    private long startTime;
     private boolean cancelled = false;
+    private CodeBlock currentBlock;
     
     public ExecutionContext(String executionId, CodeScript script, Player player, String trigger) {
         this.executionId = executionId;
@@ -541,11 +684,69 @@ class ExecutionContext {
         this.startTime = System.currentTimeMillis();
     }
     
+    // Getters
     public String getExecutionId() { return executionId; }
     public CodeScript getScript() { return script; }
     public Player getPlayer() { return player; }
     public String getTrigger() { return trigger; }
     public long getStartTime() { return startTime; }
     public boolean isCancelled() { return cancelled; }
+    public CodeBlock getCurrentBlock() { return currentBlock; }
+    
+    // Setters
+    public void setStartTime(long startTime) { this.startTime = startTime; }
+    public void setCurrentBlock(CodeBlock block) { this.currentBlock = block; }
+    
+    // Control methods
     public void cancel() { this.cancelled = true; }
+    
+    /**
+     * Creates a success result with the given message
+     */
+    public ExecutionResult createResult(boolean success, String message) {
+        return new ExecutionResult.Builder()
+            .success(success)
+            .message(message)
+            .executedBlock(currentBlock)
+            .executor(player)
+            .executionTime(System.currentTimeMillis() - startTime)
+            .build();
+    }
+    
+    /**
+     * Creates a success result with the default message
+     */
+    public ExecutionResult createResult(boolean success) {
+        return createResult(success, success ? "Operation completed successfully" : "Operation failed");
+    }
+    
+    /**
+     * Creates an error result with the given message and throwable
+     */
+    public ExecutionResult createErrorResult(String errorMessage, Throwable error) {
+        return new ExecutionResult.Builder()
+            .success(false)
+            .message(errorMessage)
+            .executedBlock(currentBlock)
+            .executor(player)
+            .error(error)
+            .executionTime(System.currentTimeMillis() - startTime)
+            .build();
+    }
+    
+    /**
+     * Creates an error result with the given message
+     */
+    public ExecutionResult createErrorResult(String errorMessage) {
+        return createErrorResult(errorMessage, null);
+    }
+    
+    /**
+     * Creates an error result from an exception
+     */
+    public ExecutionResult createErrorResult(Throwable error) {
+        return createErrorResult(error.getMessage(), error);
+    }
 }
+
+// End of file

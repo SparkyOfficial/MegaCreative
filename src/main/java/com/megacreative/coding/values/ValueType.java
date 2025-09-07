@@ -1,5 +1,8 @@
 package com.megacreative.coding.values;
 
+import com.megacreative.coding.values.SimpleDataValue;
+import java.util.Objects;
+
 /**
  * Comprehensive value type system for MegaCreative block coding
  * Supports all data types with advanced features like serialization and validation
@@ -68,6 +71,62 @@ public enum ValueType {
     }
     
     /**
+     * Determines the appropriate ValueType for a given object
+     * @param value The object to check
+     * @return The matching ValueType, or TEXT if unknown
+     */
+    public static ValueType fromObject(Object value) {
+        if (value == null) {
+            return TEXT;
+        }
+        
+        if (value instanceof Number) {
+            return NUMBER;
+        } else if (value instanceof Boolean) {
+            return BOOLEAN;
+        } else if (value instanceof org.bukkit.Location) {
+            return LOCATION;
+        } else if (value instanceof org.bukkit.entity.Entity) {
+            return value instanceof org.bukkit.entity.Player ? PLAYER : ENTITY;
+        } else if (value instanceof org.bukkit.World) {
+            return WORLD;
+        } else if (value instanceof org.bukkit.Material) {
+            return MATERIAL;
+        } else if (value instanceof java.util.Map) {
+            return DICTIONARY;
+        } else if (value instanceof java.util.Collection) {
+            return LIST;
+        } else if (value instanceof org.bukkit.Sound) {
+            return SOUND;
+        } else if (value instanceof org.bukkit.Particle) {
+            return PARTICLE;
+        } else if (value instanceof org.bukkit.potion.PotionEffectType) {
+            return POTION;
+        } else if (value instanceof org.bukkit.Color) {
+            return COLOR;
+        } else if (value instanceof org.bukkit.enchantments.Enchantment) {
+            return ENCHANTMENT;
+        } else if (value instanceof org.bukkit.GameMode) {
+            return GAMEMODE;
+        } else if (value instanceof String) {
+            // Try to parse as JSON
+            try {
+                new org.json.JSONObject(value.toString());
+                return JSON;
+            } catch (org.json.JSONException e) {
+                try {
+                    new org.json.JSONArray(value.toString());
+                    return JSON;
+                } catch (org.json.JSONException ex) {
+                    return TEXT;
+                }
+            }
+        }
+        
+        return TEXT;
+    }
+    
+    /**
      * Checks if this type is compatible with another type
      */
     public boolean isCompatible(ValueType other) {
@@ -94,12 +153,45 @@ public enum ValueType {
      */
     public Object getDefaultValue() {
         switch (this) {
-            case TEXT: return "";
-            case NUMBER: return 0;
-            case BOOLEAN: return false;
-            case LIST: return new java.util.ArrayList<>();
-            case DICTIONARY: return new java.util.HashMap<>();
-            default: return null;
+            case TEXT:
+                return "";
+            case NUMBER:
+                return 0;
+            case BOOLEAN:
+                return false;
+            case LOCATION:
+                return null; // Should be a Location object in actual implementation
+            case ITEM:
+                return null; // Should be an ItemStack in actual implementation
+            case BLOCK:
+                return null; // Should be a Block in actual implementation
+            case ENTITY:
+                return null; // Should be an Entity in actual implementation
+            case PLAYER:
+                return null; // Should be a Player in actual implementation
+            case WORLD:
+                return null; // Should be a World in actual implementation
+            case LIST:
+                return new java.util.ArrayList<>();
+            case DICTIONARY:
+                return new java.util.HashMap<>();
+            case VECTOR:
+                return null; // Should be a Vector in actual implementation
+            case SOUND:
+                return null; // Should be a Sound in actual implementation
+            case PARTICLE:
+                return null; // Should be a Particle in actual implementation
+            case POTION:
+                return null; // Should be a PotionEffect in actual implementation
+            default:
+                return null;
         }
+    }
+    
+    /**
+     * Creates a new DataValue with the default value for this type
+     */
+    public DataValue createDefaultValue() {
+        return new SimpleDataValue(getDefaultValue(), this);
     }
 }

@@ -7,52 +7,45 @@ import java.util.HashMap;
 import java.util.Map;
 
 /**
- * Перечисление всех типов блоков, доступных в системе кодирования.
- * Разделены на категории для удобства.
+ * Enumeration of all block types available in the coding system.
+ * Organized into categories for convenience.
+ * Updated to work with the new configuration-driven approach while maintaining backward compatibility.
  */
 public enum BlockType {
-    // События игрока (зеленые блоки)
-    EVENT_PLAYER_JOIN(Material.LIME_CONCRETE, "onJoin"),      // Игрок входит в мир
-    EVENT_PLAYER_QUIT(Material.LIME_CONCRETE, "onQuit"),      // Игрок выходит из мира
-    EVENT_PLAYER_INTERACT(Material.LIME_CONCRETE, "onInteract"),  // Игрок кликает ПКМ
-    EVENT_PLAYER_MOVE(Material.LIME_CONCRETE, "onMove"),      // Игрок перемещается
-    EVENT_PLAYER_CHAT(Material.LIME_CONCRETE, "onChat"),      // Игрок отправляет сообщение
-    EVENT_PLAYER_DEATH(Material.LIME_CONCRETE, "onDeath"),     // Игрок умирает
-    EVENT_PLAYER_RESPAWN(Material.LIME_CONCRETE, "onRespawn"),   // Игрок респаунится
+    // Player Events (green blocks)
+    EVENT_PLAYER_JOIN(Material.PLAYER_HEAD, "onPlayerJoin"),      // Player joins the server
+    EVENT_PLAYER_QUIT(Material.LIME_CONCRETE, "onPlayerQuit"),    // Player leaves the server
+    EVENT_PLAYER_INTERACT(Material.STICK, "onPlayerInteract"),    // Player right-clicks
+    EVENT_PLAYER_MOVE(Material.DIAMOND_BLOCK, "onPlayerMove"),    // Player moves
+    EVENT_PLAYER_CHAT(Material.PAPER, "onPlayerChat"),            // Player sends message
+    EVENT_PLAYER_DEATH(Material.BONE, "onPlayerDeath"),           // Player dies
+    EVENT_PLAYER_RESPAWN(Material.END_STONE, "onPlayerRespawn"),  // Player respawns
 
-    // Условия игрока (синие)
-    CONDITION_HAS_ITEM(Material.BLUE_CONCRETE, "hasItem"),
-    CONDITION_PLAYER_HEALTH(Material.BLUE_CONCRETE, "checkHealth"),
-    CONDITION_PLAYER_GAMEMODE(Material.BLUE_CONCRETE, "checkGamemode"),
-    CONDITION_PLAYER_LOCATION(Material.BLUE_CONCRETE, "checkLocation"),
-    CONDITION_VARIABLE_EQUALS(Material.BLUE_CONCRETE, "varEquals"),
-    CONDITION_IS_IN_REGION(Material.BLUE_CONCRETE, "inRegion"),
-    CONDITION_HAS_PERMISSION(Material.BLUE_CONCRETE, "hasPermission"),
+    // Player Conditions (blue blocks)
+    CONDITION_HAS_PERMISSION(Material.KNOWLEDGE_BOOK, "hasPermission"),
+    CONDITION_HAS_ITEM(Material.CHEST, "hasItem"),
+    CONDITION_IS_IN_WORLD(Material.GRASS_BLOCK, "isInWorld"),
+    CONDITION_COMPARE_VARIABLE(Material.COMPARATOR, "compareVariable"),
 
-    // Действия игрока (красные)
-    ACTION_SEND_MESSAGE(Material.RED_CONCRETE, "sendMessage"),
-    ACTION_TELEPORT_PLAYER(Material.RED_CONCRETE, "teleport"),
-    ACTION_GIVE_ITEM(Material.RED_CONCRETE, "giveItem"),
-    ACTION_SET_HEALTH(Material.RED_CONCRETE, "setHealth"),
-    ACTION_SET_GAMEMODE(Material.RED_CONCRETE, "setGamemode"),
-    ACTION_PLAY_SOUND(Material.RED_CONCRETE, "playSound"),
+    // Player Actions (red blocks)
+    ACTION_SEND_MESSAGE(Material.PAPER, "sendMessage"),
+    ACTION_TELEPORT_PLAYER(Material.ENDER_PEARL, "teleportPlayer"),
+    ACTION_GIVE_ITEM(Material.CHEST, "giveItem"),
+    ACTION_PLAY_SOUND(Material.NOTE_BLOCK, "playSound"),
 
-    // Переменные (желтые)
-    VARIABLE_SET(Material.YELLOW_CONCRETE, "setVariable"),
-    VARIABLE_GET(Material.YELLOW_CONCRETE, "getVariable"),
-    VARIABLE_ADD(Material.YELLOW_CONCRETE, "addToVariable"),
-    VARIABLE_SUBTRACT(Material.YELLOW_CONCRETE, "subtractFromVariable"),
+    // Variable Actions (yellow blocks)
+    ACTION_SET_VARIABLE(Material.REDSTONE_TORCH, "setVariable"),
+    ACTION_GET_VARIABLE(Material.REPEATER, "getVariable"),
 
-    // Условные блоки (фиолетовые)
-    IF_CONDITION(Material.PURPLE_CONCRETE, "if"),
-    ELSE_CONDITION(Material.PURPLE_CONCRETE, "else"),
+    // Control Flow (purple blocks)
+    CONTROL_IF_CONDITION(Material.STONE_BUTTON, "ifCondition"),
+    CONTROL_ELSE_CONDITION(Material.STONE_PRESSURE_PLATE, "elseCondition"),
 
-    // Игровые действия (оранжевые)
-    GAME_ACTION_SPAWN_MOB(Material.ORANGE_CONCRETE, "spawnMob"),
-    GAME_ACTION_EXPLOSION(Material.ORANGE_CONCRETE, "createExplosion"),
-    GAME_ACTION_WEATHER(Material.ORANGE_CONCRETE, "setWeather"),
-    GAME_ACTION_TIME(Material.ORANGE_CONCRETE, "setTime"),
-    GAME_ACTION_BROADCAST(Material.ORANGE_CONCRETE);
+    // Game Actions (orange blocks)
+    ACTION_SPAWN_MOB(Material.ZOMBIE_SPAWN_EGG, "spawnMob"),
+    ACTION_CREATE_EXPLOSION(Material.TNT, "createExplosion"),
+    ACTION_SET_WEATHER(Material.CLOCK, "setWeather"),
+    ACTION_SET_TIME(Material.CLOCK, "setTime");
 
     private final Material material;
     private final String actionName;
@@ -70,9 +63,18 @@ public enum BlockType {
         }
     }
 
+    // Default constructor for enum constants without action name
+    BlockType(Material material) {
+        this(material, name().toLowerCase().replace('_', ' '));
+    }
+    
+    // Constructor with material and action name
     BlockType(Material material, String actionName) {
+        if (material == null) {
+            throw new IllegalArgumentException("Material cannot be null");
+        }
         this.material = material;
-        this.actionName = actionName;
+        this.actionName = actionName != null ? actionName : name().toLowerCase().replace('_', ' ');
     }
 
     /**
@@ -115,5 +117,48 @@ public enum BlockType {
     @Nullable
     public static BlockType getByActionName(String actionName) {
         return actionName != null ? BY_ACTION_NAME.get(actionName.toLowerCase()) : null;
+    }
+    
+    /**
+     * Checks if this block type is an event block
+     * @return true if this is an event block
+     */
+    public boolean isEvent() {
+        return this.name().startsWith("EVENT_");
+    }
+    
+    /**
+     * Checks if this block type is a condition block
+     * @return true if this is a condition block
+     */
+    public boolean isCondition() {
+        return this.name().startsWith("CONDITION_");
+    }
+    
+    /**
+     * Checks if this block type is an action block
+     * @return true if this is an action block
+     */
+    public boolean isAction() {
+        return this.name().startsWith("ACTION_");
+    }
+    
+    /**
+     * Checks if this block type is a control block
+     * @return true if this is a control block
+     */
+    public boolean isControl() {
+        return this.name().startsWith("CONTROL_");
+    }
+    
+    /**
+     * Gets the block type category
+     * @return The category as a string
+     */
+    public String getCategory() {
+        if (isEvent()) return "EVENT";
+        if (isCondition()) return "CONDITION";
+        if (isControl()) return "CONTROL";
+        return "ACTION"; // Default to action
     }
 }

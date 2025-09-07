@@ -105,9 +105,9 @@ public class ExecutionContext {
         if (scriptId == null) {
             return new HashMap<>();
         }
-        Map<String, DataValue> scriptVars = variableManager.getLocalVariables(scriptId);
+        Map<String, DataValue> scriptVars = variableManager.getPlayerVariables(UUID.fromString(scriptId));
         Map<String, Object> result = new HashMap<>();
-        scriptVars.forEach((k, v) -> result.put(k, v.getValue()));
+        scriptVars.forEach((k, v) -> result.put(k, v != null ? v.getValue() : null));
         return result;
     }
     
@@ -118,7 +118,7 @@ public class ExecutionContext {
         if (worldId == null) {
             throw new IllegalStateException("Cannot set global variable: world ID is not available");
         }
-        variableManager.setGlobalVariable(worldId, name, DataValue.fromObject(value));
+        variableManager.setGlobalVariable(name, DataValue.fromObject(value));
     }
     
     /**
@@ -153,7 +153,7 @@ public class ExecutionContext {
         if (worldId == null) {
             return null;
         }
-        DataValue value = variableManager.getGlobalVariable(worldId, name);
+        DataValue value = variableManager.getGlobalVariable(name);
         return value != null ? value.getValue() : null;
     }
     
@@ -242,7 +242,7 @@ public class ExecutionContext {
         if (value != null) {
             setVariable(name, value);
         } else if (scriptId != null) {
-            variableManager.removeLocalVariable(scriptId, name);
+            variableManager.removeVariable(name, VariableScope.LOCAL, scriptId);
         }
     }
     

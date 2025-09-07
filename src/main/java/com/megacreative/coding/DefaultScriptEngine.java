@@ -4,10 +4,9 @@ import com.megacreative.MegaCreative;
 import com.megacreative.coding.debug.VisualDebugger;
 import com.megacreative.coding.executors.ExecutionResult;
 import com.megacreative.coding.variables.VariableManager;
-import com.megacreative.coding.variables.VariableManagerImpl;
+import com.megacreative.services.BlockConfigService;
 import org.bukkit.Material;
 import org.bukkit.entity.Player;
-import org.bukkit.plugin.java.JavaPlugin;
 
 import java.util.Map;
 import java.util.UUID;
@@ -19,6 +18,7 @@ import java.util.logging.Level;
  * Default implementation of the ScriptEngine interface.
  * Combines the best features of ScriptExecutor and ExecutorEngine
  * with a focus on performance and extensibility.
+ * Updated to use ActionFactory and ConditionFactory for dynamic block execution.
  */
 public class DefaultScriptEngine implements ScriptEngine {
     
@@ -28,8 +28,11 @@ public class DefaultScriptEngine implements ScriptEngine {
     private final ParameterResolver parameterResolver;
     private BlockConfigService blockConfigService;
     
-    private final Map<BlockType, BlockAction> actionRegistry = new HashMap<>();
-    private final Map<BlockType, BlockCondition> conditionRegistry = new HashMap<>();
+    private final ActionFactory actionFactory;
+    private final ConditionFactory conditionFactory;
+    
+    private final Map<BlockType, BlockAction> actionRegistry = new ConcurrentHashMap<>();
+    private final Map<BlockType, BlockCondition> conditionRegistry = new ConcurrentHashMap<>();
     private final Map<String, BlockType> blockTypeCache = new ConcurrentHashMap<>();
     
     private static final int MAX_RECURSION_DEPTH = 100;  
@@ -43,6 +46,10 @@ public class DefaultScriptEngine implements ScriptEngine {
         this.debugger = debugger;
         this.blockConfigService = blockConfigService;
         this.parameterResolver = new ParameterResolver(variableManager);
+        
+        // Initialize factories
+        this.actionFactory = new ActionFactory(blockConfigService, parameterResolver);
+        this.conditionFactory = new ConditionFactory(blockConfigService);
     }
     
     /**
@@ -58,14 +65,11 @@ public class DefaultScriptEngine implements ScriptEngine {
         this.blockConfigService = blockConfigService;
         
         // Clear the block type cache when the config service changes
-        if (blockTypeCache != null) {
-            blockTypeCache.clear();
-        }
+        blockTypeCache.clear();
         
-        // Re-register default actions and conditions with the new config service
+        // Re-register actions and conditions with the new config service
         if (initialized) {
-            registerDefaultActions();
-            registerDefaultConditions();
+            registerActionsAndConditions();
         }
     }
     
@@ -87,28 +91,14 @@ public class DefaultScriptEngine implements ScriptEngine {
     
     /**
      * Initializes the ScriptEngine with required dependencies
-     * @param plugin The plugin instance
-     * @param variableManager The variable manager to use (can be null to use default)
-     * @param debugger The visual debugger to use (can be null to use default)
      */
-    public void initialize(MegaCreative plugin, VariableManager variableManager, VisualDebugger debugger, BlockConfigService blockConfigService) {
+    public void initialize() {
         if (initialized) {
             return;
         }
         
-        // Use provided debugger or create a default one
-        if (debugger != null) {
-            this.debugger = debugger;
-        } else {
-            this.debugger = new VisualDebugger(plugin);
-        }
-        
-        // Register default actions and conditions
-        registerDefaultActions();
-        registerDefaultConditions();
-        
-        // Load block configurations and validate
-        validateBlockConfigs();
+        // Register actions and conditions
+        registerActionsAndConditions();
         
         initialized = true;
         plugin.getLogger().info("DefaultScriptEngine initialized with " + 
@@ -117,31 +107,62 @@ public class DefaultScriptEngine implements ScriptEngine {
     }
     
     /**
-     * Validates that all configured blocks have corresponding BlockType enums.
+     * Registers all actions and conditions from configuration
      */
-    private void validateBlockConfigs() {
-        int missingTypes = 0;
+    private void registerActionsAndConditions() {
+        actionRegistry.clear();
+        conditionRegistry.clear();
         
-        for (BlockConfig config : blockConfigService.getAllBlockConfigs()) {
-            BlockType blockType = BlockType.getByMaterialAndAction(
-                config.getMaterial(), 
-                config.getActionName()
-            );
-            
-            if (blockType == null) {
-                plugin.getLogger().warning("No BlockType found for: " + 
-                    config.getMaterial() + "/" + config.getActionName() + 
-                    " (" + config.getId() + ")");
-                missingTypes++;
-            } else if (!blockType.getMaterial().equals(config.getMaterial())) {
-                plugin.getLogger().warning("Material mismatch for " + config.getId() + 
-                    ": expected " + blockType.getMaterial() + ", got " + config.getMaterial());
+        if (blockConfigService == null) {
+            plugin.getLogger().warning("BlockConfigService is null, cannot register actions and conditions");
+            return;
+        }
+        
+        // Register all configured actions
+        int actionCount = 0;
+        for (BlockConfigService.BlockConfig config : blockConfigService.getAllBlockConfigs()) {
+            if ("ACTION".equals(config.getType()) || "EVENT".equals(config.getType())) {
+                BlockAction action = actionFactory.createAction(config.getActionName(), config.getMaterial());
+                if (action != null) {
+                    // Try to get BlockType from enum first, then create dynamic one
+                    BlockType blockType = BlockType.getByMaterialAndAction(config.getMaterial(), config.getActionName());
+                    if (blockType == null) {
+                        // For now, we'll use the enum-based approach for compatibility
+                        // In a full refactor, we'd create dynamic BlockType instances
+                        blockType = getBlockType(config.getMaterial(), config.getActionName());
+                    }
+                    
+                    if (blockType != null) {
+                        actionRegistry.put(blockType, action);
+                        actionCount++;
+                    }
+                }
             }
         }
         
-        if (missingTypes > 0) {
-            plugin.getLogger().warning("Found " + missingTypes + " blocks without matching BlockType enums");
+        // Register all configured conditions
+        int conditionCount = 0;
+        for (BlockConfigService.BlockConfig config : blockConfigService.getAllBlockConfigs()) {
+            if ("CONDITION".equals(config.getType()) || "CONTROL".equals(config.getType())) {
+                BlockCondition condition = conditionFactory.createCondition(config.getActionName(), config.getMaterial());
+                if (condition != null) {
+                    // Try to get BlockType from enum first, then create dynamic one
+                    BlockType blockType = BlockType.getByMaterialAndAction(config.getMaterial(), config.getActionName());
+                    if (blockType == null) {
+                        // For now, we'll use the enum-based approach for compatibility
+                        // In a full refactor, we'd create dynamic BlockType instances
+                        blockType = getBlockType(config.getMaterial(), config.getActionName());
+                    }
+                    
+                    if (blockType != null) {
+                        conditionRegistry.put(blockType, condition);
+                        conditionCount++;
+                    }
+                }
+            }
         }
+        
+        plugin.getLogger().info("Registered " + actionCount + " actions and " + conditionCount + " conditions from configuration");
     }
     
     @Override
@@ -167,8 +188,8 @@ public class DefaultScriptEngine implements ScriptEngine {
                 // Process the starting block
                 CodeBlock startBlock = script.getStartBlock();
                 if (startBlock != null) {
-                    processBlock(startBlock, context);
-                    return ExecutionResult.success("Script executed successfully");
+                    ExecutionResult result = processBlock(startBlock, context, 0);
+                    return result != null ? result : ExecutionResult.success("Script executed successfully");
                 } else {
                     return ExecutionResult.error("No start block found in script");
                 }
@@ -249,10 +270,6 @@ public class DefaultScriptEngine implements ScriptEngine {
         return false;
     }
     
-    /**
-     * Processes a single code block in the execution context.
-     * Handles debugging, error handling, and block execution.
-     */
     /**
      * Processes a single code block in the execution context.
      * Handles debugging, error handling, and block execution.
@@ -382,161 +399,12 @@ public class DefaultScriptEngine implements ScriptEngine {
             
             // If not found, try to find a matching block config
             if (blockType == null && blockConfigService != null) {
-                blockType = blockConfigService.getBlockType(material, actionName);
-                
-                // If still not found, try case-insensitive search
-                if (blockType == null) {
-                    for (BlockType type : BlockType.values()) {
-                        if (type.getMaterial() == material && 
-                            type.getActionName().equalsIgnoreCase(actionName)) {
-                            return type;
-                        }
-                    }
-                }
+                // In the new system, we might need to create a dynamic BlockType
+                // For now, we'll just return null if not found in enum
             }
             
             return blockType;
         });
-    }
-    
-    // Helper methods for execution
-    
-    private void registerDefaultActions() {
-        try {
-            // Clear existing actions
-            actionRegistry.clear();
-            
-            // Register static actions first with dependency injection
-            registerAction(BlockType.ACTION_SEND_MESSAGE, new SendMessageAction(parameterResolver));
-            registerAction(BlockType.ACTION_TELEPORT_PLAYER, new TeleportAction());
-            registerAction(BlockType.ACTION_GIVE_ITEM, new GiveItemAction());
-            registerAction(BlockType.ACTION_SET_HEALTH, new SetHealthAction());
-            registerAction(BlockType.ACTION_SET_GAMEMODE, new SetGamemodeAction());
-            registerAction(BlockType.ACTION_PLAY_SOUND, new PlaySoundAction());
-            
-            // Register variable actions
-            registerAction(BlockType.VARIABLE_SET, new SetVariableAction(variableManager));
-            registerAction(BlockType.VARIABLE_GET, new GetVariableAction(variableManager));
-            registerAction(BlockType.VARIABLE_ADD, new AddToVariableAction(variableManager));
-            registerAction(BlockType.VARIABLE_SUBTRACT, new SubtractFromVariableAction(variableManager));
-            
-            // Register game actions
-            registerAction(BlockType.GAME_ACTION_SPAWN_MOB, new SpawnMobAction());
-            registerAction(BlockType.GAME_ACTION_EXPLOSION, new CreateExplosionAction());
-            registerAction(BlockType.GAME_ACTION_WEATHER, new SetWeatherAction());
-            registerAction(BlockType.GAME_ACTION_TIME, new SetTimeAction());
-            
-            // Register event handlers
-            registerAction(BlockType.EVENT_PLAYER_JOIN, new PlayerJoinAction());
-            registerAction(BlockType.EVENT_PLAYER_QUIT, new PlayerQuitAction());
-            registerAction(BlockType.EVENT_PLAYER_INTERACT, new PlayerInteractAction());
-            registerAction(BlockType.EVENT_PLAYER_MOVE, new PlayerMoveAction());
-            registerAction(BlockType.EVENT_PLAYER_CHAT, new PlayerChatAction());
-            registerAction(BlockType.EVENT_PLAYER_DEATH, new PlayerDeathAction());
-            registerAction(BlockType.EVENT_PLAYER_RESPAWN, new PlayerRespawnAction());
-            
-            // Register actions from BlockConfigService if available
-            if (blockConfigService != null) {
-                int customActions = 0;
-                for (BlockConfig config : blockConfigService.getAllBlockConfigs()) {
-                    if (config.isAction() && config.isEnabled()) {
-                        BlockType blockType = getBlockType(config.getMaterial(), config.getActionName());
-                        if (blockType != null && !actionRegistry.containsKey(blockType)) {
-                            BlockAction action = createActionFromConfig(config);
-                            if (action != null) {
-                                registerAction(blockType, action);
-                                customActions++;
-                            }
-                        }
-                    }
-                }
-                if (customActions > 0) {
-                    plugin.getLogger().info("Registered " + customActions + " custom actions from config");
-                }
-            }
-            
-            plugin.getLogger().info("Registered " + actionRegistry.size() + " total actions");
-        } catch (Exception e) {
-            plugin.getLogger().severe("Failed to register default actions: " + e.getMessage());
-            e.printStackTrace();
-        }
-    }
-    
-    /**
-     * Creates a BlockAction instance from a BlockConfig.
-     * This method can be extended to support custom action types.
-     * 
-     * @param config The block configuration
-     * @return A new BlockAction instance, or null if not supported
-     */
-    protected BlockAction createActionFromConfig(BlockConfig config) {
-        // This is a basic implementation that creates a generic action
-        // You can extend this method to support custom action types
-        return new GenericBlockAction(config);
-    }
-    
-    private void registerDefaultConditions() {
-        try {
-            // Clear existing conditions
-            conditionRegistry.clear();
-            
-            // Register core conditions
-            registerCondition(BlockType.CONDITION_IS_OP, new IsOpCondition());
-            registerCondition(BlockType.CONDITION_HAS_ITEM, new HasItemCondition());
-            registerCondition(BlockType.CONDITION_HAS_PERMISSION, new HasPermissionCondition());
-            registerCondition(BlockType.CONDITION_IS_IN_WORLD, new IsInWorldCondition());
-            registerCondition(BlockType.CONDITION_COMPARE_VARIABLE, new CompareVariableCondition());
-            
-            // Register conditions from BlockConfigService if available
-            if (blockConfigService != null) {
-                int customConditions = 0;
-                for (BlockConfig config : blockConfigService.getAllBlockConfigs()) {
-                    if (config.isCondition() && config.isEnabled()) {
-                        BlockType blockType = getBlockType(config.getMaterial(), config.getActionName());
-                        if (blockType != null && !conditionRegistry.containsKey(blockType)) {
-                            BlockCondition condition = createConditionFromConfig(config);
-                            if (condition != null) {
-                                registerCondition(blockType, condition);
-                                customConditions++;
-                            }
-                        }
-                    }
-                }
-                if (customConditions > 0) {
-                    plugin.getLogger().info("Registered " + customConditions + " custom conditions from config");
-                }
-            }
-            
-            // Variable conditions
-            registerCondition(BlockType.CONDITION_VARIABLE_EQUALS, new VariableEqualsCondition(variableManager));
-            
-            // World conditions
-            registerCondition(BlockType.CONDITION_IS_IN_REGION, new InRegionCondition());
-            
-            // Control flow conditions
-            registerCondition(BlockType.IF_CONDITION, new IfCondition(variableManager));
-            registerCondition(BlockType.ELSE_CONDITION, new ElseCondition());
-            
-            plugin.getLogger().info("Registered " + conditionRegistry.size() + " default conditions");
-        } catch (Exception e) {
-            plugin.getLogger().severe("Failed to register default conditions: " + e.getMessage());
-            e.printStackTrace();
-        }
-        
-        // Register more conditions as needed
-    }
-    
-    /**
-     * Creates a BlockCondition instance from a BlockConfig.
-     * This method can be extended to support custom condition types.
-     * 
-     * @param config The block configuration
-     * @return A new BlockCondition instance, or null if not supported
-     */
-    protected BlockCondition createConditionFromConfig(BlockConfig config) {
-        // This is a basic implementation that creates a generic condition
-        // You can extend this method to support custom condition types
-        return new GenericBlockCondition(config);
     }
     
     // Getters for internal use
@@ -554,18 +422,18 @@ public class DefaultScriptEngine implements ScriptEngine {
     }
     
     /**
-     * Gets the number of registered actions
-     * @return count of registered actions
+     * Gets the ActionFactory instance
+     * @return The ActionFactory instance
      */
-    public int getActionCount() {
-        return actionRegistry.size();
+    public ActionFactory getActionFactory() {
+        return actionFactory;
     }
     
     /**
-     * Gets the number of registered conditions
-     * @return count of registered conditions
+     * Gets the ConditionFactory instance
+     * @return The ConditionFactory instance
      */
-    public int getConditionCount() {
-        return conditionRegistry.size();
+    public ConditionFactory getConditionFactory() {
+        return conditionFactory;
     }
 }

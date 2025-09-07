@@ -15,6 +15,10 @@
     <properties>
         <java.version>21</java.version>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
+        <maven.compiler.source>21</maven.compiler.source>
+        <maven.compiler.target>21</maven.compiler.target>
+        <paper.version>1.20.4</paper.version>
+        <paper.api.version>1.20.4-R0.1-SNAPSHOT</paper.api.version>
     </properties>
 
     <build>
@@ -25,20 +29,82 @@
                 <includes>
                     <include>**/*.yml</include>
                     <include>**/*.yaml</include>
+                    <include>**/*.properties</include>
                 </includes>
             </resource>
         </resources>
         <plugins>
+            <!-- Maven Shade Plugin for creating a fat JAR -->
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-shade-plugin</artifactId>
+                <version>3.5.0</version>
+                <executions>
+                    <execution>
+                        <phase>package</phase>
+                        <goals>
+                            <goal>shade</goal>
+                        </goals>
+                        <configuration>
+                            <createDependencyReducedPom>false</createDependencyReducedPom>
+                            <filters>
+                                <filter>
+                                    <artifact>*:*</artifact>
+                                    <excludes>
+                                        <exclude>META-INF/*.SF</exclude>
+                                        <exclude>META-INF/*.DSA</exclude>
+                                        <exclude>META-INF/*.RSA</exclude>
+                                        <exclude>META-INF/maven/**</exclude>
+                                        <exclude>META-INF/versions/**</exclude>
+                                        <exclude>META-INF/services/**</exclude>
+                                        <exclude>META-INF/spring.*</exclude>
+                                        <exclude>META-INF/LICENSE*</exclude>
+                                        <exclude>META-INF/NOTICE*</exclude>
+                                    </excludes>
+                                </filter>
+                            </filters>
+                            <transformers>
+                                <transformer implementation="org.apache.maven.plugins.shade.resource.ManifestResourceTransformer">
+                                    <mainClass>com.megacreative.MegaCreative</mainClass>
+                                </transformer>
+                                <transformer implementation="org.apache.maven.plugins.shade.resource.AppendingTransformer">
+                                    <resource>META-INF/spring.handlers</resource>
+                                </transformer>
+                                <transformer implementation="org.apache.maven.plugins.shade.resource.AppendingTransformer">
+                                    <resource>META-INF/spring.schemas</resource>
+                                </transformer>
+                                <transformer implementation="org.apache.maven.plugins.shade.resource.ServicesResourceTransformer"/>
+                            </transformers>
+                            <relocations>
+                                <relocation>
+                                    <pattern>com.google.gson</pattern>
+                                    <shadedPattern>com.megacreative.libs.gson</shadedPattern>
+                                </relocation>
+                                <relocation>
+                                    <pattern>org.apache.logging</pattern>
+                                    <shadedPattern>com.megacreative.libs.logging</shadedPattern>
+                                </relocation>
+                            </relocations>
+                        </configuration>
+                    </execution>
+                </executions>
+            </plugin>
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-compiler-plugin</artifactId>
                 <version>3.11.0</version>
                 <configuration>
-                    <source>21</source>
-                    <target>21</target>
+                    <source>${java.version}</source>
+                    <target>${java.version}</target>
+                    <release>21</release>
                     <compilerArgs>
                         <arg>--enable-preview</arg>
+                        <arg>-Xlint:all</arg>
+                        <arg>-Xdiags:verbose</arg>
+                        <arg>-parameters</arg>
                     </compilerArgs>
+                    <showWarnings>true</showWarnings>
+                    <showDeprecation>true</showDeprecation>
                 </configuration>
             </plugin>
             <plugin>
@@ -46,19 +112,68 @@
                 <artifactId>maven-surefire-plugin</artifactId>
                 <version>3.2.5</version>
                 <configuration>
-                    <argLine>--enable-preview</argLine>
+                    <argLine>
+                        --enable-preview
+                        -Dfile.encoding=UTF-8
+                    </argLine>
+                    <trimStackTrace>false</trimStackTrace>
+                    <systemPropertyVariables>
+                        <java.util.logging.manager>org.apache.logging.log4j.jul.LogManager</java.util.logging.manager>
+                    </systemPropertyVariables>
+                    <useFile>false</useFile>
+                    <includes>
+                        <include>**/*Test.java</include>
+                        <include>**/Test*.java</include>
+                        <include>**/*TestCase.java</include>
+                    </includes>
                 </configuration>
+                <dependencies>
+                    <dependency>
+                        <groupId>org.apache.maven.surefire</groupId>
+                        <artifactId>surefire-junit4</artifactId>
+                        <version>3.2.5</version>
+                    </dependency>
+                </dependencies>
             </plugin>
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-jar-plugin</artifactId>
                 <version>3.4.1</version>
                 <configuration>
+                    <archive>
+                        <manifest>
+                            <addClasspath>true</addClasspath>
+                            <classpathPrefix>lib/</classpathPrefix>
+                            <mainClass>com.megacreative.MegaCreative</mainClass>
+                            <addDefaultImplementationEntries>true</addDefaultImplementationEntries>
+                            <addDefaultSpecificationEntries>true</addDefaultSpecificationEntries>
+                        </manifest>
+                        <manifestEntries>
+                            <Multi-Release>true</Multi-Release>
+                            <Build-Jdk>${java.version}</Build-Jdk>
+                            <Build-Time>${maven.build.timestamp}</Build-Time>
+                            <Implementation-Version>${project.version}</Implementation-Version>
+                            <Implementation-Title>${project.name}</Implementation-Title>
+                            <Implementation-Vendor>MegaCreative Team</Implementation-Vendor>
+                        </manifestEntries>
+                    </archive>
                     <includes>
                         <include>**/*.class</include>
                         <include>**/*.yml</include>
                         <include>**/*.yaml</include>
+                        <include>**/*.properties</include>
+                        <include>**/*.xml</include>
+                        <include>**/*.json</include>
+                        <include>META-INF/**</include>
+                        <include>assets/**</include>
                     </includes>
+                    <excludes>
+                        <exclude>**/.gitkeep</exclude>
+                        <exclude>**/test/**</exclude>
+                        <exclude>**/*.md</exclude>
+                        <exclude>**/*.txt</exclude>
+                        <exclude>**/README*</exclude>
+                    </excludes>
                 </configuration>
             </plugin>
         </plugins>
@@ -73,32 +188,80 @@
             <id>sonatype</id>
             <url>https://oss.sonatype.org/content/groups/public/</url>
         </repository>
+        <repository>
+            <id>codemc-repo</id>
+            <url>https://repo.codemc.io/repository/maven-public/</url>
+        </repository>
+        <!-- JCenter is deprecated, use Maven Central instead -->
+        <repository>
+            <id>maven-central</id>
+            <url>https://repo.maven.apache.org/maven2/</url>
+        </repository>
+        <repository>
+            <id>dmulloy2-repo</id>
+            <url>https://repo.dmulloy2.net/repository/public/</url>
+        </repository>
     </repositories>
 
     <dependencies>
+        <!-- Paper API -->
         <dependency>
             <groupId>io.papermc.paper</groupId>
             <artifactId>paper-api</artifactId>
-            <version>1.20.4-R0.1-SNAPSHOT</version>
+            <version>${paper.api.version}</version>
             <scope>provided</scope>
         </dependency>
-        <!-- Test dependencies -->
+        
+        <!-- CommandAPI for better command handling -->
         <dependency>
-            <groupId>org.junit.jupiter</groupId>
-            <artifactId>junit-jupiter-api</artifactId>
-            <version>5.10.0</version>
+            <groupId>dev.jorel</groupId>
+            <artifactId>commandapi-bukkit-shade</artifactId>
+            <version>9.0.3</version>
+            <scope>compile</scope>
+        </dependency>
+        
+        <!-- Gson for JSON processing -->
+        <dependency>
+            <groupId>com.google.code.gson</groupId>
+            <artifactId>gson</artifactId>
+            <version>2.10.1</version>
+        </dependency>
+        
+        <!-- JSON processing -->
+        <dependency>
+            <groupId>org.json</groupId>
+            <artifactId>json</artifactId>
+            <version>20231013</version>
+        </dependency>
+
+        <!-- Lombok for reducing boilerplate -->
+        <dependency>
+            <groupId>org.projectlombok</groupId>
+            <artifactId>lombok</artifactId>
+            <version>1.18.30</version>
+            <scope>provided</scope>
+        </dependency>
+
+        <!-- Test Dependencies -->
+        <dependency>
+            <groupId>junit</groupId>
+            <artifactId>junit</artifactId>
+            <version>4.13.2</version>
             <scope>test</scope>
         </dependency>
-        <dependency>
-            <groupId>org.junit.jupiter</groupId>
-            <artifactId>junit-jupiter-engine</artifactId>
-            <version>5.10.0</version>
-            <scope>test</scope>
-        </dependency>
+        
         <dependency>
             <groupId>org.mockito</groupId>
             <artifactId>mockito-core</artifactId>
-            <version>5.7.0</version>
+            <version>3.12.4</version>
+            <scope>test</scope>
+        </dependency>
+        
+        <!-- Mockito JUnit Runner -->
+        <dependency>
+            <groupId>org.mockito</groupId>
+            <artifactId>mockito-junit-jupiter</artifactId>
+            <version>3.12.4</version>
             <scope>test</scope>
         </dependency>
     </dependencies>
