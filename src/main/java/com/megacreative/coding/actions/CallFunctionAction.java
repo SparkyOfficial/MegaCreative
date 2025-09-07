@@ -6,14 +6,17 @@ import com.megacreative.coding.CodeScript;
 import com.megacreative.coding.ExecutionContext;
 import com.megacreative.coding.ParameterResolver;
 import com.megacreative.coding.ScriptEngine;
+import com.megacreative.coding.executors.ExecutionResult;
 import com.megacreative.coding.values.DataValue;
 import com.megacreative.coding.variables.VariableManager;
 import com.megacreative.MegaCreative;
+import com.megacreative.interfaces.IWorldManager;
 import org.bukkit.entity.Player;
 import org.bukkit.inventory.ItemStack;
 
 import java.util.HashMap;
 import java.util.Map;
+import java.util.concurrent.CompletableFuture;
 
 /**
  * Действие для вызова функции с параметрами.
@@ -25,36 +28,37 @@ import java.util.Map;
 public class CallFunctionAction implements BlockAction {
 
     @Override
-    public void execute(ExecutionContext context) {
+    public ExecutionResult execute(CodeBlock block, ExecutionContext context) {
         Player player = context.getPlayer();
-        if (player == null) return;
-
-        CodeBlock actionBlock = context.getCurrentBlock();
-        if (actionBlock == null) return;
+        if (player == null) {
+            return ExecutionResult.error("Player is null");
+        }
 
         VariableManager variableManager = context.getPlugin().getVariableManager();
-        if (variableManager == null) return;
+        if (variableManager == null) {
+            return ExecutionResult.error("VariableManager is null");
+        }
         
         ParameterResolver resolver = new ParameterResolver(context);
 
         // Получаем имя функции из параметра
-        DataValue functionNameValue = actionBlock.getParameter("functionName");
+        DataValue functionNameValue = block.getParameter("functionName");
         if (functionNameValue == null) {
             player.sendMessage("§cОшибка: не указано имя функции!");
-            return;
+            return ExecutionResult.error("Function name not specified");
         }
         
         String functionName = resolver.resolve(context, functionNameValue).asString();
         if (functionName == null || functionName.isEmpty()) {
             player.sendMessage("§cОшибка: не указано имя функции!");
-            return;
+            return ExecutionResult.error("Function name is empty");
         }
 
         // Получаем параметры из виртуального инвентаря
         Map<String, DataValue> functionParams = new HashMap<>();
         
         // Добавляем стандартные параметры
-        for (Map.Entry<String, DataValue> entry : actionBlock.getParameters().entrySet()) {
+        for (Map.Entry<String, DataValue> entry : block.getParameters().entrySet()) {
             if (!entry.getKey().equals("functionName")) {
                 functionParams.put(entry.getKey(), entry.getValue());
             }
@@ -62,26 +66,23 @@ public class CallFunctionAction implements BlockAction {
         
         // Получаем параметры из виртуального инвентаря
         for (int i = 0; i < 27; i++) {
-            ItemStack item = actionBlock.getConfigItem(i);
+            ItemStack item = block.getConfigItem(i);
             if (item != null) {
                 functionParams.put("param_" + i, DataValue.fromObject(item.getType().name()));
                 functionParams.put("param_" + i + "_amount", DataValue.fromObject(item.getAmount()));
             }
         }
 
-        // Создаем новый контекст с параметрами функции
-        ExecutionContext functionContext = context.withCurrentBlock(context.getCurrentBlock(), context.getBlockLocation());
-        
-        // Добавляем параметры в контекст функции
-        for (Map.Entry<String, DataValue> entry : functionParams.entrySet()) {
-            functionContext.setVariable(entry.getKey(), entry.getValue());
-        }
-        
         // Вызываем функцию
         MegaCreative plugin = context.getPlugin();
         if (plugin != null) {
             // Ищем функцию в текущем мире
-            var creativeWorld = plugin.getServiceRegistry().getWorldManager().findCreativeWorldByBukkit(player.getWorld());
+            IWorldManager worldManager = plugin.getServiceRegistry().getWorldManager();
+            if (worldManager == null) {
+                return ExecutionResult.error("WorldManager is null");
+            }
+            
+            var creativeWorld = worldManager.findCreativeWorldByBukkit(player.getWorld());
             CodeScript function = null;
             if (creativeWorld != null) {
                 for (CodeScript script : creativeWorld.getScripts()) {
@@ -96,22 +97,30 @@ public class CallFunctionAction implements BlockAction {
                 // Получаем ScriptEngine из ServiceRegistry
                 ScriptEngine scriptEngine = plugin.getServiceRegistry().getService(ScriptEngine.class);
                 if (scriptEngine != null) {
-                    scriptEngine.executeScript(function, player, "function")
-                        .whenComplete((result, throwable) -> {
-                            if (throwable != null) {
-                                player.sendMessage("§cОшибка при выполнении функции '" + functionName + "': " + throwable.getMessage());
-                            } else if (result != null && !result.isSuccess()) {
-                                player.sendMessage("§cОшибка в функции '" + functionName + "': " + result.getMessage());
-                            } else {
-                                player.sendMessage("§a✓ Функция '" + functionName + "' выполнена!");
-                            }
-                        });
+                    CompletableFuture<ExecutionResult> future = scriptEngine.executeScript(function, player, "function_call");
+                    try {
+                        ExecutionResult result = future.get(); // Ждем завершения выполнения
+                        if (result != null && !result.isSuccess()) {
+                            player.sendMessage("§cОшибка в функции '" + functionName + "': " + result.getMessage());
+                            return ExecutionResult.error("Function execution failed: " + result.getMessage());
+                        } else {
+                            player.sendMessage("§a✓ Функция '" + functionName + "' выполнена!");
+                            return ExecutionResult.success("Function '" + functionName + "' executed successfully");
+                        }
+                    } catch (Exception e) {
+                        player.sendMessage("§cОшибка при выполнении функции '" + functionName + "': " + e.getMessage());
+                        return ExecutionResult.error("Error executing function: " + e.getMessage());
+                    }
                 } else {
                     player.sendMessage("§cОшибка: не удалось получить ScriptEngine");
+                    return ExecutionResult.error("ScriptEngine not available");
                 }
             } else {
                 player.sendMessage("§cОшибка: функция '" + functionName + "' не найдена!");
+                return ExecutionResult.error("Function '" + functionName + "' not found");
             }
         }
+        
+        return ExecutionResult.success();
     }
 }

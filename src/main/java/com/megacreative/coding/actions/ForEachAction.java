@@ -4,13 +4,16 @@ import com.megacreative.coding.BlockAction;
 import com.megacreative.coding.CodeBlock;
 import com.megacreative.coding.ExecutionContext;
 import com.megacreative.coding.ParameterResolver;
+import com.megacreative.coding.executors.ExecutionResult;
 import com.megacreative.coding.values.DataValue;
 import com.megacreative.coding.values.types.ListValue;
 import com.megacreative.coding.values.types.TextValue;
 import com.megacreative.coding.variables.VariableManager;
 import com.megacreative.coding.variables.VariableScope;
+import com.megacreative.services.BlockConfigService;
 import org.bukkit.entity.Player;
 import java.util.UUID;
+import java.util.function.Function;
 
 /**
  * Advanced For Each loop action with DataValue and VariableManager integration
@@ -28,12 +31,13 @@ import java.util.UUID;
 public class ForEachAction implements BlockAction {
     
     @Override
-    public void execute(ExecutionContext context) {
+    public ExecutionResult execute(CodeBlock block, ExecutionContext context) {
         Player player = context.getPlayer();
-        CodeBlock block = context.getCurrentBlock();
         VariableManager variableManager = context.getPlugin().getVariableManager();
         
-        if (player == null || block == null || variableManager == null) return;
+        if (player == null || variableManager == null) {
+            return ExecutionResult.error("Player or VariableManager not available");
+        }
         
         ParameterResolver resolver = new ParameterResolver(context);
         
@@ -43,9 +47,9 @@ public class ForEachAction implements BlockAction {
             if (listValue == null || listValue.isEmpty()) {
                 // Fallback to GUI slot
                 // Get slot resolver from BlockConfigService
-                com.megacreative.services.BlockConfigService configService = 
+                BlockConfigService configService = 
                     context.getPlugin().getServiceRegistry().getBlockConfigService();
-                java.util.function.Function<String, Integer> slotResolver = 
+                Function<String, Integer> slotResolver = 
                     configService != null ? configService.getSlotResolver("forEach") : null;
                     
                 var listItem = slotResolver != null ? 
@@ -54,7 +58,7 @@ public class ForEachAction implements BlockAction {
                     listValue = new TextValue(listItem.getItemMeta().getDisplayName());
                 } else {
                     player.sendMessage("§c[ForEach] No list specified for iteration!");
-                    return;
+                    return ExecutionResult.error("No list specified for iteration");
                 }
             }
             
@@ -63,7 +67,7 @@ public class ForEachAction implements BlockAction {
             
             if (!(resolvedList instanceof ListValue)) {
                 player.sendMessage("§c[ForEach] Value is not a list: " + resolvedList.getType());
-                return;
+                return ExecutionResult.error("Value is not a list: " + resolvedList.getType());
             }
             
             ListValue list = (ListValue) resolvedList;
@@ -87,18 +91,21 @@ public class ForEachAction implements BlockAction {
             }
             
             // Execute loop
-            executeForEachLoop(context, block, list, itemVariable, indexVariable, scope, variableManager);
+            ExecutionResult result = executeForEachLoop(context, block, list, itemVariable, indexVariable, scope, variableManager);
+            
+            return result;
             
         } catch (Exception e) {
             player.sendMessage("§c[ForEach] Error during execution: " + e.getMessage());
             context.getPlugin().getLogger().warning("ForEach execution error: " + e.getMessage());
+            return ExecutionResult.error("Error during execution: " + e.getMessage());
         }
     }
     
     /**
      * Executes the for-each loop with proper variable management
      */
-    private void executeForEachLoop(ExecutionContext context, CodeBlock block, ListValue list, 
+    private ExecutionResult executeForEachLoop(ExecutionContext context, CodeBlock block, ListValue list, 
                                    String itemVariable, String indexVariable, VariableScope scope, 
                                    VariableManager variableManager) {
         
@@ -189,13 +196,17 @@ public class ForEachAction implements BlockAction {
                 }
                 
                 // Execute child blocks
-                executeChildBlocks(context, block);
+                ExecutionResult childResult = executeChildBlocks(context, block);
+                if (!childResult.isSuccess()) {
+                    return childResult;
+                }
                 
                 // Check for break conditions or script interruption
                 // Note: Basic loop without cancellation support for now
             }
             
             player.sendMessage("§a[ForEach] Completed iteration over " + list.size() + " items");
+            return ExecutionResult.success("Completed iteration over " + list.size() + " items");
             
         } finally {
             // Restore original variable values
@@ -218,7 +229,7 @@ public class ForEachAction implements BlockAction {
     /**
      * Executes all child blocks in sequence
      */
-    private void executeChildBlocks(ExecutionContext context, CodeBlock parentBlock) {
+    private ExecutionResult executeChildBlocks(ExecutionContext context, CodeBlock parentBlock) {
         // Get ScriptEngine from ServiceRegistry
         com.megacreative.coding.ScriptEngine scriptEngine = context.getPlugin().getServiceRegistry().getService(com.megacreative.coding.ScriptEngine.class);
         if (scriptEngine == null) {
@@ -226,29 +237,36 @@ public class ForEachAction implements BlockAction {
             if (player != null) {
                 player.sendMessage("§cОшибка: не удалось получить ScriptEngine");
             }
-            return;
+            return ExecutionResult.error("ScriptEngine not available");
         }
         
         // Execute each child block
         for (CodeBlock childBlock : parentBlock.getChildren()) {
             try {
                 // Execute the child block using ScriptEngine
-                scriptEngine.executeBlockChain(childBlock, context.getPlayer(), "foreach_loop")
+                ExecutionResult result = scriptEngine.executeBlockChain(childBlock, context.getPlayer(), "foreach_loop")
                     .exceptionally(throwable -> {
                         Player player = context.getPlayer();
                         if (player != null) {
                             player.sendMessage("§cОшибка в цикле ForEach: " + throwable.getMessage());
                         }
-                        return null;
+                        return ExecutionResult.error("Error in ForEach loop: " + throwable.getMessage());
                     })
                     .join(); // Wait for completion before next iteration
+                    
+                if (!result.isSuccess()) {
+                    return result;
+                }
             } catch (Exception e) {
                 Player player = context.getPlayer();
                 if (player != null) {
                     player.sendMessage("§cОшибка при выполнении блока в цикле ForEach: " + e.getMessage());
                 }
+                return ExecutionResult.error("Error executing child block: " + e.getMessage());
             }
         }
+        
+        return ExecutionResult.success();
     }
     
     /**
