@@ -133,6 +133,7 @@ blocks:
     actions:
       - "repeat"
       - "repeatTrigger"
+      - "asyncLoop"
   
   LAPIS_BLOCK:
     name: "Вызвать функцию"
@@ -169,6 +170,13 @@ blocks:
       - "playSound"
       - "effect"
       - "playParticle"
+      - "createScoreboard"
+      - "setScore"
+      - "incrementScore"
+      - "createTeam"
+      - "addPlayerToTeam"
+      - "saveLocation"
+      - "getLocation"
   
   POLISHED_GRANITE:
     name: "Получить данные"
@@ -238,6 +246,118 @@ action_configurations:
         description: "§7Положите бумагу с названием команды. Поддерживает плейсхолдеры: %player%, %world%, %x%, %y%, %z%"
         placeholder_item: "PAPER"
         slot_name: "command"
+  
+  # Конфигурация для действия asyncLoop
+  asyncLoop:
+    slots:
+      0:
+        name: "§aКоличество итераций"
+        description: "§7Положите бумагу с названием 'iterations:X'"
+        placeholder_item: "PAPER"
+        slot_name: "iterations"
+      1:
+        name: "§bЗадержка между итерациями (в тиках)"
+        description: "§7Положите бумагу с названием 'delay:X'"
+        placeholder_item: "PAPER"
+        slot_name: "delay"
+  
+  # Конфигурация для действия createScoreboard
+  createScoreboard:
+    slots:
+      0:
+        name: "§aЗаголовок скорборда"
+        description: "§7Положите бумагу с названием заголовка скорборда"
+        placeholder_item: "PAPER"
+        slot_name: "title"
+  
+  # Конфигурация для действия setScore
+  setScore:
+    slots:
+      0:
+        name: "§aКлюч"
+        description: "§7Положите бумагу с названием ключа"
+        placeholder_item: "PAPER"
+        slot_name: "key"
+      1:
+        name: "§bЗначение"
+        description: "§7Положите бумагу с названием 'value:X'"
+        placeholder_item: "PAPER"
+        slot_name: "value"
+  
+  # Конфигурация для действия incrementScore
+  incrementScore:
+    slots:
+      0:
+        name: "§aКлюч"
+        description: "§7Положите бумагу с названием ключа"
+        placeholder_item: "PAPER"
+        slot_name: "key"
+      1:
+        name: "§bУвеличение"
+        description: "§7Положите бумагу с названием 'increment:X'"
+        placeholder_item: "PAPER"
+        slot_name: "increment"
+  
+  # Конфигурация для действия createTeam
+  createTeam:
+    slots:
+      0:
+        name: "§aИмя команды"
+        description: "§7Положите бумагу с названием имени команды"
+        placeholder_item: "PAPER"
+        slot_name: "teamName"
+      1:
+        name: "§bОтображаемое имя"
+        description: "§7Положите бумагу с названием отображаемого имени команды"
+        placeholder_item: "PAPER"
+        slot_name: "displayName"
+      2:
+        name: "§cПрефикс"
+        description: "§7Положите бумагу с названием префикса команды"
+        placeholder_item: "PAPER"
+        slot_name: "prefix"
+      3:
+        name: "§dСуффикс"
+        description: "§7Положите бумагу с названием суффикса команды"
+        placeholder_item: "PAPER"
+        slot_name: "suffix"
+  
+  # Конфигурация для действия addPlayerToTeam
+  addPlayerToTeam:
+    slots:
+      0:
+        name: "§aИмя команды"
+        description: "§7Положите бумагу с названием имени команды"
+        placeholder_item: "PAPER"
+        slot_name: "teamName"
+      1:
+        name: "§bИмя игрока"
+        description: "§7Положите бумагу с названием имени игрока (оставьте пустым для текущего игрока)"
+        placeholder_item: "PAPER"
+        slot_name: "targetPlayer"
+  
+  # Конфигурация для действия saveLocation
+  saveLocation:
+    slots:
+      0:
+        name: "§aИмя локации"
+        description: "§7Положите бумагу с названием имени локации"
+        placeholder_item: "PAPER"
+        slot_name: "locationName"
+  
+  # Конфигурация для действия getLocation
+  getLocation:
+    slots:
+      0:
+        name: "§aИмя локации"
+        description: "§7Положите бумагу с названием имени локации"
+        placeholder_item: "PAPER"
+        slot_name: "locationName"
+      1:
+        name: "§bЦелевая переменная"
+        description: "§7Положите бумагу с названием целевой переменной"
+        placeholder_item: "PAPER"
+        slot_name: "targetVariable"
   
   # Конфигурация для условия isNight
   isNight:

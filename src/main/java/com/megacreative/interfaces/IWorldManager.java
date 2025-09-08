@@ -95,4 +95,10 @@ public interface IWorldManager {
      * Сохраняет все миры
      */
     void saveAllWorlds();
+    
+    /**
+     * Получает все творческие миры
+     * @return Список всех творческих миров
+     */
+    List<CreativeWorld> getCreativeWorlds();
 }

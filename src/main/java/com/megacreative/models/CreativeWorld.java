@@ -194,6 +194,23 @@ public class CreativeWorld {
         return likes - dislikes;
     }
     
+    /**
+     * Получает список всех игроков в мире
+     * @return Список игроков
+     */
+    public List<Player> getPlayers() {
+        List<Player> players = new ArrayList<>();
+        if (onlinePlayers != null) {
+            for (UUID playerId : onlinePlayers) {
+                Player player = org.bukkit.Bukkit.getPlayer(playerId);
+                if (player != null && player.isOnline()) {
+                    players.add(player);
+                }
+            }
+        }
+        return players;
+    }
+    
     // Дополнительные геттеры для совместимости
     public String getId() {
         return id;

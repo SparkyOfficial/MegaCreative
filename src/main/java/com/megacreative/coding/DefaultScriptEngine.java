@@ -360,9 +360,6 @@ public class DefaultScriptEngine implements ScriptEngine {
                 return ExecutionResult.error("Unknown block type: " + block.getMaterial() + "/" + block.getAction());
             }
             
-            // Update context with the current block
-            // context.setCurrentBlock(block); // Removed as currentBlock is final in ExecutionContext
-            
             // Handle conditions and actions differently
             BlockAction action = actionRegistry.get(blockType);
             BlockCondition condition = conditionRegistry.get(blockType);
@@ -463,15 +460,37 @@ public class DefaultScriptEngine implements ScriptEngine {
                 debugger.onBlockExecute(context.getPlayer(), block, block.getLocation());
             }
             
+            // Special handling for else blocks
+            if (block.getAction().equals("else")) {
+                // Execute else block only if the previous condition was false
+                if (!context.getLastConditionResult()) {
+                    CodeBlock nextBlock = block.getNextBlock();
+                    if (nextBlock != null) {
+                        return processBlock(nextBlock, context, recursionDepth + 1);
+                    }
+                    return ExecutionResult.success("Else block executed");
+                } else {
+                    // Previous condition was true, skip the else block
+                    CodeBlock nextBlock = findNextBlockAfterElse(block);
+                    if (nextBlock != null) {
+                        return processBlock(nextBlock, context, recursionDepth + 1);
+                    }
+                    return ExecutionResult.success("Else block skipped");
+                }
+            }
+            
             // Evaluate the condition with the block and context
             boolean conditionResult = condition.evaluate(block, context);
+            
+            // Store the result for potential else block handling
+            context.setLastConditionResult(conditionResult);
             
             // Visual feedback for debugging
             if (context.getPlayer() != null && debugger != null) {
                 debugger.onConditionResult(context.getPlayer(), block, conditionResult);
             }
 
-            // Handle the result
+            // Handle the result based on the condition evaluation
             if (conditionResult) {
                 // Condition is true, execute the next block
                 CodeBlock nextBlock = block.getNextBlock();
@@ -480,7 +499,11 @@ public class DefaultScriptEngine implements ScriptEngine {
                 }
                 return ExecutionResult.success("Condition evaluated to true");
             } else {
-                // Condition is false or failed, skip the next block
+                // Condition is false, find the next appropriate block in the chain
+                CodeBlock nextBlock = findNextBlockInChain(block);
+                if (nextBlock != null) {
+                    return processBlock(nextBlock, context, recursionDepth + 1);
+                }
                 return ExecutionResult.success("Condition evaluated to false");
             }
         } catch (Exception e) {
@@ -496,6 +519,40 @@ public class DefaultScriptEngine implements ScriptEngine {
         }
     }
     
+    /**
+     * Finds the next appropriate block in a conditional chain
+     * @param conditionBlock The current condition block
+     * @return The next block to execute, or null if not found
+     */
+    private CodeBlock findNextBlockInChain(CodeBlock conditionBlock) {
+        // Look for else or else if blocks following this condition
+        CodeBlock current = conditionBlock.getNextBlock();
+        
+        // Skip blocks until we find an else block or reach the end of the chain
+        while (current != null) {
+            // If we find an else block, execute it
+            if ("else".equals(current.getAction())) {
+                return current;
+            }
+            // If we find another condition that's not an else, skip it
+            // (this would be an else-if in a real implementation)
+            current = current.getNextBlock();
+        }
+        
+        // If no else block is found, continue with the next block after the chain
+        return conditionBlock.getNextBlock();
+    }
+    
+    /**
+     * Finds the next block after an else block
+     * @param elseBlock The else block
+     * @return The next block to execute, or null if not found
+     */
+    private CodeBlock findNextBlockAfterElse(CodeBlock elseBlock) {
+        // Simply return the next block after the else block
+        return elseBlock.getNextBlock();
+    }
+
     @Override
     public BlockType getBlockType(Material material, String actionName) {
         if (material == null || actionName == null) {

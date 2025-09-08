@@ -40,6 +40,9 @@ public class ExecutionContext {
     private final String scriptId; // Идентификатор скрипта
     private final String worldId;  // Идентификатор мира
     
+    // Track the result of the last condition evaluation for else block handling
+    private boolean lastConditionResult = false;
+    
     // No more redundant caches - using VariableManager directly
 
     /**
@@ -378,6 +381,22 @@ public class ExecutionContext {
         
         // Default to false for safety
         return false;
+    }
+    
+    /**
+     * Sets the result of the last condition evaluation
+     * @param result The result of the condition evaluation
+     */
+    public void setLastConditionResult(boolean result) {
+        this.lastConditionResult = result;
+    }
+    
+    /**
+     * Gets the result of the last condition evaluation
+     * @return The result of the last condition evaluation
+     */
+    public boolean getLastConditionResult() {
+        return this.lastConditionResult;
     }
     
     // Builder pattern

@@ -48,6 +48,7 @@ public class ServiceRegistry {
     // Implementation managers
     private TemplateManager templateManager;
     private ScoreboardManager scoreboardManager;
+    private GameScoreboardManager gameScoreboardManager;
     private TrustedPlayerManager trustedPlayerManager;
     private ITrustedPlayerManager trustedPlayerManagerInterface;
     private GUIManager guiManager;
@@ -75,7 +76,8 @@ public class ServiceRegistry {
     private DevWorldProtectionListener devWorldProtectionListener;
     private PlayerEventsListener playerEventsListener;
     private ScriptPerformanceMonitor scriptPerformanceMonitor;
-    
+    private FunctionManager functionManager;
+
     public ServiceRegistry(Plugin plugin, DependencyContainer dependencyContainer) {
         this.plugin = plugin;
         this.dependencyContainer = dependencyContainer;
@@ -287,6 +289,10 @@ public class ServiceRegistry {
             (scoreboardManager = dependencyContainer.resolve(ScoreboardManager.class));
     }
     
+    public GameScoreboardManager getGameScoreboardManager() {
+        return gameScoreboardManager;
+    }
+    
     public ITrustedPlayerManager getTrustedPlayerManager() { 
         return trustedPlayerManagerInterface != null ? trustedPlayerManagerInterface : 
             (trustedPlayerManagerInterface = dependencyContainer.resolve(ITrustedPlayerManager.class));
@@ -421,6 +427,10 @@ public class ServiceRegistry {
     
     private void initializeImplementationManagers() {
         // Initialize implementation managers
+        if (gameScoreboardManager == null) {
+            this.gameScoreboardManager = new GameScoreboardManager((MegaCreative) plugin);
+            registerService(GameScoreboardManager.class, gameScoreboardManager);
+        }
     }
     
     private void initializeCodingServices() {
@@ -496,5 +506,9 @@ public class ServiceRegistry {
         if (worldManager instanceof com.megacreative.managers.WorldManagerImpl) {
             ((com.megacreative.managers.WorldManagerImpl) worldManager).initialize();
         }
+    }
+
+    public FunctionManager getFunctionManager() {
+        return functionManager;
     }
 }

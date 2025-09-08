@@ -372,6 +372,14 @@ public class WorldManagerImpl implements IWorldManager {
     }
     
     /**
+     * Получает все творческие миры
+     * @return Список всех творческих миров
+     */
+    public List<CreativeWorld> getCreativeWorlds() {
+        return new ArrayList<>(worlds.values());
+    }
+    
+    /**
      * Находит мир по его отображаемому имени
      * @param name Отображаемое имя мира
      * @return Найденный мир или null, если мир не найден

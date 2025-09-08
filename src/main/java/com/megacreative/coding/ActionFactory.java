@@ -53,6 +53,15 @@ public class ActionFactory {
         register("else", ElseAction::new);
         register("sendTitle", SendTitleAction::new);
         register("executeAsyncCommand", ExecuteAsyncCommandAction::new);
+        register("asyncLoop", AsyncLoopAction::new);
+        // Game-specific actions
+        register("createScoreboard", CreateScoreboardAction::new);
+        register("setScore", SetScoreAction::new);
+        register("incrementScore", IncrementScoreAction::new);
+        register("createTeam", CreateTeamAction::new);
+        register("addPlayerToTeam", AddPlayerToTeamAction::new);
+        register("saveLocation", SaveLocationAction::new);
+        register("getLocation", GetLocationAction::new);
         // Добавляем недостающие действия
         // Для действий с зависимостями используем dependencyContainer
         register("sendMessage", () -> dependencyContainer.resolve(SendMessageAction.class));
@@ -60,6 +69,8 @@ public class ActionFactory {
         register("subVar", () -> dependencyContainer.resolve(SubVarAction.class));
         register("mulVar", () -> dependencyContainer.resolve(MulVarAction.class));
         register("divVar", () -> dependencyContainer.resolve(DivVarAction.class));
+        // New target selector action
+        register("sendMessageToTarget", SendMessageToTargetAction::new);
         // ... и т.д. для всех ACTION блоков...
     }
 

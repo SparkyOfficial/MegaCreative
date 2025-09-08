@@ -8,9 +8,8 @@ import com.megacreative.coding.ParameterResolver;
 import com.megacreative.coding.ScriptEngine;
 import com.megacreative.coding.executors.ExecutionResult;
 import com.megacreative.coding.values.DataValue;
-import com.megacreative.coding.variables.VariableManager;
 import com.megacreative.MegaCreative;
-import com.megacreative.interfaces.IWorldManager;
+import com.megacreative.managers.FunctionManager;
 import org.bukkit.entity.Player;
 import org.bukkit.inventory.ItemStack;
 
@@ -34,11 +33,6 @@ public class CallFunctionAction implements BlockAction {
             return ExecutionResult.error("Player is null");
         }
 
-        VariableManager variableManager = context.getPlugin().getVariableManager();
-        if (variableManager == null) {
-            return ExecutionResult.error("VariableManager is null");
-        }
-        
         ParameterResolver resolver = new ParameterResolver(context);
 
         // Получаем имя функции из параметра
@@ -76,21 +70,18 @@ public class CallFunctionAction implements BlockAction {
         // Вызываем функцию
         MegaCreative plugin = context.getPlugin();
         if (plugin != null) {
-            // Ищем функцию в текущем мире
-            IWorldManager worldManager = plugin.getServiceRegistry().getWorldManager();
-            if (worldManager == null) {
-                return ExecutionResult.error("WorldManager is null");
+            // Получаем FunctionManager
+            FunctionManager functionManager = plugin.getServiceRegistry().getFunctionManager();
+            if (functionManager == null) {
+                player.sendMessage("§cОшибка: FunctionManager недоступен");
+                return ExecutionResult.error("FunctionManager not available");
             }
             
-            var creativeWorld = worldManager.findCreativeWorldByBukkit(player.getWorld());
+            // Ищем функцию в текущем мире через FunctionManager
+            var creativeWorld = plugin.getServiceRegistry().getWorldManager().findCreativeWorldByBukkit(player.getWorld());
             CodeScript function = null;
             if (creativeWorld != null) {
-                for (CodeScript script : creativeWorld.getScripts()) {
-                    if (script.getName().equals(functionName) && script.getType() == CodeScript.ScriptType.FUNCTION) {
-                        function = script;
-                        break;
-                    }
-                }
+                function = functionManager.getFunction(creativeWorld, functionName);
             }
             
             if (function != null) {

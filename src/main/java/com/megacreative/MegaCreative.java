@@ -9,6 +9,8 @@ import com.megacreative.exceptions.ConfigurationException;
 import com.megacreative.coding.events.PlayerEventsListener;
 import org.bukkit.entity.Player;
 import org.bukkit.plugin.java.JavaPlugin;
+import org.bukkit.scheduler.BukkitRunnable;
+import org.bukkit.scheduler.BukkitTask;
 
 import java.util.Map;
 import java.util.HashMap;
@@ -23,6 +25,8 @@ public class MegaCreative extends JavaPlugin {
     private static MegaCreative instance;
     private DependencyContainer dependencyContainer;
     private ServiceRegistry serviceRegistry;
+    private BukkitTask tickTask;
+    private int tpsCheckCounter = 0;
     
     @Override
     public void onEnable() {
@@ -43,6 +47,9 @@ public class MegaCreative extends JavaPlugin {
             registerCommands();
             registerEvents();
             
+            // Start the tick scheduler for onTick events
+            startTickScheduler();
+            
             getLogger().info("MegaCreative enabled successfully!");
             
         } catch (Exception e) {
@@ -55,6 +62,11 @@ public class MegaCreative extends JavaPlugin {
     @Override
     public void onDisable() {
         try {
+            // Stop the tick scheduler
+            if (tickTask != null) {
+                tickTask.cancel();
+            }
+            
             // Stop all repeating tasks
             if (serviceRegistry != null) {
                 // This would be handled by the appropriate service
@@ -92,6 +104,27 @@ public class MegaCreative extends JavaPlugin {
                 getLogger().warning("Failed to restore configuration from backup");
             }
         }
+    }
+    
+    /**
+     * Starts the tick scheduler for onTick events
+     */
+    private void startTickScheduler() {
+        tickTask = new BukkitRunnable() {
+            @Override
+            public void run() {
+                // Trigger onTick event for all creative worlds
+                // This will be handled by the PlayerEventsListener
+                serviceRegistry.getPlayerEventsListener().onTick();
+                
+                // Check TPS every 20 ticks (1 second)
+                tpsCheckCounter++;
+                if (tpsCheckCounter >= 20) {
+                    serviceRegistry.getPlayerEventsListener().onServerTPS();
+                    tpsCheckCounter = 0;
+                }
+            }
+        }.runTaskTimer(this, 1L, 1L); // Run every tick
     }
     
     /**
