@@ -63,12 +63,12 @@ public class ActionFactory {
         register("saveLocation", SaveLocationAction::new);
         register("getLocation", GetLocationAction::new);
         // Добавляем недостающие действия
-        // Для действий с зависимостями используем dependencyContainer
-        register("sendMessage", () -> dependencyContainer.resolve(SendMessageAction.class));
-        register("addVar", () -> dependencyContainer.resolve(AddVarAction.class));
-        register("subVar", () -> dependencyContainer.resolve(SubVarAction.class));
-        register("mulVar", () -> dependencyContainer.resolve(MulVarAction.class));
-        register("divVar", () -> dependencyContainer.resolve(DivVarAction.class));
+        // Для действий без зависимостей используем конструктор по умолчанию
+        register("sendMessage", SendMessageAction::new);
+        register("addVar", AddVarAction::new);
+        register("subVar", SubVarAction::new);
+        register("mulVar", MulVarAction::new);
+        register("divVar", DivVarAction::new);
         // New target selector action
         register("sendMessageToTarget", SendMessageToTargetAction::new);
         // ... и т.д. для всех ACTION блоков...

@@ -10,8 +10,6 @@ import com.megacreative.coding.values.DataValue;
 import com.megacreative.coding.values.types.TextValue;
 import org.bukkit.entity.Player;
 
-import javax.inject.Inject;
-
 /**
  * Действие для отправки сообщения игроку.
  * Поддерживает плейсхолдеры в сообщениях и использует типобезопасную систему DataValue.
@@ -23,12 +21,8 @@ import javax.inject.Inject;
  */
 public class SendMessageAction implements BlockAction {
     
-    private final ParameterResolver parameterResolver;
-    
-    @Inject
-    public SendMessageAction(ParameterResolver parameterResolver) {
-        this.parameterResolver = parameterResolver;
-    }
+    // Конструктор по умолчанию (без параметров)
+    public SendMessageAction() {}
     
     @Override
     public ExecutionResult execute(CodeBlock block, ExecutionContext context) {
@@ -51,6 +45,9 @@ public class SendMessageAction implements BlockAction {
     }
     
     private String getMessage(CodeBlock block, ExecutionContext context) {
+        // Создаем ParameterResolver прямо здесь, передавая ему текущий контекст
+        ParameterResolver parameterResolver = new ParameterResolver(context);
+        
         // Check parameter first (priority 1)
         DataValue messageValue = block.getParameter("message");
         if (messageValue != null && !messageValue.isEmpty()) {
@@ -84,4 +81,4 @@ public class SendMessageAction implements BlockAction {
         // Message not found
         return null;
     }
-} 
+}
