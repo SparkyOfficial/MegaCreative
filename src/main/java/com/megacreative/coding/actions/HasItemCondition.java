@@ -21,7 +21,7 @@ public class HasItemCondition implements BlockCondition {
         DataValue rawItemName = block.getParameter("item");
         if (rawItemName == null) return false;
         
-        String itemName = resolver.resolve(rawItemName).asString();
+        String itemName = resolver.resolve(context, rawItemName).asString();
         
         if (itemName != null && !itemName.isEmpty()) {
             try {
@@ -33,4 +33,4 @@ public class HasItemCondition implements BlockCondition {
         }
         return false;
     }
-} 
+}

@@ -3,6 +3,7 @@ package com.megacreative.coding;
 import com.megacreative.MegaCreative;
 import com.megacreative.coding.debug.VisualDebugger;
 import com.megacreative.coding.variables.VariableManager;
+import com.megacreative.services.BlockConfigService;
 import org.bukkit.Material;
 import org.bukkit.entity.Player;
 import org.junit.jupiter.api.BeforeEach;

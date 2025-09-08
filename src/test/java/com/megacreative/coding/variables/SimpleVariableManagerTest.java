@@ -1,5 +1,6 @@
 package com.megacreative.coding.variables;
 
+import com.megacreative.MegaCreative;
 import com.megacreative.coding.values.DataValue;
 import org.junit.Before;
 import org.junit.Test;

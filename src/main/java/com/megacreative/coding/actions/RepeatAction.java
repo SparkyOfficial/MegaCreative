@@ -59,23 +59,24 @@ public class RepeatAction implements BlockAction {
             CompletableFuture.runAsync(() -> {
                 try {
                     for (int i = 0; i < times; i++) {
+                        final int currentIndex = i; // Создаем effectively final переменную
                         // Создаем новый контекст для каждой итерации
                         ExecutionContext loopContext = context.withCurrentBlock(nextBlock, context.getBlockLocation());
                         
                         // Добавляем переменную с номером итерации
-                        loopContext.setVariable("loopIndex", i + 1);
+                        loopContext.setVariable("loopIndex", currentIndex + 1);
                         loopContext.setVariable("loopCount", times);
                         
                         // Выполняем блок синхронно в основном потоке
                         try {
                             scriptEngine.executeBlockChain(nextBlock, player, "repeat_loop")
                                 .exceptionally(throwable -> {
-                                    player.sendMessage("§cОшибка в итерации " + (i + 1) + ": " + throwable.getMessage());
+                                    player.sendMessage("§cОшибка в итерации " + (currentIndex + 1) + ": " + throwable.getMessage());
                                     return null;
                                 })
                                 .join(); // Ждем завершения итерации
                         } catch (Exception e) {
-                            player.sendMessage("§cОшибка в итерации " + (i + 1) + ": " + e.getMessage());
+                            player.sendMessage("§cОшибка в итерации " + (currentIndex + 1) + ": " + e.getMessage());
                             break;
                         }
                     }

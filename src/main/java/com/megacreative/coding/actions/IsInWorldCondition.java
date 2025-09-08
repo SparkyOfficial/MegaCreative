@@ -20,8 +20,8 @@ public class IsInWorldCondition implements BlockCondition {
         DataValue rawWorldName = block.getParameter("world");
         if (rawWorldName == null) return false;
         
-        String worldName = resolver.resolve(rawWorldName).asString();
+        String worldName = resolver.resolve(context, rawWorldName).asString();
         
         return worldName != null && player.getWorld().getName().equals(worldName);
     }
-} 
+}

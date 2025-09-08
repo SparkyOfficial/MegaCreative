@@ -113,6 +113,23 @@ public class VisualDebugger {
     }
     
     /**
+     * Logs an error message for a player
+     * @param player The player to log the error for
+     * @param errorMessage The error message to log
+     */
+    public void logError(Player player, String errorMessage) {
+        // Log the error to the console
+        log.severe(errorMessage);
+        
+        // Show the error to the player if they're in a debug session
+        DebugSession session = activeSessions.get(player.getUniqueId());
+        if (session != null) {
+            session.errorCount++;
+            player.sendMessage("§c✖ ERROR: " + errorMessage);
+        }
+    }
+    
+    /**
      * Sets a breakpoint at a specific block location
      */
     /**

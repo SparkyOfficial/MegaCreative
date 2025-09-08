@@ -20,8 +20,8 @@ public class HasPermissionCondition implements BlockCondition {
         DataValue rawPermission = block.getParameter("permission");
         if (rawPermission == null) return false;
         
-        String permission = resolver.resolve(rawPermission).asString();
+        String permission = resolver.resolve(context, rawPermission).asString();
         
         return permission != null && player.hasPermission(permission);
     }
-} 
+}
