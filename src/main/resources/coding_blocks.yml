@@ -50,6 +50,9 @@ blocks:
       - "wait"
       - "randomNumber"
       - "playParticle"
+      - "sendTitle"
+      - "sendActionBar"
+      - "executeAsyncCommand"
   
   OAK_PLANKS:
     name: "Условие игрока"
@@ -189,6 +192,53 @@ action_configurations:
         placeholder_item: "PAPER"
         slot_name: "message_slot"
   
+  # Конфигурация для действия sendTitle
+  sendTitle:
+    slots:
+      0:
+        name: "§aГлавный заголовок"
+        description: "§7Положите бумагу с названием главного заголовка. Поддерживает плейсхолдеры: %player%"
+        placeholder_item: "PAPER"
+        slot_name: "title"
+      1:
+        name: "§bПодзаголовок"
+        description: "§7Положите бумагу с названием подзаголовка (необязательно)"
+        placeholder_item: "PAPER"
+        slot_name: "subtitle"
+      2:
+        name: "§cВремя появления"
+        description: "§7Положите бумагу с названием 'fadein:X' (по умолчанию 10)"
+        placeholder_item: "PAPER"
+        slot_name: "fadein"
+      3:
+        name: "§dВремя отображения"
+        description: "§7Положите бумагу с названием 'stay:X' (по умолчанию 70)"
+        placeholder_item: "PAPER"
+        slot_name: "stay"
+      4:
+        name: "§eВремя исчезновения"
+        description: "§7Положите бумагу с названием 'fadeout:X' (по умолчанию 20)"
+        placeholder_item: "PAPER"
+        slot_name: "fadeout"
+  
+  # Конфигурация для действия sendActionBar
+  sendActionBar:
+    slots:
+      0:
+        name: "§aСообщение в ActionBar"
+        description: "§7Положите бумагу с названием сообщения для ActionBar. Поддерживает плейсхолдеры: %player%"
+        placeholder_item: "PAPER"
+        slot_name: "message"
+  
+  # Конфигурация для действия executeAsyncCommand
+  executeAsyncCommand:
+    slots:
+      0:
+        name: "§aКоманда для выполнения"
+        description: "§7Положите бумагу с названием команды. Поддерживает плейсхолдеры: %player%, %world%, %x%, %y%, %z%"
+        placeholder_item: "PAPER"
+        slot_name: "command"
+  
   # Конфигурация для условия isNight
   isNight:
     slots:
@@ -304,4 +354,4 @@ action_configurations:
 defaults:
   max_blocks_per_script: 100
   max_recursion_depth: 50
-  execution_timeout_seconds: 30 
+  execution_timeout_seconds: 30

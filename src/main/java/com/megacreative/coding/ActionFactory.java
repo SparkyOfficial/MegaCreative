@@ -1,6 +1,7 @@
 package com.megacreative.coding;
 
 import com.megacreative.coding.actions.*;
+import com.megacreative.core.DependencyContainer;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.function.Supplier;
@@ -9,9 +10,12 @@ public class ActionFactory {
 
     // Используем Supplier для "ленивого" создания. Это эффективнее.
     private final Map<String, Supplier<BlockAction>> actionMap = new HashMap<>();
+    private final DependencyContainer dependencyContainer;
 
-    // Убираем зависимость от BlockConfigService, она здесь не нужна
-    public ActionFactory() {
+    // Принимаем DependencyContainer для создания действий с зависимостями
+    public ActionFactory(DependencyContainer dependencyContainer) {
+        this.dependencyContainer = dependencyContainer;
+        
         // РЕГИСТРИРУЕМ АБСОЛЮТНО ВСЕ ДЕЙСТВИЯ ИЗ coding_blocks.yml с type: "ACTION"
         // For actions that don't require dependencies, we can use method references
         register("teleport", TeleportAction::new);
@@ -47,6 +51,15 @@ public class ActionFactory {
         register("repeat", RepeatAction::new);
         register("repeatTrigger", RepeatTriggerAction::new);
         register("else", ElseAction::new);
+        register("sendTitle", SendTitleAction::new);
+        register("executeAsyncCommand", ExecuteAsyncCommandAction::new);
+        // Добавляем недостающие действия
+        // Для действий с зависимостями используем dependencyContainer
+        register("sendMessage", () -> dependencyContainer.resolve(SendMessageAction.class));
+        register("addVar", () -> dependencyContainer.resolve(AddVarAction.class));
+        register("subVar", () -> dependencyContainer.resolve(SubVarAction.class));
+        register("mulVar", () -> dependencyContainer.resolve(MulVarAction.class));
+        register("divVar", () -> dependencyContainer.resolve(DivVarAction.class));
         // ... и т.д. для всех ACTION блоков...
     }
 

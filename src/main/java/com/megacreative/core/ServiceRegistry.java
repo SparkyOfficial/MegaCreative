@@ -85,8 +85,8 @@ public class ServiceRegistry {
         this.visualDebugger = new VisualDebugger((MegaCreative) plugin);
         this.blockConfigService = new BlockConfigService((MegaCreative) plugin);
         
-        // Initialize factories
-        this.actionFactory = new ActionFactory();
+        // Initialize factories with dependency container
+        this.actionFactory = new ActionFactory(dependencyContainer);
         this.conditionFactory = new ConditionFactory();
         
         // Initialize ScriptEngine with its dependencies
@@ -94,7 +94,8 @@ public class ServiceRegistry {
             (MegaCreative) plugin, 
             variableManager, 
             visualDebugger,
-            blockConfigService
+            blockConfigService,
+            dependencyContainer
         );
         
         // Register services

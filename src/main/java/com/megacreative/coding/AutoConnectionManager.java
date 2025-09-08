@@ -14,6 +14,7 @@ import org.bukkit.event.EventPriority;
 import org.bukkit.event.Listener;
 import org.bukkit.event.block.BlockPlaceEvent;
 import org.bukkit.event.block.BlockBreakEvent;
+import org.bukkit.inventory.ItemStack;
 
 import java.util.*;
 
@@ -65,37 +66,62 @@ public class AutoConnectionManager implements Listener {
     @EventHandler(priority = EventPriority.MONITOR) // Use MONITOR to run after BlockPlacementHandler
     public void onBlockPlace(BlockPlaceEvent event) {
         if (event.isCancelled()) return;
-        
+
         Player player = event.getPlayer();
         Block block = event.getBlock();
         Location location = block.getLocation();
-        
+        ItemStack itemInHand = event.getItemInHand();
+
         // Check if this is a dev world
         if (!isDevWorld(block.getWorld())) return;
         
         // Check if this is a code block
         if (!blockConfigService.isCodeBlock(block.getType())) return;
+
+        // --- НАЧАЛО "ПОЛИЦИИ РАЗМЕЩЕНИЯ" (ВЕРСИЯ 2.0) ---
         
-        // BLOCK PLACEMENT VALIDATION
-        String blockType = getBlockType(block.getType());
+        // 1. Определяем, какой именно блок ставится, по предмету в руке
+        String displayName = itemInHand.hasItemMeta() ? itemInHand.getItemMeta().getDisplayName() : "";
+        displayName = org.bukkit.ChatColor.stripColor(displayName);
+
+        BlockConfigService.BlockConfig config = null;
+        for(BlockConfigService.BlockConfig c : blockConfigService.getAllBlockConfigs()) {
+            if (c.getDisplayName().equalsIgnoreCase(displayName)) {
+                config = c;
+                break;
+            }
+        }
+
+        if (config == null) {
+            // Не смогли определить, какой блок ставится. Лучше отменить.
+            event.setCancelled(true);
+            player.sendMessage("§cНе удалось определить тип блока. Возможно, предмет был изменен.");
+            return;
+        }
+        
+        String blockType = config.getType();
         int blockX = location.getBlockX();
         
-        // Check position validation based on block type
-        if (blockX == 0) { // This is the "blue" line (start of coding line)
-            if (!isControlOrEventBlock(blockType)) {
+        boolean isStartBlock = blockConfigService.isControlOrEventBlock(blockType);
+
+        // 2. ПРОВЕРЯЕМ ПРАВИЛА РАЗМЕЩЕНИЯ
+        if (blockX == 0) { // Синяя линия
+            if (!isStartBlock) {
                 event.setCancelled(true);
-                player.sendMessage("§cЭтот тип блока можно ставить только на серые линии!");
-                player.sendMessage("§7Подсказка: EVENT, CONTROL и FUNCTION блоки должны быть в начале линии (на синем блоке)");
+                player.sendMessage("§cБлоки типа '" + blockType + "' можно ставить только на серые линии!");
+                player.sendMessage("§7Подсказка: В начало (на синее стекло) ставятся блоки EVENT, CONTROL, FUNCTION.");
                 return;
             }
-        } else { // This is a "gray" line (continuation of coding line)
-            if (isControlOrEventBlock(blockType)) {
+        } else { // Серая линия
+            if (isStartBlock) {
                 event.setCancelled(true);
-                player.sendMessage("§cЭтот тип блока можно ставить только в начало линии (на синий блок)!");
-                player.sendMessage("§7Подсказка: ACTION и CONDITION блоки должны быть на серых линиях");
+                player.sendMessage("§cБлоки типа '" + blockType + "' можно ставить только в начало линии!");
+                player.sendMessage("§7Подсказка: На серые линии ставятся блоки ACTION и CONDITION.");
                 return;
             }
         }
+        
+        // --- КОНЕЦ "ПОЛИЦИИ РАЗМЕЩЕНИЯ" ---
         
         // Log placement validation success
         plugin.getLogger().info("Block placement validated: " + blockType + " at X=" + blockX + " (line start: " + (blockX == 0) + ")");
@@ -114,7 +140,7 @@ public class AutoConnectionManager implements Listener {
                 // Auto-connect with neighboring blocks
                 autoConnectBlock(codeBlock, location);
                 
-                player.sendMessage("§aCode block placed and auto-connected!");
+                player.sendMessage("§aБлок кода установлен и автоматически подключен!");
                 plugin.getLogger().info("Auto-connected CodeBlock at " + location + " for player " + player.getName());
             }
         } else {
@@ -128,7 +154,7 @@ public class AutoConnectionManager implements Listener {
             addBlockToPlayerScript(player, codeBlock);
             autoConnectBlock(codeBlock, location);
             
-            player.sendMessage("§aCode block created and connected!");
+            player.sendMessage("§aБлок кода создан и подключен!");
         }
     }
     
@@ -159,7 +185,7 @@ public class AutoConnectionManager implements Listener {
                 plugin.getLogger().info("CodeBlock disconnected at " + location);
             }
             
-            event.getPlayer().sendMessage("§cCode block removed and disconnected from chain!");
+            event.getPlayer().sendMessage("§cБлок кода удален и отсоединен от цепочки!");
         }
     }
     
@@ -391,7 +417,7 @@ public class AutoConnectionManager implements Listener {
     private String determineActionFromMaterial(Material material) {
         // Get the first block config for this material as a fallback
         BlockConfigService.BlockConfig config = blockConfigService.getFirstBlockConfig(material);
-        return config != null ? config.getActionName() : null;
+        return config != null ? config.getId() : null;
     }
     
     /**

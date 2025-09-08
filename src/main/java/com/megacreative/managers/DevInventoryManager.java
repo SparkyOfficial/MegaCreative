@@ -77,36 +77,24 @@ public class DevInventoryManager implements Listener {
             return;
         }
 
-        // Используем LinkedHashMap, чтобы сохранить порядок из конфига
-        Map<Material, BlockConfigService.BlockConfig> uniqueBlocks = new LinkedHashMap<>();
-
-        // Собираем по одному блоку для каждого уникального материала из конфига
+        // Проходим по ВСЕМ блокам, определенным в coding_blocks.yml
         for (BlockConfigService.BlockConfig config : configService.getAllBlockConfigs()) {
-            if (!uniqueBlocks.containsKey(config.getMaterial())) {
-                uniqueBlocks.put(config.getMaterial(), config);
-            }
-        }
-        
-        // Выдаем игроку предметы
-        for (BlockConfigService.BlockConfig config : uniqueBlocks.values()) {
-            if (currentSlot >= 36) break; // Не выходим за пределы инвентаря
-            
+            if (currentSlot >= 36) break;
+
             ItemStack item = new ItemStack(config.getMaterial());
             ItemMeta meta = item.getItemMeta();
             if (meta != null) {
-                meta.setDisplayName("§r" + config.getDisplayName()); // §r сбрасывает курсив
+                meta.setDisplayName("§r" + config.getDisplayName());
                 List<String> lore = new ArrayList<>();
                 lore.add("§7" + config.getDescription());
                 lore.add("§8Тип: " + config.getType());
+                lore.add("§8ID: " + config.getId());
                 meta.setLore(lore);
                 item.setItemMeta(meta);
             }
             player.getInventory().setItem(currentSlot++, item);
         }
-        
-        // Добавляем статические инструменты, если нужно
-        player.getInventory().setItem(35, createDevItem(Material.STICK, "§6📋 Копировщик блоков"));
-        
+
         player.updateInventory();
     }
     

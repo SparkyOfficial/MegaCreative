@@ -5,6 +5,7 @@ import com.megacreative.coding.executors.ExecutionResult;
 import com.megacreative.coding.variables.VariableManager;
 import com.megacreative.coding.debug.VisualDebugger;
 import com.megacreative.services.BlockConfigService;
+import com.megacreative.core.DependencyContainer;
 import org.bukkit.Material;
 import org.bukkit.entity.Player;
 import java.util.Map;
@@ -26,6 +27,7 @@ public class DefaultScriptEngine implements ScriptEngine {
     private final VariableManager variableManager;
     private final VisualDebugger debugger;
     private BlockConfigService blockConfigService;
+    private final DependencyContainer dependencyContainer;
     
     private final ActionFactory actionFactory;
     private final ConditionFactory conditionFactory;
@@ -39,14 +41,15 @@ public class DefaultScriptEngine implements ScriptEngine {
     
     private boolean initialized = false;
     
-    public DefaultScriptEngine(MegaCreative plugin, VariableManager variableManager, VisualDebugger debugger, BlockConfigService blockConfigService) {
+    public DefaultScriptEngine(MegaCreative plugin, VariableManager variableManager, VisualDebugger debugger, BlockConfigService blockConfigService, DependencyContainer dependencyContainer) {
         this.plugin = plugin;
         this.variableManager = variableManager;
         this.debugger = debugger;
         this.blockConfigService = blockConfigService;
+        this.dependencyContainer = dependencyContainer;
         
-        // Initialize factories
-        this.actionFactory = new ActionFactory();
+        // Initialize factories with dependency container
+        this.actionFactory = new ActionFactory(dependencyContainer);
         this.conditionFactory = new ConditionFactory();
     }
     
@@ -120,7 +123,7 @@ public class DefaultScriptEngine implements ScriptEngine {
         int actionCount = 0;
         for (BlockConfigService.BlockConfig config : blockConfigService.getAllBlockConfigs()) {
             if ("ACTION".equals(config.getType()) || "EVENT".equals(config.getType())) {
-                BlockAction action = actionFactory.createAction(config.getActionName());
+                BlockAction action = actionFactory.createAction(config.getId());
                 if (action != null) {
                     // Create a dynamic BlockType based on the config
                     BlockType blockType = BlockType.fromString(config.getType());
@@ -136,7 +139,7 @@ public class DefaultScriptEngine implements ScriptEngine {
         int conditionCount = 0;
         for (BlockConfigService.BlockConfig config : blockConfigService.getAllBlockConfigs()) {
             if ("CONDITION".equals(config.getType()) || "CONTROL".equals(config.getType())) {
-                BlockCondition condition = conditionFactory.createCondition(config.getActionName());
+                BlockCondition condition = conditionFactory.createCondition(config.getId());
                 if (condition != null) {
                     // Create a dynamic BlockType based on the config
                     BlockType blockType = BlockType.fromString(config.getType());
