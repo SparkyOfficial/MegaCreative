@@ -423,6 +423,22 @@ public class ServiceRegistry {
     
     private void initializeManagers() {
         // Initialize interface-based managers
+        if (playerManager == null) {
+            this.playerManager = new com.megacreative.managers.PlayerManagerImpl((MegaCreative) plugin);
+            registerService(IPlayerManager.class, playerManager);
+        }
+        
+        if (worldManager == null) {
+            this.worldManager = new com.megacreative.managers.WorldManagerImpl((MegaCreative) plugin);
+            registerService(IWorldManager.class, worldManager);
+        }
+        
+        if (trustedPlayerManager == null) {
+            this.trustedPlayerManager = new com.megacreative.managers.TrustedPlayerManager((MegaCreative) plugin);
+            registerService(ITrustedPlayerManager.class, trustedPlayerManager);
+            // Keep reference to implementation for type casting
+            this.trustedPlayerManagerInterface = trustedPlayerManager;
+        }
     }
     
     private void initializeImplementationManagers() {
