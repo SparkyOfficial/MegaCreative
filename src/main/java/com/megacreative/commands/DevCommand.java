@@ -90,8 +90,8 @@ public class DevCommand implements CommandExecutor {
         // Очищаем инвентарь перед выдачей предметов
         player.getInventory().clear();
         
-        // Выдаем блоки кодирования
-        CodingItems.giveCodingItems(player);
+        // Выдаем блоки кодирования ДИНАМИЧЕСКИ
+        CodingItems.giveCodingItems(player, plugin);
         
         player.sendMessage("§aВы телепортированы в мир разработки!");
         player.sendMessage("§7Здесь вы можете создавать код для своего мира");

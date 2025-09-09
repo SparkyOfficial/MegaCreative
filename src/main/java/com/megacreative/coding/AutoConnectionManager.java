@@ -78,54 +78,48 @@ public class AutoConnectionManager implements Listener {
         // Check if this is a code block
         if (!blockConfigService.isCodeBlock(block.getType())) return;
 
-        // --- НАЧАЛО "ПОЛИЦИИ РАЗМЕЩЕНИЯ" (ВЕРСИЯ 2.0) ---
+        // --- "ПОЛИЦИЯ РАЗМЕЩЕНИЯ" ВЕРСИЯ 2.0 ---
         
-        // 1. Определяем, какой именно блок ставится, по предмету в руке
-        String displayName = itemInHand.hasItemMeta() ? itemInHand.getItemMeta().getDisplayName() : "";
-        displayName = org.bukkit.ChatColor.stripColor(displayName);
+        // 1. Получаем конфигурацию блока из предмета, который держит игрок.
+        String displayName = itemInHand.hasItemMeta() ? org.bukkit.ChatColor.stripColor(itemInHand.getItemMeta().getDisplayName()) : "";
+        BlockConfigService.BlockConfig config = blockConfigService.getBlockConfigByDisplayName(displayName);
 
-        BlockConfigService.BlockConfig config = null;
-        for(BlockConfigService.BlockConfig c : blockConfigService.getAllBlockConfigs()) {
-            if (c.getDisplayName().equalsIgnoreCase(displayName)) {
-                config = c;
-                break;
-            }
-        }
-
+        // Если это не блок из нашего конфига, разрешаем его размещение, если он в списке утилит
         if (config == null) {
-            // Не смогли определить, какой блок ставится. Лучше отменить.
-            event.setCancelled(true);
-            player.sendMessage("§cНе удалось определить тип блока. Возможно, предмет был изменен.");
+            com.megacreative.listeners.DevWorldProtectionListener protectionListener = plugin.getServiceRegistry().getDevWorldProtectionListener();
+            if (protectionListener != null && !protectionListener.isMaterialAllowedInDevWorldForAction(block.getType())) {
+                event.setCancelled(true);
+                player.sendMessage("§cЭтот предмет нельзя размещать в мире разработки.");
+            }
+            // Если это утилита (сундук, верстак), то просто выходим, не обрабатывая дальше.
             return;
         }
-        
-        String blockType = config.getType();
-        int blockX = location.getBlockX();
-        
-        boolean isStartBlock = blockConfigService.isControlOrEventBlock(blockType);
 
-        // 2. ПРОВЕРЯЕМ ПРАВИЛА РАЗМЕЩЕНИЯ
-        if (blockX == 0) { // Синяя линия
+        // 2. Теперь у нас есть config и мы можем проверить правила
+        String blockType = config.getType(); // "EVENT", "ACTION", "CONDITION", "CONTROL", "FUNCTION"
+        boolean isStartBlock = "EVENT".equals(blockType) || "CONTROL".equals(blockType) || "FUNCTION".equals(blockType);
+        
+        int blockX = location.getBlockX();
+
+        // 3. ПРИМЕНЯЕМ ПРАВИЛА
+        if (blockX == 0) { // Синяя линия (X=0)
             if (!isStartBlock) {
                 event.setCancelled(true);
-                player.sendMessage("§cБлоки типа '" + blockType + "' можно ставить только на серые линии!");
-                player.sendMessage("§7Подсказка: В начало (на синее стекло) ставятся блоки EVENT, CONTROL, FUNCTION.");
+                player.sendMessage("§cОшибка! Блоки типа '" + config.getDisplayName() + "' (§7" + blockType + "§c) нельзя ставить в начало линии.");
+                player.sendMessage("§7Подсказка: В начало (синее стекло) ставятся блоки типа EVENT, CONTROL, FUNCTION.");
                 return;
             }
-        } else { // Серая линия
+        } else { // Серая или белая линия (X > 0)
             if (isStartBlock) {
                 event.setCancelled(true);
-                player.sendMessage("§cБлоки типа '" + blockType + "' можно ставить только в начало линии!");
-                player.sendMessage("§7Подсказка: На серые линии ставятся блоки ACTION и CONDITION.");
+                player.sendMessage("§cОшибка! Блоки типа '" + config.getDisplayName() + "' (§7" + blockType + "§c) можно ставить ТОЛЬКО в начало линии.");
+                player.sendMessage("§7Подсказка: На серые/белые линии ставятся блоки типа ACTION и CONDITION.");
                 return;
             }
         }
         
         // --- КОНЕЦ "ПОЛИЦИИ РАЗМЕЩЕНИЯ" ---
-        
-        // Log placement validation success
-        plugin.getLogger().info("Block placement validated: " + blockType + " at X=" + blockX + " (line start: " + (blockX == 0) + ")");
-        
+
         // Get the CodeBlock that was created by BlockPlacementHandler
         BlockPlacementHandler placementHandler = plugin.getBlockPlacementHandler();
         if (placementHandler != null && placementHandler.hasCodeBlock(location)) {
@@ -140,7 +134,7 @@ public class AutoConnectionManager implements Listener {
                 // Auto-connect with neighboring blocks
                 autoConnectBlock(codeBlock, location);
                 
-                player.sendMessage("§aБлок кода установлен и автоматически подключен!");
+                player.sendMessage("§aБлок §f" + config.getDisplayName() + "§a установлен и автоматически подключен!");
                 plugin.getLogger().info("Auto-connected CodeBlock at " + location + " for player " + player.getName());
             }
         } else {

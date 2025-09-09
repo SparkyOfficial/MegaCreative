@@ -1,5 +1,7 @@
 package com.megacreative.coding;
 
+import com.megacreative.MegaCreative;
+import com.megacreative.services.BlockConfigService;
 import org.bukkit.Material;
 import org.bukkit.entity.Player;
 import org.bukkit.inventory.ItemStack;
@@ -8,6 +10,7 @@ import java.util.Arrays;
 import java.util.HashSet;
 import java.util.Set;
 import java.util.List;
+import java.util.ArrayList;
 
 /**
  * Класс для создания и выдачи предметов-блоков кодирования игрокам.
@@ -60,8 +63,6 @@ public class CodingItems {
         return CODING_ITEM_NAMES.contains(displayName);
     }
     // --- КОНЕЦ БЛОКА ---
-
-
 
     /**
      * Выдаёт игроку только недостающие предметы для кодинга
@@ -131,6 +132,39 @@ public class CodingItems {
         player.getInventory().addItem(copier);
 
 
+    }
+    
+    /**
+     * Выдает игроку полный набор блоков кодирования, сгенерированный из конфигурации.
+     */
+    public static void giveCodingItems(Player player, MegaCreative plugin) {
+        player.getInventory().clear(); // Очищаем инвентарь для чистоты
+        
+        BlockConfigService configService = plugin.getServiceRegistry().getBlockConfigService();
+        if (configService == null) {
+            player.sendMessage("§cОшибка: Сервис конфигурации блоков не загружен!");
+            return;
+        }
+
+        // Проходим по ВСЕМ блокам, определенным в coding_blocks.yml
+        for (BlockConfigService.BlockConfig config : configService.getAllBlockConfigs()) {
+            ItemStack item = new ItemStack(config.getMaterial());
+            ItemMeta meta = item.getItemMeta();
+            if (meta != null) {
+                // ВАЖНО: Отображаемое имя предмета ДОЛЖНО быть уникальным displayName из конфига
+                meta.setDisplayName(config.getDisplayName()); 
+                
+                List<String> lore = new ArrayList<>();
+                lore.add("§7" + config.getDescription());
+                lore.add("§8Тип: " + config.getType());
+                lore.add("§8ID: " + config.getId()); // ID для внутренней логики
+                meta.setLore(lore);
+                item.setItemMeta(meta);
+            }
+            player.getInventory().addItem(item);
+        }
+
+        player.updateInventory();
     }
     
     public static ItemStack getDataCreator() {

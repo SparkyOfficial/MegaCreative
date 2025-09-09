@@ -65,35 +65,25 @@ public class BlockPlacementHandler implements Listener {
     public void onBlockPlace(BlockPlaceEvent event) {
         Player player = event.getPlayer();
         Block block = event.getBlockPlaced();
-        Material mat = block.getType();
+        ItemStack itemInHand = event.getItemInHand();
         
-        // Проверяем, является ли блок кодовым блоком через BlockConfigService
-        if (!blockConfigService.isCodeBlock(mat)) {
+        // Получаем конфигурацию по предмету в руке, а не по материалу
+        String displayName = itemInHand.hasItemMeta() ? org.bukkit.ChatColor.stripColor(itemInHand.getItemMeta().getDisplayName()) : "";
+        BlockConfigService.BlockConfig config = blockConfigService.getBlockConfigByDisplayName(displayName);
+
+        // Если это не наш блок кода, игнорируем
+        if (config == null) {
             return;
         }
-        
-        if (!isInDevWorld(player)) {
-            return;
-        }
-        
-        // Проверяем права доверенного игрока
-        if (!trustedPlayerManager.canCodeInDevWorld(player)) {
-            event.setCancelled(true);
-            return;
-        }
-        
-        // Создаем "заготовку" блока кода с правильным действием по умолчанию
-        String defaultAction = blockConfigService.getDefaultAction(mat);
-        if (defaultAction == null) defaultAction = "Настройка..."; // Fallback
-        
-        CodeBlock newCodeBlock = new CodeBlock(mat, defaultAction);
+
+        // Создаем CodeBlock с правильным ID действия из конфига
+        CodeBlock newCodeBlock = new CodeBlock(block.getType(), config.getId());
         blockCodeBlocks.put(block.getLocation(), newCodeBlock);
         
-        // Устанавливаем табличку на блок
-        String blockName = blockConfigService.getBlockName(mat);
-        setSignOnBlock(block.getLocation(), blockName);
+        // Устанавливаем одну табличку с правильным отображаемым именем
+        setSignOnBlock(block.getLocation(), config.getDisplayName());
         
-        player.sendMessage("§a✓ Блок кода размещен: " + blockName);
+        player.sendMessage("§a✓ Блок кода размещен: " + config.getDisplayName());
         player.sendMessage("§7Кликните правой кнопкой для настройки");
     }
 
@@ -182,49 +172,48 @@ public class BlockPlacementHandler implements Listener {
     }
 
     /**
-     * Устанавливает табличку на блок
+     * Исправленная логика установки таблички.
      */
     private void setSignOnBlock(Location location, String text) {
-        // Удаляем существующую табличку
-        removeSignFromBlock(location);
-        
-        // Создаем новую табличку
+        removeSignFromBlock(location); // Сначала удаляем старые таблички
+
         Block block = location.getBlock();
-        BlockFace[] faces = {BlockFace.NORTH, BlockFace.SOUTH, BlockFace.EAST, BlockFace.WEST};
+        // Определяем приоритетные стороны для установки
+        BlockFace[] faces = {BlockFace.NORTH, BlockFace.EAST, BlockFace.SOUTH, BlockFace.WEST};
         
         for (BlockFace face : faces) {
-            Location signLocation = location.clone().add(face.getDirection());
-            Block signBlock = signLocation.getBlock();
-            
+            Block signBlock = block.getRelative(face);
             if (signBlock.getType().isAir()) {
-                signBlock.setType(Material.OAK_WALL_SIGN);
+                signBlock.setType(Material.OAK_WALL_SIGN, false); // false - не вызывать физику
                 
-                if (signBlock.getState() instanceof WallSign) {
-                    org.bukkit.block.data.type.WallSign wallSignData = (org.bukkit.block.data.type.WallSign) signBlock.getBlockData();
-                    wallSignData.setFacing(face.getOppositeFace());
-                    signBlock.setBlockData(wallSignData);
-                    
-                    Sign sign = (Sign) signBlock.getState();
-                    sign.setLine(0, text);
-                    sign.update();
-                    break;
-                }
+                WallSign wallSignData = (WallSign) signBlock.getBlockData();
+                wallSignData.setFacing(face); // Табличка смотрит НА блок
+                signBlock.setBlockData(wallSignData);
+                
+                Sign signState = (Sign) signBlock.getState();
+                signState.setLine(0, "§8============");
+                // Обрезаем текст, если он слишком длинный
+                String line2 = text.length() > 15 ? text.substring(0, 15) : text;
+                signState.setLine(1, line2);
+                signState.setLine(2, "§7Кликните ПКМ");
+                signState.setLine(3, "§8============");
+                signState.update(true);
+                
+                return; // ВАЖНО: Выходим из метода после установки ПЕРВОЙ таблички
             }
         }
     }
-
+    
     /**
-     * Удаляет табличку с блока
+     * Удаляет все таблички вокруг блока
      */
     private void removeSignFromBlock(Location location) {
         Block block = location.getBlock();
         BlockFace[] faces = {BlockFace.NORTH, BlockFace.SOUTH, BlockFace.EAST, BlockFace.WEST};
         
         for (BlockFace face : faces) {
-            Location signLocation = location.clone().add(face.getDirection());
-            Block signBlock = signLocation.getBlock();
-            
-            if (signBlock.getType().name().contains("SIGN")) {
+            Block signBlock = block.getRelative(face);
+            if (signBlock.getBlockData() instanceof WallSign) {
                 signBlock.setType(Material.AIR);
             }
         }

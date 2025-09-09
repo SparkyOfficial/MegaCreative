@@ -116,6 +116,23 @@ public class BlockConfigService {
         return getAvailableActions(material);
     }
 
+    /**
+     * Получает конфигурацию блока по его отображаемому имени (без цветовых кодов).
+     * @param displayName Отображаемое имя
+     * @return Конфигурация блока или null, если не найдена.
+     */
+    public BlockConfig getBlockConfigByDisplayName(String displayName) {
+        if (displayName == null || displayName.isEmpty()) {
+            return null;
+        }
+        for (BlockConfig config : blockConfigs.values()) {
+            if (org.bukkit.ChatColor.stripColor(config.getDisplayName()).equalsIgnoreCase(displayName)) {
+                return config;
+            }
+        }
+        return null;
+    }
+
     public boolean isControlOrEventBlock(String blockType) {
         if (blockType == null) return false;
         return blockType.equalsIgnoreCase("EVENT") ||
