@@ -41,9 +41,14 @@ public class WorldManagerImpl implements IWorldManager {
         this.worlds = new HashMap<>();
         this.playerWorlds = new HashMap<>();
         
-        // Load settings from config
-        this.maxWorldsPerPlayer = configManager.getMaxWorldsPerPlayer();
-        this.worldBorderSize = configManager.getWorldBorderSize();
+        // Load settings from config with null safety
+        if (configManager != null) {
+            this.maxWorldsPerPlayer = configManager.getMaxWorldsPerPlayer();
+            this.worldBorderSize = configManager.getWorldBorderSize();
+        } else {
+            this.maxWorldsPerPlayer = 5; // Default value
+            this.worldBorderSize = 300; // Default value
+        }
     }
     
     /**
@@ -70,8 +75,15 @@ public class WorldManagerImpl implements IWorldManager {
         this.configManager = configManager;
         this.worlds = new HashMap<>();
         this.playerWorlds = new HashMap<>();
-        this.maxWorldsPerPlayer = configManager.getMaxWorldsPerPlayer();
-        this.worldBorderSize = configManager.getWorldBorderSize();
+        
+        // Load settings from config with null safety
+        if (configManager != null) {
+            this.maxWorldsPerPlayer = configManager.getMaxWorldsPerPlayer();
+            this.worldBorderSize = configManager.getWorldBorderSize();
+        } else {
+            this.maxWorldsPerPlayer = 5; // Default value
+            this.worldBorderSize = 300; // Default value
+        }
     }
     
     /**

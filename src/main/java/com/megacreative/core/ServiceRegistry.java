@@ -417,6 +417,7 @@ public class ServiceRegistry {
         // Initialize core services like ConfigManager
         if (configManager == null) {
             configManager = new com.megacreative.utils.ConfigManager((MegaCreative) plugin);
+            configManager.loadConfig(); // Load the configuration immediately after creation
             registerService(com.megacreative.utils.ConfigManager.class, configManager);
         }
     }

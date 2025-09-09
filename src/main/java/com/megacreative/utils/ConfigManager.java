@@ -35,26 +35,44 @@ public class ConfigManager {
     }
     
     public int getMaxWorldsPerPlayer() {
+        if (config == null) {
+            return 5; // Default value
+        }
         return config.getInt("worlds.maxPerPlayer", 5);
     }
     
     public int getWorldBorderSize() {
+        if (config == null) {
+            return 300; // Default value
+        }
         return config.getInt("worlds.borderSize", 300);
     }
     
     public boolean isAutoSaveEnabled() {
+        if (config == null) {
+            return true; // Default value
+        }
         return config.getBoolean("worlds.autoSave", true);
     }
     
     public int getAutoSaveInterval() {
+        if (config == null) {
+            return 300; // Default value
+        }
         return config.getInt("worlds.autoSaveInterval", 300);
     }
     
     public String getMessage(String key) {
+        if (config == null) {
+            return "§cСообщение не найдено: " + key; // Default value
+        }
         return config.getString("messages." + key, "§cСообщение не найдено: " + key);
     }
     
     public String getPrefix() {
+        if (config == null) {
+            return "§8[§bMegaCreative§8] "; // Default value
+        }
         return config.getString("messages.prefix", "§8[§bMegaCreative§8] ");
     }
     
