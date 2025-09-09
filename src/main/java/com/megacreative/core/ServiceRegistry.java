@@ -429,7 +429,12 @@ public class ServiceRegistry {
         }
         
         if (worldManager == null) {
-            this.worldManager = new com.megacreative.managers.WorldManagerImpl((MegaCreative) plugin);
+            // Use the constructor that accepts ConfigManager and set codingManager later
+            this.worldManager = new com.megacreative.managers.WorldManagerImpl(getConfigManager());
+            // Set the coding manager after it's available
+            if (worldManager instanceof com.megacreative.managers.WorldManagerImpl) {
+                ((com.megacreative.managers.WorldManagerImpl) worldManager).setCodingManager(getCodingManager());
+            }
             registerService(IWorldManager.class, worldManager);
         }
         
