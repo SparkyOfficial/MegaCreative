@@ -1,18 +1,20 @@
 package com.megacreative.coding.variables;
 
+import com.megacreative.coding.values.DataValue;
+import com.megacreative.coding.values.ValueType;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.Material;
+import java.util.*;
 
 /**
  * Specialized DataValue for storing and working with ItemStack objects.
  * This provides type safety and convenience methods for item operations.
  */
-public class ItemValue extends DataValue {
+public class ItemValue implements DataValue {
     
-    private final ItemStack itemStack;
+    private ItemStack itemStack;
     
     public ItemValue(ItemStack itemStack) {
-        super(itemStack);
         this.itemStack = itemStack;
     }
     
@@ -25,13 +27,22 @@ public class ItemValue extends DataValue {
     }
     
     @Override
-    public ItemStack asItemStack() {
+    public ValueType getType() {
+        return ValueType.ITEM;
+    }
+    
+    @Override
+    public Object getValue() {
         return itemStack;
     }
     
     @Override
-    public boolean isItemStack() {
-        return true;
+    public void setValue(Object value) throws IllegalArgumentException {
+        if (value instanceof ItemStack) {
+            this.itemStack = (ItemStack) value;
+        } else {
+            throw new IllegalArgumentException("Value must be an ItemStack instance");
+        }
     }
     
     @Override
@@ -44,7 +55,7 @@ public class ItemValue extends DataValue {
     }
     
     @Override
-    public double asNumber() {
+    public Number asNumber() throws NumberFormatException {
         // For item, we might return the amount or some other numeric representation
         return itemStack != null ? itemStack.getAmount() : 0;
     }
@@ -52,6 +63,21 @@ public class ItemValue extends DataValue {
     @Override
     public boolean asBoolean() {
         return itemStack != null && itemStack.getAmount() > 0;
+    }
+    
+    @Override
+    public boolean isEmpty() {
+        return itemStack == null || itemStack.getAmount() <= 0;
+    }
+    
+    @Override
+    public boolean isValid() {
+        return itemStack != null && itemStack.getType() != Material.AIR;
+    }
+    
+    @Override
+    public String getDescription() {
+        return "Item: " + asString();
     }
     
     // Convenience methods for item operations
@@ -80,10 +106,30 @@ public class ItemValue extends DataValue {
     }
     
     @Override
+    public DataValue clone() {
+        return new ItemValue(itemStack != null ? itemStack.clone() : null);
+    }
+    
+    @Override
+    public Map<String, Object> serialize() {
+        Map<String, Object> map = new HashMap<>();
+        map.put("type", getType().name());
+        if (itemStack != null) {
+            Map<String, Object> itemData = new HashMap<>();
+            itemData.put("type", itemStack.getType().name());
+            itemData.put("amount", itemStack.getAmount());
+            // Note: We're not serializing item meta for simplicity
+            map.put("value", itemData);
+        } else {
+            map.put("value", null);
+        }
+        return map;
+    }
+    
+    @Override
     public boolean equals(Object obj) {
         if (this == obj) return true;
         if (obj == null || getClass() != obj.getClass()) return false;
-        if (!super.equals(obj)) return false;
         
         ItemValue itemValue = (ItemValue) obj;
         return itemStack != null ? itemStack.isSimilar(itemValue.itemStack) : itemValue.itemStack == null;

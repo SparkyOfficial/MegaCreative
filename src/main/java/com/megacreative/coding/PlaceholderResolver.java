@@ -1,6 +1,7 @@
 package com.megacreative.coding;
 
-import com.megacreative.coding.variables.DataValue;
+import com.megacreative.coding.values.DataValue;
+import com.megacreative.coding.values.ValueType;
 import org.bukkit.entity.Player;
 import org.bukkit.Location;
 
@@ -77,7 +78,9 @@ public class PlaceholderResolver {
             String variableName = matcher.group(1);
             
             // Get the variable value from the context
-            DataValue value = context.getPlugin().getVariableManager().getVariable(variableName);
+            DataValue value = context.getPlugin().getVariableManager().getVariable(variableName, 
+                com.megacreative.coding.variables.IVariableManager.VariableScope.PLAYER, 
+                context.getPlayer() != null ? context.getPlayer().getName() : null);
             
             // Replace with the variable value or empty string if not found
             String replacement = value != null ? value.asString() : "";
@@ -115,7 +118,9 @@ public class PlaceholderResolver {
         }
         
         // Try variable placeholders
-        DataValue value = context.getPlugin().getVariableManager().getVariable(placeholder);
+        DataValue value = context.getPlugin().getVariableManager().getVariable(placeholder, 
+            com.megacreative.coding.variables.IVariableManager.VariableScope.PLAYER, 
+            context.getPlayer() != null ? context.getPlayer().getName() : null);
         if (value != null) {
             return value.asString();
         }

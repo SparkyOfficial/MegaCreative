@@ -5,6 +5,7 @@ import com.megacreative.coding.executors.ExecutionResult;
 import com.megacreative.coding.variables.VariableManager;
 import com.megacreative.coding.debug.VisualDebugger;
 import com.megacreative.services.BlockConfigService;
+import org.bukkit.Material;
 import org.bukkit.entity.Player;
 
 import java.util.UUID;
@@ -33,6 +34,21 @@ public class DefaultScriptEngine implements ScriptEngine {
         // Передаем DependencyContainer, если он у вас есть, или создаем новые
         this.actionFactory = new ActionFactory(plugin.getDependencyContainer());
         this.conditionFactory = new ConditionFactory();
+    }
+    
+    public void initialize() {
+        // Initialize the script engine with any required setup
+        // This method can be used to register built-in actions and conditions
+    }
+    
+    public int getActionCount() {
+        // Return the number of registered actions
+        return 0; // Placeholder
+    }
+    
+    public int getConditionCount() {
+        // Return the number of registered conditions
+        return 0; // Placeholder
     }
     
     @Override
@@ -64,6 +80,50 @@ public class DefaultScriptEngine implements ScriptEngine {
                     debugger.onScriptEnd(player, script);
                 }
                 activeExecutions.remove(executionId);
+            }
+        });
+    }
+    
+    @Override
+    public CompletableFuture<ExecutionResult> executeBlock(CodeBlock block, Player player, String trigger) {
+        if (block == null) {
+            return CompletableFuture.completedFuture(ExecutionResult.success("Block is null."));
+        }
+
+        ExecutionContext context = new ExecutionContext.Builder()
+            .plugin(plugin)
+            .player(player)
+            .creativeWorld(plugin.getWorldManager().findCreativeWorldByBukkit(player.getWorld()))
+            .currentBlock(block)
+            .build();
+
+        return CompletableFuture.supplyAsync(() -> {
+            try {
+                return processBlock(block, context, 0);
+            } catch (Exception e) {
+                return ExecutionResult.error("Block execution failed: " + e.getMessage(), e);
+            }
+        });
+    }
+    
+    @Override
+    public CompletableFuture<ExecutionResult> executeBlockChain(CodeBlock startBlock, Player player, String trigger) {
+        if (startBlock == null) {
+            return CompletableFuture.completedFuture(ExecutionResult.success("Start block is null."));
+        }
+
+        ExecutionContext context = new ExecutionContext.Builder()
+            .plugin(plugin)
+            .player(player)
+            .creativeWorld(plugin.getWorldManager().findCreativeWorldByBukkit(player.getWorld()))
+            .currentBlock(startBlock)
+            .build();
+
+        return CompletableFuture.supplyAsync(() -> {
+            try {
+                return processBlock(startBlock, context, 0);
+            } catch (Exception e) {
+                return ExecutionResult.error("Block chain execution failed: " + e.getMessage(), e);
             }
         });
     }
@@ -153,6 +213,34 @@ public class DefaultScriptEngine implements ScriptEngine {
             default:
                 return ExecutionResult.error("Unsupported block type: " + blockType);
         }
+    }
+    
+    @Override
+    public void registerAction(BlockType type, BlockAction action) {
+        // Implementation for registering actions
+        // This would typically involve adding to an internal registry
+    }
+
+    @Override
+    public void registerCondition(BlockType type, BlockCondition condition) {
+        // Implementation for registering conditions
+        // This would typically involve adding to an internal registry
+    }
+    
+    @Override
+    public BlockType getBlockType(Material material, String actionName) {
+        // Implementation for getting block type
+        // This would typically involve looking up in a configuration or registry
+        BlockConfigService.BlockConfig config = blockConfigService.getBlockConfig(actionName);
+        if (config != null) {
+            String type = config.getType();
+            if ("EVENT".equals(type)) return BlockType.EVENT;
+            if ("ACTION".equals(type)) return BlockType.ACTION;
+            if ("CONDITION".equals(type)) return BlockType.CONDITION;
+            if ("CONTROL".equals(type)) return BlockType.CONTROL;
+            if ("FUNCTION".equals(type)) return BlockType.FUNCTION;
+        }
+        return null;
     }
     
     // Остальные методы интерфейса (getVariableManager, getDebugger, stopExecution...)

@@ -77,7 +77,6 @@ public class ServiceRegistry {
     private PlayerEventsListener playerEventsListener;
     private ScriptPerformanceMonitor scriptPerformanceMonitor;
     private FunctionManager functionManager;
-    private FunctionManager functionManager;
 
     public ServiceRegistry(Plugin plugin, DependencyContainer dependencyContainer) {
         this.plugin = plugin;
@@ -119,6 +118,7 @@ public class ServiceRegistry {
         // Initialize ScriptEngine with required dependencies
         if (scriptEngine instanceof DefaultScriptEngine) {
             DefaultScriptEngine defaultEngine = (DefaultScriptEngine) scriptEngine;
+            // Initialize the engine
             defaultEngine.initialize();
             
             log.info("ScriptEngine initialized with " + 
@@ -417,6 +417,14 @@ public class ServiceRegistry {
         return codeBlockClipboard;
     }
     
+    public FunctionManager getFunctionManager() {
+        if (functionManager == null) {
+            this.functionManager = new FunctionManager((MegaCreative) plugin);
+            registerService(FunctionManager.class, functionManager);
+        }
+        return functionManager;
+    }
+    
     private void initializeCoreServices() {
         // Initialize core services like ConfigManager
         if (configManager == null) {
@@ -536,13 +544,5 @@ public class ServiceRegistry {
         if (worldManager instanceof com.megacreative.managers.WorldManagerImpl) {
             ((com.megacreative.managers.WorldManagerImpl) worldManager).initialize();
         }
-    }
-
-    public FunctionManager getFunctionManager() {
-        if (functionManager == null) {
-            this.functionManager = new FunctionManager((MegaCreative) plugin);
-            registerService(FunctionManager.class, functionManager);
-        }
-        return functionManager;
     }
 }

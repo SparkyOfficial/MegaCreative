@@ -1,18 +1,20 @@
 package com.megacreative.coding.variables;
 
+import com.megacreative.coding.values.DataValue;
+import com.megacreative.coding.values.ValueType;
 import org.bukkit.Location;
 import org.bukkit.World;
+import java.util.*;
 
 /**
  * Specialized DataValue for storing and working with Location objects.
  * This provides type safety and convenience methods for location operations.
  */
-public class LocationValue extends DataValue {
+public class LocationValue implements DataValue {
     
-    private final Location location;
+    private Location location;
     
     public LocationValue(Location location) {
-        super(location);
         this.location = location;
     }
     
@@ -26,13 +28,22 @@ public class LocationValue extends DataValue {
     }
     
     @Override
-    public Location asLocation() {
+    public ValueType getType() {
+        return ValueType.LOCATION;
+    }
+    
+    @Override
+    public Object getValue() {
         return location;
     }
     
     @Override
-    public boolean isLocation() {
-        return true;
+    public void setValue(Object value) throws IllegalArgumentException {
+        if (value instanceof Location) {
+            this.location = (Location) value;
+        } else {
+            throw new IllegalArgumentException("Value must be a Location instance");
+        }
     }
     
     @Override
@@ -47,7 +58,7 @@ public class LocationValue extends DataValue {
     }
     
     @Override
-    public double asNumber() {
+    public Number asNumber() throws NumberFormatException {
         // For location, we might return a hash code or some other numeric representation
         return location != null ? location.hashCode() : 0;
     }
@@ -55,6 +66,21 @@ public class LocationValue extends DataValue {
     @Override
     public boolean asBoolean() {
         return location != null;
+    }
+    
+    @Override
+    public boolean isEmpty() {
+        return location == null;
+    }
+    
+    @Override
+    public boolean isValid() {
+        return location != null && location.getWorld() != null;
+    }
+    
+    @Override
+    public String getDescription() {
+        return "Location: " + asString();
     }
     
     // Convenience methods for location operations
@@ -100,10 +126,33 @@ public class LocationValue extends DataValue {
     }
     
     @Override
+    public DataValue clone() {
+        return new LocationValue(location != null ? location.clone() : null);
+    }
+    
+    @Override
+    public Map<String, Object> serialize() {
+        Map<String, Object> map = new HashMap<>();
+        map.put("type", getType().name());
+        if (location != null) {
+            Map<String, Object> locData = new HashMap<>();
+            locData.put("world", location.getWorld() != null ? location.getWorld().getName() : null);
+            locData.put("x", location.getX());
+            locData.put("y", location.getY());
+            locData.put("z", location.getZ());
+            locData.put("yaw", location.getYaw());
+            locData.put("pitch", location.getPitch());
+            map.put("value", locData);
+        } else {
+            map.put("value", null);
+        }
+        return map;
+    }
+    
+    @Override
     public boolean equals(Object obj) {
         if (this == obj) return true;
         if (obj == null || getClass() != obj.getClass()) return false;
-        if (!super.equals(obj)) return false;
         
         LocationValue that = (LocationValue) obj;
         return location != null ? location.equals(that.location) : that.location == null;

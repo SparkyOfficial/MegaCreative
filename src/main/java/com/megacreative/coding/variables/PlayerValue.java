@@ -1,28 +1,39 @@
 package com.megacreative.coding.variables;
 
+import com.megacreative.coding.values.DataValue;
+import com.megacreative.coding.values.ValueType;
 import org.bukkit.entity.Player;
+import java.util.*;
 
 /**
  * Specialized DataValue for storing and working with Player objects.
  * This provides type safety and convenience methods for player operations.
  */
-public class PlayerValue extends DataValue {
+public class PlayerValue implements DataValue {
     
-    private final Player player;
+    private Player player;
     
     public PlayerValue(Player player) {
-        super(player);
         this.player = player;
     }
     
     @Override
-    public Player asPlayer() {
+    public ValueType getType() {
+        return ValueType.PLAYER;
+    }
+    
+    @Override
+    public Object getValue() {
         return player;
     }
     
     @Override
-    public boolean isPlayer() {
-        return true;
+    public void setValue(Object value) throws IllegalArgumentException {
+        if (value instanceof Player) {
+            this.player = (Player) value;
+        } else {
+            throw new IllegalArgumentException("Value must be a Player instance");
+        }
     }
     
     @Override
@@ -30,11 +41,11 @@ public class PlayerValue extends DataValue {
         if (player == null) {
             return "null";
         }
-        return "Player{name=" + player.getName() + ", uuid=" + player.getUniqueId() + "}";
+        return player.getName();
     }
     
     @Override
-    public double asNumber() {
+    public Number asNumber() throws NumberFormatException {
         // For player, we might return a hash code or some other numeric representation
         return player != null ? player.hashCode() : 0;
     }
@@ -42,6 +53,21 @@ public class PlayerValue extends DataValue {
     @Override
     public boolean asBoolean() {
         return player != null && player.isOnline();
+    }
+    
+    @Override
+    public boolean isEmpty() {
+        return player == null;
+    }
+    
+    @Override
+    public boolean isValid() {
+        return player != null && player.isOnline();
+    }
+    
+    @Override
+    public String getDescription() {
+        return "Player: " + asString();
     }
     
     // Convenience methods for player operations
@@ -62,10 +88,22 @@ public class PlayerValue extends DataValue {
     }
     
     @Override
+    public DataValue clone() {
+        return new PlayerValue(player);
+    }
+    
+    @Override
+    public Map<String, Object> serialize() {
+        Map<String, Object> map = new HashMap<>();
+        map.put("type", getType().name());
+        map.put("value", player != null ? player.getName() : null);
+        return map;
+    }
+    
+    @Override
     public boolean equals(Object obj) {
         if (this == obj) return true;
         if (obj == null || getClass() != obj.getClass()) return false;
-        if (!super.equals(obj)) return false;
         
         PlayerValue that = (PlayerValue) obj;
         return player != null ? player.equals(that.player) : that.player == null;

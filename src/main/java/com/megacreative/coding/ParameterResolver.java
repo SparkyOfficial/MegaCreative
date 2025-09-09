@@ -1,6 +1,6 @@
 package com.megacreative.coding;
 
-import com.megacreative.coding.variables.DataValue;
+import com.megacreative.coding.values.DataValue;
 import org.bukkit.entity.Player;
 import org.bukkit.Location;
 
@@ -31,10 +31,10 @@ public class ParameterResolver {
         }
         
         // If it's a string value, resolve placeholders in it
-        if (value.isText()) {
+        if (value.getType() == com.megacreative.coding.values.ValueType.TEXT) {
             String text = value.asString();
             String resolvedText = PlaceholderResolver.resolvePlaceholders(text, context);
-            return new DataValue(resolvedText);
+            return com.megacreative.coding.values.DataValue.fromObject(resolvedText);
         }
         
         // For other types, return as is

@@ -10,6 +10,7 @@ import java.io.File;
 import java.util.*;
 import java.util.logging.Logger;
 import java.util.stream.Collectors;
+import java.util.function.Function;
 
 /**
  * Центральный сервис для загрузки и управления конфигурацией всех блоков из coding_blocks.yml.
@@ -22,6 +23,8 @@ public class BlockConfigService {
     // Ключ - это ID блока из YAML (onPlayerMove, sendMessage и т.д.)
     private final Map<String, BlockConfig> blockConfigs = new HashMap<>();
     private final Map<Material, List<String>> materialToBlockIds = new HashMap<>();
+    // Configuration for action slots
+    private ConfigurationSection actionConfigurations;
 
     public BlockConfigService(MegaCreative plugin) {
         this.plugin = plugin;
@@ -43,8 +46,12 @@ public class BlockConfigService {
         }
 
         YamlConfiguration config = YamlConfiguration.loadConfiguration(configFile);
+        
+        // Load action configurations
+        actionConfigurations = config.getConfigurationSection("action_configurations");
 
         for (String id : config.getKeys(false)) {
+            if ("action_configurations".equals(id)) continue; // Skip action_configurations section
             ConfigurationSection section = config.getConfigurationSection(id);
             if (section != null) {
                 try {
@@ -68,6 +75,11 @@ public class BlockConfigService {
         return ids.stream().map(this::getBlockConfig).filter(Objects::nonNull).collect(Collectors.toList());
     }
     
+    public List<String> getAvailableActions(Material material) {
+        List<String> ids = materialToBlockIds.getOrDefault(material, Collections.emptyList());
+        return new ArrayList<>(ids);
+    }
+    
     public boolean isCodeBlock(Material material) {
         return materialToBlockIds.containsKey(material);
     }
@@ -88,6 +100,81 @@ public class BlockConfigService {
             }
         }
         return null;
+    }
+    
+    public BlockConfig getFirstBlockConfig(Material material) {
+        List<String> ids = materialToBlockIds.getOrDefault(material, Collections.emptyList());
+        if (!ids.isEmpty()) {
+            return getBlockConfig(ids.get(0));
+        }
+        return null;
+    }
+    
+    public boolean isControlOrEventBlock(String blockType) {
+        if (blockType == null) return false;
+        BlockConfig config = getBlockConfig(blockType);
+        if (config == null) return false;
+        String type = config.getType();
+        return "CONTROL".equals(type) || "EVENT".equals(type);
+    }
+    
+    /**
+     * Gets a slot resolver function for a specific action
+     * @param actionName The name of the action
+     * @return A function that maps slot names to slot indices, or null if not found
+     */
+    public Function<String, Integer> getSlotResolver(String actionName) {
+        if (actionConfigurations == null) return null;
+        
+        ConfigurationSection actionConfig = actionConfigurations.getConfigurationSection(actionName);
+        if (actionConfig == null) return null;
+        
+        ConfigurationSection slots = actionConfig.getConfigurationSection("slots");
+        if (slots == null) return null;
+        
+        Map<String, Integer> slotMap = new HashMap<>();
+        for (String slotKey : slots.getKeys(false)) {
+            ConfigurationSection slotConfig = slots.getConfigurationSection(slotKey);
+            if (slotConfig != null) {
+                String slotName = slotConfig.getString("slot_name");
+                if (slotName != null) {
+                    try {
+                        int slotIndex = Integer.parseInt(slotKey);
+                        slotMap.put(slotName, slotIndex);
+                    } catch (NumberFormatException e) {
+                        // Ignore invalid slot indices
+                    }
+                }
+            }
+        }
+        
+        return slotMap::get;
+    }
+    
+    /**
+     * Gets a group slots resolver function for a specific action
+     * @param actionName The name of the action
+     * @return A function that maps group names to slot indices, or null if not found
+     */
+    public Function<String, int[]> getGroupSlotsResolver(String actionName) {
+        if (actionConfigurations == null) return null;
+        
+        ConfigurationSection actionConfig = actionConfigurations.getConfigurationSection(actionName);
+        if (actionConfig == null) return null;
+        
+        ConfigurationSection itemGroups = actionConfig.getConfigurationSection("item_groups");
+        if (itemGroups == null) return null;
+        
+        Map<String, int[]> groupMap = new HashMap<>();
+        for (String groupKey : itemGroups.getKeys(false)) {
+            ConfigurationSection groupConfig = itemGroups.getConfigurationSection(groupKey);
+            if (groupConfig != null) {
+                int[] slots = groupConfig.getIntegerList("slots").stream().mapToInt(Integer::intValue).toArray();
+                groupMap.put(groupKey, slots);
+            }
+        }
+        
+        return groupMap::get;
     }
 
     /**
