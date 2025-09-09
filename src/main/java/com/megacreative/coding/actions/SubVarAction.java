@@ -4,6 +4,7 @@ import com.megacreative.coding.BlockAction;
 import com.megacreative.coding.CodeBlock;
 import com.megacreative.coding.ExecutionContext;
 import com.megacreative.coding.ParameterResolver;
+import com.megacreative.coding.executors.ExecutionResult;
 import com.megacreative.coding.values.DataValue;
 import com.megacreative.coding.values.types.NumberValue;
 import org.bukkit.entity.Player;
@@ -13,35 +14,41 @@ import org.bukkit.entity.Player;
  * Supports LOCAL, GLOBAL, PLAYER, and SERVER scopes.
  */
 public class SubVarAction implements BlockAction {
+    
+    // Конструктор по умолчанию (без параметров)
+    public SubVarAction() {}
+    
     @Override
-    public void execute(ExecutionContext context) {
+    public ExecutionResult execute(CodeBlock block, ExecutionContext context) {
         Player player = context.getPlayer();
-        CodeBlock block = context.getCurrentBlock();
 
-        if (player == null || block == null) return;
+        if (player == null || block == null) {
+            return ExecutionResult.error("Player or block is null");
+        }
         
         try {
+            // Создаем ParameterResolver прямо здесь, передавая ему текущий контекст
             ParameterResolver resolver = new ParameterResolver(context);
 
             // Get variable name (required)
             DataValue rawVarName = block.getParameter("var");
             if (rawVarName == null || rawVarName.isEmpty()) {
                 player.sendMessage("§cОшибка: не указано имя переменной!");
-                return;
+                return ExecutionResult.error("Variable name not specified");
             }
 
             // Get value to subtract (required)
             DataValue rawValue = block.getParameter("value");
             if (rawValue == null || rawValue.isEmpty()) {
                 player.sendMessage("§cОшибка: не указано значение для вычитания!");
-                return;
+                return ExecutionResult.error("Value to subtract not specified");
             }
             
             // Resolve variable name and value
             String varName = resolver.resolve(context, rawVarName).asString();
             if (varName == null || varName.trim().isEmpty()) {
                 player.sendMessage("§cОшибка: имя переменной не может быть пустым!");
-                return;
+                return ExecutionResult.error("Variable name is empty");
             }
             
             // Get scope (optional, defaults to LOCAL)
@@ -76,14 +83,14 @@ public class SubVarAction implements BlockAction {
                         currentNum = ((DataValue) currentValue).asNumber().doubleValue();
                     } catch (NumberFormatException e) {
                         player.sendMessage("§cОшибка: текущее значение переменной не является числом!");
-                        return;
+                        return ExecutionResult.error("Current variable value is not a number");
                     }
                 } else {
                     try {
                         currentNum = Double.parseDouble(currentValue.toString());
                     } catch (NumberFormatException e) {
                         player.sendMessage("§cОшибка: текущее значение переменной не является числом!");
-                        return;
+                        return ExecutionResult.error("Current variable value is not a number");
                     }
                 }
             }
@@ -95,7 +102,7 @@ public class SubVarAction implements BlockAction {
                 subValue = resolvedValue.asNumber().doubleValue();
             } catch (NumberFormatException e) {
                 player.sendMessage("§cОшибка: значение для вычитания должно быть числом!");
-                return;
+                return ExecutionResult.error("Value to subtract must be a number");
             }
             
             double result = currentNum - subValue;
@@ -121,10 +128,12 @@ public class SubVarAction implements BlockAction {
             player.sendMessage("§a✓ Переменная '§f" + varName + "§a' (§b" + scope + 
                 "§a) уменьшена на §e" + subValue + "§a = §e" + result);
             
+            return ExecutionResult.success("Variable '" + varName + "' decreased by " + subValue);
         } catch (Exception e) {
             player.sendMessage("§cОшибка при изменении переменной: " + e.getMessage());
             context.getPlugin().getLogger().warning("Error in SubVarAction: " + e.getMessage());
             e.printStackTrace();
+            return ExecutionResult.error("Error in SubVarAction: " + e.getMessage());
         }
     }
 }
