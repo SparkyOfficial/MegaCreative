@@ -4,9 +4,13 @@ import com.megacreative.coding.BlockAction;
 import com.megacreative.coding.CodeBlock;
 import com.megacreative.coding.ExecutionContext;
 import com.megacreative.coding.executors.ExecutionResult;
+import com.megacreative.services.FunctionManager;
 import org.bukkit.entity.Player;
 
-// Шаблон для нового ДЕЙСТВИЯ
+/**
+ * Action for defining custom functions.
+ * When executed, it registers the function in the FunctionManager.
+ */
 public class CustomFunctionAction implements BlockAction {
 
     @Override
@@ -17,17 +21,34 @@ public class CustomFunctionAction implements BlockAction {
         }
 
         try {
-            // TODO: Получите параметры из блока, используя block.getParameter("key")
+            // Получаем параметры из блока
             String functionName = block.getParameter("function_name").asString();
-            int paramCount = block.getParameter("param_count").asNumber().intValue();
             
-            // TODO: Реализуйте логику определения пользовательской функции
-            // Сохранение функции для последующего вызова
+            // Проверяем, есть ли дочерние блоки (тело функции)
+            if (block.getChildren().isEmpty()) {
+                return ExecutionResult.error("У функции '" + functionName + "' нет тела (дочерних блоков).");
+            }
             
-            return ExecutionResult.success("Пользовательская функция определена.");
+            // Получаем первый блок тела функции
+            CodeBlock firstBlock = block.getChildren().get(0);
+            
+            // Получаем менеджер функций
+            FunctionManager functionManager = context.getPlugin().getServiceRegistry().getFunctionManager();
+            if (functionManager == null) {
+                return ExecutionResult.error("Менеджер функций не доступен.");
+            }
+            
+            // Получаем имя мира
+            String worldName = player.getWorld().getName();
+            
+            // Регистрируем функцию
+            functionManager.registerFunction(worldName, functionName, firstBlock);
+            
+            // Не выполняем дочерние блоки немедленно - они будут выполнены при вызове функции
+            return ExecutionResult.success("Функция '" + functionName + "' определена.");
 
         } catch (Exception e) {
-            return ExecutionResult.error("Ошибка при определении пользовательской функции: " + e.getMessage());
+            return ExecutionResult.error("Ошибка при определении функции: " + e.getMessage());
         }
     }
 }

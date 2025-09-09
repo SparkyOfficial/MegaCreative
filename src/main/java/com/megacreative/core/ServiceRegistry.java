@@ -77,6 +77,7 @@ public class ServiceRegistry {
     private PlayerEventsListener playerEventsListener;
     private ScriptPerformanceMonitor scriptPerformanceMonitor;
     private FunctionManager functionManager;
+    private FunctionManager functionManager;
 
     public ServiceRegistry(Plugin plugin, DependencyContainer dependencyContainer) {
         this.plugin = plugin;
@@ -91,19 +92,22 @@ public class ServiceRegistry {
         this.actionFactory = new ActionFactory(dependencyContainer);
         this.conditionFactory = new ConditionFactory();
         
+        // Initialize FunctionManager
+        this.functionManager = new FunctionManager((MegaCreative) plugin);
+        
         // Initialize ScriptEngine with its dependencies
         this.scriptEngine = new DefaultScriptEngine(
             (MegaCreative) plugin, 
             variableManager, 
             visualDebugger,
-            blockConfigService,
-            dependencyContainer
+            blockConfigService
         );
         
         // Register services
         registerService(BlockConfigService.class, blockConfigService);
         registerService(ActionFactory.class, actionFactory);
         registerService(ConditionFactory.class, conditionFactory);
+        registerService(FunctionManager.class, functionManager);
         initializeScriptEngine();
     }
     
@@ -535,6 +539,10 @@ public class ServiceRegistry {
     }
 
     public FunctionManager getFunctionManager() {
+        if (functionManager == null) {
+            this.functionManager = new FunctionManager((MegaCreative) plugin);
+            registerService(FunctionManager.class, functionManager);
+        }
         return functionManager;
     }
 }

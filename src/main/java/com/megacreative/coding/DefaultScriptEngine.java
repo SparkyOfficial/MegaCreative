@@ -111,16 +111,42 @@ public class DefaultScriptEngine implements ScriptEngine {
                 if (debugger.isDebugging(context.getPlayer())) {
                     debugger.onConditionResult(context.getPlayer(), block, conditionResult);
                 }
-                // Если условие истинно, выполняем дочерние блоки
-                if (conditionResult) {
-                    // TODO: Добавить логику выполнения дочерних блоков (вложенных)
-                    // А затем переходим к следующему блоку в основной цепочке
-                }
+                // Сохраняем результат условия для последующего использования в блоках CONTROL
                 return processBlock(block.getNextBlock(), context, recursionDepth + 1);
                 
             case "CONTROL":
+                // Здесь будет логика для IF/ELSE, LOOP и т.д.
+                if (block.getAction().equals("conditionalBranch")) {
+                    if (context.getLastConditionResult()) {
+                        // Результат последнего условия был TRUE, выполняем дочерние блоки
+                        if (!block.getChildren().isEmpty()) {
+                            // Выполняем первую дочернюю ветку
+                            ExecutionResult childResult = processBlock(block.getChildren().get(0), context, recursionDepth + 1);
+                            // Если дочерняя ветка завершилась ошибкой, прерываемся
+                            if (!childResult.isSuccess()) return childResult;
+                        }
+                    }
+                    // Независимо от результата, после IF мы идем к следующему блоку в ОСНОВНОЙ цепи
+                    return processBlock(block.getNextBlock(), context, recursionDepth + 1);
+                } else if (block.getAction().equals("else")) {
+                    // Обработка блока ELSE
+                    if (!context.getLastConditionResult()) {
+                        // Предыдущее условие было FALSE, выполняем блок ELSE
+                        if (!block.getChildren().isEmpty()) {
+                            // Выполняем первую дочернюю ветку (тело else)
+                            ExecutionResult childResult = processBlock(block.getChildren().get(0), context, recursionDepth + 1);
+                            // Если дочерняя ветка завершилась ошибкой, прерываемся
+                            if (!childResult.isSuccess()) return childResult;
+                        }
+                    }
+                    // После ELSE мы идем к следующему блоку в ОСНОВНОЙ цепи
+                    return processBlock(block.getNextBlock(), context, recursionDepth + 1);
+                }
+                // Для других CONTROL блоков просто переходим к следующему блоку
+                return processBlock(block.getNextBlock(), context, recursionDepth + 1);
+                
             case "FUNCTION":
-                // Обработка управляющих блоков (if/else, циклы) и функций - это следующий большой шаг.
+                // Обработка функций - это следующий большой шаг.
                 // Пока что просто переходим к следующему блоку.
                 return processBlock(block.getNextBlock(), context, recursionDepth + 1);
 

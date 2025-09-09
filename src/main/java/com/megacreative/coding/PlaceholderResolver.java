@@ -1,45 +1,87 @@
 package com.megacreative.coding;
 
-import com.megacreative.coding.ExecutionContext;
+import com.megacreative.coding.variables.DataValue;
 import org.bukkit.entity.Player;
+import org.bukkit.Location;
 
-import java.util.HashMap;
-import java.util.Map;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 /**
- * Система разрешения плейсхолдеров в названиях предметов.
- * Позволяет использовать переменные прямо в GUI конфигурации.
- * 
- * Примеры плейсхолдеров:
- * - %player% - имя игрока
- * - %world% - название мира
- * - %x%, %y%, %z% - координаты игрока
- * - %var:money% - значение переменной
- * - %list:items:0% - первый элемент списка
- * - %bool:isOp% - булева переменная
+ * Utility class for resolving placeholders in strings.
+ * Supports player-related placeholders like %player%, %world%, etc.
+ * Also supports variable placeholders like ${variable_name}.
  */
 public class PlaceholderResolver {
     
-    private static final Pattern PLACEHOLDER_PATTERN = Pattern.compile("%([^%]+)%");
+    private static final Pattern PLAYER_PLACEHOLDER_PATTERN = Pattern.compile("%([^%]+)%");
+    private static final Pattern VARIABLE_PLACEHOLDER_PATTERN = Pattern.compile("\\$\\{([^}]+)\\}");
     
     /**
-     * Разрешает плейсхолдеры в строке
-     * @param text Исходный текст с плейсхолдерами
-     * @param context Контекст выполнения
-     * @return Текст с замененными плейсхолдерами
+     * Resolves all placeholders in a string using the execution context
+     * @param input The input string with placeholders
+     * @param context The execution context containing player and variables
+     * @return The string with all placeholders resolved
      */
-    public static String resolve(String text, ExecutionContext context) {
-        if (text == null) return null;
+    public static String resolvePlaceholders(String input, ExecutionContext context) {
+        if (input == null || input.isEmpty()) {
+            return input;
+        }
         
-        Matcher matcher = PLACEHOLDER_PATTERN.matcher(text);
+        // First resolve player-related placeholders
+        String result = resolvePlayerPlaceholders(input, context);
+        
+        // Then resolve variable placeholders
+        result = resolveVariablePlaceholders(result, context);
+        
+        return result;
+    }
+    
+    /**
+     * Resolves player-related placeholders like %player%, %world%, %x%, %y%, %z%
+     * @param input The input string with placeholders
+     * @param context The execution context containing player information
+     * @return The string with player placeholders resolved
+     */
+    private static String resolvePlayerPlaceholders(String input, ExecutionContext context) {
+        Player player = context.getPlayer();
+        if (player == null) {
+            return input;
+        }
+        
+        String result = input;
+        Location location = player.getLocation();
+        
+        // Replace common player placeholders
+        result = result.replace("%player%", player.getName())
+                      .replace("%world%", player.getWorld().getName())
+                      .replace("%x%", String.valueOf(location.getBlockX()))
+                      .replace("%y%", String.valueOf(location.getBlockY()))
+                      .replace("%z%", String.valueOf(location.getBlockZ()));
+        
+        return result;
+    }
+    
+    /**
+     * Resolves variable placeholders like ${variable_name}
+     * @param input The input string with placeholders
+     * @param context The execution context containing variables
+     * @return The string with variable placeholders resolved
+     */
+    private static String resolveVariablePlaceholders(String input, ExecutionContext context) {
+        // Find all variable placeholders
+        Matcher matcher = VARIABLE_PLACEHOLDER_PATTERN.matcher(input);
         StringBuffer result = new StringBuffer();
         
         while (matcher.find()) {
-            String placeholder = matcher.group(1);
-            String replacement = resolvePlaceholder(placeholder, context);
-            matcher.appendReplacement(result, replacement != null ? replacement : matcher.group(0));
+            String variableName = matcher.group(1);
+            
+            // Get the variable value from the context
+            DataValue value = context.getPlugin().getVariableManager().getVariable(variableName);
+            
+            // Replace with the variable value or empty string if not found
+            String replacement = value != null ? value.asString() : "";
+            matcher.appendReplacement(result, Matcher.quoteReplacement(replacement));
         }
         matcher.appendTail(result);
         
@@ -47,121 +89,38 @@ public class PlaceholderResolver {
     }
     
     /**
-     * Разрешает конкретный плейсхолдер
-     * @param placeholder Плейсхолдер без %%
-     * @param context Контекст выполнения
-     * @return Замененное значение или null, если не найден
+     * Resolves a single placeholder
+     * @param placeholder The placeholder to resolve (without % or ${})
+     * @param context The execution context
+     * @return The resolved value or the original placeholder if not found
      */
-    private static String resolvePlaceholder(String placeholder, ExecutionContext context) {
+    public static String resolvePlaceholder(String placeholder, ExecutionContext context) {
+        // Try player placeholders first
         Player player = context.getPlayer();
-        if (player == null) return null;
-        
-        // Базовые плейсхолдеры игрока
-        switch (placeholder.toLowerCase()) {
-            case "player":
-                return player.getName();
-            case "world":
-                return player.getWorld().getName();
-            case "x":
-                return String.valueOf(player.getLocation().getBlockX());
-            case "y":
-                return String.valueOf(player.getLocation().getBlockY());
-            case "z":
-                return String.valueOf(player.getLocation().getBlockZ());
-            case "health":
-                return String.valueOf((int) player.getHealth());
-            case "maxhealth":
-                return String.valueOf((int) player.getMaxHealth());
-            case "food":
-                return String.valueOf(player.getFoodLevel());
-            case "exp":
-                return String.valueOf(player.getExp());
-            case "level":
-                return String.valueOf(player.getLevel());
-            case "gamemode":
-                return player.getGameMode().name();
-        }
-        
-        // Плейсхолдеры переменных
-        if (placeholder.startsWith("var:")) {
-            String varName = placeholder.substring(4);
-            Object value = context.getVariable(varName);
-            return value != null ? value.toString() : "null";
-        }
-        
-        // Плейсхолдеры списков
-        if (placeholder.startsWith("list:")) {
-            String[] parts = placeholder.substring(5).split(":");
-            if (parts.length >= 2) {
-                String listName = parts[0];
-                try {
-                    int index = Integer.parseInt(parts[1]);
-                    var list = context.getList(listName);
-                    if (list != null && index >= 0 && index < list.size()) {
-                        return list.get(index).toString();
-                    }
-                } catch (NumberFormatException e) {
-                    // Игнорируем некорректный индекс
-                }
+        if (player != null) {
+            Location location = player.getLocation();
+            
+            switch (placeholder.toLowerCase()) {
+                case "player":
+                    return player.getName();
+                case "world":
+                    return player.getWorld().getName();
+                case "x":
+                    return String.valueOf(location.getBlockX());
+                case "y":
+                    return String.valueOf(location.getBlockY());
+                case "z":
+                    return String.valueOf(location.getBlockZ());
             }
-            return "null";
         }
         
-        // Плейсхолдеры булевых переменных
-        if (placeholder.startsWith("bool:")) {
-            String boolName = placeholder.substring(5);
-            Boolean value = context.getBoolean(boolName);
-            return value != null ? value.toString() : "false";
+        // Try variable placeholders
+        DataValue value = context.getPlugin().getVariableManager().getVariable(placeholder);
+        if (value != null) {
+            return value.asString();
         }
         
-        // Плейсхолдеры числовых переменных
-        if (placeholder.startsWith("num:")) {
-            String numName = placeholder.substring(4);
-            Number value = context.getNumber(numName);
-            return value != null ? value.toString() : "0";
-        }
-        
-        // Плейсхолдеры глобальных переменных
-        if (placeholder.startsWith("global:")) {
-            String globalName = placeholder.substring(7);
-            Object value = context.getPlugin().getCodingManager().getGlobalVariable(globalName);
-            return value != null ? value.toString() : "null";
-        }
-        
-        // Плейсхолдеры серверных переменных
-        if (placeholder.startsWith("server:")) {
-            String serverName = placeholder.substring(7);
-            Object value = context.getPlugin().getCodingManager().getServerVariable(serverName);
-            return value != null ? value.toString() : "null";
-        }
-        
-        return null;
+        // Return the original placeholder if not found
+        return "%" + placeholder + "%";
     }
-    
-    /**
-     * Проверяет, содержит ли текст плейсхолдеры
-     * @param text Текст для проверки
-     * @return true, если содержит плейсхолдеры
-     */
-    public static boolean containsPlaceholders(String text) {
-        if (text == null) return false;
-        return PLACEHOLDER_PATTERN.matcher(text).find();
-    }
-    
-    /**
-     * Получает список всех плейсхолдеров в тексте
-     * @param text Текст для анализа
-     * @return Список плейсхолдеров
-     */
-    public static java.util.List<String> extractPlaceholders(String text) {
-        java.util.List<String> placeholders = new java.util.ArrayList<>();
-        if (text == null) return placeholders;
-        
-        Matcher matcher = PLACEHOLDER_PATTERN.matcher(text);
-        while (matcher.find()) {
-            placeholders.add(matcher.group(1));
-        }
-        
-        return placeholders;
-    }
-} 
+}
