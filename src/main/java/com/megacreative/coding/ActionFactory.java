@@ -1,6 +1,7 @@
 package com.megacreative.coding;
 
 import com.megacreative.coding.actions.*;
+import com.megacreative.coding.executors.ExecutionResult;
 import com.megacreative.core.DependencyContainer;
 import java.util.HashMap;
 import java.util.Map;
@@ -57,5 +58,24 @@ public class ActionFactory {
             return supplier.get();
         }
         return null;
+    }
+    
+    // Add missing methods with proper implementation
+    public void registerAction(String actionId, String displayName) {
+        // Register the action if it's not already registered
+        if (!actionMap.containsKey(actionId)) {
+            // For now, we'll register a generic action placeholder
+            // In a more advanced implementation, you might want to store display names separately
+            register(actionId, () -> new BlockAction() {
+                @Override
+                public ExecutionResult execute(CodeBlock block, ExecutionContext context) {
+                    return ExecutionResult.error("Action not implemented: " + actionId);
+                }
+            });
+        }
+    }
+    
+    public int getActionCount() {
+        return actionMap.size();
     }
 }

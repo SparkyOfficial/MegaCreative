@@ -7,7 +7,9 @@ import com.megacreative.coding.ParameterResolver;
 import com.megacreative.coding.executors.ExecutionResult;
 import com.megacreative.coding.values.DataValue;
 import com.megacreative.MegaCreative;
-import com.megacreative.managers.FunctionManager;
+import com.megacreative.services.FunctionManager;
+import org.bukkit.Bukkit;
+import org.bukkit.World;
 import org.bukkit.entity.Player;
 
 public class SaveFunctionAction implements BlockAction {
@@ -65,17 +67,19 @@ public class SaveFunctionAction implements BlockAction {
             return ExecutionResult.error("No block to save as function");
         }
 
-        // Сохраняем функцию через FunctionManager
-        boolean success = functionManager.saveFunction(creativeWorld, functionName, functionRoot);
-        
-        if (success) {
-            // Сохраняем мир
-            plugin.getServiceRegistry().getWorldManager().saveWorld(creativeWorld);
-            player.sendMessage("§a💾 Функция '" + functionName + "' сохранена");
-            return ExecutionResult.success("Function '" + functionName + "' saved");
-        } else {
+        // Регистрируем функцию через FunctionManager
+        // Получаем имя мира из CreativeWorld
+        String worldName = creativeWorld.getWorldName();
+        if (functionManager.functionExists(worldName, functionName)) {
             player.sendMessage("§cОшибка: функция '" + functionName + "' уже существует");
             return ExecutionResult.error("Function '" + functionName + "' already exists");
         }
+        
+        functionManager.registerFunction(worldName, functionName, functionRoot);
+        
+        // Сохраняем мир
+        plugin.getServiceRegistry().getWorldManager().saveWorld(creativeWorld);
+        player.sendMessage("§a💾 Функция '" + functionName + "' сохранена");
+        return ExecutionResult.success("Function '" + functionName + "' saved");
     }
 }
