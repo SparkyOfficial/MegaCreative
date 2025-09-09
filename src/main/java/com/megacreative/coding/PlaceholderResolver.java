@@ -80,7 +80,7 @@ public class PlaceholderResolver {
             // Get the variable value from the context
             DataValue value = context.getPlugin().getVariableManager().getVariable(variableName, 
                 com.megacreative.coding.variables.IVariableManager.VariableScope.PLAYER, 
-                context.getPlayer() != null ? context.getPlayer().getName() : null);
+                context.getPlayer() != null ? context.getPlayer().getUniqueId().toString() : null);
             
             // Replace with the variable value or empty string if not found
             String replacement = value != null ? value.asString() : "";
@@ -120,7 +120,7 @@ public class PlaceholderResolver {
         // Try variable placeholders
         DataValue value = context.getPlugin().getVariableManager().getVariable(placeholder, 
             com.megacreative.coding.variables.IVariableManager.VariableScope.PLAYER, 
-            context.getPlayer() != null ? context.getPlayer().getName() : null);
+            context.getPlayer() != null ? context.getPlayer().getUniqueId().toString() : null);
         if (value != null) {
             return value.asString();
         }

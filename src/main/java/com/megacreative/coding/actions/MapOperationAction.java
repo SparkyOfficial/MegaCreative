@@ -9,6 +9,7 @@ import com.megacreative.coding.values.ValueType;
 import com.megacreative.coding.values.types.MapValue;
 import com.megacreative.coding.values.types.ListValue;
 import com.megacreative.coding.values.types.TextValue;
+import java.util.Map;
 import com.megacreative.coding.variables.IVariableManager;
 import org.bukkit.entity.Player;
 
@@ -35,15 +36,15 @@ public class MapOperationAction implements BlockAction {
             var variableManager = context.getPlugin().getVariableManager();
             
             // Получаем или создаем карту
-            DataValue mapValue = variableManager.getVariable(mapName, IVariableManager.VariableScope.PLAYER, player.getName());
+            DataValue mapValue = variableManager.getVariable(mapName, IVariableManager.VariableScope.PLAYER, player.getUniqueId().toString());
             Map<String, DataValue> map;
             
             if (mapValue != null && mapValue.getType() == ValueType.DICTIONARY) {
                 // Convert to Map<String, DataValue>
-                map = ((com.megacreative.coding.values.types.MapValue) mapValue).getValue();
+                map = (Map<String, DataValue>) ((com.megacreative.coding.values.types.MapValue) mapValue).getValue();
             } else {
                 map = new HashMap<>();
-                variableManager.setVariable(mapName, new MapValue(map), IVariableManager.VariableScope.PLAYER, player.getName());
+                variableManager.setVariable(mapName, new MapValue(map), IVariableManager.VariableScope.PLAYER, player.getUniqueId().toString());
             }
             
             // Выполняем операцию в зависимости от типа
@@ -53,7 +54,7 @@ public class MapOperationAction implements BlockAction {
                     DataValue valueToPut = block.getParameter("value");
                     if (keyToPut != null && valueToPut != null) {
                         map.put(keyToPut, valueToPut);
-                        variableManager.setVariable(mapName, new MapValue(map), IVariableManager.VariableScope.PLAYER, player.getName());
+                        variableManager.setVariable(mapName, new MapValue(map), IVariableManager.VariableScope.PLAYER, player.getUniqueId().toString());
                     }
                     break;
                     
@@ -62,7 +63,7 @@ public class MapOperationAction implements BlockAction {
                     if (keyToGet != null && map.containsKey(keyToGet)) {
                         DataValue result = map.get(keyToGet);
                         String targetVariable = block.getParameter("target_variable").asString();
-                        variableManager.setVariable(targetVariable, result, IVariableManager.VariableScope.PLAYER, player.getName());
+                        variableManager.setVariable(targetVariable, result, IVariableManager.VariableScope.PLAYER, player.getUniqueId().toString());
                     }
                     break;
                     
@@ -70,7 +71,7 @@ public class MapOperationAction implements BlockAction {
                     String keyToRemove = block.getParameter("key").asString();
                     if (keyToRemove != null && map.containsKey(keyToRemove)) {
                         map.remove(keyToRemove);
-                        variableManager.setVariable(mapName, new MapValue(map), IVariableManager.VariableScope.PLAYER, player.getName());
+                        variableManager.setVariable(mapName, new MapValue(map), IVariableManager.VariableScope.PLAYER, player.getUniqueId().toString());
                     }
                     break;
                     
@@ -81,14 +82,14 @@ public class MapOperationAction implements BlockAction {
                         keys.add(new TextValue(k));
                     }
                     String keysVariable = block.getParameter("keys_variable").asString();
-                    variableManager.setVariable(keysVariable, new ListValue(keys), IVariableManager.VariableScope.PLAYER, player.getName());
+                    variableManager.setVariable(keysVariable, new ListValue(keys), IVariableManager.VariableScope.PLAYER, player.getUniqueId().toString());
                     break;
                     
                 case "values":
                     // Возвращаем список всех значений
                     List<DataValue> values = new ArrayList<>(map.values());
                     String valuesVariable = block.getParameter("values_variable").asString();
-                    variableManager.setVariable(valuesVariable, new ListValue(values), IVariableManager.VariableScope.PLAYER, player.getName());
+                    variableManager.setVariable(valuesVariable, new ListValue(values), IVariableManager.VariableScope.PLAYER, player.getUniqueId().toString());
                     break;
                     
                 default:

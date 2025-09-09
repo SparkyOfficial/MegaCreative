@@ -7,6 +7,7 @@ import com.megacreative.coding.executors.ExecutionResult;
 import com.megacreative.coding.values.DataValue;
 import com.megacreative.coding.values.ValueType;
 import com.megacreative.coding.values.types.ListValue;
+import java.util.List;
 import com.megacreative.coding.variables.IVariableManager;
 import org.bukkit.entity.Player;
 
@@ -31,15 +32,15 @@ public class ListOperationAction implements BlockAction {
             var variableManager = context.getPlugin().getVariableManager();
             
             // Получаем или создаем список
-            DataValue listValue = variableManager.getVariable(listName, IVariableManager.VariableScope.PLAYER, player.getName());
+            DataValue listValue = variableManager.getVariable(listName, IVariableManager.VariableScope.PLAYER, player.getUniqueId().toString());
             List<DataValue> list;
             
             if (listValue != null && listValue.getType() == ValueType.LIST) {
                 // Convert to List<DataValue>
-                list = ((com.megacreative.coding.values.types.ListValue) listValue).getValue();
+                list = (List<DataValue>) ((com.megacreative.coding.values.types.ListValue) listValue).getValue();
             } else {
                 list = new ArrayList<>();
-                variableManager.setVariable(listName, new ListValue(list), IVariableManager.VariableScope.PLAYER, player.getName());
+                variableManager.setVariable(listName, new ListValue(list), IVariableManager.VariableScope.PLAYER, player.getUniqueId().toString());
             }
             
             // Выполняем операцию в зависимости от типа
@@ -48,7 +49,7 @@ public class ListOperationAction implements BlockAction {
                     DataValue valueToAdd = block.getParameter("value");
                     if (valueToAdd != null) {
                         list.add(valueToAdd);
-                        variableManager.setVariable(listName, new ListValue(list), IVariableManager.VariableScope.PLAYER, player.getName());
+                        variableManager.setVariable(listName, new ListValue(list), IVariableManager.VariableScope.PLAYER, player.getUniqueId().toString());
                     }
                     break;
                     
@@ -56,7 +57,7 @@ public class ListOperationAction implements BlockAction {
                     int indexToRemove = block.getParameter("index").asNumber().intValue();
                     if (indexToRemove >= 0 && indexToRemove < list.size()) {
                         list.remove(indexToRemove);
-                        variableManager.setVariable(listName, new ListValue(list), IVariableManager.VariableScope.PLAYER, player.getName());
+                        variableManager.setVariable(listName, new ListValue(list), IVariableManager.VariableScope.PLAYER, player.getUniqueId().toString());
                     }
                     break;
                     
@@ -65,7 +66,7 @@ public class ListOperationAction implements BlockAction {
                     if (indexToGet >= 0 && indexToGet < list.size()) {
                         DataValue result = list.get(indexToGet);
                         String targetVariable = block.getParameter("target_variable").asString();
-                        variableManager.setVariable(targetVariable, result, IVariableManager.VariableScope.PLAYER, player.getName());
+                        variableManager.setVariable(targetVariable, result, IVariableManager.VariableScope.PLAYER, player.getUniqueId().toString());
                     }
                     break;
                     
@@ -74,13 +75,13 @@ public class ListOperationAction implements BlockAction {
                     DataValue valueToSet = block.getParameter("value");
                     if (indexToSet >= 0 && indexToSet < list.size() && valueToSet != null) {
                         list.set(indexToSet, valueToSet);
-                        variableManager.setVariable(listName, new ListValue(list), IVariableManager.VariableScope.PLAYER, player.getName());
+                        variableManager.setVariable(listName, new ListValue(list), IVariableManager.VariableScope.PLAYER, player.getUniqueId().toString());
                     }
                     break;
                     
                 case "size":
                     String sizeVariable = block.getParameter("size_variable").asString();
-                    variableManager.setVariable(sizeVariable, com.megacreative.coding.values.DataValue.fromObject(list.size()), IVariableManager.VariableScope.PLAYER, player.getName());
+                    variableManager.setVariable(sizeVariable, com.megacreative.coding.values.DataValue.fromObject(list.size()), IVariableManager.VariableScope.PLAYER, player.getUniqueId().toString());
                     break;
                     
                 default:

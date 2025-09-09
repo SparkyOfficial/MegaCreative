@@ -20,6 +20,7 @@ import com.megacreative.interfaces.*;
 import com.megacreative.listeners.DevWorldProtectionListener;
 import com.megacreative.managers.*;
 import com.megacreative.services.BlockConfigService;
+import com.megacreative.services.FunctionManager;
 import com.megacreative.MegaCreative;
 import com.megacreative.tools.CodeBlockClipboard;
 import org.bukkit.plugin.Plugin;
@@ -91,9 +92,6 @@ public class ServiceRegistry {
         this.actionFactory = new ActionFactory(dependencyContainer);
         this.conditionFactory = new ConditionFactory();
         
-        // Initialize FunctionManager
-        this.functionManager = new FunctionManager((MegaCreative) plugin);
-        
         // Initialize ScriptEngine with its dependencies
         this.scriptEngine = new DefaultScriptEngine(
             (MegaCreative) plugin, 
@@ -106,11 +104,14 @@ public class ServiceRegistry {
         registerService(BlockConfigService.class, blockConfigService);
         registerService(ActionFactory.class, actionFactory);
         registerService(ConditionFactory.class, conditionFactory);
-        registerService(FunctionManager.class, functionManager);
         initializeScriptEngine();
     }
     
     private void initializeScriptEngine() {
+        // Initialize FunctionManager
+        this.functionManager = new FunctionManager((MegaCreative) plugin);
+        registerService(FunctionManager.class, functionManager);
+        
         // Register core services
         registerService(VariableManager.class, variableManager);
         registerService(VisualDebugger.class, visualDebugger);
@@ -417,10 +418,10 @@ public class ServiceRegistry {
         return codeBlockClipboard;
     }
     
-    public FunctionManager getFunctionManager() {
+    public com.megacreative.services.FunctionManager getFunctionManager() {
         if (functionManager == null) {
-            this.functionManager = new FunctionManager((MegaCreative) plugin);
-            registerService(FunctionManager.class, functionManager);
+            this.functionManager = new com.megacreative.services.FunctionManager((MegaCreative) plugin);
+            registerService(com.megacreative.services.FunctionManager.class, functionManager);
         }
         return functionManager;
     }

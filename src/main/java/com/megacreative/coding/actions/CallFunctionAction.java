@@ -56,15 +56,13 @@ public class CallFunctionAction implements BlockAction {
                 .build();
             
             // Получаем движок скриптов
-            ScriptEngine scriptEngine = context.getPlugin().getCodingManager().getScriptEngine();
+            ScriptEngine scriptEngine = context.getPlugin().getServiceRegistry().getService(ScriptEngine.class);
             if (scriptEngine == null) {
                 return ExecutionResult.error("Движок скриптов не доступен.");
             }
             
             // Выполняем функцию асинхронно
-            CompletableFuture<ExecutionResult> future = scriptEngine.executeScript(
-                new com.megacreative.coding.CodeScript("function_" + functionName, true, functionBlock, 
-                com.megacreative.coding.CodeScript.ScriptType.FUNCTION), player, "function_call");
+            CompletableFuture<ExecutionResult> future = scriptEngine.executeBlockChain(functionBlock, player, "function_call");
             
             // Ждем завершения выполнения (в реальной реализации может потребоваться другой подход)
             ExecutionResult result = future.get();

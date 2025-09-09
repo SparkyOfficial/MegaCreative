@@ -81,7 +81,7 @@ public class ItemValue implements DataValue {
     }
     
     // Convenience methods for item operations
-    public Material getType() {
+    public Material getItemType() {
         return itemStack != null ? itemStack.getType() : Material.AIR;
     }
     

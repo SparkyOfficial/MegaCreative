@@ -39,16 +39,24 @@ public class DefaultScriptEngine implements ScriptEngine {
     public void initialize() {
         // Initialize the script engine with any required setup
         // This method can be used to register built-in actions and conditions
+        // Register all actions from BlockConfigService
+        for (BlockConfigService.BlockConfig config : blockConfigService.getAllBlockConfigs()) {
+            if ("ACTION".equals(config.getType())) {
+                actionFactory.registerAction(config.getId(), config.getDisplayName());
+            } else if ("CONDITION".equals(config.getType())) {
+                conditionFactory.registerCondition(config.getId(), config.getDisplayName());
+            }
+        }
     }
     
     public int getActionCount() {
         // Return the number of registered actions
-        return 0; // Placeholder
+        return actionFactory != null ? actionFactory.getActionCount() : 0;
     }
     
     public int getConditionCount() {
         // Return the number of registered conditions
-        return 0; // Placeholder
+        return conditionFactory != null ? conditionFactory.getConditionCount() : 0;
     }
     
     @Override
@@ -219,12 +227,18 @@ public class DefaultScriptEngine implements ScriptEngine {
     public void registerAction(BlockType type, BlockAction action) {
         // Implementation for registering actions
         // This would typically involve adding to an internal registry
+        if (actionFactory != null) {
+            //actionFactory.registerAction(type.name(), action);
+        }
     }
 
     @Override
     public void registerCondition(BlockType type, BlockCondition condition) {
         // Implementation for registering conditions
         // This would typically involve adding to an internal registry
+        if (conditionFactory != null) {
+            //conditionFactory.registerCondition(type.name(), condition);
+        }
     }
     
     @Override
