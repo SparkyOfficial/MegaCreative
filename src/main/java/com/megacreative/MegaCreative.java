@@ -35,6 +35,8 @@ public class MegaCreative extends JavaPlugin {
         try {
             // Initialize dependency injection
             this.dependencyContainer = new DependencyContainer();
+            // Register this plugin instance as a singleton in the dependency container
+            this.dependencyContainer.registerSingleton(MegaCreative.class, this);
             this.serviceRegistry = new ServiceRegistry(this, dependencyContainer);
             
             // Validate configuration

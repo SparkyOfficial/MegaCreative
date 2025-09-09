@@ -457,6 +457,10 @@ public class ServiceRegistry {
     
     private void initializeCodingServices() {
         // Initialize coding system services
+        if (blockPlacementHandler == null) {
+            this.blockPlacementHandler = new BlockPlacementHandler((MegaCreative) plugin);
+            registerService(BlockPlacementHandler.class, blockPlacementHandler);
+        }
     }
     
     private void initializeNewArchitectureServices() {
