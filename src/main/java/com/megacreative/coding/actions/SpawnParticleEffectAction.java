@@ -7,7 +7,7 @@ import com.megacreative.coding.executors.ExecutionResult;
 import org.bukkit.entity.Player;
 
 // Шаблон для нового ДЕЙСТВИЯ
-public class AsyncLoopAction implements BlockAction {
+public class SpawnParticleEffectAction implements BlockAction {
 
     @Override
     public ExecutionResult execute(CodeBlock block, ExecutionContext context) {
@@ -18,16 +18,18 @@ public class AsyncLoopAction implements BlockAction {
 
         try {
             // TODO: Получите параметры из блока, используя block.getParameter("key")
-            int iterations = block.getParameter("iterations").asNumber().intValue();
-            int delay = block.getParameter("delay").asNumber().intValue();
+            String particleType = block.getParameter("particle").asString();
+            int count = block.getParameter("count").asNumber().intValue();
+            double spread = block.getParameter("spread").asNumber().doubleValue();
+            double speed = block.getParameter("speed").asNumber().doubleValue();
             
-            // TODO: Реализуйте логику асинхронного цикла
-            // Bukkit.getScheduler().runTaskTimerAsynchronously(...);
+            // TODO: Реализуйте логику создания эффекта частиц
+            // player.spawnParticle(...);
             
-            return ExecutionResult.success("Асинхронный цикл запущен.");
+            return ExecutionResult.success("Эффект частиц создан.");
 
         } catch (Exception e) {
-            return ExecutionResult.error("Ошибка при запуске асинхронного цикла: " + e.getMessage());
+            return ExecutionResult.error("Ошибка при создании эффекта частиц: " + e.getMessage());
         }
     }
 }

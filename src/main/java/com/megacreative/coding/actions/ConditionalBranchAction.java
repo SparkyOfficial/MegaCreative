@@ -7,7 +7,7 @@ import com.megacreative.coding.executors.ExecutionResult;
 import org.bukkit.entity.Player;
 
 // Шаблон для нового ДЕЙСТВИЯ
-public class AsyncLoopAction implements BlockAction {
+public class ConditionalBranchAction implements BlockAction {
 
     @Override
     public ExecutionResult execute(CodeBlock block, ExecutionContext context) {
@@ -18,16 +18,15 @@ public class AsyncLoopAction implements BlockAction {
 
         try {
             // TODO: Получите параметры из блока, используя block.getParameter("key")
-            int iterations = block.getParameter("iterations").asNumber().intValue();
-            int delay = block.getParameter("delay").asNumber().intValue();
+            int conditionCount = block.getParameter("condition_count").asNumber().intValue();
             
-            // TODO: Реализуйте логику асинхронного цикла
-            // Bukkit.getScheduler().runTaskTimerAsynchronously(...);
+            // TODO: Реализуйте логику условного ветвления
+            // Проверка нескольких условий и выполнение соответствующих блоков
             
-            return ExecutionResult.success("Асинхронный цикл запущен.");
+            return ExecutionResult.success("Условное ветвление обработано.");
 
         } catch (Exception e) {
-            return ExecutionResult.error("Ошибка при запуске асинхронного цикла: " + e.getMessage());
+            return ExecutionResult.error("Ошибка при обработке условного ветвления: " + e.getMessage());
         }
     }
 }

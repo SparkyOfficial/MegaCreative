@@ -8,87 +8,54 @@ import java.util.function.Supplier;
 
 public class ActionFactory {
 
-    // Используем Supplier для "ленивого" создания. Это эффективнее.
     private final Map<String, Supplier<BlockAction>> actionMap = new HashMap<>();
     private final DependencyContainer dependencyContainer;
 
-    // Принимаем DependencyContainer для создания действий с зависимостями
     public ActionFactory(DependencyContainer dependencyContainer) {
         this.dependencyContainer = dependencyContainer;
-        
-        // РЕГИСТРИРУЕМ АБСОЛЮТНО ВСЕ ДЕЙСТВИЯ ИЗ coding_blocks.yml с type: "ACTION"
-        // For actions that don't require dependencies, we can use method references
-        register("teleport", TeleportAction::new);
-        register("giveItem", GiveItemAction::new);
-        register("playSound", PlaySoundAction::new);
-        register("effect", EffectAction::new);
-        register("command", CommandAction::new);
-        register("broadcast", BroadcastAction::new);
-        register("giveItems", GiveItemsAction::new);
-        register("spawnEntity", SpawnEntityAction::new);
-        register("removeItems", RemoveItemsAction::new);
-        register("setArmor", SetArmorAction::new);
-        register("setVar", SetVariableAction::new);
-        register("spawnMob", SpawnMobAction::new);
-        register("healPlayer", HealPlayerAction::new);
-        register("setGameMode", SetGameModeAction::new);
-        register("setTime", SetTimeAction::new);
-        register("setWeather", SetWeatherAction::new);
-        register("explosion", ExplosionAction::new);
-        register("setBlock", SetBlockAction::new);
-        register("getVar", GetVariableAction::new);
-        register("getPlayerName", GetPlayerNameAction::new);
-        register("setGlobalVar", SetGlobalVariableAction::new);
-        register("getGlobalVar", GetGlobalVariableAction::new);
-        register("setServerVar", SetServerVariableAction::new);
-        register("getServerVar", GetServerVariableAction::new);
-        register("wait", WaitAction::new);
-        register("randomNumber", RandomNumberAction::new);
-        register("playParticle", PlayParticleAction::new);
-        register("sendActionBar", SendActionBarAction::new);
-        register("callFunction", CallFunctionAction::new);
-        register("saveFunction", SaveFunctionAction::new);
-        register("repeat", RepeatAction::new);
-        register("repeatTrigger", RepeatTriggerAction::new);
-        register("else", ElseAction::new);
-        register("sendTitle", SendTitleAction::new);
-        register("executeAsyncCommand", ExecuteAsyncCommandAction::new);
-        register("asyncLoop", AsyncLoopAction::new);
-        // Game-specific actions
-        register("createScoreboard", CreateScoreboardAction::new);
-        register("setScore", SetScoreAction::new);
-        register("incrementScore", IncrementScoreAction::new);
-        register("createTeam", CreateTeamAction::new);
-        register("addPlayerToTeam", AddPlayerToTeamAction::new);
-        register("saveLocation", SaveLocationAction::new);
-        register("getLocation", GetLocationAction::new);
-        // Добавляем недостающие действия
-        // Для действий без зависимостей используем конструктор по умолчанию
-        register("sendMessage", SendMessageAction::new);
-        register("addVar", AddVarAction::new);
-        register("subVar", SubVarAction::new);
-        register("mulVar", MulVarAction::new);
-        register("divVar", DivVarAction::new);
-        // New target selector action
-        register("sendMessageToTarget", SendMessageToTargetAction::new);
-        // ... и т.д. для всех ACTION блоков...
+        registerAllActions();
     }
-
+    
     private void register(String actionId, Supplier<BlockAction> supplier) {
         actionMap.put(actionId, supplier);
     }
+    
+    private void registerAllActions() {
+        // --- ADVANCED ACTION BLOCKS ---
+        register("playCustomSound", PlayCustomSoundAction::new);
+        register("spawnParticleEffect", SpawnParticleEffectAction::new);
+        register("sendActionBar", SendActionBarAction::new);
+        register("executeAsyncCommand", ExecuteAsyncCommandAction::new);
 
+        // --- CONTROL FLOW BLOCKS (they can have actions) ---
+        register("asyncLoop", AsyncLoopAction::new);
+        register("conditionalBranch", ConditionalBranchAction::new); // Assuming it has an action part
+        register("timedExecution", TimedExecutionAction::new);
+
+        // --- FUNCTION BLOCKS ---
+        register("customFunction", CustomFunctionAction::new); // To define a function
+        register("callFunction", CallFunctionAction::new);
+
+        // --- DATA MANIPULATION BLOCKS ---
+        register("createList", CreateListAction::new);
+        register("listOperation", ListOperationAction::new);
+        register("createMap", CreateMapAction::new);
+        register("mapOperation", MapOperationAction::new);
+
+        // --- INTEGRATION BLOCKS ---
+        register("economyTransaction", EconomyTransactionAction::new);
+        register("discordWebhook", DiscordWebhookAction::new);
+        
+        // --- DEBUGGING BLOCKS ---
+        register("debugLog", DebugLogAction::new);
+        register("variableInspector", VariableInspectorAction::new);
+    }
+    
     public BlockAction createAction(String actionId) {
         Supplier<BlockAction> supplier = actionMap.get(actionId);
         if (supplier != null) {
-            try {
-                return supplier.get(); // Создаем новый экземпляр
-            } catch (Exception e) {
-                e.printStackTrace();
-                return null;
-            }
+            return supplier.get();
         }
-        // Возвращаем null, если действие не найдено
         return null;
     }
 }

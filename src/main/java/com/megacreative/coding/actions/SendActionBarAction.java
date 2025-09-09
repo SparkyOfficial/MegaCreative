@@ -4,44 +4,30 @@ import com.megacreative.coding.BlockAction;
 import com.megacreative.coding.CodeBlock;
 import com.megacreative.coding.ExecutionContext;
 import com.megacreative.coding.executors.ExecutionResult;
-import com.megacreative.coding.values.DataValue;
 import org.bukkit.entity.Player;
 
+// Шаблон для нового ДЕЙСТВИЯ
 public class SendActionBarAction implements BlockAction {
+
     @Override
     public ExecutionResult execute(CodeBlock block, ExecutionContext context) {
+        Player player = context.getPlayer();
+        if (player == null) {
+            return ExecutionResult.error("Игрок не найден.");
+        }
+
         try {
-            DataValue messageValue = block.getParameter("message");
-            DataValue durationValue = block.getParameter("duration");
+            // TODO: Получите параметры из блока, используя block.getParameter("key")
+            String message = block.getParameter("message").asString();
+            int duration = block.getParameter("duration").asNumber().intValue();
             
-            if (messageValue == null) {
-                return ExecutionResult.error("No message specified");
-            }
+            // TODO: Реализуйте логику отправки сообщения в ActionBar
+            // player.sendActionBar(...);
             
-            String message = messageValue.asString();
-            if (message == null || message.trim().isEmpty()) {
-                return ExecutionResult.error("Message cannot be empty");
-            }
-            
-            Player player = context.getPlayer();
-            if (player == null) {
-                return ExecutionResult.error("No player in execution context");
-            }
-            
-            // Отправляем сообщение в action bar
-            player.sendActionBar(message);
-            
-            // Если указана продолжительность, можно добавить логику таймера
-            // Но в Minecraft action bar автоматически исчезает, поэтому просто логируем
-            if (durationValue != null) {
-                int duration = durationValue.asNumber().intValue();
-                // В реальной реализации можно использовать BukkitRunnable для управления временем отображения
-            }
-            
-            return ExecutionResult.success("Action bar message sent successfully");
-            
+            return ExecutionResult.success("Сообщение в ActionBar отправлено.");
+
         } catch (Exception e) {
-            return ExecutionResult.error("Failed to send action bar message: " + e.getMessage());
+            return ExecutionResult.error("Ошибка при отправке сообщения в ActionBar: " + e.getMessage());
         }
     }
 }

@@ -7,7 +7,7 @@ import com.megacreative.coding.executors.ExecutionResult;
 import org.bukkit.entity.Player;
 
 // Шаблон для нового ДЕЙСТВИЯ
-public class EconomyTransactionAction implements BlockAction {
+public class ListOperationAction implements BlockAction {
 
     @Override
     public ExecutionResult execute(CodeBlock block, ExecutionContext context) {
@@ -18,18 +18,19 @@ public class EconomyTransactionAction implements BlockAction {
 
         try {
             // TODO: Получите параметры из блока, используя block.getParameter("key")
+            String listName = block.getParameter("list_name").asString();
             String operation = block.getParameter("operation").asString();
-            double amount = block.getParameter("amount").asNumber().doubleValue();
-            // TODO: Получите цель для транзакции
-            // String target = block.getParameter("target").asString();
+            // TODO: Получите значение для операции
+            // Object value = block.getParameter("value").asObject();
+            // int index = block.getParameter("index").asNumber().intValue();
             
-            // TODO: Реализуйте логику экономической транзакции
-            // Взаимодействие с экономическим API (Vault)
+            // TODO: Реализуйте логику операций со списком
+            // add/remove/get/set/size
             
-            return ExecutionResult.success("Экономическая транзакция выполнена.");
+            return ExecutionResult.success("Операция со списком выполнена.");
 
         } catch (Exception e) {
-            return ExecutionResult.error("Ошибка при выполнении экономической транзакции: " + e.getMessage());
+            return ExecutionResult.error("Ошибка при выполнении операции со списком: " + e.getMessage());
         }
     }
 }

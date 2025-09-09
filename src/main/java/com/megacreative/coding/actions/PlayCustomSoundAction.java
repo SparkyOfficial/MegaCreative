@@ -7,7 +7,7 @@ import com.megacreative.coding.executors.ExecutionResult;
 import org.bukkit.entity.Player;
 
 // Шаблон для нового ДЕЙСТВИЯ
-public class AsyncLoopAction implements BlockAction {
+public class PlayCustomSoundAction implements BlockAction {
 
     @Override
     public ExecutionResult execute(CodeBlock block, ExecutionContext context) {
@@ -18,16 +18,18 @@ public class AsyncLoopAction implements BlockAction {
 
         try {
             // TODO: Получите параметры из блока, используя block.getParameter("key")
-            int iterations = block.getParameter("iterations").asNumber().intValue();
-            int delay = block.getParameter("delay").asNumber().intValue();
+            String soundName = block.getParameter("sound").asString();
+            float volume = block.getParameter("volume").asNumber().floatValue();
+            float pitch = block.getParameter("pitch").asNumber().floatValue();
+            // Для location нужна более сложная логика парсинга
             
-            // TODO: Реализуйте логику асинхронного цикла
-            // Bukkit.getScheduler().runTaskTimerAsynchronously(...);
+            // TODO: Реализуйте логику проигрывания звука
+            player.playSound(player.getLocation(), soundName, volume, pitch);
             
-            return ExecutionResult.success("Асинхронный цикл запущен.");
+            return ExecutionResult.success("Звук проигран.");
 
         } catch (Exception e) {
-            return ExecutionResult.error("Ошибка при запуске асинхронного цикла: " + e.getMessage());
+            return ExecutionResult.error("Ошибка при проигрывании звука: " + e.getMessage());
         }
     }
 }

@@ -7,7 +7,7 @@ import com.megacreative.coding.executors.ExecutionResult;
 import org.bukkit.entity.Player;
 
 // Шаблон для нового ДЕЙСТВИЯ
-public class AsyncLoopAction implements BlockAction {
+public class CustomFunctionAction implements BlockAction {
 
     @Override
     public ExecutionResult execute(CodeBlock block, ExecutionContext context) {
@@ -18,16 +18,16 @@ public class AsyncLoopAction implements BlockAction {
 
         try {
             // TODO: Получите параметры из блока, используя block.getParameter("key")
-            int iterations = block.getParameter("iterations").asNumber().intValue();
-            int delay = block.getParameter("delay").asNumber().intValue();
+            String functionName = block.getParameter("function_name").asString();
+            int paramCount = block.getParameter("param_count").asNumber().intValue();
             
-            // TODO: Реализуйте логику асинхронного цикла
-            // Bukkit.getScheduler().runTaskTimerAsynchronously(...);
+            // TODO: Реализуйте логику определения пользовательской функции
+            // Сохранение функции для последующего вызова
             
-            return ExecutionResult.success("Асинхронный цикл запущен.");
+            return ExecutionResult.success("Пользовательская функция определена.");
 
         } catch (Exception e) {
-            return ExecutionResult.error("Ошибка при запуске асинхронного цикла: " + e.getMessage());
+            return ExecutionResult.error("Ошибка при определении пользовательской функции: " + e.getMessage());
         }
     }
 }
