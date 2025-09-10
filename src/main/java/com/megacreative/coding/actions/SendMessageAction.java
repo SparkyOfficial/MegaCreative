@@ -3,82 +3,45 @@ package com.megacreative.coding.actions;
 import com.megacreative.coding.BlockAction;
 import com.megacreative.coding.CodeBlock;
 import com.megacreative.coding.ExecutionContext;
-import com.megacreative.coding.PlaceholderResolver;
 import com.megacreative.coding.ParameterResolver;
 import com.megacreative.coding.executors.ExecutionResult;
 import com.megacreative.coding.values.DataValue;
-import com.megacreative.coding.values.types.TextValue;
 import org.bukkit.entity.Player;
 
 /**
- * Действие для отправки сообщения игроку.
- * Поддерживает плейсхолдеры в сообщениях и использует типобезопасную систему DataValue.
- * 
- * Примеры использования:
- * - sendMessage("Привет, %player%!") - отправляет "Привет, ИмяИгрока!"
- * - sendMessage("У вас ${money} монет") - отправляет "У вас 100 монет"
- * - sendMessage("Координаты: %x%, %y%, %z%") - отправляет координаты игрока
+ * Action for sending a message to a player.
+ * This action retrieves a message from the block parameters and sends it to the player.
  */
 public class SendMessageAction implements BlockAction {
-    
-    // Конструктор по умолчанию (без параметров)
-    public SendMessageAction() {}
-    
+
     @Override
     public ExecutionResult execute(CodeBlock block, ExecutionContext context) {
+        Player player = context.getPlayer();
+        if (player == null) {
+            return ExecutionResult.error("No player found in execution context");
+        }
+
         try {
-            Player player = context.getPlayer();
-            if (player == null) {
-                return ExecutionResult.error("No player available to send message to");
+            // Get the message parameter from the block
+            DataValue messageValue = block.getParameter("message");
+            if (messageValue == null) {
+                return ExecutionResult.error("Message parameter is missing");
             }
+
+            // Resolve any placeholders in the message
+            ParameterResolver resolver = new ParameterResolver(context);
+            DataValue resolvedMessage = resolver.resolve(context, messageValue);
             
-            String message = getMessage(block, context);
-            if (message == null || message.isEmpty()) {
-                return ExecutionResult.error("No message specified");
+            // Send the message to the player
+            String message = resolvedMessage.asString();
+            if (message != null && !message.isEmpty()) {
+                player.sendMessage(message);
+                return ExecutionResult.success("Message sent successfully");
+            } else {
+                return ExecutionResult.error("Message is empty or null");
             }
-            
-            player.sendMessage(message);
-            return ExecutionResult.success("Message sent: " + message);
         } catch (Exception e) {
-            return ExecutionResult.error("Error sending message: " + e.getMessage());
+            return ExecutionResult.error("Failed to send message: " + e.getMessage());
         }
-    }
-    
-    private String getMessage(CodeBlock block, ExecutionContext context) {
-        // Создаем ParameterResolver прямо здесь, передавая ему текущий контекст
-        ParameterResolver parameterResolver = new ParameterResolver(context);
-        
-        // Check parameter first (priority 1)
-        DataValue messageValue = block.getParameter("message");
-        if (messageValue != null && !messageValue.isEmpty()) {
-            DataValue resolved = parameterResolver.resolve(context, messageValue);
-            return resolved.asString();
-        }
-        
-        // Check virtual inventory (priority 2)
-        // Get slot resolver from BlockConfigService
-        com.megacreative.services.BlockConfigService configService = 
-            context.getPlugin().getServiceRegistry().getBlockConfigService();
-        java.util.function.Function<String, Integer> slotResolver = 
-            configService != null ? configService.getSlotResolver("sendMessage") : null;
-            
-        var messageItem = slotResolver != null ? 
-            block.getItemFromSlot("message_slot", slotResolver) : null;
-        if (messageItem != null && messageItem.hasItemMeta() && messageItem.getItemMeta().hasDisplayName()) {
-            DataValue itemNameValue = new TextValue(messageItem.getItemMeta().getDisplayName());
-            DataValue resolved = parameterResolver.resolve(context, itemNameValue);
-            return resolved.asString();
-        }
-        
-        // Fallback to config item (priority 3)
-        messageItem = block.getConfigItem(0);
-        if (messageItem != null && messageItem.hasItemMeta() && messageItem.getItemMeta().hasDisplayName()) {
-            DataValue itemNameValue = new TextValue(messageItem.getItemMeta().getDisplayName());
-            DataValue resolved = parameterResolver.resolve(context, itemNameValue);
-            return resolved.asString();
-        }
-        
-        // Message not found
-        return null;
     }
 }

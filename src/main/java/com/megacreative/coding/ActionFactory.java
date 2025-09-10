@@ -22,6 +22,11 @@ public class ActionFactory {
     }
     
     private void registerAllActions() {
+        // --- BASIC PLAYER ACTIONS ---
+        register("sendMessage", SendMessageAction::new);
+        register("teleport", TeleportAction::new);
+        register("giveItem", GiveItemAction::new);
+        
         // --- ADVANCED ACTION BLOCKS ---
         register("playCustomSound", PlayCustomSoundAction::new);
         register("spawnParticleEffect", SpawnParticleEffectAction::new);

@@ -19,6 +19,10 @@ public class ConditionFactory {
     }
     
     private void registerAllConditions() {
+        // --- BASIC PLAYER CONDITIONS ---
+        register("isOp", IsOpCondition::new);
+        register("hasPermission", HasPermissionCondition::new);
+        
         // --- ADVANCED CONDITION BLOCKS ---
         register("checkPlayerStats", CheckPlayerStatsCondition::new);
         register("checkWorldWeather", CheckWorldWeatherCondition::new);

@@ -4,40 +4,49 @@ import com.megacreative.coding.BlockAction;
 import com.megacreative.coding.CodeBlock;
 import com.megacreative.coding.ExecutionContext;
 import com.megacreative.coding.ParameterResolver;
+import com.megacreative.coding.executors.ExecutionResult;
 import com.megacreative.coding.values.DataValue;
-import com.megacreative.coding.variables.VariableManager;
 import org.bukkit.Location;
 import org.bukkit.entity.Player;
 
+/**
+ * Action for teleporting a player to a location.
+ * This action retrieves location coordinates from the block parameters and teleports the player.
+ */
 public class TeleportAction implements BlockAction {
+
     @Override
-    public void execute(ExecutionContext context) {
+    public ExecutionResult execute(CodeBlock block, ExecutionContext context) {
         Player player = context.getPlayer();
-        CodeBlock block = context.getCurrentBlock();
-
-        if (player == null || block == null) return;
-
-        ParameterResolver resolver = new ParameterResolver(context);
-
-        // Получаем и разрешаем координаты
-        DataValue rawCoords = block.getParameter("coords");
-        String coordsStr = resolver.resolve(context, rawCoords).asString();
+        if (player == null) {
+            return ExecutionResult.error("No player found in execution context");
+        }
 
         try {
-            String[] parts = coordsStr.split(" ");
-            if (parts.length == 3) {
-                double x = Double.parseDouble(parts[0]);
-                double y = Double.parseDouble(parts[1]);
-                double z = Double.parseDouble(parts[2]);
-                
-                Location targetLocation = new Location(player.getWorld(), x, y, z);
-                player.teleport(targetLocation);
-                player.sendMessage("§a✓ Телепортация на координаты: " + coordsStr);
-            } else {
-                player.sendMessage("§cОшибка: координаты должны быть в формате 'x y z'");
+            // Get the location parameter from the block
+            DataValue locationValue = block.getParameter("location");
+            if (locationValue == null) {
+                return ExecutionResult.error("Location parameter is missing");
             }
-        } catch (NumberFormatException e) {
-            player.sendMessage("§cОшибка: координаты должны быть числами!");
+
+            // Resolve any placeholders in the location
+            ParameterResolver resolver = new ParameterResolver(context);
+            DataValue resolvedLocation = resolver.resolve(context, locationValue);
+            
+            // Check if the resolved value is a LocationValue
+            if (resolvedLocation instanceof com.megacreative.coding.values.LocationValue) {
+                Location location = (Location) resolvedLocation.getValue();
+                if (location != null) {
+                    player.teleport(location);
+                    return ExecutionResult.success("Player teleported successfully");
+                } else {
+                    return ExecutionResult.error("Location is null");
+                }
+            } else {
+                return ExecutionResult.error("Location parameter is not a valid LocationValue");
+            }
+        } catch (Exception e) {
+            return ExecutionResult.error("Failed to teleport player: " + e.getMessage());
         }
     }
-} 
+}

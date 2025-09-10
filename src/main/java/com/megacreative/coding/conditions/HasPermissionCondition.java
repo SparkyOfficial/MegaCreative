@@ -7,7 +7,12 @@ import com.megacreative.coding.ParameterResolver;
 import com.megacreative.coding.values.DataValue;
 import org.bukkit.entity.Player;
 
+/**
+ * Condition for checking if a player has a specific permission.
+ * This condition retrieves a permission string from the block parameters and checks if the player has it.
+ */
 public class HasPermissionCondition implements BlockCondition {
+
     @Override
     public boolean evaluate(CodeBlock block, ExecutionContext context) {
         Player player = context.getPlayer();
@@ -15,23 +20,27 @@ public class HasPermissionCondition implements BlockCondition {
             return false;
         }
 
-        ParameterResolver resolver = new ParameterResolver(context);
+        try {
+            // Get the permission parameter from the block
+            DataValue permissionValue = block.getParameter("permission");
+            if (permissionValue == null) {
+                return false;
+            }
 
-        // Получаем и разрешаем параметры
-        DataValue rawPermission = block.getParameter("permission");
-
-        if (rawPermission == null) {
-            context.getPlugin().getLogger().warning("Permission not specified in HasPermissionCondition");
+            // Resolve any placeholders in the permission
+            ParameterResolver resolver = new ParameterResolver(context);
+            DataValue resolvedPermission = resolver.resolve(context, permissionValue);
+            
+            // Check if the player has the permission
+            String permission = resolvedPermission.asString();
+            if (permission != null && !permission.isEmpty()) {
+                return player.hasPermission(permission);
+            }
+            
+            return false;
+        } catch (Exception e) {
+            // If there's an error, return false
             return false;
         }
-
-        DataValue permissionValue = resolver.resolve(context, rawPermission);
-        String permission = permissionValue.asString();
-
-        if (permission == null || permission.isEmpty()) {
-            return false;
-        }
-
-        return player.hasPermission(permission);
     }
 }
