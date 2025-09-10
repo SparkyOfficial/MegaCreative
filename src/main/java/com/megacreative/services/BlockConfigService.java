@@ -119,6 +119,14 @@ public class BlockConfigService {
     }
     
     /**
+     * Gets the action configurations section
+     * @return The action configurations section
+     */
+    public ConfigurationSection getActionConfigurations() {
+        return actionConfigurations;
+    }
+    
+    /**
      * Gets a slot resolver function for a specific action
      * @param actionName The name of the action
      * @return A function that maps slot names to slot indices, or null if not found

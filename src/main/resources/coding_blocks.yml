@@ -376,6 +376,89 @@ action_configurations:
         description: "§7Положите предмет, символизирующий существо (седло = лошадь, лодка = лодка)"
         placeholder_item: "SADDLE"
         slot_name: "entity_slot"
+
+  # Конфигурация для условия isNearBlock
+  isNearBlock:
+    slots:
+      0:
+        name: "§aТип блока"
+        description: "§7Положите предмет блока для поиска"
+        placeholder_item: "STONE"
+        slot_name: "block_slot"
+      1:
+        name: "§bРасстояние поиска"
+        description: "§7Положите бумагу с расстоянием (по умолчанию 5)"
+        placeholder_item: "PAPER"
+        slot_name: "distance_slot"
+  
+  # Конфигурация для условия mobNear
+  mobNear:
+    slots:
+      0:
+        name: "§aТип существа"
+        description: "§7Положите предмет, символизирующий существо (по умолчанию любое)"
+        placeholder_item: "ZOMBIE_HEAD"
+        slot_name: "mob_slot"
+      1:
+        name: "§bРасстояние поиска"
+        description: "§7Положите бумагу с расстоянием (по умолчанию 10)"
+        placeholder_item: "PAPER"
+        slot_name: "distance_slot"
+  
+  # Конфигурация для условия playerGameMode
+  playerGameMode:
+    slots:
+      0:
+        name: "§aРежим игры"
+        description: "§7Положите предмет, символизирующий режим игры (SURVIVAL, CREATIVE, ADVENTURE, SPECTATOR)"
+        placeholder_item: "GRASS_BLOCK"
+        slot_name: "mode_slot"
+  
+  # Конфигурация для условия playerHealth
+  playerHealth:
+    slots:
+      0:
+        name: "§aЗдоровье"
+        description: "§7Положите бумагу с количеством здоровья"
+        placeholder_item: "PAPER"
+        slot_name: "health_slot"
+      1:
+        name: "§bОператор сравнения"
+        description: "§7Положите бумагу с оператором (greater_or_equal, less, equal и т.д.)"
+        placeholder_item: "PAPER"
+        slot_name: "operator_slot"
+  
+  # Конфигурация для условия hasItem
+  hasItem:
+    slots:
+      0:
+        name: "§aПредмет"
+        description: "§7Положите предмет для проверки"
+        placeholder_item: "STONE"
+        slot_name: "item_slot"
+      1:
+        name: "§bКоличество"
+        description: "§7Положите бумагу с количеством (по умолчанию 1)"
+        placeholder_item: "PAPER"
+        slot_name: "amount_slot"
+  
+  # Конфигурация для условия hasPermission
+  hasPermission:
+    slots:
+      0:
+        name: "§aПраво доступа"
+        description: "§7Положите бумагу с названием права доступа"
+        placeholder_item: "PAPER"
+        slot_name: "permission_slot"
+  
+  # Конфигурация для условия isInWorld
+  isInWorld:
+    slots:
+      0:
+        name: "§aНазвание мира"
+        description: "§7Положите бумагу с названием мира"
+        placeholder_item: "PAPER"
+        slot_name: "world_slot"
   
   # Конфигурация для условия isNearEntity
   isNearEntity:
@@ -469,6 +552,217 @@ action_configurations:
         description: "§7Положите бумагу с названием 'радиус:X'"
         placeholder_item: "PAPER"
         slot_name: "radius_slot"
+
+  # Конфигурация для действия addVar
+  addVar:
+    slots:
+      0:
+        name: "§aИмя переменной"
+        description: "§7Положите бумагу с названием переменной"
+        placeholder_item: "PAPER"
+        slot_name: "name"
+      1:
+        name: "§bЗначение для добавления"
+        description: "§7Положите предмет или бумагу с значением"
+        placeholder_item: "PAPER"
+        slot_name: "value"
+  
+  # Конфигурация для действия subVar
+  subVar:
+    slots:
+      0:
+        name: "§aИмя переменной"
+        description: "§7Положите бумагу с названием переменной"
+        placeholder_item: "PAPER"
+        slot_name: "name"
+      1:
+        name: "§bЗначение для вычитания"
+        description: "§7Положите предмет или бумагу с значением"
+        placeholder_item: "PAPER"
+        slot_name: "value"
+  
+  # Конфигурация для действия mulVar
+  mulVar:
+    slots:
+      0:
+        name: "§aИмя переменной"
+        description: "§7Положите бумагу с названием переменной"
+        placeholder_item: "PAPER"
+        slot_name: "name"
+      1:
+        name: "§bЗначение для умножения"
+        description: "§7Положите предмет или бумагу с значением"
+        placeholder_item: "PAPER"
+        slot_name: "value"
+  
+  # Конфигурация для действия divVar
+  divVar:
+    slots:
+      0:
+        name: "§aИмя переменной"
+        description: "§7Положите бумагу с названием переменной"
+        placeholder_item: "PAPER"
+        slot_name: "name"
+      1:
+        name: "§bЗначение для деления"
+        description: "§7Положите предмет или бумагу с значением"
+        placeholder_item: "PAPER"
+        slot_name: "value"
+
+  # Конфигурация для действия setGlobalVar
+  setGlobalVar:
+    slots:
+      0:
+        name: "§aИмя глобальной переменной"
+        description: "§7Положите бумагу с названием глобальной переменной"
+        placeholder_item: "PAPER"
+        slot_name: "name"
+      1:
+        name: "§bЗначение переменной"
+        description: "§7Положите предмет или бумагу со значением"
+        placeholder_item: "PAPER"
+        slot_name: "value"
+  
+  # Конфигурация для действия getGlobalVar
+  getGlobalVar:
+    slots:
+      0:
+        name: "§aИмя глобальной переменной"
+        description: "§7Положите бумагу с названием глобальной переменной"
+        placeholder_item: "PAPER"
+        slot_name: "name"
+      1:
+        name: "§bЦелевая переменная"
+        description: "§7Положите бумагу с названием целевой переменной"
+        placeholder_item: "PAPER"
+        slot_name: "target"
+  
+  # Конфигурация для действия setServerVar
+  setServerVar:
+    slots:
+      0:
+        name: "§aИмя серверной переменной"
+        description: "§7Положите бумагу с названием серверной переменной"
+        placeholder_item: "PAPER"
+        slot_name: "name"
+      1:
+        name: "§bЗначение переменной"
+        description: "§7Положите предмет или бумагу со значением"
+        placeholder_item: "PAPER"
+        slot_name: "value"
+  
+  # Конфигурация для действия getServerVar
+  getServerVar:
+    slots:
+      0:
+        name: "§aИмя серверной переменной"
+        description: "§7Положите бумагу с названием серверной переменной"
+        placeholder_item: "PAPER"
+        slot_name: "name"
+      1:
+        name: "§bЦелевая переменная"
+        description: "§7Положите бумагу с названием целевой переменной"
+        placeholder_item: "PAPER"
+        slot_name: "target"
+
+  # Конфигурация для условия ifVarEquals
+  ifVarEquals:
+    slots:
+      0:
+        name: "§aИмя переменной"
+        description: "§7Положите бумагу с названием переменной"
+        placeholder_item: "PAPER"
+        slot_name: "name"
+      1:
+        name: "§bЗначение для сравнения"
+        description: "§7Положите предмет или бумагу со значением"
+        placeholder_item: "PAPER"
+        slot_name: "value"
+  
+  # Конфигурация для условия ifVarGreater
+  ifVarGreater:
+    slots:
+      0:
+        name: "§aИмя переменной"
+        description: "§7Положите бумагу с названием переменной"
+        placeholder_item: "PAPER"
+        slot_name: "name"
+      1:
+        name: "§bЗначение для сравнения"
+        description: "§7Положите предмет или бумагу со значением"
+        placeholder_item: "PAPER"
+        slot_name: "value"
+  
+  # Конфигурация для условия ifVarLess
+  ifVarLess:
+    slots:
+      0:
+        name: "§aИмя переменной"
+        description: "§7Положите бумагу с названием переменной"
+        placeholder_item: "PAPER"
+        slot_name: "name"
+      1:
+        name: "§bЗначение для сравнения"
+        description: "§7Положите предмет или бумагу со значением"
+        placeholder_item: "PAPER"
+        slot_name: "value"
+
+  # Конфигурация для условия compareVariable
+  compareVariable:
+    slots:
+      0:
+        name: "§aПервая переменная"
+        description: "§7Положите бумагу с названием первой переменной"
+        placeholder_item: "PAPER"
+        slot_name: "var1"
+      1:
+        name: "§bОператор сравнения"
+        description: "§7Положите бумагу с оператором (==, !=, <, >, <=, >=)"
+        placeholder_item: "PAPER"
+        slot_name: "operator"
+      2:
+        name: "§cВторая переменная"
+        description: "§7Положите бумагу с названием второй переменной"
+        placeholder_item: "PAPER"
+        slot_name: "var2"
+
+  # Конфигурация для условия worldTime
+  worldTime:
+    slots:
+      0:
+        name: "§aВремя мира"
+        description: "§7Положите бумагу с названием времени мира (0-24000)"
+        placeholder_item: "PAPER"
+        slot_name: "time"
+      1:
+        name: "§bОператор сравнения"
+        description: "§7Положите бумагу с оператором (equal, greater, less, greater_or_equal, less_or_equal)"
+        placeholder_item: "PAPER"
+        slot_name: "operator"
+
+  # Конфигурация для условия isBlockType
+  isBlockType:
+    slots:
+      0:
+        name: "§aТип блока"
+        description: "§7Положите предмет блока для проверки"
+        placeholder_item: "STONE"
+        slot_name: "block"
+      1:
+        name: "§bОтносительная координата X"
+        description: "§7Положите бумагу с относительной координатой X (по умолчанию 0)"
+        placeholder_item: "PAPER"
+        slot_name: "relativeX"
+      2:
+        name: "§cОтносительная координата Y"
+        description: "§7Положите бумагу с относительной координатой Y (по умолчанию 0)"
+        placeholder_item: "PAPER"
+        slot_name: "relativeY"
+      3:
+        name: "§dОтносительная координата Z"
+        description: "§7Положите бумагу с относительной координатой Z (по умолчанию 0)"
+        placeholder_item: "PAPER"
+        slot_name: "relativeZ"
 
 # Настройки по умолчанию
 defaults:

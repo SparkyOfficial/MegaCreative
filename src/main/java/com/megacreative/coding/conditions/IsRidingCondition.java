@@ -3,13 +3,16 @@ package com.megacreative.coding.conditions;
 import com.megacreative.coding.BlockCondition;
 import com.megacreative.coding.CodeBlock;
 import com.megacreative.coding.ExecutionContext;
-import com.megacreative.coding.ParameterResolver;
-import com.megacreative.coding.values.DataValue;
+import com.megacreative.services.BlockConfigService;
 import org.bukkit.entity.EntityType;
 import org.bukkit.entity.Player;
+import org.bukkit.inventory.ItemStack;
+import org.bukkit.inventory.meta.ItemMeta;
+
+import java.util.function.Function;
 
 /**
- * Condition for checking if a player is riding a specific entity.
+ * Condition for checking if a player is riding a specific entity from container configuration.
  * This condition returns true if the player is riding the specified entity type.
  */
 public class IsRidingCondition implements BlockCondition {
@@ -22,21 +25,21 @@ public class IsRidingCondition implements BlockCondition {
         }
 
         try {
-            // Get the entity type parameter from the block (optional)
-            DataValue entityValue = block.getParameter("entity");
+            // Get parameters from the container configuration
+            IsRidingParams params = getEntityParamsFromContainer(block, context);
             
             // If a specific entity type is provided, check for that type
-            if (entityValue != null) {
-                ParameterResolver resolver = new ParameterResolver(context);
-                DataValue resolvedEntity = resolver.resolve(context, entityValue);
+            if (params.entityStr != null && !params.entityStr.isEmpty()) {
+                // Resolve any placeholders in the entity name
+                String resolvedEntityStr = params.entityStr;
                 
-                String entityName = resolvedEntity.asString();
-                if (entityName == null || entityName.isEmpty()) {
+                // Parse entity type parameter
+                if (resolvedEntityStr == null || resolvedEntityStr.isEmpty()) {
                     return false;
                 }
                 
                 try {
-                    EntityType entityType = EntityType.valueOf(entityName.toUpperCase());
+                    EntityType entityType = EntityType.valueOf(resolvedEntityStr.toUpperCase());
                     return player.isInsideVehicle() && player.getVehicle().getType() == entityType;
                 } catch (IllegalArgumentException e) {
                     return false;
@@ -49,5 +52,51 @@ public class IsRidingCondition implements BlockCondition {
             // If there's an error, return false
             return false;
         }
+    }
+    
+    /**
+     * Gets entity parameters from the container configuration
+     */
+    private IsRidingParams getEntityParamsFromContainer(CodeBlock block, ExecutionContext context) {
+        IsRidingParams params = new IsRidingParams();
+        
+        try {
+            // Get the BlockConfigService to resolve slot names
+            BlockConfigService blockConfigService = context.getPlugin().getServiceRegistry().getBlockConfigService();
+            
+            // Get the slot resolver for this condition
+            Function<String, Integer> slotResolver = blockConfigService.getSlotResolver(block.getCondition());
+            
+            if (slotResolver != null) {
+                // Get entity from the entity_slot
+                Integer entitySlot = slotResolver.apply("entity_slot");
+                if (entitySlot != null) {
+                    ItemStack entityItem = block.getConfigItem(entitySlot);
+                    if (entityItem != null) {
+                        // Extract entity type from item
+                        params.entityStr = getEntityTypeFromItem(entityItem);
+                    }
+                }
+            }
+        } catch (Exception e) {
+            context.getPlugin().getLogger().warning("Error getting entity parameters from container in IsRidingCondition: " + e.getMessage());
+        }
+        
+        return params;
+    }
+    
+    /**
+     * Extracts entity type from an item
+     */
+    private String getEntityTypeFromItem(ItemStack item) {
+        // For entity type, we'll use the item type name
+        return item.getType().name();
+    }
+    
+    /**
+     * Helper class to hold entity parameters
+     */
+    private static class IsRidingParams {
+        String entityStr = "";
     }
 }

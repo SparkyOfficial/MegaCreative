@@ -5,12 +5,15 @@ import com.megacreative.coding.CodeBlock;
 import com.megacreative.coding.ExecutionContext;
 import com.megacreative.coding.ScriptEngine;
 import com.megacreative.coding.executors.ExecutionResult;
-import com.megacreative.coding.values.DataValue;
+import com.megacreative.services.BlockConfigService;
 import org.bukkit.scheduler.BukkitRunnable;
 import org.bukkit.scheduler.BukkitTask;
+import org.bukkit.inventory.ItemStack;
+import org.bukkit.inventory.meta.ItemMeta;
 
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.function.Function;
 
 public class AsyncLoopAction implements BlockAction {
     
@@ -19,12 +22,8 @@ public class AsyncLoopAction implements BlockAction {
     @Override
     public ExecutionResult execute(CodeBlock block, ExecutionContext context) {
         try {
-            // Get parameters
-            DataValue iterationsValue = block.getParameter("iterations", DataValue.of(-1)); // -1 for infinite
-            DataValue delayValue = block.getParameter("delay", DataValue.of(20)); // Default 20 ticks (1 second)
-            
-            int iterations = iterationsValue.asNumber().intValue();
-            int delay = delayValue.asNumber().intValue();
+            // Get parameters from the container configuration
+            LoopParams params = getLoopParamsFromContainer(block, context);
             
             if (block.getChildren().isEmpty()) {
                 return ExecutionResult.error("Loop has no blocks inside to execute.");
@@ -41,7 +40,7 @@ public class AsyncLoopAction implements BlockAction {
                 @Override
                 public void run() {
                     // Check if we should stop
-                    if ((iterations != -1 && count >= iterations) || context.isCancelled()) {
+                    if ((params.iterations != -1 && count >= params.iterations) || context.isCancelled()) {
                         activeLoops.remove(loopId);
                         this.cancel();
                         return;
@@ -63,7 +62,7 @@ public class AsyncLoopAction implements BlockAction {
                     
                     count++;
                 }
-            }.runTaskTimerAsynchronously(context.getPlugin(), 0L, delay);
+            }.runTaskTimerAsynchronously(context.getPlugin(), 0L, params.delay);
             
             // Store the task so it can be cancelled later if needed
             activeLoops.put(loopId, task);
@@ -75,6 +74,101 @@ public class AsyncLoopAction implements BlockAction {
         }
     }
     
+    /**
+     * Gets loop parameters from the container configuration
+     */
+    private LoopParams getLoopParamsFromContainer(CodeBlock block, ExecutionContext context) {
+        LoopParams params = new LoopParams();
+        
+        try {
+            // Get the BlockConfigService to resolve slot names
+            BlockConfigService blockConfigService = context.getPlugin().getServiceRegistry().getBlockConfigService();
+            
+            // Get the slot resolver for this action
+            Function<String, Integer> slotResolver = blockConfigService.getSlotResolver(block.getAction());
+            
+            if (slotResolver != null) {
+                // Get iterations from the iterations slot
+                Integer iterationsSlot = slotResolver.apply("iterations");
+                if (iterationsSlot != null) {
+                    ItemStack iterationsItem = block.getConfigItem(iterationsSlot);
+                    if (iterationsItem != null && iterationsItem.hasItemMeta()) {
+                        // Extract iterations from item
+                        params.iterations = getIterationsFromItem(iterationsItem, -1);
+                    }
+                }
+                
+                // Get delay from the delay slot
+                Integer delaySlot = slotResolver.apply("delay");
+                if (delaySlot != null) {
+                    ItemStack delayItem = block.getConfigItem(delaySlot);
+                    if (delayItem != null && delayItem.hasItemMeta()) {
+                        // Extract delay from item
+                        params.delay = getDelayFromItem(delayItem, 20);
+                    }
+                }
+            }
+        } catch (Exception e) {
+            context.getPlugin().getLogger().warning("Error getting loop parameters from container in AsyncLoopAction: " + e.getMessage());
+        }
+        
+        return params;
+    }
+    
+    /**
+     * Extracts iterations from an item
+     */
+    private int getIterationsFromItem(ItemStack item, int defaultValue) {
+        try {
+            ItemMeta meta = item.getItemMeta();
+            if (meta != null) {
+                String displayName = meta.getDisplayName();
+                if (displayName != null && !displayName.isEmpty()) {
+                    // Try to parse iterations from display name (e.g., "iterations:10")
+                    String cleanName = displayName.replaceAll("[§0-9]", "").trim();
+                    if (cleanName.contains(":")) {
+                        String[] parts = cleanName.split(":");
+                        if (parts.length > 1) {
+                            return Integer.parseInt(parts[1].trim());
+                        }
+                    }
+                }
+            }
+            
+            // Fallback to item amount
+            return item.getAmount();
+        } catch (Exception e) {
+            return defaultValue;
+        }
+    }
+    
+    /**
+     * Extracts delay from an item
+     */
+    private int getDelayFromItem(ItemStack item, int defaultValue) {
+        try {
+            ItemMeta meta = item.getItemMeta();
+            if (meta != null) {
+                String displayName = meta.getDisplayName();
+                if (displayName != null && !displayName.isEmpty()) {
+                    // Try to parse delay from display name (e.g., "delay:20")
+                    String cleanName = displayName.replaceAll("[§0-9]", "").trim();
+                    if (cleanName.contains(":")) {
+                        String[] parts = cleanName.split(":");
+                        if (parts.length > 1) {
+                            return Math.max(1, Integer.parseInt(parts[1].trim()));
+                        }
+                    }
+                }
+            }
+            
+            // Fallback to item amount
+            return Math.max(1, item.getAmount());
+        } catch (Exception e) {
+            return Math.max(1, defaultValue);
+        }
+    }
+    
     public static void cancelAllLoopsForPlayer(String playerId) {
         activeLoops.entrySet().removeIf(entry -> {
             if (entry.getKey().startsWith(playerId)) {
@@ -83,5 +177,13 @@ public class AsyncLoopAction implements BlockAction {
             }
             return false;
         });
+    }
+    
+    /**
+     * Helper class to hold loop parameters
+     */
+    private static class LoopParams {
+        int iterations = -1; // -1 for infinite
+        int delay = 20; // Default 20 ticks (1 second)
     }
 }

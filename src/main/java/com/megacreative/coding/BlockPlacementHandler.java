@@ -4,6 +4,7 @@ import com.megacreative.MegaCreative;
 import com.megacreative.core.ServiceRegistry;
 import com.megacreative.interfaces.ITrustedPlayerManager;
 import com.megacreative.services.BlockConfigService;
+import com.megacreative.gui.coding.ActionParameterGUI;
 import org.bukkit.Material;
 import java.util.logging.Logger;
 import org.bukkit.block.Block;
@@ -83,8 +84,10 @@ public class BlockPlacementHandler implements Listener {
         // Устанавливаем одну табличку с правильным отображаемым именем
         setSignOnBlock(block.getLocation(), config.getDisplayName());
         
-        // Создаем сундук над блоком для параметров
-        spawnContainerAboveBlock(block.getLocation(), config.getId());
+        // Создаем контейнер над блоком для параметров (только для ACTION, CONDITION и других типов, кроме EVENT, FUNCTION, CONTROL)
+        if (!"EVENT".equals(config.getType()) && !"FUNCTION".equals(config.getType()) && !"CONTROL".equals(config.getType())) {
+            spawnContainerAboveBlock(block.getLocation(), config.getId());
+        }
         
         player.sendMessage("§a✓ Блок кода размещен: " + config.getDisplayName());
         player.sendMessage("§7Кликните правой кнопкой для настройки");
@@ -175,16 +178,36 @@ public class BlockPlacementHandler implements Listener {
             
             // Открываем GUI конфигурации блока
             plugin.getServiceRegistry().getBlockConfigManager().openConfigGUI(player, location);
+            return;
         }
         
         // Проверяем, кликнул ли игрок по контейнеру над блоком кода
         Location blockBelow = location.clone().add(0, -1, 0);
-        if (blockCodeBlocks.containsKey(blockBelow)) {
-            // Открываем GUI для настройки параметров через контейнер
+        CodeBlock codeBlock = blockCodeBlocks.get(blockBelow);
+        if (codeBlock != null) {
             event.setCancelled(true);
-            player.sendMessage("§eОткрытие настройки параметров через контейнер...");
-            // Здесь будет логика открытия GUI для настройки параметров
+            
+            // Проверяем тип блока - открываем специализированный GUI для параметров
+            BlockConfigService.BlockConfig config = blockConfigService.getBlockConfig(codeBlock.getAction());
+            if (config != null) {
+                // Открываем уникальный drag-and-drop GUI для конкретного действия
+                openParameterConfigGUI(player, blockBelow, codeBlock, config);
+            } else {
+                player.sendMessage("§cОшибка: Не удалось найти конфигурацию для действия " + codeBlock.getAction());
+            }
         }
+    }
+
+    /**
+     * Открывает уникальный drag-and-drop GUI для настройки параметров блока
+     */
+    private void openParameterConfigGUI(Player player, Location blockLocation, CodeBlock codeBlock, BlockConfigService.BlockConfig config) {
+        // Создаем и открываем уникальный GUI для конкретного действия
+        ActionParameterGUI gui = new ActionParameterGUI(
+            plugin, player, blockLocation, codeBlock.getAction());
+        gui.open();
+        
+        player.sendMessage("§eОткрытие настройки параметров для действия: §f" + config.getDisplayName());
     }
 
     /**
