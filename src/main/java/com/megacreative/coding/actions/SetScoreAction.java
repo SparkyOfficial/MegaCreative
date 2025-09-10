@@ -9,66 +9,60 @@ import com.megacreative.coding.values.DataValue;
 import com.megacreative.managers.GameScoreboardManager;
 import org.bukkit.entity.Player;
 
+/**
+ * Action for setting a score on a scoreboard.
+ * This action sets a score for a specific key on the player's scoreboard.
+ */
 public class SetScoreAction implements BlockAction {
-    
+
     @Override
     public ExecutionResult execute(CodeBlock block, ExecutionContext context) {
         Player player = context.getPlayer();
-
-        if (player == null || block == null) {
-            return ExecutionResult.error("Player or block is null");
-        }
-
-        ParameterResolver resolver = new ParameterResolver(context);
-
-        // Получаем и разрешаем параметры
-        DataValue rawKey = block.getParameter("key");
-        DataValue rawValue = block.getParameter("value");
-        
-        if (rawKey == null) {
-            return ExecutionResult.error("Parameter 'key' is missing");
-        }
-        
-        if (rawValue == null) {
-            return ExecutionResult.error("Parameter 'value' is missing");
-        }
-        
-        DataValue keyValue = resolver.resolve(context, rawKey);
-        DataValue valueValue = resolver.resolve(context, rawValue);
-        
-        String key = keyValue.asString();
-        String valueStr = valueValue.asString();
-
-        if (key == null) {
-            return ExecutionResult.error("Key parameter is null");
-        }
-        
-        if (valueStr == null) {
-            return ExecutionResult.error("Value parameter is null");
+        if (player == null) {
+            return ExecutionResult.error("No player found in execution context");
         }
 
         try {
-            int value = Integer.parseInt(valueStr);
-            
-            // Получаем GameScoreboardManager из ServiceRegistry
-            GameScoreboardManager scoreboardManager = context.getPlugin().getServiceRegistry().getService(GameScoreboardManager.class);
-            if (scoreboardManager == null) {
-                return ExecutionResult.error("Failed to get ScoreboardManager");
+            // Get the key parameter from the block
+            DataValue keyValue = block.getParameter("key");
+            if (keyValue == null) {
+                return ExecutionResult.error("Key parameter is missing");
             }
+
+            // Get the value parameter from the block
+            DataValue valueValue = block.getParameter("value");
+            if (valueValue == null) {
+                return ExecutionResult.error("Value parameter is missing");
+            }
+
+            // Resolve any placeholders in the parameters
+            ParameterResolver resolver = new ParameterResolver(context);
+            DataValue resolvedKey = resolver.resolve(context, keyValue);
+            DataValue resolvedValue = resolver.resolve(context, valueValue);
             
-            // Устанавливаем значение в скорборде игрока
-            boolean success = scoreboardManager.setPlayerScore(player, key, value);
-            
-            if (success) {
-                player.sendMessage("§a✅ Значение '" + key + "' установлено на " + value);
-                return ExecutionResult.success("Score '" + key + "' set to " + value);
+            // Parse parameters
+            String key = resolvedKey.asString();
+            if (key == null || key.isEmpty()) {
+                return ExecutionResult.error("Key is empty or null");
+            }
+
+            int value;
+            try {
+                value = resolvedValue.asNumber().intValue();
+            } catch (NumberFormatException e) {
+                return ExecutionResult.error("Invalid value: " + resolvedValue.asString());
+            }
+
+            // Set the score
+            GameScoreboardManager scoreboardManager = context.getPlugin().getServiceRegistry().getGameScoreboardManager();
+            if (scoreboardManager != null) {
+                scoreboardManager.setPlayerScore(player, key, value);
+                return ExecutionResult.success("Set score for '" + key + "' to " + value);
             } else {
-                return ExecutionResult.error("Failed to set score");
+                return ExecutionResult.error("Scoreboard manager is not available");
             }
-        } catch (NumberFormatException e) {
-            return ExecutionResult.error("Invalid value parameter: " + valueStr);
         } catch (Exception e) {
-            return ExecutionResult.error("Error setting score: " + e.getMessage());
+            return ExecutionResult.error("Failed to set score: " + e.getMessage());
         }
     }
 }

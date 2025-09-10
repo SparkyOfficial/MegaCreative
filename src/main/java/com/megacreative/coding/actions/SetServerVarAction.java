@@ -8,21 +8,15 @@ import com.megacreative.coding.executors.ExecutionResult;
 import com.megacreative.coding.values.DataValue;
 import com.megacreative.coding.variables.VariableManager;
 import com.megacreative.coding.variables.IVariableManager.VariableScope;
-import org.bukkit.entity.Player;
 
 /**
- * Action for setting a variable.
- * This action sets a variable to a specified value.
+ * Action for setting a server variable.
+ * This action sets a server variable to a specified value.
  */
-public class SetVarAction implements BlockAction {
+public class SetServerVarAction implements BlockAction {
 
     @Override
     public ExecutionResult execute(CodeBlock block, ExecutionContext context) {
-        Player player = context.getPlayer();
-        if (player == null) {
-            return ExecutionResult.error("No player found in execution context");
-        }
-
         try {
             // Get the variable name parameter from the block
             DataValue nameValue = block.getParameter("name");
@@ -50,14 +44,14 @@ public class SetVarAction implements BlockAction {
             // Set the variable using the VariableManager
             VariableManager variableManager = context.getPlugin().getVariableManager();
             if (variableManager != null) {
-                // Use player scope for now, but this could be configurable
-                variableManager.setVariable(varName, resolvedValue, VariableScope.PLAYER, player.getUniqueId().toString());
-                return ExecutionResult.success("Variable '" + varName + "' set successfully");
+                // Use server scope
+                variableManager.setVariable(varName, resolvedValue, VariableScope.SERVER, "server");
+                return ExecutionResult.success("Server variable '" + varName + "' set successfully");
             } else {
                 return ExecutionResult.error("Variable manager is not available");
             }
         } catch (Exception e) {
-            return ExecutionResult.error("Failed to set variable: " + e.getMessage());
+            return ExecutionResult.error("Failed to set server variable: " + e.getMessage());
         }
     }
 }

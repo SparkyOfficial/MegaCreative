@@ -4,41 +4,62 @@ import com.megacreative.coding.BlockAction;
 import com.megacreative.coding.CodeBlock;
 import com.megacreative.coding.ExecutionContext;
 import com.megacreative.coding.ParameterResolver;
+import com.megacreative.coding.executors.ExecutionResult;
 import com.megacreative.coding.values.DataValue;
-import com.megacreative.coding.variables.VariableManager;
-import org.bukkit.Bukkit;
-import org.bukkit.World;
 import org.bukkit.entity.Player;
+import org.bukkit.World;
 
+/**
+ * Action for setting the time in a world.
+ * This action changes the world time based on the parameter.
+ */
 public class SetTimeAction implements BlockAction {
+
     @Override
-    public void execute(ExecutionContext context) {
+public ExecutionResult execute(CodeBlock block, ExecutionContext context) {
         Player player = context.getPlayer();
-        CodeBlock block = context.getCurrentBlock();
-
-        if (player == null || block == null) return;
-
-        if (context == null) return;
-        
-        ParameterResolver resolver = new ParameterResolver(context);
-
-        // Получаем и разрешаем параметры
-        DataValue rawTime = block.getParameter("time");
-        if (rawTime == null) return;
-
-        String timeStr = resolver.resolve(context, rawTime).asString();
-
-        if (timeStr == null) return;
+        if (player == null) {
+            return ExecutionResult.error("No player found in execution context");
+        }
 
         try {
-            long time = Long.parseLong(timeStr);
+            // Get the time parameter from the block
+            DataValue timeValue = block.getParameter("time");
+            if (timeValue == null) {
+                return ExecutionResult.error("Time parameter is missing");
+            }
+
+            // Resolve any placeholders in the time
+            ParameterResolver resolver = new ParameterResolver(context);
+            DataValue resolvedTime = resolver.resolve(context, timeValue);
+            
+            // Parse time parameter
+            long time;
+            try {
+                time = resolvedTime.asNumber().longValue();
+            } catch (NumberFormatException e) {
+                return ExecutionResult.error("Invalid time value: " + resolvedTime.asString());
+            }
+
+            // Get optional relative parameter (default to false)
+            boolean relative = false;
+            DataValue relativeValue = block.getParameter("relative");
+            if (relativeValue != null) {
+                DataValue resolvedRelative = resolver.resolve(context, relativeValue);
+                relative = resolvedRelative.asBoolean();
+            }
+
+            // Set the time in the world
             World world = player.getWorld();
-            world.setTime(time);
+            if (relative) {
+                world.setTime(world.getTime() + time);
+            } else {
+                world.setTime(time);
+            }
             
-            player.sendMessage("§a⏰ Время установлено на: " + time);
-            
-        } catch (NumberFormatException e) {
-            player.sendMessage("§cОшибка: время должно быть числом");
+            return ExecutionResult.success("World time set to " + time);
+        } catch (Exception e) {
+            return ExecutionResult.error("Failed to set world time: " + e.getMessage());
         }
     }
-} 
+}

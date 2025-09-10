@@ -4,52 +4,68 @@ import com.megacreative.coding.BlockAction;
 import com.megacreative.coding.CodeBlock;
 import com.megacreative.coding.ExecutionContext;
 import com.megacreative.coding.ParameterResolver;
+import com.megacreative.coding.executors.ExecutionResult;
 import com.megacreative.coding.values.DataValue;
-import com.megacreative.coding.variables.VariableManager;
-import org.bukkit.WeatherType;
 import org.bukkit.entity.Player;
+import org.bukkit.World;
 
+/**
+ * Action for setting the weather in a world.
+ * This action changes the world weather based on the parameter.
+ */
 public class SetWeatherAction implements BlockAction {
+
     @Override
-    public void execute(ExecutionContext context) {
+    public ExecutionResult execute(CodeBlock block, ExecutionContext context) {
         Player player = context.getPlayer();
-        CodeBlock block = context.getCurrentBlock();
-
-        if (player == null || block == null) return;
-
-        if (context == null) return;
-        
-        ParameterResolver resolver = new ParameterResolver(context);
-
-        // Получаем и разрешаем параметры
-        DataValue rawWeather = block.getParameter("weather");
-        if (rawWeather == null) return;
-
-        String weatherStr = resolver.resolve(context, rawWeather).asString();
-
-        if (weatherStr == null) return;
+        if (player == null) {
+            return ExecutionResult.error("No player found in execution context");
+        }
 
         try {
-            WeatherType weatherType;
-            switch (weatherStr.toLowerCase()) {
+            // Get the weather parameter from the block
+            DataValue weatherValue = block.getParameter("weather");
+            if (weatherValue == null) {
+                return ExecutionResult.error("Weather parameter is missing");
+            }
+
+            // Resolve any placeholders in the weather type
+            ParameterResolver resolver = new ParameterResolver(context);
+            DataValue resolvedWeather = resolver.resolve(context, weatherValue);
+            
+            // Parse weather parameter
+            String weatherType = resolvedWeather.asString();
+            if (weatherType == null || weatherType.isEmpty()) {
+                return ExecutionResult.error("Weather type is empty or null");
+            }
+
+            // Set the weather in the world
+            World world = player.getWorld();
+            
+            switch (weatherType.toLowerCase()) {
                 case "clear":
                 case "sunny":
-                    weatherType = WeatherType.CLEAR;
-                    break;
+                    world.setStorm(false);
+                    world.setThundering(false);
+                    return ExecutionResult.success("Weather set to clear");
+                    
                 case "rain":
-                case "rainy":
-                    weatherType = WeatherType.DOWNFALL;
-                    break;
+                case "storm":
+                    world.setStorm(true);
+                    world.setThundering(false);
+                    return ExecutionResult.success("Weather set to rain");
+                    
+                case "thunder":
+                case "thunderstorm":
+                    world.setStorm(true);
+                    world.setThundering(true);
+                    return ExecutionResult.success("Weather set to thunderstorm");
+                    
                 default:
-                    player.sendMessage("§cНеизвестный тип погоды: " + weatherStr);
-                    return;
+                    return ExecutionResult.error("Invalid weather type: " + weatherType);
             }
-            
-            player.setPlayerWeather(weatherType);
-            player.sendMessage("§a🌤 Погода изменена на: " + weatherStr);
-            
         } catch (Exception e) {
-            player.sendMessage("§cОшибка установки погоды: " + e.getMessage());
+            return ExecutionResult.error("Failed to set weather: " + e.getMessage());
         }
     }
-} 
+}

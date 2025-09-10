@@ -9,62 +9,57 @@ import com.megacreative.coding.values.DataValue;
 import com.megacreative.managers.GameScoreboardManager;
 import org.bukkit.entity.Player;
 
+/**
+ * Action for incrementing a score on a scoreboard.
+ * This action increments a score for a specific key on the player's scoreboard.
+ */
 public class IncrementScoreAction implements BlockAction {
-    
+
     @Override
     public ExecutionResult execute(CodeBlock block, ExecutionContext context) {
         Player player = context.getPlayer();
-
-        if (player == null || block == null) {
-            return ExecutionResult.error("Player or block is null");
-        }
-
-        ParameterResolver resolver = new ParameterResolver(context);
-
-        // Получаем и разрешаем параметры
-        DataValue rawKey = block.getParameter("key");
-        DataValue rawIncrement = block.getParameter("increment");
-        
-        if (rawKey == null) {
-            return ExecutionResult.error("Parameter 'key' is missing");
-        }
-        
-        if (rawIncrement == null) {
-            return ExecutionResult.error("Parameter 'increment' is missing");
-        }
-        
-        DataValue keyValue = resolver.resolve(context, rawKey);
-        DataValue incrementValue = resolver.resolve(context, rawIncrement);
-        
-        String key = keyValue.asString();
-        String incrementStr = incrementValue.asString();
-
-        if (key == null) {
-            return ExecutionResult.error("Key parameter is null");
-        }
-        
-        if (incrementStr == null) {
-            return ExecutionResult.error("Increment parameter is null");
+        if (player == null) {
+            return ExecutionResult.error("No player found in execution context");
         }
 
         try {
-            int increment = Integer.parseInt(incrementStr);
-            
-            // Получаем GameScoreboardManager из ServiceRegistry
-            GameScoreboardManager scoreboardManager = context.getPlugin().getServiceRegistry().getService(GameScoreboardManager.class);
-            if (scoreboardManager == null) {
-                return ExecutionResult.error("Failed to get ScoreboardManager");
+            // Get the key parameter from the block
+            DataValue keyValue = block.getParameter("key");
+            if (keyValue == null) {
+                return ExecutionResult.error("Key parameter is missing");
             }
+
+            // Get the increment parameter from the block (default to 1)
+            int increment = 1;
+            DataValue incrementValue = block.getParameter("increment");
+            if (incrementValue != null) {
+                try {
+                    increment = incrementValue.asNumber().intValue();
+                } catch (NumberFormatException e) {
+                    // Use default increment if parsing fails
+                }
+            }
+
+            // Resolve any placeholders in the key
+            ParameterResolver resolver = new ParameterResolver(context);
+            DataValue resolvedKey = resolver.resolve(context, keyValue);
             
-            // Увеличиваем значение в скорборде игрока
-            int newValue = scoreboardManager.incrementPlayerScore(player, key, increment);
-            
-            player.sendMessage("§a✅ Значение '" + key + "' увеличено на " + increment + " (новое значение: " + newValue + ")");
-            return ExecutionResult.success("Score '" + key + "' incremented by " + increment);
-        } catch (NumberFormatException e) {
-            return ExecutionResult.error("Invalid increment parameter: " + incrementStr);
+            // Parse key parameter
+            String key = resolvedKey.asString();
+            if (key == null || key.isEmpty()) {
+                return ExecutionResult.error("Key is empty or null");
+            }
+
+            // Increment the score
+            GameScoreboardManager scoreboardManager = context.getPlugin().getServiceRegistry().getGameScoreboardManager();
+            if (scoreboardManager != null) {
+                scoreboardManager.incrementPlayerScore(player, key, increment);
+                return ExecutionResult.success("Incremented score for '" + key + "' by " + increment);
+            } else {
+                return ExecutionResult.error("Scoreboard manager is not available");
+            }
         } catch (Exception e) {
-            return ExecutionResult.error("Error incrementing score: " + e.getMessage());
+            return ExecutionResult.error("Failed to increment score: " + e.getMessage());
         }
     }
 }

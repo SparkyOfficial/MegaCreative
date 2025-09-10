@@ -4,52 +4,67 @@ import com.megacreative.coding.BlockAction;
 import com.megacreative.coding.CodeBlock;
 import com.megacreative.coding.ExecutionContext;
 import com.megacreative.coding.ParameterResolver;
+import com.megacreative.coding.executors.ExecutionResult;
 import com.megacreative.coding.values.DataValue;
-import com.megacreative.coding.variables.VariableManager;
-import org.bukkit.potion.PotionEffect;
-import org.bukkit.potion.PotionEffectType;
+import org.bukkit.Effect;
 import org.bukkit.entity.Player;
+import org.bukkit.Location;
 
+/**
+ * Action for playing a visual effect at a location.
+ * This action retrieves effect parameters from the block and plays the effect.
+ */
 public class EffectAction implements BlockAction {
+
     @Override
-    public void execute(ExecutionContext context) {
+    public ExecutionResult execute(CodeBlock block, ExecutionContext context) {
         Player player = context.getPlayer();
-        CodeBlock block = context.getCurrentBlock();
-
-        if (player == null || block == null) return;
-
-        ParameterResolver resolver = new ParameterResolver(context);
-
-        // Получаем и разрешаем параметры
-        DataValue rawEffect = block.getParameter("effect");
-        DataValue rawDuration = block.getParameter("duration");
-        DataValue rawAmplifier = block.getParameter("amplifier");
-
-        if (rawEffect == null) return;
-
-        String effectStr = resolver.resolve(context, rawEffect).asString();
-        String durationStr = rawDuration != null ? resolver.resolve(context, rawDuration).asString() : "100";
-        String amplifierStr = rawAmplifier != null ? resolver.resolve(context, rawAmplifier).asString() : "1";
-
-        if (effectStr == null) return;
+        if (player == null) {
+            return ExecutionResult.error("No player found in execution context");
+        }
 
         try {
-            PotionEffectType effectType = PotionEffectType.getByName(effectStr.toUpperCase());
-            if (effectType == null) {
-                player.sendMessage("§cНеизвестный эффект: " + effectStr);
-                return;
+            // Get the effect parameter from the block
+            DataValue effectValue = block.getParameter("effect");
+            if (effectValue == null) {
+                return ExecutionResult.error("Effect parameter is missing");
             }
+
+            // Resolve any placeholders in the effect name
+            ParameterResolver resolver = new ParameterResolver(context);
+            DataValue resolvedEffect = resolver.resolve(context, effectValue);
             
-            int duration = durationStr != null ? Integer.parseInt(durationStr) : 200;
-            int amplifier = amplifierStr != null ? Integer.parseInt(amplifierStr) : 0;
+            // Parse effect parameters
+            String effectName = resolvedEffect.asString();
+            if (effectName == null || effectName.isEmpty()) {
+                return ExecutionResult.error("Effect name is empty or null");
+            }
+
+            // Get the location where the effect should be played
+            Location location = player.getLocation();
             
-            PotionEffect effect = new PotionEffect(effectType, duration, amplifier);
-            player.addPotionEffect(effect);
-            
-            player.sendMessage("§a⚡ Эффект '" + effectStr + "' применен на " + (duration / 20) + " секунд!");
-            
-        } catch (NumberFormatException e) {
-            player.sendMessage("§cОшибка в параметрах duration/amplifier");
+            // Get optional data parameter
+            int data = 0;
+            DataValue dataValue = block.getParameter("data");
+            if (dataValue != null) {
+                DataValue resolvedData = resolver.resolve(context, dataValue);
+                try {
+                    data = resolvedData.asNumber().intValue();
+                } catch (NumberFormatException e) {
+                    // Use default data if parsing fails
+                }
+            }
+
+            // Play the effect
+            try {
+                Effect effect = Effect.valueOf(effectName.toUpperCase());
+                player.getWorld().playEffect(location, effect, data);
+                return ExecutionResult.success("Effect played successfully");
+            } catch (IllegalArgumentException e) {
+                return ExecutionResult.error("Invalid effect name: " + effectName);
+            }
+        } catch (Exception e) {
+            return ExecutionResult.error("Failed to play effect: " + e.getMessage());
         }
     }
-} 
+}

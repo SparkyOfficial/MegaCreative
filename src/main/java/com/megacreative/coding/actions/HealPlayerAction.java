@@ -4,37 +4,47 @@ import com.megacreative.coding.BlockAction;
 import com.megacreative.coding.CodeBlock;
 import com.megacreative.coding.ExecutionContext;
 import com.megacreative.coding.ParameterResolver;
+import com.megacreative.coding.executors.ExecutionResult;
 import com.megacreative.coding.values.DataValue;
-import com.megacreative.coding.variables.VariableManager;
 import org.bukkit.entity.Player;
 
+/**
+ * Action for healing a player.
+ * This action heals the player by a specified amount or to full health.
+ */
 public class HealPlayerAction implements BlockAction {
+
     @Override
-    public void execute(ExecutionContext context) {
+    public ExecutionResult execute(CodeBlock block, ExecutionContext context) {
         Player player = context.getPlayer();
-        CodeBlock block = context.getCurrentBlock();
-
-        if (player == null || block == null) return;
-
-        ParameterResolver resolver = new ParameterResolver(context);
-
-        // Получаем и разрешаем параметры
-        DataValue rawAmount = block.getParameter("amount");
-        
-        if (rawAmount == null) return;
-        
-        String amountStr = resolver.resolve(context, rawAmount).asString();
+        if (player == null) {
+            return ExecutionResult.error("No player found in execution context");
+        }
 
         try {
-            double amount = amountStr != null ? Double.parseDouble(amountStr) : player.getMaxHealth();
+            // Get the heal amount parameter from the block (optional)
+            DataValue amountValue = block.getParameter("amount");
             
-            double newHealth = Math.min(player.getHealth() + amount, player.getMaxHealth());
-            player.setHealth(newHealth);
-            
-            player.sendMessage("§a❤ Исцеление на " + amount + " единиц здоровья!");
-            
-        } catch (NumberFormatException e) {
-            player.sendMessage("§cОшибка: количество здоровья должно быть числом");
+            if (amountValue != null) {
+                // Heal by specific amount
+                ParameterResolver resolver = new ParameterResolver(context);
+                DataValue resolvedAmount = resolver.resolve(context, amountValue);
+                
+                try {
+                    double amount = resolvedAmount.asNumber().doubleValue();
+                    double newHealth = Math.min(player.getHealth() + amount, player.getMaxHealth());
+                    player.setHealth(newHealth);
+                    return ExecutionResult.success("Player healed by " + amount + " points");
+                } catch (NumberFormatException e) {
+                    return ExecutionResult.error("Invalid heal amount: " + resolvedAmount.asString());
+                }
+            } else {
+                // Heal to full health
+                player.setHealth(player.getMaxHealth());
+                return ExecutionResult.success("Player healed to full health");
+            }
+        } catch (Exception e) {
+            return ExecutionResult.error("Failed to heal player: " + e.getMessage());
         }
     }
-} 
+}

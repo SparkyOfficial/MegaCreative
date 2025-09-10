@@ -9,7 +9,12 @@ import org.bukkit.Material;
 import org.bukkit.entity.Player;
 import org.bukkit.inventory.ItemStack;
 
+/**
+ * Condition for checking if a player has a specific item.
+ * This condition returns true if the player has the specified item in their inventory.
+ */
 public class HasItemCondition implements BlockCondition {
+
     @Override
     public boolean evaluate(CodeBlock block, ExecutionContext context) {
         Player player = context.getPlayer();
@@ -17,35 +22,53 @@ public class HasItemCondition implements BlockCondition {
             return false;
         }
 
-        ParameterResolver resolver = new ParameterResolver(context);
-
-        // Получаем и разрешаем параметры
-        DataValue rawMaterial = block.getParameter("material");
-        DataValue rawAmount = block.getParameter("amount");
-
-        if (rawMaterial == null) {
-            context.getPlugin().getLogger().warning("Material not specified in HasItemCondition");
-            return false;
-        }
-
-        DataValue materialValue = resolver.resolve(context, rawMaterial);
-        String materialName = materialValue.asString();
-
-        int amount = 1; // Default amount
-        if (rawAmount != null) {
-            DataValue amountValue = resolver.resolve(context, rawAmount);
-            try {
-                amount = Integer.parseInt(amountValue.asString());
-            } catch (NumberFormatException e) {
-                // Use default amount
-            }
-        }
-
         try {
-            Material material = Material.valueOf(materialName.toUpperCase());
-            return player.getInventory().contains(material, amount);
-        } catch (IllegalArgumentException e) {
-            context.getPlugin().getLogger().warning("Invalid material in HasItemCondition: " + materialName);
+            // Get the item parameter from the block
+            DataValue itemValue = block.getParameter("item");
+            if (itemValue == null) {
+                return false;
+            }
+
+            // Resolve any placeholders in the item name
+            ParameterResolver resolver = new ParameterResolver(context);
+            DataValue resolvedItem = resolver.resolve(context, itemValue);
+            
+            // Parse item parameter
+            String itemName = resolvedItem.asString();
+            if (itemName == null || itemName.isEmpty()) {
+                return false;
+            }
+
+            // Get optional amount parameter (default to 1)
+            int amount = 1;
+            DataValue amountValue = block.getParameter("amount");
+            if (amountValue != null) {
+                DataValue resolvedAmount = resolver.resolve(context, amountValue);
+                try {
+                    amount = Math.max(1, resolvedAmount.asNumber().intValue());
+                } catch (NumberFormatException e) {
+                    // Use default amount if parsing fails
+                }
+            }
+
+            // Check if player has the specified item
+            try {
+                Material material = Material.valueOf(itemName.toUpperCase());
+                
+                // Count how many of this item the player has
+                int totalCount = 0;
+                for (ItemStack item : player.getInventory().getContents()) {
+                    if (item != null && item.getType() == material) {
+                        totalCount += item.getAmount();
+                    }
+                }
+                
+                return totalCount >= amount;
+            } catch (IllegalArgumentException e) {
+                return false;
+            }
+        } catch (Exception e) {
+            // If there's an error, return false
             return false;
         }
     }

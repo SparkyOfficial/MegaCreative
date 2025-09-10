@@ -3,18 +3,18 @@ package com.megacreative.coding.actions;
 import com.megacreative.coding.BlockAction;
 import com.megacreative.coding.CodeBlock;
 import com.megacreative.coding.ExecutionContext;
-import com.megacreative.services.BlockConfigService;
+import com.megacreative.coding.ParameterResolver;
 import com.megacreative.coding.executors.ExecutionResult;
+import com.megacreative.coding.values.DataValue;
+import com.megacreative.coding.values.ListValue;
 import org.bukkit.entity.Player;
 import org.bukkit.inventory.ItemStack;
-import org.bukkit.Material;
+
 import java.util.List;
-import java.util.ArrayList;
-import java.util.function.Function;
 
 /**
  * Action for removing items from a player's inventory.
- * Supports both legacy configuration and new named slot system.
+ * This action removes a list of items from the player's inventory.
  */
 public class RemoveItemsAction implements BlockAction {
 
@@ -22,79 +22,43 @@ public class RemoveItemsAction implements BlockAction {
     public ExecutionResult execute(CodeBlock block, ExecutionContext context) {
         Player player = context.getPlayer();
         if (player == null) {
-            return ExecutionResult.error("No player available to remove items from");
+            return ExecutionResult.error("No player found in execution context");
         }
 
         try {
-            // 1. Get our code block and its configuration
-            CodeBlock actionBlock = context.getCurrentBlock();
-            if (actionBlock == null) {
-                return ExecutionResult.error("No action block found");
+            // Get the items parameter from the block
+            DataValue itemsValue = block.getParameter("items");
+            if (itemsValue == null) {
+                return ExecutionResult.error("Items parameter is missing");
             }
 
-            // 2. Get group slots resolver from BlockConfigService
-            BlockConfigService configService = context.getPlugin().getServiceRegistry().getBlockConfigService();
-            Function<String, int[]> groupSlotsResolver = 
-                configService != null ? configService.getGroupSlotsResolver("removeItems") : null;
-
-            // 3. Get all items from the named group "items_to_remove"
-            List<ItemStack> itemsToRemove = new ArrayList<>();
-            if (groupSlotsResolver != null) {
-                int[] slots = groupSlotsResolver.apply("items_to_remove");
-                if (slots != null) {
-                    for (int slot : slots) {
-                        ItemStack item = actionBlock.getConfigItem(slot);
-                        if (item != null) {
-                            itemsToRemove.add(item);
-                        }
-                    }
-                }
-            }
+            // Resolve any placeholders in the items
+            ParameterResolver resolver = new ParameterResolver(context);
+            DataValue resolvedItems = resolver.resolve(context, itemsValue);
             
-            // If group not found, use fallback method for compatibility
-            if (itemsToRemove.isEmpty()) {
-                // Fallback to slots 0-8
-                for (int i = 0; i < 9; i++) {
-                    ItemStack item = actionBlock.getConfigItem(i);
-                    if (item != null) {
-                        itemsToRemove.add(item);
-                    }
-                }
-            }
-
-            // 4. Remove items from player
-            int removedItems = 0;
-            for (ItemStack item : itemsToRemove) {
-                if (item != null) {
-                    Material material = item.getType();
-                    int amount = item.getAmount();
-                    
-                    // Remove items of the specified type and amount
-                    ItemStack[] contents = player.getInventory().getContents();
-                    for (int i = 0; i < contents.length && amount > 0; i++) {
-                        ItemStack inventoryItem = contents[i];
-                        if (inventoryItem != null && inventoryItem.getType() == material) {
-                            int toRemove = Math.min(amount, inventoryItem.getAmount());
-                            if (inventoryItem.getAmount() <= toRemove) {
-                                player.getInventory().setItem(i, null);
-                            } else {
-                                inventoryItem.setAmount(inventoryItem.getAmount() - toRemove);
-                            }
-                            amount -= toRemove;
-                            removedItems += toRemove;
+            // Check if the resolved value is a list
+            if (resolvedItems instanceof ListValue) {
+                ListValue listValue = (ListValue) resolvedItems;
+                List<DataValue> itemsList = listValue.getList(); // Changed from getValues() to getList()
+                int removedCount = 0;
+                
+                // Remove each item from the player's inventory
+                for (DataValue itemValue : itemsList) {
+                    if (itemValue.getValue() instanceof ItemStack) {
+                        ItemStack item = (ItemStack) itemValue.getValue();
+                        if (player.getInventory().containsAtLeast(item, item.getAmount())) {
+                            player.getInventory().removeItem(item);
+                            removedCount += item.getAmount();
                         }
                     }
                 }
-            }
-
-            // 5. Notify player
-            if (removedItems > 0) {
-                return ExecutionResult.success("Removed " + removedItems + " items from player");
+                
+                return ExecutionResult.success("Removed " + removedCount + " items from player's inventory");
             } else {
-                return ExecutionResult.success("No items to remove");
+                return ExecutionResult.error("Items parameter is not a list");
             }
         } catch (Exception e) {
-            return ExecutionResult.error("Error removing items: " + e.getMessage());
+            return ExecutionResult.error("Failed to remove items: " + e.getMessage());
         }
     }
 }

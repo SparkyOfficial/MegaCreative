@@ -26,6 +26,51 @@ public class ActionFactory {
         register("sendMessage", SendMessageAction::new);
         register("teleport", TeleportAction::new);
         register("giveItem", GiveItemAction::new);
+        register("playSound", PlaySoundAction::new);
+        register("effect", EffectAction::new);
+        register("broadcast", BroadcastAction::new);
+        register("spawnMob", SpawnMobAction::new);
+        register("healPlayer", HealPlayerAction::new);
+        register("setGameMode", SetGameModeAction::new);
+        register("setTime", SetTimeAction::new);
+        register("setWeather", SetWeatherAction::new);
+        register("command", CommandAction::new);
+        register("setVar", SetVarAction::new);
+        register("getVar", GetVarAction::new);
+        
+        // --- NEW BASIC PLAYER ACTIONS ---
+        register("giveItems", GiveItemsAction::new);
+        register("spawnEntity", SpawnEntityAction::new);
+        register("removeItems", RemoveItemsAction::new);
+        register("setArmor", SetArmorAction::new);
+        register("setGlobalVar", SetGlobalVarAction::new);
+        register("getGlobalVar", GetGlobalVarAction::new);
+        register("setServerVar", SetServerVarAction::new);
+        register("getServerVar", GetServerVarAction::new);
+        register("wait", WaitAction::new);
+        register("randomNumber", RandomNumberAction::new);
+        register("playParticle", PlayParticleAction::new);
+        register("sendTitle", SendTitleAction::new);
+        register("explosion", ExplosionAction::new);
+        register("setBlock", SetBlockAction::new);
+        register("getPlayerName", GetPlayerNameAction::new);
+        
+        // --- VARIABLE MANIPULATION ACTIONS ---
+        register("addVar", AddVarAction::new);
+        register("subVar", SubVarAction::new);
+        register("mulVar", MulVarAction::new);
+        register("divVar", DivVarAction::new);
+        
+        // --- SCOREBOARD ACTIONS ---
+        register("createScoreboard", CreateScoreboardAction::new);
+        register("setScore", SetScoreAction::new);
+        register("incrementScore", IncrementScoreAction::new);
+        register("createTeam", CreateTeamAction::new);
+        register("addPlayerToTeam", AddPlayerToTeamAction::new);
+        
+        // --- LOCATION ACTIONS ---
+        register("saveLocation", SaveLocationAction::new);
+        register("getLocation", GetLocationAction::new);
         
         // --- ADVANCED ACTION BLOCKS ---
         register("playCustomSound", PlayCustomSoundAction::new);

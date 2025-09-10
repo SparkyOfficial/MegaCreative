@@ -4,59 +4,89 @@ import com.megacreative.coding.BlockAction;
 import com.megacreative.coding.CodeBlock;
 import com.megacreative.coding.ExecutionContext;
 import com.megacreative.coding.ParameterResolver;
+import com.megacreative.coding.executors.ExecutionResult;
 import com.megacreative.coding.values.DataValue;
-import com.megacreative.coding.variables.VariableManager;
 import org.bukkit.Location;
 import org.bukkit.Material;
 import org.bukkit.entity.Player;
+import org.bukkit.block.Block;
 
+/**
+ * Action for setting a block.
+ * This action sets a block at the player's location or a specified location.
+ */
 public class SetBlockAction implements BlockAction {
+
     @Override
-    public void execute(ExecutionContext context) {
+    public ExecutionResult execute(CodeBlock block, ExecutionContext context) {
         Player player = context.getPlayer();
-        CodeBlock block = context.getCurrentBlock();
-
-        if (player == null || block == null) return;
-
-        ParameterResolver resolver = new ParameterResolver(context);
-
-        // Получаем и разрешаем параметры
-        DataValue rawMaterial = block.getParameter("material");
-        DataValue rawCoords = block.getParameter("coords");
-
-        if (rawMaterial == null) return;
-
-        String materialStr = resolver.resolve(context, rawMaterial).asString();
-        String coordsStr = rawCoords != null ? resolver.resolve(context, rawCoords).asString() : null;
-
-        if (materialStr == null) return;
+        if (player == null) {
+            return ExecutionResult.error("No player found in execution context");
+        }
 
         try {
-            Material material = Material.valueOf(materialStr.toUpperCase());
-            Location location;
-            
-            if (coordsStr != null && !coordsStr.isEmpty()) {
-                // Парсим координаты "x y z"
-                String[] coords = coordsStr.split(" ");
-                if (coords.length == 3) {
-                    int x = Integer.parseInt(coords[0]);
-                    int y = Integer.parseInt(coords[1]);
-                    int z = Integer.parseInt(coords[2]);
-                    location = new Location(player.getWorld(), x, y, z);
-                } else {
-                    location = player.getLocation();
-                }
-            } else {
-                location = player.getLocation();
+            // Get the material parameter from the block
+            DataValue materialValue = block.getParameter("material");
+            if (materialValue == null) {
+                return ExecutionResult.error("Material parameter is missing");
             }
+
+            // Get the relative X parameter from the block (default to 0)
+            int relativeX = 0;
+            DataValue relativeXValue = block.getParameter("relativeX");
+            if (relativeXValue != null) {
+                try {
+                    relativeX = relativeXValue.asNumber().intValue();
+                } catch (NumberFormatException e) {
+                    // Use default relativeX if parsing fails
+                }
+            }
+
+            // Get the relative Y parameter from the block (default to 0)
+            int relativeY = 0;
+            DataValue relativeYValue = block.getParameter("relativeY");
+            if (relativeYValue != null) {
+                try {
+                    relativeY = relativeYValue.asNumber().intValue();
+                } catch (NumberFormatException e) {
+                    // Use default relativeY if parsing fails
+                }
+            }
+
+            // Get the relative Z parameter from the block (default to 0)
+            int relativeZ = 0;
+            DataValue relativeZValue = block.getParameter("relativeZ");
+            if (relativeZValue != null) {
+                try {
+                    relativeZ = relativeZValue.asNumber().intValue();
+                } catch (NumberFormatException e) {
+                    // Use default relativeZ if parsing fails
+                }
+            }
+
+            // Resolve any placeholders in the material
+            ParameterResolver resolver = new ParameterResolver(context);
+            DataValue resolvedMaterial = resolver.resolve(context, materialValue);
             
-            location.getBlock().setType(material);
-            player.sendMessage("§a🔲 Блок " + material.name() + " установлен!");
-            
-        } catch (NumberFormatException e) {
-            player.sendMessage("§cОшибка в координатах: " + coordsStr);
-        } catch (IllegalArgumentException e) {
-            player.sendMessage("§cНеизвестный материал: " + materialStr);
+            // Parse material parameter
+            String materialName = resolvedMaterial.asString();
+            if (materialName == null || materialName.isEmpty()) {
+                return ExecutionResult.error("Material is empty or null");
+            }
+
+            // Set the block
+            try {
+                Material material = Material.valueOf(materialName.toUpperCase());
+                Location location = player.getLocation().add(relativeX, relativeY, relativeZ);
+                Block blockToSet = location.getBlock();
+                blockToSet.setType(material);
+                
+                return ExecutionResult.success("Set block to " + material.name() + " at " + location.getBlockX() + ", " + location.getBlockY() + ", " + location.getBlockZ());
+            } catch (IllegalArgumentException e) {
+                return ExecutionResult.error("Invalid material: " + materialName);
+            }
+        } catch (Exception e) {
+            return ExecutionResult.error("Failed to set block: " + e.getMessage());
         }
     }
-} 
+}

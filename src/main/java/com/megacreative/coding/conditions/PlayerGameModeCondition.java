@@ -9,10 +9,11 @@ import org.bukkit.GameMode;
 import org.bukkit.entity.Player;
 
 /**
- * Условие для проверки игрового режима игрока.
+ * Condition for checking a player's game mode.
+ * This condition returns true if the player is in the specified game mode.
  */
 public class PlayerGameModeCondition implements BlockCondition {
-    
+
     @Override
     public boolean evaluate(CodeBlock block, ExecutionContext context) {
         Player player = context.getPlayer();
@@ -20,24 +21,32 @@ public class PlayerGameModeCondition implements BlockCondition {
             return false;
         }
 
-        ParameterResolver resolver = new ParameterResolver(context);
-
-        // Получаем и разрешаем параметры
-        DataValue rawGameMode = block.getParameter("gameMode");
-
-        if (rawGameMode == null) {
-            context.getPlugin().getLogger().warning("Game mode not specified in PlayerGameModeCondition");
-            return false;
-        }
-
-        DataValue gameModeValue = resolver.resolve(context, rawGameMode);
-        String gameModeName = gameModeValue.asString();
-
         try {
-            GameMode requiredGameMode = GameMode.valueOf(gameModeName.toUpperCase());
-            return player.getGameMode() == requiredGameMode;
-        } catch (IllegalArgumentException e) {
-            context.getPlugin().getLogger().warning("Invalid game mode in PlayerGameModeCondition: " + gameModeName);
+            // Get the game mode parameter from the block
+            DataValue modeValue = block.getParameter("mode");
+            if (modeValue == null) {
+                return false;
+            }
+
+            // Resolve any placeholders in the game mode
+            ParameterResolver resolver = new ParameterResolver(context);
+            DataValue resolvedMode = resolver.resolve(context, modeValue);
+            
+            // Parse game mode parameter
+            String modeName = resolvedMode.asString();
+            if (modeName == null || modeName.isEmpty()) {
+                return false;
+            }
+
+            // Check if player is in the specified game mode
+            try {
+                GameMode gameMode = GameMode.valueOf(modeName.toUpperCase());
+                return player.getGameMode() == gameMode;
+            } catch (IllegalArgumentException e) {
+                return false;
+            }
+        } catch (Exception e) {
+            // If there's an error, return false
             return false;
         }
     }

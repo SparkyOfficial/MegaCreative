@@ -6,68 +6,97 @@ import com.megacreative.coding.ExecutionContext;
 import com.megacreative.coding.ParameterResolver;
 import com.megacreative.coding.executors.ExecutionResult;
 import com.megacreative.coding.values.DataValue;
+import com.megacreative.coding.variables.VariableManager;
+import com.megacreative.coding.variables.IVariableManager.VariableScope;
+import org.bukkit.Bukkit;
 import org.bukkit.Location;
+import org.bukkit.World;
 import org.bukkit.entity.Player;
 
+/**
+ * Action for getting a saved location.
+ * This action retrieves a saved location and stores it in a variable.
+ */
 public class GetLocationAction implements BlockAction {
-    
+
     @Override
     public ExecutionResult execute(CodeBlock block, ExecutionContext context) {
         Player player = context.getPlayer();
-
-        if (player == null || block == null) {
-            return ExecutionResult.error("Player or block is null");
-        }
-
-        ParameterResolver resolver = new ParameterResolver(context);
-
-        // Получаем и разрешаем параметры
-        DataValue rawLocationName = block.getParameter("locationName");
-        DataValue rawTargetVariable = block.getParameter("targetVariable");
-        
-        if (rawLocationName == null) {
-            return ExecutionResult.error("Parameter 'locationName' is missing");
-        }
-        
-        if (rawTargetVariable == null) {
-            return ExecutionResult.error("Parameter 'targetVariable' is missing");
-        }
-        
-        DataValue locationNameValue = resolver.resolve(context, rawLocationName);
-        DataValue targetVariableValue = resolver.resolve(context, rawTargetVariable);
-        
-        String locationName = locationNameValue.asString();
-        String targetVariable = targetVariableValue.asString();
-
-        if (locationName == null) {
-            return ExecutionResult.error("Location name parameter is null");
-        }
-        
-        if (targetVariable == null) {
-            return ExecutionResult.error("Target variable parameter is null");
+        if (player == null) {
+            return ExecutionResult.error("No player found in execution context");
         }
 
         try {
-            // Получаем сохраненную локацию из глобальных переменных
-            Object locationObj = context.getGlobalVariable("location_" + locationName);
+            // Get the location name parameter from the block
+            DataValue locationNameValue = block.getParameter("locationName");
+            if (locationNameValue == null) {
+                return ExecutionResult.error("Location name parameter is missing");
+            }
+
+            // Get the target variable name parameter from the block
+            DataValue targetValue = block.getParameter("targetVariable");
+            if (targetValue == null) {
+                return ExecutionResult.error("Target variable name parameter is missing");
+            }
+
+            // Resolve any placeholders in the parameters
+            ParameterResolver resolver = new ParameterResolver(context);
+            DataValue resolvedLocationName = resolver.resolve(context, locationNameValue);
+            DataValue resolvedTarget = resolver.resolve(context, targetValue);
             
-            if (locationObj == null) {
+            // Parse parameters
+            String locationName = resolvedLocationName.asString();
+            if (locationName == null || locationName.isEmpty()) {
+                return ExecutionResult.error("Location name is empty or null");
+            }
+            
+            String targetName = resolvedTarget.asString();
+            if (targetName == null || targetName.isEmpty()) {
+                return ExecutionResult.error("Target variable name is empty or null");
+            }
+
+            // Get the location from the variable manager
+            VariableManager variableManager = context.getPlugin().getVariableManager();
+            if (variableManager != null) {
+                // Try to get the location from different scopes
+                DataValue locationValue = null;
+                
+                // Try player scope first if we have a player
+                if (context.getPlayer() != null) {
+                    locationValue = variableManager.getVariable(locationName, VariableScope.PLAYER, context.getPlayer().getUniqueId().toString());
+                }
+                
+                // Try local scope if we have a script context
+                if (locationValue == null && context.getScriptId() != null) {
+                    locationValue = variableManager.getVariable(locationName, VariableScope.LOCAL, context.getScriptId());
+                }
+                
+                // Try global scope
+                if (locationValue == null) {
+                    locationValue = variableManager.getVariable(locationName, VariableScope.GLOBAL, "global");
+                }
+                
+                // Try server scope
+                if (locationValue == null) {
+                    locationValue = variableManager.getVariable(locationName, VariableScope.SERVER, "server");
+                }
+                
+                if (locationValue != null) {
+                    String locationString = locationValue.asString();
+                    if (locationString != null && !locationString.isEmpty()) {
+                        // Store the location string in the target variable
+                        String scriptId = context.getScriptId() != null ? context.getScriptId() : "global";
+                        variableManager.setVariable(targetName, DataValue.of(locationString), VariableScope.LOCAL, scriptId);
+                        return ExecutionResult.success("Retrieved location '" + locationName + "' and stored in '" + targetName + "'");
+                    }
+                }
+                
                 return ExecutionResult.error("Location '" + locationName + "' not found");
+            } else {
+                return ExecutionResult.error("Variable manager is not available");
             }
-            
-            if (!(locationObj instanceof Location)) {
-                return ExecutionResult.error("Variable '" + locationName + "' is not a location");
-            }
-            
-            Location location = (Location) locationObj;
-            
-            // Сохраняем локацию в целевую переменную
-            context.setVariable(targetVariable, location);
-            
-            player.sendMessage("§a✅ Локация '" + locationName + "' загружена в переменную '" + targetVariable + "'");
-            return ExecutionResult.success("Location '" + locationName + "' loaded to variable '" + targetVariable + "'");
         } catch (Exception e) {
-            return ExecutionResult.error("Error getting location: " + e.getMessage());
+            return ExecutionResult.error("Failed to get location: " + e.getMessage());
         }
     }
 }

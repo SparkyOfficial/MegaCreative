@@ -7,7 +7,12 @@ import com.megacreative.coding.ParameterResolver;
 import com.megacreative.coding.values.DataValue;
 import org.bukkit.entity.Player;
 
+/**
+ * Condition for checking if a player is in a specific world.
+ * This condition returns true if the player is in the specified world.
+ */
 public class IsInWorldCondition implements BlockCondition {
+
     @Override
     public boolean evaluate(CodeBlock block, ExecutionContext context) {
         Player player = context.getPlayer();
@@ -15,23 +20,28 @@ public class IsInWorldCondition implements BlockCondition {
             return false;
         }
 
-        ParameterResolver resolver = new ParameterResolver(context);
+        try {
+            // Get the world name parameter from the block
+            DataValue worldValue = block.getParameter("world");
+            if (worldValue == null) {
+                return false;
+            }
 
-        // Получаем и разрешаем параметры
-        DataValue rawWorld = block.getParameter("world");
+            // Resolve any placeholders in the world name
+            ParameterResolver resolver = new ParameterResolver(context);
+            DataValue resolvedWorld = resolver.resolve(context, worldValue);
+            
+            // Parse world name parameter
+            String worldName = resolvedWorld.asString();
+            if (worldName == null || worldName.isEmpty()) {
+                return false;
+            }
 
-        if (rawWorld == null) {
-            context.getPlugin().getLogger().warning("World not specified in IsInWorldCondition");
+            // Check if player is in the specified world
+            return player.getWorld().getName().equals(worldName);
+        } catch (Exception e) {
+            // If there's an error, return false
             return false;
         }
-
-        DataValue worldValue = resolver.resolve(context, rawWorld);
-        String worldName = worldValue.asString();
-
-        if (worldName == null || worldName.isEmpty()) {
-            return false;
-        }
-
-        return player.getWorld().getName().equals(worldName);
     }
 }

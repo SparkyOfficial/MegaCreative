@@ -5,15 +5,17 @@ import com.megacreative.coding.CodeBlock;
 import com.megacreative.coding.ExecutionContext;
 import com.megacreative.coding.ParameterResolver;
 import com.megacreative.coding.values.DataValue;
-import org.bukkit.Location;
 import org.bukkit.Material;
 import org.bukkit.entity.Player;
+import org.bukkit.Location;
+import org.bukkit.block.Block;
 
 /**
- * Условие для проверки наличия определенного блока рядом с игроком.
+ * Condition for checking if a player is near a specific block.
+ * This condition returns true if the player is within a specified distance of a block type.
  */
 public class IsNearBlockCondition implements BlockCondition {
-    
+
     @Override
     public boolean evaluate(CodeBlock block, ExecutionContext context) {
         Player player = context.getPlayer();
@@ -21,49 +23,58 @@ public class IsNearBlockCondition implements BlockCondition {
             return false;
         }
 
-        ParameterResolver resolver = new ParameterResolver(context);
-
-        // Получаем и разрешаем параметры
-        DataValue rawMaterial = block.getParameter("material");
-        DataValue rawRadius = block.getParameter("radius");
-
-        if (rawMaterial == null) {
-            context.getPlugin().getLogger().warning("Material not specified in IsNearBlockCondition");
-            return false;
-        }
-
-        DataValue materialValue = resolver.resolve(context, rawMaterial);
-        String materialName = materialValue.asString();
-
-        int radius = 3; // Default radius
-        if (rawRadius != null) {
-            DataValue radiusValue = resolver.resolve(context, rawRadius);
-            try {
-                radius = Integer.parseInt(radiusValue.asString());
-            } catch (NumberFormatException e) {
-                // Use default radius
-            }
-        }
-
         try {
-            Material material = Material.valueOf(materialName.toUpperCase());
-            Location playerLocation = player.getLocation();
+            // Get the block type parameter from the block
+            DataValue blockValue = block.getParameter("block");
+            if (blockValue == null) {
+                return false;
+            }
+
+            // Resolve any placeholders in the block type
+            ParameterResolver resolver = new ParameterResolver(context);
+            DataValue resolvedBlock = resolver.resolve(context, blockValue);
             
-            // Check blocks in a cube around the player
-            for (int x = -radius; x <= radius; x++) {
-                for (int y = -radius; y <= radius; y++) {
-                    for (int z = -radius; z <= radius; z++) {
-                        Location checkLocation = playerLocation.clone().add(x, y, z);
-                        if (checkLocation.getBlock().getType() == material) {
-                            return true;
+            // Parse block type parameter
+            String blockName = resolvedBlock.asString();
+            if (blockName == null || blockName.isEmpty()) {
+                return false;
+            }
+
+            // Get optional distance parameter (default to 5)
+            int distance = 5;
+            DataValue distanceValue = block.getParameter("distance");
+            if (distanceValue != null) {
+                DataValue resolvedDistance = resolver.resolve(context, distanceValue);
+                try {
+                    distance = Math.max(1, resolvedDistance.asNumber().intValue());
+                } catch (NumberFormatException e) {
+                    // Use default distance if parsing fails
+                }
+            }
+
+            // Check if player is near the specified block type
+            try {
+                Material material = Material.valueOf(blockName.toUpperCase());
+                Location playerLocation = player.getLocation();
+                
+                // Check blocks in a cube around the player
+                for (int x = -distance; x <= distance; x++) {
+                    for (int y = -distance; y <= distance; y++) {
+                        for (int z = -distance; z <= distance; z++) {
+                            Block nearbyBlock = playerLocation.getBlock().getRelative(x, y, z);
+                            if (nearbyBlock.getType() == material) {
+                                return true;
+                            }
                         }
                     }
                 }
+                
+                return false;
+            } catch (IllegalArgumentException e) {
+                return false;
             }
-            
-            return false;
-        } catch (IllegalArgumentException e) {
-            context.getPlugin().getLogger().warning("Invalid material in IsNearBlockCondition: " + materialName);
+        } catch (Exception e) {
+            // If there's an error, return false
             return false;
         }
     }

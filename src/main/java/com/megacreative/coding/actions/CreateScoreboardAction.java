@@ -9,46 +9,46 @@ import com.megacreative.coding.values.DataValue;
 import com.megacreative.managers.GameScoreboardManager;
 import org.bukkit.entity.Player;
 
+/**
+ * Action for creating a scoreboard.
+ * This action creates a scoreboard with a specified title.
+ */
 public class CreateScoreboardAction implements BlockAction {
-    
+
     @Override
     public ExecutionResult execute(CodeBlock block, ExecutionContext context) {
         Player player = context.getPlayer();
-
-        if (player == null || block == null) {
-            return ExecutionResult.error("Player or block is null");
-        }
-
-        ParameterResolver resolver = new ParameterResolver(context);
-
-        // Получаем и разрешаем параметры
-        DataValue rawTitle = block.getParameter("title");
-        
-        if (rawTitle == null) {
-            return ExecutionResult.error("Parameter 'title' is missing");
-        }
-        
-        DataValue titleValue = resolver.resolve(context, rawTitle);
-        String title = titleValue.asString();
-
-        if (title == null) {
-            return ExecutionResult.error("Title parameter is null");
+        if (player == null) {
+            return ExecutionResult.error("No player found in execution context");
         }
 
         try {
-            // Получаем GameScoreboardManager из ServiceRegistry
-            GameScoreboardManager scoreboardManager = context.getPlugin().getServiceRegistry().getService(GameScoreboardManager.class);
-            if (scoreboardManager == null) {
-                return ExecutionResult.error("Failed to get GameScoreboardManager");
+            // Get the title parameter from the block
+            DataValue titleValue = block.getParameter("title");
+            if (titleValue == null) {
+                return ExecutionResult.error("Title parameter is missing");
             }
+
+            // Resolve any placeholders in the title
+            ParameterResolver resolver = new ParameterResolver(context);
+            DataValue resolvedTitle = resolver.resolve(context, titleValue);
             
-            // Создаем скорборд для игрока
-            scoreboardManager.createPlayerScoreboard(player, title);
-            
-            player.sendMessage("§a✅ Скорборд '" + title + "' создан");
-            return ExecutionResult.success("Scoreboard '" + title + "' created");
+            // Parse title parameter
+            String title = resolvedTitle.asString();
+            if (title == null || title.isEmpty()) {
+                return ExecutionResult.error("Title is empty or null");
+            }
+
+            // Create the scoreboard
+            GameScoreboardManager scoreboardManager = context.getPlugin().getServiceRegistry().getGameScoreboardManager();
+            if (scoreboardManager != null) {
+                scoreboardManager.createPlayerScoreboard(player, title);
+                return ExecutionResult.success("Created scoreboard with title: " + title);
+            } else {
+                return ExecutionResult.error("Scoreboard manager is not available");
+            }
         } catch (Exception e) {
-            return ExecutionResult.error("Error creating scoreboard: " + e.getMessage());
+            return ExecutionResult.error("Failed to create scoreboard: " + e.getMessage());
         }
     }
 }

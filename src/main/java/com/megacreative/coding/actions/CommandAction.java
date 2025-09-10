@@ -4,48 +4,49 @@ import com.megacreative.coding.BlockAction;
 import com.megacreative.coding.CodeBlock;
 import com.megacreative.coding.ExecutionContext;
 import com.megacreative.coding.ParameterResolver;
+import com.megacreative.coding.executors.ExecutionResult;
 import com.megacreative.coding.values.DataValue;
-import com.megacreative.coding.variables.VariableManager;
-import com.megacreative.utils.SafeCommandExecutor;
+import org.bukkit.Bukkit;
 import org.bukkit.entity.Player;
 
+/**
+ * Action for executing a command.
+ * This action retrieves a command from the block parameters and executes it.
+ */
 public class CommandAction implements BlockAction {
+
     @Override
-    public void execute(ExecutionContext context) {
+    public ExecutionResult execute(CodeBlock block, ExecutionContext context) {
         Player player = context.getPlayer();
-        CodeBlock block = context.getCurrentBlock();
-        VariableManager variableManager = context.getPlugin().getVariableManager();
-
-        if (player == null || block == null || variableManager == null) return;
-
-        ParameterResolver resolver = new ParameterResolver(context);
-
-        // Получаем и разрешаем параметры
-        DataValue rawCommand = block.getParameter("command");
-
-        if (rawCommand == null) return;
-
-        DataValue commandValue = resolver.resolve(context, rawCommand);
-        String commandStr = commandValue.asString();
-
-        if (commandStr == null || commandStr.isEmpty()) return;
+        if (player == null) {
+            return ExecutionResult.error("No player found in execution context");
+        }
 
         try {
-            // Заменяем плейсхолдеры
-            String finalCommand = commandStr
-                .replace("%player%", player.getName())
-                .replace("%world%", player.getWorld().getName());
-            
-            // Безопасное выполнение команды от имени игрока
-            boolean success = SafeCommandExecutor.executeCommand(player, finalCommand);
-            
-            if (success) {
-                player.sendMessage("§a✓ Команда выполнена: " + finalCommand);
+            // Get the command parameter from the block
+            DataValue commandValue = block.getParameter("command");
+            if (commandValue == null) {
+                return ExecutionResult.error("Command parameter is missing");
             }
-            // Сообщения об ошибках уже отправляются в SafeCommandExecutor
+
+            // Resolve any placeholders in the command
+            ParameterResolver resolver = new ParameterResolver(context);
+            DataValue resolvedCommand = resolver.resolve(context, commandValue);
             
+            // Execute the command
+            String command = resolvedCommand.asString();
+            if (command != null && !command.isEmpty()) {
+                boolean success = Bukkit.dispatchCommand(player, command);
+                if (success) {
+                    return ExecutionResult.success("Command executed successfully");
+                } else {
+                    return ExecutionResult.error("Failed to execute command: " + command);
+                }
+            } else {
+                return ExecutionResult.error("Command is empty or null");
+            }
         } catch (Exception e) {
-            player.sendMessage("§cОшибка выполнения команды: " + e.getMessage());
+            return ExecutionResult.error("Failed to execute command: " + e.getMessage());
         }
     }
 }

@@ -10,7 +10,8 @@ import org.bukkit.entity.Player;
 import org.bukkit.inventory.ItemStack;
 
 /**
- * Условие для проверки, надета ли на игрока определенная броня.
+ * Condition for checking if a player is wearing specific armor.
+ * This condition returns true if the player is wearing the specified armor piece.
  */
 public class HasArmorCondition implements BlockCondition {
 
@@ -21,48 +22,41 @@ public class HasArmorCondition implements BlockCondition {
             return false;
         }
 
-        ParameterResolver resolver = new ParameterResolver(context);
-
-        // Получаем и разрешаем параметры
-        DataValue rawMaterial = block.getParameter("material");
-
-        if (rawMaterial == null) {
-            context.getPlugin().getLogger().warning("Material not specified in HasArmorCondition");
-            return false;
-        }
-
-        DataValue materialValue = resolver.resolve(context, rawMaterial);
-        String materialName = materialValue.asString();
-
         try {
-            Material requiredMaterial = Material.valueOf(materialName.toUpperCase());
-            
-            // Check armor slots
-            ItemStack helmet = player.getInventory().getHelmet();
-            ItemStack chestplate = player.getInventory().getChestplate();
-            ItemStack leggings = player.getInventory().getLeggings();
-            ItemStack boots = player.getInventory().getBoots();
-            
-            // Check if any armor piece matches the required material
-            if (helmet != null && helmet.getType() == requiredMaterial) {
-                return true;
+            // Get the armor parameter from the block
+            DataValue armorValue = block.getParameter("armor");
+            if (armorValue == null) {
+                return false;
             }
+
+            // Resolve any placeholders in the armor name
+            ParameterResolver resolver = new ParameterResolver(context);
+            DataValue resolvedArmor = resolver.resolve(context, armorValue);
             
-            if (chestplate != null && chestplate.getType() == requiredMaterial) {
-                return true;
+            // Parse armor parameter
+            String armorName = resolvedArmor.asString();
+            if (armorName == null || armorName.isEmpty()) {
+                return false;
             }
-            
-            if (leggings != null && leggings.getType() == requiredMaterial) {
-                return true;
+
+            // Check if player is wearing the specified armor
+            try {
+                Material material = Material.valueOf(armorName.toUpperCase());
+                ItemStack helmet = player.getInventory().getHelmet();
+                ItemStack chestplate = player.getInventory().getChestplate();
+                ItemStack leggings = player.getInventory().getLeggings();
+                ItemStack boots = player.getInventory().getBoots();
+                
+                // Check each armor slot
+                return (helmet != null && helmet.getType() == material) ||
+                       (chestplate != null && chestplate.getType() == material) ||
+                       (leggings != null && leggings.getType() == material) ||
+                       (boots != null && boots.getType() == material);
+            } catch (IllegalArgumentException e) {
+                return false;
             }
-            
-            if (boots != null && boots.getType() == requiredMaterial) {
-                return true;
-            }
-            
-            return false;
-        } catch (IllegalArgumentException e) {
-            context.getPlugin().getLogger().warning("Invalid material in HasArmorCondition: " + materialName);
+        } catch (Exception e) {
+            // If there's an error, return false
             return false;
         }
     }

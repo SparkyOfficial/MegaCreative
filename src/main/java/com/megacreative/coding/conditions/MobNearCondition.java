@@ -5,16 +5,16 @@ import com.megacreative.coding.CodeBlock;
 import com.megacreative.coding.ExecutionContext;
 import com.megacreative.coding.ParameterResolver;
 import com.megacreative.coding.values.DataValue;
-import org.bukkit.Location;
-import org.bukkit.entity.Entity;
-import org.bukkit.entity.EntityType;
 import org.bukkit.entity.Player;
+import org.bukkit.entity.Entity;
+import org.bukkit.entity.LivingEntity;
 
 /**
- * Условие для проверки наличия мобов рядом с игроком.
+ * Condition for checking if there's a mob near the player.
+ * This condition returns true if there's a mob within a specified distance of the player.
  */
 public class MobNearCondition implements BlockCondition {
-    
+
     @Override
     public boolean evaluate(CodeBlock block, ExecutionContext context) {
         Player player = context.getPlayer();
@@ -22,53 +22,48 @@ public class MobNearCondition implements BlockCondition {
             return false;
         }
 
-        ParameterResolver resolver = new ParameterResolver(context);
-
-        // Получаем и разрешаем параметры
-        DataValue rawEntityType = block.getParameter("entityType");
-        DataValue rawRadius = block.getParameter("radius");
-
-        EntityType entityType = null;
-        if (rawEntityType != null) {
-            DataValue entityTypeValue = resolver.resolve(context, rawEntityType);
-            String entityTypeName = entityTypeValue.asString();
+        try {
+            // Get optional distance parameter (default to 10)
+            int distance = 10;
+            ParameterResolver resolver = new ParameterResolver(context);
             
-            try {
-                entityType = EntityType.valueOf(entityTypeName.toUpperCase());
-            } catch (IllegalArgumentException e) {
-                context.getPlugin().getLogger().warning("Invalid entity type in MobNearCondition: " + entityTypeName);
-                return false;
-            }
-        }
-
-        int radius = 3; // Default radius
-        if (rawRadius != null) {
-            DataValue radiusValue = resolver.resolve(context, rawRadius);
-            try {
-                radius = Integer.parseInt(radiusValue.asString());
-            } catch (NumberFormatException e) {
-                // Use default radius
-            }
-        }
-
-        Location playerLocation = player.getLocation();
-        
-        // Check for entities near the player
-        for (Entity entity : playerLocation.getWorld().getNearbyEntities(playerLocation, radius, radius, radius)) {
-            // If no specific entity type is specified, any entity counts
-            if (entityType == null) {
-                // Exclude the player themselves
-                if (!entity.equals(player)) {
-                    return true;
-                }
-            } else {
-                // Check for specific entity type
-                if (entity.getType() == entityType) {
-                    return true;
+            DataValue distanceValue = block.getParameter("distance");
+            if (distanceValue != null) {
+                DataValue resolvedDistance = resolver.resolve(context, distanceValue);
+                try {
+                    distance = Math.max(1, resolvedDistance.asNumber().intValue());
+                } catch (NumberFormatException e) {
+                    // Use default distance if parsing fails
                 }
             }
+
+            // Get optional mob type parameter
+            String mobType = null;
+            DataValue mobValue = block.getParameter("mob");
+            if (mobValue != null) {
+                DataValue resolvedMob = resolver.resolve(context, mobValue);
+                mobType = resolvedMob.asString();
+            }
+
+            // Check for mobs near the player
+            for (Entity entity : player.getNearbyEntities(distance, distance, distance)) {
+                if (entity instanceof LivingEntity) {
+                    // If a specific mob type is specified, check if it matches
+                    if (mobType != null && !mobType.isEmpty()) {
+                        if (entity.getType().name().equalsIgnoreCase(mobType)) {
+                            return true;
+                        }
+                    } else {
+                        // Any mob is acceptable
+                        return true;
+                    }
+                }
+            }
+            
+            return false;
+        } catch (Exception e) {
+            // If there's an error, return false
+            return false;
         }
-        
-        return false;
     }
 }

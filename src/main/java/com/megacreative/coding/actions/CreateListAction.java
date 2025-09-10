@@ -3,32 +3,61 @@ package com.megacreative.coding.actions;
 import com.megacreative.coding.BlockAction;
 import com.megacreative.coding.CodeBlock;
 import com.megacreative.coding.ExecutionContext;
+import com.megacreative.coding.ParameterResolver;
 import com.megacreative.coding.executors.ExecutionResult;
+import com.megacreative.coding.values.DataValue;
+import com.megacreative.coding.values.ListValue;
+import com.megacreative.coding.variables.VariableManager;
+import com.megacreative.coding.variables.IVariableManager.VariableScope;
 import org.bukkit.entity.Player;
+import java.util.ArrayList;
+import java.util.List;
 
-// Шаблон для нового ДЕЙСТВИЯ
 public class CreateListAction implements BlockAction {
 
     @Override
     public ExecutionResult execute(CodeBlock block, ExecutionContext context) {
         Player player = context.getPlayer();
         if (player == null) {
-            return ExecutionResult.error("Игрок не найден.");
+            return ExecutionResult.error("Player not found.");
         }
 
         try {
-            // TODO: Получите параметры из блока, используя block.getParameter("key")
-            String listName = block.getParameter("list_name").asString();
-            // TODO: Получите начальные значения списка
-            // List<Object> initialValues = block.getParameter("initial_values").asList();
+            // Get parameters from the block
+            DataValue listNameValue = block.getParameter("list_name");
+            DataValue initialValuesValue = block.getParameter("initial_values");
             
-            // TODO: Реализуйте логику создания списка
-            // Создание переменной-списка в менеджере переменных
+            if (listNameValue == null || listNameValue.isEmpty()) {
+                return ExecutionResult.error("List name parameter is missing.");
+            }
             
-            return ExecutionResult.success("Список создан.");
+            // Resolve parameters
+            ParameterResolver resolver = new ParameterResolver(context);
+            DataValue resolvedListName = resolver.resolve(context, listNameValue);
+            
+            String listName = resolvedListName.asString();
+            
+            // Create the list
+            List<DataValue> initialValues = new ArrayList<>();
+            if (initialValuesValue != null && !initialValuesValue.isEmpty()) {
+                DataValue resolvedInitialValues = resolver.resolve(context, initialValuesValue);
+                if (resolvedInitialValues instanceof ListValue) {
+                    initialValues = ((ListValue) resolvedInitialValues).getList(); // Changed from getValues() to getList()
+                }
+            }
+            
+            ListValue listValue = new ListValue(initialValues);
+            
+            // Store the list in the variable manager
+            VariableManager variableManager = context.getPlugin().getVariableManager();
+            if (variableManager != null) {
+                variableManager.setVariable(listName, listValue, VariableScope.LOCAL, context.getScriptId());
+            }
+            
+            return ExecutionResult.success("List '" + listName + "' created.");
 
         } catch (Exception e) {
-            return ExecutionResult.error("Ошибка при создании списка: " + e.getMessage());
+            return ExecutionResult.error("Error creating list: " + e.getMessage());
         }
     }
 }

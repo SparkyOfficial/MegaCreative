@@ -5,6 +5,8 @@ import com.megacreative.coding.CodeBlock;
 import com.megacreative.coding.ExecutionContext;
 import com.megacreative.coding.ParameterResolver;
 import com.megacreative.coding.values.DataValue;
+import com.megacreative.coding.variables.VariableManager;
+import com.megacreative.coding.variables.IVariableManager.VariableScope;
 
 /**
  * Условие для проверки, что переменная меньше заданного значения.
@@ -24,17 +26,50 @@ public class IfVarLessCondition implements BlockCondition {
             return false;
         }
 
-        DataValue varValue = resolver.resolve(context, rawVar);
+        DataValue varName = resolver.resolve(context, rawVar);
         DataValue compareValue = resolver.resolve(context, rawValue);
         
         try {
-            // Try to compare as numbers
-            double varNum = Double.parseDouble(varValue.asString());
-            double compareNum = Double.parseDouble(compareValue.asString());
-            return varNum < compareNum;
+            // Get the actual variable value from VariableManager
+            VariableManager variableManager = context.getPlugin().getVariableManager();
+            if (variableManager != null) {
+                // Try to get the variable from different scopes
+                DataValue actualVarValue = null;
+                
+                // Try player scope first if we have a player
+                if (context.getPlayer() != null) {
+                    actualVarValue = variableManager.getVariable(varName.asString(), VariableScope.PLAYER, context.getPlayer().getUniqueId().toString());
+                }
+                
+                // Try local scope if we have a script context
+                if (actualVarValue == null && context.getScriptId() != null) {
+                    actualVarValue = variableManager.getVariable(varName.asString(), VariableScope.LOCAL, context.getScriptId());
+                }
+                
+                // Try global scope
+                if (actualVarValue == null) {
+                    actualVarValue = variableManager.getVariable(varName.asString(), VariableScope.GLOBAL, "global");
+                }
+                
+                // Try server scope
+                if (actualVarValue == null) {
+                    actualVarValue = variableManager.getVariable(varName.asString(), VariableScope.SERVER, "server");
+                }
+                
+                if (actualVarValue != null) {
+                    // Try to compare as numbers
+                    double varNum = Double.parseDouble(actualVarValue.asString());
+                    double compareNum = Double.parseDouble(compareValue.asString());
+                    return varNum < compareNum;
+                }
+            }
         } catch (NumberFormatException e) {
             // If not numbers, compare as strings length
-            return varValue.asString().length() < compareValue.asString().length();
+            context.getPlugin().getLogger().warning("Failed to parse numbers in IfVarLessCondition: " + e.getMessage());
+        } catch (Exception e) {
+            context.getPlugin().getLogger().warning("Error in IfVarLessCondition: " + e.getMessage());
         }
+        
+        return false;
     }
 }

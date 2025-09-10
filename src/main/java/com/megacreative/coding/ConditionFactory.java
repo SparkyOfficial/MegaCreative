@@ -22,6 +22,25 @@ public class ConditionFactory {
         // --- BASIC PLAYER CONDITIONS ---
         register("isOp", IsOpCondition::new);
         register("hasPermission", HasPermissionCondition::new);
+        register("isNearBlock", IsNearBlockCondition::new);
+        register("mobNear", MobNearCondition::new);
+        register("playerGameMode", PlayerGameModeCondition::new);
+        register("playerHealth", PlayerHealthCondition::new);
+        register("isInWorld", IsInWorldCondition::new);
+        register("hasItem", HasItemCondition::new);
+        register("ifVarEquals", IfVarEqualsCondition::new);
+        
+        // --- NEW BASIC PLAYER CONDITIONS ---
+        register("compareVariable", CompareVariableCondition::new);
+        register("worldTime", WorldTimeCondition::new);
+        register("ifVarGreater", IfVarGreaterCondition::new);
+        register("ifVarLess", IfVarLessCondition::new);
+        register("isBlockType", IsBlockTypeCondition::new);
+        register("isPlayerHolding", IsPlayerHoldingCondition::new);
+        register("isNearEntity", IsNearEntityCondition::new);
+        register("hasArmor", HasArmorCondition::new);
+        register("isNight", IsNightCondition::new);
+        register("isRiding", IsRidingCondition::new);
         
         // --- ADVANCED CONDITION BLOCKS ---
         register("checkPlayerStats", CheckPlayerStatsCondition::new);

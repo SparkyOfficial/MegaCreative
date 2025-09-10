@@ -10,7 +10,8 @@ import org.bukkit.entity.Player;
 import org.bukkit.inventory.ItemStack;
 
 /**
- * Условие для проверки, держит ли игрок определенный предмет в руке.
+ * Condition for checking if a player is holding a specific item.
+ * This condition returns true if the player is holding the specified item in their main hand.
  */
 public class IsPlayerHoldingCondition implements BlockCondition {
 
@@ -21,37 +22,34 @@ public class IsPlayerHoldingCondition implements BlockCondition {
             return false;
         }
 
-        ParameterResolver resolver = new ParameterResolver(context);
-
-        // Получаем и разрешаем параметры
-        DataValue rawMaterial = block.getParameter("material");
-
-        if (rawMaterial == null) {
-            context.getPlugin().getLogger().warning("Material not specified in IsPlayerHoldingCondition");
-            return false;
-        }
-
-        DataValue materialValue = resolver.resolve(context, rawMaterial);
-        String materialName = materialValue.asString();
-
         try {
-            Material requiredMaterial = Material.valueOf(materialName.toUpperCase());
-            
-            // Check main hand
-            ItemStack mainHand = player.getInventory().getItemInMainHand();
-            if (mainHand != null && mainHand.getType() == requiredMaterial) {
-                return true;
+            // Get the item parameter from the block
+            DataValue itemValue = block.getParameter("item");
+            if (itemValue == null) {
+                return false;
             }
+
+            // Resolve any placeholders in the item name
+            ParameterResolver resolver = new ParameterResolver(context);
+            DataValue resolvedItem = resolver.resolve(context, itemValue);
             
-            // Check off hand
-            ItemStack offHand = player.getInventory().getItemInOffHand();
-            if (offHand != null && offHand.getType() == requiredMaterial) {
-                return true;
+            // Parse item parameter
+            String itemName = resolvedItem.asString();
+            if (itemName == null || itemName.isEmpty()) {
+                return false;
             }
-            
-            return false;
-        } catch (IllegalArgumentException e) {
-            context.getPlugin().getLogger().warning("Invalid material in IsPlayerHoldingCondition: " + materialName);
+
+            // Check if player is holding the specified item
+            try {
+                Material material = Material.valueOf(itemName.toUpperCase());
+                ItemStack itemInHand = player.getInventory().getItemInMainHand();
+                
+                return itemInHand != null && itemInHand.getType() == material;
+            } catch (IllegalArgumentException e) {
+                return false;
+            }
+        } catch (Exception e) {
+            // If there's an error, return false
             return false;
         }
     }

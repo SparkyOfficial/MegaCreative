@@ -4,31 +4,39 @@ import com.megacreative.coding.BlockAction;
 import com.megacreative.coding.CodeBlock;
 import com.megacreative.coding.ExecutionContext;
 import com.megacreative.coding.ParameterResolver;
+import com.megacreative.coding.executors.ExecutionResult;
 import com.megacreative.coding.values.DataValue;
-import com.megacreative.coding.variables.VariableManager;
 import org.bukkit.Bukkit;
-import org.bukkit.entity.Player;
 
+/**
+ * Action for broadcasting a message to all players.
+ * This action retrieves a message from the block parameters and broadcasts it.
+ */
 public class BroadcastAction implements BlockAction {
-    @Override
-    public void execute(ExecutionContext context) {
-        Player player = context.getPlayer();
-        CodeBlock block = context.getCurrentBlock();
-        VariableManager variableManager = context.getPlugin().getVariableManager();
 
-        if (block == null || variableManager == null) return;
-        
-        ParameterResolver resolver = new ParameterResolver(context);
-        
-        DataValue messageValue = block.getParameter("message");
-        if (messageValue != null) {
-            DataValue resolvedMessage = resolver.resolve(context, messageValue);
-            String message = resolvedMessage.asString();
-            
-            if (player != null) {
-                message = message.replace("%player%", player.getName());
+    @Override
+    public ExecutionResult execute(CodeBlock block, ExecutionContext context) {
+        try {
+            // Get the message parameter from the block
+            DataValue messageValue = block.getParameter("message");
+            if (messageValue == null) {
+                return ExecutionResult.error("Message parameter is missing");
             }
-            Bukkit.broadcastMessage(message);
+
+            // Resolve any placeholders in the message
+            ParameterResolver resolver = new ParameterResolver(context);
+            DataValue resolvedMessage = resolver.resolve(context, messageValue);
+            
+            // Broadcast the message
+            String message = resolvedMessage.asString();
+            if (message != null && !message.isEmpty()) {
+                Bukkit.broadcastMessage(message);
+                return ExecutionResult.success("Message broadcasted successfully");
+            } else {
+                return ExecutionResult.error("Message is empty or null");
+            }
+        } catch (Exception e) {
+            return ExecutionResult.error("Failed to broadcast message: " + e.getMessage());
         }
     }
 }

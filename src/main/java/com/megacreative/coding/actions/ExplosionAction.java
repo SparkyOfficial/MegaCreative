@@ -4,43 +4,61 @@ import com.megacreative.coding.BlockAction;
 import com.megacreative.coding.CodeBlock;
 import com.megacreative.coding.ExecutionContext;
 import com.megacreative.coding.ParameterResolver;
+import com.megacreative.coding.executors.ExecutionResult;
 import com.megacreative.coding.values.DataValue;
-import com.megacreative.coding.variables.VariableManager;
 import org.bukkit.Location;
 import org.bukkit.entity.Player;
 
+/**
+ * Action for creating an explosion.
+ * This action creates an explosion at the player's location.
+ */
 public class ExplosionAction implements BlockAction {
+
     @Override
-    public void execute(ExecutionContext context) {
+    public ExecutionResult execute(CodeBlock block, ExecutionContext context) {
         Player player = context.getPlayer();
-        CodeBlock block = context.getCurrentBlock();
-
-        if (player == null || block == null) return;
-
-        VariableManager variableManager = context.getPlugin().getVariableManager();
-        if (variableManager == null) return;
-        
-        ParameterResolver resolver = new ParameterResolver(context);
-
-        // Получаем и разрешаем параметры
-        DataValue rawPower = block.getParameter("power");
-        DataValue rawBreakBlocks = block.getParameter("breakBlocks");
-
-        String powerStr = rawPower != null ? resolver.resolve(context, rawPower).asString() : "4.0";
-        String breakBlocksStr = rawBreakBlocks != null ? resolver.resolve(context, rawBreakBlocks).asString() : "true";
+        if (player == null) {
+            return ExecutionResult.error("No player found in execution context");
+        }
 
         try {
-            float power = powerStr != null ? Float.parseFloat(powerStr) : 4.0f;
-            boolean breakBlocks = breakBlocksStr != null ? Boolean.parseBoolean(breakBlocksStr) : true;
+            // Get the power parameter from the block (default to 4.0)
+            float power = 4.0f;
+            DataValue powerValue = block.getParameter("power");
+            if (powerValue != null) {
+                try {
+                    power = Math.max(0, powerValue.asNumber().floatValue());
+                } catch (NumberFormatException e) {
+                    // Use default power if parsing fails
+                }
+            }
+
+            // Get the fire parameter from the block (default to false)
+            boolean fire = false;
+            DataValue fireValue = block.getParameter("fire");
+            if (fireValue != null) {
+                fire = "true".equalsIgnoreCase(fireValue.asString()) || "1".equals(fireValue.asString());
+            }
+
+            // Get the breakBlocks parameter from the block (default to true)
+            boolean breakBlocks = true;
+            DataValue breakBlocksValue = block.getParameter("breakBlocks");
+            if (breakBlocksValue != null) {
+                breakBlocks = !"false".equalsIgnoreCase(breakBlocksValue.asString()) && !"0".equals(breakBlocksValue.asString());
+            }
+
+            // Create the explosion at the player's location
+            Location location = player.getLocation();
+            boolean success = player.getWorld().createExplosion(location, power, fire, breakBlocks);
             
-            Location location = context.getBlockLocation() != null ? 
-                context.getBlockLocation() : player.getLocation();
-            
-            location.getWorld().createExplosion(location, power, breakBlocks);
-            player.sendMessage("§a💥 Взрыв создан с мощностью " + power + "!");
-            
-        } catch (NumberFormatException e) {
-            player.sendMessage("§cОшибка: мощность должна быть числом");
+            if (success) {
+                return ExecutionResult.success("Created explosion with power " + power);
+            } else {
+                return ExecutionResult.error("Failed to create explosion");
+            }
+        } catch (Exception e) {
+            return ExecutionResult.error("Failed to create explosion: " + e.getMessage());
         }
     }
-} 
+}

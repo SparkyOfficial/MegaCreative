@@ -4,52 +4,76 @@ import com.megacreative.coding.BlockAction;
 import com.megacreative.coding.CodeBlock;
 import com.megacreative.coding.ExecutionContext;
 import com.megacreative.coding.ParameterResolver;
+import com.megacreative.coding.executors.ExecutionResult;
 import com.megacreative.coding.values.DataValue;
 import com.megacreative.coding.variables.VariableManager;
-import org.bukkit.entity.Player;
+import com.megacreative.coding.variables.IVariableManager.VariableScope;
 
 import java.util.Random;
 
+/**
+ * Action for generating a random number.
+ * This action generates a random number and stores it in a variable.
+ */
 public class RandomNumberAction implements BlockAction {
-    private static final Random random = new Random();
     
+    private static final Random random = new Random();
+
     @Override
-    public void execute(ExecutionContext context) {
-        Player player = context.getPlayer();
-        CodeBlock block = context.getCurrentBlock();
-
-        if (player == null || block == null) return;
-
-        ParameterResolver resolver = new ParameterResolver(context);
-
-        // Получаем и разрешаем параметры
-        DataValue rawMin = block.getParameter("min");
-        DataValue rawMax = block.getParameter("max");
-        DataValue rawVar = block.getParameter("var");
-        
-        if (rawMin == null || rawMax == null || rawVar == null) return;
-
-        String minStr = resolver.resolve(context, rawMin).asString();
-        String maxStr = resolver.resolve(context, rawMax).asString();
-        String varName = resolver.resolve(context, rawVar).asString();
-
+    public ExecutionResult execute(CodeBlock block, ExecutionContext context) {
         try {
-            int min = Integer.parseInt(minStr);
-            int max = Integer.parseInt(maxStr);
-            
-            if (min > max) {
-                int temp = min;
-                min = max;
-                max = temp;
+            // Get the target variable name parameter from the block
+            DataValue targetValue = block.getParameter("target");
+            if (targetValue == null) {
+                return ExecutionResult.error("Target variable name parameter is missing");
             }
+
+            // Get the min parameter from the block (default to 0)
+            double min = 0;
+            DataValue minValue = block.getParameter("min");
+            if (minValue != null) {
+                try {
+                    min = minValue.asNumber().doubleValue();
+                } catch (NumberFormatException e) {
+                    // Use default min if parsing fails
+                }
+            }
+
+            // Get the max parameter from the block (default to 100)
+            double max = 100;
+            DataValue maxValue = block.getParameter("max");
+            if (maxValue != null) {
+                try {
+                    max = maxValue.asNumber().doubleValue();
+                } catch (NumberFormatException e) {
+                    // Use default max if parsing fails
+                }
+            }
+
+            // Resolve any placeholders in the target variable name
+            ParameterResolver resolver = new ParameterResolver(context);
+            DataValue resolvedTarget = resolver.resolve(context, targetValue);
             
-            int randomNumber = random.nextInt(max - min + 1) + min;
-            context.setVariable(varName, randomNumber);
+            // Parse target parameter
+            String targetName = resolvedTarget.asString();
+            if (targetName == null || targetName.isEmpty()) {
+                return ExecutionResult.error("Target variable name is empty or null");
+            }
+
+            // Generate random number
+            double randomNumber = min + (max - min) * random.nextDouble();
             
-            player.sendMessage("§a🎲 Случайное число " + randomNumber + " сохранено в переменную '" + varName + "'");
-            
-        } catch (NumberFormatException e) {
-            player.sendMessage("§cОшибка в параметрах min/max: " + minStr + "/" + maxStr);
+            // Store the random number in the target variable
+            VariableManager variableManager = context.getPlugin().getVariableManager();
+            if (variableManager != null) {
+                String scriptId = context.getScriptId() != null ? context.getScriptId() : "global";
+                variableManager.setVariable(targetName, DataValue.of(randomNumber), VariableScope.LOCAL, scriptId);
+                return ExecutionResult.success("Generated random number " + randomNumber + " and stored in '" + targetName + "'");
+            } else {
+                return ExecutionResult.error("Variable manager is not available");
+            }
+        } catch (Exception e) {
+            return ExecutionResult.error("Failed to generate random number: " + e.getMessage());
         }
     }
-} 
+}

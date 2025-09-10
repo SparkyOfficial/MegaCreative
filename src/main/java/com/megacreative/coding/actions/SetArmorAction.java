@@ -3,109 +3,73 @@ package com.megacreative.coding.actions;
 import com.megacreative.coding.BlockAction;
 import com.megacreative.coding.CodeBlock;
 import com.megacreative.coding.ExecutionContext;
-import com.megacreative.services.BlockConfigService;
-import org.bukkit.Material;
+import com.megacreative.coding.ParameterResolver;
+import com.megacreative.coding.executors.ExecutionResult;
+import com.megacreative.coding.values.DataValue;
 import org.bukkit.entity.Player;
 import org.bukkit.inventory.ItemStack;
 
 /**
- * Действие для установки брони игроку.
- * Использует предметы из виртуального инвентаря конфигурации блока.
- * 
- * Пример использования:
- * onJoin -> setArmor([алмазный шлем, алмазный нагрудник]) -> sendMessage("Броня установлена!")
+ * Action for setting a player's armor.
+ * This action sets the player's armor pieces.
  */
 public class SetArmorAction implements BlockAction {
 
     @Override
-    public void execute(ExecutionContext context) {
-        // 1. Убедимся, что у нас есть игрок
+    public ExecutionResult execute(CodeBlock block, ExecutionContext context) {
         Player player = context.getPlayer();
         if (player == null) {
-            return;
+            return ExecutionResult.error("No player found in execution context");
         }
 
-        // 2. Получаем наш блок кода и его конфигурацию
-        CodeBlock actionBlock = context.getCurrentBlock();
-        if (actionBlock == null) return;
+        try {
+            // Get the helmet parameter from the block (optional)
+            DataValue helmetValue = block.getParameter("helmet");
+            
+            // Get the chestplate parameter from the block (optional)
+            DataValue chestplateValue = block.getParameter("chestplate");
+            
+            // Get the leggings parameter from the block (optional)
+            DataValue leggingsValue = block.getParameter("leggings");
+            
+            // Get the boots parameter from the block (optional)
+            DataValue bootsValue = block.getParameter("boots");
 
-        // 3. Получаем slot resolver из BlockConfigService
-        BlockConfigService configService = context.getPlugin().getServiceRegistry().getBlockConfigService();
-        java.util.function.Function<String, Integer> slotResolver = 
-            configService != null ? configService.getSlotResolver("setArmor") : null;
-
-        // 4. Получаем предметы брони из именованных слотов
-        ItemStack helmet = slotResolver != null ? 
-            actionBlock.getItemFromSlot("helmet_slot", slotResolver) : null;
-        ItemStack chestplate = slotResolver != null ? 
-            actionBlock.getItemFromSlot("chestplate_slot", slotResolver) : null;
-        ItemStack leggings = slotResolver != null ? 
-            actionBlock.getItemFromSlot("leggings_slot", slotResolver) : null;
-        ItemStack boots = slotResolver != null ? 
-            actionBlock.getItemFromSlot("boots_slot", slotResolver) : null;
-        
-        // Fallback на старый способ для совместимости
-        if (helmet == null) helmet = actionBlock.getConfigItem(0);
-        if (chestplate == null) chestplate = actionBlock.getConfigItem(1);
-        if (leggings == null) leggings = actionBlock.getConfigItem(2);
-        if (boots == null) boots = actionBlock.getConfigItem(3);
-
-        // 5. Устанавливаем броню
-        int armorPieces = 0;
-        
-        if (helmet != null && isArmorPiece(helmet.getType(), ArmorType.HELMET)) {
-            player.getInventory().setHelmet(helmet.clone());
-            armorPieces++;
+            // Resolve any placeholders in the armor items
+            ParameterResolver resolver = new ParameterResolver(context);
+            
+            // Set the armor pieces
+            if (helmetValue != null) {
+                DataValue resolvedHelmet = resolver.resolve(context, helmetValue);
+                if (resolvedHelmet.getValue() instanceof ItemStack) {
+                    player.getInventory().setHelmet((ItemStack) resolvedHelmet.getValue());
+                }
+            }
+            
+            if (chestplateValue != null) {
+                DataValue resolvedChestplate = resolver.resolve(context, chestplateValue);
+                if (resolvedChestplate.getValue() instanceof ItemStack) {
+                    player.getInventory().setChestplate((ItemStack) resolvedChestplate.getValue());
+                }
+            }
+            
+            if (leggingsValue != null) {
+                DataValue resolvedLeggings = resolver.resolve(context, leggingsValue);
+                if (resolvedLeggings.getValue() instanceof ItemStack) {
+                    player.getInventory().setLeggings((ItemStack) resolvedLeggings.getValue());
+                }
+            }
+            
+            if (bootsValue != null) {
+                DataValue resolvedBoots = resolver.resolve(context, bootsValue);
+                if (resolvedBoots.getValue() instanceof ItemStack) {
+                    player.getInventory().setBoots((ItemStack) resolvedBoots.getValue());
+                }
+            }
+            
+            return ExecutionResult.success("Set player's armor");
+        } catch (Exception e) {
+            return ExecutionResult.error("Failed to set armor: " + e.getMessage());
         }
-        
-        if (chestplate != null && isArmorPiece(chestplate.getType(), ArmorType.CHESTPLATE)) {
-            player.getInventory().setChestplate(chestplate.clone());
-            armorPieces++;
-        }
-        
-        if (leggings != null && isArmorPiece(leggings.getType(), ArmorType.LEGGINGS)) {
-            player.getInventory().setLeggings(leggings.clone());
-            armorPieces++;
-        }
-        
-        if (boots != null && isArmorPiece(boots.getType(), ArmorType.BOOTS)) {
-            player.getInventory().setBoots(boots.clone());
-            armorPieces++;
-        }
-
-        // 6. Уведомляем игрока
-        if (armorPieces > 0) {
-            player.sendMessage("§a✓ Установлено " + armorPieces + " предметов брони!");
-        } else {
-            player.sendMessage("§eℹ Нечего устанавливать.");
-        }
-    }
-    
-    /**
-     * Проверяет, является ли предмет броней указанного типа
-     */
-    private boolean isArmorPiece(Material material, ArmorType armorType) {
-        switch (armorType) {
-            case HELMET:
-                return material.name().endsWith("_HELMET") || material == Material.TURTLE_HELMET;
-            case CHESTPLATE:
-                return material.name().endsWith("_CHESTPLATE") || material == Material.ELYTRA;
-            case LEGGINGS:
-                return material.name().endsWith("_LEGGINGS");
-            case BOOTS:
-                return material.name().endsWith("_BOOTS");
-            default:
-                return false;
-        }
-    }
-    
-    /**
-     * Типы брони
-     */
-    private enum ArmorType {
-        HELMET,
-        CHESTPLATE,
-        LEGGINGS,
-        BOOTS
     }
 }
