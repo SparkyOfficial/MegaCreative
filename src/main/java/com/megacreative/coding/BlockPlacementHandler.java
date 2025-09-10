@@ -83,8 +83,28 @@ public class BlockPlacementHandler implements Listener {
         // Устанавливаем одну табличку с правильным отображаемым именем
         setSignOnBlock(block.getLocation(), config.getDisplayName());
         
+        // Создаем сундук над блоком для параметров
+        spawnContainerAboveBlock(block.getLocation(), config.getId());
+        
         player.sendMessage("§a✓ Блок кода размещен: " + config.getDisplayName());
         player.sendMessage("§7Кликните правой кнопкой для настройки");
+    }
+
+    /**
+     * Создает контейнер (сундук) над блоком кода для параметров
+     */
+    private void spawnContainerAboveBlock(Location blockLocation, String actionId) {
+        Location containerLocation = blockLocation.clone().add(0, 1, 0);
+        Block containerBlock = containerLocation.getBlock();
+        
+        // Проверяем, что место свободно
+        if (containerBlock.getType().isAir() || containerBlock.isLiquid()) {
+            // Создаем сундук
+            containerBlock.setType(Material.CHEST);
+            
+            // Здесь можно добавить дополнительную настройку сундука, если нужно
+            plugin.getLogger().info("Spawned container above code block at " + blockLocation);
+        }
     }
 
     /**
@@ -100,6 +120,23 @@ public class BlockPlacementHandler implements Listener {
             
             // Удаляем табличку, если она есть
             removeSignFromBlock(loc);
+            
+            // Удаляем контейнер над блоком, если он есть
+            removeContainerAboveBlock(loc);
+        }
+    }
+
+    /**
+     * Удаляет контейнер над блоком кода
+     */
+    private void removeContainerAboveBlock(Location blockLocation) {
+        Location containerLocation = blockLocation.clone().add(0, 1, 0);
+        Block containerBlock = containerLocation.getBlock();
+        
+        // Проверяем, является ли блок сундуком
+        if (containerBlock.getType() == Material.CHEST) {
+            containerBlock.setType(Material.AIR);
+            plugin.getLogger().info("Removed container above code block at " + blockLocation);
         }
     }
 
@@ -138,6 +175,15 @@ public class BlockPlacementHandler implements Listener {
             
             // Открываем GUI конфигурации блока
             plugin.getServiceRegistry().getBlockConfigManager().openConfigGUI(player, location);
+        }
+        
+        // Проверяем, кликнул ли игрок по контейнеру над блоком кода
+        Location blockBelow = location.clone().add(0, -1, 0);
+        if (blockCodeBlocks.containsKey(blockBelow)) {
+            // Открываем GUI для настройки параметров через контейнер
+            event.setCancelled(true);
+            player.sendMessage("§eОткрытие настройки параметров через контейнер...");
+            // Здесь будет логика открытия GUI для настройки параметров
         }
     }
 
