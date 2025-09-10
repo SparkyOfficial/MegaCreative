@@ -4,30 +4,33 @@ import com.megacreative.coding.BlockAction;
 import com.megacreative.coding.CodeBlock;
 import com.megacreative.coding.ExecutionContext;
 import com.megacreative.coding.executors.ExecutionResult;
+import com.megacreative.coding.values.DataValue;
 import org.bukkit.entity.Player;
 
-// Шаблон для нового ДЕЙСТВИЯ
 public class SendActionBarAction implements BlockAction {
 
     @Override
     public ExecutionResult execute(CodeBlock block, ExecutionContext context) {
         Player player = context.getPlayer();
         if (player == null) {
-            return ExecutionResult.error("Игрок не найден.");
+            return ExecutionResult.error("No player in context");
         }
 
         try {
-            // TODO: Получите параметры из блока, используя block.getParameter("key")
-            String message = block.getParameter("message").asString();
-            int duration = block.getParameter("duration").asNumber().intValue();
-            
-            // TODO: Реализуйте логику отправки сообщения в ActionBar
-            // player.sendActionBar(...);
-            
-            return ExecutionResult.success("Сообщение в ActionBar отправлено.");
+            // Get message parameter
+            DataValue messageValue = block.getParameter("message");
+            if (messageValue == null || messageValue.isEmpty()) {
+                return ExecutionResult.error("Message parameter is missing");
+            }
 
+            String message = messageValue.asString();
+            
+            // Send action bar message
+            player.sendActionBar(message);
+
+            return ExecutionResult.success("Sent action bar message");
         } catch (Exception e) {
-            return ExecutionResult.error("Ошибка при отправке сообщения в ActionBar: " + e.getMessage());
+            return ExecutionResult.error("Error sending action bar: " + e.getMessage());
         }
     }
 }

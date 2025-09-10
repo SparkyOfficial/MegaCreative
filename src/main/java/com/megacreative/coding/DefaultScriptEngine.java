@@ -223,6 +223,22 @@ public class DefaultScriptEngine implements ScriptEngine {
         }
     }
     
+    // New method to process a chain of blocks without returning to parent
+    private ExecutionResult processBlockChain(CodeBlock startBlock, ExecutionContext context, int recursionDepth) {
+        CodeBlock current = startBlock;
+        ExecutionResult lastResult = ExecutionResult.success();
+        
+        while (current != null && !context.isCancelled()) {
+            lastResult = processBlock(current, context, recursionDepth);
+            if (!lastResult.isSuccess()) {
+                break;
+            }
+            current = current.getNextBlock();
+        }
+        
+        return lastResult;
+    }
+    
     @Override
     public void registerAction(BlockType type, BlockAction action) {
         // Implementation for registering actions

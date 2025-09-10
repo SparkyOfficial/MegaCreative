@@ -3,107 +3,85 @@ package com.megacreative.coding.actions;
 import com.megacreative.coding.BlockAction;
 import com.megacreative.coding.CodeBlock;
 import com.megacreative.coding.ExecutionContext;
+import com.megacreative.coding.ScriptEngine;
 import com.megacreative.coding.executors.ExecutionResult;
-import com.megacreative.MegaCreative;
-import org.bukkit.entity.Player;
+import com.megacreative.coding.values.DataValue;
 import org.bukkit.scheduler.BukkitRunnable;
 import org.bukkit.scheduler.BukkitTask;
 
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
-import java.util.UUID;
 
 public class AsyncLoopAction implements BlockAction {
     
-    // Храним активные задачи для возможности их отмены
-    private static final Map<UUID, BukkitTask> activeTasks = new ConcurrentHashMap<>();
-    
+    private static final Map<String, BukkitTask> activeLoops = new ConcurrentHashMap<>();
+
     @Override
     public ExecutionResult execute(CodeBlock block, ExecutionContext context) {
-        Player player = context.getPlayer();
-        if (player == null) {
-            return ExecutionResult.error("Игрок не найден.");
-        }
-        
         try {
-            // Получаем параметры из блока
-            int iterations = block.getParameter("iterations").asNumber().intValue();
-            int delay = block.getParameter("delay").asNumber().intValue();
+            // Get parameters
+            DataValue iterationsValue = block.getParameter("iterations", DataValue.of(-1)); // -1 for infinite
+            DataValue delayValue = block.getParameter("delay", DataValue.of(20)); // Default 20 ticks (1 second)
             
-            // Получаем дочерние блоки для выполнения в цикле
+            int iterations = iterationsValue.asNumber().intValue();
+            int delay = delayValue.asNumber().intValue();
+            
             if (block.getChildren().isEmpty()) {
-                return ExecutionResult.error("У блока цикла нет дочерних блоков для выполнения.");
+                return ExecutionResult.error("Loop has no blocks inside to execute.");
             }
+            
+            // Generate a unique ID for this loop
+            String loopId = context.getPlayer().getUniqueId().toString() + "_" + System.currentTimeMillis();
             
             CodeBlock firstChild = block.getChildren().get(0);
             
-            // Создаем уникальный ID для этой задачи
-            UUID taskId = UUID.randomUUID();
-            
-            // Создаем и запускаем асинхронную задачу
-            BukkitRunnable task = new BukkitRunnable() {
+            BukkitTask task = new BukkitRunnable() {
                 private int count = 0;
                 
                 @Override
                 public void run() {
-                    try {
-                        // Проверяем, не отменили ли задачу
-                        if (context.isCancelled()) {
-                            this.cancel();
-                            activeTasks.remove(taskId);
-                            return;
-                        }
-                        
-                        // Проверяем количество итераций (-1 означает бесконечный цикл)
-                        if (iterations != -1 && count >= iterations) {
-                            this.cancel();
-                            activeTasks.remove(taskId);
-                            return;
-                        }
-                        
-                        // Создаем новый контекст для каждой итерации, чтобы избежать конфликтов
-                        ExecutionContext loopContext = new ExecutionContext.Builder()
-                            .plugin(context.getPlugin())
-                            .player(context.getPlayer())
-                            .creativeWorld(context.getCreativeWorld())
-                            .currentBlock(firstChild)
-                            .build();
-                        
-                        // Выполняем дочерние блоки
-                        // Здесь нужно вызвать движок для выполнения цепочки дочерних блоков
-                        // Для упрощения просто выполним первый дочерний блок
-                        // В реальной реализации нужно выполнить всю цепочку дочерних блоков
-                        
-                        count++;
-                        
-                    } catch (Exception e) {
-                        // Логируем ошибку и останавливаем цикл
-                        context.getPlugin().getLogger().severe("Ошибка в асинхронном цикле: " + e.getMessage());
-                        e.printStackTrace();
+                    // Check if we should stop
+                    if ((iterations != -1 && count >= iterations) || context.isCancelled()) {
+                        activeLoops.remove(loopId);
                         this.cancel();
-                        activeTasks.remove(taskId);
+                        return;
                     }
+                    
+                    // Execute the child blocks
+                    try {
+                        context.getPlugin().getServer().getScheduler().runTask(context.getPlugin(), () -> {
+                            // Process the child block chain using the script engine from service registry
+                            ScriptEngine scriptEngine = context.getPlugin().getServiceRegistry().getService(ScriptEngine.class);
+                            scriptEngine.executeBlockChain(firstChild, context.getPlayer(), "loop");
+                        });
+                    } catch (Exception e) {
+                        context.getPlugin().getLogger().severe("Error in async loop: " + e.getMessage());
+                        activeLoops.remove(loopId);
+                        this.cancel();
+                        return;
+                    }
+                    
+                    count++;
                 }
-            };
+            }.runTaskTimerAsynchronously(context.getPlugin(), 0L, delay);
             
-            BukkitTask bukkitTask = task.runTaskTimerAsynchronously(context.getPlugin(), 0L, delay);
-            activeTasks.put(taskId, bukkitTask);
+            // Store the task so it can be cancelled later if needed
+            activeLoops.put(loopId, task);
             
-            return ExecutionResult.success("Асинхронный цикл запущен с " + 
-                (iterations == -1 ? "бесконечным" : iterations) + " количеством итераций.");
-
+            // For async loops, we don't block the main execution chain
+            return ExecutionResult.success("Started async loop with ID: " + loopId);
         } catch (Exception e) {
-            return ExecutionResult.error("Ошибка при запуске асинхронного цикла: " + e.getMessage());
+            return ExecutionResult.error("Error starting async loop: " + e.getMessage());
         }
     }
     
-    // Метод для отмены всех активных задач при выгрузке плагина
-    public static void cancelAllTasks() {
-        for (BukkitTask task : activeTasks.values()) {
-            try {
-                task.cancel();
-            } catch (Exception ignored) {}
-        }
-        activeTasks.clear();
+    public static void cancelAllLoopsForPlayer(String playerId) {
+        activeLoops.entrySet().removeIf(entry -> {
+            if (entry.getKey().startsWith(playerId)) {
+                entry.getValue().cancel();
+                return true;
+            }
+            return false;
+        });
     }
 }

@@ -1,56 +1,108 @@
 package com.megacreative.coding;
 
 import com.megacreative.coding.values.DataValue;
+import com.megacreative.coding.values.LocationValue;
+import com.megacreative.coding.values.PlayerValue;
+import com.megacreative.coding.variables.VariableManager;
+import com.megacreative.coding.variables.IVariableManager;
 import org.bukkit.entity.Player;
 import org.bukkit.Location;
 
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
-/**
- * Utility class for resolving parameters with placeholders.
- * This class handles the resolution of DataValue objects that may contain placeholders.
- */
 public class ParameterResolver {
-    
     private final ExecutionContext context;
-    
+    private static final Pattern PLACEHOLDER_PATTERN = Pattern.compile("\\$\\{([^}]+)\\}");
+
     public ParameterResolver(ExecutionContext context) {
         this.context = context;
     }
-    
-    /**
-     * Resolves a DataValue that may contain placeholders
-     * @param context The execution context
-     * @param value The DataValue to resolve
-     * @return The resolved DataValue
-     */
+
     public DataValue resolve(ExecutionContext context, DataValue value) {
-        if (value == null) {
+        if (value == null || value.isEmpty()) {
             return value;
         }
-        
-        // If it's a string value, resolve placeholders in it
-        if (value.getType() == com.megacreative.coding.values.ValueType.TEXT) {
-            String text = value.asString();
-            String resolvedText = PlaceholderResolver.resolvePlaceholders(text, context);
-            return com.megacreative.coding.values.DataValue.fromObject(resolvedText);
+
+        String text = value.asString();
+        if (text == null || !text.contains("${")) {
+            return value;
         }
-        
-        // For other types, return as is
-        return value;
+
+        Matcher matcher = PLACEHOLDER_PATTERN.matcher(text);
+        StringBuffer result = new StringBuffer();
+
+        while (matcher.find()) {
+            String placeholder = matcher.group(1);
+            String replacement = resolvePlaceholder(placeholder, context);
+            matcher.appendReplacement(result, replacement != null ? replacement : matcher.group(0));
+        }
+        matcher.appendTail(result);
+
+        return DataValue.of(result.toString());
     }
-    
-    /**
-     * Resolves a string that may contain placeholders
-     * @param input The input string with placeholders
-     * @return The string with all placeholders resolved
-     */
-    public String resolveString(String input) {
-        if (input == null || input.isEmpty()) {
-            return input;
+
+    private String resolvePlaceholder(String placeholder, ExecutionContext context) {
+        // Handle player-related placeholders
+        Player player = context.getPlayer();
+        if (player != null) {
+            switch (placeholder.toLowerCase()) {
+                case "player_name":
+                    return player.getName();
+                case "player_display_name":
+                    return player.getDisplayName();
+                case "player_uuid":
+                    return player.getUniqueId().toString();
+                case "player_world":
+                    return player.getWorld().getName();
+                case "player_x":
+                    return String.valueOf(player.getLocation().getX());
+                case "player_y":
+                    return String.valueOf(player.getLocation().getY());
+                case "player_z":
+                    return String.valueOf(player.getLocation().getZ());
+            }
         }
-        
-        return PlaceholderResolver.resolvePlaceholders(input, context);
+
+        // Handle location-related placeholders
+        if (context.getBlockLocation() != null) {
+            Location location = context.getBlockLocation();
+            switch (placeholder.toLowerCase()) {
+                case "block_x":
+                    return String.valueOf(location.getX());
+                case "block_y":
+                    return String.valueOf(location.getY());
+                case "block_z":
+                    return String.valueOf(location.getZ());
+                case "block_world":
+                    return location.getWorld().getName();
+            }
+        }
+
+        // Handle variable placeholders
+        VariableManager variableManager = context.getPlugin().getVariableManager();
+        if (variableManager != null) {
+            // We need to get the world name from the context
+            String worldName = "global"; // Default to global scope
+            if (context.getCreativeWorld() != null) {
+                worldName = context.getCreativeWorld().getWorldName();
+            }
+            
+            DataValue variableValue = variableManager.getVariable(worldName, IVariableManager.VariableScope.GLOBAL, placeholder);
+            if (variableValue != null) {
+                return variableValue.asString();
+            }
+        }
+
+        // Handle built-in placeholders
+        switch (placeholder.toLowerCase()) {
+            case "timestamp":
+                return String.valueOf(System.currentTimeMillis());
+            case "random":
+                return String.valueOf(Math.random());
+        }
+
+        // If we can't resolve it, return null
+        return null;
     }
 }
