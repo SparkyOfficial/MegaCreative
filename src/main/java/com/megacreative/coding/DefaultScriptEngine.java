@@ -164,6 +164,9 @@ public class DefaultScriptEngine implements ScriptEngine {
         return future;
     }
 
+    // Add a counter for instruction limiting to prevent infinite loops
+    private static final int MAX_INSTRUCTIONS_PER_TICK = 1000;
+    
     private ExecutionResult processBlock(CodeBlock block, ExecutionContext context, int recursionDepth) {
         // Check if execution is cancelled
         if (block == null || context.isCancelled()) {
@@ -172,6 +175,14 @@ public class DefaultScriptEngine implements ScriptEngine {
         
         // Check for pause/step conditions
         checkPauseAndBreakpoints(block, context);
+        
+        // Check for instruction limit to prevent infinite loops
+        if (context.getInstructionCount() > MAX_INSTRUCTIONS_PER_TICK) {
+            return ExecutionResult.error("Max instructions per tick exceeded. Possible infinite loop detected.");
+        }
+        
+        // Increment instruction counter
+        context.incrementInstructionCount();
         
         if (recursionDepth > MAX_RECURSION_DEPTH) {
             return ExecutionResult.error("Max recursion depth exceeded.");
@@ -217,34 +228,74 @@ public class DefaultScriptEngine implements ScriptEngine {
                 
             case "CONTROL":
                 // Here will be logic for IF/ELSE, LOOP etc.
-                if (block.getAction().equals("conditionalBranch")) {
-                    if (context.getLastConditionResult()) {
-                        // The result of the last condition was TRUE, execute child blocks
-                        if (!block.getChildren().isEmpty()) {
-                            // Execute the first child branch
-                            ExecutionResult childResult = processBlock(block.getChildren().get(0), context, recursionDepth + 1);
-                            // If the child branch ended with an error, stop
-                            if (!childResult.isSuccess()) return childResult;
+                switch (block.getAction()) {
+                    case "conditionalBranch":
+                        if (context.getLastConditionResult()) {
+                            // The result of the last condition was TRUE, execute child blocks
+                            if (!block.getChildren().isEmpty()) {
+                                // Execute the first child branch
+                                ExecutionResult childResult = processBlock(block.getChildren().get(0), context, recursionDepth + 1);
+                                // If the child branch ended with an error, stop
+                                if (!childResult.isSuccess()) return childResult;
+                            }
                         }
-                    }
-                    // Regardless of the result, after IF we go to the next block in the MAIN chain
-                    return processBlock(block.getNextBlock(), context, recursionDepth + 1);
-                } else if (block.getAction().equals("else")) {
-                    // Processing the ELSE block
-                    if (!context.getLastConditionResult()) {
-                        // The previous condition was FALSE, execute the ELSE block
-                        if (!block.getChildren().isEmpty()) {
-                            // Execute the first child branch (else body)
-                            ExecutionResult childResult = processBlock(block.getChildren().get(0), context, recursionDepth + 1);
-                            // If the child branch ended with an error, stop
-                            if (!childResult.isSuccess()) return childResult;
+                        // Regardless of the result, after IF we go to the next block in the MAIN chain
+                        return processBlock(block.getNextBlock(), context, recursionDepth + 1);
+                        
+                    case "else":
+                        // Processing the ELSE block
+                        if (!context.getLastConditionResult()) {
+                            // The previous condition was FALSE, execute the ELSE block
+                            if (!block.getChildren().isEmpty()) {
+                                // Execute the first child branch (else body)
+                                ExecutionResult childResult = processBlock(block.getChildren().get(0), context, recursionDepth + 1);
+                                // If the child branch ended with an error, stop
+                                if (!childResult.isSuccess()) return childResult;
+                            }
                         }
-                    }
-                    // After ELSE we go to the next block in the MAIN chain
-                    return processBlock(block.getNextBlock(), context, recursionDepth + 1);
+                        // After ELSE we go to the next block in the MAIN chain
+                        return processBlock(block.getNextBlock(), context, recursionDepth + 1);
+                        
+                    case "whileLoop":
+                        // While loop implementation
+                        // Check condition first
+                        BlockCondition whileCondition = conditionFactory.createCondition(block.getCondition());
+                        if (whileCondition != null && whileCondition.evaluate(block, context)) {
+                            // Execute body
+                            if (!block.getChildren().isEmpty()) {
+                                ExecutionResult childResult = processBlock(block.getChildren().get(0), context, recursionDepth + 1);
+                                if (!childResult.isSuccess()) return childResult;
+                            }
+                            // After body execution, loop back to the same while block to check condition again
+                            // But limit recursion to prevent stack overflow
+                            if (recursionDepth < MAX_RECURSION_DEPTH - 1) {
+                                return processBlock(block, context, recursionDepth + 1);
+                            } else {
+                                return ExecutionResult.error("Max recursion depth exceeded in while loop.");
+                            }
+                        }
+                        // Condition is false, exit loop and continue with next block
+                        return processBlock(block.getNextBlock(), context, recursionDepth + 1);
+                        
+                    case "forEach":
+                        // For each implementation would go here
+                        // This is a placeholder for future implementation
+                        return processBlock(block.getNextBlock(), context, recursionDepth + 1);
+                        
+                    case "break":
+                        // Break implementation - would need to track loop context
+                        // This is a placeholder for future implementation
+                        return processBlock(block.getNextBlock(), context, recursionDepth + 1);
+                        
+                    case "continue":
+                        // Continue implementation - would need to track loop context
+                        // This is a placeholder for future implementation
+                        return processBlock(block.getNextBlock(), context, recursionDepth + 1);
+                        
+                    default:
+                        // For other CONTROL blocks, just go to the next block
+                        return processBlock(block.getNextBlock(), context, recursionDepth + 1);
                 }
-                // For other CONTROL blocks, just go to the next block
-                return processBlock(block.getNextBlock(), context, recursionDepth + 1);
                 
             case "FUNCTION":
                 // Function processing - this is the next big step.

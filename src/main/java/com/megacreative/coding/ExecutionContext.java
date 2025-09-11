@@ -32,6 +32,9 @@ public class ExecutionContext {
     private boolean paused = false;
     private boolean stepping = false;
     private boolean cancelled = false;
+    
+    // Instruction counter for loop protection
+    private int instructionCount = 0;
 
     // Ссылка на менеджер переменных
     private final VariableManager variableManager;
@@ -397,6 +400,28 @@ public class ExecutionContext {
      */
     public boolean getLastConditionResult() {
         return this.lastConditionResult;
+    }
+    
+    /**
+     * Gets the instruction count for this execution context
+     * @return The number of instructions executed
+     */
+    public int getInstructionCount() {
+        return instructionCount;
+    }
+    
+    /**
+     * Increments the instruction counter
+     */
+    public void incrementInstructionCount() {
+        instructionCount++;
+    }
+    
+    /**
+     * Resets the instruction counter
+     */
+    public void resetInstructionCount() {
+        instructionCount = 0;
     }
     
     // Builder pattern

@@ -20,6 +20,11 @@ public class WaitAction implements BlockAction {
     @Override
     public ExecutionResult execute(CodeBlock block, ExecutionContext context) {
         try {
+            // Check if execution is cancelled before starting
+            if (context.isCancelled()) {
+                return ExecutionResult.error("Execution was cancelled");
+            }
+            
             // Get duration from the container configuration
             int ticks = getDurationFromContainer(block, context);
             
@@ -31,7 +36,26 @@ public class WaitAction implements BlockAction {
             // Note: This is a simplified implementation. In a real implementation,
             // you would need to handle asynchronous execution properly.
             try {
-                Thread.sleep(ticks * 50); // 1 tick = 50ms in Minecraft
+                // Check for cancellation periodically during wait
+                long startTime = System.currentTimeMillis();
+                long durationMs = ticks * 50; // 1 tick = 50ms in Minecraft
+                long endTime = startTime + durationMs;
+                
+                while (System.currentTimeMillis() < endTime) {
+                    // Check if execution is cancelled during wait
+                    if (context.isCancelled()) {
+                        return ExecutionResult.error("Execution was cancelled during wait");
+                    }
+                    
+                    // Sleep in small increments to allow for cancellation checks
+                    long remainingTime = endTime - System.currentTimeMillis();
+                    long sleepTime = Math.min(remainingTime, 100); // Check every 100ms
+                    
+                    if (sleepTime > 0) {
+                        Thread.sleep(sleepTime);
+                    }
+                }
+                
                 return ExecutionResult.success("Waited for " + ticks + " ticks");
             } catch (InterruptedException e) {
                 Thread.currentThread().interrupt();
