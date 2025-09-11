@@ -50,6 +50,74 @@ public class ConditionFactory {
         
         // --- INTEGRATION BLOCKS (Conditions) ---
         register("worldGuardRegionCheck", WorldGuardRegionCheckCondition::new);
+        
+        // === GENERIC CONDITIONS - Mass Production System ===
+        // Register all simple conditions to use the GenericCondition handler
+        registerGenericConditions();
+    }
+    
+    /**
+     * Register all simple conditions that can be handled by GenericCondition
+     * This enables rapid addition of new functionality without creating new classes
+     */
+    private void registerGenericConditions() {
+        // Player state conditions
+        registerGeneric("isSneaking");
+        registerGeneric("isSprinting");
+        registerGeneric("isFlying");
+        registerGeneric("isOnGround");
+        registerGeneric("isInWater");
+        registerGeneric("isBlocking");
+        
+        // Gamemode conditions
+        registerGeneric("isGameMode");
+        
+        // Health/food conditions
+        registerGeneric("healthEquals");
+        registerGeneric("healthGreaterThan");
+        registerGeneric("healthLessThan");
+        registerGeneric("foodEquals");
+        registerGeneric("foodGreaterThan");
+        registerGeneric("foodLessThan");
+        
+        // Inventory conditions
+        registerGeneric("hasItem");
+        registerGeneric("hasItemInHand");
+        registerGeneric("inventoryFull");
+        registerGeneric("inventoryEmpty");
+        
+        // Location conditions
+        registerGeneric("atLocation");
+        registerGeneric("inBiome");
+        registerGeneric("aboveY");
+        registerGeneric("belowY");
+        
+        // Time/weather conditions
+        registerGeneric("isDay");
+        registerGeneric("isNight");
+        registerGeneric("isRaining");
+        registerGeneric("isThundering");
+        
+        // Potion effect conditions
+        registerGeneric("hasPotionEffect");
+        
+        // Block conditions
+        registerGeneric("blockAtLocation");
+        registerGeneric("standingOnBlock");
+        
+        // Comparison conditions
+        registerGeneric("randomChance");
+        registerGeneric("playerCount");
+        
+        // Economy conditions
+        registerGeneric("hasMoney");
+    }
+    
+    /**
+     * Helper method to register a generic condition
+     */
+    private void registerGeneric(String conditionId) {
+        register(conditionId, GenericCondition::new);
     }
 
     public BlockCondition createCondition(String conditionId) {

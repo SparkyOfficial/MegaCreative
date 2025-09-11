@@ -163,7 +163,7 @@ public class CodeMoverListener implements Listener {
             );
             
             // Validate new location
-            if (!DevWorldGenerator.isValidCodePosition(newLoc.getBlockX(), newLoc.getBlockZ())) {
+            if (!isValidCodePosition(newLoc.getBlockX(), newLoc.getBlockZ())) {
                 player.sendMessage("§cНе удается вставить блок в позицию: " + newLoc.getBlockX() + ", " + newLoc.getBlockZ());
                 continue;
             }
@@ -367,5 +367,13 @@ public class CodeMoverListener implements Listener {
     private String getBlockDisplayName(CodeBlock codeBlock) {
         var config = plugin.getServiceRegistry().getBlockConfigService().getBlockConfig(codeBlock.getAction());
         return config != null ? config.getDisplayName() : codeBlock.getAction();
+    }
+    
+    /**
+     * Validates if a position is valid for code placement
+     */
+    private boolean isValidCodePosition(int x, int z) {
+        // Basic validation - can be enhanced based on DevWorldGenerator logic
+        return x >= 0 && x < 50 && z >= 0; // Adjust limits as needed
     }
 }

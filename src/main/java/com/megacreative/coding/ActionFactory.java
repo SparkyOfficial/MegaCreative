@@ -100,6 +100,51 @@ public class ActionFactory {
         // --- DEBUGGING BLOCKS ---
         register("debugLog", DebugLogAction::new);
         register("variableInspector", VariableInspectorAction::new);
+        
+        // === GENERIC ACTIONS - Mass Production System ===
+        // Register all simple actions to use the GenericAction handler
+        registerGenericActions();
+    }
+    
+    /**
+     * Register all simple actions that can be handled by GenericAction
+     * This enables rapid addition of new functionality without creating new classes
+     */
+    private void registerGenericActions() {
+        // Player actions
+        registerGeneric("sendActionBar");
+        registerGeneric("sendTitle");
+        registerGeneric("setHealth");
+        registerGeneric("setFood");
+        registerGeneric("addPotionEffect");
+        registerGeneric("removePotionEffect");
+        registerGeneric("playSound");
+        registerGeneric("setGameMode");
+        
+        // World actions
+        registerGeneric("setBlock");
+        registerGeneric("breakBlock");
+        registerGeneric("setTime");
+        registerGeneric("setWeather");
+        
+        // Item actions
+        registerGeneric("giveItem");
+        registerGeneric("removeItem");
+        
+        // Economy actions (if vault available)
+        registerGeneric("giveMoney");
+        registerGeneric("takeMoney");
+        
+        // Permission actions
+        registerGeneric("givePermission");
+        registerGeneric("removePermission");
+    }
+    
+    /**
+     * Helper method to register a generic action
+     */
+    private void registerGeneric(String actionId) {
+        register(actionId, GenericAction::new);
     }
     
     public BlockAction createAction(String actionId) {
