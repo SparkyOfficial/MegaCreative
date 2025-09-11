@@ -88,6 +88,51 @@ public class GenericCondition implements BlockCondition {
             return context.getPlayer().isBlocking();
         });
         
+        // === NEW ESSENTIAL CONDITIONS ===
+        CONDITION_HANDLERS.put("isSwimming", (context, params) -> {
+            return context.getPlayer().isSwimming();
+        });
+        
+        CONDITION_HANDLERS.put("isBurning", (context, params) -> {
+            return context.getPlayer().getFireTicks() > 0;
+        });
+        
+        CONDITION_HANDLERS.put("canFly", (context, params) -> {
+            return context.getPlayer().getAllowFlight();
+        });
+        
+        CONDITION_HANDLERS.put("isHungry", (context, params) -> {
+            return context.getPlayer().getFoodLevel() < 20;
+        });
+        
+        CONDITION_HANDLERS.put("isHurt", (context, params) -> {
+            return context.getPlayer().getHealth() < 20.0;
+        });
+        
+        CONDITION_HANDLERS.put("isAlive", (context, params) -> {
+            return !context.getPlayer().isDead();
+        });
+        
+        CONDITION_HANDLERS.put("hasEmptySlot", (context, params) -> {
+            return context.getPlayer().getInventory().firstEmpty() != -1;
+        });
+        
+        CONDITION_HANDLERS.put("isLookingAt", (context, params) -> {
+            Material material = Material.valueOf(params.get("material").asString());
+            org.bukkit.block.Block target = context.getPlayer().getTargetBlock(null, 5);
+            return target != null && target.getType() == material;
+        });
+        
+        CONDITION_HANDLERS.put("nearPlayer", (context, params) -> {
+            String targetName = params.get("player").asString();
+            double distance = params.containsKey("distance") ? params.get("distance").asNumber().doubleValue() : 5.0;
+            
+            org.bukkit.entity.Player targetPlayer = context.getPlayer().getServer().getPlayer(targetName);
+            if (targetPlayer == null || !targetPlayer.isOnline()) return false;
+            
+            return context.getPlayer().getLocation().distance(targetPlayer.getLocation()) <= distance;
+        });
+        
         // === PERMISSION CONDITIONS ===
         CONDITION_HANDLERS.put("hasPermission", (context, params) -> {
             String permission = params.get("permission").asString();

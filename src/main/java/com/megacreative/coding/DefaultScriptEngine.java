@@ -227,6 +227,30 @@ public class DefaultScriptEngine implements ScriptEngine {
                 return processBlock(block.getNextBlock(), context, recursionDepth + 1);
                 
             case "CONTROL":
+                // === BRACKET LOGIC ===
+                if (block.isBracket()) {
+                    if (block.getBracketType() == CodeBlock.BracketType.OPEN) {
+                        // This is an opening bracket {
+                        // All logic inside it should be executed only if the last condition was true
+                        if (context.getLastConditionResult()) {
+                            // Execute all child elements
+                            for (CodeBlock child : block.getChildren()) {
+                                ExecutionResult childResult = processBlock(child, context, recursionDepth + 1);
+                                if (!childResult.isSuccess()) {
+                                    return childResult; // Stop on first error
+                                }
+                            }
+                        }
+                        // After executing the bracket (or skipping it), go to the NEXT block AFTER this bracket
+                        return processBlock(findNextBlockAfterBracket(block), context, recursionDepth + 1);
+                    } else {
+                        // Closing bracket } - should not be processed directly
+                        // This is handled by the opening bracket logic
+                        return processBlock(block.getNextBlock(), context, recursionDepth + 1);
+                    }
+                }
+                
+                // === TRADITIONAL CONTROL LOGIC ===
                 // Here will be logic for IF/ELSE, LOOP etc.
                 switch (block.getAction()) {
                     case "conditionalBranch":
@@ -328,6 +352,21 @@ public class DefaultScriptEngine implements ScriptEngine {
             context.setStepping(false);
             context.setPaused(true);
         }
+    }
+    
+    /**
+     * Finds the next block after a bracket group
+     * This method looks for the matching closing bracket and returns the block after it
+     */
+    private CodeBlock findNextBlockAfterBracket(CodeBlock openingBracket) {
+        if (!openingBracket.isBracket() || openingBracket.getBracketType() != CodeBlock.BracketType.OPEN) {
+            return openingBracket.getNextBlock(); // Not a bracket, just return next
+        }
+        
+        // Simple approach: since we have proper parent-child relationships,
+        // the next block after a bracket group should be the nextBlock of the opening bracket
+        // This assumes that AutoConnectionManager properly sets up the connections
+        return openingBracket.getNextBlock();
     }
     
     // New method to process a chain of blocks without returning to parent

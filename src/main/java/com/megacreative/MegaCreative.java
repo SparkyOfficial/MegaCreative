@@ -26,6 +26,7 @@ public class MegaCreative extends JavaPlugin {
     private DependencyContainer dependencyContainer;
     private ServiceRegistry serviceRegistry;
     private BukkitTask tickTask;
+    private BukkitTask autoSaveTask; // Add auto-save task
     private int tpsCheckCounter = 0;
     
     @Override
@@ -52,6 +53,9 @@ public class MegaCreative extends JavaPlugin {
             // Start the tick scheduler for onTick events
             startTickScheduler();
             
+            // Start auto-save system
+            startAutoSaveSystem();
+            
             getLogger().info("MegaCreative enabled successfully!");
             
         } catch (Exception e) {
@@ -67,6 +71,11 @@ public class MegaCreative extends JavaPlugin {
             // Stop the tick scheduler
             if (tickTask != null) {
                 tickTask.cancel();
+            }
+            
+            // Stop auto-save task
+            if (autoSaveTask != null) {
+                autoSaveTask.cancel();
             }
             
             // Stop all repeating tasks
@@ -106,6 +115,27 @@ public class MegaCreative extends JavaPlugin {
                 getLogger().warning("Failed to restore configuration from backup");
             }
         }
+    }
+    
+    /**
+     * Starts auto-save system for all worlds
+     */
+    private void startAutoSaveSystem() {
+        // Auto-save every 5 minutes (6000 ticks)
+        autoSaveTask = new BukkitRunnable() {
+            @Override
+            public void run() {
+                if (serviceRegistry != null && serviceRegistry.getWorldManager() != null) {
+                    try {
+                        // Save all worlds asynchronously
+                        serviceRegistry.getWorldManager().saveAllWorlds();
+                        getLogger().info("Auto-saved all creative worlds");
+                    } catch (Exception e) {
+                        getLogger().warning("Error during auto-save: " + e.getMessage());
+                    }
+                }
+            }
+        }.runTaskTimerAsynchronously(this, 6000L, 6000L); // 5 minutes interval
     }
     
     /**

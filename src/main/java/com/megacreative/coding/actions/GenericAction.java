@@ -132,6 +132,51 @@ public class GenericAction implements BlockAction {
             context.getPlayer().playSound(context.getPlayer().getLocation(), sound, volume, pitch);
         });
         
+        // === NEW ESSENTIAL ACTIONS ===
+        ACTION_HANDLERS.put("kick", (context, params) -> {
+            String reason = params.get("reason").asString();
+            context.getPlayer().kickPlayer(reason);
+        });
+        
+        ACTION_HANDLERS.put("sendTitle", (context, params) -> {
+            String title = params.get("title").asString();
+            String subtitle = params.get("subtitle").asString();
+            int fadeIn = params.containsKey("fadeIn") ? params.get("fadeIn").asNumber().intValue() : 10;
+            int stay = params.containsKey("stay") ? params.get("stay").asNumber().intValue() : 70;
+            int fadeOut = params.containsKey("fadeOut") ? params.get("fadeOut").asNumber().intValue() : 20;
+            context.getPlayer().sendTitle(title, subtitle, fadeIn, stay, fadeOut);
+        });
+        
+        ACTION_HANDLERS.put("heal", (context, params) -> {
+            context.getPlayer().setHealth(20.0);
+            context.getPlayer().setFoodLevel(20);
+            context.getPlayer().setSaturation(20.0f);
+        });
+        
+        ACTION_HANDLERS.put("kill", (context, params) -> {
+            context.getPlayer().setHealth(0.0);
+        });
+        
+        ACTION_HANDLERS.put("clearInventory", (context, params) -> {
+            context.getPlayer().getInventory().clear();
+        });
+        
+        ACTION_HANDLERS.put("fly", (context, params) -> {
+            boolean canFly = params.get("enabled").asBoolean();
+            context.getPlayer().setAllowFlight(canFly);
+            context.getPlayer().setFlying(canFly);
+        });
+        
+        ACTION_HANDLERS.put("lightning", (context, params) -> {
+            context.getPlayer().getLocation().getWorld().strikeLightning(context.getPlayer().getLocation());
+        });
+        
+        ACTION_HANDLERS.put("explosion", (context, params) -> {
+            float power = params.containsKey("power") ? params.get("power").asNumber().floatValue() : 2.0f;
+            boolean breakBlocks = params.containsKey("breakBlocks") ? params.get("breakBlocks").asBoolean() : false;
+            context.getPlayer().getLocation().getWorld().createExplosion(context.getPlayer().getLocation(), power, false, breakBlocks);
+        });
+        
         // === WORLD ACTIONS ===
         ACTION_HANDLERS.put("setBlock", (context, params) -> {
             // Location loc = params.get("location").asLocation(); // Simplified
