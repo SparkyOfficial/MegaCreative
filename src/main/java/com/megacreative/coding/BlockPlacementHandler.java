@@ -86,7 +86,6 @@ public class BlockPlacementHandler implements Listener {
                 
                 player.sendMessage("§a✓ Скобка размещена: " + CodeBlock.BracketType.OPEN.getDisplayName());
                 player.sendMessage("§7Кликните правой кнопкой для смены типа");
-                plugin.getLogger().fine("Bracket block created at " + block.getLocation() + " with type: OPEN");
                 return; // Завершаем обработку
             }
             return; // Это обычный блок, не кодовый
@@ -110,10 +109,12 @@ public class BlockPlacementHandler implements Listener {
         // Устанавливаем табличку с названием типа блока
         setSignOnBlock(block.getLocation(), displayName);
         
+        // Визуальная и аудио обратная связь
+        player.spawnParticle(org.bukkit.Particle.VILLAGER_HAPPY, block.getLocation().add(0.5, 1.0, 0.5), 5, 0.2, 0.2, 0.2, 0.1);
+        player.playSound(block.getLocation(), org.bukkit.Sound.BLOCK_NOTE_BLOCK_PLING, 0.8f, 1.5f);
+        
         player.sendMessage("§a✓ Блок кода размещен: " + displayName);
         player.sendMessage("§7Кликните правой кнопкой для выбора действия");
-        
-        plugin.getLogger().fine("CodeBlock created at " + block.getLocation() + " with material: " + block.getType());
     }
 
     /**

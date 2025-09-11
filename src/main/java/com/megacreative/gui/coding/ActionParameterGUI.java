@@ -86,22 +86,11 @@ public class ActionParameterGUI implements GUIManager.ManagedGUIInterface {
      * Loads the action configuration from coding_blocks.yml and sets up placeholder items
      */
     private void loadActionConfiguration() {
-        // Get the action configuration from BlockConfigService
-        BlockConfigService.BlockConfig config = blockConfigService.getBlockConfig(actionId);
-        if (config == null) {
-            player.sendMessage("§cОшибка: Не найдена конфигурация для действия " + actionId);
-            return;
-        }
-        
-        // Get the action configuration section from the service
-        var actionConfigurations = plugin.getConfig().getConfigurationSection("action_configurations");
+        // Get the action configurations directly from BlockConfigService
+        var actionConfigurations = blockConfigService.getActionConfigurations();
         if (actionConfigurations == null) {
-            // Load from the YAML file directly through BlockConfigService
-            actionConfigurations = blockConfigService.getActionConfigurations();
-        }
-        
-        if (actionConfigurations == null) {
-            player.sendMessage("§cОшибка: Не найдена секция action_configurations");
+            player.sendMessage("§eИнформация: Используются базовые настройки для " + actionId);
+            setupGenericSlots();
             return;
         }
         
@@ -109,9 +98,12 @@ public class ActionParameterGUI implements GUIManager.ManagedGUIInterface {
         var actionConfig = actionConfigurations.getConfigurationSection(actionId);
         if (actionConfig == null) {
             // No specific configuration, use generic slots
+            player.sendMessage("§eИнформация: Конфигурация для " + actionId + " не найдена, используются базовые слоты");
             setupGenericSlots();
             return;
         }
+        
+        player.sendMessage("§a✓ Загружена конфигурация для " + actionId);
         
         // Check for named slots configuration
         var slotsConfig = actionConfig.getConfigurationSection("slots");
@@ -119,10 +111,16 @@ public class ActionParameterGUI implements GUIManager.ManagedGUIInterface {
             setupNamedSlots(slotsConfig);
         }
         
-        // Check for item groups configuration
+        // Check for item groups configuration  
         var itemGroupsConfig = actionConfig.getConfigurationSection("item_groups");
         if (itemGroupsConfig != null) {
             setupItemGroups(itemGroupsConfig);
+        }
+        
+        // If neither slots nor item_groups were configured, use generic setup
+        if (slotsConfig == null && itemGroupsConfig == null) {
+            player.sendMessage("§eИнформация: Слоты не настроены для " + actionId + ", используются базовые");
+            setupGenericSlots();
         }
     }
     
@@ -130,10 +128,13 @@ public class ActionParameterGUI implements GUIManager.ManagedGUIInterface {
      * Sets up named slots based on configuration
      */
     private void setupNamedSlots(org.bukkit.configuration.ConfigurationSection slotsConfig) {
+        int configuredSlots = 0;
+        
         for (String slotKey : slotsConfig.getKeys(false)) {
             try {
                 int slotIndex = Integer.parseInt(slotKey);
                 if (slotIndex < 0 || slotIndex >= inventory.getSize()) {
+                    plugin.getLogger().warning("Неверный индекс слота в конфигурации: " + slotKey + " для " + actionId);
                     continue;
                 }
                 
@@ -147,14 +148,41 @@ public class ActionParameterGUI implements GUIManager.ManagedGUIInterface {
                 
                 // Create placeholder item
                 Material material = Material.matchMaterial(placeholderItem);
-                if (material == null) material = Material.PAPER;
+                if (material == null) {
+                    plugin.getLogger().warning("Неверный материал: " + placeholderItem + " для " + actionId + ", используется PAPER");
+                    material = Material.PAPER;
+                }
                 
                 ItemStack placeholder = new ItemStack(material);
                 ItemMeta meta = placeholder.getItemMeta();
                 if (meta != null) {
                     meta.setDisplayName(name);
                     List<String> lore = new ArrayList<>();
-                    lore.add("§7" + description);
+                    
+                    // Split long descriptions into multiple lines
+                    String[] descLines = description.split("\\. ");
+                    for (String line : descLines) {
+                        if (line.length() > 40) {
+                            // Split long lines
+                            String[] words = line.split(" ");
+                            StringBuilder currentLine = new StringBuilder();
+                            for (String word : words) {
+                                if (currentLine.length() + word.length() + 1 > 40) {
+                                    if (currentLine.length() > 0) {
+                                        lore.add("§7" + currentLine.toString().trim());
+                                        currentLine = new StringBuilder();
+                                    }
+                                }
+                                currentLine.append(word).append(" ");
+                            }
+                            if (currentLine.length() > 0) {
+                                lore.add("§7" + currentLine.toString().trim());
+                            }
+                        } else {
+                            lore.add("§7" + line);
+                        }
+                    }
+                    
                     lore.add("");
                     lore.add("§eПоместите предмет сюда");
                     lore.add("§7для настройки параметра");
@@ -165,10 +193,15 @@ public class ActionParameterGUI implements GUIManager.ManagedGUIInterface {
                 }
                 
                 inventory.setItem(slotIndex, placeholder);
+                configuredSlots++;
             } catch (NumberFormatException e) {
                 // Invalid slot index, skip
-                plugin.getLogger().warning("Invalid slot index in configuration: " + slotKey);
+                plugin.getLogger().warning("Неверный формат индекса слота: " + slotKey + " для " + actionId);
             }
+        }
+        
+        if (configuredSlots > 0) {
+            player.sendMessage("§a✓ Настроено " + configuredSlots + " слотов для " + actionId);
         }
     }
     
@@ -322,6 +355,9 @@ public class ActionParameterGUI implements GUIManager.ManagedGUIInterface {
     public void open() {
         guiManager.registerGUI(player, this, inventory);
         player.openInventory(inventory);
+        
+        // Аудио обратная связь при открытии GUI
+        player.playSound(player.getLocation(), org.bukkit.Sound.BLOCK_CHEST_OPEN, 0.6f, 1.1f);
     }
     
     @Override

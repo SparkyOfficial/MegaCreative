@@ -85,14 +85,8 @@ public class ActionSelectionGUI implements GUIManager.ManagedGUIInterface {
     }
     
     private void loadAvailableActions() {
-        // Get available actions for this block material
-        BlockConfigService.BlockConfig config = blockConfigService.getBlockConfigByMaterial(blockMaterial);
-        if (config == null) {
-            player.sendMessage("§cОшибка: Не найдена конфигурация для блока " + blockMaterial.name());
-            return;
-        }
-        
-        List<String> availableActions = config.getActions();
+        // Get available actions for this block material using BlockConfigService
+        List<String> availableActions = blockConfigService.getAvailableActions(blockMaterial);
         if (availableActions == null || availableActions.isEmpty()) {
             player.sendMessage("§cОшибка: Нет доступных действий для блока " + blockMaterial.name());
             return;
@@ -282,6 +276,9 @@ public class ActionSelectionGUI implements GUIManager.ManagedGUIInterface {
     public void open() {
         guiManager.registerGUI(player, this, inventory);
         player.openInventory(inventory);
+        
+        // Аудио обратная связь при открытии GUI
+        player.playSound(player.getLocation(), org.bukkit.Sound.UI_BUTTON_CLICK, 0.7f, 1.2f);
     }
     
     @Override

@@ -32,6 +32,10 @@ public class DevCommand implements CommandExecutor {
                     plugin.getServiceRegistry().getDevInventoryManager().refreshTools(player);
                     return true;
                 }
+                case "variables" -> {
+                    openVariablesMenu(player);
+                    return true;
+                }
                 case "help" -> {
                     sendHelp(player);
                     return true;
@@ -117,8 +121,74 @@ public class DevCommand implements CommandExecutor {
         player.sendMessage("§7/dev §8- §fПерейти в режим разработки");
         player.sendMessage("§7/dev refresh §8- §fВосстановить недостающие инструменты");
         player.sendMessage("§7/dev tools §8- §fТо же, что и refresh");
+        player.sendMessage("§7/dev variables §8- §fОткрыть меню переменных");
         player.sendMessage("§7/dev help §8- §fПоказать эту справку");
         player.sendMessage("§8§m                                                        ");
+    }
+    
+    /**
+     * Открывает меню переменных (базовая реализация)
+     */
+    private void openVariablesMenu(Player player) {
+        // Проверяем, что игрок в мире разработки
+        if (!player.getWorld().getName().endsWith("_dev")) {
+            player.sendMessage("§cКоманда /dev variables доступна только в мире разработки!");
+            return;
+        }
+        
+        // Создаем простое GUI с предметами-переменными
+        org.bukkit.inventory.Inventory variablesInventory = org.bukkit.Bukkit.createInventory(null, 27, "§8Меню переменных");
+        
+        // Текст (книга)
+        org.bukkit.inventory.ItemStack textVar = new org.bukkit.inventory.ItemStack(org.bukkit.Material.WRITABLE_BOOK);
+        org.bukkit.inventory.meta.ItemMeta textMeta = textVar.getItemMeta();
+        textMeta.setDisplayName("§e§lТекстовая переменная");
+        textMeta.setLore(java.util.Arrays.asList(
+            "§7Для хранения текста",
+            "§eПереименуйте с названием"
+        ));
+        textVar.setItemMeta(textMeta);
+        
+        // Число (слайм)
+        org.bukkit.inventory.ItemStack numberVar = new org.bukkit.inventory.ItemStack(org.bukkit.Material.SLIME_BALL);
+        org.bukkit.inventory.meta.ItemMeta numberMeta = numberVar.getItemMeta();
+        numberMeta.setDisplayName("§a§lЧисловая переменная");
+        numberMeta.setLore(java.util.Arrays.asList(
+            "§7Для хранения чисел",
+            "§eПереименуйте с названием"
+        ));
+        numberVar.setItemMeta(numberMeta);
+        
+        // Локация (компас)
+        org.bukkit.inventory.ItemStack locationVar = new org.bukkit.inventory.ItemStack(org.bukkit.Material.COMPASS);
+        org.bukkit.inventory.meta.ItemMeta locationMeta = locationVar.getItemMeta();
+        locationMeta.setDisplayName("§b§lПеременная локации");
+        locationMeta.setLore(java.util.Arrays.asList(
+            "§7Для хранения координат",
+            "§eПереименуйте с названием"
+        ));
+        locationVar.setItemMeta(locationMeta);
+        
+        // Предмет (сундук)
+        org.bukkit.inventory.ItemStack itemVar = new org.bukkit.inventory.ItemStack(org.bukkit.Material.CHEST);
+        org.bukkit.inventory.meta.ItemMeta itemMeta = itemVar.getItemMeta();
+        itemMeta.setDisplayName("§6§lПеременная предмета");
+        itemMeta.setLore(java.util.Arrays.asList(
+            "§7Для хранения предметов",
+            "§eПереименуйте с названием"
+        ));
+        itemVar.setItemMeta(itemMeta);
+        
+        // Размещаем предметы в инвентаре
+        variablesInventory.setItem(10, textVar);
+        variablesInventory.setItem(12, numberVar);
+        variablesInventory.setItem(14, locationVar);
+        variablesInventory.setItem(16, itemVar);
+        
+        // Открываем инвентарь
+        player.openInventory(variablesInventory);
+        player.playSound(player.getLocation(), org.bukkit.Sound.UI_BUTTON_CLICK, 0.7f, 1.0f);
+        player.sendMessage("§aМеню переменных открыто! Возьмите нужные предметы.");
     }
    
     /**
