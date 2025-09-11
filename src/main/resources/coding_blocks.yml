@@ -78,6 +78,11 @@ blocks:
       - "hasArmor"
       - "isNight"
       - "isRiding"
+      - "checkPlayerInventory"
+      - "checkPlayerStats"
+      - "checkServerOnline"
+      - "checkWorldWeather"
+      - "worldGuardRegionCheck"
   
   IRON_BLOCK:
     name: "Переменная"
@@ -377,6 +382,25 @@ action_configurations:
         placeholder_item: "SADDLE"
         slot_name: "entity_slot"
 
+  # Конфигурация для условия checkPlayerInventory
+  checkPlayerInventory:
+    slots:
+      0:
+        name: "§aПредмет для проверки"
+        description: "§7Положите предмет, который нужно проверить в инвентаре"
+        placeholder_item: "STONE"
+        slot_name: "item_slot"
+      1:
+        name: "§bКоличество"
+        description: "§7Положите бумагу с количеством (по умолчанию 1)"
+        placeholder_item: "PAPER"
+        slot_name: "amount_slot"
+      2:
+        name: "§cТип проверки"
+        description: "§7Положите бумагу с типом проверки (has, missing, exact)"
+        placeholder_item: "PAPER"
+        slot_name: "check_type_slot"
+
   # Конфигурация для условия isNearBlock
   isNearBlock:
     slots:
@@ -451,7 +475,7 @@ action_configurations:
         placeholder_item: "PAPER"
         slot_name: "permission_slot"
   
-  # Конфигурация для условия isInWorld
+  # Конфигурация для условие isInWorld
   isInWorld:
     slots:
       0:
@@ -459,6 +483,39 @@ action_configurations:
         description: "§7Положите бумагу с названием мира"
         placeholder_item: "PAPER"
         slot_name: "world_slot"
+  
+  # Конфигурация для условия worldGuardRegionCheck
+  worldGuardRegionCheck:
+    slots:
+      0:
+        name: "§aНазвание региона"
+        description: "§7Положите бумагу с названием региона WorldGuard"
+        placeholder_item: "PAPER"
+        slot_name: "region_name_slot"
+      1:
+        name: "§bНазвание мира"
+        description: "§7Положите бумагу с названием мира (оставьте пустым для текущего мира игрока)"
+        placeholder_item: "PAPER"
+        slot_name: "world_slot"
+  
+  # Конфигурация для условия checkPlayerStats
+  checkPlayerStats:
+    slots:
+      0:
+        name: "§aТип статистики"
+        description: "§7Положите бумагу с типом статистики (например, JUMP, DAMAGE_DEALT и т.д.)"
+        placeholder_item: "PAPER"
+        slot_name: "stat_type_slot"
+      1:
+        name: "§bЗначение для сравнения"
+        description: "§7Положите бумагу со значением для сравнения"
+        placeholder_item: "PAPER"
+        slot_name: "value_slot"
+      2:
+        name: "§cОператор сравнения"
+        description: "§7Положите бумагу с оператором сравнения (==, !=, <, >, <=, >=)"
+        placeholder_item: "PAPER"
+        slot_name: "operator_slot"
   
   # Конфигурация для условия isNearEntity
   isNearEntity:
@@ -567,6 +624,24 @@ action_configurations:
         placeholder_item: "PAPER"
         slot_name: "value"
   
+  # Конфигурация для условия checkServerOnline
+  checkServerOnline:
+    slots:
+      0:
+        name: "§aТип проверки"
+        description: "§7Положите бумагу с типом проверки (online, empty, full или число игроков)"
+        placeholder_item: "PAPER"
+        slot_name: "check_type_slot"
+
+  # Конфигурация для условия checkWorldWeather
+  checkWorldWeather:
+    slots:
+      0:
+        name: "§aПогода"
+        description: "§7Положите бумагу с типом погоды (clear, rain, thunder)"
+        placeholder_item: "PAPER"
+        slot_name: "weather_slot"
+
   # Конфигурация для действия subVar
   subVar:
     slots:

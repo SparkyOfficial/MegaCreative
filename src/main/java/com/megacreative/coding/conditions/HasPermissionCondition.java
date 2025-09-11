@@ -4,12 +4,16 @@ import com.megacreative.coding.BlockCondition;
 import com.megacreative.coding.CodeBlock;
 import com.megacreative.coding.ExecutionContext;
 import com.megacreative.coding.ParameterResolver;
-import com.megacreative.coding.values.DataValue;
+import com.megacreative.services.BlockConfigService;
 import org.bukkit.entity.Player;
+import org.bukkit.inventory.ItemStack;
+import org.bukkit.inventory.meta.ItemMeta;
+
+import java.util.function.Function;
 
 /**
- * Condition for checking if a player has a specific permission.
- * This condition retrieves a permission string from the block parameters and checks if the player has it.
+ * Condition for checking if a player has a specific permission from container configuration.
+ * This condition retrieves a permission string from the container configuration and checks if the player has it.
  */
 public class HasPermissionCondition implements BlockCondition {
 
@@ -21,20 +25,19 @@ public class HasPermissionCondition implements BlockCondition {
         }
 
         try {
-            // Get the permission parameter from the block
-            DataValue permissionValue = block.getParameter("permission");
-            if (permissionValue == null) {
+            // Get the permission from the container configuration
+            String permission = getPermissionFromContainer(block, context);
+            if (permission == null || permission.isEmpty()) {
                 return false;
             }
 
             // Resolve any placeholders in the permission
             ParameterResolver resolver = new ParameterResolver(context);
-            DataValue resolvedPermission = resolver.resolve(context, permissionValue);
+            String resolvedPermission = resolver.resolveString(context, permission);
             
             // Check if the player has the permission
-            String permission = resolvedPermission.asString();
-            if (permission != null && !permission.isEmpty()) {
-                return player.hasPermission(permission);
+            if (resolvedPermission != null && !resolvedPermission.isEmpty()) {
+                return player.hasPermission(resolvedPermission);
             }
             
             return false;
@@ -42,5 +45,49 @@ public class HasPermissionCondition implements BlockCondition {
             // If there's an error, return false
             return false;
         }
+    }
+    
+    /**
+     * Gets permission from the container configuration
+     */
+    private String getPermissionFromContainer(CodeBlock block, ExecutionContext context) {
+        try {
+            // Get the BlockConfigService to resolve slot names
+            BlockConfigService blockConfigService = context.getPlugin().getServiceRegistry().getBlockConfigService();
+            
+            // Get the slot resolver for this condition
+            Function<String, Integer> slotResolver = blockConfigService.getSlotResolver(block.getCondition());
+            
+            if (slotResolver != null) {
+                // Get permission from the permission_slot
+                Integer permissionSlot = slotResolver.apply("permission_slot");
+                if (permissionSlot != null) {
+                    ItemStack permissionItem = block.getConfigItem(permissionSlot);
+                    if (permissionItem != null && permissionItem.hasItemMeta()) {
+                        // Extract permission from item
+                        return getPermissionFromItem(permissionItem);
+                    }
+                }
+            }
+        } catch (Exception e) {
+            context.getPlugin().getLogger().warning("Error getting permission from container in HasPermissionCondition: " + e.getMessage());
+        }
+        
+        return null;
+    }
+    
+    /**
+     * Extracts permission from an item
+     */
+    private String getPermissionFromItem(ItemStack item) {
+        ItemMeta meta = item.getItemMeta();
+        if (meta != null) {
+            String displayName = meta.getDisplayName();
+            if (displayName != null && !displayName.isEmpty()) {
+                // Remove color codes and return the permission
+                return displayName.replaceAll("[§0-9]", "").trim();
+            }
+        }
+        return null;
     }
 }
