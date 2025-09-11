@@ -5,6 +5,7 @@ import com.google.gson.GsonBuilder;
 import com.megacreative.coding.CodeBlock;
 import com.megacreative.coding.CodeScript;
 import com.megacreative.models.CreativeWorld;
+import com.megacreative.MegaCreative;
 
 /**
  * Утилитный класс для сериализации объектов в JSON с помощью Gson.
@@ -36,17 +37,47 @@ public class JsonSerializer {
     }
     
     /**
-     * Сериализует CreativeWorld в JSON
+     * Сериализует CreativeWorld в JSON используя безопасный DTO
      */
     public static String serializeWorld(CreativeWorld world) {
-        return toJson(world);
+        // Используем DTO для избежания проблем с Java 9+ модулями
+        com.megacreative.models.CreativeWorldData worldData = new com.megacreative.models.CreativeWorldData(world);
+        return toJson(worldData);
     }
     
     /**
      * Десериализует CreativeWorld из JSON
      */
-    public static CreativeWorld deserializeWorld(String json) {
-        return fromJson(json, CreativeWorld.class);
+    public static CreativeWorld deserializeWorld(String json, MegaCreative plugin) {
+        try {
+            com.megacreative.models.CreativeWorldData worldData = fromJson(json, com.megacreative.models.CreativeWorldData.class);
+            if (worldData == null) return null;
+            
+            // Создаем полноценный CreativeWorld из данных
+            CreativeWorld world = new CreativeWorld(worldData.id, worldData.name, worldData.ownerId, worldData.ownerName, worldData.worldType);
+            
+            // Восстанавливаем все поля
+            world.setDescription(worldData.description);
+            world.setMode(worldData.mode);
+            world.setPrivate(worldData.isPrivate);
+            world.setCreatedTime(worldData.createdTime);
+            world.setLastActivity(worldData.lastActivity);
+            if (worldData.flags != null) world.setFlags(worldData.flags);
+            if (worldData.trustedBuilders != null) world.setTrustedBuilders(worldData.trustedBuilders);
+            if (worldData.trustedCoders != null) world.setTrustedCoders(worldData.trustedCoders);
+            world.setLikes(worldData.likes);
+            world.setDislikes(worldData.dislikes);
+            if (worldData.likedBy != null) world.setLikedBy(worldData.likedBy);
+            if (worldData.dislikedBy != null) world.setDislikedBy(worldData.dislikedBy);
+            if (worldData.favoriteBy != null) world.setFavoriteBy(worldData.favoriteBy);
+            if (worldData.comments != null) world.setComments(worldData.comments);
+            if (worldData.scripts != null) world.setScripts(worldData.scripts);
+            
+            return world;
+        } catch (Exception e) {
+            plugin.getLogger().severe("Failed to deserialize CreativeWorld: " + e.getMessage());
+            return null;
+        }
     }
     
     /**
@@ -76,4 +107,4 @@ public class JsonSerializer {
     public static CodeBlock deserializeBlock(String json) {
         return gsonWithItemStacks.fromJson(json, CodeBlock.class);
     }
-} 
+}

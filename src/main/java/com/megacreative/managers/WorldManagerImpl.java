@@ -7,6 +7,7 @@ import com.megacreative.interfaces.IWorldManager;
 import com.megacreative.interfaces.ICodingManager;
 import com.megacreative.models.*;
 import com.megacreative.utils.ConfigManager;
+import com.megacreative.utils.JsonSerializer;
 import org.bukkit.*;
 import org.bukkit.entity.Player;
 import org.bukkit.plugin.Plugin;
@@ -497,14 +498,16 @@ public class WorldManagerImpl implements IWorldManager {
         File worldFile = new File(dataFolder, world.getId() + ".yml");
         YamlConfiguration config = new YamlConfiguration();
         
-        // Используем Gson для сериализации всего мира в JSON
-        String worldJson = com.megacreative.utils.JsonSerializer.serializeWorld(world);
-        config.set("worldData", worldJson);
-        
         try {
+            // Используем безопасную DTO сериализацию
+            String worldJson = JsonSerializer.serializeWorld(world);
+            config.set("worldData", worldJson);
             config.save(worldFile);
-        } catch (IOException e) {
+            
+            plugin.getLogger().fine("World " + world.getId() + " saved successfully using safe DTO serialization");
+        } catch (Exception e) {
             plugin.getLogger().severe("Ошибка сохранения мира " + world.getId() + ": " + e.getMessage());
+            e.printStackTrace();
         }
     }
     
@@ -541,7 +544,7 @@ public class WorldManagerImpl implements IWorldManager {
         }
         
         try {
-            CreativeWorld world = com.megacreative.utils.JsonSerializer.deserializeWorld(worldJson);
+            CreativeWorld world = com.megacreative.utils.JsonSerializer.deserializeWorld(worldJson, (MegaCreative) plugin);
             if (world != null) {
                 worlds.put(world.getId(), world);
                 playerWorlds.computeIfAbsent(world.getOwnerId(), k -> new ArrayList<>()).add(world.getId());
