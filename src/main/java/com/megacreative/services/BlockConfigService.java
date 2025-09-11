@@ -50,16 +50,19 @@ public class BlockConfigService {
         // Load action configurations
         actionConfigurations = config.getConfigurationSection("action_configurations");
 
-        for (String id : config.getKeys(false)) {
-            if ("action_configurations".equals(id)) continue; // Skip action_configurations section
-            ConfigurationSection section = config.getConfigurationSection(id);
-            if (section != null) {
-                try {
-                    BlockConfig blockConfig = new BlockConfig(id, section);
-                    blockConfigs.put(id, blockConfig);
-                    materialToBlockIds.computeIfAbsent(blockConfig.getMaterial(), k -> new ArrayList<>()).add(id);
-                } catch (Exception e) {
-                    logger.warning("Failed to load block config for ID '" + id + "': " + e.getMessage());
+        // ПРАВИЛЬНО: читаем ключи внутри секции blocks
+        ConfigurationSection blocksSection = config.getConfigurationSection("blocks");
+        if (blocksSection != null) {
+            for (String id : blocksSection.getKeys(false)) {
+                ConfigurationSection section = blocksSection.getConfigurationSection(id);
+                if (section != null) {
+                    try {
+                        BlockConfig blockConfig = new BlockConfig(id, section);
+                        blockConfigs.put(id, blockConfig);
+                        materialToBlockIds.computeIfAbsent(blockConfig.getMaterial(), k -> new ArrayList<>()).add(id);
+                    } catch (Exception e) {
+                        logger.warning("Failed to load block config for ID '" + id + "': " + e.getMessage());
+                    }
                 }
             }
         }
@@ -199,12 +202,14 @@ public class BlockConfigService {
 
         public BlockConfig(String id, ConfigurationSection section) {
             this.id = id;
-            this.material = Material.matchMaterial(section.getString("material", "STONE"));
+            // Материал определяется по ID (ключу) блока
+            this.material = Material.matchMaterial(id);
             if (this.material == null) {
                 throw new IllegalArgumentException("Invalid material specified for " + id);
             }
             this.type = section.getString("type", "ACTION").toUpperCase();
-            this.displayName = ChatColor.translateAlternateColorCodes('&', section.getString("displayName", id));
+            // В YAML используется поле "name", не "displayName"
+            this.displayName = ChatColor.translateAlternateColorCodes('&', section.getString("name", id));
             this.description = section.getString("description", "No description.");
             this.category = section.getString("category", "default");
 

@@ -212,8 +212,8 @@ public class WorldManagerImpl implements IWorldManager {
                 // Создаем плоский мир без структур для пустоты
                 creator.type(org.bukkit.WorldType.FLAT);
                 creator.generateStructures(false);
-                // Настройка генератора для создания только спавн платформы
-                creator.generatorSettings("minecraft:flat;minecraft:bedrock,2*minecraft:stone,minecraft:grass_block;minecraft:plains");
+                // Настройка генератора для создания только спавн платформы (современный JSON формат)
+                creator.generatorSettings("{\"layers\":[{\"block\":\"bedrock\",\"height\":1},{\"block\":\"stone\",\"height\":2},{\"block\":\"grass_block\",\"height\":1}],\"biome\":\"plains\"}");
                 break;
             case OCEAN:
                 creator.type(org.bukkit.WorldType.NORMAL);
