@@ -5,6 +5,7 @@ import com.megacreative.core.ServiceRegistry;
 import com.megacreative.interfaces.ITrustedPlayerManager;
 import com.megacreative.services.BlockConfigService;
 import com.megacreative.gui.coding.ActionParameterGUI;
+import com.megacreative.gui.coding.ActionSelectionGUI;
 import org.bukkit.Material;
 import java.util.logging.Logger;
 import org.bukkit.block.Block;
@@ -73,13 +74,9 @@ public class BlockPlacementHandler implements Listener {
         // Only process in dev worlds
         if (!isInDevWorld(player)) return;
         
-        // Получаем конфигурацию по предмету в руке, а не по материалу
-        String displayName = itemInHand.hasItemMeta() ? org.bukkit.ChatColor.stripColor(itemInHand.getItemMeta().getDisplayName()) : "";
-        BlockConfigService.BlockConfig config = blockConfigService.getBlockConfigByDisplayName(displayName);
-
-        // Особая обработка для поршней (скобок) - они могут не иметь конфига
-        if (config == null) {
-            // Если это поршень без конфига, значит это скобка
+        // Получаем конфигурацию по материалу блока
+        if (!blockConfigService.isCodeBlock(block.getType())) {
+            // Особая обработка для поршней (скобок) - они могут не иметь конфига
             if (block.getType() == Material.PISTON || block.getType() == Material.STICKY_PISTON) {
                 CodeBlock newCodeBlock = new CodeBlock(block.getType(), "BRACKET"); // Уникальный ID для скобок
                 newCodeBlock.setBracketType(CodeBlock.BracketType.OPEN); // По умолчанию открывающая
@@ -95,8 +92,8 @@ public class BlockPlacementHandler implements Listener {
             return; // Это обычный блок, не кодовый
         }
 
-        // Создаем CodeBlock с правильным ID действия из конфига
-        CodeBlock newCodeBlock = new CodeBlock(block.getType(), config.getId());
+        // Создаем CodeBlock БЕЗ действия - действие будет выбрано позже через GUI
+        CodeBlock newCodeBlock = new CodeBlock(block.getType(), "NOT_SET");
         
         // Special handling for bracket blocks (pistons)
         if (block.getType() == Material.PISTON || block.getType() == Material.STICKY_PISTON) {
@@ -106,21 +103,17 @@ public class BlockPlacementHandler implements Listener {
         
         blockCodeBlocks.put(block.getLocation(), newCodeBlock);
         
-        // Устанавливаем одну табличку с правильным отображаемым именем
-        setSignOnBlock(block.getLocation(), config.getDisplayName());
+        // Получаем отображаемое имя блока для таблички
+        BlockConfigService.BlockConfig materialConfig = blockConfigService.getBlockConfigByMaterial(block.getType());
+        String displayName = materialConfig != null ? materialConfig.getDisplayName() : block.getType().name();
         
-        // Создаем контейнер над блоком для параметров (только для ACTION, CONDITION и других типов, кроме EVENT, FUNCTION, CONTROL)
-        if (!"EVENT".equals(config.getType()) && !"FUNCTION".equals(config.getType()) && !"CONTROL".equals(config.getType())) {
-            spawnContainerAboveBlock(block.getLocation(), config.getId());
-        }
+        // Устанавливаем табличку с названием типа блока
+        setSignOnBlock(block.getLocation(), displayName);
         
-        // Notify AutoConnectionManager to handle connections (it will run at MONITOR priority)
-        // AutoConnectionManager will handle this automatically due to event priority ordering
+        player.sendMessage("§a✓ Блок кода размещен: " + displayName);
+        player.sendMessage("§7Кликните правой кнопкой для выбора действия");
         
-        player.sendMessage("§a✓ Блок кода размещен: " + config.getDisplayName());
-        player.sendMessage("§7Кликните правой кнопкой для настройки");
-        
-        plugin.getLogger().fine("CodeBlock created at " + block.getLocation() + " with action: " + config.getId());
+        plugin.getLogger().fine("CodeBlock created at " + block.getLocation() + " with material: " + block.getType());
     }
 
     /**
@@ -241,12 +234,18 @@ public class BlockPlacementHandler implements Listener {
                 return;
             }
             
-            BlockConfigService.BlockConfig config = blockConfigService.getBlockConfig(codeBlock.getAction());
-            
-            if (config != null) {
-                openParameterConfigGUI(player, location, codeBlock, config);
+            // Check if action is already set
+            if (codeBlock.getAction() == null || "NOT_SET".equals(codeBlock.getAction())) {
+                // No action set - open action selection GUI
+                openActionSelectionGUI(player, location, clickedBlock.getType());
             } else {
-                player.sendMessage("§cОшибка: Не удалось найти конфигурацию для действия " + codeBlock.getAction());
+                // Action already set - open parameter configuration GUI
+                BlockConfigService.BlockConfig config = blockConfigService.getBlockConfig(codeBlock.getAction());
+                if (config != null) {
+                    openParameterConfigGUI(player, location, codeBlock, config);
+                } else {
+                    player.sendMessage("§cОшибка: Не удалось найти конфигурацию для действия " + codeBlock.getAction());
+                }
             }
             return;
         }
@@ -266,6 +265,18 @@ public class BlockPlacementHandler implements Listener {
                 player.sendMessage("§cОшибка: Не удалось найти конфигурацию для действия " + codeBlock.getAction());
             }
         }
+    }
+
+    /**
+     * Открывает GUI для выбора действия
+     */
+    private void openActionSelectionGUI(Player player, Location blockLocation, Material blockMaterial) {
+        ActionSelectionGUI gui = new ActionSelectionGUI(plugin, player, blockLocation, blockMaterial);
+        gui.open();
+        
+        BlockConfigService.BlockConfig config = blockConfigService.getBlockConfigByMaterial(blockMaterial);
+        String blockName = config != null ? config.getDisplayName() : blockMaterial.name();
+        player.sendMessage("§eВыберите действие для блока: §f" + blockName);
     }
 
     /**
@@ -444,6 +455,12 @@ public class BlockPlacementHandler implements Listener {
         
         // Update the sign to reflect the new bracket type
         updateBracketSign(pistonBlock.getLocation(), newType);
+        
+        // ВАЖНО: Сохраняем мир после изменения типа скобки
+        var creativeWorld = plugin.getWorldManager().findCreativeWorldByBukkit(player.getWorld());
+        if (creativeWorld != null) {
+            plugin.getWorldManager().saveWorld(creativeWorld);
+        }
         
         plugin.getLogger().info("Bracket type toggled to: " + newType + " at " + pistonBlock.getLocation());
     }

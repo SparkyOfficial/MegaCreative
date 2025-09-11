@@ -29,7 +29,8 @@ public class DevInventoryManager implements Listener {
     
     public DevInventoryManager(MegaCreative plugin) {
         this.plugin = plugin;
-        startInventoryChecker();
+        // Не запускаем автоматическую проверку - будем использовать команды
+        // startInventoryChecker(); // Отключено по запросу для уменьшения спама
     }
     
     @EventHandler(priority = EventPriority.MONITOR)
@@ -50,6 +51,7 @@ public class DevInventoryManager implements Listener {
             return;
         }
         
+        // ВАЖНО: Сначала сохраняем, ПОТОМ очищаем!
         savedInventories.put(player.getUniqueId(), player.getInventory().getContents().clone());
         playersInDevWorld.add(player.getUniqueId());
         giveDevTools(player);
@@ -204,6 +206,24 @@ public class DevInventoryManager implements Listener {
         if (playersInDevWorld.contains(player.getUniqueId())) {
             giveDevTools(player);
             player.sendMessage("§aИнструменты принудительно восстановлены!");
+        }
+    }
+    
+    /**
+     * Публичный метод для команд - восстанавливает недостающие инструменты
+     */
+    public void refreshTools(Player player) {
+        if (!playersInDevWorld.contains(player.getUniqueId())) {
+            player.sendMessage("§cВы не находитесь в мире разработки!");
+            return;
+        }
+        
+        List<String> missingItems = getMissingCodingItems(player);
+        if (!missingItems.isEmpty()) {
+            giveMissingItems(player, missingItems);
+            player.sendMessage("§aНедостающие инструменты разработчика восстановлены!");
+        } else {
+            player.sendMessage("§eВсе инструменты уже на месте!");
         }
     }
 }

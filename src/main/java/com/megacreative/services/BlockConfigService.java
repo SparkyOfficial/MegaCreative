@@ -113,6 +113,15 @@ public class BlockConfigService {
         return null;
     }
     
+    /**
+     * Gets the primary block configuration for a material (alias for getFirstBlockConfig)
+     * @param material The material to search for
+     * @return The first BlockConfig for this material, or null if none found
+     */
+    public BlockConfig getBlockConfigByMaterial(Material material) {
+        return getFirstBlockConfig(material);
+    }
+    
     public boolean isControlOrEventBlock(String blockType) {
         if (blockType == null) return false;
         BlockConfig config = getBlockConfig(blockType);

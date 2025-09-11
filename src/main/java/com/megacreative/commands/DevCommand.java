@@ -25,6 +25,20 @@ public class DevCommand implements CommandExecutor {
             return true;
         }
         
+        // Проверяем подкоманды
+        if (args.length > 0) {
+            switch (args[0].toLowerCase()) {
+                case "refresh", "tools" -> {
+                    plugin.getServiceRegistry().getDevInventoryManager().refreshTools(player);
+                    return true;
+                }
+                case "help" -> {
+                    sendHelp(player);
+                    return true;
+                }
+            }
+        }
+        
         // Debug logging
         plugin.getLogger().info("[DEBUG] Player " + player.getName() + " executed /dev command");
        
@@ -93,6 +107,18 @@ public class DevCommand implements CommandExecutor {
             }
         }.runTask(plugin); // Выполнить в основном потоке
         return true;
+    }
+    
+    /**
+     * Отображает справку по команде /dev
+     */
+    private void sendHelp(Player player) {
+        player.sendMessage("§8§m                    §r §6§l/dev Справка §8§m                    ");
+        player.sendMessage("§7/dev §8- §fПерейти в режим разработки");
+        player.sendMessage("§7/dev refresh §8- §fВосстановить недостающие инструменты");
+        player.sendMessage("§7/dev tools §8- §fТо же, что и refresh");
+        player.sendMessage("§7/dev help §8- §fПоказать эту справку");
+        player.sendMessage("§8§m                                                        ");
     }
    
     /**
