@@ -1,19 +1,18 @@
 package com.megacreative.coding.conditions;
 
+import com.megacreative.MegaCreative;
 import com.megacreative.coding.CodeBlock;
 import com.megacreative.coding.ExecutionContext;
-import com.megacreative.coding.PluginMain;
 import com.megacreative.services.BlockConfigService;
-import com.megacreative.services.ServiceRegistry;
+import com.megacreative.core.ServiceRegistry;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.bukkit.entity.Player;
-import org.bukkit.inventory.PlayerInventory;
 import org.bukkit.inventory.ItemStack;
-import org.bukkit.Material;
+import org.bukkit.inventory.PlayerInventory;
 
 import java.util.function.Function;
 
@@ -30,7 +29,7 @@ public class HasItemConditionTest {
     private ExecutionContext context;
     
     @Mock
-    private PluginMain plugin;
+    private MegaCreative plugin;
     
     @Mock
     private ServiceRegistry serviceRegistry;
@@ -65,26 +64,20 @@ public class HasItemConditionTest {
     }
 
     @Test
-    public void testGetItemParamsFromContainerWithNoSlotResolver() {
+    public void testEvaluateWithNoSlotResolver() {
         when(blockConfigService.getSlotResolver(anyString())).thenReturn(null);
-        
-        // We'll test the private method indirectly by calling evaluate
-        // Since the method is private, we can't call it directly
-        // But we can verify that it handles the null case gracefully
         boolean result = condition.evaluate(block, context);
         assertFalse(result);
     }
 
     @Test
-    public void testGetItemTypeFromItem() {
-        ItemStack item = new ItemStack(Material.STONE);
-        
-        // We'll test the private method indirectly by calling evaluate
-        // Since the method is private, we can't call it directly
-        // But we can verify that it works with a real ItemStack
-        when(blockConfigService.getSlotResolver(anyString())).thenReturn(mock(Function.class));
+    public void testEvaluateWithNullItem() {
+        Function<String, Integer> slotResolver = mock(Function.class);
+        when(blockConfigService.getSlotResolver(anyString())).thenReturn(slotResolver);
+        when(slotResolver.apply("item_slot")).thenReturn(0);
+        when(block.getConfigItem(0)).thenReturn(null);
         
         boolean result = condition.evaluate(block, context);
-        assertFalse(result); // Should be false because we haven't set up the item properly
+        assertFalse(result);
     }
 }

@@ -118,7 +118,7 @@ public class AutoConnectionManager implements Listener {
             }
         }
         
-        // --- КОНЕЦ "ПОЛИЦИИ РАЗМЕЩЕНИЯ" ---
+        // --- КОНЕЦ "ПОЛИЦИЯ РАЗМЕЩЕНИЯ" ---
 
         // Get the CodeBlock that was created by BlockPlacementHandler
         BlockPlacementHandler placementHandler = plugin.getBlockPlacementHandler();
@@ -134,6 +134,11 @@ public class AutoConnectionManager implements Listener {
                 // Auto-connect with neighboring blocks
                 autoConnectBlock(codeBlock, location);
                 
+                // If this is an event block, create a script and add it to the world
+                if (isEventBlock(codeBlock)) {
+                    createAndAddScript(codeBlock, player, location);
+                }
+                
                 player.sendMessage("§aБлок §f" + config.getDisplayName() + "§a установлен и автоматически подключен!");
                 plugin.getLogger().info("Auto-connected CodeBlock at " + location + " for player " + player.getName());
             }
@@ -147,6 +152,11 @@ public class AutoConnectionManager implements Listener {
             locationToBlock.put(location, codeBlock);
             addBlockToPlayerScript(player, codeBlock);
             autoConnectBlock(codeBlock, location);
+            
+            // If this is an event block, create a script and add it to the world
+            if (isEventBlock(codeBlock)) {
+                createAndAddScript(codeBlock, player, location);
+            }
             
             player.sendMessage("§aБлок кода создан и подключен!");
         }
@@ -171,6 +181,11 @@ public class AutoConnectionManager implements Listener {
             
             // Remove from player script
             removeBlockFromPlayerScript(event.getPlayer(), codeBlock);
+            
+            // If this is an event block, remove the corresponding script from the world
+            if (isEventBlock(codeBlock)) {
+                removeScript(codeBlock, location);
+            }
             
             // Also ensure BlockPlacementHandler is synchronized
             BlockPlacementHandler placementHandler = plugin.getBlockPlacementHandler();
@@ -216,7 +231,7 @@ public class AutoConnectionManager implements Listener {
         // Step 3: Handle parent-child relationships (vertical connections)
         handleParentChildConnections(codeBlock, location, line);
         
-        // Step 4: Update player's script blocks
+        // Step 4: Update player script blocks
         updatePlayerScriptBlocks(codeBlock, location);
     }
     
@@ -452,6 +467,80 @@ public class AutoConnectionManager implements Listener {
         List<CodeBlock> blocks = playerScriptBlocks.get(playerId);
         if (blocks != null) {
             blocks.remove(codeBlock);
+        }
+    }
+    
+    /**
+     * Checks if a block is an event block
+     */
+    public boolean isEventBlock(CodeBlock block) {
+        if (block == null || block.getAction() == null) return false;
+        
+        // Get the block configuration
+        BlockConfigService.BlockConfig config = blockConfigService.getBlockConfig(block.getAction());
+        if (config == null) return false;
+        
+        // Check if it's an event block
+        return "EVENT".equals(config.getType());
+    }
+    
+    /**
+     * Creates a script from an event block and adds it to the world
+     */
+    public void createAndAddScript(CodeBlock eventBlock, Player player, Location location) {
+        try {
+            // Create a script from the event block
+            CodeScript script = new CodeScript(eventBlock);
+            script.setName("Script for " + eventBlock.getAction());
+            script.setEnabled(true);
+            script.setType(CodeScript.ScriptType.EVENT);
+            
+            // Find the creative world
+            com.megacreative.models.CreativeWorld creativeWorld = plugin.getWorldManager().findCreativeWorldByBukkit(location.getWorld());
+            if (creativeWorld != null) {
+                // Add the script to the world
+                List<CodeScript> scripts = creativeWorld.getScripts();
+                if (scripts == null) {
+                    scripts = new ArrayList<>();
+                    creativeWorld.setScripts(scripts);
+                }
+                scripts.add(script);
+                
+                plugin.getLogger().info("Created and added script for event block: " + eventBlock.getAction());
+            } else {
+                plugin.getLogger().warning("Could not find creative world for location: " + location);
+            }
+        } catch (Exception e) {
+            plugin.getLogger().severe("Failed to create script for event block: " + e.getMessage());
+            e.printStackTrace();
+        }
+    }
+    
+    /**
+     * Removes a script corresponding to an event block from the world
+     */
+    public void removeScript(CodeBlock eventBlock, Location location) {
+        try {
+            // Find the creative world
+            com.megacreative.models.CreativeWorld creativeWorld = plugin.getWorldManager().findCreativeWorldByBukkit(location.getWorld());
+            if (creativeWorld != null) {
+                // Remove the script from the world
+                List<CodeScript> scripts = creativeWorld.getScripts();
+                if (scripts != null) {
+                    // Find and remove the script that corresponds to this event block
+                    scripts.removeIf(script -> 
+                        script.getRootBlock() != null && 
+                        eventBlock.getId().equals(script.getRootBlock().getId())
+                    );
+                    
+                    plugin.getLogger().info("Removed script for event block: " + eventBlock.getAction());
+                }
+            } else {
+                plugin.getLogger().warning("Could not find creative world for location: " + location);
+            }
+        } catch (Exception e) {
+            plugin.getLogger().severe("Failed to remove script for event block: " + e.getMessage());
+            e.printStackTrace();
         }
     }
     

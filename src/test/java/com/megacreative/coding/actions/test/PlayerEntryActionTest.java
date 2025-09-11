@@ -63,7 +63,7 @@ public class PlayerEntryActionTest {
         when(mockBlock.getId()).thenReturn(UUID.randomUUID());
         
         // Mock VariableManager to return the same value (no resolution needed for simple values)
-        when(mockVariableManager.getVariable(anyString(), anyString(), anyString())).thenAnswer(invocation -> {
+        when(mockVariableManager.getVariable(anyString(), any(), anyString())).thenAnswer(invocation -> {
             return new AnyValue(null);
         });
     }
@@ -121,7 +121,7 @@ public class PlayerEntryActionTest {
         
         // Mock the container manager
         BlockContainerManager mockContainerManager = Mockito.mock(BlockContainerManager.class);
-        when(mockServiceRegistry.getContainerManager()).thenReturn(mockContainerManager);
+        when(mockServiceRegistry.getBlockContainerManager()).thenReturn(mockContainerManager);
         
         PlayerInventory mockInventory = Mockito.mock(PlayerInventory.class);
         when(mockPlayer.getInventory()).thenReturn(mockInventory);
@@ -131,7 +131,7 @@ public class PlayerEntryActionTest {
         playerEntryAction.execute(context);
         
         // Verify that container manager was accessed
-        verify(mockServiceRegistry).getContainerManager();
+        verify(mockServiceRegistry).getBlockContainerManager();
         verify(mockPlayer).sendMessage(contains("Добро пожаловать"));
     }
     

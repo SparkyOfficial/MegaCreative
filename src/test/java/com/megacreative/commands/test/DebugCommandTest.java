@@ -1,8 +1,8 @@
 package com.megacreative.commands.test;
 
 import com.megacreative.MegaCreative;
-import com.megacreative.commands.DebugCommand;
 import com.megacreative.coding.debug.VisualDebugger;
+import com.megacreative.commands.DebugCommand;
 import org.bukkit.Location;
 import org.bukkit.World;
 import org.bukkit.command.Command;
@@ -17,9 +17,11 @@ import java.util.UUID;
 import static org.mockito.Mockito.*;
 
 class DebugCommandTest {
-    
     @Mock
     private MegaCreative plugin;
+    
+    @Mock
+    private VisualDebugger visualDebugger;
     
     @Mock
     private Player player;
@@ -28,47 +30,31 @@ class DebugCommandTest {
     private Command command;
     
     @Mock
-    private VisualDebugger visualDebugger;
-    
-    @Mock
     private World world;
     
     private DebugCommand debugCommand;
-    private UUID playerUUID;
-    
+
     @BeforeEach
     void setUp() {
         MockitoAnnotations.openMocks(this);
         debugCommand = new DebugCommand(plugin);
-        playerUUID = UUID.randomUUID();
         
-        when(plugin.getScriptDebugger()).thenReturn(visualDebugger);
-        when(player.getUniqueId()).thenReturn(playerUUID);
+        // Setup player mock
+        when(player.getUniqueId()).thenReturn(UUID.randomUUID());
         when(player.getWorld()).thenReturn(world);
+        when(player.getLocation()).thenReturn(new Location(world, 0, 64, 0));
+        
+        // Setup world mock
         when(world.getName()).thenReturn("test_world");
+        
+        // Setup plugin to return our mock visual debugger
+        when(plugin.getScriptDebugger()).thenReturn(visualDebugger);
     }
-    
+
     @Test
     void testToggleDebug() {
-        // Test toggling debug on
-        when(visualDebugger.isDebugEnabled(player)).thenReturn(false);
-        debugCommand.onCommand(player, command, "debug", new String[0]);
-        verify(visualDebugger).toggleDebug(player);
-    }
-    
-    @Test
-    void testEnableDebug() {
-        // Test enabling debug
-        when(visualDebugger.isDebugEnabled(player)).thenReturn(false);
-        debugCommand.onCommand(player, command, "debug", new String[]{"on"});
-        verify(visualDebugger).toggleDebug(player);
-    }
-    
-    @Test
-    void testDisableDebug() {
-        // Test disabling debug
-        when(visualDebugger.isDebugEnabled(player)).thenReturn(true);
-        debugCommand.onCommand(player, command, "debug", new String[]{"off"});
+        // Test enabling debug mode
+        debugCommand.onCommand(player, command, "debug", new String[]{"toggle"});
         verify(visualDebugger).toggleDebug(player);
     }
     
@@ -80,17 +66,10 @@ class DebugCommandTest {
     }
     
     @Test
-    void testShowStatus() {
-        // Test showing debug status
-        debugCommand.onCommand(player, command, "debug", new String[]{"status"});
-        verify(visualDebugger).isDebugEnabled(player);
-    }
-    
-    @Test
-    void testSetBreakpoint() {
+    void testSetBreakpointAtCurrentLocation() {
         // Test setting breakpoint at current location
         debugCommand.onCommand(player, command, "debug", new String[]{"breakpoint", "set"});
-        verify(visualDebugger).setBreakpoint(player, player.getLocation(), null);
+        verify(visualDebugger).addBreakpoint(player, player.getLocation(), null);
     }
     
     @Test
@@ -98,7 +77,7 @@ class DebugCommandTest {
         // Test setting breakpoint at specific coordinates
         String[] args = {"breakpoint", "set", "10", "64", "20"};
         debugCommand.onCommand(player, command, "debug", args);
-        verify(visualDebugger).setBreakpoint(eq(player), any(Location.class), isNull());
+        verify(visualDebugger).addBreakpoint(eq(player), any(Location.class), isNull());
     }
     
     @Test

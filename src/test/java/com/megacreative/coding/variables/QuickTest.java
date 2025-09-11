@@ -30,10 +30,10 @@ public class QuickTest {
         DataValue globalValue = DataValue.of(42);
         
         vm.setGlobalVariable(globalVar, globalValue);
-        System.out.println("Set global variable: " + globalVar + " = " + globalValue.asInt());
+        System.out.println("Set global variable: " + globalVar + " = " + globalValue.asNumber().intValue());
         
         DataValue globalResult = vm.getGlobalVariable(globalVar);
-        System.out.println("Got global variable: " + (globalResult != null ? globalResult.asInt() : "null"));
+        System.out.println("Got global variable: " + (globalResult != null ? globalResult.asNumber().intValue() : "null"));
         
         System.out.println("\n=== Test Complete ===");
     }

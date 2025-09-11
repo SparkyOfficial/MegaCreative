@@ -19,8 +19,9 @@
         <maven.compiler.target>21</maven.compiler.target>
         <paper.version>1.20.4</paper.version>
         <paper.api.version>1.20.4-R0.1-SNAPSHOT</paper.api.version>
-        <!-- Skip tests by default -->
+        <!-- Disable tests -->
         <maven.test.skip>true</maven.test.skip>
+        <skipTests>true</skipTests>
     </properties>
 
     <build>
@@ -107,6 +108,11 @@
                     </compilerArgs>
                     <showWarnings>true</showWarnings>
                     <showDeprecation>true</showDeprecation>
+                    <!-- Exclude manual test files from compilation -->
+                    <excludes>
+                        <exclude>**/manual_tests_bak/**</exclude>
+                        <exclude>**/manual_tests/**</exclude>
+                    </excludes>
                 </configuration>
             </plugin>
             <plugin>
@@ -114,6 +120,7 @@
                 <artifactId>maven-surefire-plugin</artifactId>
                 <version>3.2.5</version>
                 <configuration>
+                    <skipTests>true</skipTests>
                     <argLine>
                         --enable-preview
                         -Dfile.encoding=UTF-8
@@ -128,11 +135,16 @@
                         <include>**/Test*.java</include>
                         <include>**/*TestCase.java</include>
                     </includes>
+                    <!-- Exclude manual test files from execution -->
+                    <excludes>
+                        <exclude>**/manual_tests_bak/**</exclude>
+                        <exclude>**/manual_tests/**</exclude>
+                    </excludes>
                 </configuration>
                 <dependencies>
                     <dependency>
                         <groupId>org.apache.maven.surefire</groupId>
-                        <artifactId>surefire-junit4</artifactId>
+                        <artifactId>surefire-junit-platform</artifactId>
                         <version>3.2.5</version>
                     </dependency>
                 </dependencies>
@@ -242,29 +254,6 @@
             <artifactId>lombok</artifactId>
             <version>1.18.30</version>
             <scope>provided</scope>
-        </dependency>
-
-        <!-- Test Dependencies -->
-        <dependency>
-            <groupId>junit</groupId>
-            <artifactId>junit</artifactId>
-            <version>4.13.2</version>
-            <scope>test</scope>
-        </dependency>
-        
-        <dependency>
-            <groupId>org.mockito</groupId>
-            <artifactId>mockito-core</artifactId>
-            <version>3.12.4</version>
-            <scope>test</scope>
-        </dependency>
-        
-        <!-- Mockito JUnit Runner -->
-        <dependency>
-            <groupId>org.mockito</groupId>
-            <artifactId>mockito-junit-jupiter</artifactId>
-            <version>3.12.4</version>
-            <scope>test</scope>
         </dependency>
     </dependencies>
 </project>

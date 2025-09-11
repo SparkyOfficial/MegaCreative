@@ -1,11 +1,11 @@
 package com.megacreative.coding.actions;
 
+import com.megacreative.MegaCreative;
 import com.megacreative.coding.CodeBlock;
 import com.megacreative.coding.ExecutionContext;
-import com.megacreative.coding.PluginMain;
 import com.megacreative.coding.executors.ExecutionResult;
 import com.megacreative.services.BlockConfigService;
-import com.megacreative.services.ServiceRegistry;
+import com.megacreative.core.ServiceRegistry;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -28,7 +28,7 @@ public class SendMessageActionTest {
     private ExecutionContext context;
     
     @Mock
-    private PluginMain plugin;
+    private MegaCreative plugin;
     
     @Mock
     private ServiceRegistry serviceRegistry;
@@ -56,7 +56,7 @@ public class SendMessageActionTest {
         when(context.getPlayer()).thenReturn(null);
         ExecutionResult result = action.execute(block, context);
         assertFalse(result.isSuccess());
-        assertTrue(result.getErrorMessage().contains("No player found"));
+        assertTrue(result.getMessage().contains("No player found"));
     }
 
     @Test
@@ -65,7 +65,7 @@ public class SendMessageActionTest {
         
         ExecutionResult result = action.execute(block, context);
         assertFalse(result.isSuccess());
-        assertTrue(result.getErrorMessage().contains("Message is not configured"));
+        assertTrue(result.getMessage().contains("Message is not configured"));
     }
 
     @Test
@@ -77,6 +77,6 @@ public class SendMessageActionTest {
         
         ExecutionResult result = action.execute(block, context);
         assertFalse(result.isSuccess());
-        assertTrue(result.getErrorMessage().contains("Message is not configured"));
+        assertTrue(result.getMessage().contains("Message is not configured"));
     }
 }

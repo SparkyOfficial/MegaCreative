@@ -55,23 +55,25 @@ public class PlayerEventsListener implements Listener {
         if (!creativeWorld.canCode(event.getPlayer())) return;
         
         // Find scripts triggered by player move
-        for (CodeScript script : creativeWorld.getScripts()) {
-            // Check if the script's root block is an onPlayerMove event
-            if (script.getRootBlock() != null && 
-                "onPlayerMove".equals(script.getRootBlock().getAction())) {
-                
-                // Execute script
-                if (scriptEngine != null) {
-                    scriptEngine.executeScript(script, event.getPlayer(), "player_move")
-                        .whenComplete((result, throwable) -> {
-                            if (throwable != null) {
-                                plugin.getLogger().warning("Move script execution failed with exception: " + throwable.getMessage());
-                            } else if (result != null && !result.isSuccess()) {
-                                plugin.getLogger().warning("Move script execution failed: " + result.getMessage());
-                            }
-                        });
+        if (creativeWorld.getScripts() != null) {
+            for (CodeScript script : creativeWorld.getScripts()) {
+                // Check if the script's root block is an onPlayerMove event
+                if (script.getRootBlock() != null && 
+                    "onPlayerMove".equals(script.getRootBlock().getAction())) {
+                    
+                    // Execute script
+                    if (scriptEngine != null) {
+                        scriptEngine.executeScript(script, event.getPlayer(), "player_move")
+                            .whenComplete((result, throwable) -> {
+                                if (throwable != null) {
+                                    plugin.getLogger().warning("Move script execution failed with exception: " + throwable.getMessage());
+                                } else if (result != null && !result.isSuccess()) {
+                                    plugin.getLogger().warning("Move script execution failed: " + result.getMessage());
+                                }
+                            });
+                    }
+                    break;
                 }
-                break;
             }
         }
     }
@@ -86,23 +88,25 @@ public class PlayerEventsListener implements Listener {
         if (!creativeWorld.canCode(event.getPlayer())) return;
         
         // Find scripts triggered by player join
-        for (CodeScript script : creativeWorld.getScripts()) {
-            // Check if the script's root block is an onJoin event
-            if (script.getRootBlock() != null && 
-                "onJoin".equals(script.getRootBlock().getAction())) {
-                
-                // Execute script
-                if (scriptEngine != null) {
-                    scriptEngine.executeScript(script, event.getPlayer(), "player_join")
-                        .whenComplete((result, throwable) -> {
-                            if (throwable != null) {
-                                plugin.getLogger().warning("Join script execution failed with exception: " + throwable.getMessage());
-                            } else if (result != null && !result.isSuccess()) {
-                                plugin.getLogger().warning("Join script execution failed: " + result.getMessage());
-                            }
-                        });
+        if (creativeWorld.getScripts() != null) {
+            for (CodeScript script : creativeWorld.getScripts()) {
+                // Check if the script's root block is an onJoin event
+                if (script.getRootBlock() != null && 
+                    "onJoin".equals(script.getRootBlock().getAction())) {
+                    
+                    // Execute script
+                    if (scriptEngine != null) {
+                        scriptEngine.executeScript(script, event.getPlayer(), "player_join")
+                            .whenComplete((result, throwable) -> {
+                                if (throwable != null) {
+                                    plugin.getLogger().warning("Join script execution failed with exception: " + throwable.getMessage());
+                                } else if (result != null && !result.isSuccess()) {
+                                    plugin.getLogger().warning("Join script execution failed: " + result.getMessage());
+                                }
+                            });
+                    }
+                    break;
                 }
-                break;
             }
         }
     }
@@ -117,23 +121,25 @@ public class PlayerEventsListener implements Listener {
         if (!creativeWorld.canCode(event.getPlayer())) return;
         
         // Find scripts triggered by player quit
-        for (CodeScript script : creativeWorld.getScripts()) {
-            // Check if the script's root block is an onLeave event
-            if (script.getRootBlock() != null && 
-                "onLeave".equals(script.getRootBlock().getAction())) {
-                
-                // Execute script
-                if (scriptEngine != null) {
-                    scriptEngine.executeScript(script, event.getPlayer(), "player_leave")
-                        .whenComplete((result, throwable) -> {
-                            if (throwable != null) {
-                                plugin.getLogger().warning("Leave script execution failed with exception: " + throwable.getMessage());
-                            } else if (result != null && !result.isSuccess()) {
-                                plugin.getLogger().warning("Leave script execution failed: " + result.getMessage());
-                            }
-                        });
+        if (creativeWorld.getScripts() != null) {
+            for (CodeScript script : creativeWorld.getScripts()) {
+                // Check if the script's root block is an onLeave event
+                if (script.getRootBlock() != null && 
+                    "onLeave".equals(script.getRootBlock().getAction())) {
+                    
+                    // Execute script
+                    if (scriptEngine != null) {
+                        scriptEngine.executeScript(script, event.getPlayer(), "player_leave")
+                            .whenComplete((result, throwable) -> {
+                                if (throwable != null) {
+                                    plugin.getLogger().warning("Leave script execution failed with exception: " + throwable.getMessage());
+                                } else if (result != null && !result.isSuccess()) {
+                                    plugin.getLogger().warning("Leave script execution failed: " + result.getMessage());
+                                }
+                            });
+                    }
+                    break;
                 }
-                break;
             }
         }
     }
@@ -148,23 +154,25 @@ public class PlayerEventsListener implements Listener {
         if (!creativeWorld.canCode(event.getPlayer())) return;
         
         // Find scripts triggered by player chat
-        for (CodeScript script : creativeWorld.getScripts()) {
-            // Check if the script's root block is an onChat event
-            if (script.getRootBlock() != null && 
-                "onChat".equals(script.getRootBlock().getAction())) {
-                
-                // Execute script
-                if (scriptEngine != null) {
-                    scriptEngine.executeScript(script, event.getPlayer(), "player_chat")
-                        .whenComplete((result, throwable) -> {
-                            if (throwable != null) {
-                                plugin.getLogger().warning("Chat script execution failed with exception: " + throwable.getMessage());
-                            } else if (result != null && !result.isSuccess()) {
-                                plugin.getLogger().warning("Chat script execution failed: " + result.getMessage());
-                            }
-                        });
+        if (creativeWorld.getScripts() != null) {
+            for (CodeScript script : creativeWorld.getScripts()) {
+                // Check if the script's root block is an onChat event
+                if (script.getRootBlock() != null && 
+                    "onChat".equals(script.getRootBlock().getAction())) {
+                    
+                    // Execute script
+                    if (scriptEngine != null) {
+                        scriptEngine.executeScript(script, event.getPlayer(), "player_chat")
+                            .whenComplete((result, throwable) -> {
+                                if (throwable != null) {
+                                    plugin.getLogger().warning("Chat script execution failed with exception: " + throwable.getMessage());
+                                } else if (result != null && !result.isSuccess()) {
+                                    plugin.getLogger().warning("Chat script execution failed: " + result.getMessage());
+                                }
+                            });
+                    }
+                    break;
                 }
-                break;
             }
         }
     }
@@ -179,23 +187,25 @@ public class PlayerEventsListener implements Listener {
         if (!creativeWorld.canCode(event.getPlayer())) return;
         
         // Find scripts triggered by player command
-        for (CodeScript script : creativeWorld.getScripts()) {
-            // Check if the script's root block is an onCommand event
-            if (script.getRootBlock() != null && 
-                "onCommand".equals(script.getRootBlock().getAction())) {
-                
-                // Execute script
-                if (scriptEngine != null) {
-                    scriptEngine.executeScript(script, event.getPlayer(), "player_command")
-                        .whenComplete((result, throwable) -> {
-                            if (throwable != null) {
-                                plugin.getLogger().warning("Command script execution failed with exception: " + throwable.getMessage());
-                            } else if (result != null && !result.isSuccess()) {
-                                plugin.getLogger().warning("Command script execution failed: " + result.getMessage());
-                            }
-                        });
+        if (creativeWorld.getScripts() != null) {
+            for (CodeScript script : creativeWorld.getScripts()) {
+                // Check if the script's root block is an onCommand event
+                if (script.getRootBlock() != null && 
+                    "onCommand".equals(script.getRootBlock().getAction())) {
+                    
+                    // Execute script
+                    if (scriptEngine != null) {
+                        scriptEngine.executeScript(script, event.getPlayer(), "player_command")
+                            .whenComplete((result, throwable) -> {
+                                if (throwable != null) {
+                                    plugin.getLogger().warning("Command script execution failed with exception: " + throwable.getMessage());
+                                } else if (result != null && !result.isSuccess()) {
+                                    plugin.getLogger().warning("Command script execution failed: " + result.getMessage());
+                                }
+                            });
+                    }
+                    break;
                 }
-                break;
             }
         }
     }
@@ -210,23 +220,25 @@ public class PlayerEventsListener implements Listener {
         if (!creativeWorld.canCode(event.getEntity())) return;
         
         // Find scripts triggered by player death
-        for (CodeScript script : creativeWorld.getScripts()) {
-            // Check if the script's root block is an onPlayerDeath event
-            if (script.getRootBlock() != null && 
-                "onPlayerDeath".equals(script.getRootBlock().getAction())) {
-                
-                // Execute script
-                if (scriptEngine != null) {
-                    scriptEngine.executeScript(script, event.getEntity(), "player_death")
-                        .whenComplete((result, throwable) -> {
-                            if (throwable != null) {
-                                plugin.getLogger().warning("Death script execution failed with exception: " + throwable.getMessage());
-                            } else if (result != null && !result.isSuccess()) {
-                                plugin.getLogger().warning("Death script execution failed: " + result.getMessage());
-                            }
-                        });
+        if (creativeWorld.getScripts() != null) {
+            for (CodeScript script : creativeWorld.getScripts()) {
+                // Check if the script's root block is an onPlayerDeath event
+                if (script.getRootBlock() != null && 
+                    "onPlayerDeath".equals(script.getRootBlock().getAction())) {
+                    
+                    // Execute script
+                    if (scriptEngine != null) {
+                        scriptEngine.executeScript(script, event.getEntity(), "player_death")
+                            .whenComplete((result, throwable) -> {
+                                if (throwable != null) {
+                                    plugin.getLogger().warning("Death script execution failed with exception: " + throwable.getMessage());
+                                } else if (result != null && !result.isSuccess()) {
+                                    plugin.getLogger().warning("Death script execution failed: " + result.getMessage());
+                                }
+                            });
+                    }
+                    break;
                 }
-                break;
             }
         }
     }
@@ -241,23 +253,25 @@ public class PlayerEventsListener implements Listener {
         if (!creativeWorld.canCode(event.getPlayer())) return;
         
         // Find scripts triggered by block place
-        for (CodeScript script : creativeWorld.getScripts()) {
-            // Check if the script's root block is an onBlockPlace event
-            if (script.getRootBlock() != null && 
-                "onBlockPlace".equals(script.getRootBlock().getAction())) {
-                
-                // Execute script
-                if (scriptEngine != null) {
-                    scriptEngine.executeScript(script, event.getPlayer(), "block_place")
-                        .whenComplete((result, throwable) -> {
-                            if (throwable != null) {
-                                plugin.getLogger().warning("Block place script execution failed with exception: " + throwable.getMessage());
-                            } else if (result != null && !result.isSuccess()) {
-                                plugin.getLogger().warning("Block place script execution failed: " + result.getMessage());
-                            }
-                        });
+        if (creativeWorld.getScripts() != null) {
+            for (CodeScript script : creativeWorld.getScripts()) {
+                // Check if the script's root block is an onBlockPlace event
+                if (script.getRootBlock() != null && 
+                    "onBlockPlace".equals(script.getRootBlock().getAction())) {
+                    
+                    // Execute script
+                    if (scriptEngine != null) {
+                        scriptEngine.executeScript(script, event.getPlayer(), "block_place")
+                            .whenComplete((result, throwable) -> {
+                                if (throwable != null) {
+                                    plugin.getLogger().warning("Block place script execution failed with exception: " + throwable.getMessage());
+                                } else if (result != null && !result.isSuccess()) {
+                                    plugin.getLogger().warning("Block place script execution failed: " + result.getMessage());
+                                }
+                            });
+                    }
+                    break;
                 }
-                break;
             }
         }
     }
@@ -272,23 +286,25 @@ public class PlayerEventsListener implements Listener {
         if (!creativeWorld.canCode(event.getPlayer())) return;
         
         // Find scripts triggered by block break
-        for (CodeScript script : creativeWorld.getScripts()) {
-            // Check if the script's root block is an onBlockBreak event
-            if (script.getRootBlock() != null && 
-                "onBlockBreak".equals(script.getRootBlock().getAction())) {
-                
-                // Execute script
-                if (scriptEngine != null) {
-                    scriptEngine.executeScript(script, event.getPlayer(), "block_break")
-                        .whenComplete((result, throwable) -> {
-                            if (throwable != null) {
-                                plugin.getLogger().warning("Block break script execution failed with exception: " + throwable.getMessage());
-                            } else if (result != null && !result.isSuccess()) {
-                                plugin.getLogger().warning("Block break script execution failed: " + result.getMessage());
-                            }
-                        });
+        if (creativeWorld.getScripts() != null) {
+            for (CodeScript script : creativeWorld.getScripts()) {
+                // Check if the script's root block is an onBlockBreak event
+                if (script.getRootBlock() != null && 
+                    "onBlockBreak".equals(script.getRootBlock().getAction())) {
+                    
+                    // Execute script
+                    if (scriptEngine != null) {
+                        scriptEngine.executeScript(script, event.getPlayer(), "block_break")
+                            .whenComplete((result, throwable) -> {
+                                if (throwable != null) {
+                                    plugin.getLogger().warning("Block break script execution failed with exception: " + throwable.getMessage());
+                                } else if (result != null && !result.isSuccess()) {
+                                    plugin.getLogger().warning("Block break script execution failed: " + result.getMessage());
+                                }
+                            });
+                    }
+                    break;
                 }
-                break;
             }
         }
     }
@@ -303,78 +319,24 @@ public class PlayerEventsListener implements Listener {
         if (!creativeWorld.canCode(event.getPlayer())) return;
         
         // Find scripts triggered by player level change
-        for (CodeScript script : creativeWorld.getScripts()) {
-            // Check if the script's root block is an onPlayerLevelUp event
-            if (script.getRootBlock() != null && 
-                "onPlayerLevelUp".equals(script.getRootBlock().getAction())) {
-                
-                // Execute script
-                if (scriptEngine != null) {
-                    scriptEngine.executeScript(script, event.getPlayer(), "player_level_up")
-                        .whenComplete((result, throwable) -> {
-                            if (throwable != null) {
-                                plugin.getLogger().warning("Level up script execution failed with exception: " + throwable.getMessage());
-                            } else if (result != null && !result.isSuccess()) {
-                                plugin.getLogger().warning("Level up script execution failed: " + result.getMessage());
-                            }
-                        });
-                }
-                break;
-            }
-        }
-    }
-    
-    /**
-     * Updates the TPS tracking
-     */
-    public void updateTPS() {
-        long currentTime = System.currentTimeMillis();
-        long timeDiff = currentTime - lastTickTime;
-        lastTickTime = currentTime;
-        
-        // Calculate TPS (20 is the ideal TPS)
-        if (timeDiff > 0) {
-            tps = Math.min(20.0, 1000.0 / timeDiff);
-        }
-    }
-    
-    /**
-     * Gets the current TPS
-     * @return Current TPS
-     */
-    public double getTPS() {
-        return tps;
-    }
-    
-    /**
-     * Handles the onServerTPS event - checks if TPS meets the condition
-     */
-    public void onServerTPS() {
-        // Get all creative worlds
-        List<CreativeWorld> creativeWorlds = plugin.getWorldManager().getCreativeWorlds();
-        
-        // Iterate through each creative world
-        for (CreativeWorld creativeWorld : creativeWorlds) {
-            // Find scripts triggered by onServerTPS event
+        if (creativeWorld.getScripts() != null) {
             for (CodeScript script : creativeWorld.getScripts()) {
-                // Check if the script's root block is an onServerTPS event
+                // Check if the script's root block is an onPlayerLevelUp event
                 if (script.getRootBlock() != null && 
-                    "onServerTPS".equals(script.getRootBlock().getAction())) {
+                    "onPlayerLevelUp".equals(script.getRootBlock().getAction())) {
                     
-                    // Execute script for each player in the world
-                    creativeWorld.getPlayers().forEach(player -> {
-                        if (scriptEngine != null) {
-                            scriptEngine.executeScript(script, player, "server_tps")
-                                .whenComplete((result, throwable) -> {
-                                    if (throwable != null) {
-                                        plugin.getLogger().warning("Server TPS script execution failed with exception: " + throwable.getMessage());
-                                    } else if (result != null && !result.isSuccess()) {
-                                        plugin.getLogger().warning("Server TPS script execution failed: " + result.getMessage());
-                                    }
-                                });
-                        }
-                    });
-                    break; // Only execute the first matching script to avoid duplicates
+                    // Execute script
+                    if (scriptEngine != null) {
+                        scriptEngine.executeScript(script, event.getPlayer(), "player_level_up")
+                            .whenComplete((result, throwable) -> {
+                                if (throwable != null) {
+                                    plugin.getLogger().warning("Level up script execution failed with exception: " + throwable.getMessage());
+                                } else if (result != null && !result.isSuccess()) {
+                                    plugin.getLogger().warning("Level up script execution failed: " + result.getMessage());
+                                }
+                            });
+                    }
+                    break;
                 }
             }
         }
@@ -393,27 +355,67 @@ public class PlayerEventsListener implements Listener {
         // Iterate through each creative world
         for (CreativeWorld creativeWorld : creativeWorlds) {
             // Find scripts triggered by onTick event
-            for (CodeScript script : creativeWorld.getScripts()) {
-                // Check if the script's root block is an onTick event
-                if (script.getRootBlock() != null && 
-                    "onTick".equals(script.getRootBlock().getAction())) {
-                    
-                    // Execute script for each player in the world
-                    creativeWorld.getPlayers().forEach(player -> {
-                        if (scriptEngine != null) {
-                            scriptEngine.executeScript(script, player, "tick")
-                                .whenComplete((result, throwable) -> {
-                                    if (throwable != null) {
-                                        plugin.getLogger().warning("Tick script execution failed with exception: " + throwable.getMessage());
-                                    } else if (result != null && !result.isSuccess()) {
-                                        plugin.getLogger().warning("Tick script execution failed: " + result.getMessage());
-                                    }
-                                });
-                        }
-                    });
-                    break; // Only execute the first matching script to avoid duplicates
+            if (creativeWorld.getScripts() != null) {
+                for (CodeScript script : creativeWorld.getScripts()) {
+                    // Check if the script's root block is an onTick event
+                    if (script.getRootBlock() != null && 
+                        "onTick".equals(script.getRootBlock().getAction())) {
+                        
+                        // Execute script for each player in the world
+                        creativeWorld.getPlayers().forEach(player -> {
+                            if (scriptEngine != null) {
+                                scriptEngine.executeScript(script, player, "tick")
+                                    .whenComplete((result, throwable) -> {
+                                        if (throwable != null) {
+                                            plugin.getLogger().warning("Tick script execution failed with exception: " + throwable.getMessage());
+                                        } else if (result != null && !result.isSuccess()) {
+                                            plugin.getLogger().warning("Tick script execution failed: " + result.getMessage());
+                                        }
+                                    });
+                            }
+                        });
+                        break;
+                    }
                 }
             }
         }
+    }
+    
+    /**
+     * Handles server TPS tracking
+     */
+    public void onServerTPS() {
+        long currentTime = System.currentTimeMillis();
+        long timeDiff = currentTime - lastTickTime;
+        lastTickTime = currentTime;
+        
+        if (timeDiff > 0) {
+            tps = Math.min(20.0, 1000.0 / timeDiff);
+        }
+        
+        // Log TPS if it drops significantly
+        if (tps < 15.0) {
+            plugin.getLogger().warning("Server TPS dropped to: " + String.format("%.2f", tps));
+        }
+    }
+    
+    /**
+     * Updates TPS tracking
+     */
+    private void updateTPS() {
+        long currentTime = System.currentTimeMillis();
+        long timeDiff = currentTime - lastTickTime;
+        lastTickTime = currentTime;
+        
+        if (timeDiff > 0) {
+            tps = Math.min(20.0, 1000.0 / timeDiff);
+        }
+    }
+    
+    /**
+     * Gets current server TPS
+     */
+    public double getTPS() {
+        return tps;
     }
 }

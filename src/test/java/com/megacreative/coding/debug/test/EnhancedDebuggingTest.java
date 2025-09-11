@@ -12,6 +12,7 @@ import org.mockito.MockitoAnnotations;
 
 import java.util.UUID;
 
+import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.Mockito.*;
 
 class EnhancedDebuggingTest {
@@ -26,15 +27,14 @@ class EnhancedDebuggingTest {
     private World world;
     
     private VisualDebugger debugger;
-    private UUID playerUUID;
-    
+
     @BeforeEach
     void setUp() {
         MockitoAnnotations.openMocks(this);
         debugger = new VisualDebugger(plugin);
-        playerUUID = UUID.randomUUID();
         
-        when(player.getUniqueId()).thenReturn(playerUUID);
+        // Setup mocks
+        when(player.getUniqueId()).thenReturn(UUID.randomUUID());
         when(player.getWorld()).thenReturn(world);
         when(world.getName()).thenReturn("test_world");
     }
@@ -43,7 +43,7 @@ class EnhancedDebuggingTest {
     void testBreakpointManagement() {
         // Test setting a breakpoint
         Location location = new Location(world, 10, 64, 20);
-        debugger.setBreakpoint(player, location, "player.health < 10");
+        debugger.addBreakpoint(player, location, "player.health < 10");
         
         // Verify breakpoint was set
         debugger.listBreakpoints(player);

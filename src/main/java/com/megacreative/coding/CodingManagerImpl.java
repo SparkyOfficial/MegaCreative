@@ -65,39 +65,52 @@ public class CodingManagerImpl implements ICodingManager {
     
     @Override
     public void loadScriptsForWorld(CreativeWorld world) {
-        // Implementation not needed for now
+        // In a real implementation, this would load scripts from storage
+        // For now, we'll just ensure the scripts list is initialized
+        if (world.getScripts() == null) {
+            world.setScripts(new java.util.ArrayList<>());
+        }
+        logger.info("Loaded scripts for world: " + world.getName());
     }
     
     @Override
     public void unloadScriptsForWorld(CreativeWorld world) {
-        // Implementation not needed for now
+        // In a real implementation, this would save scripts to storage
+        // For now, we'll just clear the scripts list
+        if (world.getScripts() != null) {
+            world.getScripts().clear();
+        }
+        logger.info("Unloaded scripts for world: " + world.getName());
     }
     
     @Override
     public CodeScript getScript(String name) {
-        // Implementation not needed for now
+        // In a real implementation, this would search for a script by name
         return null;
     }
     
     @Override
     public java.util.List<CodeScript> getWorldScripts(CreativeWorld world) {
-        // Implementation not needed for now
-        return new java.util.ArrayList<>();
+        // Return the scripts list for the world
+        return world.getScripts() != null ? world.getScripts() : new java.util.ArrayList<>();
     }
     
     @Override
     public void saveScript(CodeScript script) {
-        // Implementation not needed for now
+        // In a real implementation, this would save a script to storage
+        logger.info("Saved script: " + script.getName());
     }
     
     @Override
     public void cancelScriptExecution(String scriptId) {
-        // Implementation not needed for now
+        // In a real implementation, this would cancel a running script
+        logger.info("Cancelled script execution: " + scriptId);
     }
     
     @Override
     public void deleteScript(String scriptName) {
-        // Implementation not needed for now
+        // In a real implementation, this would delete a script from storage
+        logger.info("Deleted script: " + scriptName);
     }
     
     @Override

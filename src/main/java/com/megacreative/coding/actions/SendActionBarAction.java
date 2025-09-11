@@ -35,11 +35,10 @@ public class SendActionBarAction implements BlockAction {
 
             // Resolve any placeholders in the message
             ParameterResolver resolver = new ParameterResolver(context);
-            DataValue messageValue = DataValue.of(message);
-            DataValue resolvedMessage = resolver.resolve(context, messageValue);
+            String resolvedMessage = resolver.resolveString(context, message);
             
             // Send the message to the action bar
-            player.sendActionBar(resolvedMessage.asString());
+            player.sendActionBar(resolvedMessage);
             return ExecutionResult.success("Action bar message sent successfully");
         } catch (Exception e) {
             return ExecutionResult.error("Failed to send action bar message: " + e.getMessage());
@@ -83,8 +82,8 @@ public class SendActionBarAction implements BlockAction {
         if (meta != null) {
             String displayName = meta.getDisplayName();
             if (displayName != null && !displayName.isEmpty()) {
-                // Remove color codes and return the message
-                return displayName.replaceAll("[§0-9]", "").trim();
+                // Return the display name as is, preserving color codes
+                return displayName;
             }
         }
         return null;

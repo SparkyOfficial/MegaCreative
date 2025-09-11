@@ -33,11 +33,8 @@ public class SendTitleAction implements BlockAction {
             // Resolve any placeholders in the parameters
             ParameterResolver resolver = new ParameterResolver(context);
             
-            DataValue titleValue = DataValue.of(params.titleStr);
-            DataValue resolvedTitle = resolver.resolve(context, titleValue);
-            
-            DataValue subtitleValue = DataValue.of(params.subtitleStr);
-            DataValue resolvedSubtitle = resolver.resolve(context, subtitleValue);
+            String resolvedTitle = resolver.resolveString(context, params.titleStr);
+            String resolvedSubtitle = resolver.resolveString(context, params.subtitleStr);
             
             int fadeIn = params.fadeIn;
             int stay = params.stay;
@@ -45,8 +42,8 @@ public class SendTitleAction implements BlockAction {
 
             // Send the title to the player
             player.sendTitle(
-                resolvedTitle.asString(), 
-                resolvedSubtitle.asString(), 
+                resolvedTitle, 
+                resolvedSubtitle, 
                 fadeIn, 
                 stay, 
                 fadeOut
@@ -137,8 +134,8 @@ public class SendTitleAction implements BlockAction {
         if (meta != null) {
             String displayName = meta.getDisplayName();
             if (displayName != null && !displayName.isEmpty()) {
-                // Remove color codes and return the title
-                return displayName.replaceAll("[§0-9]", "").trim();
+                // Return the display name as is, preserving color codes
+                return displayName;
             }
         }
         return "";
@@ -152,8 +149,8 @@ public class SendTitleAction implements BlockAction {
         if (meta != null) {
             String displayName = meta.getDisplayName();
             if (displayName != null && !displayName.isEmpty()) {
-                // Remove color codes and return the subtitle
-                return displayName.replaceAll("[§0-9]", "").trim();
+                // Return the display name as is, preserving color codes
+                return displayName;
             }
         }
         return "";
@@ -169,8 +166,10 @@ public class SendTitleAction implements BlockAction {
                 String displayName = meta.getDisplayName();
                 if (displayName != null && !displayName.isEmpty()) {
                     // Try to parse fade in time from display name
-                    String cleanName = displayName.replaceAll("[§0-9]", "").trim();
-                    return Integer.parseInt(cleanName);
+                    String cleanName = displayName.replaceAll("[^0-9]", "");
+                    if (!cleanName.isEmpty()) {
+                        return Integer.parseInt(cleanName);
+                    }
                 }
             }
             
@@ -191,8 +190,10 @@ public class SendTitleAction implements BlockAction {
                 String displayName = meta.getDisplayName();
                 if (displayName != null && !displayName.isEmpty()) {
                     // Try to parse stay time from display name
-                    String cleanName = displayName.replaceAll("[§0-9]", "").trim();
-                    return Integer.parseInt(cleanName);
+                    String cleanName = displayName.replaceAll("[^0-9]", "");
+                    if (!cleanName.isEmpty()) {
+                        return Integer.parseInt(cleanName);
+                    }
                 }
             }
             
@@ -213,8 +214,10 @@ public class SendTitleAction implements BlockAction {
                 String displayName = meta.getDisplayName();
                 if (displayName != null && !displayName.isEmpty()) {
                     // Try to parse fade out time from display name
-                    String cleanName = displayName.replaceAll("[§0-9]", "").trim();
-                    return Integer.parseInt(cleanName);
+                    String cleanName = displayName.replaceAll("[^0-9]", "");
+                    if (!cleanName.isEmpty()) {
+                        return Integer.parseInt(cleanName);
+                    }
                 }
             }
             

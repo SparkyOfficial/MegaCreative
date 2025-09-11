@@ -93,8 +93,8 @@ class BlockPlacementHandlerTest {
         // Test block placement in dev world with code block
         when(blockConfigService.isCodeBlock(Material.DIAMOND_BLOCK)).thenReturn(true);
         when(trustedPlayerManager.canCodeInDevWorld(player)).thenReturn(true);
-        when(blockConfigService.getDefaultAction(Material.DIAMOND_BLOCK)).thenReturn("onJoin");
-        when(blockConfigService.getBlockName(Material.DIAMOND_BLOCK)).thenReturn("Событие игрока");
+        when(blockConfigService.getBlockConfig("onJoin")).thenReturn(mock(BlockConfigService.BlockConfig.class));
+        when(blockConfigService.getFirstBlockConfig(Material.DIAMOND_BLOCK)).thenReturn(mock(BlockConfigService.BlockConfig.class));
         
         BlockPlaceEvent event = new BlockPlaceEvent(block, null, null, null, player, true, null);
         
