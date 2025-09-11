@@ -7,6 +7,7 @@ import com.megacreative.coding.debug.VisualDebugger;
 import com.megacreative.services.BlockConfigService;
 import org.bukkit.Material;
 import org.bukkit.entity.Player;
+import org.bukkit.scheduler.BukkitRunnable;
 
 import java.util.UUID;
 import java.util.concurrent.CompletableFuture;
@@ -75,21 +76,30 @@ public class DefaultScriptEngine implements ScriptEngine {
         
         activeExecutions.put(executionId, context);
 
-        return CompletableFuture.supplyAsync(() -> {
-            try {
-                if (debugger.isDebugging(player)) {
-                    debugger.onScriptStart(player, script);
+        CompletableFuture<ExecutionResult> future = new CompletableFuture<>();
+        
+        // Use Bukkit scheduler to run on main thread
+        new BukkitRunnable() {
+            @Override
+            public void run() {
+                try {
+                    if (debugger.isDebugging(player)) {
+                        debugger.onScriptStart(player, script);
+                    }
+                    ExecutionResult result = processBlock(script.getRootBlock(), context, 0);
+                    future.complete(result);
+                } catch (Exception e) {
+                    future.completeExceptionally(e);
+                } finally {
+                    if (debugger.isDebugging(player)) {
+                        debugger.onScriptEnd(player, script);
+                    }
+                    activeExecutions.remove(executionId);
                 }
-                return processBlock(script.getRootBlock(), context, 0);
-            } catch (Exception e) {
-                return ExecutionResult.error("Script execution failed: " + e.getMessage(), e);
-            } finally {
-                if (debugger.isDebugging(player)) {
-                    debugger.onScriptEnd(player, script);
-                }
-                activeExecutions.remove(executionId);
             }
-        });
+        }.runTask(plugin);
+
+        return future;
     }
     
     @Override
@@ -105,13 +115,22 @@ public class DefaultScriptEngine implements ScriptEngine {
             .currentBlock(block)
             .build();
 
-        return CompletableFuture.supplyAsync(() -> {
-            try {
-                return processBlock(block, context, 0);
-            } catch (Exception e) {
-                return ExecutionResult.error("Block execution failed: " + e.getMessage(), e);
+        CompletableFuture<ExecutionResult> future = new CompletableFuture<>();
+        
+        // Use Bukkit scheduler to run on main thread
+        new BukkitRunnable() {
+            @Override
+            public void run() {
+                try {
+                    ExecutionResult result = processBlock(block, context, 0);
+                    future.complete(result);
+                } catch (Exception e) {
+                    future.completeExceptionally(e);
+                }
             }
-        });
+        }.runTask(plugin);
+
+        return future;
     }
     
     @Override
@@ -127,19 +146,33 @@ public class DefaultScriptEngine implements ScriptEngine {
             .currentBlock(startBlock)
             .build();
 
-        return CompletableFuture.supplyAsync(() -> {
-            try {
-                return processBlock(startBlock, context, 0);
-            } catch (Exception e) {
-                return ExecutionResult.error("Block chain execution failed: " + e.getMessage(), e);
+        CompletableFuture<ExecutionResult> future = new CompletableFuture<>();
+        
+        // Use Bukkit scheduler to run on main thread
+        new BukkitRunnable() {
+            @Override
+            public void run() {
+                try {
+                    ExecutionResult result = processBlock(startBlock, context, 0);
+                    future.complete(result);
+                } catch (Exception e) {
+                    future.completeExceptionally(e);
+                }
             }
-        });
+        }.runTask(plugin);
+
+        return future;
     }
 
     private ExecutionResult processBlock(CodeBlock block, ExecutionContext context, int recursionDepth) {
+        // Check if execution is cancelled
         if (block == null || context.isCancelled()) {
             return ExecutionResult.success("End of chain or cancelled.");
         }
+        
+        // Check for pause/step conditions
+        checkPauseAndBreakpoints(block, context);
+        
         if (recursionDepth > MAX_RECURSION_DEPTH) {
             return ExecutionResult.error("Max recursion depth exceeded.");
         }
@@ -183,43 +216,66 @@ public class DefaultScriptEngine implements ScriptEngine {
                 return processBlock(block.getNextBlock(), context, recursionDepth + 1);
                 
             case "CONTROL":
-                // Здесь будет логика для IF/ELSE, LOOP и т.д.
+                // Here will be logic for IF/ELSE, LOOP etc.
                 if (block.getAction().equals("conditionalBranch")) {
                     if (context.getLastConditionResult()) {
-                        // Результат последнего условия был TRUE, выполняем дочерние блоки
+                        // The result of the last condition was TRUE, execute child blocks
                         if (!block.getChildren().isEmpty()) {
-                            // Выполняем первую дочернюю ветку
+                            // Execute the first child branch
                             ExecutionResult childResult = processBlock(block.getChildren().get(0), context, recursionDepth + 1);
-                            // Если дочерняя ветка завершилась ошибкой, прерываемся
+                            // If the child branch ended with an error, stop
                             if (!childResult.isSuccess()) return childResult;
                         }
                     }
-                    // Независимо от результата, после IF мы идем к следующему блоку в ОСНОВНОЙ цепи
+                    // Regardless of the result, after IF we go to the next block in the MAIN chain
                     return processBlock(block.getNextBlock(), context, recursionDepth + 1);
                 } else if (block.getAction().equals("else")) {
-                    // Обработка блока ELSE
+                    // Processing the ELSE block
                     if (!context.getLastConditionResult()) {
-                        // Предыдущее условие было FALSE, выполняем блок ELSE
+                        // The previous condition was FALSE, execute the ELSE block
                         if (!block.getChildren().isEmpty()) {
-                            // Выполняем первую дочернюю ветку (тело else)
+                            // Execute the first child branch (else body)
                             ExecutionResult childResult = processBlock(block.getChildren().get(0), context, recursionDepth + 1);
-                            // Если дочерняя ветка завершилась ошибкой, прерываемся
+                            // If the child branch ended with an error, stop
                             if (!childResult.isSuccess()) return childResult;
                         }
                     }
-                    // После ELSE мы идем к следующему блоку в ОСНОВНОЙ цепи
+                    // After ELSE we go to the next block in the MAIN chain
                     return processBlock(block.getNextBlock(), context, recursionDepth + 1);
                 }
-                // Для других CONTROL блоков просто переходим к следующему блоку
+                // For other CONTROL blocks, just go to the next block
                 return processBlock(block.getNextBlock(), context, recursionDepth + 1);
                 
             case "FUNCTION":
-                // Обработка функций - это следующий большой шаг.
-                // Пока что просто переходим к следующему блоку.
+                // Function processing - this is the next big step.
+                // For now, just go to the next block.
                 return processBlock(block.getNextBlock(), context, recursionDepth + 1);
 
             default:
                 return ExecutionResult.error("Unsupported block type: " + blockType);
+        }
+    }
+    
+    /**
+     * Checks for pause conditions and breakpoints
+     */
+    private void checkPauseAndBreakpoints(CodeBlock block, ExecutionContext context) {
+        // Check if execution is paused
+        while (context.isPaused() && !context.isCancelled()) {
+            synchronized (context) {
+                try {
+                    context.wait(); // Wait until resumed
+                } catch (InterruptedException e) {
+                    Thread.currentThread().interrupt();
+                    return;
+                }
+            }
+        }
+        
+        // Handle stepping
+        if (context.isStepping()) {
+            context.setStepping(false);
+            context.setPaused(true);
         }
     }
     
@@ -261,6 +317,23 @@ public class DefaultScriptEngine implements ScriptEngine {
     public BlockType getBlockType(Material material, String actionName) {
         // Implementation for getting block type
         // This would typically involve looking up in a configuration or registry
+        if (material != null && actionName != null) {
+            // Get all block configs for this material
+            java.util.List<BlockConfigService.BlockConfig> configs = blockConfigService.getBlockConfigsForMaterial(material);
+            // Find the one that matches the action name
+            for (BlockConfigService.BlockConfig config : configs) {
+                if (actionName.equals(config.getId())) {
+                    String type = config.getType();
+                    if ("EVENT".equals(type)) return BlockType.EVENT;
+                    if ("ACTION".equals(type)) return BlockType.ACTION;
+                    if ("CONDITION".equals(type)) return BlockType.CONDITION;
+                    if ("CONTROL".equals(type)) return BlockType.CONTROL;
+                    if ("FUNCTION".equals(type)) return BlockType.FUNCTION;
+                }
+            }
+        }
+        
+        // Fallback to old method if material is not used
         BlockConfigService.BlockConfig config = blockConfigService.getBlockConfig(actionName);
         if (config != null) {
             String type = config.getType();

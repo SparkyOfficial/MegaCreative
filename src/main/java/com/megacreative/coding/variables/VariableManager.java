@@ -290,7 +290,7 @@ public class VariableManager implements IVariableManager {
                     Object value = config.get(key);
                     if (value != null) {
                         persistentVariables.put(key, DataValue.of(value));
-                        updateMetadata("persistent_" + key, VariableScope.PERSISTENT, ValueType.fromObject(value));
+                        updateMetadata(key, VariableScope.PERSISTENT, ValueType.fromObject(value));
                     }
                 } catch (Exception e) {
                     plugin.getLogger().warning("Failed to load persistent variable '" + key + "': " + e.getMessage());
@@ -331,7 +331,7 @@ public class VariableManager implements IVariableManager {
                     Object value = config.get(key);
                     if (value != null) {
                         serverVariables.put(key, DataValue.of(value));
-                        updateMetadata("server_" + key, VariableScope.SERVER, ValueType.fromObject(value));
+                        updateMetadata(key, VariableScope.SERVER, ValueType.fromObject(value));
                     }
                 } catch (Exception e) {
                     plugin.getLogger().warning("Failed to load server variable '" + key + "': " + e.getMessage());
@@ -576,7 +576,7 @@ public class VariableManager implements IVariableManager {
         }
         
         serverVariables.put(name, value);
-        updateMetadata("server_" + name, VariableScope.SERVER, value.getType());
+        updateMetadata(name, VariableScope.SERVER, value.getType());
         plugin.getLogger().fine("Set server variable: " + name + " = " + value.asString());
         saveServerVariables();
     }
@@ -610,7 +610,7 @@ public class VariableManager implements IVariableManager {
             return;
         }
         persistentVariables.put(name, value);
-        updateMetadata("persistent_" + name, VariableScope.PERSISTENT, value.getType());
+        updateMetadata(name, VariableScope.PERSISTENT, value.getType());
         savePersistentVariables();
     }
     
@@ -666,7 +666,30 @@ public class VariableManager implements IVariableManager {
             return;
         }
         
-        String key = scope.name().toLowerCase() + "_" + name;
+        String key;
+        switch (scope) {
+            case SERVER:
+                key = "server_" + name;
+                break;
+            case PERSISTENT:
+                key = "persistent_" + name;
+                break;
+            case GLOBAL:
+                key = "global_" + name;
+                break;
+            case LOCAL:
+                key = "local_" + name;
+                break;
+            case PLAYER:
+                key = "player_" + name;
+                break;
+            case DYNAMIC:
+                key = "dynamic_" + name;
+                break;
+            default:
+                key = scope.name().toLowerCase() + "_" + name;
+        }
+        
         long now = System.currentTimeMillis();
         
         variableMetadata.compute(key, (k, existing) -> 
@@ -678,6 +701,16 @@ public class VariableManager implements IVariableManager {
             return;
         }
         
+        // Handle global variables - broadcast to all players
+        if ("global".equals(worldId)) {
+            String message = String.format("Global variable %s updated to: %s", 
+                variableName, value.asString());
+            plugin.getServer().getOnlinePlayers().forEach(player -> 
+                player.sendMessage(message));
+            return;
+        }
+        
+        // Handle world-specific variables
         plugin.getServer().getWorlds().stream()
             .filter(world -> world.getUID().toString().equals(worldId))
             .findFirst()

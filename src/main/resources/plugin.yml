@@ -16,10 +16,11 @@ load: POSTWORLD
 # Plugin configuration
 prefix: '&8[&6MegaCreative&8] '
 
-# Default permissions
-default-permissions:
+# Permissions
+permissions:
   megacreative.*:
     description: Gives all permissions
+    default: op
     children:
       megacreative.user: true
       megacreative.admin: true
@@ -28,8 +29,6 @@ default-permissions:
       megacreative.world.delete: true
       megacreative.world.manage: true
 
-# Permissions
-permissions:
   megacreative.user:
     description: Basic user permissions
     default: true
@@ -66,6 +65,18 @@ permissions:
 
   megacreative.world.manage:
     description: Allow managing world settings
+    default: op
+
+  megacreative.create:
+    description: Create worlds
+    default: true
+
+  megacreative.join:
+    description: Join worlds
+    default: true
+
+  megacreative.trusted:
+    description: Manage trusted players
     default: op
 
 commands:
@@ -173,49 +184,32 @@ commands:
     permission: megacreative.command.version
     permission-message: '&cУ вас нет прав на просмотр версии.'
     aliases: [ver, about]
-    permission: megacreative.trusted
+
   addfloor:
     description: Добавить новый этаж кодинга в dev-мир
     usage: /<command> [номер_этажа]
     permission: megacreative.admin
+
   workspace:
     description: Открыть продвинутую среду кодирования MegaCreative
     usage: /<command> [open|close|info]
     permission: megacreative.user
     aliases: [ws, coding]
+
   create:
     description: Создать новый мир
     usage: /<command> <тип_мира>
     permission: megacreative.create
     aliases: [createworld, newworld]
+
   clipboard:
     description: Copy and paste code blocks
     usage: /<command> <copy|paste|preview|clear|info|save|load|list|pos1|pos2>
     permission: megacreative.user
     aliases: [cb, copy]
+
   group:
     description: Group and organize code blocks
     usage: /<command> <select|create|collapse|expand|delete|list|cancel> [name]
     permission: megacreative.user
     aliases: [grp, organize]
-
-permissions:
-  megacreative.*:
-    description: All MegaCreative permissions
-    default: op
-    children:
-      megacreative.admin: true
-      megacreative.create: true
-      megacreative.join: true
-  megacreative.admin:
-    description: Admin permissions
-    default: op
-  megacreative.create:
-    description: Create worlds
-    default: true
-  megacreative.join:
-    description: Join worlds
-    default: true
-  megacreative.trusted:
-    description: Manage trusted players
-    default: op
