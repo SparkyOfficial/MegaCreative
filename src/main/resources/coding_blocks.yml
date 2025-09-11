@@ -193,6 +193,14 @@ blocks:
       - "getGlobalVar"
       - "getServerVar"
       - "randomNumber"
+  
+  PISTON:
+    name: "Скобка"
+    type: "CONTROL"
+    description: "Блок для группировки логических секций кода"
+    actions:
+      - "openBracket"
+      - "closeBracket"
 
 # --- НОВАЯ СИСТЕМА: ИМЕНОВАННЫЕ СЛОТЫ И ГРУППЫ ---
 action_configurations:

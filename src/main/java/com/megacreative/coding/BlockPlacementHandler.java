@@ -183,6 +183,14 @@ public class BlockPlacementHandler implements Listener {
             return;
         }
         
+        // Проверяем стрелу НЕ для инверсии условий
+        if (itemInHand.getType() == Material.ARROW && itemInHand.hasItemMeta() &&
+            itemInHand.getItemMeta().getDisplayName().contains(CodingItems.ARROW_NOT_NAME)) {
+            handleArrowNotInteraction(player, event.getClickedBlock());
+            event.setCancelled(true);
+            return;
+        }
+        
         // Остальная логика только для кликов по уже существующим блокам
         if (event.getAction() != org.bukkit.event.block.Action.RIGHT_CLICK_BLOCK) return;
         
@@ -439,3 +447,85 @@ public class BlockPlacementHandler implements Listener {
             }
         }
     }
+    
+    /**
+     * Handles Arrow NOT interaction for negating conditions
+     */
+    private void handleArrowNotInteraction(Player player, Block clickedBlock) {
+        if (clickedBlock == null) {
+            player.sendMessage("§cОшибка: Не удалось определить блок!");
+            return;
+        }
+        
+        Location location = clickedBlock.getLocation();
+        CodeBlock codeBlock = blockCodeBlocks.get(location);
+        
+        if (codeBlock == null) {
+            player.sendMessage("§cОшибка: Это не блок кода!");
+            return;
+        }
+        
+        // Проверяем, является ли это блоком условия
+        BlockConfigService.BlockConfig config = blockConfigService.getBlockConfig(codeBlock.getAction());
+        if (config == null || !"CONDITION".equals(config.getType())) {
+            player.sendMessage("§cОшибка: Стрелку НЕ можно применять только к блокам условий!");
+            return;
+        }
+        
+        // Переключаем параметр negated
+        boolean currentNegated = false;
+        if (codeBlock.getParameter("negated") != null) {
+            currentNegated = Boolean.parseBoolean(codeBlock.getParameter("negated").toString());
+        }
+        
+        boolean newNegated = !currentNegated;
+        codeBlock.setParameter("negated", newNegated);
+        
+        // Обновляем табличку, чтобы показать состояние отрицания
+        updateConditionSign(location, config.getDisplayName(), newNegated);
+        
+        if (newNegated) {
+            player.sendMessage("§a✓ Отрицание добавлено к условию: §fНЕ " + config.getDisplayName());
+        } else {
+            player.sendMessage("§c✗ Отрицание убрано с условия: §f" + config.getDisplayName());
+        }
+        
+        plugin.getLogger().info("Arrow NOT applied to condition block at " + location + ", negated: " + newNegated);
+    }
+    
+    /**
+     * Updates the sign for a condition block to show negation status
+     */
+    private void updateConditionSign(Location location, String displayName, boolean negated) {
+        // Удаляем старую табличку и создаем новую
+        removeSignFromBlock(location);
+        
+        Block block = location.getBlock();
+        BlockFace[] faces = {BlockFace.NORTH, BlockFace.EAST, BlockFace.SOUTH, BlockFace.WEST};
+        
+        for (BlockFace face : faces) {
+            Block signBlock = block.getRelative(face);
+            if (signBlock.getType().isAir()) {
+                signBlock.setType(Material.OAK_WALL_SIGN, false);
+                
+                org.bukkit.block.data.type.WallSign wallSignData = (org.bukkit.block.data.type.WallSign) signBlock.getBlockData();
+                wallSignData.setFacing(face);
+                signBlock.setBlockData(wallSignData);
+                
+                org.bukkit.block.Sign signState = (org.bukkit.block.Sign) signBlock.getState();
+                signState.setLine(0, "§8============");
+                
+                if (negated) {
+                    signState.setLine(1, "§cНЕ " + displayName.substring(0, Math.min(displayName.length(), 12)));
+                    signState.setLine(2, "§7(отрицание)");
+                } else {
+                    String line2 = displayName.length() > 15 ? displayName.substring(0, 15) : displayName;
+                    signState.setLine(1, line2);
+                    signState.setLine(2, "§7Кликните ПКМ");
+                }
+                signState.setLine(3, "§8============");
+                signState.update(true);
+                
+                return;
+            }
+        }

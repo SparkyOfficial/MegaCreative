@@ -202,9 +202,61 @@ public class AutoConnectionManager implements Listener {
     }
     
     /**
-     * Finds the parent block for a child block based on indentation and proximity
+     * Finds the parent block for a child block based on indentation and bracket balancing
+     * Enhanced with bracket-aware parent finding using bracket balancing algorithm
      */
     private CodeBlock findParentBlock(Location childLocation, int childLine) {
+        // Use bracket balancing algorithm to find the correct parent
+        CodeBlock bracketParent = findParentUsingBracketBalancing(childLocation, childLine);
+        if (bracketParent != null) {
+            return bracketParent;
+        }
+        
+        // Fallback to indentation-based parent finding
+        return findParentByIndentation(childLocation, childLine);
+    }
+    
+    /**
+     * Finds parent using bracket balancing algorithm
+     * Looks for the nearest unclosed opening bracket
+     */
+    private CodeBlock findParentUsingBracketBalancing(Location childLocation, int childLine) {
+        int bracketBalance = 0;
+        
+        // Start from current line and move up and left
+        for (int line = childLine; line >= 0; line--) {
+            int lineZ = DevWorldGenerator.getZForCodeLine(line);
+            
+            // Scan from right to left in this line
+            int startX = (line == childLine) ? childLocation.getBlockX() - 1 : DevWorldGenerator.getBlocksPerLine() - 1;
+            
+            for (int x = startX; x >= 0; x--) {
+                Location checkLocation = new Location(childLocation.getWorld(), x, childLocation.getBlockY(), lineZ);
+                CodeBlock checkBlock = locationToBlock.get(checkLocation);
+                
+                if (checkBlock != null && checkBlock.isBracket()) {
+                    if (checkBlock.getBracketType() == CodeBlock.BracketType.CLOSE) {
+                        bracketBalance++; // Found closing bracket, increment balance
+                    } else if (checkBlock.getBracketType() == CodeBlock.BracketType.OPEN) {
+                        if (bracketBalance == 0) {
+                            // Found unmatched opening bracket - this is our parent!
+                            plugin.getLogger().info("Found bracket parent at (" + x + ", " + line + ") for child at " + childLocation);
+                            return checkBlock;
+                        } else {
+                            bracketBalance--; // Match this opening bracket with previous closing bracket
+                        }
+                    }
+                }
+            }
+        }
+        
+        return null; // No unmatched opening bracket found
+    }
+    
+    /**
+     * Traditional indentation-based parent finding (fallback method)
+     */
+    private CodeBlock findParentByIndentation(Location childLocation, int childLine) {
         // Look for parent in previous lines with less indentation
         for (int parentLine = childLine - 1; parentLine >= 0; parentLine--) {
             int parentZ = DevWorldGenerator.getZForCodeLine(parentLine);
@@ -215,6 +267,7 @@ public class AutoConnectionManager implements Listener {
                 CodeBlock parentBlock = locationToBlock.get(parentLocation);
                 
                 if (parentBlock != null && isControlBlock(parentBlock)) {
+                    plugin.getLogger().info("Found indentation parent at (" + parentX + ", " + parentLine + ") for child at " + childLocation);
                     return parentBlock;
                 }
             }

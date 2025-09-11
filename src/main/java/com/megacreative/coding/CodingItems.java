@@ -32,6 +32,8 @@ public class CodingItems {
     public static final String CALL_FUNCTION_BLOCK_NAME = "§b📞 Вызвать функцию";
     public static final String SAVE_FUNCTION_BLOCK_NAME = "§d💾 Сохранить функцию";
     public static final String REPEAT_TRIGGER_BLOCK_NAME = "§e⏰ Повторяющийся триггер";
+    public static final String BRACKET_BLOCK_NAME = "§6🔧 Скобка";
+    public static final String ARROW_NOT_NAME = "§c⟨ Отрицание НЕ";
 
     public static final String COPIER_TOOL_NAME = "§6📋 Копировщик блоков";
     public static final String DATA_CREATOR_NAME = "§b§lСоздать данные";
@@ -55,6 +57,8 @@ public class CodingItems {
         CODING_ITEM_NAMES.add(CALL_FUNCTION_BLOCK_NAME);
         CODING_ITEM_NAMES.add(SAVE_FUNCTION_BLOCK_NAME);
         CODING_ITEM_NAMES.add(REPEAT_TRIGGER_BLOCK_NAME);
+        CODING_ITEM_NAMES.add(BRACKET_BLOCK_NAME);
+        CODING_ITEM_NAMES.add(ARROW_NOT_NAME);
 
         CODING_ITEM_NAMES.add(COPIER_TOOL_NAME);
         CODING_ITEM_NAMES.add(DATA_CREATOR_NAME);
@@ -117,6 +121,8 @@ public class CodingItems {
         player.getInventory().addItem(createSimpleBlock(Material.LAPIS_BLOCK, "§b📞 Вызвать функцию"));
         player.getInventory().addItem(createSimpleBlock(Material.BOOKSHELF, "§d💾 Сохранить функцию"));
         player.getInventory().addItem(createSimpleBlock(Material.REDSTONE_BLOCK, "§e⏰ Повторяющийся триггер"));
+        player.getInventory().addItem(createSimpleBlock(Material.PISTON, BRACKET_BLOCK_NAME));
+        player.getInventory().addItem(getArrowNot());
         
         // Железный слиток для создания данных
         player.getInventory().addItem(getDataCreator());
@@ -193,6 +199,34 @@ public class CodingItems {
             "§aПКМ§7 - вставить цепочку",
             "§cЛКМ§7 - очистить буфер",
             "§8Копирует всю связанную цепочку"
+        ));
+        item.setItemMeta(meta);
+        return item;
+    }
+    
+    public static ItemStack getBracketBlock() {
+        ItemStack item = new ItemStack(Material.PISTON);
+        ItemMeta meta = item.getItemMeta();
+        meta.setDisplayName(BRACKET_BLOCK_NAME);
+        meta.setLore(Arrays.asList(
+            "§7Блок для группировки логических секций:",
+            "§aПО умолчанию: Открывающая скобка {",
+            "§eПКМ§7 - переключить тип скобки",
+            "§8Используется для структурирования кода"
+        ));
+        item.setItemMeta(meta);
+        return item;
+    }
+    
+    public static ItemStack getArrowNot() {
+        ItemStack item = new ItemStack(Material.ARROW);
+        ItemMeta meta = item.getItemMeta();
+        meta.setDisplayName(ARROW_NOT_NAME);
+        meta.setLore(Arrays.asList(
+            "§7Инструмент для отрицания условий:",
+            "§eПКМ§ по блоку условия - инвертировать результат",
+            "§7Преобразует 'истина' в 'ложь' и наоборот",
+            "§8Полезно для создания 'Если НЕ' условий"
         ));
         item.setItemMeta(meta);
         return item;

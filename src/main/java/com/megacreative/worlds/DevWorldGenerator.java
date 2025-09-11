@@ -152,6 +152,31 @@ public class DevWorldGenerator extends ChunkGenerator {
     }
     
     /**
+     * Добавляет новый этаж в указанном мире для игрока
+     * Вызывается из команды /addfloor
+     */
+    public static void addFloorForPlayer(org.bukkit.World world, org.bukkit.entity.Player player, int floorNumber) {
+        if (floorNumber > MAX_FLOORS) {
+            player.sendMessage("§cОшибка: Максимальное количество этажей: " + MAX_FLOORS);
+            return;
+        }
+        
+        if (floorNumber < 1) {
+            player.sendMessage("§cОшибка: Номер этажа должен быть больше 0");
+            return;
+        }
+        
+        player.sendMessage("§eСоздание этажа " + floorNumber + "...");
+        
+        // Генерируем новый этаж
+        addFloorToWorld(world, floorNumber);
+        
+        // Телепортируем игрока на новый этаж
+        int floorY = PLATFORM_Y + (floorNumber * FLOOR_HEIGHT);
+        org.bukkit.Location teleportLocation = new org.bukkit.Location(world, 0, floorY + 2, 0);
+        player.teleport(teleportLocation);
+        
+    /**
      * Статический метод для добавления нового этажа в существующий мир
      */
     public static void addFloorToWorld(org.bukkit.World world, int floorNumber) {
