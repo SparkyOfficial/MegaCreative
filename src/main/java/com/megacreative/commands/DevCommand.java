@@ -39,44 +39,47 @@ public class DevCommand implements CommandExecutor {
         }
        
         creativeWorld.setMode(WorldMode.DEV);
-       
-        // Проверяем существование мира в основном потоке
-        World devWorld = Bukkit.getWorld(creativeWorld.getDevWorldName());
-        if (devWorld != null) {
-            // Мир уже существует, просто телепортируем
-            teleportToDevWorld(player, devWorld);
-        } else {
-            // Мир нужно создать
-            player.sendMessage("§eСоздаем мир для разработки...");
-            
-            // Создаем мир в синхронном режиме
-            Bukkit.getScheduler().runTask(plugin, () -> {
-                try {
-                    World newDevWorld = createDevWorld(creativeWorld);
-                    if (newDevWorld != null) {
-                        setupDevWorld(newDevWorld);
-                        teleportToDevWorld(player, newDevWorld);
-                        
-                        // Сохраняем мир асинхронно
-                        Bukkit.getScheduler().runTaskAsynchronously(plugin, () -> {
-                            try {
-                                plugin.getWorldManager().saveWorld(creativeWorld);
-                            } catch (Exception e) {
-                                plugin.getLogger().warning("Не удалось сохранить данные мира: " + e.getMessage());
-                                Bukkit.getScheduler().runTask(plugin, () -> 
-                                    player.sendMessage("§cНе удалось сохранить данные мира. Обратитесь к администратору."));
-                            }
-                        });
-                    } else {
-                        player.sendMessage("§cОшибка создания мира разработки!");
+
+        // Запускаем всю логику в основном потоке сервера для потокобезопасности
+        new org.bukkit.scheduler.BukkitRunnable() {
+            @Override
+            public void run() {
+                // Проверяем существование мира в основном потоке
+                World devWorld = Bukkit.getWorld(creativeWorld.getDevWorldName());
+                if (devWorld != null) {
+                    // Мир уже существует, просто телепортируем
+                    teleportToDevWorld(player, devWorld);
+                } else {
+                    // Мир нужно создать
+                    player.sendMessage("§eСоздаем мир для разработки...");
+                    
+                    try {
+                        World newDevWorld = createDevWorld(creativeWorld);
+                        if (newDevWorld != null) {
+                            setupDevWorld(newDevWorld);
+                            teleportToDevWorld(player, newDevWorld);
+                            
+                            // Сохраняем мир асинхронно
+                            Bukkit.getScheduler().runTaskAsynchronously(plugin, () -> {
+                                try {
+                                    plugin.getWorldManager().saveWorld(creativeWorld);
+                                } catch (Exception e) {
+                                    plugin.getLogger().warning("Не удалось сохранить данные мира: " + e.getMessage());
+                                    Bukkit.getScheduler().runTask(plugin, () -> 
+                                        player.sendMessage("§cНе удалось сохранить данные мира. Обратитесь к администратору."));
+                                }
+                            });
+                        } else {
+                            player.sendMessage("§cОшибка создания мира разработки!");
+                        }
+                    } catch (Exception e) {
+                        plugin.getLogger().severe("Ошибка при создании мира разработки: " + e.getMessage());
+                        e.printStackTrace();
+                        player.sendMessage("§cПроизошла критическая ошибка при создании мира разработки.");
                     }
-                } catch (Exception e) {
-                    plugin.getLogger().severe("Ошибка при создании мира разработки: " + e.getMessage());
-                    e.printStackTrace();
-                    player.sendMessage("§cПроизошла ошибка при создании мира разработки.");
                 }
-            });
-        }
+            }
+        }.runTask(plugin); // Выполнить в основном потоке
         return true;
     }
    
