@@ -84,14 +84,16 @@ public class PlayerEventsListener implements Listener {
         CreativeWorld creativeWorld = plugin.getWorldManager().findCreativeWorldByBukkit(event.getPlayer().getWorld());
         if (creativeWorld == null) return;
         
-        // Check if player can code in this world
-        if (!creativeWorld.canCode(event.getPlayer())) return;
+        // Only execute in PLAY mode, allow coding in DEV mode but don't execute scripts
+        if (creativeWorld.getMode() == com.megacreative.models.WorldMode.DEV) {
+            return; // Don't execute scripts in dev mode
+        }
         
         // Find scripts triggered by player join
         if (creativeWorld.getScripts() != null) {
             for (CodeScript script : creativeWorld.getScripts()) {
                 // Check if the script's root block is an onJoin event
-                if (script.getRootBlock() != null && 
+                if (script.isEnabled() && script.getRootBlock() != null && 
                     "onJoin".equals(script.getRootBlock().getAction())) {
                     
                     // Execute script
@@ -102,10 +104,12 @@ public class PlayerEventsListener implements Listener {
                                     plugin.getLogger().warning("Join script execution failed with exception: " + throwable.getMessage());
                                 } else if (result != null && !result.isSuccess()) {
                                     plugin.getLogger().warning("Join script execution failed: " + result.getMessage());
+                                } else {
+                                    plugin.getLogger().info("Successfully executed onJoin script for player: " + event.getPlayer().getName());
                                 }
                             });
                     }
-                    break;
+                    break; // Only execute the first matching script
                 }
             }
         }

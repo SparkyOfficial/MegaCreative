@@ -35,6 +35,7 @@ public class CodingItems {
 
     public static final String COPIER_TOOL_NAME = "§6📋 Копировщик блоков";
     public static final String DATA_CREATOR_NAME = "§b§lСоздать данные";
+    public static final String CODE_MOVER_NAME = "§6🔄 Перемещатель кода";
 
     // --- ДОБАВЛЯЕМ АВТОМАТИЧЕСКУЮ ПРОВЕРКУ ---
     private static final Set<String> CODING_ITEM_NAMES = new HashSet<>();
@@ -57,6 +58,7 @@ public class CodingItems {
 
         CODING_ITEM_NAMES.add(COPIER_TOOL_NAME);
         CODING_ITEM_NAMES.add(DATA_CREATOR_NAME);
+        CODING_ITEM_NAMES.add(CODE_MOVER_NAME);
     }
 
     public static boolean isDisplayNameACodingItem(String displayName) {
@@ -119,7 +121,8 @@ public class CodingItems {
         // Железный слиток для создания данных
         player.getInventory().addItem(getDataCreator());
         
-
+        // Перемещатель кода
+        player.getInventory().addItem(getCodeMover());
         
         ItemStack copier = new ItemStack(Material.GOLDEN_AXE);
         ItemMeta copierMeta = copier.getItemMeta();
@@ -175,6 +178,21 @@ public class CodingItems {
             "§7Используйте для создания предметов-данных:",
             "§aПКМ§7 - открыть меню создания данных",
             "§7Данные можно вставлять в параметры блоков"
+        ));
+        item.setItemMeta(meta);
+        return item;
+    }
+    
+    public static ItemStack getCodeMover() {
+        ItemStack item = new ItemStack(Material.REDSTONE_COMPARATOR);
+        ItemMeta meta = item.getItemMeta();
+        meta.setDisplayName(CODE_MOVER_NAME);
+        meta.setLore(Arrays.asList(
+            "§7Инструмент для перемещения блоков кода:",
+            "§eShift+ПКМ§7 - скопировать цепочку",
+            "§aПКМ§7 - вставить цепочку",
+            "§cЛКМ§7 - очистить буфер",
+            "§8Копирует всю связанную цепочку"
         ));
         item.setItemMeta(meta);
         return item;

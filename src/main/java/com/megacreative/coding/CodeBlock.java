@@ -38,6 +38,30 @@ public class CodeBlock implements Cloneable {
     /** Item groups for complex configurations */
     private Map<String, List<Integer>> itemGroups;
     
+    /** Bracket type for grouping blocks */
+    private BracketType bracketType = null;
+    
+    // ===== ENUMS =====
+    
+    /**
+     * Enum for bracket types - used for grouping code blocks
+     */
+    public enum BracketType {
+        OPEN("Opening Bracket", "{"),
+        CLOSE("Closing Bracket", "}");
+        
+        private final String displayName;
+        private final String symbol;
+        
+        BracketType(String displayName, String symbol) {
+            this.displayName = displayName;
+            this.symbol = symbol;
+        }
+        
+        public String getDisplayName() { return displayName; }
+        public String getSymbol() { return symbol; }
+    }
+    
     // ===== CONSTRUCTORS =====
     
     /**
@@ -126,6 +150,18 @@ public class CodeBlock implements Cloneable {
     
     public void setItemGroups(Map<String, List<Integer>> itemGroups) { 
         this.itemGroups = itemGroups; 
+    }
+    
+    public BracketType getBracketType() {
+        return bracketType;
+    }
+    
+    public void setBracketType(BracketType bracketType) {
+        this.bracketType = bracketType;
+    }
+    
+    public boolean isBracket() {
+        return bracketType != null;
     }
     
     // ===== MAIN METHODS =====

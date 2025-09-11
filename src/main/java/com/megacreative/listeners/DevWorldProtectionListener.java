@@ -125,16 +125,24 @@ public class DevWorldProtectionListener implements Listener {
             return;
         }
 
-        // 2. Для *настоящих блоков кодинга* из `coding_blocks.yml`, проверьте права игрока на кодирование
+        // 2. Проверяем права доступа к кодированию
         if (isMaterialAConfiguredCodeBlock(placedMaterial)) {
             CreativeWorld creativeWorld = plugin.getWorldManager().findCreativeWorldByBukkit(player.getWorld());
             if (creativeWorld != null && !creativeWorld.canCode(player)) {
                 event.setCancelled(true);
                 player.sendMessage("§cУ вас нет прав на размещение блоков кода в этом мире!");
+                return;
+            }
+            
+            // 3. Проверяем правильность позиции блока кода (FrameLand-like validation)
+            if (!isValidCodeBlockPlacement(event.getBlockPlaced(), player)) {
+                event.setCancelled(true);
+                return; // Сообщение об ошибке уже отправлено в методе
             }
         }
+        
         // Если блок является одним из `ALLOWED_TOOLS_AND_UTILITIES_HARDCODED`
-        // (сундук, наковальня и т.д.), он будет разрешен уже первой проверкой и не попадет сюда.
+        // (сундук, наковальня и т.д.), он будет разрешен уже первой проверкой.
         // `BlockPlacementHandler` затем создаст `CodeBlock` для настоящих блоков кода,
         // а для остальных - просто разместит их как есть.
     }
@@ -268,6 +276,98 @@ public class DevWorldProtectionListener implements Listener {
      */
     public Set<Material> getAllowedBlocks() {
         return new HashSet<>(allPermittedPlaceAndBreakBlocks);
+    }
+    
+    /**
+     * Validates that a code block is placed on the correct glass color platform
+     * This implements FrameLand-like placement rules
+     */
+    private boolean isValidCodeBlockPlacement(org.bukkit.block.Block placedBlock, Player player) {
+        org.bukkit.Location location = placedBlock.getLocation();
+        
+        // Check if we're in a valid code line position
+        if (!DevWorldGenerator.isValidCodePosition(location.getBlockX(), location.getBlockZ())) {
+            player.sendMessage("§cБлоки кода можно размещать только на линиях кодирования!");
+            return false;
+        }
+        
+        // Get the glass block underneath
+        org.bukkit.block.Block underBlock = location.clone().add(0, -1, 0).getBlock();
+        Material underMaterial = underBlock.getType();
+        
+        // Get block configuration from the item in hand
+        org.bukkit.inventory.ItemStack itemInHand = player.getInventory().getItemInMainHand();
+        if (!itemInHand.hasItemMeta() || !itemInHand.getItemMeta().hasDisplayName()) {
+            player.sendMessage("§cИспользуйте специальные предметы кодирования!");
+            return false;
+        }
+        
+        String displayName = org.bukkit.ChatColor.stripColor(itemInHand.getItemMeta().getDisplayName());
+        BlockConfigService.BlockConfig config = blockConfigService.getBlockConfigByDisplayName(displayName);
+        
+        if (config == null) {
+            player.sendMessage("§cНеизвестный блок кодирования!");
+            return false;
+        }
+        
+        // Validate placement based on block type and glass color (FrameLand rules)
+        return validatePlacementByTypeAndGlass(config, underMaterial, location, player);
+    }
+    
+    /**
+     * Validates placement based on block type and glass color underneath
+     * Implements FrameLand-like placement validation rules
+     */
+    private boolean validatePlacementByTypeAndGlass(BlockConfigService.BlockConfig config, Material glassMaterial, org.bukkit.Location location, Player player) {
+        String blockType = config.getType();
+        int positionX = location.getBlockX();
+        
+        switch (blockType) {
+            case "EVENT":
+            case "FUNCTION":
+                // Events and functions can only be placed on blue glass at position 0
+                if (positionX != 0 || glassMaterial != Material.BLUE_STAINED_GLASS) {
+                    player.sendMessage("§cСобытия и функции можно размещать только на синем стекле в начале линии!");
+                    return false;
+                }
+                break;
+                
+            case "CONTROL":
+                // Control blocks (if, loops) can be placed on blue glass (start of line) or after other blocks
+                if (positionX == 0 && glassMaterial != Material.BLUE_STAINED_GLASS) {
+                    player.sendMessage("§cБлоки управления в начале линии можно размещать только на синем стекле!");
+                    return false;
+                } else if (positionX > 0 && glassMaterial != Material.GRAY_STAINED_GLASS && glassMaterial != Material.WHITE_STAINED_GLASS) {
+                    player.sendMessage("§cБлоки управления можно размещать только на серых или белых линиях!");
+                    return false;
+                }
+                break;
+                
+            case "ACTION":
+            case "CONDITION":
+            case "VARIABLE":
+                // Actions, conditions, and variables cannot be placed at position 0
+                if (positionX == 0) {
+                    player.sendMessage("§cДействия, условия и переменные нельзя размещать в начале линии!");
+                    return false;
+                }
+                // Must be placed on gray or white glass
+                if (glassMaterial != Material.GRAY_STAINED_GLASS && glassMaterial != Material.WHITE_STAINED_GLASS) {
+                    player.sendMessage("§cЭтот блок можно размещать только на серых или белых линиях!");
+                    return false;
+                }
+                break;
+                
+            default:
+                // For unknown types, allow placement on gray or white glass only
+                if (glassMaterial != Material.GRAY_STAINED_GLASS && glassMaterial != Material.WHITE_STAINED_GLASS) {
+                    player.sendMessage("§cЭтот блок можно размещать только на серых или белых линиях!");
+                    return false;
+                }
+                break;
+        }
+        
+        return true;
     }
     
     /**

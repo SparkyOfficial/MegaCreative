@@ -64,9 +64,14 @@ public class BlockPlacementHandler implements Listener {
      */
     @EventHandler(priority = EventPriority.HIGH) // Run before AutoConnectionManager (MONITOR)
     public void onBlockPlace(BlockPlaceEvent event) {
+        if (event.isCancelled()) return; // Don't process if already cancelled by DevWorldProtectionListener
+        
         Player player = event.getPlayer();
         Block block = event.getBlockPlaced();
         ItemStack itemInHand = event.getItemInHand();
+        
+        // Only process in dev worlds
+        if (!isInDevWorld(player)) return;
         
         // Получаем конфигурацию по предмету в руке, а не по материалу
         String displayName = itemInHand.hasItemMeta() ? org.bukkit.ChatColor.stripColor(itemInHand.getItemMeta().getDisplayName()) : "";
@@ -79,6 +84,13 @@ public class BlockPlacementHandler implements Listener {
 
         // Создаем CodeBlock с правильным ID действия из конфига
         CodeBlock newCodeBlock = new CodeBlock(block.getType(), config.getId());
+        
+        // Special handling for bracket blocks (pistons)
+        if (block.getType() == Material.PISTON || block.getType() == Material.STICKY_PISTON) {
+            newCodeBlock.setBracketType(CodeBlock.BracketType.OPEN); // Default to opening bracket
+            setPistonDirection(block, CodeBlock.BracketType.OPEN);
+        }
+        
         blockCodeBlocks.put(block.getLocation(), newCodeBlock);
         
         // Устанавливаем одну табличку с правильным отображаемым именем
@@ -89,8 +101,13 @@ public class BlockPlacementHandler implements Listener {
             spawnContainerAboveBlock(block.getLocation(), config.getId());
         }
         
+        // Notify AutoConnectionManager to handle connections (it will run at MONITOR priority)
+        // AutoConnectionManager will handle this automatically due to event priority ordering
+        
         player.sendMessage("§a✓ Блок кода размещен: " + config.getDisplayName());
         player.sendMessage("§7Кликните правой кнопкой для настройки");
+        
+        plugin.getLogger().info("CodeBlock created at " + block.getLocation() + " with action: " + config.getId());
     }
 
     /**
@@ -113,19 +130,26 @@ public class BlockPlacementHandler implements Listener {
     /**
      * Обрабатывает разрушение блоков кодирования
      */
-    @EventHandler
+    @EventHandler(priority = EventPriority.HIGH) // Run before AutoConnectionManager
     public void onBlockBreak(BlockBreakEvent event) {
+        if (event.isCancelled()) return;
+        
         Location loc = event.getBlock().getLocation();
         
         // Удаляем блок из нашей карты
         if (blockCodeBlocks.containsKey(loc)) {
-            blockCodeBlocks.remove(loc);
+            CodeBlock removedBlock = blockCodeBlocks.remove(loc);
             
             // Удаляем табличку, если она есть
             removeSignFromBlock(loc);
             
             // Удаляем контейнер над блоком, если он есть
             removeContainerAboveBlock(loc);
+            
+            // AutoConnectionManager will handle disconnection automatically at MONITOR priority
+            event.getPlayer().sendMessage("§cБлок кода удален!");
+            
+            plugin.getLogger().info("CodeBlock removed from " + loc + " with action: " + (removedBlock != null ? removedBlock.getAction() : "unknown"));
         }
     }
 
@@ -146,7 +170,7 @@ public class BlockPlacementHandler implements Listener {
     /**
      * Обрабатывает взаимодействие с блоками
      */
-    @EventHandler
+    @EventHandler(priority = EventPriority.NORMAL)
     public void onPlayerInteract(PlayerInteractEvent event) {
         Player player = event.getPlayer();
         ItemStack itemInHand = player.getInventory().getItemInMainHand();
@@ -176,8 +200,22 @@ public class BlockPlacementHandler implements Listener {
             
             event.setCancelled(true); // Важно, чтобы не открылся, например, верстак
             
-            // Открываем GUI конфигурации блока
-            plugin.getServiceRegistry().getBlockConfigManager().openConfigGUI(player, location);
+            // Открываем GUI конфигурации блока - используем новый улучшенный интерфейс
+            CodeBlock codeBlock = blockCodeBlocks.get(location);
+            
+            // Special handling for bracket blocks - toggle bracket type instead of opening GUI
+            if (codeBlock.isBracket()) {
+                toggleBracketType(codeBlock, event.getClickedBlock(), player);
+                return;
+            }
+            
+            BlockConfigService.BlockConfig config = blockConfigService.getBlockConfig(codeBlock.getAction());
+            
+            if (config != null) {
+                openParameterConfigGUI(player, location, codeBlock, config);
+            } else {
+                player.sendMessage("§cОшибка: Не удалось найти конфигурацию для действия " + codeBlock.getAction());
+            }
             return;
         }
         
@@ -323,4 +361,81 @@ public class BlockPlacementHandler implements Listener {
         blockCodeBlocks.entrySet().removeIf(entry -> entry.getKey().getWorld().equals(world));
         plugin.getLogger().info("Cleared all code blocks from world: " + world.getName() + " in BlockPlacementHandler.");
     }
-}
+    
+    /**
+     * Синхронизирует CodeBlocks с AutoConnectionManager
+     * Должно вызываться после полной инициализации
+     */
+    public void synchronizeWithAutoConnection() {
+        com.megacreative.coding.AutoConnectionManager autoConnection = plugin.getServiceRegistry().getAutoConnectionManager();
+        if (autoConnection != null) {
+            autoConnection.synchronizeWithPlacementHandler(this);
+            plugin.getLogger().info("BlockPlacementHandler synchronized with AutoConnectionManager");
+        }
+    }
+    
+    /**
+     * Sets the direction of a piston based on bracket type
+     */
+    private void setPistonDirection(Block pistonBlock, CodeBlock.BracketType bracketType) {
+        org.bukkit.block.data.type.Piston pistonData = (org.bukkit.block.data.type.Piston) pistonBlock.getBlockData();
+        
+        // Set direction based on bracket type
+        if (bracketType == CodeBlock.BracketType.OPEN) {
+            pistonData.setFacing(org.bukkit.block.BlockFace.EAST); // Pointing right >
+        } else {
+            pistonData.setFacing(org.bukkit.block.BlockFace.WEST); // Pointing left <
+        }
+        
+        pistonBlock.setBlockData(pistonData);
+    }
+    
+    /**
+     * Toggles the bracket type and updates the visual representation
+     */
+    private void toggleBracketType(CodeBlock codeBlock, Block pistonBlock, Player player) {
+        CodeBlock.BracketType currentType = codeBlock.getBracketType();
+        CodeBlock.BracketType newType = (currentType == CodeBlock.BracketType.OPEN) ? 
+            CodeBlock.BracketType.CLOSE : CodeBlock.BracketType.OPEN;
+        
+        codeBlock.setBracketType(newType);
+        setPistonDirection(pistonBlock, newType);
+        
+        player.sendMessage("§aСкобка изменена на: §f" + newType.getSymbol() + " " + newType.getDisplayName());
+        
+        // Update the sign to reflect the new bracket type
+        updateBracketSign(pistonBlock.getLocation(), newType);
+        
+        plugin.getLogger().info("Bracket type toggled to: " + newType + " at " + pistonBlock.getLocation());
+    }
+    
+    /**
+     * Updates the sign for a bracket block
+     */
+    private void updateBracketSign(Location location, CodeBlock.BracketType bracketType) {
+        // Remove old sign and create new one with bracket info
+        removeSignFromBlock(location);
+        
+        Block block = location.getBlock();
+        BlockFace[] faces = {BlockFace.NORTH, BlockFace.EAST, BlockFace.SOUTH, BlockFace.WEST};
+        
+        for (BlockFace face : faces) {
+            Block signBlock = block.getRelative(face);
+            if (signBlock.getType().isAir()) {
+                signBlock.setType(Material.OAK_WALL_SIGN, false);
+                
+                org.bukkit.block.data.type.WallSign wallSignData = (org.bukkit.block.data.type.WallSign) signBlock.getBlockData();
+                wallSignData.setFacing(face);
+                signBlock.setBlockData(wallSignData);
+                
+                org.bukkit.block.Sign signState = (org.bukkit.block.Sign) signBlock.getState();
+                signState.setLine(0, "§8============");
+                signState.setLine(1, "§6" + bracketType.getSymbol() + " Скобка");
+                signState.setLine(2, "§7ПКМ для смены");
+                signState.setLine(3, "§8============");
+                signState.update(true);
+                
+                return;
+            }
+        }
+    }

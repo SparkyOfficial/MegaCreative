@@ -249,6 +249,9 @@ public class MegaCreative extends JavaPlugin {
         getServer().getPluginManager().registerEvents(serviceRegistry.getCustomEventManager(), this);
         getServer().getPluginManager().registerEvents(new BlockGroupListener(serviceRegistry), this);
         
+        // Register CodeMoverListener for advanced code manipulation
+        getServer().getPluginManager().registerEvents(new com.megacreative.listeners.CodeMoverListener(this), this);
+        
         // Register our new PlayerEventsListener
         getServer().getPluginManager().registerEvents(serviceRegistry.getPlayerEventsListener(), this);
     }

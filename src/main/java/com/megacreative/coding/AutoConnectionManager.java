@@ -75,82 +75,22 @@ public class AutoConnectionManager implements Listener {
         // Check if this is a dev world
         if (!isDevWorld(block.getWorld())) return;
         
-        // Check if this is a code block
-        if (!blockConfigService.isCodeBlock(block.getType())) return;
-
-        // --- "ПОЛИЦИЯ РАЗМЕЩЕНИЯ" ВЕРСИЯ 2.0 ---
-        
-        // 1. Получаем конфигурацию блока из предмета, который держит игрок.
-        String displayName = itemInHand.hasItemMeta() ? org.bukkit.ChatColor.stripColor(itemInHand.getItemMeta().getDisplayName()) : "";
-        BlockConfigService.BlockConfig config = blockConfigService.getBlockConfigByDisplayName(displayName);
-
-        // Если это не блок из нашего конфига, разрешаем его размещение, если он в списке утилит
-        if (config == null) {
-            com.megacreative.listeners.DevWorldProtectionListener protectionListener = plugin.getServiceRegistry().getDevWorldProtectionListener();
-            if (protectionListener != null && !protectionListener.isMaterialAllowedInDevWorldForAction(block.getType())) {
-                event.setCancelled(true);
-                player.sendMessage("§cЭтот предмет нельзя размещать в мире разработки.");
-            }
-            // Если это утилита (сундук, верстак), то просто выходим, не обрабатывая дальше.
-            return;
+        // Check if this is a code block by checking if BlockPlacementHandler created a CodeBlock
+        BlockPlacementHandler placementHandler = plugin.getBlockPlacementHandler();
+        if (placementHandler == null || !placementHandler.hasCodeBlock(location)) {
+            return; // Not a code block or not handled by BlockPlacementHandler
         }
-
-        // 2. Теперь у нас есть config и мы можем проверить правила
-        String blockType = config.getType(); // "EVENT", "ACTION", "CONDITION", "CONTROL", "FUNCTION"
-        boolean isStartBlock = "EVENT".equals(blockType) || "CONTROL".equals(blockType) || "FUNCTION".equals(blockType);
-        
-        int blockX = location.getBlockX();
-
-        // 3. ПРИМЕНЯЕМ ПРАВИЛА
-        if (blockX == 0) { // Синяя линия (X=0)
-            if (!isStartBlock) {
-                event.setCancelled(true);
-                player.sendMessage("§cОшибка! Блоки типа '" + config.getDisplayName() + "' (§7" + blockType + "§c) нельзя ставить в начало линии.");
-                player.sendMessage("§7Подсказка: В начало (синее стекло) ставятся блоки типа EVENT, CONTROL, FUNCTION.");
-                return;
-            }
-        } else { // Серая или белая линия (X > 0)
-            if (isStartBlock) {
-                event.setCancelled(true);
-                player.sendMessage("§cОшибка! Блоки типа '" + config.getDisplayName() + "' (§7" + blockType + "§c) можно ставить ТОЛЬКО в начало линии.");
-                player.sendMessage("§7Подсказка: На серые/белые линии ставятся блоки типа ACTION и CONDITION.");
-                return;
-            }
-        }
-        
-        // --- КОНЕЦ "ПОЛИЦИЯ РАЗМЕЩЕНИЯ" ---
 
         // Get the CodeBlock that was created by BlockPlacementHandler
-        BlockPlacementHandler placementHandler = plugin.getBlockPlacementHandler();
-        if (placementHandler != null && placementHandler.hasCodeBlock(location)) {
-            CodeBlock codeBlock = placementHandler.getCodeBlock(location);
-            if (codeBlock != null) {
-                // Add to our tracking map
-                locationToBlock.put(location, codeBlock);
-                
-                // Add to player's script blocks
-                addBlockToPlayerScript(player, codeBlock);
-                
-                // Auto-connect with neighboring blocks
-                autoConnectBlock(codeBlock, location);
-                
-                // If this is an event block, create a script and add it to the world
-                if (isEventBlock(codeBlock)) {
-                    createAndAddScript(codeBlock, player, location);
-                }
-                
-                player.sendMessage("§aБлок §f" + config.getDisplayName() + "§a установлен и автоматически подключен!");
-                plugin.getLogger().info("Auto-connected CodeBlock at " + location + " for player " + player.getName());
-            }
-        } else {
-            // Fallback: create CodeBlock if BlockPlacementHandler didn't handle it
-            plugin.getLogger().warning("BlockPlacementHandler didn't create CodeBlock at " + location + ", creating fallback");
-            
-            CodeBlock codeBlock = createCodeBlockFromMaterial(block.getType(), location);
-            if (codeBlock == null) return;
-            
+        CodeBlock codeBlock = placementHandler.getCodeBlock(location);
+        if (codeBlock != null) {
+            // Add to our tracking map
             locationToBlock.put(location, codeBlock);
+            
+            // Add to player's script blocks
             addBlockToPlayerScript(player, codeBlock);
+            
+            // Auto-connect with neighboring blocks
             autoConnectBlock(codeBlock, location);
             
             // If this is an event block, create a script and add it to the world
@@ -158,7 +98,13 @@ public class AutoConnectionManager implements Listener {
                 createAndAddScript(codeBlock, player, location);
             }
             
-            player.sendMessage("§aБлок кода создан и подключен!");
+            // Get configuration for display name
+            String displayName = itemInHand.hasItemMeta() ? org.bukkit.ChatColor.stripColor(itemInHand.getItemMeta().getDisplayName()) : "";
+            BlockConfigService.BlockConfig config = blockConfigService.getBlockConfigByDisplayName(displayName);
+            String blockName = config != null ? config.getDisplayName() : "Unknown Block";
+            
+            player.sendMessage("§aБлок §f" + blockName + "§a установлен и автоматически подключен!");
+            plugin.getLogger().info("Auto-connected CodeBlock at " + location + " for player " + player.getName());
         }
     }
     
@@ -445,28 +391,57 @@ public class AutoConnectionManager implements Listener {
     }
     
     /**
-     * Проверяет, является ли мир dev-миром
+     * Gets the location for a CodeBlock by searching through the location map
      */
-    private boolean isDevWorld(World world) {
-        return world.getName().endsWith("_dev");
+    private Location getLocationForBlock(CodeBlock targetBlock) {
+        for (Map.Entry<Location, CodeBlock> entry : locationToBlock.entrySet()) {
+            if (entry.getValue().equals(targetBlock)) {
+                return entry.getKey();
+            }
+        }
+        return null;
     }
     
     /**
-     * Добавляет блок к скрипту игрока
+     * Enhanced block addition to player script tracking
+     * Maintains proper ordering and relationships
      */
     private void addBlockToPlayerScript(Player player, CodeBlock codeBlock) {
         UUID playerId = player.getUniqueId();
-        playerScriptBlocks.computeIfAbsent(playerId, k -> new ArrayList<>()).add(codeBlock);
+        List<CodeBlock> blocks = playerScriptBlocks.computeIfAbsent(playerId, k -> new ArrayList<>());
+        
+        if (!blocks.contains(codeBlock)) {
+            blocks.add(codeBlock);
+            
+            // Sort blocks by location for proper execution order
+            blocks.sort((a, b) -> {
+                Location locA = getLocationForBlock(a);
+                Location locB = getLocationForBlock(b);
+                if (locA == null || locB == null) return 0;
+                
+                // Sort by Z (line) first, then by X (position in line)
+                int lineCompare = Integer.compare(locA.getBlockZ(), locB.getBlockZ());
+                if (lineCompare != 0) return lineCompare;
+                return Integer.compare(locA.getBlockX(), locB.getBlockX());
+            });
+            
+            plugin.getLogger().info("Added CodeBlock to player " + player.getName() + " script. Total blocks: " + blocks.size());
+        }
     }
     
     /**
-     * Удаляет блок из скрипта игрока
+     * Removes a block from player script tracking
      */
     private void removeBlockFromPlayerScript(Player player, CodeBlock codeBlock) {
         UUID playerId = player.getUniqueId();
         List<CodeBlock> blocks = playerScriptBlocks.get(playerId);
+        
         if (blocks != null) {
             blocks.remove(codeBlock);
+            if (blocks.isEmpty()) {
+                playerScriptBlocks.remove(playerId);
+            }
+            plugin.getLogger().info("Removed CodeBlock from player " + player.getName() + " script. Remaining blocks: " + blocks.size());
         }
     }
     
@@ -489,11 +464,12 @@ public class AutoConnectionManager implements Listener {
      */
     public void createAndAddScript(CodeBlock eventBlock, Player player, Location location) {
         try {
-            // Create a script from the event block
-            CodeScript script = new CodeScript(eventBlock);
-            script.setName("Script for " + eventBlock.getAction());
-            script.setEnabled(true);
-            script.setType(CodeScript.ScriptType.EVENT);
+            // Use the new compilation method to create a complete script
+            CodeScript script = compileScriptFromEventBlock(eventBlock, location);
+            if (script == null) {
+                player.sendMessage("§cОшибка при создании скрипта!");
+                return;
+            }
             
             // Find the creative world
             com.megacreative.models.CreativeWorld creativeWorld = plugin.getWorldManager().findCreativeWorldByBukkit(location.getWorld());
@@ -504,9 +480,19 @@ public class AutoConnectionManager implements Listener {
                     scripts = new ArrayList<>();
                     creativeWorld.setScripts(scripts);
                 }
+                
+                // Remove any existing script with the same root block action to avoid duplicates
+                scripts.removeIf(existingScript -> 
+                    existingScript.getRootBlock() != null && 
+                    eventBlock.getAction().equals(existingScript.getRootBlock().getAction()));
+                
                 scripts.add(script);
                 
-                plugin.getLogger().info("Created and added script for event block: " + eventBlock.getAction());
+                // Save the creative world to persist the script
+                plugin.getWorldManager().saveWorld(creativeWorld);
+                
+                player.sendMessage("§a✓ Скрипт скомпилирован и создан для события: §f" + eventBlock.getAction());
+                plugin.getLogger().info("Compiled and added script for event block: " + eventBlock.getAction() + " in world: " + creativeWorld.getName());
             } else {
                 plugin.getLogger().warning("Could not find creative world for location: " + location);
             }
@@ -528,12 +514,16 @@ public class AutoConnectionManager implements Listener {
                 List<CodeScript> scripts = creativeWorld.getScripts();
                 if (scripts != null) {
                     // Find and remove the script that corresponds to this event block
-                    scripts.removeIf(script -> 
+                    boolean removed = scripts.removeIf(script -> 
                         script.getRootBlock() != null && 
-                        eventBlock.getId().equals(script.getRootBlock().getId())
+                        eventBlock.getAction().equals(script.getRootBlock().getAction())
                     );
                     
-                    plugin.getLogger().info("Removed script for event block: " + eventBlock.getAction());
+                    if (removed) {
+                        // Save the creative world to persist the change
+                        plugin.getWorldManager().saveWorld(creativeWorld);
+                        plugin.getLogger().info("Removed script for event block: " + eventBlock.getAction() + " from world: " + creativeWorld.getName());
+                    }
                 }
             } else {
                 plugin.getLogger().warning("Could not find creative world for location: " + location);
@@ -562,18 +552,6 @@ public class AutoConnectionManager implements Listener {
 
     
     /**
-     * Получает позицию для блока
-     */
-    private Location getLocationForBlock(CodeBlock block) {
-        for (Map.Entry<Location, CodeBlock> entry : locationToBlock.entrySet()) {
-            if (entry.getValue() == block) {
-                return entry.getKey();
-            }
-        }
-        return null;
-    }
-    
-    /**
      * Очищает все связи для мира
      */
     public void clearWorldConnections(World world) {
@@ -591,6 +569,207 @@ public class AutoConnectionManager implements Listener {
             }
         }
         return worldBlocks;
+    }
+    
+    /**
+     * Rebuilds all connections for blocks in a specific world
+     * Useful for initializing connections when loading existing worlds
+     */
+    public void rebuildWorldConnections(World world) {
+        plugin.getLogger().info("Rebuilding connections for world: " + world.getName());
+        
+        // Get all blocks in the world
+        Map<Location, CodeBlock> worldBlocks = getWorldBlocks(world);
+        
+        // Clear existing connections
+        for (CodeBlock block : worldBlocks.values()) {
+            block.setNextBlock(null);
+            block.getChildren().clear();
+        }
+        
+        // Rebuild connections
+        for (Map.Entry<Location, CodeBlock> entry : worldBlocks.entrySet()) {
+            autoConnectBlock(entry.getValue(), entry.getKey());
+        }
+        
+        plugin.getLogger().info("Rebuilt connections for " + worldBlocks.size() + " blocks");
+    }
+    
+    /**
+     * Forces synchronization with BlockPlacementHandler and rebuilds connections
+     */
+    public void forceSynchronization() {
+        BlockPlacementHandler placementHandler = plugin.getBlockPlacementHandler();
+        if (placementHandler != null) {
+            synchronizeWithPlacementHandler(placementHandler);
+            
+            // Rebuild connections for all loaded worlds
+            for (World world : plugin.getServer().getWorlds()) {
+                if (isDevWorld(world)) {
+                    rebuildWorldConnections(world);
+                }
+            }
+        }
+    }
+    
+    /**
+     * Gets connection statistics for debugging
+     */
+    public String getConnectionStats() {
+        int totalBlocks = locationToBlock.size();
+        int connectedBlocks = 0;
+        int parentBlocks = 0;
+        int childBlocks = 0;
+        
+        for (CodeBlock block : locationToBlock.values()) {
+            if (block.getNextBlock() != null) {
+                connectedBlocks++;
+            }
+            if (!block.getChildren().isEmpty()) {
+                parentBlocks++;
+                childBlocks += block.getChildren().size();
+            }
+        }
+        
+        return String.format("Blocks: %d, Connected: %d, Parents: %d, Total Children: %d", 
+                            totalBlocks, connectedBlocks, parentBlocks, childBlocks);
+    }
+    
+    /**
+     * Gets all available materials for code blocks
+     */
+    public Set<Material> getCodeBlockMaterials() {
+        return blockConfigService.getCodeBlockMaterials();
+    }
+    
+    /**
+     * Reloads block configuration
+     */
+    public void reloadBlockConfig() {
+        blockConfigService.reload();
+        plugin.getLogger().info("Block configuration reloaded");
+    }
+    
+    /**
+     * Determines if a block should auto-connect to the next block
+     * Control and event blocks don't auto-connect as they have special connection logic
+     */
+    private boolean shouldAutoConnect(String action, String blockType) {
+        // Get the block configuration
+        BlockConfigService.BlockConfig config = blockConfigService.getBlockConfig(action);
+        if (config == null) return true; // Default to auto-connect
+        
+        // Check if it's a control or event block
+        return !blockConfigService.isControlOrEventBlock(config.getType());
+    }
+    
+    /**
+     * Compiles a complete script from an event block by following all connections
+     * This implements the "compilation" process mentioned in the roadmap
+     */
+    public CodeScript compileScriptFromEventBlock(CodeBlock eventBlock, Location eventLocation) {
+        try {
+            // Create the root script
+            CodeScript script = new CodeScript(eventBlock);
+            script.setName("Compiled Script for " + eventBlock.getAction());
+            script.setEnabled(true);
+            script.setType(CodeScript.ScriptType.EVENT);
+            
+            // Build the complete block chain by following connections
+            buildBlockChain(eventBlock, eventLocation);
+            
+            plugin.getLogger().info("Compiled script from event block: " + eventBlock.getAction() + " with connected blocks");
+            return script;
+            
+        } catch (Exception e) {
+            plugin.getLogger().severe("Failed to compile script from event block: " + e.getMessage());
+            e.printStackTrace();
+            return null;
+        }
+    }
+    
+    /**
+     * Builds the complete block chain by following nextBlock and children connections
+     */
+    private void buildBlockChain(CodeBlock currentBlock, Location currentLocation) {
+        if (currentBlock == null || currentLocation == null) return;
+        
+        // Follow the next block in the chain
+        Location nextLocation = getNextLocationInLine(currentLocation);
+        if (nextLocation != null) {
+            CodeBlock nextBlock = locationToBlock.get(nextLocation);
+            if (nextBlock != null) {
+                currentBlock.setNextBlock(nextBlock);
+                buildBlockChain(nextBlock, nextLocation); // Recursively build chain
+            }
+        }
+        
+        // Build child blocks (for conditionals, loops)
+        if (isControlBlock(currentBlock)) {
+            buildChildBlocks(currentBlock, currentLocation);
+        }
+    }
+    
+    /**
+     * Builds child blocks for control structures
+     */
+    private void buildChildBlocks(CodeBlock parentBlock, Location parentLocation) {
+        int parentLine = DevWorldGenerator.getCodeLineFromZ(parentLocation.getBlockZ());
+        
+        // Look for indented blocks in subsequent lines (children)
+        for (int childLine = parentLine + 1; childLine < parentLine + 10 && childLine < DevWorldGenerator.getLinesCount(); childLine++) {
+            int childZ = DevWorldGenerator.getZForCodeLine(childLine);
+            
+            // Check different indentation levels (X > 0 means indented)
+            for (int childX = 1; childX <= 5; childX++) {
+                Location childLocation = new Location(parentLocation.getWorld(), childX, parentLocation.getBlockY(), childZ);
+                CodeBlock childBlock = locationToBlock.get(childLocation);
+                
+                if (childBlock != null) {
+                    parentBlock.addChild(childBlock);
+                    buildBlockChain(childBlock, childLocation); // Recursively build child chain
+                }
+            }
+            
+            // If we find a non-indented block, stop looking for children
+            Location endLocation = new Location(parentLocation.getWorld(), 0, parentLocation.getBlockY(), childZ);
+            if (locationToBlock.containsKey(endLocation)) {
+                break;
+            }
+        }
+    }
+    
+    /**
+     * Rebuilds and recompiles all scripts in a world
+     * This should be called when the world is loaded or when significant changes are made
+     */
+    public void recompileWorldScripts(org.bukkit.World world) {
+        plugin.getLogger().info("Recompiling all scripts for world: " + world.getName());
+        
+        com.megacreative.models.CreativeWorld creativeWorld = plugin.getWorldManager().findCreativeWorldByBukkit(world);
+        if (creativeWorld == null) return;
+        
+        // Clear existing scripts
+        List<CodeScript> newScripts = new ArrayList<>();
+        
+        // Find all event blocks in the world and compile scripts from them
+        for (Map.Entry<Location, CodeBlock> entry : locationToBlock.entrySet()) {
+            if (!entry.getKey().getWorld().equals(world)) continue;
+            
+            CodeBlock block = entry.getValue();
+            if (isEventBlock(block)) {
+                CodeScript compiledScript = compileScriptFromEventBlock(block, entry.getKey());
+                if (compiledScript != null) {
+                    newScripts.add(compiledScript);
+                }
+            }
+        }
+        
+        // Update the creative world with new scripts
+        creativeWorld.setScripts(newScripts);
+        plugin.getWorldManager().saveWorld(creativeWorld);
+        
+        plugin.getLogger().info("Recompiled " + newScripts.size() + " scripts for world: " + world.getName());
     }
     
     /**
