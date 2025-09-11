@@ -39,6 +39,7 @@ permissions:
       megacreative.command.join: true
       megacreative.command.play: true
       megacreative.command.build: true
+      megacreative.command.dev: true
       megacreative.command.hub: true
 
   megacreative.admin:

@@ -24,21 +24,33 @@ public class DevCommand implements CommandExecutor {
             sender.sendMessage("§cЭта команда доступна только игрокам!");
             return true;
         }
+        
+        // Debug logging
+        plugin.getLogger().info("[DEBUG] Player " + player.getName() + " executed /dev command");
        
         World currentWorld = player.getWorld();
+        plugin.getLogger().info("[DEBUG] Player is in world: " + currentWorld.getName());
+        
         CreativeWorld creativeWorld = findCreativeWorld(currentWorld);
        
         if (creativeWorld == null) {
+            plugin.getLogger().info("[DEBUG] CreativeWorld not found for world: " + currentWorld.getName());
             player.sendMessage("§cВы не находитесь в мире MegaCreative!");
             return true;
         }
+        
+        plugin.getLogger().info("[DEBUG] Found CreativeWorld: " + creativeWorld.getName() + " (ID: " + creativeWorld.getId() + ")");
        
         if (!creativeWorld.canCode(player)) {
+            plugin.getLogger().info("[DEBUG] Player " + player.getName() + " cannot code in world " + creativeWorld.getName());
             player.sendMessage("§cУ вас нет прав на кодирование в этом мире!");
             return true;
         }
+        
+        plugin.getLogger().info("[DEBUG] Player " + player.getName() + " has coding permissions");
        
         creativeWorld.setMode(WorldMode.DEV);
+        plugin.getLogger().info("[DEBUG] Set world mode to DEV");
 
         // Запускаем всю логику в основном потоке сервера для потокобезопасности
         new org.bukkit.scheduler.BukkitRunnable() {
