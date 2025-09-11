@@ -366,36 +366,44 @@ public class CustomEvent {
         public boolean isCompatible(DataValue value) {
             if (value == null) return !required;
             
-            // Handle direct type matching
+            // Handle direct type matching first
             if (expectedType.isAssignableFrom(value.getClass())) {
                 return true;
             }
             
-            // Handle primitive type matching (e.g., Boolean.class with BooleanValue.class)
-            if (expectedType == Boolean.class && value instanceof com.megacreative.coding.values.types.BooleanValue) {
+            // Handle DataValue wrapper to expected type matching
+            if (expectedType == org.bukkit.entity.Player.class && value instanceof com.megacreative.coding.values.types.PlayerValue) {
                 return true;
             }
             if (expectedType == String.class && value instanceof com.megacreative.coding.values.types.TextValue) {
                 return true;
             }
-            if (expectedType == Number.class && value instanceof com.megacreative.coding.values.types.NumberValue) {
+            if ((expectedType == Number.class || expectedType == Integer.class || expectedType == Long.class || expectedType == Double.class) 
+                && value instanceof com.megacreative.coding.values.types.NumberValue) {
                 return true;
             }
-            if (expectedType == Integer.class && value instanceof com.megacreative.coding.values.types.NumberValue) {
+            if (expectedType == Boolean.class && value instanceof com.megacreative.coding.values.types.BooleanValue) {
                 return true;
             }
-            if (expectedType == Long.class && value instanceof com.megacreative.coding.values.types.NumberValue) {
+            if (expectedType == org.bukkit.Location.class && value instanceof com.megacreative.coding.values.types.LocationValue) {
                 return true;
             }
-            if (expectedType == Double.class && value instanceof com.megacreative.coding.values.types.NumberValue) {
+            if (expectedType == org.bukkit.inventory.ItemStack.class && value instanceof com.megacreative.coding.values.types.ItemValue) {
                 return true;
             }
-            if (expectedType == org.bukkit.entity.Player.class && value instanceof com.megacreative.coding.values.types.PlayerValue) {
+            if (expectedType == java.util.List.class && value instanceof com.megacreative.coding.values.types.ListValue) {
+                return true;
+            }
+            if (expectedType == java.util.Map.class && value instanceof com.megacreative.coding.values.types.MapValue) {
                 return true;
             }
             
             // Handle generic object matching
-            return expectedType.equals(Object.class) || value.getClass().equals(Object.class);
+            if (expectedType.equals(Object.class)) {
+                return true;
+            }
+            
+            return false;
         }
     }
 }

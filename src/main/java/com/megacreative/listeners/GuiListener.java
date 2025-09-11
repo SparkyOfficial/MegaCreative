@@ -170,28 +170,40 @@ public class GuiListener implements Listener {
                 return;
             }
             
-            // Create the world
-            player.sendMessage("§a⏳ Создание мира \"" + message + "\"...");
-            plugin.getWorldManager().createWorld(player, message, worldType);
+            // Create the world in the main thread (synchronous operations)
+            new org.bukkit.scheduler.BukkitRunnable() {
+                @Override
+                public void run() {
+                    player.sendMessage("§a⏳ Создание мира \"" + message + "\"...");
+                    plugin.getWorldManager().createWorld(player, message, worldType);
+                }
+            }.runTask(plugin);
             return;
         }
 
         // Handle удаление мира
         if (plugin.getGuiManager().isAwaitingDeleteConfirmation(player)) {
             event.setCancelled(true);
-            if (message.equalsIgnoreCase("УДАЛИТЬ")) {
-                String worldId = plugin.getGuiManager().getDeleteConfirmationWorldId(player);
-                var world = plugin.getWorldManager().getWorld(worldId);
-                if (world != null) {
-                    plugin.getWorldManager().deleteWorld(world.getId(), player);
-                    player.sendMessage("§aМир успешно удалён!");
-                } else {
-                    player.sendMessage("§cМир не найден!");
+            
+            // Execute synchronous operations in main thread
+            new org.bukkit.scheduler.BukkitRunnable() {
+                @Override
+                public void run() {
+                    if (message.equalsIgnoreCase("УДАЛИТЬ")) {
+                        String worldId = plugin.getGuiManager().getDeleteConfirmationWorldId(player);
+                        var world = plugin.getWorldManager().getWorld(worldId);
+                        if (world != null) {
+                            plugin.getWorldManager().deleteWorld(world.getId(), player);
+                            player.sendMessage("§aМир успешно удалён!");
+                        } else {
+                            player.sendMessage("§cМир не найден!");
+                        }
+                    } else {
+                        player.sendMessage("§cУдаление отменено.");
+                    }
+                    plugin.getGuiManager().clearDeleteConfirmation(player);
                 }
-            } else {
-                player.sendMessage("§cУдаление отменено.");
-            }
-            plugin.getGuiManager().clearDeleteConfirmation(player);
+            }.runTask(plugin);
             return;
         }
 
@@ -214,24 +226,30 @@ public class GuiListener implements Listener {
                 return;
             }
             
-            // Create and add the comment
-            WorldComment comment = new WorldComment(
-                player.getUniqueId(),
-                player.getName(),
-                message,
-                System.currentTimeMillis()
-            );
-            
-            world.addComment(comment);
-            
-            // Save the world to persist the comment
-            plugin.getWorldManager().saveWorld(world);
-            
-            // Remove from inputs and show the updated comments GUI
-            plugin.getGuiManager().clearCommentInput(player);
-            
-            // Open the comments GUI on the first page
-            new WorldCommentsGUI(plugin, player, world, 0).open();
+            // Execute synchronous operations in main thread
+            new org.bukkit.scheduler.BukkitRunnable() {
+                @Override
+                public void run() {
+                    // Create and add the comment
+                    WorldComment comment = new WorldComment(
+                        player.getUniqueId(),
+                        player.getName(),
+                        message,
+                        System.currentTimeMillis()
+                    );
+                    
+                    world.addComment(comment);
+                    
+                    // Save the world to persist the comment
+                    plugin.getWorldManager().saveWorld(world);
+                    
+                    // Remove from inputs
+                    plugin.getGuiManager().clearCommentInput(player);
+                    
+                    // Open the comments GUI on the first page
+                    new WorldCommentsGUI(plugin, player, world, 0).open();
+                }
+            }.runTask(plugin);
             
             return;
         }
