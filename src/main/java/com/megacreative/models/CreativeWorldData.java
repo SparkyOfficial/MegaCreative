@@ -1,9 +1,11 @@
 package com.megacreative.models;
 
+
 import com.megacreative.coding.CodeScript;
 import java.util.UUID;
 import java.util.List;
 import java.util.Set;
+import java.util.ArrayList;
 
 /**
  * Serializable data transfer object for CreativeWorld.
@@ -30,7 +32,7 @@ public class CreativeWorldData {
     public Set<UUID> dislikedBy;
     public Set<UUID> favoriteBy;
     public List<WorldComment> comments;
-    public List<CodeScript> scripts;
+    public List<CodeScriptData> scripts;
     
     // Empty constructor for Gson
     public CreativeWorldData() {}
@@ -56,6 +58,11 @@ public class CreativeWorldData {
         this.dislikedBy = world.getDislikedBy();
         this.favoriteBy = world.getFavoriteBy();
         this.comments = world.getComments();
-        this.scripts = world.getScripts();
+        this.scripts = new ArrayList<>();
+        if (world.getScripts() != null) {
+            for (com.megacreative.coding.CodeScript script : world.getScripts()) {
+                this.scripts.add(new CodeScriptData(script));
+            }
+        }
     }
 }

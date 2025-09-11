@@ -2,8 +2,12 @@ package com.megacreative.utils;
 
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
-import com.megacreative.coding.CodeBlock;
-import com.megacreative.coding.CodeScript;
+import com.megacreative.coding.CodeBlockData;
+import com.megacreative.models.CodeScriptData;
+import com.megacreative.coding.values.DataValue;
+import org.bukkit.Material;
+import org.bukkit.inventory.ItemStack;
+import java.util.ArrayList;
 import com.megacreative.models.CreativeWorld;
 import com.megacreative.MegaCreative;
 
@@ -71,7 +75,23 @@ public class JsonSerializer {
             if (worldData.dislikedBy != null) world.setDislikedBy(worldData.dislikedBy);
             if (worldData.favoriteBy != null) world.setFavoriteBy(worldData.favoriteBy);
             if (worldData.comments != null) world.setComments(worldData.comments);
-            if (worldData.scripts != null) world.setScripts(worldData.scripts);
+            // Восстанавливаем скрипты
+            java.util.List<com.megacreative.coding.CodeScript> restoredScripts = new ArrayList<>();
+            if (worldData.scripts != null) {
+                for (CodeScriptData scriptData : worldData.scripts) {
+                    com.megacreative.coding.CodeScript script = new com.megacreative.coding.CodeScript(
+                        scriptData.name != null ? scriptData.name : "Unnamed Script",
+                        scriptData.enabled,
+                        restoreCodeBlock(scriptData.rootBlock)
+                    );
+                    script.setId(scriptData.id);
+                    if (scriptData.type != null) {
+                        script.setType(com.megacreative.coding.CodeScript.ScriptType.valueOf(scriptData.type));
+                    }
+                    restoredScripts.add(script);
+                }
+            }
+            world.setScripts(restoredScripts);
             
             return world;
         } catch (Exception e) {
@@ -83,28 +103,83 @@ public class JsonSerializer {
     /**
      * Сериализует CodeScript в JSON
      */
-    public static String serializeScript(CodeScript script) {
+    public static String serializeScript(com.megacreative.coding.CodeScript script) {
         return toJson(script);
     }
     
     /**
      * Десериализует CodeScript из JSON
      */
-    public static CodeScript deserializeScript(String json) {
-        return fromJson(json, CodeScript.class);
+    public static com.megacreative.coding.CodeScript deserializeScript(String json) {
+        return fromJson(json, com.megacreative.coding.CodeScript.class);
     }
     
     /**
      * Сериализует CodeBlock в JSON с поддержкой ItemStack
      */
-    public static String serializeBlock(CodeBlock block) {
+    public static String serializeBlock(com.megacreative.coding.CodeBlock block) {
         return gsonWithItemStacks.toJson(block);
     }
     
     /**
      * Десериализует CodeBlock из JSON с поддержкой ItemStack
      */
-    public static CodeBlock deserializeBlock(String json) {
-        return gsonWithItemStacks.fromJson(json, CodeBlock.class);
+    public static com.megacreative.coding.CodeBlock deserializeBlock(String json) {
+        return gsonWithItemStacks.fromJson(json, com.megacreative.coding.CodeBlock.class);
+    }
+    
+    /**
+     * Рекурсивный метод для восстановления CodeBlock из CodeBlockData
+     */
+    private static com.megacreative.coding.CodeBlock restoreCodeBlock(CodeBlockData data) {
+        if (data == null) return null;
+
+        Material material = data.materialName != null ? Material.getMaterial(data.materialName) : Material.STONE;
+        com.megacreative.coding.CodeBlock block = new com.megacreative.coding.CodeBlock(material, data.action);
+        block.setId(data.id);
+
+        // Восстанавливаем параметры
+        if (data.parameters != null) {
+            data.parameters.forEach((key, value) -> {
+                block.setParameter(key, DataValue.fromObject(value));
+            });
+        }
+
+        // Восстанавливаем configItems из сериализованной карты
+        if (data.configItems != null) {
+            data.configItems.forEach((slot, map) -> {
+                try {
+                    ItemStack itemStack = ItemStack.deserialize(map);
+                    block.setConfigItem(slot, itemStack);
+                } catch (Exception e) {
+                    // Логируем ошибку, но продолжаем работу
+                    System.err.println("Failed to deserialize ItemStack: " + e.getMessage());
+                }
+            });
+        }
+        
+        // Восстанавливаем скобки
+        if (data.bracketType != null) {
+            try {
+                block.setBracketType(com.megacreative.coding.CodeBlock.BracketType.valueOf(data.bracketType));
+            } catch (IllegalArgumentException e) {
+                // Игнорируем неверные значения
+            }
+        }
+        
+        // Рекурсивно восстанавливаем следующие и дочерние блоки
+        if (data.nextBlock != null) {
+            block.setNextBlock(restoreCodeBlock(data.nextBlock));
+        }
+        if (data.children != null) {
+            for (CodeBlockData childData : data.children) {
+                com.megacreative.coding.CodeBlock childBlock = restoreCodeBlock(childData);
+                if (childBlock != null) {
+                    block.addChild(childBlock);
+                }
+            }
+        }
+
+        return block;
     }
 }
