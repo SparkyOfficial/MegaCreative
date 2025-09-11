@@ -112,26 +112,77 @@ public class DevInventoryManager implements Listener {
                     }
                 }
             }
-        }.runTaskTimer(plugin, 100L, 100L);
+        }.runTaskTimer(plugin, 200L, 600L); // Проверяем каждые 30 секунд (вместо 5), меньше спама
     }
     
     private void checkAndRestoreTools(Player player) {
         if (!playersInDevWorld.contains(player.getUniqueId())) return;
         
-        boolean hasDevTools = false;
+        // Вместо полного сброса, будем просто добавлять недостающие
+        List<String> missingItems = getMissingCodingItems(player);
+        if (!missingItems.isEmpty()) {
+            giveMissingItems(player, missingItems);
+            player.sendMessage("§aНекоторые инструменты разработчика были восстановлены!");
+        }
+    }
+    
+    /**
+     * Проверяет, каких именно предметов не хватает
+     */
+    private List<String> getMissingCodingItems(Player player) {
+        List<String> missingItems = new ArrayList<>();
+        
+        // Проверяем ключевые инструменты (не все блоки кода!)
+        boolean hasCopier = false;
+        boolean hasArrowNot = false;
+        boolean hasDataCreator = false;
+        boolean hasCodeMover = false;
+        
         for (ItemStack item : player.getInventory().getContents()) {
             if (item != null && item.hasItemMeta() && item.getItemMeta().hasDisplayName()) {
                 String name = item.getItemMeta().getDisplayName();
                 if (name.contains("Копировщик блоков") || name.contains(CodingItems.COPIER_TOOL_NAME)) {
-                    hasDevTools = true;
-                    break;
+                    hasCopier = true;
+                } else if (name.contains("Стрела НЕ") || name.contains(CodingItems.ARROW_NOT_NAME)) {
+                    hasArrowNot = true;
+                } else if (name.contains("Создатель данных") || name.contains(CodingItems.DATA_CREATOR_NAME)) {
+                    hasDataCreator = true;
+                } else if (name.contains("Перемещатель кода") || name.contains(CodingItems.CODE_MOVER_NAME)) {
+                    hasCodeMover = true;
                 }
             }
         }
         
-        if (!hasDevTools) {
-            giveDevTools(player);
-            player.sendMessage("§aИнструменты разработчика восстановлены!");
+        // Добавляем недостающие инструменты
+        if (!hasCopier) missingItems.add("copier");
+        if (!hasArrowNot) missingItems.add("arrow_not");
+        if (!hasDataCreator) missingItems.add("data_creator");
+        if (!hasCodeMover) missingItems.add("code_mover");
+        
+        return missingItems;
+    }
+    
+    /**
+     * Выдает только недостающие предметы
+     */
+    private void giveMissingItems(Player player, List<String> missingItems) {
+        for (String item : missingItems) {
+            switch (item) {
+                case "copier" -> {
+                    ItemStack copier = new ItemStack(Material.GOLDEN_AXE);
+                    ItemMeta copierMeta = copier.getItemMeta();
+                    copierMeta.setDisplayName("§6📋 Копировщик блоков");
+                    copierMeta.setLore(Arrays.asList(
+                        "§7ЛКМ по блоку - скопировать",
+                        "§7ПКМ по блоку - вставить"
+                    ));
+                    copier.setItemMeta(copierMeta);
+                    player.getInventory().addItem(copier);
+                }
+                case "arrow_not" -> player.getInventory().addItem(CodingItems.getArrowNot());
+                case "data_creator" -> player.getInventory().addItem(CodingItems.getDataCreator());
+                case "code_mover" -> player.getInventory().addItem(CodingItems.getCodeMover());
+            }
         }
     }
     

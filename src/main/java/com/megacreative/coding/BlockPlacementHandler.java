@@ -77,9 +77,22 @@ public class BlockPlacementHandler implements Listener {
         String displayName = itemInHand.hasItemMeta() ? org.bukkit.ChatColor.stripColor(itemInHand.getItemMeta().getDisplayName()) : "";
         BlockConfigService.BlockConfig config = blockConfigService.getBlockConfigByDisplayName(displayName);
 
-        // Если это не наш блок кода, игнорируем
+        // Особая обработка для поршней (скобок) - они могут не иметь конфига
         if (config == null) {
-            return;
+            // Если это поршень без конфига, значит это скобка
+            if (block.getType() == Material.PISTON || block.getType() == Material.STICKY_PISTON) {
+                CodeBlock newCodeBlock = new CodeBlock(block.getType(), "BRACKET"); // Уникальный ID для скобок
+                newCodeBlock.setBracketType(CodeBlock.BracketType.OPEN); // По умолчанию открывающая
+                setPistonDirection(block, CodeBlock.BracketType.OPEN); // Задать направление
+                updateBracketSign(block.getLocation(), CodeBlock.BracketType.OPEN); // Повесить табличку
+                blockCodeBlocks.put(block.getLocation(), newCodeBlock);
+                
+                player.sendMessage("§a✓ Скобка размещена: " + CodeBlock.BracketType.OPEN.getDisplayName());
+                player.sendMessage("§7Кликните правой кнопкой для смены типа");
+                plugin.getLogger().fine("Bracket block created at " + block.getLocation() + " with type: OPEN");
+                return; // Завершаем обработку
+            }
+            return; // Это обычный блок, не кодовый
         }
 
         // Создаем CodeBlock с правильным ID действия из конфига
@@ -107,7 +120,7 @@ public class BlockPlacementHandler implements Listener {
         player.sendMessage("§a✓ Блок кода размещен: " + config.getDisplayName());
         player.sendMessage("§7Кликните правой кнопкой для настройки");
         
-        plugin.getLogger().info("CodeBlock created at " + block.getLocation() + " with action: " + config.getId());
+        plugin.getLogger().fine("CodeBlock created at " + block.getLocation() + " with action: " + config.getId());
     }
 
     /**
@@ -154,16 +167,27 @@ public class BlockPlacementHandler implements Listener {
     }
 
     /**
-     * Удаляет контейнер над блоком кода
+     * Удаляет контейнер над блоком кода (улучшенная версия)
      */
     private void removeContainerAboveBlock(Location blockLocation) {
         Location containerLocation = blockLocation.clone().add(0, 1, 0);
         Block containerBlock = containerLocation.getBlock();
         
-        // Проверяем, является ли блок сундуком
-        if (containerBlock.getType() == Material.CHEST) {
+        // Проверяем все типы контейнеров
+        if (containerBlock.getType() == Material.CHEST || 
+            containerBlock.getType() == Material.TRAPPED_CHEST ||
+            containerBlock.getType() == Material.BARREL ||
+            containerBlock.getType() == Material.SHULKER_BOX ||
+            containerBlock.getType().name().contains("SHULKER_BOX")) {
+            
+            // Очищаем содержимое перед удалением
+            if (containerBlock.getState() instanceof org.bukkit.inventory.InventoryHolder) {
+                org.bukkit.inventory.InventoryHolder holder = (org.bukkit.inventory.InventoryHolder) containerBlock.getState();
+                holder.getInventory().clear();
+            }
+            
             containerBlock.setType(Material.AIR);
-            plugin.getLogger().info("Removed container above code block at " + blockLocation);
+            plugin.getLogger().fine("Removed container above code block at " + blockLocation);
         }
     }
 
@@ -320,16 +344,23 @@ public class BlockPlacementHandler implements Listener {
     }
     
     /**
-     * Удаляет все таблички вокруг блока
+     * Удаляет все таблички вокруг блока (улучшенная версия)
      */
     private void removeSignFromBlock(Location location) {
         Block block = location.getBlock();
-        BlockFace[] faces = {BlockFace.NORTH, BlockFace.SOUTH, BlockFace.EAST, BlockFace.WEST};
+        BlockFace[] faces = {BlockFace.NORTH, BlockFace.SOUTH, BlockFace.EAST, BlockFace.WEST, 
+                            BlockFace.UP, BlockFace.DOWN}; // Проверяем все стороны
         
         for (BlockFace face : faces) {
             Block signBlock = block.getRelative(face);
-            if (signBlock.getBlockData() instanceof WallSign) {
+            // Проверяем все типы табличек
+            if (signBlock.getBlockData() instanceof WallSign || 
+                signBlock.getType() == Material.OAK_SIGN ||
+                signBlock.getType() == Material.OAK_WALL_SIGN ||
+                signBlock.getType().name().contains("SIGN")) {
+                
                 signBlock.setType(Material.AIR);
+                plugin.getLogger().fine("Removed sign at " + signBlock.getLocation() + " near block at " + location);
             }
         }
     }

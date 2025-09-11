@@ -66,7 +66,7 @@ public class AutoConnectionManager implements Listener {
             }
         }
         
-        plugin.getLogger().info("Synchronized " + placementBlocks.size() + " blocks with AutoConnectionManager");
+        plugin.getLogger().fine("Synchronized " + placementBlocks.size() + " blocks with AutoConnectionManager");
     }
     
     /**
@@ -114,7 +114,7 @@ public class AutoConnectionManager implements Listener {
             String blockName = config != null ? config.getDisplayName() : "Unknown Block";
             
             player.sendMessage("§aБлок §f" + blockName + "§a установлен и автоматически подключен!");
-            plugin.getLogger().info("Auto-connected CodeBlock at " + location + " for player " + player.getName());
+            plugin.getLogger().fine("Auto-connected CodeBlock at " + location + " for player " + player.getName());
         }
     }
     
@@ -147,7 +147,7 @@ public class AutoConnectionManager implements Listener {
             BlockPlacementHandler placementHandler = plugin.getBlockPlacementHandler();
             if (placementHandler != null) {
                 // The BlockPlacementHandler should handle this in its own event handler
-                plugin.getLogger().info("CodeBlock disconnected at " + location);
+                plugin.getLogger().fine("CodeBlock disconnected at " + location);
             }
             
             event.getPlayer().sendMessage("§cБлок кода удален и отсоединен от цепочки!");
@@ -162,7 +162,7 @@ public class AutoConnectionManager implements Listener {
         int line = DevWorldGenerator.getCodeLineFromZ(location.getBlockZ());
         if (line == -1) return;
         
-        plugin.getLogger().info("Auto-connecting block at " + location + " (line " + line + ")");
+        plugin.getLogger().fine("Auto-connecting block at " + location + " (line " + line + ")");
         
         // Step 1: Connect with previous block in the same line (horizontal connection)
         Location prevLocation = getPreviousLocationInLine(location);
@@ -170,7 +170,7 @@ public class AutoConnectionManager implements Listener {
             CodeBlock prevBlock = locationToBlock.get(prevLocation);
             if (prevBlock != null) {
                 prevBlock.setNextBlock(codeBlock);
-                plugin.getLogger().info("Connected horizontal: " + prevLocation + " -> " + location);
+                plugin.getLogger().fine("Connected horizontal: " + prevLocation + " -> " + location);
             }
         }
         
@@ -180,7 +180,7 @@ public class AutoConnectionManager implements Listener {
             CodeBlock nextBlock = locationToBlock.get(nextLocation);
             if (nextBlock != null) {
                 codeBlock.setNextBlock(nextBlock);
-                plugin.getLogger().info("Connected horizontal: " + location + " -> " + nextLocation);
+                plugin.getLogger().fine("Connected horizontal: " + location + " -> " + nextLocation);
             }
         }
         
@@ -201,7 +201,7 @@ public class AutoConnectionManager implements Listener {
             CodeBlock parentBlock = findParentBlock(location, line);
             if (parentBlock != null) {
                 parentBlock.addChild(codeBlock);
-                plugin.getLogger().info("Added child relationship: parent at line " + line + " -> child at " + location);
+                plugin.getLogger().fine("Added child relationship: parent at line " + line + " -> child at " + location);
             }
         }
         
@@ -250,7 +250,7 @@ public class AutoConnectionManager implements Listener {
                     } else if (checkBlock.getBracketType() == CodeBlock.BracketType.OPEN) {
                         if (bracketBalance == 0) {
                             // Found unmatched opening bracket - this is our parent!
-                            plugin.getLogger().info("Found bracket parent at (" + x + ", " + line + ") for child at " + childLocation);
+                            plugin.getLogger().fine("Found bracket parent at (" + x + ", " + line + ") for child at " + childLocation);
                             return checkBlock;
                         } else {
                             bracketBalance--; // Match this opening bracket with previous closing bracket
@@ -277,7 +277,7 @@ public class AutoConnectionManager implements Listener {
                 CodeBlock parentBlock = locationToBlock.get(parentLocation);
                 
                 if (parentBlock != null && isControlBlock(parentBlock)) {
-                    plugin.getLogger().info("Found indentation parent at (" + parentX + ", " + parentLine + ") for child at " + childLocation);
+                    plugin.getLogger().fine("Found indentation parent at (" + parentX + ", " + parentLine + ") for child at " + childLocation);
                     return parentBlock;
                 }
             }
@@ -325,7 +325,7 @@ public class AutoConnectionManager implements Listener {
                     return Integer.compare(locA.getBlockX(), locB.getBlockX());
                 });
                 
-                plugin.getLogger().info("Updated player script blocks for: " + entry.getKey());
+                plugin.getLogger().fine("Updated player script blocks for: " + entry.getKey());
                 break;
             }
         }
@@ -338,7 +338,7 @@ public class AutoConnectionManager implements Listener {
     private void connectChildBlocks(CodeBlock parentBlock, Location parentLocation) {
         int parentLine = DevWorldGenerator.getCodeLineFromZ(parentLocation.getBlockZ());
         
-        plugin.getLogger().info("Looking for child blocks for parent at line " + parentLine);
+        plugin.getLogger().fine("Looking for child blocks for parent at line " + parentLine);
         
         // Look for indented blocks in subsequent lines
         for (int childLine = parentLine + 1; childLine < parentLine + 10 && childLine < DevWorldGenerator.getLinesCount(); childLine++) {
@@ -355,7 +355,7 @@ public class AutoConnectionManager implements Listener {
                     // Only add as child if not already connected
                     if (!parentBlock.getChildren().contains(childBlock)) {
                         parentBlock.addChild(childBlock);
-                        plugin.getLogger().info("Connected child: parent line " + parentLine + " -> child at (" + childX + ", " + childLine + ")");
+                        plugin.getLogger().fine("Connected child: parent line " + parentLine + " -> child at (" + childX + ", " + childLine + ")");
                         foundChildInLine = true;
                     }
                 }
@@ -367,7 +367,7 @@ public class AutoConnectionManager implements Listener {
                 // Check if there's any block at X=0 (non-indented) which would end the child section
                 Location endLocation = new Location(parentLocation.getWorld(), 0, parentLocation.getBlockY(), childZ);
                 if (locationToBlock.containsKey(endLocation)) {
-                    plugin.getLogger().info("Found non-indented block at line " + childLine + ", ending child search");
+                    plugin.getLogger().fine("Found non-indented block at line " + childLine + ", ending child search");
                     break;
                 }
             }
@@ -488,7 +488,7 @@ public class AutoConnectionManager implements Listener {
                 return Integer.compare(locA.getBlockX(), locB.getBlockX());
             });
             
-            plugin.getLogger().info("Added CodeBlock to player " + player.getName() + " script. Total blocks: " + blocks.size());
+            plugin.getLogger().fine("Added CodeBlock to player " + player.getName() + " script. Total blocks: " + blocks.size());
         }
     }
     
@@ -504,7 +504,7 @@ public class AutoConnectionManager implements Listener {
             if (blocks.isEmpty()) {
                 playerScriptBlocks.remove(playerId);
             }
-            plugin.getLogger().info("Removed CodeBlock from player " + player.getName() + " script. Remaining blocks: " + blocks.size());
+            plugin.getLogger().fine("Removed CodeBlock from player " + player.getName() + " script. Remaining blocks: " + blocks.size());
         }
     }
     
@@ -555,7 +555,7 @@ public class AutoConnectionManager implements Listener {
                 plugin.getWorldManager().saveWorld(creativeWorld);
                 
                 player.sendMessage("§a✓ Скрипт скомпилирован и создан для события: §f" + eventBlock.getAction());
-                plugin.getLogger().info("Compiled and added script for event block: " + eventBlock.getAction() + " in world: " + creativeWorld.getName());
+                plugin.getLogger().fine("Compiled and added script for event block: " + eventBlock.getAction() + " in world: " + creativeWorld.getName());
             } else {
                 plugin.getLogger().warning("Could not find creative world for location: " + location);
             }
@@ -585,7 +585,7 @@ public class AutoConnectionManager implements Listener {
                     if (removed) {
                         // Save the creative world to persist the change
                         plugin.getWorldManager().saveWorld(creativeWorld);
-                        plugin.getLogger().info("Removed script for event block: " + eventBlock.getAction() + " from world: " + creativeWorld.getName());
+                        plugin.getLogger().fine("Removed script for event block: " + eventBlock.getAction() + " from world: " + creativeWorld.getName());
                     }
                 }
             } else {
@@ -639,7 +639,7 @@ public class AutoConnectionManager implements Listener {
      * Useful for initializing connections when loading existing worlds
      */
     public void rebuildWorldConnections(World world) {
-        plugin.getLogger().info("Rebuilding connections for world: " + world.getName());
+        plugin.getLogger().fine("Rebuilding connections for world: " + world.getName());
         
         // Get all blocks in the world
         Map<Location, CodeBlock> worldBlocks = getWorldBlocks(world);
@@ -655,7 +655,7 @@ public class AutoConnectionManager implements Listener {
             autoConnectBlock(entry.getValue(), entry.getKey());
         }
         
-        plugin.getLogger().info("Rebuilt connections for " + worldBlocks.size() + " blocks");
+        plugin.getLogger().fine("Rebuilt connections for " + worldBlocks.size() + " blocks");
     }
     
     /**
@@ -710,7 +710,7 @@ public class AutoConnectionManager implements Listener {
      */
     public void reloadBlockConfig() {
         blockConfigService.reload();
-        plugin.getLogger().info("Block configuration reloaded");
+        plugin.getLogger().fine("Block configuration reloaded");
     }
     
     /**
@@ -741,7 +741,7 @@ public class AutoConnectionManager implements Listener {
             // Build the complete block chain by following connections
             buildBlockChain(eventBlock, eventLocation);
             
-            plugin.getLogger().info("Compiled script from event block: " + eventBlock.getAction() + " with connected blocks");
+            plugin.getLogger().fine("Compiled script from event block: " + eventBlock.getAction() + " with connected blocks");
             return script;
             
         } catch (Exception e) {
@@ -807,7 +807,7 @@ public class AutoConnectionManager implements Listener {
      * This should be called when the world is loaded or when significant changes are made
      */
     public void recompileWorldScripts(org.bukkit.World world) {
-        plugin.getLogger().info("Recompiling all scripts for world: " + world.getName());
+        plugin.getLogger().fine("Recompiling all scripts for world: " + world.getName());
         
         com.megacreative.models.CreativeWorld creativeWorld = plugin.getWorldManager().findCreativeWorldByBukkit(world);
         if (creativeWorld == null) return;
@@ -832,7 +832,7 @@ public class AutoConnectionManager implements Listener {
         creativeWorld.setScripts(newScripts);
         plugin.getWorldManager().saveWorld(creativeWorld);
         
-        plugin.getLogger().info("Recompiled " + newScripts.size() + " scripts for world: " + world.getName());
+        plugin.getLogger().fine("Recompiled " + newScripts.size() + " scripts for world: " + world.getName());
     }
     
     /**
