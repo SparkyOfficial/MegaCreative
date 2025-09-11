@@ -190,7 +190,7 @@ public class CodingItems {
     }
     
     public static ItemStack getCodeMover() {
-        ItemStack item = new ItemStack(Material.REDSTONE_COMPARATOR);
+        ItemStack item = new ItemStack(Material.COMPARATOR);
         ItemMeta meta = item.getItemMeta();
         meta.setDisplayName(CODE_MOVER_NAME);
         meta.setLore(Arrays.asList(

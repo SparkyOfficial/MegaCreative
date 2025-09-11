@@ -176,6 +176,9 @@ public class DevWorldGenerator extends ChunkGenerator {
         org.bukkit.Location teleportLocation = new org.bukkit.Location(world, 0, floorY + 2, 0);
         player.teleport(teleportLocation);
         
+        player.sendMessage("§a✓ Этаж " + floorNumber + " создан! Вы телепортированы на новый этаж.");
+    }
+    
     /**
      * Статический метод для добавления нового этажа в существующий мир
      */

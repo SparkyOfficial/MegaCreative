@@ -36,6 +36,16 @@ public class AutoConnectionManager implements Listener {
     }
     
     /**
+     * Checks if a world is a development world
+     */
+    private boolean isDevWorld(World world) {
+        String worldName = world.getName();
+        return worldName.contains("dev") || worldName.contains("Dev") || 
+               worldName.contains("разработка") || worldName.contains("Разработка") ||
+               worldName.contains("creative") || worldName.contains("Creative");
+    }
+    
+    /**
      * Synchronizes with BlockPlacementHandler's CodeBlock map
      * This ensures both systems work with the same CodeBlock instances
      */
@@ -823,99 +833,6 @@ public class AutoConnectionManager implements Listener {
         plugin.getWorldManager().saveWorld(creativeWorld);
         
         plugin.getLogger().info("Recompiled " + newScripts.size() + " scripts for world: " + world.getName());
-    }
-    
-    /**
-     * Rebuilds all connections for blocks in a specific world
-     * Useful for initializing connections when loading existing worlds
-     */
-    public void rebuildWorldConnections(World world) {
-        plugin.getLogger().info("Rebuilding connections for world: " + world.getName());
-        
-        // Get all blocks in the world
-        Map<Location, CodeBlock> worldBlocks = getWorldBlocks(world);
-        
-        // Clear existing connections
-        for (CodeBlock block : worldBlocks.values()) {
-            block.setNextBlock(null);
-            block.getChildren().clear();
-        }
-        
-        // Rebuild connections
-        for (Map.Entry<Location, CodeBlock> entry : worldBlocks.entrySet()) {
-            autoConnectBlock(entry.getValue(), entry.getKey());
-        }
-        
-        plugin.getLogger().info("Rebuilt connections for " + worldBlocks.size() + " blocks");
-    }
-    
-    /**
-     * Forces synchronization with BlockPlacementHandler and rebuilds connections
-     * Should be called during plugin initialization or world loading
-     */
-    public void forceSynchronization() {
-        BlockPlacementHandler placementHandler = plugin.getBlockPlacementHandler();
-        if (placementHandler != null) {
-            synchronizeWithPlacementHandler(placementHandler);
-            
-            // Rebuild connections for all loaded worlds
-            for (World world : plugin.getServer().getWorlds()) {
-                if (isDevWorld(world)) {
-                    rebuildWorldConnections(world);
-                }
-            }
-        }
-    }
-    
-    /**
-     * Gets connection statistics for debugging
-     */
-    public String getConnectionStats() {
-        int totalBlocks = locationToBlock.size();
-        int connectedBlocks = 0;
-        int parentBlocks = 0;
-        int childBlocks = 0;
-        
-        for (CodeBlock block : locationToBlock.values()) {
-            if (block.getNextBlock() != null) {
-                connectedBlocks++;
-            }
-            if (!block.getChildren().isEmpty()) {
-                parentBlocks++;
-                childBlocks += block.getChildren().size();
-            }
-        }
-        
-        return String.format("Blocks: %d, Connected: %d, Parents: %d, Total Children: %d", 
-                            totalBlocks, connectedBlocks, parentBlocks, childBlocks);
-    }
-    
-    /**
-     * Gets all available materials for code blocks
-     */
-    public Set<Material> getCodeBlockMaterials() {
-        return blockConfigService.getCodeBlockMaterials();
-    }
-    
-    /**
-     * Reloads block configuration
-     */
-    public void reloadBlockConfig() {
-        blockConfigService.reload();
-        plugin.getLogger().info("Block configuration reloaded");
-    }
-    
-    /**
-     * Determines if a block should auto-connect to the next block
-     * Control and event blocks don't auto-connect as they have special connection logic
-     */
-    private boolean shouldAutoConnect(String action, String blockType) {
-        // Get the block configuration
-        BlockConfigService.BlockConfig config = blockConfigService.getBlockConfig(action);
-        if (config == null) return true; // Default to auto-connect
-        
-        // Check if it's a control or event block
-        return !blockConfigService.isControlOrEventBlock(config.getType());
     }
     
     /**

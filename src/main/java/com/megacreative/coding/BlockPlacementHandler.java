@@ -529,3 +529,5 @@ public class BlockPlacementHandler implements Listener {
                 return;
             }
         }
+    }
+}
