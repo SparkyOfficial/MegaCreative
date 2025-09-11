@@ -403,6 +403,11 @@ public class CustomEvent {
                 return true;
             }
             
+            // Check if the underlying value in DataValue is compatible
+            if (value.getValue() != null && expectedType.isAssignableFrom(value.getValue().getClass())) {
+                return true;
+            }
+            
             return false;
         }
     }

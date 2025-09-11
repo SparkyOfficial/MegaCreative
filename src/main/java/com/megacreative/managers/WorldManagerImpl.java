@@ -121,7 +121,6 @@ public class WorldManagerImpl implements IWorldManager {
             return;
         }
 
-        player.closeInventory();
         player.sendMessage("§eПодготовка к созданию мира '" + name + "'...");
 
         // Генерация ID и создание объекта мира синхронно
@@ -131,6 +130,8 @@ public class WorldManagerImpl implements IWorldManager {
         // Вся работа с миром выполняется синхронно
         Bukkit.getScheduler().runTask(plugin, () -> {
             try {
+                // Закрываем инвентарь в основном потоке
+                player.closeInventory();
                 player.sendMessage("§eСоздание мира... Пожалуйста, подождите.");
                 World newWorld = createMinecraftWorld(creativeWorld);
 
