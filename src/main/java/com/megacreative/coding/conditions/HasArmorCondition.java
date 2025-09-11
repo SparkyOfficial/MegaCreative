@@ -4,6 +4,7 @@ import com.megacreative.coding.BlockCondition;
 import com.megacreative.coding.CodeBlock;
 import com.megacreative.coding.ExecutionContext;
 import com.megacreative.coding.ParameterResolver;
+import com.megacreative.coding.values.DataValue;
 import com.megacreative.services.BlockConfigService;
 import org.bukkit.Material;
 import org.bukkit.entity.Player;
@@ -35,16 +36,18 @@ public class HasArmorCondition implements BlockCondition {
 
             // Resolve any placeholders in the armor name
             ParameterResolver resolver = new ParameterResolver(context);
-            String resolvedArmorStr = resolver.resolveString(context, params.armorStr);
+            DataValue armorValue = DataValue.of(params.armorStr);
+            DataValue resolvedArmor = resolver.resolve(context, armorValue);
             
             // Parse armor parameter
-            if (resolvedArmorStr == null || resolvedArmorStr.isEmpty()) {
+            String armorName = resolvedArmor.asString();
+            if (armorName == null || armorName.isEmpty()) {
                 return false;
             }
 
             // Check if player is wearing the specified armor
             try {
-                Material material = Material.valueOf(resolvedArmorStr.toUpperCase());
+                Material material = Material.valueOf(armorName.toUpperCase());
                 ItemStack helmet = player.getInventory().getHelmet();
                 ItemStack chestplate = player.getInventory().getChestplate();
                 ItemStack leggings = player.getInventory().getLeggings();

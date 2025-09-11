@@ -5,6 +5,7 @@ import com.megacreative.coding.CodeBlock;
 import com.megacreative.coding.ExecutionContext;
 import com.megacreative.coding.ParameterResolver;
 import com.megacreative.coding.executors.ExecutionResult;
+import com.megacreative.coding.values.DataValue;
 import com.megacreative.services.BlockConfigService;
 import org.bukkit.Bukkit;
 import org.bukkit.entity.Player;
@@ -35,14 +36,15 @@ public class CommandAction implements BlockAction {
 
             // Resolve any placeholders in the command
             ParameterResolver resolver = new ParameterResolver(context);
-            String resolvedCommand = resolver.resolveString(context, command);
+            DataValue commandValue = DataValue.of(command);
+            DataValue resolvedCommand = resolver.resolve(context, commandValue);
             
             // Execute the command
-            boolean success = Bukkit.dispatchCommand(player, resolvedCommand);
+            boolean success = Bukkit.dispatchCommand(player, resolvedCommand.asString());
             if (success) {
                 return ExecutionResult.success("Command executed successfully");
             } else {
-                return ExecutionResult.error("Failed to execute command: " + resolvedCommand);
+                return ExecutionResult.error("Failed to execute command: " + resolvedCommand.asString());
             }
         } catch (Exception e) {
             return ExecutionResult.error("Failed to execute command: " + e.getMessage());

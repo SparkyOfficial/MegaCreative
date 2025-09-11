@@ -5,6 +5,7 @@ import com.megacreative.coding.CodeBlock;
 import com.megacreative.coding.ExecutionContext;
 import com.megacreative.coding.ParameterResolver;
 import com.megacreative.coding.executors.ExecutionResult;
+import com.megacreative.coding.values.DataValue;
 import com.megacreative.services.BlockConfigService;
 import org.bukkit.entity.Player;
 import org.bukkit.inventory.ItemStack;
@@ -12,13 +13,17 @@ import org.bukkit.inventory.meta.ItemMeta;
 
 import java.util.function.Function;
 
+/**
+ * Action for sending an action bar message to a player.
+ * This action retrieves a message from the container configuration and sends it to the action bar.
+ */
 public class SendActionBarAction implements BlockAction {
 
     @Override
     public ExecutionResult execute(CodeBlock block, ExecutionContext context) {
         Player player = context.getPlayer();
         if (player == null) {
-            return ExecutionResult.error("No player in context");
+            return ExecutionResult.error("No player found in execution context");
         }
 
         try {
@@ -30,14 +35,14 @@ public class SendActionBarAction implements BlockAction {
 
             // Resolve any placeholders in the message
             ParameterResolver resolver = new ParameterResolver(context);
-            String resolvedMessage = resolver.resolveString(context, message);
+            DataValue messageValue = DataValue.of(message);
+            DataValue resolvedMessage = resolver.resolve(context, messageValue);
             
-            // Send action bar message
-            player.sendActionBar(resolvedMessage);
-
-            return ExecutionResult.success("Sent action bar message");
+            // Send the message to the action bar
+            player.sendActionBar(resolvedMessage.asString());
+            return ExecutionResult.success("Action bar message sent successfully");
         } catch (Exception e) {
-            return ExecutionResult.error("Error sending action bar: " + e.getMessage());
+            return ExecutionResult.error("Failed to send action bar message: " + e.getMessage());
         }
     }
     

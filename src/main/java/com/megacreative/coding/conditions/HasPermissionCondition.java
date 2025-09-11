@@ -4,6 +4,7 @@ import com.megacreative.coding.BlockCondition;
 import com.megacreative.coding.CodeBlock;
 import com.megacreative.coding.ExecutionContext;
 import com.megacreative.coding.ParameterResolver;
+import com.megacreative.coding.values.DataValue;
 import com.megacreative.services.BlockConfigService;
 import org.bukkit.entity.Player;
 import org.bukkit.inventory.ItemStack;
@@ -33,11 +34,13 @@ public class HasPermissionCondition implements BlockCondition {
 
             // Resolve any placeholders in the permission
             ParameterResolver resolver = new ParameterResolver(context);
-            String resolvedPermission = resolver.resolveString(context, permission);
+            DataValue permissionValue = DataValue.of(permission);
+            DataValue resolvedPermission = resolver.resolve(context, permissionValue);
             
             // Check if the player has the permission
-            if (resolvedPermission != null && !resolvedPermission.isEmpty()) {
-                return player.hasPermission(resolvedPermission);
+            String perm = resolvedPermission.asString();
+            if (perm != null && !perm.isEmpty()) {
+                return player.hasPermission(perm);
             }
             
             return false;

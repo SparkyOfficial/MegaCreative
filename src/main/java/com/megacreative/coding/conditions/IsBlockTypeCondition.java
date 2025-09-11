@@ -7,17 +7,17 @@ import com.megacreative.coding.ParameterResolver;
 import com.megacreative.coding.values.DataValue;
 import com.megacreative.services.BlockConfigService;
 import org.bukkit.Material;
+import org.bukkit.block.Block;
 import org.bukkit.entity.Player;
 import org.bukkit.Location;
-import org.bukkit.block.Block;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.inventory.meta.ItemMeta;
 
 import java.util.function.Function;
 
 /**
- * Condition for checking if a block at a location is of a specific type from container configuration.
- * This condition returns true if the block at the specified location is of the specified type.
+ * Condition for checking if a block at a relative position is of a specific type from container configuration.
+ * This condition returns true if the block at the specified relative position is of the specified type.
  */
 public class IsBlockTypeCondition implements BlockCondition {
 
@@ -36,27 +36,53 @@ public class IsBlockTypeCondition implements BlockCondition {
                 return false;
             }
 
-            // Parse relative coordinates
-            int relativeX = parseCoordinate(params.relativeXStr);
-            int relativeY = parseCoordinate(params.relativeYStr);
-            int relativeZ = parseCoordinate(params.relativeZStr);
+            // Parse relative coordinates (default to 0)
+            int relativeX = 0, relativeY = 0, relativeZ = 0;
+            
+            if (params.relativeXStr != null && !params.relativeXStr.isEmpty()) {
+                try {
+                    relativeX = Integer.parseInt(params.relativeXStr);
+                } catch (NumberFormatException e) {
+                    // Use default relativeX if parsing fails
+                }
+            }
+            
+            if (params.relativeYStr != null && !params.relativeYStr.isEmpty()) {
+                try {
+                    relativeY = Integer.parseInt(params.relativeYStr);
+                } catch (NumberFormatException e) {
+                    // Use default relativeY if parsing fails
+                }
+            }
+            
+            if (params.relativeZStr != null && !params.relativeZStr.isEmpty()) {
+                try {
+                    relativeZ = Integer.parseInt(params.relativeZStr);
+                } catch (NumberFormatException e) {
+                    // Use default relativeZ if parsing fails
+                }
+            }
 
             // Resolve any placeholders in the block type
             ParameterResolver resolver = new ParameterResolver(context);
-            String resolvedBlockStr = resolver.resolveString(context, params.blockStr);
+            DataValue blockValue = DataValue.of(params.blockStr);
+            DataValue resolvedBlock = resolver.resolve(context, blockValue);
             
             // Parse block type parameter
-            if (resolvedBlockStr == null || resolvedBlockStr.isEmpty()) {
+            String blockName = resolvedBlock.asString();
+            if (blockName == null || blockName.isEmpty()) {
                 return false;
             }
 
-            // Check if the block at the specified location is of the specified type
+            // Get the block at the relative position
+            Location playerLocation = player.getLocation();
+            Location blockLocation = playerLocation.clone().add(relativeX, relativeY, relativeZ);
+            Block targetBlock = blockLocation.getBlock();
+
+            // Check if the block is of the specified type
             try {
-                Material material = Material.valueOf(resolvedBlockStr.toUpperCase());
-                Location location = player.getLocation().add(relativeX, relativeY, relativeZ);
-                Block checkBlock = location.getBlock();
-                
-                return checkBlock.getType() == material;
+                Material material = Material.valueOf(blockName.toUpperCase());
+                return targetBlock.getType() == material;
             } catch (IllegalArgumentException e) {
                 return false;
             }
@@ -80,7 +106,7 @@ public class IsBlockTypeCondition implements BlockCondition {
             Function<String, Integer> slotResolver = blockConfigService.getSlotResolver(block.getCondition());
             
             if (slotResolver != null) {
-                // Get block type from the block slot
+                // Get block from the block slot
                 Integer blockSlot = slotResolver.apply("block");
                 if (blockSlot != null) {
                     ItemStack blockItem = block.getConfigItem(blockSlot);
@@ -96,7 +122,7 @@ public class IsBlockTypeCondition implements BlockCondition {
                     ItemStack relativeXItem = block.getConfigItem(relativeXSlot);
                     if (relativeXItem != null && relativeXItem.hasItemMeta()) {
                         // Extract relative X from item
-                        params.relativeXStr = getCoordinateFromItem(relativeXItem);
+                        params.relativeXStr = getRelativeXFromItem(relativeXItem);
                     }
                 }
                 
@@ -106,7 +132,7 @@ public class IsBlockTypeCondition implements BlockCondition {
                     ItemStack relativeYItem = block.getConfigItem(relativeYSlot);
                     if (relativeYItem != null && relativeYItem.hasItemMeta()) {
                         // Extract relative Y from item
-                        params.relativeYStr = getCoordinateFromItem(relativeYItem);
+                        params.relativeYStr = getRelativeYFromItem(relativeYItem);
                     }
                 }
                 
@@ -116,7 +142,7 @@ public class IsBlockTypeCondition implements BlockCondition {
                     ItemStack relativeZItem = block.getConfigItem(relativeZSlot);
                     if (relativeZItem != null && relativeZItem.hasItemMeta()) {
                         // Extract relative Z from item
-                        params.relativeZStr = getCoordinateFromItem(relativeZItem);
+                        params.relativeZStr = getRelativeZFromItem(relativeZItem);
                     }
                 }
             }
@@ -136,14 +162,14 @@ public class IsBlockTypeCondition implements BlockCondition {
     }
     
     /**
-     * Extracts coordinate from an item
+     * Extracts relative X from an item
      */
-    private String getCoordinateFromItem(ItemStack item) {
+    private String getRelativeXFromItem(ItemStack item) {
         ItemMeta meta = item.getItemMeta();
         if (meta != null) {
             String displayName = meta.getDisplayName();
             if (displayName != null && !displayName.isEmpty()) {
-                // Remove color codes and return the coordinate
+                // Remove color codes and return the relative X
                 return displayName.replaceAll("[§0-9]", "").trim();
             }
         }
@@ -151,18 +177,33 @@ public class IsBlockTypeCondition implements BlockCondition {
     }
     
     /**
-     * Parses coordinate string to integer
+     * Extracts relative Y from an item
      */
-    private int parseCoordinate(String coordStr) {
-        if (coordStr == null || coordStr.isEmpty()) {
-            return 0;
+    private String getRelativeYFromItem(ItemStack item) {
+        ItemMeta meta = item.getItemMeta();
+        if (meta != null) {
+            String displayName = meta.getDisplayName();
+            if (displayName != null && !displayName.isEmpty()) {
+                // Remove color codes and return the relative Y
+                return displayName.replaceAll("[§0-9]", "").trim();
+            }
         }
-        
-        try {
-            return Integer.parseInt(coordStr);
-        } catch (NumberFormatException e) {
-            return 0;
+        return null;
+    }
+    
+    /**
+     * Extracts relative Z from an item
+     */
+    private String getRelativeZFromItem(ItemStack item) {
+        ItemMeta meta = item.getItemMeta();
+        if (meta != null) {
+            String displayName = meta.getDisplayName();
+            if (displayName != null && !displayName.isEmpty()) {
+                // Remove color codes and return the relative Z
+                return displayName.replaceAll("[§0-9]", "").trim();
+            }
         }
+        return null;
     }
     
     /**

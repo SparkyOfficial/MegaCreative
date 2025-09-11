@@ -5,6 +5,7 @@ import com.megacreative.coding.CodeBlock;
 import com.megacreative.coding.ExecutionContext;
 import com.megacreative.coding.ParameterResolver;
 import com.megacreative.coding.executors.ExecutionResult;
+import com.megacreative.coding.values.DataValue;
 import com.megacreative.services.BlockConfigService;
 import org.bukkit.Sound;
 import org.bukkit.entity.Player;
@@ -30,18 +31,31 @@ public class PlaySoundAction implements BlockAction {
             // Get sound parameters from the container configuration
             PlaySoundParams params = getSoundParamsFromContainer(block, context);
             
-            if (params.sound == null) {
+            if (params.soundNameStr == null || params.soundNameStr.isEmpty()) {
                 return ExecutionResult.error("Sound is not configured");
             }
 
             // Resolve any placeholders in the parameters
             ParameterResolver resolver = new ParameterResolver(context);
-            String resolvedSoundName = resolver.resolveString(context, params.soundName);
-            float resolvedVolume = params.volume;
-            float resolvedPitch = params.pitch;
+            DataValue soundNameVal = DataValue.of(params.soundNameStr);
+            DataValue resolvedSoundName = resolver.resolve(context, soundNameVal);
+            
+            // Parse parameters
+            String soundName = resolvedSoundName.asString();
+            float volume = params.volume;
+            float pitch = params.pitch;
+
+            // Parse the sound
+            Sound sound;
+            try {
+                sound = Sound.valueOf(soundName.toUpperCase());
+            } catch (IllegalArgumentException e) {
+                // Use default sound if parsing fails
+                sound = Sound.ENTITY_PLAYER_LEVELUP;
+            }
 
             // Play the sound
-            player.playSound(player.getLocation(), params.sound, resolvedVolume, resolvedPitch);
+            player.playSound(player.getLocation(), sound, volume, pitch);
             return ExecutionResult.success("Sound played successfully");
         } catch (Exception e) {
             return ExecutionResult.error("Failed to play sound: " + e.getMessage());
@@ -62,21 +76,13 @@ public class PlaySoundAction implements BlockAction {
             Function<String, Integer> slotResolver = blockConfigService.getSlotResolver(block.getAction());
             
             if (slotResolver != null) {
-                // Get sound from the sound slot
+                // Get sound name from the sound slot
                 Integer soundSlot = slotResolver.apply("sound_slot");
                 if (soundSlot != null) {
                     ItemStack soundItem = block.getConfigItem(soundSlot);
                     if (soundItem != null && soundItem.hasItemMeta()) {
-                        // Extract sound from item
-                        params.soundName = getSoundNameFromItem(soundItem);
-                        if (params.soundName != null) {
-                            try {
-                                params.sound = Sound.valueOf(params.soundName.toUpperCase());
-                            } catch (IllegalArgumentException e) {
-                                // Use default sound if parsing fails
-                                params.sound = Sound.ENTITY_PLAYER_LEVELUP;
-                            }
-                        }
+                        // Extract sound name from item
+                        params.soundNameStr = getSoundNameFromItem(soundItem);
                     }
                 }
                 
@@ -105,8 +111,8 @@ public class PlaySoundAction implements BlockAction {
         }
         
         // Set defaults if not configured
-        if (params.sound == null) {
-            params.sound = Sound.ENTITY_PLAYER_LEVELUP;
+        if (params.soundNameStr == null || params.soundNameStr.isEmpty()) {
+            params.soundNameStr = "ENTITY_PLAYER_LEVELUP";
         }
         
         return params;
@@ -175,8 +181,7 @@ public class PlaySoundAction implements BlockAction {
      * Helper class to hold sound parameters
      */
     private static class PlaySoundParams {
-        Sound sound = null;
-        String soundName = "";
+        String soundNameStr = "";
         float volume = 1.0f;
         float pitch = 1.0f;
     }

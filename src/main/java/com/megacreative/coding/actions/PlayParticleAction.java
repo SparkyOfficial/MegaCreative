@@ -5,8 +5,8 @@ import com.megacreative.coding.CodeBlock;
 import com.megacreative.coding.ExecutionContext;
 import com.megacreative.coding.ParameterResolver;
 import com.megacreative.coding.executors.ExecutionResult;
+import com.megacreative.coding.values.DataValue;
 import com.megacreative.services.BlockConfigService;
-import org.bukkit.Location;
 import org.bukkit.Particle;
 import org.bukkit.entity.Player;
 import org.bukkit.inventory.ItemStack;
@@ -15,8 +15,8 @@ import org.bukkit.inventory.meta.ItemMeta;
 import java.util.function.Function;
 
 /**
- * Action for playing a particle effect.
- * This action plays a particle effect at the player's location from container configuration.
+ * Action for playing a particle effect to a player.
+ * This action retrieves particle parameters from the container configuration and plays the particle effect.
  */
 public class PlayParticleAction implements BlockAction {
 
@@ -31,25 +31,31 @@ public class PlayParticleAction implements BlockAction {
             // Get particle parameters from the container configuration
             PlayParticleParams params = getParticleParamsFromContainer(block, context);
             
-            if (params.particle == null) {
-                return ExecutionResult.error("Particle type is not configured");
+            if (params.particleNameStr == null || params.particleNameStr.isEmpty()) {
+                return ExecutionResult.error("Particle is not configured");
             }
 
-            // Resolve any placeholders in the particle type
+            // Resolve any placeholders in the parameters
             ParameterResolver resolver = new ParameterResolver(context);
-            String resolvedParticleName = resolver.resolveString(context, params.particleName);
+            DataValue particleNameVal = DataValue.of(params.particleNameStr);
+            DataValue resolvedParticleName = resolver.resolve(context, particleNameVal);
+            
+            // Parse parameters
+            String particleName = resolvedParticleName.asString();
+            int count = params.count;
 
-            // Play the particle effect
+            // Parse the particle
+            Particle particle;
             try {
-                Particle particle = Particle.valueOf(resolvedParticleName.toUpperCase());
-                Location location = player.getLocation();
-                
-                player.getWorld().spawnParticle(particle, location, params.count, 0.5, 0.5, 0.5, params.speed);
-                
-                return ExecutionResult.success("Played particle effect: " + particle.name());
+                particle = Particle.valueOf(particleName.toUpperCase());
             } catch (IllegalArgumentException e) {
-                return ExecutionResult.error("Invalid particle type: " + params.particleName);
+                // Use default particle if parsing fails
+                particle = Particle.FLAME;
             }
+
+            // Play the particle
+            player.getWorld().spawnParticle(particle, player.getLocation(), count);
+            return ExecutionResult.success("Particle played successfully");
         } catch (Exception e) {
             return ExecutionResult.error("Failed to play particle: " + e.getMessage());
         }
@@ -69,21 +75,13 @@ public class PlayParticleAction implements BlockAction {
             Function<String, Integer> slotResolver = blockConfigService.getSlotResolver(block.getAction());
             
             if (slotResolver != null) {
-                // Get particle from the particle slot
+                // Get particle name from the particle slot
                 Integer particleSlot = slotResolver.apply("particle_slot");
                 if (particleSlot != null) {
                     ItemStack particleItem = block.getConfigItem(particleSlot);
                     if (particleItem != null && particleItem.hasItemMeta()) {
-                        // Extract particle from item
-                        params.particleName = getParticleNameFromItem(particleItem);
-                        if (params.particleName != null) {
-                            try {
-                                params.particle = Particle.valueOf(params.particleName.toUpperCase());
-                            } catch (IllegalArgumentException e) {
-                                // Use default particle if parsing fails
-                                params.particle = Particle.EXPLOSION_NORMAL;
-                            }
-                        }
+                        // Extract particle name from item
+                        params.particleNameStr = getParticleNameFromItem(particleItem);
                     }
                 }
                 
@@ -93,17 +91,7 @@ public class PlayParticleAction implements BlockAction {
                     ItemStack countItem = block.getConfigItem(countSlot);
                     if (countItem != null && countItem.hasItemMeta()) {
                         // Extract count from item
-                        params.count = getIntFromItem(countItem, 10);
-                    }
-                }
-                
-                // Get speed from the speed slot
-                Integer speedSlot = slotResolver.apply("speed_slot");
-                if (speedSlot != null) {
-                    ItemStack speedItem = block.getConfigItem(speedSlot);
-                    if (speedItem != null && speedItem.hasItemMeta()) {
-                        // Extract speed from item
-                        params.speed = getDoubleFromItem(speedItem, 0.1);
+                        params.count = getCountFromItem(countItem, 10);
                     }
                 }
             }
@@ -112,8 +100,8 @@ public class PlayParticleAction implements BlockAction {
         }
         
         // Set defaults if not configured
-        if (params.particle == null) {
-            params.particle = Particle.EXPLOSION_NORMAL;
+        if (params.particleNameStr == null || params.particleNameStr.isEmpty()) {
+            params.particleNameStr = "FLAME";
         }
         
         return params;
@@ -135,46 +123,24 @@ public class PlayParticleAction implements BlockAction {
     }
     
     /**
-     * Extracts integer from an item
+     * Extracts count from an item
      */
-    private int getIntFromItem(ItemStack item, int defaultValue) {
+    private int getCountFromItem(ItemStack item, int defaultCount) {
         try {
             ItemMeta meta = item.getItemMeta();
             if (meta != null) {
                 String displayName = meta.getDisplayName();
                 if (displayName != null && !displayName.isEmpty()) {
-                    // Try to parse integer from display name
+                    // Try to parse count from display name
                     String cleanName = displayName.replaceAll("[§0-9]", "").trim();
-                    return Math.max(1, Integer.parseInt(cleanName));
+                    return Integer.parseInt(cleanName);
                 }
             }
             
             // Fallback to item amount
-            return Math.max(1, item.getAmount());
+            return item.getAmount();
         } catch (Exception e) {
-            return Math.max(1, defaultValue);
-        }
-    }
-    
-    /**
-     * Extracts double from an item
-     */
-    private double getDoubleFromItem(ItemStack item, double defaultValue) {
-        try {
-            ItemMeta meta = item.getItemMeta();
-            if (meta != null) {
-                String displayName = meta.getDisplayName();
-                if (displayName != null && !displayName.isEmpty()) {
-                    // Try to parse double from display name
-                    String cleanName = displayName.replaceAll("[§0-9]", "").trim();
-                    return Math.max(0, Double.parseDouble(cleanName));
-                }
-            }
-            
-            // Fallback to item amount
-            return Math.max(0, item.getAmount());
-        } catch (Exception e) {
-            return Math.max(0, defaultValue);
+            return defaultCount;
         }
     }
     
@@ -182,9 +148,7 @@ public class PlayParticleAction implements BlockAction {
      * Helper class to hold particle parameters
      */
     private static class PlayParticleParams {
-        Particle particle = null;
-        String particleName = "";
+        String particleNameStr = "";
         int count = 10;
-        double speed = 0.1;
     }
 }

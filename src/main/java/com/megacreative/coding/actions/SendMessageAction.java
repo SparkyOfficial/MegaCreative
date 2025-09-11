@@ -5,6 +5,7 @@ import com.megacreative.coding.CodeBlock;
 import com.megacreative.coding.ExecutionContext;
 import com.megacreative.coding.ParameterResolver;
 import com.megacreative.coding.executors.ExecutionResult;
+import com.megacreative.coding.values.DataValue;
 import com.megacreative.services.BlockConfigService;
 import org.bukkit.entity.Player;
 import org.bukkit.inventory.ItemStack;
@@ -34,10 +35,11 @@ public class SendMessageAction implements BlockAction {
 
             // Resolve any placeholders in the message
             ParameterResolver resolver = new ParameterResolver(context);
-            String resolvedMessage = resolver.resolveString(context, message);
+            DataValue messageValue = DataValue.of(message);
+            DataValue resolvedMessage = resolver.resolve(context, messageValue);
             
             // Send the message to the player
-            player.sendMessage(resolvedMessage);
+            player.sendMessage(resolvedMessage.asString());
             return ExecutionResult.success("Message sent successfully");
         } catch (Exception e) {
             return ExecutionResult.error("Failed to send message: " + e.getMessage());

@@ -13,8 +13,8 @@ import org.bukkit.inventory.meta.ItemMeta;
 import java.util.function.Function;
 
 /**
- * Condition for checking the world time from container configuration.
- * This condition returns true if the world time meets the specified criteria.
+ * Condition for checking world time from container configuration.
+ * This condition returns true if the world time matches the specified criteria.
  */
 public class WorldTimeCondition implements BlockCondition {
 
@@ -29,45 +29,58 @@ public class WorldTimeCondition implements BlockCondition {
             // Get parameters from the container configuration
             WorldTimeParams params = getTimeParamsFromContainer(block, context);
             
-            if (params.timeStr == null || params.timeStr.isEmpty()) {
-                return false;
-            }
-
-            // Get optional comparison operator (default to "equal")
-            String operator = "equal";
-            if (params.operator != null && !params.operator.isEmpty()) {
-                operator = params.operator.toLowerCase();
-            }
-
-            // Resolve any placeholders in the time value
-            ParameterResolver resolver = new ParameterResolver(context);
-            String resolvedTimeStr = resolver.resolveString(context, params.timeStr);
-            
             // Parse time parameter
-            long time;
-            try {
-                time = Long.parseLong(resolvedTimeStr);
-            } catch (NumberFormatException e) {
-                return false;
+            long worldTime = 0;
+            if (params.timeStr != null && !params.timeStr.isEmpty()) {
+                try {
+                    worldTime = Long.parseLong(params.timeStr);
+                } catch (NumberFormatException e) {
+                    // Use default time if parsing fails
+                    worldTime = 0;
+                }
             }
 
-            // Check world time against the specified value
-            long worldTime = player.getWorld().getTime();
+            // Resolve any placeholders in the time
+            ParameterResolver resolver = new ParameterResolver(context);
+            DataValue timeValue = DataValue.of(String.valueOf(worldTime));
+            DataValue resolvedTime = resolver.resolve(context, timeValue);
             
-            switch (operator) {
+            long time = 0;
+            try {
+                time = Long.parseLong(resolvedTime.asString());
+            } catch (NumberFormatException e) {
+                // Use default time if parsing fails
+                time = 0;
+            }
+
+            // Parse operator parameter (default to "equal")
+            String operator = params.operatorStr != null && !params.operatorStr.isEmpty() ? params.operatorStr : "equal";
+
+            // Get the current world time
+            long currentWorldTime = player.getWorld().getTime();
+
+            // Compare based on operator
+            switch (operator.toLowerCase()) {
                 case "equal":
                 case "equals":
-                    return worldTime == time;
+                case "==":
+                    return currentWorldTime == time;
                 case "greater":
-                    return worldTime > time;
-                case "greater_or_equal":
-                    return worldTime >= time;
+                case "greater_than":
+                case ">":
+                    return currentWorldTime > time;
                 case "less":
-                    return worldTime < time;
+                case "less_than":
+                case "<":
+                    return currentWorldTime < time;
+                case "greater_or_equal":
+                case ">=":
+                    return currentWorldTime >= time;
                 case "less_or_equal":
-                    return worldTime <= time;
+                case "<=":
+                    return currentWorldTime <= time;
                 default:
-                    return worldTime == time; // Default to equal
+                    return currentWorldTime == time;
             }
         } catch (Exception e) {
             // If there's an error, return false
@@ -105,7 +118,7 @@ public class WorldTimeCondition implements BlockCondition {
                     ItemStack operatorItem = block.getConfigItem(operatorSlot);
                     if (operatorItem != null && operatorItem.hasItemMeta()) {
                         // Extract operator from item
-                        params.operator = getOperatorFromItem(operatorItem);
+                        params.operatorStr = getOperatorFromItem(operatorItem);
                     }
                 }
             }
@@ -151,6 +164,6 @@ public class WorldTimeCondition implements BlockCondition {
      */
     private static class WorldTimeParams {
         String timeStr = "";
-        String operator = "";
+        String operatorStr = "";
     }
 }

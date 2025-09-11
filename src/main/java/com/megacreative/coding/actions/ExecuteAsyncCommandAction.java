@@ -5,6 +5,7 @@ import com.megacreative.coding.CodeBlock;
 import com.megacreative.coding.ExecutionContext;
 import com.megacreative.coding.ParameterResolver;
 import com.megacreative.coding.executors.ExecutionResult;
+import com.megacreative.coding.values.DataValue;
 import com.megacreative.services.BlockConfigService;
 import org.bukkit.Bukkit;
 import org.bukkit.entity.Player;
@@ -13,48 +14,50 @@ import org.bukkit.inventory.meta.ItemMeta;
 
 import java.util.function.Function;
 
+/**
+ * Action for executing a command asynchronously.
+ * This action retrieves a command from the container configuration and executes it asynchronously.
+ */
 public class ExecuteAsyncCommandAction implements BlockAction {
 
     @Override
     public ExecutionResult execute(CodeBlock block, ExecutionContext context) {
         Player player = context.getPlayer();
         if (player == null) {
-            return ExecutionResult.error("Player not found.");
+            return ExecutionResult.error("No player found in execution context");
         }
 
         try {
-            // Get parameters from the container configuration
-            AsyncCommandParams params = getCommandParamsFromContainer(block, context);
-            
-            if (params.command == null || params.command.isEmpty()) {
-                return ExecutionResult.error("Command is not configured.");
+            // Get the command from the container configuration
+            String command = getCommandFromContainer(block, context);
+            if (command == null || command.isEmpty()) {
+                return ExecutionResult.error("Command is not configured");
             }
 
-            // Resolve parameters
+            // Resolve any placeholders in the command
             ParameterResolver resolver = new ParameterResolver(context);
-            String resolvedCommand = resolver.resolveString(context, params.command);
-
-            // Execute command asynchronously with optional delay
-            Bukkit.getScheduler().runTaskLaterAsynchronously(context.getPlugin(), () -> {
+            DataValue commandValue = DataValue.of(command);
+            DataValue resolvedCommand = resolver.resolve(context, commandValue);
+            
+            // Execute the command asynchronously
+            Bukkit.getScheduler().runTaskAsynchronously(context.getPlugin(), () -> {
                 try {
-                    Bukkit.dispatchCommand(Bukkit.getConsoleSender(), resolvedCommand);
+                    Bukkit.dispatchCommand(player, resolvedCommand.asString());
                 } catch (Exception e) {
-                    context.getPlugin().getLogger().severe("Error executing async command: " + e.getMessage());
+                    context.getPlugin().getLogger().warning("Failed to execute async command: " + e.getMessage());
                 }
-            }, params.delay);
-
-            return ExecutionResult.success("Command will be executed asynchronously.");
+            });
+            
+            return ExecutionResult.success("Command queued for asynchronous execution");
         } catch (Exception e) {
-            return ExecutionResult.error("Error executing async command: " + e.getMessage());
+            return ExecutionResult.error("Failed to queue command for asynchronous execution: " + e.getMessage());
         }
     }
     
     /**
-     * Gets command parameters from the container configuration
+     * Gets command from the container configuration
      */
-    private AsyncCommandParams getCommandParamsFromContainer(CodeBlock block, ExecutionContext context) {
-        AsyncCommandParams params = new AsyncCommandParams();
-        
+    private String getCommandFromContainer(CodeBlock block, ExecutionContext context) {
         try {
             // Get the BlockConfigService to resolve slot names
             BlockConfigService blockConfigService = context.getPlugin().getServiceRegistry().getBlockConfigService();
@@ -69,25 +72,15 @@ public class ExecuteAsyncCommandAction implements BlockAction {
                     ItemStack commandItem = block.getConfigItem(commandSlot);
                     if (commandItem != null && commandItem.hasItemMeta()) {
                         // Extract command from item
-                        params.command = getCommandFromItem(commandItem);
-                    }
-                }
-                
-                // Get delay from the delay slot
-                Integer delaySlot = slotResolver.apply("delay");
-                if (delaySlot != null) {
-                    ItemStack delayItem = block.getConfigItem(delaySlot);
-                    if (delayItem != null && delayItem.hasItemMeta()) {
-                        // Extract delay from item
-                        params.delay = getDelayFromItem(delayItem, 0);
+                        return getCommandFromItem(commandItem);
                     }
                 }
             }
         } catch (Exception e) {
-            context.getPlugin().getLogger().warning("Error getting command parameters from container in ExecuteAsyncCommandAction: " + e.getMessage());
+            context.getPlugin().getLogger().warning("Error getting command from container in ExecuteAsyncCommandAction: " + e.getMessage());
         }
         
-        return params;
+        return null;
     }
     
     /**
@@ -103,35 +96,5 @@ public class ExecuteAsyncCommandAction implements BlockAction {
             }
         }
         return null;
-    }
-    
-    /**
-     * Extracts delay from an item
-     */
-    private int getDelayFromItem(ItemStack item, int defaultValue) {
-        try {
-            ItemMeta meta = item.getItemMeta();
-            if (meta != null) {
-                String displayName = meta.getDisplayName();
-                if (displayName != null && !displayName.isEmpty()) {
-                    // Try to parse delay from display name
-                    String cleanName = displayName.replaceAll("[§0-9]", "").trim();
-                    return Math.max(0, Integer.parseInt(cleanName));
-                }
-            }
-            
-            // Fallback to item amount
-            return Math.max(0, item.getAmount());
-        } catch (Exception e) {
-            return Math.max(0, defaultValue);
-        }
-    }
-    
-    /**
-     * Helper class to hold async command parameters
-     */
-    private static class AsyncCommandParams {
-        String command = "";
-        int delay = 0;
     }
 }

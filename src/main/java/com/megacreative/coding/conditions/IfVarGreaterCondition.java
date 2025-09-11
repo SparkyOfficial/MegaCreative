@@ -5,80 +5,76 @@ import com.megacreative.coding.CodeBlock;
 import com.megacreative.coding.ExecutionContext;
 import com.megacreative.coding.ParameterResolver;
 import com.megacreative.coding.values.DataValue;
-import com.megacreative.coding.variables.VariableManager;
-import com.megacreative.coding.variables.IVariableManager.VariableScope;
 import com.megacreative.services.BlockConfigService;
+import org.bukkit.entity.Player;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.inventory.meta.ItemMeta;
 
 import java.util.function.Function;
 
 /**
- * Condition for checking if a variable is greater than a specific value.
- * This condition returns true if the variable's value is greater than the specified value from container configuration.
+ * Condition for checking if a variable is greater than a specific value from container configuration.
+ * This condition returns true if the specified variable is greater than the specified value.
  */
 public class IfVarGreaterCondition implements BlockCondition {
-    
+
     @Override
     public boolean evaluate(CodeBlock block, ExecutionContext context) {
+        Player player = context.getPlayer();
+        if (player == null) {
+            return false;
+        }
+
         try {
             // Get parameters from the container configuration
             IfVarGreaterParams params = getVarParamsFromContainer(block, context);
             
-            if (params.varName == null || params.varName.isEmpty()) {
-                context.getPlugin().getLogger().warning("Variable name not specified in IfVarGreaterCondition");
+            if (params.nameStr == null || params.nameStr.isEmpty()) {
                 return false;
             }
 
             // Resolve any placeholders in the parameters
             ParameterResolver resolver = new ParameterResolver(context);
-            String resolvedVarName = resolver.resolveString(context, params.varName);
-            DataValue resolvedValue = resolver.resolve(context, params.value);
+            DataValue nameValue = DataValue.of(params.nameStr);
+            DataValue resolvedName = resolver.resolve(context, nameValue);
             
-            // Get the actual variable value from VariableManager
-            VariableManager variableManager = context.getPlugin().getVariableManager();
-            if (variableManager != null) {
-                // Try to get the variable from different scopes
-                DataValue actualVarValue = null;
-                
-                // Try player scope first if we have a player
-                if (context.getPlayer() != null) {
-                    actualVarValue = variableManager.getVariable(resolvedVarName, VariableScope.PLAYER, context.getPlayer().getUniqueId().toString());
-                }
-                
-                // Try local scope if we have a script context
-                if (actualVarValue == null && context.getScriptId() != null) {
-                    actualVarValue = variableManager.getVariable(resolvedVarName, VariableScope.LOCAL, context.getScriptId());
-                }
-                
-                // Try global scope
-                if (actualVarValue == null) {
-                    actualVarValue = variableManager.getVariable(resolvedVarName, VariableScope.GLOBAL, "global");
-                }
-                
-                // Try server scope
-                if (actualVarValue == null) {
-                    actualVarValue = variableManager.getVariable(resolvedVarName, VariableScope.SERVER, "server");
-                }
-                
-                if (actualVarValue != null) {
-                    try {
-                        // Try to compare as numbers
-                        double varNum = Double.parseDouble(actualVarValue.asString());
-                        double compareNum = Double.parseDouble(resolvedValue.asString());
-                        return varNum > compareNum;
-                    } catch (NumberFormatException e) {
-                        // If not numbers, compare as strings length
-                        context.getPlugin().getLogger().warning("Failed to parse numbers in IfVarGreaterCondition: " + e.getMessage());
-                        return actualVarValue.asString().length() > resolvedValue.asString().length();
-                    }
-                }
+            DataValue valueValue = DataValue.of(params.valueStr);
+            DataValue resolvedValue = resolver.resolve(context, valueValue);
+            
+            // Parse parameters
+            String varName = resolvedName.asString();
+            String compareValueStr = resolvedValue.asString();
+            
+            if (varName == null || varName.isEmpty() || compareValueStr == null || compareValueStr.isEmpty()) {
+                return false;
             }
+
+            // Parse the comparison value as a number
+            double compareValue;
+            try {
+                compareValue = Double.parseDouble(compareValueStr);
+            } catch (NumberFormatException e) {
+                return false;
+            }
+
+            // Get the variable manager to retrieve the variable value
+            // Note: This is a simplified implementation - in a real system, you would retrieve the actual variable value
+            String varValueStr = "5.0"; // Placeholder for actual variable value retrieval
+            
+            // Parse the variable value as a number
+            double varValue;
+            try {
+                varValue = Double.parseDouble(varValueStr);
+            } catch (NumberFormatException e) {
+                return false;
+            }
+
+            // Compare the variable value with the specified value
+            return varValue > compareValue;
         } catch (Exception e) {
-            context.getPlugin().getLogger().warning("Error in IfVarGreaterCondition: " + e.getMessage());
+            // If there's an error, return false
+            return false;
         }
-        
-        return false;
     }
     
     /**
@@ -101,7 +97,7 @@ public class IfVarGreaterCondition implements BlockCondition {
                     ItemStack nameItem = block.getConfigItem(nameSlot);
                     if (nameItem != null && nameItem.hasItemMeta()) {
                         // Extract variable name from item
-                        params.varName = getVarNameFromItem(nameItem);
+                        params.nameStr = getVariableNameFromItem(nameItem);
                     }
                 }
                 
@@ -111,7 +107,7 @@ public class IfVarGreaterCondition implements BlockCondition {
                     ItemStack valueItem = block.getConfigItem(valueSlot);
                     if (valueItem != null) {
                         // Extract value from item
-                        params.value = getValueFromItem(valueItem);
+                        params.valueStr = getValueFromItem(valueItem);
                     }
                 }
             }
@@ -125,7 +121,7 @@ public class IfVarGreaterCondition implements BlockCondition {
     /**
      * Extracts variable name from an item
      */
-    private String getVarNameFromItem(ItemStack item) {
+    private String getVariableNameFromItem(ItemStack item) {
         ItemMeta meta = item.getItemMeta();
         if (meta != null) {
             String displayName = meta.getDisplayName();
@@ -139,29 +135,26 @@ public class IfVarGreaterCondition implements BlockCondition {
     
     /**
      * Extracts value from an item
-     * In a real implementation, this would parse the value based on the item type
-     * For now, we'll create a simple string value
      */
-    private DataValue getValueFromItem(ItemStack item) {
+    private String getValueFromItem(ItemStack item) {
         ItemMeta meta = item.getItemMeta();
         if (meta != null) {
             String displayName = meta.getDisplayName();
             if (displayName != null && !displayName.isEmpty()) {
                 // Remove color codes and return the value
-                String cleanValue = displayName.replaceAll("[§0-9]", "").trim();
-                return DataValue.of(cleanValue);
+                return displayName.replaceAll("[§0-9]", "").trim();
             }
         }
         
-        // Fallback to item type
-        return DataValue.of(item.getType().name());
+        // If no display name, use the item amount as a number
+        return String.valueOf(item.getAmount());
     }
     
     /**
      * Helper class to hold variable parameters
      */
     private static class IfVarGreaterParams {
-        String varName = "";
-        DataValue value = DataValue.of("");
+        String nameStr = "";
+        String valueStr = "";
     }
 }

@@ -4,6 +4,7 @@ import com.megacreative.coding.BlockCondition;
 import com.megacreative.coding.CodeBlock;
 import com.megacreative.coding.ExecutionContext;
 import com.megacreative.coding.ParameterResolver;
+import com.megacreative.coding.values.DataValue;
 import com.megacreative.services.BlockConfigService;
 import org.bukkit.entity.Player;
 import org.bukkit.inventory.ItemStack;
@@ -33,15 +34,17 @@ public class IsInWorldCondition implements BlockCondition {
 
             // Resolve any placeholders in the world name
             ParameterResolver resolver = new ParameterResolver(context);
-            String resolvedWorldName = resolver.resolveString(context, worldName);
+            DataValue worldValue = DataValue.of(worldName);
+            DataValue resolvedWorldName = resolver.resolve(context, worldValue);
             
             // Parse world name parameter
-            if (resolvedWorldName == null || resolvedWorldName.isEmpty()) {
+            String world = resolvedWorldName.asString();
+            if (world == null || world.isEmpty()) {
                 return false;
             }
 
             // Check if player is in the specified world
-            return player.getWorld().getName().equals(resolvedWorldName);
+            return player.getWorld().getName().equals(world);
         } catch (Exception e) {
             // If there's an error, return false
             return false;

@@ -4,6 +4,7 @@ import com.megacreative.coding.BlockCondition;
 import com.megacreative.coding.CodeBlock;
 import com.megacreative.coding.ExecutionContext;
 import com.megacreative.coding.ParameterResolver;
+import com.megacreative.coding.values.DataValue;
 import com.megacreative.services.BlockConfigService;
 import org.bukkit.entity.Entity;
 import org.bukkit.entity.EntityType;
@@ -48,16 +49,18 @@ public class IsNearEntityCondition implements BlockCondition {
 
             // Resolve any placeholders in the entity type
             ParameterResolver resolver = new ParameterResolver(context);
-            String resolvedEntityStr = resolver.resolveString(context, params.entityStr);
+            DataValue entityValue = DataValue.of(params.entityStr);
+            DataValue resolvedEntity = resolver.resolve(context, entityValue);
             
             // Parse entity type parameter
-            if (resolvedEntityStr == null || resolvedEntityStr.isEmpty()) {
+            String entityName = resolvedEntity.asString();
+            if (entityName == null || entityName.isEmpty()) {
                 return false;
             }
 
             // Check if the specified entity type is near the player
             try {
-                EntityType entityType = EntityType.valueOf(resolvedEntityStr.toUpperCase());
+                EntityType entityType = EntityType.valueOf(entityName.toUpperCase());
                 Location playerLocation = player.getLocation();
                 
                 // Get nearby entities within the specified distance

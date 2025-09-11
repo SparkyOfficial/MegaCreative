@@ -5,6 +5,7 @@ import com.megacreative.coding.CodeBlock;
 import com.megacreative.coding.ExecutionContext;
 import com.megacreative.coding.ParameterResolver;
 import com.megacreative.coding.executors.ExecutionResult;
+import com.megacreative.coding.values.DataValue;
 import com.megacreative.services.BlockConfigService;
 import org.bukkit.Effect;
 import org.bukkit.entity.Player;
@@ -31,15 +32,33 @@ public class EffectAction implements BlockAction {
             // Get effect parameters from the container configuration
             EffectParams params = getEffectParamsFromContainer(block, context);
             
-            if (params.effect == null) {
+            if (params.effectNameStr == null || params.effectNameStr.isEmpty()) {
                 return ExecutionResult.error("Effect is not configured");
+            }
+
+            // Resolve any placeholders in the parameters
+            ParameterResolver resolver = new ParameterResolver(context);
+            DataValue effectNameVal = DataValue.of(params.effectNameStr);
+            DataValue resolvedEffectName = resolver.resolve(context, effectNameVal);
+            
+            // Parse parameters
+            String effectName = resolvedEffectName.asString();
+            int data = params.data;
+
+            // Parse the effect
+            Effect effect;
+            try {
+                effect = Effect.valueOf(effectName.toUpperCase());
+            } catch (IllegalArgumentException e) {
+                // Use default effect if parsing fails
+                effect = Effect.ENDER_SIGNAL;
             }
 
             // Get the location where the effect should be played
             Location location = player.getLocation();
 
             // Play the effect
-            player.getWorld().playEffect(location, params.effect, params.data);
+            player.getWorld().playEffect(location, effect, data);
             return ExecutionResult.success("Effect played successfully");
         } catch (Exception e) {
             return ExecutionResult.error("Failed to play effect: " + e.getMessage());
@@ -60,21 +79,13 @@ public class EffectAction implements BlockAction {
             Function<String, Integer> slotResolver = blockConfigService.getSlotResolver(block.getAction());
             
             if (slotResolver != null) {
-                // Get effect from the effect slot
+                // Get effect name from the effect slot
                 Integer effectSlot = slotResolver.apply("effect_slot");
                 if (effectSlot != null) {
                     ItemStack effectItem = block.getConfigItem(effectSlot);
                     if (effectItem != null && effectItem.hasItemMeta()) {
                         // Extract effect name from item
-                        params.effectName = getEffectNameFromItem(effectItem);
-                        if (params.effectName != null) {
-                            try {
-                                params.effect = Effect.valueOf(params.effectName.toUpperCase());
-                            } catch (IllegalArgumentException e) {
-                                // Use default effect if parsing fails
-                                params.effect = Effect.ENDER_SIGNAL;
-                            }
-                        }
+                        params.effectNameStr = getEffectNameFromItem(effectItem);
                     }
                 }
                 
@@ -93,8 +104,8 @@ public class EffectAction implements BlockAction {
         }
         
         // Set defaults if not configured
-        if (params.effect == null) {
-            params.effect = Effect.ENDER_SIGNAL;
+        if (params.effectNameStr == null || params.effectNameStr.isEmpty()) {
+            params.effectNameStr = "ENDER_SIGNAL";
         }
         
         return params;
@@ -141,8 +152,7 @@ public class EffectAction implements BlockAction {
      * Helper class to hold effect parameters
      */
     private static class EffectParams {
-        Effect effect = null;
-        String effectName = "";
+        String effectNameStr = "";
         int data = 0;
     }
 }

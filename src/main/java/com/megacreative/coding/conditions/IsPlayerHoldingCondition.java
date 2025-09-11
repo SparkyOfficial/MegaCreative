@@ -5,6 +5,7 @@ import com.megacreative.coding.CodeBlock;
 import com.megacreative.coding.ExecutionContext;
 import com.megacreative.coding.ParameterResolver;
 import com.megacreative.coding.values.DataValue;
+import com.megacreative.coding.values.DataValue;
 import com.megacreative.services.BlockConfigService;
 import org.bukkit.Material;
 import org.bukkit.entity.Player;
@@ -36,16 +37,18 @@ public class IsPlayerHoldingCondition implements BlockCondition {
 
             // Resolve any placeholders in the item name
             ParameterResolver resolver = new ParameterResolver(context);
-            String resolvedItemStr = resolver.resolveString(context, params.itemStr);
+            DataValue itemValue = DataValue.of(params.itemStr);
+            DataValue resolvedItem = resolver.resolve(context, itemValue);
             
             // Parse item parameter
-            if (resolvedItemStr == null || resolvedItemStr.isEmpty()) {
+            String itemName = resolvedItem.asString();
+            if (itemName == null || itemName.isEmpty()) {
                 return false;
             }
 
             // Check if player is holding the specified item
             try {
-                Material material = Material.valueOf(resolvedItemStr.toUpperCase());
+                Material material = Material.valueOf(itemName.toUpperCase());
                 ItemStack itemInHand = player.getInventory().getItemInMainHand();
                 
                 return itemInHand != null && itemInHand.getType() == material;

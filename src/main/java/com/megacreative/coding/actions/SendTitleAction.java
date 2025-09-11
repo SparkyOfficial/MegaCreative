@@ -5,6 +5,7 @@ import com.megacreative.coding.CodeBlock;
 import com.megacreative.coding.ExecutionContext;
 import com.megacreative.coding.ParameterResolver;
 import com.megacreative.coding.executors.ExecutionResult;
+import com.megacreative.coding.values.DataValue;
 import com.megacreative.services.BlockConfigService;
 import org.bukkit.entity.Player;
 import org.bukkit.inventory.ItemStack;
@@ -14,7 +15,7 @@ import java.util.function.Function;
 
 /**
  * Action for sending a title to a player.
- * This action sends a title and subtitle to the player with configurable timing from container configuration.
+ * This action retrieves title parameters from the container configuration and sends the title.
  */
 public class SendTitleAction implements BlockAction {
 
@@ -29,17 +30,27 @@ public class SendTitleAction implements BlockAction {
             // Get title parameters from the container configuration
             SendTitleParams params = getTitleParamsFromContainer(block, context);
             
-            if (params.title == null || params.title.isEmpty()) {
-                return ExecutionResult.error("Title is not configured");
-            }
-
             // Resolve any placeholders in the parameters
             ParameterResolver resolver = new ParameterResolver(context);
-            String resolvedTitle = resolver.resolveString(context, params.title);
-            String resolvedSubtitle = resolver.resolveString(context, params.subtitle);
+            
+            DataValue titleValue = DataValue.of(params.titleStr);
+            DataValue resolvedTitle = resolver.resolve(context, titleValue);
+            
+            DataValue subtitleValue = DataValue.of(params.subtitleStr);
+            DataValue resolvedSubtitle = resolver.resolve(context, subtitleValue);
+            
+            int fadeIn = params.fadeIn;
+            int stay = params.stay;
+            int fadeOut = params.fadeOut;
 
             // Send the title to the player
-            player.sendTitle(resolvedTitle, resolvedSubtitle, params.fadeIn, params.stay, params.fadeOut);
+            player.sendTitle(
+                resolvedTitle.asString(), 
+                resolvedSubtitle.asString(), 
+                fadeIn, 
+                stay, 
+                fadeOut
+            );
             
             return ExecutionResult.success("Title sent successfully");
         } catch (Exception e) {
@@ -67,7 +78,7 @@ public class SendTitleAction implements BlockAction {
                     ItemStack titleItem = block.getConfigItem(titleSlot);
                     if (titleItem != null && titleItem.hasItemMeta()) {
                         // Extract title from item
-                        params.title = getTextFromItem(titleItem);
+                        params.titleStr = getTitleFromItem(titleItem);
                     }
                 }
                 
@@ -77,37 +88,37 @@ public class SendTitleAction implements BlockAction {
                     ItemStack subtitleItem = block.getConfigItem(subtitleSlot);
                     if (subtitleItem != null && subtitleItem.hasItemMeta()) {
                         // Extract subtitle from item
-                        params.subtitle = getTextFromItem(subtitleItem);
+                        params.subtitleStr = getSubtitleFromItem(subtitleItem);
                     }
                 }
                 
-                // Get fadeIn from the fadeIn slot
+                // Get fade in time from the fadein slot
                 Integer fadeInSlot = slotResolver.apply("fadein");
                 if (fadeInSlot != null) {
                     ItemStack fadeInItem = block.getConfigItem(fadeInSlot);
                     if (fadeInItem != null && fadeInItem.hasItemMeta()) {
-                        // Extract fadeIn from item
-                        params.fadeIn = getNumberFromItem(fadeInItem, 10);
+                        // Extract fade in time from item
+                        params.fadeIn = getFadeInFromItem(fadeInItem, 10);
                     }
                 }
                 
-                // Get stay from the stay slot
+                // Get stay time from the stay slot
                 Integer staySlot = slotResolver.apply("stay");
                 if (staySlot != null) {
                     ItemStack stayItem = block.getConfigItem(staySlot);
                     if (stayItem != null && stayItem.hasItemMeta()) {
-                        // Extract stay from item
-                        params.stay = getNumberFromItem(stayItem, 70);
+                        // Extract stay time from item
+                        params.stay = getStayFromItem(stayItem, 70);
                     }
                 }
                 
-                // Get fadeOut from the fadeout slot
+                // Get fade out time from the fadeout slot
                 Integer fadeOutSlot = slotResolver.apply("fadeout");
                 if (fadeOutSlot != null) {
                     ItemStack fadeOutItem = block.getConfigItem(fadeOutSlot);
                     if (fadeOutItem != null && fadeOutItem.hasItemMeta()) {
-                        // Extract fadeOut from item
-                        params.fadeOut = getNumberFromItem(fadeOutItem, 20);
+                        // Extract fade out time from item
+                        params.fadeOut = getFadeOutFromItem(fadeOutItem, 20);
                     }
                 }
             }
@@ -119,14 +130,14 @@ public class SendTitleAction implements BlockAction {
     }
     
     /**
-     * Extracts text from an item
+     * Extracts title from an item
      */
-    private String getTextFromItem(ItemStack item) {
+    private String getTitleFromItem(ItemStack item) {
         ItemMeta meta = item.getItemMeta();
         if (meta != null) {
             String displayName = meta.getDisplayName();
             if (displayName != null && !displayName.isEmpty()) {
-                // Remove color codes and return the text
+                // Remove color codes and return the title
                 return displayName.replaceAll("[§0-9]", "").trim();
             }
         }
@@ -134,29 +145,83 @@ public class SendTitleAction implements BlockAction {
     }
     
     /**
-     * Extracts number from an item
+     * Extracts subtitle from an item
      */
-    private int getNumberFromItem(ItemStack item, int defaultValue) {
+    private String getSubtitleFromItem(ItemStack item) {
+        ItemMeta meta = item.getItemMeta();
+        if (meta != null) {
+            String displayName = meta.getDisplayName();
+            if (displayName != null && !displayName.isEmpty()) {
+                // Remove color codes and return the subtitle
+                return displayName.replaceAll("[§0-9]", "").trim();
+            }
+        }
+        return "";
+    }
+    
+    /**
+     * Extracts fade in time from an item
+     */
+    private int getFadeInFromItem(ItemStack item, int defaultValue) {
         try {
             ItemMeta meta = item.getItemMeta();
             if (meta != null) {
                 String displayName = meta.getDisplayName();
                 if (displayName != null && !displayName.isEmpty()) {
-                    // Try to parse number from display name (e.g., "fadein:10")
+                    // Try to parse fade in time from display name
                     String cleanName = displayName.replaceAll("[§0-9]", "").trim();
-                    if (cleanName.contains(":")) {
-                        String[] parts = cleanName.split(":");
-                        if (parts.length > 1) {
-                            return Math.max(0, Integer.parseInt(parts[1].trim()));
-                        }
-                    }
+                    return Integer.parseInt(cleanName);
                 }
             }
             
             // Fallback to item amount
-            return Math.max(0, item.getAmount());
+            return item.getAmount();
         } catch (Exception e) {
-            return Math.max(0, defaultValue);
+            return defaultValue;
+        }
+    }
+    
+    /**
+     * Extracts stay time from an item
+     */
+    private int getStayFromItem(ItemStack item, int defaultValue) {
+        try {
+            ItemMeta meta = item.getItemMeta();
+            if (meta != null) {
+                String displayName = meta.getDisplayName();
+                if (displayName != null && !displayName.isEmpty()) {
+                    // Try to parse stay time from display name
+                    String cleanName = displayName.replaceAll("[§0-9]", "").trim();
+                    return Integer.parseInt(cleanName);
+                }
+            }
+            
+            // Fallback to item amount
+            return item.getAmount();
+        } catch (Exception e) {
+            return defaultValue;
+        }
+    }
+    
+    /**
+     * Extracts fade out time from an item
+     */
+    private int getFadeOutFromItem(ItemStack item, int defaultValue) {
+        try {
+            ItemMeta meta = item.getItemMeta();
+            if (meta != null) {
+                String displayName = meta.getDisplayName();
+                if (displayName != null && !displayName.isEmpty()) {
+                    // Try to parse fade out time from display name
+                    String cleanName = displayName.replaceAll("[§0-9]", "").trim();
+                    return Integer.parseInt(cleanName);
+                }
+            }
+            
+            // Fallback to item amount
+            return item.getAmount();
+        } catch (Exception e) {
+            return defaultValue;
         }
     }
     
@@ -164,8 +229,8 @@ public class SendTitleAction implements BlockAction {
      * Helper class to hold title parameters
      */
     private static class SendTitleParams {
-        String title = "";
-        String subtitle = "";
+        String titleStr = "";
+        String subtitleStr = "";
         int fadeIn = 10;
         int stay = 70;
         int fadeOut = 20;
