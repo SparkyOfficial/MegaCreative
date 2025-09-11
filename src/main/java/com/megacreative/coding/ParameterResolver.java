@@ -42,6 +42,23 @@ public class ParameterResolver {
         return DataValue.of(result.toString());
     }
 
+    /**
+     * Resolves placeholders in a string and returns the resolved string.
+     * 
+     * @param context The execution context
+     * @param text The text to resolve
+     * @return The resolved string
+     */
+    public String resolveString(ExecutionContext context, String text) {
+        if (text == null || text.isEmpty()) {
+            return text;
+        }
+        
+        DataValue value = DataValue.of(text);
+        DataValue resolved = resolve(context, value);
+        return resolved.asString();
+    }
+
     private String resolvePlaceholder(String placeholder, ExecutionContext context) {
         // Handle player-related placeholders
         Player player = context.getPlayer();
