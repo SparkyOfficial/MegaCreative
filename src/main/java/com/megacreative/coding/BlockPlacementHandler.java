@@ -159,36 +159,58 @@ public class BlockPlacementHandler implements Listener {
             return;
         }
         
-        // Пример для конструкции "Если" (аналог WOOD из FrameLand)
+        // 🎆 ENHANCED: More intuitive structure creation like FrameLand
         if (config.getType().equals("CONDITION") || config.getType().equals("CONTROL")) {
             int bracketDistance = structure.getBracketDistance();
             
-            // Место для открывающей скобки (поршень)
-            Location openBracketLoc = loc.clone().add(1, 0, 0);
-            // Место для закрывающей скобки (поршень)
-            Location closeBracketLoc = loc.clone().add(1 + bracketDistance, 0, 0);
+            // Calculate optimal positioning based on surrounding blocks
+            BlockFace buildDirection = findOptimalBuildDirection(loc, bracketDistance);
             
-            // 1. Ставим поршни-скобки
-            createBracketPiston(openBracketLoc, CodeBlock.BracketType.OPEN, player);
-            createBracketPiston(closeBracketLoc, CodeBlock.BracketType.CLOSE, player);
+            // Create opening bracket (piston pointing inward)
+            Location openBracketLoc = loc.clone().add(buildDirection.getModX(), 0, buildDirection.getModZ());
             
-            // 2. Создаем и настраиваем табличку на основном блоке
+            // Create closing bracket (piston pointing outward)
+            Location closeBracketLoc = openBracketLoc.clone().add(
+                buildDirection.getModX() * bracketDistance, 
+                0, 
+                buildDirection.getModZ() * bracketDistance
+            );
+            
+            // 1. Create bracket pistons with proper orientation
+            createBracketPiston(openBracketLoc, CodeBlock.BracketType.OPEN, player, buildDirection);
+            createBracketPiston(closeBracketLoc, CodeBlock.BracketType.CLOSE, player, buildDirection.getOppositeFace());
+            
+            // 2. Create smart sign on main block that opens configuration GUI
             if (structure.hasSign()) {
-                setSignOnBlock(loc, config.getDisplayName());
+                setSmartSignOnBlock(loc, config.getDisplayName(), config.getId());
             }
             
-            plugin.getLogger().info("Built constructor structure for " + config.getId() + " at " + loc);
+            // 3. Create container above main block for parameters (optional)
+            if (config.getType().equals("CONDITION") && !config.getId().equals("else")) {
+                spawnContainerAboveBlock(loc, config.getId());
+            }
+            
+            // 4. Add visual effects for "magical" feeling
+            addConstructionEffects(loc, player);
+            
+            plugin.getLogger().info("🎆 Built magical constructor structure for " + config.getId() + " at " + loc);
         }
         
-        // Здесь можно добавить логику для других типов конструкций
-        // Например, для "События игрока" (DIAMOND_BLOCK) можно ставить
-        // рядом какой-то вспомогательный блок, как это делал FrameLand.
+        // Additional structure types can be added here
+        // For example, EVENT blocks could spawn helper blocks
+        else if (config.getType().equals("EVENT")) {
+            // Event blocks get special treatment
+            if (structure.hasSign()) {
+                setSmartSignOnBlock(loc, config.getDisplayName() + " Event", config.getId());
+            }
+            addConstructionEffects(loc, player);
+        }
     }
     
     /**
-     * Создает поршень-скобку с правильным направлением
+     * 🎆 ENHANCED: Creates bracket piston with proper orientation
      */
-    private void createBracketPiston(Location location, CodeBlock.BracketType bracketType, Player player) {
+    private void createBracketPiston(Location location, CodeBlock.BracketType bracketType, Player player, BlockFace facing) {
         Block pistonBlock = location.getWorld().getBlockAt(location);
         
         // Проверяем, что место свободно
@@ -203,10 +225,11 @@ public class BlockPlacementHandler implements Listener {
         // Используем современный BlockData для установки направления
         org.bukkit.block.data.type.Piston pistonData = (org.bukkit.block.data.type.Piston) pistonBlock.getBlockData();
         
+        // 🎆 ENHANCED: Smart piston orientation
         if (bracketType == CodeBlock.BracketType.OPEN) {
-            pistonData.setFacing(org.bukkit.block.BlockFace.EAST); // Смотрит вправо >
+            pistonData.setFacing(facing); // Points inward toward the structure
         } else {
-            pistonData.setFacing(org.bukkit.block.BlockFace.WEST); // Смотрит влево <
+            pistonData.setFacing(facing); // Points outward from the structure
         }
         
         pistonBlock.setBlockData(pistonData);
@@ -219,7 +242,7 @@ public class BlockPlacementHandler implements Listener {
         // Добавляем табличку к скобке
         updateBracketSign(location, bracketType);
         
-        plugin.getLogger().fine("Created bracket piston " + bracketType + " at " + location);
+        plugin.getLogger().fine(".EVT Created magical bracket piston " + bracketType + " at " + location);
     }
 
     /**
@@ -384,6 +407,14 @@ public class BlockPlacementHandler implements Listener {
         if (clickedBlock == null) return;
         
         Location location = clickedBlock.getLocation();
+        
+        // 🎆 ENHANCED: Check if player clicked on a smart sign
+        if (clickedBlock.getType().name().contains("SIGN")) {
+            if (handleSmartSignClick(clickedBlock, player)) {
+                event.setCancelled(true);
+                return;
+            }
+        }
         
         // Проверяем, есть ли уже блок кода на этой локации
         if (blockCodeBlocks.containsKey(location)) {
@@ -744,6 +775,146 @@ public class BlockPlacementHandler implements Listener {
                 signState.update(true);
                 
                 return;
+            }
+        }
+    }
+    
+    /**
+     * 🎆 ENHANCED: Finds optimal build direction based on available space
+     */
+    private BlockFace findOptimalBuildDirection(Location center, int bracketDistance) {
+        BlockFace[] directions = {BlockFace.EAST, BlockFace.WEST, BlockFace.NORTH, BlockFace.SOUTH};
+        
+        for (BlockFace direction : directions) {
+            boolean hasSpace = true;
+            
+            // Check if we have enough space in this direction
+            for (int i = 1; i <= bracketDistance + 1; i++) {
+                Location checkLoc = center.clone().add(
+                    direction.getModX() * i, 
+                    0, 
+                    direction.getModZ() * i
+                );
+                
+                if (!checkLoc.getBlock().getType().isAir()) {
+                    hasSpace = false;
+                    break;
+                }
+            }
+            
+            if (hasSpace) {
+                return direction;
+            }
+        }
+        
+        // Default to east if no space found
+        return BlockFace.EAST;
+    }
+    
+    /**
+     * 🎆 ENHANCED: Adds magical construction effects
+     */
+    private void addConstructionEffects(Location location, Player player) {
+        // Visual effects
+        player.spawnParticle(org.bukkit.Particle.VILLAGER_HAPPY, 
+            location.clone().add(0.5, 1.0, 0.5), 10, 0.3, 0.3, 0.3, 0.1);
+        player.spawnParticle(org.bukkit.Particle.END_ROD, 
+            location.clone().add(0.5, 0.5, 0.5), 5, 0.2, 0.2, 0.2, 0.05);
+        
+        // Audio feedback
+        player.playSound(location, org.bukkit.Sound.BLOCK_ENCHANTMENT_TABLE_USE, 0.8f, 1.2f);
+        player.playSound(location, org.bukkit.Sound.ENTITY_EXPERIENCE_ORB_PICKUP, 1.0f, 1.5f);
+        
+        // Delayed sparkle effect
+        plugin.getServer().getScheduler().runTaskLater(plugin, () -> {
+            player.spawnParticle(org.bukkit.Particle.FIREWORKS_SPARK, 
+                location.clone().add(0.5, 1.5, 0.5), 8, 0.4, 0.4, 0.4, 0.1);
+        }, 10L);
+    }
+    
+    /**
+     * 🎆 ENHANCED: Handles smart sign clicks to open configuration GUIs
+     * This restores the FrameLand "magic" of clicking signs to configure blocks
+     */
+    private boolean handleSmartSignClick(Block signBlock, Player player) {
+        if (!(signBlock.getState() instanceof Sign)) {
+            return false;
+        }
+        
+        Sign sign = (Sign) signBlock.getState();
+        
+        // Check if this is a smart sign (has our special markers)
+        String[] lines = sign.getLines();
+        if (lines.length < 3 || !lines[2].contains("Клик для настройки")) {
+            return false;
+        }
+        
+        // Find the associated code block (sign should be adjacent to it)
+        BlockFace[] adjacentFaces = {BlockFace.NORTH, BlockFace.SOUTH, BlockFace.EAST, BlockFace.WEST};
+        
+        for (BlockFace face : adjacentFaces) {
+            Block adjacentBlock = signBlock.getRelative(face);
+            Location blockLoc = adjacentBlock.getLocation();
+            
+            if (blockCodeBlocks.containsKey(blockLoc)) {
+                CodeBlock codeBlock = blockCodeBlocks.get(blockLoc);
+                
+                // Open appropriate GUI based on block state
+                if (codeBlock.getAction() == null || "NOT_SET".equals(codeBlock.getAction())) {
+                    // No action set - open action selection GUI
+                    openActionSelectionGUI(player, blockLoc, adjacentBlock.getType());
+                } else {
+                    // Action already set - open parameter configuration GUI
+                    BlockConfigService.BlockConfig config = blockConfigService.getBlockConfig(codeBlock.getAction());
+                    if (config != null) {
+                        openParameterConfigGUI(player, blockLoc, codeBlock, config);
+                    } else {
+                        player.sendMessage("§cОшибка: Не удалось найти конфигурацию для действия " + codeBlock.getAction());
+                    }
+                }
+                
+                // Add magical click effects
+                player.spawnParticle(org.bukkit.Particle.VILLAGER_HAPPY, 
+                    signBlock.getLocation().add(0.5, 0.5, 0.5), 3, 0.1, 0.1, 0.1, 0.1);
+                player.playSound(signBlock.getLocation(), org.bukkit.Sound.UI_BUTTON_CLICK, 0.8f, 1.2f);
+                
+                return true; // Successfully handled
+            }
+        }
+        
+        return false; // Not a smart sign or no associated block found
+    }
+    
+    /**
+     * 🎆 ENHANCED: Creates smart sign that opens configuration GUI on right-click
+     * This restores the FrameLand "magic" of clicking signs to configure blocks
+     */
+    private void setSmartSignOnBlock(Location location, String displayName, String blockId) {
+        removeSignFromBlock(location); // Remove old signs first
+
+        Block block = location.getBlock();
+        // Define priority sides for installation
+        BlockFace[] faces = {BlockFace.NORTH, BlockFace.EAST, BlockFace.SOUTH, BlockFace.WEST};
+        
+        for (BlockFace face : faces) {
+            Block signBlock = block.getRelative(face);
+            if (signBlock.getType().isAir()) {
+                signBlock.setType(Material.OAK_WALL_SIGN, false); // false - don't trigger physics
+                
+                WallSign wallSignData = (WallSign) signBlock.getBlockData();
+                wallSignData.setFacing(face); // Sign faces the block
+                signBlock.setBlockData(wallSignData);
+                
+                Sign signState = (Sign) signBlock.getState();
+                signState.setLine(0, "§6★★★★★★★★★★★★");
+                // Trim text if too long
+                String line1 = displayName.length() > 15 ? displayName.substring(0, 15) : displayName;
+                signState.setLine(1, "§e" + line1);
+                signState.setLine(2, "§a➜ Клик для настройки");
+                signState.setLine(3, "§6★★★★★★★★★★★★");
+                signState.update(true);
+                
+                return; // IMPORTANT: Exit after placing FIRST sign
             }
         }
     }
