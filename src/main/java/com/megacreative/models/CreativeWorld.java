@@ -128,6 +128,22 @@ public class CreativeWorld {
         return "megacreative_" + id + "-" + dualMode.getSuffix();
     }
     
+    /**
+     * Gets the Bukkit World instance for this CreativeWorld
+     * @return The Bukkit World or null if not loaded
+     */
+    public org.bukkit.World getBukkitWorld() {
+        return org.bukkit.Bukkit.getWorld(getWorldName());
+    }
+    
+    /**
+     * Gets the base name of the world (without suffixes)
+     * @return The base world name
+     */
+    public String getBaseName() {
+        return name != null ? name : "World_" + id;
+    }
+    
     public String getDevWorldName() {
         // Legacy support - now returns the dev mode world name
         if (dualMode == WorldDualMode.DEV) {

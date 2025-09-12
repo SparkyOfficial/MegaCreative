@@ -7,16 +7,16 @@ import com.megacreative.models.CreativeWorld;
 import org.bukkit.command.Command;
 import org.bukkit.command.CommandExecutor;
 import org.bukkit.command.CommandSender;
+import org.bukkit.command.TabCompleter;
 import org.bukkit.entity.Player;
 
-import java.util.Map;
-import java.util.UUID;
+import java.util.*;
 
 /**
- * 🎆 ENHANCED: World analytics command for tracking dual world usage
- * Usage: /worldstats [worldId]
+ * 🎆 ENHANCED: World statistics command for dual world analytics
+ * Shows comprehensive usage data for FrameLand-style worlds
  */
-public class WorldStatsCommand implements CommandExecutor {
+public class WorldStatsCommand implements CommandExecutor, TabCompleter {
     
     private final MegaCreative plugin;
     private final IWorldManager worldManager;
@@ -35,35 +35,135 @@ public class WorldStatsCommand implements CommandExecutor {
             return true;
         }
         
-        String worldId;
-        
         if (args.length == 0) {
-            // Use current world
-            CreativeWorld currentWorld = worldManager.findCreativeWorldByBukkit(player.getWorld());
-            if (currentWorld == null) {
-                player.sendMessage("§cВы не находитесь в мире MegaCreative! Укажите ID мира.");
+            // Show statistics for current world
+            CreativeWorld world = worldManager.findCreativeWorldByBukkit(player.getWorld());
+            if (world == null) {
+                player.sendMessage("§cВы не находитесь в управляемом мире!");
                 return true;
             }
-            worldId = currentWorld.getId();
+            showWorldStatistics(player, world);
         } else {
-            worldId = args[0];
+            // Show statistics for specified world
+            String worldName = args[0];
+            CreativeWorld world = worldManager.findCreativeWorld(worldName);
+            if (world == null) {
+                player.sendMessage("§cМир не найден: " + worldName);
+                return true;
+            }
+            
+            // Check if player has permission to view stats
+            if (!world.isOwner(player) && !player.hasPermission("megacreative.world.stats.others")) {
+                player.sendMessage("§cУ вас нет доступа к статистике этого мира!");
+                return true;
+            }
+            
+            showWorldStatistics(player, world);
         }
         
-        CreativeWorld world = worldManager.getWorld(worldId);
-        if (world == null) {
-            player.sendMessage("§cМир с ID " + worldId + " не найден!");
-            return true;
-        }
-        
-        // Check permissions
-        if (!world.isOwner(player) && !player.hasPermission("megacreative.admin")) {
-            player.sendMessage("§cУ вас нет прав для просмотра статистики этого мира!");
-            return true;
-        }
-        
-        showWorldStatistics(player, world);
         return true;
     }
     
     private void showWorldStatistics(Player player, CreativeWorld world) {
-        Map<String, Object> stats = playerManager.getWorldStatistics(world.getId());\n        Map<UUID, String> currentPlayers = playerManager.getPlayersInWorld(world.getId());\n        \n        player.sendMessage(\"§8§m                    §r §6§lWorld Statistics §8§m                    \");\n        player.sendMessage(\"§7Мир: §f\" + world.getName() + \" §7(ID: \" + world.getId() + \")\");\n        player.sendMessage(\"§7Режим: §f\" + world.getDualMode().getDisplayName());\n        \n        if (world.isPaired()) {\n            CreativeWorld pairedWorld = worldManager.getPairedWorld(world);\n            if (pairedWorld != null) {\n                player.sendMessage(\"§7Парный мир: §f\" + pairedWorld.getName());\n            }\n        }\n        \n        player.sendMessage(\"\");\n        player.sendMessage(\"§e📊 Статистика использования:\");\n        \n        int uniqueVisitors = (Integer) stats.getOrDefault(\"uniqueVisitors\", 0);\n        long totalTimeSpent = (Long) stats.getOrDefault(\"totalTimeSpent\", 0L);\n        int totalSessions = (Integer) stats.getOrDefault(\"totalSessions\", 0);\n        long averageSessionTime = (Long) stats.getOrDefault(\"averageSessionTime\", 0L);\n        \n        player.sendMessage(\"§7• Уникальных посетителей: §f\" + uniqueVisitors);\n        player.sendMessage(\"§7• Всего сессий: §f\" + totalSessions);\n        player.sendMessage(\"§7• Общее время: §f\" + formatTime(totalTimeSpent));\n        player.sendMessage(\"§7• Среднее время сессии: §f\" + formatTime(averageSessionTime));\n        \n        @SuppressWarnings(\"unchecked\")\n        Map<String, Integer> modeSessions = (Map<String, Integer>) stats.getOrDefault(\"modeSessions\", Map.of());\n        if (!modeSessions.isEmpty()) {\n            player.sendMessage(\"\");\n            player.sendMessage(\"§e🎮 По режимам:\");\n            for (Map.Entry<String, Integer> entry : modeSessions.entrySet()) {\n                String mode = entry.getKey();\n                int sessions = entry.getValue();\n                String emoji = mode.equals(\"DEV\") ? \"🔧\" : \"🎮\";\n                player.sendMessage(\"§7• \" + emoji + \" \" + mode + \": §f\" + sessions + \" сессий\");\n            }\n        }\n        \n        if (!currentPlayers.isEmpty()) {\n            player.sendMessage(\"\");\n            player.sendMessage(\"§e👥 Сейчас в мире (\" + currentPlayers.size() + \"):\");\n            for (Map.Entry<UUID, String> entry : currentPlayers.entrySet()) {\n                UUID playerId = entry.getKey();\n                String mode = entry.getValue();\n                long sessionTime = playerManager.getPlayerSessionTime(playerId);\n                \n                Player onlinePlayer = plugin.getServer().getPlayer(playerId);\n                String playerName = onlinePlayer != null ? onlinePlayer.getName() : \"Unknown\";\n                String emoji = mode.equals(\"DEV\") ? \"🔧\" : \"🎮\";\n                \n                player.sendMessage(\"§7• \" + emoji + \" §f\" + playerName + \" §7(\" + formatTime(sessionTime) + \")\");\n            }\n        }\n        \n        player.sendMessage(\"§8§m                                                        \");\n    }\n    \n    private String formatTime(long milliseconds) {\n        if (milliseconds < 1000) {\n            return \"< 1с\";\n        }\n        \n        long seconds = milliseconds / 1000;\n        long minutes = seconds / 60;\n        long hours = minutes / 60;\n        \n        if (hours > 0) {\n            return hours + \"ч \" + (minutes % 60) + \"м\";\n        } else if (minutes > 0) {\n            return minutes + \"м \" + (seconds % 60) + \"с\";\n        } else {\n            return seconds + \"с\";\n        }\n    }\n}
+        Map<String, Object> stats = playerManager.getWorldStatistics(world.getId());
+        Map<UUID, String> currentPlayers = playerManager.getPlayersInWorld(world.getId());
+        
+        player.sendMessage("§8§m                    §r §6§lWorld Statistics §8§m                    ");
+        player.sendMessage("§7Мир: §f" + world.getName() + " §7(ID: " + world.getId() + ")");
+        player.sendMessage("§7Режим: §f" + world.getDualMode().getDisplayName());
+        
+        if (world.isPaired()) {
+            CreativeWorld pairedWorld = worldManager.getPairedWorld(world);
+            if (pairedWorld != null) {
+                player.sendMessage("§7Парный мир: §f" + pairedWorld.getName());
+            }
+        }
+        
+        player.sendMessage("");
+        player.sendMessage("§e📊 Статистика использования:");
+        
+        int uniqueVisitors = (Integer) stats.getOrDefault("uniqueVisitors", 0);
+        long totalTimeSpent = (Long) stats.getOrDefault("totalTimeSpent", 0L);
+        int totalSessions = (Integer) stats.getOrDefault("totalSessions", 0);
+        long averageSessionTime = (Long) stats.getOrDefault("averageSessionTime", 0L);
+        
+        player.sendMessage("§7• Уникальных посетителей: §f" + uniqueVisitors);
+        player.sendMessage("§7• Всего сессий: §f" + totalSessions);
+        player.sendMessage("§7• Общее время: §f" + formatTime(totalTimeSpent));
+        player.sendMessage("§7• Среднее время сессии: §f" + formatTime(averageSessionTime));
+        
+        @SuppressWarnings("unchecked")
+        Map<String, Integer> modeSessions = (Map<String, Integer>) stats.getOrDefault("modeSessions", Map.of());
+        if (!modeSessions.isEmpty()) {
+            player.sendMessage("");
+            player.sendMessage("§e🎮 По режимам:");
+            for (Map.Entry<String, Integer> entry : modeSessions.entrySet()) {
+                String mode = entry.getKey();
+                int sessions = entry.getValue();
+                String emoji = mode.equals("DEV") ? "🔧" : "🎮";
+                player.sendMessage("§7• " + emoji + " " + mode + ": §f" + sessions + " сессий");
+            }
+        }
+        
+        if (!currentPlayers.isEmpty()) {
+            player.sendMessage("");
+            player.sendMessage("§e👥 Сейчас в мире (" + currentPlayers.size() + "):");
+            for (Map.Entry<UUID, String> entry : currentPlayers.entrySet()) {
+                UUID playerId = entry.getKey();
+                String mode = entry.getValue();
+                long sessionTime = playerManager.getPlayerSessionTime(playerId);
+                
+                Player onlinePlayer = plugin.getServer().getPlayer(playerId);
+                String playerName = onlinePlayer != null ? onlinePlayer.getName() : "Unknown";
+                String emoji = mode.equals("DEV") ? "🔧" : "🎮";
+                
+                player.sendMessage("§7• " + emoji + " §f" + playerName + " §7(" + formatTime(sessionTime) + ")");
+            }
+        }
+        
+        player.sendMessage("§8§m                                                        ");
+    }
+    
+    private String formatTime(long milliseconds) {
+        if (milliseconds < 1000) {
+            return "< 1с";
+        }
+        
+        long seconds = milliseconds / 1000;
+        long minutes = seconds / 60;
+        long hours = minutes / 60;
+        
+        if (hours > 0) {
+            return hours + "ч " + (minutes % 60) + "м";
+        } else if (minutes > 0) {
+            return minutes + "м " + (seconds % 60) + "с";
+        } else {
+            return seconds + "с";
+        }
+    }
+    
+    @Override
+    public List<String> onTabComplete(CommandSender sender, Command command, String alias, String[] args) {
+        if (!(sender instanceof Player player)) {
+            return new ArrayList<>();
+        }
+        
+        if (args.length == 1) {
+            List<String> worldNames = new ArrayList<>();
+            
+            // Add worlds the player owns
+            for (CreativeWorld world : worldManager.getPlayerWorlds(player.getUniqueId())) {
+                worldNames.add(world.getName());
+            }
+            
+            // Filter by current input
+            String input = args[0].toLowerCase();
+            return worldNames.stream()
+                .filter(name -> name.toLowerCase().startsWith(input))
+                .sorted()
+                .toList();
+        }
+        
+        return new ArrayList<>();
+    }
+}

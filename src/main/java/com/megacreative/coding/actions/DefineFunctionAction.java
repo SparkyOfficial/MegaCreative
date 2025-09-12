@@ -1,6 +1,7 @@
 package com.megacreative.coding.actions;
 
 import com.megacreative.MegaCreative;
+import com.megacreative.coding.BlockAction;
 import com.megacreative.coding.CodeBlock;
 import com.megacreative.coding.ExecutionContext;
 import com.megacreative.coding.functions.AdvancedFunctionManager;
@@ -20,31 +21,29 @@ import java.util.ArrayList;
  * Handles creation and registration of user-defined functions.
  * Allows players to define reusable code blocks with parameters.
  */
-public class DefineFunctionAction extends CodeAction {
+public class DefineFunctionAction implements BlockAction {
     
+    private final MegaCreative plugin;
     private final AdvancedFunctionManager functionManager;
     
     public DefineFunctionAction(MegaCreative plugin) {
-        super(plugin);
+        this.plugin = plugin;
         this.functionManager = plugin.getServiceRegistry().getService(AdvancedFunctionManager.class);
     }
 
     @Override
-    public CompletableFuture<ExecutionResult> execute(ExecutionContext context) {
-        CodeBlock block = context.getCurrentBlock();
+    public ExecutionResult execute(CodeBlock block, ExecutionContext context) {
         Player player = context.getPlayer();
         
         if (block == null || player == null) {
-            return CompletableFuture.completedFuture(
-                ExecutionResult.error("Invalid execution context for function definition"));
+            return ExecutionResult.error("Invalid execution context for function definition");
         }
         
         try {
             // Parse function definition from block parameters
             String functionName = block.getParameterValue("function_name", String.class);
             if (functionName == null || functionName.trim().isEmpty()) {
-                return CompletableFuture.completedFuture(
-                    ExecutionResult.error("Function name is required"));
+                return ExecutionResult.error("Function name is required");
             }
             
             String description = block.getParameterValue("description", String.class);
@@ -54,7 +53,7 @@ public class DefineFunctionAction extends CodeAction {
             FunctionDefinition.FunctionScope scope = parseFunctionScope(scopeStr);
             
             // Parse function parameters
-            List<FunctionDefinition.Parameter> parameters = parseParameters(block);
+            List<FunctionDefinition.FunctionParameter> parameters = parseParameters(block);
             
             // Get function body blocks (connected blocks after this one)
             List<CodeBlock> functionBlocks = collectFunctionBlocks(block);
@@ -64,35 +63,29 @@ public class DefineFunctionAction extends CodeAction {
             int maxRecursionDepth = block.getParameterValue("max_recursion", Integer.class, 10);
             long maxExecutionTime = block.getParameterValue("max_execution_time", Long.class, 5000L);
             
-            // Create function definition
-            FunctionDefinition function = new FunctionDefinition.Builder()
-                .name(functionName)
-                .description(description)
-                .owner(player)
-                .scope(scope)
-                .parameters(parameters)
-                .functionBlocks(functionBlocks)
-                .enabled(enabled)
-                .maxRecursionDepth(maxRecursionDepth)
-                .maxExecutionTime(maxExecutionTime)
-                .build();
+            // Create function definition using constructor
+            FunctionDefinition function = new FunctionDefinition(
+                functionName, description, player, parameters, functionBlocks, 
+                ValueType.ANY, scope);
+            
+            // Set additional properties
+            function.setEnabled(enabled);
+            function.setMaxRecursionDepth(maxRecursionDepth);
+            function.setMaxExecutionTime(maxExecutionTime);
             
             // Register function
             boolean registered = functionManager.registerFunction(function);
             
             if (registered) {
                 plugin.getLogger().info("🎆 Function '" + functionName + "' defined successfully by " + player.getName());
-                return CompletableFuture.completedFuture(
-                    ExecutionResult.success("Function '" + functionName + "' defined successfully"));
+                return ExecutionResult.success("Function '" + functionName + "' defined successfully");
             } else {
-                return CompletableFuture.completedFuture(
-                    ExecutionResult.error("Failed to register function: " + functionName + " (name conflict?)"));
+                return ExecutionResult.error("Failed to register function: " + functionName + " (name conflict?)");
             }
             
         } catch (Exception e) {
             plugin.getLogger().warning("🎆 Function definition failed: " + e.getMessage());
-            return CompletableFuture.completedFuture(
-                ExecutionResult.error("Function definition failed: " + e.getMessage()));
+            return ExecutionResult.error("Function definition failed: " + e.getMessage());
         }
     }
     
@@ -118,8 +111,8 @@ public class DefineFunctionAction extends CodeAction {
     /**
      * Parses function parameters from block parameters
      */
-    private List<FunctionDefinition.Parameter> parseParameters(CodeBlock block) {
-        List<FunctionDefinition.Parameter> parameters = new ArrayList<>();
+    private List<FunctionDefinition.FunctionParameter> parseParameters(CodeBlock block) {
+        List<FunctionDefinition.FunctionParameter> parameters = new ArrayList<>();
         
         // Look for parameter definitions in block parameters
         int paramIndex = 0;
@@ -136,8 +129,8 @@ public class DefineFunctionAction extends CodeAction {
             boolean required = block.getParameterValue("param_" + paramIndex + "_required", Boolean.class, true);
             Object defaultValue = block.getParameterValue("param_" + paramIndex + "_default");
             
-            FunctionDefinition.Parameter parameter = new FunctionDefinition.Parameter(
-                paramName, type, description, required, defaultValue);
+            FunctionDefinition.FunctionParameter parameter = new FunctionDefinition.FunctionParameter(
+                paramName, type, required, DataValue.fromObject(defaultValue), description);
             
             parameters.add(parameter);
             paramIndex++;
@@ -150,7 +143,7 @@ public class DefineFunctionAction extends CodeAction {
      * Parses ValueType from string
      */
     private ValueType parseValueType(String typeStr) {
-        if (typeStr == null) return ValueType.STRING;
+        if (typeStr == null) return ValueType.TEXT;
         
         switch (typeStr.toUpperCase()) {
             case "NUMBER":
@@ -163,9 +156,9 @@ public class DefineFunctionAction extends CodeAction {
                 return ValueType.ITEM;
             case "PLAYER":
                 return ValueType.PLAYER;
-            case "STRING":
+            case "TEXT":
             default:
-                return ValueType.STRING;
+                return ValueType.TEXT;
         }
     }
     

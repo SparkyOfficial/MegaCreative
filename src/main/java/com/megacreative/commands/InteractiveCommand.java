@@ -99,7 +99,7 @@ public class InteractiveCommand implements CommandExecutor, TabCompleter {
             new InteractiveGUIManager.MaterialSelectorElement("demo_material", 
                 java.util.Map.of("materials", Arrays.asList(
                     Material.STONE, Material.DIRT, Material.GRASS_BLOCK, 
-                    Material.WOOD, Material.IRON_BLOCK, Material.GOLD_BLOCK)));
+                    Material.OAK_PLANKS, Material.IRON_BLOCK, Material.GOLD_BLOCK)));
         
         materialSelector.addChangeListener(value -> 
             player.sendMessage("§a🎆 Material changed to: §e" + value.getValue()));
@@ -213,7 +213,7 @@ public class InteractiveCommand implements CommandExecutor, TabCompleter {
             case "material":
                 element = new InteractiveGUIManager.MaterialSelectorElement("test", 
                     java.util.Map.of("materials", Arrays.asList(
-                        Material.STONE, Material.DIRT, Material.WOOD, Material.IRON_BLOCK)));
+                        Material.STONE, Material.DIRT, Material.OAK_PLANKS, Material.IRON_BLOCK)));
                 break;
             case "toggle":
                 element = new InteractiveGUIManager.ModeToggleElement("test", 

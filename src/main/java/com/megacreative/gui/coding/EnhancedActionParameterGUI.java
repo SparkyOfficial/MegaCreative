@@ -178,7 +178,7 @@ public class EnhancedActionParameterGUI {
                 case "material":
                     properties.put("materials", Arrays.asList(
                         Material.STONE, Material.DIRT, Material.GRASS_BLOCK,
-                        Material.WOOD, Material.COBBLESTONE, Material.SAND
+                        Material.OAK_PLANKS, Material.COBBLESTONE, Material.SAND
                     ));
                     break;
                 case "tool":
@@ -189,7 +189,7 @@ public class EnhancedActionParameterGUI {
                     break;
                 default:
                     properties.put("materials", Arrays.asList(
-                        Material.STONE, Material.DIRT, Material.WOOD, Material.IRON_INGOT
+                        Material.STONE, Material.DIRT, Material.OAK_PLANKS, Material.IRON_INGOT
                     ));
             }
         }

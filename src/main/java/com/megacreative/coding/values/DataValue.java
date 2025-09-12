@@ -22,6 +22,13 @@ public interface DataValue extends ConfigurationSerializable, Cloneable {
     Object getValue();
     
     /**
+     * Gets the raw value object (alias for getValue)
+     */
+    default Object getRawValue() {
+        return getValue();
+    }
+    
+    /**
      * Sets the raw value with validation
      */
     void setValue(Object value) throws IllegalArgumentException;

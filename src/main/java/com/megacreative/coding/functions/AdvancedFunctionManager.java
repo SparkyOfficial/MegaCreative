@@ -198,4 +198,308 @@ public class AdvancedFunctionManager {
         long startTime = System.currentTimeMillis();
         
         // Execute function blocks
-        return executeFunctionBlocks(function, newContext)\n            .whenComplete((result, throwable) -> {\n                long executionTime = System.currentTimeMillis() - startTime;\n                \n                // Record execution statistics\n                function.recordExecution(executionTime, throwable == null && result.isSuccess());\n                \n                // Remove from active executions\n                activeExecutions.remove(caller.getUniqueId());\n                \n                // Restore previous context if nested\n                if (execContext != null) {\n                    activeExecutions.put(caller.getUniqueId(), execContext);\n                }\n            });\n    }\n    \n    /**\n     * Executes the code blocks of a function\n     */\n    private CompletableFuture<ExecutionResult> executeFunctionBlocks(FunctionDefinition function, \n                                                                     FunctionExecutionContext context) {\n        try {\n            // Create local scope with function parameters\n            Map<String, DataValue> localScope = function.createLocalScope(context.getArguments());\n            \n            // Create execution context for script engine\n            ExecutionContext scriptContext = new ExecutionContext.Builder()\n                .plugin(plugin)\n                .player(context.getCaller())\n                .creativeWorld(plugin.getWorldManager().findCreativeWorldByBukkit(context.getCaller().getWorld()))\n                .currentBlock(function.getFunctionBlocks().get(0))\n                .build();\n            \n            // Add local variables to context\n            for (Map.Entry<String, DataValue> entry : localScope.entrySet()) {\n                scriptContext.setVariable(entry.getKey(), entry.getValue().getValue());\n            }\n            \n            // Add context data\n            for (Map.Entry<String, Object> entry : context.getContextData().entrySet()) {\n                scriptContext.setVariable(entry.getKey(), entry.getValue());\n            }\n            \n            // Create temporary script from function blocks\n            CodeScript functionScript = new CodeScript(\n                \"Function: \" + function.getName(), true, function.getFunctionBlocks().get(0));\n            \n            // Link function blocks\n            for (int i = 0; i < function.getFunctionBlocks().size() - 1; i++) {\n                function.getFunctionBlocks().get(i).setNextBlock(function.getFunctionBlocks().get(i + 1));\n            }\n            \n            // Execute function script\n            return scriptEngine.executeScript(functionScript, context.getCaller(), \"function_call\")\n                .thenApply(result -> {\n                    // Handle return value\n                    Object returnValue = scriptContext.getVariable(\"return\");\n                    if (returnValue != null) {\n                        result = ExecutionResult.success(\"Function executed with return value: \" + returnValue);\n                    }\n                    return result;\n                });\n            \n        } catch (Exception e) {\n            return CompletableFuture.completedFuture(\n                ExecutionResult.error(\"Function execution failed: \" + e.getMessage()));\n        }\n    }\n    \n    /**\n     * Gets all functions available to a player\n     */\n    public List<FunctionDefinition> getAvailableFunctions(Player player) {\n        List<FunctionDefinition> available = new ArrayList<>();\n        \n        // Add player functions\n        Map<String, FunctionDefinition> playerFuncs = playerFunctions.get(player.getUniqueId());\n        if (playerFuncs != null) {\n            available.addAll(playerFuncs.values());\n        }\n        \n        // Add shared functions\n        for (Map<String, FunctionDefinition> funcs : playerFunctions.values()) {\n            for (FunctionDefinition func : funcs.values()) {\n                if (func.getScope() == FunctionDefinition.FunctionScope.SHARED && func.canCall(player)) {\n                    available.add(func);\n                }\n            }\n        }\n        \n        // Add world functions\n        String worldId = getPlayerWorldId(player);\n        if (worldId != null) {\n            Map<String, FunctionDefinition> worldFuncs = worldFunctions.get(worldId);\n            if (worldFuncs != null) {\n                available.addAll(worldFuncs.values().stream()\n                    .filter(func -> func.canCall(player))\n                    .collect(Collectors.toList()));\n            }\n        }\n        \n        // Add global functions\n        available.addAll(globalFunctions.values().stream()\n            .filter(func -> func.canCall(player))\n            .collect(Collectors.toList()));\n        \n        return available;\n    }\n    \n    /**\n     * Removes a function definition\n     */\n    public boolean removeFunction(String name, Player owner) {\n        boolean removed = false;\n        \n        // Remove from player functions\n        Map<String, FunctionDefinition> playerFuncs = playerFunctions.get(owner.getUniqueId());\n        if (playerFuncs != null) {\n            removed = playerFuncs.remove(name) != null;\n        }\n        \n        // Remove from world functions\n        String worldId = getPlayerWorldId(owner);\n        if (worldId != null) {\n            Map<String, FunctionDefinition> worldFuncs = worldFunctions.get(worldId);\n            if (worldFuncs != null) {\n                removed = worldFuncs.remove(name) != null || removed;\n            }\n        }\n        \n        // Remove from global functions (only if owner)\n        FunctionDefinition globalFunc = globalFunctions.get(name);\n        if (globalFunc != null && globalFunc.getOwner().getUniqueId().equals(owner.getUniqueId())) {\n            removed = globalFunctions.remove(name) != null || removed;\n        }\n        \n        return removed;\n    }\n    \n    /**\n     * Gets function execution statistics\n     */\n    public Map<String, Object> getFunctionStatistics() {\n        Map<String, Object> stats = new HashMap<>();\n        \n        int totalFunctions = globalFunctions.size();\n        totalFunctions += playerFunctions.values().stream().mapToInt(Map::size).sum();\n        totalFunctions += worldFunctions.values().stream().mapToInt(Map::size).sum();\n        \n        stats.put(\"total_functions\", totalFunctions);\n        stats.put(\"global_functions\", globalFunctions.size());\n        stats.put(\"player_functions\", playerFunctions.size());\n        stats.put(\"world_functions\", worldFunctions.size());\n        stats.put(\"active_executions\", activeExecutions.size());\n        stats.put(\"libraries\", libraries.size());\n        \n        return stats;\n    }\n    \n    /**\n     * Initializes built-in function libraries\n     */\n    private void initializeBuiltInLibraries() {\n        // Math library\n        FunctionLibrary mathLib = new FunctionLibrary(\"math\", \"Mathematical functions\");\n        libraries.put(\"math\", mathLib);\n        \n        // String library\n        FunctionLibrary stringLib = new FunctionLibrary(\"string\", \"String manipulation functions\");\n        libraries.put(\"string\", stringLib);\n        \n        // Utility library\n        FunctionLibrary utilLib = new FunctionLibrary(\"util\", \"Utility functions\");\n        libraries.put(\"util\", utilLib);\n        \n        plugin.getLogger().info(\"🎆 Initialized \" + libraries.size() + \" built-in function libraries\");\n    }\n    \n    /**\n     * Helper methods\n     */\n    \n    private boolean functionExists(String name, Player owner, FunctionDefinition.FunctionScope scope) {\n        switch (scope) {\n            case GLOBAL:\n                return globalFunctions.containsKey(name);\n            case PLAYER:\n            case SHARED:\n                Map<String, FunctionDefinition> playerFuncs = playerFunctions.get(owner.getUniqueId());\n                return playerFuncs != null && playerFuncs.containsKey(name);\n            case WORLD:\n                String worldId = getPlayerWorldId(owner);\n                if (worldId != null) {\n                    Map<String, FunctionDefinition> worldFuncs = worldFunctions.get(worldId);\n                    return worldFuncs != null && worldFuncs.containsKey(name);\n                }\n                return false;\n            default:\n                return false;\n        }\n    }\n    \n    private String getPlayerWorldId(Player player) {\n        CreativeWorld world = plugin.getWorldManager().findCreativeWorldByBukkit(player.getWorld());\n        return world != null ? world.getId() : null;\n    }\n    \n    /**\n     * Function execution context\n     */\n    private static class FunctionExecutionContext {\n        private final UUID executionId;\n        private final FunctionDefinition function;\n        private final Player caller;\n        private final DataValue[] arguments;\n        private final Map<String, Object> contextData;\n        private final long startTime;\n        private int recursionDepth = 0;\n        \n        public FunctionExecutionContext(UUID executionId, FunctionDefinition function, Player caller,\n                                      DataValue[] arguments, Map<String, Object> contextData) {\n            this.executionId = executionId;\n            this.function = function;\n            this.caller = caller;\n            this.arguments = arguments;\n            this.contextData = contextData;\n            this.startTime = System.currentTimeMillis();\n        }\n        \n        // Getters\n        public UUID getExecutionId() { return executionId; }\n        public FunctionDefinition getFunction() { return function; }\n        public Player getCaller() { return caller; }\n        public DataValue[] getArguments() { return arguments; }\n        public Map<String, Object> getContextData() { return contextData; }\n        public long getStartTime() { return startTime; }\n        public int getRecursionDepth() { return recursionDepth; }\n        \n        public void setRecursionDepth(int recursionDepth) { this.recursionDepth = recursionDepth; }\n    }\n    \n    /**\n     * Function library for organizing related functions\n     */\n    public static class FunctionLibrary {\n        private final String name;\n        private final String description;\n        private final Map<String, FunctionDefinition> functions = new ConcurrentHashMap<>();\n        \n        public FunctionLibrary(String name, String description) {\n            this.name = name;\n            this.description = description;\n        }\n        \n        public void addFunction(FunctionDefinition function) {\n            functions.put(function.getName(), function);\n        }\n        \n        public void removeFunction(String name) {\n            functions.remove(name);\n        }\n        \n        public FunctionDefinition getFunction(String name) {\n            return functions.get(name);\n        }\n        \n        public Collection<FunctionDefinition> getAllFunctions() {\n            return functions.values();\n        }\n        \n        // Getters\n        public String getName() { return name; }\n        public String getDescription() { return description; }\n        public int getFunctionCount() { return functions.size(); }\n    }\n    \n    /**\n     * Cleanup and shutdown\n     */\n    public void shutdown() {\n        // Cancel all active executions\n        activeExecutions.clear();\n        \n        // Clear all function definitions\n        globalFunctions.clear();\n        playerFunctions.clear();\n        worldFunctions.clear();\n        libraries.clear();\n        \n        plugin.getLogger().info(\"🎆 Advanced Function Manager shut down\");\n    }\n}
+        return executeFunctionBlocks(function, newContext)
+            .whenComplete((result, throwable) -> {
+                long executionTime = System.currentTimeMillis() - startTime;
+                
+                // Record execution statistics
+                function.recordExecution(executionTime, throwable == null && result.isSuccess());
+                
+                // Remove from active executions
+                activeExecutions.remove(caller.getUniqueId());
+                
+                // Restore previous context if nested
+                if (execContext != null) {
+                    activeExecutions.put(caller.getUniqueId(), execContext);
+                }
+            });
+    }
+    
+    /**
+     * Executes the code blocks of a function
+     */
+    private CompletableFuture<ExecutionResult> executeFunctionBlocks(FunctionDefinition function, 
+                                                                     FunctionExecutionContext context) {
+        try {
+            // Create local scope with function parameters
+            Map<String, DataValue> localScope = function.createLocalScope(context.getArguments());
+            
+            // Create execution context for script engine
+            ExecutionContext scriptContext = new ExecutionContext.Builder()
+                .plugin(plugin)
+                .player(context.getCaller())
+                .creativeWorld(plugin.getWorldManager().findCreativeWorldByBukkit(context.getCaller().getWorld()))
+                .currentBlock(function.getFunctionBlocks().get(0))
+                .build();
+            
+            // Add local variables to context
+            for (Map.Entry<String, DataValue> entry : localScope.entrySet()) {
+                scriptContext.setVariable(entry.getKey(), entry.getValue().getValue());
+            }
+            
+            // Add context data
+            for (Map.Entry<String, Object> entry : context.getContextData().entrySet()) {
+                scriptContext.setVariable(entry.getKey(), entry.getValue());
+            }
+            
+            // Create temporary script from function blocks
+            CodeScript functionScript = new CodeScript(
+                "Function: " + function.getName(), true, function.getFunctionBlocks().get(0));
+            
+            // Link function blocks
+            for (int i = 0; i < function.getFunctionBlocks().size() - 1; i++) {
+                function.getFunctionBlocks().get(i).setNextBlock(function.getFunctionBlocks().get(i + 1));
+            }
+            
+            // Execute function script
+            return scriptEngine.executeScript(functionScript, context.getCaller(), "function_call")
+                .thenApply(result -> {
+                    // Handle return value
+                    Object returnValue = scriptContext.getVariable("return");
+                    if (returnValue != null) {
+                        result = ExecutionResult.success("Function executed with return value: " + returnValue);
+                    }
+                    return result;
+                });
+            
+        } catch (Exception e) {
+            return CompletableFuture.completedFuture(
+                ExecutionResult.error("Function execution failed: " + e.getMessage()));
+        }
+    }
+    
+    /**
+     * Gets all functions available to a player
+     */
+    public List<FunctionDefinition> getAvailableFunctions(Player player) {
+        List<FunctionDefinition> available = new ArrayList<>();
+        
+        // Add player functions
+        Map<String, FunctionDefinition> playerFuncs = playerFunctions.get(player.getUniqueId());
+        if (playerFuncs != null) {
+            available.addAll(playerFuncs.values());
+        }
+        
+        // Add shared functions
+        for (Map<String, FunctionDefinition> funcs : playerFunctions.values()) {
+            for (FunctionDefinition func : funcs.values()) {
+                if (func.getScope() == FunctionDefinition.FunctionScope.SHARED && func.canCall(player)) {
+                    available.add(func);
+                }
+            }
+        }
+        
+        // Add world functions
+        String worldId = getPlayerWorldId(player);
+        if (worldId != null) {
+            Map<String, FunctionDefinition> worldFuncs = worldFunctions.get(worldId);
+            if (worldFuncs != null) {
+                available.addAll(worldFuncs.values().stream()
+                    .filter(func -> func.canCall(player))
+                    .collect(Collectors.toList()));
+            }
+        }
+        
+        // Add global functions
+        available.addAll(globalFunctions.values().stream()
+            .filter(func -> func.canCall(player))
+            .collect(Collectors.toList()));
+        
+        return available;
+    }
+    
+    /**
+     * Removes a function by name and player (for player/shared functions)
+     */
+    public boolean removeFunction(String name, Player player) {
+        // Try to remove from player functions
+        Map<String, FunctionDefinition> playerFuncs = playerFunctions.get(player.getUniqueId());
+        if (playerFuncs != null && playerFuncs.containsKey(name)) {
+            FunctionDefinition func = playerFuncs.get(name);
+            if (func.getOwner().getUniqueId().equals(player.getUniqueId())) {
+                playerFuncs.remove(name);
+                plugin.getLogger().info("🎆 Removed function: " + name + " by " + player.getName());
+                return true;
+            }
+        }
+        
+        // Try to remove from world functions (if player is owner)
+        String worldId = getPlayerWorldId(player);
+        if (worldId != null) {
+            Map<String, FunctionDefinition> worldFuncs = worldFunctions.get(worldId);
+            if (worldFuncs != null && worldFuncs.containsKey(name)) {
+                FunctionDefinition func = worldFuncs.get(name);
+                if (func.getOwner().getUniqueId().equals(player.getUniqueId())) {
+                    worldFuncs.remove(name);
+                    plugin.getLogger().info("🎆 Removed world function: " + name + " by " + player.getName());
+                    return true;
+                }
+            }
+        }
+        
+        return false;
+    }
+    
+    /**
+     * Gets function system statistics
+     */
+    public Map<String, Object> getFunctionStatistics() {
+        Map<String, Object> stats = new HashMap<>();
+        
+        int totalFunctions = globalFunctions.size();
+        int playerFunctionCount = 0;
+        int worldFunctionCount = 0;
+        
+        for (Map<String, FunctionDefinition> playerMap : playerFunctions.values()) {
+            playerFunctionCount += playerMap.size();
+        }
+        
+        for (Map<String, FunctionDefinition> worldMap : worldFunctions.values()) {
+            worldFunctionCount += worldMap.size();
+        }
+        
+        totalFunctions += playerFunctionCount + worldFunctionCount;
+        
+        stats.put("total_functions", totalFunctions);
+        stats.put("global_functions", globalFunctions.size());
+        stats.put("player_functions", playerFunctionCount);
+        stats.put("world_functions", worldFunctionCount);
+        stats.put("active_executions", activeExecutions.size());
+        stats.put("libraries", libraries.size());
+        
+        return stats;
+    }
+    
+    /**
+     * Helper methods
+     */
+    
+    private boolean functionExists(String name, Player owner, FunctionDefinition.FunctionScope scope) {
+        switch (scope) {
+            case GLOBAL:
+                return globalFunctions.containsKey(name);
+            case PLAYER:
+            case SHARED:
+                Map<String, FunctionDefinition> playerFuncs = playerFunctions.get(owner.getUniqueId());
+                return playerFuncs != null && playerFuncs.containsKey(name);
+            case WORLD:
+                String worldId = getPlayerWorldId(owner);
+                if (worldId != null) {
+                    Map<String, FunctionDefinition> worldFuncs = worldFunctions.get(worldId);
+                    return worldFuncs != null && worldFuncs.containsKey(name);
+                }
+                return false;
+            default:
+                return false;
+        }
+    }
+    
+    private String getPlayerWorldId(Player player) {
+        CreativeWorld world = plugin.getWorldManager().findCreativeWorldByBukkit(player.getWorld());
+        return world != null ? world.getId() : null;
+    }
+    
+    /**
+     * Initializes built-in function libraries
+     */
+    private void initializeBuiltInLibraries() {
+        // Math library
+        FunctionLibrary mathLib = new FunctionLibrary("math", "Mathematical functions");
+        libraries.put("math", mathLib);
+        
+        // String library
+        FunctionLibrary stringLib = new FunctionLibrary("string", "String manipulation functions");
+        libraries.put("string", stringLib);
+        
+        // Utility library
+        FunctionLibrary utilLib = new FunctionLibrary("util", "Utility functions");
+        libraries.put("util", utilLib);
+        
+        plugin.getLogger().info("🎆 Initialized " + libraries.size() + " built-in function libraries");
+    }
+    
+    /**
+     * Function execution context
+     */
+    private static class FunctionExecutionContext {
+        private final UUID executionId;
+        private final FunctionDefinition function;
+        private final Player caller;
+        private final DataValue[] arguments;
+        private final Map<String, Object> contextData;
+        private final long startTime;
+        private int recursionDepth = 0;
+        
+        public FunctionExecutionContext(UUID executionId, FunctionDefinition function, Player caller,
+                                      DataValue[] arguments, Map<String, Object> contextData) {
+            this.executionId = executionId;
+            this.function = function;
+            this.caller = caller;
+            this.arguments = arguments;
+            this.contextData = contextData;
+            this.startTime = System.currentTimeMillis();
+        }
+        
+        // Getters
+        public UUID getExecutionId() { return executionId; }
+        public FunctionDefinition getFunction() { return function; }
+        public Player getCaller() { return caller; }
+        public DataValue[] getArguments() { return arguments; }
+        public Map<String, Object> getContextData() { return contextData; }
+        public long getStartTime() { return startTime; }
+        public int getRecursionDepth() { return recursionDepth; }
+        
+        public void setRecursionDepth(int recursionDepth) { this.recursionDepth = recursionDepth; }
+    }
+    
+    /**
+     * Function library for organizing related functions
+     */
+    public static class FunctionLibrary {
+        private final String name;
+        private final String description;
+        private final Map<String, FunctionDefinition> functions = new ConcurrentHashMap<>();
+        
+        public FunctionLibrary(String name, String description) {
+            this.name = name;
+            this.description = description;
+        }
+        
+        public void addFunction(FunctionDefinition function) {
+            functions.put(function.getName(), function);
+        }
+        
+        public void removeFunction(String name) {
+            functions.remove(name);
+        }
+        
+        public FunctionDefinition getFunction(String name) {
+            return functions.get(name);
+        }
+        
+        public Collection<FunctionDefinition> getAllFunctions() {
+            return functions.values();
+        }
+        
+        // Getters
+        public String getName() { return name; }
+        public String getDescription() { return description; }
+        public int getFunctionCount() { return functions.size(); }
+    }
+    
+    /**
+     * Cleanup and shutdown
+     */
+    public void shutdown() {
+        // Cancel all active executions
+        activeExecutions.clear();
+        
+        // Clear all function definitions
+        globalFunctions.clear();
+        playerFunctions.clear();
+        worldFunctions.clear();
+        libraries.clear();
+        
+        plugin.getLogger().info("🎆 Advanced Function Manager shut down");
+    }
+}

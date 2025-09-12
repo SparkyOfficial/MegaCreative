@@ -1,6 +1,8 @@
 package com.megacreative.coding.actions;
 
 import com.megacreative.MegaCreative;
+import com.megacreative.coding.BlockAction;
+import com.megacreative.coding.CodeBlock;
 import com.megacreative.coding.ExecutionContext;
 import com.megacreative.coding.values.DataValue;
 import com.megacreative.coding.executors.ExecutionResult;
@@ -14,26 +16,27 @@ import java.util.concurrent.CompletableFuture;
  * Handles function return statements with optional return values.
  * Terminates function execution and returns control to the caller.
  */
-public class ReturnAction extends CodeAction {
+public class ReturnAction implements BlockAction {
+    
+    private final MegaCreative plugin;
     
     public ReturnAction(MegaCreative plugin) {
-        super(plugin);
+        this.plugin = plugin;
     }
 
     @Override
-    public CompletableFuture<ExecutionResult> execute(ExecutionContext context) {
+    public ExecutionResult execute(CodeBlock block, ExecutionContext context) {
         Player player = context.getPlayer();
         
         if (player == null) {
-            return CompletableFuture.completedFuture(
-                ExecutionResult.error("Invalid execution context for return"));
+            return ExecutionResult.error("Invalid execution context for return");
         }
         
         try {
             // Get return value from block parameters
             Object returnValue = null;
-            if (context.getCurrentBlock() != null) {
-                returnValue = context.getCurrentBlock().getParameterValue("return_value");
+            if (block != null) {
+                returnValue = block.getParameterValue("return_value");
             }
             
             // Set return value in context
@@ -51,27 +54,11 @@ public class ReturnAction extends CodeAction {
                 result.setReturnValue(returnValue);
             }
             
-            return CompletableFuture.completedFuture(result);
+            return result;
             
         } catch (Exception e) {
             plugin.getLogger().warning("🎆 Return action failed: " + e.getMessage());
-            return CompletableFuture.completedFuture(
-                ExecutionResult.error("Return failed: " + e.getMessage()));
+            return ExecutionResult.error("Return failed: " + e.getMessage());
         }
-    }
-
-    @Override
-    public boolean canExecute(ExecutionContext context) {
-        return context.getPlayer() != null;
-    }
-
-    @Override
-    public String getActionName() {
-        return "return";
-    }
-
-    @Override
-    public String getDescription() {
-        return "🎆 Returns from a function with an optional value";
     }
 }

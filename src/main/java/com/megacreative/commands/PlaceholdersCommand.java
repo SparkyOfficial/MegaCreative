@@ -46,4 +46,133 @@ public class PlaceholdersCommand implements CommandExecutor {
                     testPlaceholder(player, String.join(" ", java.util.Arrays.copyOfRange(args, 1, args.length)));
                 } else {
                     player.sendMessage("§cИспользование: /placeholders test <текст с плейсхолдерами>");
-                }\n                break;\n            case \"help\":\n                showHelp(player);\n                break;\n            case \"examples\":\n                showExamples(player);\n                break;\n            default:\n                // Treat as placeholder test\n                testPlaceholder(player, String.join(\" \", args));\n                break;\n        }\n        \n        return true;\n    }\n    \n    private void showHelp(Player player) {\n        player.sendMessage(\"\u00a78\u00a7m                    \u00a7r \u00a76\u00a7lPlaceholder System \u00a78\u00a7m                    \");\n        player.sendMessage(\"\u00a7e\ud83c\udf86 FrameLand-Style Placeholder System\");\n        player.sendMessage(\"\");\n        player.sendMessage(\"\u00a77\u00a7l\u041a\u043e\u043c\u0430\u043d\u0434\u044b:\");\n        player.sendMessage(\"\u00a7e/placeholders demo \u00a78- \u00a7f\u041f\u043e\u043a\u0430\u0437\u0430\u0442\u044c \u0434\u0435\u043c\u043e\u043d\u0441\u0442\u0440\u0430\u0446\u0438\u044e\");\n        player.sendMessage(\"\u00a7e/placeholders test <\u0442\u0435\u043a\u0441\u0442> \u00a78- \u00a7f\u041f\u0440\u043e\u0442\u0435\u0441\u0442\u0438\u0440\u043e\u0432\u0430\u0442\u044c \u043f\u043b\u0435\u0439\u0441\u0445\u043e\u043b\u0434\u0435\u0440\u044b\");\n        player.sendMessage(\"\u00a7e/placeholders examples \u00a78- \u00a7f\u041f\u043e\u043a\u0430\u0437\u0430\u0442\u044c \u043f\u0440\u0438\u043c\u0435\u0440\u044b\");\n        player.sendMessage(\"\u00a7e/placeholders help \u00a78- \u00a7f\u041f\u043e\u043a\u0430\u0437\u0430\u0442\u044c \u044d\u0442\u0443 \u0441\u043f\u0440\u0430\u0432\u043a\u0443\");\n        player.sendMessage(\"\");\n        player.sendMessage(\"\u00a77\u00a7l\u041e\u0441\u043d\u043e\u0432\u043d\u044b\u0435 \u0444\u043e\u0440\u043c\u0430\u0442\u044b:\");\n        player.sendMessage(\"\u00a7a\u2022 FrameLand: \u00a7fprefix[content]~\");\n        player.sendMessage(\"\u00a7a\u2022 Modern: \u00a7f${variable}\");\n        player.sendMessage(\"\u00a7a\u2022 Classic: \u00a7f%variable%\");\n        player.sendMessage(\"\u00a78\u00a7m                                                        \");\n    }\n    \n    private void showDemo(Player player) {\n        // Set up demo variables\n        plugin.getServiceRegistry().getVariableManager().setPlayerVariable(\n            player.getUniqueId(), \"demo_score\", DataValue.of(\"1500\"));\n        plugin.getServiceRegistry().getVariableManager().setPlayerVariable(\n            player.getUniqueId(), \"demo_level\", DataValue.of(\"25\"));\n        plugin.getServiceRegistry().getVariableManager().setPlayerVariable(\n            player.getUniqueId(), \"demo_money\", DataValue.of(\"12345.67\"));\n            \n        // Create execution context\n        CreativeWorld world = worldManager.findCreativeWorldByBukkit(player.getWorld());\n        ExecutionContext context = new ExecutionContext(plugin, player, world, null);\n        \n        player.sendMessage(\"\u00a78\u00a7m                    \u00a7r \u00a76\u00a7lPlaceholder Demo \u00a78\u00a7m                    \");\n        \n        // Demo different placeholder types\n        String[] demoTexts = {\n            \"color[gold]~=== player[name]~'s Profile ===\",\n            \"color[green]~\u2764 Health: player[health]~/player[max_health]~\",\n            \"color[blue]~\ud83d\udccd Location: location[formatted]~ in world[name]~\",\n            \"color[yellow]~\ud83c\udf86 Score: apple[demo_score]~ points\",\n            \"color[cyan]~\ud83d\udcb0 Money: format[apple[demo_money]~|currency]~\",\n            \"color[purple]~\u2b06 Level: apple[demo_level]~ (player[level]~ exp)\",\n            \"color[red]~\ud83c\udfb2 Random: random[1-100]~\",\n            \"color[green]~\ud83d\udd52 Time: time[HH:mm:ss]~\",\n            \"color[aqua]~\ud83e\uddee Math: math[apple[demo_score]~/10]~ per level\",\n            \"color[reset]~Mixed: apple[demo_score]~, ${player_name}, %world%\"\n        };\n        \n        for (String text : demoTexts) {\n            String resolved = FrameLandPlaceholderResolver.resolvePlaceholders(text, context);\n            player.sendMessage(resolved);\n        }\n        \n        player.sendMessage(\"\u00a78\u00a7m                                                        \");\n        player.sendMessage(\"\u00a77\u041f\u0435\u0440\u0435\u043c\u0435\u043d\u043d\u044b\u0435 demo_score, demo_level, demo_money \u0431\u044b\u043b\u0438 \u0443\u0441\u0442\u0430\u043d\u043e\u0432\u043b\u0435\u043d\u044b \u0434\u043b\u044f \u0434\u0435\u043c\u043e\");\n    }\n    \n    private void testPlaceholder(Player player, String text) {\n        // Create execution context\n        CreativeWorld world = worldManager.findCreativeWorldByBukkit(player.getWorld());\n        ExecutionContext context = new ExecutionContext(plugin, player, world, null);\n        \n        player.sendMessage(\"\u00a78\u00a7m                    \u00a7r \u00a76\u00a7lPlaceholder Test \u00a78\u00a7m                    \");\n        player.sendMessage(\"\u00a77\u0418\u0441\u0445\u043e\u0434\u043d\u044b\u0439 \u0442\u0435\u043a\u0441\u0442:\");\n        player.sendMessage(\"\u00a7f\" + text);\n        player.sendMessage(\"\");\n        player.sendMessage(\"\u00a77\u0420\u0435\u0437\u0443\u043b\u044c\u0442\u0430\u0442:\");\n        \n        String resolved = FrameLandPlaceholderResolver.resolvePlaceholders(text, context);\n        player.sendMessage(resolved);\n        \n        player.sendMessage(\"\u00a78\u00a7m                                                        \");\n    }\n    \n    private void showExamples(Player player) {\n        player.sendMessage(\"\u00a78\u00a7m                    \u00a7r \u00a76\u00a7lPlaceholder Examples \u00a78\u00a7m                    \");\n        \n        String[] examples = {\n            \"\u00a77\u041f\u0435\u0440\u0435\u043c\u0435\u043d\u043d\u044b\u0435:\",\n            \"\u00a7f  apple[score]~ - \u00a77\u0417\u043d\u0430\u0447\u0435\u043d\u0438\u0435 \u043f\u0435\u0440\u0435\u043c\u0435\u043d\u043d\u043e\u0439\",\n            \"\u00a7f  apple[missing|\u041d\u0435\u0442 \u0434\u0430\u043d\u043d\u044b\u0445]~ - \u00a77\u0421 \u0437\u043d\u0430\u0447\u0435\u043d\u0438\u0435\u043c \u043f\u043e \u0443\u043c\u043e\u043b\u0447\u0430\u043d\u0438\u044e\",\n            \"\",\n            \"\u00a77\u0418\u0433\u0440\u043e\u043a:\",\n            \"\u00a7f  player[name]~ - \u00a77\u0418\u043c\u044f \u0438\u0433\u0440\u043e\u043a\u0430\",\n            \"\u00a7f  player[health]~/player[max_health]~ - \u00a77\u0417\u0434\u043e\u0440\u043e\u0432\u044c\u0435\",\n            \"\u00a7f  player[level]~ - \u00a77\u0423\u0440\u043e\u0432\u0435\u043d\u044c\",\n            \"\",\n            \"\u00a77\u041c\u0430\u0442\u0435\u043c\u0430\u0442\u0438\u043a\u0430:\",\n            \"\u00a7f  math[5+3]~ - \u00a77\u041f\u0440\u043e\u0441\u0442\u044b\u0435 \u0432\u044b\u0447\u0438\u0441\u043b\u0435\u043d\u0438\u044f\",\n            \"\u00a7f  math[apple[score]~*2]~ - \u00a77\u0421 \u043f\u0435\u0440\u0435\u043c\u0435\u043d\u043d\u044b\u043c\u0438\",\n            \"\",\n            \"\u00a77\u0424\u043e\u0440\u043c\u0430\u0442\u0438\u0440\u043e\u0432\u0430\u043d\u0438\u0435:\",\n            \"\u00a7f  format[1234.567|2]~ - \u00a771234.57\",\n            \"\u00a7f  format[apple[money]~|currency]~ - \u00a77$1234.57\",\n            \"\",\n            \"\u00a77\u0426\u0432\u0435\u0442\u0430:\",\n            \"\u00a7f  color[red]~\u041a\u0440\u0430\u0441\u043d\u044b\u0439 color[green]~\u0417\u0435\u043b\u0451\u043d\u044b\u0439 color[reset]~\u041e\u0431\u044b\u0447\u043d\u044b\u0439\",\n            \"\",\n            \"\u00a77\u0412\u0440\u0435\u043c\u044f:\",\n            \"\u00a7f  time[HH:mm]~ - \u00a7715:30\",\n            \"\u00a7f  time[date]~ - \u00a772023-12-25\",\n            \"\",\n            \"\u00a77\u0421\u043b\u0443\u0447\u0430\u0439\u043d\u044b\u0435 \u0447\u0438\u0441\u043b\u0430:\",\n            \"\u00a7f  random[1-100]~ - \u00a77\u041e\u0442 1 \u0434\u043e 100\",\n            \"\u00a7f  random[10]~ - \u00a77\u041e\u0442 0 \u0434\u043e 10\"\n        };\n        \n        for (String example : examples) {\n            player.sendMessage(example);\n        }\n        \n        player.sendMessage(\"\u00a78\u00a7m                                                        \");\n        player.sendMessage(\"\u00a77\u0418\u0441\u043f\u043e\u043b\u044c\u0437\u0443\u0439\u0442\u0435 \u00a7e/placeholders test <\u0442\u0435\u043a\u0441\u0442> \u00a77\u0447\u0442\u043e\u0431\u044b \u043f\u0440\u043e\u0442\u0435\u0441\u0442\u0438\u0440\u043e\u0432\u0430\u0442\u044c!\");\n    }\n}\n
+                }
+                break;
+            case "help":
+                showHelp(player);
+                break;
+            case "examples":
+                showExamples(player);
+                break;
+            default:
+                // Treat as placeholder test
+                testPlaceholder(player, String.join(" ", args));
+                break;
+        }
+        
+        return true;
+    }
+    
+    private void showHelp(Player player) {
+        player.sendMessage("§8§m                    §r §6§lPlaceholder System §8§m                    ");
+        player.sendMessage("§e🎆 FrameLand-Style Placeholder System");
+        player.sendMessage("");
+        player.sendMessage("§7§lКоманды:");
+        player.sendMessage("§e/placeholders demo §8- §fПоказать демонстрацию");
+        player.sendMessage("§e/placeholders test <текст> §8- §fПротестировать плейсхолдеры");
+        player.sendMessage("§e/placeholders examples §8- §fПоказать примеры");
+        player.sendMessage("§e/placeholders help §8- §fПоказать эту справку");
+        player.sendMessage("");
+        player.sendMessage("§7§lОсновные форматы:");
+        player.sendMessage("§a• FrameLand: §fprefix[content]~");
+        player.sendMessage("§a• Modern: §f${variable}");
+        player.sendMessage("§a• Classic: §f%variable%");
+        player.sendMessage("§8§m                                                        ");
+    }
+    
+    private void showDemo(Player player) {
+        // Set up demo variables
+        plugin.getServiceRegistry().getVariableManager().setPlayerVariable(
+            player.getUniqueId(), "demo_score", DataValue.of("1500"));
+        plugin.getServiceRegistry().getVariableManager().setPlayerVariable(
+            player.getUniqueId(), "demo_level", DataValue.of("25"));
+        plugin.getServiceRegistry().getVariableManager().setPlayerVariable(
+            player.getUniqueId(), "demo_money", DataValue.of("12345.67"));
+            
+        // Create execution context
+        CreativeWorld world = worldManager.findCreativeWorldByBukkit(player.getWorld());
+        ExecutionContext context = new ExecutionContext(plugin, player, world, null);
+        
+        player.sendMessage("§8§m                    §r §6§lPlaceholder Demo §8§m                    ");
+        
+        // Demo different placeholder types
+        String[] demoTexts = {
+            "color[gold]~=== player[name]~'s Profile ===",
+            "color[green]~❤ Health: player[health]~/player[max_health]~",
+            "color[blue]~📍 Location: location[formatted]~ in world[name]~",
+            "color[yellow]~🎆 Score: apple[demo_score]~ points",
+            "color[cyan]~💰 Money: format[apple[demo_money]~|currency]~",
+            "color[purple]~⬆ Level: apple[demo_level]~ (player[level]~ exp)",
+            "color[red]~🎲 Random: random[1-100]~",
+            "color[green]~🕒 Time: time[HH:mm:ss]~",
+            "color[aqua]~🧮 Math: math[apple[demo_score]~/10]~ per level",
+            "color[reset]~Mixed: apple[demo_score]~, ${player_name}, %world%"
+        };
+        
+        for (String text : demoTexts) {
+            String resolved = FrameLandPlaceholderResolver.resolvePlaceholders(text, context);
+            player.sendMessage(resolved);
+        }
+        
+        player.sendMessage("§8§m                                                        ");
+        player.sendMessage("§7Переменные demo_score, demo_level, demo_money были установлены для демо");
+    }
+    
+    private void testPlaceholder(Player player, String text) {
+        // Create execution context
+        CreativeWorld world = worldManager.findCreativeWorldByBukkit(player.getWorld());
+        ExecutionContext context = new ExecutionContext(plugin, player, world, null);
+        
+        player.sendMessage("§8§m                    §r §6§lPlaceholder Test §8§m                    ");
+        player.sendMessage("§7Исходный текст:");
+        player.sendMessage("§f" + text);
+        player.sendMessage("");
+        player.sendMessage("§7Результат:");
+        
+        String resolved = FrameLandPlaceholderResolver.resolvePlaceholders(text, context);
+        player.sendMessage(resolved);
+        
+        player.sendMessage("§8§m                                                        ");
+    }
+    
+    private void showExamples(Player player) {
+        player.sendMessage("§8§m                    §r §6§lPlaceholder Examples §8§m                    ");
+        
+        String[] examples = {
+            "§7Переменные:",
+            "§f  apple[score]~ - §7Значение переменной",
+            "§f  apple[missing|Нет данных]~ - §7С значением по умолчанию",
+            "",
+            "§7Игрок:",
+            "§f  player[name]~ - §7Имя игрока",
+            "§f  player[health]~/player[max_health]~ - §7Здоровье",
+            "§f  player[level]~ - §7Уровень",
+            "",
+            "§7Математика:",
+            "§f  math[5+3]~ - §7Простые вычисления",
+            "§f  math[apple[score]~*2]~ - §7С переменными",
+            "",
+            "§7Форматирование:",
+            "§f  format[1234.567|2]~ - §771234.57",
+            "§f  format[apple[money]~|currency]~ - §7$1234.57",
+            "",
+            "§7Цвета:",
+            "§f  color[red]~Красный color[green]~Зелёный color[reset]~Обычный",
+            "",
+            "§7Время:",
+            "§f  time[HH:mm]~ - §715:30",
+            "§f  time[date]~ - §772023-12-25",
+            "",
+            "§7Случайные числа:",
+            "§f  random[1-100]~ - §7От 1 до 100",
+            "§f  random[10]~ - §7От 0 до 10"
+        };
+        
+        for (String example : examples) {
+            player.sendMessage(example);
+        }
+        
+        player.sendMessage("§8§m                                                        ");
+        player.sendMessage("§7Используйте §e/placeholders test <текст> §7чтобы протестировать!");
+    }
+}

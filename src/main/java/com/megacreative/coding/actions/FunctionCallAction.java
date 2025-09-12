@@ -1,6 +1,7 @@
 package com.megacreative.coding.actions;
 
 import com.megacreative.MegaCreative;
+import com.megacreative.coding.BlockAction;
 import com.megacreative.coding.CodeBlock;
 import com.megacreative.coding.ExecutionContext;
 import com.megacreative.coding.functions.AdvancedFunctionManager;
@@ -21,37 +22,34 @@ import java.util.HashMap;
  * Handles execution of user-defined functions within the coding system.
  * Supports function discovery, parameter passing, and result handling.
  */
-public class FunctionCallAction extends CodeAction {
+public class FunctionCallAction implements BlockAction {
     
+    private final MegaCreative plugin;
     private final AdvancedFunctionManager functionManager;
     
     public FunctionCallAction(MegaCreative plugin) {
-        super(plugin);
+        this.plugin = plugin;
         this.functionManager = plugin.getServiceRegistry().getService(AdvancedFunctionManager.class);
     }
 
     @Override
-    public CompletableFuture<ExecutionResult> execute(ExecutionContext context) {
-        CodeBlock block = context.getCurrentBlock();
+    public ExecutionResult execute(CodeBlock block, ExecutionContext context) {
         Player player = context.getPlayer();
         
         if (block == null || player == null) {
-            return CompletableFuture.completedFuture(
-                ExecutionResult.error("Invalid execution context for function call"));
+            return ExecutionResult.error("Invalid execution context for function call");
         }
         
         // Get function name from block parameters
         String functionName = block.getParameterValue("function_name", String.class);
         if (functionName == null || functionName.trim().isEmpty()) {
-            return CompletableFuture.completedFuture(
-                ExecutionResult.error("Function name is required"));
+            return ExecutionResult.error("Function name is required");
         }
         
         // Find function definition
         FunctionDefinition function = functionManager.findFunction(functionName, player);
         if (function == null) {
-            return CompletableFuture.completedFuture(
-                ExecutionResult.error("Function not found: " + functionName));
+            return ExecutionResult.error("Function not found: " + functionName);
         }
         
         // Parse function arguments from block parameters
@@ -62,35 +60,39 @@ public class FunctionCallAction extends CodeAction {
         contextData.put("caller_block", block);
         contextData.put("execution_context", context);
         
-        // Execute function
-        return functionManager.executeFunction(functionName, player, arguments, contextData)
-            .thenApply(result -> {
-                // Handle function result
-                if (result.isSuccess()) {
-                    // Store return value in context if available
-                    Object returnValue = result.getReturnValue();
-                    if (returnValue != null) {
-                        context.setVariable("last_function_result", returnValue);
-                    }
-                    
-                    plugin.getLogger().info("🎆 Function '" + functionName + "' executed successfully");
-                    return ExecutionResult.success("Function call completed: " + functionName);
-                } else {
-                    plugin.getLogger().warning("🎆 Function '" + functionName + "' execution failed: " + result.getMessage());
-                    return result;
+        try {
+            // Execute function synchronously for simplicity
+            CompletableFuture<ExecutionResult> future = functionManager.executeFunction(functionName, player, arguments, contextData);
+            ExecutionResult result = future.get(); // This blocks, but for action compatibility
+            
+            // Handle function result
+            if (result.isSuccess()) {
+                // Store return value in context if available
+                Object returnValue = result.getReturnValue();
+                if (returnValue != null) {
+                    context.setVariable("last_function_result", returnValue);
                 }
-            });
+                
+                plugin.getLogger().info("🎆 Function '" + functionName + "' executed successfully");
+                return ExecutionResult.success("Function call completed: " + functionName);
+            } else {
+                plugin.getLogger().warning("🎆 Function '" + functionName + "' execution failed: " + result.getMessage());
+                return result;
+            }
+        } catch (Exception e) {
+            return ExecutionResult.error("Function execution error: " + e.getMessage());
+        }
     }
     
     /**
      * Parses function arguments from block parameters
      */
     private DataValue[] parseArguments(CodeBlock block, FunctionDefinition function) {
-        List<FunctionDefinition.Parameter> expectedParams = function.getParameters();
+        List<FunctionDefinition.FunctionParameter> expectedParams = function.getParameters();
         DataValue[] arguments = new DataValue[expectedParams.size()];
         
         for (int i = 0; i < expectedParams.size(); i++) {
-            FunctionDefinition.Parameter param = expectedParams.get(i);
+            FunctionDefinition.FunctionParameter param = expectedParams.get(i);
             String paramKey = "arg_" + i + "_" + param.getName();
             
             // Try to get parameter value from block
@@ -123,37 +125,21 @@ public class FunctionCallAction extends CodeAction {
      */
     private DataValue createEmptyValue(ValueType type) {
         switch (type) {
-            case STRING:
-                return new DataValue(ValueType.STRING, "");
+            case TEXT:
+                return DataValue.of("");
             case NUMBER:
-                return new DataValue(ValueType.NUMBER, 0.0);
+                return DataValue.of(0.0);
             case BOOLEAN:
-                return new DataValue(ValueType.BOOLEAN, false);
+                return DataValue.of(false);
             case LOCATION:
-                return new DataValue(ValueType.LOCATION, null);
+                return DataValue.of(null);
             case ITEM:
-                return new DataValue(ValueType.ITEM, null);
+                return DataValue.of(null);
             case PLAYER:
-                return new DataValue(ValueType.PLAYER, null);
+                return DataValue.of(null);
             default:
-                return new DataValue(ValueType.STRING, "");
+                return DataValue.of("");
         }
     }
 
-    @Override
-    public boolean canExecute(ExecutionContext context) {
-        return context.getCurrentBlock() != null && 
-               context.getPlayer() != null &&
-               functionManager != null;
-    }
-
-    @Override
-    public String getActionName() {
-        return "call_function";
-    }
-
-    @Override
-    public String getDescription() {
-        return "🎆 Calls a user-defined function with specified arguments";
-    }
 }

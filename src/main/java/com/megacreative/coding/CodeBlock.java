@@ -205,6 +205,67 @@ public class CodeBlock implements Cloneable {
     }
     
     /**
+     * Gets a parameter value as a specific type
+     * @param key Parameter key
+     * @param type Expected type class
+     * @return Parameter value converted to type or null if not found
+     */
+    @SuppressWarnings("unchecked")
+    public <T> T getParameterValue(String key, Class<T> type) {
+        DataValue value = parameters.get(key);
+        if (value == null) return null;
+        
+        if (type == String.class) {
+            return (T) value.asString();
+        } else if (type == Boolean.class) {
+            return (T) Boolean.valueOf(value.asBoolean());
+        } else if (type == Integer.class) {
+            return (T) Integer.valueOf(value.asNumber().intValue());
+        } else if (type == Long.class) {
+            return (T) Long.valueOf(value.asNumber().longValue());
+        } else if (type == Double.class) {
+            return (T) Double.valueOf(value.asNumber().doubleValue());
+        } else if (type == Float.class) {
+            return (T) Float.valueOf(value.asNumber().floatValue());
+        }
+        
+        return null;
+    }
+    
+    /**
+     * Gets a parameter value as a specific type with default
+     * @param key Parameter key
+     * @param type Expected type class
+     * @param defaultValue Default value
+     * @return Parameter value converted to type or default value
+     */
+    public <T> T getParameterValue(String key, Class<T> type, T defaultValue) {
+        T value = getParameterValue(key, type);
+        return value != null ? value : defaultValue;
+    }
+    
+    /**
+     * Gets a parameter value as Object
+     * @param key Parameter key
+     * @return Parameter value as Object or null if not found
+     */
+    public Object getParameterValue(String key) {
+        DataValue value = parameters.get(key);
+        if (value == null) return null;
+        
+        return value.getRawValue();
+    }
+    
+    /**
+     * Checks if a parameter exists
+     * @param key Parameter key
+     * @return true if parameter exists
+     */
+    public boolean hasParameter(String key) {
+        return parameters.containsKey(key);
+    }
+    
+    /**
      * Adds a child block (for conditions).
      * @param child Block that will be executed inside this block
      */

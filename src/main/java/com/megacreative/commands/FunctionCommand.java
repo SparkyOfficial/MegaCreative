@@ -164,7 +164,7 @@ public class FunctionCommand implements CommandExecutor, TabCompleter {
         
         if (!function.getParameters().isEmpty()) {
             player.sendMessage(ChatColor.GOLD + "Parameters:");
-            for (FunctionDefinition.Parameter param : function.getParameters()) {
+            for (FunctionDefinition.FunctionParameter param : function.getParameters()) {
                 String required = param.isRequired() ? ChatColor.RED + "*" : ChatColor.GRAY + "";
                 player.sendMessage(ChatColor.GRAY + "  - " + required + ChatColor.WHITE + param.getName() + 
                     ChatColor.GRAY + " (" + param.getType() + ") - " + param.getDescription());
@@ -172,10 +172,9 @@ public class FunctionCommand implements CommandExecutor, TabCompleter {
         }
         
         // Show execution statistics
-        FunctionDefinition.ExecutionStats stats = function.getExecutionStats();
-        player.sendMessage(ChatColor.YELLOW + "Executions: " + ChatColor.WHITE + stats.getTotalExecutions());
-        player.sendMessage(ChatColor.YELLOW + "Success Rate: " + ChatColor.WHITE + 
-            String.format("%.1f%%", stats.getSuccessRate() * 100));
+        FunctionDefinition.FunctionStatistics stats = function.getStatistics();
+        player.sendMessage(ChatColor.YELLOW + "Executions: " + ChatColor.WHITE + stats.getCallCount());
+        player.sendMessage(ChatColor.YELLOW + "Total Time: " + ChatColor.WHITE + stats.getTotalExecutionTime() + "ms");
         player.sendMessage(ChatColor.YELLOW + "Avg Time: " + ChatColor.WHITE + 
             String.format("%.2fms", stats.getAverageExecutionTime()));
     }
@@ -294,16 +293,16 @@ public class FunctionCommand implements CommandExecutor, TabCompleter {
         // Try to parse as number
         try {
             double number = Double.parseDouble(arg);
-            return new DataValue(ValueType.NUMBER, number);
+            return DataValue.of(number);
         } catch (NumberFormatException ignored) {}
         
         // Try to parse as boolean
         if ("true".equalsIgnoreCase(arg) || "false".equalsIgnoreCase(arg)) {
-            return new DataValue(ValueType.BOOLEAN, Boolean.parseBoolean(arg));
+            return DataValue.of(Boolean.parseBoolean(arg));
         }
         
         // Default to string
-        return new DataValue(ValueType.STRING, arg);
+        return DataValue.of(arg);
     }
 
     @Override

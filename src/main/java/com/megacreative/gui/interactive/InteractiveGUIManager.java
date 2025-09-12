@@ -181,7 +181,7 @@ public class InteractiveGUIManager implements Listener {
         public InteractiveElement(String id, Map<String, Object> properties) {
             this.id = id;
             this.properties = new HashMap<>(properties);
-            this.value = new DataValue(ValueType.STRING, "");
+            this.value = DataValue.of("");
         }
         
         public String getId() { return id; }
@@ -244,13 +244,13 @@ public class InteractiveGUIManager implements Listener {
                 // Default materials
                 this.availableMaterials = Arrays.asList(
                     Material.STONE, Material.DIRT, Material.GRASS_BLOCK,
-                    Material.WOOD, Material.IRON_BLOCK, Material.GOLD_BLOCK,
+                    Material.OAK_PLANKS, Material.IRON_BLOCK, Material.GOLD_BLOCK,
                     Material.DIAMOND_BLOCK, Material.EMERALD_BLOCK
                 );
             }
             
             if (!availableMaterials.isEmpty()) {
-                setValue(new DataValue(ValueType.STRING, availableMaterials.get(0).name()));
+                setValue(DataValue.of(availableMaterials.get(0).name()));
             }
         }
         
@@ -298,7 +298,7 @@ public class InteractiveGUIManager implements Listener {
             }
             
             Material newMaterial = availableMaterials.get(currentIndex);
-            setValue(new DataValue(ValueType.STRING, newMaterial.name()));
+            setValue(DataValue.of(newMaterial.name()));
         }
         
         @Override
@@ -331,7 +331,7 @@ public class InteractiveGUIManager implements Listener {
             }
             
             if (!modes.isEmpty()) {
-                setValue(new DataValue(ValueType.STRING, modes.get(0)));
+                setValue(DataValue.of(modes.get(0)));
             }
         }
         
@@ -385,7 +385,7 @@ public class InteractiveGUIManager implements Listener {
             
             currentModeIndex = (currentModeIndex + 1) % modes.size();
             String newMode = modes.get(currentModeIndex);
-            setValue(new DataValue(ValueType.STRING, newMode));
+            setValue(DataValue.of(newMode));
         }
         
         @Override
@@ -411,7 +411,7 @@ public class InteractiveGUIManager implements Listener {
             this.step = ((Number) getProperty("step", 1.0)).doubleValue();
             this.currentValue = ((Number) getProperty("value", min)).doubleValue();
             
-            setValue(new DataValue(ValueType.NUMBER, currentValue));
+            setValue(DataValue.of(currentValue));
         }
         
         @Override
@@ -457,7 +457,7 @@ public class InteractiveGUIManager implements Listener {
             }
             
             currentValue = Math.max(min, Math.min(max, currentValue + change));
-            setValue(new DataValue(ValueType.NUMBER, currentValue));
+            setValue(DataValue.of(currentValue));
         }
         
         @Override
@@ -475,7 +475,7 @@ public class InteractiveGUIManager implements Listener {
         public TextInputElement(String id, Map<String, Object> properties) {
             super(id, properties);
             this.currentText = (String) getProperty("value", "");
-            setValue(new DataValue(ValueType.STRING, currentText));
+            setValue(DataValue.of(currentText));
         }
         
         @Override
@@ -530,7 +530,7 @@ public class InteractiveGUIManager implements Listener {
                 Material.PINK_CONCRETE, Material.BROWN_CONCRETE
             );
             
-            setValue(new DataValue(ValueType.STRING, colorMaterials.get(0).name()));
+            setValue(DataValue.of(colorMaterials.get(0).name()));
         }
         
         @Override
@@ -570,7 +570,7 @@ public class InteractiveGUIManager implements Listener {
             }
             
             Material newColor = colorMaterials.get(currentColorIndex);
-            setValue(new DataValue(ValueType.STRING, newColor.name()));
+            setValue(DataValue.of(newColor.name()));
         }
         
         @Override
@@ -588,7 +588,7 @@ public class InteractiveGUIManager implements Listener {
         public ItemStackEditorElement(String id, Map<String, Object> properties) {
             super(id, properties);
             this.currentItem = new ItemStack(Material.STONE);
-            setValue(new DataValue(ValueType.ITEM, currentItem));
+            setValue(DataValue.of(currentItem));
         }
         
         @Override
@@ -624,7 +624,7 @@ public class InteractiveGUIManager implements Listener {
             switch (clickType) {
                 case LEFT:
                     // Cycle through common materials
-                    Material[] materials = {Material.STONE, Material.DIRT, Material.WOOD, Material.IRON_INGOT};
+                    Material[] materials = {Material.STONE, Material.DIRT, Material.OAK_PLANKS, Material.IRON_INGOT};
                     Material current = currentItem.getType();
                     for (int i = 0; i < materials.length; i++) {
                         if (materials[i] == current) {
@@ -641,7 +641,7 @@ public class InteractiveGUIManager implements Listener {
                     break;
             }
             
-            setValue(new DataValue(ValueType.ITEM, currentItem));
+            setValue(DataValue.of(currentItem));
         }
         
         @Override

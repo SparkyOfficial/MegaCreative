@@ -139,4 +139,111 @@ public class WorldPermissions {
             case "admin":
             case "settings":
             case "permissions":
-                return level == PermissionLevel.ADMIN;\n                \n            case \"interact\":\n            case \"use\":\n                return level.ordinal() >= PermissionLevel.PLAYER.ordinal();\n                \n            case \"view\":\n            case \"explore\":\n                return level.ordinal() >= PermissionLevel.VISITOR.ordinal();\n                \n            default:\n                return false;\n        }\n    }\n    \n    /**\n     * Sets permission level for a player\n     */\n    public void setPlayerPermission(UUID playerId, PermissionLevel level) {\n        if (level == null) {\n            playerPermissions.remove(playerId);\n        } else {\n            playerPermissions.put(playerId, level);\n        }\n    }\n    \n    /**\n     * Gets permission level for a player\n     */\n    public PermissionLevel getPlayerPermission(UUID playerId) {\n        return playerPermissions.getOrDefault(playerId, PermissionLevel.VISITOR);\n    }\n    \n    /**\n     * Adds player to whitelist\n     */\n    public void addToWhitelist(UUID playerId) {\n        whitelist.add(playerId);\n        blacklist.remove(playerId); // Remove from blacklist if present\n    }\n    \n    /**\n     * Removes player from whitelist\n     */\n    public void removeFromWhitelist(UUID playerId) {\n        whitelist.remove(playerId);\n    }\n    \n    /**\n     * Adds player to blacklist\n     */\n    public void addToBlacklist(UUID playerId) {\n        blacklist.add(playerId);\n        whitelist.remove(playerId); // Remove from whitelist if present\n        playerPermissions.remove(playerId); // Remove permissions\n    }\n    \n    /**\n     * Removes player from blacklist\n     */\n    public void removeFromBlacklist(UUID playerId) {\n        blacklist.remove(playerId);\n    }\n    \n    // Getters and setters\n    public AccessMode getPlayWorldAccess() { return playWorldAccess; }\n    public void setPlayWorldAccess(AccessMode playWorldAccess) { this.playWorldAccess = playWorldAccess; }\n    \n    public AccessMode getDevWorldAccess() { return devWorldAccess; }\n    public void setDevWorldAccess(AccessMode devWorldAccess) { this.devWorldAccess = devWorldAccess; }\n    \n    public Map<UUID, PermissionLevel> getPlayerPermissions() { return new HashMap<>(playerPermissions); }\n    public Set<UUID> getWhitelist() { return new HashSet<>(whitelist); }\n    public Set<UUID> getBlacklist() { return new HashSet<>(blacklist); }\n    \n    public boolean isAllowPvP() { return allowPvP; }\n    public void setAllowPvP(boolean allowPvP) { this.allowPvP = allowPvP; }\n    \n    public boolean isAllowMobSpawning() { return allowMobSpawning; }\n    public void setAllowMobSpawning(boolean allowMobSpawning) { this.allowMobSpawning = allowMobSpawning; }\n    \n    public boolean isAllowExplosions() { return allowExplosions; }\n    public void setAllowExplosions(boolean allowExplosions) { this.allowExplosions = allowExplosions; }\n    \n    public boolean isAllowFlightInPlay() { return allowFlightInPlay; }\n    public void setAllowFlightInPlay(boolean allowFlightInPlay) { this.allowFlightInPlay = allowFlightInPlay; }\n    \n    public boolean isAllowItemDrops() { return allowItemDrops; }\n    public void setAllowItemDrops(boolean allowItemDrops) { this.allowItemDrops = allowItemDrops; }\n    \n    public boolean isProtectFromGriefing() { return protectFromGriefing; }\n    public void setProtectFromGriefing(boolean protectFromGriefing) { this.protectFromGriefing = protectFromGriefing; }\n    \n    /**\n     * Gets summary of permissions for display\n     */\n    public Map<String, Object> getPermissionsSummary() {\n        Map<String, Object> summary = new HashMap<>();\n        summary.put(\"playAccess\", playWorldAccess.getDisplayName());\n        summary.put(\"devAccess\", devWorldAccess.getDisplayName());\n        summary.put(\"trustedPlayers\", playerPermissions.size());\n        summary.put(\"whitelistedPlayers\", whitelist.size());\n        summary.put(\"blacklistedPlayers\", blacklist.size());\n        summary.put(\"pvpEnabled\", allowPvP);\n        summary.put(\"griefProtection\", protectFromGriefing);\n        return summary;\n    }\n}\n
+                return level == PermissionLevel.ADMIN;
+                
+            case "interact":
+            case "use":
+                return level.ordinal() >= PermissionLevel.PLAYER.ordinal();
+                
+            case "view":
+            case "explore":
+                return level.ordinal() >= PermissionLevel.VISITOR.ordinal();
+                
+            default:
+                return false;
+        }
+    }
+    
+    /**
+     * Sets permission level for a player
+     */
+    public void setPlayerPermission(UUID playerId, PermissionLevel level) {
+        if (level == null) {
+            playerPermissions.remove(playerId);
+        } else {
+            playerPermissions.put(playerId, level);
+        }
+    }
+    
+    /**
+     * Gets permission level for a player
+     */
+    public PermissionLevel getPlayerPermission(UUID playerId) {
+        return playerPermissions.getOrDefault(playerId, PermissionLevel.VISITOR);
+    }
+    
+    /**
+     * Adds player to whitelist
+     */
+    public void addToWhitelist(UUID playerId) {
+        whitelist.add(playerId);
+        blacklist.remove(playerId); // Remove from blacklist if present
+    }
+    
+    /**
+     * Removes player from whitelist
+     */
+    public void removeFromWhitelist(UUID playerId) {
+        whitelist.remove(playerId);
+    }
+    
+    /**
+     * Adds player to blacklist
+     */
+    public void addToBlacklist(UUID playerId) {
+        blacklist.add(playerId);
+        whitelist.remove(playerId); // Remove from whitelist if present
+        playerPermissions.remove(playerId); // Remove permissions
+    }
+    
+    /**
+     * Removes player from blacklist
+     */
+    public void removeFromBlacklist(UUID playerId) {
+        blacklist.remove(playerId);
+    }
+    
+    // Getters and setters
+    public AccessMode getPlayWorldAccess() { return playWorldAccess; }
+    public void setPlayWorldAccess(AccessMode playWorldAccess) { this.playWorldAccess = playWorldAccess; }
+    
+    public AccessMode getDevWorldAccess() { return devWorldAccess; }
+    public void setDevWorldAccess(AccessMode devWorldAccess) { this.devWorldAccess = devWorldAccess; }
+    
+    public Map<UUID, PermissionLevel> getPlayerPermissions() { return new HashMap<>(playerPermissions); }
+    public Set<UUID> getWhitelist() { return new HashSet<>(whitelist); }
+    public Set<UUID> getBlacklist() { return new HashSet<>(blacklist); }
+    
+    public boolean isAllowPvP() { return allowPvP; }
+    public void setAllowPvP(boolean allowPvP) { this.allowPvP = allowPvP; }
+    
+    public boolean isAllowMobSpawning() { return allowMobSpawning; }
+    public void setAllowMobSpawning(boolean allowMobSpawning) { this.allowMobSpawning = allowMobSpawning; }
+    
+    public boolean isAllowExplosions() { return allowExplosions; }
+    public void setAllowExplosions(boolean allowExplosions) { this.allowExplosions = allowExplosions; }
+    
+    public boolean isAllowFlightInPlay() { return allowFlightInPlay; }
+    public void setAllowFlightInPlay(boolean allowFlightInPlay) { this.allowFlightInPlay = allowFlightInPlay; }
+    
+    public boolean isAllowItemDrops() { return allowItemDrops; }
+    public void setAllowItemDrops(boolean allowItemDrops) { this.allowItemDrops = allowItemDrops; }
+    
+    public boolean isProtectFromGriefing() { return protectFromGriefing; }
+    public void setProtectFromGriefing(boolean protectFromGriefing) { this.protectFromGriefing = protectFromGriefing; }
+    
+    /**
+     * Gets summary of permissions for display
+     */
+    public Map<String, Object> getPermissionsSummary() {
+        Map<String, Object> summary = new HashMap<>();
+        summary.put("playAccess", playWorldAccess.getDisplayName());
+        summary.put("devAccess", devWorldAccess.getDisplayName());
+        summary.put("trustedPlayers", playerPermissions.size());
+        summary.put("whitelistedPlayers", whitelist.size());
+        summary.put("blacklistedPlayers", blacklist.size());
+        summary.put("pvpEnabled", allowPvP);
+        summary.put("griefProtection", protectFromGriefing);
+        return summary;
+    }
+}

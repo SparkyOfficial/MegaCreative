@@ -59,4 +59,173 @@ public class WorldProtectionListener implements Listener {
         
         if (world != null) {
             // Check access permissions for new world
-            if (!world.canAccess(player, world.getDualMode())) {\n                player.sendMessage(\"§c🚫 У вас нет доступа к этому миру!\");\n                plugin.getServer().getScheduler().runTask(plugin, () -> {\n                    player.performCommand(\"hub\");\n                });\n                return;\n            }\n            \n            // Apply world-specific settings\n            applyWorldSettings(player, world);\n            \n            // Send mode-specific welcome message\n            sendWorldWelcomeMessage(player, world);\n        }\n    }\n    \n    @EventHandler(priority = EventPriority.HIGH)\n    public void onBlockPlace(BlockPlaceEvent event) {\n        if (!checkWorldPermission(event.getPlayer(), \"build\", event)) {\n            event.getPlayer().sendMessage(\"§c🚫 У вас нет прав на строительство в этом мире!\");\n        }\n    }\n    \n    @EventHandler(priority = EventPriority.HIGH)\n    public void onBlockBreak(BlockBreakEvent event) {\n        if (!checkWorldPermission(event.getPlayer(), \"build\", event)) {\n            event.getPlayer().sendMessage(\"§c🚫 У вас нет прав на разрушение блоков в этом мире!\");\n        }\n    }\n    \n    @EventHandler(priority = EventPriority.HIGH)\n    public void onPlayerInteract(PlayerInteractEvent event) {\n        if (event.getClickedBlock() != null && \n            !checkWorldPermission(event.getPlayer(), \"interact\", event)) {\n            event.getPlayer().sendMessage(\"§c🚫 У вас нет прав на взаимодействие в этом мире!\");\n        }\n    }\n    \n    @EventHandler(priority = EventPriority.HIGH)\n    public void onInventoryOpen(InventoryOpenEvent event) {\n        if (event.getPlayer() instanceof Player player) {\n            CreativeWorld world = worldManager.findCreativeWorldByBukkit(player.getWorld());\n            \n            if (world != null && !world.canPerform(player, \"interact\")) {\n                event.setCancelled(true);\n                player.sendMessage(\"§c🚫 У вас нет прав на использование инвентарей в этом мире!\");\n            }\n        }\n    }\n    \n    @EventHandler(priority = EventPriority.HIGH)\n    public void onPlayerDropItem(PlayerDropItemEvent event) {\n        CreativeWorld world = worldManager.findCreativeWorldByBukkit(event.getPlayer().getWorld());\n        \n        if (world != null) {\n            WorldPermissions permissions = world.getPermissions();\n            if (!permissions.isAllowItemDrops() && !world.isOwner(event.getPlayer())) {\n                event.setCancelled(true);\n                event.getPlayer().sendMessage(\"§c🚫 Выбрасывание предметов запрещено в этом мире!\");\n            }\n        }\n    }\n    \n    @EventHandler(priority = EventPriority.HIGH)\n    public void onEntityDamageByEntity(EntityDamageByEntityEvent event) {\n        if (event.getDamager() instanceof Player damager && event.getEntity() instanceof Player victim) {\n            CreativeWorld world = worldManager.findCreativeWorldByBukkit(damager.getWorld());\n            \n            if (world != null) {\n                WorldPermissions permissions = world.getPermissions();\n                if (!permissions.isAllowPvP()) {\n                    event.setCancelled(true);\n                    damager.sendMessage(\"§c🚫 PvP запрещён в этом мире!\");\n                }\n            }\n        }\n    }\n    \n    @EventHandler(priority = EventPriority.HIGH)\n    public void onEntityExplode(EntityExplodeEvent event) {\n        CreativeWorld world = worldManager.findCreativeWorldByBukkit(event.getLocation().getWorld());\n        \n        if (world != null) {\n            WorldPermissions permissions = world.getPermissions();\n            if (!permissions.isAllowExplosions()) {\n                event.setCancelled(true);\n            }\n        }\n    }\n    \n    @EventHandler(priority = EventPriority.NORMAL)\n    public void onPlayerToggleFlight(PlayerToggleFlightEvent event) {\n        Player player = event.getPlayer();\n        CreativeWorld world = worldManager.findCreativeWorldByBukkit(player.getWorld());\n        \n        if (world != null && world.getDualMode() == CreativeWorld.WorldDualMode.PLAY) {\n            WorldPermissions permissions = world.getPermissions();\n            if (!permissions.isAllowFlightInPlay() && !world.canPerform(player, \"admin\")) {\n                event.setCancelled(true);\n                player.sendMessage(\"§c🚫 Полёт запрещён в игровом режиме этого мира!\");\n                player.setFlying(false);\n                player.setAllowFlight(false);\n            }\n        }\n    }\n    \n    /**\n     * Checks if player has permission to perform action in their current world\n     */\n    private boolean checkWorldPermission(Player player, String action, Cancellable event) {\n        CreativeWorld world = worldManager.findCreativeWorldByBukkit(player.getWorld());\n        \n        if (world == null) {\n            return true; // Not a managed world\n        }\n        \n        boolean hasPermission = world.canPerform(player, action);\n        if (!hasPermission) {\n            event.setCancelled(true);\n        }\n        \n        return hasPermission;\n    }\n    \n    /**\n     * Applies world-specific settings to player\n     */\n    private void applyWorldSettings(Player player, CreativeWorld world) {\n        WorldPermissions permissions = world.getPermissions();\n        \n        // Apply flight settings for play mode\n        if (world.getDualMode() == CreativeWorld.WorldDualMode.PLAY) {\n            if (!permissions.isAllowFlightInPlay() && !world.canPerform(player, \"admin\")) {\n                player.setFlying(false);\n                player.setAllowFlight(false);\n            }\n        } else {\n            // Allow flight in dev mode\n            player.setAllowFlight(true);\n        }\n    }\n    \n    /**\n     * Sends welcome message with world info and permissions\n     */\n    private void sendWorldWelcomeMessage(Player player, CreativeWorld world) {\n        String modeEmoji = world.getDualMode() == CreativeWorld.WorldDualMode.DEV ? \"🔧\" : \"🎮\";\n        String modeColor = world.getDualMode() == CreativeWorld.WorldDualMode.DEV ? \"§e\" : \"§a\";\n        \n        player.sendMessage(\"\");\n        player.sendMessage(modeColor + modeEmoji + \" Добро пожаловать в \" + world.getName());\n        player.sendMessage(\"§7Режим: \" + world.getDualMode().getDisplayName());\n        \n        // Show permission level\n        WorldPermissions permissions = world.getPermissions();\n        if (world.isOwner(player)) {\n            player.sendMessage(\"§c⚡ Вы владелец этого мира\");\n        } else {\n            WorldPermissions.PermissionLevel level = permissions.getPlayerPermission(player.getUniqueId());\n            player.sendMessage(\"§7Ваш уровень: \" + level.getDisplayName());\n        }\n        \n        // Show access mode\n        WorldPermissions.AccessMode accessMode = world.getDualMode() == CreativeWorld.WorldDualMode.DEV ? \n            permissions.getDevWorldAccess() : permissions.getPlayWorldAccess();\n        player.sendMessage(\"§7Доступ: \" + accessMode.getDisplayName());\n        \n        player.sendMessage(\"\");\n    }\n}\n
+            if (!world.canAccess(player, world.getDualMode())) {
+                player.sendMessage("§c🚫 У вас нет доступа к этому миру!");
+                plugin.getServer().getScheduler().runTask(plugin, () -> {
+                    player.performCommand("hub");
+                });
+                return;
+            }
+            
+            // Apply world-specific settings
+            applyWorldSettings(player, world);
+            
+            // Send mode-specific welcome message
+            sendWorldWelcomeMessage(player, world);
+        }
+    }
+    
+    @EventHandler(priority = EventPriority.HIGH)
+    public void onBlockPlace(BlockPlaceEvent event) {
+        if (!checkWorldPermission(event.getPlayer(), "build", event)) {
+            event.getPlayer().sendMessage("§c🚫 У вас нет прав на строительство в этом мире!");
+        }
+    }
+    
+    @EventHandler(priority = EventPriority.HIGH)
+    public void onBlockBreak(BlockBreakEvent event) {
+        if (!checkWorldPermission(event.getPlayer(), "build", event)) {
+            event.getPlayer().sendMessage("§c🚫 У вас нет прав на разрушение блоков в этом мире!");
+        }
+    }
+    
+    @EventHandler(priority = EventPriority.HIGH)
+    public void onPlayerInteract(PlayerInteractEvent event) {
+        if (event.getClickedBlock() != null && 
+            !checkWorldPermission(event.getPlayer(), "interact", event)) {
+            event.getPlayer().sendMessage("§c🚫 У вас нет прав на взаимодействие в этом мире!");
+        }
+    }
+    
+    @EventHandler(priority = EventPriority.HIGH)
+    public void onInventoryOpen(InventoryOpenEvent event) {
+        if (event.getPlayer() instanceof Player player) {
+            CreativeWorld world = worldManager.findCreativeWorldByBukkit(player.getWorld());
+            
+            if (world != null && !world.canPerform(player, "interact")) {
+                event.setCancelled(true);
+                player.sendMessage("§c🚫 У вас нет прав на использование инвентарей в этом мире!");
+            }
+        }
+    }
+    
+    @EventHandler(priority = EventPriority.HIGH)
+    public void onPlayerDropItem(PlayerDropItemEvent event) {
+        CreativeWorld world = worldManager.findCreativeWorldByBukkit(event.getPlayer().getWorld());
+        
+        if (world != null) {
+            WorldPermissions permissions = world.getPermissions();
+            if (!permissions.isAllowItemDrops() && !world.isOwner(event.getPlayer())) {
+                event.setCancelled(true);
+                event.getPlayer().sendMessage("§c🚫 Выбрасывание предметов запрещено в этом мире!");
+            }
+        }
+    }
+    
+    @EventHandler(priority = EventPriority.HIGH)
+    public void onEntityDamageByEntity(EntityDamageByEntityEvent event) {
+        if (event.getDamager() instanceof Player damager && event.getEntity() instanceof Player victim) {
+            CreativeWorld world = worldManager.findCreativeWorldByBukkit(damager.getWorld());
+            
+            if (world != null) {
+                WorldPermissions permissions = world.getPermissions();
+                if (!permissions.isAllowPvP()) {
+                    event.setCancelled(true);
+                    damager.sendMessage("§c🚫 PvP запрещён в этом мире!");
+                }
+            }
+        }
+    }
+    
+    @EventHandler(priority = EventPriority.HIGH)
+    public void onEntityExplode(EntityExplodeEvent event) {
+        CreativeWorld world = worldManager.findCreativeWorldByBukkit(event.getLocation().getWorld());
+        
+        if (world != null) {
+            WorldPermissions permissions = world.getPermissions();
+            if (!permissions.isAllowExplosions()) {
+                event.setCancelled(true);
+            }
+        }
+    }
+    
+    @EventHandler(priority = EventPriority.NORMAL)
+    public void onPlayerToggleFlight(PlayerToggleFlightEvent event) {
+        Player player = event.getPlayer();
+        CreativeWorld world = worldManager.findCreativeWorldByBukkit(player.getWorld());
+        
+        if (world != null && world.getDualMode() == CreativeWorld.WorldDualMode.PLAY) {
+            WorldPermissions permissions = world.getPermissions();
+            if (!permissions.isAllowFlightInPlay() && !world.canPerform(player, "admin")) {
+                event.setCancelled(true);
+                player.sendMessage("§c🚫 Полёт запрещён в игровом режиме этого мира!");
+                player.setFlying(false);
+                player.setAllowFlight(false);
+            }
+        }
+    }
+    
+    /**
+     * Checks if player has permission to perform action in their current world
+     */
+    private boolean checkWorldPermission(Player player, String action, Cancellable event) {
+        CreativeWorld world = worldManager.findCreativeWorldByBukkit(player.getWorld());
+        
+        if (world == null) {
+            return true; // Not a managed world
+        }
+        
+        boolean hasPermission = world.canPerform(player, action);
+        if (!hasPermission) {
+            event.setCancelled(true);
+        }
+        
+        return hasPermission;
+    }
+    
+    /**
+     * Applies world-specific settings to player
+     */
+    private void applyWorldSettings(Player player, CreativeWorld world) {
+        WorldPermissions permissions = world.getPermissions();
+        
+        // Apply flight settings for play mode
+        if (world.getDualMode() == CreativeWorld.WorldDualMode.PLAY) {
+            if (!permissions.isAllowFlightInPlay() && !world.canPerform(player, "admin")) {
+                player.setFlying(false);
+                player.setAllowFlight(false);
+            }
+        } else {
+            // Allow flight in dev mode
+            player.setAllowFlight(true);
+        }
+    }
+    
+    /**
+     * Sends welcome message with world info and permissions
+     */
+    private void sendWorldWelcomeMessage(Player player, CreativeWorld world) {
+        String modeEmoji = world.getDualMode() == CreativeWorld.WorldDualMode.DEV ? "🔧" : "🎮";
+        String modeColor = world.getDualMode() == CreativeWorld.WorldDualMode.DEV ? "§e" : "§a";
+        
+        player.sendMessage("");
+        player.sendMessage(modeColor + modeEmoji + " Добро пожаловать в " + world.getName());
+        player.sendMessage("§7Режим: " + world.getDualMode().getDisplayName());
+        
+        // Show permission level
+        WorldPermissions permissions = world.getPermissions();
+        if (world.isOwner(player)) {
+            player.sendMessage("§c⚡ Вы владелец этого мира");
+        } else {
+            WorldPermissions.PermissionLevel level = permissions.getPlayerPermission(player.getUniqueId());
+            player.sendMessage("§7Ваш уровень: " + level.getDisplayName());
+        }
+        
+        // Show access mode
+        WorldPermissions.AccessMode accessMode = world.getDualMode() == CreativeWorld.WorldDualMode.DEV ? 
+            permissions.getDevWorldAccess() : permissions.getPlayWorldAccess();
+        player.sendMessage("§7Доступ: " + accessMode.getDisplayName());
+        
+        player.sendMessage("");
+    }
+}

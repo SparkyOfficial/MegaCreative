@@ -47,7 +47,7 @@ public class FrameLandStyleGUI {
         if (block.hasParameter("material")) {
             Map<String, Object> materialProps = new HashMap<>();
             materialProps.put("materials", Arrays.asList(
-                Material.STONE, Material.DIRT, Material.GRASS_BLOCK, Material.WOOD,
+                Material.STONE, Material.DIRT, Material.GRASS_BLOCK, Material.OAK_PLANKS,
                 Material.IRON_BLOCK, Material.GOLD_BLOCK, Material.DIAMOND_BLOCK,
                 Material.EMERALD_BLOCK, Material.OBSIDIAN, Material.BEDROCK
             ));
@@ -242,7 +242,7 @@ public class FrameLandStyleGUI {
         // Material selector
         Map<String, Object> materialProps = new HashMap<>();
         materialProps.put("materials", Arrays.asList(
-            Material.STONE, Material.DIRT, Material.WOOD, Material.IRON_INGOT,
+            Material.STONE, Material.DIRT, Material.OAK_PLANKS, Material.IRON_INGOT,
             Material.GOLD_INGOT, Material.DIAMOND, Material.EMERALD
         ));
         

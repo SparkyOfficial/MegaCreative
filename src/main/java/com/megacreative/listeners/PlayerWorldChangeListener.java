@@ -101,10 +101,6 @@ public class PlayerWorldChangeListener implements Listener {
             return "UNKNOWN";
         }
     }
-
-            }
-        }
-    }
     
     /**
      * Проверяет, каких предметов для кодинга не хватает игроку
@@ -113,7 +109,6 @@ public class PlayerWorldChangeListener implements Listener {
         List<String> missingItems = new ArrayList<>();
         
         // Проверяем наличие ключевых предметов
-
         boolean hasEventBlock = false;
         boolean hasActionBlock = false;
         boolean hasConditionBlock = false;
@@ -131,7 +126,6 @@ public class PlayerWorldChangeListener implements Listener {
                 if (name.contains("Повторить")) hasRepeatBlock = true;
             }
         }
-        
 
         if (!hasEventBlock) missingItems.add("Блок события");
         if (!hasActionBlock) missingItems.add("Блок действия");
@@ -140,5 +134,5 @@ public class PlayerWorldChangeListener implements Listener {
         if (!hasRepeatBlock) missingItems.add("Блок повтора");
         
         return missingItems;
-    } 
-} 
+    }
+}
