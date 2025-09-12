@@ -53,32 +53,20 @@ public class DevCommand implements CommandExecutor {
             }
         }
         
-        // Debug logging
-        plugin.getLogger().info("[DEBUG] Player " + player.getName() + " executed /dev command");
-       
         World currentWorld = player.getWorld();
-        plugin.getLogger().info("[DEBUG] Player is in world: " + currentWorld.getName());
-        
         CreativeWorld creativeWorld = findCreativeWorld(currentWorld);
        
         if (creativeWorld == null) {
-            plugin.getLogger().info("[DEBUG] CreativeWorld not found for world: " + currentWorld.getName());
             player.sendMessage("§cВы не находитесь в мире MegaCreative!");
             return true;
         }
         
-        plugin.getLogger().info("[DEBUG] Found CreativeWorld: " + creativeWorld.getName() + " (ID: " + creativeWorld.getId() + ")");
-       
         if (!creativeWorld.canCode(player)) {
-            plugin.getLogger().info("[DEBUG] Player " + player.getName() + " cannot code in world " + creativeWorld.getName());
             player.sendMessage("§cУ вас нет прав на кодирование в этом мире!");
             return true;
         }
-        
-        plugin.getLogger().info("[DEBUG] Player " + player.getName() + " has coding permissions");
        
         creativeWorld.setMode(WorldMode.DEV);
-        plugin.getLogger().info("[DEBUG] Set world mode to DEV");
 
         // Запускаем всю логику в основном потоке сервера для потокобезопасности
         new org.bukkit.scheduler.BukkitRunnable() {
@@ -231,8 +219,8 @@ public class DevCommand implements CommandExecutor {
             // Используем наш кастомный генератор для мира разработки
             creator.generator(new com.megacreative.worlds.DevWorldGenerator());
             
-            // Для плоского мира достаточно указать тип, generatorSettings не требуется
-            // и вызывает ошибки на новых версиях
+            // 🔧 FIX: Add proper flat world generator settings to prevent "No key layers" error
+            creator.generatorSettings("{\"layers\":[{\"block\":\"bedrock\",\"height\":1},{\"block\":\"stone\",\"height\":2},{\"block\":\"grass_block\",\"height\":1}],\"biome\":\"plains\"}");
             creator.generateStructures(false);
             
             // Создаем мир с минимальными настройками

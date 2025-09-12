@@ -31,7 +31,7 @@ public class PlayCommand implements CommandExecutor {
             switch (args[0].toLowerCase()) {
                 case "switch", "world" -> {
                     // Find current world and switch to its play version
-                    CreativeWorld currentWorld = findCreativeWorld(player.getWorld());
+                    CreativeWorld currentWorld = plugin.getWorldManager().findCreativeWorldByBukkit(player.getWorld());
                     if (currentWorld != null && currentWorld.isPaired()) {
                         plugin.getWorldManager().switchToPlayWorld(player, currentWorld.getId());
                         return true;
@@ -42,39 +42,15 @@ public class PlayCommand implements CommandExecutor {
         }
         
         // Найти мир игрока по его текущему местоположению
-        World currentWorld = player.getWorld();
-        CreativeWorld creativeWorld = findCreativeWorld(currentWorld);
+        CreativeWorld creativeWorld = plugin.getWorldManager().findCreativeWorldByBukkit(player.getWorld());
         
         if (creativeWorld == null) {
             player.sendMessage("§cВы не находитесь в мире MegaCreative!");
             return true;
         }
         
-        if (!creativeWorld.canEdit(player)) {
-            player.sendMessage("§cУ вас нет прав на изменение этого мира!");
-            return true;
-        }
-        
-        // Переключение в режим игры
-        creativeWorld.setMode(WorldMode.PLAY);
-        
-        // Телепортация в основной мир (если находится в dev мире)
-        if (currentWorld.getName().endsWith("_dev")) {
-            World mainWorld = Bukkit.getWorld(creativeWorld.getWorldName());
-            if (mainWorld != null) {
-                player.teleport(mainWorld.getSpawnLocation());
-            }
-        }
-        
-        // Установка режима игры
-        player.setGameMode(GameMode.ADVENTURE);
-        
-        player.sendMessage("§aРежим мира изменен на §f§lИГРА§a!");
-        player.sendMessage("§7✅ Код активирован, скрипты будут выполняться");
-        player.sendMessage("§7Игроки в режиме приключения");
-        
-        // Сохранение изменений
-        plugin.getWorldManager().saveWorld(creativeWorld);
+        // 🎆 UNIFIED: Use centralized world switching method
+        plugin.getWorldManager().switchToPlayWorld(player, creativeWorld.getId());
         
         return true;
     }

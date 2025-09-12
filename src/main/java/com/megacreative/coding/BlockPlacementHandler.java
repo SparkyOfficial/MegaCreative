@@ -121,7 +121,6 @@ public class BlockPlacementHandler implements Listener {
         // 🔧 FIX: Use default action if available for immediate functionality
         if (config.getDefaultAction() != null) {
             actionId = config.getDefaultAction();
-            plugin.getLogger().info("🎆 Using default action '" + actionId + "' for " + config.getDisplayName());
         }
         
         CodeBlock newCodeBlock = new CodeBlock(block.getType(), actionId);
@@ -200,8 +199,6 @@ public class BlockPlacementHandler implements Listener {
             
             // 4. Add visual effects for "magical" feeling
             addConstructionEffects(loc, player);
-            
-            plugin.getLogger().info("🎆 Built magical constructor structure for " + config.getId() + " at " + loc);
         }
         
         // Additional structure types can be added here

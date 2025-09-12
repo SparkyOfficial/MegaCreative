@@ -29,8 +29,7 @@ public class BuildCommand implements CommandExecutor {
             return true;
         }
         
-        World currentWorld = player.getWorld();
-        CreativeWorld creativeWorld = findCreativeWorld(currentWorld);
+        CreativeWorld creativeWorld = worldManager.findCreativeWorldByBukkit(player.getWorld());
         
         if (creativeWorld == null) {
             player.sendMessage("§cВы не находитесь в мире MegaCreative!");
@@ -42,18 +41,12 @@ public class BuildCommand implements CommandExecutor {
             return true;
         }
         
+        // 🎆 UNIFIED: Set mode and switch to play world with BUILD mode
         creativeWorld.setMode(WorldMode.BUILD);
+        worldManager.switchToPlayWorld(player, creativeWorld.getId());
         
-        if (currentWorld.getName().endsWith("_dev")) {
-            World mainWorld = Bukkit.getWorld(creativeWorld.getWorldName());
-            if (mainWorld != null) {
-                player.teleport(mainWorld.getSpawnLocation());
-            }
-        }
-        
-        if (creativeWorld.canEdit(player)) {
-            player.setGameMode(GameMode.CREATIVE);
-        }
+        // Set creative mode for building
+        player.setGameMode(GameMode.CREATIVE);
         
         player.sendMessage("§aРежим мира изменен на §f§lСТРОИТЕЛЬСТВО§a!");
         player.sendMessage("§7❌ Код отключен, скрипты не будут выполняться");
