@@ -8,7 +8,6 @@ import com.megacreative.coding.ScriptEngine;
 import com.megacreative.coding.executors.ExecutionResult;
 import com.megacreative.coding.values.DataValue;
 import com.megacreative.coding.values.ValueType;
-import com.megacreative.core.ServiceRegistry;
 import com.megacreative.models.CreativeWorld;
 import org.bukkit.entity.Player;
 
@@ -51,27 +50,14 @@ public class AdvancedFunctionManager {
     public AdvancedFunctionManager(MegaCreative plugin) {
         this.plugin = plugin;
         
-        // Get ScriptEngine with null check
-        ServiceRegistry serviceRegistry = plugin.getServiceRegistry();
-        if (serviceRegistry == null) {
-            throw new IllegalStateException("ServiceRegistry is not initialized yet");
-        }
-        
-        ScriptEngine engine = null;
-        try {
-            engine = serviceRegistry.getService(ScriptEngine.class);
-        } catch (IllegalArgumentException e) {
-            plugin.getLogger().warning("🎆 ScriptEngine not yet available during AdvancedFunctionManager initialization: " + e.getMessage());
-            plugin.getLogger().warning("🎆 AdvancedFunctionManager will initialize without ScriptEngine for now");
-        }
-        
-        this.scriptEngine = engine;
+        // ScriptEngine will be set later via setScriptEngine()
+        // Cannot access ServiceRegistry during construction as it's still being built
+        this.scriptEngine = null;
         
         // Initialize built-in function libraries
         initializeBuiltInLibraries();
         
-        plugin.getLogger().info("🎆 Advanced Function Manager initialized" + 
-            (scriptEngine != null ? " with ScriptEngine" : " (ScriptEngine will be set later)"));
+        plugin.getLogger().info("🎆 Advanced Function Manager initialized (ScriptEngine will be set later)");
     }
     
     /**
