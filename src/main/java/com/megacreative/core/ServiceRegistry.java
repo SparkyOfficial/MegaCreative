@@ -98,7 +98,7 @@ public class ServiceRegistry {
         this.plugin = plugin;
         this.dependencyContainer = dependencyContainer;
         
-        // Initialize core services first
+        // Initialize core services first (services without dependencies)
         this.variableManager = new VariableManager((MegaCreative) plugin);
         this.visualDebugger = new VisualDebugger((MegaCreative) plugin);
         this.blockConfigService = new BlockConfigService((MegaCreative) plugin);
@@ -115,27 +115,35 @@ public class ServiceRegistry {
             blockConfigService
         );
         
-        // Register services
+        // IMPORTANT: Register key services BEFORE creating dependent services
         registerService(BlockConfigService.class, blockConfigService);
+        registerService(VariableManager.class, variableManager);
+        registerService(VisualDebugger.class, visualDebugger);
         registerService(ActionFactory.class, actionFactory);
         registerService(ConditionFactory.class, conditionFactory);
-        initializeScriptEngine();
+        registerService(ScriptEngine.class, scriptEngine);
+        registerService(DefaultScriptEngine.class, (DefaultScriptEngine) scriptEngine);
+        
+        // Now initialize services that depend on the above
+        initializeDependentServices();
     }
     
-    private void initializeScriptEngine() {
-        // Initialize FunctionManager
+    private void initializeDependentServices() {
+        // Initialize FunctionManager first
         this.functionManager = new FunctionManager((MegaCreative) plugin);
         registerService(FunctionManager.class, functionManager);
         
-        // 🎆 FrameLand: Initialize Advanced Function Manager
+        // 🎆 FrameLand: Now it's safe to initialize Advanced Function Manager
+        // because ScriptEngine is already registered
         this.advancedFunctionManager = new AdvancedFunctionManager((MegaCreative) plugin);
         registerService(AdvancedFunctionManager.class, advancedFunctionManager);
         
-        // Register core services
-        registerService(VariableManager.class, variableManager);
-        registerService(VisualDebugger.class, visualDebugger);
+        // Set ScriptEngine in AdvancedFunctionManager if it wasn't available during construction
+        if (!advancedFunctionManager.isScriptEngineAvailable()) {
+            advancedFunctionManager.setScriptEngine(scriptEngine);
+        }
         
-        // Initialize ScriptEngine with required dependencies
+        // Initialize ScriptEngine
         if (scriptEngine instanceof DefaultScriptEngine) {
             DefaultScriptEngine defaultEngine = (DefaultScriptEngine) scriptEngine;
             // Initialize the engine
@@ -146,9 +154,7 @@ public class ServiceRegistry {
                     defaultEngine.getConditionCount() + " conditions");
         }
         
-        // Register ScriptEngine services
-        registerService(ScriptEngine.class, scriptEngine);
-        registerService(DefaultScriptEngine.class, (DefaultScriptEngine) scriptEngine);
+        log.info("🎆 Advanced Function Manager initialized after ScriptEngine registration");
     }
     
     /**

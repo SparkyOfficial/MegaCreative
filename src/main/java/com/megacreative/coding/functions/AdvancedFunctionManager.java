@@ -8,6 +8,7 @@ import com.megacreative.coding.ScriptEngine;
 import com.megacreative.coding.executors.ExecutionResult;
 import com.megacreative.coding.values.DataValue;
 import com.megacreative.coding.values.ValueType;
+import com.megacreative.core.ServiceRegistry;
 import com.megacreative.models.CreativeWorld;
 import org.bukkit.entity.Player;
 
@@ -31,7 +32,7 @@ import java.util.stream.Collectors;
 public class AdvancedFunctionManager {
     
     private final MegaCreative plugin;
-    private final ScriptEngine scriptEngine;
+    private ScriptEngine scriptEngine; // Remove final to allow late initialization
     
     // Function storage
     private final Map<String, FunctionDefinition> globalFunctions = new ConcurrentHashMap<>();
@@ -49,12 +50,45 @@ public class AdvancedFunctionManager {
     
     public AdvancedFunctionManager(MegaCreative plugin) {
         this.plugin = plugin;
-        this.scriptEngine = plugin.getServiceRegistry().getService(ScriptEngine.class);
+        
+        // Get ScriptEngine with null check
+        ServiceRegistry serviceRegistry = plugin.getServiceRegistry();
+        if (serviceRegistry == null) {
+            throw new IllegalStateException("ServiceRegistry is not initialized yet");
+        }
+        
+        ScriptEngine engine = null;
+        try {
+            engine = serviceRegistry.getService(ScriptEngine.class);
+        } catch (IllegalArgumentException e) {
+            plugin.getLogger().warning("🎆 ScriptEngine not yet available during AdvancedFunctionManager initialization: " + e.getMessage());
+            plugin.getLogger().warning("🎆 AdvancedFunctionManager will initialize without ScriptEngine for now");
+        }
+        
+        this.scriptEngine = engine;
         
         // Initialize built-in function libraries
         initializeBuiltInLibraries();
         
-        plugin.getLogger().info("🎆 Advanced Function Manager initialized with built-in libraries");
+        plugin.getLogger().info("🎆 Advanced Function Manager initialized" + 
+            (scriptEngine != null ? " with ScriptEngine" : " (ScriptEngine will be set later)"));
+    }
+    
+    /**
+     * Sets the ScriptEngine after late initialization
+     */
+    public void setScriptEngine(ScriptEngine scriptEngine) {
+        if (this.scriptEngine == null && scriptEngine != null) {
+            this.scriptEngine = scriptEngine;
+            plugin.getLogger().info("🎆 ScriptEngine set for AdvancedFunctionManager");
+        }
+    }
+    
+    /**
+     * Checks if ScriptEngine is available
+     */
+    public boolean isScriptEngineAvailable() {
+        return scriptEngine != null;
     }
     
     /**
@@ -154,6 +188,12 @@ public class AdvancedFunctionManager {
      */
     public CompletableFuture<ExecutionResult> executeFunction(String functionName, Player caller, 
                                                              DataValue[] arguments, Map<String, Object> contextData) {
+        // Check if ScriptEngine is available
+        if (scriptEngine == null) {
+            return CompletableFuture.completedFuture(
+                ExecutionResult.error("ScriptEngine not available for function execution"));
+        }
+        
         // Find function
         FunctionDefinition function = findFunction(functionName, caller);
         if (function == null) {
