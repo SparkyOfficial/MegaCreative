@@ -195,10 +195,11 @@ public class BlockPlacementHandler implements Listener {
             Location openBracketLoc = loc.clone().add(buildDirection.getModX(), 0, buildDirection.getModZ());
             
             // Create closing bracket (piston pointing outward)
-            Location closeBracketLoc = openBracketLoc.clone().add(
-                buildDirection.getModX() * bracketDistance, 
+            // 🔧 FIX: Correct bracket positioning - count from main block, not from open bracket
+            Location closeBracketLoc = loc.clone().add(
+                buildDirection.getModX() * (bracketDistance + 1), 
                 0, 
-                buildDirection.getModZ() * bracketDistance
+                buildDirection.getModZ() * (bracketDistance + 1)
             );
             
             // 1. Create bracket pistons with proper orientation
@@ -226,6 +227,14 @@ public class BlockPlacementHandler implements Listener {
             if (structure.hasSign()) {
                 setSmartSignOnBlock(loc, config.getDisplayName() + " Event", config.getId());
             }
+            
+            // 🔧 FIX: Add "ore" block for event blocks to make them visible
+            // Add diamond ore block to make the event block "magical"
+            Location oreLoc = loc.clone().add(-1, 0, 0); // Place ore to the west of the event block
+            if (oreLoc.getBlock().getType().isAir()) {
+                oreLoc.getBlock().setType(Material.DIAMOND_ORE);
+            }
+            
             addConstructionEffects(loc, player);
         }
     }
@@ -339,10 +348,11 @@ public class BlockPlacementHandler implements Listener {
             
             // Места скобок
             Location openBracketLoc = mainBlockLoc.clone().add(buildDirection.getModX(), 0, buildDirection.getModZ());
-            Location closeBracketLoc = openBracketLoc.clone().add(
-                buildDirection.getModX() * bracketDistance, 
+            // 🔧 FIX: Correct bracket positioning - count from main block, not from open bracket
+            Location closeBracketLoc = mainBlockLoc.clone().add(
+                buildDirection.getModX() * (bracketDistance + 1), 
                 0, 
-                buildDirection.getModZ() * bracketDistance
+                buildDirection.getModZ() * (bracketDistance + 1)
             );
             
             // Удаляем скобки-поршни
