@@ -54,7 +54,7 @@ public class WorldLoadListener implements Listener {
         try {
             // Iterate through all loaded chunks in the world
             for (Chunk chunk : world.getLoadedChunks()) {
-                // Check all block states (tile entities) in the chunk
+                // Check all block states (tile entities) in the chunk - this is much more efficient
                 for (BlockState tileEntity : chunk.getTileEntities()) {
                     // Look for signs that might be code block signs
                     if (tileEntity instanceof Sign) {

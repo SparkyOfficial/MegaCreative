@@ -250,4 +250,12 @@ public class DevInventoryManager implements Listener {
             player.sendMessage("§eВсе инструменты уже на месте!");
         }
     }
+    
+    /**
+     * Добавь такой метод в DevInventoryManager
+     * Проверяет, находится ли игрок в dev мире
+     */
+    public boolean isPlayerInDevWorld(Player player) {
+        return playersInDevWorld.contains(player.getUniqueId());
+    }
 }

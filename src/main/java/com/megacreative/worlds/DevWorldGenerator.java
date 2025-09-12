@@ -67,7 +67,7 @@ public class DevWorldGenerator extends ChunkGenerator {
                         
                         // Генерируем соединительные блоки между линиями
                         if (worldZ > lineZ && worldZ < lineZ + LINES_SPACING && worldX == 0) {
-                            // Вертикальные соединители между линиями (синее стекло)
+                            // Вертикальные соединители между линиями (светло-синее стекло)
                             chunkData.setBlock(x, floorY, z, Material.LIGHT_BLUE_STAINED_GLASS);
                         }
                     }

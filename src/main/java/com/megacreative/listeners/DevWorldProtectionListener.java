@@ -48,7 +48,8 @@ public class DevWorldProtectionListener implements Listener {
         Material.COMPARATOR,     // Редстоун компаратор
         Material.TORCH,          // Факел
         Material.REDSTONE_TORCH, // Редстоун факел
-        Material.BLUE_STAINED_GLASS, // Платформа для размещения блоков кода (исправлено с LIGHT_BLUE на BLUE)
+        Material.BLUE_STAINED_GLASS, // Платформа для размещения блоков кода (события/функции)
+        Material.LIGHT_BLUE_STAINED_GLASS, // Платформа для соединений между линиями
         Material.GRAY_STAINED_GLASS,  // Платформа для размещения блоков кода
         Material.WHITE_STAINED_GLASS,      // Платформа для размещения блоков кода
         

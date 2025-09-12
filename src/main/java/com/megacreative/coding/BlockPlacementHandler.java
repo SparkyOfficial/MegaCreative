@@ -325,6 +325,16 @@ public class BlockPlacementHandler implements Listener {
                     // Это блок-конструктор, удаляем всю структуру
                     removeConstructorStructure(loc, config, player);
                 }
+                // ===============================================
+                //           ДОРАБОТКА РАЗРУШЕНИЯ СТРУКТУР
+                // ===============================================
+                // Если это событие, удаляем "руду"
+                else if (config != null && "EVENT".equals(config.getType())) {
+                    Block oreBlock = loc.clone().add(-1, 0, 0).getBlock();
+                    if (oreBlock.getType() == Material.DIAMOND_ORE) { // или другой соответствующей руды
+                        oreBlock.setType(Material.AIR);
+                    }
+                }
             }
             
             // Удаляем табличку, если она есть
@@ -489,19 +499,8 @@ public class BlockPlacementHandler implements Listener {
                 return;
             }
             
-            // Check if action is already set
-            if (codeBlock.getAction() == null || "NOT_SET".equals(codeBlock.getAction())) {
-                // No action set - open action selection GUI
-                openActionSelectionGUI(player, location, clickedBlock.getType());
-            } else {
-                // Action already set - open parameter configuration GUI
-                BlockConfigService.BlockConfig config = blockConfigService.getBlockConfig(codeBlock.getAction());
-                if (config != null) {
-                    openParameterConfigGUI(player, location, codeBlock, config);
-                } else {
-                    player.sendMessage("§cОшибка: Не удалось найти конфигурацию для действия " + codeBlock.getAction());
-                }
-            }
+            // Handle block interaction with proper GUI opening
+            handleBlockInteraction(player, location);
             return;
         }
         
@@ -522,6 +521,35 @@ public class BlockPlacementHandler implements Listener {
         }
     }
 
+    /**
+     * Завершение интерактивности (возвращение "магии" FrameLand)
+     * Обрабатывает взаимодействие с блоком кода для открытия соответствующего GUI
+     */
+    private void handleBlockInteraction(Player player, Location blockLocation) {
+        CodeBlock codeBlock = blockCodeBlocks.get(blockLocation);
+        if (codeBlock == null) return;
+        
+        // Если это поршень (скобка), переключаем тип
+        if (codeBlock.isBracket()) {
+            toggleBracketType(codeBlock, blockLocation.getBlock(), player);
+            return;
+        }
+
+        // Если у блока еще нет действия, открываем GUI выбора действия
+        if (codeBlock.getAction() == null || codeBlock.getAction().equals("NOT_SET") || blockConfigService.getBlockConfig(codeBlock.getAction()) == null) {
+            // Вызываем GUI для выбора действия, которое ты уже создал
+            openActionSelectionGUI(player, blockLocation, codeBlock.getMaterial());
+        } else {
+            // Иначе открываем GUI настройки параметров
+            BlockConfigService.BlockConfig config = blockConfigService.getBlockConfig(codeBlock.getAction());
+            if (config != null) {
+                // Вызываем GUI для настройки параметров, которое ты уже создал
+                openParameterConfigGUI(player, blockLocation, codeBlock, config);
+            } else {
+                player.sendMessage("§cОшибка: Не удалось найти конфигурацию для действия '" + codeBlock.getAction() + "'");
+            }
+        }
+    }
     
     /**
      * Открывает GUI для выбора действия
