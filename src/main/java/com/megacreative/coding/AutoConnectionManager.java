@@ -113,7 +113,8 @@ public class AutoConnectionManager implements Listener {
             BlockConfigService.BlockConfig config = blockConfigService.getBlockConfigByDisplayName(displayName);
             String blockName = config != null ? config.getDisplayName() : "Unknown Block";
             
-            player.sendMessage("§aБлок §f" + blockName + "§a установлен и автоматически подключен!");
+            // Уменьшен спам - сообщение только важных событий
+            plugin.getLogger().fine("Block '" + blockName + "' placed and auto-connected at " + location + " for player " + player.getName());
             plugin.getLogger().fine("Auto-connected CodeBlock at " + location + " for player " + player.getName());
         }
     }
