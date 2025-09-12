@@ -202,10 +202,13 @@ public class DevInventoryManager implements Listener {
         return worldName.endsWith("_dev");
     }
     
-    public void forceRestoreTools(Player player) {
+    /**
+     * Публичный метод для сохранения инвентаря игрока перед входом в мир разработки
+     */
+    public void savePlayerInventory(Player player) {
         if (playersInDevWorld.contains(player.getUniqueId())) {
-            giveDevTools(player);
-            player.sendMessage("§aИнструменты принудительно восстановлены!");
+            savedInventories.put(player.getUniqueId(), player.getInventory().getContents());
+            plugin.getLogger().info("Saved dev inventory for " + player.getName());
         }
     }
     
@@ -220,6 +223,13 @@ public class DevInventoryManager implements Listener {
         if (savedInventory != null) {
             player.getInventory().setContents(savedInventory);
             player.sendMessage("§aВаш инвентарь восстановлен!");
+        }
+    }
+    
+    public void forceRestoreTools(Player player) {
+        if (playersInDevWorld.contains(player.getUniqueId())) {
+            giveDevTools(player);
+            player.sendMessage("§aИнструменты принудительно восстановлены!");
         }
     }
     

@@ -41,14 +41,19 @@ public class BuildCommand implements CommandExecutor {
             return true;
         }
         
+        // Сохраняем dev инвентарь (если игрок в dev мире)
+        if (plugin.getBlockPlacementHandler().isInDevWorld(player)) {
+            plugin.getServiceRegistry().getDevInventoryManager().savePlayerInventory(player);
+        }
+        
         // Восстанавливаем "обычный" инвентарь игрока ПЕРЕД телепортацией
         plugin.getServiceRegistry().getDevInventoryManager().restorePlayerInventory(player);
         
         // 🎆 UNIFIED: Set mode and switch to build world with BUILD mode
-        creativeWorld.setMode(WorldMode.BUILD);
+        creativeWorld.setMode(com.megacreative.models.WorldMode.BUILD);
         worldManager.switchToBuildWorld(player, creativeWorld.getId());
         
-        player.sendMessage("§aРежим мира изменен на §f§lСТРОИТЕЛЬСТВО§a!");
+        player.sendMessage("§aРежим мира изменен на §f§лСТРОИТЕЛЬСТВО§a!");
         player.sendMessage("§7❌ Код отключен, скрипты не будут выполняться");
         player.sendMessage("§7Креатив для строителей");
         

@@ -33,6 +33,10 @@ public class PlayCommand implements CommandExecutor {
                     // Find current world and switch to its play version
                     CreativeWorld currentWorld = plugin.getWorldManager().findCreativeWorldByBukkit(player.getWorld());
                     if (currentWorld != null && currentWorld.isPaired()) {
+                        // Сохраняем dev инвентарь (если игрок в dev мире)
+                        if (plugin.getBlockPlacementHandler().isInDevWorld(player)) {
+                            plugin.getServiceRegistry().getDevInventoryManager().savePlayerInventory(player);
+                        }
                         // Восстанавливаем "обычный" инвентарь игрока ПЕРЕД телепортацией
                         plugin.getServiceRegistry().getDevInventoryManager().restorePlayerInventory(player);
                         plugin.getWorldManager().switchToPlayWorld(player, currentWorld.getId());
@@ -51,6 +55,11 @@ public class PlayCommand implements CommandExecutor {
         if (creativeWorld == null) {
             player.sendMessage("§cВы не находитесь в мире MegaCreative!");
             return true;
+        }
+        
+        // Сохраняем dev инвентарь (если игрок в dev мире)
+        if (plugin.getBlockPlacementHandler().isInDevWorld(player)) {
+            plugin.getServiceRegistry().getDevInventoryManager().savePlayerInventory(player);
         }
         
         // Восстанавливаем "обычный" инвентарь игрока ПЕРЕД телепортацией

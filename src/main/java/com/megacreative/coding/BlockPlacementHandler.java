@@ -6,6 +6,12 @@ import com.megacreative.interfaces.ITrustedPlayerManager;
 import com.megacreative.services.BlockConfigService;
 import com.megacreative.gui.coding.ActionParameterGUI;
 import com.megacreative.gui.coding.ActionSelectionGUI;
+import com.megacreative.coding.values.DataValue; // 🔧 FIX: Add correct import
+import com.megacreative.coding.values.types.AnyValue; // 🔧 FIX: Add correct import
+import com.megacreative.coding.values.types.TextValue; // 🔧 FIX: Add correct import
+import com.megacreative.coding.values.types.NumberValue; // 🔧 FIX: Add correct import
+import com.megacreative.coding.values.types.BooleanValue; // 🔧 FIX: Add correct import
+import com.megacreative.coding.values.types.ListValue; // 🔧 FIX: Add correct import
 import org.bukkit.Material;
 import java.util.logging.Logger;
 import org.bukkit.block.Block;
@@ -26,6 +32,7 @@ import org.bukkit.World;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.UUID;
+import java.util.List; // 🔧 FIX: Add missing import
 
 /**
  * Обрабатывает размещение и взаимодействие с блоками кодирования
@@ -1000,10 +1007,328 @@ public class BlockPlacementHandler implements Listener {
             }
         }
         
+        // 🔧 FIX: Restore parameters from container above the block
+        restoreParametersFromContainer(block, codeBlock);
+        
         // Add to our tracking
         blockCodeBlocks.put(location, codeBlock);
         
         plugin.getLogger().fine("Recreated CodeBlock at " + location + " with action: " + action);
+    }
+    
+    /**
+     * 🔧 FIX: Restores parameters from container (chest) above the code block
+     * This is used during world loading to "hydrate" code block parameters
+     */
+    private void restoreParametersFromContainer(Block block, CodeBlock codeBlock) {
+        try {
+            // Look for container above the block
+            Location containerLocation = block.getLocation().clone().add(0, 1, 0);
+            Block containerBlock = containerLocation.getBlock();
+            
+            // Check if it's a container block
+            if (containerBlock.getState() instanceof org.bukkit.block.Container container) {
+                org.bukkit.inventory.Inventory inventory = container.getInventory();
+                
+                // Convert ItemStacks to DataValue parameters
+                convertItemStacksToParameters(inventory, codeBlock);
+                
+                plugin.getLogger().fine("Restored parameters for CodeBlock at " + block.getLocation() + " from container");
+            }
+        } catch (Exception e) {
+            plugin.getLogger().warning("Failed to restore parameters from container for block at " + block.getLocation() + ": " + e.getMessage());
+        }
+    }
+    
+    /**
+     * Converts ItemStacks from GUI inventory to DataValue parameters in CodeBlock
+     * This is a copy of the method from BlockConfigManager with necessary modifications
+     */
+    private void convertItemStacksToParameters(org.bukkit.inventory.Inventory inventory, CodeBlock codeBlock) {
+        Map<String, com.megacreative.coding.values.DataValue> newParameters = new HashMap<>();
+        int processedItems = 0;
+        
+        // Process each slot in the inventory
+        for (int slot = 0; slot < inventory.getSize(); slot++) {
+            org.bukkit.inventory.ItemStack item = inventory.getItem(slot);
+            if (item == null || item.getType().isAir()) continue;
+            
+            // Skip placeholder items
+            if (isPlaceholderItem(item)) continue;
+            
+            // Try to determine parameter name for this slot
+            String paramName = getParameterNameForSlot(codeBlock.getAction(), slot);
+            if (paramName == null) {
+                // Fallback: use generic slot-based parameter name
+                paramName = "slot_" + slot;
+            }
+            
+            // Convert ItemStack to DataValue
+            com.megacreative.coding.values.DataValue paramValue = convertItemStackToDataValue(item);
+            if (paramValue != null) {
+                newParameters.put(paramName, paramValue);
+                processedItems++;
+            }
+        }
+        
+        // Update CodeBlock parameters
+        for (Map.Entry<String, com.megacreative.coding.values.DataValue> entry : newParameters.entrySet()) {
+            codeBlock.setParameter(entry.getKey(), entry.getValue());
+        }
+        
+        if (processedItems > 0) {
+            plugin.getLogger().info("Converted " + processedItems + " ItemStacks to DataValue parameters for block " + codeBlock.getAction());
+        }
+    }
+    
+    /**
+     * Converts an ItemStack to a DataValue
+     * This is a copy of the method from BlockConfigManager with necessary modifications
+     */
+    private com.megacreative.coding.values.DataValue convertItemStackToDataValue(org.bukkit.inventory.ItemStack item) {
+        if (item == null || item.getType().isAir()) {
+            return new com.megacreative.coding.values.types.AnyValue(null);
+        }
+        
+        org.bukkit.inventory.meta.ItemMeta meta = item.getItemMeta();
+        String displayName = meta != null && meta.hasDisplayName() ? meta.getDisplayName() : "";
+        
+        // Clean display name from color codes for processing
+        String cleanName = displayName.replaceAll("§[0-9a-fk-or]", "");
+        
+        // 1. Try to extract value from existing parameter items (our converted items)
+        if (meta != null && meta.hasLore()) {
+            List<String> lore = meta.getLore();
+            for (String line : lore) {
+                if (line.startsWith("§8Parameter: ")) {
+                    // This is a parameter item we created - extract the value
+                    return extractValueFromParameterItem(item, lore);
+                }
+            }
+        }
+        
+        // 2. Try to detect type from material
+        switch (item.getType()) {
+            case PAPER:
+                // Extract text from display name or use item name
+                if (!cleanName.isEmpty()) {
+                    return new com.megacreative.coding.values.types.TextValue(cleanName);
+                } else {
+                    return new com.megacreative.coding.values.types.TextValue("Текст");
+                }
+            
+            case GOLD_NUGGET:
+            case GOLD_INGOT:
+                // Try to parse number from name or use amount
+                if (!cleanName.isEmpty()) {
+                    try {
+                        String numberStr = cleanName.replaceAll("[^0-9.-]", "");
+                        if (!numberStr.isEmpty()) {
+                            return new com.megacreative.coding.values.types.NumberValue(Double.parseDouble(numberStr));
+                        }
+                    } catch (NumberFormatException ignored) {}
+                }
+                return new com.megacreative.coding.values.types.NumberValue(item.getAmount());
+            
+            case LIME_DYE:
+                return new com.megacreative.coding.values.types.BooleanValue(true);
+            case RED_DYE:
+                return new com.megacreative.coding.values.types.BooleanValue(false);
+            
+            case CHEST:
+            case BARREL:
+                // Consider these as lists or containers
+                return new com.megacreative.coding.values.types.ListValue(new java.util.ArrayList<>()); // 🔧 FIX: Pass empty list to constructor
+            
+            default:
+                // For other items, create text value from name or material
+                if (!cleanName.isEmpty()) {
+                    return new com.megacreative.coding.values.types.TextValue(cleanName);
+                } else {
+                    // Use material name as text value
+                    return new com.megacreative.coding.values.types.TextValue(item.getType().name().toLowerCase().replace("_", " "));
+                }
+        }
+    }
+    
+    /**
+     * Extracts value from a parameter item we created
+     * This is a copy of the method from BlockConfigManager with necessary modifications
+     */
+    private com.megacreative.coding.values.DataValue extractValueFromParameterItem(org.bukkit.inventory.ItemStack item, List<String> lore) {
+        // Look for "Value: " line in lore
+        for (String line : lore) {
+            String cleanLine = line.replaceAll("§[0-9a-fk-or]", "");
+            if (cleanLine.startsWith("Value: ")) {
+                String valueStr = cleanLine.substring(7); // Remove "Value: "
+                
+                // Check type from the previous line
+                int index = lore.indexOf(line);
+                if (index > 0) {
+                    String typeLine = lore.get(index - 1).replaceAll("§[0-9a-fk-or]", "");
+                    
+                    if (typeLine.contains("Number")) {
+                        try {
+                            return new com.megacreative.coding.values.types.NumberValue(Double.parseDouble(valueStr));
+                        } catch (NumberFormatException e) {
+                            return new com.megacreative.coding.values.types.TextValue(valueStr);
+                        }
+                    } else if (typeLine.contains("Boolean")) {
+                        return new com.megacreative.coding.values.types.BooleanValue("True".equalsIgnoreCase(valueStr));
+                    } else if (typeLine.contains("List")) {
+                        return new com.megacreative.coding.values.types.ListValue(new java.util.ArrayList<>()); // 🔧 FIX: Pass empty list to constructor
+                    }
+                }
+                
+                // Default to text
+                return new com.megacreative.coding.values.types.TextValue(valueStr);
+            }
+        }
+        
+        // Fallback
+        return new com.megacreative.coding.values.types.TextValue(item.getType().name().toLowerCase());
+    }
+    
+    /**
+     * Gets parameter name for a specific slot based on action type
+     * This is a copy of the method from BlockConfigManager with necessary modifications
+     */
+    private String getParameterNameForSlot(String action, int slot) {
+        // Action-specific parameter mapping based on coding_blocks.yml
+        switch (action) {
+            case "sendMessage":
+                return slot == 0 ? "message" : "param_" + slot;
+            case "teleport":
+                return slot == 0 ? "coords" : "param_" + slot;
+            case "giveItem":
+                return switch (slot) {
+                    case 0 -> "item";
+                    case 1 -> "amount";
+                    default -> "param_" + slot;
+                };
+            case "playSound":
+                return switch (slot) {
+                    case 0 -> "sound";
+                    case 1 -> "volume";
+                    case 2 -> "pitch";
+                    default -> "param_" + slot;
+                };
+            case "effect":
+                return switch (slot) {
+                    case 0 -> "effect";
+                    case 1 -> "duration";
+                    case 2 -> "amplifier";
+                    default -> "param_" + slot;
+                };
+            case "setVar":
+            case "addVar":
+            case "subVar":
+            case "mulVar":
+            case "divVar":
+                return switch (slot) {
+                    case 0 -> "var";
+                    case 1 -> "value";
+                    default -> "param_" + slot;
+                };
+            case "spawnMob":
+                return switch (slot) {
+                    case 0 -> "mob";
+                    case 1 -> "amount";
+                    default -> "param_" + slot;
+                };
+            case "wait":
+                return slot == 0 ? "ticks" : "param_" + slot;
+            case "randomNumber":
+                return switch (slot) {
+                    case 0 -> "min";
+                    case 1 -> "max";
+                    case 2 -> "var";
+                    default -> "param_" + slot;
+                };
+            case "setTime":
+                return slot == 0 ? "time" : "param_" + slot;
+            case "setWeather":
+                return slot == 0 ? "weather" : "param_" + slot;
+            case "command":
+                return slot == 0 ? "command" : "param_" + slot;
+            case "broadcast":
+                return slot == 0 ? "message" : "param_" + slot;
+            case "healPlayer":
+                return slot == 0 ? "amount" : "param_" + slot;
+            case "explosion":
+                return switch (slot) {
+                    case 0 -> "power";
+                    case 1 -> "breakBlocks";
+                    default -> "param_" + slot;
+                };
+            case "setBlock":
+                return switch (slot) {
+                    case 0 -> "material";
+                    case 1 -> "coords";
+                    default -> "param_" + slot;
+                };
+            // Variable conditions (unified handling)
+            case "compareVariable":
+                return switch (slot) {
+                    case 0 -> "var1";
+                    case 1 -> "operator";
+                    case 2 -> "var2";
+                    default -> "param_" + slot;
+                };
+            case "ifVarEquals":
+            case "ifVarGreater":
+            case "ifVarLess":
+                return switch (slot) {
+                    case 0 -> "variable"; // Legacy parameter name for backward compatibility
+                    case 1 -> "value";
+                    default -> "param_" + slot;
+                };
+            case "hasItem":
+                return slot == 0 ? "item" : "param_" + slot;
+            case "isNearBlock":
+                return switch (slot) {
+                    case 0 -> "block";
+                    case 1 -> "radius";
+                    default -> "param_" + slot;
+                };
+            case "mobNear":
+                return switch (slot) {
+                    case 0 -> "mob";
+                    case 1 -> "radius";
+                    default -> "param_" + slot;
+                };
+            
+            // Generic fallback
+            default:
+                return switch (slot) {
+                    case 0 -> "message";
+                    case 1 -> "amount";
+                    case 2 -> "target";
+                    case 3 -> "item";
+                    case 4 -> "location";
+                    default -> "param_" + slot;
+                };
+        }
+    }
+    
+    /**
+     * Checks if an ItemStack is a placeholder item
+     * This is a copy of the method from BlockConfigManager with necessary modifications
+     */
+    private boolean isPlaceholderItem(org.bukkit.inventory.ItemStack item) {
+        if (item == null || !item.hasItemMeta()) return false;
+        
+        org.bukkit.inventory.meta.ItemMeta meta = item.getItemMeta();
+        if (meta.hasLore()) {
+            List<String> lore = meta.getLore();
+            for (String line : lore) {
+                if (line.contains("placeholder") || line.contains("Placeholder")) {
+                    return true;
+                }
+            }
+        }
+        
+        return false;
     }
     
     /**
