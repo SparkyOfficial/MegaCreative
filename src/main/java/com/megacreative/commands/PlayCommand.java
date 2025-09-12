@@ -26,6 +26,21 @@ public class PlayCommand implements CommandExecutor {
             return true;
         }
         
+        // 🎆 ENHANCED: Check for dual world switching support
+        if (args.length > 0) {
+            switch (args[0].toLowerCase()) {
+                case "switch", "world" -> {
+                    // Find current world and switch to its play version
+                    CreativeWorld currentWorld = findCreativeWorld(player.getWorld());
+                    if (currentWorld != null && currentWorld.isPaired()) {
+                        plugin.getWorldManager().switchToPlayWorld(player, currentWorld.getId());
+                        return true;
+                    }
+                    // Fall through to normal play mode
+                }
+            }
+        }
+        
         // Найти мир игрока по его текущему местоположению
         World currentWorld = player.getWorld();
         CreativeWorld creativeWorld = findCreativeWorld(currentWorld);

@@ -103,6 +103,21 @@ public class WorldManagerImpl implements IWorldManager {
     }
     
     public void createWorld(Player player, String name, CreativeWorldType worldType) {
+        createWorld(player, name, worldType, CreativeWorld.WorldDualMode.STANDALONE, null);
+    }
+    
+    // 🎆 ENHANCED: FrameLand-style dual world creation with pairing support
+    public void createDualWorld(Player player, String name, CreativeWorldType worldType) {
+        // Create dev world first
+        String devWorldId = generateUniqueId();
+        String playWorldId = generateUniqueId();
+        
+        createWorld(player, name, worldType, CreativeWorld.WorldDualMode.DEV, playWorldId);
+        createWorld(player, name + " (Play)", worldType, CreativeWorld.WorldDualMode.PLAY, devWorldId);
+    }
+    
+    public void createWorld(Player player, String name, CreativeWorldType worldType, 
+                           CreativeWorld.WorldDualMode dualMode, String pairedWorldId) {
         // Валидация имени мира
         if (!isValidWorldName(name)) {
             player.sendMessage("§cНекорректное имя мира!");
@@ -127,6 +142,12 @@ public class WorldManagerImpl implements IWorldManager {
         // Генерация ID и создание объекта мира синхронно
         String worldId = generateUniqueId();
         CreativeWorld creativeWorld = new CreativeWorld(worldId, name, player.getUniqueId(), player.getName(), worldType);
+        
+        // 🎆 ENHANCED: Set dual world properties
+        creativeWorld.setDualMode(dualMode);
+        if (pairedWorldId != null) {
+            creativeWorld.setPairedWorldId(pairedWorldId);
+        }
 
         // Вся работа с миром выполняется синхронно
         Bukkit.getScheduler().runTask(plugin, () -> {
@@ -394,10 +415,94 @@ public class WorldManagerImpl implements IWorldManager {
     }
     
     /**
-     * Находит мир по его отображаемому имени
-     * @param name Отображаемое имя мира
-     * @return Найденный мир или null, если мир не найден
+     * 🎆 ENHANCED: FrameLand-style world pairing and switching methods
      */
+    public CreativeWorld getPairedWorld(CreativeWorld world) {
+        if (world.getPairedWorldId() != null) {
+            return getWorld(world.getPairedWorldId());
+        }
+        return null;
+    }
+    
+    public void switchToDevWorld(Player player, String worldId) {
+        CreativeWorld world = getWorld(worldId);
+        if (world == null) {
+            player.sendMessage("§cМир не найден!");
+            return;
+        }
+        
+        if (!world.canCode(player)) {
+            player.sendMessage("§cУ вас нет прав для разработки в этом мире!");
+            return;
+        }
+        
+        String devWorldName = world.isDevWorld() ? world.getWorldName() : world.getDevWorldName();
+        World bukkitWorld = Bukkit.getWorld(devWorldName);
+        
+        if (bukkitWorld == null) {
+            // Create dev world if it doesn't exist
+            createDevWorldIfNotExists(world);
+            bukkitWorld = Bukkit.getWorld(devWorldName);
+        }
+        
+        if (bukkitWorld != null) {
+            player.teleport(bukkitWorld.getSpawnLocation());
+            player.sendMessage("§e🔧 Переключение в режим разработки!");
+            
+            // 🎆 ENHANCED: Track world mode switch
+            if (plugin instanceof MegaCreative) {
+                ((MegaCreative) plugin).getPlayerManager().trackPlayerWorldEntry(player, worldId, "DEV");
+            }
+        }
+    }
+    
+    public void switchToPlayWorld(Player player, String worldId) {
+        CreativeWorld world = getWorld(worldId);
+        if (world == null) {
+            player.sendMessage("§cМир не найден!");
+            return;
+        }
+        
+        String playWorldName = world.isPlayWorld() ? world.getWorldName() : world.getPlayWorldName();
+        World bukkitWorld = Bukkit.getWorld(playWorldName);
+        
+        if (bukkitWorld == null) {
+            player.sendMessage("§cМир для игры не существует!");
+            return;
+        }
+        
+        player.teleport(bukkitWorld.getSpawnLocation());
+        player.sendMessage("§a🎮 Переключение в игровой режим!");
+        
+        // 🎆 ENHANCED: Track world mode switch
+        if (plugin instanceof MegaCreative) {
+            ((MegaCreative) plugin).getPlayerManager().trackPlayerWorldEntry(player, worldId, "PLAY");
+        }
+    }
+    
+    private void createDevWorldIfNotExists(CreativeWorld world) {
+        if (Bukkit.getWorld(world.getDevWorldName()) == null) {
+            // Create a dev world copy with coding features enabled
+            WorldCreator creator = new WorldCreator(world.getDevWorldName());
+            creator.environment(world.getWorldType().getEnvironment());
+            creator.copy(Bukkit.getWorld(world.getWorldName()));
+            
+            World devWorld = Bukkit.createWorld(creator);
+            if (devWorld != null) {
+                setupDevWorld(devWorld, world);
+            }
+        }
+    }
+    
+    private void setupDevWorld(World devWorld, CreativeWorld creativeWorld) {
+        // Enhanced setup for development world
+        setupWorld(devWorld, creativeWorld);
+        
+        // Additional dev world specific settings
+        devWorld.setGameRule(GameRule.DO_MOB_SPAWNING, false); // No mobs in dev mode
+        devWorld.setGameRule(GameRule.KEEP_INVENTORY, true); // Keep items on death
+        devWorld.setGameRule(GameRule.DO_IMMEDIATE_RESPAWN, true); // Instant respawn
+    }
     public CreativeWorld getWorldByName(String name) {
         if (name == null || name.isEmpty()) {
             return null;
@@ -421,7 +526,8 @@ public class WorldManagerImpl implements IWorldManager {
     }
     
     /**
-     * Находит мир по Bukkit-миру
+     * 🎆 ENHANCED: Finds CreativeWorld by Bukkit world with dual world architecture support
+     * Handles both old-style (_dev) and new FrameLand-style (-world, -code) naming
      * @param bukkitWorld Bukkit-мир
      * @return Найденный CreativeWorld или null, если не найден
      */
@@ -429,9 +535,40 @@ public class WorldManagerImpl implements IWorldManager {
         if (bukkitWorld == null) return null;
         
         String worldName = bukkitWorld.getName();
+        
+        // Handle old-style megacreative_ naming
         if (worldName.startsWith("megacreative_")) {
             String id = worldName.replace("megacreative_", "").replace("_dev", "");
             return getWorld(id);
+        }
+        
+        // 🎆 ENHANCED: Handle new FrameLand-style dual world naming
+        // Format: worldname-code or worldname-world
+        for (CreativeWorld world : worlds.values()) {
+            // Check if this is the main world
+            if (worldName.equals(world.getWorldName())) {
+                return world;
+            }
+            
+            // Check if this is a dev world (old style)
+            if (worldName.equals(world.getDevWorldName())) {
+                return world;
+            }
+            
+            // Check FrameLand-style naming patterns
+            if (world.getDualMode() != CreativeWorld.WorldDualMode.STANDALONE) {
+                String baseName = world.getBaseName();
+                
+                // Check -code suffix (dev world)
+                if (worldName.equals(baseName + "-code")) {
+                    return world;
+                }
+                
+                // Check -world suffix (play world)
+                if (worldName.equals(baseName + "-world")) {
+                    return world;
+                }
+            }
         }
         
         return null;

@@ -26,6 +26,14 @@ public interface IWorldManager {
     void createWorld(Player player, String name, CreativeWorldType worldType);
     
     /**
+     * 🎆 ENHANCED: Creates a dual world pair for FrameLand-style development
+     * @param player Игрок, создающий мир
+     * @param name Имя мира
+     * @param worldType Тип мира
+     */
+    void createDualWorld(Player player, String name, CreativeWorldType worldType);
+    
+    /**
      * Удаляет мир
      * @param worldId ID мира
      * @param requester Игрок, запрашивающий удаление
@@ -101,4 +109,27 @@ public interface IWorldManager {
      * @return Список всех творческих миров
      */
     List<CreativeWorld> getCreativeWorlds();
+    
+    // 🎆 ENHANCED: FrameLand-style world switching methods
+    
+    /**
+     * Gets the paired world for dual world architecture
+     * @param world The world to find the pair for
+     * @return The paired world or null if not found
+     */
+    CreativeWorld getPairedWorld(CreativeWorld world);
+    
+    /**
+     * Switches player to the development world
+     * @param player Player to switch
+     * @param worldId ID of the world
+     */
+    void switchToDevWorld(Player player, String worldId);
+    
+    /**
+     * Switches player to the play world
+     * @param player Player to switch
+     * @param worldId ID of the world
+     */
+    void switchToPlayWorld(Player player, String worldId);
 }

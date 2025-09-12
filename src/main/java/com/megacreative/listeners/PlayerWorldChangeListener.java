@@ -2,11 +2,14 @@ package com.megacreative.listeners;
 
 import com.megacreative.MegaCreative;
 import com.megacreative.coding.CodingItems;
+import com.megacreative.models.CreativeWorld;
 import org.bukkit.World;
 import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.Listener;
 import org.bukkit.event.player.PlayerChangedWorldEvent;
+import org.bukkit.event.player.PlayerJoinEvent;
+import org.bukkit.event.player.PlayerQuitEvent;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -21,16 +24,83 @@ public class PlayerWorldChangeListener implements Listener {
     @EventHandler
     public void onWorldChange(PlayerChangedWorldEvent event) {
         Player player = event.getPlayer();
+        World fromWorld = event.getFrom();
         World toWorld = player.getWorld();
+        
+        // 🎆 ENHANCED: Track world changes for analytics
+        trackWorldChange(player, fromWorld, toWorld);
         
         // Когда игрок меняет мир, заново устанавливаем ему скорборд
         plugin.getScoreboardManager().setScoreboard(player);
         
         // Проверяем инвентарь при входе в dev-мир
-        if (toWorld.getName().endsWith("_dev")) {
+        if (toWorld.getName().endsWith("_dev") || toWorld.getName().endsWith("-code")) {
             List<String> missingItems = getMissingCodingItems(player);
             if (!missingItems.isEmpty()) {
                 CodingItems.giveMissingItems(player, missingItems);
+            }
+        }
+    }
+    
+    @EventHandler
+    public void onPlayerJoin(PlayerJoinEvent event) {
+        Player player = event.getPlayer();
+        World world = player.getWorld();
+        
+        // 🎆 ENHANCED: Track join to current world
+        CreativeWorld creativeWorld = plugin.getWorldManager().findCreativeWorldByBukkit(world);
+        if (creativeWorld != null) {
+            String mode = determineWorldMode(world, creativeWorld);
+            plugin.getPlayerManager().trackPlayerWorldEntry(player, creativeWorld.getId(), mode);
+        }
+    }
+    
+    @EventHandler
+    public void onPlayerQuit(PlayerQuitEvent event) {
+        Player player = event.getPlayer();
+        World world = player.getWorld();
+        
+        // 🎆 ENHANCED: Track exit from current world
+        CreativeWorld creativeWorld = plugin.getWorldManager().findCreativeWorldByBukkit(world);
+        if (creativeWorld != null) {
+            plugin.getPlayerManager().trackPlayerWorldExit(player, creativeWorld.getId());
+        }
+    }
+    
+    /**
+     * 🎆 ENHANCED: Tracks world changes for dual world analytics
+     */
+    private void trackWorldChange(Player player, World fromWorld, World toWorld) {
+        // Track exit from previous world
+        CreativeWorld fromCreativeWorld = plugin.getWorldManager().findCreativeWorldByBukkit(fromWorld);
+        if (fromCreativeWorld != null) {
+            plugin.getPlayerManager().trackPlayerWorldExit(player, fromCreativeWorld.getId());
+        }
+        
+        // Track entry to new world
+        CreativeWorld toCreativeWorld = plugin.getWorldManager().findCreativeWorldByBukkit(toWorld);
+        if (toCreativeWorld != null) {
+            String mode = determineWorldMode(toWorld, toCreativeWorld);
+            plugin.getPlayerManager().trackPlayerWorldEntry(player, toCreativeWorld.getId(), mode);
+        }
+    }
+    
+    /**
+     * 🎆 ENHANCED: Determines the world mode based on world name and dual architecture
+     */
+    private String determineWorldMode(World world, CreativeWorld creativeWorld) {
+        String worldName = world.getName();
+        
+        if (worldName.endsWith("-code") || worldName.endsWith("_dev")) {
+            return "DEV";
+        } else if (worldName.endsWith("-world")) {
+            return "PLAY";
+        } else if (creativeWorld.getDualMode() != null) {
+            return creativeWorld.getDualMode().name();
+        } else {
+            return "UNKNOWN";
+        }
+    }
 
             }
         }

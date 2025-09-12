@@ -39,11 +39,36 @@ public class CreativeWorld {
     // Комментарии
     private List<WorldComment> comments;
 
+    // 🎆 ENHANCED: FrameLand-style dual world support
+    private String pairedWorldId; // ID of the paired world (dev/play)
+    private WorldDualMode dualMode; // Whether this is dev or play world
+    
+    // 🎆 ENHANCED: Advanced permission system
+    private WorldPermissions permissions;
+    
     // Скрипты
     private List<CodeScript> scripts;
     
     // Онлайн игроки
     private Set<UUID> onlinePlayers;
+    
+    // 🎆 ENHANCED: World dual mode enum
+    public enum WorldDualMode {
+        DEV("code", "§e🔧 Development"),
+        PLAY("world", "§a🎮 Play"),
+        STANDALONE("single", "§7📦 Standalone");
+        
+        private final String suffix;
+        private final String displayName;
+        
+        WorldDualMode(String suffix, String displayName) {
+            this.suffix = suffix;
+            this.displayName = displayName;
+        }
+        
+        public String getSuffix() { return suffix; }
+        public String getDisplayName() { return displayName; }
+    }
     
     public CreativeWorld() {
         // Конструктор по умолчанию для десериализации
@@ -86,14 +111,50 @@ public class CreativeWorld {
         this.comments = new ArrayList<>();
         this.scripts = new ArrayList<>();
         this.onlinePlayers = new HashSet<>();
+        
+        // 🎆 ENHANCED: Initialize dual world support
+        this.dualMode = WorldDualMode.STANDALONE;
+        this.pairedWorldId = null;
+        
+        // 🎆 ENHANCED: Initialize advanced permissions
+        this.permissions = new WorldPermissions();
     }
     
+    // 🎆 ENHANCED: FrameLand-style world naming with dual mode support
     public String getWorldName() {
-        return "megacreative_" + id;
+        if (dualMode == WorldDualMode.STANDALONE) {
+            return "megacreative_" + id;
+        }
+        return "megacreative_" + id + "-" + dualMode.getSuffix();
     }
     
     public String getDevWorldName() {
-        return "megacreative_" + id + "_dev";
+        // Legacy support - now returns the dev mode world name
+        if (dualMode == WorldDualMode.DEV) {
+            return getWorldName();
+        }
+        return "megacreative_" + id + "-code";
+    }
+    
+    public String getPlayWorldName() {
+        if (dualMode == WorldDualMode.PLAY) {
+            return getWorldName();
+        }
+        return "megacreative_" + id + "-world";
+    }
+    
+    public String getPairedWorldName() {
+        if (pairedWorldId != null) {
+            switch (dualMode) {
+                case DEV:
+                    return "megacreative_" + pairedWorldId + "-world";
+                case PLAY:
+                    return "megacreative_" + pairedWorldId + "-code";
+                default:
+                    return null;
+            }
+        }
+        return null;
     }
     
     public boolean isOwner(Player player) {
@@ -115,11 +176,55 @@ public class CreativeWorld {
     }
     
     public boolean canEdit(Player player) {
+        // 🎆 ENHANCED: Use advanced permission system with fallback to legacy
+        if (permissions != null) {
+            return isOwner(player) || 
+                   permissions.canAccess(player, dualMode) && 
+                   permissions.canPerform(player, "build", dualMode);
+        }
+        // Legacy fallback
         return isOwner(player) || isTrustedBuilder(player);
     }
     
     public boolean canCode(Player player) {
+        // 🎆 ENHANCED: Use advanced permission system with fallback to legacy
+        if (permissions != null) {
+            return isOwner(player) || 
+                   permissions.canAccess(player, dualMode) && 
+                   permissions.canPerform(player, "code", dualMode);
+        }
+        // Legacy fallback
         return isOwner(player) || isTrustedCoder(player);
+    }
+    
+    /**
+     * 🎆 ENHANCED: Checks if player can access the world in specific mode
+     */
+    public boolean canAccess(Player player, WorldDualMode mode) {
+        if (permissions != null) {
+            return isOwner(player) || permissions.canAccess(player, mode);
+        }
+        // Legacy fallback - public access
+        return !isPrivate || isOwner(player) || isTrustedBuilder(player);
+    }
+    
+    /**
+     * 🎆 ENHANCED: Checks if player can perform a specific action
+     */
+    public boolean canPerform(Player player, String action) {
+        if (permissions != null) {
+            return isOwner(player) || permissions.canPerform(player, action, dualMode);
+        }
+        // Legacy fallback
+        switch (action.toLowerCase()) {
+            case "build":
+            case "edit":
+                return canEdit(player);
+            case "code":
+                return canCode(player);
+            default:
+                return !isPrivate || isOwner(player);
+        }
     }
     
     public void addOnlinePlayer(UUID playerId) {
@@ -344,8 +449,56 @@ public class CreativeWorld {
         return onlinePlayers;
     }
     
+    // 🎆 ENHANCED: Dual world getters/setters
+    public WorldDualMode getDualMode() {
+        return dualMode != null ? dualMode : WorldDualMode.STANDALONE;
+    }
+    
+    public void setDualMode(WorldDualMode dualMode) {
+        this.dualMode = dualMode;
+    }
+    
+    public String getPairedWorldId() {
+        return pairedWorldId;
+    }
+    
+    public void setPairedWorldId(String pairedWorldId) {
+        this.pairedWorldId = pairedWorldId;
+    }
+    
+    public boolean isPaired() {
+        return pairedWorldId != null;
+    }
+    
+    public boolean isDevWorld() {
+        return dualMode == WorldDualMode.DEV;
+    }
+    
+    public boolean isPlayWorld() {
+        return dualMode == WorldDualMode.PLAY;
+    }
+    
     public void setMode(WorldMode mode) {
         this.mode = mode;
+    }
+    
+    // 🎆 ENHANCED: Permission system getters/setters
+    public WorldPermissions getPermissions() {
+        if (permissions == null) {
+            permissions = new WorldPermissions();
+        }
+        return permissions;
+    }
+    
+    public void setPermissions(WorldPermissions permissions) {
+        this.permissions = permissions;
+    }
+    
+    /**
+     * Gets permission summary for display
+     */
+    public Map<String, Object> getPermissionsSummary() {
+        return getPermissions().getPermissionsSummary();
     }
     
     public void setDescription(String description) {

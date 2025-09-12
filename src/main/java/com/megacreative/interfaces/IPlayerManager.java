@@ -88,4 +88,49 @@ public interface IPlayerManager {
      * @return true если мир в избранном
      */
     boolean isFavorite(UUID playerId, String worldId);
+    
+    // 🎆 ENHANCED: World tracking methods for dual world architecture
+    
+    /**
+     * Tracks player entry into a world and mode
+     * @param player Player entering world
+     * @param worldId World ID
+     * @param mode World mode (DEV, PLAY, etc.)
+     */
+    void trackPlayerWorldEntry(Player player, String worldId, String mode);
+    
+    /**
+     * Tracks player exit from a world
+     * @param player Player leaving world
+     * @param worldId World ID
+     */
+    void trackPlayerWorldExit(Player player, String worldId);
+    
+    /**
+     * Gets the current world and mode for a player
+     * @param playerId Player UUID
+     * @return Map with worldId and mode, or null if not tracked
+     */
+    Map<String, String> getCurrentPlayerLocation(UUID playerId);
+    
+    /**
+     * Gets all players currently in a specific world
+     * @param worldId World ID
+     * @return Map of player UUIDs to their modes
+     */
+    Map<UUID, String> getPlayersInWorld(String worldId);
+    
+    /**
+     * Gets world statistics for analytics
+     * @param worldId World ID
+     * @return Statistics including unique players, time spent, etc.
+     */
+    Map<String, Object> getWorldStatistics(String worldId);
+    
+    /**
+     * Gets player session time in current world
+     * @param playerId Player UUID
+     * @return Session time in milliseconds, or 0 if not in a world
+     */
+    long getPlayerSessionTime(UUID playerId);
 }

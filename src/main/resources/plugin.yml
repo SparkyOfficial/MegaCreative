@@ -125,6 +125,13 @@ commands:
     permission: megacreative.command.dev
     permission-message: '&cYou do not have developer permissions.'
 
+  switch:
+    description: Switch between world modes (code/play) for dual worlds
+    aliases: [sw, mode]
+    usage: /switch <code|play|dev|world>
+    permission: megacreative.command.switch
+    permission-message: '&cYou do not have permission to switch world modes.'
+
   hub:
     description: Return to hub world
     aliases: [lobby, spawn]

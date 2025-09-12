@@ -40,6 +40,16 @@ public class DevCommand implements CommandExecutor {
                     sendHelp(player);
                     return true;
                 }
+                // 🎆 ENHANCED: Add dual world switching support
+                case "switch", "code" -> {
+                    // Find current world and switch to its dev version
+                    CreativeWorld currentWorld = findCreativeWorld(player.getWorld());
+                    if (currentWorld != null && currentWorld.isPaired()) {
+                        plugin.getWorldManager().switchToDevWorld(player, currentWorld.getId());
+                        return true;
+                    }
+                    // Fall through to normal dev mode creation
+                }
             }
         }
         
@@ -122,6 +132,7 @@ public class DevCommand implements CommandExecutor {
         player.sendMessage("§7/dev refresh §8- §fВосстановить недостающие инструменты");
         player.sendMessage("§7/dev tools §8- §fТо же, что и refresh");
         player.sendMessage("§7/dev variables §8- §fОткрыть меню переменных");
+        player.sendMessage("§7/dev switch §8- §fПереключиться в режим разработки (дуальные миры)");
         player.sendMessage("§7/dev help §8- §fПоказать эту справку");
         player.sendMessage("§8§m                                                        ");
     }

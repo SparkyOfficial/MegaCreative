@@ -34,6 +34,10 @@ public class CreativeWorldData {
     public List<WorldComment> comments;
     public List<CodeScriptData> scripts;
     
+    // 🎆 ENHANCED: Dual world support
+    public String pairedWorldId;
+    public CreativeWorld.WorldDualMode dualMode;
+    
     // Empty constructor for Gson
     public CreativeWorldData() {}
 
@@ -64,5 +68,9 @@ public class CreativeWorldData {
                 this.scripts.add(new CodeScriptData(script));
             }
         }
+        
+        // 🎆 ENHANCED: Copy dual world data
+        this.pairedWorldId = world.getPairedWorldId();
+        this.dualMode = world.getDualMode();
     }
 }

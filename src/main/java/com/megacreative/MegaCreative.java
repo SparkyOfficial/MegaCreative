@@ -237,6 +237,7 @@ public class MegaCreative extends JavaPlugin {
         getCommand("trusted").setExecutor(new TrustedPlayerCommand(this));
         getCommand("build").setExecutor(new BuildCommand(this, serviceRegistry.getWorldManager()));
         getCommand("dev").setExecutor(new DevCommand(this));
+        getCommand("switch").setExecutor(new com.megacreative.commands.SwitchCommand(this, serviceRegistry.getWorldManager()));
         getCommand("hub").setExecutor(new HubCommand(this, serviceRegistry.getPlayerManager()));
         
         getCommand("templates").setExecutor(new TemplatesCommand(this));
@@ -284,6 +285,9 @@ public class MegaCreative extends JavaPlugin {
         
         // Register our new PlayerEventsListener
         getServer().getPluginManager().registerEvents(serviceRegistry.getPlayerEventsListener(), this);
+        
+        // 🎆 ENHANCED: Register comprehensive world protection listener
+        getServer().getPluginManager().registerEvents(new com.megacreative.listeners.WorldProtectionListener(this, serviceRegistry.getWorldManager()), this);
     }
     
     // Static access and service delegation

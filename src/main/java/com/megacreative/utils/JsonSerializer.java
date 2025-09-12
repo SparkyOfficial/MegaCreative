@@ -93,6 +93,14 @@ public class JsonSerializer {
             }
             world.setScripts(restoredScripts);
             
+            // 🎆 ENHANCED: Restore dual world data
+            if (worldData.pairedWorldId != null) {
+                world.setPairedWorldId(worldData.pairedWorldId);
+            }
+            if (worldData.dualMode != null) {
+                world.setDualMode(worldData.dualMode);
+            }
+            
             return world;
         } catch (Exception e) {
             plugin.getLogger().severe("Failed to deserialize CreativeWorld: " + e.getMessage());

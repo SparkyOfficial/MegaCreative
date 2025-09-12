@@ -39,11 +39,18 @@ public class CreateWorldCommand implements CommandExecutor {
             player.sendMessage("§7- ocean (океанский мир)");
             player.sendMessage("§7- nether (адский мир)");
             player.sendMessage("§7- end (краевой мир)");
+            player.sendMessage("");
+            player.sendMessage("§e🎆 FrameLand-style dual world mode:");
+            player.sendMessage("§7  Add §f--dual §7to create paired dev/play worlds");
+            player.sendMessage("§7  Example: §f/create flat --dual My World");
             return true;
         }
         
         String typeStr = args[0].toLowerCase();
         CreativeWorldType worldType;
+        
+        // 🎆 ENHANCED: Check for dual world creation mode
+        boolean isDualMode = false;
         
         try {
             worldType = CreativeWorldType.valueOf(typeStr.toUpperCase());
@@ -52,13 +59,22 @@ public class CreateWorldCommand implements CommandExecutor {
             return true;
         }
         
-        // Generate world name - use provided name or generate default
+        // 🎆 ENHANCED: Parse arguments for dual mode and world name
         String worldName;
-        if (args.length > 1) {
+        int nameStartIndex = 1;
+        
+        // Check for --dual flag
+        if (args.length > 1 && args[1].equals("--dual")) {
+            isDualMode = true;
+            nameStartIndex = 2;
+        }
+        
+        // Generate world name - use provided name or generate default
+        if (args.length > nameStartIndex) {
             // Join all remaining arguments to form the world name
             StringBuilder nameBuilder = new StringBuilder();
-            for (int i = 1; i < args.length; i++) {
-                if (i > 1) nameBuilder.append(" ");
+            for (int i = nameStartIndex; i < args.length; i++) {
+                if (i > nameStartIndex) nameBuilder.append(" ");
                 nameBuilder.append(args[i]);
             }
             worldName = nameBuilder.toString();
@@ -79,9 +95,17 @@ public class CreateWorldCommand implements CommandExecutor {
         }
         
         // Create the world
-        player.sendMessage("§a⏳ Создание мира \"" + worldName + "\"...");
-        
-        worldManager.createWorld(player, worldName, worldType);
+        if (isDualMode) {
+            player.sendMessage("§a⏳ Создание парных миров \"" + worldName + "\"...");
+            player.sendMessage("§7🔧 Мир разработки: " + worldName + "-code");
+            player.sendMessage("§7🎮 Игровой мир: " + worldName + "-world");
+            
+            worldManager.createDualWorld(player, worldName, worldType);
+        } else {
+            player.sendMessage("§a⏳ Создание мира \"" + worldName + "\"...");
+            
+            worldManager.createWorld(player, worldName, worldType);
+        }
         
         // The world creation is handled in the WorldManager
         // It will send appropriate messages to the player
