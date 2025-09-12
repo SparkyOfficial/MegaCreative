@@ -3,10 +3,15 @@
 
 blocks:
   DIAMOND_BLOCK:
-    name: "Событие игрока"
+    name: "Событие"
     type: "EVENT"
     description: "Блоки событий, которые запускают скрипт"
-    default_action: "onJoin"  # 🔧 FIX: Add default action for immediate functionality
+    default_action: "onJoin"
+    is_constructor: true
+    structure:
+      brackets: PISTON
+      sign: true
+      bracket_distance: 3
     actions:
       - "onJoin"
       - "onLeave"
@@ -19,10 +24,15 @@ blocks:
       - "onTick"
   
   COBBLESTONE:
-    name: "Действие игрока"
+    name: "Действие"
     type: "ACTION"
     description: "Блоки действий, которые выполняются в скрипте"
-    default_action: "sendMessage"  # 🔧 FIX: Add default action
+    default_action: "sendMessage"
+    is_constructor: true
+    structure:
+      brackets: PISTON
+      sign: true
+      bracket_distance: 3
     actions:
       - "sendMessage"
       - "teleport"
@@ -57,15 +67,15 @@ blocks:
       - "executeAsyncCommand"
   
   OAK_PLANKS:
-    name: "Условие игрока"
+    name: "Условие"
     type: "CONDITION"
     description: "Блоки условий для проверки различных состояний"
-    default_action: "hasItem"  # 🔧 FIX: Add default action
-    is_constructor: true  # Создает структуру с поршнями-скобками
+    default_action: "hasItem"
+    is_constructor: true
     structure:
       brackets: PISTON
       sign: true
-      bracket_distance: 3  # Расстояние между скобками
+      bracket_distance: 3
     actions:
       - "isOp"
       - "compareVariable"
@@ -112,7 +122,7 @@ blocks:
     name: "Если переменная"
     type: "CONDITION"
     description: "Условия для проверки переменных"
-    is_constructor: true  # Создает структуру с поршнями-скобками
+    is_constructor: true
     structure:
       brackets: PISTON
       sign: true
@@ -127,7 +137,7 @@ blocks:
     name: "Если игра"
     type: "CONDITION"
     description: "Условия для проверки игровых состояний"
-    is_constructor: true  # Создает структуру с поршнями-скобками
+    is_constructor: true
     structure:
       brackets: PISTON
       sign: true
@@ -153,11 +163,11 @@ blocks:
     name: "Повторить N раз"
     type: "CONTROL"
     description: "Циклы и повторения"
-    is_constructor: true  # Создает структуру с поршнями-скобками
+    is_constructor: true
     structure:
       brackets: PISTON
       sign: true
-      bracket_distance: 4  # Больше места для циклов
+      bracket_distance: 4
     actions:
       - "repeat"
       - "repeatTrigger"
