@@ -255,6 +255,10 @@ public class MegaCreative extends JavaPlugin {
         getCommand("function").setExecutor(new FunctionCommand(this));
         getCommand("function").setTabCompleter(new FunctionCommand(this));
         
+        // 🎆 FrameLand: Register interactive GUI command
+        getCommand("interactive").setExecutor(new InteractiveCommand(this));
+        getCommand("interactive").setTabCompleter(new InteractiveCommand(this));
+        
         // 🎆 FrameLand-style advanced execution command
         getCommand("execution").setExecutor(new ExecutionCommand(this));
     }

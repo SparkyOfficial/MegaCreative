@@ -22,6 +22,9 @@ import com.megacreative.managers.*;
 import com.megacreative.services.BlockConfigService;
 import com.megacreative.services.FunctionManager;
 import com.megacreative.coding.functions.AdvancedFunctionManager;
+import com.megacreative.gui.interactive.InteractiveGUIManager;
+import com.megacreative.gui.interactive.FrameLandStyleGUI;
+import com.megacreative.gui.coding.EnhancedActionParameterGUI;
 import com.megacreative.MegaCreative;
 import com.megacreative.tools.CodeBlockClipboard;
 // 🎆 FrameLand-style comprehensive events
@@ -82,6 +85,11 @@ public class ServiceRegistry {
     private ScriptPerformanceMonitor scriptPerformanceMonitor;
     private FunctionManager functionManager;
     private AdvancedFunctionManager advancedFunctionManager;
+    
+    // 🎆 FrameLand: Interactive GUI System
+    private InteractiveGUIManager interactiveGUIManager;
+    private FrameLandStyleGUI frameLandStyleGUI;
+    private EnhancedActionParameterGUI enhancedActionParameterGUI;
     
     // 🎆 FrameLand-style comprehensive event system
     private FrameLandEventManager frameLandEventManager;
@@ -218,6 +226,11 @@ public class ServiceRegistry {
         // 🎆 FRAMELAND: Shutdown comprehensive event manager
         if (frameLandEventManager != null) {
             frameLandEventManager.shutdown();
+        }
+        
+        // 🎆 FRAMELAND: Shutdown interactive GUI system
+        if (interactiveGUIManager != null) {
+            interactiveGUIManager.shutdown();
         }
         
         // 🎆 FRAMELAND: Shutdown advanced function manager
@@ -466,6 +479,33 @@ public class ServiceRegistry {
         return frameLandEventManager;
     }
     
+    // 🎆 FrameLand: Get Interactive GUI Manager
+    public InteractiveGUIManager getInteractiveGUIManager() {
+        if (interactiveGUIManager == null) {
+            this.interactiveGUIManager = new InteractiveGUIManager((MegaCreative) plugin);
+            registerService(InteractiveGUIManager.class, interactiveGUIManager);
+        }
+        return interactiveGUIManager;
+    }
+    
+    // 🎆 FrameLand: Get FrameLand Style GUI
+    public FrameLandStyleGUI getFrameLandStyleGUI() {
+        if (frameLandStyleGUI == null) {
+            this.frameLandStyleGUI = new FrameLandStyleGUI((MegaCreative) plugin);
+            registerService(FrameLandStyleGUI.class, frameLandStyleGUI);
+        }
+        return frameLandStyleGUI;
+    }
+    
+    // 🎆 FrameLand: Get Enhanced Action Parameter GUI
+    public EnhancedActionParameterGUI getEnhancedActionParameterGUI() {
+        if (enhancedActionParameterGUI == null) {
+            this.enhancedActionParameterGUI = new EnhancedActionParameterGUI((MegaCreative) plugin);
+            registerService(EnhancedActionParameterGUI.class, enhancedActionParameterGUI);
+        }
+        return enhancedActionParameterGUI;
+    }
+    
     private void initializeCoreServices() {
         // Initialize core services like ConfigManager
         if (configManager == null) {
@@ -572,9 +612,26 @@ public class ServiceRegistry {
             registerService(FrameLandEventManager.class, frameLandEventManager);
         }
         
+        // 🎆 FRAMELAND: Initialize interactive GUI system
+        if (interactiveGUIManager == null) {
+            this.interactiveGUIManager = new InteractiveGUIManager((MegaCreative) plugin);
+            registerService(InteractiveGUIManager.class, interactiveGUIManager);
+        }
+        
+        if (frameLandStyleGUI == null) {
+            this.frameLandStyleGUI = new FrameLandStyleGUI((MegaCreative) plugin);
+            registerService(FrameLandStyleGUI.class, frameLandStyleGUI);
+        }
+        
+        if (enhancedActionParameterGUI == null) {
+            this.enhancedActionParameterGUI = new EnhancedActionParameterGUI((MegaCreative) plugin);
+            registerService(EnhancedActionParameterGUI.class, enhancedActionParameterGUI);
+        }
+        
         log.info("BlockConfigService initialized with " + blockConfigService.getAllBlockConfigs().size() + " block configurations");
         log.info("🎆 FrameLand Event Manager initialized with comprehensive event coverage");
         log.info("🎆 FrameLand Advanced Execution Engine integrated with DefaultScriptEngine");
+        log.info("🎆 FrameLand Interactive GUI System initialized with 6 element types");
     }
     
     private void registerServicesInDI() {

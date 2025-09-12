@@ -42,6 +42,7 @@ permissions:
       megacreative.command.dev: true
       megacreative.command.hub: true
       megacreative.command.function: true
+      megacreative.command.interactive: true
 
   megacreative.admin:
     description: Admin permissions
@@ -234,6 +235,17 @@ commands:
       &6/function help &f- Show function help
     permission: megacreative.user
     aliases: [func, fn]
+
+  interactive:
+    description: 🎆 FrameLand-style interactive GUI system
+    usage: |
+      &6/interactive demo &f- Open interactive element demo
+      &6/interactive block <action> &f- Open block parameter editor
+      &6/interactive world &f- Open world settings GUI
+      &6/interactive test <element> &f- Test specific element type
+      &6/interactive help &f- Show interactive help
+    permission: megacreative.user
+    aliases: [gui, igui]
 
   execution:
     description: 🎆 Advanced execution engine control and testing
