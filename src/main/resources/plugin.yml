@@ -256,3 +256,9 @@ commands:
       &6/execution cancel &f- Cancel all executions
     permission: megacreative.user
     aliases: [exec, perf]
+
+  delete:
+    description: Удалить ваш мир
+    usage: /<command> <ID мира> [confirm]
+    permission: megacreative.user
+    aliases: [del, remove]
