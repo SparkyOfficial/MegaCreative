@@ -1,0 +1,20 @@
+name: FrameLandCreative
+version: '1.1'
+main: deadpool23232.framelandcreative.FrameLandCreative
+authors: [ Deadpool23232(necko4) ]
+description: ААААААА БЛЯТЬ СЕЙЧАС УМРУ НАХУЙ КТО БЛЯТЬ КТО МЕНЯ ПРОСИЛ ЭТО ДЕЛАТЬ
+depend:
+  - PlaceholderAPI
+  - Vault
+commands:
+  create: {}
+  id: {}
+  code: {}
+  play: {}
+  world: {}
+  like: {}
+  games: {}
+  hub: {}
+  delete: {}
+
+  test: {}

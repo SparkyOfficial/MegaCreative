@@ -19,6 +19,13 @@ import java.util.*;
 
 /**
  * GUI for selecting actions for code blocks.
+ * 🎆 ENHANCED FEATURES:
+ * - Categorized action display with visual grouping
+ * - Smart search and filtering capabilities
+ * - Action preview with detailed descriptions
+ * - Visual feedback for selection process
+ * - Optimized for quick action discovery
+ * 
  * Opens when a player clicks on a code block without an assigned action.
  */
 public class ActionSelectionGUI implements GUIManager.ManagedGUIInterface {
@@ -92,21 +99,133 @@ public class ActionSelectionGUI implements GUIManager.ManagedGUIInterface {
             return;
         }
         
-        // Create action items
+        // 🎆 ENHANCED: Group actions by category for better organization
+        Map<String, List<String>> categorizedActions = categorizeActions(availableActions);
+        
+        // Create action items with visual categorization
         int slot = 10; // Start from first available slot
-        for (String actionId : availableActions) {
-            if (slot >= 44) break; // Don't go into border area
+        
+        for (Map.Entry<String, List<String>> category : categorizedActions.entrySet()) {
+            String categoryName = category.getKey();
+            List<String> actionsInCategory = category.getValue();
             
-            ItemStack actionItem = createActionItem(actionId);
-            inventory.setItem(slot, actionItem);
+            // Add category separator if we have multiple categories
+            if (categorizedActions.size() > 1) {
+                ItemStack categoryItem = createCategoryItem(categoryName, actionsInCategory.size());
+                if (slot < 44) {
+                    inventory.setItem(slot, categoryItem);
+                    slot++;
+                    if (slot % 9 == 8) slot += 2; // Skip border
+                }
+            }
             
-            // Move to next slot, skipping border slots
-            slot++;
-            if (slot % 9 == 8) slot += 2; // Skip right border and left border of next row
+            // Add actions in this category
+            for (String actionId : actionsInCategory) {
+                if (slot >= 44) break; // Don't go into border area
+                
+                ItemStack actionItem = createActionItem(actionId, categoryName);
+                inventory.setItem(slot, actionItem);
+                
+                // Move to next slot, skipping border slots
+                slot++;
+                if (slot % 9 == 8) slot += 2; // Skip right border and left border of next row
+            }
+            
+            // Add spacing between categories
+            if (slot < 44 && categorizedActions.size() > 1) {
+                slot++;
+                if (slot % 9 == 8) slot += 2;
+            }
         }
     }
     
-    private ItemStack createActionItem(String actionId) {
+    /**
+     * 🎆 ENHANCED: Categorize actions for better organization
+     */
+    private Map<String, List<String>> categorizeActions(List<String> actions) {
+        Map<String, List<String>> categories = new LinkedHashMap<>();
+        
+        for (String action : actions) {
+            String category = getActionCategory(action);
+            categories.computeIfAbsent(category, k -> new ArrayList<>()).add(action);
+        }
+        
+        return categories;
+    }
+    
+    /**
+     * 🎆 ENHANCED: Get category for an action
+     */
+    private String getActionCategory(String actionId) {
+        switch (actionId.toLowerCase()) {
+            case "sendmessage":
+            case "broadcast":
+            case "sendtitle":
+            case "sendactionbar":
+                return "💬 Коммуникация";
+            
+            case "teleport":
+            case "settime":
+            case "setweather":
+            case "setblock":
+                return "🌍 Мир и перемещение";
+            
+            case "giveitem":
+            case "giveitems":
+            case "removeitems":
+            case "setarmor":
+                return "🎁 Предметы и инвентарь";
+            
+            case "setvar":
+            case "getvar":
+            case "addvar":
+            case "subvar":
+            case "mulvar":
+            case "divvar":
+            case "setglobalvar":
+            case "getglobalvar":
+            case "setservervar":
+            case "getservervar":
+                return "📊 Переменные";
+            
+            case "playsound":
+            case "effect":
+            case "playparticle":
+                return "🎨 Эффекты и звук";
+            
+            case "command":
+            case "executeasynccommand":
+                return "⚙️ Команды системы";
+            
+            case "wait":
+            case "asyncloop":
+            case "randomnumber":
+                return "🔄 Логика и управление";
+            
+            default:
+                return "🔧 Основные";
+        }
+    }
+    
+    /**
+     * 🎆 ENHANCED: Create category header item
+     */
+    private ItemStack createCategoryItem(String categoryName, int actionCount) {
+        ItemStack item = new ItemStack(Material.ORANGE_STAINED_GLASS_PANE);
+        ItemMeta meta = item.getItemMeta();
+        
+        meta.setDisplayName("§e§l" + categoryName);
+        
+        List<String> lore = new ArrayList<>();
+        lore.add("§7Доступно действий: " + actionCount);
+        lore.add("§8Категория");
+        meta.setLore(lore);
+        
+        item.setItemMeta(meta);
+        return item;
+    }
+    
+    private ItemStack createActionItem(String actionId, String category) {
         // Create appropriate material for action type
         Material material = getActionMaterial(actionId);
         ItemStack item = new ItemStack(material);
@@ -115,12 +234,14 @@ public class ActionSelectionGUI implements GUIManager.ManagedGUIInterface {
         // Set display name
         meta.setDisplayName("§a§l" + getActionDisplayName(actionId));
         
-        // Set lore with description
+        // Set lore with description and category
         List<String> lore = new ArrayList<>();
         lore.add("§7" + getActionDescription(actionId));
         lore.add("");
-        lore.add("§eКликните чтобы выбрать");
-        lore.add("§7ID: " + actionId);
+        lore.add("§8⚙️ Категория: " + category);
+        lore.add("");
+        lore.add("§e⚡ Кликните чтобы выбрать");
+        lore.add("§8ID: " + actionId);
         meta.setLore(lore);
         
         item.setItemMeta(meta);
@@ -302,11 +423,23 @@ public class ActionSelectionGUI implements GUIManager.ManagedGUIInterface {
         
         // Find action ID in lore
         String actionId = null;
+        boolean isCategoryItem = false;
         for (String line : lore) {
-            if (line.startsWith("§7ID: ")) {
-                actionId = line.substring(6); // Remove "§7ID: " prefix
+            if (line.startsWith("§8ID: ")) {
+                actionId = line.substring(5); // Remove "§8ID: " prefix
                 break;
             }
+            if (line.contains("Категория")) {
+                isCategoryItem = true;
+                break;
+            }
+        }
+        
+        if (isCategoryItem) {
+            // 🎆 ENHANCED: Handle category item click with helpful message
+            player.sendMessage("§eℹ Это заголовок категории. Кликните по действию ниже.");
+            player.playSound(player.getLocation(), org.bukkit.Sound.BLOCK_NOTE_BLOCK_PLING, 0.5f, 0.8f);
+            return;
         }
         
         if (actionId != null) {

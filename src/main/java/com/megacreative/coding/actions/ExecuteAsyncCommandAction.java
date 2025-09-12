@@ -39,18 +39,19 @@ public class ExecuteAsyncCommandAction implements BlockAction {
             DataValue commandValue = DataValue.of(command);
             DataValue resolvedCommand = resolver.resolve(context, commandValue);
             
-            // Execute the command asynchronously
-            Bukkit.getScheduler().runTaskAsynchronously(context.getPlugin(), () -> {
+            // Execute the command with proper thread safety
+            // Commands must be executed on the main thread due to Bukkit API requirements
+            Bukkit.getScheduler().runTask(context.getPlugin(), () -> {
                 try {
                     Bukkit.dispatchCommand(player, resolvedCommand.asString());
                 } catch (Exception e) {
-                    context.getPlugin().getLogger().warning("Failed to execute async command: " + e.getMessage());
+                    context.getPlugin().getLogger().warning("Failed to execute command: " + e.getMessage());
                 }
             });
             
-            return ExecutionResult.success("Command queued for asynchronous execution");
+            return ExecutionResult.success("Command queued for execution");
         } catch (Exception e) {
-            return ExecutionResult.error("Failed to queue command for asynchronous execution: " + e.getMessage());
+            return ExecutionResult.error("Failed to queue command for execution: " + e.getMessage());
         }
     }
     

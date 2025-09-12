@@ -610,14 +610,84 @@ action_configurations:
         placeholder_item: "DIAMOND_BOOTS"
         slot_name: "boots_slot"
   
-  # Конфигурация для действия giveItems
-  giveItems:
-    item_groups:
-      items_to_give:
-        slots: [0, 1, 2, 3, 4, 5, 6, 7, 8]
-        name: "§aПредметы для выдачи"
-        description: "§7Положите сюда все предметы, которые нужно выдать игроку"
-        placeholder_item: "CHEST"
+  # Конфигурация для действия giveItem
+  giveItem:
+    slots:
+      0:
+        name: "§aПредмет для выдачи"
+        description: "§7Положите предмет, который нужно выдать игроку"
+        placeholder_item: "DIAMOND"
+        slot_name: "item"
+        required: true
+      1:
+        name: "§bКоличество"
+        description: "§7Положите бумагу с количеством (по умолчанию 1)"
+        placeholder_item: "PAPER"
+        slot_name: "amount"
+        validation: "number"
+        default_value: "1"
+  
+  # Конфигурация для действия playSound
+  playSound:
+    slots:
+      0:
+        name: "§aЗвук"
+        description: "§7Положите бумагу с названием звука (например: minecraft:block.note_block.harp)"
+        placeholder_item: "PAPER"
+        slot_name: "sound"
+        required: true
+        validation: "sound_name"
+      1:
+        name: "§bГромкость"
+        description: "§7Положите бумагу с громкостью (0.0-1.0, по умолчанию 1.0)"
+        placeholder_item: "PAPER"
+        slot_name: "volume"
+        validation: "number_range:0.0-1.0"
+        default_value: "1.0"
+      2:
+        name: "§cТон"
+        description: "§7Положите бумагу с тоном (0.5-2.0, по умолчанию 1.0)"
+        placeholder_item: "PAPER"
+        slot_name: "pitch"
+        validation: "number_range:0.5-2.0"
+        default_value: "1.0"
+  
+  # Конфигурация для действия effect
+  effect:
+    slots:
+      0:
+        name: "§aЭффект"
+        description: "§7Положите бумагу с названием эффекта (например: SPEED, STRENGTH)"
+        placeholder_item: "PAPER"
+        slot_name: "effect_type"
+        required: true
+        validation: "effect_name"
+      1:
+        name: "§bДлительность"
+        description: "§7Положите бумагу с длительностью в секундах"
+        placeholder_item: "PAPER"
+        slot_name: "duration"
+        validation: "number"
+        default_value: "30"
+      2:
+        name: "§cУровень"
+        description: "§7Положите бумагу с уровнем эффекта (1-255)"
+        placeholder_item: "PAPER"
+        slot_name: "amplifier"
+        validation: "number_range:1-255"
+        default_value: "1"
+  
+  # Конфигурация для действия wait
+  wait:
+    slots:
+      0:
+        name: "§aВремя ожидания"
+        description: "§7Положите бумагу с временем в тиках (20 тиков = 1 секунда)"
+        placeholder_item: "PAPER"
+        slot_name: "delay"
+        required: true
+        validation: "number"
+        hint: "20 тиков = 1 секунда"
   
   # Конфигурация для действия spawnEntity
   spawnEntity:

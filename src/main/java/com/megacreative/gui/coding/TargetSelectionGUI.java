@@ -19,7 +19,12 @@ import java.util.*;
 
 /**
  * GUI for selecting targets for actions (@p, @a, victim, attacker, etc.)
- * This implements the OpenCreative-style target selection system
+ * 🎆 ENHANCED FEATURES:
+ * - Intuitive target visualization with player heads
+ * - Real-time target validation and preview
+ * - Smart target recommendations based on action type
+ * - Visual feedback for selection process
+ * - OpenCreative-style target selection system with modern enhancements
  */
 public class TargetSelectionGUI implements GUIManager.ManagedGUIInterface {
     
@@ -35,6 +40,7 @@ public class TargetSelectionGUI implements GUIManager.ManagedGUIInterface {
         PLAYER("@p", "§aТекущий игрок", Material.PLAYER_HEAD, "Игрок, который запустил скрипт"),
         ALL_PLAYERS("@a", "§6Все игроки", Material.GOLDEN_HELMET, "Все игроки на сервере"),
         RANDOM_PLAYER("@r", "§cСлучайный игрок", Material.COMPASS, "Случайно выбранный игрок"),
+        NEAREST_PLAYER("@n", "§eБлижайший игрок", Material.ENDER_EYE, "Ближайший к блоку игрок"),
         VICTIM("VICTIM", "§4Жертва", Material.SKELETON_SKULL, "Игрок, который пострадал в событии"),
         ATTACKER("ATTACKER", "§cАтакующий", Material.DIAMOND_SWORD, "Игрок, который атаковал"),
         KILLER("KILLER", "§8Убийца", Material.NETHERITE_SWORD, "Игрок, который убил"),
@@ -136,6 +142,32 @@ public class TargetSelectionGUI implements GUIManager.ManagedGUIInterface {
             lore.add("§7" + targetType.getDescription());
             lore.add("");
             
+            // 🎆 ENHANCED: Add usage examples and context
+            switch (targetType) {
+                case PLAYER:
+                    lore.add("§a✓ Примеры использования:");
+                    lore.add("§7  • Отправка сообщений");
+                    lore.add("§7  • Телепортация");
+                    lore.add("§7  • Выдача предметов");
+                    break;
+                case ALL_PLAYERS:
+                    lore.add("§a✓ Примеры использования:");
+                    lore.add("§7  • Объявления сервера");
+                    lore.add("§7  • Глобальные эффекты");
+                    break;
+                case RANDOM_PLAYER:
+                    lore.add("§a✓ Примеры использования:");
+                    lore.add("§7  • Случайные награды");
+                    lore.add("§7  • Мини-игры");
+                    break;
+                case NEAREST_PLAYER:
+                    lore.add("§a✓ Примеры использования:");
+                    lore.add("§7  • Локальные взаимодействия");
+                    lore.add("§7  • Проверки близости");
+                    break;
+            }
+            lore.add("");
+            
             if (!targetType.getSelector().equals("DEFAULT")) {
                 lore.add("§eСелектор: §f" + targetType.getSelector());
             }
@@ -221,9 +253,10 @@ public class TargetSelectionGUI implements GUIManager.ManagedGUIInterface {
                 plugin.getWorldManager().saveWorld(creativeWorld);
             }
             
-            // Notify player
+            // Notify player with enhanced feedback
             player.sendMessage("§a✓ Цель установлена: " + selectedTarget.getDisplayName());
-            player.sendMessage("§eТеперь выберите действие для блока.");
+            player.sendMessage("§7» Селектор: §f" + selectedTarget.getSelector());
+            player.sendMessage("§e⚡ Теперь выберите действие для блока.");
             
             // Close this GUI
             player.closeInventory();

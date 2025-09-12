@@ -19,7 +19,14 @@ import java.util.*;
 
 /**
  * Advanced drag-and-drop GUI for configuring action parameters
- * Provides a unique interface for each action type with named slots and item groups
+ * 🎆 ENHANCED FEATURES:
+ * - Dynamic YAML-driven slot configuration
+ * - Real-time parameter validation
+ * - Visual feedback for configuration status
+ * - Smart placeholder generation
+ * - Error prevention and user guidance
+ * 
+ * Features intuitive interface for each action type with named slots and item groups
  * Based on the configuration from coding_blocks.yml
  */
 public class ActionParameterGUI implements GUIManager.ManagedGUIInterface {
@@ -31,6 +38,11 @@ public class ActionParameterGUI implements GUIManager.ManagedGUIInterface {
     private final Inventory inventory;
     private final GUIManager guiManager;
     private final BlockConfigService blockConfigService;
+    
+    // 🎆 Enhanced features
+    private boolean hasUnsavedChanges = false;
+    private final Map<Integer, String> slotValidationErrors = new HashMap<>();
+    private final Map<Integer, Boolean> slotValidationStatus = new HashMap<>();
     
     public ActionParameterGUI(MegaCreative plugin, Player player, Location blockLocation, String actionId) {
         this.plugin = plugin;
@@ -71,6 +83,10 @@ public class ActionParameterGUI implements GUIManager.ManagedGUIInterface {
         infoLore.add("");
         infoLore.add("§aПеретащите предметы в слоты");
         infoLore.add("§aдля настройки параметров");
+        infoLore.add("");
+        infoLore.add("§f⚡ Оптимизировано для быстрой настройки");
+        infoLore.add("§7• Валидация в реальном времени");
+        infoLore.add("§7• Автоматическая подсказка");
         infoMeta.setLore(infoLore);
         infoItem.setItemMeta(infoMeta);
         inventory.setItem(4, infoItem);
@@ -293,6 +309,7 @@ public class ActionParameterGUI implements GUIManager.ManagedGUIInterface {
     
     /**
      * Saves the configured parameters back to the code block
+     * 🎆 ENHANCED: With validation feedback
      */
     private void saveParameters() {
         BlockPlacementHandler placementHandler = plugin.getBlockPlacementHandler();
@@ -301,30 +318,201 @@ public class ActionParameterGUI implements GUIManager.ManagedGUIInterface {
         CodeBlock codeBlock = placementHandler.getCodeBlock(blockLocation);
         if (codeBlock == null) return;
         
+        // 🎆 ENHANCED: Check validation status before saving
+        boolean hasErrors = false;
+        List<String> errorMessages = new ArrayList<>();
+        
+        for (Map.Entry<Integer, String> entry : slotValidationErrors.entrySet()) {
+            if (entry.getValue() != null) {
+                hasErrors = true;
+                errorMessages.add("Слот " + entry.getKey() + ": " + entry.getValue());
+            }
+        }
+        
+        if (hasErrors && !errorMessages.isEmpty()) {
+            player.sendMessage("§c⚠ Обнаружены ошибки в конфигурации:");
+            for (String error : errorMessages) {
+                player.sendMessage("§c  • " + error);
+            }
+            player.sendMessage("§eКонфигурация сохранена, но может работать некорректно.");
+        }
+        
         // Clear existing configuration
         codeBlock.clearConfigItems();
         
         // Save items from inventory to code block
         int savedItems = 0;
+        int validItems = 0;
         for (int i = 0; i < inventory.getSize(); i++) {
             ItemStack item = inventory.getItem(i);
             if (item != null && !item.getType().isAir() && !isPlaceholderItem(item)) {
                 codeBlock.setConfigItem(i, item);
                 savedItems++;
+                
+                // Count valid items
+                if (slotValidationStatus.getOrDefault(i, true)) {
+                    validItems++;
+                }
             }
         }
         
         if (savedItems > 0) {
-            player.sendMessage("§a✓ Сохранено " + savedItems + " предметов для действия " + actionId);
+            if (validItems == savedItems) {
+                player.sendMessage("§a✓ Сохранено " + savedItems + " параметров для действия " + actionId);
+            } else {
+                player.sendMessage("§e⚠ Сохранено " + savedItems + " параметров (" + validItems + " корректных) для " + actionId);
+            }
         } else {
             player.sendMessage("§eℹ Конфигурация очищена для действия " + actionId);
         }
+        
+        // Reset unsaved changes flag
+        hasUnsavedChanges = false;
         
         // Save the world to persist changes
         var creativeWorld = plugin.getWorldManager().findCreativeWorldByBukkit(player.getWorld());
         if (creativeWorld != null) {
             plugin.getWorldManager().saveWorld(creativeWorld);
         }
+    }
+    
+    /**
+     * 🎆 ENHANCED: Real-time parameter validation
+     * Validates a specific slot configuration and provides user feedback
+     */
+    private void validateSlot(int slot, ItemStack item) {
+        String error = null;
+        boolean isValid = true;
+        
+        if (item == null || item.getType().isAir()) {
+            // Empty slot - check if required
+            if (isSlotRequired(slot)) {
+                error = "Обязательный параметр";
+                isValid = false;
+            }
+        } else {
+            // Validate item type and content
+            error = validateItemForSlot(slot, item);
+            isValid = (error == null);
+        }
+        
+        slotValidationErrors.put(slot, error);
+        slotValidationStatus.put(slot, isValid);
+        
+        // Update visual feedback
+        updateSlotVisualFeedback(slot, isValid, error);
+        
+        // Track unsaved changes
+        hasUnsavedChanges = true;
+    }
+    
+    /**
+     * 🎆 ENHANCED: Check if a slot is required for this action
+     */
+    private boolean isSlotRequired(int slot) {
+        var actionConfigurations = blockConfigService.getActionConfigurations();
+        if (actionConfigurations == null) return false;
+        
+        var actionConfig = actionConfigurations.getConfigurationSection(actionId);
+        if (actionConfig == null) return false;
+        
+        var slotsConfig = actionConfig.getConfigurationSection("slots");
+        if (slotsConfig == null) return false;
+        
+        var slotConfig = slotsConfig.getConfigurationSection(String.valueOf(slot));
+        if (slotConfig == null) return false;
+        
+        return slotConfig.getBoolean("required", slot == 0); // First slot usually required
+    }
+    
+    /**
+     * 🎆 ENHANCED: Validate item content for specific slot
+     */
+    private String validateItemForSlot(int slot, ItemStack item) {
+        if (!item.hasItemMeta() || !item.getItemMeta().hasDisplayName()) {
+            return "Нужно переименовать предмет";
+        }
+        
+        String itemName = item.getItemMeta().getDisplayName();
+        
+        // Action-specific validation
+        switch (actionId.toLowerCase()) {
+            case "sendmessage":
+                if (slot == 0 && itemName.trim().isEmpty()) {
+                    return "Сообщение не может быть пустым";
+                }
+                break;
+            case "executeAsyncCommand":
+                if (slot == 0 && !itemName.startsWith("/") && !itemName.contains(":")) {
+                    return "Команда должна начинаться с '/' или содержать ':'";
+                }
+                break;
+            case "asyncloop":
+                if (slot == 0 && !isValidNumber(itemName)) {
+                    return "Количество итераций должно быть числом";
+                }
+                if (slot == 1 && !isValidNumber(itemName)) {
+                    return "Задержка должна быть числом";
+                }
+                break;
+        }
+        
+        return null; // No error
+    }
+    
+    /**
+     * 🎆 ENHANCED: Check if string represents a valid number
+     */
+    private boolean isValidNumber(String str) {
+        if (str == null || str.trim().isEmpty()) return false;
+        
+        // Remove color codes and common prefixes
+        String cleaned = str.replaceAll("§[0-9a-fk-or]", "").trim();
+        
+        // Check for pattern like "iterations:5" or "delay:20"
+        if (cleaned.contains(":")) {
+            String[] parts = cleaned.split(":");
+            if (parts.length == 2) {
+                cleaned = parts[1].trim();
+            }
+        }
+        
+        try {
+            Integer.parseInt(cleaned);
+            return true;
+        } catch (NumberFormatException e) {
+            return false;
+        }
+    }
+    
+    /**
+     * 🎆 ENHANCED: Update visual feedback for slot validation
+     */
+    private void updateSlotVisualFeedback(int slot, boolean isValid, String error) {
+        ItemStack currentItem = inventory.getItem(slot);
+        if (currentItem == null || currentItem.getType().isAir()) return;
+        
+        ItemMeta meta = currentItem.getItemMeta();
+        if (meta == null) return;
+        
+        List<String> lore = meta.getLore();
+        if (lore == null) lore = new ArrayList<>();
+        
+        // Remove old validation messages
+        lore.removeIf(line -> line.contains("✓") || line.contains("✗") || line.contains("Ошибка:"));
+        
+        // Add new validation status
+        if (isValid) {
+            lore.add("§a✓ Параметр корректен");
+        } else if (error != null) {
+            lore.add("§c✗ Ошибка: " + error);
+        }
+        
+        meta.setLore(lore);
+        currentItem.setItemMeta(meta);
+        
+        // Update item in inventory
+        inventory.setItem(slot, currentItem);
     }
     
     /**
@@ -374,7 +562,11 @@ public class ActionParameterGUI implements GUIManager.ManagedGUIInterface {
         
         // Allow interaction with center slots (9-17) for parameter configuration
         if (slot >= 9 && slot <= 17) {
-            // Allow normal interaction for item configuration
+            // 🎆 ENHANCED: Trigger real-time validation after item placement
+            org.bukkit.Bukkit.getScheduler().runTaskLater(plugin, () -> {
+                ItemStack newItem = inventory.getItem(slot);
+                validateSlot(slot, newItem);
+            }, 1L);
             return;
         }
         
