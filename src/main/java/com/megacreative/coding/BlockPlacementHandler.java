@@ -345,24 +345,32 @@ public class BlockPlacementHandler implements Listener {
         if (config.getType().equals("CONDITION") || config.getType().equals("CONTROL")) {
             int bracketDistance = structure.getBracketDistance();
             
+            // Calculate optimal positioning based on surrounding blocks (same as creation)
+            BlockFace buildDirection = findOptimalBuildDirection(mainBlockLoc, bracketDistance);
+            
             // Места скобок
-            Location openBracketLoc = mainBlockLoc.clone().add(1, 0, 0);
-            Location closeBracketLoc = mainBlockLoc.clone().add(1 + bracketDistance, 0, 0);
+            Location openBracketLoc = mainBlockLoc.clone().add(buildDirection.getModX(), 0, buildDirection.getModZ());
+            Location closeBracketLoc = openBracketLoc.clone().add(
+                buildDirection.getModX() * bracketDistance, 
+                0, 
+                buildDirection.getModZ() * bracketDistance
+            );
             
             // Удаляем скобки-поршни
             removeBracketPiston(openBracketLoc, player);
             removeBracketPiston(closeBracketLoc, player);
             
             // Удаляем все блоки между скобками (предотвращаем мусор)
-            for (int x = 2; x < 1 + bracketDistance; x++) {
-                Location innerBlockLoc = mainBlockLoc.clone().add(x, 0, 0);
+            for (int i = 1; i < bracketDistance; i++) {
+                Location innerBlockLoc = mainBlockLoc.clone().add(
+                    buildDirection.getModX() * i, 
+                    0, 
+                    buildDirection.getModZ() * i
+                );
                 if (blockCodeBlocks.containsKey(innerBlockLoc)) {
                     blockCodeBlocks.remove(innerBlockLoc);
                     removeSignFromBlock(innerBlockLoc);
                     removeContainerAboveBlock(innerBlockLoc);
-                    
-                    // Опционально: можно также удалять сам блок, но это может быть слишком агрессивно
-                    // innerBlockLoc.getBlock().setType(Material.AIR);
                 }
             }
             
