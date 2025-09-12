@@ -5,6 +5,8 @@ import com.megacreative.coding.executors.ExecutionResult;
 import com.megacreative.coding.variables.VariableManager;
 import com.megacreative.coding.debug.VisualDebugger;
 import com.megacreative.services.BlockConfigService;
+// 🎆 FrameLand-style advanced execution
+import com.megacreative.coding.executors.AdvancedExecutionEngine;
 import org.bukkit.Material;
 import org.bukkit.entity.Player;
 import org.bukkit.scheduler.BukkitRunnable;
@@ -14,7 +16,7 @@ import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.Map;
 
-public class DefaultScriptEngine implements ScriptEngine {
+public class DefaultScriptEngine implements ScriptEngine, EnhancedScriptEngine {
     
     private final MegaCreative plugin;
     private final VariableManager variableManager;
@@ -23,8 +25,15 @@ public class DefaultScriptEngine implements ScriptEngine {
     private final ActionFactory actionFactory;
     private final ConditionFactory conditionFactory;
     
+    // 🎆 FrameLand-style advanced execution engine
+    private final AdvancedExecutionEngine advancedExecutionEngine;
+    
     private final Map<String, ExecutionContext> activeExecutions = new ConcurrentHashMap<>();
     private static final int MAX_RECURSION_DEPTH = 100;
+    
+    // Performance settings
+    private long maxExecutionTimeMs = 5000; // 5 seconds
+    private int maxInstructionsPerTick = 1000;
 
     public DefaultScriptEngine(MegaCreative plugin, VariableManager variableManager, VisualDebugger debugger,
                                BlockConfigService blockConfigService) {
@@ -35,6 +44,9 @@ public class DefaultScriptEngine implements ScriptEngine {
         // Передаем DependencyContainer, если он у вас есть, или создаем новые
         this.actionFactory = new ActionFactory(plugin.getDependencyContainer());
         this.conditionFactory = new ConditionFactory();
+        
+        // 🎆 FrameLand: Initialize advanced execution engine
+        this.advancedExecutionEngine = new AdvancedExecutionEngine(plugin);
     }
     
     public void initialize() {
@@ -489,5 +501,112 @@ public class DefaultScriptEngine implements ScriptEngine {
             return true;
         }
         return false;
+    }
+    
+    // 🎆 FrameLand-style enhanced execution methods
+    
+    @Override
+    public CompletableFuture<ExecutionResult> executeScript(CodeScript script, Player player, 
+                                                           AdvancedExecutionEngine.ExecutionMode mode, 
+                                                           AdvancedExecutionEngine.Priority priority, 
+                                                           String trigger) {
+        return advancedExecutionEngine.executeScript(script, player, mode, priority, trigger);
+    }
+    
+    @Override
+    public CompletableFuture<ExecutionResult> executeBlock(CodeBlock block, Player player, 
+                                                          AdvancedExecutionEngine.ExecutionMode mode, 
+                                                          AdvancedExecutionEngine.Priority priority, 
+                                                          String trigger) {
+        // Create a temporary script with just this block
+        CodeScript tempScript = new CodeScript("Temporary Block Script", true, block);
+        return advancedExecutionEngine.executeScript(tempScript, player, mode, priority, trigger);
+    }
+    
+    @Override
+    public CompletableFuture<ExecutionResult> executeScriptDelayed(CodeScript script, Player player, 
+                                                                   long delayTicks, String trigger) {
+        return advancedExecutionEngine.executeScript(script, player, 
+            AdvancedExecutionEngine.ExecutionMode.DELAYED, 
+            AdvancedExecutionEngine.Priority.NORMAL, trigger);
+    }
+    
+    @Override
+    public CompletableFuture<ExecutionResult[]> executeScriptsBatch(CodeScript[] scripts, Player player, String trigger) {
+        CompletableFuture<ExecutionResult>[] futures = new CompletableFuture[scripts.length];
+        
+        for (int i = 0; i < scripts.length; i++) {
+            futures[i] = advancedExecutionEngine.executeScript(scripts[i], player, 
+                AdvancedExecutionEngine.ExecutionMode.BATCH, 
+                AdvancedExecutionEngine.Priority.NORMAL, trigger);
+        }
+        
+        return CompletableFuture.allOf(futures)
+            .thenApply(v -> {
+                ExecutionResult[] results = new ExecutionResult[futures.length];
+                for (int i = 0; i < futures.length; i++) {
+                    try {
+                        results[i] = futures[i].get();
+                    } catch (Exception e) {
+                        results[i] = ExecutionResult.error("Batch execution failed: " + e.getMessage());
+                    }
+                }
+                return results;
+            });
+    }
+    
+    @Override
+    public void cancelPlayerExecutions(Player player) {
+        advancedExecutionEngine.cancelPlayerExecutions(player);
+        
+        // Also cancel any active executions in the legacy system
+        activeExecutions.entrySet().removeIf(entry -> {
+            ExecutionContext context = entry.getValue();
+            if (context.getPlayer() != null && context.getPlayer().getUniqueId().equals(player.getUniqueId())) {
+                context.setCancelled(true);
+                return true;
+            }
+            return false;
+        });
+    }
+    
+    @Override
+    public AdvancedExecutionEngine.ExecutionStatistics getExecutionStatistics() {
+        return advancedExecutionEngine.getStatistics();
+    }
+    
+    @Override
+    public void setMaxExecutionTime(long maxTimeMs) {
+        this.maxExecutionTimeMs = maxTimeMs;
+    }
+    
+    @Override
+    public void setMaxInstructionsPerTick(int maxInstructions) {
+        this.maxInstructionsPerTick = maxInstructions;
+    }
+    
+    @Override
+    public boolean isOverloaded() {
+        AdvancedExecutionEngine.ExecutionStatistics stats = getExecutionStatistics();
+        // Consider overloaded if more than 50 active sessions or throughput over 100/sec
+        return stats.getActiveSessions() > 50 || stats.getThroughput() > 100.0;
+    }
+    
+    @Override
+    public double getCurrentThroughput() {
+        return getExecutionStatistics().getThroughput();
+    }
+    
+    /**
+     * Shutdown the enhanced execution engine
+     */
+    public void shutdown() {
+        if (advancedExecutionEngine != null) {
+            advancedExecutionEngine.shutdown();
+        }
+        
+        // Cancel all active executions
+        activeExecutions.values().forEach(context -> context.setCancelled(true));
+        activeExecutions.clear();
     }
 }

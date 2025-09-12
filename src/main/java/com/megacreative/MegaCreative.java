@@ -250,6 +250,9 @@ public class MegaCreative extends JavaPlugin {
         getCommand("create").setExecutor(new CreateWorldCommand(this, serviceRegistry.getWorldManager()));
         getCommand("clipboard").setExecutor(new ClipboardCommand(this, serviceRegistry.getCodeBlockClipboard()));
         getCommand("group").setExecutor(new GroupCommand(serviceRegistry));
+        
+        // 🎆 FrameLand-style advanced execution command
+        getCommand("execution").setExecutor(new ExecutionCommand(this));
     }
     
     /**

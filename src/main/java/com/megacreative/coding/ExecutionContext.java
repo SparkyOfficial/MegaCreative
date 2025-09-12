@@ -5,6 +5,9 @@ import com.megacreative.coding.variables.VariableManager;
 import com.megacreative.coding.variables.IVariableManager.VariableScope;
 import com.megacreative.coding.values.DataValue;
 import com.megacreative.models.CreativeWorld;
+// 🎆 FrameLand-style execution modes
+import com.megacreative.coding.executors.AdvancedExecutionEngine.ExecutionMode;
+import com.megacreative.coding.executors.AdvancedExecutionEngine.Priority;
 import org.bukkit.Location;
 import org.bukkit.entity.Player;
 import org.bukkit.event.Event;
@@ -35,6 +38,13 @@ public class ExecutionContext {
     
     // Instruction counter for loop protection
     private int instructionCount = 0;
+    
+    // 🎆 FrameLand-style execution enhancements
+    private ExecutionMode executionMode = ExecutionMode.SYNCHRONOUS;
+    private Priority priority = Priority.NORMAL;
+    private int maxInstructions = 1000;
+    private long executionTimeout = 0;
+    private long executionStartTime = System.currentTimeMillis();
 
     // Ссылка на менеджер переменных
     private final VariableManager variableManager;
@@ -424,6 +434,92 @@ public class ExecutionContext {
         instructionCount = 0;
     }
     
+    // 🎆 FrameLand-style execution mode methods
+    
+    /**
+     * Gets the execution mode for this context
+     */
+    public ExecutionMode getExecutionMode() {
+        return executionMode;
+    }
+    
+    /**
+     * Sets the execution mode
+     */
+    public void setExecutionMode(ExecutionMode executionMode) {
+        this.executionMode = executionMode;
+    }
+    
+    /**
+     * Gets the execution priority
+     */
+    public Priority getPriority() {
+        return priority;
+    }
+    
+    /**
+     * Sets the execution priority
+     */
+    public void setPriority(Priority priority) {
+        this.priority = priority;
+    }
+    
+    /**
+     * Gets the maximum allowed instructions
+     */
+    public int getMaxInstructions() {
+        return maxInstructions;
+    }
+    
+    /**
+     * Sets the maximum allowed instructions
+     */
+    public void setMaxInstructions(int maxInstructions) {
+        this.maxInstructions = maxInstructions;
+    }
+    
+    /**
+     * Gets the execution timeout timestamp
+     */
+    public long getExecutionTimeout() {
+        return executionTimeout;
+    }
+    
+    /**
+     * Sets the execution timeout
+     */
+    public void setExecutionTimeout(long executionTimeout) {
+        this.executionTimeout = executionTimeout;
+    }
+    
+    /**
+     * Checks if execution has timed out
+     */
+    public boolean isTimedOut() {
+        return executionTimeout > 0 && System.currentTimeMillis() > executionTimeout;
+    }
+    
+    /**
+     * Gets the execution start time
+     */
+    public long getExecutionStartTime() {
+        return executionStartTime;
+    }
+    
+    /**
+     * Gets the current execution duration in milliseconds
+     */
+    public long getExecutionDuration() {
+        return System.currentTimeMillis() - executionStartTime;
+    }
+    
+    /**
+     * Checks if the instruction limit has been exceeded
+     */
+    public boolean isInstructionLimitExceeded() {
+        return instructionCount > maxInstructions;
+    }
+    
     // Builder pattern
     public static Builder builder() {
         return new Builder();
@@ -436,6 +532,11 @@ public class ExecutionContext {
         private Event event;
         private Location blockLocation;
         private CodeBlock currentBlock;
+        
+        // 🎆 FrameLand-style execution mode fields
+        private ExecutionMode executionMode = ExecutionMode.SYNCHRONOUS;
+        private Priority priority = Priority.NORMAL;
+        private int maxInstructions = 1000;
         
         public Builder plugin(MegaCreative plugin) {
             this.plugin = plugin;
@@ -467,8 +568,28 @@ public class ExecutionContext {
             return this;
         }
         
+        // 🎆 FrameLand-style execution mode builders
+        public Builder executionMode(ExecutionMode executionMode) {
+            this.executionMode = executionMode;
+            return this;
+        }
+        
+        public Builder priority(Priority priority) {
+            this.priority = priority;
+            return this;
+        }
+        
+        public Builder maxInstructions(int maxInstructions) {
+            this.maxInstructions = maxInstructions;
+            return this;
+        }
+        
         public ExecutionContext build() {
-            return new ExecutionContext(plugin, player, creativeWorld, event, blockLocation, currentBlock);
+            ExecutionContext context = new ExecutionContext(plugin, player, creativeWorld, event, blockLocation, currentBlock);
+            context.executionMode = this.executionMode;
+            context.priority = this.priority;
+            context.maxInstructions = this.maxInstructions;
+            return context;
         }
     }
 }

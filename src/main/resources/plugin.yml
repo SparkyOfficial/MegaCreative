@@ -221,3 +221,13 @@ commands:
     usage: /<command> <select|create|collapse|expand|delete|list|cancel> [name]
     permission: megacreative.user
     aliases: [grp, organize]
+
+  execution:
+    description: 🎆 Advanced execution engine control and testing
+    usage: |
+      &6/execution test <mode> &f- Test execution modes
+      &6/execution stats &f- Show performance statistics
+      &6/execution benchmark &f- Run performance benchmark
+      &6/execution cancel &f- Cancel all executions
+    permission: megacreative.user
+    aliases: [exec, perf]

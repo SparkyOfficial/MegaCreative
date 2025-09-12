@@ -554,6 +554,7 @@ public class ServiceRegistry {
         
         log.info("BlockConfigService initialized with " + blockConfigService.getAllBlockConfigs().size() + " block configurations");
         log.info("🎆 FrameLand Event Manager initialized with comprehensive event coverage");
+        log.info("🎆 FrameLand Advanced Execution Engine integrated with DefaultScriptEngine");
     }
     
     private void registerServicesInDI() {
