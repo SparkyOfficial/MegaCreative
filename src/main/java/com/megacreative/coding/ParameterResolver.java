@@ -5,12 +5,20 @@ import com.megacreative.coding.values.LocationValue;
 import com.megacreative.coding.values.PlayerValue;
 import com.megacreative.coding.variables.VariableManager;
 import com.megacreative.coding.variables.IVariableManager;
+import com.megacreative.coding.placeholders.FrameLandPlaceholderResolver;
 import org.bukkit.entity.Player;
 import org.bukkit.Location;
 
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
+/**
+ * 🎆 ENHANCED: Parameter resolver with FrameLand-style placeholder support
+ * Now supports multiple placeholder formats:
+ * - FrameLand style: apple[variable]~
+ * - Modern style: ${variable}
+ * - Classic style: %variable%
+ */
 public class ParameterResolver {
     private final ExecutionContext context;
     private static final Pattern PLACEHOLDER_PATTERN = Pattern.compile("\\$\\{([^}]+)\\}");
@@ -25,25 +33,18 @@ public class ParameterResolver {
         }
 
         String text = value.asString();
-        if (text == null || !text.contains("${")) {
+        if (text == null) {
             return value;
         }
 
-        Matcher matcher = PLACEHOLDER_PATTERN.matcher(text);
-        StringBuffer result = new StringBuffer();
-
-        while (matcher.find()) {
-            String placeholder = matcher.group(1);
-            String replacement = resolvePlaceholder(placeholder, context);
-            matcher.appendReplacement(result, replacement != null ? replacement : matcher.group(0));
-        }
-        matcher.appendTail(result);
-
-        return DataValue.of(result.toString());
+        // 🎆 ENHANCED: Use FrameLand placeholder resolver for comprehensive support
+        String resolvedText = FrameLandPlaceholderResolver.resolvePlaceholders(text, context);
+        
+        return DataValue.of(resolvedText);
     }
 
     /**
-     * Resolves placeholders in a string and returns the resolved string.
+     * 🎆 ENHANCED: Resolves placeholders in a string using FrameLand system
      * 
      * @param context The execution context
      * @param text The text to resolve
@@ -54,11 +55,14 @@ public class ParameterResolver {
             return text;
         }
         
-        DataValue value = DataValue.of(text);
-        DataValue resolved = resolve(context, value);
-        return resolved.asString();
+        return FrameLandPlaceholderResolver.resolvePlaceholders(text, context);
     }
 
+    /**
+     * Legacy method for backwards compatibility
+     * @deprecated Use FrameLandPlaceholderResolver directly for better performance
+     */
+    @Deprecated
     private String resolvePlaceholder(String placeholder, ExecutionContext context) {
         // Handle player-related placeholders
         Player player = context.getPlayer();

@@ -2,6 +2,7 @@ package com.megacreative.coding;
 
 import com.megacreative.coding.values.DataValue;
 import com.megacreative.coding.values.ValueType;
+import com.megacreative.coding.placeholders.FrameLandPlaceholderResolver;
 import org.bukkit.entity.Player;
 import org.bukkit.Location;
 
@@ -9,17 +10,20 @@ import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 /**
- * Utility class for resolving placeholders in strings.
+ * 🎆 ENHANCED: Legacy placeholder resolver - now delegates to FrameLand system
  * Supports player-related placeholders like %player%, %world%, etc.
  * Also supports variable placeholders like ${variable_name}.
+ * 
+ * @deprecated Use FrameLandPlaceholderResolver for better functionality
  */
+@Deprecated
 public class PlaceholderResolver {
     
     private static final Pattern PLAYER_PLACEHOLDER_PATTERN = Pattern.compile("%([^%]+)%");
     private static final Pattern VARIABLE_PLACEHOLDER_PATTERN = Pattern.compile("\\$\\{([^}]+)\\}");
     
     /**
-     * Resolves all placeholders in a string using the execution context
+     * 🎆 ENHANCED: Resolves all placeholders using FrameLand system
      * @param input The input string with placeholders
      * @param context The execution context containing player and variables
      * @return The string with all placeholders resolved
@@ -29,13 +33,8 @@ public class PlaceholderResolver {
             return input;
         }
         
-        // First resolve player-related placeholders
-        String result = resolvePlayerPlaceholders(input, context);
-        
-        // Then resolve variable placeholders
-        result = resolveVariablePlaceholders(result, context);
-        
-        return result;
+        // Delegate to FrameLand placeholder resolver for comprehensive support
+        return FrameLandPlaceholderResolver.resolvePlaceholders(input, context);
     }
     
     /**

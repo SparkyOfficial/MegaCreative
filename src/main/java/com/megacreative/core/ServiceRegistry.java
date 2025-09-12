@@ -23,6 +23,8 @@ import com.megacreative.services.BlockConfigService;
 import com.megacreative.services.FunctionManager;
 import com.megacreative.MegaCreative;
 import com.megacreative.tools.CodeBlockClipboard;
+// 🎆 FrameLand-style comprehensive events
+import com.megacreative.managers.FrameLandEventManager;
 import org.bukkit.plugin.Plugin;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.logging.Level;
@@ -78,6 +80,9 @@ public class ServiceRegistry {
     private PlayerEventsListener playerEventsListener;
     private ScriptPerformanceMonitor scriptPerformanceMonitor;
     private FunctionManager functionManager;
+    
+    // 🎆 FrameLand-style comprehensive event system
+    private FrameLandEventManager frameLandEventManager;
 
     public ServiceRegistry(Plugin plugin, DependencyContainer dependencyContainer) {
         this.plugin = plugin;
@@ -203,6 +208,12 @@ public class ServiceRegistry {
         log.info("Shutting down MegaCreative services...");
         
         // Shutdown services in reverse order of initialization
+        
+        // 🎆 FRAMELAND: Shutdown comprehensive event manager
+        if (frameLandEventManager != null) {
+            frameLandEventManager.shutdown();
+        }
+        
         if (scriptPerformanceMonitor != null) {
             scriptPerformanceMonitor.shutdown();
         }
@@ -426,6 +437,15 @@ public class ServiceRegistry {
         return functionManager;
     }
     
+    // 🎆 FRAMELAND: Get comprehensive event manager
+    public FrameLandEventManager getFrameLandEventManager() {
+        if (frameLandEventManager == null) {
+            this.frameLandEventManager = new FrameLandEventManager((MegaCreative) plugin);
+            registerService(FrameLandEventManager.class, frameLandEventManager);
+        }
+        return frameLandEventManager;
+    }
+    
     private void initializeCoreServices() {
         // Initialize core services like ConfigManager
         if (configManager == null) {
@@ -526,7 +546,14 @@ public class ServiceRegistry {
             registerService(EventDataExtractorRegistry.class, eventDataExtractorRegistry);
         }
         
+        // 🎆 FRAMELAND: Initialize comprehensive event manager
+        if (frameLandEventManager == null) {
+            this.frameLandEventManager = new FrameLandEventManager((MegaCreative) plugin);
+            registerService(FrameLandEventManager.class, frameLandEventManager);
+        }
+        
         log.info("BlockConfigService initialized with " + blockConfigService.getAllBlockConfigs().size() + " block configurations");
+        log.info("🎆 FrameLand Event Manager initialized with comprehensive event coverage");
     }
     
     private void registerServicesInDI() {
