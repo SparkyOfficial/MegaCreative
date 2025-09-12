@@ -205,16 +205,11 @@ public class AdvancedEventTrigger {
         
         private void scheduleDelayedExecution(CustomEventManager eventManager, Player player, 
                                            String world, Map<String, DataValue> data, long delay) {
-            // In a real implementation, this would use Bukkit's scheduler
-            // For now, we'll simulate with a simple delayed execution
-            new Thread(() -> {
-                try {
-                    Thread.sleep(delay);
-                    eventManager.triggerEvent(chainedEventName, data, player, world);
-                } catch (InterruptedException e) {
-                    Thread.currentThread().interrupt();
-                }
-            }).start();
+            // Use Bukkit's scheduler instead of creating direct threads
+            com.megacreative.MegaCreative plugin = com.megacreative.MegaCreative.getInstance();
+            plugin.getServer().getScheduler().runTaskLater(plugin, () -> {
+                eventManager.triggerEvent(chainedEventName, data, player, world);
+            }, delay / 50); // Convert milliseconds to ticks (1 tick = 50ms)
         }
     }
     

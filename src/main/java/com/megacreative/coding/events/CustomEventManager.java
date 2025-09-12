@@ -463,19 +463,11 @@ public class CustomEventManager implements Listener {
      * Starts the correlation cleanup task
      */
     private void startCorrelationCleanupTask() {
-        // In a real implementation, this would use Bukkit's scheduler
-        // For now, we'll simulate with a simple periodic cleanup
-        new Thread(() -> {
-            while (!Thread.currentThread().isInterrupted()) {
-                try {
-                    Thread.sleep(60000); // Every minute
-                    correlationEngine.cleanupExpiredInstances();
-                } catch (InterruptedException e) {
-                    Thread.currentThread().interrupt();
-                    break;
-                }
-            }
-        }).start();
+        // Use Bukkit's scheduler instead of creating direct threads
+        com.megacreative.MegaCreative plugin = com.megacreative.MegaCreative.getInstance();
+        plugin.getServer().getScheduler().runTaskTimer(plugin, () -> {
+            correlationEngine.cleanupExpiredInstances();
+        }, 1200L, 1200L); // Run every minute (1200 ticks = 60 seconds)
     }
     
     /**
@@ -643,6 +635,7 @@ public class CustomEventManager implements Listener {
         private final UUID playerId;
         private final String worldName;
         private boolean cancelled = false;
+        private int taskId = -1; // Bukkit task ID
         
         public ScheduledTrigger(String triggerId, long delayMs, Player player, String worldName) {
             this.triggerId = triggerId;
@@ -652,24 +645,23 @@ public class CustomEventManager implements Listener {
         }
         
         public void schedule(CustomEventManager manager) {
-            // In a real implementation, this would use Bukkit's scheduler
-            // For now, we'll simulate with a simple delayed execution
-            new Thread(() -> {
-                try {
-                    Thread.sleep(delayMs);
-                    if (!cancelled) {
-                        Player player = playerId != null ? 
-                            Bukkit.getPlayer(playerId) : null;
-                        manager.executeAdvancedTrigger(triggerId, player, worldName);
-                    }
-                } catch (InterruptedException e) {
-                    Thread.currentThread().interrupt();
+            // Use Bukkit's scheduler instead of creating direct threads
+            com.megacreative.MegaCreative plugin = com.megacreative.MegaCreative.getInstance();
+            this.taskId = plugin.getServer().getScheduler().scheduleSyncDelayedTask(plugin, () -> {
+                if (!cancelled) {
+                    manager.executeAdvancedTrigger(triggerId, 
+                        playerId != null ? plugin.getServer().getPlayer(playerId) : null, 
+                        worldName);
                 }
-            }).start();
+            }, delayMs / 50); // Convert milliseconds to ticks (1 tick = 50ms)
         }
         
         public void cancel() {
-            this.cancelled = true;
+            cancelled = true;
+            if (taskId != -1) {
+                com.megacreative.MegaCreative plugin = com.megacreative.MegaCreative.getInstance();
+                plugin.getServer().getScheduler().cancelTask(taskId);
+            }
         }
     }
     

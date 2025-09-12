@@ -162,6 +162,7 @@ public class JsonSerializer {
                 } catch (Exception e) {
                     // Логируем ошибку, но продолжаем работу
                     System.err.println("Failed to deserialize ItemStack: " + e.getMessage());
+                    System.err.println("Stack trace: " + java.util.Arrays.toString(e.getStackTrace()));
                 }
             });
         }

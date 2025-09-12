@@ -182,7 +182,7 @@ public class WorldManagerImpl implements IWorldManager {
                 }
             } catch (Exception e) {
                 plugin.getLogger().severe("Критическая ошибка при создании мира: " + e.getMessage());
-                e.printStackTrace();
+                plugin.getLogger().severe("Stack trace: " + java.util.Arrays.toString(e.getStackTrace()));
                 player.sendMessage("§cПроизошла ошибка при создании мира. Пожалуйста, обратитесь к администратору.");
 
                 // Пытаемся очистить мир, если он был частично создан
@@ -664,7 +664,7 @@ public class WorldManagerImpl implements IWorldManager {
                         player.sendMessage("§aМир '" + world.getName() + "' успешно сохранен!"));
                 } catch (Exception e) {
                     plugin.getLogger().severe("Критическая ошибка при сохранении мира " + world.getId() + ": " + e.getMessage());
-                    e.printStackTrace();
+                    plugin.getLogger().severe("Stack trace: " + java.util.Arrays.toString(e.getStackTrace()));
                     // Уведомление об ошибке в главном потоке
                     Bukkit.getScheduler().runTask(plugin, () -> 
                         player.sendMessage("§cПроизошла ошибка при сохранении мира."));
@@ -691,7 +691,7 @@ public class WorldManagerImpl implements IWorldManager {
             plugin.getLogger().fine("World " + world.getId() + " saved successfully using safe DTO serialization");
         } catch (Exception e) {
             plugin.getLogger().severe("Ошибка сохранения мира " + world.getId() + ": " + e.getMessage());
-            e.printStackTrace();
+            plugin.getLogger().severe("Stack trace: " + java.util.Arrays.toString(e.getStackTrace()));
         }
     }
     

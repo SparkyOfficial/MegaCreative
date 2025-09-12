@@ -562,7 +562,7 @@ public class AutoConnectionManager implements Listener {
             }
         } catch (Exception e) {
             plugin.getLogger().severe("Failed to create script for event block: " + e.getMessage());
-            e.printStackTrace();
+            plugin.getLogger().severe("Stack trace: " + java.util.Arrays.toString(e.getStackTrace()));
         }
     }
     
@@ -594,7 +594,7 @@ public class AutoConnectionManager implements Listener {
             }
         } catch (Exception e) {
             plugin.getLogger().severe("Failed to remove script for event block: " + e.getMessage());
-            e.printStackTrace();
+            plugin.getLogger().severe("Stack trace: " + java.util.Arrays.toString(e.getStackTrace()));
         }
     }
     
@@ -747,7 +747,7 @@ public class AutoConnectionManager implements Listener {
             
         } catch (Exception e) {
             plugin.getLogger().severe("Failed to compile script from event block: " + e.getMessage());
-            e.printStackTrace();
+            plugin.getLogger().severe("Stack trace: " + java.util.Arrays.toString(e.getStackTrace()));
             return null;
         }
     }
@@ -804,7 +804,7 @@ public class AutoConnectionManager implements Listener {
     }
     
     /**
-     * Rebuilds and recompiles all scripts in a world
+     * Recompiles all scripts in a world
      * This should be called when the world is loaded or when significant changes are made
      */
     public void recompileWorldScripts(org.bukkit.World world) {

@@ -74,7 +74,7 @@ public class AsyncLoopControl implements BlockAction {
         } catch (Exception e) {
             player.sendMessage("§cError starting async loop: " + e.getMessage());
             if (context.isDebugMode()) {
-                e.printStackTrace();
+                context.getPlugin().getLogger().severe("Stack trace: " + java.util.Arrays.toString(e.getStackTrace()));
             }
         }
     }
@@ -202,7 +202,7 @@ public class AsyncLoopControl implements BlockAction {
                 if (player != null) {
                     player.sendMessage("§cError in async loop iteration " + currentIteration + ": " + e.getMessage());
                     if (context.isDebugMode()) {
-                        e.printStackTrace();
+                        context.getPlugin().getLogger().severe("Stack trace: " + java.util.Arrays.toString(e.getStackTrace()));
                     }
                 }
                 cleanup();

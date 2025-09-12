@@ -73,7 +73,7 @@ public class AddFloorCommand implements CommandExecutor {
         } catch (Exception e) {
             player.sendMessage("§cОшибка при создании этажа: " + e.getMessage());
             plugin.getLogger().severe("Failed to create floor " + floorNumber + " for player " + player.getName() + ": " + e.getMessage());
-            e.printStackTrace();
+            plugin.getLogger().severe("Stack trace: " + java.util.Arrays.toString(e.getStackTrace()));
         }
         
         return true;

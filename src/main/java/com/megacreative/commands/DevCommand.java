@@ -102,7 +102,7 @@ public class DevCommand implements CommandExecutor {
                         }
                     } catch (Exception e) {
                         plugin.getLogger().severe("Ошибка при создании мира разработки: " + e.getMessage());
-                        e.printStackTrace();
+                        plugin.getLogger().severe("Stack trace: " + java.util.Arrays.toString(e.getStackTrace()));
                         player.sendMessage("§cПроизошла критическая ошибка при создании мира разработки.");
                     }
                 }
@@ -228,7 +228,7 @@ public class DevCommand implements CommandExecutor {
             
         } catch (Exception e) {
             plugin.getLogger().severe("Ошибка создания мира разработки: " + e.getMessage());
-            e.printStackTrace();
+            plugin.getLogger().severe("Stack trace: " + java.util.Arrays.toString(e.getStackTrace()));
             
             // Попытка создать мир с минимальными настройками
             try {
@@ -244,7 +244,7 @@ public class DevCommand implements CommandExecutor {
                 
             } catch (Exception fallbackException) {
                 plugin.getLogger().severe("Критическая ошибка создания мира: " + fallbackException.getMessage());
-                fallbackException.printStackTrace();
+                plugin.getLogger().severe("Stack trace: " + java.util.Arrays.toString(fallbackException.getStackTrace()));
                 return null;
             }
         }

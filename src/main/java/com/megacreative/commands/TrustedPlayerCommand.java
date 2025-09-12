@@ -291,7 +291,7 @@ public class TrustedPlayerCommand implements CommandExecutor, TabCompleter {
         } catch (Exception e) {
             player.sendMessage("§c❌ Ошибка при открытии меню: " + e.getMessage());
             plugin.getLogger().severe("Error opening TrustedPlayersGUI: " + e.getMessage());
-            e.printStackTrace();
+            plugin.getLogger().severe("Stack trace: " + java.util.Arrays.toString(e.getStackTrace()));
         }
         
         return true;

@@ -47,7 +47,7 @@ public class GenericAction implements BlockAction {
             
         } catch (Exception e) {
             context.getPlugin().getLogger().severe("Error executing generic action " + block.getAction() + ": " + e.getMessage());
-            e.printStackTrace();
+            context.getPlugin().getLogger().severe("Stack trace: " + java.util.Arrays.toString(e.getStackTrace()));
             return ExecutionResult.error("Action execution error: " + e.getMessage());
         }
     }
@@ -59,18 +59,18 @@ public class GenericAction implements BlockAction {
     private static void initializeActionHandlers() {
         // === PLAYER ACTIONS ===
         ACTION_HANDLERS.put("sendMessage", (context, params) -> {
-            String message = params.get("message").asString();
+            String message = params.containsKey("message") ? params.get("message").asString() : "Hello World";
             context.getPlayer().sendMessage(message);
         });
         
         ACTION_HANDLERS.put("sendTitle", (context, params) -> {
-            String title = params.get("title").asString();
-            String subtitle = params.get("subtitle").asString();
+            String title = params.containsKey("title") ? params.get("title").asString() : "";
+            String subtitle = params.containsKey("subtitle") ? params.get("subtitle").asString() : "";
             context.getPlayer().sendTitle(title, subtitle, 10, 70, 20);
         });
         
         ACTION_HANDLERS.put("sendActionBar", (context, params) -> {
-            String message = params.get("message").asString();
+            String message = params.containsKey("message") ? params.get("message").asString() : "";
             context.getPlayer().sendActionBar(message);
         });
         

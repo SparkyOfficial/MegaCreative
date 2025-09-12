@@ -60,7 +60,7 @@ public class MegaCreative extends JavaPlugin {
             
         } catch (Exception e) {
             getLogger().severe("Failed to enable MegaCreative: " + e.getMessage());
-            e.printStackTrace();
+            getLogger().severe("Stack trace: " + java.util.Arrays.toString(e.getStackTrace()));
             getServer().getPluginManager().disablePlugin(this);
         }
     }
@@ -93,7 +93,7 @@ public class MegaCreative extends JavaPlugin {
             
         } catch (Exception e) {
             getLogger().severe("Error during plugin disable: " + e.getMessage());
-            e.printStackTrace();
+            getLogger().severe("Stack trace: " + java.util.Arrays.toString(e.getStackTrace()));
         }
     }
     

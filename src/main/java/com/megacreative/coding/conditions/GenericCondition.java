@@ -53,7 +53,7 @@ public class GenericCondition implements BlockCondition {
             
         } catch (Exception e) {
             context.getPlugin().getLogger().severe("Error evaluating generic condition " + block.getAction() + ": " + e.getMessage());
-            e.printStackTrace();
+            context.getPlugin().getLogger().severe("Stack trace: " + java.util.Arrays.toString(e.getStackTrace()));
             return false;
         }
     }

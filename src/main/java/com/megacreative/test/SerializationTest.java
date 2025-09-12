@@ -83,7 +83,7 @@ public class SerializationTest {
             
         } catch (Exception e) {
             System.err.println("❌ Serialization test failed: " + e.getMessage());
-            e.printStackTrace();
+            System.err.println("Stack trace: " + java.util.Arrays.toString(e.getStackTrace()));
         }
     }
     
