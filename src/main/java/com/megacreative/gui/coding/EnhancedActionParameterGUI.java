@@ -267,7 +267,7 @@ public class EnhancedActionParameterGUI {
         
         // Message parameter (common for many actions)
         Map<String, Object> messageProps = new HashMap<>();
-        messageProps.put("value", block.getParameter("message", ""));
+        messageProps.put("value", block.getParameterValue("message", String.class, ""));
         InteractiveGUIManager.TextInputElement messageInput = 
             new InteractiveGUIManager.TextInputElement("message", messageProps);
         messageInput.addChangeListener(value -> {

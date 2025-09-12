@@ -173,7 +173,7 @@ public class InteractiveGUI implements GUIManager.ManagedGUIInterface {
     private void setupAutoRefresh() {
         // Schedule periodic refresh for smooth animations
         Bukkit.getScheduler().runTaskTimer(
-            manager.plugin, 
+            manager.getPlugin(), 
             () -> {
                 if (needsRefresh && player.getOpenInventory().getTopInventory().equals(inventory)) {
                     refreshNow();
@@ -247,7 +247,6 @@ public class InteractiveGUI implements GUIManager.ManagedGUIInterface {
         onClose();
     }
     
-    @Override
     public void onPlayerQuit(org.bukkit.event.player.PlayerQuitEvent event) {
         if (!event.getPlayer().equals(player)) return;
         

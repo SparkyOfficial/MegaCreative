@@ -46,7 +46,7 @@ public class WorldStatsCommand implements CommandExecutor, TabCompleter {
         } else {
             // Show statistics for specified world
             String worldName = args[0];
-            CreativeWorld world = worldManager.findCreativeWorld(worldName);
+            CreativeWorld world = worldManager.getWorldByName(worldName);
             if (world == null) {
                 player.sendMessage("§cМир не найден: " + worldName);
                 return true;
@@ -152,7 +152,7 @@ public class WorldStatsCommand implements CommandExecutor, TabCompleter {
             List<String> worldNames = new ArrayList<>();
             
             // Add worlds the player owns
-            for (CreativeWorld world : worldManager.getPlayerWorlds(player.getUniqueId())) {
+            for (CreativeWorld world : worldManager.getPlayerWorlds(player)) {
                 worldNames.add(world.getName());
             }
             

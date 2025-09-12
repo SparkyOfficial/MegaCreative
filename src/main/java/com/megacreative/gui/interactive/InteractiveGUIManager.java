@@ -54,6 +54,13 @@ public class InteractiveGUIManager implements Listener {
     }
     
     /**
+     * Gets the plugin instance
+     */
+    public MegaCreative getPlugin() {
+        return plugin;
+    }
+    
+    /**
      * Creates an interactive GUI for a player
      */
     public InteractiveGUI createInteractiveGUI(Player player, String title, int size) {

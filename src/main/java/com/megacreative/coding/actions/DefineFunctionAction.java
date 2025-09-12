@@ -191,19 +191,16 @@ public class DefineFunctionAction implements BlockAction {
         return functionBlocks;
     }
 
-    @Override
     public boolean canExecute(ExecutionContext context) {
         return context.getCurrentBlock() != null && 
                context.getPlayer() != null &&
                functionManager != null;
     }
 
-    @Override
     public String getActionName() {
         return "define_function";
     }
 
-    @Override
     public String getDescription() {
         return "🎆 Defines a new user function with parameters and body";
     }

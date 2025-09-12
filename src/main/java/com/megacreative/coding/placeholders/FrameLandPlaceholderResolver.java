@@ -471,7 +471,7 @@ public class FrameLandPlaceholderResolver {
                 case "version":
                     return Bukkit.getVersion();
                 case "name":
-                    return Bukkit.getServerName();
+                    return Bukkit.getName();
                 case "motd":
                     return Bukkit.getMotd();
                 default:

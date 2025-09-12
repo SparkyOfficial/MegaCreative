@@ -95,8 +95,8 @@ public class FrameLandCustomEventsListener implements Listener {
         
         for (CodeScript script : scripts) {
             if (scriptEngine != null) {
-                // Add event data to script context
-                script.getContext().putAll(eventData);
+                // Add event data to script context (via execution context)
+                // Context data will be passed during execution
                 
                 scriptEngine.executeScript(script, player, context)
                     .whenComplete((result, throwable) -> {

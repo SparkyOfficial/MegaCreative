@@ -91,7 +91,7 @@ public class PlaceholdersCommand implements CommandExecutor {
             
         // Create execution context
         CreativeWorld world = worldManager.findCreativeWorldByBukkit(player.getWorld());
-        ExecutionContext context = new ExecutionContext(plugin, player, world, null);
+        ExecutionContext context = new ExecutionContext(plugin, player, world, null, null, null);
         
         player.sendMessage("§8§m                    §r §6§lPlaceholder Demo §8§m                    ");
         
@@ -121,7 +121,7 @@ public class PlaceholdersCommand implements CommandExecutor {
     private void testPlaceholder(Player player, String text) {
         // Create execution context
         CreativeWorld world = worldManager.findCreativeWorldByBukkit(player.getWorld());
-        ExecutionContext context = new ExecutionContext(plugin, player, world, null);
+        ExecutionContext context = new ExecutionContext(plugin, player, world, null, null, null);
         
         player.sendMessage("§8§m                    §r §6§lPlaceholder Test §8§m                    ");
         player.sendMessage("§7Исходный текст:");
