@@ -82,9 +82,12 @@ public class PlayCommand implements CommandExecutor {
     private CreativeWorld findCreativeWorld(World bukkitWorld) {
         String worldName = bukkitWorld.getName();
         
-        // Убираем префикс и суффиксы
+        // 🔧 FIX: Remove prefix and ALL possible suffixes for dual world architecture
         if (worldName.startsWith("megacreative_")) {
-            String id = worldName.replace("megacreative_", "").replace("_dev", "");
+            String id = worldName.replace("megacreative_", "")
+                                  .replace("-code", "")    // New dev world suffix
+                                  .replace("-world", "")   // New play world suffix  
+                                  .replace("_dev", "");    // Legacy compatibility
             return plugin.getWorldManager().getWorld(id);
         }
         

@@ -144,10 +144,22 @@ public class FrameLandEventsListener implements Listener {
     @EventHandler(priority = EventPriority.MONITOR)
     public void onPlayerTeleport(PlayerTeleportEvent event) {
         Map<String, Object> eventData = new HashMap<>();
-        eventData.put("from_location", event.getFrom());
-        eventData.put("to_location", event.getTo());
+        Location from = event.getFrom();
+        Location to = event.getTo();
+        
+        eventData.put("from_location", from);
+        eventData.put("to_location", to);
         eventData.put("cause", event.getCause().name());
-        eventData.put("distance", event.getFrom().distance(event.getTo()));
+        
+        // 🔧 FIX: Only calculate distance if both locations are in the same world
+        if (from.getWorld().equals(to.getWorld())) {
+            eventData.put("distance", from.distance(to));
+        } else {
+            // Different worlds - distance is not meaningful
+            eventData.put("distance", -1.0); // Use -1 to indicate cross-world teleport
+            eventData.put("from_world", from.getWorld().getName());
+            eventData.put("to_world", to.getWorld().getName());
+        }
         
         executeEventScripts("onPlayerTeleport", event.getPlayer(), "player_teleport", eventData);
     }

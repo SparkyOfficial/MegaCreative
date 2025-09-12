@@ -207,6 +207,7 @@ public class BlockConfigService {
         private final String displayName;
         private final String description;
         private final String category;
+        private final String defaultAction;  // 🔧 FIX: Add default action field
         private final boolean isConstructor;
         private final StructureConfig structure;
         private final Map<String, Object> parameters;
@@ -223,6 +224,7 @@ public class BlockConfigService {
             this.displayName = ChatColor.translateAlternateColorCodes('&', section.getString("name", id));
             this.description = section.getString("description", "No description.");
             this.category = section.getString("category", "default");
+            this.defaultAction = section.getString("default_action", null);  // 🔧 FIX: Read default action from config
             this.isConstructor = section.getBoolean("is_constructor", false);
             
             // Загружаем конфигурацию структуры, если блок является конструктором
@@ -249,6 +251,7 @@ public class BlockConfigService {
         public String getDisplayName() { return displayName; }
         public String getDescription() { return description; }
         public String getCategory() { return category; }
+        public String getDefaultAction() { return defaultAction; }  // 🔧 FIX: Add getter for default action
         public boolean isConstructor() { return isConstructor; }
         public StructureConfig getStructure() { return structure; }
         public Map<String, Object> getParameters() { return parameters; }

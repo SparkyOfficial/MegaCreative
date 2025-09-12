@@ -116,7 +116,15 @@ public class BlockPlacementHandler implements Listener {
         }
         
         // Создаем CodeBlock с ID из конфига
-        CodeBlock newCodeBlock = new CodeBlock(block.getType(), config.getId());
+        String actionId = config.getId();
+        
+        // 🔧 FIX: Use default action if available for immediate functionality
+        if (config.getDefaultAction() != null) {
+            actionId = config.getDefaultAction();
+            plugin.getLogger().info("🎆 Using default action '" + actionId + "' for " + config.getDisplayName());
+        }
+        
+        CodeBlock newCodeBlock = new CodeBlock(block.getType(), actionId);
         
         // Special handling for bracket blocks (pistons)
         if (block.getType() == Material.PISTON || block.getType() == Material.STICKY_PISTON) {

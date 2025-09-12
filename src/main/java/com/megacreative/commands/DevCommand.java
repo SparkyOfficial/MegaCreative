@@ -304,8 +304,13 @@ public class DevCommand implements CommandExecutor {
     private CreativeWorld findCreativeWorld(World bukkitWorld) {
         try {
             String worldName = bukkitWorld.getName();
+            
+            // 🔧 FIX: Remove prefix and ALL possible suffixes for dual world architecture
             if (worldName.startsWith("megacreative_")) {
-                String id = worldName.replace("megacreative_", "").replace("_dev", "");
+                String id = worldName.replace("megacreative_", "")
+                                      .replace("-code", "")    // New dev world suffix
+                                      .replace("-world", "")   // New play world suffix  
+                                      .replace("_dev", "");    // Legacy compatibility
                 return plugin.getWorldManager().getWorld(id);
             }
         } catch (Exception e) {

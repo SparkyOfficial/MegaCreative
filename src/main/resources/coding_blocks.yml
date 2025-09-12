@@ -6,6 +6,7 @@ blocks:
     name: "Событие игрока"
     type: "EVENT"
     description: "Блоки событий, которые запускают скрипт"
+    default_action: "onJoin"  # 🔧 FIX: Add default action for immediate functionality
     actions:
       - "onJoin"
       - "onLeave"
@@ -21,6 +22,7 @@ blocks:
     name: "Действие игрока"
     type: "ACTION"
     description: "Блоки действий, которые выполняются в скрипте"
+    default_action: "sendMessage"  # 🔧 FIX: Add default action
     actions:
       - "sendMessage"
       - "teleport"
@@ -58,6 +60,7 @@ blocks:
     name: "Условие игрока"
     type: "CONDITION"
     description: "Блоки условий для проверки различных состояний"
+    default_action: "hasItem"  # 🔧 FIX: Add default action
     is_constructor: true  # Создает структуру с поршнями-скобками
     structure:
       brackets: PISTON

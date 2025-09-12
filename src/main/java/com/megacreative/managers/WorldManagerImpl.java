@@ -229,6 +229,8 @@ public class WorldManagerImpl implements IWorldManager {
         switch (creativeWorld.getWorldType()) {
             case FLAT:
                 creator.type(org.bukkit.WorldType.FLAT);
+                // 🔧 FIX: Add proper flat world generator settings to prevent "No key layers" error
+                creator.generatorSettings("{\"layers\":[{\"block\":\"bedrock\",\"height\":1},{\"block\":\"stone\",\"height\":2},{\"block\":\"grass_block\",\"height\":1}],\"biome\":\"plains\"}");
                 break;
             case VOID:
                 // Создаем плоский мир без структур для пустоты
@@ -538,7 +540,11 @@ public class WorldManagerImpl implements IWorldManager {
         
         // Handle old-style megacreative_ naming
         if (worldName.startsWith("megacreative_")) {
-            String id = worldName.replace("megacreative_", "").replace("_dev", "");
+            // 🔧 FIX: Remove prefix and ALL possible suffixes for dual world architecture
+            String id = worldName.replace("megacreative_", "")
+                                  .replace("-code", "")    // New dev world suffix
+                                  .replace("-world", "")   // New play world suffix  
+                                  .replace("_dev", "");    // Legacy compatibility
             return getWorld(id);
         }
         
