@@ -120,28 +120,14 @@ public class BlockPlacementHandler implements Listener {
             
             // 4. Вызываем метод для постройки структуры
             buildStructureFor(event, config);
-            
-            // 5. Создаем CodeBlock для основного блока
-            String actionId = config.getId();
-            
-            // 🔧 FIX: Use default action if available for immediate functionality
-            if (config.getDefaultAction() != null) {
-                actionId = config.getDefaultAction();
-            }
-            
-            CodeBlock newCodeBlock = new CodeBlock(placedBlock.getType(), actionId);
-            blockCodeBlocks.put(placedBlock.getLocation(), newCodeBlock);
-            
-            // 6. Устанавливаем умную табличку
-            setSmartSignOnBlock(placedBlock.getLocation(), config.getDisplayName(), config.getId());
-            
-            // 7. Визуальная и аудио обратная связь
+                    
+            // 5. Визуальная и аудио обратная связь
             player.spawnParticle(org.bukkit.Particle.VILLAGER_HAPPY, placedBlock.getLocation().add(0.5, 1.0, 0.5), 5, 0.2, 0.2, 0.2, 0.1);
             player.playSound(placedBlock.getLocation(), org.bukkit.Sound.BLOCK_NOTE_BLOCK_PLING, 0.8f, 1.5f);
-            
+                    
             player.sendMessage("§a✓ Структура " + config.getDisplayName() + " создана!");
             player.sendMessage("§7Кликните по табличке для настройки параметров");
-            
+                    
             return; // Завершаем обработку, чтобы не создавать блок дважды
         }
         
@@ -261,7 +247,7 @@ public class BlockPlacementHandler implements Listener {
         // Используем современный BlockData для установки направления
         org.bukkit.block.data.type.Piston pistonData = (org.bukkit.block.data.type.Piston) pistonBlock.getBlockData();
         
-        // 🎆 ENHANCED: Smart piston orientation
+        // 🎆 ENHANCED: Smart piston orientation for FrameLand-style brackets
         if (bracketType == CodeBlock.BracketType.OPEN) {
             pistonData.setFacing(facing); // Points inward toward the structure
         } else {
@@ -277,6 +263,10 @@ public class BlockPlacementHandler implements Listener {
         
         // Добавляем табличку к скобке
         updateBracketSign(location, bracketType);
+        
+        // Add visual effects for FrameLand-style magic
+        player.spawnParticle(org.bukkit.Particle.ENCHANTMENT_TABLE, location.add(0.5, 0.5, 0.5), 10, 0.3, 0.3, 0.3, 1);
+        player.playSound(location, org.bukkit.Sound.BLOCK_ENCHANTMENT_TABLE_USE, 1.0f, 1.5f);
         
         plugin.getLogger().fine(".EVT Created magical bracket piston " + bracketType + " at " + location);
     }
@@ -674,11 +664,11 @@ public class BlockPlacementHandler implements Listener {
     private void setPistonDirection(Block pistonBlock, CodeBlock.BracketType bracketType) {
         org.bukkit.block.data.type.Piston pistonData = (org.bukkit.block.data.type.Piston) pistonBlock.getBlockData();
         
-        // Set direction based on bracket type
+        // Set direction based on bracket type for FrameLand-style orientation
         if (bracketType == CodeBlock.BracketType.OPEN) {
-            pistonData.setFacing(org.bukkit.block.BlockFace.EAST); // Pointing right >
+            pistonData.setFacing(org.bukkit.block.BlockFace.EAST); // Pointing right for opening bracket {
         } else {
-            pistonData.setFacing(org.bukkit.block.BlockFace.WEST); // Pointing left <
+            pistonData.setFacing(org.bukkit.block.BlockFace.WEST); // Pointing left for closing bracket }
         }
         
         pistonBlock.setBlockData(pistonData);
