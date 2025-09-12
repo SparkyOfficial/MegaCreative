@@ -300,6 +300,9 @@ public class MegaCreative extends JavaPlugin {
         
         // 🎆 ENHANCED: Register comprehensive world protection listener
         getServer().getPluginManager().registerEvents(new com.megacreative.listeners.WorldProtectionListener(this, serviceRegistry.getWorldManager()), this);
+        
+        // 🎆 ENHANCED: Register world load listener for code block hydration
+        getServer().getPluginManager().registerEvents(new com.megacreative.listeners.WorldLoadListener(this), this);
     }
     
     // Static access and service delegation

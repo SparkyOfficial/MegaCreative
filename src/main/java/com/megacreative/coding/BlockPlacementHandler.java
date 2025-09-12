@@ -505,6 +505,7 @@ public class BlockPlacementHandler implements Listener {
         }
     }
 
+    
     /**
      * Открывает GUI для выбора действия
      */
@@ -955,5 +956,73 @@ public class BlockPlacementHandler implements Listener {
                 return; // IMPORTANT: Exit after placing FIRST sign
             }
         }
+    }
+    
+    /**
+     * 🎆 ENHANCED: Recreates a CodeBlock from an existing physical block and sign
+     * This is used during world loading to "hydrate" code blocks
+     */
+    public void recreateCodeBlockFromExisting(Block block, Sign sign) {
+        Location location = block.getLocation();
+        
+        // Check if we already have this block registered
+        if (blockCodeBlocks.containsKey(location)) {
+            return; // Already exists
+        }
+        
+        Material material = block.getType();
+        String action = determineActionFromBlockAndSign(block, sign);
+        
+        // Create the CodeBlock
+        CodeBlock codeBlock = new CodeBlock(material, action);
+        
+        // Special handling for bracket blocks
+        if (material == Material.PISTON || material == Material.STICKY_PISTON) {
+            // Determine bracket type from sign text
+            String[] lines = sign.getLines();
+            if (lines.length > 1) {
+                String line2 = lines[1];
+                if (line2.contains("{")) {
+                    codeBlock.setBracketType(CodeBlock.BracketType.OPEN);
+                } else if (line2.contains("}")) {
+                    codeBlock.setBracketType(CodeBlock.BracketType.CLOSE);
+                }
+            }
+        }
+        
+        // Add to our tracking
+        blockCodeBlocks.put(location, codeBlock);
+        
+        plugin.getLogger().fine("Recreated CodeBlock at " + location + " with action: " + action);
+    }
+    
+    /**
+     * 🎆 ENHANCED: Determines the action for a block based on its material and sign
+     */
+    private String determineActionFromBlockAndSign(Block block, Sign sign) {
+        Material material = block.getType();
+        
+        // Get the block configuration
+        BlockConfigService.BlockConfig config = blockConfigService.getFirstBlockConfig(material);
+        if (config != null) {
+            // Check if there's a default action
+            if (config.getDefaultAction() != null) {
+                return config.getDefaultAction();
+            }
+            // Fallback to block ID
+            return config.getId();
+        }
+        
+        // Fallback for unknown blocks
+        return "UNKNOWN";
+    }
+    
+    /**
+     * Gets the first block configuration for a material
+     * @param material The material to look up
+     * @return The block configuration or null if not found
+     */
+    public BlockConfigService.BlockConfig getBlockConfigForMaterial(Material material) {
+        return blockConfigService.getFirstBlockConfig(material);
     }
 }

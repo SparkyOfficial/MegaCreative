@@ -848,4 +848,15 @@ public class AutoConnectionManager implements Listener {
         // Check if it's a control or event block
         return blockConfigService.isControlOrEventBlock(config.getType());
     }
+    
+    /**
+     * Adds a code block to the location tracking map
+     * Used during world hydration to register existing blocks
+     */
+    public void addCodeBlock(Location location, CodeBlock codeBlock) {
+        if (!locationToBlock.containsKey(location)) {
+            locationToBlock.put(location, codeBlock);
+            plugin.getLogger().fine("Added CodeBlock to tracking at " + location);
+        }
+    }
 }
