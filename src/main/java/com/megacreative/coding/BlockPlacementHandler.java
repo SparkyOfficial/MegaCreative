@@ -100,7 +100,7 @@ public class BlockPlacementHandler implements Listener {
         
         if (config == null) {
             // Это не кодовый блок, запрещаем установку
-            event.setCancelled(true);
+            // event.setCancelled(true); // УБИРАЕМ ОТМЕНУ СОБЫТИЯ
             player.sendMessage("§cВы можете размещать только специальные блоки для кодирования!");
             return;
         }
@@ -111,23 +111,24 @@ public class BlockPlacementHandler implements Listener {
         
         // 1. Проверяем, является ли блок "конструктором"
         if (config.isConstructor()) {
-            // 2. Отменяем стандартное размещение блока
-            event.setCancelled(true);
+            // 2. НЕ отменяем стандартное размещение блока, позволяем ему установиться
+            // event.setCancelled(true); // УБИРАЕМ ОТМЕНУ СОБЫТИЯ
             
-            // 3. Размещаем блок программно (без вызова события)
-            Block placedBlock = event.getBlockPlaced();
-            placedBlock.setType(itemInHand.getType());
+            // 3. Размещаем блок программно (без вызова события) - НЕ НУЖНО, ПОЗВОЛЯЕМ СОБЫТИЮ ЗАВЕРШИТЬСЯ
             
-            // 4. Вызываем метод для постройки структуры
-            buildStructureFor(event, config);
-                    
-            // 5. Визуальная и аудио обратная связь
-            player.spawnParticle(org.bukkit.Particle.VILLAGER_HAPPY, placedBlock.getLocation().add(0.5, 1.0, 0.5), 5, 0.2, 0.2, 0.2, 0.1);
-            player.playSound(placedBlock.getLocation(), org.bukkit.Sound.BLOCK_NOTE_BLOCK_PLING, 0.8f, 1.5f);
-                    
-            player.sendMessage("§a✓ Структура " + config.getDisplayName() + " создана!");
-            player.sendMessage("§7Кликните по табличке для настройки параметров");
-                    
+            // 4. Вызываем метод для постройки структуры на следующий тик
+            // Запланируем создание структуры на следующий тик, чтобы событие BlockPlaceEvent полностью завершилось
+            org.bukkit.Bukkit.getScheduler().runTask(plugin, () -> {
+                buildStructureFor(event, config);
+                
+                // 5. Визуальная и аудио обратная связь
+                player.spawnParticle(org.bukkit.Particle.VILLAGER_HAPPY, block.getLocation().add(0.5, 1.0, 0.5), 5, 0.2, 0.2, 0.2, 0.1);
+                player.playSound(block.getLocation(), org.bukkit.Sound.BLOCK_NOTE_BLOCK_PLING, 0.8f, 1.5f);
+                
+                player.sendMessage("§a✓ Структура " + config.getDisplayName() + " создана!");
+                player.sendMessage("§7Кликните по табличке для настройки параметров");
+            });
+            
             return; // Завершаем обработку, чтобы не создавать блок дважды
         }
         
@@ -237,7 +238,6 @@ public class BlockPlacementHandler implements Listener {
         
         // Проверяем, что место свободно
         if (!pistonBlock.getType().isAir()) {
-            player.sendMessage("§eПредупреждение: Место для скобки занято на " + location);
             return;
         }
         
@@ -268,7 +268,6 @@ public class BlockPlacementHandler implements Listener {
         player.spawnParticle(org.bukkit.Particle.ENCHANTMENT_TABLE, location.add(0.5, 0.5, 0.5), 10, 0.3, 0.3, 0.3, 1);
         player.playSound(location, org.bukkit.Sound.BLOCK_ENCHANTMENT_TABLE_USE, 1.0f, 1.5f);
         
-        plugin.getLogger().fine(".EVT Created magical bracket piston " + bracketType + " at " + location);
     }
 
     /**
@@ -284,7 +283,7 @@ public class BlockPlacementHandler implements Listener {
             containerBlock.setType(Material.CHEST);
             
             // Здесь можно добавить дополнительную настройку сундука, если нужно
-            plugin.getLogger().info("Spawned container above code block at " + blockLocation);
+
         }
     }
 
@@ -381,7 +380,7 @@ public class BlockPlacementHandler implements Listener {
                 pistonBlock.setType(Material.AIR);
             }
             
-            plugin.getLogger().fine("Removed bracket piston at " + location);
+            // plugin.getLogger().fine("Removed bracket piston at " + location); // УБИРАЕМ СПАМ
         }
     }
 
@@ -406,7 +405,7 @@ public class BlockPlacementHandler implements Listener {
             }
             
             containerBlock.setType(Material.AIR);
-            plugin.getLogger().fine("Removed container above code block at " + blockLocation);
+            // plugin.getLogger().fine("Removed container above code block at " + blockLocation); // УБИРАЕМ СПАМ
         }
     }
 
@@ -415,6 +414,11 @@ public class BlockPlacementHandler implements Listener {
      */
     @EventHandler(priority = EventPriority.NORMAL)
     public void onPlayerInteract(PlayerInteractEvent event) {
+        // Fix double firing by only processing main hand
+        if (event.getHand() != org.bukkit.inventory.EquipmentSlot.HAND) {
+            return;
+        }
+        
         Player player = event.getPlayer();
         ItemStack itemInHand = player.getInventory().getItemInMainHand();
         
@@ -605,7 +609,7 @@ public class BlockPlacementHandler implements Listener {
                 signBlock.getType().name().contains("SIGN")) {
                 
                 signBlock.setType(Material.AIR);
-                plugin.getLogger().fine("Removed sign at " + signBlock.getLocation() + " near block at " + location);
+                // plugin.getLogger().fine("Removed sign at " + signBlock.getLocation() + " near block at " + location); // УБИРАЕМ СПАМ
             }
         }
     }

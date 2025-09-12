@@ -33,7 +33,11 @@ public class PlayCommand implements CommandExecutor {
                     // Find current world and switch to its play version
                     CreativeWorld currentWorld = plugin.getWorldManager().findCreativeWorldByBukkit(player.getWorld());
                     if (currentWorld != null && currentWorld.isPaired()) {
+                        // Восстанавливаем "обычный" инвентарь игрока ПЕРЕД телепортацией
+                        plugin.getServiceRegistry().getDevInventoryManager().restorePlayerInventory(player);
                         plugin.getWorldManager().switchToPlayWorld(player, currentWorld.getId());
+                        // После телепорта в режим PLAY инвентарь игрока должен быть очищен
+                        player.getInventory().clear();
                         return true;
                     }
                     // Fall through to normal play mode
@@ -49,8 +53,14 @@ public class PlayCommand implements CommandExecutor {
             return true;
         }
         
+        // Восстанавливаем "обычный" инвентарь игрока ПЕРЕД телепортацией
+        plugin.getServiceRegistry().getDevInventoryManager().restorePlayerInventory(player);
+        
         // 🎆 UNIFIED: Use centralized world switching method
         plugin.getWorldManager().switchToPlayWorld(player, creativeWorld.getId());
+        
+        // После телепорта в режим PLAY инвентарь игрока должен быть очищен
+        player.getInventory().clear();
         
         return true;
     }

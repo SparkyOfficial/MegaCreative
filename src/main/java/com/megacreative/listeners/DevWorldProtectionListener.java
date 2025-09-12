@@ -74,7 +74,20 @@ public class DevWorldProtectionListener implements Listener {
         Material.LIME_SHULKER_BOX, Material.PINK_SHULKER_BOX, Material.GRAY_SHULKER_BOX,
         Material.LIGHT_GRAY_SHULKER_BOX, Material.CYAN_SHULKER_BOX, Material.PURPLE_SHULKER_BOX,
         Material.BLUE_SHULKER_BOX, Material.BROWN_SHULKER_BOX, Material.GREEN_SHULKER_BOX,
-        Material.RED_SHULKER_BOX, Material.BLACK_SHULKER_BOX
+        Material.RED_SHULKER_BOX, Material.BLACK_SHULKER_BOX,
+        
+        // ДОБАВЛЯЕМ ВСЕ ВИДЫ ТАБЛИЧЕК ДЛЯ "УМНЫХ ТАБЛИЧЕК"
+        Material.OAK_SIGN, Material.OAK_WALL_SIGN,
+        Material.SPRUCE_SIGN, Material.SPRUCE_WALL_SIGN,
+        Material.BIRCH_SIGN, Material.BIRCH_WALL_SIGN,
+        Material.JUNGLE_SIGN, Material.JUNGLE_WALL_SIGN,
+        Material.ACACIA_SIGN, Material.ACACIA_WALL_SIGN,
+        Material.DARK_OAK_SIGN, Material.DARK_OAK_WALL_SIGN,
+        Material.MANGROVE_SIGN, Material.MANGROVE_WALL_SIGN,
+        Material.CHERRY_SIGN, Material.CHERRY_WALL_SIGN,
+        Material.BAMBOO_SIGN, Material.BAMBOO_WALL_SIGN,
+        Material.CRIMSON_SIGN, Material.CRIMSON_WALL_SIGN,
+        Material.WARPED_SIGN, Material.WARPED_WALL_SIGN
     );
 
     // Конструктор должен принимать зависимости

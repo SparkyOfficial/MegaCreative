@@ -210,6 +210,20 @@ public class DevInventoryManager implements Listener {
     }
     
     /**
+     * Публичный метод для восстановления инвентаря игрока при выходе из мира разработки
+     */
+    public void restorePlayerInventory(Player player) {
+        UUID playerId = player.getUniqueId();
+        playersInDevWorld.remove(playerId);
+        
+        ItemStack[] savedInventory = savedInventories.remove(playerId);
+        if (savedInventory != null) {
+            player.getInventory().setContents(savedInventory);
+            player.sendMessage("§aВаш инвентарь восстановлен!");
+        }
+    }
+    
+    /**
      * Публичный метод для команд - восстанавливает недостающие инструменты
      */
     public void refreshTools(Player player) {

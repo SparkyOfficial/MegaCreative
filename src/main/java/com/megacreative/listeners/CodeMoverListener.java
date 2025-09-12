@@ -32,6 +32,11 @@ public class CodeMoverListener implements Listener {
     
     @EventHandler
     public void onPlayerInteract(PlayerInteractEvent event) {
+        // Fix double firing by only processing main hand
+        if (event.getHand() != org.bukkit.inventory.EquipmentSlot.HAND) {
+            return;
+        }
+        
         Player player = event.getPlayer();
         ItemStack item = player.getInventory().getItemInMainHand();
         
