@@ -482,6 +482,47 @@ public class WorldManagerImpl implements IWorldManager {
         }
     }
     
+    // 🎆 ENHANCED: Add missing switchToBuildWorld method for proper build mode switching
+    public void switchToBuildWorld(Player player, String worldId) {
+        CreativeWorld world = getWorld(worldId);
+        if (world == null) {
+            player.sendMessage("§cМир не найден!");
+            return;
+        }
+        
+        if (!world.canEdit(player)) {
+            player.sendMessage("§cУ вас нет прав на изменение этого мира!");
+            return;
+        }
+        
+        // Set mode to BUILD
+        world.setMode(com.megacreative.models.WorldMode.BUILD);
+        
+        String devWorldName = world.isDevWorld() ? world.getWorldName() : world.getDevWorldName();
+        World bukkitWorld = Bukkit.getWorld(devWorldName);
+        
+        if (bukkitWorld == null) {
+            // Create dev world if it doesn't exist
+            createDevWorldIfNotExists(world);
+            bukkitWorld = Bukkit.getWorld(devWorldName);
+        }
+        
+        if (bukkitWorld != null) {
+            player.teleport(bukkitWorld.getSpawnLocation());
+            player.setGameMode(org.bukkit.GameMode.CREATIVE);
+            player.sendMessage("§aРежим мира изменен на §f§lСТРОИТЕЛЬСТВО§a!");
+            player.sendMessage("§7❌ Код отключен, скрипты не будут выполняться");
+            player.sendMessage("§7Креатив для строителей");
+            
+            // 🎆 ENHANCED: Track world mode switch
+            if (plugin instanceof MegaCreative) {
+                ((MegaCreative) plugin).getPlayerManager().trackPlayerWorldEntry(player, worldId, "BUILD");
+            }
+            
+            saveWorld(world);
+        }
+    }
+    
     private void createDevWorldIfNotExists(CreativeWorld world) {
         if (Bukkit.getWorld(world.getDevWorldName()) == null) {
             // Create a dev world copy with coding features enabled

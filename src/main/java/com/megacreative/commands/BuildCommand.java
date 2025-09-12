@@ -41,12 +41,9 @@ public class BuildCommand implements CommandExecutor {
             return true;
         }
         
-        // 🎆 UNIFIED: Set mode and switch to play world with BUILD mode
+        // 🎆 UNIFIED: Set mode and switch to build world with BUILD mode
         creativeWorld.setMode(WorldMode.BUILD);
-        worldManager.switchToPlayWorld(player, creativeWorld.getId());
-        
-        // Set creative mode for building
-        player.setGameMode(GameMode.CREATIVE);
+        worldManager.switchToBuildWorld(player, creativeWorld.getId());
         
         player.sendMessage("§aРежим мира изменен на §f§lСТРОИТЕЛЬСТВО§a!");
         player.sendMessage("§7❌ Код отключен, скрипты не будут выполняться");

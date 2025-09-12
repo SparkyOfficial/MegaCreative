@@ -111,10 +111,41 @@ public class BlockPlacementHandler implements Listener {
         
         // 1. Проверяем, является ли блок "конструктором"
         if (config.isConstructor()) {
-            // 2. Вызываем метод для постройки структуры
+            // 2. Отменяем стандартное размещение блока
+            event.setCancelled(true);
+            
+            // 3. Размещаем блок программно (без вызова события)
+            Block placedBlock = event.getBlockPlaced();
+            placedBlock.setType(itemInHand.getType());
+            
+            // 4. Вызываем метод для постройки структуры
             buildStructureFor(event, config);
+            
+            // 5. Создаем CodeBlock для основного блока
+            String actionId = config.getId();
+            
+            // 🔧 FIX: Use default action if available for immediate functionality
+            if (config.getDefaultAction() != null) {
+                actionId = config.getDefaultAction();
+            }
+            
+            CodeBlock newCodeBlock = new CodeBlock(placedBlock.getType(), actionId);
+            blockCodeBlocks.put(placedBlock.getLocation(), newCodeBlock);
+            
+            // 6. Устанавливаем умную табличку
+            setSmartSignOnBlock(placedBlock.getLocation(), config.getDisplayName(), config.getId());
+            
+            // 7. Визуальная и аудио обратная связь
+            player.spawnParticle(org.bukkit.Particle.VILLAGER_HAPPY, placedBlock.getLocation().add(0.5, 1.0, 0.5), 5, 0.2, 0.2, 0.2, 0.1);
+            player.playSound(placedBlock.getLocation(), org.bukkit.Sound.BLOCK_NOTE_BLOCK_PLING, 0.8f, 1.5f);
+            
+            player.sendMessage("§a✓ Структура " + config.getDisplayName() + " создана!");
+            player.sendMessage("§7Кликните по табличке для настройки параметров");
+            
+            return; // Завершаем обработку, чтобы не создавать блок дважды
         }
         
+        // Для обычных блоков продолжаем стандартную логику
         // Создаем CodeBlock с ID из конфига
         String actionId = config.getId();
         
@@ -234,7 +265,7 @@ public class BlockPlacementHandler implements Listener {
         if (bracketType == CodeBlock.BracketType.OPEN) {
             pistonData.setFacing(facing); // Points inward toward the structure
         } else {
-            pistonData.setFacing(facing); // Points outward from the structure
+            pistonData.setFacing(facing.getOppositeFace()); // Points outward from the structure
         }
         
         pistonBlock.setBlockData(pistonData);
@@ -765,7 +796,7 @@ public class BlockPlacementHandler implements Listener {
                 wallSignData.setFacing(face);
                 signBlock.setBlockData(wallSignData);
                 
-                org.bukkit.block.Sign signState = (org.bukkit.block.Sign) signBlock.getState();
+                org.bukkit.block.Sign signState = (Sign) signBlock.getState();
                 signState.setLine(0, "§8============");
                 
                 if (negated) {

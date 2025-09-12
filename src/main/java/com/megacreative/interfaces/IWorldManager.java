@@ -132,4 +132,11 @@ public interface IWorldManager {
      * @param worldId ID of the world
      */
     void switchToPlayWorld(Player player, String worldId);
+    
+    /**
+     * 🎆 ENHANCED: Switches player to the build world (development mode with BUILD permissions)
+     * @param player Player to switch
+     * @param worldId ID of the world
+     */
+    void switchToBuildWorld(Player player, String worldId);
 }
