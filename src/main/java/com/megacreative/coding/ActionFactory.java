@@ -1,6 +1,9 @@
 package com.megacreative.coding;
 
 import com.megacreative.coding.actions.*;
+import com.megacreative.coding.actions.FunctionCallAction;
+import com.megacreative.coding.actions.DefineFunctionAction;
+import com.megacreative.coding.actions.ReturnAction;
 import com.megacreative.coding.executors.ExecutionResult;
 import com.megacreative.core.DependencyContainer;
 import java.util.HashMap;
@@ -86,6 +89,11 @@ public class ActionFactory {
         // --- FUNCTION BLOCKS ---
         register("customFunction", CustomFunctionAction::new); // To define a function
         register("callFunction", CallFunctionAction::new);
+        
+        // 🎆 FrameLand: Advanced Function System
+        register("define_function", () -> new DefineFunctionAction((com.megacreative.MegaCreative) dependencyContainer.resolve(com.megacreative.MegaCreative.class)));
+        register("call_function", () -> new FunctionCallAction((com.megacreative.MegaCreative) dependencyContainer.resolve(com.megacreative.MegaCreative.class)));
+        register("return", () -> new ReturnAction((com.megacreative.MegaCreative) dependencyContainer.resolve(com.megacreative.MegaCreative.class)));
 
         // --- DATA MANIPULATION BLOCKS ---
         register("createList", CreateListAction::new);

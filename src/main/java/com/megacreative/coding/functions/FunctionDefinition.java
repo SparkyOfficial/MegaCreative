@@ -3,138 +3,334 @@ package com.megacreative.coding.functions;
 import com.megacreative.coding.CodeBlock;
 import com.megacreative.coding.values.DataValue;
 import com.megacreative.coding.values.ValueType;
-import java.util.*;
-import java.util.Objects;
+import org.bukkit.entity.Player;
 
+import java.util.*;
+import java.util.concurrent.ConcurrentHashMap;
+
+/**
+ * 🎆 FrameLand-Style Function Definition
+ * 
+ * Represents a reusable function with parameters, return values, and scope management.
+ * Functions can be called from scripts and maintain their own execution context.
+ * 
+ * Features:
+ * - Parameter validation and type checking
+ * - Local variable scope isolation
+ * - Return value management
+ * - Recursive call protection
+ * - Performance optimization
+ * - Access control and permissions
+ */
 public class FunctionDefinition {
     
-    private UUID id;
-    private String name;
-    private String description = "";
-    private String author;
-    private long createdTime;
+    private final String name;
+    private final String description;
+    private final UUID id;
+    private final Player owner;
+    private final long createdTime;
     
-    private List<FunctionParameter> parameters = new ArrayList<>();
-    private ValueType returnType = ValueType.ANY;
-    private String returnVariableName = "result";
+    // Function structure
+    private final List<FunctionParameter> parameters;
+    private final List<CodeBlock> functionBlocks;
+    private final ValueType returnType;
+    private final FunctionScope scope;
+    private final FunctionVisibility visibility;
     
-    private CodeBlock entryBlock;
-    private List<CodeBlock> codeBlocks = new ArrayList<>();
+    // Execution control
+    private boolean enabled = true;
+    private int maxRecursionDepth = 10;
+    private long maxExecutionTime = 5000; // 5 seconds
+    private int callCount = 0;
+    private long totalExecutionTime = 0;
     
-    private boolean isPublic = false;
-    private Set<String> tags = new HashSet<>();
-    private Map<String, Object> metadata = new HashMap<>();
+    // Access control
+    private final Set<UUID> allowedPlayers = ConcurrentHashMap.newKeySet();
+    private final Set<String> requiredPermissions = ConcurrentHashMap.newKeySet();
     
-    // Getters and Setters
-    public UUID getId() { return id; }
-    public void setId(UUID id) { this.id = id; }
+    public enum FunctionScope {
+        GLOBAL,     // Available to all worlds and players
+        WORLD,      // Available only within the same world
+        PLAYER,     // Available only to the owner
+        SHARED      // Available to specified players
+    }
+    
+    public enum FunctionVisibility {
+        PUBLIC,     // Visible in function browser
+        PRIVATE,    // Hidden from browser
+        PROTECTED   // Visible only to allowed users
+    }
+    
+    public FunctionDefinition(String name, String description, Player owner, List<FunctionParameter> parameters,
+                            List<CodeBlock> functionBlocks, ValueType returnType, FunctionScope scope) {
+        this.id = UUID.randomUUID();
+        this.name = name;
+        this.description = description;
+        this.owner = owner;
+        this.parameters = new ArrayList<>(parameters);
+        this.functionBlocks = new ArrayList<>(functionBlocks);
+        this.returnType = returnType;
+        this.scope = scope;
+        this.visibility = FunctionVisibility.PUBLIC;
+        this.createdTime = System.currentTimeMillis();
+        
+        // Validate function structure
+        validateFunction();
+    }
+    
+    /**
+     * Validates the function definition for correctness
+     */
+    private void validateFunction() {
+        if (name == null || name.trim().isEmpty()) {
+            throw new IllegalArgumentException("Function name cannot be empty");
+        }
+        
+        if (!name.matches("^[a-zA-Z_][a-zA-Z0-9_]*$")) {
+            throw new IllegalArgumentException("Function name must be a valid identifier: " + name);
+        }
+        
+        if (functionBlocks == null || functionBlocks.isEmpty()) {
+            throw new IllegalArgumentException("Function must have at least one code block");
+        }
+        
+        // Check for duplicate parameter names
+        Set<String> paramNames = new HashSet<>();
+        for (FunctionParameter param : parameters) {
+            if (!paramNames.add(param.getName())) {
+                throw new IllegalArgumentException("Duplicate parameter name: " + param.getName());
+            }
+        }
+    }
+    
+    /**
+     * Checks if a player can call this function
+     */
+    public boolean canCall(Player player) {
+        if (!enabled) {
+            return false;
+        }
+        
+        // Check scope permissions
+        switch (scope) {
+            case PLAYER:
+                return player.getUniqueId().equals(owner.getUniqueId());
+            case SHARED:
+                return allowedPlayers.contains(player.getUniqueId()) || player.getUniqueId().equals(owner.getUniqueId());
+            case WORLD:
+                // Would need world context to check
+                return true;
+            case GLOBAL:
+                return true;
+            default:
+                return false;
+        }
+    }
+    
+    /**
+     * Validates function call arguments
+     */
+    public ValidationResult validateArguments(DataValue[] arguments) {
+        if (arguments.length != parameters.size()) {
+            return ValidationResult.error("Expected " + parameters.size() + " arguments, got " + arguments.length);
+        }
+        
+        for (int i = 0; i < parameters.size(); i++) {
+            FunctionParameter param = parameters.get(i);
+            DataValue arg = arguments[i];
+            
+            // Check required parameters
+            if (param.isRequired() && (arg == null || arg.isEmpty())) {
+                return ValidationResult.error("Required parameter '" + param.getName() + "' is missing");
+            }
+            
+            // Check type compatibility
+            if (arg != null && !arg.isEmpty()) {
+                if (!param.getType().isCompatible(arg.getType())) {
+                    return ValidationResult.error("Parameter '" + param.getName() + "' expects " + 
+                        param.getType().getName() + " but got " + arg.getType().getName());
+                }
+            }
+        }
+        
+        return ValidationResult.success();
+    }
+    
+    /**
+     * Creates a local variable scope for function execution
+     */
+    public Map<String, DataValue> createLocalScope(DataValue[] arguments) {
+        Map<String, DataValue> localScope = new HashMap<>();
+        
+        // Bind arguments to parameters
+        for (int i = 0; i < parameters.size(); i++) {
+            FunctionParameter param = parameters.get(i);
+            DataValue value = i < arguments.length ? arguments[i] : param.getDefaultValue();
+            
+            if (value == null && param.isRequired()) {
+                throw new IllegalArgumentException("Required parameter '" + param.getName() + "' has no value");
+            }
+            
+            localScope.put(param.getName(), value);
+        }
+        
+        return localScope;
+    }
+    
+    /**
+     * Records function execution statistics
+     */
+    public void recordExecution(long executionTime, boolean success) {
+        callCount++;
+        if (success) {
+            totalExecutionTime += executionTime;
+        }
+    }
+    
+    /**
+     * Gets function execution statistics
+     */
+    public FunctionStatistics getStatistics() {
+        long avgExecutionTime = callCount > 0 ? totalExecutionTime / callCount : 0;
+        return new FunctionStatistics(callCount, avgExecutionTime, totalExecutionTime);
+    }
+    
+    // Getters and setters
     
     public String getName() { return name; }
-    public void setName(String name) { this.name = name; }
-    
     public String getDescription() { return description; }
-    public void setDescription(String description) { this.description = description; }
-    
-    public String getAuthor() { return author; }
-    public void setAuthor(String author) { this.author = author; }
-    
+    public UUID getId() { return id; }
+    public Player getOwner() { return owner; }
     public long getCreatedTime() { return createdTime; }
-    public void setCreatedTime(long createdTime) { this.createdTime = createdTime; }
-    
-    public List<FunctionParameter> getParameters() { return parameters; }
-    public void setParameters(List<FunctionParameter> parameters) { this.parameters = parameters; }
-    
+    public List<FunctionParameter> getParameters() { return new ArrayList<>(parameters); }
+    public List<CodeBlock> getFunctionBlocks() { return new ArrayList<>(functionBlocks); }
     public ValueType getReturnType() { return returnType; }
-    public void setReturnType(ValueType returnType) { this.returnType = returnType; }
+    public FunctionScope getScope() { return scope; }
+    public FunctionVisibility getVisibility() { return visibility; }
+    public boolean isEnabled() { return enabled; }
+    public int getMaxRecursionDepth() { return maxRecursionDepth; }
+    public long getMaxExecutionTime() { return maxExecutionTime; }
     
-    public String getReturnVariableName() { return returnVariableName; }
-    public void setReturnVariableName(String returnVariableName) { this.returnVariableName = returnVariableName; }
+    public void setEnabled(boolean enabled) { this.enabled = enabled; }
+    public void setMaxRecursionDepth(int maxRecursionDepth) { this.maxRecursionDepth = maxRecursionDepth; }
+    public void setMaxExecutionTime(long maxExecutionTime) { this.maxExecutionTime = maxExecutionTime; }
     
-    public CodeBlock getEntryBlock() { return entryBlock; }
-    public void setEntryBlock(CodeBlock entryBlock) { this.entryBlock = entryBlock; }
+    // Access control methods
     
-    public List<CodeBlock> getCodeBlocks() { return codeBlocks; }
-    public void setCodeBlocks(List<CodeBlock> codeBlocks) { this.codeBlocks = codeBlocks; }
+    public void addAllowedPlayer(UUID playerId) {
+        allowedPlayers.add(playerId);
+    }
     
-    public boolean isPublic() { return isPublic; }
-    public void setPublic(boolean aPublic) { isPublic = aPublic; }
+    public void removeAllowedPlayer(UUID playerId) {
+        allowedPlayers.remove(playerId);
+    }
     
-    public Set<String> getTags() { return tags; }
-    public void setTags(Set<String> tags) { this.tags = tags; }
+    public Set<UUID> getAllowedPlayers() {
+        return new HashSet<>(allowedPlayers);
+    }
     
-    public Map<String, Object> getMetadata() { return metadata; }
-    public void setMetadata(Map<String, Object> metadata) { this.metadata = metadata; }
+    public void addRequiredPermission(String permission) {
+        requiredPermissions.add(permission);
+    }
     
-    // equals and hashCode
+    public void removeRequiredPermission(String permission) {
+        requiredPermissions.remove(permission);
+    }
+    
+    public Set<String> getRequiredPermissions() {
+        return new HashSet<>(requiredPermissions);
+    }
+    
+    /**
+     * Function parameter definition
+     */
+    public static class FunctionParameter {
+        private final String name;
+        private final ValueType type;
+        private final boolean required;
+        private final DataValue defaultValue;
+        private final String description;
+        
+        public FunctionParameter(String name, ValueType type, boolean required, DataValue defaultValue, String description) {
+            this.name = name;
+            this.type = type;
+            this.required = required;
+            this.defaultValue = defaultValue;
+            this.description = description;
+        }
+        
+        // Getters
+        public String getName() { return name; }
+        public ValueType getType() { return type; }
+        public boolean isRequired() { return required; }
+        public DataValue getDefaultValue() { return defaultValue; }
+        public String getDescription() { return description; }
+    }
+    
+    /**
+     * Function validation result
+     */
+    public static class ValidationResult {
+        private final boolean valid;
+        private final String message;
+        
+        private ValidationResult(boolean valid, String message) {
+            this.valid = valid;
+            this.message = message;
+        }
+        
+        public static ValidationResult success() {
+            return new ValidationResult(true, null);
+        }
+        
+        public static ValidationResult error(String message) {
+            return new ValidationResult(false, message);
+        }
+        
+        public boolean isValid() { return valid; }
+        public String getMessage() { return message; }
+    }
+    
+    /**
+     * Function execution statistics
+     */
+    public static class FunctionStatistics {
+        private final int callCount;
+        private final long averageExecutionTime;
+        private final long totalExecutionTime;
+        
+        public FunctionStatistics(int callCount, long averageExecutionTime, long totalExecutionTime) {
+            this.callCount = callCount;
+            this.averageExecutionTime = averageExecutionTime;
+            this.totalExecutionTime = totalExecutionTime;
+        }
+        
+        public int getCallCount() { return callCount; }
+        public long getAverageExecutionTime() { return averageExecutionTime; }
+        public long getTotalExecutionTime() { return totalExecutionTime; }
+    }
+    
+    @Override
+    public String toString() {
+        return "Function{" +
+            "name='" + name + '\'' +
+            ", parameters=" + parameters.size() +
+            ", returnType=" + returnType +
+            ", scope=" + scope +
+            ", calls=" + callCount +
+            '}';
+    }
+    
     @Override
     public boolean equals(Object o) {
         if (this == o) return true;
-        if (o == null || getClass() != o.getClass()) return false;
+        if (!(o instanceof FunctionDefinition)) return false;
         FunctionDefinition that = (FunctionDefinition) o;
-        return createdTime == that.createdTime &&
-               isPublic == that.isPublic &&
-               Objects.equals(id, that.id) &&
-               Objects.equals(name, that.name) &&
-               Objects.equals(description, that.description) &&
-               Objects.equals(author, that.author) &&
-               Objects.equals(parameters, that.parameters) &&
-               returnType == that.returnType &&
-               Objects.equals(returnVariableName, that.returnVariableName) &&
-               Objects.equals(entryBlock, that.entryBlock) &&
-               Objects.equals(codeBlocks, that.codeBlocks) &&
-               Objects.equals(tags, that.tags) &&
-               Objects.equals(metadata, that.metadata);
+        return Objects.equals(id, that.id);
     }
     
     @Override
     public int hashCode() {
-        return Objects.hash(id, name, description, author, createdTime, parameters, returnType, 
-                          returnVariableName, entryBlock, codeBlocks, isPublic, tags, metadata);
-    }
-    
-    // No-args constructor
-    public FunctionDefinition() {
-        this.id = UUID.randomUUID();
-        this.parameters = new ArrayList<>();
-        this.codeBlocks = new ArrayList<>();
-        this.tags = new HashSet<>();
-        this.metadata = new HashMap<>();
-    }
-    
-    public FunctionDefinition(String name, String author) {
-        this.id = UUID.randomUUID();
-        this.name = name;
-        this.author = author;
-        this.createdTime = System.currentTimeMillis();
-    }
-    
-    public FunctionDefinition addParameter(FunctionParameter parameter) {
-        parameters.add(parameter);
-        return this;
-    }
-    
-    public FunctionDefinition setReturnType(ValueType returnType, String returnVariableName) {
-        this.returnType = returnType;
-        this.returnVariableName = returnVariableName != null ? returnVariableName : "result";
-        return this;
-    }
-    
-    public String getSignature() {
-        StringBuilder sb = new StringBuilder();
-        sb.append(returnType.name().toLowerCase()).append(" ");
-        sb.append(name).append("(");
-        
-        for (int i = 0; i < parameters.size(); i++) {
-            if (i > 0) sb.append(", ");
-            FunctionParameter param = parameters.get(i);
-            sb.append(param.getExpectedType().name().toLowerCase());
-            sb.append(" ").append(param.getName());
-            if (!param.isRequired()) {
-                sb.append("?");
-            }
-        }
-        
-        sb.append(")");
-        return sb.toString();
+        return Objects.hash(id);
     }
 }

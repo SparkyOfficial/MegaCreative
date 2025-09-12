@@ -251,6 +251,10 @@ public class MegaCreative extends JavaPlugin {
         getCommand("clipboard").setExecutor(new ClipboardCommand(this, serviceRegistry.getCodeBlockClipboard()));
         getCommand("group").setExecutor(new GroupCommand(serviceRegistry));
         
+        // 🎆 FrameLand: Register function management command
+        getCommand("function").setExecutor(new FunctionCommand(this));
+        getCommand("function").setTabCompleter(new FunctionCommand(this));
+        
         // 🎆 FrameLand-style advanced execution command
         getCommand("execution").setExecutor(new ExecutionCommand(this));
     }

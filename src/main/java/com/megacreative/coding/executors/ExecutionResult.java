@@ -13,6 +13,8 @@ public class ExecutionResult {
     private final Player executor;
     private final Throwable error;
     private final long executionTime;
+    private boolean terminated = false;
+    private Object returnValue;
 
     private ExecutionResult(Builder builder) {
         this.success = builder.success;
@@ -46,6 +48,34 @@ public class ExecutionResult {
 
     public long getExecutionTime() {
         return executionTime;
+    }
+
+    /**
+     * Checks if the execution was terminated (e.g., by a return statement)
+     */
+    public boolean isTerminated() {
+        return terminated;
+    }
+
+    /**
+     * Sets whether the execution was terminated
+     */
+    public void setTerminated(boolean terminated) {
+        this.terminated = terminated;
+    }
+
+    /**
+     * Gets the return value from the execution
+     */
+    public Object getReturnValue() {
+        return returnValue;
+    }
+
+    /**
+     * Sets the return value for the execution
+     */
+    public void setReturnValue(Object returnValue) {
+        this.returnValue = returnValue;
     }
 
     /**

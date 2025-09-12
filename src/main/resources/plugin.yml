@@ -41,6 +41,7 @@ permissions:
       megacreative.command.build: true
       megacreative.command.dev: true
       megacreative.command.hub: true
+      megacreative.command.function: true
 
   megacreative.admin:
     description: Admin permissions
@@ -221,6 +222,18 @@ commands:
     usage: /<command> <select|create|collapse|expand|delete|list|cancel> [name]
     permission: megacreative.user
     aliases: [grp, organize]
+
+  function:
+    description: 🎆 FrameLand-style function management
+    usage: |
+      &6/function list [scope] &f- List available functions
+      &6/function info <name> &f- Show function details
+      &6/function call <name> [args...] &f- Test function execution
+      &6/function remove <name> &f- Remove your function
+      &6/function stats &f- Show function statistics
+      &6/function help &f- Show function help
+    permission: megacreative.user
+    aliases: [func, fn]
 
   execution:
     description: 🎆 Advanced execution engine control and testing

@@ -21,6 +21,7 @@ import com.megacreative.listeners.DevWorldProtectionListener;
 import com.megacreative.managers.*;
 import com.megacreative.services.BlockConfigService;
 import com.megacreative.services.FunctionManager;
+import com.megacreative.coding.functions.AdvancedFunctionManager;
 import com.megacreative.MegaCreative;
 import com.megacreative.tools.CodeBlockClipboard;
 // 🎆 FrameLand-style comprehensive events
@@ -80,6 +81,7 @@ public class ServiceRegistry {
     private PlayerEventsListener playerEventsListener;
     private ScriptPerformanceMonitor scriptPerformanceMonitor;
     private FunctionManager functionManager;
+    private AdvancedFunctionManager advancedFunctionManager;
     
     // 🎆 FrameLand-style comprehensive event system
     private FrameLandEventManager frameLandEventManager;
@@ -116,6 +118,10 @@ public class ServiceRegistry {
         // Initialize FunctionManager
         this.functionManager = new FunctionManager((MegaCreative) plugin);
         registerService(FunctionManager.class, functionManager);
+        
+        // 🎆 FrameLand: Initialize Advanced Function Manager
+        this.advancedFunctionManager = new AdvancedFunctionManager((MegaCreative) plugin);
+        registerService(AdvancedFunctionManager.class, advancedFunctionManager);
         
         // Register core services
         registerService(VariableManager.class, variableManager);
@@ -212,6 +218,11 @@ public class ServiceRegistry {
         // 🎆 FRAMELAND: Shutdown comprehensive event manager
         if (frameLandEventManager != null) {
             frameLandEventManager.shutdown();
+        }
+        
+        // 🎆 FRAMELAND: Shutdown advanced function manager
+        if (advancedFunctionManager != null) {
+            advancedFunctionManager.shutdown();
         }
         
         if (scriptPerformanceMonitor != null) {
@@ -435,6 +446,15 @@ public class ServiceRegistry {
             registerService(com.megacreative.services.FunctionManager.class, functionManager);
         }
         return functionManager;
+    }
+    
+    // 🎆 FrameLand: Get Advanced Function Manager
+    public AdvancedFunctionManager getAdvancedFunctionManager() {
+        if (advancedFunctionManager == null) {
+            this.advancedFunctionManager = new AdvancedFunctionManager((MegaCreative) plugin);
+            registerService(AdvancedFunctionManager.class, advancedFunctionManager);
+        }
+        return advancedFunctionManager;
     }
     
     // 🎆 FRAMELAND: Get comprehensive event manager
