@@ -58,6 +58,11 @@ blocks:
     name: "Условие игрока"
     type: "CONDITION"
     description: "Блоки условий для проверки различных состояний"
+    is_constructor: true  # Создает структуру с поршнями-скобками
+    structure:
+      brackets: PISTON
+      sign: true
+      bracket_distance: 3  # Расстояние между скобками
     actions:
       - "isOp"
       - "compareVariable"
@@ -104,6 +109,11 @@ blocks:
     name: "Если переменная"
     type: "CONDITION"
     description: "Условия для проверки переменных"
+    is_constructor: true  # Создает структуру с поршнями-скобками
+    structure:
+      brackets: PISTON
+      sign: true
+      bracket_distance: 3
     actions:
       - "ifVarEquals"
       - "ifVarGreater"
@@ -114,6 +124,11 @@ blocks:
     name: "Если игра"
     type: "CONDITION"
     description: "Условия для проверки игровых состояний"
+    is_constructor: true  # Создает структуру с поршнями-скобками
+    structure:
+      brackets: PISTON
+      sign: true
+      bracket_distance: 3
     actions:
       - "isOp"
       - "playerGameMode"
@@ -135,6 +150,11 @@ blocks:
     name: "Повторить N раз"
     type: "CONTROL"
     description: "Циклы и повторения"
+    is_constructor: true  # Создает структуру с поршнями-скобками
+    structure:
+      brackets: PISTON
+      sign: true
+      bracket_distance: 4  # Больше места для циклов
     actions:
       - "repeat"
       - "repeatTrigger"

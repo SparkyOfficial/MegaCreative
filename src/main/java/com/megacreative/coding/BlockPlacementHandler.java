@@ -74,25 +74,49 @@ public class BlockPlacementHandler implements Listener {
         // Only process in dev worlds
         if (!isInDevWorld(player)) return;
         
-        // Получаем конфигурацию по материалу блока
-        if (!blockConfigService.isCodeBlock(block.getType())) {
-            // Особая обработка для поршней (скобок) - они могут не иметь конфига
-            if (block.getType() == Material.PISTON || block.getType() == Material.STICKY_PISTON) {
-                CodeBlock newCodeBlock = new CodeBlock(block.getType(), "BRACKET"); // Уникальный ID для скобок
-                newCodeBlock.setBracketType(CodeBlock.BracketType.OPEN); // По умолчанию открывающая
-                setPistonDirection(block, CodeBlock.BracketType.OPEN); // Задать направление
-                updateBracketSign(block.getLocation(), CodeBlock.BracketType.OPEN); // Повесить табличку
-                blockCodeBlocks.put(block.getLocation(), newCodeBlock);
-                
-                player.sendMessage("§a✓ Скобка размещена: " + CodeBlock.BracketType.OPEN.getDisplayName());
-                player.sendMessage("§7Кликните правой кнопкой для смены типа");
-                return; // Завершаем обработку
+        // Проверяем, что это специальный предмет кодирования
+        if (!itemInHand.hasItemMeta() || !itemInHand.getItemMeta().hasDisplayName()) {
+            // Если это не специальный предмет, возможно, это обычный блок - его нужно запретить
+            if (!blockConfigService.isCodeBlock(block.getType())) {
+                // Особая обработка для поршней (скобок) - они могут не иметь конфига
+                if (block.getType() == Material.PISTON || block.getType() == Material.STICKY_PISTON) {
+                    CodeBlock newCodeBlock = new CodeBlock(block.getType(), "BRACKET"); // Уникальный ID для скобок
+                    newCodeBlock.setBracketType(CodeBlock.BracketType.OPEN); // По умолчанию открывающая
+                    setPistonDirection(block, CodeBlock.BracketType.OPEN); // Задать направление
+                    updateBracketSign(block.getLocation(), CodeBlock.BracketType.OPEN); // Повесить табличку
+                    blockCodeBlocks.put(block.getLocation(), newCodeBlock);
+                    
+                    player.sendMessage("§a✓ Скобка размещена: " + CodeBlock.BracketType.OPEN.getDisplayName());
+                    player.sendMessage("§7Кликните правой кнопкой для смены типа");
+                    return; // Завершаем обработку
+                }
+                return; // Это обычный блок, не кодовый
             }
-            return; // Это обычный блок, не кодовый
         }
-
-        // Создаем CodeBlock БЕЗ действия - действие будет выбрано позже через GUI
-        CodeBlock newCodeBlock = new CodeBlock(block.getType(), "NOT_SET");
+        
+        // Получаем конфиг блока из предмета в руке
+        String displayName = org.bukkit.ChatColor.stripColor(itemInHand.getItemMeta().getDisplayName());
+        BlockConfigService.BlockConfig config = blockConfigService.getBlockConfigByDisplayName(displayName);
+        
+        if (config == null) {
+            // Это не кодовый блок, запрещаем установку
+            event.setCancelled(true);
+            player.sendMessage("§cВы можете размещать только специальные блоки для кодирования!");
+            return;
+        }
+        
+        // ===============================================
+        //           НОВАЯ ЛОГИКА КОНСТРУКТОРОВ
+        // ===============================================
+        
+        // 1. Проверяем, является ли блок "конструктором"
+        if (config.isConstructor()) {
+            // 2. Вызываем метод для постройки структуры
+            buildStructureFor(event, config);
+        }
+        
+        // Создаем CodeBlock с ID из конфига
+        CodeBlock newCodeBlock = new CodeBlock(block.getType(), config.getId());
         
         // Special handling for bracket blocks (pistons)
         if (block.getType() == Material.PISTON || block.getType() == Material.STICKY_PISTON) {
@@ -102,19 +126,100 @@ public class BlockPlacementHandler implements Listener {
         
         blockCodeBlocks.put(block.getLocation(), newCodeBlock);
         
-        // Получаем отображаемое имя блока для таблички
-        BlockConfigService.BlockConfig materialConfig = blockConfigService.getBlockConfigByMaterial(block.getType());
-        String displayName = materialConfig != null ? materialConfig.getDisplayName() : block.getType().name();
-        
-        // Устанавливаем табличку с названием типа блока
-        setSignOnBlock(block.getLocation(), displayName);
+        // Устанавливаем табличку с названием из конфига (для конструкторов табличка уже создана в buildStructureFor)
+        if (!config.isConstructor()) {
+            setSignOnBlock(block.getLocation(), config.getDisplayName());
+        }
         
         // Визуальная и аудио обратная связь
         player.spawnParticle(org.bukkit.Particle.VILLAGER_HAPPY, block.getLocation().add(0.5, 1.0, 0.5), 5, 0.2, 0.2, 0.2, 0.1);
         player.playSound(block.getLocation(), org.bukkit.Sound.BLOCK_NOTE_BLOCK_PLING, 0.8f, 1.5f);
         
-        player.sendMessage("§a✓ Блок кода размещен: " + displayName);
-        player.sendMessage("§7Кликните правой кнопкой для выбора действия");
+        if (config.isConstructor()) {
+            player.sendMessage("§a✓ Структура " + config.getDisplayName() + " создана!");
+            player.sendMessage("§7Кликните по основному блоку для выбора действия");
+        } else {
+            player.sendMessage("§a✓ Блок кода размещен: " + config.getDisplayName());
+            player.sendMessage("§7Кликните правой кнопкой для выбора действия");
+        }
+    }
+    
+    /**
+     * Создает структуру для блоков-конструкторов (аналог WOOD из FrameLand)
+     */
+    private void buildStructureFor(BlockPlaceEvent event, BlockConfigService.BlockConfig config) {
+        Block placedBlock = event.getBlock();
+        Location loc = placedBlock.getLocation();
+        World world = loc.getWorld();
+        Player player = event.getPlayer();
+        
+        BlockConfigService.StructureConfig structure = config.getStructure();
+        if (structure == null) {
+            plugin.getLogger().warning("Constructor block " + config.getId() + " has no structure configuration!");
+            return;
+        }
+        
+        // Пример для конструкции "Если" (аналог WOOD из FrameLand)
+        if (config.getType().equals("CONDITION") || config.getType().equals("CONTROL")) {
+            int bracketDistance = structure.getBracketDistance();
+            
+            // Место для открывающей скобки (поршень)
+            Location openBracketLoc = loc.clone().add(1, 0, 0);
+            // Место для закрывающей скобки (поршень)
+            Location closeBracketLoc = loc.clone().add(1 + bracketDistance, 0, 0);
+            
+            // 1. Ставим поршни-скобки
+            createBracketPiston(openBracketLoc, CodeBlock.BracketType.OPEN, player);
+            createBracketPiston(closeBracketLoc, CodeBlock.BracketType.CLOSE, player);
+            
+            // 2. Создаем и настраиваем табличку на основном блоке
+            if (structure.hasSign()) {
+                setSignOnBlock(loc, config.getDisplayName());
+            }
+            
+            plugin.getLogger().info("Built constructor structure for " + config.getId() + " at " + loc);
+        }
+        
+        // Здесь можно добавить логику для других типов конструкций
+        // Например, для "События игрока" (DIAMOND_BLOCK) можно ставить
+        // рядом какой-то вспомогательный блок, как это делал FrameLand.
+    }
+    
+    /**
+     * Создает поршень-скобку с правильным направлением
+     */
+    private void createBracketPiston(Location location, CodeBlock.BracketType bracketType, Player player) {
+        Block pistonBlock = location.getWorld().getBlockAt(location);
+        
+        // Проверяем, что место свободно
+        if (!pistonBlock.getType().isAir()) {
+            player.sendMessage("§eПредупреждение: Место для скобки занято на " + location);
+            return;
+        }
+        
+        // Ставим поршень
+        pistonBlock.setType(Material.PISTON);
+        
+        // Используем современный BlockData для установки направления
+        org.bukkit.block.data.type.Piston pistonData = (org.bukkit.block.data.type.Piston) pistonBlock.getBlockData();
+        
+        if (bracketType == CodeBlock.BracketType.OPEN) {
+            pistonData.setFacing(org.bukkit.block.BlockFace.EAST); // Смотрит вправо >
+        } else {
+            pistonData.setFacing(org.bukkit.block.BlockFace.WEST); // Смотрит влево <
+        }
+        
+        pistonBlock.setBlockData(pistonData);
+        
+        // Создаем CodeBlock для скобки
+        CodeBlock bracketCodeBlock = new CodeBlock(Material.PISTON, "BRACKET");
+        bracketCodeBlock.setBracketType(bracketType);
+        blockCodeBlocks.put(location, bracketCodeBlock);
+        
+        // Добавляем табличку к скобке
+        updateBracketSign(location, bracketType);
+        
+        plugin.getLogger().fine("Created bracket piston " + bracketType + " at " + location);
     }
 
     /**
@@ -142,10 +247,21 @@ public class BlockPlacementHandler implements Listener {
         if (event.isCancelled()) return;
         
         Location loc = event.getBlock().getLocation();
+        Player player = event.getPlayer();
         
         // Удаляем блок из нашей карты
         if (blockCodeBlocks.containsKey(loc)) {
             CodeBlock removedBlock = blockCodeBlocks.remove(loc);
+            
+            // Проверяем, является ли это блоком-конструктором
+            String blockId = removedBlock != null ? removedBlock.getAction() : null;
+            if (blockId != null) {
+                BlockConfigService.BlockConfig config = blockConfigService.getBlockConfig(blockId);
+                if (config != null && config.isConstructor()) {
+                    // Это блок-конструктор, удаляем всю структуру
+                    removeConstructorStructure(loc, config, player);
+                }
+            }
             
             // Удаляем табличку, если она есть
             removeSignFromBlock(loc);
@@ -154,9 +270,61 @@ public class BlockPlacementHandler implements Listener {
             removeContainerAboveBlock(loc);
             
             // AutoConnectionManager will handle disconnection automatically at MONITOR priority
-            event.getPlayer().sendMessage("§cБлок кода удален!");
+            player.sendMessage("§cБлок кода удален!");
             
             plugin.getLogger().info("CodeBlock removed from " + loc + " with action: " + (removedBlock != null ? removedBlock.getAction() : "unknown"));
+        }
+    }
+    
+    /**
+     * Удаляет всю структуру конструктора (скобки, блоки внутри)
+     */
+    private void removeConstructorStructure(Location mainBlockLoc, BlockConfigService.BlockConfig config, Player player) {
+        BlockConfigService.StructureConfig structure = config.getStructure();
+        if (structure == null) return;
+        
+        if (config.getType().equals("CONDITION") || config.getType().equals("CONTROL")) {
+            int bracketDistance = structure.getBracketDistance();
+            
+            // Места скобок
+            Location openBracketLoc = mainBlockLoc.clone().add(1, 0, 0);
+            Location closeBracketLoc = mainBlockLoc.clone().add(1 + bracketDistance, 0, 0);
+            
+            // Удаляем скобки-поршни
+            removeBracketPiston(openBracketLoc, player);
+            removeBracketPiston(closeBracketLoc, player);
+            
+            // Удаляем все блоки между скобками (предотвращаем мусор)
+            for (int x = 2; x < 1 + bracketDistance; x++) {
+                Location innerBlockLoc = mainBlockLoc.clone().add(x, 0, 0);
+                if (blockCodeBlocks.containsKey(innerBlockLoc)) {
+                    blockCodeBlocks.remove(innerBlockLoc);
+                    removeSignFromBlock(innerBlockLoc);
+                    removeContainerAboveBlock(innerBlockLoc);
+                    
+                    // Опционально: можно также удалять сам блок, но это может быть слишком агрессивно
+                    // innerBlockLoc.getBlock().setType(Material.AIR);
+                }
+            }
+            
+            player.sendMessage("§eСтруктура " + config.getDisplayName() + " полностью удалена!");
+        }
+    }
+    
+    /**
+     * Удаляет поршень-скобку
+     */
+    private void removeBracketPiston(Location location, Player player) {
+        if (blockCodeBlocks.containsKey(location)) {
+            blockCodeBlocks.remove(location);
+            removeSignFromBlock(location);
+            
+            Block pistonBlock = location.getBlock();
+            if (pistonBlock.getType() == Material.PISTON || pistonBlock.getType() == Material.STICKY_PISTON) {
+                pistonBlock.setType(Material.AIR);
+            }
+            
+            plugin.getLogger().fine("Removed bracket piston at " + location);
         }
     }
 

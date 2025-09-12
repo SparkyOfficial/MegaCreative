@@ -207,6 +207,8 @@ public class BlockConfigService {
         private final String displayName;
         private final String description;
         private final String category;
+        private final boolean isConstructor;
+        private final StructureConfig structure;
         private final Map<String, Object> parameters;
 
         public BlockConfig(String id, ConfigurationSection section) {
@@ -221,6 +223,15 @@ public class BlockConfigService {
             this.displayName = ChatColor.translateAlternateColorCodes('&', section.getString("name", id));
             this.description = section.getString("description", "No description.");
             this.category = section.getString("category", "default");
+            this.isConstructor = section.getBoolean("is_constructor", false);
+            
+            // Загружаем конфигурацию структуры, если блок является конструктором
+            if (isConstructor && section.contains("structure")) {
+                ConfigurationSection structureSection = section.getConfigurationSection("structure");
+                this.structure = new StructureConfig(structureSection);
+            } else {
+                this.structure = null;
+            }
 
             this.parameters = new HashMap<>();
             ConfigurationSection paramsSection = section.getConfigurationSection("parameters");
@@ -238,6 +249,28 @@ public class BlockConfigService {
         public String getDisplayName() { return displayName; }
         public String getDescription() { return description; }
         public String getCategory() { return category; }
+        public boolean isConstructor() { return isConstructor; }
+        public StructureConfig getStructure() { return structure; }
         public Map<String, Object> getParameters() { return parameters; }
+    }
+    
+    /**
+     * Конфигурация структуры для блоков-конструкторов
+     */
+    public static class StructureConfig {
+        private final Material brackets;
+        private final boolean hasSign;
+        private final int bracketDistance;
+        
+        public StructureConfig(ConfigurationSection section) {
+            String bracketMaterial = section.getString("brackets", "PISTON");
+            this.brackets = Material.matchMaterial(bracketMaterial);
+            this.hasSign = section.getBoolean("sign", true);
+            this.bracketDistance = section.getInt("bracket_distance", 3);
+        }
+        
+        public Material getBrackets() { return brackets; }
+        public boolean hasSign() { return hasSign; }
+        public int getBracketDistance() { return bracketDistance; }
     }
 }
