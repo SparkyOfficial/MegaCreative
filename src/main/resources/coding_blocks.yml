@@ -262,6 +262,24 @@ action_configurations:
         placeholder_item: "PAPER"
         slot_name: "fadeout"
   
+  # Конфигурация для действия broadcast
+  broadcast:
+    slots:
+      0:
+        name: "§aСообщение для объявления"
+        description: "§7Положите бумагу с названием сообщения для всех игроков. Поддерживает плейсхолдеры: %player%, %world%"
+        placeholder_item: "PAPER"
+        slot_name: "message_slot"
+  
+  # Конфигурация для действия command
+  command:
+    slots:
+      0:
+        name: "§aКоманда для выполнения"
+        description: "§7Положите бумагу с названием команды. Поддерживает плейсхолдеры: %player%, %world%, %x%, %y%, %z%"
+        placeholder_item: "PAPER"
+        slot_name: "command_slot"
+  
   # Конфигурация для действия sendActionBar
   sendActionBar:
     slots:

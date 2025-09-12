@@ -6,7 +6,9 @@ import com.megacreative.coding.ExecutionContext;
 import com.megacreative.coding.ParameterResolver;
 import com.megacreative.coding.executors.ExecutionResult;
 import com.megacreative.coding.values.DataValue;
+import com.megacreative.coding.variables.VariableManager;
 import com.megacreative.services.BlockConfigService;
+import org.bukkit.entity.Player;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.inventory.meta.ItemMeta;
 
@@ -44,12 +46,24 @@ public class SetVarAction implements BlockAction {
                 return ExecutionResult.error("Invalid variable name");
             }
 
-            // Get the variable manager to set the variable
-            // Note: This is a simplified implementation - in a real system, you would set the actual variable
-            // For now, we'll just log the operation
-            context.getPlugin().getLogger().info("Setting variable " + varName + " to " + valueStr);
+            // 🎆 ENHANCED: Actually set the variable using VariableManager
+            Player player = context.getPlayer();
+            if (player == null) {
+                return ExecutionResult.error("No player found in execution context");
+            }
             
-            return ExecutionResult.success("Variable set successfully");
+            VariableManager variableManager = context.getPlugin().getServiceRegistry().getVariableManager();
+            if (variableManager == null) {
+                return ExecutionResult.error("Variable manager not available");
+            }
+            
+            // Set the variable for the player
+            DataValue dataValue = DataValue.of(valueStr);
+            variableManager.setPlayerVariable(player.getUniqueId(), varName, dataValue);
+            
+            context.getPlugin().getLogger().info("💾 Variable set: " + varName + " = " + valueStr + " for player " + player.getName());
+            
+            return ExecutionResult.success("Variable '" + varName + "' set to '" + valueStr + "'");
         } catch (Exception e) {
             return ExecutionResult.error("Failed to set variable: " + e.getMessage());
         }

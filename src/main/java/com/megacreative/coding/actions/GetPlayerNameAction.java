@@ -6,6 +6,7 @@ import com.megacreative.coding.ExecutionContext;
 import com.megacreative.coding.ParameterResolver;
 import com.megacreative.coding.executors.ExecutionResult;
 import com.megacreative.coding.values.DataValue;
+import com.megacreative.coding.variables.VariableManager;
 import com.megacreative.services.BlockConfigService;
 import org.bukkit.entity.Player;
 import org.bukkit.inventory.ItemStack;
@@ -45,12 +46,19 @@ public class GetPlayerNameAction implements BlockAction {
             // Get the player's name
             String playerName = player.getName();
 
-            // Get the variable manager to set the variable
-            // Note: This is a simplified implementation - in a real system, you would set the actual variable
-            // For now, we'll just log the operation
-            context.getPlugin().getLogger().info("Getting player name " + playerName + " into " + targetVar);
+            // 🎆 ENHANCED: Actually set the variable using VariableManager
+            VariableManager variableManager = context.getPlugin().getServiceRegistry().getVariableManager();
+            if (variableManager == null) {
+                return ExecutionResult.error("Variable manager not available");
+            }
             
-            return ExecutionResult.success("Player name retrieved successfully");
+            // Set the variable for the player
+            DataValue dataValue = DataValue.of(playerName);
+            variableManager.setPlayerVariable(player.getUniqueId(), targetVar, dataValue);
+            
+            context.getPlugin().getLogger().info("💾 Player name stored: " + playerName + " -> " + targetVar + " for player " + player.getName());
+            
+            return ExecutionResult.success("Player name '" + playerName + "' stored in variable '" + targetVar + "'");
         } catch (Exception e) {
             return ExecutionResult.error("Failed to get player name: " + e.getMessage());
         }

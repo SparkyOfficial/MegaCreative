@@ -6,7 +6,9 @@ import com.megacreative.coding.ExecutionContext;
 import com.megacreative.coding.ParameterResolver;
 import com.megacreative.coding.executors.ExecutionResult;
 import com.megacreative.coding.values.DataValue;
+import com.megacreative.coding.variables.VariableManager;
 import com.megacreative.services.BlockConfigService;
+import org.bukkit.entity.Player;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.inventory.meta.ItemMeta;
 
@@ -48,12 +50,29 @@ public class GetVarAction implements BlockAction {
                 return ExecutionResult.error("Invalid target variable");
             }
 
-            // Get the variable manager to get the variable
-            // Note: This is a simplified implementation - in a real system, you would get the actual variable
-            // For now, we'll just log the operation
-            context.getPlugin().getLogger().info("Getting variable " + varName + " into " + targetVar);
+            // 🎆 ENHANCED: Actually get the variable using VariableManager
+            Player player = context.getPlayer();
+            if (player == null) {
+                return ExecutionResult.error("No player found in execution context");
+            }
             
-            return ExecutionResult.success("Variable retrieved successfully");
+            VariableManager variableManager = context.getPlugin().getServiceRegistry().getVariableManager();
+            if (variableManager == null) {
+                return ExecutionResult.error("Variable manager not available");
+            }
+            
+            // Get the variable for the player
+            DataValue varValue = variableManager.getPlayerVariable(player.getUniqueId(), varName);
+            if (varValue == null) {
+                return ExecutionResult.error("Variable '" + varName + "' not found");
+            }
+            
+            // Set the target variable with the retrieved value
+            variableManager.setPlayerVariable(player.getUniqueId(), targetVar, varValue);
+            
+            context.getPlugin().getLogger().info("💾 Variable retrieved: " + varName + " -> " + targetVar + " (value: " + varValue.asString() + ") for player " + player.getName());
+            
+            return ExecutionResult.success("Variable '" + varName + "' retrieved into '" + targetVar + "'");
         } catch (Exception e) {
             return ExecutionResult.error("Failed to get variable: " + e.getMessage());
         }

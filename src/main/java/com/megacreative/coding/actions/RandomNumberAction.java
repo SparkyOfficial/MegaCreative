@@ -6,7 +6,9 @@ import com.megacreative.coding.ExecutionContext;
 import com.megacreative.coding.ParameterResolver;
 import com.megacreative.coding.executors.ExecutionResult;
 import com.megacreative.coding.values.DataValue;
+import com.megacreative.coding.variables.VariableManager;
 import com.megacreative.services.BlockConfigService;
+import org.bukkit.entity.Player;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.inventory.meta.ItemMeta;
 
@@ -56,12 +58,24 @@ public class RandomNumberAction implements BlockAction {
             // Generate a random number
             int randomNumber = RANDOM.nextInt(max - min + 1) + min;
 
-            // Get the variable manager to set the variable
-            // Note: This is a simplified implementation - in a real system, you would set the actual variable
-            // For now, we'll just log the operation
-            context.getPlugin().getLogger().info("Generating random number " + randomNumber + " into " + targetVar);
+            // 🎆 ENHANCED: Actually set the variable using VariableManager
+            Player player = context.getPlayer();
+            if (player == null) {
+                return ExecutionResult.error("No player found in execution context");
+            }
             
-            return ExecutionResult.success("Random number generated successfully");
+            VariableManager variableManager = context.getPlugin().getServiceRegistry().getVariableManager();
+            if (variableManager == null) {
+                return ExecutionResult.error("Variable manager not available");
+            }
+            
+            // Set the variable for the player
+            DataValue dataValue = DataValue.of(String.valueOf(randomNumber));
+            variableManager.setPlayerVariable(player.getUniqueId(), targetVar, dataValue);
+            
+            context.getPlugin().getLogger().info("🎲 Random number generated: " + randomNumber + " -> " + targetVar + " for player " + (player != null ? player.getName() : "unknown"));
+            
+            return ExecutionResult.success("Random number " + randomNumber + " generated and stored in '" + targetVar + "'");
         } catch (Exception e) {
             return ExecutionResult.error("Failed to generate random number: " + e.getMessage());
         }

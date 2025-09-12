@@ -40,7 +40,7 @@ public ExecutionResult execute(CodeBlock block, ExecutionContext context) {
     }
     
     /**
-     * Gets item from the container configuration
+     * 🎆 ENHANCED: Gets item from the container configuration with improved handling
      */
     private ItemStack getItemFromContainer(CodeBlock block, ExecutionContext context) {
         try {
@@ -51,12 +51,52 @@ public ExecutionResult execute(CodeBlock block, ExecutionContext context) {
             Function<String, Integer> slotResolver = blockConfigService.getSlotResolver(block.getAction());
             
             if (slotResolver != null) {
-                // Get item from the item slot
-                Integer itemSlot = slotResolver.apply("item_slot");
+                // Get item from the item slot (primary)
+                Integer itemSlot = slotResolver.apply("item");
+                if (itemSlot == null) {
+                    itemSlot = slotResolver.apply("item_slot"); // Fallback
+                }
+                
                 if (itemSlot != null) {
-                    return block.getConfigItem(itemSlot);
+                    ItemStack configuredItem = block.getConfigItem(itemSlot);
+                    if (configuredItem != null && !configuredItem.getType().isAir()) {
+                        // Get amount from amount slot if configured
+                        Integer amountSlot = slotResolver.apply("amount");
+                        if (amountSlot != null) {
+                            ItemStack amountItem = block.getConfigItem(amountSlot);
+                            if (amountItem != null && amountItem.hasItemMeta()) {
+                                String amountStr = org.bukkit.ChatColor.stripColor(
+                                    amountItem.getItemMeta().getDisplayName()).trim();
+                                try {
+                                    int amount = Integer.parseInt(amountStr);
+                                    configuredItem.setAmount(Math.max(1, Math.min(64, amount)));
+                                } catch (NumberFormatException e) {
+                                    // Use default amount from configured item
+                                }
+                            }
+                        }
+                        return configuredItem;
+                    }
                 }
             }
+            
+            // 🎆 ENHANCED: Fallback to parameter-based configuration
+            com.megacreative.coding.values.DataValue materialParam = block.getParameter("material");
+            com.megacreative.coding.values.DataValue amountParam = block.getParameter("amount");
+            
+            if (materialParam != null && !materialParam.isEmpty()) {
+                try {
+                    org.bukkit.Material material = org.bukkit.Material.valueOf(materialParam.asString().toUpperCase());
+                    int amount = 1;
+                    if (amountParam != null && !amountParam.isEmpty()) {
+                        amount = Math.max(1, Math.min(64, Integer.parseInt(amountParam.asString())));
+                    }
+                    return new ItemStack(material, amount);
+                } catch (Exception e) {
+                    context.getPlugin().getLogger().warning("Invalid material or amount in GiveItemAction: " + e.getMessage());
+                }
+            }
+            
         } catch (Exception e) {
             context.getPlugin().getLogger().warning("Error getting item from container in GiveItemAction: " + e.getMessage());
         }

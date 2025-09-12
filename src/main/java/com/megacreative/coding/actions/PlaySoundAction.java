@@ -15,8 +15,8 @@ import org.bukkit.inventory.meta.ItemMeta;
 import java.util.function.Function;
 
 /**
- * Action for playing a sound to a player.
- * This action retrieves sound parameters from the container configuration and plays the sound.
+ * 🎆 ENHANCED: Action for playing sounds to players
+ * Supports both container-based configuration and parameter-based configuration
  */
 public class PlaySoundAction implements BlockAction {
 
@@ -28,45 +28,47 @@ public class PlaySoundAction implements BlockAction {
         }
 
         try {
-            // Get sound parameters from the container configuration
-            PlaySoundParams params = getSoundParamsFromContainer(block, context);
+            // Get sound parameters from configuration
+            SoundParams params = getSoundParamsFromContainer(block, context);
             
-            if (params.soundNameStr == null || params.soundNameStr.isEmpty()) {
+            if (params.soundStr == null || params.soundStr.isEmpty()) {
                 return ExecutionResult.error("Sound is not configured");
             }
 
-            // Resolve any placeholders in the parameters
+            // Resolve any placeholders in the sound name
             ParameterResolver resolver = new ParameterResolver(context);
-            DataValue soundNameVal = DataValue.of(params.soundNameStr);
-            DataValue resolvedSoundName = resolver.resolve(context, soundNameVal);
+            DataValue soundValue = DataValue.of(params.soundStr);
+            DataValue resolvedSound = resolver.resolve(context, soundValue);
             
-            // Parse parameters
-            String soundName = resolvedSoundName.asString();
-            float volume = params.volume;
-            float pitch = params.pitch;
-
-            // Parse the sound
-            Sound sound;
-            try {
-                sound = Sound.valueOf(soundName.toUpperCase());
-            } catch (IllegalArgumentException e) {
-                // Use default sound if parsing fails
-                sound = Sound.ENTITY_PLAYER_LEVELUP;
+            String soundName = resolvedSound.asString();
+            if (soundName == null || soundName.isEmpty()) {
+                return ExecutionResult.error("Invalid sound name");
             }
+
+            // Parse sound name
+            Sound sound = parseSound(soundName);
+            if (sound == null) {
+                return ExecutionResult.error("Unknown sound: " + soundName);
+            }
+
+            // Validate and constrain parameters
+            float volume = Math.max(0.0f, Math.min(1.0f, params.volume));
+            float pitch = Math.max(0.5f, Math.min(2.0f, params.pitch));
 
             // Play the sound
             player.playSound(player.getLocation(), sound, volume, pitch);
-            return ExecutionResult.success("Sound played successfully");
+            
+            return ExecutionResult.success("Sound '" + soundName + "' played successfully");
         } catch (Exception e) {
             return ExecutionResult.error("Failed to play sound: " + e.getMessage());
         }
     }
     
     /**
-     * Gets sound parameters from the container configuration
+     * 🎆 ENHANCED: Gets sound parameters from container configuration with fallbacks
      */
-    private PlaySoundParams getSoundParamsFromContainer(CodeBlock block, ExecutionContext context) {
-        PlaySoundParams params = new PlaySoundParams();
+    private SoundParams getSoundParamsFromContainer(CodeBlock block, ExecutionContext context) {
+        SoundParams params = new SoundParams();
         
         try {
             // Get the BlockConfigService to resolve slot names
@@ -76,43 +78,61 @@ public class PlaySoundAction implements BlockAction {
             Function<String, Integer> slotResolver = blockConfigService.getSlotResolver(block.getAction());
             
             if (slotResolver != null) {
-                // Get sound name from the sound slot
-                Integer soundSlot = slotResolver.apply("sound_slot");
+                // Get sound from the sound slot
+                Integer soundSlot = slotResolver.apply("sound");
                 if (soundSlot != null) {
                     ItemStack soundItem = block.getConfigItem(soundSlot);
                     if (soundItem != null && soundItem.hasItemMeta()) {
-                        // Extract sound name from item
-                        params.soundNameStr = getSoundNameFromItem(soundItem);
+                        params.soundStr = getSoundFromItem(soundItem);
                     }
                 }
                 
                 // Get volume from the volume slot
-                Integer volumeSlot = slotResolver.apply("volume_slot");
+                Integer volumeSlot = slotResolver.apply("volume");
                 if (volumeSlot != null) {
                     ItemStack volumeItem = block.getConfigItem(volumeSlot);
                     if (volumeItem != null && volumeItem.hasItemMeta()) {
-                        // Extract volume from item
-                        params.volume = getVolumeFromItem(volumeItem, 1.0f);
+                        params.volume = getFloatFromItem(volumeItem, 1.0f);
                     }
                 }
                 
                 // Get pitch from the pitch slot
-                Integer pitchSlot = slotResolver.apply("pitch_slot");
+                Integer pitchSlot = slotResolver.apply("pitch");
                 if (pitchSlot != null) {
                     ItemStack pitchItem = block.getConfigItem(pitchSlot);
                     if (pitchItem != null && pitchItem.hasItemMeta()) {
-                        // Extract pitch from item
-                        params.pitch = getPitchFromItem(pitchItem, 1.0f);
+                        params.pitch = getFloatFromItem(pitchItem, 1.0f);
                     }
                 }
             }
+            
+            // 🎆 ENHANCED: Fallback to parameter-based configuration
+            DataValue soundParam = block.getParameter("sound");
+            DataValue volumeParam = block.getParameter("volume");
+            DataValue pitchParam = block.getParameter("pitch");
+            
+            if (params.soundStr == null && soundParam != null && !soundParam.isEmpty()) {
+                params.soundStr = soundParam.asString();
+            }
+            
+            if (volumeParam != null && !volumeParam.isEmpty()) {
+                try {
+                    params.volume = Float.parseFloat(volumeParam.asString());
+                } catch (NumberFormatException e) {
+                    // Use default volume
+                }
+            }
+            
+            if (pitchParam != null && !pitchParam.isEmpty()) {
+                try {
+                    params.pitch = Float.parseFloat(pitchParam.asString());
+                } catch (NumberFormatException e) {
+                    // Use default pitch
+                }
+            }
+            
         } catch (Exception e) {
-            context.getPlugin().getLogger().warning("Error getting sound parameters from container in PlaySoundAction: " + e.getMessage());
-        }
-        
-        // Set defaults if not configured
-        if (params.soundNameStr == null || params.soundNameStr.isEmpty()) {
-            params.soundNameStr = "ENTITY_PLAYER_LEVELUP";
+            context.getPlugin().getLogger().warning("Error getting sound parameters from container: " + e.getMessage());
         }
         
         return params;
@@ -121,67 +141,95 @@ public class PlaySoundAction implements BlockAction {
     /**
      * Extracts sound name from an item
      */
-    private String getSoundNameFromItem(ItemStack item) {
+    private String getSoundFromItem(ItemStack item) {
         ItemMeta meta = item.getItemMeta();
         if (meta != null) {
             String displayName = meta.getDisplayName();
             if (displayName != null && !displayName.isEmpty()) {
                 // Remove color codes and return the sound name
-                return displayName.replaceAll("[§0-9]", "").trim();
+                return org.bukkit.ChatColor.stripColor(displayName).trim();
             }
         }
         return null;
     }
     
     /**
-     * Extracts volume from an item
+     * Extracts float value from an item
      */
-    private float getVolumeFromItem(ItemStack item, float defaultVolume) {
-        try {
-            ItemMeta meta = item.getItemMeta();
-            if (meta != null) {
-                String displayName = meta.getDisplayName();
-                if (displayName != null && !displayName.isEmpty()) {
-                    // Try to parse volume from display name
-                    String cleanName = displayName.replaceAll("[§0-9]", "").trim();
+    private float getFloatFromItem(ItemStack item, float defaultValue) {
+        ItemMeta meta = item.getItemMeta();
+        if (meta != null) {
+            String displayName = meta.getDisplayName();
+            if (displayName != null && !displayName.isEmpty()) {
+                try {
+                    String cleanName = org.bukkit.ChatColor.stripColor(displayName).trim();
                     return Float.parseFloat(cleanName);
+                } catch (NumberFormatException e) {
+                    // Use default value if parsing fails
                 }
             }
-            
-            // Fallback to item amount
-            return item.getAmount();
-        } catch (Exception e) {
-            return defaultVolume;
         }
+        return defaultValue;
     }
     
     /**
-     * Extracts pitch from an item
+     * 🎆 ENHANCED: Parse sound name with support for both enum names and namespaced keys
      */
-    private float getPitchFromItem(ItemStack item, float defaultPitch) {
+    private Sound parseSound(String soundName) {
+        if (soundName == null || soundName.isEmpty()) {
+            return null;
+        }
+        
         try {
-            ItemMeta meta = item.getItemMeta();
-            if (meta != null) {
-                String displayName = meta.getDisplayName();
-                if (displayName != null && !displayName.isEmpty()) {
-                    // Try to parse pitch from display name
-                    String cleanName = displayName.replaceAll("[§0-9]", "").trim();
-                    return Float.parseFloat(cleanName);
-                }
-            }
+            // Try parsing as direct enum name first
+            return Sound.valueOf(soundName.toUpperCase());
+        } catch (IllegalArgumentException e) {
+            // Try common variations and mappings
+            String upperName = soundName.toUpperCase().replace(".", "_").replace(":", "_");
             
-            // Fallback to item amount
-            return item.getAmount();
-        } catch (Exception e) {
-            return defaultPitch;
+            // Common sound mappings
+            switch (upperName) {
+                case "CLICK":
+                case "UI_CLICK":
+                    return Sound.UI_BUTTON_CLICK;
+                case "PLING":
+                case "NOTE":
+                    return Sound.BLOCK_NOTE_BLOCK_PLING;
+                case "POP":
+                    return Sound.ENTITY_ITEM_PICKUP;
+                case "LEVEL_UP":
+                    return Sound.ENTITY_PLAYER_LEVELUP;
+                case "SUCCESS":
+                    return Sound.ENTITY_EXPERIENCE_ORB_PICKUP;
+                case "ERROR":
+                case "FAIL":
+                    return Sound.BLOCK_NOTE_BLOCK_BASS;
+                case "AMBIENT_CAVE":
+                    return Sound.AMBIENT_CAVE;
+                default:
+                    // Try with common prefixes
+                    try {
+                        return Sound.valueOf("BLOCK_NOTE_BLOCK_" + upperName);
+                    } catch (IllegalArgumentException e2) {
+                        try {
+                            return Sound.valueOf("ENTITY_" + upperName);
+                        } catch (IllegalArgumentException e3) {
+                            try {
+                                return Sound.valueOf("UI_" + upperName);
+                            } catch (IllegalArgumentException e4) {
+                                return null;
+                            }
+                        }
+                    }
+            }
         }
     }
     
     /**
      * Helper class to hold sound parameters
      */
-    private static class PlaySoundParams {
-        String soundNameStr = "";
+    private static class SoundParams {
+        String soundStr = "";
         float volume = 1.0f;
         float pitch = 1.0f;
     }

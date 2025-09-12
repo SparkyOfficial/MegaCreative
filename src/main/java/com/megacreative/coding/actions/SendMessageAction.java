@@ -67,6 +67,13 @@ public class SendMessageAction implements BlockAction {
                     }
                 }
             }
+            
+            // 🎆 ENHANCED: Fallback to parameter-based configuration
+            DataValue messageParam = block.getParameter("message");
+            if (messageParam != null && !messageParam.isEmpty()) {
+                return messageParam.asString();
+            }
+            
         } catch (Exception e) {
             context.getPlugin().getLogger().warning("Error getting message from container in SendMessageAction: " + e.getMessage());
         }
