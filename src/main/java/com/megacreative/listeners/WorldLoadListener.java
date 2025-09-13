@@ -34,68 +34,165 @@ public class WorldLoadListener implements Listener {
 
     @EventHandler(priority = EventPriority.MONITOR)
     public void onWorldLoad(WorldLoadEvent event) {
+        if (event == null) return;
+        
         World world = event.getWorld();
-        // Check if this is a dev world (both old _dev and new -code suffixes)
-        if (world.getName().endsWith("_dev") || world.getName().endsWith("-code")) {
-            plugin.getLogger().info("Found dev world: " + world.getName() + ". Rehydrating code blocks...");
-            // Run asynchronously to avoid blocking the main thread during world loading
-            Bukkit.getScheduler().runTaskAsynchronously(plugin, () -> {
-                rehydrateWorld(world);
+        if (world == null) {
+            plugin.getLogger().warning("WorldLoadEvent received with null world!");
+            return;
+        }
+        
+        String worldName = world.getName();
+        if (worldName.endsWith("_dev") || worldName.endsWith("-code")) {
+            plugin.getLogger().info("Found dev world: " + worldName + ". Scheduling rehydration...");
+            
+            // Run on the next tick to ensure world is fully loaded
+            Bukkit.getScheduler().runTask(plugin, () -> {
+                try {
+                    rehydrateWorld(world);
+                } catch (Exception e) {
+                    plugin.getLogger().log(Level.SEVERE, "Error during world rehydration for " + worldName, e);
+                }
             });
         }
     }
 
     private void rehydrateWorld(World world) {
+        if (world == null) {
+            plugin.getLogger().warning("Attempted to rehydrate null world!");
+            return;
+        }
+
+        plugin.getLogger().info("Starting rehydration for world: " + world.getName());
+        
         BlockPlacementHandler placementHandler = plugin.getBlockPlacementHandler();
-        AutoConnectionManager connectionManager = plugin.getServiceRegistry().getAutoConnectionManager();
-        BlockConfigService configService = plugin.getServiceRegistry().getBlockConfigService();
+        if (placementHandler == null) {
+            plugin.getLogger().severe("BlockPlacementHandler is not initialized!");
+            return;
+        }
+
+        ServiceRegistry serviceRegistry = plugin.getServiceRegistry();
+        if (serviceRegistry == null) {
+            plugin.getLogger().severe("ServiceRegistry is not initialized!");
+            return;
+        }
+
+        AutoConnectionManager connectionManager = serviceRegistry.getAutoConnectionManager();
+        BlockConfigService configService = serviceRegistry.getBlockConfigService();
+        
+        if (connectionManager == null || configService == null) {
+            plugin.getLogger().severe("Required services are not initialized!");
+            return;
+        }
+
         int blockCount = 0;
+        long startTime = System.currentTimeMillis();
 
         try {
-            // Iterate through all loaded chunks in the world
-            for (Chunk chunk : world.getLoadedChunks()) {
-                // Check all block states (tile entities) in the chunk - this is much more efficient
-                for (BlockState tileEntity : chunk.getTileEntities()) {
-                    // Look for signs that might be code block signs
-                    if (tileEntity instanceof Sign) {
-                        Sign sign = (Sign) tileEntity;
-                        // Check if this is a code sign
-                        if (isCodeSign(sign)) {
-                            Block codeBlock = findAssociatedCodeBlock(sign);
-                            if (codeBlock != null && (configService.isCodeBlock(codeBlock.getType()) || 
-                                    codeBlock.getType() == Material.PISTON || codeBlock.getType() == Material.STICKY_PISTON)) {
-                                // Recreate the CodeBlock object for this physical block
-                                placementHandler.recreateCodeBlockFromExisting(codeBlock, sign);
-                                
-                                // Add to AutoConnectionManager tracking
-                                CodeBlock recreatedBlock = placementHandler.getCodeBlock(codeBlock.getLocation());
-                                if (recreatedBlock != null) {
-                                    connectionManager.addCodeBlock(codeBlock.getLocation(), recreatedBlock);
-                                    blockCount++;
-                                }
+            // Get all loaded chunks
+            Chunk[] chunks = world.getLoadedChunks();
+            if (chunks == null || chunks.length == 0) {
+                plugin.getLogger().info("No chunks to process in world: " + world.getName());
+                return;
+            }
+            
+            plugin.getLogger().info("Processing " + chunks.length + " chunks in world: " + world.getName());
+            
+            // Process each chunk
+            for (Chunk chunk : chunks) {
+                if (chunk == null) continue;
+                
+                try {
+                    BlockState[] tileEntities = chunk.getTileEntities();
+                    if (tileEntities == null || tileEntities.length == 0) continue;
+                    
+                    for (BlockState tileEntity : tileEntities) {
+                        if (tileEntity instanceof Sign) {
+                            processSignTileEntity((Sign) tileEntity, placementHandler, connectionManager, configService);
+                            blockCount++;
+                            
+                            // Small delay every 10 blocks to prevent server lag
+                            if (blockCount % 10 == 0) {
+                                Thread.sleep(1);
                             }
                         }
                     }
+                } catch (Exception e) {
+                    plugin.getLogger().log(Level.WARNING, "Error processing chunk at " + chunk.getX() + "," + chunk.getZ(), e);
                 }
             }
 
-            // After all blocks are loaded, rebuild connections between them
-            // Make variables effectively final for lambda expression
-            final AutoConnectionManager finalConnectionManager = connectionManager;
-            final World finalWorld = world;
-            final int finalBlockCount = blockCount;
-            Bukkit.getScheduler().runTask(plugin, () -> {
-                finalConnectionManager.rebuildWorldConnections(finalWorld);
-                plugin.getLogger().info("Rehydration complete. Loaded " + finalBlockCount + " code blocks for world " + finalWorld.getName());
-                
-                // 🔧 FIX: Synchronize with BlockPlacementHandler after rehydration
-                placementHandler.synchronizeWithAutoConnection();
-            });
+            // Rebuild connections between blocks
+            plugin.getLogger().info("Rebuilding connections for " + blockCount + " code blocks...");
+            connectionManager.rebuildWorldConnections(world);
+            
+            // Synchronize with BlockPlacementHandler after rehydration
+            placementHandler.synchronizeWithAutoConnection();
+            
+            long duration = System.currentTimeMillis() - startTime;
+            plugin.getLogger().info(String.format(
+                "Rehydration complete for %s. Processed %d code blocks in %.2f seconds",
+                world.getName(),
+                blockCount,
+                duration / 1000.0
+            ));
+            
         } catch (Exception e) {
-            plugin.getLogger().log(Level.SEVERE, "Error during world rehydration for " + world.getName(), e);
+            plugin.getLogger().log(Level.SEVERE, "Critical error during world rehydration for " + world.getName(), e);
         }
     }
 
+    /**
+     * Processes a sign tile entity to check if it's part of a code block
+     */
+    private void processSignTileEntity(Sign sign, 
+                                     BlockPlacementHandler placementHandler,
+                                     AutoConnectionManager connectionManager,
+                                     BlockConfigService configService) {
+        if (sign == null || placementHandler == null || connectionManager == null || configService == null) {
+            return;
+        }
+
+        try {
+            if (!isCodeSign(sign)) {
+                return;
+            }
+
+            Block codeBlock = findAssociatedCodeBlock(sign);
+            if (codeBlock == null) {
+                return;
+            }
+
+            Material blockType = codeBlock.getType();
+            if (!configService.isCodeBlock(blockType) && 
+                blockType != Material.PISTON && 
+                blockType != Material.STICKY_PISTON) {
+                return;
+            }
+
+            // Recreate the CodeBlock object for this physical block
+            placementHandler.recreateCodeBlockFromExisting(codeBlock, sign);
+            
+            // Add to AutoConnectionManager tracking
+            CodeBlock recreatedBlock = placementHandler.getCodeBlock(codeBlock.getLocation());
+            if (recreatedBlock != null) {
+                connectionManager.addCodeBlock(codeBlock.getLocation(), recreatedBlock);
+            }
+        } catch (Exception e) {
+            Location loc = sign != null ? sign.getLocation() : null;
+            plugin.getLogger().log(Level.WARNING, 
+                String.format("Error processing sign at %s: %s", 
+                    loc != null ? loc.toString() : "unknown location",
+                    e.getMessage()
+                ), 
+                e
+            );
+        }
+    }
+
+    /**
+     * Checks if a sign is part of a code block by examining its text
+     */
     private boolean isCodeSign(Sign sign) {
         // Check if this is a code sign by looking for our special markers
         String[] lines = sign.getLines();
