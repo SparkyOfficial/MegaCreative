@@ -49,23 +49,23 @@ public class HasItemConditionTest {
     public void setUp() {
         condition = new HasItemCondition();
         
-        when(context.getPlayer()).thenReturn(player);
-        when(context.getPlugin()).thenReturn(plugin);
-        when(plugin.getServiceRegistry()).thenReturn(serviceRegistry);
-        when(serviceRegistry.getBlockConfigService()).thenReturn(blockConfigService);
-        when(player.getInventory()).thenReturn(inventory);
+        lenient().when(context.getPlayer()).thenReturn(player);
+        lenient().when(context.getPlugin()).thenReturn(plugin);
+        lenient().when(plugin.getServiceRegistry()).thenReturn(serviceRegistry);
+        lenient().when(serviceRegistry.getBlockConfigService()).thenReturn(blockConfigService);
+        lenient().when(player.getInventory()).thenReturn(inventory);
     }
 
     @Test
     public void testEvaluateWithNullPlayer() {
-        when(context.getPlayer()).thenReturn(null);
+        lenient().when(context.getPlayer()).thenReturn(null);
         boolean result = condition.evaluate(block, context);
         assertFalse(result);
     }
 
     @Test
     public void testEvaluateWithNoSlotResolver() {
-        when(blockConfigService.getSlotResolver(anyString())).thenReturn(null);
+        lenient().when(blockConfigService.getSlotResolver(anyString())).thenReturn(null);
         boolean result = condition.evaluate(block, context);
         assertFalse(result);
     }
@@ -73,9 +73,9 @@ public class HasItemConditionTest {
     @Test
     public void testEvaluateWithNullItem() {
         Function<String, Integer> slotResolver = mock(Function.class);
-        when(blockConfigService.getSlotResolver(anyString())).thenReturn(slotResolver);
-        when(slotResolver.apply("item_slot")).thenReturn(0);
-        when(block.getConfigItem(0)).thenReturn(null);
+        lenient().when(blockConfigService.getSlotResolver(anyString())).thenReturn(slotResolver);
+        lenient().when(slotResolver.apply("item_slot")).thenReturn(0);
+        lenient().when(block.getConfigItem(0)).thenReturn(null);
         
         boolean result = condition.evaluate(block, context);
         assertFalse(result);

@@ -14,7 +14,7 @@ import java.util.UUID;
 import java.util.logging.Logger;
 
 import static org.junit.jupiter.api.Assertions.*;
-import static org.mockito.Mockito.when;
+import static org.mockito.Mockito.*;
 
 @ExtendWith(MockitoExtension.class)
 public class SimpleVariableManagerTest {
@@ -33,8 +33,8 @@ public class SimpleVariableManagerTest {
         when(mockPlugin.getLogger()).thenReturn(Logger.getLogger("test"));
         // Mock getDataFolder to avoid NPE
         when(mockPlugin.getDataFolder()).thenReturn(new File("test-data"));
-        // Mock getServer
-        when(mockPlugin.getServer()).thenReturn(mockServer);
+        // Mock getServer (make it lenient since not all tests use it)
+        lenient().when(mockPlugin.getServer()).thenReturn(mockServer);
         
         // Create the variable manager
         variableManager = new VariableManager(mockPlugin);

@@ -1,0 +1,25 @@
+worldData: |-
+  {
+    "id": "test-world-id",
+    "name": null,
+    "description": null,
+    "ownerId": null,
+    "ownerName": null,
+    "worldType": null,
+    "mode": null,
+    "isPrivate": false,
+    "createdTime": 0,
+    "lastActivity": 0,
+    "flags": null,
+    "trustedBuilders": [],
+    "trustedCoders": [],
+    "likes": 0,
+    "dislikes": 0,
+    "likedBy": [],
+    "dislikedBy": [],
+    "favoriteBy": [],
+    "comments": [],
+    "scripts": [],
+    "pairedWorldId": null,
+    "dualMode": null
+  }

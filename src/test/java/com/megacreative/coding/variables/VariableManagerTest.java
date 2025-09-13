@@ -15,7 +15,7 @@ import java.util.UUID;
 import java.util.logging.Logger;
 
 import static org.junit.jupiter.api.Assertions.*;
-import static org.mockito.Mockito.when;
+import static org.mockito.Mockito.*;
 
 @ExtendWith(MockitoExtension.class)
 public class VariableManagerTest {
@@ -33,7 +33,8 @@ public class VariableManagerTest {
         // Setup plugin mock
         when(plugin.getLogger()).thenReturn(Logger.getLogger("test"));
         when(plugin.getDataFolder()).thenReturn(new File("test-data"));
-        when(plugin.getServer()).thenReturn(server);
+        // Make this lenient since not all tests use it
+        lenient().when(plugin.getServer()).thenReturn(server);
         
         // Create test data directory if it doesn't exist
         File testDataDir = new File("test-data");
@@ -140,7 +141,7 @@ public class VariableManagerTest {
         variableManager.setGlobalVariable(varName, value);
         
         // Test getting variable metadata
-        IVariableManager.VariableMetadata metadata = variableManager.getVariableMetadata(varName);
+        IVariableManager.VariableMetadata metadata = variableManager.getVariableMetadata("global_" + varName);
         assertNotNull(metadata);
         assertEquals(IVariableManager.VariableScope.GLOBAL, metadata.getScope());
         assertEquals(com.megacreative.coding.values.ValueType.NUMBER, metadata.getType());

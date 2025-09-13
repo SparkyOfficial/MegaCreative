@@ -172,6 +172,11 @@ public class CodeCompiler {
                 Location checkLocation = new Location(world, x, y, z);
                 Block block = checkLocation.getBlock();
                 
+                // 🔧 FIX: Add null check for block
+                if (block == null) {
+                    continue;
+                }
+                
                 // Check if this is a code block material
                 if (blockConfigService.isCodeBlock(block.getType())) {
                     // Try to get existing CodeBlock or create new one
@@ -237,6 +242,11 @@ public class CodeCompiler {
      * Implements reference system-style: compilation from world with full structure scanning
      */
     private CodeBlock createCodeBlockFromPhysicalBlock(Block block) {
+        // 🔧 FIX: Add null check for block
+        if (block == null) {
+            return null;
+        }
+        
         Material material = block.getType();
         String action = "NOT_SET"; // Default to not set
         
@@ -260,6 +270,11 @@ public class CodeCompiler {
      * Creates a bracket CodeBlock from a physical piston block
      */
     private CodeBlock createBracketBlockFromPhysicalBlock(Block block) {
+        // 🔧 FIX: Add null check for block
+        if (block == null) {
+            return null;
+        }
+        
         Material material = block.getType();
         
         // Create the CodeBlock for bracket
@@ -271,6 +286,10 @@ public class CodeCompiler {
         
         for (BlockFace face : faces) {
             Block adjacentBlock = block.getRelative(face);
+            // 🔧 FIX: Add null check for adjacentBlock
+            if (adjacentBlock == null) {
+                continue;
+            }
             if (adjacentBlock.getState() instanceof Sign) {
                 Sign sign = (Sign) adjacentBlock.getState();
                 String[] lines = sign.getLines();
@@ -350,6 +369,11 @@ public class CodeCompiler {
                         Location checkLocation = new Location(world, x, y, z);
                         Block block = checkLocation.getBlock();
                         
+                        // 🔧 FIX: Add null check for block
+                        if (block == null) {
+                            continue;
+                        }
+                        
                         blocksScanned++;
                         
                         // Identify code blocks by their material
@@ -414,6 +438,11 @@ public class CodeCompiler {
         // Look for signs adjacent to the block
         Block block = blockLocation.getBlock();
         
+        // 🔧 FIX: Add null check for block
+        if (block == null) {
+            return null;
+        }
+        
         // Check all adjacent faces for signs
         org.bukkit.block.BlockFace[] faces = {
             org.bukkit.block.BlockFace.NORTH,
@@ -424,6 +453,10 @@ public class CodeCompiler {
         
         for (org.bukkit.block.BlockFace face : faces) {
             Block adjacentBlock = block.getRelative(face);
+            // 🔧 FIX: Add null check for adjacentBlock
+            if (adjacentBlock == null) {
+                continue;
+            }
             if (adjacentBlock.getState() instanceof Sign) {
                 Sign sign = (Sign) adjacentBlock.getState();
                 String[] lines = sign.getLines();
@@ -522,6 +555,11 @@ public class CodeCompiler {
         Location containerLocation = blockLocation.clone().add(0, 1, 0);
         Block containerBlock = containerLocation.getBlock();
         
+        // 🔧 FIX: Add null check for containerBlock
+        if (containerBlock == null) {
+            return;
+        }
+        
         if (containerBlock.getState() instanceof Container) {
             Container container = (Container) containerBlock.getState();
             Inventory inventory = container.getInventory();
@@ -532,8 +570,11 @@ public class CodeCompiler {
             logger.fine("Found container with parameters for block at " + blockLocation);
             
             // Add visual feedback for parameter reading
-            containerLocation.getWorld().spawnParticle(org.bukkit.Particle.ENCHANTMENT_TABLE, 
-                containerLocation.add(0.5, 0.5, 0.5), 5, 0.3, 0.3, 0.3, 1.0);
+            // 🔧 FIX: Add null check for world
+            if (containerLocation.getWorld() != null) {
+                containerLocation.getWorld().spawnParticle(org.bukkit.Particle.ENCHANTMENT_TABLE, 
+                    containerLocation.add(0.5, 0.5, 0.5), 5, 0.3, 0.3, 0.3, 1.0);
+            }
         }
     }
 

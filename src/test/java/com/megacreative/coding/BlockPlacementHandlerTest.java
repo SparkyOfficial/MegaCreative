@@ -16,8 +16,7 @@ import org.junit.jupiter.api.Test;
 import org.mockito.Mock;
 import org.mockito.MockitoAnnotations;
 
-import static org.junit.jupiter.api.Assertions.assertFalse;
-import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.Mockito.*;
 
 class BlockPlacementHandlerTest {
@@ -51,63 +50,64 @@ class BlockPlacementHandlerTest {
         
         // Mock ServiceRegistry and its dependencies
         ServiceRegistry serviceRegistry = mock(ServiceRegistry.class);
-        when(plugin.getServiceRegistry()).thenReturn(serviceRegistry);
-        when(serviceRegistry.getBlockConfigService()).thenReturn(blockConfigService);
-        when(serviceRegistry.getTrustedPlayerManager()).thenReturn(trustedPlayerManager);
+        lenient().when(plugin.getServiceRegistry()).thenReturn(serviceRegistry);
+        lenient().when(serviceRegistry.getBlockConfigService()).thenReturn(blockConfigService);
+        lenient().when(serviceRegistry.getTrustedPlayerManager()).thenReturn(trustedPlayerManager);
         
         // Initialize handler after mocks are set up
         handler = new BlockPlacementHandler(plugin);
         
         // Mock player and world
-        when(player.getWorld()).thenReturn(world);
-        when(world.getName()).thenReturn("megacreative_123456_dev");
-        when(block.getType()).thenReturn(Material.DIAMOND_BLOCK);
-        when(block.getLocation()).thenReturn(location);
+        lenient().when(player.getWorld()).thenReturn(world);
+        lenient().when(world.getName()).thenReturn("megacreative_123456_dev");
+        lenient().when(block.getType()).thenReturn(Material.DIAMOND_BLOCK);
+        lenient().when(block.getLocation()).thenReturn(location);
     }
 
     @Test
     void testIsInDevWorld() {
         // Test with dev world name
-        when(world.getName()).thenReturn("megacreative_123456_dev");
+        lenient().when(world.getName()).thenReturn("megacreative_123456_dev");
         assertTrue(handler.isInDevWorld(player));
         
         // Test with non-dev world name that contains "dev" but not at the end
-        when(world.getName()).thenReturn("megacreative_dev_test");
+        lenient().when(world.getName()).thenReturn("megacreative_dev_test");
         assertTrue(handler.isInDevWorld(player)); // This will be true because it contains "dev"
         
         // Test with non-dev world name that contains "creative"
-        when(world.getName()).thenReturn("megacreative_123456");
+        lenient().when(world.getName()).thenReturn("megacreative_123456");
         assertTrue(handler.isInDevWorld(player)); // This will be true because it contains "creative"
         
         // Test with another non-dev world name
-        when(world.getName()).thenReturn("normal_world");
+        lenient().when(world.getName()).thenReturn("normal_world");
         assertFalse(handler.isInDevWorld(player));
         
         // Test with a world name that contains "dev" in a different context
-        when(world.getName()).thenReturn("development_world");
+        lenient().when(world.getName()).thenReturn("development_world");
         assertTrue(handler.isInDevWorld(player)); // This will be true because it contains "dev"
     }
 
     @Test
     void testOnBlockPlaceWithCodeBlock() {
         // Test block placement in dev world with code block
-        when(blockConfigService.isCodeBlock(Material.DIAMOND_BLOCK)).thenReturn(true);
-        when(trustedPlayerManager.canCodeInDevWorld(player)).thenReturn(true);
-        when(blockConfigService.getBlockConfig("onJoin")).thenReturn(mock(BlockConfigService.BlockConfig.class));
-        when(blockConfigService.getFirstBlockConfig(Material.DIAMOND_BLOCK)).thenReturn(mock(BlockConfigService.BlockConfig.class));
+        lenient().when(blockConfigService.isCodeBlock(Material.DIAMOND_BLOCK)).thenReturn(true);
+        lenient().when(trustedPlayerManager.canCodeInDevWorld(player)).thenReturn(true);
+        lenient().when(blockConfigService.getBlockConfig("onJoin")).thenReturn(mock(BlockConfigService.BlockConfig.class));
+        lenient().when(blockConfigService.getFirstBlockConfig(Material.DIAMOND_BLOCK)).thenReturn(mock(BlockConfigService.BlockConfig.class));
         
         BlockPlaceEvent event = new BlockPlaceEvent(block, null, null, null, player, true, null);
         
         // This test is more about verifying the method doesn't throw exceptions
         // Since we're using mocks, we can't fully test the event handling
         // In a real scenario, we would need more complex mocking
+        assertDoesNotThrow(() -> handler.onBlockPlace(event));
     }
 
     @Test
     void testOnBlockPlaceWithNonCodeBlock() {
         // Test block placement in dev world with non-code block
-        when(blockConfigService.isCodeBlock(Material.STONE)).thenReturn(false);
-        when(block.getType()).thenReturn(Material.STONE);
+        lenient().when(blockConfigService.isCodeBlock(Material.STONE)).thenReturn(false);
+        lenient().when(block.getType()).thenReturn(Material.STONE);
         
         BlockPlaceEvent event = new BlockPlaceEvent(block, null, null, null, player, true, null);
         
