@@ -27,6 +27,7 @@ import java.util.*;
  * - Optimized for quick action discovery
  * 
  * Opens when a player clicks on a code block without an assigned action.
+ * Реализует Creative+-стиль: универсальные блоки с настройкой через GUI
  */
 public class ActionSelectionGUI implements GUIManager.ManagedGUIInterface {
     
@@ -83,6 +84,9 @@ public class ActionSelectionGUI implements GUIManager.ManagedGUIInterface {
         infoLore.add("");
         infoLore.add("§aКликните на действие чтобы");
         infoLore.add("§aназначить его блоку");
+        infoLore.add("");
+        infoLore.add("§f✨ FrameLand-стиль: универсальные блоки");
+        infoLore.add("§fс настройкой через GUI");
         infoMeta.setLore(infoLore);
         infoItem.setItemMeta(infoMeta);
         inventory.setItem(4, infoItem);
@@ -141,6 +145,7 @@ public class ActionSelectionGUI implements GUIManager.ManagedGUIInterface {
     
     /**
      * 🎆 ENHANCED: Categorize actions for better organization
+     * Реализует FrameLand-стиль: универсальные блоки с настройкой через GUI
      */
     private Map<String, List<String>> categorizeActions(List<String> actions) {
         Map<String, List<String>> categories = new LinkedHashMap<>();
@@ -155,6 +160,7 @@ public class ActionSelectionGUI implements GUIManager.ManagedGUIInterface {
     
     /**
      * 🎆 ENHANCED: Get category for an action
+     * Реализует FrameLand-стиль: универсальные блоки с настройкой через GUI
      */
     private String getActionCategory(String actionId) {
         switch (actionId.toLowerCase()) {
@@ -202,6 +208,17 @@ public class ActionSelectionGUI implements GUIManager.ManagedGUIInterface {
             case "randomnumber":
                 return "🔄 Логика и управление";
             
+            case "spawnentity":
+            case "spawnmob":
+                return "🧟 Существа";
+            
+            case "healplayer":
+            case "setgamemode":
+                return "🎮 Игрок";
+            
+            case "explosion":
+                return "💥 Разрушение";
+            
             default:
                 return "🔧 Основные";
         }
@@ -209,6 +226,7 @@ public class ActionSelectionGUI implements GUIManager.ManagedGUIInterface {
     
     /**
      * 🎆 ENHANCED: Create category header item
+     * Реализует FrameLand-стиль: универсальные блоки с настройкой через GUI
      */
     private ItemStack createCategoryItem(String categoryName, int actionCount) {
         ItemStack item = new ItemStack(Material.ORANGE_STAINED_GLASS_PANE);
@@ -219,12 +237,18 @@ public class ActionSelectionGUI implements GUIManager.ManagedGUIInterface {
         List<String> lore = new ArrayList<>();
         lore.add("§7Доступно действий: " + actionCount);
         lore.add("§8Категория");
+        lore.add("");
+        lore.add("§f✨ FrameLand-стиль: универсальные блоки");
         meta.setLore(lore);
         
         item.setItemMeta(meta);
         return item;
     }
     
+    /**
+     * 🎆 ENHANCED: Create action item
+     * Реализует FrameLand-стиль: универсальные блоки с настройкой через GUI
+     */
     private ItemStack createActionItem(String actionId, String category) {
         // Create appropriate material for action type
         Material material = getActionMaterial(actionId);
@@ -242,6 +266,8 @@ public class ActionSelectionGUI implements GUIManager.ManagedGUIInterface {
         lore.add("");
         lore.add("§e⚡ Кликните чтобы выбрать");
         lore.add("§8ID: " + actionId);
+        lore.add("");
+        lore.add("§f✨ FrameLand-стиль: универсальные блоки");
         meta.setLore(lore);
         
         item.setItemMeta(meta);
@@ -304,6 +330,8 @@ public class ActionSelectionGUI implements GUIManager.ManagedGUIInterface {
                 return Material.HOPPER;
             case "randomnumber":
                 return Material.SLIME_BALL;
+            case "asyncloop":
+                return Material.REPEATER;
             default:
                 return Material.STONE;
         }
@@ -346,6 +374,7 @@ public class ActionSelectionGUI implements GUIManager.ManagedGUIInterface {
             case "setblock": return "Установить блок";
             case "wait": return "Ожидание";
             case "randomnumber": return "Случайное число";
+            case "asyncloop": return "Асинхронный цикл";
             default: return actionId;
         }
     }
@@ -387,12 +416,14 @@ public class ActionSelectionGUI implements GUIManager.ManagedGUIInterface {
             case "setblock": return "Устанавливает блок";
             case "wait": return "Задержка выполнения";
             case "randomnumber": return "Генерирует случайное число";
+            case "asyncloop": return "Повторяет действие асинхронно";
             default: return "Действие " + actionId;
         }
     }
     
     /**
      * Opens the GUI for the player
+     * Реализует FrameLand-стиль: универсальные блоки с настройкой через GUI
      */
     public void open() {
         guiManager.registerGUI(player, this, inventory);
@@ -400,6 +431,10 @@ public class ActionSelectionGUI implements GUIManager.ManagedGUIInterface {
         
         // Аудио обратная связь при открытии GUI
         player.playSound(player.getLocation(), org.bukkit.Sound.UI_BUTTON_CLICK, 0.7f, 1.2f);
+        
+        // Add visual effects for FrameLand-style magic
+        player.spawnParticle(org.bukkit.Particle.ENCHANTMENT_TABLE, 
+            player.getLocation().add(0, 1, 0), 10, 0.5, 0.5, 0.5, 1);
     }
     
     @Override
@@ -447,6 +482,10 @@ public class ActionSelectionGUI implements GUIManager.ManagedGUIInterface {
         }
     }
     
+    /**
+     * 🎆 ENHANCED: Select action for the block
+     * Реализует FrameLand-стиль: универсальные блоки с настройкой через GUI
+     */
     private void selectAction(String actionId) {
         // Get the code block
         BlockPlacementHandler placementHandler = plugin.getBlockPlacementHandler();
@@ -474,11 +513,13 @@ public class ActionSelectionGUI implements GUIManager.ManagedGUIInterface {
         player.sendMessage("§a✓ Действие '" + getActionDisplayName(actionId) + "' установлено!");
         player.sendMessage("§eКликните снова по блоку для настройки параметров.");
         
+        // Add visual feedback for FrameLand-style magic
+        player.spawnParticle(org.bukkit.Particle.VILLAGER_HAPPY, 
+            player.getLocation().add(0, 1, 0), 15, 0.5, 0.5, 0.5, 1);
+        player.playSound(player.getLocation(), org.bukkit.Sound.ENTITY_EXPERIENCE_ORB_PICKUP, 1.0f, 1.2f);
+        
         // Close this GUI
         player.closeInventory();
-        
-        // Play sound feedback
-        player.playSound(player.getLocation(), org.bukkit.Sound.ENTITY_EXPERIENCE_ORB_PICKUP, 1.0f, 1.2f);
     }
     
     @Override

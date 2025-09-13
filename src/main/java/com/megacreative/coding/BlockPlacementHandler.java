@@ -6,12 +6,12 @@ import com.megacreative.interfaces.ITrustedPlayerManager;
 import com.megacreative.services.BlockConfigService;
 import com.megacreative.gui.coding.ActionParameterGUI;
 import com.megacreative.gui.coding.ActionSelectionGUI;
-import com.megacreative.coding.values.DataValue; // 🔧 FIX: Add correct import
-import com.megacreative.coding.values.types.AnyValue; // 🔧 FIX: Add correct import
-import com.megacreative.coding.values.types.TextValue; // 🔧 FIX: Add correct import
-import com.megacreative.coding.values.types.NumberValue; // 🔧 FIX: Add correct import
-import com.megacreative.coding.values.types.BooleanValue; // 🔧 FIX: Add correct import
-import com.megacreative.coding.values.types.ListValue; // 🔧 FIX: Add correct import
+import com.megacreative.coding.values.DataValue;
+import com.megacreative.coding.values.types.AnyValue;
+import com.megacreative.coding.values.types.TextValue;
+import com.megacreative.coding.values.types.NumberValue;
+import com.megacreative.coding.values.types.BooleanValue;
+import com.megacreative.coding.values.types.ListValue;
 import org.bukkit.Material;
 import java.util.logging.Logger;
 import org.bukkit.block.Block;
@@ -32,10 +32,11 @@ import org.bukkit.World;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.UUID;
-import java.util.List; // 🔧 FIX: Add missing import
+import java.util.List;
 
 /**
  * Обрабатывает размещение и взаимодействие с блоками кодирования
+ * Реализует FrameLand-стиль: универсальные блоки с настройкой через GUI
  */
 public class BlockPlacementHandler implements Listener {
     private static final Logger log = Logger.getLogger(BlockPlacementHandler.class.getName());
@@ -69,6 +70,7 @@ public class BlockPlacementHandler implements Listener {
 
     /**
      * Обрабатывает размещение блоков кодирования
+     * Реализует FrameLand-стиль: универсальные блоки с настройкой через GUI
      */
     @EventHandler(priority = EventPriority.HIGH) // Run before AutoConnectionManager (MONITOR)
     public void onBlockPlace(BlockPlaceEvent event) {
@@ -81,33 +83,28 @@ public class BlockPlacementHandler implements Listener {
         // Only process in dev worlds
         if (!isInDevWorld(player)) return;
         
-        // Проверяем, что это специальный предмет кодирования
-        if (!itemInHand.hasItemMeta() || !itemInHand.getItemMeta().hasDisplayName()) {
-            // Если это не специальный предмет, возможно, это обычный блок - его нужно запретить
-            if (!blockConfigService.isCodeBlock(block.getType())) {
-                // Особая обработка для поршней (скобок) - они могут не иметь конфига
-                if (block.getType() == Material.PISTON || block.getType() == Material.STICKY_PISTON) {
-                    CodeBlock newCodeBlock = new CodeBlock(block.getType(), "BRACKET"); // Уникальный ID для скобок
-                    newCodeBlock.setBracketType(CodeBlock.BracketType.OPEN); // По умолчанию открывающая
-                    setPistonDirection(block, CodeBlock.BracketType.OPEN); // Задать направление
-                    updateBracketSign(block.getLocation(), CodeBlock.BracketType.OPEN); // Повесить табличку
-                    blockCodeBlocks.put(block.getLocation(), newCodeBlock);
-                    
-                    player.sendMessage("§a✓ Скобка размещена: " + CodeBlock.BracketType.OPEN.getDisplayName());
-                    player.sendMessage("§7Кликните правой кнопкой для смены типа");
-                    return; // Завершаем обработку
-                }
-                return; // Это обычный блок, не кодовый
+        // Проверяем, что это универсальный блок для кодирования
+        if (!blockConfigService.isCodeBlock(block.getType())) {
+            // Особая обработка для поршней (скобок) - они могут не иметь конфига
+            if (block.getType() == Material.PISTON || block.getType() == Material.STICKY_PISTON) {
+                CodeBlock newCodeBlock = new CodeBlock(block.getType(), "BRACKET"); // Уникальный ID для скобок
+                newCodeBlock.setBracketType(CodeBlock.BracketType.OPEN); // По умолчанию открывающая
+                setPistonDirection(block, CodeBlock.BracketType.OPEN); // Задать направление
+                updateBracketSign(block.getLocation(), CodeBlock.BracketType.OPEN); // Повесить табличку
+                blockCodeBlocks.put(block.getLocation(), newCodeBlock);
+                
+                player.sendMessage("§a✓ Скобка размещена: " + CodeBlock.BracketType.OPEN.getDisplayName());
+                player.sendMessage("§7Кликните правой кнопкой для смены типа");
+                return; // Завершаем обработку
             }
+            return; // Это обычный блок, не кодовый
         }
         
-        // Получаем конфиг блока из предмета в руке
-        String displayName = org.bukkit.ChatColor.stripColor(itemInHand.getItemMeta().getDisplayName());
-        BlockConfigService.BlockConfig config = blockConfigService.getBlockConfigByDisplayName(displayName);
+        // Получаем конфиг блока из материала блока
+        BlockConfigService.BlockConfig config = blockConfigService.getBlockConfigByMaterial(block.getType());
         
         if (config == null) {
             // Это не кодовый блок, запрещаем установку
-            // event.setCancelled(true); // УБИРАЕМ ОТМЕНУ СОБЫТИЯ
             player.sendMessage("§cВы можете размещать только специальные блоки для кодирования!");
             return;
         }
@@ -119,16 +116,13 @@ public class BlockPlacementHandler implements Listener {
         // 1. Проверяем, является ли блок "конструктором"
         if (config.isConstructor()) {
             // 2. НЕ отменяем стандартное размещение блока, позволяем ему установиться
-            // event.setCancelled(true); // УБИРАЕМ ОТМЕНУ СОБЫТИЯ
             
-            // 3. Размещаем блок программно (без вызова события) - НЕ НУЖНО, ПОЗВОЛЯЕМ СОБЫТИЮ ЗАВЕРШИТЬСЯ
-            
-            // 4. Вызываем метод для постройки структуры на следующий тик
+            // 3. Вызываем метод для постройки структуры на следующий тик
             // Запланируем создание структуры на следующий тик, чтобы событие BlockPlaceEvent полностью завершилось
             org.bukkit.Bukkit.getScheduler().runTask(plugin, () -> {
                 buildStructureFor(event, config);
                 
-                // 5. Визуальная и аудио обратная связь
+                // 4. Визуальная и аудио обратная связь
                 player.spawnParticle(org.bukkit.Particle.VILLAGER_HAPPY, block.getLocation().add(0.5, 1.0, 0.5), 5, 0.2, 0.2, 0.2, 0.1);
                 player.playSound(block.getLocation(), org.bukkit.Sound.BLOCK_NOTE_BLOCK_PLING, 0.8f, 1.5f);
                 
@@ -139,14 +133,9 @@ public class BlockPlacementHandler implements Listener {
             return; // Завершаем обработку, чтобы не создавать блок дважды
         }
         
-        // Для обычных блоков продолжаем стандартную логику
-        // Создаем CodeBlock с ID из конфига
-        String actionId = config.getId();
-        
-        // 🔧 FIX: Use default action if available for immediate functionality
-        if (config.getDefaultAction() != null) {
-            actionId = config.getDefaultAction();
-        }
+        // Для обычных блоков создаем "пустой" блок, который будет настроен через GUI
+        // Создаем CodeBlock с ID из конфига, но без действия (пустой блок)
+        String actionId = "NOT_SET"; // Пустой блок без действия
         
         CodeBlock newCodeBlock = new CodeBlock(block.getType(), actionId);
         
@@ -160,7 +149,7 @@ public class BlockPlacementHandler implements Listener {
         
         // Устанавливаем табличку с названием из конфига (для конструкторов табличка уже создана в buildStructureFor)
         if (!config.isConstructor()) {
-            setSignOnBlock(block.getLocation(), config.getDisplayName());
+            setSignOnBlock(block.getLocation(), config.getDisplayName() + " (Пустой)");
         }
         
         // Визуальная и аудио обратная связь
@@ -178,6 +167,7 @@ public class BlockPlacementHandler implements Listener {
     
     /**
      * Создает структуру для блоков-конструкторов (аналог WOOD из FrameLand)
+     * Реализует FrameLand-стиль: визуальное построение кода с обратной связью
      */
     private void buildStructureFor(BlockPlaceEvent event, BlockConfigService.BlockConfig config) {
         Block placedBlock = event.getBlock();
@@ -244,10 +234,33 @@ public class BlockPlacementHandler implements Listener {
             
             addConstructionEffects(loc, player);
         }
+        
+        // ACTION blocks also get structure building like FrameLand
+        else if (config.getType().equals("ACTION")) {
+            // Action blocks get a simple structure with sign
+            if (structure.hasSign()) {
+                setSmartSignOnBlock(loc, config.getDisplayName() + " Action", config.getId());
+            }
+            
+            // Add visual effects
+            addConstructionEffects(loc, player);
+        }
+        
+        // VARIABLE blocks
+        else if (config.getType().equals("VARIABLE")) {
+            // Variable blocks get a simple structure with sign
+            if (structure.hasSign()) {
+                setSmartSignOnBlock(loc, config.getDisplayName() + " Variable", config.getId());
+            }
+            
+            // Add visual effects
+            addConstructionEffects(loc, player);
+        }
     }
     
     /**
      * 🎆 ENHANCED: Creates bracket piston with proper orientation
+     * Реализует FrameLand-стиль: визуальное построение кода с обратной связью
      */
     private void createBracketPiston(Location location, CodeBlock.BracketType bracketType, Player player, BlockFace facing) {
         Block pistonBlock = location.getWorld().getBlockAt(location);
@@ -281,9 +294,12 @@ public class BlockPlacementHandler implements Listener {
         updateBracketSign(location, bracketType);
         
         // Add visual effects for FrameLand-style magic
-        player.spawnParticle(org.bukkit.Particle.ENCHANTMENT_TABLE, location.add(0.5, 0.5, 0.5), 10, 0.3, 0.3, 0.3, 1);
+        Location effectLoc = location.add(0.5, 0.5, 0.5);
+        player.spawnParticle(org.bukkit.Particle.ENCHANTMENT_TABLE, effectLoc, 10, 0.3, 0.3, 0.3, 1);
         player.playSound(location, org.bukkit.Sound.BLOCK_ENCHANTMENT_TABLE_USE, 1.0f, 1.5f);
         
+        // Add extra visual feedback for bracket creation
+        player.spawnParticle(org.bukkit.Particle.FIREWORKS_SPARK, effectLoc, 5, 0.2, 0.2, 0.2, 0.1);
     }
 
     /**
@@ -524,6 +540,7 @@ public class BlockPlacementHandler implements Listener {
     /**
      * Завершение интерактивности (возвращение "магии" FrameLand)
      * Обрабатывает взаимодействие с блоком кода для открытия соответствующего GUI
+     * Реализует FrameLand-стиль: универсальные блоки с настройкой через GUI
      */
     private void handleBlockInteraction(Player player, Location blockLocation) {
         CodeBlock codeBlock = blockCodeBlocks.get(blockLocation);
@@ -535,24 +552,29 @@ public class BlockPlacementHandler implements Listener {
             return;
         }
 
-        // Если у блока еще нет действия, открываем GUI выбора действия
-        if (codeBlock.getAction() == null || codeBlock.getAction().equals("NOT_SET") || blockConfigService.getBlockConfig(codeBlock.getAction()) == null) {
-            // Вызываем GUI для выбора действия, которое ты уже создал
+        // Для универсальных блоков всегда открываем GUI выбора действия
+        // Это реализует FrameLand-стиль: один блок - множество функций
+        if (codeBlock.getAction() == null || codeBlock.getAction().equals("NOT_SET") || codeBlock.getAction().equals("UNKNOWN")) {
+            // Вызываем GUI для выбора действия
             openActionSelectionGUI(player, blockLocation, codeBlock.getMaterial());
         } else {
             // Иначе открываем GUI настройки параметров
             BlockConfigService.BlockConfig config = blockConfigService.getBlockConfig(codeBlock.getAction());
             if (config != null) {
-                // Вызываем GUI для настройки параметров, которое ты уже создал
+                // Вызываем GUI для настройки параметров
                 openParameterConfigGUI(player, blockLocation, codeBlock, config);
             } else {
+                // Если конфигурация не найдена, открываем GUI выбора действия
                 player.sendMessage("§cОшибка: Не удалось найти конфигурацию для действия '" + codeBlock.getAction() + "'");
+                player.sendMessage("§eОткрываю GUI для выбора нового действия...");
+                openActionSelectionGUI(player, blockLocation, codeBlock.getMaterial());
             }
         }
     }
     
     /**
      * Открывает GUI для выбора действия
+     * Реализует FrameLand-стиль: универсальные блоки с настройкой через GUI
      */
     private void openActionSelectionGUI(Player player, Location blockLocation, Material blockMaterial) {
         ActionSelectionGUI gui = new ActionSelectionGUI(plugin, player, blockLocation, blockMaterial);
@@ -565,6 +587,7 @@ public class BlockPlacementHandler implements Listener {
 
     /**
      * Открывает уникальный drag-and-drop GUI для настройки параметров блока
+     * Реализует FrameLand-стиль: универсальные блоки с настройкой через GUI
      */
     private void openParameterConfigGUI(Player player, Location blockLocation, CodeBlock codeBlock, BlockConfigService.BlockConfig config) {
         // Создаем и открываем уникальный GUI для конкретного действия
@@ -607,6 +630,7 @@ public class BlockPlacementHandler implements Listener {
 
     /**
      * Исправленная логика установки таблички.
+     * Реализует FrameLand-стиль: визуальное построение кода с обратной связью
      */
     private void setSignOnBlock(Location location, String text) {
         removeSignFromBlock(location); // Сначала удаляем старые таблички
@@ -625,13 +649,17 @@ public class BlockPlacementHandler implements Listener {
                 signBlock.setBlockData(wallSignData);
                 
                 Sign signState = (Sign) signBlock.getState();
-                signState.setLine(0, "§8============");
+                signState.setLine(0, "§6★★★★★★★★★★★★");
                 // Обрезаем текст, если он слишком длинный
                 String line2 = text.length() > 15 ? text.substring(0, 15) : text;
-                signState.setLine(1, line2);
-                signState.setLine(2, "§7Кликните ПКМ");
-                signState.setLine(3, "§8============");
+                signState.setLine(1, "§e" + line2);
+                signState.setLine(2, "§a➜ Кликните ПКМ");
+                signState.setLine(3, "§6★★★★★★★★★★★★");
                 signState.update(true);
+                
+                // Add visual effects for FrameLand-style magic
+                Location effectLoc = signBlock.getLocation().add(0.5, 0.5, 0.5);
+                block.getWorld().spawnParticle(org.bukkit.Particle.ENCHANTMENT_TABLE, effectLoc, 5, 0.3, 0.3, 0.3, 1);
                 
                 return; // ВАЖНО: Выходим из метода после установки ПЕРВОЙ таблички
             }
@@ -750,7 +778,8 @@ public class BlockPlacementHandler implements Listener {
     }
     
     /**
-     * Updates the sign for a bracket block
+     * 🎆 ENHANCED: Updates the sign for a bracket block
+     * Реализует FrameLand-стиль: визуальное построение кода с обратной связью
      */
     private void updateBracketSign(Location location, CodeBlock.BracketType bracketType) {
         // Remove old sign and create new one with bracket info
@@ -769,11 +798,15 @@ public class BlockPlacementHandler implements Listener {
                 signBlock.setBlockData(wallSignData);
                 
                 org.bukkit.block.Sign signState = (org.bukkit.block.Sign) signBlock.getState();
-                signState.setLine(0, "§8============");
+                signState.setLine(0, "§6★★★★★★★★★★★★");
                 signState.setLine(1, "§6" + bracketType.getSymbol() + " Скобка");
-                signState.setLine(2, "§7ПКМ для смены");
-                signState.setLine(3, "§8============");
+                signState.setLine(2, "§a➜ ПКМ для смены");
+                signState.setLine(3, "§6★★★★★★★★★★★★");
                 signState.update(true);
+                
+                // Add visual effects for FrameLand-style magic
+                Location effectLoc = signBlock.getLocation().add(0.5, 0.5, 0.5);
+                block.getWorld().spawnParticle(org.bukkit.Particle.ENCHANTMENT_TABLE, effectLoc, 5, 0.3, 0.3, 0.3, 1);
                 
                 return;
             }
@@ -972,6 +1005,7 @@ public class BlockPlacementHandler implements Listener {
     /**
      * 🎆 ENHANCED: Creates smart sign that opens configuration GUI on right-click
      * This restores the FrameLand "magic" of clicking signs to configure blocks
+     * Реализует FrameLand-стиль: визуальное построение кода с обратной связью
      */
     private void setSmartSignOnBlock(Location location, String displayName, String blockId) {
         removeSignFromBlock(location); // Remove old signs first
@@ -997,6 +1031,10 @@ public class BlockPlacementHandler implements Listener {
                 signState.setLine(2, "§a➜ Клик для настройки");
                 signState.setLine(3, "§6★★★★★★★★★★★★");
                 signState.update(true);
+                
+                // Add visual effects for FrameLand-style magic
+                Location effectLoc = signBlock.getLocation().add(0.5, 0.5, 0.5);
+                block.getWorld().spawnParticle(org.bukkit.Particle.ENCHANTMENT_TABLE, effectLoc, 5, 0.3, 0.3, 0.3, 1);
                 
                 return; // IMPORTANT: Exit after placing FIRST sign
             }
