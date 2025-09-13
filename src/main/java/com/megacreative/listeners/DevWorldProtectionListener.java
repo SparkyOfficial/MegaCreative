@@ -148,7 +148,7 @@ public class DevWorldProtectionListener implements Listener {
                 return;
             }
             
-            // 3. Проверяем правильность позиции блока кода (FrameLand-like validation)
+            // 3. Проверяем правильность позиции блока кода (Reference system-like validation)
             if (!isValidCodeBlockPlacement(event.getBlockPlaced(), player)) {
                 event.setCancelled(true);
                 return; // Сообщение об ошибке уже отправлено в методе
@@ -294,7 +294,7 @@ public class DevWorldProtectionListener implements Listener {
     
     /**
      * Validates that a code block is placed on the correct glass color platform
-     * This implements FrameLand-like placement rules
+     * This implements reference system-like placement rules
      */
     private boolean isValidCodeBlockPlacement(org.bukkit.block.Block placedBlock, Player player) {
         org.bukkit.Location location = placedBlock.getLocation();
@@ -324,13 +324,13 @@ public class DevWorldProtectionListener implements Listener {
             return false;
         }
         
-        // Validate placement based on block type and glass color (FrameLand rules)
+        // Validate placement based on block type and glass color (Reference system rules)
         return validatePlacementByTypeAndGlass(config, underMaterial, location, player);
     }
     
     /**
      * Validates placement based on block type and glass color underneath
-     * Implements FrameLand-like placement validation rules
+     * Implements reference system-like placement validation rules
      */
     private boolean validatePlacementByTypeAndGlass(BlockConfigService.BlockConfig config, Material glassMaterial, org.bukkit.Location location, Player player) {
         String blockType = config.getType();

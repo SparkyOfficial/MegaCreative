@@ -9,7 +9,7 @@ import org.bukkit.command.CommandSender;
 import org.bukkit.entity.Player;
 
 /**
- * 🎆 ENHANCED: FrameLand-style world switching command
+ * 🎆 ENHANCED: Reference system-style world switching command
  * Usage: /switch [code|dev|play|world]
  */
 public class SwitchCommand implements CommandExecutor {

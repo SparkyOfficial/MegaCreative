@@ -17,7 +17,7 @@ import java.util.concurrent.ConcurrentHashMap;
 import java.util.stream.Collectors;
 
 /**
- * 🎆 FrameLand-Style Advanced Function Manager
+ * 🎆 Reference System-Style Advanced Function Manager
  * 
  * Manages function definitions, execution, and scope isolation.
  * Provides a complete function system with:

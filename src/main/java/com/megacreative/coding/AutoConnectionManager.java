@@ -151,7 +151,7 @@ public class AutoConnectionManager implements Listener {
                 plugin.getLogger().fine("CodeBlock disconnected at " + location);
             }
             
-            event.getPlayer().sendMessage("§cБлок кода удален и отсоединен от цепочки!");
+            event.getPlayer().sendMessage("§cБлок кода удален и отсоединён от цепочки!");
         }
     }
     
@@ -172,6 +172,9 @@ public class AutoConnectionManager implements Listener {
             if (prevBlock != null) {
                 prevBlock.setNextBlock(codeBlock);
                 plugin.getLogger().fine("Connected horizontal: " + prevLocation + " -> " + location);
+                
+                // Add visual feedback for connection
+                addConnectionEffect(prevLocation, location);
             }
         }
         
@@ -182,6 +185,9 @@ public class AutoConnectionManager implements Listener {
             if (nextBlock != null) {
                 codeBlock.setNextBlock(nextBlock);
                 plugin.getLogger().fine("Connected horizontal: " + location + " -> " + nextLocation);
+                
+                // Add visual feedback for connection
+                addConnectionEffect(location, nextLocation);
             }
         }
         
@@ -700,13 +706,6 @@ public class AutoConnectionManager implements Listener {
     }
     
     /**
-     * Gets all available materials for code blocks
-     */
-    public Set<Material> getCodeBlockMaterials() {
-        return blockConfigService.getCodeBlockMaterials();
-    }
-    
-    /**
      * Reloads block configuration
      */
     public void reloadBlockConfig() {
@@ -735,14 +734,16 @@ public class AutoConnectionManager implements Listener {
         try {
             // Create the root script
             CodeScript script = new CodeScript(eventBlock);
-            script.setName("Compiled Script for " + eventBlock.getAction());
+            script.setName("Compiled Script for " + eventBlock.getAction() + " at " + formatLocation(eventLocation));
             script.setEnabled(true);
             script.setType(CodeScript.ScriptType.EVENT);
+            
+            plugin.getLogger().fine("Starting compilation of script from event block: " + eventBlock.getAction() + " at " + formatLocation(eventLocation));
             
             // Build the complete block chain by following connections
             buildBlockChain(eventBlock, eventLocation);
             
-            plugin.getLogger().fine("Compiled script from event block: " + eventBlock.getAction() + " with connected blocks");
+            plugin.getLogger().fine("Successfully compiled script from event block: " + eventBlock.getAction() + " with connected blocks");
             return script;
             
         } catch (Exception e) {
@@ -817,14 +818,28 @@ public class AutoConnectionManager implements Listener {
         List<CodeScript> newScripts = new ArrayList<>();
         
         // Find all event blocks in the world and compile scripts from them
+        int scriptCount = 0;
+        int errorCount = 0;
+        
         for (Map.Entry<Location, CodeBlock> entry : locationToBlock.entrySet()) {
             if (!entry.getKey().getWorld().equals(world)) continue;
             
             CodeBlock block = entry.getValue();
             if (isEventBlock(block)) {
-                CodeScript compiledScript = compileScriptFromEventBlock(block, entry.getKey());
-                if (compiledScript != null) {
-                    newScripts.add(compiledScript);
+                try {
+                    CodeScript compiledScript = compileScriptFromEventBlock(block, entry.getKey());
+                    if (compiledScript != null) {
+                        newScripts.add(compiledScript);
+                        scriptCount++;
+                        plugin.getLogger().fine("Successfully compiled script: " + compiledScript.getName());
+                    } else {
+                        errorCount++;
+                        plugin.getLogger().warning("Failed to compile script from event block at " + entry.getKey());
+                    }
+                } catch (Exception e) {
+                    errorCount++;
+                    plugin.getLogger().severe("Error compiling script from event block at " + entry.getKey() + ": " + e.getMessage());
+                    e.printStackTrace();
                 }
             }
         }
@@ -833,7 +848,7 @@ public class AutoConnectionManager implements Listener {
         creativeWorld.setScripts(newScripts);
         plugin.getWorldManager().saveWorld(creativeWorld);
         
-        plugin.getLogger().fine("Recompiled " + newScripts.size() + " scripts for world: " + world.getName());
+        plugin.getLogger().fine("Recompiled " + scriptCount + " scripts for world: " + world.getName() + " with " + errorCount + " errors");
     }
     
     /**
@@ -859,4 +874,57 @@ public class AutoConnectionManager implements Listener {
             plugin.getLogger().fine("Added CodeBlock to tracking at " + location);
         }
     }
+    
+    /**
+     * 🎆 ENHANCED: Adds visual effects for block connections
+     * Implements reference system-style: visual code construction with feedback
+     */
+    private void addConnectionEffect(Location from, Location to) {
+        // Create a beam of particles between connected blocks
+        org.bukkit.World world = from.getWorld();
+        
+        // Calculate direction and distance
+        double dx = to.getX() - from.getX();
+        double dy = to.getY() - from.getY();
+        double dz = to.getZ() - from.getZ();
+        double distance = Math.sqrt(dx*dx + dy*dy + dz*dz);
+        
+        if (distance > 0) {
+            // Normalize direction
+            dx /= distance;
+            dy /= distance;
+            dz /= distance;
+            
+            // Create particle beam
+            for (int i = 0; i < distance * 2; i++) {
+                Location particleLoc = from.clone().add(
+                    dx * i * 0.5, 
+                    dy * i * 0.5, 
+                    dz * i * 0.5
+                );
+                
+                world.spawnParticle(org.bukkit.Particle.REDSTONE, particleLoc, 1, 0, 0, 0, 0,
+                    new org.bukkit.Particle.DustOptions(org.bukkit.Color.fromRGB(0, 255, 255), 1.0f));
+            }
+        }
+    }
+    
+    /**
+     * Formats a location for logging/display purposes
+     * 
+     * @param location The location to format
+     * @return Formatted string representation
+     */
+    private String formatLocation(Location location) {
+        if (location == null) return "null";
+        return String.format("(%d, %d, %d)", location.getBlockX(), location.getBlockY(), location.getBlockZ());
+    }
+    
+    /**
+     * Gets all available materials for code blocks
+     */
+    public Set<Material> getCodeBlockMaterials() {
+        return blockConfigService.getCodeBlockMaterials();
+    }
+
 }

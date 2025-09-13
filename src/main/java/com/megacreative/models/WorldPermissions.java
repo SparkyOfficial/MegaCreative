@@ -5,7 +5,7 @@ import org.bukkit.entity.Player;
 import java.util.*;
 
 /**
- * 🎆 ENHANCED: FrameLand-style world permissions with whitelist/blacklist functionality
+ * 🎆 ENHANCED: Reference system-style world permissions with whitelist/blacklist functionality
  */
 public class WorldPermissions {
     

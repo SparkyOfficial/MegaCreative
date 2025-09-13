@@ -2,7 +2,7 @@ package com.megacreative.commands;
 
 import com.megacreative.MegaCreative;
 import com.megacreative.coding.ExecutionContext;
-import com.megacreative.coding.placeholders.FrameLandPlaceholderResolver;
+import com.megacreative.coding.placeholders.ReferenceSystemPlaceholderResolver;
 import com.megacreative.coding.values.DataValue;
 import com.megacreative.interfaces.IWorldManager;
 import com.megacreative.models.CreativeWorld;
@@ -12,7 +12,7 @@ import org.bukkit.command.CommandSender;
 import org.bukkit.entity.Player;
 
 /**
- * 🎆 ENHANCED: Placeholder demo command showing FrameLand-style features
+ * 🎆 ENHANCED: Placeholder demo command showing reference system-style features
  * Usage: /placeholders [demo|test|help]
  */
 public class PlaceholdersCommand implements CommandExecutor {
@@ -65,7 +65,7 @@ public class PlaceholdersCommand implements CommandExecutor {
     
     private void showHelp(Player player) {
         player.sendMessage("§8§m                    §r §6§lPlaceholder System §8§m                    ");
-        player.sendMessage("§e🎆 FrameLand-Style Placeholder System");
+        player.sendMessage("§e🎆 Reference System-Style Placeholder System");
         player.sendMessage("");
         player.sendMessage("§7§lКоманды:");
         player.sendMessage("§e/placeholders demo §8- §fПоказать демонстрацию");
@@ -74,7 +74,7 @@ public class PlaceholdersCommand implements CommandExecutor {
         player.sendMessage("§e/placeholders help §8- §fПоказать эту справку");
         player.sendMessage("");
         player.sendMessage("§7§lОсновные форматы:");
-        player.sendMessage("§a• FrameLand: §fprefix[content]~");
+        player.sendMessage("§a• Reference System: §fprefix[content]~");
         player.sendMessage("§a• Modern: §f${variable}");
         player.sendMessage("§a• Classic: §f%variable%");
         player.sendMessage("§8§m                                                        ");
@@ -110,7 +110,7 @@ public class PlaceholdersCommand implements CommandExecutor {
         };
         
         for (String text : demoTexts) {
-            String resolved = FrameLandPlaceholderResolver.resolvePlaceholders(text, context);
+            String resolved = ReferenceSystemPlaceholderResolver.resolvePlaceholders(text, context);
             player.sendMessage(resolved);
         }
         
@@ -129,7 +129,7 @@ public class PlaceholdersCommand implements CommandExecutor {
         player.sendMessage("");
         player.sendMessage("§7Результат:");
         
-        String resolved = FrameLandPlaceholderResolver.resolvePlaceholders(text, context);
+        String resolved = ReferenceSystemPlaceholderResolver.resolvePlaceholders(text, context);
         player.sendMessage(resolved);
         
         player.sendMessage("§8§m                                                        ");

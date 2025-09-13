@@ -97,6 +97,20 @@ public class DevInventoryManager implements Listener {
             player.getInventory().setItem(currentSlot++, item);
         }
 
+        // Добавляем специальные инструменты
+        if (currentSlot < 36) {
+            player.getInventory().setItem(currentSlot++, CodingItems.getGameValue());
+        }
+        if (currentSlot < 36) {
+            player.getInventory().setItem(currentSlot++, CodingItems.getArrowNot());
+        }
+        if (currentSlot < 36) {
+            player.getInventory().setItem(currentSlot++, CodingItems.getDataCreator());
+        }
+        if (currentSlot < 36) {
+            player.getInventory().setItem(currentSlot++, CodingItems.getCodeMover());
+        }
+
         player.updateInventory();
     }
     
@@ -133,13 +147,14 @@ public class DevInventoryManager implements Listener {
      */
     private List<String> getMissingCodingItems(Player player) {
         List<String> missingItems = new ArrayList<>();
-        
+    
         // Проверяем ключевые инструменты (не все блоки кода!)
         boolean hasCopier = false;
         boolean hasArrowNot = false;
         boolean hasDataCreator = false;
         boolean hasCodeMover = false;
-        
+        boolean hasGameValue = false; // Add this line
+    
         for (ItemStack item : player.getInventory().getContents()) {
             if (item != null && item.hasItemMeta() && item.getItemMeta().hasDisplayName()) {
                 String name = item.getItemMeta().getDisplayName();
@@ -151,19 +166,22 @@ public class DevInventoryManager implements Listener {
                     hasDataCreator = true;
                 } else if (name.contains("Перемещатель кода") || name.contains(CodingItems.CODE_MOVER_NAME)) {
                     hasCodeMover = true;
+                } else if (name.contains("Игровое значение") || name.contains(CodingItems.GAME_VALUE_NAME)) { // Add this condition
+                    hasGameValue = true;
                 }
             }
         }
-        
+    
         // Добавляем недостающие инструменты
         if (!hasCopier) missingItems.add("copier");
         if (!hasArrowNot) missingItems.add("arrow_not");
         if (!hasDataCreator) missingItems.add("data_creator");
         if (!hasCodeMover) missingItems.add("code_mover");
-        
+        if (!hasGameValue) missingItems.add("game_value"); // Add this line
+    
         return missingItems;
     }
-    
+
     /**
      * Выдает только недостающие предметы
      */
@@ -184,6 +202,7 @@ public class DevInventoryManager implements Listener {
                 case "arrow_not" -> player.getInventory().addItem(CodingItems.getArrowNot());
                 case "data_creator" -> player.getInventory().addItem(CodingItems.getDataCreator());
                 case "code_mover" -> player.getInventory().addItem(CodingItems.getCodeMover());
+                case "game_value" -> player.getInventory().addItem(CodingItems.getGameValue()); // Add this case
             }
         }
     }

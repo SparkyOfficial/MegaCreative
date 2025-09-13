@@ -225,7 +225,7 @@ commands:
     aliases: [grp, organize]
 
   function:
-    description: 🎆 FrameLand-style function management
+    description: 🎆 Reference system-style function management
     usage: |
       &6/function list [scope] &f- List available functions
       &6/function info <name> &f- Show function details
@@ -237,7 +237,7 @@ commands:
     aliases: [func, fn]
 
   interactive:
-    description: 🎆 FrameLand-style interactive GUI system
+    description: 🎆 Reference system-style interactive GUI system
     usage: |
       &6/interactive demo &f- Open interactive element demo
       &6/interactive block <action> &f- Open block parameter editor
@@ -262,3 +262,9 @@ commands:
     usage: /<command> <ID мира> [confirm]
     permission: megacreative.user
     aliases: [del, remove]
+
+  testcompile:
+    description: 🎆 Test compilation system
+    usage: /<command> [world_name]
+    permission: megacreative.admin
+    aliases: [tcomp, compiletest]

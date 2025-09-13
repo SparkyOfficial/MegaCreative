@@ -19,7 +19,7 @@ import org.bukkit.event.world.WorldLoadEvent;
 
 /**
  * 🎆 ENHANCED: Comprehensive world protection system for dual world architecture
- * Implements FrameLand-style permission checking and access control
+ * Implements reference system-style permission checking and access control
  */
 public class WorldProtectionListener implements Listener {
     

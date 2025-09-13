@@ -19,7 +19,7 @@ import java.util.Map;
 import java.util.stream.Collectors;
 
 /**
- * 🎆 FrameLand-Style Function Management Command
+ * 🎆 Reference System-Style Function Management Command
  * 
  * Provides command-line interface for function management:
  * - List available functions
@@ -80,7 +80,7 @@ public class FunctionCommand implements CommandExecutor, TabCompleter {
      * Shows command help
      */
     private void showHelp(Player player) {
-        player.sendMessage(ChatColor.GOLD + "🎆 FrameLand Function Management");
+        player.sendMessage(ChatColor.GOLD + "🎆 Reference System Function Management");
         player.sendMessage(ChatColor.YELLOW + "/function list [scope] - List available functions");
         player.sendMessage(ChatColor.YELLOW + "/function info <name> - Show function details");
         player.sendMessage(ChatColor.YELLOW + "/function call <name> [args...] - Test function execution");

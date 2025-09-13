@@ -14,7 +14,7 @@ import java.util.*;
 
 /**
  * 🎆 ENHANCED: World statistics command for dual world analytics
- * Shows comprehensive usage data for FrameLand-style worlds
+ * Shows comprehensive usage data for reference system-style worlds
  */
 public class WorldStatsCommand implements CommandExecutor, TabCompleter {
     

@@ -16,7 +16,7 @@ import java.util.List;
 import java.util.ArrayList;
 
 /**
- * 🎆 FrameLand-Style Function Definition Action
+ * 🎆 Reference System-Style Function Definition Action
  * 
  * Handles creation and registration of user-defined functions.
  * Allows players to define reusable code blocks with parameters.

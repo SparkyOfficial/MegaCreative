@@ -3,7 +3,7 @@ package com.megacreative.commands;
 import com.megacreative.MegaCreative;
 import com.megacreative.gui.interactive.InteractiveGUI;
 import com.megacreative.gui.interactive.InteractiveGUIManager;
-import com.megacreative.gui.interactive.FrameLandStyleGUI;
+import com.megacreative.gui.interactive.ReferenceSystemStyleGUI;
 import com.megacreative.coding.CodeBlock;
 import com.megacreative.models.CreativeWorld;
 import org.bukkit.Location;
@@ -20,7 +20,7 @@ import java.util.List;
 import java.util.stream.Collectors;
 
 /**
- * 🎆 FrameLand-Style Interactive GUI Command
+ * 🎆 Reference System-Style Interactive GUI Command
  * 
  * Demonstrates and tests the interactive GUI system with various examples.
  * Usage: /interactive <demo|block|world|test> [args...]
@@ -29,12 +29,12 @@ public class InteractiveCommand implements CommandExecutor, TabCompleter {
     
     private final MegaCreative plugin;
     private final InteractiveGUIManager guiManager;
-    private final FrameLandStyleGUI frameGUI;
+    private final ReferenceSystemStyleGUI frameGUI;
     
     public InteractiveCommand(MegaCreative plugin) {
         this.plugin = plugin;
         this.guiManager = plugin.getServiceRegistry().getInteractiveGUIManager();
-        this.frameGUI = plugin.getServiceRegistry().getFrameLandStyleGUI();
+        this.frameGUI = plugin.getServiceRegistry().getReferenceSystemStyleGUI();
     }
 
     @Override
@@ -77,7 +77,7 @@ public class InteractiveCommand implements CommandExecutor, TabCompleter {
      * Shows command help
      */
     private void showHelp(Player player) {
-        player.sendMessage("§6🎆 FrameLand Interactive GUI System");
+        player.sendMessage("§6🎆 Reference System Interactive GUI System");
         player.sendMessage("§e/interactive demo §7- Open interactive element demo");
         player.sendMessage("§e/interactive block <action> §7- Open block parameter editor");
         player.sendMessage("§e/interactive world §7- Open world settings GUI");
@@ -92,7 +92,7 @@ public class InteractiveCommand implements CommandExecutor, TabCompleter {
      */
     private void openDemoGUI(Player player) {
         InteractiveGUI gui = guiManager.createInteractiveGUI(player, 
-            "🎆 FrameLand Interactive Demo", 54);
+            "🎆 Reference System Interactive Demo", 54);
         
         // Material selector demo
         InteractiveGUIManager.MaterialSelectorElement materialSelector = 
@@ -145,7 +145,7 @@ public class InteractiveCommand implements CommandExecutor, TabCompleter {
         gui.setElement(28, itemEditor);
         
         gui.open();
-        player.sendMessage("§a🎆 Opened FrameLand Interactive Demo!");
+        player.sendMessage("§a🎆 Opened Reference System Interactive Demo!");
     }
     
     /**

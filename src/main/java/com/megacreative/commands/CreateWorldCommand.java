@@ -40,7 +40,7 @@ public class CreateWorldCommand implements CommandExecutor {
             player.sendMessage("§7- nether (адский мир)");
             player.sendMessage("§7- end (краевой мир)");
             player.sendMessage("");
-            player.sendMessage("§e🎆 FrameLand-style dual world mode:");
+            player.sendMessage("§e🎆 Reference system-style dual world mode:");
             player.sendMessage("§7  Add §f--dual §7to create paired dev/play worlds");
             player.sendMessage("§7  Example: §f/create flat --dual My World");
             return true;

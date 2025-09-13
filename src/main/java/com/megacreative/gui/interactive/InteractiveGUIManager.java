@@ -20,7 +20,7 @@ import java.util.concurrent.ConcurrentHashMap;
 import java.util.function.Consumer;
 
 /**
- * 🎆 FrameLand-Style Interactive GUI Manager
+ * 🎆 Reference System-Style Interactive GUI Manager
  * 
  * Provides dynamic GUI elements with real-time updates:
  * - Material selection with live preview
@@ -50,7 +50,7 @@ public class InteractiveGUIManager implements Listener {
         // Register event listeners
         plugin.getServer().getPluginManager().registerEvents(this, plugin);
         
-        plugin.getLogger().info("🎆 Interactive GUI Manager initialized with FrameLand-style elements");
+        plugin.getLogger().info("🎆 Interactive GUI Manager initialized with reference system-style elements");
     }
     
     /**

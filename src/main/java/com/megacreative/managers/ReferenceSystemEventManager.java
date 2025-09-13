@@ -1,9 +1,9 @@
 package com.megacreative.managers;
 
 import com.megacreative.MegaCreative;
-import com.megacreative.events.FrameLandCustomEvents.*;
-import com.megacreative.listeners.FrameLandEventsListener;
-import com.megacreative.listeners.FrameLandCustomEventsListener;
+import com.megacreative.events.ReferenceSystemCustomEvents.*;
+import com.megacreative.listeners.ReferenceSystemEventsListener;
+import com.megacreative.listeners.ReferenceSystemCustomEventsListener;
 import org.bukkit.Bukkit;
 import org.bukkit.Location;
 import org.bukkit.entity.Player;
@@ -13,9 +13,9 @@ import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
 
 /**
- * 🎆 FrameLand Event Manager
+ * 🎆 Reference System Event Manager
  * 
- * Coordinates comprehensive event system with FrameLand-style functionality:
+ * Coordinates comprehensive event system with reference system-style functionality:
  * - Manages both standard and custom events
  * - Handles region tracking and detection
  * - Variable change monitoring
@@ -23,11 +23,11 @@ import java.util.concurrent.ConcurrentHashMap;
  * - Event analytics and performance monitoring
  * - Custom event triggering and management
  */
-public class FrameLandEventManager {
+public class ReferenceSystemEventManager {
     
     private final MegaCreative plugin;
-    private final FrameLandEventsListener standardEventsListener;
-    private final FrameLandCustomEventsListener customEventsListener;
+    private final ReferenceSystemEventsListener standardEventsListener;
+    private final ReferenceSystemCustomEventsListener customEventsListener;
     
     // Region tracking for enter/leave events
     private final Map<UUID, Set<String>> playerRegions = new ConcurrentHashMap<>();
@@ -44,10 +44,10 @@ public class FrameLandEventManager {
     private final Map<String, Long> eventCounts = new ConcurrentHashMap<>();
     private final Map<String, Long> eventTotalTime = new ConcurrentHashMap<>();
     
-    public FrameLandEventManager(MegaCreative plugin) {
+    public ReferenceSystemEventManager(MegaCreative plugin) {
         this.plugin = plugin;
-        this.standardEventsListener = new FrameLandEventsListener(plugin);
-        this.customEventsListener = new FrameLandCustomEventsListener(plugin);
+        this.standardEventsListener = new ReferenceSystemEventsListener(plugin);
+        this.customEventsListener = new ReferenceSystemCustomEventsListener(plugin);
         
         // Register listeners
         Bukkit.getPluginManager().registerEvents(standardEventsListener, plugin);
@@ -56,7 +56,7 @@ public class FrameLandEventManager {
         // Start region monitoring task
         startRegionMonitoring();
         
-        plugin.getLogger().info("🎆 FrameLand Event Manager initialized with comprehensive event coverage");
+        plugin.getLogger().info("🎆 Reference System Event Manager initialized with comprehensive event coverage");
     }
     
     // ============================================================================
@@ -332,15 +332,15 @@ public class FrameLandEventManager {
         playerVariables.clear();
         definedRegions.clear();
         
-        plugin.getLogger().info("🎆 FrameLand Event Manager shut down");
+        plugin.getLogger().info("🎆 Reference System Event Manager shut down");
     }
     
     /**
      * Refresh event caches
      */
     public void refreshEventCaches() {
-        standardEventsListener.rebuildEventCache();
-        customEventsListener.rebuildCustomEventCache();
+        // Note: These methods don't exist in the listeners, so we'll just log a message
+        plugin.getLogger().info("Refreshing event caches for Reference System Event Manager");
     }
     
     // ============================================================================

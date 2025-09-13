@@ -39,7 +39,7 @@ public class CreativeWorld {
     // Комментарии
     private List<WorldComment> comments;
 
-    // 🎆 ENHANCED: FrameLand-style dual world support
+    // 🎆 ENHANCED: Reference system-style dual world support
     private String pairedWorldId; // ID of the paired world (dev/play)
     private WorldDualMode dualMode; // Whether this is dev or play world
     
@@ -120,7 +120,7 @@ public class CreativeWorld {
         this.permissions = new WorldPermissions();
     }
     
-    // 🎆 ENHANCED: FrameLand-style world naming with dual mode support
+    // 🎆 ENHANCED: Reference system-style world naming with dual mode support
     public String getWorldName() {
         if (dualMode == WorldDualMode.STANDALONE) {
             return "megacreative_" + id;

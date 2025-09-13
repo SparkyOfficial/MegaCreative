@@ -19,7 +19,7 @@ import java.util.List;
 import java.util.ArrayList;
 
 /**
- * 🎆 FrameLand-Style Advanced Execution Engine
+ * 🎆 Reference System-Style Advanced Execution Engine
  * 
  * Provides sophisticated script execution modes for optimal performance:
  * - Synchronous execution for real-time operations

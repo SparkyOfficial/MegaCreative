@@ -11,7 +11,7 @@ import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
 
 /**
- * 🎆 FrameLand-Style Interactive GUI Implementation
+ * 🎆 Reference System-Style Interactive GUI Implementation
  * 
  * A dynamic GUI that can contain interactive elements with real-time updates.
  * Supports element positioning, data binding, and event handling.

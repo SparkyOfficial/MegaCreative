@@ -15,17 +15,17 @@ import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 /**
- * 🎆 ENHANCED: FrameLand-style placeholder system with apple[variable]~ syntax
+ * 🎆 ENHANCED: Reference system-style placeholder system with apple[variable]~ syntax
  * Supports multiple placeholder formats:
- * - FrameLand style: apple[variable]~ 
+ * - Reference system style: apple[variable]~ 
  * - Modern style: ${variable}
  * - Classic style: %variable%
  * - Advanced features: prefix[variable|default]~, math[variable+5]~
  */
-public class FrameLandPlaceholderResolver {
+public class ReferenceSystemPlaceholderResolver {
     
     // Placeholder patterns
-    private static final Pattern FRAMELAND_PATTERN = Pattern.compile("([a-zA-Z_][a-zA-Z0-9_]*)\\[([^\\]]+)\\]~");
+    private static final Pattern REFERENCESYSTEM_PATTERN = Pattern.compile("([a-zA-Z_][a-zA-Z0-9_]*)\\[([^\\]]+)\\]~");
     private static final Pattern MODERN_PATTERN = Pattern.compile("\\$\\{([^}]+)\\}");
     private static final Pattern CLASSIC_PATTERN = Pattern.compile("%([^%]+)%");
     
@@ -33,7 +33,7 @@ public class FrameLandPlaceholderResolver {
     private static final Map<String, PlaceholderHandler> BUILTIN_HANDLERS = new HashMap<>();
     
     static {
-        // Core FrameLand-style handlers
+        // Core reference system-style handlers
         BUILTIN_HANDLERS.put("apple", new VariablePlaceholderHandler()); // apple[variable]~
         BUILTIN_HANDLERS.put("var", new VariablePlaceholderHandler());   // var[variable]~
         BUILTIN_HANDLERS.put("player", new PlayerPlaceholderHandler()); // player[name]~
@@ -48,7 +48,7 @@ public class FrameLandPlaceholderResolver {
     }
     
     /**
-     * Resolves all placeholders in text using FrameLand-style syntax
+     * Resolves all placeholders in text using reference system-style syntax
      */
     public static String resolvePlaceholders(String text, ExecutionContext context) {
         if (text == null || text.isEmpty()) {
@@ -57,8 +57,8 @@ public class FrameLandPlaceholderResolver {
         
         String result = text;
         
-        // Process FrameLand-style placeholders first (highest priority)
-        result = resolveFrameLandPlaceholders(result, context);
+        // Process reference system-style placeholders first (highest priority)
+        result = resolveReferenceSystemPlaceholders(result, context);
         
         // Process modern ${} placeholders
         result = resolveModernPlaceholders(result, context);
@@ -70,10 +70,10 @@ public class FrameLandPlaceholderResolver {
     }
     
     /**
-     * Resolves FrameLand-style placeholders: prefix[content]~
+     * Resolves reference system-style placeholders: prefix[content]~
      */
-    private static String resolveFrameLandPlaceholders(String text, ExecutionContext context) {
-        Matcher matcher = FRAMELAND_PATTERN.matcher(text);
+    private static String resolveReferenceSystemPlaceholders(String text, ExecutionContext context) {
+        Matcher matcher = REFERENCESYSTEM_PATTERN.matcher(text);
         StringBuffer result = new StringBuffer();
         
         while (matcher.find()) {
@@ -315,7 +315,7 @@ public class FrameLandPlaceholderResolver {
         public String resolve(String content, ExecutionContext context, String defaultValue) {
             try {
                 // Replace variables in math expression
-                String expression = FrameLandPlaceholderResolver.resolvePlaceholders(content, context);
+                String expression = ReferenceSystemPlaceholderResolver.resolvePlaceholders(content, context);
                 
                 // Simple math evaluation (basic operations only for security)
                 return evaluateSimpleMath(expression);
@@ -549,7 +549,7 @@ public class FrameLandPlaceholderResolver {
                 String format = parts.length > 1 ? parts[1] : "0";
                 
                 // Resolve any placeholders in the value
-                value = FrameLandPlaceholderResolver.resolvePlaceholders(value, context);
+                value = ReferenceSystemPlaceholderResolver.resolvePlaceholders(value, context);
                 
                 double number = Double.parseDouble(value);
                 

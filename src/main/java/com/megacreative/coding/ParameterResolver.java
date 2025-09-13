@@ -5,7 +5,7 @@ import com.megacreative.coding.values.LocationValue;
 import com.megacreative.coding.values.PlayerValue;
 import com.megacreative.coding.variables.VariableManager;
 import com.megacreative.coding.variables.IVariableManager;
-import com.megacreative.coding.placeholders.FrameLandPlaceholderResolver;
+import com.megacreative.coding.placeholders.ReferenceSystemPlaceholderResolver;
 import org.bukkit.entity.Player;
 import org.bukkit.Location;
 
@@ -13,9 +13,9 @@ import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 /**
- * 🎆 ENHANCED: Parameter resolver with FrameLand-style placeholder support
+ * 🎆 ENHANCED: Parameter resolver with reference system-style placeholder support
  * Now supports multiple placeholder formats:
- * - FrameLand style: apple[variable]~
+ * - Reference system style: apple[variable]~
  * - Modern style: ${variable}
  * - Classic style: %variable%
  */
@@ -37,14 +37,14 @@ public class ParameterResolver {
             return value;
         }
 
-        // 🎆 ENHANCED: Use FrameLand placeholder resolver for comprehensive support
-        String resolvedText = FrameLandPlaceholderResolver.resolvePlaceholders(text, context);
+        // 🎆 ENHANCED: Use reference system placeholder resolver for comprehensive support
+        String resolvedText = ReferenceSystemPlaceholderResolver.resolvePlaceholders(text, context);
         
         return DataValue.of(resolvedText);
     }
 
     /**
-     * 🎆 ENHANCED: Resolves placeholders in a string using FrameLand system
+     * 🎆 ENHANCED: Resolves placeholders in a string using reference system
      * 
      * @param context The execution context
      * @param text The text to resolve
@@ -55,12 +55,12 @@ public class ParameterResolver {
             return text;
         }
         
-        return FrameLandPlaceholderResolver.resolvePlaceholders(text, context);
+        return ReferenceSystemPlaceholderResolver.resolvePlaceholders(text, context);
     }
 
     /**
      * Legacy method for backwards compatibility
-     * @deprecated Use FrameLandPlaceholderResolver directly for better performance
+     * @deprecated Use ReferenceSystemPlaceholderResolver directly for better performance
      */
     @Deprecated
     private String resolvePlaceholder(String placeholder, ExecutionContext context) {

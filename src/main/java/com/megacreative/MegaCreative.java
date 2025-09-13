@@ -1,6 +1,8 @@
 package com.megacreative;
 
 import com.megacreative.commands.*;
+import com.megacreative.configs.WorldCode; // Add this import
+import com.megacreative.execution.runCode; // Add this import
 import com.megacreative.listeners.*;
 import com.megacreative.core.DependencyContainer;
 import com.megacreative.core.ServiceRegistry;
@@ -28,10 +30,15 @@ public class MegaCreative extends JavaPlugin {
     private BukkitTask tickTask;
     private BukkitTask autoSaveTask; // Add auto-save task
     private int tpsCheckCounter = 0;
+    private java.util.logging.Logger logger;
     
     @Override
     public void onEnable() {
         instance = this;
+        logger = getLogger();
+        
+        // Initialize WorldCode configuration system
+        WorldCode.setup(this);
         
         try {
             // Initialize dependency injection
@@ -252,16 +259,19 @@ public class MegaCreative extends JavaPlugin {
         getCommand("group").setExecutor(new GroupCommand(serviceRegistry));
         getCommand("delete").setExecutor(new DeleteCommand(this));
         
-        // 🎆 FrameLand: Register function management command
+        // Register function management command
         getCommand("function").setExecutor(new FunctionCommand(this));
         getCommand("function").setTabCompleter(new FunctionCommand(this));
         
-        // 🎆 FrameLand: Register interactive GUI command
+        // Register interactive GUI command
         getCommand("interactive").setExecutor(new InteractiveCommand(this));
         getCommand("interactive").setTabCompleter(new InteractiveCommand(this));
         
-        // 🎆 FrameLand-style advanced execution command
+        // Advanced execution command
         getCommand("execution").setExecutor(new ExecutionCommand(this));
+        
+        // Test compilation command
+        getCommand("testcompile").setExecutor(new TestCompileCommand(this));
     }
     
     /**
@@ -294,6 +304,12 @@ public class MegaCreative extends JavaPlugin {
         
         // Register CodeMoverListener for advanced code manipulation
         getServer().getPluginManager().registerEvents(new com.megacreative.listeners.CodeMoverListener(this), this);
+        
+        // Register our new CompilationListener for automatic code compilation
+        getServer().getPluginManager().registerEvents(new CompilationListener(this), this);
+        
+        // Register runCode execution engine
+        getServer().getPluginManager().registerEvents(new runCode(this), this);
         
         // Register our new PlayerEventsListener
         getServer().getPluginManager().registerEvents(serviceRegistry.getPlayerEventsListener(), this);

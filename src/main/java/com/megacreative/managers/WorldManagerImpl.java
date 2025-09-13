@@ -20,7 +20,7 @@ import java.util.concurrent.ThreadLocalRandom;
 
 public class WorldManagerImpl implements IWorldManager {
     
-    private final Plugin plugin;
+    private Plugin plugin;
     private ICodingManager codingManager;
     private final ConfigManager configManager;
     private final Map<String, CreativeWorld> worlds;
@@ -71,7 +71,7 @@ public class WorldManagerImpl implements IWorldManager {
      * Constructor for ServiceRegistry (uses ConfigManager)
      */
     public WorldManagerImpl(ConfigManager configManager) {
-        this.plugin = com.megacreative.MegaCreative.getInstance(); // Get the singleton instance
+        this.plugin = null; // Will be set later through setPlugin method
         this.codingManager = null; // Will be injected by ServiceRegistry
         this.configManager = configManager;
         this.worlds = new HashMap<>();
@@ -85,6 +85,23 @@ public class WorldManagerImpl implements IWorldManager {
             this.maxWorldsPerPlayer = 5; // Default value
             this.worldBorderSize = 300; // Default value
         }
+    }
+    
+    /**
+     * Sets the plugin instance for dependency injection
+     */
+    public void setPlugin(Plugin plugin) {
+        this.plugin = plugin;
+    }
+    
+    /**
+     * Gets the plugin instance, trying to get it from MegaCreative singleton if not directly set
+     */
+    private Plugin getPlugin() {
+        if (plugin == null) {
+            plugin = MegaCreative.getInstance();
+        }
+        return plugin;
     }
     
     /**
@@ -106,7 +123,7 @@ public class WorldManagerImpl implements IWorldManager {
         createWorld(player, name, worldType, CreativeWorld.WorldDualMode.STANDALONE, null);
     }
     
-    // 🎆 ENHANCED: FrameLand-style dual world creation with pairing support
+    // 🎆 ENHANCED: Reference system-style dual world creation with pairing support
     public void createDualWorld(Player player, String name, CreativeWorldType worldType) {
         // Create dev world first
         String devWorldId = generateUniqueId();
@@ -181,8 +198,8 @@ public class WorldManagerImpl implements IWorldManager {
                     throw new RuntimeException("Не удалось создать мир (Bukkit.createWorld вернул null)");
                 }
             } catch (Exception e) {
-                plugin.getLogger().severe("Критическая ошибка при создании мира: " + e.getMessage());
-                plugin.getLogger().severe("Stack trace: " + java.util.Arrays.toString(e.getStackTrace()));
+                getPlugin().getLogger().severe("Критическая ошибка при создании мира: " + e.getMessage());
+                getPlugin().getLogger().severe("Stack trace: " + java.util.Arrays.toString(e.getStackTrace()));
                 player.sendMessage("§cПроизошла ошибка при создании мира. Пожалуйста, обратитесь к администратору.");
 
                 // Пытаемся очистить мир, если он был частично создан
@@ -190,7 +207,7 @@ public class WorldManagerImpl implements IWorldManager {
                     Bukkit.getScheduler().runTask(plugin, () -> { // Очистку делаем синхронно
                         World partiallyCreatedWorld = Bukkit.getWorld(creativeWorld.getWorldName());
                         if (partiallyCreatedWorld != null) {
-                            plugin.getLogger().info("Попытка очистки частично созданного мира: " + partiallyCreatedWorld.getName());
+                            getPlugin().getLogger().info("Попытка очистки частично созданного мира: " + partiallyCreatedWorld.getName());
 
                             // Кикаем всех игроков (хотя их там быть не должно)
                             for (Player p : partiallyCreatedWorld.getPlayers()) {
@@ -200,7 +217,7 @@ public class WorldManagerImpl implements IWorldManager {
                             
                             // Выгружаем мир
                             if (!Bukkit.unloadWorld(partiallyCreatedWorld, false)) {
-                                plugin.getLogger().warning("Не удалось выгрузить частично созданный мир для удаления.");
+                                getPlugin().getLogger().warning("Не удалось выгрузить частично созданный мир для удаления.");
                                 return; // Дальше нет смысла, так как файлы заблокированы
                             }
                             
@@ -209,9 +226,9 @@ public class WorldManagerImpl implements IWorldManager {
                             Bukkit.getScheduler().runTaskAsynchronously(plugin, () -> {
                                 try {
                                     deleteFolder(worldFolder);
-                                    plugin.getLogger().info("Файлы поврежденного мира удалены: " + worldFolder.getName());
+                                    getPlugin().getLogger().info("Файлы поврежденного мира удалены: " + worldFolder.getName());
                                 } catch (Exception deleteEx) {
-                                    plugin.getLogger().severe("Не удалось удалить файлы поврежденного мира: " + deleteEx.getMessage());
+                                    getPlugin().getLogger().severe("Не удалось удалить файлы поврежденного мира: " + deleteEx.getMessage());
                                 }
                             });
                         }
@@ -283,11 +300,11 @@ public class WorldManagerImpl implements IWorldManager {
         World bukkitWorld = Bukkit.getWorld(world.getWorldName());
         if (bukkitWorld != null) {
             if (!bukkitWorld.getPlayers().isEmpty()) { // Сначала кикаем игроков, если они там есть.
-                bukkitWorld.getPlayers().forEach(p -> p.teleport(plugin.getServer().getWorlds().get(0).getSpawnLocation()));
+                bukkitWorld.getPlayers().forEach(p -> p.teleport(getPlugin().getServer().getWorlds().get(0).getSpawnLocation()));
             }
             unloadedMain = Bukkit.unloadWorld(bukkitWorld, false); // Сохранять изменения в момент удаления - не всегда хорошая идея, т.к. может сохранить ошибки
             if (!unloadedMain) {
-                plugin.getLogger().warning("Failed to unload main world: " + world.getWorldName() + ". Files might be locked.");
+                getPlugin().getLogger().warning("Failed to unload main world: " + world.getWorldName() + ". Files might be locked.");
                 requester.sendMessage("§cНе удалось полностью выгрузить основной мир. Возможно, требуется перезагрузка сервера.");
                 return; // Не можем удалить файлы, если мир не выгружен
             }
@@ -297,11 +314,11 @@ public class WorldManagerImpl implements IWorldManager {
         World devWorld = Bukkit.getWorld(world.getDevWorldName());
         if (devWorld != null) {
             if (!devWorld.getPlayers().isEmpty()) { // Кикаем игроков
-                devWorld.getPlayers().forEach(p -> p.teleport(plugin.getServer().getWorlds().get(0).getSpawnLocation()));
+                devWorld.getPlayers().forEach(p -> p.teleport(getPlugin().getServer().getWorlds().get(0).getSpawnLocation()));
             }
             unloadedDev = Bukkit.unloadWorld(devWorld, false);
              if (!unloadedDev) {
-                plugin.getLogger().warning("Failed to unload dev world: " + world.getDevWorldName() + ". Files might be locked.");
+                getPlugin().getLogger().warning("Failed to unload dev world: " + world.getDevWorldName() + ". Files might be locked.");
                 requester.sendMessage("§cНе удалось полностью выгрузить мир разработки. Возможно, требуется перезагрузка сервера.");
                 return; // Не можем удалить файлы, если мир не выгружен
             }
@@ -309,7 +326,7 @@ public class WorldManagerImpl implements IWorldManager {
 
         if (!unloadedMain || !unloadedDev) {
             requester.sendMessage("§cНекоторые миры не удалось выгрузить полностью. Пожалуйста, повторите команду или свяжитесь с администратором.");
-            plugin.getLogger().severe("Cannot proceed with deleting world files as world unload failed.");
+            getPlugin().getLogger().severe("Cannot proceed with deleting world files as world unload failed.");
             return;
         }
 
@@ -330,7 +347,7 @@ public class WorldManagerImpl implements IWorldManager {
 
         // Удаление файлов мира - асинхронно
         // Переместим deleteWorldFiles(world); сюда:
-        Bukkit.getScheduler().runTaskAsynchronously(plugin, () -> deleteWorldFilesInternal(world, requester));
+        Bukkit.getScheduler().runTaskAsynchronously(getPlugin(), () -> deleteWorldFilesInternal(world, requester));
 
         requester.sendMessage("§aМир '" + world.getName() + "' успешно помечен к удалению файлов!");
         requester.sendMessage("§7Файлы мира будут удалены в фоновом режиме.");
@@ -339,7 +356,7 @@ public class WorldManagerImpl implements IWorldManager {
     private void deleteWorldFilesInternal(CreativeWorld world, Player requester) {
         File worldFolder = new File(Bukkit.getWorldContainer(), world.getWorldName());
         File devWorldFolder = new File(Bukkit.getWorldContainer(), world.getDevWorldName());
-        File dataFile = new File(plugin.getDataFolder(), "worlds/" + world.getId() + ".yml");
+        File dataFile = new File(getPlugin().getDataFolder(), "worlds/" + world.getId() + ".yml");
         
         try {
             boolean successMain = deleteFolderRecursive(worldFolder);
@@ -347,15 +364,15 @@ public class WorldManagerImpl implements IWorldManager {
             boolean successDataFile = dataFile.delete();
             
             if (successMain && successDev && successDataFile) {
-                plugin.getLogger().info("Successfully deleted world files for world ID " + world.getId());
+                getPlugin().getLogger().info("Successfully deleted world files for world ID " + world.getId());
                 requester.sendMessage("§a✓ Файлы мира '" + world.getName() + "' полностью удалены.");
             } else {
-                plugin.getLogger().warning("Failed to fully delete world files for world ID " + world.getId() + 
+                getPlugin().getLogger().warning("Failed to fully delete world files for world ID " + world.getId() + 
                                             ". Main: " + successMain + ", Dev: " + successDev + ", Data: " + successDataFile);
                 requester.sendMessage("§c⚠ Ошибка удаления всех файлов мира. Возможно, они были заблокированы. Проверьте логи сервера.");
             }
         } catch (Exception e) {
-            plugin.getLogger().severe("Error deleting world files for world ID " + world.getId() + ": " + e.getMessage());
+            getPlugin().getLogger().severe("Error deleting world files for world ID " + world.getId() + ": " + e.getMessage());
             requester.sendMessage("§c❌ Непредвиденная ошибка при удалении файлов мира: " + e.getMessage());
         }
     }
@@ -383,7 +400,7 @@ public class WorldManagerImpl implements IWorldManager {
             // Удаляем саму папку или файл после того, как ее содержимое удалено
             return folder.delete();
         } catch (Exception e) {
-            plugin.getLogger().severe("Failed to delete " + folder.getName() + ": " + e.getMessage());
+            getPlugin().getLogger().severe("Failed to delete " + folder.getName() + ": " + e.getMessage());
             return false;
         }
     }
@@ -417,7 +434,7 @@ public class WorldManagerImpl implements IWorldManager {
     }
     
     /**
-     * 🎆 ENHANCED: FrameLand-style world pairing and switching methods
+     * 🎆 ENHANCED: Reference system-style world pairing and switching methods
      */
     public CreativeWorld getPairedWorld(CreativeWorld world) {
         if (world.getPairedWorldId() != null) {
@@ -570,7 +587,7 @@ public class WorldManagerImpl implements IWorldManager {
     
     /**
      * 🎆 ENHANCED: Finds CreativeWorld by Bukkit world with dual world architecture support
-     * Handles both old-style (_dev) and new FrameLand-style (-world, -code) naming
+     * Handles both old-style (_dev) and new reference system-style (-world, -code) naming
      * @param bukkitWorld Bukkit-мир
      * @return Найденный CreativeWorld или null, если не найден
      */
@@ -589,7 +606,7 @@ public class WorldManagerImpl implements IWorldManager {
             return getWorld(id);
         }
         
-        // 🎆 ENHANCED: Handle new FrameLand-style dual world naming
+        // 🎆 ENHANCED: Handle new reference system-style dual world naming
         // Format: worldname-code or worldname-world
         for (CreativeWorld world : worlds.values()) {
             // Check if this is the main world
@@ -602,7 +619,7 @@ public class WorldManagerImpl implements IWorldManager {
                 return world;
             }
             
-            // Check FrameLand-style naming patterns
+            // Check reference system-style naming patterns
             if (world.getDualMode() != CreativeWorld.WorldDualMode.STANDALONE) {
                 String baseName = world.getBaseName();
                 
@@ -655,18 +672,18 @@ public class WorldManagerImpl implements IWorldManager {
      * Асинхронное сохранение мира с синхронизацией
      */
     public void saveWorldAsync(CreativeWorld world, Player player) {
-        Bukkit.getScheduler().runTaskAsynchronously(plugin, () -> {
+        Bukkit.getScheduler().runTaskAsynchronously(getPlugin(), () -> {
             synchronized (worldSaveLock) {
                 try {
                     saveWorld(world);
                     // Уведомление об успехе в главном потоке
-                    Bukkit.getScheduler().runTask(plugin, () -> 
+                    Bukkit.getScheduler().runTask(getPlugin(), () -> 
                         player.sendMessage("§aМир '" + world.getName() + "' успешно сохранен!"));
                 } catch (Exception e) {
-                    plugin.getLogger().severe("Критическая ошибка при сохранении мира " + world.getId() + ": " + e.getMessage());
-                    plugin.getLogger().severe("Stack trace: " + java.util.Arrays.toString(e.getStackTrace()));
+                    getPlugin().getLogger().severe("Критическая ошибка при сохранении мира " + world.getId() + ": " + e.getMessage());
+                    getPlugin().getLogger().severe("Stack trace: " + java.util.Arrays.toString(e.getStackTrace()));
                     // Уведомление об ошибке в главном потоке
-                    Bukkit.getScheduler().runTask(plugin, () -> 
+                    Bukkit.getScheduler().runTask(getPlugin(), () -> 
                         player.sendMessage("§cПроизошла ошибка при сохранении мира."));
                 }
             }
@@ -674,7 +691,7 @@ public class WorldManagerImpl implements IWorldManager {
     }
     
     public void saveWorld(CreativeWorld world) {
-        File dataFolder = new File(plugin.getDataFolder(), "worlds");
+        File dataFolder = new File(getPlugin().getDataFolder(), "worlds");
         if (!dataFolder.exists()) {
             dataFolder.mkdirs();
         }
@@ -688,10 +705,10 @@ public class WorldManagerImpl implements IWorldManager {
             config.set("worldData", worldJson);
             config.save(worldFile);
             
-            plugin.getLogger().fine("World " + world.getId() + " saved successfully using safe DTO serialization");
+            getPlugin().getLogger().fine("World " + world.getId() + " saved successfully using safe DTO serialization");
         } catch (Exception e) {
-            plugin.getLogger().severe("Ошибка сохранения мира " + world.getId() + ": " + e.getMessage());
-            plugin.getLogger().severe("Stack trace: " + java.util.Arrays.toString(e.getStackTrace()));
+            getPlugin().getLogger().severe("Ошибка сохранения мира " + world.getId() + ": " + e.getMessage());
+            getPlugin().getLogger().severe("Stack trace: " + java.util.Arrays.toString(e.getStackTrace()));
         }
     }
     
@@ -700,7 +717,7 @@ public class WorldManagerImpl implements IWorldManager {
     }
     
     private void loadWorlds() {
-        File dataFolder = new File(plugin.getDataFolder(), "worlds");
+        File dataFolder = new File(getPlugin().getDataFolder(), "worlds");
         if (!dataFolder.exists()) {
             return;
         }
@@ -712,7 +729,7 @@ public class WorldManagerImpl implements IWorldManager {
             try {
                 loadWorld(worldFile);
             } catch (Exception e) {
-                plugin.getLogger().severe("Ошибка загрузки мира " + worldFile.getName() + ": " + e.getMessage());
+                getPlugin().getLogger().severe("Ошибка загрузки мира " + worldFile.getName() + ": " + e.getMessage());
             }
         }
     }
@@ -723,12 +740,12 @@ public class WorldManagerImpl implements IWorldManager {
         // Используем Gson для десериализации мира из JSON
         String worldJson = config.getString("worldData");
         if (worldJson == null) {
-            plugin.getLogger().warning("Файл мира " + worldFile.getName() + " не содержит данных worldData");
+            getPlugin().getLogger().warning("Файл мира " + worldFile.getName() + " не содержит данных worldData");
             return;
         }
         
         try {
-            CreativeWorld world = com.megacreative.utils.JsonSerializer.deserializeWorld(worldJson, (MegaCreative) plugin);
+            CreativeWorld world = com.megacreative.utils.JsonSerializer.deserializeWorld(worldJson, (MegaCreative) getPlugin());
             if (world != null) {
                 worlds.put(world.getId(), world);
                 playerWorlds.computeIfAbsent(world.getOwnerId(), k -> new ArrayList<>()).add(world.getId());
@@ -748,11 +765,11 @@ public class WorldManagerImpl implements IWorldManager {
                     bukkitWorld = creator.createWorld();
                 }
                 if (bukkitWorld != null) {
-                    ((MegaCreative) plugin).getCodingManager().loadScriptsForWorld(world);
+                    ((MegaCreative) getPlugin()).getCodingManager().loadScriptsForWorld(world);
                 }
             }
         } catch (Exception e) {
-            plugin.getLogger().severe("Ошибка загрузки мира " + worldFile.getName() + ": " + e.getMessage());
+            getPlugin().getLogger().severe("Ошибка загрузки мира " + worldFile.getName() + ": " + e.getMessage());
         }
     }
     

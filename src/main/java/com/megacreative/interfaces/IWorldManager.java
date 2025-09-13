@@ -26,7 +26,7 @@ public interface IWorldManager {
     void createWorld(Player player, String name, CreativeWorldType worldType);
     
     /**
-     * 🎆 ENHANCED: Creates a dual world pair for FrameLand-style development
+     * 🎆 ENHANCED: Creates a dual world pair for reference system-style development
      * @param player Игрок, создающий мир
      * @param name Имя мира
      * @param worldType Тип мира
@@ -110,7 +110,7 @@ public interface IWorldManager {
      */
     List<CreativeWorld> getCreativeWorlds();
     
-    // 🎆 ENHANCED: FrameLand-style world switching methods
+    // 🎆 ENHANCED: Reference system-style world switching methods
     
     /**
      * Gets the paired world for dual world architecture

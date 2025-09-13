@@ -9,7 +9,7 @@ import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
 
 /**
- * 🎆 FrameLand-Style Function Definition
+ * 🎆 Reference System-Style Function Definition
  * 
  * Represents a reusable function with parameters, return values, and scope management.
  * Functions can be called from scripts and maintain their own execution context.

@@ -16,7 +16,7 @@ import org.bukkit.inventory.meta.ItemMeta;
 import java.util.*;
 
 /**
- * 🎆 Enhanced FrameLand-Style Action Parameter GUI
+ * 🎆 Enhanced Reference System-Style Action Parameter GUI
  * 
  * Combines the power of InteractiveGUI with action parameter configuration.
  * Provides dynamic, real-time parameter editing with visual feedback.
@@ -327,14 +327,14 @@ public class EnhancedActionParameterGUI {
         ItemMeta meta = item.getItemMeta();
         
         if (meta != null) {
-            meta.setDisplayName("§6🎆 FrameLand Parameter Editor");
+            meta.setDisplayName("§6🎆 Reference System Parameter Editor");
             meta.setLore(Arrays.asList(
                 "§7Action: §e" + actionId,
                 "§7Block: §f" + block.getMaterial().name(),
                 "§7Parameters: §f" + block.getParameters().size(),
                 "",
                 "§a✨ Real-time parameter editing",
-                "§a🎆 FrameLand-style interface",
+                "§a🎆 Reference System-style interface",
                 "§7Use the interactive elements below"
             ));
             item.setItemMeta(meta);

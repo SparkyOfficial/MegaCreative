@@ -11,7 +11,7 @@ import org.bukkit.entity.Player;
 import java.util.concurrent.CompletableFuture;
 
 /**
- * 🎆 FrameLand-Style Return Action
+ * 🎆 Reference System-Style Return Action
  * 
  * Handles function return statements with optional return values.
  * Terminates function execution and returns control to the caller.

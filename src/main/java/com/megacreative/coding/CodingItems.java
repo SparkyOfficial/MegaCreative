@@ -34,6 +34,7 @@ public class CodingItems {
     public static final String REPEAT_TRIGGER_BLOCK_NAME = "§e⏰ Повторяющийся триггер";
     public static final String BRACKET_BLOCK_NAME = "§6🔧 Скобка";
     public static final String ARROW_NOT_NAME = "§c⟨ Отрицание НЕ";
+    public static final String GAME_VALUE_NAME = "§b🎮 Игровое значение";
 
     public static final String COPIER_TOOL_NAME = "§6📋 Копировщик блоков";
     public static final String DATA_CREATOR_NAME = "§b§lСоздать данные";
@@ -59,6 +60,7 @@ public class CodingItems {
         CODING_ITEM_NAMES.add(REPEAT_TRIGGER_BLOCK_NAME);
         CODING_ITEM_NAMES.add(BRACKET_BLOCK_NAME);
         CODING_ITEM_NAMES.add(ARROW_NOT_NAME);
+        CODING_ITEM_NAMES.add(GAME_VALUE_NAME);
 
         CODING_ITEM_NAMES.add(COPIER_TOOL_NAME);
         CODING_ITEM_NAMES.add(DATA_CREATOR_NAME);
@@ -123,7 +125,8 @@ public class CodingItems {
         player.getInventory().addItem(createSimpleBlock(Material.REDSTONE_BLOCK, "§e⏰ Повторяющийся триггер"));
         player.getInventory().addItem(createSimpleBlock(Material.PISTON, BRACKET_BLOCK_NAME));
         player.getInventory().addItem(getArrowNot());
-        
+        player.getInventory().addItem(getGameValue());
+    
         // Железный слиток для создания данных
         player.getInventory().addItem(getDataCreator());
         
@@ -241,4 +244,19 @@ public class CodingItems {
         }
         return item;
     }
+    
+    public static ItemStack getGameValue() {
+        ItemStack item = new ItemStack(Material.GOLDEN_APPLE);
+        ItemMeta meta = item.getItemMeta();
+        meta.setDisplayName(GAME_VALUE_NAME);
+        meta.setLore(Arrays.asList(
+            "§7Используйте для получения игровых значений:",
+            "§aПКМ§7 - открыть меню выбора значения",
+            "§7Можно использовать в параметрах блоков",
+            "§8Примеры: здоровье, голод, позиция и т.д."
+        ));
+        item.setItemMeta(meta);
+        return item;
+    }
+
 }

@@ -7,7 +7,7 @@ import org.bukkit.entity.Player;
 import java.util.concurrent.CompletableFuture;
 
 /**
- * 🎆 Enhanced Script Engine Interface with FrameLand-Style Execution Modes
+ * 🎆 Enhanced Script Engine Interface with Reference System-Style Execution Modes
  * 
  * Extends the basic ScriptEngine with advanced execution capabilities:
  * - Multiple execution modes (sync, async, delayed, batch, prioritized)

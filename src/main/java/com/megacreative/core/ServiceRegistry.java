@@ -23,12 +23,12 @@ import com.megacreative.services.BlockConfigService;
 import com.megacreative.services.FunctionManager;
 import com.megacreative.coding.functions.AdvancedFunctionManager;
 import com.megacreative.gui.interactive.InteractiveGUIManager;
-import com.megacreative.gui.interactive.FrameLandStyleGUI;
+import com.megacreative.gui.interactive.ReferenceSystemStyleGUI;
 import com.megacreative.gui.coding.EnhancedActionParameterGUI;
 import com.megacreative.MegaCreative;
 import com.megacreative.tools.CodeBlockClipboard;
-// 🎆 FrameLand-style comprehensive events
-import com.megacreative.managers.FrameLandEventManager;
+// 🎆 Reference system-style comprehensive events
+import com.megacreative.managers.ReferenceSystemEventManager;
 import org.bukkit.plugin.Plugin;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.logging.Level;
@@ -85,14 +85,15 @@ public class ServiceRegistry {
     private ScriptPerformanceMonitor scriptPerformanceMonitor;
     private FunctionManager functionManager;
     private AdvancedFunctionManager advancedFunctionManager;
+    private com.megacreative.services.CodeCompiler codeCompiler;
     
-    // 🎆 FrameLand: Interactive GUI System
+    // 🎆 Reference system: Interactive GUI System
     private InteractiveGUIManager interactiveGUIManager;
-    private FrameLandStyleGUI frameLandStyleGUI;
+    private ReferenceSystemStyleGUI referenceSystemStyleGUI;
     private EnhancedActionParameterGUI enhancedActionParameterGUI;
     
-    // 🎆 FrameLand-style comprehensive event system
-    private FrameLandEventManager frameLandEventManager;
+    // 🎆 Reference system-style comprehensive event system
+    private ReferenceSystemEventManager referenceSystemEventManager;
 
     public ServiceRegistry(Plugin plugin, DependencyContainer dependencyContainer) {
         this.plugin = plugin;
@@ -133,7 +134,7 @@ public class ServiceRegistry {
         this.functionManager = new FunctionManager((MegaCreative) plugin);
         registerService(FunctionManager.class, functionManager);
         
-        // 🎆 FrameLand: Now it's safe to initialize Advanced Function Manager
+        // 🎆 Reference system: Now it's safe to initialize Advanced Function Manager
         // because ScriptEngine is already registered
         this.advancedFunctionManager = new AdvancedFunctionManager((MegaCreative) plugin);
         registerService(AdvancedFunctionManager.class, advancedFunctionManager);
@@ -154,42 +155,89 @@ public class ServiceRegistry {
                     defaultEngine.getConditionCount() + " conditions");
         }
         
-        log.info("🎆 Advanced Function Manager initialized after ScriptEngine registration");
+        log.info(" YYS Advanced Function Manager initialized after ScriptEngine registration");
     }
     
     /**
-     * Initializes all services in the correct order
+     * 🎆 Reference system: Initialize all core services in correct order
+     * This method sets up the dependency injection container and registers all services
+     * Services are initialized in dependency order to prevent circular dependencies
      */
     public void initializeServices() {
-        log.info("Initializing MegaCreative services...");
+        plugin.getLogger().info(" YYS Initializing Service Registry...");
         
         try {
-            // 1. Core services first (config, database, etc.)
-            initializeCoreServices();
+            // Initialize core services first (services without dependencies)
+            // Initialize ConfigManager first as it's needed by WorldManagerImpl
+            if (configManager == null) {
+                configManager = new com.megacreative.utils.ConfigManager((MegaCreative) plugin);
+                configManager.loadConfig(); // Load the configuration immediately after creation
+                registerService(com.megacreative.utils.ConfigManager.class, configManager);
+            }
             
-            // 2. Interface-based managers (world, player, coding)
-            initializeManagers();
+            // Core managers first (minimal dependencies)
+            // Use the constructor that accepts ConfigManager to avoid circular dependency
+            WorldManagerImpl worldManagerImpl = new com.megacreative.managers.WorldManagerImpl(configManager);
+            worldManagerImpl.setPlugin(plugin); // Set the plugin instance
+            this.worldManager = worldManagerImpl;
+            registerService(com.megacreative.managers.WorldManagerImpl.class, worldManagerImpl);
+            registerService(com.megacreative.interfaces.IWorldManager.class, worldManagerImpl);
             
-            // 3. Implementation managers (templates, scoreboard, etc.)
-            initializeImplementationManagers();
+            // Register interface-to-implementation mapping in DependencyContainer
+            dependencyContainer.registerType(com.megacreative.interfaces.IWorldManager.class, com.megacreative.managers.WorldManagerImpl.class);
             
-            // 4. Coding system services (block placement, debugger, etc.)
-            initializeCodingServices();
+            PlayerManagerImpl playerManagerImpl = new com.megacreative.managers.PlayerManagerImpl((MegaCreative) plugin);
+            this.playerManager = playerManagerImpl;
+            registerService(com.megacreative.managers.PlayerManagerImpl.class, playerManagerImpl);
+            registerService(com.megacreative.interfaces.IPlayerManager.class, playerManagerImpl);
             
-            // 5. New architecture services (visual programming, collaboration, etc.)
-            initializeNewArchitectureServices();
+            // Register interface-to-implementation mapping in DependencyContainer
+            dependencyContainer.registerType(com.megacreative.interfaces.IPlayerManager.class, com.megacreative.managers.PlayerManagerImpl.class);
             
-            // 6. Register all services in DI container for dependency injection
-            registerServicesInDI();
+            this.trustedPlayerManager = new com.megacreative.managers.TrustedPlayerManager((MegaCreative) plugin);
+            registerService(com.megacreative.managers.TrustedPlayerManager.class, trustedPlayerManager);
+            // Keep reference to implementation for type casting
+            this.trustedPlayerManagerInterface = trustedPlayerManager;
             
-            // 7. Initialize services that need post-construction setup
-            postInitialize();
+            // Register interface-to-implementation mapping in DependencyContainer
+            dependencyContainer.registerType(com.megacreative.interfaces.ITrustedPlayerManager.class, com.megacreative.managers.TrustedPlayerManager.class);
             
-            log.info(String.format("Successfully initialized %d services", services.size()));
+            // Initialize world manager early
+            if (worldManagerImpl != null) {
+                // Set the coding manager after it's available through lazy initialization
+                worldManagerImpl.setCodingManager(getCodingManager());
+                worldManagerImpl.initialize();
+            }
+            
+            // Managers with minimal dependencies
+            this.devInventoryManager = new DevInventoryManager((MegaCreative) plugin);
+            registerService(DevInventoryManager.class, devInventoryManager);
+            
+            // 🎆 Reference system: Now it's safe to initialize Advanced Function Manager
+            this.advancedFunctionManager = new AdvancedFunctionManager((MegaCreative) plugin);
+            registerService(AdvancedFunctionManager.class, advancedFunctionManager);
+            
+            // Core handlers (depend on managers)
+            this.blockPlacementHandler = new BlockPlacementHandler((MegaCreative) plugin);
+            registerService(BlockPlacementHandler.class, blockPlacementHandler);
+            
+            this.autoConnectionManager = new AutoConnectionManager((MegaCreative) plugin, blockConfigService);
+            registerService(AutoConnectionManager.class, autoConnectionManager);
+            
+            // 🎆 Reference system-style comprehensive event system
+            this.referenceSystemEventManager = new ReferenceSystemEventManager((MegaCreative) plugin);
+            registerService(ReferenceSystemEventManager.class, referenceSystemEventManager);
+            
+            // Compiler service
+            this.codeCompiler = new com.megacreative.services.CodeCompiler((MegaCreative) plugin);
+            registerService(com.megacreative.services.CodeCompiler.class, codeCompiler);
+            
+            plugin.getLogger().info(" YYS Service Registry initialized successfully!");
             
         } catch (Exception e) {
-            log.log(Level.SEVERE, "Failed to initialize services: " + e.getMessage(), e);
-            throw new RuntimeException("Service initialization failed: " + e.getMessage(), e);
+            plugin.getLogger().severe(" YYS Failed to initialize Service Registry: " + e.getMessage());
+            e.printStackTrace();
+            throw new RuntimeException("Service registry initialization failed", e);
         }
     }
     
@@ -230,8 +278,8 @@ public class ServiceRegistry {
         // Shutdown services in reverse order of initialization
         
         // 🎆 FRAMELAND: Shutdown comprehensive event manager
-        if (frameLandEventManager != null) {
-            frameLandEventManager.shutdown();
+        if (referenceSystemEventManager != null) {
+            referenceSystemEventManager.shutdown();
         }
         
         // 🎆 FRAMELAND: Shutdown interactive GUI system
@@ -314,6 +362,11 @@ public class ServiceRegistry {
             // Create and initialize CodingManager
             this.codingManager = new com.megacreative.coding.CodingManagerImpl((MegaCreative) plugin, worldManager);
             registerService(ICodingManager.class, codingManager);
+            
+            // Set the coding manager in WorldManagerImpl
+            if (worldManager instanceof WorldManagerImpl) {
+                ((WorldManagerImpl) worldManager).setCodingManager(codingManager);
+            }
             
             // Verify ScriptEngine is properly set
             if (scriptEngine == null) {
@@ -467,25 +520,7 @@ public class ServiceRegistry {
         return functionManager;
     }
     
-    // 🎆 FrameLand: Get Advanced Function Manager
-    public AdvancedFunctionManager getAdvancedFunctionManager() {
-        if (advancedFunctionManager == null) {
-            this.advancedFunctionManager = new AdvancedFunctionManager((MegaCreative) plugin);
-            registerService(AdvancedFunctionManager.class, advancedFunctionManager);
-        }
-        return advancedFunctionManager;
-    }
-    
-    // 🎆 FRAMELAND: Get comprehensive event manager
-    public FrameLandEventManager getFrameLandEventManager() {
-        if (frameLandEventManager == null) {
-            this.frameLandEventManager = new FrameLandEventManager((MegaCreative) plugin);
-            registerService(FrameLandEventManager.class, frameLandEventManager);
-        }
-        return frameLandEventManager;
-    }
-    
-    // 🎆 FrameLand: Get Interactive GUI Manager
+    // 🎆 Reference system: Get Interactive GUI Manager
     public InteractiveGUIManager getInteractiveGUIManager() {
         if (interactiveGUIManager == null) {
             this.interactiveGUIManager = new InteractiveGUIManager((MegaCreative) plugin);
@@ -494,22 +529,31 @@ public class ServiceRegistry {
         return interactiveGUIManager;
     }
     
-    // 🎆 FrameLand: Get FrameLand Style GUI
-    public FrameLandStyleGUI getFrameLandStyleGUI() {
-        if (frameLandStyleGUI == null) {
-            this.frameLandStyleGUI = new FrameLandStyleGUI((MegaCreative) plugin);
-            registerService(FrameLandStyleGUI.class, frameLandStyleGUI);
+    // 🎆 Reference system: Get Reference System Style GUI
+    public ReferenceSystemStyleGUI getReferenceSystemStyleGUI() {
+        if (referenceSystemStyleGUI == null) {
+            this.referenceSystemStyleGUI = new ReferenceSystemStyleGUI((MegaCreative) plugin);
+            registerService(ReferenceSystemStyleGUI.class, referenceSystemStyleGUI);
         }
-        return frameLandStyleGUI;
+        return referenceSystemStyleGUI;
     }
     
-    // 🎆 FrameLand: Get Enhanced Action Parameter GUI
+    // 🎆 Reference system: Get Enhanced Action Parameter GUI
     public EnhancedActionParameterGUI getEnhancedActionParameterGUI() {
         if (enhancedActionParameterGUI == null) {
             this.enhancedActionParameterGUI = new EnhancedActionParameterGUI((MegaCreative) plugin);
             registerService(EnhancedActionParameterGUI.class, enhancedActionParameterGUI);
         }
         return enhancedActionParameterGUI;
+    }
+    
+    // Get CodeCompiler service
+    public com.megacreative.services.CodeCompiler getCodeCompiler() {
+        if (codeCompiler == null) {
+            this.codeCompiler = new com.megacreative.services.CodeCompiler((MegaCreative) plugin);
+            registerService(com.megacreative.services.CodeCompiler.class, codeCompiler);
+        }
+        return codeCompiler;
     }
     
     private void initializeCoreServices() {
@@ -524,23 +568,28 @@ public class ServiceRegistry {
     private void initializeManagers() {
         // Initialize interface-based managers
         if (playerManager == null) {
-            this.playerManager = new com.megacreative.managers.PlayerManagerImpl((MegaCreative) plugin);
-            registerService(IPlayerManager.class, playerManager);
+            PlayerManagerImpl playerManagerImpl = new com.megacreative.managers.PlayerManagerImpl((MegaCreative) plugin);
+            this.playerManager = playerManagerImpl;
+            registerService(IPlayerManager.class, playerManagerImpl);
+            dependencyContainer.registerType(com.megacreative.interfaces.IPlayerManager.class, com.megacreative.managers.PlayerManagerImpl.class);
         }
         
         if (worldManager == null) {
             // Use the constructor that accepts ConfigManager and set codingManager later
-            this.worldManager = new com.megacreative.managers.WorldManagerImpl(getConfigManager());
+            WorldManagerImpl worldManagerImpl = new com.megacreative.managers.WorldManagerImpl(getConfigManager());
+            this.worldManager = worldManagerImpl;
             // Set the coding manager after it's available
-            if (worldManager instanceof com.megacreative.managers.WorldManagerImpl) {
-                ((com.megacreative.managers.WorldManagerImpl) worldManager).setCodingManager(getCodingManager());
+            if (worldManagerImpl != null) {
+                worldManagerImpl.setCodingManager(getCodingManager());
             }
-            registerService(IWorldManager.class, worldManager);
+            registerService(IWorldManager.class, worldManagerImpl);
+            dependencyContainer.registerType(com.megacreative.interfaces.IWorldManager.class, com.megacreative.managers.WorldManagerImpl.class);
         }
         
         if (trustedPlayerManager == null) {
             this.trustedPlayerManager = new com.megacreative.managers.TrustedPlayerManager((MegaCreative) plugin);
             registerService(ITrustedPlayerManager.class, trustedPlayerManager);
+            dependencyContainer.registerType(com.megacreative.interfaces.ITrustedPlayerManager.class, com.megacreative.managers.TrustedPlayerManager.class);
             // Keep reference to implementation for type casting
             this.trustedPlayerManagerInterface = trustedPlayerManager;
         }
@@ -613,31 +662,15 @@ public class ServiceRegistry {
         }
         
         // 🎆 FRAMELAND: Initialize comprehensive event manager
-        if (frameLandEventManager == null) {
-            this.frameLandEventManager = new FrameLandEventManager((MegaCreative) plugin);
-            registerService(FrameLandEventManager.class, frameLandEventManager);
-        }
-        
-        // 🎆 FRAMELAND: Initialize interactive GUI system
-        if (interactiveGUIManager == null) {
-            this.interactiveGUIManager = new InteractiveGUIManager((MegaCreative) plugin);
-            registerService(InteractiveGUIManager.class, interactiveGUIManager);
-        }
-        
-        if (frameLandStyleGUI == null) {
-            this.frameLandStyleGUI = new FrameLandStyleGUI((MegaCreative) plugin);
-            registerService(FrameLandStyleGUI.class, frameLandStyleGUI);
-        }
-        
-        if (enhancedActionParameterGUI == null) {
-            this.enhancedActionParameterGUI = new EnhancedActionParameterGUI((MegaCreative) plugin);
-            registerService(EnhancedActionParameterGUI.class, enhancedActionParameterGUI);
+        if (referenceSystemEventManager == null) {
+            this.referenceSystemEventManager = new ReferenceSystemEventManager((MegaCreative) plugin);
+            registerService(ReferenceSystemEventManager.class, referenceSystemEventManager);
         }
         
         log.info("BlockConfigService initialized with " + blockConfigService.getAllBlockConfigs().size() + " block configurations");
-        log.info("🎆 FrameLand Event Manager initialized with comprehensive event coverage");
-        log.info("🎆 FrameLand Advanced Execution Engine integrated with DefaultScriptEngine");
-        log.info("🎆 FrameLand Interactive GUI System initialized with 6 element types");
+        log.info(" YYS Reference System Event Manager initialized with comprehensive event coverage");
+        log.info(" YYS Reference System Advanced Execution Engine integrated with DefaultScriptEngine");
+        log.info(" YYS Reference System Interactive GUI System initialized with 6 element types");
     }
     
     private void registerServicesInDI() {

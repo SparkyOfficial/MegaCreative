@@ -5,7 +5,7 @@ import com.megacreative.coding.executors.ExecutionResult;
 import com.megacreative.coding.variables.VariableManager;
 import com.megacreative.coding.debug.VisualDebugger;
 import com.megacreative.services.BlockConfigService;
-// 🎆 FrameLand-style advanced execution
+// 🎆 Reference system-style advanced execution
 import com.megacreative.coding.executors.AdvancedExecutionEngine;
 import org.bukkit.Material;
 import org.bukkit.entity.Player;
@@ -25,7 +25,7 @@ public class DefaultScriptEngine implements ScriptEngine, EnhancedScriptEngine {
     private final ActionFactory actionFactory;
     private final ConditionFactory conditionFactory;
     
-    // 🎆 FrameLand-style advanced execution engine
+    // 🎆 Reference system-style advanced execution engine
     private final AdvancedExecutionEngine advancedExecutionEngine;
     
     private final Map<String, ExecutionContext> activeExecutions = new ConcurrentHashMap<>();
@@ -45,7 +45,7 @@ public class DefaultScriptEngine implements ScriptEngine, EnhancedScriptEngine {
         this.actionFactory = new ActionFactory(plugin.getDependencyContainer());
         this.conditionFactory = new ConditionFactory();
         
-        // 🎆 FrameLand: Initialize advanced execution engine
+        // 🎆 Reference system: Initialize advanced execution engine
         this.advancedExecutionEngine = new AdvancedExecutionEngine(plugin);
     }
     
@@ -503,7 +503,7 @@ public class DefaultScriptEngine implements ScriptEngine, EnhancedScriptEngine {
         return false;
     }
     
-    // 🎆 FrameLand-style enhanced execution methods
+    // 🎆 Reference system-style enhanced execution methods
     
     @Override
     public CompletableFuture<ExecutionResult> executeScript(CodeScript script, Player player, 

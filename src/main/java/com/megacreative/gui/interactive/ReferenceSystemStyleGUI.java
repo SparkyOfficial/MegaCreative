@@ -15,30 +15,30 @@ import java.util.HashMap;
 import java.util.Map;
 
 /**
- * 🎆 FrameLand-Style Interactive GUI Examples
+ * 🎆 Reference System-Style Interactive GUI Examples
  * 
- * Demonstrates various FrameLand-style interactive elements:
+ * Demonstrates various reference system-style interactive elements:
  * - Material selection with live preview
  * - Mode toggles with visual feedback
  * - Dynamic value adjustments
  * - Real-time parameter editing
  */
-public class FrameLandStyleGUI {
+public class ReferenceSystemStyleGUI {
     
     private final MegaCreative plugin;
     private final InteractiveGUIManager guiManager;
     
-    public FrameLandStyleGUI(MegaCreative plugin) {
+    public ReferenceSystemStyleGUI(MegaCreative plugin) {
         this.plugin = plugin;
         this.guiManager = new InteractiveGUIManager(plugin);
     }
     
     /**
-     * Creates a FrameLand-style block parameter editor
+     * Creates a reference system-style block parameter editor
      */
     public InteractiveGUI createBlockParameterEditor(Player player, CodeBlock block) {
         InteractiveGUI gui = guiManager.createInteractiveGUI(player, 
-            "🎆 FrameLand Block Editor - " + block.getAction(), 54);
+            "🎆 Reference System Block Editor - " + block.getAction(), 54);
         
         // Title display
         gui.getInventory().setItem(4, createTitleItem(block));
@@ -122,11 +122,11 @@ public class FrameLandStyleGUI {
     }
     
     /**
-     * Creates a FrameLand-style world settings GUI
+     * Creates a reference system-style world settings GUI
      */
     public InteractiveGUI createWorldSettingsGUI(Player player, CreativeWorld world) {
         InteractiveGUI gui = guiManager.createInteractiveGUI(player, 
-            "🎆 FrameLand World Settings - " + world.getName(), 54);
+            "🎆 Reference System World Settings - " + world.getName(), 54);
         
         // World mode toggle
         Map<String, Object> modeProps = new HashMap<>();
@@ -213,11 +213,11 @@ public class FrameLandStyleGUI {
     }
     
     /**
-     * Creates a FrameLand-style item editor GUI
+     * Creates a reference system-style item editor GUI
      */
     public InteractiveGUI createItemEditorGUI(Player player, String parameterName, DataValue currentValue) {
         InteractiveGUI gui = guiManager.createInteractiveGUI(player, 
-            "🎆 FrameLand Item Editor - " + parameterName, 27);
+            "🎆 Reference System Item Editor - " + parameterName, 27);
         
         // Item stack editor
         Map<String, Object> itemProps = new HashMap<>();

@@ -17,7 +17,7 @@ import java.util.Map;
 import java.util.HashMap;
 
 /**
- * 🎆 FrameLand-Style Function Call Action
+ * 🎆 Reference System-Style Function Call Action
  * 
  * Handles execution of user-defined functions within the coding system.
  * Supports function discovery, parameter passing, and result handling.

@@ -12,7 +12,7 @@ import java.util.List;
 import java.util.ArrayList;
 
 /**
- * 🎆 FrameLand-Style Execution Performance Command
+ * 🎆 Reference System-Style Execution Performance Command
  * 
  * Demonstrates and tests the advanced execution modes.
  * Simplified version to avoid compilation issues.
@@ -38,7 +38,7 @@ public class ExecutionCommand implements CommandExecutor, TabCompleter {
     }
     
     private void showHelp(Player player) {
-        player.sendMessage("§6§l🎆 FrameLand Execution Engine");
+        player.sendMessage("§6§l🎆 Reference System Execution Engine");
         player.sendMessage("§7Advanced execution modes are available through the enhanced script engine");
         player.sendMessage("§7Use /interactive demo to test GUI elements");
     }

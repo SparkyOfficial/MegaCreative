@@ -5,7 +5,7 @@ import com.megacreative.coding.variables.VariableManager;
 import com.megacreative.coding.variables.IVariableManager.VariableScope;
 import com.megacreative.coding.values.DataValue;
 import com.megacreative.models.CreativeWorld;
-// 🎆 FrameLand-style execution modes
+// 🎆 Reference system-style execution modes
 import com.megacreative.coding.executors.AdvancedExecutionEngine.ExecutionMode;
 import com.megacreative.coding.executors.AdvancedExecutionEngine.Priority;
 import org.bukkit.Location;
@@ -39,7 +39,7 @@ public class ExecutionContext {
     // Instruction counter for loop protection
     private int instructionCount = 0;
     
-    // 🎆 FrameLand-style execution enhancements
+    // 🎆 Reference system-style execution enhancements
     private ExecutionMode executionMode = ExecutionMode.SYNCHRONOUS;
     private Priority priority = Priority.NORMAL;
     private int maxInstructions = 1000;
@@ -434,7 +434,7 @@ public class ExecutionContext {
         instructionCount = 0;
     }
     
-    // 🎆 FrameLand-style execution mode methods
+    // 🎆 Reference system-style execution mode methods
     
     /**
      * Gets the execution mode for this context
@@ -533,7 +533,7 @@ public class ExecutionContext {
         private Location blockLocation;
         private CodeBlock currentBlock;
         
-        // 🎆 FrameLand-style execution mode fields
+        // 🎆 Reference system-style execution mode fields
         private ExecutionMode executionMode = ExecutionMode.SYNCHRONOUS;
         private Priority priority = Priority.NORMAL;
         private int maxInstructions = 1000;
@@ -568,7 +568,7 @@ public class ExecutionContext {
             return this;
         }
         
-        // 🎆 FrameLand-style execution mode builders
+        // 🎆 Reference system-style execution mode builders
         public Builder executionMode(ExecutionMode executionMode) {
             this.executionMode = executionMode;
             return this;

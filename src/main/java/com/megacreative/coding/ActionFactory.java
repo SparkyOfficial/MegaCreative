@@ -90,7 +90,7 @@ public class ActionFactory {
         register("customFunction", CustomFunctionAction::new); // To define a function
         register("callFunction", CallFunctionAction::new);
         
-        // 🎆 FrameLand: Advanced Function System
+        // Advanced Function System
         register("define_function", () -> new DefineFunctionAction((com.megacreative.MegaCreative) dependencyContainer.resolve(com.megacreative.MegaCreative.class)));
         register("call_function", () -> new FunctionCallAction((com.megacreative.MegaCreative) dependencyContainer.resolve(com.megacreative.MegaCreative.class)));
         register("return", () -> new ReturnAction((com.megacreative.MegaCreative) dependencyContainer.resolve(com.megacreative.MegaCreative.class)));
