@@ -98,9 +98,10 @@ public class ReferenceSystemCustomEventsListener implements Listener {
      * Handle player variable change event
      */
     @EventHandler
-    public void onPlayerVariableChange(/* No direct Bukkit event for this - using a placeholder */) {
+    public void onPlayerVariableChange(org.bukkit.event.player.PlayerJoinEvent event) {
         // This would be triggered by custom variable change logic
-        // For now, we'll leave this as a placeholder
+        // For now, we'll use PlayerJoinEvent as a placeholder
+        // In a real implementation, this would be triggered when player variables change
     }
     
     // ============================================================================
@@ -111,9 +112,10 @@ public class ReferenceSystemCustomEventsListener implements Listener {
      * Handle timer expire event
      */
     @EventHandler
-    public void onTimerExpire(/* No direct Bukkit event for this - using a placeholder */) {
+    public void onTimerExpire(org.bukkit.event.server.ServerLoadEvent event) {
         // This would be triggered by custom timer logic
-        // For now, we'll leave this as a placeholder
+        // For now, we'll use ServerLoadEvent as a placeholder
+        // In a real implementation, this would be triggered when timers expire
     }
     
     // ============================================================================
@@ -124,9 +126,10 @@ public class ReferenceSystemCustomEventsListener implements Listener {
      * Handle player custom action event
      */
     @EventHandler
-    public void onPlayerCustomAction(/* No direct Bukkit event for this - using a placeholder */) {
+    public void onPlayerCustomAction(org.bukkit.event.player.PlayerInteractEvent event) {
         // This would be triggered by custom action logic
-        // For now, we'll leave this as a placeholder
+        // For now, we'll use PlayerInteractEvent as a placeholder
+        // In a real implementation, this would be triggered when players perform custom actions
     }
     
     // ============================================================================
@@ -137,9 +140,10 @@ public class ReferenceSystemCustomEventsListener implements Listener {
      * Handle player score change event
      */
     @EventHandler
-    public void onPlayerScoreChange(/* No direct Bukkit event for this - using a placeholder */) {
+    public void onPlayerScoreChange(org.bukkit.event.player.PlayerExpChangeEvent event) {
         // This would be triggered by custom score change logic
-        // For now, we'll leave this as a placeholder
+        // For now, we'll use PlayerExpChangeEvent as a placeholder
+        // In a real implementation, this would be triggered when player scores change
     }
     
     // ============================================================================
@@ -150,9 +154,10 @@ public class ReferenceSystemCustomEventsListener implements Listener {
      * Handle function call event
      */
     @EventHandler
-    public void onFunctionCall(/* No direct Bukkit event for this - using a placeholder */) {
+    public void onFunctionCall(org.bukkit.event.player.PlayerCommandPreprocessEvent event) {
         // This would be triggered by custom function call logic
-        // For now, we'll leave this as a placeholder
+        // For now, we'll use PlayerCommandPreprocessEvent as a placeholder
+        // In a real implementation, this would be triggered when functions are called
     }
     
     // ============================================================================
@@ -163,9 +168,10 @@ public class ReferenceSystemCustomEventsListener implements Listener {
      * Handle world mode change event
      */
     @EventHandler
-    public void onWorldModeChange(/* No direct Bukkit event for this - using a placeholder */) {
+    public void onWorldModeChange(org.bukkit.event.player.PlayerChangedWorldEvent event) {
         // This would be triggered by custom world mode change logic
-        // For now, we'll leave this as a placeholder
+        // For now, we'll use PlayerChangedWorldEvent as a placeholder
+        // In a real implementation, this would be triggered when world modes change
     }
     
     // ============================================================================

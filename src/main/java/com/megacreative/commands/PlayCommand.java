@@ -2,7 +2,7 @@ package com.megacreative.commands;
 
 import com.megacreative.MegaCreative;
 import com.megacreative.models.CreativeWorld;
-import com.megacreative.models.WorldMode;
+import com.megacreative.services.CodeCompiler; // Add missing import
 import org.bukkit.Bukkit;
 import org.bukkit.GameMode;
 import org.bukkit.World;
@@ -10,6 +10,7 @@ import org.bukkit.command.Command;
 import org.bukkit.command.CommandExecutor;
 import org.bukkit.command.CommandSender;
 import org.bukkit.entity.Player;
+import java.util.List; // Add missing import
 
 public class PlayCommand implements CommandExecutor {
     
@@ -55,6 +56,24 @@ public class PlayCommand implements CommandExecutor {
         if (creativeWorld == null) {
             player.sendMessage("§cВы не находитесь в мире MegaCreative!");
             return true;
+        }
+        
+        // Автоматически компилируем код перед переключением в режим игры
+        World currentWorld = player.getWorld();
+        if (currentWorld.getName().contains("-code")) {
+            // Компилируем код из мира разработки
+            CodeCompiler codeCompiler = plugin.getServiceRegistry().getCodeCompiler();
+            if (codeCompiler != null) {
+                try {
+                    List<String> codeStrings = codeCompiler.compileWorldToCodeStrings(currentWorld);
+                    String worldId = currentWorld.getName().replace("-code", "");
+                    codeCompiler.saveCompiledCode(worldId, codeStrings);
+                    player.sendMessage("§aКод успешно скомпилирован!");
+                } catch (Exception e) {
+                    player.sendMessage("§cОшибка компиляции кода: " + e.getMessage());
+                    plugin.getLogger().severe("Failed to compile world code: " + e.getMessage());
+                }
+            }
         }
         
         // Сохраняем dev инвентарь (если игрок в dev мире)

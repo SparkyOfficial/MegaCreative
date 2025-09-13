@@ -83,6 +83,15 @@ public class BlockPlacementHandler implements Listener {
         // Only process in dev worlds
         if (!isInDevWorld(player)) return;
         
+        // Проверяем стекло под блоком (как в FrameLand)
+        Block glassUnder = player.getWorld().getBlockAt(block.getX(), block.getY() - 1, block.getZ());
+        if (glassUnder.getType() != Material.BLUE_STAINED_GLASS && glassUnder.getType() != Material.GRAY_STAINED_GLASS) {
+            player.sendMessage("§cВы можете размещать блоки кода только на синее (события) или серое (действия) стекло!");
+            player.playSound(block.getLocation(), org.bukkit.Sound.ENTITY_VILLAGER_NO, 1.0f, 0.8f);
+            event.setCancelled(true);
+            return;
+        }
+        
         // Проверяем, что это универсальный блок для кодирования
         if (!blockConfigService.isCodeBlock(block.getType())) {
             // Особая обработка для поршней (скобок) - они могут не иметь конфига
@@ -147,6 +156,12 @@ public class BlockPlacementHandler implements Listener {
         
         CodeBlock newCodeBlock = new CodeBlock(block.getType(), actionId);
         
+        // 🔧 FIX: Устанавливаем действие по умолчанию из конфигурации, если есть
+        if (config.getDefaultAction() != null) {
+            newCodeBlock.setAction(config.getDefaultAction());
+            actionId = config.getDefaultAction();
+        }
+        
         // Special handling for bracket blocks (pistons)
         if (block.getType() == Material.PISTON || block.getType() == Material.STICKY_PISTON) {
             newCodeBlock.setBracketType(CodeBlock.BracketType.OPEN); // Default to opening bracket
@@ -157,7 +172,14 @@ public class BlockPlacementHandler implements Listener {
         
         // Устанавливаем табличку с названием из конфига (для конструкторов табличка уже создана в buildStructureFor)
         if (!config.isConstructor()) {
-            setSignOnBlock(block.getLocation(), config.getDisplayName() + " (Пустой)");
+            // 🔧 FIX: Show the actual action instead of "Пустой"
+            String displayText = config.getDisplayName();
+            if (!actionId.equals("NOT_SET")) {
+                displayText += " (" + actionId + ")";
+            } else {
+                displayText += " (Пустой)";
+            }
+            setSignOnBlock(block.getLocation(), displayText);
         }
         
         // Визуальная и аудио обратная связь
@@ -166,9 +188,12 @@ public class BlockPlacementHandler implements Listener {
         
         if (config.isConstructor()) {
             player.sendMessage("§a✓ Структура " + config.getDisplayName() + " создана!");
-            player.sendMessage("§7Кликните по основному блоку для выбора действия");
+            player.sendMessage("§7Кликните по табличке для настройки параметров");
         } else {
             player.sendMessage("§a✓ Блок кода размещен: " + config.getDisplayName());
+            if (!actionId.equals("NOT_SET")) {
+                player.sendMessage("§7Действие: " + actionId);
+            }
             player.sendMessage("§7Кликните правой кнопкой для выбора действия");
         }
     }
@@ -202,9 +227,9 @@ public class BlockPlacementHandler implements Listener {
             // Create closing bracket (piston pointing outward)
             // 🔧 FIX: Correct bracket positioning - count from main block, not from open bracket
             Location closeBracketLoc = loc.clone().add(
-                buildDirection.getModX() * (bracketDistance + 1), 
+                buildDirection.getModX() * bracketDistance, 
                 0, 
-                buildDirection.getModZ() * (bracketDistance + 1)
+                buildDirection.getModZ() * bracketDistance
             );
             
             // 1. Create bracket pistons with proper orientation
@@ -402,6 +427,29 @@ public class BlockPlacementHandler implements Listener {
             // AutoConnectionManager will handle disconnection automatically at MONITOR priority
             plugin.getLogger().info("CodeBlock removed from " + loc + " with action: " + (removedBlock != null ? removedBlock.getAction() : "unknown"));
         }
+        
+        // Особая обработка для поршней (скобок)
+        else if (event.getBlock().getType() == Material.PISTON || event.getBlock().getType() == Material.STICKY_PISTON) {
+            // Это поршень-скобка, удаляем его из нашей карты
+            blockCodeBlocks.remove(loc);
+            
+            // Удаляем табличку, если она есть
+            removeSignFromBlock(loc);
+            
+            // Enhanced feedback for bracket removal
+            player.sendMessage("§cСкобка удалена!");
+            player.playSound(loc, org.bukkit.Sound.BLOCK_PISTON_CONTRACT, 0.8f, 1.2f);
+            
+            // Add visual effect for bracket removal
+            Location effectLoc = loc.add(0.5, 0.5, 0.5);
+            player.spawnParticle(org.bukkit.Particle.SMOKE_NORMAL, effectLoc, 8, 0.3, 0.3, 0.3, 0.1);
+            player.spawnParticle(org.bukkit.Particle.FLAME, effectLoc, 3, 0.2, 0.2, 0.2, 0.05);
+            
+            // 🔧 FIX: Actually remove the physical block
+            event.getBlock().setType(Material.AIR);
+            
+            plugin.getLogger().info("Bracket piston removed from " + loc);
+        }
     }
     
     /**
@@ -443,6 +491,332 @@ public class BlockPlacementHandler implements Listener {
             
             // Add visual effect for container removal
             Location effectLoc = containerLocation.add(0.5, 0.5, 0.5);
+            player.spawnParticle(org.bukkit.Particle.SMOKE_NORMAL, effectLoc, 8, 0.3, 0.3, 0.3, 0.1);
+            player.playSound(containerLocation, org.bukkit.Sound.BLOCK_WOOD_BREAK, 0.7f, 0.9f);
+            
+            containerBlock.setType(Material.AIR);
+        }
+    }
+    
+    /**
+     * Обрабатывает взаимодействие с блоками кодирования
+     */
+    @EventHandler
+    public void onPlayerInteract(PlayerInteractEvent event) {
+        if (event.isCancelled()) return;
+        
+        Player player = event.getPlayer();
+        Block block = event.getClickedBlock();
+        
+        if (block == null) return;
+        
+        // Only process in dev worlds
+        if (!isInDevWorld(player)) return;
+        
+        // Проверяем, что это блок кода
+        if (blockCodeBlocks.containsKey(block.getLocation())) {
+            CodeBlock codeBlock = blockCodeBlocks.get(block.getLocation());
+            String actionId = codeBlock.getAction();
+            
+            // Если это блок с параметрами (унарные или бинарные операции), открываем GUI для параметров
+            if (actionId.equals("UNARY_OP") || actionId.equals("BINARY_OP")) {
+                openActionParameterGUI(player, block, codeBlock);
+            } else {
+                openActionSelectionGUI(player, block, codeBlock);
+            }
+            
+            return;
+        }
+        
+        // Особая обработка для поршней (скобок)
+        else if (block.getType() == Material.PISTON || block.getType() == Material.STICKY_PISTON) {
+            // Это поршень-скобка, меняем его тип
+            CodeBlock bracketCodeBlock = blockCodeBlocks.get(block.getLocation());
+            if (bracketCodeBlock != null) {
+                CodeBlock.BracketType bracketType = bracketCodeBlock.getBracketType();
+                CodeBlock.BracketType newBracketType = bracketType == CodeBlock.BracketType.OPEN ? CodeBlock.BracketType.CLOSE : CodeBlock.BracketType.OPEN;
+                bracketCodeBlock.setBracketType(newBracketType);
+                setPistonDirection(block, newBracketType);
+                updateBracketSign(block.getLocation(), newBracketType);
+                
+                // Enhanced feedback for bracket type change
+                player.sendMessage("§a✓ Тип скобки изменен: " + newBracketType.getDisplayName());
+                player.playSound(block.getLocation(), org.bukkit.Sound.BLOCK_NOTE_BLOCK_STICKS, 0.8f, 1.5f);
+                
+                // Add visual effects
+                Location effectLoc = block.getLocation().add(0.5, 0.5, 0.5);
+                player.spawnParticle(org.bukkit.Particle.ENCHANTMENT_TABLE, effectLoc, 15, 0.4, 0.4, 0.4, 1.5);
+                player.spawnParticle(org.bukkit.Particle.CRIT_MAGIC, effectLoc, 10, 0.3, 0.3, 0.3, 0.5);
+                player.playSound(block.getLocation(), org.bukkit.Sound.BLOCK_ENCHANTMENT_TABLE_USE, 1.2f, 1.8f);
+            }
+            
+            return;
+        }
+    }
+
+    /**
+     * Удаляет всю структуру конструктора
+     */
+    private void removeConstructorStructure(Location loc, BlockConfigService.BlockConfig config, Player player) {
+        BlockConfigService.StructureConfig structure = config.getStructure();
+        if (structure == null) return;
+        
+        // ENHANCED: More intuitive structure removal
+        if (config.getType().equals("CONDITION") || config.getType().equals("CONTROL")) {
+            int bracketDistance = structure.getBracketDistance();
+            
+            // Calculate optimal positioning based on surrounding blocks
+            BlockFace buildDirection = findOptimalBuildDirection(loc, bracketDistance);
+            
+            // Remove opening bracket (piston pointing inward)
+            Location openBracketLoc = loc.clone().add(buildDirection.getModX(), 0, buildDirection.getModZ());
+            removeBracketPiston(openBracketLoc, player);
+            
+            // Remove closing bracket (piston pointing outward)
+            Location closeBracketLoc = loc.clone().add(
+                buildDirection.getModX() * bracketDistance, 
+                0, 
+                buildDirection.getModZ() * bracketDistance
+            );
+            removeBracketPiston(closeBracketLoc, player);
+            
+            // Remove smart sign on main block
+            removeSignFromBlock(loc);
+        }
+        
+        // Additional structure types can be added here
+        // For example, EVENT blocks could spawn helper blocks
+        else if (config.getType().equals("EVENT")) {
+            // Event blocks get special treatment
+            removeSignFromBlock(loc);
+            
+            // 🔧 FIX: Remove "ore" block for event blocks
+            Location oreLoc = loc.clone().add(-1, 0, 0); // Remove ore to the west of the event block
+            if (oreLoc.getBlock().getType() == Material.DIAMOND_ORE) { // или другой соответствующей руды
+                oreLoc.getBlock().setType(Material.AIR);
+            }
+        }
+        
+        // ACTION blocks also get structure building
+        else if (config.getType().equals("ACTION")) {
+            // Action blocks get a simple structure with sign
+            removeSignFromBlock(loc);
+        }
+        
+        // VARIABLE blocks
+        else if (config.getType().equals("VARIABLE")) {
+            // Variable blocks get a simple structure with sign
+            removeSignFromBlock(loc);
+        }
+    }
+    
+    /**
+     * Открывает GUI для выбора действия
+     */
+    private void openActionSelectionGUI(Player player, Block block, CodeBlock codeBlock) {
+        ActionSelectionGUI gui = new ActionSelectionGUI(plugin, player, block, codeBlock);
+        gui.showGUI();
+    }
+    
+    /**
+     * Открывает GUI для настройки параметров действия
+     */
+    private void openActionParameterGUI(Player player, Block block, CodeBlock codeBlock) {
+        ActionParameterGUI gui = new ActionParameterGUI(plugin, player, block, codeBlock);
+        gui.showGUI();
+    }
+    
+    /**
+     * Устанавливает направление поршня для скобки
+     */
+    private void setPistonDirection(Block block, CodeBlock.BracketType bracketType) {
+        org.bukkit.block.data.type.Piston pistonData = (org.bukkit.block.data.type.Piston) block.getBlockData();
+        pistonData.setFacing(bracketType == CodeBlock.BracketType.OPEN ? BlockFace.EAST : BlockFace.WEST);
+        block.setBlockData(pistonData);
+    }
+    
+    /**
+     * Обновляет табличку для скобки
+     */
+    private void updateBracketSign(Location location, CodeBlock.BracketType bracketType) {
+        removeSignFromBlock(location);
+        String signText = "Скобка: " + bracketType.getDisplayName();
+        setSignOnBlock(location, signText);
+    }
+    
+    /**
+     * Устанавливает табличку на блоке с указанным текстом
+     */
+    private void setSignOnBlock(Location location, String text) {
+        World world = location.getWorld();
+        if (world == null) return;
+        
+        Location signLoc = location.clone().add(0, 1, 0);
+        Block signBlock = signLoc.getBlock();
+        
+        // Проверяем, что место свободно
+        if (!signBlock.getType().isAir()) {
+            return;
+        }
+        
+        // Ставим табличку
+        signBlock.setType(Material.OAK_WALL_SIGN);
+        
+        // Используем современный BlockData для установки направления
+        WallSign signData = (WallSign) signBlock.getBlockData();
+        signData.setFacing(BlockFace.DOWN);
+        signBlock.setBlockData(signData);
+        
+        // Устанавливаем текст на табличке
+        Sign sign = (Sign) signBlock.getState();
+        sign.setLine(0, text);
+        sign.update();
+    }
+    
+    /**
+     * Устанавливает умную табличку на блоке с указанным текстом и действием
+     */
+    private void setSmartSignOnBlock(Location location, String text, String actionId) {
+        World world = location.getWorld();
+        if (world == null) return;
+        
+        Location signLoc = location.clone().add(0, 1, 0);
+        Block signBlock = signLoc.getBlock();
+        
+        // Проверяем, что место свободно
+        if (!signBlock.getType().isAir()) {
+            return;
+        }
+        
+        // Ставим табличку
+        signBlock.setType(Material.OAK_WALL_SIGN);
+        
+        // Используем современный BlockData для установки направления
+        WallSign signData = (WallSign) signBlock.getBlockData();
+        signData.setFacing(BlockFace.DOWN);
+        signBlock.setBlockData(signData);
+        
+        // Устанавливаем текст на табличке
+        Sign sign = (Sign) signBlock.getState();
+        sign.setLine(0, text);
+        sign.setLine(1, "Action ID: " + actionId);
+        sign.update();
+    }
+    
+    /**
+     * Удаляет табличку с блока
+     */
+    private void removeSignFromBlock(Location location) {
+        Location signLoc = location.clone().add(0, 1, 0);
+        Block signBlock = signLoc.getBlock();
+        
+        if (signBlock.getType() == Material.OAK_WALL_SIGN) {
+            signBlock.setType(Material.AIR);
+        }
+    }
+    
+    /**
+     * Добавляет эффекты создания структуры
+     */
+    private void addConstructionEffects(Location location, Player player) {
+        // Add visual effect for structure creation
+        Location effectLoc = location.add(0.5, 1.0, 0.5);
+        player.spawnParticle(org.bukkit.Particle.FLAME, effectLoc, 10, 0.2, 0.2, 0.2, 0.1);
+        player.spawnParticle(org.bukkit.Particle.VILLAGER_HAPPY, effectLoc, 10, 0.2, 0.2, 0.2, 0.1);
+        player.playSound(location, org.bukkit.Sound.BLOCK_NOTE_BLOCK_PLING, 0.8f, 1.5f);
+    }
+    
+    /**
+     * Показывает направленный луч формирования структуры
+     */
+    private void showStructureBeam(Location location, BlockFace direction, int distance, Player player) {
+        // Calculate positions of all blocks in the structure
+        World world = location.getWorld();
+        if (world == null) return;
+        
+        for (int i = 0; i <= distance; i++) {
+            Location blockLoc = location.clone().add(
+                direction.getModX() * i, 
+                0, 
+                direction.getModZ() * i
+            );
+            
+            // Add visual effect for each block
+            Location effectLoc = blockLoc.add(0.5, 0.5, 0.5);
+            player.spawnParticle(org.bukkit.Particle.VILLAGER_HAPPY, effectLoc, 1, 0.2, 0.2, 0.2, 0.1);
+            player.playSound(blockLoc, org.bukkit.Sound.BLOCK_NOTE_BLOCK_PLING, 0.8f, 1.5f);
+        }
+    }
+    
+    /**
+     * Наполняет контейнер заполнителями в зависимости от действия
+     */
+    private void populateContainerWithPlaceholders(Block containerBlock, String actionId) {
+        // Получаем конфиг действия из сервиса действий
+        ActionConfigService.ActionConfig config = plugin.getActionConfigService().getActionConfig(actionId);
+        if (config == null) return;
+        
+        List<ActionConfigService.ParameterConfig> parameters = config.getParameters();
+        if (parameters.isEmpty()) return;
+        
+        // Создаем инвентарь контейнера
+        org.bukkit.inventory.Inventory containerInventory = ((org.bukkit.block.Container) containerBlock).getInventory();
+        
+        // Заполняем каждый слот заполнителем в зависимости от типа параметра
+        for (int i = 0; i < parameters.size(); i++) {
+            ActionConfigService.ParameterConfig paramConfig = parameters.get(i);
+            DataValue placeholder = createPlaceholderValue(paramConfig.getType());
+            
+            // Добавляем заполнитель в соответствующий слот инвентаря
+            containerInventory.setItem(i, placeholder.asItemStack());
+        }
+    }
+    
+    /**
+     * Создает заполнитель значения указанного типа
+     */
+    private DataValue createPlaceholderValue(String type) {
+        if (type.equals("ANY")) {
+            return new AnyValue("Параметр");
+        }
+        if (type.equals("TEXT")) {
+            return new TextValue("Текст");
+        }
+        if (type.equals("NUMBER")) {
+            return new NumberValue(0);
+        }
+        if (type.equals("BOOLEAN")) {
+            return new BooleanValue(false);
+        }
+        if (type.equals("LIST")) {
+            return new ListValue();
+        }
+        return null;
+    }
+    
+    /**
+     * Вычисляет оптимальное направление строительства
+     */
+    private BlockFace findOptimalBuildDirection(Location location, int bracketDistance) {
+        // TODO: Add logic to calculate optimal direction based on surrounding blocks
+        
+        // For now, return a fixed direction
+        return BlockFace.EAST;
+    }
+    
+    /**
+     * Проверяет, находится ли игрок в тестовом мире
+     * Если нет, выдает предупреждение и возвращает false
+     */
+    private boolean isInDevWorld(Player player) {
+        String worldName = player.getWorld().getName();
+        if (!worldName.toLowerCase().contains("dev")) {
+            player.sendMessage("§cВы можете использовать блоки кодирования только в тестовых мирах!");
+            player.playSound(player.getLocation(), org.bukkit.Sound.ENTITY_VILLAGER_NO, 1.0f, 0.8f);
+            return false;
+        }
+        return true;
+    }
             containerLocation.getWorld().spawnParticle(org.bukkit.Particle.CLOUD, effectLoc, 6, 0.3, 0.3, 0.3, 0.1);
             containerLocation.getWorld().playSound(containerLocation, org.bukkit.Sound.BLOCK_WOOD_BREAK, 0.7f, 0.8f);
             
@@ -470,13 +844,12 @@ public class BlockPlacementHandler implements Listener {
             // Calculate optimal positioning based on surrounding blocks (same as creation)
             BlockFace buildDirection = findOptimalBuildDirection(mainBlockLoc, bracketDistance);
             
-            // Места скобок
+            // Места скобок - исправлено для правильного позиционирования
             Location openBracketLoc = mainBlockLoc.clone().add(buildDirection.getModX(), 0, buildDirection.getModZ());
-            // 🔧 FIX: Correct bracket positioning - count from main block, not from open bracket
             Location closeBracketLoc = mainBlockLoc.clone().add(
-                buildDirection.getModX() * (bracketDistance + 1), 
+                buildDirection.getModX() * bracketDistance, 
                 0, 
-                buildDirection.getModZ() * (bracketDistance + 1)
+                buildDirection.getModZ() * bracketDistance
             );
             
             // Удаляем скобки-поршни
@@ -497,10 +870,54 @@ public class BlockPlacementHandler implements Listener {
                 }
             }
             
+            // Также удаляем основной блок
+            blockCodeBlocks.remove(mainBlockLoc);
+            removeSignFromBlock(mainBlockLoc);
+            removeContainerAboveBlock(mainBlockLoc);
+            
             // Add visual effect for complete structure removal
             player.sendMessage("§eСтруктура " + config.getDisplayName() + " полностью удалена!");
             player.playSound(mainBlockLoc, org.bukkit.Sound.ENTITY_ENDERMAN_TELEPORT, 1.0f, 0.5f);
             player.spawnParticle(org.bukkit.Particle.EXPLOSION_NORMAL, mainBlockLoc.add(0.5, 0.5, 0.5), 10, 0.5, 0.5, 0.5, 0.2);
+            
+            // Удаляем физический блок
+            mainBlockLoc.getBlock().setType(Material.AIR);
+        }
+        // 🔧 FIX: Add handling for EVENT blocks
+        else if (config.getType().equals("EVENT")) {
+            // For event blocks, just remove the block and any associated "ore"
+            blockCodeBlocks.remove(mainBlockLoc);
+            removeSignFromBlock(mainBlockLoc);
+            removeContainerAboveBlock(mainBlockLoc);
+            
+            // Remove the "ore" block to the west
+            Block oreBlock = mainBlockLoc.clone().add(-1, 0, 0).getBlock();
+            if (oreBlock.getType() == Material.DIAMOND_ORE) {
+                oreBlock.setType(Material.AIR);
+            }
+            
+            // Add visual effect for complete structure removal
+            player.sendMessage("§eСтруктура " + config.getDisplayName() + " полностью удалена!");
+            player.playSound(mainBlockLoc, org.bukkit.Sound.ENTITY_ENDERMAN_TELEPORT, 1.0f, 0.5f);
+            player.spawnParticle(org.bukkit.Particle.EXPLOSION_NORMAL, mainBlockLoc.add(0.5, 0.5, 0.5), 10, 0.5, 0.5, 0.5, 0.2);
+            
+            // Удаляем физический блок
+            mainBlockLoc.getBlock().setType(Material.AIR);
+        }
+        // 🔧 FIX: Add handling for ACTION blocks
+        else if (config.getType().equals("ACTION")) {
+            // For action blocks, just remove the block
+            blockCodeBlocks.remove(mainBlockLoc);
+            removeSignFromBlock(mainBlockLoc);
+            removeContainerAboveBlock(mainBlockLoc);
+            
+            // Add visual effect for complete structure removal
+            player.sendMessage("§eСтруктура " + config.getDisplayName() + " полностью удалена!");
+            player.playSound(mainBlockLoc, org.bukkit.Sound.ENTITY_ENDERMAN_TELEPORT, 1.0f, 0.5f);
+            player.spawnParticle(org.bukkit.Particle.EXPLOSION_NORMAL, mainBlockLoc.add(0.5, 0.5, 0.5), 10, 0.5, 0.5, 0.5, 0.2);
+            
+            // Удаляем физический блок
+            mainBlockLoc.getBlock().setType(Material.AIR);
         }
     }
 

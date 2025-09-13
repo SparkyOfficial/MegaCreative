@@ -62,7 +62,8 @@ public class WorldLoadListener implements Listener {
                         // Check if this is a code sign
                         if (isCodeSign(sign)) {
                             Block codeBlock = findAssociatedCodeBlock(sign);
-                            if (codeBlock != null && configService.isCodeBlock(codeBlock.getType())) {
+                            if (codeBlock != null && (configService.isCodeBlock(codeBlock.getType()) || 
+                                    codeBlock.getType() == Material.PISTON || codeBlock.getType() == Material.STICKY_PISTON)) {
                                 // Recreate the CodeBlock object for this physical block
                                 placementHandler.recreateCodeBlockFromExisting(codeBlock, sign);
                                 
@@ -86,6 +87,9 @@ public class WorldLoadListener implements Listener {
             Bukkit.getScheduler().runTask(plugin, () -> {
                 finalConnectionManager.rebuildWorldConnections(finalWorld);
                 plugin.getLogger().info("Rehydration complete. Loaded " + finalBlockCount + " code blocks for world " + finalWorld.getName());
+                
+                // 🔧 FIX: Synchronize with BlockPlacementHandler after rehydration
+                placementHandler.synchronizeWithAutoConnection();
             });
         } catch (Exception e) {
             plugin.getLogger().log(Level.SEVERE, "Error during world rehydration for " + world.getName(), e);

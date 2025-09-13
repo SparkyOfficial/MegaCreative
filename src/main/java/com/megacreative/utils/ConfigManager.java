@@ -1,6 +1,7 @@
 package com.megacreative.utils;
 
 import com.megacreative.MegaCreative;
+import com.megacreative.configs.WorldCode;
 import org.bukkit.configuration.file.FileConfiguration;
 
 public class ConfigManager {
@@ -74,6 +75,14 @@ public class ConfigManager {
             return "§8[§bMegaCreative§8] "; // Default value
         }
         return config.getString("messages.prefix", "§8[§bMegaCreative§8] ");
+    }
+    
+    /**
+     * Gets the WorldCode configuration manager
+     * @return WorldCode class for static access
+     */
+    public Class<WorldCode> getWorldCode() {
+        return WorldCode.class; // Return the class for static access
     }
     
     /**

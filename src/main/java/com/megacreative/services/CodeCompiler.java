@@ -5,6 +5,7 @@ import com.megacreative.coding.CodeBlock;
 import com.megacreative.coding.CodeScript;
 import com.megacreative.coding.BlockPlacementHandler;
 import com.megacreative.services.BlockConfigService;
+import com.megacreative.configs.WorldCode;
 import org.bukkit.World;
 import org.bukkit.Location;
 import org.bukkit.block.Block;
@@ -905,6 +906,14 @@ public class CodeCompiler {
         }
         
         logger.info("Compiled " + compiledCode.size() + " lines of code from world: " + world.getName());
+        
+        // 🎆 ENHANCED: Save compiled code to WorldCode like FrameLand
+        String worldId = world.getName().replace("-code", "");
+        if (!compiledCode.isEmpty()) {
+            WorldCode.setCode(worldId, compiledCode);
+            logger.info("Saved " + compiledCode.size() + " lines of compiled code for world: " + worldId);
+        }
+        
         return compiledCode;
     }
 
@@ -919,7 +928,18 @@ public class CodeCompiler {
         if (block == null) return null;
         
         String action = block.getAction();
-        if (action == null || action.equals("NOT_SET")) return null;
+        // 🔧 FIX: Handle empty or unset actions properly
+        if (action == null || action.equals("NOT_SET") || action.isEmpty()) {
+            // For bracket blocks, we still want to include them even if action is not set
+            if (block.getMaterial() == Material.PISTON || block.getMaterial() == Material.STICKY_PISTON) {
+                if (block.getBracketType() == CodeBlock.BracketType.OPEN) {
+                    return "{";
+                } else if (block.getBracketType() == CodeBlock.BracketType.CLOSE) {
+                    return "}";
+                }
+            }
+            return null;
+        }
         
         // Handle special cases like brackets
         if (block.getMaterial() == Material.PISTON || block.getMaterial() == Material.STICKY_PISTON) {

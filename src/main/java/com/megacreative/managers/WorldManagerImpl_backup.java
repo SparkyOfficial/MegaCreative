@@ -250,6 +250,7 @@ public class WorldManagerImpl implements IWorldManager {
                 creator.generatorSettings("{\"layers\":[{\"block\":\"bedrock\",\"height\":1},{\"block\":\"stone\",\"height\":2},{\"block\":\"grass_block\",\"height\":1}],\"biome\":\"plains\"}");
                 break;
             case VOID:
+                // Создаем плоский мир без структур для пустоты
                 creator.type(org.bukkit.WorldType.FLAT);
                 creator.generateStructures(false);
                 // Настройка генератора для создания только спавн платформы (современный JSON формат)
@@ -442,6 +443,62 @@ public class WorldManagerImpl implements IWorldManager {
         return null;
     }
     
+    public void switchToDevWorld(Player player, String worldId) {
+        CreativeWorld world = getWorld(worldId);
+        if (world == null) {
+            player.sendMessage("§cМир не найден!");
+            return;
+        }
+        
+        if (!world.canCode(player)) {
+            player.sendMessage("§cУ вас нет прав для разработки в этом мире!");
+            return;
+        }
+        
+        String devWorldName = world.isDevWorld() ? world.getWorldName() : world.getDevWorldName();
+        World bukkitWorld = Bukkit.getWorld(devWorldName);
+        
+        if (bukkitWorld == null) {
+            // Create dev world if it doesn't exist
+            createDevWorldIfNotExists(world);
+            bukkitWorld = Bukkit.getWorld(devWorldName);
+        }
+        
+        if (bukkitWorld != null) {
+            player.teleport(bukkitWorld.getSpawnLocation());
+            player.sendMessage("§e🔧 Переключение в режим разработки!");
+            
+            // 🎆 ENHANCED: Track world mode switch
+            if (plugin instanceof MegaCreative) {
+                ((MegaCreative) plugin).getPlayerManager().trackPlayerWorldEntry(player, worldId, "DEV");
+            }
+        }
+    }
+    
+    public void switchToPlayWorld(Player player, String worldId) {
+        CreativeWorld world = getWorld(worldId);
+        if (world == null) {
+            player.sendMessage("§cМир не найден!");
+            return;
+        }
+        
+        String playWorldName = world.isPlayWorld() ? world.getWorldName() : world.getPlayWorldName();
+        World bukkitWorld = Bukkit.getWorld(playWorldName);
+        
+        if (bukkitWorld == null) {
+            player.sendMessage("§cМир для игры не существует!");
+            return;
+        }
+        
+        player.teleport(bukkitWorld.getSpawnLocation());
+        player.sendMessage("§a🎮 Переключение в игровой режим!");
+        
+        // 🎆 ENHANCED: Track world mode switch
+        if (plugin instanceof MegaCreative) {
+            ((MegaCreative) plugin).getPlayerManager().trackPlayerWorldEntry(player, worldId, "PLAY");
+        }
+    }
+    
     // 🎆 ENHANCED: Add missing switchToDevWorld method for proper dev mode switching
     public void switchToDevWorld(Player player, String worldId) {
         CreativeWorld world = getWorld(worldId);
@@ -484,30 +541,6 @@ public class WorldManagerImpl implements IWorldManager {
             }
             
             saveWorld(world);
-        }
-    }
-    
-    public void switchToPlayWorld(Player player, String worldId) {
-        CreativeWorld world = getWorld(worldId);
-        if (world == null) {
-            player.sendMessage("§cМир не найден!");
-            return;
-        }
-        
-        String playWorldName = world.isPlayWorld() ? world.getWorldName() : world.getPlayWorldName();
-        World bukkitWorld = Bukkit.getWorld(playWorldName);
-        
-        if (bukkitWorld == null) {
-            player.sendMessage("§cМир для игры не существует!");
-            return;
-        }
-        
-        player.teleport(bukkitWorld.getSpawnLocation());
-        player.sendMessage("§a🎮 Переключение в игровой режим!");
-        
-        // 🎆 ENHANCED: Track world mode switch
-        if (plugin instanceof MegaCreative) {
-            ((MegaCreative) plugin).getPlayerManager().trackPlayerWorldEntry(player, worldId, "PLAY");
         }
     }
     
