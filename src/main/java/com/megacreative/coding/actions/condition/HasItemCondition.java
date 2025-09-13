@@ -1,0 +1,36 @@
+package com.megacreative.coding.actions.condition;
+
+import com.megacreative.coding.BlockCondition;
+import com.megacreative.coding.CodeBlock;
+import com.megacreative.coding.ExecutionContext;
+import com.megacreative.coding.ParameterResolver;
+import com.megacreative.coding.values.DataValue;
+import org.bukkit.Material;
+import org.bukkit.entity.Player;
+
+public class HasItemCondition implements BlockCondition {
+    @Override
+    public boolean evaluate(ExecutionContext context) {
+        Player player = context.getPlayer();
+        CodeBlock block = context.getCurrentBlock();
+        
+        if (player == null || block == null) return false;
+        
+        ParameterResolver resolver = new ParameterResolver(context);
+        
+        DataValue rawItemName = block.getParameter("item");
+        if (rawItemName == null) return false;
+        
+        String itemName = resolver.resolve(context, rawItemName).asString();
+        
+        if (itemName != null && !itemName.isEmpty()) {
+            try {
+                Material material = Material.valueOf(itemName.toUpperCase());
+                return player.getInventory().contains(material);
+            } catch (IllegalArgumentException e) {
+                return false;
+            }
+        }
+        return false;
+    }
+}

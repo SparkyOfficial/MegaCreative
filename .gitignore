@@ -62,6 +62,5 @@ banned-players.json
 banned-ips.json
 ops.json
 whitelist.json
-world/
 logs/
 crash-reports/
