@@ -1,6 +1,6 @@
 worldData: |-
   {
-    "id": "test-world-id",
+    "id": "valid-world",
     "name": "Test World",
     "description": "A test world for debugging",
     "ownerId": "00000000-0000-0000-0000-000000000000",

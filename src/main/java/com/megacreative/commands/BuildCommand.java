@@ -75,6 +75,8 @@ public class BuildCommand implements CommandExecutor {
         
         if (creativeWorld == null) {
             player.sendMessage("§cYou are not in a MegaCreative world!");
+            player.sendMessage("§7Current world: " + player.getWorld().getName());
+            player.sendMessage("§7Available worlds: " + worldManager.getCreativeWorlds().size());
             return true;
         }
         

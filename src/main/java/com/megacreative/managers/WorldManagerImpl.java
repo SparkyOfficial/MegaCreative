@@ -713,6 +713,8 @@ public class WorldManagerImpl implements IWorldManager {
         if (bukkitWorld == null) return null;
         
         String worldName = bukkitWorld.getName();
+        getPlugin().getLogger().info("Looking for CreativeWorld for Bukkit world: " + worldName);
+        getPlugin().getLogger().info("Available worlds in memory: " + worlds.size());
         
         // Handle old-style megacreative_ naming
         if (worldName.startsWith("megacreative_")) {
@@ -721,19 +723,28 @@ public class WorldManagerImpl implements IWorldManager {
                                   .replace("-code", "")    // New dev world suffix
                                   .replace("-world", "")   // New play world suffix  
                                   .replace("_dev", "");    // Legacy compatibility
-            return getWorld(id);
+            getPlugin().getLogger().info("Trying to find world with ID: " + id);
+            CreativeWorld result = getWorld(id);
+            if (result != null) {
+                getPlugin().getLogger().info("Found world: " + result.getName());
+                return result;
+            }
         }
         
         // 🎆 ENHANCED: Handle new reference system-style dual world naming
         // Format: worldname-code or worldname-world
         for (CreativeWorld world : worlds.values()) {
+            getPlugin().getLogger().info("Checking world: " + world.getName() + " (ID: " + world.getId() + ")");
+            
             // Check if this is the main world
             if (worldName.equals(world.getWorldName())) {
+                getPlugin().getLogger().info("Matched main world name: " + world.getWorldName());
                 return world;
             }
             
             // Check if this is a dev world (old style)
             if (worldName.equals(world.getDevWorldName())) {
+                getPlugin().getLogger().info("Matched dev world name: " + world.getDevWorldName());
                 return world;
             }
             
@@ -743,11 +754,13 @@ public class WorldManagerImpl implements IWorldManager {
                 
                 // Check -code suffix (dev world)
                 if (worldName.equals(baseName + "-code")) {
+                    getPlugin().getLogger().info("Matched -code pattern: " + baseName + "-code");
                     return world;
                 }
                 
                 // Check -world suffix (play world)
                 if (worldName.equals(baseName + "-world")) {
+                    getPlugin().getLogger().info("Matched -world pattern: " + baseName + "-world");
                     return world;
                 }
             }
@@ -755,6 +768,7 @@ public class WorldManagerImpl implements IWorldManager {
             // 🔧 FIX: Handle additional naming patterns for better compatibility
             // Check if worldName contains the world ID
             if (worldName.contains(world.getId())) {
+                getPlugin().getLogger().info("Matched ID pattern: " + world.getId());
                 return world;
             }
         }
@@ -763,10 +777,12 @@ public class WorldManagerImpl implements IWorldManager {
         for (CreativeWorld world : worlds.values()) {
             if (worldName.contains(world.getName().toLowerCase().replace(" ", "")) || 
                 world.getName().toLowerCase().replace(" ", "").contains(worldName.toLowerCase())) {
+                getPlugin().getLogger().info("Matched partial name pattern: " + world.getName());
                 return world;
             }
         }
         
+        getPlugin().getLogger().warning("No CreativeWorld found for Bukkit world: " + worldName);
         return null;
     }
     
