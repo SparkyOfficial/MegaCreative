@@ -268,3 +268,9 @@ commands:
     usage: /<command> [world_name]
     permission: megacreative.admin
     aliases: [tcomp, compiletest]
+
+  enemy:
+    description: Enemy player management
+    usage: /<command> <add|remove|list|info> [player]
+    permission: megacreative.admin
+    aliases: [enemies]
