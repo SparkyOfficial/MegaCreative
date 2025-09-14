@@ -11,6 +11,14 @@ import java.util.ArrayList;
  * Serializable data transfer object for CreativeWorld.
  * Contains only the essential data needed for persistence, 
  * avoiding complex Bukkit objects that cause serialization issues.
+ *
+ * Сериализуемый объект передачи данных для CreativeWorld.
+ * Содержит только основные данные, необходимые для сохранения,
+ * избегая сложных объектов Bukkit, которые вызывают проблемы сериализации.
+ *
+ * Serialisierbares Datenübertragungsobjekt für CreativeWorld.
+ * Enthält nur die wesentlichen Daten, die für die Persistenz benötigt werden,
+ * und vermeidet komplexe Bukkit-Objekte, die Serialisierungsprobleme verursachen.
  */
 public class CreativeWorldData {
     public String id;
@@ -34,14 +42,35 @@ public class CreativeWorldData {
     public List<WorldComment> comments;
     public List<CodeScriptData> scripts;
     
-    // 🎆 ENHANCED: Dual world support
+    /**
+     * 🎆 ENHANCED: Dual world support
+     *
+     * 🎆 ENHANCED: Двойная поддержка миров
+     *
+     * 🎆 ENHANCED: Duale Weltunterstützung
+     */
     public String pairedWorldId;
     public CreativeWorld.WorldDualMode dualMode;
     
-    // Empty constructor for Gson
+    /**
+     * Empty constructor for Gson
+     *
+     * Пустой конструктор для Gson
+     *
+     * Leerer Konstruktor für Gson
+     */
     public CreativeWorldData() {}
 
-    // Constructor to create from CreativeWorld
+    /**
+     * Constructor to create from CreativeWorld
+     * @param world Source CreativeWorld
+     *
+     * Конструктор для создания из CreativeWorld
+     * @param world Исходный CreativeWorld
+     *
+     * Konstruktor zum Erstellen aus CreativeWorld
+     * @param world Quell-CreativeWorld
+     */
     public CreativeWorldData(CreativeWorld world) {
         this.id = world.getId();
         this.name = world.getName();
@@ -70,6 +99,8 @@ public class CreativeWorldData {
         }
         
         // 🎆 ENHANCED: Copy dual world data
+        // 🎆 ENHANCED: Копировать данные двойного мира
+        // 🎆 ENHANCED: Duale Weltdaten kopieren
         this.pairedWorldId = world.getPairedWorldId();
         this.dualMode = world.getDualMode();
     }

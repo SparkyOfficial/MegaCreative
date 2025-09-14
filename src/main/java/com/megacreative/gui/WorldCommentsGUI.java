@@ -18,6 +18,16 @@ import java.util.Arrays;
 import java.util.Date;
 import java.util.List;
 
+/**
+ * Управляет графическим интерфейсом для просмотра и добавления комментариев к миру
+ * Позволяет игрокам просматривать комментарии и добавлять новые
+ *
+ * Manages GUI for viewing and adding comments to a world
+ * Allows players to view comments and add new ones
+ *
+ * Verwaltet die GUI zum Anzeigen und Hinzufügen von Kommentaren zu einer Welt
+ * Ermöglicht Spielern das Anzeigen von Kommentaren und das Hinzufügen neuer Kommentare
+ */
 public class WorldCommentsGUI implements GUIManager.ManagedGUIInterface {
     
     private final MegaCreative plugin;
@@ -28,6 +38,25 @@ public class WorldCommentsGUI implements GUIManager.ManagedGUIInterface {
     private final int page;
     private static final int COMMENTS_PER_PAGE = 21;
     
+    /**
+     * Инициализирует графический интерфейс комментариев к миру
+     * @param plugin Ссылка на основной плагин
+     * @param player Игрок, который будет использовать интерфейс
+     * @param world Мир, к которому относятся комментарии
+     * @param page Номер страницы для отображения комментариев
+     *
+     * Initializes world comments GUI
+     * @param plugin Reference to main plugin
+     * @param player Player who will use the interface
+     * @param world World to which comments belong
+     * @param page Page number for displaying comments
+     *
+     * Initialisiert die Weltkommentar-GUI
+     * @param plugin Referenz zum Haupt-Plugin
+     * @param player Spieler, der die Schnittstelle verwenden wird
+     * @param world Welt, zu der die Kommentare gehören
+     * @param page Seitennummer für die Anzeige von Kommentaren
+     */
     public WorldCommentsGUI(MegaCreative plugin, Player player, CreativeWorld world, int page) {
         this.plugin = plugin;
         this.player = player;
@@ -39,6 +68,13 @@ public class WorldCommentsGUI implements GUIManager.ManagedGUIInterface {
         setupInventory();
     }
     
+    /**
+     * Настраивает инвентарь графического интерфейса
+     *
+     * Sets up the GUI inventory
+     *
+     * Richtet das GUI-Inventar ein
+     */
     private void setupInventory() {
         inventory.clear();
         
@@ -119,6 +155,13 @@ public class WorldCommentsGUI implements GUIManager.ManagedGUIInterface {
         inventory.setItem(46, backButton);
     }
     
+    /**
+     * Открывает графический интерфейс для игрока
+     *
+     * Opens the GUI for the player
+     *
+     * Öffnet die GUI für den Spieler
+     */
     public void open() {
         // Register with GUIManager and open inventory
         guiManager.registerGUI(player, this, inventory);
@@ -126,11 +169,31 @@ public class WorldCommentsGUI implements GUIManager.ManagedGUIInterface {
     }
     
     @Override
+    /**
+     * Получает заголовок графического интерфейса
+     * @return Заголовок интерфейса
+     *
+     * Gets the GUI title
+     * @return Interface title
+     *
+     * Ruft den GUI-Titel ab
+     * @return Schnittstellentitel
+     */
     public String getGUITitle() {
         return "World Comments GUI for " + world.getName();
     }
     
     @Override
+    /**
+     * Обрабатывает события кликов в инвентаре
+     * @param event Событие клика в инвентаре
+     *
+     * Handles inventory click events
+     * @param event Inventory click event
+     *
+     * Verarbeitet Inventarklick-Ereignisse
+     * @param event Inventarklick-Ereignis
+     */
     public void onInventoryClick(InventoryClickEvent event) {
         if (!event.getInventory().equals(inventory)) return;
         
@@ -179,12 +242,29 @@ public class WorldCommentsGUI implements GUIManager.ManagedGUIInterface {
     }
     
     @Override
+    /**
+     * Обрабатывает события закрытия инвентаря
+     * @param event Событие закрытия инвентаря
+     *
+     * Handles inventory close events
+     * @param event Inventory close event
+     *
+     * Verarbeitet Inventarschließ-Ereignisse
+     * @param event Inventarschließ-Ereignis
+     */
     public void onInventoryClose(InventoryCloseEvent event) {
         // Optional cleanup when GUI is closed
         // GUIManager handles automatic unregistration
     }
     
     @Override
+    /**
+     * Выполняет очистку ресурсов при закрытии интерфейса
+     *
+     * Performs resource cleanup when interface is closed
+     *
+     * Führt eine Ressourcenbereinigung durch, wenn die Schnittstelle geschlossen wird
+     */
     public void onCleanup() {
         // Called when GUI is being cleaned up by GUIManager
         // No special cleanup needed for this GUI

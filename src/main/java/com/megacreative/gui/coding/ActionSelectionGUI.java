@@ -18,6 +18,22 @@ import org.bukkit.Location;
 import java.util.*;
 
 /**
+ * Графический интерфейс для выбора действий для блоков кода.
+ * 🎆 УЛУЧШЕННЫЕ ФУНКЦИИ:
+ * - Категоризированное отображение действий с визуальной группировкой
+ * - Умные возможности поиска и фильтрации
+ * - Предварительный просмотр действий с подробными описаниями
+ * - Визуальная обратная связь для процесса выбора
+ * - Оптимизирован для быстрого поиска действий
+ * 
+ * Графический интерфейс для выбора действий для блоков кода.
+ * 🎆 УЛУЧШЕННЫЕ ФУНКЦИИ:
+ * - Категоризированное отображение действий с визуальной группировкой
+ * - Умные возможности поиска и фильтрации
+ * - Предварительный просмотр действий с подробными описаниями
+ * - Визуальная обратная связь для процесса выбора
+ * - Оптимизирован для быстрого поиска действий
+ *
  * GUI for selecting actions for code blocks.
  * 🎆 ENHANCED FEATURES:
  * - Categorized action display with visual grouping
@@ -25,9 +41,20 @@ import java.util.*;
  * - Action preview with detailed descriptions
  * - Visual feedback for selection process
  * - Optimized for quick action discovery
+ *
+ * GUI zur Auswahl von Aktionen für Codeblöcke.
+ * 🎆 ERWEITERT FUNKTIONEN:
+ * - Kategorisierte Aktionsanzeige mit visueller Gruppierung
+ * - Intelligente Such- und Filterfunktionen
+ * - Aktionsvorschau mit detaillierten Beschreibungen
+ * - Visuelle Rückmeldung für den Auswahlprozess
+ * - Optimiert für schnelle Aktionsfindung
  * 
  * Opens when a player clicks on a code block without an assigned action.
  * Реализует Creative+-стиль: универсальные блоки с настройкой через GUI
+ *
+ * Wird geöffnet, wenn ein Spieler auf einen Codeblock ohne zugewiesene Aktion klickt.
+ * Implementiert Creative+-Stil: universelle Blöcke mit GUI-Konfiguration
  */
 public class ActionSelectionGUI implements GUIManager.ManagedGUIInterface {
     
@@ -39,6 +66,25 @@ public class ActionSelectionGUI implements GUIManager.ManagedGUIInterface {
     private final GUIManager guiManager;
     private final BlockConfigService blockConfigService;
     
+    /**
+     * Инициализирует графический интерфейс выбора действий
+     * @param plugin Ссылка на основной плагин
+     * @param player Игрок, который будет использовать интерфейс
+     * @param blockLocation Расположение блока для настройки
+     * @param blockMaterial Материал блока для настройки
+     *
+     * Initializes action selection GUI
+     * @param plugin Reference to main plugin
+     * @param player Player who will use the interface
+     * @param blockLocation Location of block to configure
+     * @param blockMaterial Material of block to configure
+     *
+     * Initialisiert die Aktionsauswahl-GUI
+     * @param plugin Referenz zum Haupt-Plugin
+     * @param player Spieler, der die Schnittstelle verwenden wird
+     * @param blockLocation Position des zu konfigurierenden Blocks
+     * @param blockMaterial Material des zu konfigurierenden Blocks
+     */
     public ActionSelectionGUI(MegaCreative plugin, Player player, Location blockLocation, Material blockMaterial) {
         this.plugin = plugin;
         this.player = player;
@@ -53,12 +99,26 @@ public class ActionSelectionGUI implements GUIManager.ManagedGUIInterface {
         setupInventory();
     }
     
+    /**
+     * Получает отображаемое имя блока
+     *
+     * Gets display name for block
+     *
+     * Ruft den Anzeigenamen des Blocks ab
+     */
     private String getBlockDisplayName() {
         // Get display name from block config service
         BlockConfigService.BlockConfig config = blockConfigService.getBlockConfigByMaterial(blockMaterial);
         return config != null ? config.getDisplayName() : blockMaterial.name();
     }
     
+    /**
+     * Настраивает инвентарь графического интерфейса
+     *
+     * Sets up the GUI inventory
+     *
+     * Richtet das GUI-Inventar ein
+     */
     private void setupInventory() {
         inventory.clear();
         
@@ -95,6 +155,13 @@ public class ActionSelectionGUI implements GUIManager.ManagedGUIInterface {
         loadAvailableActions();
     }
     
+    /**
+     * Загружает доступные действия для этого типа блока
+     *
+     * Loads available actions for this block type
+     *
+     * Lädt verfügbare Aktionen für diesen Blocktyp
+     */
     private void loadAvailableActions() {
         // Get available actions for this block material using BlockConfigService
         List<String> availableActions = blockConfigService.getAvailableActions(blockMaterial);
@@ -144,8 +211,14 @@ public class ActionSelectionGUI implements GUIManager.ManagedGUIInterface {
     }
     
     /**
+     * 🎆 УЛУЧШЕННОЕ: Категоризирует действия для лучшей организации
+     * Реализует стиль reference system: универсальные блоки с настройкой через GUI
+     *
      * 🎆 ENHANCED: Categorize actions for better organization
      * Implements reference system-style: universal blocks with GUI configuration
+     *
+     * 🎆 ERWEITERT: Kategorisiert Aktionen für bessere Organisation
+     * Implementiert Reference-System-Stil: universelle Blöcke mit GUI-Konfiguration
      */
     private Map<String, List<String>> categorizeActions(List<String> actions) {
         Map<String, List<String>> categories = new LinkedHashMap<>();
@@ -159,8 +232,14 @@ public class ActionSelectionGUI implements GUIManager.ManagedGUIInterface {
     }
     
     /**
+     * 🎆 УЛУЧШЕННОЕ: Получает категорию для действия
+     * Реализует стиль reference system: универсальные блоки с настройкой через GUI
+     *
      * 🎆 ENHANCED: Get category for an action
      * Implements reference system-style: universal blocks with GUI configuration
+     *
+     * 🎆 ERWEITERT: Ruft die Kategorie für eine Aktion ab
+     * Implementiert Reference-System-Stil: universelle Blöcke mit GUI-Konfiguration
      */
     private String getActionCategory(String actionId) {
         switch (actionId.toLowerCase()) {
@@ -225,8 +304,14 @@ public class ActionSelectionGUI implements GUIManager.ManagedGUIInterface {
     }
     
     /**
+     * 🎆 УЛУЧШЕННОЕ: Создает элемент заголовка категории
+     * Реализует стиль reference system: универсальные блоки с настройкой через GUI
+     *
      * 🎆 ENHANCED: Create category header item
      * Implements reference system-style: universal blocks with GUI configuration
+     *
+     * 🎆 ERWEITERT: Erstellt Kategorie-Header-Element
+     * Implementiert Reference-System-Stil: universelle Blöcke mit GUI-Konfiguration
      */
     private ItemStack createCategoryItem(String categoryName, int actionCount) {
         ItemStack item = new ItemStack(Material.ORANGE_STAINED_GLASS_PANE);
@@ -246,8 +331,14 @@ public class ActionSelectionGUI implements GUIManager.ManagedGUIInterface {
     }
     
     /**
+     * 🎆 УЛУЧШЕННОЕ: Создает элемент действия
+     * Реализует стиль reference system: универсальные блоки с настройкой через GUI
+     *
      * 🎆 ENHANCED: Create action item
      * Implements reference system-style: universal blocks with GUI configuration
+     *
+     * 🎆 ERWEITERT: Erstellt Aktionsgegenstand
+     * Implementiert Reference-System-Stil: universelle Blöcke mit GUI-Konfiguration
      */
     private ItemStack createActionItem(String actionId, String category) {
         // Create appropriate material for action type
@@ -274,6 +365,13 @@ public class ActionSelectionGUI implements GUIManager.ManagedGUIInterface {
         return item;
     }
     
+    /**
+     * Получает материал для действия
+     *
+     * Gets material for action
+     *
+     * Ruft das Material für die Aktion ab
+     */
     private Material getActionMaterial(String actionId) {
         // Return appropriate materials based on action type
         switch (actionId.toLowerCase()) {
@@ -337,6 +435,13 @@ public class ActionSelectionGUI implements GUIManager.ManagedGUIInterface {
         }
     }
     
+    /**
+     * Получает отображаемое имя действия
+     *
+     * Gets display name for action
+     *
+     * Ruft den Anzeigenamen der Aktion ab
+     */
     private String getActionDisplayName(String actionId) {
         // Return user-friendly names for actions
         switch (actionId.toLowerCase()) {
@@ -379,6 +484,13 @@ public class ActionSelectionGUI implements GUIManager.ManagedGUIInterface {
         }
     }
     
+    /**
+     * Получает описание действия
+     *
+     * Gets description for action
+     *
+     * Ruft die Beschreibung der Aktion ab
+     */
     private String getActionDescription(String actionId) {
         // Return descriptions for actions
         switch (actionId.toLowerCase()) {
@@ -422,8 +534,14 @@ public class ActionSelectionGUI implements GUIManager.ManagedGUIInterface {
     }
     
     /**
+     * Открывает графический интерфейс для игрока
+     * Реализует стиль reference system: универсальные блоки с настройкой через GUI
+     *
      * Opens the GUI for the player
      * Implements reference system-style: universal blocks with GUI configuration
+     *
+     * Öffnet die GUI für den Spieler
+     * Implementiert Reference-System-Stil: universelle Blöcke mit GUI-Konfiguration
      */
     public void open() {
         guiManager.registerGUI(player, this, inventory);
@@ -438,11 +556,31 @@ public class ActionSelectionGUI implements GUIManager.ManagedGUIInterface {
     }
     
     @Override
+    /**
+     * Получает заголовок графического интерфейса
+     * @return Заголовок интерфейса
+     *
+     * Gets the GUI title
+     * @return Interface title
+     *
+     * Ruft den GUI-Titel ab
+     * @return Schnittstellentitel
+     */
     public String getGUITitle() {
         return "Action Selection GUI for " + blockMaterial.name();
     }
     
     @Override
+    /**
+     * Обрабатывает события кликов в инвентаре
+     * @param event Событие клика в инвентаре
+     *
+     * Handles inventory click events
+     * @param event Inventory click event
+     *
+     * Verarbeitet Inventarklick-Ereignisse
+     * @param event Inventarklick-Ereignis
+     */
     public void onInventoryClick(InventoryClickEvent event) {
         if (!player.equals(event.getWhoClicked())) return;
         if (!inventory.equals(event.getInventory())) return;
@@ -483,8 +621,14 @@ public class ActionSelectionGUI implements GUIManager.ManagedGUIInterface {
     }
     
     /**
+     * 🎆 УЛУЧШЕННОЕ: Выбирает действие для блока
+     * Реализует стиль reference system: универсальные блоки с настройкой через GUI
+     *
      * 🎆 ENHANCED: Select action for the block
      * Implements reference system-style: universal blocks with GUI configuration
+     *
+     * 🎆 ERWEITERT: Wählt Aktion für den Block
+     * Implementiert Reference-System-Stil: universelle Blöcke mit GUI-Konfiguration
      */
     private void selectAction(String actionId) {
         // Get the code block
@@ -523,12 +667,29 @@ public class ActionSelectionGUI implements GUIManager.ManagedGUIInterface {
     }
     
     @Override
+    /**
+     * Обрабатывает события закрытия инвентаря
+     * @param event Событие закрытия инвентаря
+     *
+     * Handles inventory close events
+     * @param event Inventory close event
+     *
+     * Verarbeitet Inventarschließ-Ereignisse
+     * @param event Inventarschließ-Ereignis
+     */
     public void onInventoryClose(InventoryCloseEvent event) {
         // Optional cleanup when GUI is closed
         // GUIManager handles automatic unregistration
     }
     
     @Override
+    /**
+     * Выполняет очистку ресурсов при закрытии интерфейса
+     *
+     * Performs resource cleanup when interface is closed
+     *
+     * Führt eine Ressourcenbereinigung durch, wenn die Schnittstelle geschlossen wird
+     */
     public void onCleanup() {
         // Called when GUI is being cleaned up by GUIManager
         // No special cleanup needed for this GUI

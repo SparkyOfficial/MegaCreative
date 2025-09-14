@@ -8,26 +8,46 @@ import java.util.HashMap;
 import java.util.Map;
 
 /**
- * Manages block-related configurations for the plugin.
+ * Управляет конфигурациями блоков для плагина
+ *
+ * Manages block-related configurations for the plugin
+ *
+ * Verwaltet blockbezogene Konfigurationen für das Plugin
  */
 public class BlockConfig {
     private final JavaPlugin plugin;
     private FileConfiguration config;
     private final Map<String, Material> blockMaterials = new HashMap<>();
     
+    /**
+     * Инициализирует конфигурацию блоков
+     * @param plugin Экземпляр основного плагина
+     *
+     * Initializes block configuration
+     * @param plugin Main plugin instance
+     *
+     * Initialisiert die Blockkonfiguration
+     * @param plugin Hauptplugin-Instanz
+     */
     public BlockConfig(JavaPlugin plugin) {
         this.plugin = plugin;
         loadConfig();
     }
     
     /**
-     * Loads the block configuration from the config file.
+     * Загружает конфигурацию блоков из файла конфигурации
+     *
+     * Loads the block configuration from the config file
+     *
+     * Lädt die Blockkonfiguration aus der Konfigurationsdatei
      */
     public void loadConfig() {
         plugin.saveDefaultConfig();
         this.config = plugin.getConfig();
         
+        // Загружаем материалы блоков
         // Load block materials
+        // Block-Materialien laden
         blockMaterials.clear();
         if (config.contains("blocks")) {
             for (String key : config.getConfigurationSection("blocks").getKeys(false)) {
@@ -37,30 +57,50 @@ public class BlockConfig {
                     blockMaterials.put(key, material);
                 } catch (IllegalArgumentException e) {
                     plugin.getLogger().warning("Invalid material type: " + materialName);
+                    // Недопустимый тип материала:
+                    // Ungültiger Materialtyp:
                 }
             }
         }
     }
     
     /**
-     * Gets the material for a specific block type.
+     * Получает материал для определенного типа блока
+     * @param blockType Тип блока
+     * @return Material или null, если не найден
+     *
+     * Gets the material for a specific block type
      * @param blockType The type of block
      * @return The Material or null if not found
+     *
+     * Ruft das Material für einen bestimmten Blocktyp ab
+     * @param blockType Der Blocktyp
+     * @return Das Material oder null, wenn nicht gefunden
      */
     public Material getBlockMaterial(String blockType) {
         return blockMaterials.get(blockType);
     }
     
     /**
-     * Gets all configured block materials.
+     * Получает все сконфигурированные материалы блоков
+     * @return Карта типов блоков и их материалов
+     *
+     * Gets all configured block materials
      * @return Map of block types to their materials
+     *
+     * Ruft alle konfigurierten Blockmaterialien ab
+     * @return Karte der Blocktypen zu ihren Materialien
      */
     public Map<String, Material> getBlockMaterials() {
         return new HashMap<>(blockMaterials);
     }
     
     /**
-     * Reloads the configuration from disk.
+     * Перезагружает конфигурацию с диска
+     *
+     * Reloads the configuration from disk
+     *
+     * Lädt die Konfiguration von der Festplatte neu
      */
     public void reload() {
         plugin.reloadConfig();
@@ -68,15 +108,23 @@ public class BlockConfig {
     }
     
     /**
-     * Saves the current configuration to disk.
+     * Сохраняет текущую конфигурацию на диск
+     *
+     * Saves the current configuration to disk
+     *
+     * Speichert die aktuelle Konfiguration auf der Festplatte
      */
     public void save() {
+        // Обновляем конфигурацию с текущими материалами блоков
         // Update config with current block materials
+        // Konfiguration mit aktuellen Blockmaterialien aktualisieren
         for (Map.Entry<String, Material> entry : blockMaterials.entrySet()) {
             config.set("blocks." + entry.getKey(), entry.getValue().name());
         }
         
+        // Сохраняем на диск
         // Save to disk
+        // Auf Festplatte speichern
         plugin.saveConfig();
     }
 }

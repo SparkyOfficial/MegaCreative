@@ -20,7 +20,14 @@ import java.util.Date;
 import java.util.List;
 
 /**
- * GUI для управления доверенными игроками
+ * Графический интерфейс для управления доверенными игроками
+ * Позволяет добавлять, удалять и просматривать доверенных игроков
+ *
+ * GUI for managing trusted players
+ * Allows adding, removing, and viewing trusted players
+ *
+ * GUI zur Verwaltung vertrauenswürdiger Spieler
+ * Ermöglicht das Hinzufügen, Entfernen und Anzeigen vertrauenswürdiger Spieler
  */
 public class TrustedPlayersGUI implements GUIManager.ManagedGUIInterface {
 
@@ -29,6 +36,19 @@ public class TrustedPlayersGUI implements GUIManager.ManagedGUIInterface {
     private final Inventory inventory;
     private final GUIManager guiManager;
 
+    /**
+     * Инициализирует графический интерфейс управления доверенными игроками
+     * @param plugin Ссылка на основной плагин
+     * @param player Игрок, который будет использовать интерфейс
+     *
+     * Initializes trusted players management GUI
+     * @param plugin Reference to main plugin
+     * @param player Player who will use the interface
+     *
+     * Initialisiert die GUI zur Verwaltung vertrauenswürdiger Spieler
+     * @param plugin Referenz zum Haupt-Plugin
+     * @param player Spieler, der die Schnittstelle verwenden wird
+     */
     public TrustedPlayersGUI(MegaCreative plugin, Player player) {
         this.plugin = plugin;
         this.player = player;
@@ -37,6 +57,13 @@ public class TrustedPlayersGUI implements GUIManager.ManagedGUIInterface {
         setupGUI();
     }
 
+    /**
+     * Настраивает графический интерфейс
+     *
+     * Sets up the GUI
+     *
+     * Richtet die GUI ein
+     */
     private void setupGUI() {
         // Заполняем фон
         ItemStack background = createItem(Material.BLACK_STAINED_GLASS_PANE, "§7", "");
@@ -66,6 +93,13 @@ public class TrustedPlayersGUI implements GUIManager.ManagedGUIInterface {
         displayTrustedPlayers();
     }
 
+    /**
+     * Отображает список доверенных игроков
+     *
+     * Displays the list of trusted players
+     *
+     * Zeigt die Liste der vertrauenswürdigen Spieler an
+     */
     private void displayTrustedPlayers() {
         List<TrustedPlayer> allTrusted = plugin.getTrustedPlayerManager().getAllTrustedPlayers();
         
@@ -101,6 +135,13 @@ public class TrustedPlayersGUI implements GUIManager.ManagedGUIInterface {
         }
     }
 
+    /**
+     * Открывает графический интерфейс для игрока
+     *
+     * Opens the GUI for the player
+     *
+     * Öffnet die GUI für den Spieler
+     */
     public void open() {
         // Register with GUIManager and open inventory
         guiManager.registerGUI(player, this, inventory);
@@ -108,11 +149,31 @@ public class TrustedPlayersGUI implements GUIManager.ManagedGUIInterface {
     }
     
     @Override
+    /**
+     * Получает заголовок графического интерфейса
+     * @return Заголовок интерфейса
+     *
+     * Gets the GUI title
+     * @return Interface title
+     *
+     * Ruft den GUI-Titel ab
+     * @return Schnittstellentitel
+     */
     public String getGUITitle() {
         return "Trusted Players Management GUI";
     }
     
     @Override
+    /**
+     * Обрабатывает события кликов в инвентаре
+     * @param event Событие клика в инвентаре
+     *
+     * Handles inventory click events
+     * @param event Inventory click event
+     *
+     * Verarbeitet Inventarklick-Ereignisse
+     * @param event Inventarklick-Ereignis
+     */
     public void onInventoryClick(InventoryClickEvent event) {
         if (!event.getInventory().equals(inventory)) return;
         
@@ -152,6 +213,25 @@ public class TrustedPlayersGUI implements GUIManager.ManagedGUIInterface {
         }
     }
 
+    /**
+     * Создает предмет с указанными параметрами
+     * @param material Материал предмета
+     * @param name Имя предмета
+     * @param lore Описание предмета
+     * @return Созданный предмет
+     *
+     * Creates an item with specified parameters
+     * @param material Item material
+     * @param name Item name
+     * @param lore Item description
+     * @return Created item
+     *
+     * Erstellt einen Gegenstand mit den angegebenen Parametern
+     * @param material Gegenstandsmaterial
+     * @param name Gegenstandsname
+     * @param lore Gegenstandsbeschreibung
+     * @return Erstellter Gegenstand
+     */
     public static ItemStack createItem(Material material, String name, String... lore) {
         ItemStack item = new ItemStack(material);
         ItemMeta meta = item.getItemMeta();
@@ -165,19 +245,46 @@ public class TrustedPlayersGUI implements GUIManager.ManagedGUIInterface {
         return item;
     }
 
+    /**
+     * Получает инвентарь графического интерфейса
+     * @return Инвентарь графического интерфейса
+     *
+     * Gets the GUI inventory
+     * @return GUI inventory
+     *
+     * Ruft das GUI-Inventar ab
+     * @return GUI-Inventar
+     */
     public Inventory getInventory() {
         return inventory;
     }
     
     @Override
+    /**
+     * Обрабатывает события закрытия инвентаря
+     * @param event Событие закрытия инвентаря
+     *
+     * Handles inventory close events
+     * @param event Inventory close event
+     *
+     * Verarbeitet Inventarschließ-Ereignisse
+     * @param event Inventarschließ-Ereignis
+     */
     public void onInventoryClose(InventoryCloseEvent event) {
         // Optional cleanup when GUI is closed
         // GUIManager handles automatic unregistration
     }
     
     @Override
+    /**
+     * Выполняет очистку ресурсов при закрытии интерфейса
+     *
+     * Performs resource cleanup when interface is closed
+     *
+     * Führt eine Ressourcenbereinigung durch, wenn die Schnittstelle geschlossen wird
+     */
     public void onCleanup() {
         // Called when GUI is being cleaned up by GUIManager
         // No special cleanup needed for this GUI
     }
-} 
+}

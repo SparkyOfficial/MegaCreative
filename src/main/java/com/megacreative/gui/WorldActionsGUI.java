@@ -14,7 +14,14 @@ import org.bukkit.inventory.meta.ItemMeta;
 import java.util.Arrays;
 
 /**
- * World Actions GUI - Implements ManagedGUIInterface for proper GUIManager integration
+ * Графический интерфейс для выполнения действий с миром
+ * Реализует ManagedGUIInterface для интеграции с GUIManager
+ *
+ * GUI for performing actions with a world
+ * Implements ManagedGUIInterface for integration with GUIManager
+ *
+ * GUI zum Ausführen von Aktionen mit einer Welt
+ * Implementiert ManagedGUIInterface für die Integration mit GUIManager
  */
 public class WorldActionsGUI implements GUIManager.ManagedGUIInterface {
     
@@ -23,6 +30,22 @@ public class WorldActionsGUI implements GUIManager.ManagedGUIInterface {
     private final CreativeWorld world;
     private final Inventory inventory;
     
+    /**
+     * Инициализирует графический интерфейс действий с миром
+     * @param plugin Ссылка на основной плагин
+     * @param player Игрок, который будет использовать интерфейс
+     * @param world Мир, с которым будут выполняться действия
+     *
+     * Initializes world actions GUI
+     * @param plugin Reference to main plugin
+     * @param player Player who will use the interface
+     * @param world World to perform actions on
+     *
+     * Initialisiert die Weltaktions-GUI
+     * @param plugin Referenz zum Haupt-Plugin
+     * @param player Spieler, der die Schnittstelle verwenden wird
+     * @param world Welt, mit der Aktionen durchgeführt werden
+     */
     public WorldActionsGUI(MegaCreative plugin, Player player, CreativeWorld world) {
         this.plugin = plugin;
         this.player = player;
@@ -32,6 +55,13 @@ public class WorldActionsGUI implements GUIManager.ManagedGUIInterface {
         setupInventory();
     }
     
+    /**
+     * Настраивает инвентарь графического интерфейса
+     *
+     * Sets up the GUI inventory
+     *
+     * Richtet das GUI-Inventar ein
+     */
     private void setupInventory() {
         inventory.clear();
         
@@ -101,6 +131,13 @@ public class WorldActionsGUI implements GUIManager.ManagedGUIInterface {
         inventory.setItem(22, backButton);
     }
     
+    /**
+     * Открывает графический интерфейс для игрока
+     *
+     * Opens the GUI for the player
+     *
+     * Öffnet die GUI für den Spieler
+     */
     public void open() {
         // Use the new GUIManager system
         plugin.getGuiManager().registerGUI(player, this, inventory);
@@ -108,11 +145,31 @@ public class WorldActionsGUI implements GUIManager.ManagedGUIInterface {
     }
     
     @Override
+    /**
+     * Получает заголовок графического интерфейса
+     * @return Заголовок интерфейса
+     *
+     * Gets the GUI title
+     * @return Interface title
+     *
+     * Ruft den GUI-Titel ab
+     * @return Schnittstellentitel
+     */
     public String getGUITitle() {
         return "World Actions: " + world.getName();
     }
     
     @Override
+    /**
+     * Обрабатывает события кликов в инвентаре
+     * @param event Событие клика в инвентаре
+     *
+     * Handles inventory click events
+     * @param event Inventory click event
+     *
+     * Verarbeitet Inventarklick-Ereignisse
+     * @param event Inventarklick-Ereignis
+     */
     public void onInventoryClick(InventoryClickEvent event) {
         if (!event.getInventory().equals(inventory)) return;
         

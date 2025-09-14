@@ -15,7 +15,14 @@ import org.bukkit.inventory.meta.ItemMeta;
 import java.util.Arrays;
 
 /**
- * World Settings GUI - Implements ManagedGUIInterface for proper GUIManager integration
+ * Графический интерфейс для настройки параметров мира
+ * Реализует ManagedGUIInterface для интеграции с GUIManager
+ *
+ * GUI for configuring world settings
+ * Implements ManagedGUIInterface for integration with GUIManager
+ *
+ * GUI zur Konfiguration von Welteinstellungen
+ * Implementiert ManagedGUIInterface für die Integration mit GUIManager
  */
 public class WorldSettingsGUI implements GUIManager.ManagedGUIInterface {
     
@@ -24,6 +31,22 @@ public class WorldSettingsGUI implements GUIManager.ManagedGUIInterface {
     private final CreativeWorld world;
     private final Inventory inventory;
     
+    /**
+     * Инициализирует графический интерфейс настроек мира
+     * @param plugin Ссылка на основной плагин
+     * @param player Игрок, который будет использовать интерфейс
+     * @param world Мир, для которого настраиваются параметры
+     *
+     * Initializes world settings GUI
+     * @param plugin Reference to main plugin
+     * @param player Player who will use the interface
+     * @param world World for which settings are configured
+     *
+     * Initialisiert die Welteinstellungs-GUI
+     * @param plugin Referenz zum Haupt-Plugin
+     * @param player Spieler, der die Schnittstelle verwenden wird
+     * @param world Welt, für die Einstellungen konfiguriert werden
+     */
     public WorldSettingsGUI(MegaCreative plugin, Player player, CreativeWorld world) {
         this.plugin = plugin;
         this.player = player;
@@ -33,6 +56,13 @@ public class WorldSettingsGUI implements GUIManager.ManagedGUIInterface {
         setupInventory();
     }
     
+    /**
+     * Настраивает инвентарь графического интерфейса
+     *
+     * Sets up the GUI inventory
+     *
+     * Richtet das GUI-Inventar ein
+     */
     private void setupInventory() {
         inventory.clear();
         
@@ -100,16 +130,43 @@ public class WorldSettingsGUI implements GUIManager.ManagedGUIInterface {
     }
     
     @Override
+    /**
+     * Получает заголовок графического интерфейса
+     * @return Заголовок интерфейса
+     *
+     * Gets the GUI title
+     * @return Interface title
+     *
+     * Ruft den GUI-Titel ab
+     * @return Schnittstellentitel
+     */
     public String getGUITitle() {
         return "World Settings: " + world.getName();
     }
     
+    /**
+     * Открывает графический интерфейс для игрока
+     *
+     * Opens the GUI for the player
+     *
+     * Öffnet die GUI für den Spieler
+     */
     public void open() {
         // Use the new GUIManager system
         plugin.getGuiManager().registerGUI(player, this, inventory);
         player.openInventory(inventory);
     }
     
+    /**
+     * Обрабатывает события кликов в инвентаре
+     * @param event Событие клика в инвентаре
+     *
+     * Handles inventory click events
+     * @param event Inventory click event
+     *
+     * Verarbeitet Inventarklick-Ereignisse
+     * @param event Inventarklick-Ereignis
+     */
     public void onInventoryClick(InventoryClickEvent event) {
         if (!event.getInventory().equals(inventory)) return;
         

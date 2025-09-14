@@ -5,9 +5,18 @@ import org.bukkit.Bukkit;
 import org.bukkit.ChatColor;
 import org.bukkit.entity.Player;
 
+/**
+ * Менеджер списка TAB для отображения информации об игроке
+ *
+ * TAB list manager for displaying player information
+ *
+ * TAB-Listen-Manager zur Anzeige von Spielerinformationen
+ */
 public class TabListManager {
 
     // ASCII-арт, который будет в заголовке
+    // ASCII art that will be in the header
+    // ASCII-Kunst, die in der Kopfzeile steht
     private static final String HEADER =
             ChatColor.AQUA + "" + ChatColor.BOLD + " __  __      _        ______                _   \n" +
             ChatColor.AQUA + "" + ChatColor.BOLD + "|  \\/  |    | |      |  ____|              | |  \n" +
@@ -20,6 +29,13 @@ public class TabListManager {
 
     /**
      * Устанавливает TAB для игрока с нашим лого и динамическим футером
+     * @param player Игрок, для которого устанавливается TAB
+     *
+     * Sets TAB for player with our logo and dynamic footer
+     * @param player Player for whom TAB is set
+     *
+     * Stellt TAB für Spieler mit unserem Logo und dynamischem Footer ein
+     * @param player Spieler, für den TAB eingestellt wird
      */
     public static void setTabList(Player player) {
         String footerText = "\n" +
@@ -27,8 +43,16 @@ public class TabListManager {
                 ChatColor.DARK_GRAY + " | " +
                 ChatColor.GRAY + "Ваш пинг: " + ChatColor.GREEN + player.getPing() + "ms" +
                 "\n" + ChatColor.AQUA + "Приятной игры!";
+                // Players online:
+                // Your ping:
+                // Have a nice game!
+                // Spieler online:
+                // Dein Ping:
+                // Viel Spaß beim Spielen!
 
         // Конвертируем старый формат в новый
+        // Convert old format to new
+        // Konvertiere altes Format in neues
         Component headerComponent = Component.text(HEADER);
         Component footerComponent = Component.text(footerText);
 
@@ -37,8 +61,15 @@ public class TabListManager {
 
     /**
      * Очищает TAB для игрока
+     * @param player Игрок, для которого очищается TAB
+     *
+     * Clears TAB for player
+     * @param player Player for whom TAB is cleared
+     *
+     * Löscht TAB für Spieler
+     * @param player Spieler, für den TAB gelöscht wird
      */
     public static void clearTabList(Player player) {
         player.sendPlayerListHeaderAndFooter(Component.empty(), Component.empty());
     }
-} 
+}

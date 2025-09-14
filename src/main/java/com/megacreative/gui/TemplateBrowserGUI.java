@@ -17,6 +17,16 @@ import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
 
+/**
+ * Управляет графическим интерфейсом для просмотра шаблонов скриптов
+ * Позволяет игрокам просматривать, импортировать и предварительно просматривать шаблоны
+ *
+ * Manages GUI for browsing script templates
+ * Allows players to browse, import, and preview templates
+ *
+ * Verwaltet die GUI zum Durchsuchen von Skriptvorlagen
+ * Ermöglicht Spielern das Durchsuchen, Importieren und Vorschauen von Vorlagen
+ */
 public class TemplateBrowserGUI implements GUIManager.ManagedGUIInterface {
     
     private final MegaCreative plugin;
@@ -25,6 +35,19 @@ public class TemplateBrowserGUI implements GUIManager.ManagedGUIInterface {
     private final GUIManager guiManager;
     private int page = 0;
     
+    /**
+     * Инициализирует графический интерфейс библиотеки шаблонов
+     * @param plugin Ссылка на основной плагин
+     * @param player Игрок, который будет использовать интерфейс
+     *
+     * Initializes template browser GUI
+     * @param plugin Reference to main plugin
+     * @param player Player who will use the interface
+     *
+     * Initialisiert die Vorlagenbrowser-GUI
+     * @param plugin Referenz zum Haupt-Plugin
+     * @param player Spieler, der die Schnittstelle verwenden wird
+     */
     public TemplateBrowserGUI(MegaCreative plugin, Player player) {
         this.plugin = plugin;
         this.player = player;
@@ -34,6 +57,13 @@ public class TemplateBrowserGUI implements GUIManager.ManagedGUIInterface {
         setupInventory();
     }
     
+    /**
+     * Настраивает инвентарь графического интерфейса
+     *
+     * Sets up the GUI inventory
+     *
+     * Richtet das GUI-Inventar ein
+     */
     private void setupInventory() {
         inventory.clear();
         
@@ -101,6 +131,19 @@ public class TemplateBrowserGUI implements GUIManager.ManagedGUIInterface {
         inventory.setItem(46, backButton);
     }
     
+    /**
+     * Подсчитывает количество блоков в шаблоне
+     * @param block Блок для подсчета
+     * @return Количество блоков
+     *
+     * Counts the number of blocks in a template
+     * @param block Block to count
+     * @return Number of blocks
+     *
+     * Zählt die Anzahl der Blöcke in einer Vorlage
+     * @param block Block zum Zählen
+     * @return Anzahl der Blöcke
+     */
     private int countBlocks(CodeBlock block) {
         if (block == null) return 0;
         int count = 1;
@@ -111,6 +154,13 @@ public class TemplateBrowserGUI implements GUIManager.ManagedGUIInterface {
         return count;
     }
     
+    /**
+     * Открывает графический интерфейс для игрока
+     *
+     * Opens the GUI for the player
+     *
+     * Öffnet die GUI für den Spieler
+     */
     public void open() {
         // Register with GUIManager and open inventory
         guiManager.registerGUI(player, this, inventory);
@@ -118,11 +168,31 @@ public class TemplateBrowserGUI implements GUIManager.ManagedGUIInterface {
     }
     
     @Override
+    /**
+     * Получает заголовок графического интерфейса
+     * @return Заголовок интерфейса
+     *
+     * Gets the GUI title
+     * @return Interface title
+     *
+     * Ruft den GUI-Titel ab
+     * @return Schnittstellentitel
+     */
     public String getGUITitle() {
         return "Template Browser GUI";
     }
     
     @Override
+    /**
+     * Обрабатывает события кликов в инвентаре
+     * @param event Событие клика в инвентаре
+     *
+     * Handles inventory click events
+     * @param event Inventory click event
+     *
+     * Verarbeitet Inventarklick-Ereignisse
+     * @param event Inventarklick-Ereignis
+     */
     public void onInventoryClick(InventoryClickEvent event) {
         if (!event.getInventory().equals(inventory)) return;
         
@@ -180,6 +250,19 @@ public class TemplateBrowserGUI implements GUIManager.ManagedGUIInterface {
         }
     }
     
+    /**
+     * Получает индекс шаблона по слоту инвентаря
+     * @param slot Слот инвентаря
+     * @return Индекс шаблона или -1, если слот не содержит шаблона
+     *
+     * Gets template index by inventory slot
+     * @param slot Inventory slot
+     * @return Template index or -1 if slot doesn't contain a template
+     *
+     * Ruft den Vorlagenindex nach Inventarslot ab
+     * @param slot Inventarslot
+     * @return Vorlagenindex oder -1, wenn der Slot keine Vorlage enthält
+     */
     private int getTemplateIndexFromSlot(int slot) {
         if (slot < 10 || slot > 43) return -1;
         
@@ -192,14 +275,31 @@ public class TemplateBrowserGUI implements GUIManager.ManagedGUIInterface {
     }
     
     @Override
+    /**
+     * Обрабатывает события закрытия инвентаря
+     * @param event Событие закрытия инвентаря
+     *
+     * Handles inventory close events
+     * @param event Inventory close event
+     *
+     * Verarbeitet Inventarschließ-Ereignisse
+     * @param event Inventarschließ-Ereignis
+     */
     public void onInventoryClose(InventoryCloseEvent event) {
         // Optional cleanup when GUI is closed
         // GUIManager handles automatic unregistration
     }
     
     @Override
+    /**
+     * Выполняет очистку ресурсов при закрытии интерфейса
+     *
+     * Performs resource cleanup when interface is closed
+     *
+     * Führt eine Ressourcenbereinigung durch, wenn die Schnittstelle geschlossen wird
+     */
     public void onCleanup() {
         // Called when GUI is being cleaned up by GUIManager
         // No special cleanup needed for this GUI
     }
-} 
+}

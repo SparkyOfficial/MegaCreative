@@ -17,6 +17,16 @@ import java.util.Arrays;
 import java.util.List;
 import java.util.function.Consumer;
 
+/**
+ * Управляет графическим интерфейсом выбора параметров для блоков кода
+ * Позволяет игрокам выбирать значения параметров из предопределенного списка
+ *
+ * Manages parameter selection GUI for code blocks
+ * Allows players to select parameter values from a predefined list
+ *
+ * Verwaltet die Parameterauswahl-GUI für Codeblöcke
+ * Ermöglicht Spielern die Auswahl von Parameterwerten aus einer vordefinierten Liste
+ */
 public class ParameterSelectorGUI implements Listener {
     
     private final MegaCreative plugin;
@@ -27,6 +37,31 @@ public class ParameterSelectorGUI implements Listener {
     private final Consumer<String> onSelect;
     private final Inventory inventory;
     
+    /**
+     * Инициализирует графический интерфейс выбора параметров
+     * @param plugin Ссылка на основной плагин
+     * @param player Игрок, который будет использовать интерфейс
+     * @param block Блок кода, для которого выбирается параметр
+     * @param parameterName Имя параметра
+     * @param options Список доступных опций
+     * @param onSelect Обратный вызов при выборе опции
+     *
+     * Initializes parameter selection GUI
+     * @param plugin Reference to main plugin
+     * @param player Player who will use the interface
+     * @param block Code block for which parameter is selected
+     * @param parameterName Parameter name
+     * @param options List of available options
+     * @param onSelect Callback on option selection
+     *
+     * Initialisiert die Parameterauswahl-GUI
+     * @param plugin Referenz zum Haupt-Plugin
+     * @param player Spieler, der die Schnittstelle verwenden wird
+     * @param block Codeblock, für den der Parameter ausgewählt wird
+     * @param parameterName Parametername
+     * @param options Liste der verfügbaren Optionen
+     * @param onSelect Rückruf bei Optionsauswahl
+     */
     public ParameterSelectorGUI(MegaCreative plugin, Player player, CodeBlock block, String parameterName, List<String> options, Consumer<String> onSelect) {
         this.plugin = plugin;
         this.player = player;
@@ -39,6 +74,13 @@ public class ParameterSelectorGUI implements Listener {
         setupInventory();
     }
     
+    /**
+     * Настраивает инвентарь графического интерфейса
+     *
+     * Sets up the GUI inventory
+     *
+     * Richtet das GUI-Inventar ein
+     */
     private void setupInventory() {
         inventory.clear();
         
@@ -80,6 +122,13 @@ public class ParameterSelectorGUI implements Listener {
         inventory.setItem(22, cancelButton);
     }
     
+    /**
+     * Открывает графический интерфейс для игрока
+     *
+     * Opens the GUI for the player
+     *
+     * Öffnet die GUI für den Spieler
+     */
     public void open() {
         // Регистрируем GUI в централизованной системе
         plugin.getGuiManager().registerGUI(player, new GUIManager.ManagedGUIInterface() {
@@ -96,6 +145,16 @@ public class ParameterSelectorGUI implements Listener {
         player.openInventory(inventory);
     }
     
+    /**
+     * Обрабатывает события кликов в инвентаре
+     * @param event Событие клика в инвентаре
+     *
+     * Handles inventory click events
+     * @param event Inventory click event
+     *
+     * Verarbeitet Inventarklick-Ereignisse
+     * @param event Inventarklick-Ereignis
+     */
     private void handleInventoryClick(InventoryClickEvent event) {
         if (!event.getInventory().equals(inventory)) return;
         
@@ -127,6 +186,16 @@ public class ParameterSelectorGUI implements Listener {
         }
     }
     
+    /**
+     * Обрабатывает события кликов в инвентаре
+     * @param event Событие клика в инвентаре
+     *
+     * Handles inventory click events
+     * @param event Inventory click event
+     *
+     * Verarbeitet Inventarklick-Ereignisse
+     * @param event Inventarklick-Ereignis
+     */
     @EventHandler
     public void onInventoryClick(InventoryClickEvent event) {
         handleInventoryClick(event);

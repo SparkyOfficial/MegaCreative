@@ -18,6 +18,22 @@ import org.bukkit.Location;
 import java.util.*;
 
 /**
+ * Расширенный графический интерфейс перетаскивания для настройки параметров действий
+ * 🎆 РАСШИРЕННЫЕ ФУНКЦИИ:
+ * - Динамическая настройка слотов на основе YAML
+ * - Валидация параметров в реальном времени
+ * - Визуальная обратная связь по статусу конфигурации
+ * - Умная генерация заполнителей
+ * - Предотвращение ошибок и руководство пользователя
+ * 
+ * Расширенный графический интерфейс перетаскивания для настройки параметров действий
+ * 🎆 УЛУЧШЕННЫЕ ФУНКЦИИ:
+ * - Динамическая конфигурация слотов на основе YAML
+ * - Валидация параметров в реальном времени
+ * - Визуальная обратная связь по статусу конфигурации
+ * - Умная генерация заполнителей
+ * - Предотвращение ошибок и руководство пользователя
+ *
  * Advanced drag-and-drop GUI for configuring action parameters
  * 🎆 ENHANCED FEATURES:
  * - Dynamic YAML-driven slot configuration
@@ -25,9 +41,20 @@ import java.util.*;
  * - Visual feedback for configuration status
  * - Smart placeholder generation
  * - Error prevention and user guidance
+ *
+ * Erweiterte Drag-and-Drop-GUI zur Konfiguration von Aktionsparametern
+ * 🎆 ERWEITERT FUNKTIONEN:
+ * - Dynamische YAML-gesteuerte Slot-Konfiguration
+ * - Echtzeit-Parameter-Validierung
+ * - Visuelle Rückmeldung zum Konfigurationsstatus
+ * - Intelligente Platzhaltergenerierung
+ * - Fehlervermeidung und Benutzerführung
  * 
  * Features intuitive interface for each action type with named slots and item groups
  * Based on the configuration from coding_blocks.yml
+ *
+ * Bietet eine intuitive Schnittstelle für jeden Aktionstyp mit benannten Slots und Artikelgruppen
+ * Basierend auf der Konfiguration aus coding_blocks.yml
  */
 public class ActionParameterGUI implements GUIManager.ManagedGUIInterface {
     
@@ -44,6 +71,25 @@ public class ActionParameterGUI implements GUIManager.ManagedGUIInterface {
     private final Map<Integer, String> slotValidationErrors = new HashMap<>();
     private final Map<Integer, Boolean> slotValidationStatus = new HashMap<>();
     
+    /**
+     * Инициализирует графический интерфейс параметров действий
+     * @param plugin Ссылка на основной плагин
+     * @param player Игрок, который будет использовать интерфейс
+     * @param blockLocation Расположение блока для настройки
+     * @param actionId Идентификатор действия для настройки
+     *
+     * Initializes action parameters GUI
+     * @param plugin Reference to main plugin
+     * @param player Player who will use the interface
+     * @param blockLocation Location of block to configure
+     * @param actionId Action ID to configure
+     *
+     * Initialisiert die Aktionsparameter-GUI
+     * @param plugin Referenz zum Haupt-Plugin
+     * @param player Spieler, der die Schnittstelle verwenden wird
+     * @param blockLocation Position des zu konfigurierenden Blocks
+     * @param actionId Aktions-ID zum Konfigurieren
+     */
     public ActionParameterGUI(MegaCreative plugin, Player player, Location blockLocation, String actionId) {
         this.plugin = plugin;
         this.player = player;
@@ -58,6 +104,13 @@ public class ActionParameterGUI implements GUIManager.ManagedGUIInterface {
         setupInventory();
     }
     
+    /**
+     * Настраивает инвентарь графического интерфейса
+     *
+     * Sets up the GUI inventory
+     *
+     * Richtet das GUI-Inventar ein
+     */
     private void setupInventory() {
         inventory.clear();
         
@@ -99,7 +152,11 @@ public class ActionParameterGUI implements GUIManager.ManagedGUIInterface {
     }
     
     /**
+     * Загружает конфигурацию действия из coding_blocks.yml и настраивает элементы-заполнители
+     *
      * Loads the action configuration from coding_blocks.yml and sets up placeholder items
+     *
+     * Lädt die Aktionskonfiguration aus coding_blocks.yml und richtet Platzhalterelemente ein
      */
     private void loadActionConfiguration() {
         // Get the action configurations directly from BlockConfigService
@@ -141,7 +198,11 @@ public class ActionParameterGUI implements GUIManager.ManagedGUIInterface {
     }
     
     /**
+     * Настраивает именованные слоты на основе конфигурации
+     *
      * Sets up named slots based on configuration
+     *
+     * Richtet benannte Slots basierend auf der Konfiguration ein
      */
     private void setupNamedSlots(org.bukkit.configuration.ConfigurationSection slotsConfig) {
         int configuredSlots = 0;
@@ -222,7 +283,11 @@ public class ActionParameterGUI implements GUIManager.ManagedGUIInterface {
     }
     
     /**
+     * Настраивает группы предметов на основе конфигурации
+     *
      * Sets up item groups based on configuration
+     *
+     * Richtet Artikelgruppen basierend auf der Konfiguration ein
      */
     private void setupItemGroups(org.bukkit.configuration.ConfigurationSection itemGroupsConfig) {
         for (String groupKey : itemGroupsConfig.getKeys(false)) {
@@ -263,7 +328,11 @@ public class ActionParameterGUI implements GUIManager.ManagedGUIInterface {
     }
     
     /**
+     * Настраивает базовые слоты, когда конкретная конфигурация не найдена
+     *
      * Sets up generic slots when no specific configuration is found
+     *
+     * Richtet generische Slots ein, wenn keine spezifische Konfiguration gefunden wird
      */
     private void setupGenericSlots() {
         // Create generic placeholder items for slots 9-17 (center row)
@@ -284,7 +353,11 @@ public class ActionParameterGUI implements GUIManager.ManagedGUIInterface {
     }
     
     /**
+     * Загружает существующие параметры из блока кода в графический интерфейс
+     *
      * Loads existing parameters from the code block into the GUI
+     *
+     * Lädt vorhandene Parameter aus dem Codeblock in die GUI
      */
     private void loadExistingParameters() {
         BlockPlacementHandler placementHandler = plugin.getBlockPlacementHandler();
@@ -308,8 +381,14 @@ public class ActionParameterGUI implements GUIManager.ManagedGUIInterface {
     }
     
     /**
+     * Сохраняет настроенные параметры обратно в блок кода
+     * 🎆 УЛУЧШЕННОЕ: С обратной связью по валидации
+     *
      * Saves the configured parameters back to the code block
      * 🎆 ENHANCED: With validation feedback
+     *
+     * Speichert die konfigurierten Parameter zurück in den Codeblock
+     * 🎆 ERWEITERT: Mit Validierungs-Rückmeldung
      */
     private void saveParameters() {
         BlockPlacementHandler placementHandler = plugin.getBlockPlacementHandler();
@@ -377,8 +456,14 @@ public class ActionParameterGUI implements GUIManager.ManagedGUIInterface {
     }
     
     /**
+     * 🎆 УЛУЧШЕННОЕ: Валидация параметров в реальном времени
+     * Проверяет конфигурацию определенного слота и предоставляет пользователю обратную связь
+     *
      * 🎆 ENHANCED: Real-time parameter validation
      * Validates a specific slot configuration and provides user feedback
+     *
+     * 🎆 ERWEITERT: Echtzeit-Parameter-Validierung
+     * Validiert eine bestimmte Slot-Konfiguration und gibt dem Benutzer Feedback
      */
     private void validateSlot(int slot, ItemStack item) {
         String error = null;
@@ -407,7 +492,11 @@ public class ActionParameterGUI implements GUIManager.ManagedGUIInterface {
     }
     
     /**
+     * 🎆 УЛУЧШЕННОЕ: Проверяет, является ли слот обязательным для этого действия
+     *
      * 🎆 ENHANCED: Check if a slot is required for this action
+     *
+     * 🎆 ERWEITERT: Prüft, ob ein Slot für diese Aktion erforderlich ist
      */
     private boolean isSlotRequired(int slot) {
         var actionConfigurations = blockConfigService.getActionConfigurations();
@@ -426,7 +515,11 @@ public class ActionParameterGUI implements GUIManager.ManagedGUIInterface {
     }
     
     /**
+     * 🎆 УЛУЧШЕННОЕ: Проверяет содержимое предмета для определенного слота
+     *
      * 🎆 ENHANCED: Validate item content for specific slot
+     *
+     * 🎆 ERWEITERT: Validiert den Artikelinhalt für einen bestimmten Slot
      */
     private String validateItemForSlot(int slot, ItemStack item) {
         if (!item.hasItemMeta() || !item.getItemMeta().hasDisplayName()) {
@@ -461,7 +554,11 @@ public class ActionParameterGUI implements GUIManager.ManagedGUIInterface {
     }
     
     /**
+     * 🎆 УЛУЧШЕННОЕ: Проверяет, представляет ли строка допустимое число
+     *
      * 🎆 ENHANCED: Check if string represents a valid number
+     *
+     * 🎆 ERWEITERT: Prüft, ob die Zeichenfolge eine gültige Zahl darstellt
      */
     private boolean isValidNumber(String str) {
         if (str == null || str.trim().isEmpty()) return false;
@@ -486,7 +583,11 @@ public class ActionParameterGUI implements GUIManager.ManagedGUIInterface {
     }
     
     /**
+     * 🎆 УЛУЧШЕННОЕ: Обновляет визуальную обратную связь для валидации слота
+     *
      * 🎆 ENHANCED: Update visual feedback for slot validation
+     *
+     * 🎆 ERWEITERT: Aktualisiert die visuelle Rückmeldung zur Slot-Validierung
      */
     private void updateSlotVisualFeedback(int slot, boolean isValid, String error) {
         ItemStack currentItem = inventory.getItem(slot);
@@ -516,7 +617,11 @@ public class ActionParameterGUI implements GUIManager.ManagedGUIInterface {
     }
     
     /**
+     * Проверяет, является ли предмет элементом-заполнителем
+     *
      * Checks if an item is a placeholder item
+     *
+     * Prüft, ob ein Artikel ein Platzhalterartikel ist
      */
     private boolean isPlaceholderItem(ItemStack item) {
         if (item == null || !item.hasItemMeta()) return false;
@@ -538,7 +643,11 @@ public class ActionParameterGUI implements GUIManager.ManagedGUIInterface {
     }
     
     /**
+     * Открывает графический интерфейс для игрока
+     *
      * Opens the GUI for the player
+     *
+     * Öffnet die GUI für den Spieler
      */
     public void open() {
         guiManager.registerGUI(player, this, inventory);
@@ -549,11 +658,31 @@ public class ActionParameterGUI implements GUIManager.ManagedGUIInterface {
     }
     
     @Override
+    /**
+     * Получает заголовок графического интерфейса
+     * @return Заголовок интерфейса
+     *
+     * Gets the GUI title
+     * @return Interface title
+     *
+     * Ruft den GUI-Titel ab
+     * @return Schnittstellentitel
+     */
     public String getGUITitle() {
         return "Action Parameter GUI for " + actionId;
     }
     
     @Override
+    /**
+     * Обрабатывает события кликов в инвентаре
+     * @param event Событие клика в инвентаре
+     *
+     * Handles inventory click events
+     * @param event Inventory click event
+     *
+     * Verarbeitet Inventarklick-Ereignisse
+     * @param event Inventarklick-Ereignis
+     */
     public void onInventoryClick(InventoryClickEvent event) {
         if (!player.equals(event.getWhoClicked())) return;
         if (!inventory.equals(event.getInventory())) return;
@@ -603,6 +732,16 @@ public class ActionParameterGUI implements GUIManager.ManagedGUIInterface {
     }
     
     @Override
+    /**
+     * Обрабатывает события закрытия инвентаря
+     * @param event Событие закрытия инвентаря
+     *
+     * Handles inventory close events
+     * @param event Inventory close event
+     *
+     * Verarbeitet Inventarschließ-Ereignisse
+     * @param event Inventarschließ-Ereignis
+     */
     public void onInventoryClose(InventoryCloseEvent event) {
         // Save parameters when GUI is closed
         saveParameters();
@@ -612,6 +751,13 @@ public class ActionParameterGUI implements GUIManager.ManagedGUIInterface {
     }
     
     @Override
+    /**
+     * Выполняет очистку ресурсов при закрытии интерфейса
+     *
+     * Performs resource cleanup when interface is closed
+     *
+     * Führt eine Ressourcenbereinigung durch, wenn die Schnittstelle geschlossen wird
+     */
     public void onCleanup() {
         // Called when GUI is being cleaned up by GUIManager
         // No special cleanup needed for this GUI

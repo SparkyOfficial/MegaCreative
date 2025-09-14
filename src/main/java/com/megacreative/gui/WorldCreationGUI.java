@@ -14,12 +14,35 @@ import org.bukkit.inventory.meta.ItemMeta;
 
 import java.util.Arrays;
 
+/**
+ * Управляет графическим интерфейсом для создания новых миров
+ * Позволяет игрокам выбирать тип мира для создания
+ *
+ * Manages GUI for creating new worlds
+ * Allows players to select world type for creation
+ *
+ * Verwaltet die GUI zum Erstellen neuer Welten
+ * Ermöglicht Spielern die Auswahl des Weltenyps für die Erstellung
+ */
 public class WorldCreationGUI implements GUIManager.ManagedGUIInterface {
     
     private final MegaCreative plugin;
     private final Player player;
     private final Inventory inventory;
     
+    /**
+     * Инициализирует графический интерфейс создания мира
+     * @param plugin Ссылка на основной плагин
+     * @param player Игрок, который будет использовать интерфейс
+     *
+     * Initializes world creation GUI
+     * @param plugin Reference to main plugin
+     * @param player Player who will use the interface
+     *
+     * Initialisiert die Welten-Erstellungs-GUI
+     * @param plugin Referenz zum Haupt-Plugin
+     * @param player Spieler, der die Schnittstelle verwenden wird
+     */
     public WorldCreationGUI(MegaCreative plugin, Player player) {
         this.plugin = plugin;
         this.player = player;
@@ -28,6 +51,13 @@ public class WorldCreationGUI implements GUIManager.ManagedGUIInterface {
         setupInventory();
     }
     
+    /**
+     * Настраивает инвентарь графического интерфейса
+     *
+     * Sets up the GUI inventory
+     *
+     * Richtet das GUI-Inventar ein
+     */
     private void setupInventory() {
         inventory.clear();
         
@@ -117,16 +147,43 @@ public class WorldCreationGUI implements GUIManager.ManagedGUIInterface {
     }
     
     @Override
+    /**
+     * Получает заголовок графического интерфейса
+     * @return Заголовок интерфейса
+     *
+     * Gets the GUI title
+     * @return Interface title
+     *
+     * Ruft den GUI-Titel ab
+     * @return Schnittstellentitel
+     */
     public String getGUITitle() {
         return "World Creation";
     }
     
+    /**
+     * Открывает графический интерфейс для игрока
+     *
+     * Opens the GUI for the player
+     *
+     * Öffnet die GUI für den Spieler
+     */
     public void open() {
         plugin.getGuiManager().registerGUI(player, this, inventory);
         player.openInventory(inventory);
     }
     
     @Override
+    /**
+     * Обрабатывает события кликов в инвентаре
+     * @param event Событие клика в инвентаре
+     *
+     * Handles inventory click events
+     * @param event Inventory click event
+     *
+     * Verarbeitet Inventarklick-Ereignisse
+     * @param event Inventarklick-Ereignis
+     */
     public void onInventoryClick(InventoryClickEvent event) {
         if (!event.getInventory().equals(inventory)) return;
         
@@ -179,12 +236,29 @@ public class WorldCreationGUI implements GUIManager.ManagedGUIInterface {
     }
     
     @Override
+    /**
+     * Обрабатывает события закрытия инвентаря
+     * @param event Событие закрытия инвентаря
+     *
+     * Handles inventory close events
+     * @param event Inventory close event
+     *
+     * Verarbeitet Inventarschließ-Ereignisse
+     * @param event Inventarschließ-Ereignis
+     */
     public void onInventoryClose(InventoryCloseEvent event) {
         // Optional cleanup when GUI is closed
         // GUIManager handles automatic unregistration
     }
     
     @Override
+    /**
+     * Выполняет очистку ресурсов при закрытии интерфейса
+     *
+     * Performs resource cleanup when interface is closed
+     *
+     * Führt eine Ressourcenbereinigung durch, wenn die Schnittstelle geschlossen wird
+     */
     public void onCleanup() {
         // Called when GUI is being cleaned up by GUIManager
         // No special cleanup needed for this GUI

@@ -14,6 +14,14 @@ import org.bukkit.inventory.meta.ItemMeta;
 import java.util.*;
 
 /**
+ * 🎆 УЛУЧШЕННЫЙ ГРАФИЧЕСКИЙ ИНТЕРФЕЙС ОТОБРАЖЕНИЯ ОШИБОК
+ * Предоставляет удобные сообщения об ошибках и руководство по исправлению проблем конфигурации
+ * Особенности:
+ * - Визуальная категоризация ошибок
+ * - Полезные предложения и решения
+ * - Быстрые варианты исправления, когда это возможно
+ * - Индикаторы серьезности ошибок
+ *
  * 🎆 ENHANCED ERROR DISPLAY GUI
  * Provides user-friendly error messages and guidance for fixing configuration issues
  * Features:
@@ -21,6 +29,14 @@ import java.util.*;
  * - Helpful suggestions and solutions
  * - Quick fix options when possible
  * - Error severity indicators
+ *
+ * 🎆 ERWEITERTES FEHLERANZEIGE-GUI
+ * Bietet benutzerfreundliche Fehlermeldungen und Anleitungen zur Behebung von Konfigurationsproblemen
+ * Funktionen:
+ * - Visuelle Fehlerkategorisierung
+ * - Hilfreiche Vorschläge und Lösungen
+ * - Schnelle Korrekturmöglichkeiten, wenn möglich
+ * - Fehler-Schweregrad-Indikatoren
  */
 public class ErrorDisplayGUI implements GUIManager.ManagedGUIInterface {
     
@@ -72,6 +88,25 @@ public class ErrorDisplayGUI implements GUIManager.ManagedGUIInterface {
         public String getDisplayName() { return displayName; }
     }
     
+    /**
+     * Инициализирует графический интерфейс отображения ошибок
+     * @param plugin Ссылка на основной плагин
+     * @param player Игрок, который будет использовать интерфейс
+     * @param errorTitle Заголовок ошибки
+     * @param errors Список ошибок для отображения
+     *
+     * Initializes error display GUI
+     * @param plugin Reference to main plugin
+     * @param player Player who will use the interface
+     * @param errorTitle Error title
+     * @param errors List of errors to display
+     *
+     * Initialisiert die Fehleranzeige-GUI
+     * @param plugin Referenz zum Haupt-Plugin
+     * @param player Spieler, der die Schnittstelle verwenden wird
+     * @param errorTitle Fehlertitel
+     * @param errors Liste der anzuzeigenden Fehler
+     */
     public ErrorDisplayGUI(MegaCreative plugin, Player player, String errorTitle, List<ErrorInfo> errors) {
         this.plugin = plugin;
         this.player = player;
@@ -86,6 +121,13 @@ public class ErrorDisplayGUI implements GUIManager.ManagedGUIInterface {
         setupInventory();
     }
     
+    /**
+     * Настраивает инвентарь графического интерфейса
+     *
+     * Sets up the GUI inventory
+     *
+     * Richtet das GUI-Inventar ein
+     */
     private void setupInventory() {
         inventory.clear();
         
@@ -138,6 +180,13 @@ public class ErrorDisplayGUI implements GUIManager.ManagedGUIInterface {
         inventory.setItem(inventory.getSize() - 5, closeItem);
     }
     
+    /**
+     * Создает элемент ошибки
+     *
+     * Creates error item
+     *
+     * Erstellt Fehlerelement
+     */
     private ItemStack createErrorItem(ErrorInfo error, int number) {
         Material material = getErrorMaterial(error.getSeverity());
         ItemStack item = new ItemStack(material);
@@ -164,6 +213,13 @@ public class ErrorDisplayGUI implements GUIManager.ManagedGUIInterface {
         return item;
     }
     
+    /**
+     * Получает материал для ошибки
+     *
+     * Gets material for error
+     *
+     * Ruft das Material für den Fehler ab
+     */
     private Material getErrorMaterial(ErrorSeverity severity) {
         switch (severity) {
             case ERROR:
@@ -177,6 +233,13 @@ public class ErrorDisplayGUI implements GUIManager.ManagedGUIInterface {
         }
     }
     
+    /**
+     * Открывает графический интерфейс для игрока
+     *
+     * Opens the GUI for the player
+     *
+     * Öffnet die GUI für den Spieler
+     */
     public void open() {
         guiManager.registerGUI(player, this, inventory);
         player.openInventory(inventory);
@@ -186,11 +249,31 @@ public class ErrorDisplayGUI implements GUIManager.ManagedGUIInterface {
     }
     
     @Override
+    /**
+     * Получает заголовок графического интерфейса
+     * @return Заголовок интерфейса
+     *
+     * Gets the GUI title
+     * @return Interface title
+     *
+     * Ruft den GUI-Titel ab
+     * @return Schnittstellentitel
+     */
     public String getGUITitle() {
         return "Error Display GUI for " + errorTitle;
     }
     
     @Override
+    /**
+     * Обрабатывает события кликов в инвентаре
+     * @param event Событие клика в инвентаре
+     *
+     * Handles inventory click events
+     * @param event Inventory click event
+     *
+     * Verarbeitet Inventarklick-Ereignisse
+     * @param event Inventarklick-Ereignis
+     */
     public void onInventoryClick(InventoryClickEvent event) {
         if (!player.equals(event.getWhoClicked())) return;
         if (!inventory.equals(event.getInventory())) return;
@@ -240,12 +323,29 @@ public class ErrorDisplayGUI implements GUIManager.ManagedGUIInterface {
     }
     
     @Override
+    /**
+     * Обрабатывает события закрытия инвентаря
+     * @param event Событие закрытия инвентаря
+     *
+     * Handles inventory close events
+     * @param event Inventory close event
+     *
+     * Verarbeitet Inventarschließ-Ereignisse
+     * @param event Inventarschließ-Ereignis
+     */
     public void onInventoryClose(InventoryCloseEvent event) {
         // Optional cleanup when GUI is closed
         // GUIManager handles automatic unregistration
     }
     
     @Override
+    /**
+     * Выполняет очистку ресурсов при закрытии интерфейса
+     *
+     * Performs resource cleanup when interface is closed
+     *
+     * Führt eine Ressourcenbereinigung durch, wenn die Schnittstelle geschlossen wird
+     */
     public void onCleanup() {
         // Called when GUI is being cleaned up by GUIManager
         // No special cleanup needed for this GUI

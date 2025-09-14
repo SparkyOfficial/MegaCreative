@@ -16,7 +16,14 @@ import java.util.Arrays;
 import java.util.List;
 
 /**
- * World Browser GUI - Fixed to use new GUIManager system
+ * Графический интерфейс для просмотра миров
+ * Реализует ManagedGUIInterface для интеграции с GUIManager
+ *
+ * GUI for browsing worlds
+ * Implements ManagedGUIInterface for integration with GUIManager
+ *
+ * GUI zum Durchsuchen von Welten
+ * Implementiert ManagedGUIInterface für die Integration mit GUIManager
  */
 public class WorldBrowserGUI implements GUIManager.ManagedGUIInterface {
     
@@ -25,6 +32,19 @@ public class WorldBrowserGUI implements GUIManager.ManagedGUIInterface {
     private final Inventory inventory;
     private int page = 0;
     
+    /**
+     * Инициализирует графический интерфейс браузера миров
+     * @param plugin Ссылка на основной плагин
+     * @param player Игрок, который будет использовать интерфейс
+     *
+     * Initializes world browser GUI
+     * @param plugin Reference to main plugin
+     * @param player Player who will use the interface
+     *
+     * Initialisiert die Weltbrowser-GUI
+     * @param plugin Referenz zum Haupt-Plugin
+     * @param player Spieler, der die Schnittstelle verwenden wird
+     */
     public WorldBrowserGUI(MegaCreative plugin, Player player) {
         this.plugin = plugin;
         this.player = player;
@@ -33,6 +53,13 @@ public class WorldBrowserGUI implements GUIManager.ManagedGUIInterface {
         setupInventory();
     }
     
+    /**
+     * Настраивает инвентарь графического интерфейса
+     *
+     * Sets up the GUI inventory
+     *
+     * Richtet das GUI-Inventar ein
+     */
     private void setupInventory() {
         inventory.clear();
         
@@ -114,10 +141,27 @@ public class WorldBrowserGUI implements GUIManager.ManagedGUIInterface {
     }
     
     @Override
+    /**
+     * Получает заголовок графического интерфейса
+     * @return Заголовок интерфейса
+     *
+     * Gets the GUI title
+     * @return Interface title
+     *
+     * Ruft den GUI-Titel ab
+     * @return Schnittstellentitel
+     */
     public String getGUITitle() {
         return "World Browser";
     }
     
+    /**
+     * Открывает графический интерфейс для игрока
+     *
+     * Opens the GUI for the player
+     *
+     * Öffnet die GUI für den Spieler
+     */
     public void open() {
         // Use the new GUIManager system instead of old GuiListener
         plugin.getGuiManager().registerGUI(player, this, inventory);
@@ -125,6 +169,16 @@ public class WorldBrowserGUI implements GUIManager.ManagedGUIInterface {
     }
     
     @Override
+    /**
+     * Обрабатывает события кликов в инвентаре
+     * @param event Событие клика в инвентаре
+     *
+     * Handles inventory click events
+     * @param event Inventory click event
+     *
+     * Verarbeitet Inventarklick-Ereignisse
+     * @param event Inventarklick-Ereignis
+     */
     public void onInventoryClick(InventoryClickEvent event) {
         if (!event.getInventory().equals(inventory)) return;
         
@@ -172,6 +226,19 @@ public class WorldBrowserGUI implements GUIManager.ManagedGUIInterface {
         }
     }
     
+    /**
+     * Получает индекс мира по слоту инвентаря
+     * @param slot Слот инвентаря
+     * @return Индекс мира или -1, если слот не содержит мира
+     *
+     * Gets world index by inventory slot
+     * @param slot Inventory slot
+     * @return World index or -1 if slot doesn't contain a world
+     *
+     * Ruft den Weltenindex nach Inventarslot ab
+     * @param slot Inventarslot
+     * @return Weltenindex oder -1, wenn der Slot keine Welt enthält
+     */
     private int getWorldIndexFromSlot(int slot) {
         if (slot < 10 || slot > 43) return -1;
         
@@ -184,12 +251,29 @@ public class WorldBrowserGUI implements GUIManager.ManagedGUIInterface {
     }
     
     @Override
+    /**
+     * Обрабатывает события закрытия инвентаря
+     * @param event Событие закрытия инвентаря
+     *
+     * Handles inventory close events
+     * @param event Inventory close event
+     *
+     * Verarbeitet Inventarschließ-Ereignisse
+     * @param event Inventarschließ-Ereignis
+     */
     public void onInventoryClose(InventoryCloseEvent event) {
         // Optional cleanup when GUI is closed
         // GUIManager handles automatic unregistration
     }
     
     @Override
+    /**
+     * Выполняет очистку ресурсов при закрытии интерфейса
+     *
+     * Performs resource cleanup when interface is closed
+     *
+     * Führt eine Ressourcenbereinigung durch, wenn die Schnittstelle geschlossen wird
+     */
     public void onCleanup() {
         // Called when GUI is being cleaned up by GUIManager
         // No special cleanup needed for this GUI

@@ -18,6 +18,14 @@ import org.bukkit.Location;
 import java.util.*;
 
 /**
+ * Графический интерфейс для выбора целей для действий (@p, @a, victim, attacker и т.д.)
+ * 🎆 УЛУЧШЕННЫЕ ФУНКЦИИ:
+ * - Интуитивная визуализация целей с головами игроков
+ * - Валидация целей и предварительный просмотр в реальном времени
+ * - Умные рекомендации целей на основе типа действия
+ * - Визуальная обратная связь для процесса выбора
+ * - Система выбора целей в стиле OpenCreative с современными улучшениями
+ *
  * GUI for selecting targets for actions (@p, @a, victim, attacker, etc.)
  * 🎆 ENHANCED FEATURES:
  * - Intuitive target visualization with player heads
@@ -25,6 +33,14 @@ import java.util.*;
  * - Smart target recommendations based on action type
  * - Visual feedback for selection process
  * - OpenCreative-style target selection system with modern enhancements
+ *
+ * GUI zur Auswahl von Zielen für Aktionen (@p, @a, Opfer, Angreifer usw.)
+ * 🎆 ERWEITERT FUNKTIONEN:
+ * - Intuitive Zielvisualisierung mit Spielerköpfen
+ * - Echtzeit-Zielvalidierung und -vorschau
+ * - Intelligente Ziel-Empfehlungen basierend auf dem Aktionstyp
+ * - Visuelle Rückmeldung für den Auswahlprozess
+ * - OpenCreative-Stil-Zielauswahlsystem mit modernen Verbesserungen
  */
 public class TargetSelectionGUI implements GUIManager.ManagedGUIInterface {
     
@@ -65,6 +81,25 @@ public class TargetSelectionGUI implements GUIManager.ManagedGUIInterface {
         public String getDescription() { return description; }
     }
     
+    /**
+     * Инициализирует графический интерфейс выбора целей
+     * @param plugin Ссылка на основной плагин
+     * @param player Игрок, который будет использовать интерфейс
+     * @param blockLocation Расположение блока для настройки
+     * @param blockMaterial Материал блока для настройки
+     *
+     * Initializes target selection GUI
+     * @param plugin Reference to main plugin
+     * @param player Player who will use the interface
+     * @param blockLocation Location of block to configure
+     * @param blockMaterial Material of block to configure
+     *
+     * Initialisiert die Zielauswahl-GUI
+     * @param plugin Referenz zum Haupt-Plugin
+     * @param player Spieler, der die Schnittstelle verwenden wird
+     * @param blockLocation Position des zu konfigurierenden Blocks
+     * @param blockMaterial Material des zu konfigurierenden Blocks
+     */
     public TargetSelectionGUI(MegaCreative plugin, Player player, Location blockLocation, Material blockMaterial) {
         this.plugin = plugin;
         this.player = player;
@@ -78,12 +113,26 @@ public class TargetSelectionGUI implements GUIManager.ManagedGUIInterface {
         setupInventory();
     }
     
+    /**
+     * Получает отображаемое имя блока
+     *
+     * Gets display name for block
+     *
+     * Ruft den Anzeigenamen des Blocks ab
+     */
     private String getBlockDisplayName() {
         BlockConfigService blockConfigService = plugin.getServiceRegistry().getBlockConfigService();
         BlockConfigService.BlockConfig config = blockConfigService.getBlockConfigByMaterial(blockMaterial);
         return config != null ? config.getDisplayName() : blockMaterial.name();
     }
     
+    /**
+     * Настраивает инвентарь графического интерфейса
+     *
+     * Sets up the GUI inventory
+     *
+     * Richtet das GUI-Inventar ein
+     */
     private void setupInventory() {
         inventory.clear();
         
@@ -117,6 +166,13 @@ public class TargetSelectionGUI implements GUIManager.ManagedGUIInterface {
         loadTargetOptions();
     }
     
+    /**
+     * Загружает опции целей
+     *
+     * Loads target options
+     *
+     * Lädt Zieloptionen
+     */
     private void loadTargetOptions() {
         // Place target options in a nice grid layout
         int[] slots = {10, 11, 12, 13, 14, 15, 16, 19, 20, 21, 22, 23, 24, 25, 28, 29, 30, 31, 32, 33, 34};
@@ -131,6 +187,13 @@ public class TargetSelectionGUI implements GUIManager.ManagedGUIInterface {
         }
     }
     
+    /**
+     * Создает элемент цели
+     *
+     * Creates target item
+     *
+     * Erstellt Zielelement
+     */
     private ItemStack createTargetItem(TargetType targetType) {
         ItemStack item = new ItemStack(targetType.getIcon());
         ItemMeta meta = item.getItemMeta();
@@ -184,7 +247,11 @@ public class TargetSelectionGUI implements GUIManager.ManagedGUIInterface {
     }
     
     /**
+     * Открывает графический интерфейс для игрока
+     *
      * Opens the GUI for the player
+     *
+     * Öffnet die GUI für den Spieler
      */
     public void open() {
         guiManager.registerGUI(player, this, inventory);
@@ -195,11 +262,31 @@ public class TargetSelectionGUI implements GUIManager.ManagedGUIInterface {
     }
     
     @Override
+    /**
+     * Получает заголовок графического интерфейса
+     * @return Заголовок интерфейса
+     *
+     * Gets the GUI title
+     * @return Interface title
+     *
+     * Ruft den GUI-Titel ab
+     * @return Schnittstellentitel
+     */
     public String getGUITitle() {
         return "Target Selection GUI for " + blockMaterial.name();
     }
     
     @Override
+    /**
+     * Обрабатывает события кликов в инвентаре
+     * @param event Событие клика в инвентаре
+     *
+     * Handles inventory click events
+     * @param event Inventory click event
+     *
+     * Verarbeitet Inventarklick-Ereignisse
+     * @param event Inventarklick-Ereignis
+     */
     public void onInventoryClick(InventoryClickEvent event) {
         if (!player.equals(event.getWhoClicked())) return;
         if (!inventory.equals(event.getInventory())) return;
@@ -227,6 +314,13 @@ public class TargetSelectionGUI implements GUIManager.ManagedGUIInterface {
         }
     }
     
+    /**
+     * Выбирает цель
+     *
+     * Selects target
+     *
+     * Wählt Ziel
+     */
     private void selectTarget(String targetId) {
         try {
             TargetType selectedTarget = TargetType.valueOf(targetId);
@@ -272,6 +366,13 @@ public class TargetSelectionGUI implements GUIManager.ManagedGUIInterface {
         }
     }
     
+    /**
+     * Открывает графический интерфейс выбора действий
+     *
+     * Opens ActionSelectionGUI after target selection
+     *
+     * Öffnet ActionSelectionGUI nach der Zielauswahl
+     */
     private void openActionSelectionGUI() {
         // Open ActionSelectionGUI after target selection
         Bukkit.getScheduler().runTaskLater(plugin, () -> {
@@ -281,12 +382,29 @@ public class TargetSelectionGUI implements GUIManager.ManagedGUIInterface {
     }
     
     @Override
+    /**
+     * Обрабатывает события закрытия инвентаря
+     * @param event Событие закрытия инвентаря
+     *
+     * Handles inventory close events
+     * @param event Inventory close event
+     *
+     * Verarbeitet Inventarschließ-Ereignisse
+     * @param event Inventarschließ-Ereignis
+     */
     public void onInventoryClose(InventoryCloseEvent event) {
         // Optional cleanup when GUI is closed
         // GUIManager handles automatic unregistration
     }
     
     @Override
+    /**
+     * Выполняет очистку ресурсов при закрытии интерфейса
+     *
+     * Performs resource cleanup when interface is closed
+     *
+     * Führt eine Ressourcenbereinigung durch, wenn die Schnittstelle geschlossen wird
+     */
     public void onCleanup() {
         // Called when GUI is being cleaned up by GUIManager
         // No special cleanup needed for this GUI

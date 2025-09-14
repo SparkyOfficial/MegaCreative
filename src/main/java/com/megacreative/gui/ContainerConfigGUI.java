@@ -19,9 +19,17 @@ import java.util.ArrayList;
 import java.util.List;
 
 /**
+ * Пользовательский графический интерфейс перетаскивания для настройки контейнеров над блоками кода
+ * Предоставляет интуитивный интерфейс для игроков для настройки предметов, которые будут выданы
+ * при выполнении PlayerEntryAction
+ *
  * Custom drag and drop GUI for configuring containers above code blocks
  * Provides an intuitive interface for players to configure items that will be given
  * when they execute a PlayerEntryAction
+ *
+ * Benutzerdefinierte Drag-and-Drop-GUI zur Konfiguration von Containern über Codeblöcken
+ * Bietet eine intuitive Schnittstelle für Spieler zur Konfiguration von Gegenständen, die
+ * bei der Ausführung einer PlayerEntryAction ausgegeben werden
  */
 public class ContainerConfigGUI implements GUIManager.ManagedGUIInterface {
     
@@ -32,6 +40,22 @@ public class ContainerConfigGUI implements GUIManager.ManagedGUIInterface {
     private final GUIManager guiManager;
     private final BlockContainerManager containerManager;
     
+    /**
+     * Инициализирует графический интерфейс настройки контейнера
+     * @param plugin Ссылка на основной плагин
+     * @param player Игрок, который будет использовать интерфейс
+     * @param blockLocation Расположение блока для настройки
+     *
+     * Initializes container configuration GUI
+     * @param plugin Reference to main plugin
+     * @param player Player who will use the interface
+     * @param blockLocation Location of block to configure
+     *
+     * Initialisiert die Container-Konfigurations-GUI
+     * @param plugin Referenz zum Haupt-Plugin
+     * @param player Spieler, der die Schnittstelle verwenden wird
+     * @param blockLocation Position des zu konfigurierenden Blocks
+     */
     public ContainerConfigGUI(MegaCreative plugin, Player player, Location blockLocation) {
         this.plugin = plugin;
         this.player = player;
@@ -47,6 +71,13 @@ public class ContainerConfigGUI implements GUIManager.ManagedGUIInterface {
         setupInventory();
     }
     
+    /**
+     * Настраивает инвентарь графического интерфейса
+     *
+     * Sets up the GUI inventory
+     *
+     * Richtet das GUI-Inventar ein
+     */
     private void setupInventory() {
         inventory.clear();
         
@@ -102,7 +133,11 @@ public class ContainerConfigGUI implements GUIManager.ManagedGUIInterface {
     }
     
     /**
-     * Loads existing items from the container above the block
+     * Загружает существующие предметы из контейнера
+     *
+     * Loads existing items from the container
+     *
+     * Lädt vorhandene Gegenstände aus dem Container
      */
     private void loadContainerItems() {
         try {
@@ -130,7 +165,11 @@ public class ContainerConfigGUI implements GUIManager.ManagedGUIInterface {
     }
     
     /**
-     * Saves items from GUI to the container above the block
+     * Сохраняет предметы из графического интерфейса в контейнер
+     *
+     * Saves items from GUI to the container
+     *
+     * Speichert Gegenstände von der GUI im Container
      */
     private void saveContainerItems() {
         // Skip saving if containerManager is not available (test environment)
@@ -180,7 +219,11 @@ public class ContainerConfigGUI implements GUIManager.ManagedGUIInterface {
     }
     
     /**
+     * Открывает графический интерфейс для игрока
+     *
      * Opens the GUI for the player
+     *
+     * Öffnet die GUI für den Spieler
      */
     public void open() {
         // Register with GUIManager and open inventory
@@ -189,11 +232,31 @@ public class ContainerConfigGUI implements GUIManager.ManagedGUIInterface {
     }
     
     @Override
+    /**
+     * Получает заголовок графического интерфейса
+     * @return Заголовок интерфейса
+     *
+     * Gets the GUI title
+     * @return Interface title
+     *
+     * Ruft den GUI-Titel ab
+     * @return Schnittstellentitel
+     */
     public String getGUITitle() {
         return "Container Configuration GUI for " + (blockLocation != null ? blockLocation.toString() : "unknown location");
     }
     
     @Override
+    /**
+     * Обрабатывает события кликов в инвентаре
+     * @param event Событие клика в инвентаре
+     *
+     * Handles inventory click events
+     * @param event Inventory click event
+     *
+     * Verarbeitet Inventarklick-Ereignisse
+     * @param event Inventarklick-Ereignis
+     */
     public void onInventoryClick(InventoryClickEvent event) {
         if (player == null || !player.equals(event.getWhoClicked())) return;
         if (inventory == null || !inventory.equals(event.getInventory())) return;
@@ -222,6 +285,16 @@ public class ContainerConfigGUI implements GUIManager.ManagedGUIInterface {
     }
     
     @Override
+    /**
+     * Обрабатывает события закрытия инвентаря
+     * @param event Событие закрытия инвентаря
+     *
+     * Handles inventory close events
+     * @param event Inventory close event
+     *
+     * Verarbeitet Inventarschließ-Ereignisse
+     * @param event Inventarschließ-Ereignis
+     */
     public void onInventoryClose(InventoryCloseEvent event) {
         // Save items when GUI is closed
         saveContainerItems();
@@ -231,6 +304,13 @@ public class ContainerConfigGUI implements GUIManager.ManagedGUIInterface {
     }
     
     @Override
+    /**
+     * Выполняет очистку ресурсов при закрытии интерфейса
+     *
+     * Performs resource cleanup when interface is closed
+     *
+     * Führt eine Ressourcenbereinigung durch, wenn die Schnittstelle geschlossen wird
+     */
     public void onCleanup() {
         // Called when GUI is being cleaned up by GUIManager
         // No special cleanup needed for this GUI

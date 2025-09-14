@@ -15,6 +15,16 @@ import org.bukkit.inventory.meta.ItemMeta;
 
 import java.util.Arrays;
 
+/**
+ * Управляет графическим интерфейсом для работы с типами данных
+ * Предоставляет интуитивный интерфейс для получения различных типов данных
+ *
+ * Manages GUI for working with data types
+ * Provides intuitive interface for obtaining various data types
+ *
+ * Verwaltet die GUI zur Arbeit mit Datentypen
+ * Bietet eine intuitive Schnittstelle zum Abrufen verschiedener Datentypen
+ */
 public class DataGUI implements GUIManager.ManagedGUIInterface {
     
     private final MegaCreative plugin;
@@ -22,6 +32,19 @@ public class DataGUI implements GUIManager.ManagedGUIInterface {
     private final Inventory inventory;
     private final GUIManager guiManager;
     
+    /**
+     * Инициализирует графический интерфейс для работы с типами данных
+     * @param plugin Ссылка на основной плагин
+     * @param player Игрок, который будет использовать интерфейс
+     *
+     * Initializes data types GUI
+     * @param plugin Reference to main plugin
+     * @param player Player who will use the interface
+     *
+     * Initialisiert die Datentypen-GUI
+     * @param plugin Referenz zum Haupt-Plugin
+     * @param player Spieler, der die Schnittstelle verwenden wird
+     */
     public DataGUI(MegaCreative plugin, Player player) {
         this.plugin = plugin;
         this.player = player;
@@ -31,6 +54,13 @@ public class DataGUI implements GUIManager.ManagedGUIInterface {
         setupInventory();
     }
     
+    /**
+     * Настраивает инвентарь графического интерфейса
+     *
+     * Sets up the GUI inventory
+     *
+     * Richtet das GUI-Inventar ein
+     */
     private void setupInventory() {
         inventory.clear();
         
@@ -100,6 +130,13 @@ public class DataGUI implements GUIManager.ManagedGUIInterface {
         inventory.setItem(22, backButton);
     }
     
+    /**
+     * Открывает графический интерфейс для игрока
+     *
+     * Opens the GUI for the player
+     *
+     * Öffnet die GUI für den Spieler
+     */
     public void open() {
         // Register with GUIManager and open inventory
         guiManager.registerGUI(player, this, inventory);
@@ -107,11 +144,31 @@ public class DataGUI implements GUIManager.ManagedGUIInterface {
     }
     
     @Override
+    /**
+     * Получает заголовок графического интерфейса
+     * @return Заголовок интерфейса
+     *
+     * Gets the GUI title
+     * @return Interface title
+     *
+     * Ruft den GUI-Titel ab
+     * @return Schnittstellentitel
+     */
     public String getGUITitle() {
         return "Data Types GUI";
     }
     
     @Override
+    /**
+     * Обрабатывает события кликов в инвентаре
+     * @param event Событие клика в инвентаре
+     *
+     * Handles inventory click events
+     * @param event Inventory click event
+     *
+     * Verarbeitet Inventarklick-Ereignisse
+     * @param event Inventarklick-Ereignis
+     */
     public void onInventoryClick(InventoryClickEvent event) {
         if (!event.getInventory().equals(inventory)) return;
         
@@ -145,6 +202,16 @@ public class DataGUI implements GUIManager.ManagedGUIInterface {
         }
     }
     
+    /**
+     * Выдает предмет данных игроку
+     * @param dataType Тип данных для выдачи
+     *
+     * Gives data item to player
+     * @param dataType Data type to give
+     *
+     * Gibt Datengegenstand an Spieler
+     * @param dataType Auszugebender Datentyp
+     */
     private void giveDataItem(DataType dataType) {
         String defaultValue = switch (dataType) {
             case TEXT -> "Не установлено";
@@ -159,14 +226,31 @@ public class DataGUI implements GUIManager.ManagedGUIInterface {
     }
     
     @Override
+    /**
+     * Обрабатывает события закрытия инвентаря
+     * @param event Событие закрытия инвентаря
+     *
+     * Handles inventory close events
+     * @param event Inventory close event
+     *
+     * Verarbeitet Inventarschließ-Ereignisse
+     * @param event Inventarschließ-Ereignis
+     */
     public void onInventoryClose(InventoryCloseEvent event) {
         // Optional cleanup when GUI is closed
         // GUIManager handles automatic unregistration
     }
     
     @Override
+    /**
+     * Выполняет очистку ресурсов при закрытии интерфейса
+     *
+     * Performs resource cleanup when interface is closed
+     *
+     * Führt eine Ressourcenbereinigung durch, wenn die Schnittstelle geschlossen wird
+     */
     public void onCleanup() {
         // Called when GUI is being cleaned up by GUIManager
         // No special cleanup needed for this GUI
     }
-} 
+}

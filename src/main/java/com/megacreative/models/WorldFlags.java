@@ -5,6 +5,12 @@ import java.util.Objects;
 /**
  * Represents various world flags that can be toggled on/off.
  * These flags control different world behaviors and features.
+ *
+ * Представляет различные флаги мира, которые можно включать/выключать.
+ * Эти флаги управляют различными поведениями и функциями мира.
+ *
+ * Stellt verschiedene Welt-Flags dar, die ein- und ausgeschaltet werden können.
+ * Diese Flags steuern verschiedene Weltverhalten und -funktionen.
  */
 public class WorldFlags {
     private boolean mobSpawning = true;
@@ -18,6 +24,12 @@ public class WorldFlags {
     /**
      * Creates a new WorldFlags instance with default values.
      * Defaults: mobSpawning=true, pvp=false, explosions=false
+     *
+     * Создает новый экземпляр WorldFlags со значениями по умолчанию.
+     * По умолчанию: mobSpawning=true, pvp=false, explosions=false
+     *
+     * Erstellt eine neue WorldFlags-Instanz mit Standardwerten.
+     * Standard: mobSpawning=true, pvp=false, explosions=false
      */
     public WorldFlags() {
         this(true, false, false);
@@ -29,6 +41,18 @@ public class WorldFlags {
      * @param mobSpawning whether mob spawning is enabled
      * @param pvp whether PvP is enabled
      * @param explosions whether explosions are enabled
+     *
+     * Создает новый экземпляр WorldFlags с указанными значениями.
+     * 
+     * @param mobSpawning включено ли возрождение мобов
+     * @param pvp включен ли PvP
+     * @param explosions включены ли взрывы
+     *
+     * Erstellt eine neue WorldFlags-Instanz mit den angegebenen Werten.
+     * 
+     * @param mobSpawning ob die Mob-Spawning aktiviert ist
+     * @param pvp ob PvP aktiviert ist
+     * @param explosions ob Explosionen aktiviert sind
      */
     public WorldFlags(boolean mobSpawning, boolean pvp, boolean explosions) {
         this.mobSpawning = mobSpawning;
@@ -37,9 +61,15 @@ public class WorldFlags {
     }
     
     // Getters and setters with documentation
+    // Геттеры и сеттеры с документацией
+    // Getter und Setter mit Dokumentation
     
     /**
      * @return true if mob spawning is enabled, false otherwise
+     *
+     * @return true, если возрождение мобов включено, false в противном случае
+     *
+     * @return true, wenn die Mob-Spawning aktiviert ist, sonst false
      */
     public boolean isMobSpawning() {
         return mobSpawning;
@@ -47,6 +77,10 @@ public class WorldFlags {
     
     /**
      * @param mobSpawning whether mob spawning should be enabled
+     *
+     * @param mobSpawning следует ли включить возрождение мобов
+     *
+     * @param mobSpawning ob die Mob-Spawning aktiviert werden soll
      */
     public void setMobSpawning(boolean mobSpawning) {
         this.mobSpawning = mobSpawning;
@@ -54,6 +88,10 @@ public class WorldFlags {
     
     /**
      * @return true if PvP is enabled, false otherwise
+     *
+     * @return true, если PvP включен, false в противном случае
+     *
+     * @return true, wenn PvP aktiviert ist, sonst false
      */
     public boolean isPvp() {
         return pvp;
@@ -61,6 +99,10 @@ public class WorldFlags {
     
     /**
      * @param pvp whether PvP should be enabled
+     *
+     * @param pvp следует ли включить PvP
+     *
+     * @param pvp ob PvP aktiviert werden soll
      */
     public void setPvp(boolean pvp) {
         this.pvp = pvp;
@@ -68,6 +110,10 @@ public class WorldFlags {
     
     /**
      * @return true if explosions are enabled, false otherwise
+     *
+     * @return true, если взрывы включены, false в противном случае
+     *
+     * @return true, wenn Explosionen aktiviert sind, sonst false
      */
     public boolean isExplosions() {
         return explosions;
@@ -75,6 +121,10 @@ public class WorldFlags {
     
     /**
      * @param explosions whether explosions should be enabled
+     *
+     * @param explosions следует ли включить взрывы
+     *
+     * @param explosions ob Explosionen aktiviert werden sollen
      */
     public void setExplosions(boolean explosions) {
         this.explosions = explosions;
@@ -82,6 +132,10 @@ public class WorldFlags {
     
     /**
      * @return true if fire spread is enabled, false otherwise
+     *
+     * @return true, если распространение огня включено, false в противном случае
+     *
+     * @return true, wenn Feuerausbreitung aktiviert ist, sonst false
      */
     public boolean isFireSpread() {
         return fireSpread;
@@ -89,6 +143,10 @@ public class WorldFlags {
     
     /**
      * @param fireSpread whether fire spread should be enabled
+     *
+     * @param fireSpread следует ли включить распространение огня
+     *
+     * @param fireSpread ob Feuerausbreitung aktiviert werden soll
      */
     public void setFireSpread(boolean fireSpread) {
         this.fireSpread = fireSpread;
@@ -96,6 +154,10 @@ public class WorldFlags {
     
     /**
      * @return true if mob griefing is enabled, false otherwise
+     *
+     * @return true, если грифинг мобов включен, false в противном случае
+     *
+     * @return true, wenn Mob-Griefing aktiviert ist, sonst false
      */
     public boolean isMobGriefing() {
         return mobGriefing;
@@ -103,6 +165,10 @@ public class WorldFlags {
     
     /**
      * @param mobGriefing whether mob griefing should be enabled
+     *
+     * @param mobGriefing следует ли включить грифинг мобов
+     *
+     * @param mobGriefing ob Mob-Griefing aktiviert werden soll
      */
     public void setMobGriefing(boolean mobGriefing) {
         this.mobGriefing = mobGriefing;
@@ -110,6 +176,10 @@ public class WorldFlags {
     
     /**
      * @return true if weather cycle is enabled, false otherwise
+     *
+     * @return true, если цикл погоды включен, false в противном случае
+     *
+     * @return true, wenn Wetterzyklus aktiviert ist, sonst false
      */
     public boolean isWeatherCycle() {
         return weatherCycle;
@@ -117,6 +187,10 @@ public class WorldFlags {
     
     /**
      * @param weatherCycle whether weather cycle should be enabled
+     *
+     * @param weatherCycle следует ли включить цикл погоды
+     *
+     * @param weatherCycle ob Wetterzyklus aktiviert werden soll
      */
     public void setWeatherCycle(boolean weatherCycle) {
         this.weatherCycle = weatherCycle;
@@ -124,6 +198,10 @@ public class WorldFlags {
     
     /**
      * @return true if day/night cycle is enabled, false otherwise
+     *
+     * @return true, если цикл день/ночь включен, false в противном случае
+     *
+     * @return true, wenn Tag/Nacht-Zyklus aktiviert ist, sonst false
      */
     public boolean isDayNightCycle() {
         return dayNightCycle;
@@ -131,6 +209,10 @@ public class WorldFlags {
     
     /**
      * @param dayNightCycle whether day/night cycle should be enabled
+     *
+     * @param dayNightCycle следует ли включить цикл день/ночь
+     *
+     * @param dayNightCycle ob Tag/Nacht-Zyklus aktiviert werden soll
      */
     public void setDayNightCycle(boolean dayNightCycle) {
         this.dayNightCycle = dayNightCycle;

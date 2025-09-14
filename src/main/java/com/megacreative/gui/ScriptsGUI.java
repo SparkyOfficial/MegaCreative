@@ -17,6 +17,16 @@ import org.bukkit.inventory.meta.ItemMeta;
 import java.util.Arrays;
 import java.util.List;
 
+/**
+ * Управляет графическим интерфейсом для управления скриптами
+ * Позволяет игрокам просматривать, создавать и редактировать скрипты в своих мирах
+ *
+ * Manages GUI for script management
+ * Allows players to view, create, and edit scripts in their worlds
+ *
+ * Verwaltet die GUI zur Skriptverwaltung
+ * Ermöglicht Spielern das Anzeigen, Erstellen und Bearbeiten von Skripten in ihren Welten
+ */
 public class ScriptsGUI implements GUIManager.ManagedGUIInterface {
     
     private final MegaCreative plugin;
@@ -25,6 +35,19 @@ public class ScriptsGUI implements GUIManager.ManagedGUIInterface {
     private final GUIManager guiManager;
     private int page = 0;
     
+    /**
+     * Инициализирует графический интерфейс управления скриптами
+     * @param plugin Ссылка на основной плагин
+     * @param player Игрок, который будет использовать интерфейс
+     *
+     * Initializes script management GUI
+     * @param plugin Reference to main plugin
+     * @param player Player who will use the interface
+     *
+     * Initialisiert die Skriptverwaltungs-GUI
+     * @param plugin Referenz zum Haupt-Plugin
+     * @param player Spieler, der die Schnittstelle verwenden wird
+     */
     public ScriptsGUI(MegaCreative plugin, Player player) {
         this.plugin = plugin;
         this.player = player;
@@ -34,6 +57,13 @@ public class ScriptsGUI implements GUIManager.ManagedGUIInterface {
         setupInventory();
     }
     
+    /**
+     * Настраивает инвентарь графического интерфейса
+     *
+     * Sets up the GUI inventory
+     *
+     * Richtet das GUI-Inventar ein
+     */
     private void setupInventory() {
         inventory.clear();
         
@@ -106,11 +136,37 @@ public class ScriptsGUI implements GUIManager.ManagedGUIInterface {
         }
     }
     
+    /**
+     * Подсчитывает количество блоков в скрипте
+     * @param script Скрипт для подсчета блоков
+     * @return Количество блоков в скрипте
+     *
+     * Counts the number of blocks in a script
+     * @param script Script to count blocks
+     * @return Number of blocks in the script
+     *
+     * Zählt die Anzahl der Blöcke in einem Skript
+     * @param script Skript zum Zählen der Blöcke
+     * @return Anzahl der Blöcke im Skript
+     */
     private int countBlocks(CodeScript script) {
         if (script.getRootBlock() == null) return 0;
         return countBlocksRecursive(script.getRootBlock());
     }
     
+    /**
+     * Рекурсивно подсчитывает количество блоков
+     * @param block Блок для подсчета
+     * @return Количество блоков
+     *
+     * Recursively counts the number of blocks
+     * @param block Block to count
+     * @return Number of blocks
+     *
+     * Zählt rekursiv die Anzahl der Blöcke
+     * @param block Block zum Zählen
+     * @return Anzahl der Blöcke
+     */
     private int countBlocksRecursive(com.megacreative.coding.CodeBlock block) {
         if (block == null) return 0;
         int count = 1;
@@ -121,6 +177,13 @@ public class ScriptsGUI implements GUIManager.ManagedGUIInterface {
         return count;
     }
     
+    /**
+     * Открывает графический интерфейс для игрока
+     *
+     * Opens the GUI for the player
+     *
+     * Öffnet die GUI für den Spieler
+     */
     public void open() {
         // Register with GUIManager and open inventory
         guiManager.registerGUI(player, this, inventory);
@@ -128,11 +191,31 @@ public class ScriptsGUI implements GUIManager.ManagedGUIInterface {
     }
     
     @Override
+    /**
+     * Получает заголовок графического интерфейса
+     * @return Заголовок интерфейса
+     *
+     * Gets the GUI title
+     * @return Interface title
+     *
+     * Ruft den GUI-Titel ab
+     * @return Schnittstellentitel
+     */
     public String getGUITitle() {
         return "Scripts Management GUI";
     }
     
     @Override
+    /**
+     * Обрабатывает события кликов в инвентаре
+     * @param event Событие клика в инвентаре
+     *
+     * Handles inventory click events
+     * @param event Inventory click event
+     *
+     * Verarbeitet Inventarklick-Ereignisse
+     * @param event Inventarklick-Ereignis
+     */
     public void onInventoryClick(InventoryClickEvent event) {
         if (!event.getInventory().equals(inventory)) return;
         
@@ -191,6 +274,19 @@ public class ScriptsGUI implements GUIManager.ManagedGUIInterface {
         }
     }
     
+    /**
+     * Получает индекс скрипта по слоту инвентаря
+     * @param slot Слот инвентаря
+     * @return Индекс скрипта или -1, если слот не содержит скрипта
+     *
+     * Gets script index by inventory slot
+     * @param slot Inventory slot
+     * @return Script index or -1 if slot doesn't contain a script
+     *
+     * Ruft den Skriptindex nach Inventarslot ab
+     * @param slot Inventarslot
+     * @return Skriptindex oder -1, wenn der Slot kein Skript enthält
+     */
     private int getScriptIndexFromSlot(int slot) {
         if (slot < 10 || slot > 43) return -1;
         
@@ -203,14 +299,31 @@ public class ScriptsGUI implements GUIManager.ManagedGUIInterface {
     }
     
     @Override
+    /**
+     * Обрабатывает события закрытия инвентаря
+     * @param event Событие закрытия инвентаря
+     *
+     * Handles inventory close events
+     * @param event Inventory close event
+     *
+     * Verarbeitet Inventarschließ-Ereignisse
+     * @param event Inventarschließ-Ereignis
+     */
     public void onInventoryClose(InventoryCloseEvent event) {
         // Optional cleanup when GUI is closed
         // GUIManager handles automatic unregistration
     }
     
     @Override
+    /**
+     * Выполняет очистку ресурсов при закрытии интерфейса
+     *
+     * Performs resource cleanup when interface is closed
+     *
+     * Führt eine Ressourcenbereinigung durch, wenn die Schnittstelle geschlossen wird
+     */
     public void onCleanup() {
         // Called when GUI is being cleaned up by GUIManager
         // No special cleanup needed for this GUI
     }
-} 
+}

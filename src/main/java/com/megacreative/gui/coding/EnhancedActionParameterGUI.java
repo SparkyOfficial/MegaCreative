@@ -16,10 +16,20 @@ import org.bukkit.inventory.meta.ItemMeta;
 import java.util.*;
 
 /**
+ * 🎆 Улучшенный графический интерфейс параметров действий в стиле Reference System
+ * 
+ * Объединяет мощность InteractiveGUI с настройкой параметров действий.
+ * Обеспечивает динамическое редактирование параметров в реальном времени с визуальной обратной связью.
+ *
  * 🎆 Enhanced Reference System-Style Action Parameter GUI
  * 
  * Combines the power of InteractiveGUI with action parameter configuration.
  * Provides dynamic, real-time parameter editing with visual feedback.
+ *
+ * 🎆 Erweiterte Reference System-Stil Aktionsparameter-GUI
+ * 
+ * Kombiniert die Leistung von InteractiveGUI mit der Konfiguration von Aktionsparametern.
+ * Bietet dynamische, Echtzeit-Parameterbearbeitung mit visueller Rückmeldung.
  */
 public class EnhancedActionParameterGUI {
     
@@ -27,6 +37,16 @@ public class EnhancedActionParameterGUI {
     private final InteractiveGUIManager guiManager;
     private final BlockConfigService blockConfigService;
     
+    /**
+     * Инициализирует улучшенный графический интерфейс параметров действий
+     * @param plugin Ссылка на основной плагин
+     *
+     * Initializes enhanced action parameter GUI
+     * @param plugin Reference to main plugin
+     *
+     * Initialisiert die erweiterte Aktionsparameter-GUI
+     * @param plugin Referenz zum Haupt-Plugin
+     */
     public EnhancedActionParameterGUI(MegaCreative plugin) {
         this.plugin = plugin;
         this.guiManager = new InteractiveGUIManager(plugin);
@@ -34,7 +54,11 @@ public class EnhancedActionParameterGUI {
     }
     
     /**
+     * Создает улучшенный редактор параметров для блока кода
+     *
      * Creates an enhanced parameter editor for a code block
+     *
+     * Erstellt einen erweiterten Parameter-Editor für einen Codeblock
      */
     public InteractiveGUI createParameterEditor(Player player, Location blockLocation, String actionId) {
         // Get the code block
@@ -61,7 +85,11 @@ public class EnhancedActionParameterGUI {
     }
     
     /**
+     * Настраивает редакторы параметров на основе конфигурации действия
+     *
      * Sets up parameter editors based on action configuration
+     *
+     * Richtet Parameter-Editoren basierend auf der Aktionskonfiguration ein
      */
     private void setupParameterEditors(InteractiveGUI gui, String actionId, CodeBlock block, Player player) {
         // Get action configuration
@@ -87,7 +115,11 @@ public class EnhancedActionParameterGUI {
     }
     
     /**
+     * Настраивает редакторы параметров из конфигурации
+     *
      * Sets up parameter editors from configuration
+     *
+     * Richtet Parameter-Editoren aus der Konfiguration ein
      */
     private void setupConfiguredParameterEditors(InteractiveGUI gui, 
                                                org.bukkit.configuration.ConfigurationSection parametersConfig, 
@@ -122,7 +154,11 @@ public class EnhancedActionParameterGUI {
     }
     
     /**
+     * Создает элемент параметра на основе типа
+     *
      * Creates parameter element based on type
+     *
+     * Erstellt Parameterelement basierend auf dem Typ
      */
     private InteractiveGUIManager.InteractiveElement createParameterElement(String paramName, 
                                                                           String paramType, 
@@ -164,7 +200,11 @@ public class EnhancedActionParameterGUI {
     }
     
     /**
+     * Создает элемент выбора материала
+     *
      * Creates material selector element
+     *
+     * Erstellt Materialauswahlelement
      */
     private InteractiveGUIManager.InteractiveElement createMaterialSelector(String paramName, Map<String, Object> properties) {
         // Setup available materials
@@ -198,7 +238,11 @@ public class EnhancedActionParameterGUI {
     }
     
     /**
+     * Создает элемент ползунка числа
+     *
      * Creates number slider element
+     *
+     * Erstellt Zahlenschieberelement
      */
     private InteractiveGUIManager.InteractiveElement createNumberSlider(String paramName, Map<String, Object> properties) {
         // Set defaults based on parameter name
@@ -231,7 +275,11 @@ public class EnhancedActionParameterGUI {
     }
     
     /**
+     * Создает элемент переключателя булевого значения
+     *
      * Creates boolean toggle element
+     *
+     * Erstellt Boolesches Umschaltelement
      */
     private InteractiveGUIManager.InteractiveElement createBooleanToggle(String paramName, Map<String, Object> properties) {
         properties.putIfAbsent("modes", Arrays.asList("TRUE", "FALSE"));
@@ -239,28 +287,44 @@ public class EnhancedActionParameterGUI {
     }
     
     /**
+     * Создает элемент выбора цвета
+     *
      * Creates color picker element
+     *
+     * Erstellt Farbauswahlelement
      */
     private InteractiveGUIManager.InteractiveElement createColorPicker(String paramName, Map<String, Object> properties) {
         return new InteractiveGUIManager.ColorPickerElement(paramName, properties);
     }
     
     /**
+     * Создает элемент редактора предмета
+     *
      * Creates item editor element
+     *
+     * Erstellt Artikel-Editorelement
      */
     private InteractiveGUIManager.InteractiveElement createItemEditor(String paramName, Map<String, Object> properties) {
         return new InteractiveGUIManager.ItemStackEditorElement(paramName, properties);
     }
     
     /**
+     * Создает элемент ввода текста
+     *
      * Creates text input element
+     *
+     * Erstellt Texteingabeelement
      */
     private InteractiveGUIManager.InteractiveElement createTextInput(String paramName, Map<String, Object> properties) {
         return new InteractiveGUIManager.TextInputElement(paramName, properties);
     }
     
     /**
+     * Настраивает общие редакторы параметров для неизвестных действий
+     *
      * Sets up generic parameter editors for unknown actions
+     *
+     * Richtet generische Parameter-Editoren für unbekannte Aktionen ein
      */
     private void setupGenericParameterEditors(InteractiveGUI gui, CodeBlock block) {
         // Common parameters for most actions
@@ -302,7 +366,11 @@ public class EnhancedActionParameterGUI {
     }
     
     /**
+     * Настраивает кнопки управления (сохранить, отменить и т.д.)
+     *
      * Sets up control buttons (save, cancel, etc.)
+     *
+     * Richtet Steuerschaltflächen ein (speichern, abbrechen, etc.)
      */
     private void setupControlButtons(InteractiveGUI gui, CodeBlock block, Player player, Location blockLocation) {
         // Save button
@@ -319,7 +387,11 @@ public class EnhancedActionParameterGUI {
     }
     
     /**
+     * Вспомогательные методы для создания кнопок управления
+     *
      * Helper methods for creating control buttons
+     *
+     * Hilfsmethoden zum Erstellen von Steuerschaltflächen
      */
     
     private ItemStack createTitleItem(String actionId, CodeBlock block) {
@@ -414,7 +486,11 @@ public class EnhancedActionParameterGUI {
     }
     
     /**
+     * Вспомогательные методы
+     *
      * Helper methods
+     *
+     * Hilfsmethoden
      */
     
     private CodeBlock getCodeBlock(Location location) {
@@ -432,7 +508,11 @@ public class EnhancedActionParameterGUI {
     }
     
     /**
+     * Открывает улучшенный редактор параметров
+     *
      * Opens the enhanced parameter editor
+     *
+     * Öffnet den erweiterten Parameter-Editor
      */
     public void openParameterEditor(Player player, Location blockLocation, String actionId) {
         InteractiveGUI gui = createParameterEditor(player, blockLocation, actionId);
@@ -442,7 +522,11 @@ public class EnhancedActionParameterGUI {
     }
     
     /**
+     * Получает менеджер интерактивного графического интерфейса
+     *
      * Gets the interactive GUI manager
+     *
+     * Ruft den interaktiven GUI-Manager ab
      */
     public InteractiveGUIManager getGUIManager() {
         return guiManager;

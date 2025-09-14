@@ -18,6 +18,14 @@ import org.bukkit.Location;
 import java.util.*;
 
 /**
+ * 🔗 ВИЗУАЛЬНАЯ ОТЛАДКА СВЯЗЕЙ
+ * Помогает пользователям визуализировать и понимать связи блоков в их скриптах
+ * Особенности:
+ * - Визуализация карты связей блоков
+ * - Предварительный просмотр потока выполнения
+ * - Валидация связей
+ * - Быстрая навигация к связанным блокам
+ *
  * 🔗 VISUAL CONNECTION DEBUGGING GUI
  * Helps users visualize and understand block connections in their scripts
  * Features:
@@ -25,6 +33,14 @@ import java.util.*;
  * - Execution flow preview
  * - Connection validation
  * - Quick navigation to connected blocks
+ *
+ * 🔗 VISUELLE VERBINDUNGS-DEBUGGING-GUI
+ * Hilft Benutzern dabei, Blockverbindungen in ihren Skripten zu visualisieren und zu verstehen
+ * Funktionen:
+ * - Visualisierung der Blockverbindungs-Karte
+ * - Vorschau des Ausführungsflusses
+ * - Verbindungsvalidierung
+ * - Schnelle Navigation zu verbundenen Blöcken
  */
 public class ConnectionDebugGUI implements GUIManager.ManagedGUIInterface {
     
@@ -37,6 +53,22 @@ public class ConnectionDebugGUI implements GUIManager.ManagedGUIInterface {
     
     private final Map<Integer, Location> slotToBlockLocation = new HashMap<>();
     
+    /**
+     * Инициализирует графический интерфейс отладки связей
+     * @param plugin Ссылка на основной плагин
+     * @param player Игрок, который будет использовать интерфейс
+     * @param rootBlockLocation Расположение корневого блока для отладки
+     *
+     * Initializes connection debug GUI
+     * @param plugin Reference to main plugin
+     * @param player Player who will use the interface
+     * @param rootBlockLocation Location of root block to debug
+     *
+     * Initialisiert die Verbindungs-Debug-GUI
+     * @param plugin Referenz zum Haupt-Plugin
+     * @param player Spieler, der die Schnittstelle verwenden wird
+     * @param rootBlockLocation Position des zu debuggenden Wurzelblocks
+     */
     public ConnectionDebugGUI(MegaCreative plugin, Player player, Location rootBlockLocation) {
         this.plugin = plugin;
         this.player = player;
@@ -49,6 +81,13 @@ public class ConnectionDebugGUI implements GUIManager.ManagedGUIInterface {
         setupInventory();
     }
     
+    /**
+     * Настраивает инвентарь графического интерфейса
+     *
+     * Sets up the GUI inventory
+     *
+     * Richtet das GUI-Inventar ein
+     */
     private void setupInventory() {
         inventory.clear();
         
@@ -82,6 +121,13 @@ public class ConnectionDebugGUI implements GUIManager.ManagedGUIInterface {
         addControlItems();
     }
     
+    /**
+     * Сопоставляет связанные блоки
+     *
+     * Maps connected blocks
+     *
+     * Ordnet verbundene Blöcke zu
+     */
     private void mapConnectedBlocks(CodeBlock rootBlock, Location rootLocation) {
         Set<Location> visitedBlocks = new HashSet<>();
         Queue<BlockConnection> toProcess = new LinkedList<>();
@@ -139,6 +185,13 @@ public class ConnectionDebugGUI implements GUIManager.ManagedGUIInterface {
         }
     }
     
+    /**
+     * Создает элемент информации о блоке
+     *
+     * Creates block info item
+     *
+     * Erstellt Blockinformationsgegenstand
+     */
     private ItemStack createBlockInfoItem(CodeBlock block, Location location, boolean isRoot) {
         Material blockMaterial = location.getBlock().getType();
         ItemStack item = new ItemStack(blockMaterial);
@@ -199,6 +252,13 @@ public class ConnectionDebugGUI implements GUIManager.ManagedGUIInterface {
         return item;
     }
     
+    /**
+     * Добавляет стрелку связи
+     *
+     * Adds connection arrow
+     *
+     * Fügt Verbindungspfeil hinzu
+     */
     private void addConnectionArrow(int fromSlot, int toSlot, String connectionType) {
         // Calculate position between slots for arrow
         int arrowSlot = calculateArrowSlot(fromSlot, toSlot);
@@ -216,6 +276,13 @@ public class ConnectionDebugGUI implements GUIManager.ManagedGUIInterface {
         }
     }
     
+    /**
+     * Вычисляет слот для стрелки
+     *
+     * Calculates arrow slot
+     *
+     * Berechnet den Pfeil-Slot
+     */
     private int calculateArrowSlot(int fromSlot, int toSlot) {
         // Simple calculation for arrow position
         if (Math.abs(fromSlot - toSlot) == 1) {
@@ -229,6 +296,13 @@ public class ConnectionDebugGUI implements GUIManager.ManagedGUIInterface {
         }
     }
     
+    /**
+     * Получает следующий доступный слот
+     *
+     * Gets next available slot
+     *
+     * Ruft den nächsten verfügbaren Slot ab
+     */
     private int getNextAvailableSlot(int centerSlot, String direction) {
         // Get available slot around center based on direction
         int[] candidates;
@@ -259,12 +333,26 @@ public class ConnectionDebugGUI implements GUIManager.ManagedGUIInterface {
         return -1; // No available slot
     }
     
+    /**
+     * Находит расположение блока
+     *
+     * Finds block location
+     *
+     * Findet die Blockposition
+     */
     private Location findBlockLocation(CodeBlock block) {
         // This would need to be implemented based on how blocks are tracked
         // For now, return null as placeholder
         return null;
     }
     
+    /**
+     * Добавляет элементы управления
+     *
+     * Adds control items
+     *
+     * Fügt Steuerelemente hinzu
+     */
     private void addControlItems() {
         // Refresh button
         ItemStack refresh = new ItemStack(Material.LIME_STAINED_GLASS);
@@ -297,6 +385,13 @@ public class ConnectionDebugGUI implements GUIManager.ManagedGUIInterface {
         inventory.setItem(49, help);
     }
     
+    /**
+     * Показывает ошибку
+     *
+     * Shows error
+     *
+     * Zeigt Fehler an
+     */
     private void showError(String message) {
         ItemStack error = new ItemStack(Material.BARRIER);
         ItemMeta errorMeta = error.getItemMeta();
@@ -306,6 +401,13 @@ public class ConnectionDebugGUI implements GUIManager.ManagedGUIInterface {
         inventory.setItem(22, error);
     }
     
+    /**
+     * Открывает графический интерфейс для игрока
+     *
+     * Opens the GUI for the player
+     *
+     * Öffnet die GUI für den Spieler
+     */
     public void open() {
         guiManager.registerGUI(player, this, inventory);
         player.openInventory(inventory);
@@ -313,11 +415,31 @@ public class ConnectionDebugGUI implements GUIManager.ManagedGUIInterface {
     }
     
     @Override
+    /**
+     * Получает заголовок графического интерфейса
+     * @return Заголовок интерфейса
+     *
+     * Gets the GUI title
+     * @return Interface title
+     *
+     * Ruft den GUI-Titel ab
+     * @return Schnittstellentitel
+     */
     public String getGUITitle() {
         return "Connection Debug GUI";
     }
     
     @Override
+    /**
+     * Обрабатывает события кликов в инвентаре
+     * @param event Событие клика в инвентаре
+     *
+     * Handles inventory click events
+     * @param event Inventory click event
+     *
+     * Verarbeitet Inventarklick-Ereignisse
+     * @param event Inventarklick-Ereignis
+     */
     public void onInventoryClick(InventoryClickEvent event) {
         if (!player.equals(event.getWhoClicked())) return;
         if (!inventory.equals(event.getInventory())) return;
@@ -359,17 +481,38 @@ public class ConnectionDebugGUI implements GUIManager.ManagedGUIInterface {
     }
     
     @Override
+    /**
+     * Обрабатывает события закрытия инвентаря
+     * @param event Событие закрытия инвентаря
+     *
+     * Handles inventory close events
+     * @param event Inventory close event
+     *
+     * Verarbeitet Inventarschließ-Ereignisse
+     * @param event Inventarschließ-Ereignis
+     */
     public void onInventoryClose(InventoryCloseEvent event) {
         // Cleanup
     }
     
     @Override
+    /**
+     * Выполняет очистку ресурсов при закрытии интерфейса
+     *
+     * Performs resource cleanup when interface is closed
+     *
+     * Führt eine Ressourcenbereinigung durch, wenn die Schnittstelle geschlossen wird
+     */
     public void onCleanup() {
         slotToBlockLocation.clear();
     }
     
     /**
+     * Вспомогательный класс для отслеживания связей блоков во время сопоставления
+     *
      * Helper class for tracking block connections during mapping
+     *
+     * Hilfsklasse zum Verfolgen von Blockverbindungen während der Zuordnung
      */
     private static class BlockConnection {
         final CodeBlock block;
