@@ -8,17 +8,55 @@ import org.bukkit.command.CommandSender;
 import org.bukkit.entity.Player;
 
 /**
+ * Команда для открытия расширенного рабочего пространства кодирования
+ * Использование: /workspace [open|close|info]
+ *
  * Command to open the advanced coding workspace
  * Usage: /workspace [open|close|info]
+ *
+ * Befehl zum Öffnen des erweiterten Codier-Arbeitsbereichs
+ * Verwendung: /workspace [open|close|info]
  */
 public class WorkspaceCommand implements CommandExecutor {
     
     private final MegaCreative plugin;
     
+    /**
+     * Инициализирует команду рабочего пространства
+     * @param plugin основной экземпляр плагина
+     *
+     * Initializes the workspace command
+     * @param plugin main plugin instance
+     *
+     * Initialisiert den Arbeitsbereichsbefehl
+     * @param plugin Haupt-Plugin-Instanz
+     */
     public WorkspaceCommand(MegaCreative plugin) {
         this.plugin = plugin;
     }
     
+    /**
+     * Обрабатывает выполнение команды рабочего пространства
+     * @param sender отправитель команды
+     * @param command выполняемая команда
+     * @param label метка команды
+     * @param args аргументы команды
+     * @return true если команда выполнена успешно
+     *
+     * Handles workspace command execution
+     * @param sender command sender
+     * @param command executed command
+     * @param label command label
+     * @param args command arguments
+     * @return true if command executed successfully
+     *
+     * Verarbeitet die Ausführung des Arbeitsbereichsbefehls
+     * @param sender Befehlsabsender
+     * @param command ausgeführter Befehl
+     * @param label Befehlsbezeichnung
+     * @param args Befehlsargumente
+     * @return true, wenn der Befehl erfolgreich ausgeführt wurde
+     */
     @Override
     public boolean onCommand(CommandSender sender, Command command, String label, String[] args) {
         if (!(sender instanceof Player)) {
@@ -64,6 +102,19 @@ public class WorkspaceCommand implements CommandExecutor {
         return true;
     }
     
+    /**
+     * Отображает информацию о рабочем пространстве
+     * @param player игрок, которому отправляется информация
+     * @param world творческий мир
+     *
+     * Displays workspace information
+     * @param player player to send information to
+     * @param world creative world
+     *
+     * Zeigt Arbeitsbereichsinformationen an
+     * @param player Spieler, dem die Informationen gesendet werden
+     * @param world Creative-Welt
+     */
     private void showWorkspaceInfo(Player player, CreativeWorld world) {
         player.sendMessage("§6§l=== MegaCreative Coding Workspace ===");
         player.sendMessage("§aWorld: §f" + world.getName());
@@ -81,6 +132,19 @@ public class WorkspaceCommand implements CommandExecutor {
         player.sendMessage("§aUse §e/workspace open §ato start coding!");
     }
     
+    /**
+     * Открывает расширенное рабочее пространство
+     * @param player игрок, для которого открывается рабочее пространство
+     * @param world творческий мир
+     *
+     * Opens the advanced workspace
+     * @param player player for whom workspace is opened
+     * @param world creative world
+     *
+     * Öffnet den erweiterten Arbeitsbereich
+     * @param player Spieler, für den der Arbeitsbereich geöffnet wird
+     * @param world Creative-Welt
+     */
     private void openAdvancedWorkspace(Player player, CreativeWorld world) {
         player.sendMessage("§6§l=== MegaCreative Advanced Workspace ===");
         player.sendMessage("§aOpening advanced coding environment...");

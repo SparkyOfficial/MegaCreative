@@ -19,24 +19,69 @@ import java.util.Map;
 import java.util.stream.Collectors;
 
 /**
- * 🎆 Reference System-Style Function Management Command
- * 
+ * Команда для управления функциями в стиле Reference System
+ * Предоставляет интерфейс командной строки для управления функциями:
+ * - Список доступных функций
+ * - Получение информации о функциях
+ * - Тестирование выполнения функций
+ * - Управление правами доступа к функциям
+ *
+ * Command for managing Reference System-style functions
  * Provides command-line interface for function management:
  * - List available functions
  * - Get function information
  * - Test function execution
  * - Manage function permissions
+ *
+ * Befehl zur Verwaltung von Reference System-Stil-Funktionen
+ * Bietet eine Befehlszeilenschnittstelle für die Funktionsverwaltung:
+ * - Liste verfügbarer Funktionen
+ * - Informationen zu Funktionen abrufen
+ * - Testen der Funktionsausführung
+ * - Verwaltung von Funktionsberechtigungen
  */
 public class FunctionCommand implements CommandExecutor, TabCompleter {
     
     private final MegaCreative plugin;
     private final AdvancedFunctionManager functionManager;
     
+    /**
+     * Инициализирует команду управления функциями
+     * @param plugin основной экземпляр плагина
+     *
+     * Initializes the function management command
+     * @param plugin main plugin instance
+     *
+     * Initialisiert den Funktionsverwaltungsbefehl
+     * @param plugin Haupt-Plugin-Instanz
+     */
     public FunctionCommand(MegaCreative plugin) {
         this.plugin = plugin;
         this.functionManager = plugin.getServiceRegistry().getService(AdvancedFunctionManager.class);
     }
 
+    /**
+     * Обрабатывает выполнение команды управления функциями
+     * @param sender отправитель команды
+     * @param command выполняемая команда
+     * @param label метка команды
+     * @param args аргументы команды
+     * @return true если команда выполнена успешно
+     *
+     * Handles function management command execution
+     * @param sender command sender
+     * @param command executed command
+     * @param label command label
+     * @param args command arguments
+     * @return true if command executed successfully
+     *
+     * Verarbeitet die Ausführung des Funktionsverwaltungsbefehls
+     * @param sender Befehlsabsender
+     * @param command ausgeführter Befehl
+     * @param label Befehlsbezeichnung
+     * @param args Befehlsargumente
+     * @return true, wenn der Befehl erfolgreich ausgeführt wurde
+     */
     @Override
     public boolean onCommand(CommandSender sender, Command command, String label, String[] args) {
         if (!(sender instanceof Player)) {
@@ -77,7 +122,14 @@ public class FunctionCommand implements CommandExecutor, TabCompleter {
     }
     
     /**
+     * Отображает справочную информацию по команде
+     * @param player игрок, которому отправляется справка
+     *
      * Shows command help
+     * @param player player to send help to
+     *
+     * Zeigt Befehlshilfe an
+     * @param player Spieler, dem die Hilfe gesendet wird
      */
     private void showHelp(Player player) {
         player.sendMessage(ChatColor.GOLD + "🎆 Reference System Function Management");
@@ -90,7 +142,17 @@ public class FunctionCommand implements CommandExecutor, TabCompleter {
     }
     
     /**
+     * Отображает список доступных функций
+     * @param player игрок, которому отправляется список
+     * @param args аргументы команды
+     *
      * Lists available functions
+     * @param player player to send list to
+     * @param args command arguments
+     *
+     * Listet verfügbare Funktionen auf
+     * @param player Spieler, dem die Liste gesendet wird
+     * @param args Befehlsargumente
      */
     private void listFunctions(Player player, String[] args) {
         if (functionManager == null) {
@@ -133,7 +195,17 @@ public class FunctionCommand implements CommandExecutor, TabCompleter {
     }
     
     /**
+     * Отображает подробную информацию о функции
+     * @param player игрок, которому отправляется информация
+     * @param args аргументы команды
+     *
      * Shows detailed function information
+     * @param player player to send information to
+     * @param args command arguments
+     *
+     * Zeigt detaillierte Funktionsinformationen an
+     * @param player Spieler, dem die Informationen gesendet werden
+     * @param args Befehlsargumente
      */
     private void showFunctionInfo(Player player, String[] args) {
         if (args.length < 2) {
@@ -180,7 +252,17 @@ public class FunctionCommand implements CommandExecutor, TabCompleter {
     }
     
     /**
+     * Вызывает функцию для тестирования
+     * @param player игрок, выполняющий вызов
+     * @param args аргументы команды
+     *
      * Calls a function for testing
+     * @param player player executing the call
+     * @param args command arguments
+     *
+     * Ruft eine Funktion zum Testen auf
+     * @param player Spieler, der den Aufruf ausführt
+     * @param args Befehlsargumente
      */
     private void callFunction(Player player, String[] args) {
         if (args.length < 2) {
@@ -228,7 +310,17 @@ public class FunctionCommand implements CommandExecutor, TabCompleter {
     }
     
     /**
+     * Удаляет функцию
+     * @param player игрок, выполняющий удаление
+     * @param args аргументы команды
+     *
      * Removes a function
+     * @param player player executing the removal
+     * @param args command arguments
+     *
+     * Entfernt eine Funktion
+     * @param player Spieler, der die Entfernung ausführt
+     * @param args Befehlsargumente
      */
     private void removeFunction(Player player, String[] args) {
         if (args.length < 2) {
@@ -252,7 +344,14 @@ public class FunctionCommand implements CommandExecutor, TabCompleter {
     }
     
     /**
+     * Отображает статистику функций
+     * @param player игрок, которому отправляется статистика
+     *
      * Shows function statistics
+     * @param player player to send statistics to
+     *
+     * Zeigt Funktionsstatistiken an
+     * @param player Spieler, dem die Statistiken gesendet werden
      */
     private void showStatistics(Player player) {
         if (functionManager == null) {
@@ -272,7 +371,11 @@ public class FunctionCommand implements CommandExecutor, TabCompleter {
     }
     
     /**
+     * Вспомогательные методы
+     *
      * Helper methods
+     *
+     * Hilfsmethoden
      */
     
     private ChatColor getScopeColor(FunctionDefinition.FunctionScope scope) {
@@ -305,6 +408,28 @@ public class FunctionCommand implements CommandExecutor, TabCompleter {
         return DataValue.of(arg);
     }
 
+    /**
+     * Обрабатывает автозавершение команды
+     * @param sender отправитель команды
+     * @param command выполняемая команда
+     * @param alias псевдоним команды
+     * @param args аргументы команды
+     * @return список возможных завершений
+     *
+     * Handles command tab completion
+     * @param sender command sender
+     * @param command executed command
+     * @param alias command alias
+     * @param args command arguments
+     * @return list of possible completions
+     *
+     * Verarbeitet die Befehls-Tab-Vervollständigung
+     * @param sender Befehlsabsender
+     * @param command ausgeführter Befehl
+     * @param alias Befehlsalias
+     * @param args Befehlsargumente
+     * @return Liste möglicher Vervollständigungen
+     */
     @Override
     public List<String> onTabComplete(CommandSender sender, Command command, String alias, String[] args) {
         if (!(sender instanceof Player)) {

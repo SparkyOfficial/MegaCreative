@@ -12,19 +12,63 @@ import org.bukkit.command.CommandSender;
 import org.bukkit.entity.Player;
 
 /**
- * 🎆 ENHANCED: Placeholder demo command showing reference system-style features
- * Usage: /placeholders [demo|test|help]
+ * Команда для демонстрации работы с плейсхолдерами в стиле Reference System
+ * Поддерживает тестирование различных форматов плейсхолдеров
+ * Управление переменными и контекстом выполнения
+ *
+ * Command for demonstrating placeholder functionality in Reference System style
+ * Supports testing various placeholder formats
+ * Variable and execution context management
+ *
+ * Befehl zur Demonstration der Platzhalterfunktionalität im Reference System-Stil
+ * Unterstützt das Testen verschiedener Platzhalterformate
+ * Variablen- und Ausführungskontextverwaltung
  */
 public class PlaceholdersCommand implements CommandExecutor {
     
     private final MegaCreative plugin;
     private final IWorldManager worldManager;
     
+    /**
+     * Инициализирует команду плейсхолдеров с необходимыми зависимостями
+     * @param plugin основной экземпляр плагина
+     * @param worldManager менеджер мира для управления мирами
+     *
+     * Initializes the placeholder command with required dependencies
+     * @param plugin main plugin instance
+     * @param worldManager world manager for world management
+     *
+     * Initialisiert den Platzhalterbefehl mit den erforderlichen Abhängigkeiten
+     * @param plugin Haupt-Plugin-Instanz
+     * @param worldManager Weltmanager für die Weltverwaltung
+     */
     public PlaceholdersCommand(MegaCreative plugin, IWorldManager worldManager) {
         this.plugin = plugin;
         this.worldManager = worldManager;
     }
     
+    /**
+     * Обрабатывает выполнение команды плейсхолдеров
+     * @param sender отправитель команды
+     * @param command выполняемая команда
+     * @param label метка команды
+     * @param args аргументы команды
+     * @return true если команда выполнена успешно
+     *
+     * Handles placeholder command execution
+     * @param sender command sender
+     * @param command executed command
+     * @param label command label
+     * @param args command arguments
+     * @return true if command executed successfully
+     *
+     * Verarbeitet die Ausführung des Platzhalterbefehls
+     * @param sender Befehlsabsender
+     * @param command ausgeführter Befehl
+     * @param label Befehlsbezeichnung
+     * @param args Befehlsargumente
+     * @return true, wenn der Befehl erfolgreich ausgeführt wurde
+     */
     @Override
     public boolean onCommand(CommandSender sender, Command command, String label, String[] args) {
         if (!(sender instanceof Player player)) {
@@ -63,6 +107,16 @@ public class PlaceholdersCommand implements CommandExecutor {
         return true;
     }
     
+    /**
+     * Отображает справочную информацию по команде
+     * @param player игрок, которому отправляется справка
+     *
+     * Displays help information for the command
+     * @param player player to send help to
+     *
+     * Zeigt Hilfsinformationen für den Befehl an
+     * @param player Spieler, dem die Hilfe gesendet wird
+     */
     private void showHelp(Player player) {
         player.sendMessage("§8§m                    §r §6§lPlaceholder System §8§m                    ");
         player.sendMessage("§e🎆 Reference System-Style Placeholder System");
@@ -80,6 +134,16 @@ public class PlaceholdersCommand implements CommandExecutor {
         player.sendMessage("§8§m                                                        ");
     }
     
+    /**
+     * Показывает демонстрацию работы плейсхолдеров
+     * @param player игрок, для которого показывается демонстрация
+     *
+     * Shows placeholder functionality demonstration
+     * @param player player for whom demonstration is shown
+     *
+     * Zeigt eine Demonstration der Platzhalterfunktionalität
+     * @param player Spieler, für den die Demonstration angezeigt wird
+     */
     private void showDemo(Player player) {
         // Set up demo variables
         plugin.getServiceRegistry().getVariableManager().setPlayerVariable(
@@ -118,6 +182,19 @@ public class PlaceholdersCommand implements CommandExecutor {
         player.sendMessage("§7Переменные demo_score, demo_level, demo_money были установлены для демо");
     }
     
+    /**
+     * Тестирует работу плейсхолдеров с заданным текстом
+     * @param player игрок, для которого выполняется тест
+     * @param text текст с плейсхолдерами для тестирования
+     *
+     * Tests placeholder functionality with given text
+     * @param player player for whom test is performed
+     * @param text text with placeholders to test
+     *
+     * Testet die Platzhalterfunktionalität mit dem angegebenen Text
+     * @param player Spieler, für den der Test durchgeführt wird
+     * @param text Text mit Platzhaltern zum Testen
+     */
     private void testPlaceholder(Player player, String text) {
         // Create execution context
         CreativeWorld world = worldManager.findCreativeWorldByBukkit(player.getWorld());
@@ -135,6 +212,16 @@ public class PlaceholdersCommand implements CommandExecutor {
         player.sendMessage("§8§m                                                        ");
     }
     
+    /**
+     * Показывает примеры использования плейсхолдеров
+     * @param player игрок, которому показываются примеры
+     *
+     * Shows placeholder usage examples
+     * @param player player to show examples to
+     *
+     * Zeigt Beispiele für die Verwendung von Platzhaltern an
+     * @param player Spieler, dem die Beispiele angezeigt werden
+     */
     private void showExamples(Player player) {
         player.sendMessage("§8§m                    §r §6§lPlaceholder Examples §8§m                    ");
         

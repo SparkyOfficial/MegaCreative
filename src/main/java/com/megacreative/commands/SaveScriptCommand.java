@@ -14,14 +14,59 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 
+/**
+ * Команда для сохранения скриптов из блоков кода
+ * Позволяет сохранять созданные скрипты как обычные скрипты или публичные шаблоны
+ * Управление сохранением и экспортом скриптов
+ *
+ * Command for saving scripts from code blocks
+ * Allows saving created scripts as regular scripts or public templates
+ * Script saving and export management
+ *
+ * Befehl zum Speichern von Skripten aus Codeblöcken
+ * Ermöglicht das Speichern erstellter Skripte als reguläre Skripte oder öffentliche Vorlagen
+ * Skript-Speicherungs- und Exportverwaltung
+ */
 public class SaveScriptCommand implements CommandExecutor {
     
     private final MegaCreative plugin;
     
+    /**
+     * Инициализирует команду сохранения скриптов
+     * @param plugin основной экземпляр плагина
+     *
+     * Initializes the save script command
+     * @param plugin main plugin instance
+     *
+     * Initialisiert den Skript-Speicher-Befehl
+     * @param plugin Haupt-Plugin-Instanz
+     */
     public SaveScriptCommand(MegaCreative plugin) {
         this.plugin = plugin;
     }
     
+    /**
+     * Обрабатывает выполнение команды сохранения скриптов
+     * @param sender отправитель команды
+     * @param command выполняемая команда
+     * @param label метка команды
+     * @param args аргументы команды
+     * @return true если команда выполнена успешно
+     *
+     * Handles save script command execution
+     * @param sender command sender
+     * @param command executed command
+     * @param label command label
+     * @param args command arguments
+     * @return true if command executed successfully
+     *
+     * Verarbeitet die Ausführung des Skript-Speicher-Befehls
+     * @param sender Befehlsabsender
+     * @param command ausgeführter Befehl
+     * @param label Befehlsbezeichnung
+     * @param args Befehlsargumente
+     * @return true, wenn der Befehl erfolgreich ausgeführt wurde
+     */
     @Override
     public boolean onCommand(CommandSender sender, Command command, String label, String[] args) {
         if (!(sender instanceof Player player)) {
@@ -87,4 +132,4 @@ public class SaveScriptCommand implements CommandExecutor {
         
         return true;
     }
-} 
+}

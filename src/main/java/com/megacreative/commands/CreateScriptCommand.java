@@ -10,13 +10,58 @@ import org.bukkit.command.CommandExecutor;
 import org.bukkit.command.CommandSender;
 import org.bukkit.entity.Player;
 
+/**
+ * Команда для создания предопределенных скриптов
+ * Поддерживает различные типы скриптов для автоматизации игровых процессов
+ * Управление событиями и действиями в мире
+ *
+ * Command for creating predefined scripts
+ * Supports various script types for automating gameplay processes
+ * Event and action management in the world
+ *
+ * Befehl zum Erstellen vordefinierter Skripte
+ * Unterstützt verschiedene Skripttypen zur Automatisierung von Spielprozessen
+ * Ereignis- und Aktionsverwaltung in der Welt
+ */
 public class CreateScriptCommand implements CommandExecutor {
     private final MegaCreative plugin;
 
+    /**
+     * Инициализирует команду создания скриптов
+     * @param plugin основной экземпляр плагина
+     *
+     * Initializes the create script command
+     * @param plugin main plugin instance
+     *
+     * Initialisiert den Skripterstellungsbefehl
+     * @param plugin Haupt-Plugin-Instanz
+     */
     public CreateScriptCommand(MegaCreative plugin) {
         this.plugin = plugin;
     }
 
+    /**
+     * Обрабатывает выполнение команды создания скриптов
+     * @param sender отправитель команды
+     * @param command выполняемая команда
+     * @param label метка команды
+     * @param args аргументы команды
+     * @return true если команда выполнена успешно
+     *
+     * Handles create script command execution
+     * @param sender command sender
+     * @param command executed command
+     * @param label command label
+     * @param args command arguments
+     * @return true if command executed successfully
+     *
+     * Verarbeitet die Ausführung des Skripterstellungsbefehls
+     * @param sender Befehlsabsender
+     * @param command ausgeführter Befehl
+     * @param label Befehlsbezeichnung
+     * @param args Befehlsargumente
+     * @return true, wenn der Befehl erfolgreich ausgeführt wurde
+     */
     @Override
     public boolean onCommand(CommandSender sender, Command command, String label, String[] args) {
         if (!(sender instanceof Player)) {
@@ -76,6 +121,16 @@ public class CreateScriptCommand implements CommandExecutor {
         return true;
     }
 
+    /**
+     * Создает скрипт приветствия игрока
+     * @return созданный скрипт приветствия
+     *
+     * Creates a player welcome script
+     * @return created welcome script
+     *
+     * Erstellt ein Spielerbegrüßungsskript
+     * @return erstelltes Begrüßungsskript
+     */
     private CodeScript createWelcomeScript() {
         CodeBlock eventBlock = new CodeBlock(Material.DIAMOND_BLOCK, "onJoin");
         
@@ -97,6 +152,16 @@ public class CreateScriptCommand implements CommandExecutor {
         return new CodeScript("Приветствие игрока", true, eventBlock);
     }
 
+    /**
+     * Создает скрипт телепортации при входе
+     * @return созданный скрипт телепортации
+     *
+     * Creates a teleport on join script
+     * @return created teleport script
+     *
+     * Erstellt ein Teleportation-beim-Betreten-Skript
+     * @return erstelltes Teleportationsskript
+     */
     private CodeScript createTeleportScript() {
         CodeBlock eventBlock = new CodeBlock(Material.DIAMOND_BLOCK, "onJoin");
         
@@ -118,6 +183,16 @@ public class CreateScriptCommand implements CommandExecutor {
         return new CodeScript("Телепортация на спавн", true, eventBlock);
     }
 
+    /**
+     * Создает VIP скрипт приветствия
+     * @return созданный VIP скрипт
+     *
+     * Creates a VIP welcome script
+     * @return created VIP script
+     *
+     * Erstellt ein VIP-Begrüßungsskript
+     * @return erstelltes VIP-Skript
+     */
     private CodeScript createVipScript() {
         CodeBlock eventBlock = new CodeBlock(Material.DIAMOND_BLOCK, "onJoin");
         
@@ -141,6 +216,16 @@ public class CreateScriptCommand implements CommandExecutor {
         return new CodeScript("VIP приветствие", true, eventBlock);
     }
 
+    /**
+     * Создает скрипт смены режима игры
+     * @return созданный скрипт смены режима игры
+     *
+     * Creates a gamemode change script
+     * @return created gamemode script
+     *
+     * Erstellt ein Spielmodus-Änderungsskript
+     * @return erstelltes Spielmodus-Skript
+     */
     private CodeScript createGamemodeScript() {
         CodeBlock eventBlock = new CodeBlock(Material.DIAMOND_BLOCK, "onJoin");
         
@@ -159,6 +244,16 @@ public class CreateScriptCommand implements CommandExecutor {
         return new CodeScript("Смена режима игры", true, eventBlock);
     }
 
+    /**
+     * Создает скрипт управления погодой
+     * @return созданный скрипт управления погодой
+     *
+     * Creates a weather control script
+     * @return created weather script
+     *
+     * Erstellt ein Wetterkontrollskript
+     * @return erstelltes Wetter-Skript
+     */
     private CodeScript createWeatherScript() {
         CodeBlock eventBlock = new CodeBlock(Material.DIAMOND_BLOCK, "onJoin");
         
@@ -177,4 +272,4 @@ public class CreateScriptCommand implements CommandExecutor {
         
         return new CodeScript("Управление погодой", true, eventBlock);
     }
-} 
+}

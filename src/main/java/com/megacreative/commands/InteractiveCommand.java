@@ -20,10 +20,17 @@ import java.util.List;
 import java.util.stream.Collectors;
 
 /**
- * 🎆 Reference System-Style Interactive GUI Command
- * 
- * Demonstrates and tests the interactive GUI system with various examples.
+ * Команда интерактивного GUI в стиле Reference System
+ * Демонстрирует и тестирует систему интерактивного GUI с различными примерами
+ * Использование: /interactive <demo|block|world|test> [аргументы...]
+ *
+ * Reference System-Style Interactive GUI Command
+ * Demonstrates and tests the interactive GUI system with various examples
  * Usage: /interactive <demo|block|world|test> [args...]
+ *
+ * Reference System-Stil interaktiver GUI-Befehl
+ * Demonstriert und testet das interaktive GUI-System mit verschiedenen Beispielen
+ * Verwendung: /interactive <demo|block|world|test> [Argumente...]
  */
 public class InteractiveCommand implements CommandExecutor, TabCompleter {
     
@@ -31,12 +38,44 @@ public class InteractiveCommand implements CommandExecutor, TabCompleter {
     private final InteractiveGUIManager guiManager;
     private final ReferenceSystemStyleGUI frameGUI;
     
+    /**
+     * Инициализирует команду интерактивного GUI
+     * @param plugin основной экземпляр плагина
+     *
+     * Initializes the interactive GUI command
+     * @param plugin main plugin instance
+     *
+     * Initialisiert den interaktiven GUI-Befehl
+     * @param plugin Haupt-Plugin-Instanz
+     */
     public InteractiveCommand(MegaCreative plugin) {
         this.plugin = plugin;
         this.guiManager = plugin.getServiceRegistry().getInteractiveGUIManager();
         this.frameGUI = plugin.getServiceRegistry().getReferenceSystemStyleGUI();
     }
 
+    /**
+     * Обрабатывает выполнение команды интерактивного GUI
+     * @param sender отправитель команды
+     * @param command выполняемая команда
+     * @param label метка команды
+     * @param args аргументы команды
+     * @return true если команда выполнена успешно
+     *
+     * Handles interactive GUI command execution
+     * @param sender command sender
+     * @param command executed command
+     * @param label command label
+     * @param args command arguments
+     * @return true if command executed successfully
+     *
+     * Verarbeitet die Ausführung des interaktiven GUI-Befehls
+     * @param sender Befehlsabsender
+     * @param command ausgeführter Befehl
+     * @param label Befehlsbezeichnung
+     * @param args Befehlsargumente
+     * @return true, wenn der Befehl erfolgreich ausgeführt wurde
+     */
     @Override
     public boolean onCommand(CommandSender sender, Command command, String label, String[] args) {
         if (!(sender instanceof Player)) {
@@ -74,7 +113,14 @@ public class InteractiveCommand implements CommandExecutor, TabCompleter {
     }
     
     /**
+     * Отображает справочную информацию по команде
+     * @param player игрок, которому отправляется справка
+     *
      * Shows command help
+     * @param player player to send help to
+     *
+     * Zeigt Befehlshilfe an
+     * @param player Spieler, dem die Hilfe gesendet wird
      */
     private void showHelp(Player player) {
         player.sendMessage("§6🎆 Reference System Interactive GUI System");
@@ -88,7 +134,14 @@ public class InteractiveCommand implements CommandExecutor, TabCompleter {
     }
     
     /**
+     * Открывает демонстрационный GUI интерактивных элементов
+     * @param player игрок, для которого открывается GUI
+     *
      * Opens the interactive element demonstration GUI
+     * @param player player for whom GUI is opened
+     *
+     * Öffnet die interaktive Element-Demonstrations-GUI
+     * @param player Spieler, für den die GUI geöffnet wird
      */
     private void openDemoGUI(Player player) {
         InteractiveGUI gui = guiManager.createInteractiveGUI(player, 
@@ -149,7 +202,17 @@ public class InteractiveCommand implements CommandExecutor, TabCompleter {
     }
     
     /**
+     * Открывает редактор параметров блока
+     * @param player игрок, для которого открывается редактор
+     * @param args аргументы команды
+     *
      * Opens block parameter editor
+     * @param player player for whom editor is opened
+     * @param args command arguments
+     *
+     * Öffnet den Blockparameter-Editor
+     * @param player Spieler, für den der Editor geöffnet wird
+     * @param args Befehlsargumente
      */
     private void openBlockEditor(Player player, String[] args) {
         if (args.length < 2) {
@@ -177,7 +240,14 @@ public class InteractiveCommand implements CommandExecutor, TabCompleter {
     }
     
     /**
+     * Открывает GUI настроек мира
+     * @param player игрок, для которого открываются настройки
+     *
      * Opens world settings GUI
+     * @param player player for whom settings are opened
+     *
+     * Öffnet die Welteinstellungs-GUI
+     * @param player Spieler, für den die Einstellungen geöffnet werden
      */
     private void openWorldSettings(Player player) {
         // Find current creative world
@@ -194,7 +264,17 @@ public class InteractiveCommand implements CommandExecutor, TabCompleter {
     }
     
     /**
+     * Открывает тестовый GUI для определенного типа элемента
+     * @param player игрок, для которого открывается тестовый GUI
+     * @param args аргументы команды
+     *
      * Opens test GUI for specific element type
+     * @param player player for whom test GUI is opened
+     * @param args command arguments
+     *
+     * Öffnet die Test-GUI für einen bestimmten Elementtyp
+     * @param player Spieler, für den die Test-GUI geöffnet wird
+     * @param args Befehlsargumente
      */
     private void openTestGUI(Player player, String[] args) {
         if (args.length < 2) {
@@ -250,6 +330,28 @@ public class InteractiveCommand implements CommandExecutor, TabCompleter {
         }
     }
 
+    /**
+     * Обрабатывает автозавершение команды
+     * @param sender отправитель команды
+     * @param command выполняемая команда
+     * @param alias псевдоним команды
+     * @param args аргументы команды
+     * @return список возможных завершений
+     *
+     * Handles command tab completion
+     * @param sender command sender
+     * @param command executed command
+     * @param alias command alias
+     * @param args command arguments
+     * @return list of possible completions
+     *
+     * Verarbeitet die Befehls-Tab-Vervollständigung
+     * @param sender Befehlsabsender
+     * @param command ausgeführter Befehl
+     * @param alias Befehlsalias
+     * @param args Befehlsargumente
+     * @return Liste möglicher Vervollständigungen
+     */
     @Override
     public List<String> onTabComplete(CommandSender sender, Command command, String alias, String[] args) {
         if (!(sender instanceof Player)) {

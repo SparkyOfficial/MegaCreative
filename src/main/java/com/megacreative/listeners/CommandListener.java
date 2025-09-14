@@ -10,13 +10,40 @@ import org.bukkit.event.Listener;
 import org.bukkit.event.player.PlayerCommandPreprocessEvent;
 import org.bukkit.entity.Player;
 
+/**
+ * Listener for player command events
+ *
+ * Слушатель для событий команд игроков
+ *
+ * Listener für Spieler-Befehls-Ereignisse
+ */
 public class CommandListener implements Listener {
     private final MegaCreative plugin;
     
+    /**
+     * Constructor for CommandListener
+     * @param plugin the main plugin
+     *
+     * Конструктор для CommandListener
+     * @param plugin основной плагин
+     *
+     * Konstruktor für CommandListener
+     * @param plugin das Haupt-Plugin
+     */
     public CommandListener(MegaCreative plugin) {
         this.plugin = plugin;
     }
     
+    /**
+     * Handles player command events
+     * @param event the player command preprocess event
+     *
+     * Обрабатывает события команд игроков
+     * @param event событие предварительной обработки команды игрока
+     *
+     * Verarbeitet Spieler-Befehls-Ereignisse
+     * @param event das Spieler-Befehl-Vorverarbeitungs-Ereignis
+     */
     @EventHandler
     public void onPlayerCommand(PlayerCommandPreprocessEvent event) {
         Player player = event.getPlayer();

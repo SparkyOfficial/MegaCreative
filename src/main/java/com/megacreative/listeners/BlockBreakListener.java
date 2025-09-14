@@ -12,13 +12,40 @@ import org.bukkit.entity.Player;
 
 import java.util.concurrent.CompletableFuture;
 
+/**
+ * Listener for block break events
+ *
+ * Слушатель для событий разрушения блоков
+ *
+ * Listener für Block-Zerstörungs-Ereignisse
+ */
 public class BlockBreakListener implements Listener {
     private final MegaCreative plugin;
     
+    /**
+     * Constructor for BlockBreakListener
+     * @param plugin the main plugin
+     *
+     * Конструктор для BlockBreakListener
+     * @param plugin основной плагин
+     *
+     * Konstruktor für BlockBreakListener
+     * @param plugin das Haupt-Plugin
+     */
     public BlockBreakListener(MegaCreative plugin) {
         this.plugin = plugin;
     }
     
+    /**
+     * Handles block break events
+     * @param event the block break event
+     *
+     * Обрабатывает события разрушения блоков
+     * @param event событие разрушения блока
+     *
+     * Verarbeitet Block-Zerstörungs-Ereignisse
+     * @param event das Block-Zerstörungs-Ereignis
+     */
     @EventHandler
     public void onBlockBreak(BlockBreakEvent event) {
         Player player = event.getPlayer();

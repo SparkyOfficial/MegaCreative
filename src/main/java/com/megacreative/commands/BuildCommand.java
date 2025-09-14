@@ -12,16 +12,58 @@ import org.bukkit.command.CommandExecutor;
 import org.bukkit.command.CommandSender;
 import org.bukkit.entity.Player;
 
+/**
+ * Команда для переключения мира в режим строительства
+ *
+ * Command to switch world to build mode
+ *
+ * Befehl zum Wechseln der Welt in den Bauplan-Modus
+ */
 public class BuildCommand implements CommandExecutor {
     
     private final MegaCreative plugin;
     private final IWorldManager worldManager;
     
+    /**
+     * Конструктор команды BuildCommand
+     * @param plugin основной плагин
+     * @param worldManager менеджер миров
+     *
+     * Constructor for BuildCommand
+     * @param plugin main plugin
+     * @param worldManager world manager
+     *
+     * Konstruktor für BuildCommand
+     * @param plugin Haupt-Plugin
+     * @param worldManager Welt-Manager
+     */
     public BuildCommand(MegaCreative plugin, IWorldManager worldManager) {
         this.plugin = plugin;
         this.worldManager = worldManager;
     }
     
+    /**
+     * Обрабатывает выполнение команды /build
+     * @param sender отправитель команды
+     * @param command команда
+     * @param label метка команды
+     * @param args аргументы команды
+     * @return true если команда выполнена успешно
+     *
+     * Handles execution of the /build command
+     * @param sender command sender
+     * @param command command
+     * @param label command label
+     * @param args command arguments
+     * @return true if command executed successfully
+     *
+     * Verarbeitet die Ausführung des /build-Befehls
+     * @param sender Befehlsabsender
+     * @param command Befehl
+     * @param label Befehlsbezeichnung
+     * @param args Befehlsargumente
+     * @return true, wenn der Befehl erfolgreich ausgeführt wurde
+     */
     @Override
     public boolean onCommand(CommandSender sender, Command command, String label, String[] args) {
         if (!(sender instanceof Player player)) {

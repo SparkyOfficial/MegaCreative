@@ -13,8 +13,14 @@ import org.bukkit.entity.Player;
 import java.util.*;
 
 /**
- * 🎆 ENHANCED: World statistics command for dual world analytics
+ * Команда статистики мира для аналитики двойных миров
+ * Показывает комплексные данные об использовании миров в стиле Reference System
+ *
+ * World statistics command for dual world analytics
  * Shows comprehensive usage data for reference system-style worlds
+ *
+ * Weltenstatistikbefehl für die Analyse von Doppelwelten
+ * Zeigt umfassende Nutzungsdaten für Reference System-Stil-Welten an
  */
 public class WorldStatsCommand implements CommandExecutor, TabCompleter {
     
@@ -22,12 +28,50 @@ public class WorldStatsCommand implements CommandExecutor, TabCompleter {
     private final IWorldManager worldManager;
     private final IPlayerManager playerManager;
     
+    /**
+     * Инициализирует команду статистики мира
+     * @param plugin основной экземпляр плагина
+     * @param worldManager менеджер мира
+     * @param playerManager менеджер игрока
+     *
+     * Initializes the world statistics command
+     * @param plugin main plugin instance
+     * @param worldManager world manager
+     * @param playerManager player manager
+     *
+     * Initialisiert den Weltenstatistikbefehl
+     * @param plugin Haupt-Plugin-Instanz
+     * @param worldManager Weltmanager
+     * @param playerManager Spielermanager
+     */
     public WorldStatsCommand(MegaCreative plugin, IWorldManager worldManager, IPlayerManager playerManager) {
         this.plugin = plugin;
         this.worldManager = worldManager;
         this.playerManager = playerManager;
     }
     
+    /**
+     * Обрабатывает выполнение команды статистики мира
+     * @param sender отправитель команды
+     * @param command выполняемая команда
+     * @param label метка команды
+     * @param args аргументы команды
+     * @return true если команда выполнена успешно
+     *
+     * Handles world statistics command execution
+     * @param sender command sender
+     * @param command executed command
+     * @param label command label
+     * @param args command arguments
+     * @return true if command executed successfully
+     *
+     * Verarbeitet die Ausführung des Weltenstatistikbefehls
+     * @param sender Befehlsabsender
+     * @param command ausgeführter Befehl
+     * @param label Befehlsbezeichnung
+     * @param args Befehlsargumente
+     * @return true, wenn der Befehl erfolgreich ausgeführt wurde
+     */
     @Override
     public boolean onCommand(CommandSender sender, Command command, String label, String[] args) {
         if (!(sender instanceof Player player)) {
@@ -64,6 +108,19 @@ public class WorldStatsCommand implements CommandExecutor, TabCompleter {
         return true;
     }
     
+    /**
+     * Отображает статистику мира
+     * @param player игрок, которому отправляется статистика
+     * @param world творческий мир
+     *
+     * Shows world statistics
+     * @param player player to send statistics to
+     * @param world creative world
+     *
+     * Zeigt Weltenstatistiken an
+     * @param player Spieler, dem die Statistiken gesendet werden
+     * @param world Creative-Welt
+     */
     private void showWorldStatistics(Player player, CreativeWorld world) {
         Map<String, Object> stats = playerManager.getWorldStatistics(world.getId());
         Map<UUID, String> currentPlayers = playerManager.getPlayersInWorld(world.getId());
@@ -124,6 +181,19 @@ public class WorldStatsCommand implements CommandExecutor, TabCompleter {
         player.sendMessage("§8§m                                                        ");
     }
     
+    /**
+     * Форматирует время в читаемый формат
+     * @param milliseconds время в миллисекундах
+     * @return отформатированная строка времени
+     *
+     * Formats time into readable format
+     * @param milliseconds time in milliseconds
+     * @return formatted time string
+     *
+     * Formatiert die Zeit in ein lesbares Format
+     * @param milliseconds Zeit in Millisekunden
+     * @return formatierte Zeitzeichenfolge
+     */
     private String formatTime(long milliseconds) {
         if (milliseconds < 1000) {
             return "< 1с";
@@ -142,6 +212,28 @@ public class WorldStatsCommand implements CommandExecutor, TabCompleter {
         }
     }
     
+    /**
+     * Обрабатывает автозавершение команды
+     * @param sender отправитель команды
+     * @param command выполняемая команда
+     * @param alias псевдоним команды
+     * @param args аргументы команды
+     * @return список возможных завершений
+     *
+     * Handles command tab completion
+     * @param sender command sender
+     * @param command executed command
+     * @param alias command alias
+     * @param args command arguments
+     * @return list of possible completions
+     *
+     * Verarbeitet die Befehls-Tab-Vervollständigung
+     * @param sender Befehlsabsender
+     * @param command ausgeführter Befehl
+     * @param alias Befehlsalias
+     * @param args Befehlsargumente
+     * @return Liste möglicher Vervollständigungen
+     */
     @Override
     public List<String> onTabComplete(CommandSender sender, Command command, String alias, String[] args) {
         if (!(sender instanceof Player player)) {

@@ -9,20 +9,57 @@ import org.bukkit.event.Listener;
 import org.bukkit.event.player.AsyncPlayerChatEvent;
 import org.bukkit.event.player.PlayerQuitEvent;
 
+/**
+ * Listener for GUI-related events
+ *
+ * Слушатель для событий, связанных с GUI
+ *
+ * Listener für GUI-bezogene Ereignisse
+ */
 public class GuiListener implements Listener {
     
     private final MegaCreative plugin;
     
+    /**
+     * Constructor for GuiListener
+     * @param plugin the main plugin
+     *
+     * Конструктор для GuiListener
+     * @param plugin основной плагин
+     *
+     * Konstruktor für GuiListener
+     * @param plugin das Haupt-Plugin
+     */
     public GuiListener(MegaCreative plugin) {
         this.plugin = plugin;
     }
     
+    /**
+     * Handles player quit events
+     * @param event the player quit event
+     *
+     * Обрабатывает события выхода игрока
+     * @param event событие выхода игрока
+     *
+     * Verarbeitet Spieler-Verlassen-Ereignisse
+     * @param event das Spieler-Verlassen-Ereignis
+     */
     @EventHandler
     public void onPlayerQuit(PlayerQuitEvent event) {
         Player player = event.getPlayer();
         plugin.getGuiManager().unregisterGUI(player);
     }
     
+    /**
+     * Handles player chat events
+     * @param event the async player chat event
+     *
+     * Обрабатывает события чата игроков
+     * @param event асинхронное событие чата игрока
+     *
+     * Verarbeitet Spieler-Chat-Ereignisse
+     * @param event das asynchrone Spieler-Chat-Ereignis
+     */
     @EventHandler
     public void onPlayerChat(AsyncPlayerChatEvent event) {
         Player player = event.getPlayer();

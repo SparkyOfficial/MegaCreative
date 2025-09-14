@@ -13,17 +13,55 @@ import java.util.Arrays;
 import java.util.List;
 
 /**
+ * Обработчик команд для функциональности группировки блоков
+ * Использование: /code group <подкоманда> [аргументы...]
+ *
  * Command handler for block grouping functionality
  * Usage: /code group <subcommand> [args...]
+ *
+ * Befehlshandler für die Blockgruppierungsfunktionalität
+ * Verwendung: /code group <Unterbefehl> [Argumente...]
  */
 public class GroupCommand implements CommandExecutor, TabCompleter {
     
     private final ServiceRegistry serviceRegistry;
     
+    /**
+     * Инициализирует обработчик команд группировки
+     * @param serviceRegistry реестр сервисов
+     *
+     * Initializes the group command handler
+     * @param serviceRegistry service registry
+     *
+     * Initialisiert den Gruppenbefehlshandler
+     * @param serviceRegistry Serviceregister
+     */
     public GroupCommand(ServiceRegistry serviceRegistry) {
         this.serviceRegistry = serviceRegistry;
     }
     
+    /**
+     * Обрабатывает выполнение команды группировки
+     * @param sender отправитель команды
+     * @param command выполняемая команда
+     * @param label метка команды
+     * @param args аргументы команды
+     * @return true если команда выполнена успешно
+     *
+     * Handles group command execution
+     * @param sender command sender
+     * @param command executed command
+     * @param label command label
+     * @param args command arguments
+     * @return true if command executed successfully
+     *
+     * Verarbeitet die Ausführung des Gruppenbefehls
+     * @param sender Befehlsabsender
+     * @param command ausgeführter Befehl
+     * @param label Befehlsbezeichnung
+     * @param args Befehlsargumente
+     * @return true, wenn der Befehl erfolgreich ausgeführt wurde
+     */
     @Override
     public boolean onCommand(CommandSender sender, Command command, String label, String[] args) {
         if (!(sender instanceof Player player)) {
@@ -82,6 +120,28 @@ public class GroupCommand implements CommandExecutor, TabCompleter {
         return true;
     }
     
+    /**
+     * Обрабатывает автозавершение команды группировки
+     * @param sender отправитель команды
+     * @param command выполняемая команда
+     * @param alias псевдоним команды
+     * @param args аргументы команды
+     * @return список возможных завершений
+     *
+     * Handles group command tab completion
+     * @param sender command sender
+     * @param command executed command
+     * @param alias command alias
+     * @param args command arguments
+     * @return list of possible completions
+     *
+     * Verarbeitet die Gruppenbefehls-Tab-Vervollständigung
+     * @param sender Befehlsabsender
+     * @param command ausgeführter Befehl
+     * @param alias Befehlsalias
+     * @param args Befehlsargumente
+     * @return Liste möglicher Vervollständigungen
+     */
     @Override
     public List<String> onTabComplete(CommandSender sender, Command command, String alias, String[] args) {
         if (!(sender instanceof Player)) {
@@ -104,6 +164,16 @@ public class GroupCommand implements CommandExecutor, TabCompleter {
         return new ArrayList<>();
     }
     
+    /**
+     * Отображает справочную информацию по команде группировки
+     * @param player игрок, которому отправляется справка
+     *
+     * Displays help information for the group command
+     * @param player player to send help to
+     *
+     * Zeigt Hilfsinformationen für den Gruppenbefehl an
+     * @param player Spieler, dem die Hilfe gesendet wird
+     */
     private void showHelp(Player player) {
         player.sendMessage("§6=== Block Group Commands ===");
         player.sendMessage("§f/code group select §7- Start selecting blocks for grouping");

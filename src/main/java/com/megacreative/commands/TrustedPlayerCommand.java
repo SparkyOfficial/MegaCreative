@@ -19,15 +19,57 @@ import java.util.stream.Collectors;
 
 /**
  * Команда для управления доверенными игроками
+ * Позволяет добавлять, удалять и просматривать доверенных игроков в мирах
+ * Управление правами доступа и разрешениями для доверенных игроков
+ *
+ * Command for managing trusted players
+ * Allows adding, removing and viewing trusted players in worlds
+ * Management of access rights and permissions for trusted players
+ *
+ * Befehl zur Verwaltung vertrauenswürdiger Spieler
+ * Ermöglicht das Hinzufügen, Entfernen und Anzeigen vertrauenswürdiger Spieler in Welten
+ * Verwaltung von Zugriffsrechten und Berechtigungen für vertrauenswürdige Spieler
  */
 public class TrustedPlayerCommand implements CommandExecutor, TabCompleter {
 
     private final MegaCreative plugin;
 
+    /**
+     * Инициализирует команду управления доверенными игроками
+     * @param plugin основной экземпляр плагина
+     *
+     * Initializes the trusted player management command
+     * @param plugin main plugin instance
+     *
+     * Initialisiert den Befehl zur Verwaltung vertrauenswürdiger Spieler
+     * @param plugin Haupt-Plugin-Instanz
+     */
     public TrustedPlayerCommand(MegaCreative plugin) {
         this.plugin = plugin;
     }
 
+    /**
+     * Обрабатывает выполнение команды управления доверенными игроками
+     * @param sender отправитель команды
+     * @param command выполняемая команда
+     * @param label метка команды
+     * @param args аргументы команды
+     * @return true если команда выполнена успешно
+     *
+     * Handles trusted player management command execution
+     * @param sender command sender
+     * @param command executed command
+     * @param label command label
+     * @param args command arguments
+     * @return true if command executed successfully
+     *
+     * Verarbeitet die Ausführung des Befehls zur Verwaltung vertrauenswürdiger Spieler
+     * @param sender Befehlsabsender
+     * @param command ausgeführter Befehl
+     * @param label Befehlsbezeichnung
+     * @param args Befehlsargumente
+     * @return true, wenn der Befehl erfolgreich ausgeführt wurde
+     */
     @Override
     public boolean onCommand(CommandSender sender, Command command, String label, String[] args) {
         if (!sender.hasPermission("megacreative.trusted")) {
@@ -59,6 +101,22 @@ public class TrustedPlayerCommand implements CommandExecutor, TabCompleter {
         }
     }
 
+    /**
+     * Обрабатывает добавление доверенного игрока
+     * @param sender отправитель команды
+     * @param args аргументы команды
+     * @return true если команда выполнена успешно
+     *
+     * Handles adding a trusted player
+     * @param sender command sender
+     * @param args command arguments
+     * @return true if command executed successfully
+     *
+     * Verarbeitet das Hinzufügen eines vertrauenswürdigen Spielers
+     * @param sender Befehlsabsender
+     * @param args Befehlsargumente
+     * @return true, wenn der Befehl erfolgreich ausgeführt wurde
+     */
     private boolean handleAdd(CommandSender sender, String[] args) {
         if (!(sender instanceof Player)) {
             sender.sendMessage("§c❌ Эту команду можно использовать только в игре!");
@@ -104,6 +162,22 @@ public class TrustedPlayerCommand implements CommandExecutor, TabCompleter {
         return true;
     }
 
+    /**
+     * Обрабатывает удаление доверенного игрока
+     * @param sender отправитель команды
+     * @param args аргументы команды
+     * @return true если команда выполнена успешно
+     *
+     * Handles removing a trusted player
+     * @param sender command sender
+     * @param args command arguments
+     * @return true if command executed successfully
+     *
+     * Verarbeitet das Entfernen eines vertrauenswürdigen Spielers
+     * @param sender Befehlsabsender
+     * @param args Befehlsargumente
+     * @return true, wenn der Befehl erfolgreich ausgeführt wurde
+     */
     private boolean handleRemove(CommandSender sender, String[] args) {
         if (!(sender instanceof Player)) {
             sender.sendMessage("§c❌ Эту команду можно использовать только в игре!");
@@ -155,6 +229,22 @@ public class TrustedPlayerCommand implements CommandExecutor, TabCompleter {
         return true;
     }
 
+    /**
+     * Обрабатывает отображение списка доверенных игроков
+     * @param sender отправитель команды
+     * @param args аргументы команды
+     * @return true если команда выполнена успешно
+     *
+     * Handles displaying the list of trusted players
+     * @param sender command sender
+     * @param args command arguments
+     * @return true if command executed successfully
+     *
+     * Verarbeitet die Anzeige der Liste vertrauenswürdiger Spieler
+     * @param sender Befehlsabsender
+     * @param args Befehlsargumente
+     * @return true, wenn der Befehl erfolgreich ausgeführt wurde
+     */
     private boolean handleList(CommandSender sender, String[] args) {
         if (!(sender instanceof Player)) {
             sender.sendMessage("§c❌ Эта команда доступна только игрокам!");
@@ -207,6 +297,22 @@ public class TrustedPlayerCommand implements CommandExecutor, TabCompleter {
         return true;
     }
 
+    /**
+     * Обрабатывает отображение информации о доверенном игроке
+     * @param sender отправитель команды
+     * @param args аргументы команды
+     * @return true если команда выполнена успешно
+     *
+     * Handles displaying information about a trusted player
+     * @param sender command sender
+     * @param args command arguments
+     * @return true if command executed successfully
+     *
+     * Verarbeitet die Anzeige von Informationen über einen vertrauenswürdigen Spieler
+     * @param sender Befehlsabsender
+     * @param args Befehlsargumente
+     * @return true, wenn der Befehl erfolgreich ausgeführt wurde
+     */
     private boolean handleInfo(CommandSender sender, String[] args) {
         if (!(sender instanceof Player)) {
             sender.sendMessage("§c❌ Эта команда доступна только игрокам!");
@@ -263,6 +369,22 @@ public class TrustedPlayerCommand implements CommandExecutor, TabCompleter {
         return true;
     }
 
+    /**
+     * Обрабатывает открытие GUI управления доверенными игроками
+     * @param sender отправитель команды
+     * @param args аргументы команды
+     * @return true если команда выполнена успешно
+     *
+     * Handles opening the trusted players management GUI
+     * @param sender command sender
+     * @param args command arguments
+     * @return true if command executed successfully
+     *
+     * Verarbeitet das Öffnen der GUI zur Verwaltung vertrauenswürdiger Spieler
+     * @param sender Befehlsabsender
+     * @param args Befehlsargumente
+     * @return true, wenn der Befehl erfolgreich ausgeführt wurde
+     */
     private boolean handleGUI(CommandSender sender, String[] args) {
         if (!(sender instanceof Player)) {
             sender.sendMessage("§c❌ Эта команда доступна только игрокам!");
@@ -297,6 +419,16 @@ public class TrustedPlayerCommand implements CommandExecutor, TabCompleter {
         return true;
     }
 
+    /**
+     * Отправляет справочную информацию по команде
+     * @param sender отправитель команды
+     *
+     * Sends help information for the command
+     * @param sender command sender
+     *
+     * Sendet Hilfsinformationen für den Befehl
+     * @param sender Befehlsabsender
+     */
     private void sendHelp(CommandSender sender) {
         sender.sendMessage("§e=== Команды управления доверенными игроками ===");
         sender.sendMessage("§7/trusted add <игрок> §f- Добавить доверенного игрока");
@@ -307,6 +439,28 @@ public class TrustedPlayerCommand implements CommandExecutor, TabCompleter {
         sender.sendMessage("§7Примечание: §fКоманды работают только в мире, где вы находитесь");
     }
 
+    /**
+     * Обрабатывает автозавершение команды
+     * @param sender отправитель команды
+     * @param command выполняемая команда
+     * @param alias псевдоним команды
+     * @param args аргументы команды
+     * @return список возможных завершений
+     *
+     * Handles command tab completion
+     * @param sender command sender
+     * @param command executed command
+     * @param alias command alias
+     * @param args command arguments
+     * @return list of possible completions
+     *
+     * Verarbeitet die Befehls-Tab-Vervollständigung
+     * @param sender Befehlsabsender
+     * @param command ausgeführter Befehl
+     * @param alias Befehlsalias
+     * @param args Befehlsargumente
+     * @return Liste möglicher Vervollständigungen
+     */
     @Override
     public List<String> onTabComplete(CommandSender sender, Command command, String alias, String[] args) {
         if (!sender.hasPermission("megacreative.trusted") || !(sender instanceof Player)) {

@@ -6,14 +6,41 @@ import org.bukkit.event.EventHandler;
 import org.bukkit.event.Listener;
 import org.bukkit.event.player.PlayerQuitEvent;
 
+/**
+ * Listener for player quit events
+ *
+ * Слушатель для событий выхода игроков
+ *
+ * Listener für Spieler-Verlassen-Ereignisse
+ */
 public class PlayerQuitListener implements Listener {
     
     private final MegaCreative plugin;
     
+    /**
+     * Constructor for PlayerQuitListener
+     * @param plugin the main plugin
+     *
+     * Конструктор для PlayerQuitListener
+     * @param plugin основной плагин
+     *
+     * Konstruktor für PlayerQuitListener
+     * @param plugin das Haupt-Plugin
+     */
     public PlayerQuitListener(MegaCreative plugin) {
         this.plugin = plugin;
     }
     
+    /**
+     * Handles player quit events
+     * @param event the player quit event
+     *
+     * Обрабатывает события выхода игроков
+     * @param event событие выхода игрока
+     *
+     * Verarbeitet Spieler-Verlassen-Ereignisse
+     * @param event das Spieler-Verlassen-Ereignis
+     */
     @EventHandler
     public void onPlayerQuit(PlayerQuitEvent event) {
         Player player = event.getPlayer();

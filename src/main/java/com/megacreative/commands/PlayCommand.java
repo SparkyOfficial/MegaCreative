@@ -12,14 +12,53 @@ import org.bukkit.command.CommandSender;
 import org.bukkit.entity.Player;
 import java.util.List;
 
+/**
+ * Команда для переключения мира в режим игры
+ *
+ * Command to switch world to play mode
+ *
+ * Befehl zum Wechseln der Welt in den Spielmodus
+ */
 public class PlayCommand implements CommandExecutor {
     
     private final MegaCreative plugin;
     
+    /**
+     * Конструктор команды PlayCommand
+     * @param plugin основной плагин
+     *
+     * Constructor for PlayCommand
+     * @param plugin main plugin
+     *
+     * Konstruktor für PlayCommand
+     * @param plugin Haupt-Plugin
+     */
     public PlayCommand(MegaCreative plugin) {
         this.plugin = plugin;
     }
     
+    /**
+     * Обрабатывает выполнение команды /play
+     * @param sender отправитель команды
+     * @param command команда
+     * @param label метка команды
+     * @param args аргументы команды
+     * @return true если команда выполнена успешно
+     *
+     * Handles execution of the /play command
+     * @param sender command sender
+     * @param command command
+     * @param label command label
+     * @param args command arguments
+     * @return true if command executed successfully
+     *
+     * Verarbeitet die Ausführung des /play-Befehls
+     * @param sender Befehlsabsender
+     * @param command Befehl
+     * @param label Befehlsbezeichnung
+     * @param args Befehlsargumente
+     * @return true, wenn der Befehl erfolgreich ausgeführt wurde
+     */
     @Override
     public boolean onCommand(CommandSender sender, Command command, String label, String[] args) {
         if (!(sender instanceof Player player)) {

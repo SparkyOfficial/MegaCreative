@@ -8,16 +8,58 @@ import org.bukkit.command.CommandExecutor;
 import org.bukkit.command.CommandSender;
 import org.bukkit.entity.Player;
 
+/**
+ * Команда для создания нового мира
+ *
+ * Command to create a new world
+ *
+ * Befehl zum Erstellen einer neuen Welt
+ */
 public class CreateWorldCommand implements CommandExecutor {
     
     private final MegaCreative plugin;
     private final IWorldManager worldManager;
     
+    /**
+     * Конструктор команды CreateWorldCommand
+     * @param plugin основной плагин
+     * @param worldManager менеджер миров
+     *
+     * Constructor for CreateWorldCommand
+     * @param plugin main plugin
+     * @param worldManager world manager
+     *
+     * Konstruktor für CreateWorldCommand
+     * @param plugin Haupt-Plugin
+     * @param worldManager Welt-Manager
+     */
     public CreateWorldCommand(MegaCreative plugin, IWorldManager worldManager) {
         this.plugin = plugin;
         this.worldManager = worldManager;
     }
     
+    /**
+     * Обрабатывает выполнение команды /create
+     * @param sender отправитель команды
+     * @param command команда
+     * @param label метка команды
+     * @param args аргументы команды
+     * @return true если команда выполнена успешно
+     *
+     * Handles execution of the /create command
+     * @param sender command sender
+     * @param command command
+     * @param label command label
+     * @param args command arguments
+     * @return true if command executed successfully
+     *
+     * Verarbeitet die Ausführung des /create-Befehls
+     * @param sender Befehlsabsender
+     * @param command Befehl
+     * @param label Befehlsbezeichnung
+     * @param args Befehlsargumente
+     * @return true, wenn der Befehl erfolgreich ausgeführt wurde
+     */
     @Override
     public boolean onCommand(CommandSender sender, Command command, String label, String[] args) {
         if (!(sender instanceof Player player)) {

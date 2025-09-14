@@ -8,17 +8,55 @@ import org.bukkit.command.CommandSender;
 import org.bukkit.entity.Player;
 
 /**
- * Command to add new floors to dev worlds
+ * Команда для добавления новых этажей в миры разработки
+ * Позволяет игрокам расширять пространство для программирования вертикально
+ *
+ * Command to add new floors to development worlds
  * Allows players to expand their coding space vertically
+ *
+ * Befehl zum Hinzufügen neuer Ebenen zu Entwicklungswelten
+ * Ermöglicht es Spielern, ihren Programmierbereich vertikal zu erweitern
  */
 public class AddFloorCommand implements CommandExecutor {
     
     private final MegaCreative plugin;
     
+    /**
+     * Инициализирует команду добавления этажей
+     * @param plugin основной экземпляр плагина
+     *
+     * Initializes the add floor command
+     * @param plugin main plugin instance
+     *
+     * Initialisiert den Befehl zum Hinzufügen von Ebenen
+     * @param plugin Haupt-Plugin-Instanz
+     */
     public AddFloorCommand(MegaCreative plugin) {
         this.plugin = plugin;
     }
     
+    /**
+     * Обрабатывает выполнение команды добавления этажей
+     * @param sender отправитель команды
+     * @param command выполняемая команда
+     * @param label метка команды
+     * @param args аргументы команды
+     * @return true если команда выполнена успешно
+     *
+     * Handles add floor command execution
+     * @param sender command sender
+     * @param command executed command
+     * @param label command label
+     * @param args command arguments
+     * @return true if command executed successfully
+     *
+     * Verarbeitet die Ausführung des Befehls zum Hinzufügen von Ebenen
+     * @param sender Befehlsabsender
+     * @param command ausgeführter Befehl
+     * @param label Befehlsbezeichnung
+     * @param args Befehlsargumente
+     * @return true, wenn der Befehl erfolgreich ausgeführt wurde
+     */
     @Override
     public boolean onCommand(CommandSender sender, Command command, String label, String[] args) {
         if (!(sender instanceof Player)) {
@@ -80,7 +118,17 @@ public class AddFloorCommand implements CommandExecutor {
     }
     
     /**
+     * Проверяет, является ли мир миром разработки
+     * @param worldName имя мира для проверки
+     * @return true если мир является миром разработки
+     *
      * Checks if the world is a development world
+     * @param worldName world name to check
+     * @return true if the world is a development world
+     *
+     * Prüft, ob die Welt eine Entwicklungswelt ist
+     * @param worldName zu prüfender Weltname
+     * @return true, wenn die Welt eine Entwicklungswelt ist
      */
     private boolean isDevWorld(String worldName) {
         return worldName.contains("dev") || worldName.contains("Dev") || 

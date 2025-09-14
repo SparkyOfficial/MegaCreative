@@ -12,13 +12,58 @@ import org.bukkit.entity.Player;
 import java.util.ArrayList;
 import java.util.List;
 
+/**
+ * Команда для управления системой отладки скриптов
+ * Поддерживает различные режимы отладки, точки останова, наблюдение за переменными
+ * Трассировку выполнения и визуализацию процесса работы скриптов
+ *
+ * Command for managing the script debugging system
+ * Supports various debugging modes, breakpoints, variable watching
+ * Execution tracing and visualization of script operation processes
+ *
+ * Befehl zur Verwaltung des Skript-Debugging-Systems
+ * Unterstützt verschiedene Debugging-Modi, Haltepunkte, Variablenbeobachtung
+ * Ausführungsverfolgung und Visualisierung von Skriptbetriebsprozessen
+ */
 public class DebugCommand implements CommandExecutor, TabCompleter {
     private final MegaCreative plugin;
 
+    /**
+     * Инициализирует команду отладки с необходимыми зависимостями
+     * @param plugin основной экземпляр плагина
+     *
+     * Initializes the debug command with required dependencies
+     * @param plugin main plugin instance
+     *
+     * Initialisiert den Debug-Befehl mit den erforderlichen Abhängigkeiten
+     * @param plugin Haupt-Plugin-Instanz
+     */
     public DebugCommand(MegaCreative plugin) {
         this.plugin = plugin;
     }
 
+    /**
+     * Обрабатывает выполнение команды отладки
+     * @param sender отправитель команды
+     * @param command выполняемая команда
+     * @param label метка команды
+     * @param args аргументы команды
+     * @return true если команда выполнена успешно
+     *
+     * Handles debug command execution
+     * @param sender command sender
+     * @param command executed command
+     * @param label command label
+     * @param args command arguments
+     * @return true if command executed successfully
+     *
+     * Verarbeitet die Ausführung des Debug-Befehls
+     * @param sender Befehlsabsender
+     * @param command ausgeführter Befehl
+     * @param label Befehlsbezeichnung
+     * @param args Befehlsargumente
+     * @return true, wenn der Befehl erfolgreich ausgeführt wurde
+     */
     @Override
     public boolean onCommand(CommandSender sender, Command command, String label, String[] args) {
         if (!(sender instanceof Player)) {
@@ -95,13 +140,33 @@ public class DebugCommand implements CommandExecutor, TabCompleter {
     }
 
     /**
+     * Обрабатывает подкоманды точек останова
+     * @param player игрок, выполняющий команду
+     * @param args аргументы команды
+     *
      * Handles breakpoint subcommands
+     * @param player player executing the command
+     * @param args command arguments
+     *
+     * Verarbeitet Haltepunkt-Unterbefehle
+     * @param player Spieler, der den Befehl ausführt
+     * @param args Befehlsargumente
      */
     private void handleBreakpointCommand(Player player, String[] args) {
     }
 
     /**
+     * Обрабатывает подкоманды наблюдения за переменными
+     * @param player игрок, выполняющий команду
+     * @param args аргументы команды
+     *
      * Handles variable watching subcommands
+     * @param player player executing the command
+     * @param args command arguments
+     *
+     * Verarbeitet Variablenbeobachtungs-Unterbefehle
+     * @param player Spieler, der den Befehl ausführt
+     * @param args Befehlsargumente
      */
     private void handleWatchCommand(Player player, String[] args) {
         if (args.length < 2) {
@@ -156,7 +221,17 @@ public class DebugCommand implements CommandExecutor, TabCompleter {
     }
 
     /**
+     * Обрабатывает подкоманды трассировки
+     * @param player игрок, выполняющий команду
+     * @param args аргументы команды
+     *
      * Handles trace subcommands
+     * @param player player executing the command
+     * @param args command arguments
+     *
+     * Verarbeitet Trace-Unterbefehle
+     * @param player Spieler, der den Befehl ausführt
+     * @param args Befehlsargumente
      */
     private void handleTraceCommand(Player player, String[] args) {
         if (args.length < 2) {
@@ -196,7 +271,17 @@ public class DebugCommand implements CommandExecutor, TabCompleter {
     }
 
     /**
+     * Обрабатывает подкоманды производительности
+     * @param player игрок, выполняющий команду
+     * @param args аргументы команды
+     *
      * Handles performance subcommands
+     * @param player player executing the command
+     * @param args command arguments
+     *
+     * Verarbeitet Leistungs-Unterbefehle
+     * @param player Spieler, der den Befehl ausführt
+     * @param args Befehlsargumente
      */
     private void handlePerformanceCommand(Player player, String[] args) {
         if (args.length < 2) {
@@ -228,7 +313,17 @@ public class DebugCommand implements CommandExecutor, TabCompleter {
     }
 
     /**
+     * Обрабатывает подкоманды визуализации
+     * @param player игрок, выполняющий команду
+     * @param args аргументы команды
+     *
      * Handles visualization subcommands
+     * @param player player executing the command
+     * @param args command arguments
+     *
+     * Verarbeitet Visualisierungs-Unterbefehle
+     * @param player Spieler, der den Befehl ausführt
+     * @param args Befehlsargumente
      */
     private void handleVisualizationCommand(Player player, String[] args) {
         if (args.length < 2) {
@@ -290,6 +385,16 @@ public class DebugCommand implements CommandExecutor, TabCompleter {
         }
     }
 
+    /**
+     * Отображает справочную информацию по команде отладки
+     * @param player игрок, которому отправляется справка
+     *
+     * Displays help information for the debug command
+     * @param player player to send help to
+     *
+     * Zeigt Hilfsinformationen für den Debug-Befehl an
+     * @param player Spieler, dem die Hilfe gesendet wird
+     */
     private void showHelp(Player player) {
         player.sendMessage("§e=== Отладка скриптов ===");
         player.sendMessage("§7/debug §8- переключить отладку");
@@ -312,6 +417,28 @@ public class DebugCommand implements CommandExecutor, TabCompleter {
         player.sendMessage("§7- Статистику выполнения скриптов");
     }
 
+    /**
+     * Обрабатывает автозавершение команды отладки
+     * @param sender отправитель команды
+     * @param command выполняемая команда
+     * @param alias псевдоним команды
+     * @param args аргументы команды
+     * @return список возможных завершений
+     *
+     * Handles debug command tab completion
+     * @param sender command sender
+     * @param command executed command
+     * @param alias command alias
+     * @param args command arguments
+     * @return list of possible completions
+     *
+     * Verarbeitet die Debug-Befehls-Tab-Vervollständigung
+     * @param sender Befehlsabsender
+     * @param command ausgeführter Befehl
+     * @param alias Befehlsalias
+     * @param args Befehlsargumente
+     * @return Liste möglicher Vervollständigungen
+     */
     @Override
     public List<String> onTabComplete(CommandSender sender, Command command, String alias, String[] args) {
         List<String> completions = new ArrayList<>();

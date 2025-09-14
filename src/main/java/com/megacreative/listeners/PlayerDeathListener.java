@@ -10,13 +10,40 @@ import org.bukkit.event.Listener;
 import org.bukkit.event.entity.PlayerDeathEvent;
 import org.bukkit.entity.Player;
 
+/**
+ * Listener for player death events
+ *
+ * Слушатель для событий смерти игроков
+ *
+ * Listener für Spieler-Todes-Ereignisse
+ */
 public class PlayerDeathListener implements Listener {
     private final MegaCreative plugin;
     
+    /**
+     * Constructor for PlayerDeathListener
+     * @param plugin the main plugin
+     *
+     * Конструктор для PlayerDeathListener
+     * @param plugin основной плагин
+     *
+     * Konstruktor für PlayerDeathListener
+     * @param plugin das Haupt-Plugin
+     */
     public PlayerDeathListener(MegaCreative plugin) {
         this.plugin = plugin;
     }
     
+    /**
+     * Handles player death events
+     * @param event the player death event
+     *
+     * Обрабатывает события смерти игроков
+     * @param event событие смерти игрока
+     *
+     * Verarbeitet Spieler-Todes-Ereignisse
+     * @param event das Spieler-Todes-Ereignis
+     */
     @EventHandler
     public void onPlayerDeath(PlayerDeathEvent event) {
         Player player = event.getEntity();

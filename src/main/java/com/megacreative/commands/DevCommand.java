@@ -10,14 +10,53 @@ import org.bukkit.command.CommandSender;
 import org.bukkit.entity.Player;
 import org.bukkit.persistence.PersistentDataType;
 
+/**
+ * Команда для перехода в режим разработки
+ *
+ * Command to switch to development mode
+ *
+ * Befehl zum Wechseln in den Entwicklungsmodus
+ */
 public class DevCommand implements CommandExecutor {
    
     private final MegaCreative plugin;
    
+    /**
+     * Конструктор команды DevCommand
+     * @param plugin основной плагин
+     *
+     * Constructor for DevCommand
+     * @param plugin main plugin
+     *
+     * Konstruktor für DevCommand
+     * @param plugin Haupt-Plugin
+     */
     public DevCommand(MegaCreative plugin) {
         this.plugin = plugin;
     }
    
+    /**
+     * Обрабатывает выполнение команды /dev
+     * @param sender отправитель команды
+     * @param command команда
+     * @param label метка команды
+     * @param args аргументы команды
+     * @return true если команда выполнена успешно
+     *
+     * Handles execution of the /dev command
+     * @param sender command sender
+     * @param command command
+     * @param label command label
+     * @param args command arguments
+     * @return true if command executed successfully
+     *
+     * Verarbeitet die Ausführung des /dev-Befehls
+     * @param sender Befehlsabsender
+     * @param command Befehl
+     * @param label Befehlsbezeichnung
+     * @param args Befehlsargumente
+     * @return true, wenn der Befehl erfolgreich ausgeführt wurde
+     */
     @Override
     public boolean onCommand(CommandSender sender, Command command, String label, String[] args) {
         if (!(sender instanceof Player player)) {
@@ -113,6 +152,8 @@ public class DevCommand implements CommandExecutor {
     
     /**
      * Отображает справку по команде /dev
+     * Displays help for the /dev command
+     * Zeigt Hilfe für den /dev-Befehl an
      */
     private void sendHelp(Player player) {
         player.sendMessage("§8§m                    §r §6§l/dev Справка §8§m                    ");
@@ -127,6 +168,8 @@ public class DevCommand implements CommandExecutor {
     
     /**
      * Открывает меню переменных (базовая реализация)
+     * Opens the variables menu (basic implementation)
+     * Öffnet das Variablen-Menü (Grundimplementierung)
      */
     private void openVariablesMenu(Player player) {
         // Проверяем, что игрок в мире разработки
@@ -192,6 +235,8 @@ public class DevCommand implements CommandExecutor {
    
     /**
      * Телепортирует игрока в мир разработки и настраивает его
+     * Teleports player to development world and configures it
+     * Teleportiert den Spieler in die Entwicklungs-Welt und konfiguriert sie
      */
     private void teleportToDevWorld(Player player, World devWorld) {
         player.teleport(devWorld.getSpawnLocation());

@@ -19,8 +19,14 @@ import java.util.HashMap;
 import java.util.UUID;
 
 /**
+ * Основной класс плагина - теперь легковесный и ориентированный на жизненный цикл плагина
+ * Использует ServiceRegistry для избежания антипаттерна God Object
+ *
  * Main plugin class - now lightweight and focused on plugin lifecycle
  * Uses ServiceRegistry to avoid God Object pattern
+ *
+ * Haupt-Plugin-Klasse - jetzt schlank und fokussiert auf den Plugin-Lebenszyklus
+ * Verwendet ServiceRegistry, um das God Object-Muster zu vermeiden
  */
 public class MegaCreative extends JavaPlugin {
     
@@ -105,7 +111,11 @@ public class MegaCreative extends JavaPlugin {
     }
     
     /**
+     * Проверяет конфигурацию плагина
+     *
      * Validates plugin configuration
+     *
+     * Validiert die Plugin-Konfiguration
      */
     private void validateConfiguration() {
         try {
@@ -125,7 +135,11 @@ public class MegaCreative extends JavaPlugin {
     }
     
     /**
+     * Запускает систему автоматического сохранения для всех миров
+     *
      * Starts auto-save system for all worlds
+     *
+     * Startet das automatische Speichersystem für alle Welten
      */
     private void startAutoSaveSystem() {
         // Auto-save every 5 minutes (6000 ticks)
@@ -146,7 +160,11 @@ public class MegaCreative extends JavaPlugin {
     }
     
     /**
+     * Запускает планировщик тиков для событий onTick
+     *
      * Starts the tick scheduler for onTick events
+     *
+     * Startet den Tick-Planer für onTick-Ereignisse
      */
     private void startTickScheduler() {
         tickTask = new BukkitRunnable() {
@@ -167,7 +185,11 @@ public class MegaCreative extends JavaPlugin {
     }
     
     /**
+     * Регистрирует все команды плагина
+     *
      * Registers all plugin commands
+     *
+     * Registriert alle Plugin-Befehle
      */
     // Getters for various managers
     public com.megacreative.interfaces.IWorldManager getWorldManager() {

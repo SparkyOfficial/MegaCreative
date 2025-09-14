@@ -18,6 +18,13 @@ import java.io.IOException;
 import java.util.*;
 import java.util.concurrent.ThreadLocalRandom;
 
+/**
+ * Implementation of the world manager
+ *
+ * Реализация менеджера миров
+ *
+ * Implementierung des Welt-Managers
+ */
 public class WorldManagerImpl implements IWorldManager {
     
     private Plugin plugin;
@@ -29,11 +36,17 @@ public class WorldManagerImpl implements IWorldManager {
     private final int worldBorderSize;
     
     // Синхронизация для операций с мирами
+    // Synchronization for world operations
+    // Synchronisation für Weltoperationen
     private final Object worldSaveLock = new Object();
     private final Object worldCreationLock = new Object();
     
     /**
      * Constructor with specific dependencies (no God Object)
+     *
+     * Конструктор с конкретными зависимостями (без God Object)
+     *
+     * Konstruktor mit spezifischen Abhängigkeiten (kein God Object)
      */
     public WorldManagerImpl(Plugin plugin, ICodingManager codingManager, ConfigManager configManager) {
         this.plugin = plugin;
@@ -55,6 +68,12 @@ public class WorldManagerImpl implements IWorldManager {
     /**
      * Legacy constructor for backward compatibility
      * @deprecated Use constructor with specific dependencies
+     *
+     * Устаревший конструктор для обратной совместимости
+     * @deprecated Используйте конструктор с конкретными зависимостями
+     *
+     * Legacy-Konstruktor für Abwärtskompatibilität
+     * @deprecated Verwenden Sie den Konstruktor mit spezifischen Abhängigkeiten
      */
     @Deprecated
     public WorldManagerImpl(com.megacreative.MegaCreative plugin) {
@@ -69,6 +88,10 @@ public class WorldManagerImpl implements IWorldManager {
     
     /**
      * Constructor for ServiceRegistry (uses ConfigManager)
+     *
+     * Конструктор для ServiceRegistry (использует ConfigManager)
+     *
+     * Konstruktor für ServiceRegistry (verwendet ConfigManager)
      */
     public WorldManagerImpl(ConfigManager configManager) {
         this.plugin = null; // Will be set later through setPlugin method
@@ -89,6 +112,10 @@ public class WorldManagerImpl implements IWorldManager {
     
     /**
      * Sets the plugin instance for dependency injection
+     *
+     * Устанавливает экземпляр плагина для внедрения зависимостей
+     *
+     * Setzt die Plugin-Instanz für die Abhängigkeitsinjektion
      */
     public void setPlugin(Plugin plugin) {
         this.plugin = plugin;
@@ -96,6 +123,10 @@ public class WorldManagerImpl implements IWorldManager {
     
     /**
      * Gets the plugin instance, trying to get it from MegaCreative singleton if not directly set
+     *
+     * Получает экземпляр плагина, пытаясь получить его из синглтона MegaCreative, если не установлен напрямую
+     *
+     * Gibt die Plugin-Instanz zurück und versucht, sie vom MegaCreative-Singleton zu erhalten, falls nicht direkt gesetzt
      */
     private Plugin getPlugin() {
         if (plugin == null) {
@@ -106,6 +137,10 @@ public class WorldManagerImpl implements IWorldManager {
     
     /**
      * Sets the coding manager for dependency injection
+     *
+     * Устанавливает менеджер кодирования для внедрения зависимостей
+     *
+     * Setzt den Coding-Manager für die Abhängigkeitsinjektion
      */
     public void setCodingManager(ICodingManager codingManager) {
         this.codingManager = codingManager;
@@ -114,16 +149,56 @@ public class WorldManagerImpl implements IWorldManager {
     /**
      * Инициализация менеджера миров - загружает все миры из файлов
      * Должен вызываться ПОСЛЕ создания всех остальных менеджеров
+     *
+     * World manager initialization - loads all worlds from files
+     * Should be called AFTER creating all other managers
+     *
+     * Welt-Manager-Initialisierung - lädt alle Welten aus Dateien
+     * Sollte NACH der Erstellung aller anderen Manager aufgerufen werden
      */
     public void initialize() {
         loadWorlds();
     }
     
+    /**
+     * Creates a world for a player
+     * @param player the player
+     * @param name the world name
+     * @param worldType the world type
+     *
+     * Создает мир для игрока
+     * @param player игрок
+     * @param name название мира
+     * @param worldType тип мира
+     *
+     * Erstellt eine Welt für einen Spieler
+     * @param player der Spieler
+     * @param name der Weltname
+     * @param worldType der Welttyp
+     */
     public void createWorld(Player player, String name, CreativeWorldType worldType) {
         createWorld(player, name, worldType, CreativeWorld.WorldDualMode.STANDALONE, null);
     }
     
     // 🎆 ENHANCED: Reference system-style dual world creation with pairing support
+    // 🎆 УСОВЕРШЕНСТВОВАННАЯ: Создание парных миров в стиле reference system с поддержкой сопряжения
+    // 🎆 VERBESSERTE: Referenzsystem-Stil duale Welt-Erstellung mit Paarungsunterstützung
+    /**
+     * Creates a dual world for a player
+     * @param player the player
+     * @param name the world name
+     * @param worldType the world type
+     *
+     * Создает парный мир для игрока
+     * @param player игрок
+     * @param name название мира
+     * @param worldType тип мира
+     *
+     * Erstellt eine duale Welt für einen Spieler
+     * @param player der Spieler
+     * @param name der Weltname
+     * @param worldType der Welttyp
+     */
     public void createDualWorld(Player player, String name, CreativeWorldType worldType) {
         // Create dev world first
         String devWorldId = generateUniqueId();
@@ -133,6 +208,28 @@ public class WorldManagerImpl implements IWorldManager {
         createWorld(player, name + " (Play)", worldType, CreativeWorld.WorldDualMode.PLAY, devWorldId);
     }
     
+    /**
+     * Creates a world for a player with specific parameters
+     * @param player the player
+     * @param name the world name
+     * @param worldType the world type
+     * @param dualMode the dual mode
+     * @param pairedWorldId the paired world ID
+     *
+     * Создает мир для игрока с конкретными параметрами
+     * @param player игрок
+     * @param name название мира
+     * @param worldType тип мира
+     * @param dualMode двойной режим
+     * @param pairedWorldId ID сопряженного мира
+     *
+     * Erstellt eine Welt für einen Spieler mit spezifischen Parametern
+     * @param player der Spieler
+     * @param name der Weltname
+     * @param worldType der Welttyp
+     * @param dualMode der duale Modus
+     * @param pairedWorldId die ID der gekoppelten Welt
+     */
     public void createWorld(Player player, String name, CreativeWorldType worldType, 
                            CreativeWorld.WorldDualMode dualMode, String pairedWorldId) {
         // Валидация имени мира
