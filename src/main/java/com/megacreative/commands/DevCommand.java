@@ -245,8 +245,8 @@ public class DevCommand implements CommandExecutor {
         // Очищаем инвентарь перед выдачей предметов
         player.getInventory().clear();
         
-        // Выдаем блоки кодирования ДИНАМИЧЕСКИ
-        CodingItems.giveCodingItems(player, plugin);
+        // Выдаем блоки кодирования и специальные инструменты через DevInventoryManager
+        plugin.getServiceRegistry().getDevInventoryManager().forceRestoreTools(player);
         
         player.sendMessage("§aВы телепортированы в мир разработки!");
         player.sendMessage("§7Здесь вы можете создавать код для своего мира");
