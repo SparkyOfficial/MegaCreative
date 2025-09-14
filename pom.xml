@@ -19,6 +19,7 @@
         <maven.compiler.target>21</maven.compiler.target>
         <paper.version>1.20.4</paper.version>
         <paper.api.version>1.20.4-R0.1-SNAPSHOT</paper.api.version>
+        <checkstyle.config.location>checkstyle.xml</checkstyle.config.location>
         <!-- Disable tests -->
         <maven.test.skip>true</maven.test.skip>
         <skipTests>true</skipTests>
@@ -37,6 +38,29 @@
             </resource>
         </resources>
         <plugins>
+            <!-- Checkstyle Plugin -->
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-checkstyle-plugin</artifactId>
+                <version>3.3.1</version>
+                <configuration>
+                    <configLocation>checkstyle.xml</configLocation>
+                    <encoding>UTF-8</encoding>
+                    <consoleOutput>true</consoleOutput>
+                    <failsOnError>false</failsOnError>
+                    <linkXRef>false</linkXRef>
+                </configuration>
+                <executions>
+                    <execution>
+                        <id>validate</id>
+                        <phase>validate</phase>
+                        <goals>
+                            <goal>check</goal>
+                        </goals>
+                    </execution>
+                </executions>
+            </plugin>
+            
             <!-- Maven Shade Plugin for creating a fat JAR -->
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
@@ -288,6 +312,13 @@
             <artifactId>mockito-junit-jupiter</artifactId>
             <version>5.7.0</version>
             <scope>test</scope>
+        </dependency>
+        
+        <!-- Checkstyle dependency -->
+        <dependency>
+            <groupId>com.puppycrawl.tools</groupId>
+            <artifactId>checkstyle</artifactId>
+            <version>10.12.4</version>
         </dependency>
     </dependencies>
 </project>
