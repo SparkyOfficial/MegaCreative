@@ -191,7 +191,9 @@ public class CustomEventManager implements Listener {
                         }
                     }
                 } catch (Exception e) {
-                    log.log(Level.WARNING, "Error executing event handler for " + eventName, e);
+                    log.severe("Error executing event handler: " + e.getMessage());
+                    e.printStackTrace();
+                    // Log error but don't propagate to avoid breaking other handlers
                 }
             }
             
@@ -504,6 +506,7 @@ public class CustomEventManager implements Listener {
         public void handle(Map<String, DataValue> eventData, Player source, String sourceWorld) {
             // Execute the handler block with event data as variables
             // This would integrate with the existing script execution system
+            // Called from lines 183 and 262 in the same file
             if (handlerBlock != null) {
                 // Set event data as local variables for the handler
                 for (Map.Entry<String, DataValue> entry : eventData.entrySet()) {
@@ -515,8 +518,17 @@ public class CustomEventManager implements Listener {
                 try {
                     // This would need integration with the execution system
                     // handlerBlock.execute(source);
+                    // TODO: Implement actual handler execution
+                    // For now, we're just logging that the handler was called
+                    com.megacreative.MegaCreative.getInstance().getLogger().info(
+                        "EventHandler called for player " + (source != null ? source.getName() : "unknown") + 
+                        " in world " + sourceWorld
+                    );
                 } catch (Exception e) {
                     // Log error but don't propagate to avoid breaking other handlers
+                    com.megacreative.MegaCreative.getInstance().getLogger().warning(
+                        "Error in EventHandler: " + e.getMessage()
+                    );
                 }
             }
         }

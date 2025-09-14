@@ -40,7 +40,9 @@ public class MegaCreative extends JavaPlugin {
     
     @Override
     public void onEnable() {
-        instance = this;
+        synchronized (MegaCreative.class) {
+            instance = this;
+        }
         logger = getLogger();
         
         // Initialize WorldCode configuration system
@@ -53,17 +55,13 @@ public class MegaCreative extends JavaPlugin {
             this.dependencyContainer.registerSingleton(MegaCreative.class, this);
             this.serviceRegistry = new ServiceRegistry(this, dependencyContainer);
             
-            // Validate configuration
             validateConfiguration();
-            
-            // Initialize all services through registry
+
             serviceRegistry.initializeServices();
             
-            // Register commands and events
             registerCommands();
             registerEvents();
             
-            // Start the tick scheduler for onTick events
             startTickScheduler();
             
             // Start auto-save system

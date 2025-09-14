@@ -477,7 +477,7 @@ public class BlockGroupManager {
             return new HashMap<>(selectedBlocks);
         }
         
-        public void addBlock(Location location, CodeBlock block) {
+        public void addBlock(final Location location, final CodeBlock block) {
             selectedBlocks.put(location, block);
         }
         
@@ -494,10 +494,14 @@ public class BlockGroupManager {
         }
         
         @Override
-        public boolean equals(Object o) {
-            if (this == o) return true;
-            if (o == null || getClass() != o.getClass()) return false;
-            GroupSelectionState that = (GroupSelectionState) o;
+        public boolean equals(final Object o) {
+            if (this == o) {
+                return true;
+            }
+            if (o == null || getClass() != o.getClass()) {
+                return false;
+            }
+            final GroupSelectionState that = (GroupSelectionState) o;
             return Objects.equals(selectedBlocks, that.selectedBlocks);
         }
         
@@ -517,7 +521,7 @@ public class BlockGroupManager {
     public static class GroupBounds {
         private final int minX, minY, minZ, maxX, maxY, maxZ;
         
-        public GroupBounds(int minX, int minY, int minZ, int maxX, int maxY, int maxZ) {
+        public GroupBounds(final int minX, final int minY, final int minZ, final int maxX, final int maxY, final int maxZ) {
             this.minX = minX;
             this.minY = minY;
             this.minZ = minZ;
@@ -537,10 +541,14 @@ public class BlockGroupManager {
         public int getDepth() { return maxZ - minZ + 1; }
         
         @Override
-        public boolean equals(Object o) {
-            if (this == o) return true;
-            if (o == null || getClass() != o.getClass()) return false;
-            GroupBounds that = (GroupBounds) o;
+        public boolean equals(final Object o) {
+            if (this == o) {
+                return true;
+            }
+            if (o == null || getClass() != o.getClass()) {
+                return false;
+            }
+            final GroupBounds that = (GroupBounds) o;
             return minX == that.minX && 
                    minY == that.minY && 
                    minZ == that.minZ && 

@@ -4,8 +4,15 @@ import com.megacreative.coding.CodeBlock;
 import org.bukkit.Location;
 import java.util.logging.Logger;
 
-import java.util.*;
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Map;
+import java.util.Set;
+import java.util.UUID;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.Objects;
 
 /**
  * Manages group templates for creating reusable block group configurations
@@ -16,14 +23,14 @@ public class GroupTemplateManager {
     private final BlockGroupManager groupManager;
     private final Map<String, GroupTemplate> templates = new ConcurrentHashMap<>();
     
-    public GroupTemplateManager(BlockGroupManager groupManager) {
+    public GroupTemplateManager(final BlockGroupManager groupManager) {
         this.groupManager = groupManager;
     }
     
     /**
      * Creates a template from an advanced group
      */
-    public GroupTemplate createTemplateFromGroup(AdvancedBlockGroup group, String templateName, String description) {
+    public GroupTemplate createTemplateFromGroup(final AdvancedBlockGroup group, final String templateName, final String description) {
         if (templateName == null || templateName.trim().isEmpty()) {
             throw new IllegalArgumentException("Template name cannot be null or empty");
         }
@@ -42,8 +49,8 @@ public class GroupTemplateManager {
     /**
      * Creates a template from a set of blocks
      */
-    public GroupTemplate createTemplateFromBlocks(String templateName, String description, 
-                                                Map<Location, CodeBlock> blocks) {
+    public GroupTemplate createTemplateFromBlocks(final String templateName, final String description, 
+                                                final Map<Location, CodeBlock> blocks) {
         if (templateName == null || templateName.trim().isEmpty()) {
             throw new IllegalArgumentException("Template name cannot be null or empty");
         }
@@ -62,7 +69,7 @@ public class GroupTemplateManager {
     /**
      * Gets a template by name
      */
-    public GroupTemplate getTemplate(String templateName) {
+    public GroupTemplate getTemplate(final String templateName) {
         return templates.get(templateName);
     }
     
@@ -76,7 +83,7 @@ public class GroupTemplateManager {
     /**
      * Lists templates by tag
      */
-    public List<GroupTemplate> listTemplatesByTag(String tag) {
+    public List<GroupTemplate> listTemplatesByTag(final String tag) {
         List<GroupTemplate> result = new ArrayList<>();
         for (GroupTemplate template : templates.values()) {
             if (template.hasTag(tag)) {
@@ -89,7 +96,7 @@ public class GroupTemplateManager {
     /**
      * Deletes a template
      */
-    public void deleteTemplate(String templateName) {
+    public void deleteTemplate(final String templateName) {
         GroupTemplate removed = templates.remove(templateName);
         if (removed != null) {
             log.info("Deleted template: " + templateName);
@@ -99,7 +106,7 @@ public class GroupTemplateManager {
     /**
      * Updates a template's description
      */
-    public void updateTemplateDescription(String templateName, String newDescription) {
+    public void updateTemplateDescription(final String templateName, final String newDescription) {
         GroupTemplate template = templates.get(templateName);
         if (template != null) {
             template.setDescription(newDescription);
@@ -110,7 +117,7 @@ public class GroupTemplateManager {
     /**
      * Adds a tag to a template
      */
-    public void addTagToTemplate(String templateName, String tag) {
+    public void addTagToTemplate(final String templateName, final String tag) {
         GroupTemplate template = templates.get(templateName);
         if (template != null) {
             template.addTag(tag);
@@ -121,12 +128,35 @@ public class GroupTemplateManager {
     /**
      * Removes a tag from a template
      */
-    public void removeTagFromTemplate(String templateName, String tag) {
+    public void removeTagFromTemplate(final String templateName, final String tag) {
         GroupTemplate template = templates.get(templateName);
         if (template != null) {
             template.removeTag(tag);
             log.info("Removed tag '" + tag + "' from template: " + templateName);
         }
+    }
+    
+    /**
+     * Calculates bounds for a set of locations
+     */
+    private static BlockGroupManager.GroupBounds calculateBounds(Set<Location> locations) {
+        if (locations.isEmpty()) {
+            return new BlockGroupManager.GroupBounds(0, 0, 0, 0, 0, 0);
+        }
+        
+        int minX = Integer.MAX_VALUE, minY = Integer.MAX_VALUE, minZ = Integer.MAX_VALUE;
+        int maxX = Integer.MIN_VALUE, maxY = Integer.MIN_VALUE, maxZ = Integer.MIN_VALUE;
+        
+        for (Location loc : locations) {
+            minX = Math.min(minX, loc.getBlockX());
+            minY = Math.min(minY, loc.getBlockY());
+            minZ = Math.min(minZ, loc.getBlockZ());
+            maxX = Math.max(maxX, loc.getBlockX());
+            maxY = Math.max(maxY, loc.getBlockY());
+            maxZ = Math.max(maxZ, loc.getBlockZ());
+        }
+        
+        return new BlockGroupManager.GroupBounds(minX, minY, minZ, maxX, maxY, maxZ);
     }
     
     /**
@@ -142,7 +172,7 @@ public class GroupTemplateManager {
         private final long createdTime;
         private long lastModified;
         
-        public GroupTemplate(String name, String description, AdvancedBlockGroup sourceGroup) {
+        public GroupTemplate(final String name, final String description, final AdvancedBlockGroup sourceGroup) {
             this.name = name;
             this.description = description != null ? description : "";
             this.templateBlocks = new HashMap<>(sourceGroup.getBlocks());
@@ -157,7 +187,7 @@ public class GroupTemplateManager {
             this.metadata.putAll(sourceGroup.getMetadata());
         }
         
-        public GroupTemplate(String name, String description, Map<Location, CodeBlock> blocks) {
+        public GroupTemplate(final String name, final String description, final Map<Location, CodeBlock> blocks) {
             this.name = name;
             this.description = description != null ? description : "";
             this.templateBlocks = new HashMap<>(blocks);
@@ -169,14 +199,14 @@ public class GroupTemplateManager {
         /**
          * Instantiates this template into a new advanced group
          */
-        public AdvancedBlockGroup instantiate(String groupName, java.util.UUID ownerId) {
+        public AdvancedBlockGroup instantiate(final String groupName, final UUID ownerId) {
             // Create new group from template blocks
             AdvancedBlockGroup group = new AdvancedBlockGroup(
-                java.util.UUID.randomUUID(),
+                UUID.randomUUID(),
                 groupName,
                 ownerId,
                 new HashMap<>(this.templateBlocks),
-                calculateBounds(this.templateBlocks.keySet())
+                calculateBounds(this.templateBlocks.keySet()) // Fixed method call
             );
             
             // Apply template properties
@@ -199,94 +229,100 @@ public class GroupTemplateManager {
         /**
          * Adds a tag to this template
          */
-        public void addTag(String tag) {
-            tags.add(tag.toLowerCase());
-            touch();
+        public void addTag(final String tag) {
+            if (tag != null && !tag.trim().isEmpty()) {
+                tags.add(tag.trim());
+                lastModified = System.currentTimeMillis();
+            }
         }
         
         /**
          * Removes a tag from this template
          */
-        public void removeTag(String tag) {
-            if (tags.remove(tag.toLowerCase())) {
-                touch();
+        public void removeTag(final String tag) {
+            if (tag != null) {
+                tags.remove(tag);
+                lastModified = System.currentTimeMillis();
             }
         }
         
         /**
          * Checks if this template has a specific tag
          */
-        public boolean hasTag(String tag) {
-            return tags.contains(tag.toLowerCase());
+        public boolean hasTag(final String tag) {
+            return tag != null && tags.contains(tag);
         }
         
         /**
-         * Sets a metadata value
+         * Gets all tags for this template
          */
-        public void setMetadata(String key, Object value) {
-            metadata.put(key, value);
-            touch();
+        public Set<String> getTags() {
+            return new HashSet<>(tags);
         }
         
         /**
-         * Gets a metadata value
+         * Sets metadata for this template
          */
-        @SuppressWarnings("unchecked")
-        public <T> T getMetadata(String key, Class<T> type) {
-            Object value = metadata.get(key);
-            if (value != null && type.isInstance(value)) {
-                return (T) value;
+        public void setMetadata(final String key, final Object value) {
+            if (key != null) {
+                if (value != null) {
+                    metadata.put(key, value);
+                } else {
+                    metadata.remove(key);
+                }
+                lastModified = System.currentTimeMillis();
             }
-            return null;
         }
         
         /**
-         * Updates the last modified timestamp
+         * Gets metadata for this template
          */
-        private void touch() {
-            this.lastModified = System.currentTimeMillis();
+        public Object getMetadata(final String key) {
+            return key != null ? metadata.get(key) : null;
         }
         
         /**
-         * Gets template information
+         * Gets all metadata for this template
          */
-        public String getInfo() {
-            return String.format("Template '%s' (%d blocks, v%s) - %s", 
-                               name, templateBlocks.size(), version, description);
+        public Map<String, Object> getAllMetadata() {
+            return new HashMap<>(metadata);
         }
         
         // Getters
         public String getName() { return name; }
         public String getDescription() { return description; }
-        public void setDescription(String description) { this.description = description; touch(); }
-        public Map<Location, CodeBlock> getTemplateBlocks() { return templateBlocks; }
-        public Set<String> getTags() { return tags; }
-        public Map<String, Object> getMetadata() { return metadata; }
+        public void setDescription(final String description) { 
+            this.description = description != null ? description : "";
+            this.lastModified = System.currentTimeMillis();
+        }
+        public Map<Location, CodeBlock> getTemplateBlocks() { return new HashMap<>(templateBlocks); }
         public String getVersion() { return version; }
         public long getCreatedTime() { return createdTime; }
         public long getLastModified() { return lastModified; }
         
-        /**
-         * Calculates bounds for a set of locations
-         */
-        private BlockGroupManager.GroupBounds calculateBounds(Set<Location> locations) {
-            if (locations.isEmpty()) {
-                return new BlockGroupManager.GroupBounds(0, 0, 0, 0, 0, 0);
-            }
-            
-            int minX = Integer.MAX_VALUE, minY = Integer.MAX_VALUE, minZ = Integer.MAX_VALUE;
-            int maxX = Integer.MIN_VALUE, maxY = Integer.MIN_VALUE, maxZ = Integer.MIN_VALUE;
-            
-            for (Location loc : locations) {
-                minX = Math.min(minX, loc.getBlockX());
-                minY = Math.min(minY, loc.getBlockY());
-                minZ = Math.min(minZ, loc.getBlockZ());
-                maxX = Math.max(maxX, loc.getBlockX());
-                maxY = Math.max(maxY, loc.getBlockY());
-                maxZ = Math.max(maxZ, loc.getBlockZ());
-            }
-            
-            return new BlockGroupManager.GroupBounds(minX, minY, minZ, maxX, maxY, maxZ);
+        @Override
+        public boolean equals(final Object o) {
+            if (this == o) return true;
+            if (o == null || getClass() != o.getClass()) return false;
+            GroupTemplate that = (GroupTemplate) o;
+            return Objects.equals(name, that.name);
+        }
+        
+        @Override
+        public int hashCode() {
+            return Objects.hash(name);
+        }
+        
+
+        
+        @Override
+        public String toString() {
+            return "GroupTemplate{" +
+                   "name='" + name + '\'' +
+                   ", description='" + description + '\'' +
+                   ", version='" + version + '\'' +
+                   ", tags=" + tags +
+                   '}';
         }
     }
 }

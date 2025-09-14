@@ -200,19 +200,19 @@ public class ReferenceSystemCustomEventsListener implements Listener {
     }
     
     private void executeScript(CodeScript script, Player player, String eventType, String eventValue, Map<String, Object> data) {
-        // Create execution context with proper parameters
-        ExecutionContext context = new ExecutionContext(
-            plugin, 
-            player, 
-            null, // creativeWorld
-            null, // event
-            null, // blockLocation
-            null  // currentBlock
-        );
-        
         // Execute the script with the context
         ScriptEngine scriptEngine = plugin.getServiceRegistry().getService(ScriptEngine.class);
         if (scriptEngine != null) {
+            // Create execution context with proper parameters
+            // ExecutionContext context = new ExecutionContext(
+            //     plugin, 
+            //     player, 
+            //     null, // creativeWorld
+            //     null, // event
+            //     null, // blockLocation
+            //     null  // currentBlock
+            // );
+            
             // Pass the context and parameters to the script engine for execution
             // This is a simplified approach - you may need to adapt based on your actual implementation
         }

@@ -461,22 +461,22 @@ public class WorldPermissions {
     public Set<UUID> getBlacklist() { return new HashSet<>(blacklist); }
     
     public boolean isAllowPvP() { return allowPvP; }
-    public void setAllowPvP(boolean allowPvP) { this.allowPvP = allowPvP; }
+    public void setAllowPvP(final boolean allowPvP) { this.allowPvP = allowPvP; }
     
     public boolean isAllowMobSpawning() { return allowMobSpawning; }
-    public void setAllowMobSpawning(boolean allowMobSpawning) { this.allowMobSpawning = allowMobSpawning; }
+    public void setAllowMobSpawning(final boolean allowMobSpawning) { this.allowMobSpawning = allowMobSpawning; }
     
     public boolean isAllowExplosions() { return allowExplosions; }
-    public void setAllowExplosions(boolean allowExplosions) { this.allowExplosions = allowExplosions; }
+    public void setAllowExplosions(final boolean allowExplosions) { this.allowExplosions = allowExplosions; }
     
     public boolean isAllowFlightInPlay() { return allowFlightInPlay; }
-    public void setAllowFlightInPlay(boolean allowFlightInPlay) { this.allowFlightInPlay = allowFlightInPlay; }
+    public void setAllowFlightInPlay(final boolean allowFlightInPlay) { this.allowFlightInPlay = allowFlightInPlay; }
     
     public boolean isAllowItemDrops() { return allowItemDrops; }
-    public void setAllowItemDrops(boolean allowItemDrops) { this.allowItemDrops = allowItemDrops; }
+    public void setAllowItemDrops(final boolean allowItemDrops) { this.allowItemDrops = allowItemDrops; }
     
     public boolean isProtectFromGriefing() { return protectFromGriefing; }
-    public void setProtectFromGriefing(boolean protectFromGriefing) { this.protectFromGriefing = protectFromGriefing; }
+    public void setProtectFromGriefing(final boolean protectFromGriefing) { this.protectFromGriefing = protectFromGriefing; }
     
     /**
      * Gets summary of permissions for display

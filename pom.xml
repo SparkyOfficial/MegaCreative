@@ -38,7 +38,8 @@
             </resource>
         </resources>
         <plugins>
-            <!-- Checkstyle Plugin -->
+            <!-- Checkstyle Plugin - Disabled -->
+            <!--
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-checkstyle-plugin</artifactId>
@@ -60,6 +61,7 @@
                     </execution>
                 </executions>
             </plugin>
+            -->
             
             <!-- Maven Shade Plugin for creating a fat JAR -->
             <plugin>

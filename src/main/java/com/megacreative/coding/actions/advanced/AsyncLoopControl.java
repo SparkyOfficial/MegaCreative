@@ -100,7 +100,7 @@ public class AsyncLoopControl implements BlockAction {
      * Generates unique loop ID for tracking
      */
     private UUID generateLoopId(UUID playerId) {
-        return UUID.nameUUIDFromBytes((playerId.toString() + System.currentTimeMillis()).getBytes());
+        return UUID.nameUUIDFromBytes((playerId.toString() + System.currentTimeMillis()).getBytes(java.nio.charset.StandardCharsets.UTF_8));
     }
     
     /**

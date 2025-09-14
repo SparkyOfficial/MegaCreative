@@ -747,7 +747,7 @@ public class CreativeWorld {
             // Generate a consistent UUID from the string ID if it's not a valid UUID
             // Генерировать согласованный UUID из строкового ID, если это недопустимый UUID
             // Einen konsistenten UUID aus der Zeichenfolgen-ID generieren, wenn es kein gültiger UUID ist
-            return UUID.nameUUIDFromBytes(id.getBytes());
+            return UUID.nameUUIDFromBytes(id.getBytes(java.nio.charset.StandardCharsets.UTF_8));
         }
     }
     

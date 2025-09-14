@@ -339,7 +339,6 @@ public class DevWorldGenerator extends ChunkGenerator {
             // Anzahl der Etagen begrenzen
         }
         
-        DevWorldGenerator generator = new DevWorldGenerator();
         int floorY = PLATFORM_Y + (floorNumber * FLOOR_HEIGHT);
         
         // Генерируем новый этаж в загруженных чанках

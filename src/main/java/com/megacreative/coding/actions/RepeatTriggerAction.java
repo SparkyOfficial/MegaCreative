@@ -29,10 +29,7 @@ public class RepeatTriggerAction implements BlockAction {
         }
 
         // Получаем и разрешаем параметры
-        if (context == null) {
-            return ExecutionResult.error("Context is null");
-        }
-        
+
         ParameterResolver resolver = new ParameterResolver(context);
         
         DataValue rawTicks = block.getParameter("ticks");

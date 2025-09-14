@@ -2,7 +2,7 @@ package com.megacreative.coding.functions;
 
 import com.megacreative.coding.values.DataValue;
 import com.megacreative.coding.values.ValueType;
-import java.util.*;
+import java.util.Objects;
 
 /**
  * Represents a function parameter with name, type, and default value
@@ -16,26 +16,30 @@ public class FunctionParameter {
     
     // Getters and Setters
     public String getName() { return name; }
-    public void setName(String name) { this.name = name; }
+    public void setName(final String name) { this.name = name; }
     
     public ValueType getExpectedType() { return expectedType; }
-    public void setExpectedType(ValueType expectedType) { this.expectedType = expectedType; }
+    public void setExpectedType(final ValueType expectedType) { this.expectedType = expectedType; }
     
     public DataValue getDefaultValue() { return defaultValue; }
-    public void setDefaultValue(DataValue defaultValue) { this.defaultValue = defaultValue; }
+    public void setDefaultValue(final DataValue defaultValue) { this.defaultValue = defaultValue; }
     
     public boolean isRequired() { return required; }
-    public void setRequired(boolean required) { this.required = required; }
+    public void setRequired(final boolean required) { this.required = required; }
     
     public String getDescription() { return description; }
-    public void setDescription(String description) { this.description = description; }
+    public void setDescription(final String description) { this.description = description; }
     
     // equals and hashCode
     @Override
-    public boolean equals(Object o) {
-        if (this == o) return true;
-        if (o == null || getClass() != o.getClass()) return false;
-        FunctionParameter that = (FunctionParameter) o;
+    public boolean equals(final Object o) {
+        if (this == o) {
+            return true;
+        }
+        if (o == null || getClass() != o.getClass()) {
+            return false;
+        }
+        final FunctionParameter that = (FunctionParameter) o;
         return required == that.required &&
                Objects.equals(name, that.name) &&
                expectedType == that.expectedType &&
@@ -52,14 +56,14 @@ public class FunctionParameter {
     public FunctionParameter() {
     }
     
-    public FunctionParameter(String name, ValueType expectedType, boolean required) {
+    public FunctionParameter(final String name, final ValueType expectedType, final boolean required) {
         this.name = name;
         this.expectedType = expectedType;
         this.required = required;
         this.description = "";
     }
     
-    public FunctionParameter(String name, ValueType expectedType, DataValue defaultValue, String description) {
+    public FunctionParameter(final String name, final ValueType expectedType, final DataValue defaultValue, final String description) {
         this.name = name;
         this.expectedType = expectedType;
         this.defaultValue = defaultValue;
@@ -69,16 +73,25 @@ public class FunctionParameter {
     
     /**
      * Validates if a value is compatible with this parameter
+     *
+     * @param value the value to check compatibility for
+     * @return true if the value is compatible with this parameter, false otherwise
      */
-    public boolean isCompatible(DataValue value) {
-        if (value == null) return !required;
+    public boolean isCompatible(final DataValue value) {
+        if (value == null) {
+            return !required;
+        }
         return expectedType == ValueType.ANY || value.getType() == expectedType || expectedType.isCompatible(value.getType());
     }
     
     /**
      * Gets the value to use for this parameter, applying defaults if needed
+     *
+     * @param providedValue the value provided for this parameter
+     * @return the effective value for this parameter
+     * @throws IllegalArgumentException if a required parameter is not provided
      */
-    public DataValue getEffectiveValue(DataValue providedValue) {
+    public DataValue getEffectiveValue(final DataValue providedValue) {
         if (providedValue != null && isCompatible(providedValue)) {
             return providedValue;
         }

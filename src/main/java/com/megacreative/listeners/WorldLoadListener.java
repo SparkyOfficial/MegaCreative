@@ -180,7 +180,7 @@ public class WorldLoadListener implements Listener {
                 connectionManager.addCodeBlock(codeBlock.getLocation(), recreatedBlock);
             }
         } catch (Exception e) {
-            Location loc = sign != null ? sign.getLocation() : null;
+            Location loc = sign.getLocation();
             plugin.getLogger().log(Level.WARNING, 
                 String.format("Error processing sign at %s: %s", 
                     loc != null ? loc.toString() : "unknown location",
