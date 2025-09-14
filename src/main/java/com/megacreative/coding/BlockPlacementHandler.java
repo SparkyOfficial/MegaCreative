@@ -872,6 +872,28 @@ public class BlockPlacementHandler implements Listener {
             player.sendMessage("§eСтруктура " + config.getDisplayName() + " полностью удалена!");
             player.playSound(mainBlockLoc, org.bukkit.Sound.ENTITY_ENDERMAN_TELEPORT, 1.0f, 0.5f);
             player.spawnParticle(org.bukkit.Particle.EXPLOSION_NORMAL, mainBlockLoc.add(0.5, 0.5, 0.5), 10, 0.5, 0.5, 0.5, 0.2);
+        }
+        // 🔧 FIX: Add handling for ACTION blocks
+        else if (config.getType().equals("ACTION")) {
+            // For action blocks, just remove the block
+            blockCodeBlocks.remove(mainBlockLoc);
+            removeSignFromBlock(mainBlockLoc);
+            removeContainerAboveBlock(mainBlockLoc);
+            
+            // Add visual effect for complete structure removal
+            player.sendMessage("§eСтруктура " + config.getDisplayName() + " полностью удалена!");
+            player.playSound(mainBlockLoc, org.bukkit.Sound.ENTITY_ENDERMAN_TELEPORT, 1.0f, 0.5f);
+            player.spawnParticle(org.bukkit.Particle.EXPLOSION_NORMAL, mainBlockLoc.add(0.5, 0.5, 0.5), 10, 0.5, 0.5, 0.5, 0.2);
+            
+            // Удаляем физический блок
+            mainBlockLoc.getBlock().setType(Material.AIR);
+        }
+        
+        // 🔧 FIX: Handle block movement with connected brackets
+        // Check if this is a code block that might have connected brackets
+        handleConnectedStructureRemoval(mainBlockLoc, player);
+    }
+    
     /**
      * 🔧 FIX: Handle removal of connected structure components when a block is broken
      * This ensures brackets and other connected elements move with the main block
@@ -894,42 +916,6 @@ public class BlockPlacementHandler implements Listener {
                 }
             }
         }
-    }
-    
-    /**
-     * 🔧 FIX: Add handling for STORAGE blocks
-     */
-    private void removeBracketPiston(Location mainBlockLoc, Player player) {
-        // Remove bracket piston from codeBlocks
-        blockCodeBlocks.remove(mainBlockLoc);
-        removeSignFromBlock(mainBlockLoc);
-        removeContainerAboveBlock(mainBlockLoc);
-        
-        // Add visual effect for complete structure removal
-        player.sendMessage("§eСтруктура " + config.getDisplayName() + " полностью удалена!");
-        player.playSound(mainBlockLoc, org.bukkit.Sound.ENTITY_ENDERMAN_TELEPORT, 1.0f, 0.5f);
-        player.spawnParticle(org.bukkit.Particle.EXPLOSION_NORMAL, mainBlockLoc.add(0.5, 0.5, 0.5), 10, 0.5, 0.5, 0.5, 0.2);
-        
-        // Удаляем физический блок
-        mainBlockLoc.getBlock().setType(Material.AIR);
-    }
-    
-    /**
-     * 🔧 FIX: Add handling for ACTION blocks
-     */
-    private void removeBracketPiston(Location mainBlockLoc, Player player) {
-        // For action blocks, just remove the block
-        blockCodeBlocks.remove(mainBlockLoc);
-        removeSignFromBlock(mainBlockLoc);
-        removeContainerAboveBlock(mainBlockLoc);
-        
-        // Add visual effect for complete structure removal
-        player.sendMessage("§eСтруктура " + config.getDisplayName() + " полностью удалена!");
-        player.playSound(mainBlockLoc, org.bukkit.Sound.ENTITY_ENDERMAN_TELEPORT, 1.0f, 0.5f);
-        player.spawnParticle(org.bukkit.Particle.EXPLOSION_NORMAL, mainBlockLoc.add(0.5, 0.5, 0.5), 10, 0.5, 0.5, 0.5, 0.2);
-        
-        // Удаляем физический блок
-        mainBlockLoc.getBlock().setType(Material.AIR);
     }
     
     /**
