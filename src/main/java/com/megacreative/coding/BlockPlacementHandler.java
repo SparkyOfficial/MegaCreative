@@ -919,6 +919,49 @@ public class BlockPlacementHandler implements Listener {
     }
     
     /**
+     * 🔧 FIX: Handle movement of connected structure components when a block is moved
+     * This ensures brackets and other connected elements move with the main block
+     */
+    private void handleConnectedStructureMovement(Location oldLocation, Location newLocation, Player player) {
+        // Check for connected brackets in all directions around the old location
+        BlockFace[] directions = {BlockFace.NORTH, BlockFace.EAST, BlockFace.SOUTH, BlockFace.WEST};
+        
+        for (BlockFace face : directions) {
+            Location oldAdjacentLoc = oldLocation.clone().add(face.getModX(), 0, face.getModZ());
+            Location newAdjacentLoc = newLocation.clone().add(face.getModX(), 0, face.getModZ());
+            
+            // Check if old adjacent location has a bracket piston
+            if (blockCodeBlocks.containsKey(oldAdjacentLoc)) {
+                CodeBlock codeBlock = blockCodeBlocks.get(oldAdjacentLoc);
+                if (codeBlock != null && codeBlock.isBracket()) {
+                    // Move the bracket to the new location
+                    Block oldBlock = oldAdjacentLoc.getBlock();
+                    Block newBlock = newAdjacentLoc.getBlock();
+                    
+                    // Copy the block type and data
+                    newBlock.setType(oldBlock.getType());
+                    newBlock.setBlockData(oldBlock.getBlockData());
+                    
+                    // Update our tracking
+                    blockCodeBlocks.remove(oldAdjacentLoc);
+                    blockCodeBlocks.put(newAdjacentLoc, codeBlock);
+                    
+                    // Update the sign
+                    removeSignFromBlock(oldAdjacentLoc);
+                    updateBracketSign(newAdjacentLoc, codeBlock.getBracketType());
+                    
+                    // Remove the old block
+                    oldBlock.setType(Material.AIR);
+                    
+                    // Add visual effects
+                    player.spawnParticle(org.bukkit.Particle.ENCHANTMENT_TABLE, 
+                        newAdjacentLoc.add(0.5, 0.5, 0.5), 5, 0.3, 0.3, 0.3, 1.0);
+                }
+            }
+        }
+    }
+    
+    /**
      * Определяет фактическое направление строительства структуры
      */
     private BlockFace findActualBuildDirection(Location location, int bracketDistance) {

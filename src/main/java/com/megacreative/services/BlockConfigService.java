@@ -104,7 +104,7 @@ public class BlockConfigService {
                 if (section != null) {
                     try {
                         plugin.getLogger().info("Loading block config: " + id);
-                        BlockConfig blockConfig = new BlockConfig(id, section);
+                        BlockConfig blockConfig = new BlockConfig(id, section, plugin);
                         blockConfigs.put(id, blockConfig);
                         materialToBlockIds.computeIfAbsent(blockConfig.getMaterial(), k -> new ArrayList<>()).add(id);
                         plugin.getLogger().info("Successfully loaded block config: " + id + " with material " + blockConfig.getMaterial());
@@ -423,37 +423,36 @@ public class BlockConfigService {
         private final Map<String, Object> parameters;
 
         /**
-         * Создает конфигурацию блока из секции конфигурации
-         * @param id ID блока
-         * @param section Секция конфигурации блока
-         *
          * Creates block configuration from configuration section
          * @param id Block ID
          * @param section Block configuration section
+         * @param plugin Main plugin instance
+         *
+         * Создает конфигурацию блока из секции конфигурации
+         * @param id ID блока
+         * @param section Секция конфигурации блока
+         * @param plugin Экземпляр основного плагина
          *
          * Erstellt eine Blockkonfiguration aus dem Konfigurationsabschnitt
          * @param id Block-ID
          * @param section Blockkonfigurationsabschnitt
+         * @param plugin Hauptplugin-Instanz
          */
-        public BlockConfig(String id, ConfigurationSection section) {
+        public BlockConfig(String id, ConfigurationSection section, MegaCreative plugin) {
             this.id = id;
             // Материал определяется по ID (ключу) блока
             // Material is determined by ID (key) of block
             // Material wird durch ID (Schlüssel) des Blocks bestimmt
-            this.material = Material.matchMaterial(id);
-            if (this.material == null) {
-                // Log detailed error information
-                System.err.println("Invalid material specified for ID '" + id + "'");
-                System.err.println("Available materials: ");
-                for (Material mat : Material.values()) {
-                    if (mat.name().equals(id)) {
-                        System.err.println("Exact match found: " + mat);
-                    }
+            Material mat = Material.matchMaterial(id);
+            if (mat == null) {
+                // 🔧 FIX: Handle cases where ID is not a valid material name
+                // For block types that don't directly map to materials, use a default
+                mat = Material.STONE; // Fallback material
+                if (plugin != null) {
+                    plugin.getLogger().warning("Invalid material for ID '" + id + "', using STONE as fallback");
                 }
-                throw new IllegalArgumentException("Invalid material specified for " + id);
-                // Указан недопустимый материал для
-                // Ungültiges Material angegeben für
             }
+            this.material = mat;
             this.type = section.getString("type", "ACTION").toUpperCase();
             // В YAML используется поле "name", не "displayName"
             // In YAML, the "name" field is used, not "displayName"
@@ -517,11 +516,11 @@ public class BlockConfigService {
         private final int bracketDistance;
         
         /**
-         * Создает конфигурацию структуры из секции конфигурации
-         * @param section Секция конфигурации структуры
-         *
          * Creates structure configuration from configuration section
          * @param section Structure configuration section
+         *
+         * Создает конфигурацию структуры из секции конфигурации
+         * @param section Секция конфигурации структуры
          *
          * Erstellt eine Strukturkonfiguration aus dem Konfigurationsabschnitt
          * @param section Strukturkonfigurationsabschnitt

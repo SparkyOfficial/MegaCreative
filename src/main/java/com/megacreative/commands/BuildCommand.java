@@ -77,7 +77,20 @@ public class BuildCommand implements CommandExecutor {
             player.sendMessage("§cYou are not in a MegaCreative world!");
             player.sendMessage("§7Current world: " + player.getWorld().getName());
             player.sendMessage("§7Available worlds: " + worldManager.getCreativeWorlds().size());
-            return true;
+            // 🔧 FIX: Try to find world by ID pattern matching
+            String worldName = player.getWorld().getName();
+            if (worldName.startsWith("megacreative_")) {
+                String id = worldName.replace("megacreative_", "").replace("-code", "").replace("-world", "").replace("_dev", "");
+                CreativeWorld foundWorld = worldManager.getWorld(id);
+                if (foundWorld != null) {
+                    creativeWorld = foundWorld;
+                    player.sendMessage("§aFound world by ID pattern matching: " + foundWorld.getName());
+                }
+            }
+            // If still not found, return
+            if (creativeWorld == null) {
+                return true;
+            }
         }
         
         if (!creativeWorld.canEdit(player)) {

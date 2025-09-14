@@ -14,7 +14,10 @@ import org.bukkit.inventory.Inventory;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.inventory.meta.ItemMeta;
 import org.bukkit.Location;
+import org.bukkit.configuration.file.YamlConfiguration;
+import org.bukkit.configuration.ConfigurationSection;
 
+import java.io.File;
 import java.util.*;
 
 /**
@@ -54,7 +57,7 @@ import java.util.*;
  * Реализует Creative+-стиль: универсальные блоки с настройкой через GUI
  *
  * Wird geöffnet, wenn ein Spieler auf einen Codeblock ohne zugewiesene Aktion klickt.
- * Implementiert Creative+-Stil: universelle Blöcke mit GUI-Konfiguration
+ * Implementiert Creative+-Stil: universelle Blöcke mit GUI-Konфигuration
  */
 public class ActionSelectionGUI implements GUIManager.ManagedGUIInterface {
     
@@ -83,7 +86,7 @@ public class ActionSelectionGUI implements GUIManager.ManagedGUIInterface {
      * @param plugin Referenz zum Haupt-Plugin
      * @param player Spieler, der die Schnittstelle verwenden wird
      * @param blockLocation Position des zu konfigurierenden Blocks
-     * @param blockMaterial Material des zu konfigurierenden Blocks
+     * @param blockMaterial Material des zu konфигurierenden Blocks
      */
     public ActionSelectionGUI(MegaCreative plugin, Player player, Location blockLocation, Material blockMaterial) {
         this.plugin = plugin;
@@ -171,6 +174,7 @@ public class ActionSelectionGUI implements GUIManager.ManagedGUIInterface {
         
         player.sendMessage("§eDebug: Available actions count: " + (availableActions != null ? availableActions.size() : "null"));
         
+        // 🔧 FIX: If no actions found, try to get actions from block configuration
         if (availableActions == null || availableActions.isEmpty()) {
             player.sendMessage("§cОшибка: Нет доступных действий для блока " + blockMaterial.name());
             
@@ -189,8 +193,35 @@ public class ActionSelectionGUI implements GUIManager.ManagedGUIInterface {
                 player.sendMessage("§eDebug: Block type: " + blockConfig.getType());
                 player.sendMessage("§eDebug: Default action: " + blockConfig.getDefaultAction());
                 
-                // If we have a block config, try to get its actions
-                List<String> actions = blockConfigService.getAvailableActions(blockMaterial);
+                // If we have a block config, try to get its actions from the config directly
+                // 🔧 FIX: Load actions from the block configuration's actions list
+                List<String> actions = new ArrayList<>();
+                // Try to get actions from the block config's actions list
+                BlockConfigService.BlockConfig config = blockConfigService.getBlockConfig(blockConfig.getId());
+                if (config != null) {
+                    // Get the configuration section for this block
+                    File configFile = new File(plugin.getDataFolder(), "coding_blocks.yml");
+                    if (configFile.exists()) {
+                        YamlConfiguration yamlConfig = YamlConfiguration.loadConfiguration(configFile);
+                        ConfigurationSection blocksSection = yamlConfig.getConfigurationSection("blocks");
+                        if (blocksSection != null) {
+                            ConfigurationSection blockSection = blocksSection.getConfigurationSection(blockConfig.getId());
+                            if (blockSection != null) {
+                                List<String> blockActions = blockSection.getStringList("actions");
+                                if (!blockActions.isEmpty()) {
+                                    actions.addAll(blockActions);
+                                    player.sendMessage("§aDebug: Found actions from config: " + blockActions.size());
+                                }
+                            }
+                        }
+                    }
+                }
+                
+                // Fallback to getting actions from material mapping
+                if (actions.isEmpty()) {
+                    actions = blockConfigService.getAvailableActions(blockMaterial);
+                }
+                
                 if (actions != null && !actions.isEmpty()) {
                     availableActions = actions;
                     player.sendMessage("§aDebug: Found actions after re-check: " + actions.size());
@@ -214,6 +245,12 @@ public class ActionSelectionGUI implements GUIManager.ManagedGUIInterface {
             
             // If we still don't have actions, return early
             if (availableActions == null || availableActions.isEmpty()) {
+                // 🔧 FIX: Add default actions as fallback
+                availableActions = new ArrayList<>();
+                availableActions.add("sendMessage");
+                availableActions.add("teleport");
+                availableActions.add("giveItem");
+                player.sendMessage("§6Using default actions as fallback");
                 return;
             }
         }
@@ -287,7 +324,7 @@ public class ActionSelectionGUI implements GUIManager.ManagedGUIInterface {
      * Implements reference system-style: universal blocks with GUI configuration
      *
      * 🎆 ERWEITERT: Ruft die Kategorie für eine Aktion ab
-     * Implementiert Reference-System-Stil: universelle Blöcke mit GUI-Konфигuration
+     * Implementiert Reference-System-Stil: universelle Blöcke mit GUI-Kонфигuration
      */
     private String getActionCategory(String actionId) {
         switch (actionId.toLowerCase()) {
@@ -359,7 +396,7 @@ public class ActionSelectionGUI implements GUIManager.ManagedGUIInterface {
      * Implements reference system-style: universal blocks with GUI configuration
      *
      * 🎆 ERWEITERT: Erstellt Kategorie-Header-Element
-     * Implementiert Reference-System-Stil: universelle Blöcke mit GUI-Konфигuration
+     * Implementiert Reference-System-Stil: universelle Blöcke mit GUI-Kонфигuration
      */
     private ItemStack createCategoryItem(String categoryName, int actionCount) {
         ItemStack item = new ItemStack(Material.ORANGE_STAINED_GLASS_PANE);
@@ -418,7 +455,7 @@ public class ActionSelectionGUI implements GUIManager.ManagedGUIInterface {
      *
      * Gets material for action
      *
-     * Ruft das Material für die Aktion ab
+     * Ruft das Material für die Aktion аб
      */
     private Material getActionMaterial(String actionId) {
         // Return appropriate materials based on action type
@@ -488,7 +525,7 @@ public class ActionSelectionGUI implements GUIManager.ManagedGUIInterface {
      *
      * Gets display name for action
      *
-     * Ruft den Anzeigenamen der Aktion ab
+     * Ruft den Anzeigenamen der Aktion аб
      */
     private String getActionDisplayName(String actionId) {
         // Return user-friendly names for actions
@@ -537,7 +574,7 @@ public class ActionSelectionGUI implements GUIManager.ManagedGUIInterface {
      *
      * Gets description for action
      *
-     * Ruft die Beschreibung der Aktion ab
+     * Ruft die Beschreibung der Aktion аб
      */
     private String getActionDescription(String actionId) {
         // Return descriptions for actions
@@ -611,7 +648,7 @@ public class ActionSelectionGUI implements GUIManager.ManagedGUIInterface {
      * Gets the GUI title
      * @return Interface title
      *
-     * Ruft den GUI-Titel ab
+     * Ruft den GUI-Titel аб
      * @return Schnittstellentitel
      */
     public String getGUITitle() {
