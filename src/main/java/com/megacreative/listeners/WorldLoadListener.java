@@ -5,6 +5,7 @@ import com.megacreative.coding.BlockPlacementHandler;
 import com.megacreative.coding.AutoConnectionManager;
 import com.megacreative.services.BlockConfigService;
 import com.megacreative.coding.CodeBlock;
+import com.megacreative.core.ServiceRegistry;
 import org.bukkit.Bukkit;
 import org.bukkit.World;
 import org.bukkit.Chunk;

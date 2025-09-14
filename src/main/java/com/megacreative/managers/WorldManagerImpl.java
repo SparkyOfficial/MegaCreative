@@ -340,8 +340,17 @@ public class WorldManagerImpl implements IWorldManager {
         // Также очистите все связанные блоки кодинга, если они хранятся вне самого мира.
         if (plugin instanceof MegaCreative) {
             MegaCreative megaPlugin = (MegaCreative) plugin;
-            megaPlugin.getServiceRegistry().getBlockPlacementHandler().clearAllCodeBlocksInWorld(Bukkit.getWorld(world.getWorldName()));
-            megaPlugin.getServiceRegistry().getBlockPlacementHandler().clearAllCodeBlocksInWorld(Bukkit.getWorld(world.getDevWorldName()));
+            com.megacreative.coding.BlockPlacementHandler blockPlacementHandler = megaPlugin.getServiceRegistry().getBlockPlacementHandler();
+            World worldToRemove = Bukkit.getWorld(world.getWorldName());
+            World devWorldToRemove = Bukkit.getWorld(world.getDevWorldName());
+            
+            if (blockPlacementHandler != null && worldToRemove != null) {
+                blockPlacementHandler.clearAllCodeBlocksInWorld(worldToRemove);
+            }
+            
+            if (blockPlacementHandler != null && devWorldToRemove != null) {
+                blockPlacementHandler.clearAllCodeBlocksInWorld(devWorldToRemove);
+            }
         }
 
         // Удаление файлов мира - асинхронно
@@ -777,7 +786,10 @@ public class WorldManagerImpl implements IWorldManager {
                     bukkitWorld = creator.createWorld();
                 }
                 if (bukkitWorld != null) {
-                    ((MegaCreative) getPlugin()).getCodingManager().loadScriptsForWorld(world);
+                    ICodingManager codingManager = ((MegaCreative) getPlugin()).getCodingManager();
+                    if (codingManager != null) {
+                        codingManager.loadScriptsForWorld(world);
+                    }
                 }
             }
         } catch (Exception e) {

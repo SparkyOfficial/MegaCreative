@@ -12,8 +12,11 @@ import com.megacreative.coding.values.types.TextValue;
 import com.megacreative.coding.values.types.NumberValue;
 import com.megacreative.coding.values.types.BooleanValue;
 import com.megacreative.coding.values.types.ListValue;
+import com.megacreative.coding.CodeBlock;
+import com.megacreative.coding.CodingItems;
 import org.bukkit.Material;
 import java.util.logging.Logger;
+import java.util.logging.Level;
 import org.bukkit.block.Block;
 import org.bukkit.block.BlockFace;
 import org.bukkit.block.Sign;
@@ -66,6 +69,38 @@ public class BlockPlacementHandler implements Listener {
         playerDebugStates.remove(playerId);
         playerSelections.remove(playerId);
         clipboard.remove(playerId);
+    }
+
+    /**
+     * Sets the direction of a piston block
+     */
+    private void setPistonDirection(Block pistonBlock, CodeBlock.BracketType bracketType) {
+        if (pistonBlock.getType() == Material.PISTON || pistonBlock.getType() == Material.STICKY_PISTON) {
+            org.bukkit.block.data.type.Piston pistonData = (org.bukkit.block.data.type.Piston) pistonBlock.getBlockData();
+            
+            // For opening bracket, piston should point inward (toward the structure)
+            // For closing bracket, piston should point outward (away from the structure)
+            if (bracketType == CodeBlock.BracketType.OPEN) {
+                // Point inward - this would depend on the structure, for now we'll use NORTH as default
+                pistonData.setFacing(BlockFace.NORTH);
+            } else {
+                // Point outward - this would depend on the structure, for now we'll use SOUTH as default
+                pistonData.setFacing(BlockFace.SOUTH);
+            }
+            
+            pistonBlock.setBlockData(pistonData);
+        }
+    }
+    
+    /**
+     * Добавляет эффекты создания структуры
+     */
+    private void addConstructionEffects(Location location, Player player) {
+        // Add visual effect for structure creation
+        Location effectLoc = location.add(0.5, 1.0, 0.5);
+        player.spawnParticle(org.bukkit.Particle.FLAME, effectLoc, 10, 0.2, 0.2, 0.2, 0.1);
+        player.spawnParticle(org.bukkit.Particle.VILLAGER_HAPPY, effectLoc, 10, 0.2, 0.2, 0.2, 0.1);
+        player.playSound(location, org.bukkit.Sound.BLOCK_NOTE_BLOCK_PLING, 0.8f, 1.5f);
     }
 
     /**
@@ -473,113 +508,38 @@ public class BlockPlacementHandler implements Listener {
             
             // plugin.getLogger().fine("Removed bracket piston at " + location); // УБИРАЕМ СПАМ
         }
- * Удаляет контейнер над блоком кода (улучшенная версия)
- */
-private void removeContainerAboveBlock(Location blockLocation) {
-    Location containerLocation = blockLocation.clone().add(0, 1, 0);
-    Block containerBlock = containerLocation.getBlock();
+    }
     
-    // Проверяем все типы контейнеров
-    if (containerBlock.getType() == Material.CHEST || 
-        containerBlock.getType() == Material.TRAPPED_CHEST ||
-        containerBlock.getType() == Material.BARREL ||
-        containerBlock.getType() == Material.SHULKER_BOX ||
-        containerBlock.getType().name().contains("SHULKER_BOX")) {
+    /**
+     * Удаляет контейнер над блоком кода (улучшенная версия)
+     */
+    private void removeContainerAboveBlock(Location blockLocation) {
+        Location containerLocation = blockLocation.clone().add(0, 1, 0);
+        Block containerBlock = containerLocation.getBlock();
         
-        // Add visual effect for container removal
-        Location effectLoc = containerLocation.add(0.5, 0.5, 0.5);
-        containerLocation.getWorld().spawnParticle(org.bukkit.Particle.CLOUD, effectLoc, 6, 0.3, 0.3, 0.3, 0.1);
-        containerLocation.getWorld().playSound(containerLocation, org.bukkit.Sound.BLOCK_WOOD_BREAK, 0.7f, 0.8f);
-        
-        // Очищаем содержимое перед удалением
-        if (containerBlock.getState() instanceof org.bukkit.inventory.InventoryHolder) {
-            org.bukkit.inventory.InventoryHolder holder = (org.bukkit.inventory.InventoryHolder) containerBlock.getState();
-            holder.getInventory().clear();
+        // Проверяем все типы контейнеров
+        if (containerBlock.getType() == Material.CHEST || 
+            containerBlock.getType() == Material.TRAPPED_CHEST ||
+            containerBlock.getType() == Material.BARREL ||
+            containerBlock.getType() == Material.SHULKER_BOX ||
+            containerBlock.getType().name().contains("SHULKER_BOX")) {
+            
+            // Add visual effect for container removal
+            Location effectLoc = containerLocation.add(0.5, 0.5, 0.5);
+            containerLocation.getWorld().spawnParticle(org.bukkit.Particle.CLOUD, effectLoc, 6, 0.3, 0.3, 0.3, 0.1);
+            containerLocation.getWorld().playSound(containerLocation, org.bukkit.Sound.BLOCK_WOOD_BREAK, 0.7f, 0.8f);
+            
+            // Очищаем содержимое перед удалением
+            if (containerBlock.getState() instanceof org.bukkit.inventory.InventoryHolder) {
+                org.bukkit.inventory.InventoryHolder holder = (org.bukkit.inventory.InventoryHolder) containerBlock.getState();
+                holder.getInventory().clear();
+            }
+            
+            containerBlock.setType(Material.AIR);
+            // plugin.getLogger().fine("Removed container above code block at " + blockLocation); // УБИРАЕМ СПАМ
         }
-        
-        containerBlock.setType(Material.AIR);
-        // plugin.getLogger().fine("Removed container above code block at " + blockLocation); // УБИРАЕМ СПАМ
     }
-}
 
-/**
- * Removes a sign from above the specified block location
- * Handles both wall signs and standing signs safely
- */
-private void removeSignFromBlock(Location location) {
-    if (location == null) {
-        plugin.getLogger().warning("Attempted to remove sign from null location");
-        return;
-    }
-    
-    Location signLoc = location.clone().add(0, 1, 0);
-    if (!signLoc.getWorld().isChunkLoaded(signLoc.getBlockX() >> 4, signLoc.getBlockZ() >> 4)) {
-        return; // Chunk not loaded, skip to avoid chunk loading
-    }
-    
-    Block signBlock = signLoc.getBlock();
-    Material blockType = signBlock.getType();
-    
-    // Check for all possible sign types
-    if (blockType == Material.OAK_SIGN || 
-        blockType == Material.OAK_WALL_SIGN ||
-        blockType.name().contains("SIGN") || // Catch all sign types just in case
-        blockType.name().contains("SIGN[")) {
-        
-        // Add removal effect
-        Location effectLoc = signLoc.clone().add(0.5, 0.5, 0.5);
-        signBlock.getWorld().spawnParticle(org.bukkit.Particle.CLOUD, effectLoc, 5, 0.2, 0.2, 0.2, 0.05);
-        
-        // Remove the sign
-        signBlock.setType(Material.AIR, false);
-        plugin.getLogger().fine("Removed sign at " + signLoc);
-    }
-}
-
-/**
- * Formats text to fit on a sign with proper line breaks
- */
-private String[] formatSignText(String text, String actionId) {
-    String[] lines = new String[4];
-    lines[0] = "§a" + (text.length() > 15 ? text.substring(0, 15) : text);
-    lines[1] = "§7ID: §f" + (actionId.length() > 13 ? actionId.substring(0, 13) : actionId);
-    lines[2] = "§8[§eMegaCreative§8]";
-    lines[3] = "";
-    return lines;
-}
-
-/**
- * Places a sign above the specified block with the given text and action ID
- * Uses OAK_SIGN for horizontal surfaces instead of WALL_SIGN to avoid facing issues
- */
-private void setSmartSignOnBlock(Location location, String text, String actionId) {
-    if (location == null || text == null || actionId == null) {
-        plugin.getLogger().warning("Invalid parameters for setSmartSignOnBlock");
-        return;
-    }
-    
-    World world = location.getWorld();
-    if (world == null) {
-        plugin.getLogger().warning("World is null in setSmartSignOnBlock");
-        return;
-    }
-    
-    // Calculate sign position (one block above)
-    Location signLoc = location.clone().add(0, 1, 0);
-    Block signBlock = signLoc.getBlock();
-    
-    // Check if the block is already occupied
-    if (!signBlock.getType().isAir()) {
-        plugin.getLogger().warning("Cannot place sign - block at " + signLoc + " is not air");
-        return;
-    }
-    
-    try {
-        // Set the sign type
-        signBlock.setType(Material.OAK_SIGN);
-        
-        // Update the sign data
-        Sign sign = (Sign) signBlock.getState();
     /**
      * Removes a sign from above the specified block location
      * Handles both wall signs and standing signs safely
@@ -613,63 +573,91 @@ private void setSmartSignOnBlock(Location location, String text, String actionId
             plugin.getLogger().fine("Removed sign at " + signLoc);
         }
     }
-    
+
     /**
-     * Добавляет эффекты создания структуры
+     * Places a sign above the specified block with the given text and action ID
+     * Uses OAK_SIGN for horizontal surfaces instead of WALL_SIGN to avoid facing issues
      */
-    private void addConstructionEffects(Location location, Player player) {
-        // Add visual effect for structure creation
-        Location effectLoc = location.add(0.5, 1.0, 0.5);
-        player.spawnParticle(org.bukkit.Particle.FLAME, effectLoc, 10, 0.2, 0.2, 0.2, 0.1);
-        player.spawnParticle(org.bukkit.Particle.VILLAGER_HAPPY, effectLoc, 10, 0.2, 0.2, 0.2, 0.1);
-        player.playSound(location, org.bukkit.Sound.BLOCK_NOTE_BLOCK_PLING, 0.8f, 1.5f);
+    private void setSmartSignOnBlock(Location location, String text, String actionId) {
+        if (location == null || text == null || actionId == null) {
+            plugin.getLogger().warning("Invalid parameters for setSmartSignOnBlock");
+            return;
+        }
+        
+        World world = location.getWorld();
+        if (world == null) {
+            plugin.getLogger().warning("World is null in setSmartSignOnBlock");
+            return;
+        }
+        
+        // Calculate sign position (one block above)
+        Location signLoc = location.clone().add(0, 1, 0);
+        Block signBlock = signLoc.getBlock();
+        
+        // Check if the block is already occupied
+        if (!signBlock.getType().isAir()) {
+            plugin.getLogger().warning("Cannot place sign - block at " + signLoc + " is not air");
+            return;
+        }
+        
+        try {
+            // Set the sign type
+            signBlock.setType(Material.OAK_SIGN);
+            
+            // Update the sign data
+            Sign sign = (Sign) signBlock.getState();
+            
+            // Set sign lines
+            String[] lines = formatSignText(text, actionId);
+            for (int i = 0; i < 4 && i < lines.length; i++) {
+                sign.setLine(i, lines[i]);
+            }
+            
+            // Update the sign
+            sign.update(true);
+            
+            plugin.getLogger().fine("Placed sign at " + signLoc + " with text: " + text);
+            
+        } catch (Exception e) {
+            plugin.getLogger().log(Level.SEVERE, "Error placing sign at " + signLoc, e);
+            // Clean up if something went wrong
+            signBlock.setType(Material.AIR);
+        }
     }
-        
-        // Update the sign
-        sign.update(true);
-        
-        plugin.getLogger().fine("Placed sign at " + signLoc + " with text: " + text);
-        
-    } catch (Exception e) {
-        plugin.getLogger().log(Level.SEVERE, "Error placing sign at " + signLoc, e);
-        // Clean up if something went wrong
-        signBlock.setType(Material.AIR);
-    }
-}
 
-/**
- * Formats text to fit on a sign with proper line breaks
- */
-private String[] formatSignText(String text, String actionId) {
-    String[] lines = new String[4];
-    lines[0] = "§a" + (text.length() > 15 ? text.substring(0, 15) : text);
-    lines[1] = "§7ID: §f" + (actionId.length() > 13 ? actionId.substring(0, 13) : actionId);
-    lines[2] = "§8[§eMegaCreative§8]";
-    lines[3] = "";
-    return lines;
-}
-
-/**
- * Показывает направленный луч формирования структуры
- */
-private void showStructureBeam(Location location, BlockFace direction, int distance, Player player) {
-    // Calculate positions of all blocks in the structure
-    World world = location.getWorld();
-    if (world == null) return;
-    
-    for (int i = 0; i <= distance; i++) {
-        Location blockLoc = location.clone().add(
-            direction.getModX() * i, 
-            0, 
-            direction.getModZ() * i
-        );
-        
-        // Add visual effect for each block
-        Location effectLoc = blockLoc.add(0.5, 0.5, 0.5);
-        player.spawnParticle(org.bukkit.Particle.VILLAGER_HAPPY, effectLoc, 1, 0.2, 0.2, 0.2, 0.1);
-        player.playSound(blockLoc, org.bukkit.Sound.BLOCK_NOTE_BLOCK_PLING, 0.8f, 1.5f);
+    /**
+     * Formats text to fit on a sign with proper line breaks
+     */
+    private String[] formatSignText(String text, String actionId) {
+        String[] lines = new String[4];
+        lines[0] = "§a" + (text.length() > 15 ? text.substring(0, 15) : text);
+        lines[1] = "§7ID: §f" + (actionId.length() > 13 ? actionId.substring(0, 13) : actionId);
+        lines[2] = "§8[§eMegaCreative§8]";
+        lines[3] = "";
+        return lines;
     }
-}
+
+    /**
+     * Показывает направленный луч формирования структуры
+     */
+    private void showStructureBeam(Location location, BlockFace direction, int distance, Player player) {
+        // Calculate positions of all blocks in the structure
+        World world = location.getWorld();
+        if (world == null) return;
+        
+        for (int i = 0; i <= distance; i++) {
+            Location blockLoc = location.clone().add(
+                direction.getModX() * i, 
+                0, 
+                direction.getModZ() * i
+            );
+            
+            // Add visual effect for each block
+            Location effectLoc = blockLoc.add(0.5, 0.5, 0.5);
+            player.spawnParticle(org.bukkit.Particle.VILLAGER_HAPPY, effectLoc, 1, 0.2, 0.2, 0.2, 0.1);
+            player.playSound(blockLoc, org.bukkit.Sound.BLOCK_NOTE_BLOCK_PLING, 0.8f, 1.5f);
+        }
+    }
     
     /**
      * Наполняет контейнер заполнителями в зависимости от действия
@@ -995,7 +983,7 @@ private void showStructureBeam(Location location, BlockFace direction, int dista
         
         player.sendMessage("§eОткрытие настройки параметров для действия: §f" + config.getDisplayName());
     }
-
+    
     /**
      * Проверяет, находится ли игрок в мире разработки
      */
@@ -1141,6 +1129,32 @@ private void showStructureBeam(Location location, BlockFace direction, int dista
      * 🎆 ENHANCED: Updates the sign for a bracket block
      * Implements reference system-style: visual code construction with feedback
      */
+    private void updateBracketSign(Location location, CodeBlock.BracketType bracketType) {
+        removeSignFromBlock(location); // Remove existing sign first
+
+        Block block = location.getBlock();
+        BlockFace[] faces = {BlockFace.NORTH, BlockFace.EAST, BlockFace.SOUTH, BlockFace.WEST};
+        
+        for (BlockFace face : faces) {
+            Block signBlock = block.getRelative(face);
+            if (signBlock.getType().isAir()) {
+                signBlock.setType(Material.OAK_WALL_SIGN, false);
+                
+                WallSign wallSignData = (WallSign) signBlock.getBlockData();
+                wallSignData.setFacing(face);
+                signBlock.setBlockData(wallSignData);
+                
+                Sign signState = (Sign) signBlock.getState();
+                signState.setLine(0, "§8============");
+                signState.setLine(1, "§6" + bracketType.getSymbol());
+                signState.setLine(2, "§7" + bracketType.getDisplayName());
+                signState.setLine(3, "§8============");
+                signState.update(true);
+                
+                return;
+            }
+        }
+    }
     
     /**
      * Handles Arrow NOT interaction for negating conditions
