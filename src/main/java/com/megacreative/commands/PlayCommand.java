@@ -85,18 +85,6 @@ public class PlayCommand implements CommandExecutor {
         
         CreativeWorld creativeWorld = plugin.getWorldManager().findCreativeWorldByBukkit(player.getWorld());
         
-        // If we can't find the world directly, try to find it by ID from the world name
-        if (creativeWorld == null) {
-            String worldName = player.getWorld().getName();
-            if (worldName.startsWith("megacreative_")) {
-                // Extract world ID from the world name - improved logic
-                String worldId = extractWorldId(worldName);
-                if (worldId != null) {
-                    creativeWorld = plugin.getWorldManager().getWorld(worldId);
-                }
-            }
-        }
-        
         if (creativeWorld == null) {
             player.sendMessage("§cYou are not in a MegaCreative world!");
             return true;
@@ -108,11 +96,9 @@ public class PlayCommand implements CommandExecutor {
             if (codeCompiler != null) {
                 try {
                     List<String> codeStrings = codeCompiler.compileWorldToCodeStrings(currentWorld);
-                    String worldId = extractWorldId(currentWorld.getName());
-                    if (worldId != null) {
-                        codeCompiler.saveCompiledCode(worldId, codeStrings);
-                        player.sendMessage("§aCode compiled successfully!");
-                    }
+                    // Use the world ID from the creativeWorld object we already found
+                    codeCompiler.saveCompiledCode(creativeWorld.getId(), codeStrings);
+                    player.sendMessage("§aCode compiled successfully!");
                 } catch (Exception e) {
                     player.sendMessage("§cCode compilation error: " + e.getMessage());
                     plugin.getLogger().severe("Failed to compile world code: " + e.getMessage());
@@ -131,27 +117,5 @@ public class PlayCommand implements CommandExecutor {
         player.getInventory().clear();
         
         return true;
-    }
-    
-    /**
-     * Extracts world ID from world name with improved logic for dual world architecture
-     * @param worldName the world name
-     * @return the extracted world ID or null if not found
-     */
-    private String extractWorldId(String worldName) {
-        if (!worldName.startsWith("megacreative_")) {
-            return null;
-        }
-        
-        // Remove prefix
-        String withoutPrefix = worldName.substring("megacreative_".length());
-        
-        // Remove all possible suffixes for dual world architecture
-        withoutPrefix = withoutPrefix.replace("-code", "")
-                                    .replace("-world", "")
-                                    .replace("_dev", "");
-        
-        // If we still have something, that's our ID
-        return withoutPrefix.isEmpty() ? null : withoutPrefix;
     }
 }
