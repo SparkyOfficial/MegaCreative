@@ -77,11 +77,11 @@ public class BuildCommand implements CommandExecutor {
         if (creativeWorld == null) {
             String worldName = player.getWorld().getName();
             if (worldName.startsWith("megacreative_")) {
-                // Extract world ID from the world name
-                String worldId = worldName.replace("megacreative_", "");
-                // Remove suffixes for dual world architecture
-                worldId = worldId.replace("-code", "").replace("-world", "").replace("_dev", "");
-                creativeWorld = worldManager.getWorld(worldId);
+                // Extract world ID from the world name - improved logic
+                String worldId = extractWorldId(worldName);
+                if (worldId != null) {
+                    creativeWorld = worldManager.getWorld(worldId);
+                }
             }
         }
         
@@ -112,5 +112,27 @@ public class BuildCommand implements CommandExecutor {
         
         worldManager.saveWorld(creativeWorld);
         return true;
+    }
+    
+    /**
+     * Extracts world ID from world name with improved logic for dual world architecture
+     * @param worldName the world name
+     * @return the extracted world ID or null if not found
+     */
+    private String extractWorldId(String worldName) {
+        if (!worldName.startsWith("megacreative_")) {
+            return null;
+        }
+        
+        // Remove prefix
+        String withoutPrefix = worldName.substring("megacreative_".length());
+        
+        // Remove all possible suffixes for dual world architecture
+        withoutPrefix = withoutPrefix.replace("-code", "")
+                                    .replace("-world", "")
+                                    .replace("_dev", "");
+        
+        // If we still have something, that's our ID
+        return withoutPrefix.isEmpty() ? null : withoutPrefix;
     }
 }
