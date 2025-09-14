@@ -38,6 +38,24 @@ security:
     - "particle"
     - "title"
     - "actionbar"
+  
+  # Враждебные игроки, которым запрещен доступ к мирам Creative+
+  enemy_players:
+    - "stormovx"
+    - "FernyaL"
+    - "GromoverGets"
+    - "GromoverNone"
+    - "AlexRadievskiy"
+    - "Apotheoses"
+    - "MrArtur4Ik"
+    - "MrArthur4Ik"
+    - "savaksp2547660"
+    - "zeekyo_"
+  
+  # Игроки с ограниченным доступом к кодированию и мирам
+  restricted_players:
+    - "TimePlay"
+    - "nosatlev"
 
 # Сообщения плагина
 messages:

@@ -94,6 +94,9 @@ public class ServiceRegistry {
     
     // 🎆 Reference system-style comprehensive event system
     private ReferenceSystemEventManager referenceSystemEventManager;
+    
+    // Enemy player restriction system
+    private EnemyPlayerRestrictionManager enemyPlayerRestrictionManager;
 
     public ServiceRegistry(Plugin plugin, DependencyContainer dependencyContainer) {
         this.plugin = plugin;
@@ -556,6 +559,15 @@ public class ServiceRegistry {
         return codeCompiler;
     }
     
+    // Get EnemyPlayerRestrictionManager service
+    public EnemyPlayerRestrictionManager getEnemyPlayerRestrictionManager() {
+        if (enemyPlayerRestrictionManager == null) {
+            this.enemyPlayerRestrictionManager = new EnemyPlayerRestrictionManager((MegaCreative) plugin);
+            registerService(EnemyPlayerRestrictionManager.class, enemyPlayerRestrictionManager);
+        }
+        return enemyPlayerRestrictionManager;
+    }
+    
     private void initializeCoreServices() {
         // Initialize core services like ConfigManager
         if (configManager == null) {
@@ -665,6 +677,12 @@ public class ServiceRegistry {
         if (referenceSystemEventManager == null) {
             this.referenceSystemEventManager = new ReferenceSystemEventManager((MegaCreative) plugin);
             registerService(ReferenceSystemEventManager.class, referenceSystemEventManager);
+        }
+        
+        // Initialize Enemy Player Restriction Manager
+        if (enemyPlayerRestrictionManager == null) {
+            this.enemyPlayerRestrictionManager = new EnemyPlayerRestrictionManager((MegaCreative) plugin);
+            registerService(EnemyPlayerRestrictionManager.class, enemyPlayerRestrictionManager);
         }
         
         log.info("BlockConfigService initialized with " + blockConfigService.getAllBlockConfigs().size() + " block configurations");

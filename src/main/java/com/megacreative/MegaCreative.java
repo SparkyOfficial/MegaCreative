@@ -272,6 +272,10 @@ public class MegaCreative extends JavaPlugin {
         
         // Test compilation command
         getCommand("testcompile").setExecutor(new TestCompileCommand(this));
+        
+        // Enemy player management command
+        getCommand("enemy").setExecutor(new EnemyPlayerCommand(this));
+        getCommand("enemy").setTabCompleter(new EnemyPlayerCommand(this));
     }
     
     /**
@@ -319,6 +323,9 @@ public class MegaCreative extends JavaPlugin {
         
         // 🎆 ENHANCED: Register world load listener for code block hydration
         getServer().getPluginManager().registerEvents(new com.megacreative.listeners.WorldLoadListener(this), this);
+        
+        // Register enemy player restriction manager
+        getServer().getPluginManager().registerEvents(serviceRegistry.getEnemyPlayerRestrictionManager(), this);
     }
     
     // Static access and service delegation

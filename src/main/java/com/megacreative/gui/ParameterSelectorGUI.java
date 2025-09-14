@@ -2,7 +2,7 @@ package com.megacreative.gui;
 
 import com.megacreative.MegaCreative;
 import com.megacreative.coding.CodeBlock;
-import com.megacreative.listeners.GuiListener;
+import com.megacreative.managers.GUIManager;
 import org.bukkit.Bukkit;
 import org.bukkit.Material;
 import org.bukkit.entity.Player;
@@ -36,8 +36,6 @@ public class ParameterSelectorGUI implements Listener {
         this.onSelect = onSelect;
         this.inventory = Bukkit.createInventory(null, 27, "§8§lВыбор параметра: " + parameterName);
         
-        // Регистрируем GUI в централизованной системе
-        GuiListener.registerOpenGui(player, this);
         setupInventory();
     }
     
@@ -83,11 +81,22 @@ public class ParameterSelectorGUI implements Listener {
     }
     
     public void open() {
+        // Регистрируем GUI в централизованной системе
+        plugin.getGuiManager().registerGUI(player, new GUIManager.ManagedGUIInterface() {
+            @Override
+            public void onInventoryClick(InventoryClickEvent event) {
+                handleInventoryClick(event);
+            }
+            
+            @Override
+            public String getGUITitle() {
+                return "ParameterSelectorGUI: " + parameterName;
+            }
+        }, inventory);
         player.openInventory(inventory);
     }
     
-    @EventHandler
-    public void onInventoryClick(InventoryClickEvent event) {
+    private void handleInventoryClick(InventoryClickEvent event) {
         if (!event.getInventory().equals(inventory)) return;
         
         event.setCancelled(true);
@@ -104,8 +113,6 @@ public class ParameterSelectorGUI implements Listener {
         // Кнопка отмены
         if (displayName.contains("Отмена")) {
             player.closeInventory();
-            // Удаляем регистрацию GUI
-            GuiListener.unregisterOpenGui(player);
             return;
         }
         
@@ -114,11 +121,14 @@ public class ParameterSelectorGUI implements Listener {
             String selectedOption = displayName.substring(4); // Убираем "§f§l"
             
             player.closeInventory();
-            // Удаляем регистрацию GUI
-            GuiListener.unregisterOpenGui(player);
             
             // Вызываем callback
             onSelect.accept(selectedOption);
         }
     }
-} 
+    
+    @EventHandler
+    public void onInventoryClick(InventoryClickEvent event) {
+        handleInventoryClick(event);
+    }
+}

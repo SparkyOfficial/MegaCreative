@@ -2,7 +2,7 @@ package com.megacreative.commands;
 
 import com.megacreative.MegaCreative;
 import com.megacreative.models.CreativeWorld;
-import com.megacreative.services.CodeCompiler; // Add missing import
+import com.megacreative.services.CodeCompiler;
 import org.bukkit.Bukkit;
 import org.bukkit.GameMode;
 import org.bukkit.World;
@@ -10,7 +10,7 @@ import org.bukkit.command.Command;
 import org.bukkit.command.CommandExecutor;
 import org.bukkit.command.CommandSender;
 import org.bukkit.entity.Player;
-import java.util.List; // Add missing import
+import java.util.List;
 
 public class PlayCommand implements CommandExecutor {
     
@@ -23,88 +23,72 @@ public class PlayCommand implements CommandExecutor {
     @Override
     public boolean onCommand(CommandSender sender, Command command, String label, String[] args) {
         if (!(sender instanceof Player player)) {
-            sender.sendMessage("§cЭта команда доступна только игрокам!");
+            sender.sendMessage("§cThis command is only available to players!");
             return true;
         }
         
-        // 🎆 ENHANCED: Check for dual world switching support
         if (args.length > 0) {
             switch (args[0].toLowerCase()) {
                 case "switch", "world" -> {
-                    // Find current world and switch to its play version
                     CreativeWorld currentWorld = plugin.getWorldManager().findCreativeWorldByBukkit(player.getWorld());
-                    if (currentWorld != null && currentWorld.isPaired()) {
-                        // Сохраняем dev инвентарь (если игрок в dev мире)
+                    if (currentWorld != null && currentWorld.getPairedWorldId() != null) {
                         if (plugin.getBlockPlacementHandler().isInDevWorld(player)) {
                             plugin.getServiceRegistry().getDevInventoryManager().savePlayerInventory(player);
                         }
-                        // Восстанавливаем "обычный" инвентарь игрока ПЕРЕД телепортацией
                         plugin.getServiceRegistry().getDevInventoryManager().restorePlayerInventory(player);
                         plugin.getWorldManager().switchToPlayWorld(player, currentWorld.getId());
-                        // После телепорта в режим PLAY инвентарь игрока должен быть очищен
                         player.getInventory().clear();
                         return true;
                     }
-                    // Fall through to normal play mode
                 }
             }
         }
         
-        // Найти мир игрока по его текущему местоположению
         CreativeWorld creativeWorld = plugin.getWorldManager().findCreativeWorldByBukkit(player.getWorld());
         
+        // If we can't find the world directly, try to find it by ID from the world name
         if (creativeWorld == null) {
-            player.sendMessage("§cВы не находитесь в мире MegaCreative!");
+            String worldName = player.getWorld().getName();
+            if (worldName.startsWith("megacreative_")) {
+                // Extract world ID from the world name
+                String worldId = worldName.replace("megacreative_", "");
+                // Remove suffixes for dual world architecture
+                worldId = worldId.replace("-code", "").replace("-world", "").replace("_dev", "");
+                creativeWorld = plugin.getWorldManager().getWorld(worldId);
+            }
+        }
+        
+        if (creativeWorld == null) {
+            player.sendMessage("§cYou are not in a MegaCreative world!");
             return true;
         }
         
-        // Автоматически компилируем код перед переключением в режим игры
         World currentWorld = player.getWorld();
         if (currentWorld.getName().contains("-code")) {
-            // Компилируем код из мира разработки
             CodeCompiler codeCompiler = plugin.getServiceRegistry().getCodeCompiler();
             if (codeCompiler != null) {
                 try {
                     List<String> codeStrings = codeCompiler.compileWorldToCodeStrings(currentWorld);
-                    String worldId = currentWorld.getName().replace("-code", "");
+                    String worldId = currentWorld.getName().replace("megacreative_", "").replace("-code", "");
                     codeCompiler.saveCompiledCode(worldId, codeStrings);
-                    player.sendMessage("§aКод успешно скомпилирован!");
+                    player.sendMessage("§aCode compiled successfully!");
                 } catch (Exception e) {
-                    player.sendMessage("§cОшибка компиляции кода: " + e.getMessage());
+                    player.sendMessage("§cCode compilation error: " + e.getMessage());
                     plugin.getLogger().severe("Failed to compile world code: " + e.getMessage());
                 }
             }
         }
         
-        // Сохраняем dev инвентарь (если игрок в dev мире)
         if (plugin.getBlockPlacementHandler().isInDevWorld(player)) {
             plugin.getServiceRegistry().getDevInventoryManager().savePlayerInventory(player);
         }
         
-        // Восстанавливаем "обычный" инвентарь игрока ПЕРЕД телепортацией
         plugin.getServiceRegistry().getDevInventoryManager().restorePlayerInventory(player);
         
-        // 🎆 UNIFIED: Use centralized world switching method
         plugin.getWorldManager().switchToPlayWorld(player, creativeWorld.getId());
         
-        // После телепорта в режим PLAY инвентарь игрока должен быть очищен
         player.getInventory().clear();
         
         return true;
-    }
-
-    private CreativeWorld findCreativeWorld(World bukkitWorld) {
-        String worldName = bukkitWorld.getName();
-        
-        // 🔧 FIX: Remove prefix and ALL possible suffixes for dual world architecture
-        if (worldName.startsWith("megacreative_")) {
-            String id = worldName.replace("megacreative_", "")
-                                  .replace("-code", "")    // New dev world suffix
-                                  .replace("-world", "")   // New play world suffix  
-                                  .replace("_dev", "");    // Legacy compatibility
-            return plugin.getWorldManager().getWorld(id);
-        }
-        
-        return null;
     }
 }
