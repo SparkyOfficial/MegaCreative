@@ -269,7 +269,7 @@ public class BlockPlacementHandler implements Listener {
             
             // 1. Create bracket pistons with proper orientation
             createBracketPiston(openBracketLoc, CodeBlock.BracketType.OPEN, player, buildDirection);
-            createBracketPiston(closeBracketLoc, CodeBlock.BracketType.CLOSE, player, buildDirection.getOppositeFace());
+            createBracketPiston(closeBracketLoc, CodeBlock.BracketType.CLOSE, player, buildDirection);
             
             // 2. Create smart sign on main block that opens configuration GUI
             if (structure.hasSign()) {
@@ -550,27 +550,47 @@ public class BlockPlacementHandler implements Listener {
             return;
         }
         
-        Location signLoc = location.clone().add(0, 1, 0);
-        if (!signLoc.getWorld().isChunkLoaded(signLoc.getBlockX() >> 4, signLoc.getBlockZ() >> 4)) {
-            return; // Chunk not loaded, skip to avoid chunk loading
+        Block block = location.getBlock();
+        // Check adjacent blocks for wall signs
+        BlockFace[] faces = {BlockFace.NORTH, BlockFace.EAST, BlockFace.SOUTH, BlockFace.WEST};
+        
+        for (BlockFace face : faces) {
+            Block signBlock = block.getRelative(face);
+            Material blockType = signBlock.getType();
+            
+            // Check for wall signs
+            if (blockType == Material.OAK_WALL_SIGN) {
+                WallSign wallSign = (WallSign) signBlock.getState();
+                // Check if the sign is facing toward the block
+                if (wallSign.getFacing() == face.getOppositeFace()) {
+                    // Add removal effect
+                    Location effectLoc = signBlock.getLocation().add(0.5, 0.5, 0.5);
+                    signBlock.getWorld().spawnParticle(org.bukkit.Particle.CLOUD, effectLoc, 5, 0.2, 0.2, 0.2, 0.05);
+                    
+                    // Remove the sign
+                    signBlock.setType(Material.AIR, false);
+                    plugin.getLogger().fine("Removed wall sign at " + signBlock.getLocation());
+                    return; // Remove only one sign
+                }
+            }
         }
         
-        Block signBlock = signLoc.getBlock();
-        Material blockType = signBlock.getType();
-        
-        // Check for all possible sign types
-        if (blockType == Material.OAK_SIGN || 
-            blockType == Material.OAK_WALL_SIGN ||
-            blockType.name().contains("SIGN") || // Catch all sign types just in case
-            blockType.name().contains("SIGN[")) {
+        // Also check one block above for standing signs
+        Location signLoc = location.clone().add(0, 1, 0);
+        if (signLoc.getWorld().isChunkLoaded(signLoc.getBlockX() >> 4, signLoc.getBlockZ() >> 4)) {
+            Block signBlock = signLoc.getBlock();
+            Material blockType = signBlock.getType();
             
-            // Add removal effect
-            Location effectLoc = signLoc.clone().add(0.5, 0.5, 0.5);
-            signBlock.getWorld().spawnParticle(org.bukkit.Particle.CLOUD, effectLoc, 5, 0.2, 0.2, 0.2, 0.05);
-            
-            // Remove the sign
-            signBlock.setType(Material.AIR, false);
-            plugin.getLogger().fine("Removed sign at " + signLoc);
+            // Check for standing signs
+            if (blockType == Material.OAK_SIGN) {
+                // Add removal effect
+                Location effectLoc = signLoc.clone().add(0.5, 0.5, 0.5);
+                signBlock.getWorld().spawnParticle(org.bukkit.Particle.CLOUD, effectLoc, 5, 0.2, 0.2, 0.2, 0.05);
+                
+                // Remove the sign
+                signBlock.setType(Material.AIR, false);
+                plugin.getLogger().fine("Removed standing sign at " + signLoc);
+            }
         }
     }
 
@@ -759,7 +779,7 @@ public class BlockPlacementHandler implements Listener {
             int bracketDistance = structure.getBracketDistance();
             
             // Calculate optimal positioning based on surrounding blocks (same as creation)
-            BlockFace buildDirection = findOptimalBuildDirection(mainBlockLoc, bracketDistance);
+            BlockFace buildDirection = findActualBuildDirection(mainBlockLoc, bracketDistance);
             
             // Места скобок - исправлено для правильного позиционирования
             Location openBracketLoc = mainBlockLoc.clone().add(buildDirection.getModX(), 0, buildDirection.getModZ());
@@ -837,7 +857,30 @@ public class BlockPlacementHandler implements Listener {
             mainBlockLoc.getBlock().setType(Material.AIR);
         }
     }
-
+    
+    /**
+     * Определяет фактическое направление строительства структуры
+     */
+    private BlockFace findActualBuildDirection(Location location, int bracketDistance) {
+        // Check for existing brackets to determine the actual build direction
+        for (BlockFace face : new BlockFace[]{BlockFace.EAST, BlockFace.WEST, BlockFace.NORTH, BlockFace.SOUTH}) {
+            Location potentialBracketLoc = location.clone().add(face.getModX(), 0, face.getModZ());
+            Block potentialBracket = potentialBracketLoc.getBlock();
+            
+            // Check if this location has a bracket piston
+            if ((potentialBracket.getType() == Material.PISTON || potentialBracket.getType() == Material.STICKY_PISTON) 
+                && blockCodeBlocks.containsKey(potentialBracketLoc)) {
+                CodeBlock codeBlock = blockCodeBlocks.get(potentialBracketLoc);
+                if (codeBlock.isBracket()) {
+                    return face;
+                }
+            }
+        }
+        
+        // Fallback to default direction if no brackets found
+        return BlockFace.EAST;
+    }
+    
     /**
      * Обрабатывает взаимодействие с блоками
      */
