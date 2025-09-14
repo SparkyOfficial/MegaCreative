@@ -143,7 +143,7 @@ public class ActionSelectionGUI implements GUIManager.ManagedGUIInterface {
         infoLore.add("§7Выберите действие для этого блока");
         infoLore.add("");
         infoLore.add("§aКликните на действие чтобы");
-        infoLore.add("§aназначить его блоку");
+        infoLore.add("§аназначить его блоку");
         infoLore.add("");
         infoLore.add("§f✨ Reference system-стиль: универсальные блоки");
         infoLore.add("§fс настройкой через GUI");
@@ -163,11 +163,59 @@ public class ActionSelectionGUI implements GUIManager.ManagedGUIInterface {
      * Lädt verfügbare Aktionen für diesen Blocktyp
      */
     private void loadAvailableActions() {
+        // Debug logging
+        player.sendMessage("§eDebug: Checking material " + blockMaterial.name());
+        
         // Get available actions for this block material using BlockConfigService
         List<String> availableActions = blockConfigService.getAvailableActions(blockMaterial);
+        
+        player.sendMessage("§eDebug: Available actions count: " + (availableActions != null ? availableActions.size() : "null"));
+        
         if (availableActions == null || availableActions.isEmpty()) {
             player.sendMessage("§cОшибка: Нет доступных действий для блока " + blockMaterial.name());
-            return;
+            
+            // Try to get all block configs for debugging
+            var allConfigs = blockConfigService.getAllBlockConfigs();
+            player.sendMessage("§eDebug: Total block configs: " + allConfigs.size());
+            
+            // Check if this material is recognized as a code block
+            boolean isCodeBlock = blockConfigService.isCodeBlock(blockMaterial);
+            player.sendMessage("§eDebug: Is code block: " + isCodeBlock);
+            
+            // Try to get block config by material
+            var blockConfig = blockConfigService.getBlockConfigByMaterial(blockMaterial);
+            if (blockConfig != null) {
+                player.sendMessage("§eDebug: Block config found: " + blockConfig.getId() + " - " + blockConfig.getDisplayName());
+                player.sendMessage("§eDebug: Block type: " + blockConfig.getType());
+                player.sendMessage("§eDebug: Default action: " + blockConfig.getDefaultAction());
+                
+                // If we have a block config, try to get its actions
+                List<String> actions = blockConfigService.getAvailableActions(blockMaterial);
+                if (actions != null && !actions.isEmpty()) {
+                    availableActions = actions;
+                    player.sendMessage("§aDebug: Found actions after re-check: " + actions.size());
+                }
+            } else {
+                player.sendMessage("§eDebug: No block config found for material");
+                
+                // List all available materials for debugging
+                Set<Material> codeBlockMaterials = blockConfigService.getCodeBlockMaterials();
+                player.sendMessage("§eDebug: Available code block materials (" + codeBlockMaterials.size() + "):");
+                int count = 0;
+                for (Material mat : codeBlockMaterials) {
+                    player.sendMessage("§7- " + mat.name());
+                    count++;
+                    if (count >= 10) {
+                        player.sendMessage("§7... and " + (codeBlockMaterials.size() - 10) + " more");
+                        break;
+                    }
+                }
+            }
+            
+            // If we still don't have actions, return early
+            if (availableActions == null || availableActions.isEmpty()) {
+                return;
+            }
         }
         
         // 🎆 ENHANCED: Group actions by category for better organization
@@ -218,7 +266,7 @@ public class ActionSelectionGUI implements GUIManager.ManagedGUIInterface {
      * Implements reference system-style: universal blocks with GUI configuration
      *
      * 🎆 ERWEITERT: Kategorisiert Aktionen für bessere Organisation
-     * Implementiert Reference-System-Stil: universelle Blöcke mit GUI-Konfiguration
+     * Implementiert Reference-System-Stil: universelle Blöcke mit GUI-Konфигuration
      */
     private Map<String, List<String>> categorizeActions(List<String> actions) {
         Map<String, List<String>> categories = new LinkedHashMap<>();
@@ -239,7 +287,7 @@ public class ActionSelectionGUI implements GUIManager.ManagedGUIInterface {
      * Implements reference system-style: universal blocks with GUI configuration
      *
      * 🎆 ERWEITERT: Ruft die Kategorie für eine Aktion ab
-     * Implementiert Reference-System-Stil: universelle Blöcke mit GUI-Konfiguration
+     * Implementiert Reference-System-Stil: universelle Blöcke mit GUI-Konфигuration
      */
     private String getActionCategory(String actionId) {
         switch (actionId.toLowerCase()) {
@@ -311,7 +359,7 @@ public class ActionSelectionGUI implements GUIManager.ManagedGUIInterface {
      * Implements reference system-style: universal blocks with GUI configuration
      *
      * 🎆 ERWEITERT: Erstellt Kategorie-Header-Element
-     * Implementiert Reference-System-Stil: universelle Blöcke mit GUI-Konfiguration
+     * Implementiert Reference-System-Stil: universelle Blöcke mit GUI-Konфигuration
      */
     private ItemStack createCategoryItem(String categoryName, int actionCount) {
         ItemStack item = new ItemStack(Material.ORANGE_STAINED_GLASS_PANE);
@@ -338,7 +386,7 @@ public class ActionSelectionGUI implements GUIManager.ManagedGUIInterface {
      * Implements reference system-style: universal blocks with GUI configuration
      *
      * 🎆 ERWEITERT: Erstellt Aktionsgegenstand
-     * Implementiert Reference-System-Stil: universelle Blöcke mit GUI-Konfiguration
+     * Implementiert Reference-System-Stil: universelle Blöcke mit GUI-Kонфигuration
      */
     private ItemStack createActionItem(String actionId, String category) {
         // Create appropriate material for action type
@@ -541,7 +589,7 @@ public class ActionSelectionGUI implements GUIManager.ManagedGUIInterface {
      * Implements reference system-style: universal blocks with GUI configuration
      *
      * Öffnet die GUI für den Spieler
-     * Implementiert Reference-System-Stil: universelle Blöcke mit GUI-Konfiguration
+     * Implementiert Reference-System-Stil: universelle Blöcke mit GUI-Kонфигuration
      */
     public void open() {
         guiManager.registerGUI(player, this, inventory);
@@ -628,7 +676,7 @@ public class ActionSelectionGUI implements GUIManager.ManagedGUIInterface {
      * Implements reference system-style: universal blocks with GUI configuration
      *
      * 🎆 ERWEITERT: Wählt Aktion für den Block
-     * Implementiert Reference-System-Stil: universelle Blöcke mit GUI-Konfiguration
+     * Implementiert Reference-System-Stil: universelle Blöcke mit GUI-Kонфигuration
      */
     private void selectAction(String actionId) {
         // Get the code block

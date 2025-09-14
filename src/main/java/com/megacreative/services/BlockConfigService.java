@@ -81,34 +81,53 @@ public class BlockConfigService {
 
         YamlConfiguration config = YamlConfiguration.loadConfiguration(configFile);
         
+        // Debug logging
+        plugin.getLogger().info("Loading coding_blocks.yml from: " + configFile.getAbsolutePath());
+        plugin.getLogger().info("File exists: " + configFile.exists());
+        
         // Load action configurations
         // Загружаем конфигурации действий
         // Lade Aktionskonfigurationen
         actionConfigurations = config.getConfigurationSection("action_configurations");
+        plugin.getLogger().info("Action configurations loaded: " + (actionConfigurations != null));
 
         // ПРАВИЛЬНО: читаем ключи внутри секции blocks
         // CORRECTLY: read keys within the blocks section
         // RICHTIG: Lese Schlüssel innerhalb des blocks-Abschnitts
         ConfigurationSection blocksSection = config.getConfigurationSection("blocks");
+        plugin.getLogger().info("Blocks section exists: " + (blocksSection != null));
+        
         if (blocksSection != null) {
+            plugin.getLogger().info("Blocks section keys: " + blocksSection.getKeys(false).size());
             for (String id : blocksSection.getKeys(false)) {
                 ConfigurationSection section = blocksSection.getConfigurationSection(id);
                 if (section != null) {
                     try {
+                        plugin.getLogger().info("Loading block config: " + id);
                         BlockConfig blockConfig = new BlockConfig(id, section);
                         blockConfigs.put(id, blockConfig);
                         materialToBlockIds.computeIfAbsent(blockConfig.getMaterial(), k -> new ArrayList<>()).add(id);
+                        plugin.getLogger().info("Successfully loaded block config: " + id + " with material " + blockConfig.getMaterial());
                     } catch (Exception e) {
-                        logger.warning("Failed to load block config for ID '" + id + "': " + e.getMessage());
+                        plugin.getLogger().warning("Failed to load block config for ID '" + id + "': " + e.getMessage());
                         // Не удалось загрузить конфигурацию блока для ID:
                         // Fehler beim Laden der Blockkonfiguration für ID:
+                        e.printStackTrace(); // Add stack trace for debugging
                     }
+                } else {
+                    plugin.getLogger().warning("Section is null for ID: " + id);
                 }
             }
         }
-        logger.info("Loaded " + blockConfigs.size() + " block definitions from coding_blocks.yml.");
+        plugin.getLogger().info("Loaded " + blockConfigs.size() + " block definitions from coding_blocks.yml.");
         // Загружено определений блоков из coding_blocks.yml
         // Blockdefinitionen aus coding_blocks.yml geladen
+        
+        // Log loaded materials for debugging
+        plugin.getLogger().info("Loaded materials: " + materialToBlockIds.keySet().size());
+        for (Material material : materialToBlockIds.keySet()) {
+            plugin.getLogger().info("Material: " + material.name() + " -> Actions: " + materialToBlockIds.get(material));
+        }
     }
     
     /**
@@ -423,6 +442,14 @@ public class BlockConfigService {
             // Material wird durch ID (Schlüssel) des Blocks bestimmt
             this.material = Material.matchMaterial(id);
             if (this.material == null) {
+                // Log detailed error information
+                System.err.println("Invalid material specified for ID '" + id + "'");
+                System.err.println("Available materials: ");
+                for (Material mat : Material.values()) {
+                    if (mat.name().equals(id)) {
+                        System.err.println("Exact match found: " + mat);
+                    }
+                }
                 throw new IllegalArgumentException("Invalid material specified for " + id);
                 // Указан недопустимый материал для
                 // Ungültiges Material angegeben für
