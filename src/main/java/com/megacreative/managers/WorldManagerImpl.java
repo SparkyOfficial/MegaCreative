@@ -751,6 +751,20 @@ public class WorldManagerImpl implements IWorldManager {
                     return world;
                 }
             }
+            
+            // 🔧 FIX: Handle additional naming patterns for better compatibility
+            // Check if worldName contains the world ID
+            if (worldName.contains(world.getId())) {
+                return world;
+            }
+        }
+        
+        // 🔧 FIX: Fallback to partial name matching for better compatibility
+        for (CreativeWorld world : worlds.values()) {
+            if (worldName.contains(world.getName().toLowerCase().replace(" ", "")) || 
+                world.getName().toLowerCase().replace(" ", "").contains(worldName.toLowerCase())) {
+                return world;
+            }
         }
         
         return null;

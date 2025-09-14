@@ -21,6 +21,7 @@ import org.bukkit.block.Block;
 import org.bukkit.block.BlockFace;
 import org.bukkit.block.Sign;
 import org.bukkit.block.data.type.WallSign;
+import org.bukkit.block.data.BlockData;
 import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.EventPriority;
@@ -298,7 +299,8 @@ public class BlockPlacementHandler implements Listener {
             
             // 🔧 FIX: Add "ore" block for event blocks to make them visible
             // Add diamond ore block to make the event block "magical"
-            Location oreLoc = loc.clone().add(-1, 0, 0); // Place ore to the west of the event block
+            // Place ore at (1, 0, 0) relative to event block (to the east)
+            Location oreLoc = loc.clone().add(1, 0, 0); // Place ore to the east of the event block
             if (oreLoc.getBlock().getType().isAir()) {
                 oreLoc.getBlock().setType(Material.DIAMOND_ORE);
                 
@@ -485,6 +487,10 @@ public class BlockPlacementHandler implements Listener {
             
             plugin.getLogger().info("Bracket piston removed from " + loc);
         }
+        
+        // 🔧 FIX: Handle block movement with connected brackets
+        // Check if this is a code block that might have connected brackets
+        handleConnectedStructureRemoval(loc, player);
     }
     
     /**
@@ -560,17 +566,20 @@ public class BlockPlacementHandler implements Listener {
             
             // Check for wall signs
             if (blockType == Material.OAK_WALL_SIGN) {
-                WallSign wallSign = (WallSign) signBlock.getState();
-                // Check if the sign is facing toward the block
-                if (wallSign.getFacing() == face.getOppositeFace()) {
-                    // Add removal effect
-                    Location effectLoc = signBlock.getLocation().add(0.5, 0.5, 0.5);
-                    signBlock.getWorld().spawnParticle(org.bukkit.Particle.CLOUD, effectLoc, 5, 0.2, 0.2, 0.2, 0.05);
-                    
-                    // Remove the sign
-                    signBlock.setType(Material.AIR, false);
-                    plugin.getLogger().fine("Removed wall sign at " + signBlock.getLocation());
-                    return; // Remove only one sign
+                BlockData blockData = signBlock.getBlockData();
+                if (blockData instanceof WallSign) {
+                    WallSign wallSign = (WallSign) blockData;
+                    // Check if the sign is facing toward the block
+                    if (wallSign.getFacing() == face.getOppositeFace()) {
+                        // Add removal effect
+                        Location effectLoc = signBlock.getLocation().add(0.5, 0.5, 0.5);
+                        signBlock.getWorld().spawnParticle(org.bukkit.Particle.CLOUD, effectLoc, 5, 0.2, 0.2, 0.2, 0.05);
+                        
+                        // Remove the sign
+                        signBlock.setType(Material.AIR, false);
+                        plugin.getLogger().fine("Removed wall sign at " + signBlock.getLocation());
+                        return; // Remove only one sign
+                    }
                 }
             }
         }
@@ -762,9 +771,35 @@ public class BlockPlacementHandler implements Listener {
      * Вычисляет оптимальное направление строительства
      */
     private BlockFace findOptimalBuildDirection(Location location, int bracketDistance) {
-        // TODO: Add logic to calculate optimal direction based on surrounding blocks
+        World world = location.getWorld();
+        if (world == null) return BlockFace.EAST;
         
-        // For now, return a fixed direction
+        // Check available space in each direction
+        BlockFace[] directions = {BlockFace.EAST, BlockFace.WEST, BlockFace.SOUTH, BlockFace.NORTH};
+        
+        for (BlockFace face : directions) {
+            boolean hasSpace = true;
+            
+            // Check if we have enough space for the structure
+            for (int i = 1; i <= bracketDistance; i++) {
+                Location checkLoc = location.clone().add(
+                    face.getModX() * i, 
+                    0, 
+                    face.getModZ() * i
+                );
+                
+                if (!checkLoc.getBlock().getType().isAir()) {
+                    hasSpace = false;
+                    break;
+                }
+            }
+            
+            if (hasSpace) {
+                return face;
+            }
+        }
+        
+        // Fallback to first available direction
         return BlockFace.EAST;
     }
     
@@ -827,8 +862,8 @@ public class BlockPlacementHandler implements Listener {
             removeSignFromBlock(mainBlockLoc);
             removeContainerAboveBlock(mainBlockLoc);
             
-            // Remove the "ore" block to the west
-            Block oreBlock = mainBlockLoc.clone().add(-1, 0, 0).getBlock();
+            // Remove the "ore" block to the east
+            Block oreBlock = mainBlockLoc.clone().add(1, 0, 0).getBlock();
             if (oreBlock.getType() == Material.DIAMOND_ORE) {
                 oreBlock.setType(Material.AIR);
             }
@@ -837,25 +872,64 @@ public class BlockPlacementHandler implements Listener {
             player.sendMessage("§eСтруктура " + config.getDisplayName() + " полностью удалена!");
             player.playSound(mainBlockLoc, org.bukkit.Sound.ENTITY_ENDERMAN_TELEPORT, 1.0f, 0.5f);
             player.spawnParticle(org.bukkit.Particle.EXPLOSION_NORMAL, mainBlockLoc.add(0.5, 0.5, 0.5), 10, 0.5, 0.5, 0.5, 0.2);
+    /**
+     * 🔧 FIX: Handle removal of connected structure components when a block is broken
+     * This ensures brackets and other connected elements move with the main block
+     */
+    private void handleConnectedStructureRemoval(Location blockLocation, Player player) {
+        // Check for connected brackets in all directions
+        BlockFace[] directions = {BlockFace.NORTH, BlockFace.EAST, BlockFace.SOUTH, BlockFace.WEST};
+        
+        for (BlockFace face : directions) {
+            Location adjacentLoc = blockLocation.clone().add(face.getModX(), 0, face.getModZ());
+            Block adjacentBlock = adjacentLoc.getBlock();
             
-            // Удаляем физический блок
-            mainBlockLoc.getBlock().setType(Material.AIR);
+            // Check if adjacent block is a bracket piston
+            if ((adjacentBlock.getType() == Material.PISTON || adjacentBlock.getType() == Material.STICKY_PISTON) 
+                && blockCodeBlocks.containsKey(adjacentLoc)) {
+                CodeBlock codeBlock = blockCodeBlocks.get(adjacentLoc);
+                if (codeBlock != null && codeBlock.isBracket()) {
+                    // This is a connected bracket, remove it
+                    removeBracketPiston(adjacentLoc, player);
+                }
+            }
         }
-        // 🔧 FIX: Add handling for ACTION blocks
-        else if (config.getType().equals("ACTION")) {
-            // For action blocks, just remove the block
-            blockCodeBlocks.remove(mainBlockLoc);
-            removeSignFromBlock(mainBlockLoc);
-            removeContainerAboveBlock(mainBlockLoc);
-            
-            // Add visual effect for complete structure removal
-            player.sendMessage("§eСтруктура " + config.getDisplayName() + " полностью удалена!");
-            player.playSound(mainBlockLoc, org.bukkit.Sound.ENTITY_ENDERMAN_TELEPORT, 1.0f, 0.5f);
-            player.spawnParticle(org.bukkit.Particle.EXPLOSION_NORMAL, mainBlockLoc.add(0.5, 0.5, 0.5), 10, 0.5, 0.5, 0.5, 0.2);
-            
-            // Удаляем физический блок
-            mainBlockLoc.getBlock().setType(Material.AIR);
-        }
+    }
+    
+    /**
+     * 🔧 FIX: Add handling for STORAGE blocks
+     */
+    private void removeBracketPiston(Location mainBlockLoc, Player player) {
+        // Remove bracket piston from codeBlocks
+        blockCodeBlocks.remove(mainBlockLoc);
+        removeSignFromBlock(mainBlockLoc);
+        removeContainerAboveBlock(mainBlockLoc);
+        
+        // Add visual effect for complete structure removal
+        player.sendMessage("§eСтруктура " + config.getDisplayName() + " полностью удалена!");
+        player.playSound(mainBlockLoc, org.bukkit.Sound.ENTITY_ENDERMAN_TELEPORT, 1.0f, 0.5f);
+        player.spawnParticle(org.bukkit.Particle.EXPLOSION_NORMAL, mainBlockLoc.add(0.5, 0.5, 0.5), 10, 0.5, 0.5, 0.5, 0.2);
+        
+        // Удаляем физический блок
+        mainBlockLoc.getBlock().setType(Material.AIR);
+    }
+    
+    /**
+     * 🔧 FIX: Add handling for ACTION blocks
+     */
+    private void removeBracketPiston(Location mainBlockLoc, Player player) {
+        // For action blocks, just remove the block
+        blockCodeBlocks.remove(mainBlockLoc);
+        removeSignFromBlock(mainBlockLoc);
+        removeContainerAboveBlock(mainBlockLoc);
+        
+        // Add visual effect for complete structure removal
+        player.sendMessage("§eСтруктура " + config.getDisplayName() + " полностью удалена!");
+        player.playSound(mainBlockLoc, org.bukkit.Sound.ENTITY_ENDERMAN_TELEPORT, 1.0f, 0.5f);
+        player.spawnParticle(org.bukkit.Particle.EXPLOSION_NORMAL, mainBlockLoc.add(0.5, 0.5, 0.5), 10, 0.5, 0.5, 0.5, 0.2);
+        
+        // Удаляем физический блок
+        mainBlockLoc.getBlock().setType(Material.AIR);
     }
     
     /**
@@ -1295,7 +1369,17 @@ public class BlockPlacementHandler implements Listener {
         
         // Check if this is a smart sign (has our special markers)
         String[] lines = sign.getLines();
-        if (lines.length < 3 || !lines[2].contains("Клик для настройки")) {
+        // 🔧 FIX: Check for multiple possible sign text patterns
+        boolean isSmartSign = false;
+        for (String line : lines) {
+            if (line.contains("Клик для настройки") || line.contains("Кликните ПКМ") || 
+                line.contains("Click to configure") || line.contains("Right-click")) {
+                isSmartSign = true;
+                break;
+            }
+        }
+        
+        if (!isSmartSign) {
             return false;
         }
         

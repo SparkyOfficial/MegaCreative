@@ -246,10 +246,9 @@ public class DevInventoryManager implements Listener {
     }
     
     public void forceRestoreTools(Player player) {
-        if (playersInDevWorld.contains(player.getUniqueId())) {
-            giveDevTools(player);
-            player.sendMessage("§aИнструменты принудительно восстановлены!");
-        }
+        // 🔧 FIX: Always give dev tools regardless of dev world status
+        giveDevTools(player);
+        player.sendMessage("§aИнструменты принудительно восстановлены!");
     }
     
     /**
