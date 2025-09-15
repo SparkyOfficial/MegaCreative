@@ -106,8 +106,23 @@ public class BlockConfigService {
                         plugin.getLogger().info("Loading block config: " + id);
                         BlockConfig blockConfig = new BlockConfig(id, section, plugin);
                         blockConfigs.put(id, blockConfig);
-                        materialToBlockIds.computeIfAbsent(blockConfig.getMaterial(), k -> new ArrayList<>()).add(id);
-                        plugin.getLogger().info("Successfully loaded block config: " + id + " with material " + blockConfig.getMaterial());
+                        
+                        // 🔧 FIX: Set the material correctly based on the block ID (which should match a material)
+                        Material material = Material.matchMaterial(id);
+                        if (material != null) {
+                            // Use reflection to set the material field
+                            try {
+                                java.lang.reflect.Field materialField = BlockConfig.class.getDeclaredField("material");
+                                materialField.setAccessible(true);
+                                materialField.set(blockConfig, material);
+                                materialToBlockIds.computeIfAbsent(material, k -> new ArrayList<>()).add(id);
+                                plugin.getLogger().info("Successfully loaded block config: " + id + " with material " + material);
+                            } catch (Exception e) {
+                                plugin.getLogger().warning("Failed to set material for block config " + id + ": " + e.getMessage());
+                            }
+                        } else {
+                            plugin.getLogger().warning("Invalid material for block config: " + id);
+                        }
                     } catch (Exception e) {
                         plugin.getLogger().warning("Failed to load block config for ID '" + id + "': " + e.getMessage());
                         // Не удалось загрузить конфигурацию блока для ID:
@@ -126,7 +141,13 @@ public class BlockConfigService {
         // Log loaded materials for debugging
         plugin.getLogger().info("Loaded materials: " + materialToBlockIds.keySet().size());
         for (Material material : materialToBlockIds.keySet()) {
-            plugin.getLogger().info("Material: " + material.name() + " -> Actions: " + materialToBlockIds.get(material));
+            List<String> actions = materialToBlockIds.get(material);
+            plugin.getLogger().info("Material: " + material.name() + " -> Actions: " + (actions != null ? actions.size() : 0));
+            if (actions != null) {
+                for (String action : actions) {
+                    plugin.getLogger().info("  - " + action);
+                }
+            }
         }
     }
     
@@ -267,7 +288,18 @@ public class BlockConfigService {
     public BlockConfig getFirstBlockConfig(Material material) {
         List<String> ids = materialToBlockIds.getOrDefault(material, Collections.emptyList());
         if (!ids.isEmpty()) {
-            return getBlockConfig(ids.get(0));
+            BlockConfig config = getBlockConfig(ids.get(0));
+            // 🔧 FIX: Ensure the material is set correctly
+            if (config != null && config.getMaterial() == null) {
+                try {
+                    java.lang.reflect.Field materialField = BlockConfig.class.getDeclaredField("material");
+                    materialField.setAccessible(true);
+                    materialField.set(config, material);
+                } catch (Exception e) {
+                    plugin.getLogger().warning("Failed to set material for block config " + config.getId() + ": " + e.getMessage());
+                }
+            }
+            return config;
         }
         return null;
     }
@@ -440,19 +472,9 @@ public class BlockConfigService {
          */
         public BlockConfig(String id, ConfigurationSection section, MegaCreative plugin) {
             this.id = id;
-            // Материал определяется по ID (ключу) блока
-            // Material is determined by ID (key) of block
-            // Material wird durch ID (Schlüssel) des Blocks bestimmt
-            Material mat = Material.matchMaterial(id);
-            if (mat == null) {
-                // 🔧 FIX: Handle cases where ID is not a valid material name
-                // For block types that don't directly map to materials, use a default
-                mat = Material.STONE; // Fallback material
-                if (plugin != null) {
-                    plugin.getLogger().warning("Invalid material for ID '" + id + "', using STONE as fallback");
-                }
-            }
-            this.material = mat;
+            // 🔧 FIX: Material will be set by BlockConfigService when adding to material mapping
+            // The ID is the block configuration identifier, not necessarily a material name
+            this.material = null; // Will be set by BlockConfigService
             this.type = section.getString("type", "ACTION").toUpperCase();
             // В YAML используется поле "name", не "displayName"
             // In YAML, the "name" field is used, not "displayName"

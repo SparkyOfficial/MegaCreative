@@ -782,6 +782,19 @@ public class WorldManagerImpl implements IWorldManager {
             }
         }
         
+        // 🔧 FIX: Try to extract ID from world name for megacreative_ worlds
+        if (worldName.startsWith("megacreative_")) {
+            String[] parts = worldName.replace("megacreative_", "").split("[_-]");
+            if (parts.length > 0) {
+                String potentialId = parts[0];
+                CreativeWorld result = getWorld(potentialId);
+                if (result != null) {
+                    getPlugin().getLogger().info("Found world by extracted ID: " + potentialId);
+                    return result;
+                }
+            }
+        }
+        
         getPlugin().getLogger().warning("No CreativeWorld found for Bukkit world: " + worldName);
         return null;
     }

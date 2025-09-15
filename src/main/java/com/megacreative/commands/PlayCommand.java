@@ -85,22 +85,41 @@ public class PlayCommand implements CommandExecutor {
         
         CreativeWorld creativeWorld = plugin.getWorldManager().findCreativeWorldByBukkit(player.getWorld());
         
+        // 🔧 FIX: Enhanced world finding logic with better pattern matching
         if (creativeWorld == null) {
             player.sendMessage("§cYou are not in a MegaCreative world!");
             player.sendMessage("§7Current world: " + player.getWorld().getName());
             player.sendMessage("§7Available worlds: " + plugin.getWorldManager().getCreativeWorlds().size());
-            // 🔧 FIX: Try to find world by ID pattern matching
+            
+            // Try multiple pattern matching approaches
             String worldName = player.getWorld().getName();
             if (worldName.startsWith("megacreative_")) {
-                String id = worldName.replace("megacreative_", "").replace("-code", "").replace("-world", "").replace("_dev", "");
-                CreativeWorld foundWorld = plugin.getWorldManager().getWorld(id);
-                if (foundWorld != null) {
-                    creativeWorld = foundWorld;
-                    player.sendMessage("§aFound world by ID pattern matching: " + foundWorld.getName());
+                // Extract ID using regex to handle complex naming
+                String[] parts = worldName.replace("megacreative_", "").split("[_-]");
+                if (parts.length > 0) {
+                    String potentialId = parts[0];
+                    CreativeWorld foundWorld = plugin.getWorldManager().getWorld(potentialId);
+                    if (foundWorld != null) {
+                        creativeWorld = foundWorld;
+                        player.sendMessage("§aFound world by extracted ID: " + potentialId);
+                    }
                 }
             }
+            
+            // If still not found, try all available worlds
+            if (creativeWorld == null) {
+                for (CreativeWorld world : plugin.getWorldManager().getCreativeWorlds()) {
+                    if (worldName.contains(world.getId()) || worldName.contains(world.getName().toLowerCase().replace(" ", ""))) {
+                        creativeWorld = world;
+                        player.sendMessage("§aFound world by partial name matching: " + world.getName());
+                        break;
+                    }
+                }
+            }
+            
             // If still not found, return
             if (creativeWorld == null) {
+                player.sendMessage("§cUnable to find associated MegaCreative world. Please contact an administrator.");
                 return true;
             }
         }

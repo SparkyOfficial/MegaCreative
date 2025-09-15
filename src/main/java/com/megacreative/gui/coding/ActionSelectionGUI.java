@@ -174,7 +174,7 @@ public class ActionSelectionGUI implements GUIManager.ManagedGUIInterface {
         
         player.sendMessage("§eDebug: Available actions count: " + (availableActions != null ? availableActions.size() : "null"));
         
-        // 🔧 FIX: If no actions found, try to get actions from block configuration
+        // 🔧 FIX: Enhanced action loading logic
         if (availableActions == null || availableActions.isEmpty()) {
             player.sendMessage("§cОшибка: Нет доступных действий для блока " + blockMaterial.name());
             
@@ -193,24 +193,37 @@ public class ActionSelectionGUI implements GUIManager.ManagedGUIInterface {
                 player.sendMessage("§eDebug: Block type: " + blockConfig.getType());
                 player.sendMessage("§eDebug: Default action: " + blockConfig.getDefaultAction());
                 
-                // If we have a block config, try to get its actions from the config directly
                 // 🔧 FIX: Load actions from the block configuration's actions list
                 List<String> actions = new ArrayList<>();
-                // Try to get actions from the block config's actions list
-                BlockConfigService.BlockConfig config = blockConfigService.getBlockConfig(blockConfig.getId());
-                if (config != null) {
-                    // Get the configuration section for this block
-                    File configFile = new File(plugin.getDataFolder(), "coding_blocks.yml");
-                    if (configFile.exists()) {
-                        YamlConfiguration yamlConfig = YamlConfiguration.loadConfiguration(configFile);
-                        ConfigurationSection blocksSection = yamlConfig.getConfigurationSection("blocks");
-                        if (blocksSection != null) {
-                            ConfigurationSection blockSection = blocksSection.getConfigurationSection(blockConfig.getId());
-                            if (blockSection != null) {
-                                List<String> blockActions = blockSection.getStringList("actions");
-                                if (!blockActions.isEmpty()) {
-                                    actions.addAll(blockActions);
-                                    player.sendMessage("§aDebug: Found actions from config: " + blockActions.size());
+                
+                // First, try to get actions directly from the block config
+                if (blockConfig.getParameters().containsKey("actions")) {
+                    // This is for backward compatibility with old config format
+                    Object actionsObj = blockConfig.getParameters().get("actions");
+                    if (actionsObj instanceof List) {
+                        actions.addAll((List<String>) actionsObj);
+                        player.sendMessage("§aDebug: Found actions from block config parameters: " + actions.size());
+                    }
+                }
+                
+                // Try to get actions from the YAML configuration file
+                File configFile = new File(plugin.getDataFolder(), "coding_blocks.yml");
+                if (configFile.exists()) {
+                    YamlConfiguration yamlConfig = YamlConfiguration.loadConfiguration(configFile);
+                    ConfigurationSection blocksSection = yamlConfig.getConfigurationSection("blocks");
+                    if (blocksSection != null) {
+                        ConfigurationSection blockSection = blocksSection.getConfigurationSection(blockConfig.getId());
+                        if (blockSection != null) {
+                            List<String> blockActions = blockSection.getStringList("actions");
+                            if (!blockActions.isEmpty()) {
+                                actions.addAll(blockActions);
+                                player.sendMessage("§aDebug: Found actions from YAML config: " + blockActions.size());
+                            } else {
+                                // 🔧 FIX: If no actions list, try to get default action
+                                String defaultAction = blockSection.getString("default_action");
+                                if (defaultAction != null && !defaultAction.isEmpty()) {
+                                    actions.add(defaultAction);
+                                    player.sendMessage("§aDebug: Found default action from YAML config: " + defaultAction);
                                 }
                             }
                         }
@@ -220,6 +233,32 @@ public class ActionSelectionGUI implements GUIManager.ManagedGUIInterface {
                 // Fallback to getting actions from material mapping
                 if (actions.isEmpty()) {
                     actions = blockConfigService.getAvailableActions(blockMaterial);
+                }
+                
+                // Final fallback - use all actions from the config
+                if (actions.isEmpty()) {
+                    // Get all action IDs from the blocks section
+                    File configFileFallback = new File(plugin.getDataFolder(), "coding_blocks.yml");
+                    if (configFileFallback.exists()) {
+                        YamlConfiguration yamlConfigFallback = YamlConfiguration.loadConfiguration(configFileFallback);
+                        ConfigurationSection blocksSectionFallback = yamlConfigFallback.getConfigurationSection("blocks");
+                        if (blocksSectionFallback != null) {
+                            for (String blockId : blocksSectionFallback.getKeys(false)) {
+                                ConfigurationSection blockSection = blocksSectionFallback.getConfigurationSection(blockId);
+                                if (blockSection != null) {
+                                    List<String> blockActions = blockSection.getStringList("actions");
+                                    if (!blockActions.isEmpty()) {
+                                        actions.addAll(blockActions);
+                                    } else {
+                                        String defaultAction = blockSection.getString("default_action");
+                                        if (defaultAction != null && !defaultAction.isEmpty()) {
+                                            actions.add(defaultAction);
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    }
                 }
                 
                 if (actions != null && !actions.isEmpty()) {
@@ -243,7 +282,7 @@ public class ActionSelectionGUI implements GUIManager.ManagedGUIInterface {
                 }
             }
             
-            // If we still don't have actions, return early
+            // If we still don't have actions, use default actions as fallback
             if (availableActions == null || availableActions.isEmpty()) {
                 // 🔧 FIX: Add default actions as fallback
                 availableActions = new ArrayList<>();
@@ -251,7 +290,6 @@ public class ActionSelectionGUI implements GUIManager.ManagedGUIInterface {
                 availableActions.add("teleport");
                 availableActions.add("giveItem");
                 player.sendMessage("§6Using default actions as fallback");
-                return;
             }
         }
         

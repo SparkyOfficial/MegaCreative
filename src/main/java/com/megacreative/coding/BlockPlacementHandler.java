@@ -14,6 +14,7 @@ import com.megacreative.coding.values.types.BooleanValue;
 import com.megacreative.coding.values.types.ListValue;
 import com.megacreative.coding.CodeBlock;
 import com.megacreative.coding.CodingItems;
+import org.bukkit.ChatColor;
 import org.bukkit.Material;
 import java.util.logging.Logger;
 import java.util.logging.Level;
@@ -28,6 +29,8 @@ import org.bukkit.event.EventPriority;
 import org.bukkit.event.Listener;
 import org.bukkit.event.block.BlockBreakEvent;
 import org.bukkit.event.block.BlockPlaceEvent;
+import org.bukkit.event.block.BlockPistonExtendEvent;
+import org.bukkit.event.block.BlockPistonRetractEvent;
 import org.bukkit.event.player.PlayerInteractEvent;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.Location;
@@ -1029,6 +1032,14 @@ public class BlockPlacementHandler implements Listener {
             }
         }
         
+        // 🔧 FIX: Ensure we handle all sign types properly
+        if (clickedBlock.getState() instanceof Sign) {
+            if (handleSmartSignClick(clickedBlock, player)) {
+                event.setCancelled(true);
+                return;
+            }
+        }
+        
         // Проверяем, есть ли уже блок кода на этой локации
         if (blockCodeBlocks.containsKey(location)) {
             // Предотвращаем открытие GUI, если в руке инструмент
@@ -1398,11 +1409,15 @@ public class BlockPlacementHandler implements Listener {
         
         // Check if this is a smart sign (has our special markers)
         String[] lines = sign.getLines();
-        // 🔧 FIX: Check for multiple possible sign text patterns
+        // 🔧 FIX: Enhanced smart sign detection with more patterns
         boolean isSmartSign = false;
         for (String line : lines) {
-            if (line.contains("Клик для настройки") || line.contains("Кликните ПКМ") || 
-                line.contains("Click to configure") || line.contains("Right-click")) {
+            String cleanLine = ChatColor.stripColor(line).toLowerCase();
+            if (cleanLine.contains("клик для настройки") || cleanLine.contains("кликните пкм") || 
+                cleanLine.contains("click to configure") || cleanLine.contains("right-click") ||
+                cleanLine.contains("★") || cleanLine.contains("megacreative") || cleanLine.contains("кликните") ||
+                cleanLine.contains("настройка") || cleanLine.contains("configure") || cleanLine.contains("setup") ||
+                cleanLine.contains("magic") || cleanLine.contains("code") || cleanLine.contains("блок")) {
                 isSmartSign = true;
                 break;
             }
@@ -1823,6 +1838,93 @@ public class BlockPlacementHandler implements Listener {
         
         // Fallback for unknown blocks
         return "UNKNOWN";
+    }
+    
+    /**
+     * Handles piston extension events to move connected code blocks
+     */
+    @EventHandler(priority = EventPriority.HIGH)
+    public void onBlockPistonExtend(BlockPistonExtendEvent event) {
+        handlePistonMovement(event.getBlocks(), event.getDirection(), event.getBlock().getWorld());
+    }
+    
+    /**
+     * Handles piston retraction events to move connected code blocks
+     */
+    @EventHandler(priority = EventPriority.HIGH)
+    public void onBlockPistonRetract(BlockPistonRetractEvent event) {
+        handlePistonMovement(event.getBlocks(), event.getDirection(), event.getBlock().getWorld());
+    }
+    
+    /**
+     * Handles piston movement of code blocks
+     */
+    private void handlePistonMovement(List<Block> blocks, BlockFace direction, World world) {
+        // Check if any of the moved blocks are code blocks
+        for (Block block : blocks) {
+            Location blockLoc = block.getLocation();
+            if (blockCodeBlocks.containsKey(blockLoc)) {
+                // This is a code block, we need to move it
+                Location newLoc = blockLoc.clone().add(direction.getModX(), direction.getModY(), direction.getModZ());
+                
+                // Move the code block data
+                CodeBlock codeBlock = blockCodeBlocks.remove(blockLoc);
+                if (codeBlock != null) {
+                    blockCodeBlocks.put(newLoc, codeBlock);
+                    
+                    // Update any associated signs
+                    removeSignFromBlock(blockLoc);
+                    // Recreate sign at new location if needed
+                    if (codeBlock.isBracket()) {
+                        updateBracketSign(newLoc, codeBlock.getBracketType());
+                    } else if (codeBlock.getAction() != null && !codeBlock.getAction().equals("NOT_SET")) {
+                        BlockConfigService.BlockConfig config = blockConfigService.getBlockConfig(codeBlock.getAction());
+                        if (config != null) {
+                            setSignOnBlock(newLoc, config.getDisplayName());
+                        } else {
+                            // Fallback to material name
+                            setSignOnBlock(newLoc, codeBlock.getMaterial().name());
+                        }
+                    } else {
+                        // For blocks without actions, use material name
+                        setSignOnBlock(newLoc, codeBlock.getMaterial().name() + " (Пустой)");
+                    }
+                    
+                    // Add visual effect for movement
+                    world.spawnParticle(org.bukkit.Particle.ENCHANTMENT_TABLE, newLoc.add(0.5, 0.5, 0.5), 5, 0.3, 0.3, 0.3, 1.0);
+                }
+            }
+        }
+        
+        // 🔧 FIX: Handle connected bracket movement
+        // Check for brackets that might be connected to moved blocks
+        for (Block block : blocks) {
+            Location blockLoc = block.getLocation();
+            // Check adjacent locations for brackets
+            for (BlockFace face : new BlockFace[]{BlockFace.NORTH, BlockFace.EAST, BlockFace.SOUTH, BlockFace.WEST, BlockFace.UP, BlockFace.DOWN}) {
+                Location adjacentLoc = blockLoc.clone().add(face.getModX(), face.getModY(), face.getModZ());
+                if (blockCodeBlocks.containsKey(adjacentLoc)) {
+                    CodeBlock adjacentBlock = blockCodeBlocks.get(adjacentLoc);
+                    if (adjacentBlock != null && adjacentBlock.isBracket()) {
+                        // Move the bracket as well
+                        Location newLoc = adjacentLoc.clone().add(direction.getModX(), direction.getModY(), direction.getModZ());
+                        
+                        // Move the bracket data
+                        CodeBlock bracketBlock = blockCodeBlocks.remove(adjacentLoc);
+                        if (bracketBlock != null) {
+                            blockCodeBlocks.put(newLoc, bracketBlock);
+                            
+                            // Update signs
+                            removeSignFromBlock(adjacentLoc);
+                            updateBracketSign(newLoc, bracketBlock.getBracketType());
+                            
+                            // Add visual effect
+                            world.spawnParticle(org.bukkit.Particle.ENCHANTMENT_TABLE, newLoc.add(0.5, 0.5, 0.5), 5, 0.3, 0.3, 0.3, 1.0);
+                        }
+                    }
+                }
+            }
+        }
     }
     
     /**
