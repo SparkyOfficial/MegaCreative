@@ -93,11 +93,42 @@ public class PlayCommand implements CommandExecutor {
             
             // Try multiple pattern matching approaches
             String worldName = player.getWorld().getName();
+            plugin.getLogger().info("Attempting to find CreativeWorld for world name: " + worldName);
+            
             if (worldName.startsWith("megacreative_")) {
-                // Extract ID using regex to handle complex naming
-                String[] parts = worldName.replace("megacreative_", "").split("[_-]");
-                if (parts.length > 0) {
-                    String potentialId = parts[0];
+                // Extract ID using more precise method for complex naming
+                String potentialId = null;
+                
+                // Handle new reference system-style naming (megacreative_ID-code, megacreative_ID-world)
+                if (worldName.contains("-code") || worldName.contains("-world")) {
+                    // Extract everything between "megacreative_" and the first suffix
+                    int startIndex = "megacreative_".length();
+                    int endIndex = worldName.length();
+                    
+                    // Find the first suffix
+                    int codeIndex = worldName.indexOf("-code");
+                    int worldIndex = worldName.indexOf("-world");
+                    int devIndex = worldName.indexOf("_dev");
+                    
+                    if (codeIndex != -1 && codeIndex < endIndex) endIndex = codeIndex;
+                    if (worldIndex != -1 && worldIndex < endIndex) endIndex = worldIndex;
+                    if (devIndex != -1 && devIndex < endIndex) endIndex = devIndex;
+                    
+                    if (startIndex < endIndex) {
+                        potentialId = worldName.substring(startIndex, endIndex);
+                    }
+                } 
+                // Handle legacy naming (megacreative_ID_dev)
+                else if (worldName.contains("_dev")) {
+                    potentialId = worldName.replace("megacreative_", "").replace("_dev", "");
+                }
+                // Handle basic naming (megacreative_ID)
+                else {
+                    potentialId = worldName.replace("megacreative_", "");
+                }
+                
+                if (potentialId != null) {
+                    plugin.getLogger().info("Trying to find world with extracted ID: " + potentialId);
                     CreativeWorld foundWorld = plugin.getWorldManager().getWorld(potentialId);
                     if (foundWorld != null) {
                         creativeWorld = foundWorld;
@@ -108,6 +139,7 @@ public class PlayCommand implements CommandExecutor {
             
             // If still not found, try all available worlds
             if (creativeWorld == null) {
+                plugin.getLogger().info("Trying partial name matching for all available worlds");
                 for (CreativeWorld world : plugin.getWorldManager().getCreativeWorlds()) {
                     if (worldName.contains(world.getId()) || worldName.contains(world.getName().toLowerCase().replace(" ", ""))) {
                         creativeWorld = world;

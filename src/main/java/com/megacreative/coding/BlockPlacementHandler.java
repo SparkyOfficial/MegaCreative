@@ -207,6 +207,9 @@ public class BlockPlacementHandler implements Listener {
             setPistonDirection(block, CodeBlock.BracketType.OPEN);
         }
         
+        // 🔧 FIX: Check if this block is being placed between existing brackets and reposition them
+        handleBracketRepositioning(block.getLocation(), player);
+        
         blockCodeBlocks.put(block.getLocation(), newCodeBlock);
         
         // Устанавливаем табличку с названием из конфига (для конструкторов табличка уже создана в buildStructureFor)
@@ -1000,6 +1003,9 @@ public class BlockPlacementHandler implements Listener {
         Player player = event.getPlayer();
         ItemStack itemInHand = player.getInventory().getItemInMainHand();
         
+        // 🔧 FIX: Add debug logging to see what's happening
+        plugin.getLogger().info("Player " + player.getName() + " interacted with block. Action: " + event.getAction() + ", In dev world: " + isInDevWorld(player));
+        
         // Проверяем железный слиток для создания данных
         if (itemInHand.getType() == Material.IRON_INGOT && itemInHand.hasItemMeta() &&
             itemInHand.getItemMeta().getDisplayName().contains(CodingItems.DATA_CREATOR_NAME)) {
@@ -1024,6 +1030,9 @@ public class BlockPlacementHandler implements Listener {
         
         Location location = clickedBlock.getLocation();
         
+        // 🔧 FIX: Add debug logging
+        plugin.getLogger().info("Player " + player.getName() + " right-clicked block at " + location + ", type: " + clickedBlock.getType());
+        
         // 🎆 ENHANCED: Check if player clicked on a smart sign
         if (clickedBlock.getType().name().contains("SIGN")) {
             if (handleSmartSignClick(clickedBlock, player)) {
@@ -1042,8 +1051,12 @@ public class BlockPlacementHandler implements Listener {
         
         // Проверяем, есть ли уже блок кода на этой локации
         if (blockCodeBlocks.containsKey(location)) {
+            // 🔧 FIX: Add debug logging
+            plugin.getLogger().info("Found code block at " + location + " for player " + player.getName());
+            
             // Предотвращаем открытие GUI, если в руке инструмент
             if (isTool(itemInHand)) {
+                plugin.getLogger().info("Player " + player.getName() + " has tool in hand, not opening GUI");
                 return;
             }
             
@@ -1054,11 +1067,13 @@ public class BlockPlacementHandler implements Listener {
             
             // Special handling for bracket blocks - toggle bracket type instead of opening GUI
             if (codeBlock.isBracket()) {
+                plugin.getLogger().info("Player " + player.getName() + " clicked bracket block, toggling type");
                 toggleBracketType(codeBlock, event.getClickedBlock(), player);
                 return;
             }
             
             // Handle block interaction with proper GUI opening
+            plugin.getLogger().info("Player " + player.getName() + " opening block interaction GUI");
             handleBlockInteraction(player, location);
             return;
         }
@@ -1067,11 +1082,13 @@ public class BlockPlacementHandler implements Listener {
         Location blockBelow = location.clone().add(0, -1, 0);
         CodeBlock codeBlock = blockCodeBlocks.get(blockBelow);
         if (codeBlock != null) {
+            plugin.getLogger().info("Player " + player.getName() + " clicked container above code block at " + blockBelow);
             event.setCancelled(true);
             
             // Проверяем тип блока - открываем специализированный GUI для параметров
             BlockConfigService.BlockConfig config = blockConfigService.getBlockConfig(codeBlock.getAction());
             if (config != null) {
+                plugin.getLogger().info("Opening parameter config GUI for container interaction for player " + player.getName());
                 // Открываем уникальный drag-and-drop GUI для конкретного действия
                 openParameterConfigGUI(player, blockBelow, codeBlock, config);
             } else {
@@ -1086,8 +1103,12 @@ public class BlockPlacementHandler implements Listener {
      * Implements reference system-style: universal blocks with GUI configuration
      */
     private void handleBlockInteraction(Player player, Location blockLocation) {
+        plugin.getLogger().info("Handling block interaction for player " + player.getName() + " at " + blockLocation);
         CodeBlock codeBlock = blockCodeBlocks.get(blockLocation);
-        if (codeBlock == null) return;
+        if (codeBlock == null) {
+            plugin.getLogger().info("No code block found at " + blockLocation + " for player " + player.getName());
+            return;
+        }
         
         // Если это поршень (скобка), переключаем тип
         if (codeBlock.isBracket()) {
@@ -1098,9 +1119,11 @@ public class BlockPlacementHandler implements Listener {
         // Для универсальных блоков всегда открываем GUI выбора действия
         // Это реализует стиль: один блок - множество функций
         if (codeBlock.getAction() == null || codeBlock.getAction().equals("NOT_SET") || codeBlock.getAction().equals("UNKNOWN")) {
+            plugin.getLogger().info("Opening action selection GUI for player " + player.getName() + " at " + blockLocation);
             // Вызываем GUI для выбора действия
             openActionSelectionGUI(player, blockLocation, codeBlock.getMaterial());
         } else {
+            plugin.getLogger().info("Opening parameter config GUI for player " + player.getName() + " at " + blockLocation + " with action " + codeBlock.getAction());
             // Иначе открываем GUI настройки параметров
             BlockConfigService.BlockConfig config = blockConfigService.getBlockConfig(codeBlock.getAction());
             if (config != null) {
@@ -1149,7 +1172,8 @@ public class BlockPlacementHandler implements Listener {
         // Проверяем разные варианты названий миров разработки
         return worldName.contains("dev") || worldName.contains("Dev") || 
                worldName.contains("разработка") || worldName.contains("Разработка") ||
-               worldName.contains("creative") || worldName.contains("Creative");
+               worldName.contains("creative") || worldName.contains("Creative") ||
+               worldName.contains("-code") || worldName.endsWith("-code"); // 🔧 FIX: Add -code suffix detection for dev worlds
     }
 
     /**
@@ -1401,7 +1425,11 @@ public class BlockPlacementHandler implements Listener {
      * This restores the reference system "magic" of clicking signs to configure blocks
      */
     private boolean handleSmartSignClick(Block signBlock, Player player) {
+        // 🔧 FIX: Add debug logging
+        plugin.getLogger().info("Player " + player.getName() + " clicked sign at " + signBlock.getLocation());
+        
         if (!(signBlock.getState() instanceof Sign)) {
+            plugin.getLogger().info("Block at " + signBlock.getLocation() + " is not a sign");
             return false;
         }
         
@@ -1411,21 +1439,31 @@ public class BlockPlacementHandler implements Listener {
         String[] lines = sign.getLines();
         // 🔧 FIX: Enhanced smart sign detection with more patterns
         boolean isSmartSign = false;
+        plugin.getLogger().info("Checking sign lines for player " + player.getName() + ":");
+        for (int i = 0; i < lines.length; i++) {
+            plugin.getLogger().info("Line " + i + ": " + lines[i]);
+        }
+        
         for (String line : lines) {
-            String cleanLine = ChatColor.stripColor(line).toLowerCase();
+            String cleanLine = ChatColor.stripColor(line).toLowerCase().trim();
+            plugin.getLogger().info("Checking clean line: " + cleanLine);
             if (cleanLine.contains("клик для настройки") || cleanLine.contains("кликните пкм") || 
                 cleanLine.contains("click to configure") || cleanLine.contains("right-click") ||
                 cleanLine.contains("★") || cleanLine.contains("megacreative") || cleanLine.contains("кликните") ||
                 cleanLine.contains("настройка") || cleanLine.contains("configure") || cleanLine.contains("setup") ||
-                cleanLine.contains("magic") || cleanLine.contains("code") || cleanLine.contains("блок")) {
+                cleanLine.contains("magic") || cleanLine.contains("code") || cleanLine.contains("блок") ||
+                cleanLine.contains("[megacreative]")) { // 🔧 FIX: Add [megacreative] pattern from logs
                 isSmartSign = true;
+                plugin.getLogger().info("Found smart sign pattern in line: " + cleanLine);
                 break;
             }
         }
         
         if (!isSmartSign) {
+            plugin.getLogger().info("Sign at " + signBlock.getLocation() + " is not a smart sign for player " + player.getName());
             return false;
         }
+        plugin.getLogger().info("Sign at " + signBlock.getLocation() + " is a smart sign for player " + player.getName());
         
         // Find the associated code block (sign should be adjacent to it)
         BlockFace[] adjacentFaces = {BlockFace.NORTH, BlockFace.SOUTH, BlockFace.EAST, BlockFace.WEST};
@@ -1434,17 +1472,22 @@ public class BlockPlacementHandler implements Listener {
             Block adjacentBlock = signBlock.getRelative(face);
             Location blockLoc = adjacentBlock.getLocation();
             
+            plugin.getLogger().info("Checking adjacent block at " + blockLoc + " for player " + player.getName() + ", face: " + face);
+            
             if (blockCodeBlocks.containsKey(blockLoc)) {
+                plugin.getLogger().info("Found code block at " + blockLoc + " for player " + player.getName());
                 CodeBlock codeBlock = blockCodeBlocks.get(blockLoc);
                 
                 // Open appropriate GUI based on block state
                 if (codeBlock.getAction() == null || "NOT_SET".equals(codeBlock.getAction())) {
+                    plugin.getLogger().info("Opening action selection GUI for player " + player.getName());
                     // No action set - open action selection GUI
                     openActionSelectionGUI(player, blockLoc, adjacentBlock.getType());
                 } else {
                     // Action already set - open parameter configuration GUI
                     BlockConfigService.BlockConfig config = blockConfigService.getBlockConfig(codeBlock.getAction());
                     if (config != null) {
+                        plugin.getLogger().info("Opening parameter config GUI for player " + player.getName());
                         openParameterConfigGUI(player, blockLoc, codeBlock, config);
                     } else {
                         player.sendMessage("§cОшибка: Не удалось найти конфигурацию для действия " + codeBlock.getAction());
@@ -1924,6 +1967,98 @@ public class BlockPlacementHandler implements Listener {
                     }
                 }
             }
+        }
+    }
+    
+    /**
+     * 🔧 FIX: Handle repositioning of brackets when a new block is placed between them
+     * This ensures that when a block is placed between existing brackets, 
+     * the brackets move to maintain the proper distance
+     */
+    private void handleBracketRepositioning(Location newBlockLocation, Player player) {
+        // Check adjacent locations for existing brackets in all directions
+        BlockFace[] directions = {BlockFace.EAST, BlockFace.WEST, BlockFace.NORTH, BlockFace.SOUTH};
+        
+        for (BlockFace direction : directions) {
+            // Look for opening bracket in this direction
+            Location openBracketLoc = findBracketInDirection(newBlockLocation, direction, CodeBlock.BracketType.OPEN);
+            if (openBracketLoc != null) {
+                // Look for corresponding closing bracket
+                Location closeBracketLoc = findBracketInDirection(openBracketLoc, direction, CodeBlock.BracketType.CLOSE);
+                if (closeBracketLoc != null) {
+                    // Calculate the new positions for brackets (3 blocks apart from the new block)
+                    Location newOpenBracketLoc = newBlockLocation.clone().add(direction.getModX() * 1, 0, direction.getModZ() * 1);
+                    Location newCloseBracketLoc = newBlockLocation.clone().add(direction.getModX() * 3, 0, direction.getModZ() * 3);
+                    
+                    // Move the brackets to their new positions
+                    moveBracket(openBracketLoc, newOpenBracketLoc, CodeBlock.BracketType.OPEN, player);
+                    moveBracket(closeBracketLoc, newCloseBracketLoc, CodeBlock.BracketType.CLOSE, player);
+                    
+                    // Update piston directions
+                    updateBracketPistonDirection(newOpenBracketLoc.getBlock(), CodeBlock.BracketType.OPEN, direction);
+                    updateBracketPistonDirection(newCloseBracketLoc.getBlock(), CodeBlock.BracketType.CLOSE, direction);
+                    
+                    player.sendMessage("§a✓ Brackets repositioned to maintain proper distance");
+                    return; // Only handle one pair of brackets
+                }
+            }
+        }
+    }
+    
+    /**
+     * 🔧 FIX: Find a bracket in a specific direction
+     */
+    private Location findBracketInDirection(Location startLocation, BlockFace direction, CodeBlock.BracketType bracketType) {
+        // Search up to 10 blocks in the given direction
+        for (int i = 1; i <= 10; i++) {
+            Location checkLocation = startLocation.clone().add(
+                direction.getModX() * i, 
+                0, 
+                direction.getModZ() * i
+            );
+            
+            if (blockCodeBlocks.containsKey(checkLocation)) {
+                CodeBlock codeBlock = blockCodeBlocks.get(checkLocation);
+                if (codeBlock != null && codeBlock.isBracket() && codeBlock.getBracketType() == bracketType) {
+                    return checkLocation;
+                }
+            }
+        }
+        return null;
+    }
+    
+    /**
+     * 🔧 FIX: Move a bracket from one location to another
+     */
+    private void moveBracket(Location oldLocation, Location newLocation, CodeBlock.BracketType bracketType, Player player) {
+        // Get the code block
+        CodeBlock codeBlock = blockCodeBlocks.remove(oldLocation);
+        if (codeBlock == null) return;
+        
+        // Remove old block and sign
+        removeBracketPiston(oldLocation, player);
+        
+        // Create new bracket at the new location
+        createBracketPiston(newLocation, bracketType, player, BlockFace.EAST); // Direction will be updated later
+        
+        // Update our tracking
+        blockCodeBlocks.put(newLocation, codeBlock);
+    }
+    
+    /**
+     * 🔧 FIX: Update the direction of a bracket piston
+     */
+    private void updateBracketPistonDirection(Block pistonBlock, CodeBlock.BracketType bracketType, BlockFace direction) {
+        if (pistonBlock.getType() == Material.PISTON || pistonBlock.getType() == Material.STICKY_PISTON) {
+            org.bukkit.block.data.type.Piston pistonData = (org.bukkit.block.data.type.Piston) pistonBlock.getBlockData();
+            
+            if (bracketType == CodeBlock.BracketType.OPEN) {
+                pistonData.setFacing(direction); // Points inward toward the structure
+            } else {
+                pistonData.setFacing(direction.getOppositeFace()); // Points outward from the structure
+            }
+            
+            pistonBlock.setBlockData(pistonData);
         }
     }
     

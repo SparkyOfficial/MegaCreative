@@ -645,7 +645,7 @@ public class WorldManagerImpl implements IWorldManager {
         if (bukkitWorld != null) {
             player.teleport(bukkitWorld.getSpawnLocation());
             player.setGameMode(org.bukkit.GameMode.CREATIVE);
-            player.sendMessage("§aРежим мира изменен на §f§lСТРОИТЕЛЬСТВО§a!");
+            player.sendMessage("§aРежим мира изменен на §f§лСТРОИТЕЛЬСТВО§a!");
             player.sendMessage("§7❌ Код отключен, скрипты не будут выполняться");
             player.sendMessage("§7Креатив для строителей");
             
@@ -718,7 +718,31 @@ public class WorldManagerImpl implements IWorldManager {
         
         // Handle old-style megacreative_ naming
         if (worldName.startsWith("megacreative_")) {
-            // 🔧 FIX: Remove prefix and ALL possible suffixes for dual world architecture
+            // 🔧 FIX: More precise ID extraction for complex naming
+            // Extract everything between "megacreative_" and the first suffix
+            int startIndex = "megacreative_".length();
+            int endIndex = worldName.length();
+            
+            // Find the first suffix
+            int codeIndex = worldName.indexOf("-code");
+            int worldIndex = worldName.indexOf("-world");
+            int devIndex = worldName.indexOf("_dev");
+            
+            if (codeIndex != -1 && codeIndex < endIndex) endIndex = codeIndex;
+            if (worldIndex != -1 && worldIndex < endIndex) endIndex = worldIndex;
+            if (devIndex != -1 && devIndex < endIndex) endIndex = devIndex;
+            
+            if (startIndex < endIndex) {
+                String preciseId = worldName.substring(startIndex, endIndex);
+                getPlugin().getLogger().info("Trying to find world with precise ID: " + preciseId);
+                CreativeWorld preciseResult = getWorld(preciseId);
+                if (preciseResult != null) {
+                    getPlugin().getLogger().info("Found world with precise ID: " + preciseResult.getName());
+                    return preciseResult;
+                }
+            }
+            
+            // Fallback to simple extraction
             String id = worldName.replace("megacreative_", "")
                                   .replace("-code", "")    // New dev world suffix
                                   .replace("-world", "")   // New play world suffix  
@@ -769,15 +793,6 @@ public class WorldManagerImpl implements IWorldManager {
             // Check if worldName contains the world ID
             if (worldName.contains(world.getId())) {
                 getPlugin().getLogger().info("Matched ID pattern: " + world.getId());
-                return world;
-            }
-        }
-        
-        // 🔧 FIX: Fallback to partial name matching for better compatibility
-        for (CreativeWorld world : worlds.values()) {
-            if (worldName.contains(world.getName().toLowerCase().replace(" ", "")) || 
-                world.getName().toLowerCase().replace(" ", "").contains(worldName.toLowerCase())) {
-                getPlugin().getLogger().info("Matched partial name pattern: " + world.getName());
                 return world;
             }
         }
