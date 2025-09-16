@@ -496,7 +496,6 @@ public class ExecutorEngine {
     private ExecutionResult executeRemoveItems(Map<String, DataValue> params, ExecutionContext context) {
         try {
             Player player = context.getPlayer();
-            java.util.List<org.bukkit.inventory.ItemStack> itemsToRemove = new java.util.ArrayList<>();
             
             // In a real implementation, we would get the items from the block's config items
             // For now, we'll implement a basic version that removes some example items
