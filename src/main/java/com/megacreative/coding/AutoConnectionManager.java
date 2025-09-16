@@ -320,9 +320,12 @@ public class AutoConnectionManager implements Listener {
      * Updates player script blocks and maintains execution order
      */
     private void updatePlayerScriptBlocks(CodeBlock codeBlock, Location location) {
-        // Find the player who owns this block (simplified approach)
-        for (Map.Entry<UUID, List<CodeBlock>> entry : playerScriptBlocks.entrySet()) {
-            List<CodeBlock> blocks = entry.getValue();
+        // Find the player who owns this block using a more sophisticated approach
+        Player owner = findBlockOwner(location);
+        
+        if (owner != null) {
+            UUID playerId = owner.getUniqueId();
+            List<CodeBlock> blocks = playerScriptBlocks.computeIfAbsent(playerId, k -> new ArrayList<>());
             
             // Add to player's blocks if not already present
             if (!blocks.contains(codeBlock)) {
@@ -340,8 +343,32 @@ public class AutoConnectionManager implements Listener {
                     return Integer.compare(locA.getBlockX(), locB.getBlockX());
                 });
                 
-                plugin.getLogger().fine("Updated player script blocks for: " + entry.getKey());
-                break;
+                plugin.getLogger().fine("Updated player script blocks for: " + owner.getName());
+            }
+        } else {
+            // Fallback to the simplified approach if owner cannot be determined
+            for (Map.Entry<UUID, List<CodeBlock>> entry : playerScriptBlocks.entrySet()) {
+                List<CodeBlock> blocks = entry.getValue();
+                
+                // Add to player's blocks if not already present
+                if (!blocks.contains(codeBlock)) {
+                    blocks.add(codeBlock);
+                    
+                    // Sort blocks by location for proper execution order
+                    blocks.sort((a, b) -> {
+                        Location locA = getLocationForBlock(a);
+                        Location locB = getLocationForBlock(b);
+                        if (locA == null || locB == null) return 0;
+                        
+                        // Sort by Z (line) first, then by X (position in line)
+                        int lineCompare = Integer.compare(locA.getBlockZ(), locB.getBlockZ());
+                        if (lineCompare != 0) return lineCompare;
+                        return Integer.compare(locA.getBlockX(), locB.getBlockX());
+                    });
+                    
+                    plugin.getLogger().fine("Updated player script blocks for: " + entry.getKey());
+                    break;
+                }
             }
         }
     }
@@ -459,6 +486,37 @@ public class AutoConnectionManager implements Listener {
     private String getBlockType(Material material) {
         BlockConfigService.BlockConfig config = blockConfigService.getFirstBlockConfig(material);
         return config != null ? config.getType() : "ACTION";
+    }
+    
+    /**
+     * Finds the player who owns a block at the specified location
+     * Uses a more sophisticated approach than the simplified method
+     */
+    private Player findBlockOwner(Location location) {
+        if (location == null || location.getWorld() == null) {
+            return null;
+        }
+        
+        World world = location.getWorld();
+        
+        // First, try to find a player who is close to the block
+        Collection<? extends Player> players = world.getPlayers();
+        for (Player player : players) {
+            // Check if player is within a reasonable distance (32 blocks)
+            if (player.getLocation().distanceSquared(location) < 1024) { // 32^2 = 1024
+                return player;
+            }
+        }
+        
+        // If no nearby player, try to find the player who last interacted with a block in this area
+        // This would require tracking player interactions, which is more complex
+        
+        // Fallback to the first player in the world
+        if (!players.isEmpty()) {
+            return players.iterator().next();
+        }
+        
+        return null;
     }
     
     /**

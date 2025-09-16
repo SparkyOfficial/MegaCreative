@@ -88,17 +88,50 @@ public class BlockPlacementHandler implements Listener {
     }
 
     /**
-     * Sets the direction of a piston block
+     * Sets the direction of a piston block based on adjacent blocks
      */
     private void setPistonDirection(Block pistonBlock, CodeBlock.BracketType bracketType) {
         if (pistonBlock.getBlockData() instanceof org.bukkit.block.data.type.Piston pistonData) {
+            // Determine the optimal direction based on adjacent code blocks
+            BlockFace optimalDirection = determineOptimalPistonDirection(pistonBlock.getLocation(), bracketType);
+            
             if (bracketType == CodeBlock.BracketType.OPEN) {
-                pistonData.setFacing(org.bukkit.block.BlockFace.EAST);
+                // Opening bracket should face toward the structure (inward)
+                pistonData.setFacing(optimalDirection);
             } else {
-                pistonData.setFacing(org.bukkit.block.BlockFace.WEST);
+                // Closing bracket should face away from the structure (outward)
+                pistonData.setFacing(optimalDirection.getOppositeFace());
             }
             pistonBlock.setBlockData(pistonData);
         }
+    }
+    
+    /**
+     * Determines the optimal direction for a piston bracket based on adjacent code blocks
+     */
+    private BlockFace determineOptimalPistonDirection(Location location, CodeBlock.BracketType bracketType) {
+        World world = location.getWorld();
+        if (world == null) return BlockFace.EAST;
+        
+        // Check adjacent locations for code blocks to determine the best direction
+        BlockFace[] directions = {BlockFace.EAST, BlockFace.WEST, BlockFace.SOUTH, BlockFace.NORTH};
+        
+        for (BlockFace face : directions) {
+            Location adjacentLoc = location.clone().add(face.getModX(), 0, face.getModZ());
+            if (blockCodeBlocks.containsKey(adjacentLoc)) {
+                // Found an adjacent code block, determine direction based on bracket type
+                if (bracketType == CodeBlock.BracketType.OPEN) {
+                    // Opening bracket should face toward the adjacent block (inward)
+                    return face;
+                } else {
+                    // Closing bracket should face away from the adjacent block (outward)
+                    return face.getOppositeFace();
+                }
+            }
+        }
+        
+        // Fallback to default direction
+        return BlockFace.EAST;
     }
     
     /**

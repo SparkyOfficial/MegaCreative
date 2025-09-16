@@ -202,8 +202,12 @@ public class ForEachAction implements BlockAction {
                 }
                 
                 // Check for break conditions or script interruption
-                // Implement proper cancellation support
-                if (context.isCancelled() || context.hasBreakFlag()) {
+                if (context.isCancelled()) {
+                    player.sendMessage("§c[ForEach] Loop cancelled by external interruption");
+                    break; // Exit the loop
+                }
+                
+                if (context.hasBreakFlag()) {
                     context.clearBreakFlag(); // Clear the break flag
                     player.sendMessage("§a[ForEach] Loop interrupted at item " + (i + 1));
                     break; // Exit the loop

@@ -354,11 +354,17 @@ public class DefaultScriptEngine implements ScriptEngine, EnhancedScriptEngine {
                     case "break":
                         // Break implementation - set a flag in context to break out of loops
                         context.setBreakFlag(true);
+                        if (context.getPlayer() != null) {
+                            context.getPlayer().sendMessage("§aBreak statement executed");
+                        }
                         return ExecutionResult.success("Break executed");
                         
                     case "continue":
                         // Continue implementation - set a flag in context to continue loops
                         context.setContinueFlag(true);
+                        if (context.getPlayer() != null) {
+                            context.getPlayer().sendMessage("§aContinue statement executed");
+                        }
                         return ExecutionResult.success("Continue executed");
                         
                     default:

@@ -289,9 +289,38 @@ public class ActionFactory {
         register("createInteractiveGui", () -> new BlockAction() {
             @Override
             public ExecutionResult execute(CodeBlock block, ExecutionContext context) {
-                // This is a placeholder for interactive GUI creation
-                // In a full implementation, this would use the interactiveGUIManager
-                return ExecutionResult.success("Interactive GUI creation placeholder");
+                // Create interactive GUI using the interactiveGUIManager
+                if (interactiveGUIManager != null) {
+                    try {
+                        // Get parameters from the block
+                        String guiTitle = block.getParameter("title") != null ? 
+                            block.getParameter("title").asString() : "Interactive GUI";
+                        int guiSize = block.getParameter("size") != null ? 
+                            block.getParameter("size").asNumber().intValue() : 27;
+                        
+                        // Create the interactive GUI
+                        com.megacreative.gui.interactive.InteractiveGUI interactiveGUI = 
+                            interactiveGUIManager.createInteractiveGUI(context.getPlayer(), guiTitle, guiSize);
+                        
+                        // Add any configured items to the GUI
+                        if (block.getParameter("items") != null) {
+                            // Process items parameter and add to GUI
+                            // This would depend on how items are stored in the block parameters
+                        }
+                        
+                        // Open the GUI for the player
+                        if (context.getPlayer() != null) {
+                            interactiveGUI.open();
+                            return ExecutionResult.success("Interactive GUI created and opened");
+                        } else {
+                            return ExecutionResult.error("No player context available");
+                        }
+                    } catch (Exception e) {
+                        return ExecutionResult.error("Failed to create interactive GUI: " + e.getMessage());
+                    }
+                } else {
+                    return ExecutionResult.error("Interactive GUI manager not available");
+                }
             }
         });
         

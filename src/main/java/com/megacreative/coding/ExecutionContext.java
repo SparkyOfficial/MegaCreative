@@ -368,10 +368,18 @@ public class ExecutionContext {
     
     public void setBreakFlag(boolean breakFlag) {
         this.breakFlag = breakFlag;
+        // Log break flag changes for debugging
+        if (plugin != null && plugin.getLogger() != null) {
+            plugin.getLogger().fine("Break flag set to: " + breakFlag);
+        }
     }
     
     public void clearBreakFlag() {
         this.breakFlag = false;
+        // Log break flag changes for debugging
+        if (plugin != null && plugin.getLogger() != null) {
+            plugin.getLogger().fine("Break flag cleared");
+        }
     }
     
     public boolean hasContinueFlag() {
@@ -380,10 +388,18 @@ public class ExecutionContext {
     
     public void setContinueFlag(boolean continueFlag) {
         this.continueFlag = continueFlag;
+        // Log continue flag changes for debugging
+        if (plugin != null && plugin.getLogger() != null) {
+            plugin.getLogger().fine("Continue flag set to: " + continueFlag);
+        }
     }
     
     public void clearContinueFlag() {
         this.continueFlag = false;
+        // Log continue flag changes for debugging
+        if (plugin != null && plugin.getLogger() != null) {
+            plugin.getLogger().fine("Continue flag cleared");
+        }
     }
     
     public CodeBlock getCurrentBlock() {

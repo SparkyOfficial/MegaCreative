@@ -92,12 +92,21 @@ public class CodingManagerImpl implements ICodingManager {
     
     @Override
     public CodeScript getScript(String name) {
-        // In a real implementation, this would search for a script by name
+        // Search for a script by name with enhanced matching
         // Search through all worlds for a script with the given name
         for (CreativeWorld world : plugin.getWorldManager().getCreativeWorlds()) {
             if (world.getScripts() != null) {
                 for (CodeScript script : world.getScripts()) {
+                    // Exact match first
                     if (script.getName().equals(name)) {
+                        return script;
+                    }
+                    // Case-insensitive match
+                    if (script.getName().equalsIgnoreCase(name)) {
+                        return script;
+                    }
+                    // Partial match (contains)
+                    if (script.getName().toLowerCase().contains(name.toLowerCase())) {
                         return script;
                     }
                 }

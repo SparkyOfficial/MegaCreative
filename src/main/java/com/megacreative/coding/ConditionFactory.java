@@ -2,6 +2,7 @@ package com.megacreative.coding;
 
 import com.megacreative.coding.conditions.*;
 import com.megacreative.coding.executors.ExecutionResult;
+import com.megacreative.coding.values.DataValue;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.function.Supplier;
@@ -132,12 +133,82 @@ public class ConditionFactory {
     public void registerCondition(String conditionId, String displayName) {
         // Register the condition if it's not already registered
         if (!conditionMap.containsKey(conditionId)) {
-            // For now, we'll register a generic condition placeholder
-            // In a more advanced implementation, you might want to store display names separately
+            // Register a generic condition that evaluates based on parameters
             register(conditionId, () -> new BlockCondition() {
                 @Override
                 public boolean evaluate(CodeBlock block, ExecutionContext context) {
-                    return false; // Default to false for unimplemented conditions
+                    try {
+                        // Get condition parameters
+                        DataValue conditionType = block.getParameter("type");
+                        DataValue conditionValue = block.getParameter("value");
+                        DataValue expectedValue = block.getParameter("expected");
+                        
+                        // If we have a specific evaluation type, use it
+                        if (conditionType != null) {
+                            switch (conditionType.asString().toLowerCase()) {
+                                case "equals":
+                                case "equal":
+                                    return conditionValue != null && expectedValue != null && 
+                                           conditionValue.asString().equals(expectedValue.asString());
+                                case "greater":
+                                case "greater_than":
+                                    if (conditionValue != null && expectedValue != null) {
+                                        try {
+                                            double val1 = Double.parseDouble(conditionValue.asString());
+                                            double val2 = Double.parseDouble(expectedValue.asString());
+                                            return val1 > val2;
+                                        } catch (NumberFormatException e) {
+                                            return false;
+                                        }
+                                    }
+                                    break;
+                                case "less":
+                                case "less_than":
+                                    if (conditionValue != null && expectedValue != null) {
+                                        try {
+                                            double val1 = Double.parseDouble(conditionValue.asString());
+                                            double val2 = Double.parseDouble(expectedValue.asString());
+                                            return val1 < val2;
+                                        } catch (NumberFormatException e) {
+                                            return false;
+                                        }
+                                    }
+                                    break;
+                                case "contains":
+                                    if (conditionValue != null && expectedValue != null) {
+                                        return conditionValue.asString().contains(expectedValue.asString());
+                                    }
+                                    break;
+                                case "not_empty":
+                                    return conditionValue != null && !conditionValue.asString().isEmpty();
+                                case "is_true":
+                                case "true":
+                                    if (conditionValue != null) {
+                                        return Boolean.parseBoolean(conditionValue.asString());
+                                    }
+                                    break;
+                                case "is_false":
+                                case "false":
+                                    if (conditionValue != null) {
+                                        return !Boolean.parseBoolean(conditionValue.asString());
+                                    }
+                                    break;
+                            }
+                        }
+                        
+                        // Default evaluation - check if condition value is truthy
+                        if (conditionValue != null) {
+                            String value = conditionValue.asString();
+                            return !value.isEmpty() && !"false".equalsIgnoreCase(value) && !"0".equals(value);
+                        }
+                        
+                        // If no parameters, default to true to allow execution
+                        return true;
+                    } catch (Exception e) {
+                        context.getPlugin().getLogger().warning("Error evaluating condition " + conditionId + ": " + e.getMessage());
+                        // Default to false on error for safety
+                        return false;
+                    }
                 }
             });
         }

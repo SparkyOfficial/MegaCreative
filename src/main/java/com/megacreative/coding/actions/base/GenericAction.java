@@ -132,12 +132,24 @@ public class GenericAction implements BlockAction {
         });
         
         ACTION_HANDLERS.put("teleport", (context, params) -> {
-            // Location loc = params.get("location").asLocation(); // Need to implement location handling
             String locString = params.get("location").asString();
-            // Parse location string and teleport - simplified for now
             Location location = parseLocationString(locString, context);
             if (location != null) {
+                // Add teleport effects
+                context.getPlayer().getWorld().spawnParticle(org.bukkit.Particle.PORTAL, 
+                    context.getPlayer().getLocation(), 50, 0.5, 1.0, 0.5, 0.1);
+                context.getPlayer().playSound(context.getPlayer().getLocation(), 
+                    org.bukkit.Sound.ENTITY_ENDERMAN_TELEPORT, 1.0f, 1.0f);
+                
                 context.getPlayer().teleport(location);
+                
+                // Add arrival effects
+                context.getPlayer().getWorld().spawnParticle(org.bukkit.Particle.PORTAL, 
+                    location, 50, 0.5, 1.0, 0.5, 0.1);
+                context.getPlayer().playSound(location, 
+                    org.bukkit.Sound.ENTITY_ENDERMAN_TELEPORT, 1.0f, 1.0f);
+                
+                context.getPlayer().sendMessage("§aTeleported to " + locString);
             } else {
                 context.getPlayer().sendMessage("§cInvalid location: " + locString);
             }
