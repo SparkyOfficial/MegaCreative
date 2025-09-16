@@ -259,6 +259,15 @@ public class ExecutorEngine {
                 case "ifVarEquals":
                     result = executeIfVariable(block, processedParameters, context);
                     break;
+                case "ifVarGreater":
+                    result = executeIfVarGreater(block, processedParameters, context);
+                    break;
+                case "ifVarLess":
+                    result = executeIfVarLess(block, processedParameters, context);
+                    break;
+                case "compareVariable":
+                    result = executeCompareVariable(block, processedParameters, context);
+                    break;
                 default:
                     return context.createErrorResult("Unknown action: " + action);
             }
@@ -1093,207 +1102,7 @@ public class ExecutorEngine {
             }
             
             // Store the random number in the variable
-            variableManager.setVariable(targetVariable, randomNumber);
-            
-            // Create success message
-            return context.createResult(true, "Generated random number " + randomNumber + " and stored in variable '" + targetVariable + "'");
-            
-        } catch (Exception e) {
-            return context.createErrorResult("Failed to generate random number: " + e.getMessage(), e);
-        }
-    }
-    
-    /**
-     * Executes the playParticle action to spawn particles at a relative position from the player
-     */
-    private ExecutionResult executePlayParticle(Map<String, DataValue> params, ExecutionContext context) {
-        try {
-            // Get the particle type parameter (required)
-            DataValue particleTypeValue = params.get("particle_type");
-            if (particleTypeValue == null) {
-                return context.createErrorResult("No particle type specified for playParticle action");
-            }
-            
-            String particleTypeName = particleTypeValue.asString();
-            if (particleTypeName == null || particleTypeName.trim().isEmpty()) {
-                return context.createErrorResult("Particle type cannot be empty");
-            }
-            
-            // Try to get the particle type
-            org.bukkit.Particle particleType;
-            try {
-                particleType = org.bukkit.Particle.valueOf(particleTypeName.toUpperCase());
-            } catch (IllegalArgumentException e) {
-                return context.createErrorResult("Invalid particle type: " + particleTypeName);
-            }
-            
-            // Get count with default
-            int count = 10;
-            try {
-                if (params.containsKey("count")) {
-                    count = Integer.parseInt(params.get("count").asString());
-                }
-            } catch (NumberFormatException e) {
-                // Keep default count
-            }
-            
-            // Validate count range
-            if (count < 1 || count > 100) {
-                count = Math.max(1, Math.min(100, count)); // Clamp to valid range
-            }
-            
-            // Get relative coordinates with defaults
-            double relativeX = 0.0;
-            double relativeY = 0.0;
-            double relativeZ = 0.0;
-            
-            try {
-                if (params.containsKey("relative_x")) {
-                    relativeX = Double.parseDouble(params.get("relative_x").asString());
-                }
-                if (params.containsKey("relative_y")) {
-                    relativeY = Double.parseDouble(params.get("relative_y").asString());
-                }
-                if (params.containsKey("relative_z")) {
-                    relativeZ = Double.parseDouble(params.get("relative_z").asString());
-                }
-            } catch (NumberFormatException e) {
-                return context.createErrorResult("Invalid number format for relative coordinates");
-            }
-            
-            // Get the player's location and calculate target position
-            Player player = context.getPlayer();
-            Location playerLocation = player.getLocation();
-            Location targetLocation = playerLocation.clone().add(relativeX, relativeY, relativeZ);
-            
-            // Spawn the particles
-            player.spawnParticle(particleType, targetLocation, count);
-            
-            // Visual effect
-            player.playSound(targetLocation, Sound.BLOCK_NOTE_BLOCK_CHIME, 1.0f, 1.5f);
-            
-            // Create success message
-            return context.createResult(true, "Spawned " + count + " " + particleType.name().toLowerCase() + 
-                " particles at relative position (" + relativeX + ", " + relativeY + ", " + relativeZ + ")");
-            
-        } catch (Exception e) {
-            return context.createErrorResult("Failed to spawn particles: " + e.getMessage(), e);
-        }
-    }
-    
-    private ExecutionResult executePlaySound(Map<String, DataValue> params, ExecutionContext context) {
-        try {
-            DataValue soundValue = params.get("sound");
-            if (soundValue == null) {
-                return context.createErrorResult("No sound specified");
-            }
-            
-            String soundName = soundValue.asString();
-            if (soundName == null || soundName.trim().isEmpty()) {
-                return context.createErrorResult("Sound name cannot be empty");
-            }
-            
-            // Try to get the sound type
-            org.bukkit.Sound sound;
-            try {
-                sound = org.bukkit.Sound.valueOf(soundName.toUpperCase());
-            } catch (IllegalArgumentException e) {
-                return context.createErrorResult("Invalid sound: " + soundName);
-            }
-            
-            // Get volume and pitch with defaults
-            float volume = 1.0f;
-            float pitch = 1.0f;
-            
-            try {
-                if (params.containsKey("volume")) {
-                    volume = Float.parseFloat(params.get("volume").asString());
-                }
-                if (params.containsKey("pitch")) {
-                    pitch = Float.parseFloat(params.get("pitch").asString());
-                }
-            } catch (NumberFormatException e) {
-                // Keep default volume and pitch
-            }
-            
-            // Validate volume and pitch ranges
-            if (volume < 0.0f || volume > 2.0f) {
-                volume = Math.max(0.0f, Math.min(2.0f, volume)); // Clamp to valid range
-            }
-            if (pitch < 0.5f || pitch > 2.0f) {
-                pitch = Math.max(0.5f, Math.min(2.0f, pitch)); // Clamp to valid range
-            }
-            String minStr = minValueValue.asString();
-            if (minStr == null || minStr.trim().isEmpty()) {
-                return context.createErrorResult("Minimum value cannot be empty");
-            }
-            
-            // Parse the min value
-            int minValue;
-            try {
-                minValue = Integer.parseInt(minStr);
-            } catch (NumberFormatException e) {
-                return context.createErrorResult("Invalid minimum value format: " + minStr + ". Must be a number.");
-            }
-            
-            // Get the max value parameter (required)
-            DataValue maxValueValue = params.get("max_value");
-            if (maxValueValue == null) {
-                return context.createErrorResult("No maximum value specified for randomNumber action");
-            }
-            
-            String maxStr = maxValueValue.asString();
-            if (maxStr == null || maxStr.trim().isEmpty()) {
-                return context.createErrorResult("Maximum value cannot be empty");
-            }
-            
-            // Parse the max value
-            int maxValue;
-            try {
-                maxValue = Integer.parseInt(maxStr);
-            } catch (NumberFormatException e) {
-                return context.createErrorResult("Invalid maximum value format: " + maxStr + ". Must be a number.");
-            }
-            
-            // Validate that min is less than or equal to max
-            if (minValue > maxValue) {
-                return context.createErrorResult("Minimum value (" + minValue + ") must be less than or equal to maximum value (" + maxValue + ")");
-            }
-            
-            // Get the target variable parameter (required)
-            DataValue targetVariableValue = params.get("target_variable");
-            if (targetVariableValue == null) {
-                return context.createErrorResult("No target variable specified for randomNumber action");
-            }
-            
-            String targetVariable = targetVariableValue.asString();
-            if (targetVariable == null || targetVariable.trim().isEmpty()) {
-                return context.createErrorResult("Target variable name cannot be empty");
-            }
-            
-            // Validate target variable name length
-            if (targetVariable.length() < 1 || targetVariable.length() > 16) {
-                return context.createErrorResult("Target variable name must be between 1 and 16 characters");
-            }
-            
-            // Generate random number
-            java.util.Random random = new java.util.Random();
-            int randomNumber = random.nextInt(maxValue - minValue + 1) + minValue;
-            
-            // Get the player
-            Player player = context.getPlayer();
-            
-            // Store the random number in the specified variable
-            // Get world and script IDs for variable scoping
-            String scriptId = context.getScript() != null ? 
-                context.getScript().getId().toString() : "global";
-            
-            // Set the variable
-            variableManager.setLocalVariable(scriptId, targetVariable, DataValue.of(randomNumber));
-            
-            // Visual effect
-            player.spawnParticle(Particle.ENCHANTMENT_TABLE, player.getLocation().add(0, 2, 0), 5);
-            player.playSound(player.getLocation(), Sound.BLOCK_NOTE_BLOCK_CHIME, 1.0f, 1.5f);
+            variableManager.setLocalVariable("global", targetVariable, DataValue.of(randomNumber));
             
             // Create success message
             return context.createResult(true, "Generated random number " + randomNumber + " and stored in variable '" + targetVariable + "'");
@@ -1478,7 +1287,7 @@ public class ExecutorEngine {
             player.sendTitle(title, subtitle, fadeIn, stay, fadeOut);
             
             // Visual effect
-            player.spawnParticle(Particle.TOTEM_OF_UNDYING, player.getLocation().add(0, 2, 0), 5);
+            player.spawnParticle(Particle.TOTEM, player.getLocation().add(0, 2, 0), 5);
             player.playSound(player.getLocation(), Sound.ENTITY_PLAYER_LEVELUP, 1.0f, 1.5f);
             
             // Create success message
@@ -1486,6 +1295,84 @@ public class ExecutorEngine {
             
         } catch (Exception e) {
             return context.createErrorResult("Failed to send title: " + e.getMessage(), e);
+        }
+    }
+    
+    /**
+     * Executes the playParticle action to spawn particles at a relative position from the player
+     */
+    private ExecutionResult executePlayParticle(Map<String, DataValue> params, ExecutionContext context) {
+        try {
+            // Get the particle type parameter (required)
+            DataValue particleTypeValue = params.get("particle_type");
+            if (particleTypeValue == null) {
+                return context.createErrorResult("No particle type specified for playParticle action");
+            }
+            
+            String particleTypeName = particleTypeValue.asString();
+            if (particleTypeName == null || particleTypeName.trim().isEmpty()) {
+                return context.createErrorResult("Particle type cannot be empty");
+            }
+            
+            // Try to get the particle type
+            org.bukkit.Particle particleType;
+            try {
+                particleType = org.bukkit.Particle.valueOf(particleTypeName.toUpperCase());
+            } catch (IllegalArgumentException e) {
+                return context.createErrorResult("Invalid particle type: " + particleTypeName);
+            }
+            
+            // Get count with default
+            int count = 10;
+            try {
+                if (params.containsKey("count")) {
+                    count = Integer.parseInt(params.get("count").asString());
+                }
+            } catch (NumberFormatException e) {
+                // Keep default count
+            }
+            
+            // Validate count range
+            if (count < 1 || count > 100) {
+                count = Math.max(1, Math.min(100, count)); // Clamp to valid range
+            }
+            
+            // Get relative coordinates with defaults
+            double relativeX = 0.0;
+            double relativeY = 0.0;
+            double relativeZ = 0.0;
+            
+            try {
+                if (params.containsKey("relative_x")) {
+                    relativeX = Double.parseDouble(params.get("relative_x").asString());
+                }
+                if (params.containsKey("relative_y")) {
+                    relativeY = Double.parseDouble(params.get("relative_y").asString());
+                }
+                if (params.containsKey("relative_z")) {
+                    relativeZ = Double.parseDouble(params.get("relative_z").asString());
+                }
+            } catch (NumberFormatException e) {
+                return context.createErrorResult("Invalid number format for relative coordinates");
+            }
+            
+            // Get the player's location and calculate target position
+            Player player = context.getPlayer();
+            Location playerLocation = player.getLocation();
+            Location targetLocation = playerLocation.clone().add(relativeX, relativeY, relativeZ);
+            
+            // Spawn the particles
+            player.spawnParticle(particleType, targetLocation, count);
+            
+            // Visual effect
+            player.playSound(targetLocation, Sound.BLOCK_NOTE_BLOCK_CHIME, 1.0f, 1.5f);
+            
+            // Create success message
+            return context.createResult(true, "Spawned " + count + " " + particleType.name().toLowerCase() + 
+                " particles at relative position (" + relativeX + ", " + relativeY + ", " + relativeZ + ")");
+            
+        } catch (Exception e) {
+            return context.createErrorResult("Failed to spawn particles: " + e.getMessage(), e);
         }
     }
     
@@ -1679,6 +1566,46 @@ public class ExecutorEngine {
             return context.createErrorResult("Failed to broadcast message: " + e.getMessage(), e);
         }
     }
+
+    /**
+     * Executes the sendActionBar action to send a message to the player's action bar
+     */
+    private ExecutionResult executeSendActionBar(Map<String, DataValue> params, ExecutionContext context) {
+        try {
+            // Get the message parameter (required)
+            DataValue messageValue = params.get("message");
+            if (messageValue == null) {
+                return context.createErrorResult("No message specified for sendActionBar action");
+            }
+            
+            String message = messageValue.asString();
+            if (message == null || message.trim().isEmpty()) {
+                return context.createErrorResult("Message cannot be empty");
+            }
+            
+            // Validate message length (1-64 characters as per config)
+            if (message.length() < 1 || message.length() > 64) {
+                return context.createErrorResult("Message must be between 1 and 64 characters. Provided: " + message.length());
+            }
+            
+            // Resolve placeholders in the message
+            message = resolvePlaceholders(message, context);
+            
+            // Send the action bar message to the player
+            Player player = context.getPlayer();
+            player.sendActionBar(message);
+            
+            // Visual effect
+            player.spawnParticle(Particle.ENCHANTMENT_TABLE, player.getLocation().add(0, 2, 0), 3);
+            player.playSound(player.getLocation(), Sound.BLOCK_NOTE_BLOCK_PLING, 1.0f, 1.5f);
+            
+            // Create success message
+            return context.createResult(true, "Sent action bar message: " + message);
+            
+        } catch (Exception e) {
+            return context.createErrorResult("Failed to send action bar message: " + e.getMessage(), e);
+        }
+    }
     
     private ExecutionResult executeIfVariable(com.megacreative.coding.CodeBlock block, 
                                             Map<String, DataValue> params, ExecutionContext context) {
@@ -1733,6 +1660,342 @@ public class ExecutorEngine {
                         return context.createResult(false, "Execution cancelled");
                     }
                 }
+            }
+            
+            return context.createResult(true, "Condition evaluated: " + condition);
+            
+        } catch (Exception e) {
+            return context.createErrorResult("Failed to evaluate condition: " + e.getMessage(), e);
+        }
+    }
+    
+    /**
+     * Executes the ifVarGreater condition to check if a variable is greater than a value
+     */
+    private ExecutionResult executeIfVarGreater(com.megacreative.coding.CodeBlock block,
+                                              Map<String, DataValue> params, ExecutionContext context) {
+        try {
+            DataValue varNameValue = params.get("name");
+            DataValue compareValue = params.get("value");
+            
+            if (varNameValue == null) {
+                return context.createErrorResult("Variable name not specified");
+            }
+            
+            String varName = varNameValue.asString();
+            if (varName == null || varName.trim().isEmpty()) {
+                return context.createErrorResult("Variable name cannot be empty");
+            }
+            
+            if (compareValue == null) {
+                return context.createErrorResult("Comparison value not specified");
+            }
+            
+            // Get world and script IDs for variable scoping
+            String scriptId = context.getScript() != null ? 
+                context.getScript().getId().toString() : "global";
+            
+            // Get current variable value
+            DataValue currentValue = variableManager.getLocalVariable(scriptId, varName);
+            
+            // Check condition - variable > compareValue
+            boolean condition = false;
+            if (currentValue != null && currentValue.getValue() != null && compareValue.getValue() != null) {
+                try {
+                    // Try to compare as numbers first
+                    double currentNum = Double.parseDouble(currentValue.asString());
+                    double compareNum = Double.parseDouble(compareValue.asString());
+                    condition = currentNum > compareNum;
+                } catch (NumberFormatException e) {
+                    // If not numbers, compare as strings
+                    condition = currentValue.asString().compareTo(compareValue.asString()) > 0;
+                }
+            }
+            
+            // Log the condition check
+            plugin.getLogger().fine(String.format("Condition check: %s > %s -> %s",
+                currentValue != null ? currentValue.asString() : "null",
+                compareValue.asString(),
+                condition));
+            
+            // Execute child blocks if condition is true and there are children
+            if (condition && block.getChildren() != null && !block.getChildren().isEmpty()) {
+                for (var childBlock : block.getChildren()) {
+                    if (childBlock == null) continue;
+                    
+                    ExecutionResult childResult = executeBlockChain(childBlock, context);
+                    if (!childResult.isSuccess()) {
+                        return childResult; // Return first failure
+                    }
+                    
+                    // Stop if execution was cancelled
+                    if (context.isCancelled()) {
+                        return context.createResult(false, "Execution cancelled");
+                    }
+                }
+            }
+            
+            // Visual feedback
+            Player player = context.getPlayer();
+            if (condition) {
+                player.spawnParticle(Particle.VILLAGER_HAPPY, player.getLocation().add(0, 2, 0), 3);
+            } else {
+                player.spawnParticle(Particle.SMOKE_NORMAL, player.getLocation().add(0, 2, 0), 3);
+            }
+            
+            return context.createResult(true, "Condition evaluated: " + condition);
+            
+        } catch (Exception e) {
+            return context.createErrorResult("Failed to evaluate condition: " + e.getMessage(), e);
+        }
+    }
+    
+    /**
+     * Executes the ifVarLess condition to check if a variable is less than a value
+     */
+    private ExecutionResult executeIfVarLess(com.megacreative.coding.CodeBlock block,
+                                           Map<String, DataValue> params, ExecutionContext context) {
+        try {
+            DataValue varNameValue = params.get("name");
+            DataValue compareValue = params.get("value");
+            
+            if (varNameValue == null) {
+                return context.createErrorResult("Variable name not specified");
+            }
+            
+            String varName = varNameValue.asString();
+            if (varName == null || varName.trim().isEmpty()) {
+                return context.createErrorResult("Variable name cannot be empty");
+            }
+            
+            if (compareValue == null) {
+                return context.createErrorResult("Comparison value not specified");
+            }
+            
+            // Get world and script IDs for variable scoping
+            String scriptId = context.getScript() != null ? 
+                context.getScript().getId().toString() : "global";
+            
+            // Get current variable value
+            DataValue currentValue = variableManager.getLocalVariable(scriptId, varName);
+            
+            // Check condition - variable < compareValue
+            boolean condition = false;
+            if (currentValue != null && currentValue.getValue() != null && compareValue.getValue() != null) {
+                try {
+                    // Try to compare as numbers first
+                    double currentNum = Double.parseDouble(currentValue.asString());
+                    double compareNum = Double.parseDouble(compareValue.asString());
+                    condition = currentNum < compareNum;
+                } catch (NumberFormatException e) {
+                    // If not numbers, compare as strings
+                    condition = currentValue.asString().compareTo(compareValue.asString()) < 0;
+                }
+            }
+            
+            // Log the condition check
+            plugin.getLogger().fine(String.format("Condition check: %s < %s -> %s",
+                currentValue != null ? currentValue.asString() : "null",
+                compareValue.asString(),
+                condition));
+            
+            // Execute child blocks if condition is true and there are children
+            if (condition && block.getChildren() != null && !block.getChildren().isEmpty()) {
+                for (var childBlock : block.getChildren()) {
+                    if (childBlock == null) continue;
+                    
+                    ExecutionResult childResult = executeBlockChain(childBlock, context);
+                    if (!childResult.isSuccess()) {
+                        return childResult; // Return first failure
+                    }
+                    
+                    // Stop if execution was cancelled
+                    if (context.isCancelled()) {
+                        return context.createResult(false, "Execution cancelled");
+                    }
+                }
+            }
+            
+            // Visual feedback
+            Player player = context.getPlayer();
+            if (condition) {
+                player.spawnParticle(Particle.VILLAGER_HAPPY, player.getLocation().add(0, 2, 0), 3);
+            } else {
+                player.spawnParticle(Particle.SMOKE_NORMAL, player.getLocation().add(0, 2, 0), 3);
+            }
+            
+            return context.createResult(true, "Condition evaluated: " + condition);
+            
+        } catch (Exception e) {
+            return context.createErrorResult("Failed to evaluate condition: " + e.getMessage(), e);
+        }
+    }
+    
+    /**
+     * Executes the compareVariable condition to compare two variables with various operators
+     */
+    private ExecutionResult executeCompareVariable(com.megacreative.coding.CodeBlock block,
+                                                 Map<String, DataValue> params, ExecutionContext context) {
+        try {
+            DataValue var1Value = params.get("var1");
+            DataValue operatorValue = params.get("operator");
+            DataValue var2Value = params.get("var2");
+            
+            if (var1Value == null) {
+                return context.createErrorResult("First variable name not specified");
+            }
+            
+            if (operatorValue == null) {
+                return context.createErrorResult("Operator not specified");
+            }
+            
+            if (var2Value == null) {
+                return context.createErrorResult("Second variable name not specified");
+            }
+            
+            String var1Name = var1Value.asString();
+            String operator = operatorValue.asString();
+            String var2Name = var2Value.asString();
+            
+            if (var1Name == null || var1Name.trim().isEmpty()) {
+                return context.createErrorResult("First variable name cannot be empty");
+            }
+            
+            if (operator == null || operator.trim().isEmpty()) {
+                return context.createErrorResult("Operator cannot be empty");
+            }
+            
+            if (var2Name == null || var2Name.trim().isEmpty()) {
+                return context.createErrorResult("Second variable name cannot be empty");
+            }
+            
+            // Get world and script IDs for variable scoping
+            String scriptId = context.getScript() != null ? 
+                context.getScript().getId().toString() : "global";
+            
+            // Get both variable values
+            DataValue value1 = variableManager.getLocalVariable(scriptId, var1Name);
+            DataValue value2 = variableManager.getLocalVariable(scriptId, var2Name);
+            
+            // Check condition based on operator
+            boolean condition = false;
+            if (value1 != null && value1.getValue() != null && value2 != null && value2.getValue() != null) {
+                try {
+                    // Try to compare as numbers first
+                    double num1 = Double.parseDouble(value1.asString());
+                    double num2 = Double.parseDouble(value2.asString());
+                    
+                    switch (operator) {
+                        case "==":
+                        case "===":
+                            condition = num1 == num2;
+                            break;
+                        case "!=":
+                        case "!==":
+                            condition = num1 != num2;
+                            break;
+                        case "<":
+                            condition = num1 < num2;
+                            break;
+                        case ">":
+                            condition = num1 > num2;
+                            break;
+                        case "<=":
+                            condition = num1 <= num2;
+                            break;
+                        case ">=":
+                            condition = num1 >= num2;
+                            break;
+                        default:
+                            return context.createErrorResult("Invalid operator: " + operator);
+                    }
+                } catch (NumberFormatException e) {
+                    // If not numbers, compare as strings
+                    int comparison = value1.asString().compareTo(value2.asString());
+                    
+                    switch (operator) {
+                        case "==":
+                        case "===":
+                            condition = comparison == 0;
+                            break;
+                        case "!=":
+                        case "!==":
+                            condition = comparison != 0;
+                            break;
+                        case "<":
+                            condition = comparison < 0;
+                            break;
+                        case ">":
+                            condition = comparison > 0;
+                            break;
+                        case "<=":
+                            condition = comparison <= 0;
+                            break;
+                        case ">=":
+                            condition = comparison >= 0;
+                            break;
+                        default:
+                            return context.createErrorResult("Invalid operator: " + operator);
+                    }
+                }
+            } else if (value1 == null && value2 == null) {
+                // Both null - only == or != make sense
+                switch (operator) {
+                    case "==":
+                    case "===":
+                        condition = true;
+                        break;
+                    case "!=":
+                    case "!==":
+                        condition = false;
+                        break;
+                    default:
+                        condition = false;
+                        break;
+                }
+            } else {
+                // One is null, the other isn't - only != makes sense
+                switch (operator) {
+                    case "!=":
+                    case "!==":
+                        condition = true;
+                        break;
+                    default:
+                        condition = false;
+                        break;
+                }
+            }
+            
+            // Log the condition check
+            plugin.getLogger().fine(String.format("Condition check: %s %s %s -> %s",
+                value1 != null ? value1.asString() : "null",
+                operator,
+                value2 != null ? value2.asString() : "null",
+                condition));
+            
+            // Execute child blocks if condition is true and there are children
+            if (condition && block.getChildren() != null && !block.getChildren().isEmpty()) {
+                for (var childBlock : block.getChildren()) {
+                    if (childBlock == null) continue;
+                    
+                    ExecutionResult childResult = executeBlockChain(childBlock, context);
+                    if (!childResult.isSuccess()) {
+                        return childResult; // Return first failure
+                    }
+                    
+                    // Stop if execution was cancelled
+                    if (context.isCancelled()) {
+                        return context.createResult(false, "Execution cancelled");
+                    }
+                }
+            }
+            
+            // Visual feedback
+            Player player = context.getPlayer();
+            if (condition) {
+                player.spawnParticle(Particle.VILLAGER_HAPPY, player.getLocation().add(0, 2, 0), 3);
+            } else {
+                player.spawnParticle(Particle.SMOKE_NORMAL, player.getLocation().add(0, 2, 0), 3);
             }
             
             return context.createResult(true, "Condition evaluated: " + condition);
@@ -2559,5 +2822,4 @@ class ExecutionContext {
         return createErrorResult(error.getMessage(), error);
     }
 }
-
 // End of file
