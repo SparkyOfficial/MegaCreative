@@ -25,6 +25,63 @@ public class GenericAction implements BlockAction {
     // Action handlers map for easy extension
     private static final Map<String, BiConsumer<ExecutionContext, Map<String, DataValue>>> ACTION_HANDLERS = new HashMap<>();
     
+    /**
+     * Parse a location string in the format "world:x,y,z" or "x,y,z" (uses player's world)
+     * @param locString The location string to parse
+     * @param context The execution context
+     * @return The parsed Location or null if invalid
+     */
+    private static Location parseLocationString(String locString, ExecutionContext context) {
+        if (locString == null || locString.isEmpty()) {
+            return null;
+        }
+        
+        try {
+            // Split by colon to separate world and coordinates
+            String[] parts = locString.split(":");
+            
+            if (parts.length == 1) {
+                // Format: x,y,z (use player's world)
+                String[] coords = parts[0].split(",");
+                if (coords.length != 3) {
+                    return null;
+                }
+                
+                double x = Double.parseDouble(coords[0].trim());
+                double y = Double.parseDouble(coords[1].trim());
+                double z = Double.parseDouble(coords[2].trim());
+                
+                return new Location(context.getPlayer().getWorld(), x, y, z);
+            } else if (parts.length == 2) {
+                // Format: world:x,y,z
+                String worldName = parts[0].trim();
+                String[] coords = parts[1].split(",");
+                if (coords.length != 3) {
+                    return null;
+                }
+                
+                double x = Double.parseDouble(coords[0].trim());
+                double y = Double.parseDouble(coords[1].trim());
+                double z = Double.parseDouble(coords[2].trim());
+                
+                org.bukkit.World world = context.getPlayer().getServer().getWorld(worldName);
+                if (world == null) {
+                    return null;
+                }
+                
+                return new Location(world, x, y, z);
+            }
+        } catch (NumberFormatException e) {
+            // Invalid number format
+            return null;
+        } catch (Exception e) {
+            // Any other parsing error
+            return null;
+        }
+        
+        return null;
+    }
+    
     static {
         initializeActionHandlers();
     }
@@ -78,7 +135,12 @@ public class GenericAction implements BlockAction {
             // Location loc = params.get("location").asLocation(); // Need to implement location handling
             String locString = params.get("location").asString();
             // Parse location string and teleport - simplified for now
-            context.getPlayer().sendMessage("§aTeleport to: " + locString + " (Location parsing needed)");
+            Location location = parseLocationString(locString, context);
+            if (location != null) {
+                context.getPlayer().teleport(location);
+            } else {
+                context.getPlayer().sendMessage("§cInvalid location: " + locString);
+            }
         });
         
         ACTION_HANDLERS.put("giveItem", (context, params) -> {
@@ -180,13 +242,29 @@ public class GenericAction implements BlockAction {
         // === WORLD ACTIONS ===
         ACTION_HANDLERS.put("setBlock", (context, params) -> {
             // Location loc = params.get("location").asLocation(); // Simplified
+            String locString = params.get("location").asString();
             Material material = Material.valueOf(params.get("material").asString());
-            context.getPlayer().sendMessage("§aSet block to: " + material + " (Location handling needed)");
+            
+            Location location = parseLocationString(locString, context);
+            if (location != null) {
+                location.getBlock().setType(material);
+                context.getPlayer().sendMessage("§aBlock set to: " + material);
+            } else {
+                context.getPlayer().sendMessage("§cInvalid location: " + locString);
+            }
         });
         
         ACTION_HANDLERS.put("breakBlock", (context, params) -> {
             // Location loc = params.get("location").asLocation(); // Simplified
-            context.getPlayer().sendMessage("§aBreak block (Location handling needed)");
+            String locString = params.get("location").asString();
+            
+            Location location = parseLocationString(locString, context);
+            if (location != null) {
+                location.getBlock().setType(Material.AIR);
+                context.getPlayer().sendMessage("§aBlock broken");
+            } else {
+                context.getPlayer().sendMessage("§cInvalid location: " + locString);
+            }
         });
         
         ACTION_HANDLERS.put("setTime", (context, params) -> {

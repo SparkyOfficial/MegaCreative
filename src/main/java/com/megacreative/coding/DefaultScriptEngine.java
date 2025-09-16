@@ -7,6 +7,8 @@ import com.megacreative.coding.debug.VisualDebugger;
 import com.megacreative.services.BlockConfigService;
 // 🎆 Reference system-style advanced execution
 import com.megacreative.coding.executors.AdvancedExecutionEngine;
+import com.megacreative.coding.values.DataValue;
+import com.megacreative.coding.values.types.ListValue;
 import org.bukkit.Material;
 import org.bukkit.entity.Player;
 import org.bukkit.scheduler.BukkitRunnable;
@@ -263,7 +265,7 @@ public class DefaultScriptEngine implements ScriptEngine, EnhancedScriptEngine {
                 }
                 
                 // === TRADITIONAL CONTROL LOGIC ===
-                // Here will be logic for IF/ELSE, LOOP etc.
+                // Implementing logic for IF/ELSE, LOOP etc.
                 switch (block.getAction()) {
                     case "conditionalBranch":
                         if (context.getLastConditionResult()) {
@@ -314,19 +316,50 @@ public class DefaultScriptEngine implements ScriptEngine, EnhancedScriptEngine {
                         return processBlock(block.getNextBlock(), context, recursionDepth + 1);
                         
                     case "forEach":
-                        // For each implementation would go here
-                        // This is a placeholder for future implementation
+                        // For each implementation
+                        DataValue listValue = block.getParameter("list");
+                        String itemVariable = block.getParameter("itemVariable").asString();
+                        
+                        if (listValue != null && listValue instanceof ListValue && itemVariable != null) {
+                            ListValue list = (ListValue) listValue;
+                            VariableManager variableManager = getVariableManager();
+                            UUID playerId = context.getPlayer().getUniqueId();
+                            
+                            // Store original variable value
+                            DataValue originalValue = variableManager.getPlayerVariable(playerId, itemVariable);
+                            
+                            try {
+                                // Iterate through list items
+                                for (DataValue item : list.getValues()) {
+                                    // Set current item as variable
+                                    variableManager.setPlayerVariable(playerId, itemVariable, item);
+                                    
+                                    // Execute child blocks
+                                    if (!block.getChildren().isEmpty()) {
+                                        ExecutionResult childResult = processBlock(block.getChildren().get(0), context, recursionDepth + 1);
+                                        if (!childResult.isSuccess()) return childResult;
+                                    }
+                                }
+                            } finally {
+                                // Restore original variable value
+                                if (originalValue != null) {
+                                    variableManager.setPlayerVariable(playerId, itemVariable, originalValue);
+                                } else {
+                                    variableManager.setPlayerVariable(playerId, itemVariable, null);
+                                }
+                            }
+                        }
                         return processBlock(block.getNextBlock(), context, recursionDepth + 1);
                         
                     case "break":
-                        // Break implementation - would need to track loop context
-                        // This is a placeholder for future implementation
-                        return processBlock(block.getNextBlock(), context, recursionDepth + 1);
+                        // Break implementation - set a flag in context to break out of loops
+                        context.setBreakFlag(true);
+                        return ExecutionResult.success("Break executed");
                         
                     case "continue":
-                        // Continue implementation - would need to track loop context
-                        // This is a placeholder for future implementation
-                        return processBlock(block.getNextBlock(), context, recursionDepth + 1);
+                        // Continue implementation - set a flag in context to continue loops
+                        context.setContinueFlag(true);
+                        return ExecutionResult.success("Continue executed");
                         
                     default:
                         // For other CONTROL blocks, just go to the next block

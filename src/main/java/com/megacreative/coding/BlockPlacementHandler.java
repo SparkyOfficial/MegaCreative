@@ -91,19 +91,12 @@ public class BlockPlacementHandler implements Listener {
      * Sets the direction of a piston block
      */
     private void setPistonDirection(Block pistonBlock, CodeBlock.BracketType bracketType) {
-        if (pistonBlock.getType() == Material.PISTON || pistonBlock.getType() == Material.STICKY_PISTON) {
-            org.bukkit.block.data.type.Piston pistonData = (org.bukkit.block.data.type.Piston) pistonBlock.getBlockData();
-            
-            // For opening bracket, piston should point inward (toward the structure)
-            // For closing bracket, piston should point outward (away from the structure)
+        if (pistonBlock.getBlockData() instanceof org.bukkit.block.data.type.Piston pistonData) {
             if (bracketType == CodeBlock.BracketType.OPEN) {
-                // Point inward - this would depend on the structure, for now we'll use NORTH as default
-                pistonData.setFacing(BlockFace.NORTH);
+                pistonData.setFacing(org.bukkit.block.BlockFace.EAST);
             } else {
-                // Point outward - this would depend on the structure, for now we'll use SOUTH as default
-                pistonData.setFacing(BlockFace.SOUTH);
+                pistonData.setFacing(org.bukkit.block.BlockFace.WEST);
             }
-            
             pistonBlock.setBlockData(pistonData);
         }
     }
@@ -2020,6 +2013,7 @@ public class BlockPlacementHandler implements Listener {
         // Update our tracking
         blockCodeBlocks.put(newLocation, codeBlock);
     }
+    
     
     /**
      * 🔧 FIX: Update the direction of a bracket piston

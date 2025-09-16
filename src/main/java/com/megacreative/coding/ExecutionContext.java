@@ -36,6 +36,10 @@ public class ExecutionContext {
     private boolean stepping = false;
     private boolean cancelled = false;
     
+    // Loop control flags for break/continue support
+    private boolean breakFlag = false;
+    private boolean continueFlag = false;
+    
     // Instruction counter for loop protection
     private int instructionCount = 0;
     
@@ -355,6 +359,31 @@ public class ExecutionContext {
     
     public void setCancelled(boolean cancelled) {
         this.cancelled = cancelled;
+    }
+    
+    // Loop control flag methods for break/continue support
+    public boolean hasBreakFlag() {
+        return breakFlag;
+    }
+    
+    public void setBreakFlag(boolean breakFlag) {
+        this.breakFlag = breakFlag;
+    }
+    
+    public void clearBreakFlag() {
+        this.breakFlag = false;
+    }
+    
+    public boolean hasContinueFlag() {
+        return continueFlag;
+    }
+    
+    public void setContinueFlag(boolean continueFlag) {
+        this.continueFlag = continueFlag;
+    }
+    
+    public void clearContinueFlag() {
+        this.continueFlag = false;
     }
     
     public CodeBlock getCurrentBlock() {

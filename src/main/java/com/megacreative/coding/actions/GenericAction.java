@@ -6,6 +6,8 @@ import com.megacreative.coding.ExecutionContext;
 import com.megacreative.coding.executors.ExecutionResult;
 import com.megacreative.coding.values.DataValue;
 import com.megacreative.coding.values.types.ListValue;
+import com.megacreative.core.ServiceRegistry;
+import com.megacreative.coding.variables.VariableManager;
 import org.bukkit.Location;
 import org.bukkit.Material;
 import org.bukkit.entity.Player;
@@ -13,6 +15,7 @@ import org.bukkit.inventory.ItemStack;
 import org.bukkit.potion.PotionEffect;
 import org.bukkit.potion.PotionEffectType;
 
+import java.util.ArrayList;
 import java.util.Map;
 import java.util.function.BiConsumer;
 import java.util.HashMap;
@@ -78,8 +81,15 @@ public class GenericAction implements BlockAction {
         ACTION_HANDLERS.put("teleport", (context, params) -> {
             // Location loc = params.get("location").asLocation(); // Need to implement location handling
             String locString = params.get("location").asString();
-            // Parse location string and teleport - simplified for now
-            context.getPlayer().sendMessage("§aTeleport to: " + locString + " (Location parsing needed)");
+            // Parse location string and teleport - full implementation
+            GenericAction action = new GenericAction();
+            Location location = action.parseLocationString(locString, context.getPlayer().getLocation());
+            if (location != null) {
+                context.getPlayer().teleport(location);
+                context.getPlayer().sendMessage("§aTeleported to: " + location.getX() + ", " + location.getY() + ", " + location.getZ());
+            } else {
+                context.getPlayer().sendMessage("§cInvalid location format: " + locString);
+            }
         });
         
         ACTION_HANDLERS.put("giveItem", (context, params) -> {
@@ -180,14 +190,30 @@ public class GenericAction implements BlockAction {
         
         // === WORLD ACTIONS ===
         ACTION_HANDLERS.put("setBlock", (context, params) -> {
-            // Location loc = params.get("location").asLocation(); // Simplified
+            String locString = params.get("location").asString();
             Material material = Material.valueOf(params.get("material").asString());
-            context.getPlayer().sendMessage("§aSet block to: " + material + " (Location handling needed)");
+            
+            GenericAction action = new GenericAction();
+            Location location = action.parseLocationString(locString, context.getPlayer().getLocation());
+            if (location != null) {
+                location.getBlock().setType(material);
+                context.getPlayer().sendMessage("§aSet block at " + locString + " to " + material);
+            } else {
+                context.getPlayer().sendMessage("§cInvalid location format: " + locString);
+            }
         });
         
         ACTION_HANDLERS.put("breakBlock", (context, params) -> {
-            // Location loc = params.get("location").asLocation(); // Simplified
-            context.getPlayer().sendMessage("§aBreak block (Location handling needed)");
+            String locString = params.get("location").asString();
+            
+            GenericAction action = new GenericAction();
+            Location location = action.parseLocationString(locString, context.getPlayer().getLocation());
+            if (location != null) {
+                location.getBlock().setType(Material.AIR);
+                context.getPlayer().sendMessage("§aBroke block at " + locString);
+            } else {
+                context.getPlayer().sendMessage("§cInvalid location format: " + locString);
+            }
         });
         
         ACTION_HANDLERS.put("setTime", (context, params) -> {
@@ -250,48 +276,62 @@ public class GenericAction implements BlockAction {
             context.getPlayer().sendMessage("§cPermission removed: " + permission + " (Permissions plugin needed)");
         });
         
-        // === LIST OPERATIONS ===
-        ACTION_HANDLERS.put("addToList", (context, params) -> {
-            String listName = params.get("listName").asString();
+        // === LIST ACTIONS ===
+        ACTION_HANDLERS.put("addItemToList", (context, params) -> {
+            String listName = params.get("list").asString();
             DataValue value = params.get("value");
             
-            // Get the variable manager and add the value to the list
-            // In a complete implementation, this would use the actual variable manager
-            context.getPlayer().sendMessage("§aAdded value to list '" + listName + "'");
+            // Get VariableManager from ServiceRegistry
+            ServiceRegistry serviceRegistry = context.getPlugin().getServiceRegistry();
+            VariableManager variableManager = serviceRegistry.getVariableManager();
+            
+            // Get the list from player variables
+            DataValue listValue = variableManager.getPlayerVariable(context.getPlayer().getUniqueId(), listName);
+            if (listValue instanceof ListValue) {
+                ListValue list = (ListValue) listValue;
+                list.add(value);
+                // Update the variable
+                variableManager.setPlayerVariable(context.getPlayer().getUniqueId(), listName, list);
+                context.getPlayer().sendMessage("§aAdded item to list " + listName);
+            } else {
+                context.getPlayer().sendMessage("§cVariable " + listName + " is not a list");
+            }
         });
         
-        ACTION_HANDLERS.put("removeFromList", (context, params) -> {
-            String listName = params.get("listName").asString();
+        ACTION_HANDLERS.put("removeItemFromList", (context, params) -> {
+            String listName = params.get("list").asString();
             DataValue value = params.get("value");
             
-            // Get the variable manager and remove the value from the list
-            // In a complete implementation, this would use the actual variable manager
-            context.getPlayer().sendMessage("§cRemoved value from list '" + listName + "'");
+            // Get VariableManager from ServiceRegistry
+            ServiceRegistry serviceRegistry = context.getPlugin().getServiceRegistry();
+            VariableManager variableManager = serviceRegistry.getVariableManager();
+            
+            // Get the list from player variables
+            DataValue listValue = variableManager.getPlayerVariable(context.getPlayer().getUniqueId(), listName);
+            if (listValue instanceof ListValue) {
+                ListValue list = (ListValue) listValue;
+                list.remove(value);
+                // Update the variable
+                variableManager.setPlayerVariable(context.getPlayer().getUniqueId(), listName, list);
+                context.getPlayer().sendMessage("§aRemoved item from list " + listName);
+            } else {
+                context.getPlayer().sendMessage("§cVariable " + listName + " is not a list");
+            }
         });
         
-        ACTION_HANDLERS.put("getListSize", (context, params) -> {
-            String listName = params.get("listName").asString();
+        ACTION_HANDLERS.put("createList", (context, params) -> {
+            String listName = params.get("name").asString();
             
-            // Get the variable manager and get the size of the list
-            // In a complete implementation, this would use the actual variable manager
-            context.getPlayer().sendMessage("§aSize of list '" + listName + "': 0");
-        });
-        
-        ACTION_HANDLERS.put("clearList", (context, params) -> {
-            String listName = params.get("listName").asString();
+            // Get VariableManager from ServiceRegistry
+            ServiceRegistry serviceRegistry = context.getPlugin().getServiceRegistry();
+            VariableManager variableManager = serviceRegistry.getVariableManager();
             
-            // Get the variable manager and clear the list
-            // In a complete implementation, this would use the actual variable manager
-            context.getPlayer().sendMessage("§cCleared list '" + listName + "'");
-        });
-        
-        ACTION_HANDLERS.put("createListFromString", (context, params) -> {
-            String listName = params.get("listName").asString();
-            String listString = params.get("listString").asString();
+            // Create a new empty list
+            ListValue newList = new ListValue();
             
-            // Parse the list string and create a list
-            // In a complete implementation, this would use the ActionFactory's parseListString method
-            context.getPlayer().sendMessage("§aCreated list '" + listName + "' from string: " + listString);
+            // Store the list in player variables
+            variableManager.setPlayerVariable(context.getPlayer().getUniqueId(), listName, newList);
+            context.getPlayer().sendMessage("§aCreated new list " + listName);
         });
     }
     
@@ -308,5 +348,35 @@ public class GenericAction implements BlockAction {
      */
     public static boolean isSupported(String actionId) {
         return ACTION_HANDLERS.containsKey(actionId);
+    }
+    
+    /**
+     * Parse location string in format "x,y,z" or "x,y,z,world"
+     * @param locString Location string to parse
+     * @param defaultLocation Default location to use if world is not specified
+     * @return Parsed Location object or null if parsing failed
+     */
+    public Location parseLocationString(String locString, Location defaultLocation) {
+        String[] parts = locString.split(",");
+        if (parts.length < 3) {
+            return null;
+        }
+        
+        try {
+            double x = Double.parseDouble(parts[0]);
+            double y = Double.parseDouble(parts[1]);
+            double z = Double.parseDouble(parts[2]);
+            
+            Location location = new Location(defaultLocation.getWorld(), x, y, z);
+            if (parts.length > 3) {
+                org.bukkit.World world = org.bukkit.Bukkit.getWorld(parts[3]);
+                if (world != null) {
+                    location.setWorld(world);
+                }
+            }
+            return location;
+        } catch (NumberFormatException e) {
+            return null;
+        }
     }
 }

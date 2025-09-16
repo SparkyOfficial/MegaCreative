@@ -202,7 +202,19 @@ public class ForEachAction implements BlockAction {
                 }
                 
                 // Check for break conditions or script interruption
-                // Note: Basic loop without cancellation support for now
+                // Implement proper cancellation support
+                if (context.isCancelled() || context.hasBreakFlag()) {
+                    context.clearBreakFlag(); // Clear the break flag
+                    player.sendMessage("§a[ForEach] Loop interrupted at item " + (i + 1));
+                    break; // Exit the loop
+                }
+                
+                // Check for continue flag
+                if (context.hasContinueFlag()) {
+                    context.clearContinueFlag(); // Clear the continue flag
+                    player.sendMessage("§a[ForEach] Continuing to next item at " + (i + 1));
+                    continue; // Skip to next iteration
+                }
             }
             
             player.sendMessage("§a[ForEach] Completed iteration over " + list.size() + " items");

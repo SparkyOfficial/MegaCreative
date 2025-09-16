@@ -5,6 +5,7 @@ import com.megacreative.coding.containers.BlockContainerManager;
 import com.megacreative.coding.debug.VisualDebugger;
 import com.megacreative.coding.events.PlayerEventsListener;
 import com.megacreative.coding.executors.ExecutionResult;
+import com.megacreative.coding.values.DataValue;
 import com.megacreative.coding.variables.VariableManager;
 import com.megacreative.core.ServiceRegistry;
 import com.megacreative.interfaces.ICodingManager;
@@ -17,6 +18,8 @@ import org.bukkit.entity.Player;
 import org.bukkit.event.player.PlayerInteractEvent;
 import org.bukkit.event.player.PlayerQuitEvent;
 
+import java.util.Map;
+import java.util.HashMap;
 import java.util.concurrent.CompletableFuture;
 import java.util.logging.Logger;
 
@@ -78,6 +81,10 @@ public class CodingManagerImpl implements ICodingManager {
         // In a real implementation, this would save scripts to storage
         // For now, we'll just clear the scripts list
         if (world.getScripts() != null) {
+            // Save scripts before clearing
+            for (CodeScript script : world.getScripts()) {
+                saveScript(script);
+            }
             world.getScripts().clear();
         }
         logger.info("Unloaded scripts for world: " + world.getName());
@@ -86,6 +93,16 @@ public class CodingManagerImpl implements ICodingManager {
     @Override
     public CodeScript getScript(String name) {
         // In a real implementation, this would search for a script by name
+        // Search through all worlds for a script with the given name
+        for (CreativeWorld world : plugin.getWorldManager().getCreativeWorlds()) {
+            if (world.getScripts() != null) {
+                for (CodeScript script : world.getScripts()) {
+                    if (script.getName().equals(name)) {
+                        return script;
+                    }
+                }
+            }
+        }
         return null;
     }
     
@@ -99,57 +116,131 @@ public class CodingManagerImpl implements ICodingManager {
     public void saveScript(CodeScript script) {
         // In a real implementation, this would save a script to storage
         logger.info("Saved script: " + script.getName());
+        // In a more complete implementation, we would serialize the script to a file or database
     }
     
     @Override
     public void cancelScriptExecution(String scriptId) {
         // In a real implementation, this would cancel a running script
         logger.info("Cancelled script execution: " + scriptId);
+        // Get the script engine and cancel the execution
+        ScriptEngine engine = getScriptEngine();
+        if (engine != null) {
+            engine.stopExecution(scriptId);
+        }
     }
     
     @Override
     public void deleteScript(String scriptName) {
         // In a real implementation, this would delete a script from storage
         logger.info("Deleted script: " + scriptName);
+        // Find and remove the script from all worlds
+        for (CreativeWorld world : plugin.getWorldManager().getCreativeWorlds()) {
+            if (world.getScripts() != null) {
+                world.getScripts().removeIf(script -> script.getName().equals(scriptName));
+            }
+        }
     }
     
     @Override
     public Object getGlobalVariable(String name) {
-        // Implementation not needed for now
+        // Implementation for global variables
+        ServiceRegistry serviceRegistry = plugin.getServiceRegistry();
+        if (serviceRegistry != null) {
+            VariableManager variableManager = serviceRegistry.getVariableManager();
+            if (variableManager != null) {
+                DataValue value = variableManager.getGlobalVariable(name);
+                return value != null ? value.getValue() : null;
+            }
+        }
         return null;
     }
     
     @Override
     public void setGlobalVariable(String name, Object value) {
-        // Implementation not needed for now
+        // Implementation for setting global variables
+        ServiceRegistry serviceRegistry = plugin.getServiceRegistry();
+        if (serviceRegistry != null) {
+            VariableManager variableManager = serviceRegistry.getVariableManager();
+            if (variableManager != null) {
+                variableManager.setGlobalVariable(name, DataValue.fromObject(value));
+            }
+        }
     }
     
     @Override
     public Object getServerVariable(String name) {
-        // Implementation not needed for now
+        // Implementation for server variables
+        ServiceRegistry serviceRegistry = plugin.getServiceRegistry();
+        if (serviceRegistry != null) {
+            VariableManager variableManager = serviceRegistry.getVariableManager();
+            if (variableManager != null) {
+                DataValue value = variableManager.getServerVariable(name);
+                return value != null ? value.getValue() : null;
+            }
+        }
         return null;
     }
     
     @Override
     public void setServerVariable(String name, Object value) {
-        // Implementation not needed for now
+        // Implementation for setting server variables
+        ServiceRegistry serviceRegistry = plugin.getServiceRegistry();
+        if (serviceRegistry != null) {
+            VariableManager variableManager = serviceRegistry.getVariableManager();
+            if (variableManager != null) {
+                variableManager.setServerVariable(name, DataValue.fromObject(value));
+            }
+        }
     }
     
     @Override
     public java.util.Map<String, Object> getGlobalVariables() {
-        // Implementation not needed for now
+        // Implementation for getting all global variables
+        ServiceRegistry serviceRegistry = plugin.getServiceRegistry();
+        if (serviceRegistry != null) {
+            VariableManager variableManager = serviceRegistry.getVariableManager();
+            if (variableManager != null) {
+                Map<String, DataValue> dataValues = variableManager.getAllGlobalVariables();
+                Map<String, Object> objects = new HashMap<>();
+                for (Map.Entry<String, DataValue> entry : dataValues.entrySet()) {
+                    objects.put(entry.getKey(), entry.getValue().getValue());
+                }
+                return objects;
+            }
+        }
         return new java.util.HashMap<>();
     }
     
     @Override
     public java.util.Map<String, Object> getServerVariables() {
-        // Implementation not needed for now
+        // Implementation for getting all server variables
+        ServiceRegistry serviceRegistry = plugin.getServiceRegistry();
+        if (serviceRegistry != null) {
+            VariableManager variableManager = serviceRegistry.getVariableManager();
+            if (variableManager != null) {
+                Map<String, DataValue> dataValues = variableManager.getServerVariables();
+                Map<String, Object> objects = new HashMap<>();
+                for (Map.Entry<String, DataValue> entry : dataValues.entrySet()) {
+                    objects.put(entry.getKey(), entry.getValue().getValue());
+                }
+                return objects;
+            }
+        }
         return new java.util.HashMap<>();
     }
     
     @Override
     public void clearVariables() {
-        // Implementation not needed for now
+        // Implementation for clearing all variables
+        ServiceRegistry serviceRegistry = plugin.getServiceRegistry();
+        if (serviceRegistry != null) {
+            VariableManager variableManager = serviceRegistry.getVariableManager();
+            if (variableManager != null) {
+                variableManager.clearGlobalVariables();
+                variableManager.clearServerVariables();
+            }
+        }
     }
     
     @Override
