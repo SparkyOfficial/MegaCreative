@@ -7,6 +7,16 @@ import com.megacreative.services.BlockConfigService;
 import com.megacreative.gui.coding.ActionParameterGUI;
 import com.megacreative.gui.coding.ActionSelectionGUI;
 import com.megacreative.gui.coding.ConditionSelectionGUI;
+import com.megacreative.gui.coding.variable.VariableBlockGUI;
+import com.megacreative.gui.coding.variable_condition.VariableConditionBlockGUI;
+import com.megacreative.gui.coding.game_action.GameActionBlockGUI;
+import com.megacreative.gui.coding.game_condition.GameConditionBlockGUI;
+import com.megacreative.gui.coding.player_event.PlayerEventBlockGUI;
+import com.megacreative.gui.coding.game_event.GameEventBlockGUI;
+import com.megacreative.gui.coding.entity_event.EntityEventBlockGUI;
+import com.megacreative.gui.coding.entity_condition.EntityConditionBlockGUI;
+import com.megacreative.gui.coding.player_condition.PlayerConditionBlockGUI;
+import com.megacreative.gui.coding.entity_action.EntityActionBlockGUI;
 import com.megacreative.gui.coding.EventSelectionGUI;
 import com.megacreative.coding.values.DataValue;
 import com.megacreative.coding.values.types.AnyValue;
@@ -1179,6 +1189,34 @@ public class BlockPlacementHandler implements Listener {
                     gameConditionGui.open();
                     plugin.getLogger().info("Opened GameConditionBlockGUI for player " + player.getName() + " at " + blockLocation);
                     player.sendMessage("§aОткрыта настройка игрового условия!");
+                } else if (codeBlock.getMaterial() == Material.DIAMOND_BLOCK) {
+                    // Open PlayerEventBlockGUI for diamond blocks (player events)
+                    com.megacreative.gui.coding.player_event.PlayerEventBlockGUI playerEventGui = 
+                        new com.megacreative.gui.coding.player_event.PlayerEventBlockGUI(plugin, player, blockLocation, codeBlock.getMaterial());
+                    playerEventGui.open();
+                    plugin.getLogger().info("Opened PlayerEventBlockGUI for player " + player.getName() + " at " + blockLocation);
+                    player.sendMessage("§aОткрыта настройка события игрока!");
+                } else if (codeBlock.getMaterial() == Material.EMERALD_BLOCK) {
+                    // Open GameEventBlockGUI for emerald blocks (game events)
+                    com.megacreative.gui.coding.game_event.GameEventBlockGUI gameEventGui = 
+                        new com.megacreative.gui.coding.game_event.GameEventBlockGUI(plugin, player, blockLocation, codeBlock.getMaterial());
+                    gameEventGui.open();
+                    plugin.getLogger().info("Opened GameEventBlockGUI for player " + player.getName() + " at " + blockLocation);
+                    player.sendMessage("§aОткрыта настройка игрового события!");
+                } else if (codeBlock.getMaterial() == Material.BRICKS) {
+                    // Open EntityEventBlockGUI for bricks blocks (entity events)
+                    com.megacreative.gui.coding.entity_event.EntityEventBlockGUI entityEventGui = 
+                        new com.megacreative.gui.coding.entity_event.EntityEventBlockGUI(plugin, player, blockLocation, codeBlock.getMaterial());
+                    entityEventGui.open();
+                    plugin.getLogger().info("Opened EntityEventBlockGUI for player " + player.getName() + " at " + blockLocation);
+                    player.sendMessage("§aОткрыта настройка события сущности!");
+                } else if (codeBlock.getMaterial() == Material.COBBLESTONE) {
+                    // Open EntityActionBlockGUI for cobblestone blocks (entity actions)
+                    com.megacreative.gui.coding.entity_action.EntityActionBlockGUI entityActionGui = 
+                        new com.megacreative.gui.coding.entity_action.EntityActionBlockGUI(plugin, player, blockLocation, codeBlock.getMaterial());
+                    entityActionGui.open();
+                    plugin.getLogger().info("Opened EntityActionBlockGUI for player " + player.getName() + " at " + blockLocation);
+                    player.sendMessage("§aОткрыта настройка действия над сущностью!");
                 } else if ("EVENT".equals(blockType)) {
                     // Open EventSelectionGUI for event blocks
                     EventSelectionGUI eventGui = new EventSelectionGUI(plugin, player, blockLocation, codeBlock.getMaterial());
