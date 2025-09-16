@@ -236,6 +236,8 @@ action_configurations:
         description: "§7Положите бумагу с названием сообщения. Поддерживает плейсхолдеры: %player%, %world%, %x%, %y%, %z%"
         placeholder_item: "PAPER"
         slot_name: "message_slot"
+        validation: "length:1-100"
+        hint: "Сообщение должно содержать от 1 до 100 символов"
   
   # Конфигурация для действия sendTitle
   sendTitle:
@@ -245,26 +247,36 @@ action_configurations:
         description: "§7Положите бумагу с названием главного заголовка. Поддерживает плейсхолдеры: %player%"
         placeholder_item: "PAPER"
         slot_name: "title"
+        validation: "length:1-50"
+        hint: "Заголовок должен содержать от 1 до 50 символов"
       1:
         name: "§bПодзаголовок"
         description: "§7Положите бумагу с названием подзаголовка (необязательно)"
         placeholder_item: "PAPER"
         slot_name: "subtitle"
+        validation: "length:0-50"
+        hint: "Подзаголовок может содержать до 50 символов"
       2:
         name: "§cВремя появления"
         description: "§7Положите бумагу с названием 'fadein:X' (по умолчанию 10)"
         placeholder_item: "PAPER"
         slot_name: "fadein"
+        validation: "number_range:0-100"
+        hint: "Время появления от 0 до 100"
       3:
         name: "§dВремя отображения"
         description: "§7Положите бумагу с названием 'stay:X' (по умолчанию 70)"
         placeholder_item: "PAPER"
         slot_name: "stay"
+        validation: "number_range:0-1000"
+        hint: "Время отображения от 0 до 1000"
       4:
         name: "§eВремя исчезновения"
         description: "§7Положите бумагу с названием 'fadeout:X' (по умолчанию 20)"
         placeholder_item: "PAPER"
         slot_name: "fadeout"
+        validation: "number_range:0-100"
+        hint: "Время исчезновения от 0 до 100"
   
   # Конфигурация для действия broadcast
   broadcast:
@@ -274,6 +286,8 @@ action_configurations:
         description: "§7Положите бумагу с названием сообщения для всех игроков. Поддерживает плейсхолдеры: %player%, %world%"
         placeholder_item: "PAPER"
         slot_name: "message_slot"
+        validation: "length:1-200"
+        hint: "Сообщение должно содержать от 1 до 200 символов"
   
   # Конфигурация для действия command
   command:
@@ -283,6 +297,8 @@ action_configurations:
         description: "§7Положите бумагу с названием команды. Поддерживает плейсхолдеры: %player%, %world%, %x%, %y%, %z%"
         placeholder_item: "PAPER"
         slot_name: "command_slot"
+        validation: "regex:^[\\w/][\\w\\s\\-._~:/?#\\[\\]@!$&'()*+,;=]*$"
+        hint: "Команда должна начинаться с буквы или / и содержать допустимые символы"
   
   # Конфигурация для действия sendActionBar
   sendActionBar:
@@ -292,6 +308,8 @@ action_configurations:
         description: "§7Положите бумагу с названием сообщения для ActionBar. Поддерживает плейсхолдеры: %player%"
         placeholder_item: "PAPER"
         slot_name: "message"
+        validation: "length:1-64"
+        hint: "Сообщение в ActionBar должно содержать от 1 до 64 символов"
   
   # Конфигурация для действия executeAsyncCommand
   executeAsyncCommand:
@@ -301,6 +319,8 @@ action_configurations:
         description: "§7Положите бумагу с названием команды. Поддерживает плейсхолдеры: %player%, %world%, %x%, %y%, %z%"
         placeholder_item: "PAPER"
         slot_name: "command"
+        validation: "regex:^[\\w/][\\w\\s\\-._~:/?#\\[\\]@!$&'()*+,;=]*$"
+        hint: "Команда должна начинаться с буквы или / и содержать допустимые символы"
   
   # Конфигурация для действия asyncLoop
   asyncLoop:
@@ -310,11 +330,15 @@ action_configurations:
         description: "§7Положите бумагу с названием 'iterations:X'"
         placeholder_item: "PAPER"
         slot_name: "iterations"
+        validation: "number_range:1-1000"
+        hint: "Количество итераций от 1 до 1000"
       1:
         name: "§bЗадержка между итерациями (в тиках)"
         description: "§7Положите бумагу с названием 'delay:X'"
         placeholder_item: "PAPER"
         slot_name: "delay"
+        validation: "number_range:1-1200"
+        hint: "Задержка от 1 до 1200 тиков (1 минута)"
   
   # Конфигурация для действия createScoreboard
   createScoreboard:
@@ -324,6 +348,8 @@ action_configurations:
         description: "§7Положите бумагу с названием заголовка скорборда"
         placeholder_item: "PAPER"
         slot_name: "title"
+        validation: "length:1-32"
+        hint: "Заголовок скорборда должен содержать от 1 до 32 символов"
   
   # Конфигурация для действия setScore
   setScore:
@@ -333,11 +359,15 @@ action_configurations:
         description: "§7Положите бумагу с названием ключа"
         placeholder_item: "PAPER"
         slot_name: "key"
+        validation: "length:1-16"
+        hint: "Ключ должен содержать от 1 до 16 символов"
       1:
         name: "§bЗначение"
         description: "§7Положите бумагу с названием 'value:X'"
         placeholder_item: "PAPER"
         slot_name: "value"
+        validation: "number"
+        hint: "Значение должно быть числом"
   
   # Конфигурация для действия incrementScore
   incrementScore:
@@ -347,11 +377,15 @@ action_configurations:
         description: "§7Положите бумагу с названием ключа"
         placeholder_item: "PAPER"
         slot_name: "key"
+        validation: "length:1-16"
+        hint: "Ключ должен содержать от 1 до 16 символов"
       1:
         name: "§bУвеличение"
         description: "§7Положите бумагу с названием 'increment:X'"
         placeholder_item: "PAPER"
         slot_name: "increment"
+        validation: "number"
+        hint: "Увеличение должно быть числом"
   
   # Конфигурация для действия createTeam
   createTeam:
@@ -361,21 +395,29 @@ action_configurations:
         description: "§7Положите бумагу с названием имени команды"
         placeholder_item: "PAPER"
         slot_name: "teamName"
+        validation: "length:1-16"
+        hint: "Имя команды должно содержать от 1 до 16 символов"
       1:
         name: "§bОтображаемое имя"
         description: "§7Положите бумагу с названием отображаемого имени команды"
         placeholder_item: "PAPER"
         slot_name: "displayName"
+        validation: "length:0-32"
+        hint: "Отображаемое имя может содержать до 32 символов"
       2:
         name: "§cПрефикс"
         description: "§7Положите бумагу с названием префикса команды"
         placeholder_item: "PAPER"
         slot_name: "prefix"
+        validation: "length:0-16"
+        hint: "Префикс может содержать до 16 символов"
       3:
         name: "§dСуффикс"
         description: "§7Положите бумагу с названием суффикса команды"
         placeholder_item: "PAPER"
         slot_name: "suffix"
+        validation: "length:0-16"
+        hint: "Суффикс может содержать до 16 символов"
   
   # Конфигурация для действия addPlayerToTeam
   addPlayerToTeam:
@@ -385,11 +427,15 @@ action_configurations:
         description: "§7Положите бумагу с названием имени команды"
         placeholder_item: "PAPER"
         slot_name: "teamName"
+        validation: "length:1-16"
+        hint: "Имя команды должно содержать от 1 до 16 символов"
       1:
         name: "§bИмя игрока"
         description: "§7Положите бумагу с названием имени игрока (оставьте пустым для текущего игрока)"
         placeholder_item: "PAPER"
         slot_name: "targetPlayer"
+        validation: "player_name"
+        hint: "Введите действительное имя игрока"
   
   # Конфигурация для действия saveLocation
   saveLocation:
@@ -399,6 +445,8 @@ action_configurations:
         description: "§7Положите бумагу с названием имени локации"
         placeholder_item: "PAPER"
         slot_name: "locationName"
+        validation: "length:1-32"
+        hint: "Имя локации должно содержать от 1 до 32 символов"
   
   # Конфигурация для действия getLocation
   getLocation:
@@ -408,11 +456,15 @@ action_configurations:
         description: "§7Положите бумагу с названием имени локации"
         placeholder_item: "PAPER"
         slot_name: "locationName"
+        validation: "length:1-32"
+        hint: "Имя локации должно содержать от 1 до 32 символов"
       1:
         name: "§bЦелевая переменная"
         description: "§7Положите бумагу с названием целевой переменной"
         placeholder_item: "PAPER"
         slot_name: "targetVariable"
+        validation: "length:1-16"
+        hint: "Имя переменной должно содержать от 1 до 16 символов"
   
   # Конфигурация для условия isNight
   isNight:
@@ -422,6 +474,8 @@ action_configurations:
         description: "§7Положите предмет, символизирующий время (черная шерсть = ночь, желтая = день)"
         placeholder_item: "BLACK_WOOL"
         slot_name: "time_slot"
+        validation: "enum:night,day"
+        hint: "Выберите ночь или день"
   
   # Конфигурация для условия isRiding
   isRiding:
@@ -431,6 +485,8 @@ action_configurations:
         description: "§7Положите предмет, символизирующий существо (седло = лошадь, лодка = лодка)"
         placeholder_item: "SADDLE"
         slot_name: "entity_slot"
+        validation: "enum:horse,boat,pig,strider"
+        hint: "Выберите тип существа для езды"
 
   # Конфигурация для условия checkPlayerInventory
   checkPlayerInventory:

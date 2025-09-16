@@ -6,10 +6,15 @@ import com.megacreative.coding.CodeBlock;
 import com.megacreative.coding.values.DataValue;
 import com.megacreative.coding.variables.VariableManager;
 import com.megacreative.coding.executors.ExecutionResult;
+import com.megacreative.services.BlockConfigService;
+import com.megacreative.coding.ParameterResolver;
+import com.megacreative.coding.placeholders.ReferenceSystemPlaceholderResolver;
 import org.bukkit.Location;
 import org.bukkit.Particle;
 import org.bukkit.Sound;
 import org.bukkit.entity.Player;
+import org.bukkit.inventory.ItemStack;
+import org.bukkit.inventory.meta.ItemMeta;
 import org.bukkit.scheduler.BukkitRunnable;
 
 import java.util.*;
@@ -29,6 +34,7 @@ public class ExecutorEngine {
     
     private final MegaCreative plugin;
     private final VariableManager variableManager;
+    private final com.megacreative.services.BlockConfigService blockConfigService; // Add BlockConfigService reference
     
     // Execution tracking
     private final Map<String, ExecutionContext> activeExecutions = new ConcurrentHashMap<>();
@@ -40,6 +46,8 @@ public class ExecutorEngine {
     public ExecutorEngine(MegaCreative plugin, VariableManager variableManager) {
         this.plugin = plugin;
         this.variableManager = variableManager;
+        // Initialize BlockConfigService reference
+        this.blockConfigService = plugin.getServiceRegistry().getService(com.megacreative.services.BlockConfigService.class);
         startVisualUpdater();
     }
     
@@ -159,7 +167,7 @@ public class ExecutorEngine {
     }
     
     /**
-     * Executes a single block with type-specific handling
+     * Executes a single block with type-specific handling and enhanced parameter validation
      */
     private ExecutionResult executeBlock(com.megacreative.coding.CodeBlock block, ExecutionContext context) {
         try {
@@ -169,26 +177,54 @@ public class ExecutorEngine {
             // Log block execution
             plugin.getLogger().fine("Executing block: " + action + " with params: " + parameters);
             
+            // 🎆 ENHANCED: Preprocess parameters with validation and placeholder resolution
+            Map<String, DataValue> processedParameters = preprocessParameters(block, context);
+            
+            // Check for validation errors
+            String validationError = validateBlockParameters(block, processedParameters);
+            if (validationError != null) {
+                // Create detailed error result with validation information
+                Map<String, Object> errorDetails = new HashMap<>();
+                errorDetails.put("action", action);
+                errorDetails.put("validationError", validationError);
+                errorDetails.put("processedParameters", processedParameters);
+                
+                ExecutionResult errorResult = new ExecutionResult.Builder()
+                    .success(false)
+                    .message("Parameter validation failed: " + validationError)
+                    .executedBlock(block)
+                    .executor(context.getPlayer())
+                    .executionTime(System.currentTimeMillis() - context.getStartTime())
+                    .details(errorDetails)
+                    .build();
+                
+                // Log the details
+                plugin.getLogger().warning("Validation failed for action '" + action + "': " + validationError);
+                plugin.getLogger().warning("Parameters: " + processedParameters);
+                
+                return errorResult;
+            }
+            
             // Execute the appropriate action
             ExecutionResult result;
             switch (action) {
                 case "sendMessage":
-                    result = executeSendMessage(parameters, context);
+                    result = executeSendMessage(processedParameters, context);
                     break;
                 case "teleport":
-                    result = executeTeleport(parameters, context);
+                    result = executeTeleport(processedParameters, context);
                     break;
                 case "giveItem":
-                    result = executeGiveItem(parameters, context);
+                    result = executeGiveItem(processedParameters, context);
                     break;
                 case "playSound":
-                    result = executePlaySound(parameters, context);
+                    result = executePlaySound(processedParameters, context);
                     break;
                 case "setVar":
-                    result = executeSetVariable(parameters, context);
+                    result = executeSetVariable(processedParameters, context);
                     break;
                 case "ifVarEquals":
-                    result = executeIfVariable(block, parameters, context);
+                    result = executeIfVariable(block, processedParameters, context);
                     break;
                 default:
                     return context.createErrorResult("Unknown action: " + action);
@@ -614,6 +650,521 @@ public class ExecutorEngine {
         
         long duration = System.currentTimeMillis() - context.getStartTime();
         stats.addExecutionTime(duration);
+    }
+    
+    /**
+     * 🎆 ENHANCED: Preprocess parameters with placeholder resolution and validation
+     */
+    private Map<String, DataValue> preprocessParameters(com.megacreative.coding.CodeBlock block, ExecutionContext context) {
+        Map<String, DataValue> processedParams = new HashMap<>();
+        
+        // Process configuration items from GUI
+        if (block.hasConfigItems()) {
+            // Get action configuration
+            var actionConfigurations = blockConfigService.getActionConfigurations();
+            if (actionConfigurations != null) {
+                var actionConfig = actionConfigurations.getConfigurationSection(block.getAction());
+                if (actionConfig != null) {
+                    var slotsConfig = actionConfig.getConfigurationSection("slots");
+                    if (slotsConfig != null) {
+                        // Process each configured slot
+                        for (String slotKey : slotsConfig.getKeys(false)) {
+                            try {
+                                int slotIndex = Integer.parseInt(slotKey);
+                                ItemStack configItem = block.getConfigItem(slotIndex);
+                                
+                                if (configItem != null && configItem.hasItemMeta()) {
+                                    ItemMeta meta = configItem.getItemMeta();
+                                    if (meta != null && meta.hasDisplayName()) {
+                                        String slotName = slotsConfig.getConfigurationSection(slotKey).getString("slot_name", "slot_" + slotIndex);
+                                        String rawValue = meta.getDisplayName();
+                                        
+                                        // Resolve placeholders in the value using reference system
+                                        String resolvedValue = ReferenceSystemPlaceholderResolver.resolvePlaceholders(rawValue, createCodingContext(context));
+                                        
+                                        // Store processed parameter
+                                        processedParams.put(slotName, DataValue.of(resolvedValue));
+                                    }
+                                }
+                            } catch (NumberFormatException e) {
+                                // Skip invalid slot indices
+                            }
+                        }
+                    }
+                    
+                    // Process item groups
+                    var itemGroupsConfig = actionConfig.getConfigurationSection("item_groups");
+                    if (itemGroupsConfig != null) {
+                        for (String groupKey : itemGroupsConfig.getKeys(false)) {
+                            var groupConfig = itemGroupsConfig.getConfigurationSection(groupKey);
+                            if (groupConfig != null) {
+                                List<Integer> slots = groupConfig.getIntegerList("slots");
+                                String groupName = groupConfig.getString("name", groupKey);
+                                
+                                // Process items in the group
+                                List<String> groupItems = new ArrayList<>();
+                                for (int slotIndex : slots) {
+                                    ItemStack configItem = block.getConfigItem(slotIndex);
+                                    if (configItem != null && configItem.hasItemMeta()) {
+                                        ItemMeta meta = configItem.getItemMeta();
+                                        if (meta != null && meta.hasDisplayName()) {
+                                            String rawValue = meta.getDisplayName();
+                                            String resolvedValue = ReferenceSystemPlaceholderResolver.resolvePlaceholders(rawValue, createCodingContext(context));
+                                            groupItems.add(resolvedValue);
+                                        }
+                                    }
+                                }
+                                
+                                // Store group items as a comma-separated string
+                                if (!groupItems.isEmpty()) {
+                                    processedParams.put(groupName, DataValue.of(String.join(",", groupItems)));
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        }
+        
+        // Merge with existing parameters
+        if (block.getParameters() != null) {
+            processedParams.putAll(block.getParameters());
+        }
+        
+        // Apply additional preprocessing transformations
+        return applyParameterTransformations(processedParams, context);
+    }
+    
+    /**
+     * 🎆 ENHANCED: Create a coding.ExecutionContext from executors.ExecutionContext
+     */
+    private com.megacreative.coding.ExecutionContext createCodingContext(ExecutionContext context) {
+        return new com.megacreative.coding.ExecutionContext.Builder()
+            .plugin(plugin)
+            .player(context.getPlayer())
+            .build();
+    }
+    
+    /**
+     * 🎆 ENHANCED: Apply additional parameter transformations
+     */
+    private Map<String, DataValue> applyParameterTransformations(Map<String, DataValue> parameters, ExecutionContext context) {
+        Map<String, DataValue> transformedParams = new HashMap<>(parameters);
+        
+        // Apply transformations based on parameter names and values
+        for (Map.Entry<String, DataValue> entry : parameters.entrySet()) {
+            String paramName = entry.getKey();
+            DataValue paramValue = entry.getValue();
+            
+            if (paramValue != null && paramValue.asString() != null) {
+                String value = paramValue.asString();
+                
+                // Handle special parameter transformations
+                if (paramName.startsWith("number:")) {
+                    // Convert to number
+                    try {
+                        Double.parseDouble(value);
+                        // Store as numeric value
+                        transformedParams.put(paramName.substring(7), DataValue.of(Double.parseDouble(value)));
+                    } catch (NumberFormatException e) {
+                        // Keep as string if not a valid number
+                    }
+                } else if (paramName.startsWith("boolean:")) {
+                    // Convert to boolean
+                    boolean boolValue = "true".equalsIgnoreCase(value) || "1".equals(value);
+                    transformedParams.put(paramName.substring(8), DataValue.of(boolValue));
+                } else if (paramName.startsWith("list:")) {
+                    // Convert to list
+                    String[] items = value.split(",");
+                    List<DataValue> listItems = new ArrayList<>();
+                    for (String item : items) {
+                        listItems.add(DataValue.of(item.trim()));
+                    }
+                    transformedParams.put(paramName.substring(5), DataValue.of(listItems));
+                }
+            }
+        }
+        
+        return transformedParams;
+    }
+    
+    /**
+     * 🎆 ENHANCED: Validate block parameters based on configuration
+     */
+    private String validateBlockParameters(com.megacreative.coding.CodeBlock block, Map<String, DataValue> parameters) {
+        var actionConfigurations = blockConfigService.getActionConfigurations();
+        if (actionConfigurations == null) return null;
+        
+        var actionConfig = actionConfigurations.getConfigurationSection(block.getAction());
+        if (actionConfig == null) return null;
+        
+        var slotsConfig = actionConfig.getConfigurationSection("slots");
+        if (slotsConfig == null) return null;
+        
+        // First pass: Validate each parameter based on slot configuration
+        for (String slotKey : slotsConfig.getKeys(false)) {
+            try {
+                var slotConfig = slotsConfig.getConfigurationSection(slotKey);
+                if (slotConfig == null) continue;
+                
+                String slotName = slotConfig.getString("slot_name", "slot_" + slotKey);
+                boolean required = slotConfig.getBoolean("required", false);
+                String validationRule = slotConfig.getString("validation");
+                
+                // Check if required parameter is missing
+                if (required && !parameters.containsKey(slotName)) {
+                    return "Required parameter '" + slotName + "' is missing";
+                }
+                
+                // Validate parameter value if present
+                if (parameters.containsKey(slotName) && validationRule != null && !validationRule.isEmpty()) {
+                    DataValue value = parameters.get(slotName);
+                    if (value != null) {
+                        String error = validateParameterValue(slotName, value.asString(), validationRule);
+                        if (error != null) {
+                            return error;
+                        }
+                    }
+                }
+            } catch (Exception e) {
+                // Continue with other validations
+            }
+        }
+        
+        // Second pass: Validate dependent parameters
+        for (String slotKey : slotsConfig.getKeys(false)) {
+            try {
+                var slotConfig = slotsConfig.getConfigurationSection(slotKey);
+                if (slotConfig == null) continue;
+                
+                String slotName = slotConfig.getString("slot_name", "slot_" + slotKey);
+                String dependsOn = slotConfig.getString("depends_on");
+                
+                // Check dependencies
+                if (dependsOn != null && !dependsOn.isEmpty()) {
+                    String error = validateDependentParameter(slotName, dependsOn, parameters);
+                    if (error != null) {
+                        return error;
+                    }
+                }
+            } catch (Exception e) {
+                // Continue with other validations
+            }
+        }
+        
+        return null; // No validation errors
+    }
+    
+    /**
+     * 🎆 ENHANCED: Validate dependent parameters
+     */
+    private String validateDependentParameter(String slotName, String dependsOn, Map<String, DataValue> parameters) {
+        // Parse dependency: "slotName=value" or "slotName!=value"
+        String[] parts = dependsOn.split("(!?=)");
+        if (parts.length >= 2) {
+            String dependencySlotName = parts[0].trim();
+            String expectedValue = parts[1].trim();
+            boolean isNotEqual = dependsOn.contains("!=");
+            
+            // Check if the dependency parameter exists
+            if (!parameters.containsKey(dependencySlotName)) {
+                return "Parameter '" + slotName + "' depends on '" + dependencySlotName + "' which is not set";
+            }
+            
+            // Get the actual value of the dependency parameter
+            DataValue dependencyValue = parameters.get(dependencySlotName);
+            if (dependencyValue == null) {
+                return "Parameter '" + slotName + "' depends on '" + dependencySlotName + "' which has no value";
+            }
+            
+            String actualValue = dependencyValue.asString();
+            if (actualValue == null) {
+                return "Parameter '" + slotName + "' depends on '" + dependencySlotName + "' which has no value";
+            }
+            
+            // Check if dependency condition is met
+            boolean conditionMet = false;
+            if (isNotEqual) {
+                conditionMet = !actualValue.equals(expectedValue);
+            } else {
+                conditionMet = actualValue.equals(expectedValue);
+            }
+            
+            // If condition is not met, this parameter should not be set
+            if (!conditionMet && parameters.containsKey(slotName)) {
+                return "Parameter '" + slotName + "' is only available when '" + dependencySlotName + 
+                    (isNotEqual ? " ≠ " : " = ") + expectedValue + "'";
+            }
+        }
+        
+        return null; // No dependency validation error
+    }
+    
+    /**
+     * 🎆 ENHANCED: Validate a single parameter value based on validation rule
+     */
+    private String validateParameterValue(String paramName, String value, String validationRule) {
+        if (value == null || value.trim().isEmpty()) return null;
+        
+        // Remove color codes for validation
+        String cleanedValue = value.replaceAll("§[0-9a-fk-or]", "").trim();
+        
+        // Handle different validation rules
+        switch (validationRule) {
+            case "number":
+                try {
+                    Double.parseDouble(cleanedValue);
+                } catch (NumberFormatException e) {
+                    return "Parameter '" + paramName + "' must be a number";
+                }
+                break;
+                
+            case "sound_name":
+                if (!isValidSoundName(cleanedValue)) {
+                    return "Parameter '" + paramName + "' must be a valid sound name";
+                }
+                break;
+                
+            case "effect_name":
+                if (!isValidEffectName(cleanedValue)) {
+                    return "Parameter '" + paramName + "' must be a valid effect name";
+                }
+                break;
+                
+            case "player_name":
+                if (!isValidPlayerName(cleanedValue)) {
+                    return "Parameter '" + paramName + "' must be a valid player name";
+                }
+                break;
+                
+            case "world_name":
+                if (!isValidWorldName(cleanedValue)) {
+                    return "Parameter '" + paramName + "' must be a valid world name";
+                }
+                break;
+                
+            case "material_name":
+                if (!isValidMaterialName(cleanedValue)) {
+                    return "Parameter '" + paramName + "' must be a valid material name";
+                }
+                break;
+                
+            case "color_hex":
+                if (!isValidHexColor(cleanedValue)) {
+                    return "Parameter '" + paramName + "' must be a valid hex color (#RRGGBB)";
+                }
+                break;
+                
+            case "email":
+                if (!isValidEmail(cleanedValue)) {
+                    return "Parameter '" + paramName + "' must be a valid email address";
+                }
+                break;
+                
+            case "url":
+                if (!isValidUrl(cleanedValue)) {
+                    return "Parameter '" + paramName + "' must be a valid URL";
+                }
+                break;
+                
+            default:
+                // Handle range validations like "number_range:0.0-1.0"
+                if (validationRule.startsWith("number_range:")) {
+                    String range = validationRule.substring("number_range:".length());
+                    String[] parts = range.split("-");
+                    if (parts.length == 2) {
+                        try {
+                            double min = Double.parseDouble(parts[0]);
+                            double max = Double.parseDouble(parts[1]);
+                            double val = Double.parseDouble(cleanedValue);
+                            if (val < min || val > max) {
+                                return "Parameter '" + paramName + "' must be between " + min + " and " + max;
+                            }
+                        } catch (NumberFormatException e) {
+                            return "Parameter '" + paramName + "' has invalid range format";
+                        }
+                    }
+                }
+                // Handle regex validations like "regex:[a-zA-Z]+"
+                else if (validationRule.startsWith("regex:")) {
+                    String regex = validationRule.substring("regex:".length());
+                    if (!cleanedValue.matches(regex)) {
+                        return "Parameter '" + paramName + "' does not match required format";
+                    }
+                }
+                // Handle length validations like "length:5-20"
+                else if (validationRule.startsWith("length:")) {
+                    String lengthSpec = validationRule.substring("length:".length());
+                    String[] parts = lengthSpec.split("-");
+                    if (parts.length == 1) {
+                        try {
+                            int exactLength = Integer.parseInt(parts[0]);
+                            if (cleanedValue.length() != exactLength) {
+                                return "Parameter '" + paramName + "' must be exactly " + exactLength + " characters";
+                            }
+                        } catch (NumberFormatException e) {
+                            return "Parameter '" + paramName + "' has invalid length specification";
+                        }
+                    } else if (parts.length == 2) {
+                        try {
+                            int minLength = Integer.parseInt(parts[0]);
+                            int maxLength = Integer.parseInt(parts[1]);
+                            int length = cleanedValue.length();
+                            if (length < minLength || length > maxLength) {
+                                return "Parameter '" + paramName + "' must be between " + minLength + " and " + maxLength + " characters";
+                            }
+                        } catch (NumberFormatException e) {
+                            return "Parameter '" + paramName + "' has invalid length specification";
+                        }
+                    }
+                }
+                // Handle enum validations like "enum:option1,option2,option3"
+                else if (validationRule.startsWith("enum:")) {
+                    String enumValues = validationRule.substring("enum:".length());
+                    String[] values = enumValues.split(",");
+                    boolean found = false;
+                    for (String val : values) {
+                        if (cleanedValue.equalsIgnoreCase(val.trim())) {
+                            found = true;
+                            break;
+                        }
+                    }
+                    if (!found) {
+                        return "Parameter '" + paramName + "' must be one of: " + enumValues;
+                    }
+                }
+                break;
+        }
+        
+        return null; // No validation error
+    }
+    
+    /**
+     * 🎆 ENHANCED: Check if string represents a valid player name
+     */
+    private boolean isValidPlayerName(String playerName) {
+        if (playerName == null || playerName.trim().isEmpty()) return false;
+        String cleaned = playerName.replaceAll("§[0-9a-fk-or]", "").trim();
+        if (cleaned.contains(":")) {
+            String[] parts = cleaned.split(":");
+            if (parts.length == 2) {
+                cleaned = parts[1].trim();
+            }
+        }
+        return cleaned.matches("[a-zA-Z0-9_]{3,16}");
+    }
+    
+    /**
+     * 🎆 ENHANCED: Check if string represents a valid world name
+     */
+    private boolean isValidWorldName(String worldName) {
+        if (worldName == null || worldName.trim().isEmpty()) return false;
+        String cleaned = worldName.replaceAll("§[0-9a-fk-or]", "").trim();
+        if (cleaned.contains(":")) {
+            String[] parts = cleaned.split(":");
+            if (parts.length == 2) {
+                cleaned = parts[1].trim();
+            }
+        }
+        return cleaned.matches("[a-zA-Z0-9_.\\-]+");
+    }
+    
+    /**
+     * 🎆 ENHANCED: Check if string represents a valid material name
+     */
+    private boolean isValidMaterialName(String materialName) {
+        if (materialName == null || materialName.trim().isEmpty()) return false;
+        String cleaned = materialName.replaceAll("§[0-9a-fk-or]", "").trim();
+        if (cleaned.contains(":")) {
+            String[] parts = cleaned.split(":");
+            if (parts.length == 2) {
+                cleaned = parts[1].trim();
+            }
+        }
+        return org.bukkit.Material.matchMaterial(cleaned) != null;
+    }
+    
+    /**
+     * 🎆 ENHANCED: Check if string represents a valid hex color
+     */
+    private boolean isValidHexColor(String color) {
+        if (color == null || color.trim().isEmpty()) return false;
+        String cleaned = color.replaceAll("§[0-9a-fk-or]", "").trim();
+        if (cleaned.contains(":")) {
+            String[] parts = cleaned.split(":");
+            if (parts.length == 2) {
+                cleaned = parts[1].trim();
+            }
+        }
+        return cleaned.matches("#[0-9a-fA-F]{6}");
+    }
+    
+    /**
+     * 🎆 ENHANCED: Check if string represents a valid email
+     */
+    private boolean isValidEmail(String email) {
+        if (email == null || email.trim().isEmpty()) return false;
+        String cleaned = email.replaceAll("§[0-9a-fk-or]", "").trim();
+        if (cleaned.contains(":")) {
+            String[] parts = cleaned.split(":");
+            if (parts.length == 2) {
+                cleaned = parts[1].trim();
+            }
+        }
+        return cleaned.matches("^[\\w.-]+@[\\w.-]+\\.[a-zA-Z]{2,}$");
+    }
+    
+    /**
+     * 🎆 ENHANCED: Check if string represents a valid URL
+     */
+    private boolean isValidUrl(String url) {
+        if (url == null || url.trim().isEmpty()) return false;
+        String cleaned = url.replaceAll("§[0-9a-fk-or]", "").trim();
+        if (cleaned.contains(":")) {
+            String[] parts = cleaned.split(":");
+            if (parts.length == 2) {
+                cleaned = parts[1].trim();
+            }
+        }
+        // Basic URL validation - fixed regex with proper escaping
+        return cleaned.matches("https?://[\\w.-]+(?:\\.[\\w.-]+)+[/\\w\\-._~:/?#\\[\\]@!$&'()*+,;=]*");
+    }
+    
+    /**
+     * 🎆 ENHANCED: Check if string represents a valid sound name
+     */
+    private boolean isValidSoundName(String soundName) {
+        if (soundName == null || soundName.trim().isEmpty()) return false;
+        String cleaned = soundName.replaceAll("§[0-9a-fk-or]", "").trim();
+        return cleaned.contains(":") || 
+               cleaned.startsWith("minecraft:") || 
+               cleaned.contains("block.") || 
+               cleaned.contains("entity.") || 
+               cleaned.contains("item.") || 
+               cleaned.contains("music.") || 
+               cleaned.contains("ambient.");
+    }
+    
+    /**
+     * 🎆 ENHANCED: Check if string represents a valid effect name
+     */
+    private boolean isValidEffectName(String effectName) {
+        if (effectName == null || effectName.trim().isEmpty()) return false;
+        String cleaned = effectName.replaceAll("§[0-9a-fk-or]", "").trim();
+        String[] validEffects = {
+            "SPEED", "SLOW", "FAST_DIGGING", "SLOW_DIGGING", "INCREASE_DAMAGE", 
+            "HEAL", "HARM", "JUMP", "CONFUSION", "REGENERATION", "DAMAGE_RESISTANCE",
+            "FIRE_RESISTANCE", "WATER_BREATHING", "INVISIBILITY", "BLINDNESS",
+            "NIGHT_VISION", "HUNGER", "WEAKNESS", "POISON", "WITHER", "HEALTH_BOOST",
+            "ABSORPTION", "SATURATION", "GLOWING", "LEVITATION", "LUCK", "UNLUCK",
+            "SLOW_FALLING", "CONDUIT_POWER", "DOLPHINS_GRACE", "BAD_OMEN", "HERO_OF_THE_VILLAGE"
+        };
+        for (String effect : validEffects) {
+            if (effect.equalsIgnoreCase(cleaned)) {
+                return true;
+            }
+        }
+        return false;
     }
     
     public void shutdown() {

@@ -70,6 +70,8 @@ public class ActionParameterGUI implements GUIManager.ManagedGUIInterface {
     private boolean hasUnsavedChanges = false;
     private final Map<Integer, String> slotValidationErrors = new HashMap<>();
     private final Map<Integer, Boolean> slotValidationStatus = new HashMap<>();
+    // 🎆 NEW: Store current values for dependent validation
+    private final Map<Integer, String> slotCurrentValues = new HashMap<>();
     
     /**
      * Инициализирует графический интерфейс параметров действий
@@ -202,7 +204,7 @@ public class ActionParameterGUI implements GUIManager.ManagedGUIInterface {
      *
      * Sets up named slots based on configuration
      *
-     * Richtet benannte Slots basierend auf der Konfiguration ein
+     * Richtet benannte Slots basierend auf der Konфигuration ein
      */
     private void setupNamedSlots(org.bukkit.configuration.ConfigurationSection slotsConfig) {
         int configuredSlots = 0;
@@ -332,7 +334,7 @@ public class ActionParameterGUI implements GUIManager.ManagedGUIInterface {
      *
      * Sets up generic slots when no specific configuration is found
      *
-     * Richtet generische Slots ein, wenn keine spezifische Konfiguration gefunden wird
+     * Richtet generische Slots ein, wenn keine spezifische Konфигuration gefunden wird
      */
     private void setupGenericSlots() {
         // Create generic placeholder items for slots 9-17 (center row)
@@ -422,6 +424,15 @@ public class ActionParameterGUI implements GUIManager.ManagedGUIInterface {
             }
         }
         
+        // 🎆 NEW: Check for dependent parameter errors
+        for (Map.Entry<Integer, String> entry : slotValidationErrors.entrySet()) {
+            String error = entry.getValue();
+            if (error != null && error.startsWith("Доступно только если")) {
+                hasErrors = true;
+                errorMessages.add("Слот " + entry.getKey() + ": " + error);
+            }
+        }
+        
         // Provide feedback to player
         if (hasErrors && !errorMessages.isEmpty()) {
             player.sendMessage("§c⚠ Обнаружены ошибки в конфигурации:");
@@ -498,6 +509,13 @@ public class ActionParameterGUI implements GUIManager.ManagedGUIInterface {
         String error = null;
         boolean isValid = true;
         
+        // Store current value for dependent validation
+        if (item != null && item.hasItemMeta() && item.getItemMeta().hasDisplayName()) {
+            slotCurrentValues.put(slot, item.getItemMeta().getDisplayName());
+        } else {
+            slotCurrentValues.remove(slot);
+        }
+        
         if (item == null || item.getType().isAir()) {
             // Empty slot - check if required
             if (isSlotRequired(slot)) {
@@ -516,8 +534,120 @@ public class ActionParameterGUI implements GUIManager.ManagedGUIInterface {
         // Update visual feedback
         updateSlotVisualFeedback(slot, isValid, error);
         
+        // 🎆 NEW: Validate dependent slots
+        validateDependentSlots(slot);
+        
         // Track unsaved changes
         hasUnsavedChanges = true;
+    }
+    
+    /**
+     * 🎆 УЛУЧШЕННОЕ: Проверяет зависимые слоты при изменении значения
+     *
+     * 🎆 ENHANCED: Validate dependent slots when a value changes
+     */
+    private void validateDependentSlots(int changedSlot) {
+        var actionConfigurations = blockConfigService.getActionConfigurations();
+        if (actionConfigurations == null) return;
+        
+        var actionConfig = actionConfigurations.getConfigurationSection(actionId);
+        if (actionConfig == null) return;
+        
+        var slotsConfig = actionConfig.getConfigurationSection("slots");
+        if (slotsConfig == null) return;
+        
+        // Check all slots for dependencies on the changed slot
+        for (String slotKey : slotsConfig.getKeys(false)) {
+            try {
+                int slot = Integer.parseInt(slotKey);
+                if (slot == changedSlot) continue; // Skip the slot that just changed
+                
+                var slotConfig = slotsConfig.getConfigurationSection(slotKey);
+                if (slotConfig == null) continue;
+                
+                // Check for dependencies
+                String dependsOn = slotConfig.getString("depends_on");
+                if (dependsOn != null && !dependsOn.isEmpty()) {
+                    // Parse dependency: "slotName=value" or "slotName!=value"
+                    String[] parts = dependsOn.split("(!?=)");
+                    if (parts.length >= 2) {
+                        String dependencySlotName = parts[0].trim();
+                        String expectedValue = parts[1].trim();
+                        boolean isNotEqual = dependsOn.contains("!=");
+                        
+                        // Find the dependency slot number
+                        Integer dependencySlot = findSlotNumberByName(dependencySlotName);
+                        if (dependencySlot != null) {
+                            String currentValue = slotCurrentValues.get(dependencySlot);
+                            
+                            // Check if dependency condition is met
+                            boolean conditionMet = false;
+                            if (currentValue != null) {
+                                if (isNotEqual) {
+                                    conditionMet = !currentValue.equals(expectedValue);
+                                } else {
+                                    conditionMet = currentValue.equals(expectedValue);
+                                }
+                            }
+                            
+                            // If condition is not met, mark dependent slot as invalid
+                            if (!conditionMet) {
+                                String error = "Доступно только если " + dependencySlotName + 
+                                    (isNotEqual ? " ≠ " : " = ") + expectedValue;
+                                slotValidationErrors.put(slot, error);
+                                slotValidationStatus.put(slot, false);
+                                updateSlotVisualFeedback(slot, false, error);
+                            } else {
+                                // Re-validate the slot since dependency condition is now met
+                                ItemStack item = inventory.getItem(slot);
+                                if (item != null && !item.getType().isAir()) {
+                                    String newError = validateItemForSlot(slot, item);
+                                    boolean newValid = (newError == null);
+                                    slotValidationErrors.put(slot, newError);
+                                    slotValidationStatus.put(slot, newValid);
+                                    updateSlotVisualFeedback(slot, newValid, newError);
+                                }
+                            }
+                        }
+                    }
+                }
+            } catch (NumberFormatException e) {
+                // Invalid slot index, skip
+            }
+        }
+    }
+    
+    /**
+     * 🎆 УЛУЧШЕННОЕ: Находит номер слота по имени
+     *
+     * 🎆 ENHANCED: Find slot number by name
+     */
+    private Integer findSlotNumberByName(String slotName) {
+        var actionConfigurations = blockConfigService.getActionConfigurations();
+        if (actionConfigurations == null) return null;
+        
+        var actionConfig = actionConfigurations.getConfigurationSection(actionId);
+        if (actionConfig == null) return null;
+        
+        var slotsConfig = actionConfig.getConfigurationSection("slots");
+        if (slotsConfig == null) return null;
+        
+        // Find the slot configuration by slot_name
+        for (String slotKey : slotsConfig.getKeys(false)) {
+            try {
+                var slotConfig = slotsConfig.getConfigurationSection(slotKey);
+                if (slotConfig != null) {
+                    String configSlotName = slotConfig.getString("slot_name");
+                    if (slotName.equals(configSlotName)) {
+                        return Integer.parseInt(slotKey);
+                    }
+                }
+            } catch (NumberFormatException e) {
+                // Invalid slot index, skip
+            }
+        }
+        
+        return null;
     }
     
     /**
@@ -634,7 +764,7 @@ public class ActionParameterGUI implements GUIManager.ManagedGUIInterface {
      *
      * 🎆 ENHANCED: Get slot name from configuration
      *
-     * 🎆 ERWEITERT: Ruft den Slot-Namen aus der Konfiguration ab
+     * 🎆 ERWEITERT: Ruft den Slot-Namen aus der Konфигuration ab
      */
     private String getSlotName(int slot) {
         var actionConfigurations = blockConfigService.getActionConfigurations();
@@ -714,6 +844,36 @@ public class ActionParameterGUI implements GUIManager.ManagedGUIInterface {
                     return "Неверное имя эффекта";
                 }
                 break;
+            case "player_name":
+                if (!isValidPlayerName(itemName)) {
+                    return "Неверное имя игрока";
+                }
+                break;
+            case "world_name":
+                if (!isValidWorldName(itemName)) {
+                    return "Неверное имя мира";
+                }
+                break;
+            case "material_name":
+                if (!isValidMaterialName(itemName)) {
+                    return "Неверное имя материала";
+                }
+                break;
+            case "color_hex":
+                if (!isValidHexColor(itemName)) {
+                    return "Неверный формат цвета (должен быть #RRGGBB)";
+                }
+                break;
+            case "email":
+                if (!isValidEmail(itemName)) {
+                    return "Неверный формат email";
+                }
+                break;
+            case "url":
+                if (!isValidUrl(itemName)) {
+                    return "Неверный формат URL";
+                }
+                break;
             default:
                 // Handle range validations like "number_range:0.0-1.0"
                 if (validationRule.startsWith("number_range:")) {
@@ -731,10 +891,265 @@ public class ActionParameterGUI implements GUIManager.ManagedGUIInterface {
                         }
                     }
                 }
+                // Handle regex validations like "regex:[a-zA-Z]+"
+                else if (validationRule.startsWith("regex:")) {
+                    String regex = validationRule.substring("regex:".length());
+                    if (!isValidRegex(itemName, regex)) {
+                        return "Значение не соответствует формату: " + regex;
+                    }
+                }
+                // Handle length validations like "length:5-20"
+                else if (validationRule.startsWith("length:")) {
+                    String lengthSpec = validationRule.substring("length:".length());
+                    if (!isValidLength(itemName, lengthSpec)) {
+                        return "Длина значения должна быть от " + lengthSpec.replace("-", " до ");
+                    }
+                }
+                // Handle enum validations like "enum:option1,option2,option3"
+                else if (validationRule.startsWith("enum:")) {
+                    String enumValues = validationRule.substring("enum:".length());
+                    if (!isValidEnum(itemName, enumValues)) {
+                        return "Значение должно быть одним из: " + enumValues;
+                    }
+                }
                 break;
         }
         
         return null; // No error
+    }
+    
+    /**
+     * 🎆 УЛУЧШЕННОЕ: Проверяет, представляет ли строка допустимое имя игрока
+     *
+     * 🎆 ENHANCED: Check if string represents a valid player name
+     */
+    private boolean isValidPlayerName(String playerName) {
+        if (playerName == null || playerName.trim().isEmpty()) return false;
+        
+        // Remove color codes
+        String cleaned = playerName.replaceAll("§[0-9a-fk-or]", "").trim();
+        
+        // Check for pattern like "player:Name" or just "Name"
+        if (cleaned.contains(":")) {
+            String[] parts = cleaned.split(":");
+            if (parts.length == 2) {
+                cleaned = parts[1].trim();
+            }
+        }
+        
+        // Player names should be 3-16 characters, alphanumeric and underscores
+        return cleaned.matches("[a-zA-Z0-9_]{3,16}");
+    }
+    
+    /**
+     * 🎆 УЛУЧШЕННОЕ: Проверяет, представляет ли строка допустимое имя мира
+     *
+     * 🎆 ENHANCED: Check if string represents a valid world name
+     */
+    private boolean isValidWorldName(String worldName) {
+        if (worldName == null || worldName.trim().isEmpty()) return false;
+        
+        // Remove color codes
+        String cleaned = worldName.replaceAll("§[0-9a-fk-or]", "").trim();
+        
+        // Check for pattern like "world:Name" or just "Name"
+        if (cleaned.contains(":")) {
+            String[] parts = cleaned.split(":");
+            if (parts.length == 2) {
+                cleaned = parts[1].trim();
+            }
+        }
+        
+        // World names can contain letters, numbers, underscores, hyphens, and dots
+        return cleaned.matches("[a-zA-Z0-9_.\\-]+");
+    }
+    
+    /**
+     * 🎆 УЛУЧШЕННОЕ: Проверяет, представляет ли строка допустимое имя материала
+     *
+     * 🎆 ENHANCED: Check if string represents a valid material name
+     */
+    private boolean isValidMaterialName(String materialName) {
+        if (materialName == null || materialName.trim().isEmpty()) return false;
+        
+        // Remove color codes
+        String cleaned = materialName.replaceAll("§[0-9a-fk-or]", "").trim();
+        
+        // Check for pattern like "material:Name" or just "Name"
+        if (cleaned.contains(":")) {
+            String[] parts = cleaned.split(":");
+            if (parts.length == 2) {
+                cleaned = parts[1].trim();
+            }
+        }
+        
+        // Check if material exists
+        return org.bukkit.Material.matchMaterial(cleaned) != null;
+    }
+    
+    /**
+     * 🎆 УЛУЧШЕННОЕ: Проверяет, представляет ли строка допустимый HEX цвет
+     *
+     * 🎆 ENHANCED: Check if string represents a valid hex color
+     */
+    private boolean isValidHexColor(String color) {
+        if (color == null || color.trim().isEmpty()) return false;
+        
+        // Remove color codes
+        String cleaned = color.replaceAll("§[0-9a-fk-or]", "").trim();
+        
+        // Check for pattern like "color:#RRGGBB" or just "#RRGGBB"
+        if (cleaned.contains(":")) {
+            String[] parts = cleaned.split(":");
+            if (parts.length == 2) {
+                cleaned = parts[1].trim();
+            }
+        }
+        
+        // HEX color should be in format #RRGGBB
+        return cleaned.matches("#[0-9a-fA-F]{6}");
+    }
+    
+    /**
+     * 🎆 УЛУЧШЕННОЕ: Проверяет, представляет ли строка допустимый email
+     *
+     * 🎆 ENHANCED: Check if string represents a valid email
+     */
+    private boolean isValidEmail(String email) {
+        if (email == null || email.trim().isEmpty()) return false;
+        
+        // Remove color codes
+        String cleaned = email.replaceAll("§[0-9a-fk-or]", "").trim();
+        
+        // Check for pattern like "email:address@domain.com" or just "address@domain.com"
+        if (cleaned.contains(":")) {
+            String[] parts = cleaned.split(":");
+            if (parts.length == 2) {
+                cleaned = parts[1].trim();
+            }
+        }
+        
+        // Basic email validation
+        return cleaned.matches("^[\\w.-]+@[\\w.-]+\\.[a-zA-Z]{2,}$");
+    }
+    
+    /**
+     * 🎆 УЛУЧШЕННОЕ: Проверяет, представляет ли строка допустимый URL
+     *
+     * 🎆 ENHANCED: Check if string represents a valid URL
+     */
+    private boolean isValidUrl(String url) {
+        if (url == null || url.trim().isEmpty()) return false;
+        
+        // Remove color codes
+        String cleaned = url.replaceAll("§[0-9a-fk-or]", "").trim();
+        
+        // Check for pattern like "url:https://example.com" or just "https://example.com"
+        if (cleaned.contains(":")) {
+            String[] parts = cleaned.split(":");
+            if (parts.length == 2) {
+                cleaned = parts[1].trim();
+            }
+        }
+        
+        // Basic URL validation - fixed regex with proper escaping
+        return cleaned.matches("https?://[\\w.-]+(?:\\.[\\w.-]+)+[/\\w\\-._~:/?#\\[\\]@!$&'()*+,;=]*");
+    }
+    
+    /**
+     * 🎆 УЛУЧШЕННОЕ: Проверяет, соответствует ли строка регулярному выражению
+     *
+     * 🎆 ENHANCED: Check if string matches a regex pattern
+     */
+    private boolean isValidRegex(String str, String regex) {
+        if (str == null || str.trim().isEmpty()) return false;
+        
+        // Remove color codes
+        String cleaned = str.replaceAll("§[0-9a-fk-or]", "").trim();
+        
+        // Check for pattern like "value:text" or just "text"
+        if (cleaned.contains(":")) {
+            String[] parts = cleaned.split(":");
+            if (parts.length == 2) {
+                cleaned = parts[1].trim();
+            }
+        }
+        
+        try {
+            return cleaned.matches(regex);
+        } catch (Exception e) {
+            return false; // Invalid regex pattern
+        }
+    }
+    
+    /**
+     * 🎆 УЛУЧШЕННОЕ: Проверяет, соответствует ли длина строки спецификации
+     *
+     * 🎆 ENHANCED: Check if string length matches specification
+     */
+    private boolean isValidLength(String str, String lengthSpec) {
+        if (str == null) return false;
+        
+        // Remove color codes
+        String cleaned = str.replaceAll("§[0-9a-fk-or]", "").trim();
+        
+        // Check for pattern like "value:text" or just "text"
+        if (cleaned.contains(":")) {
+            String[] parts = cleaned.split(":");
+            if (parts.length == 2) {
+                cleaned = parts[1].trim();
+            }
+        }
+        
+        String[] parts = lengthSpec.split("-");
+        if (parts.length == 1) {
+            try {
+                int exactLength = Integer.parseInt(parts[0]);
+                return cleaned.length() == exactLength;
+            } catch (NumberFormatException e) {
+                return false;
+            }
+        } else if (parts.length == 2) {
+            try {
+                int minLength = Integer.parseInt(parts[0]);
+                int maxLength = Integer.parseInt(parts[1]);
+                int length = cleaned.length();
+                return length >= minLength && length <= maxLength;
+            } catch (NumberFormatException e) {
+                return false;
+            }
+        }
+        
+        return false;
+    }
+    
+    /**
+     * 🎆 УЛУЧШЕННОЕ: Проверяет, является ли значение одним из перечисленных
+     *
+     * 🎆 ENHANCED: Check if value is one of the enumerated values
+     */
+    private boolean isValidEnum(String str, String enumValues) {
+        if (str == null || str.trim().isEmpty()) return false;
+        
+        // Remove color codes
+        String cleaned = str.replaceAll("§[0-9a-fk-or]", "").trim();
+        
+        // Check for pattern like "value:text" or just "text"
+        if (cleaned.contains(":")) {
+            String[] parts = cleaned.split(":");
+            if (parts.length == 2) {
+                cleaned = parts[1].trim();
+            }
+        }
+        
+        String[] values = enumValues.split(",");
+        for (String value : values) {
+            if (cleaned.equalsIgnoreCase(value.trim())) {
+                return true;
+            }
+        }
+        
+        return false;
     }
     
     /**
@@ -874,7 +1289,7 @@ public class ActionParameterGUI implements GUIManager.ManagedGUIInterface {
         if (lore == null) lore = new ArrayList<>();
         
         // Remove old validation messages
-        lore.removeIf(line -> line.contains("✓") || line.contains("✗") || line.contains("Ошибка:") || line.contains("Статус:"));
+        lore.removeIf(line -> line.contains("✓") || line.contains("✗") || line.contains("Ошибка:") || line.contains("Статус:") || line.contains("Подсказка:"));
         
         // Add new validation status with enhanced visual feedback
         if (isValid) {
@@ -899,6 +1314,15 @@ public class ActionParameterGUI implements GUIManager.ManagedGUIInterface {
             lore.add("§7Статус: §eОжидает проверки");
         }
         
+        // Add helpful hints based on slot configuration
+        String slotName = getSlotName(slot);
+        if (slotName != null) {
+            String hint = getValidationHint(slotName);
+            if (hint != null && !hint.isEmpty()) {
+                lore.add("§bПодсказка: §7" + hint);
+            }
+        }
+        
         meta.setLore(lore);
         currentItem.setItemMeta(meta);
         
@@ -911,6 +1335,52 @@ public class ActionParameterGUI implements GUIManager.ManagedGUIInterface {
             player.spawnParticle(org.bukkit.Particle.VILLAGER_HAPPY, effectLoc, 5, 0.3, 0.3, 0.3, 0.1);
         } else if (error != null) {
             player.spawnParticle(org.bukkit.Particle.FLAME, effectLoc, 5, 0.3, 0.3, 0.3, 0.05);
+        }
+    }
+    
+    /**
+     * 🎆 УЛУЧШЕННОЕ: Получает подсказку по валидации для имени слота
+     *
+     * 🎆 ENHANCED: Get validation hint for slot name
+     */
+    private String getValidationHint(String slotName) {
+        var actionConfigurations = blockConfigService.getActionConfigurations();
+        if (actionConfigurations == null) return null;
+        
+        var actionConfig = actionConfigurations.getConfigurationSection(actionId);
+        if (actionConfig == null) return null;
+        
+        var slotsConfig = actionConfig.getConfigurationSection("slots");
+        if (slotsConfig == null) return null;
+        
+        // Find the slot configuration by slot_name
+        for (String slotKey : slotsConfig.getKeys(false)) {
+            var slotConfig = slotsConfig.getConfigurationSection(slotKey);
+            if (slotConfig != null) {
+                String configSlotName = slotConfig.getString("slot_name");
+                if (slotName.equals(configSlotName)) {
+                    // Found the slot, get hint
+                    return slotConfig.getString("hint", "");
+                }
+            }
+        }
+        
+        return null;
+    }
+    
+    /**
+     * 🎆 УЛУЧШЕННОЕ: Обновляет визуальную обратную связь для всех слотов
+     *
+     * 🎆 ENHANCED: Update visual feedback for all slots
+     */
+    private void updateAllSlotsVisualFeedback() {
+        for (int slot = 0; slot < inventory.getSize(); slot++) {
+            ItemStack item = inventory.getItem(slot);
+            if (item != null && !item.getType().isAir() && !isPlaceholderItem(item)) {
+                String error = slotValidationErrors.get(slot);
+                Boolean isValid = slotValidationStatus.get(slot);
+                updateSlotVisualFeedback(slot, isValid != null ? isValid : true, error);
+            }
         }
     }
     

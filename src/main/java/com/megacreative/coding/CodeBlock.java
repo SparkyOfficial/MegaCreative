@@ -3,6 +3,7 @@ package com.megacreative.coding;
 import com.megacreative.coding.values.DataValue;
 import org.bukkit.Material;
 import org.bukkit.inventory.ItemStack;
+import org.bukkit.inventory.meta.ItemMeta;
 
 import java.util.*;
 
@@ -446,6 +447,105 @@ public class CodeBlock implements Cloneable {
             return new HashMap<>();
         }
         return namedGroupsResolver.apply(null);
+    }
+    
+    /**
+     * 🎆 ENHANCED: Gets a parameter value from a named slot with placeholder resolution
+     * @param slotName The name of the slot to get the parameter from
+     * @param slotResolver Function to resolve slot names to numbers
+     * @param context Execution context for placeholder resolution
+     * @return The resolved parameter value or null if not found
+     */
+    public String getNamedSlotParameter(String slotName, java.util.function.Function<String, Integer> slotResolver, com.megacreative.coding.ExecutionContext context) {
+        if (slotName == null || slotResolver == null || context == null) {
+            return null;
+        }
+        
+        Integer slotNumber = slotResolver.apply(slotName);
+        if (slotNumber == null) {
+            return null;
+        }
+        
+        ItemStack item = getConfigItem(slotNumber);
+        if (item == null || !item.hasItemMeta()) {
+            return null;
+        }
+        
+        org.bukkit.inventory.meta.ItemMeta meta = item.getItemMeta();
+        if (meta == null || !meta.hasDisplayName()) {
+            return null;
+        }
+        
+        String rawValue = meta.getDisplayName();
+        
+        // Resolve placeholders using the reference system
+        return com.megacreative.coding.placeholders.ReferenceSystemPlaceholderResolver.resolvePlaceholders(rawValue, context);
+    }
+    
+    /**
+     * 🎆 ENHANCED: Gets a list of parameter values from a named group with placeholder resolution
+     * @param groupName The name of the group to get parameters from
+     * @param groupResolver Function to resolve group names to slot numbers
+     * @param context Execution context for placeholder resolution
+     * @return List of resolved parameter values
+     */
+    public List<String> getNamedGroupParameters(String groupName, java.util.function.Function<String, int[]> groupResolver, com.megacreative.coding.ExecutionContext context) {
+        List<String> parameters = new ArrayList<>();
+        
+        if (groupName == null || groupResolver == null || context == null) {
+            return parameters;
+        }
+        
+        int[] slotNumbers = groupResolver.apply(groupName);
+        if (slotNumbers == null || slotNumbers.length == 0) {
+            return parameters;
+        }
+        
+        for (int slotNumber : slotNumbers) {
+            ItemStack item = getConfigItem(slotNumber);
+            if (item != null && item.hasItemMeta()) {
+                org.bukkit.inventory.meta.ItemMeta meta = item.getItemMeta();
+                if (meta != null && meta.hasDisplayName()) {
+                    String rawValue = meta.getDisplayName();
+                    String resolvedValue = com.megacreative.coding.placeholders.ReferenceSystemPlaceholderResolver.resolvePlaceholders(rawValue, context);
+                    parameters.add(resolvedValue);
+                }
+            }
+        }
+        
+        return parameters;
+    }
+    
+    /**
+     * 🎆 ENHANCED: Gets all named slot parameters with placeholder resolution
+     * @param slotResolver Function to resolve slot names to numbers
+     * @param context Execution context for placeholder resolution
+     * @return Map of slot names to resolved parameter values
+     */
+    public Map<String, String> getAllNamedSlotParameters(java.util.function.Function<String, Integer> slotResolver, com.megacreative.coding.ExecutionContext context) {
+        Map<String, String> parameters = new HashMap<>();
+        
+        if (slotResolver == null || context == null) {
+            return parameters;
+        }
+        
+        // We don't have access to the slot names here, so we'll return what we can
+        for (Map.Entry<Integer, ItemStack> entry : configItems.entrySet()) {
+            Integer slotNumber = entry.getKey();
+            ItemStack item = entry.getValue();
+            
+            if (item != null && item.hasItemMeta()) {
+                org.bukkit.inventory.meta.ItemMeta meta = item.getItemMeta();
+                if (meta != null && meta.hasDisplayName()) {
+                    String rawValue = meta.getDisplayName();
+                    String resolvedValue = com.megacreative.coding.placeholders.ReferenceSystemPlaceholderResolver.resolvePlaceholders(rawValue, context);
+                    // We'll use the slot number as the key since we don't have the name
+                    parameters.put("slot_" + slotNumber, resolvedValue);
+                }
+            }
+        }
+        
+        return parameters;
     }
     
     // ===== OVERRIDDEN METHODS =====

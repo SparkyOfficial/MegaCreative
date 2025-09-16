@@ -3,6 +3,9 @@ package com.megacreative.coding.executors;
 import com.megacreative.coding.CodeBlock;
 import org.bukkit.entity.Player;
 
+import java.util.Map;
+import java.util.HashMap;
+
 /**
  * Represents the result of a script or block execution.
  */
@@ -13,6 +16,7 @@ public class ExecutionResult {
     private final Player executor;
     private final Throwable error;
     private final long executionTime;
+    private final Map<String, Object> details;
     private boolean terminated = false;
     private Object returnValue;
 
@@ -23,6 +27,7 @@ public class ExecutionResult {
         this.executor = builder.executor;
         this.error = builder.error;
         this.executionTime = builder.executionTime;
+        this.details = builder.details != null ? new HashMap<>(builder.details) : new HashMap<>();
     }
 
     // Getters
@@ -112,6 +117,20 @@ public class ExecutionResult {
             .error(error)
             .build();
     }
+    
+    /**
+     * Gets additional details about the execution result
+     */
+    public Map<String, Object> getDetails() {
+        return details != null ? new HashMap<>(details) : new HashMap<>();
+    }
+    
+    /**
+     * Gets a specific detail by key
+     */
+    public Object getDetail(String key) {
+        return details != null ? details.get(key) : null;
+    }
 
     /**
      * Creates an error result from an exception
@@ -130,6 +149,7 @@ public class ExecutionResult {
         private Player executor;
         private Throwable error;
         private long executionTime;
+        private Map<String, Object> details;
 
         public Builder success(boolean success) {
             this.success = success;
@@ -158,6 +178,19 @@ public class ExecutionResult {
 
         public Builder executionTime(long executionTime) {
             this.executionTime = executionTime;
+            return this;
+        }
+        
+        public Builder details(Map<String, Object> details) {
+            this.details = details;
+            return this;
+        }
+        
+        public Builder addDetail(String key, Object value) {
+            if (this.details == null) {
+                this.details = new HashMap<>();
+            }
+            this.details.put(key, value);
             return this;
         }
 
