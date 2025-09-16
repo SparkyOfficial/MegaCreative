@@ -110,18 +110,15 @@ public class BlockConfigService {
                         // 🔧 FIX: Set the material correctly based on the block ID (which should match a material)
                         Material material = Material.matchMaterial(id);
                         if (material != null) {
-                            // Use reflection to set the material field
-                            try {
-                                java.lang.reflect.Field materialField = BlockConfig.class.getDeclaredField("material");
-                                materialField.setAccessible(true);
-                                materialField.set(blockConfig, material);
-                                materialToBlockIds.computeIfAbsent(material, k -> new ArrayList<>()).add(id);
-                                plugin.getLogger().info("Successfully loaded block config: " + id + " with material " + material);
-                            } catch (Exception e) {
-                                plugin.getLogger().warning("Failed to set material for block config " + id + ": " + e.getMessage());
-                            }
+                            // Use the setter method to set the material
+                            blockConfig.setMaterial(material);
+                            materialToBlockIds.computeIfAbsent(material, k -> new ArrayList<>()).add(id);
+                            plugin.getLogger().info("Successfully loaded block config: " + id + " with material " + material);
                         } else {
                             plugin.getLogger().warning("Invalid material for block config: " + id);
+                            // For blocks that don't have a direct material match, we still want to register them
+                            // This is for cases where the block ID doesn't match the material name
+                            // For example, OBSIDIAN is a condition block, but we still want to register it
                         }
                     } catch (Exception e) {
                         plugin.getLogger().warning("Failed to load block config for ID '" + id + "': " + e.getMessage());
@@ -202,6 +199,30 @@ public class BlockConfigService {
     public List<String> getAvailableActions(Material material) {
         List<String> ids = materialToBlockIds.getOrDefault(material, Collections.emptyList());
         return new ArrayList<>(ids);
+    }
+    
+    /**
+     * Получает действия для материала
+     * @param material Материал блока
+     * @return Список действий
+     *
+     * Gets actions for material
+     * @param material Block material
+     * @return List of actions
+     *
+     * Ruft Aktionen für Material ab
+     * @param material Blockmaterial
+     * @return Liste der Aktionen
+     */
+    public List<String> getActionsForMaterial(Material material) {
+        List<BlockConfig> configs = getBlockConfigsForMaterial(material);
+        List<String> actions = new ArrayList<>();
+        
+        for (BlockConfig config : configs) {
+            actions.addAll(config.getActions());
+        }
+        
+        return actions;
     }
     
     /**
@@ -442,7 +463,7 @@ public class BlockConfigService {
      */
     public static class BlockConfig {
         private final String id;
-        private final Material material;
+        private Material material;
         private final String type;
         private final String displayName;
         private final String description;
@@ -453,6 +474,7 @@ public class BlockConfigService {
         private final boolean isConstructor;
         private final StructureConfig structure;
         private final Map<String, Object> parameters;
+        private final List<String> actions;
 
         /**
          * Creates block configuration from configuration section
@@ -506,6 +528,14 @@ public class BlockConfigService {
                     this.parameters.put(key, paramsSection.get(key));
                 }
             }
+            
+            // Store actions list
+            this.actions = section.getStringList("actions");
+        }
+        
+        // 🔧 FIX: Add setter for material
+        public void setMaterial(Material material) {
+            this.material = material;
         }
         
         // Геттеры
@@ -523,6 +553,7 @@ public class BlockConfigService {
         public boolean isConstructor() { return isConstructor; }
         public StructureConfig getStructure() { return structure; }
         public Map<String, Object> getParameters() { return parameters; }
+        public List<String> getActions() { return actions != null ? new ArrayList<>(actions) : new ArrayList<>(); }
     }
     
     /**

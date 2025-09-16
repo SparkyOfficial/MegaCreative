@@ -116,11 +116,12 @@ class BlockConfigServiceComprehensiveTest {
     @Test
     void testGetAvailableActions() {
         // Test getting available actions for a material
-        List<String> actions = blockConfigService.getAvailableActions(Material.DIAMOND_BLOCK);
+        List<String> actions = blockConfigService.getActionsForMaterial(Material.DIAMOND_BLOCK);
         
         // Should have at least one action for diamond block
         assertFalse(actions.isEmpty());
-        assertTrue(actions.contains("DIAMOND_BLOCK"));
+        // Check that it contains actual actions, not just block IDs
+        assertTrue(actions.contains("onJoin"));
     }
 
     @Test

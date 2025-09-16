@@ -85,7 +85,7 @@ public class BlockConfigManager implements Listener {
     private void showActionSelectionGUI(Player player, CodeBlock codeBlock, Location blockLocation) {
         // Get available actions from BlockConfigService
         var blockConfigService = plugin.getServiceRegistry().getBlockConfigService();
-        List<String> availableActions = blockConfigService.getAvailableActions(codeBlock.getMaterial());
+        List<String> availableActions = blockConfigService.getActionsForMaterial(codeBlock.getMaterial());
         
         if (availableActions.isEmpty()) {
             player.sendMessage("§cОшибка: нет доступных действий для данного типа блока.");

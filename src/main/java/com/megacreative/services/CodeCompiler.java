@@ -705,7 +705,7 @@ public class CodeCompiler {
                             // First try exact match
                             // Сначала попробовать точное совпадение
                             // Zuerst exakte Übereinstimmung versuchen
-                            List<String> availableActions = blockConfigService.getAvailableActions(block.getType());
+                            List<String> availableActions = blockConfigService.getActionsForMaterial(block.getType());
                             for (String action : availableActions) {
                                 if (action.equalsIgnoreCase(cleanLine)) {
                                     logger.fine("Found exact action match: " + action + " for block at " + formatLocation(blockLocation));

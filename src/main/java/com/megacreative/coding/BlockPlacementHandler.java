@@ -6,6 +6,8 @@ import com.megacreative.interfaces.ITrustedPlayerManager;
 import com.megacreative.services.BlockConfigService;
 import com.megacreative.gui.coding.ActionParameterGUI;
 import com.megacreative.gui.coding.ActionSelectionGUI;
+import com.megacreative.gui.coding.ConditionSelectionGUI;
+import com.megacreative.gui.coding.EventSelectionGUI;
 import com.megacreative.coding.values.DataValue;
 import com.megacreative.coding.values.types.AnyValue;
 import com.megacreative.coding.values.types.TextValue;
@@ -120,7 +122,12 @@ public class BlockPlacementHandler implements Listener {
         ItemStack itemInHand = event.getItemInHand();
         
         // Only process in dev worlds
-        if (!isInDevWorld(player)) return;
+        if (!isInDevWorld(player)) {
+            plugin.getLogger().info("Block placement by " + player.getName() + " not in dev world: " + player.getWorld().getName());
+            return;
+        }
+        
+        plugin.getLogger().info("Player " + player.getName() + " placing block in dev world: " + player.getWorld().getName());
         
         // Проверяем стекло под блоком (как в FrameLand)
         Block glassUnder = player.getWorld().getBlockAt(block.getX(), block.getY() - 1, block.getZ());
@@ -150,6 +157,7 @@ public class BlockPlacementHandler implements Listener {
                 player.spawnParticle(org.bukkit.Particle.ENCHANTMENT_TABLE, effectLoc, 10, 0.3, 0.3, 0.3, 1.0);
                 player.playSound(block.getLocation(), org.bukkit.Sound.BLOCK_PISTON_EXTEND, 1.0f, 1.5f);
                 
+                plugin.getLogger().info("Bracket placed by " + player.getName() + " at " + block.getLocation());
                 return; // Завершаем обработку
             }
             return; // Это обычный блок, не кодовый
@@ -238,6 +246,8 @@ public class BlockPlacementHandler implements Listener {
             }
             player.sendMessage("§7Кликните правой кнопкой для выбора действия");
         }
+        
+        plugin.getLogger().info("Code block placed by " + player.getName() + " at " + block.getLocation() + " with action: " + actionId);
     }
     
     /**
@@ -1023,30 +1033,37 @@ public class BlockPlacementHandler implements Listener {
         }
         
         // Остальная логика только для кликов по уже существующим блокам
-        if (event.getAction() != org.bukkit.event.block.Action.RIGHT_CLICK_BLOCK) return;
+        if (event.getAction() != org.bukkit.event.block.Action.RIGHT_CLICK_BLOCK && 
+            event.getAction() != org.bukkit.event.block.Action.LEFT_CLICK_BLOCK) {
+            plugin.getLogger().info("Player " + player.getName() + " performed action " + event.getAction() + ", not processing");
+            return;
+        }
         
         Block clickedBlock = event.getClickedBlock();
-        if (clickedBlock == null) return;
+        if (clickedBlock == null) {
+            plugin.getLogger().info("Player " + player.getName() + " clicked null block");
+            return;
+        }
         
         Location location = clickedBlock.getLocation();
         
         // 🔧 FIX: Add debug logging
-        plugin.getLogger().info("Player " + player.getName() + " right-clicked block at " + location + ", type: " + clickedBlock.getType());
+        plugin.getLogger().info("Player " + player.getName() + " clicked block at " + location + ", type: " + clickedBlock.getType());
         
         // 🎆 ENHANCED: Check if player clicked on a smart sign
-        if (clickedBlock.getType().name().contains("SIGN")) {
+        if (clickedBlock.getType().name().contains("SIGN") || clickedBlock.getState() instanceof Sign) {
+            plugin.getLogger().info("Player " + player.getName() + " clicked on a sign");
             if (handleSmartSignClick(clickedBlock, player)) {
                 event.setCancelled(true);
+                player.sendMessage("§aОткрыта настройка через табличку!");
                 return;
             }
         }
         
-        // 🔧 FIX: Ensure we handle all sign types properly
-        if (clickedBlock.getState() instanceof Sign) {
-            if (handleSmartSignClick(clickedBlock, player)) {
-                event.setCancelled(true);
-                return;
-            }
+        // Only process in dev worlds
+        if (!isInDevWorld(player)) {
+            plugin.getLogger().info("Player " + player.getName() + " is not in dev world, skipping interaction");
+            return;
         }
         
         // Проверяем, есть ли уже блок кода на этой локации
@@ -1069,12 +1086,14 @@ public class BlockPlacementHandler implements Listener {
             if (codeBlock.isBracket()) {
                 plugin.getLogger().info("Player " + player.getName() + " clicked bracket block, toggling type");
                 toggleBracketType(codeBlock, event.getClickedBlock(), player);
+                player.sendMessage("§aСкобка переключена!");
                 return;
             }
             
             // Handle block interaction with proper GUI opening
             plugin.getLogger().info("Player " + player.getName() + " opening block interaction GUI");
             handleBlockInteraction(player, location);
+            player.sendMessage("§aОткрыта настройка блока!");
             return;
         }
         
@@ -1091,10 +1110,23 @@ public class BlockPlacementHandler implements Listener {
                 plugin.getLogger().info("Opening parameter config GUI for container interaction for player " + player.getName());
                 // Открываем уникальный drag-and-drop GUI для конкретного действия
                 openParameterConfigGUI(player, blockBelow, codeBlock, config);
+                player.sendMessage("§aОткрыта настройка параметров!");
             } else {
                 player.sendMessage("§cОшибка: Не удалось найти конфигурацию для действия " + codeBlock.getAction());
             }
+            return;
         }
+        
+        // 🔧 FIX: Handle block placement for code blocks
+        if (event.getAction() == org.bukkit.event.block.Action.RIGHT_CLICK_BLOCK && 
+            !itemInHand.getType().isAir() && 
+            blockConfigService.isCodeBlock(itemInHand.getType())) {
+            // This is a block placement attempt, let the BlockPlaceEvent handle it
+            plugin.getLogger().info("Player " + player.getName() + " attempting to place code block");
+            return;
+        }
+        
+        plugin.getLogger().info("Player " + player.getName() + " interaction not handled - no code block found at " + location);
     }
 
     /**
@@ -1107,61 +1139,94 @@ public class BlockPlacementHandler implements Listener {
         CodeBlock codeBlock = blockCodeBlocks.get(blockLocation);
         if (codeBlock == null) {
             plugin.getLogger().info("No code block found at " + blockLocation + " for player " + player.getName());
+            player.sendMessage("§cОшибка: Блок кода не найден!");
             return;
         }
         
-        // Если это поршень (скобка), переключаем тип
-        if (codeBlock.isBracket()) {
-            toggleBracketType(codeBlock, blockLocation.getBlock(), player);
-            return;
-        }
-
-        // Для универсальных блоков всегда открываем GUI выбора действия
-        // Это реализует стиль: один блок - множество функций
-        if (codeBlock.getAction() == null || codeBlock.getAction().equals("NOT_SET") || codeBlock.getAction().equals("UNKNOWN")) {
-            plugin.getLogger().info("Opening action selection GUI for player " + player.getName() + " at " + blockLocation);
-            // Вызываем GUI для выбора действия
-            openActionSelectionGUI(player, blockLocation, codeBlock.getMaterial());
-        } else {
-            plugin.getLogger().info("Opening parameter config GUI for player " + player.getName() + " at " + blockLocation + " with action " + codeBlock.getAction());
-            // Иначе открываем GUI настройки параметров
-            BlockConfigService.BlockConfig config = blockConfigService.getBlockConfig(codeBlock.getAction());
+        try {
+            // Get the block configuration to determine the appropriate GUI
+            BlockConfigService.BlockConfig config = blockConfigService.getBlockConfigByMaterial(codeBlock.getMaterial());
+            
             if (config != null) {
-                // Вызываем GUI для настройки параметров
-                openParameterConfigGUI(player, blockLocation, codeBlock, config);
+                String blockType = config.getType();
+                
+                // Open the appropriate GUI based on block type
+                if ("EVENT".equals(blockType)) {
+                    // Open EventSelectionGUI for event blocks
+                    EventSelectionGUI eventGui = new EventSelectionGUI(plugin, player, blockLocation, codeBlock.getMaterial());
+                    eventGui.open();
+                    plugin.getLogger().info("Opened EventSelectionGUI for player " + player.getName() + " at " + blockLocation);
+                    player.sendMessage("§aОткрыта настройка события!");
+                } else if ("CONDITION".equals(blockType)) {
+                    // Open ConditionSelectionGUI for condition blocks
+                    ConditionSelectionGUI conditionGui = new ConditionSelectionGUI(plugin, player, blockLocation, codeBlock.getMaterial());
+                    conditionGui.open();
+                    plugin.getLogger().info("Opened ConditionSelectionGUI for player " + player.getName() + " at " + blockLocation);
+                    player.sendMessage("§aОткрыта настройка условия!");
+                } else {
+                    // Open ActionSelectionGUI for action blocks (default behavior)
+                    ActionSelectionGUI actionGui = new ActionSelectionGUI(plugin, player, blockLocation, codeBlock.getMaterial());
+                    actionGui.open();
+                    plugin.getLogger().info("Opened ActionSelectionGUI for player " + player.getName() + " at " + blockLocation);
+                    player.sendMessage("§aОткрыта настройка действия!");
+                }
             } else {
-                // Если конфигурация не найдена, открываем GUI выбора действия
-                player.sendMessage("§cОшибка: Не удалось найти конфигурацию для действия '" + codeBlock.getAction() + "'");
-                player.sendMessage("§eОткрываю GUI для выбора нового действия...");
-                openActionSelectionGUI(player, blockLocation, codeBlock.getMaterial());
+                // Fallback to ActionSelectionGUI if no config found
+                ActionSelectionGUI gui = new ActionSelectionGUI(plugin, player, blockLocation, codeBlock.getMaterial());
+                gui.open();
+                plugin.getLogger().info("Opened GUI for player " + player.getName() + " at " + blockLocation);
+                player.sendMessage("§aОткрыта настройка блока!");
             }
+        } catch (Exception e) {
+            plugin.getLogger().severe("Failed to open selection GUI for player " + player.getName() + ": " + e.getMessage());
+            e.printStackTrace();
+            player.sendMessage("§cОшибка при открытии GUI: " + e.getMessage());
         }
     }
     
     /**
-     * Открывает GUI для выбора действия
-     * Implements reference system-style: universal blocks with GUI configuration
-     */
-    private void openActionSelectionGUI(Player player, Location blockLocation, Material blockMaterial) {
-        ActionSelectionGUI gui = new ActionSelectionGUI(plugin, player, blockLocation, blockMaterial);
-        gui.open();
-        
-        BlockConfigService.BlockConfig config = blockConfigService.getBlockConfigByMaterial(blockMaterial);
-        String blockName = config != null ? config.getDisplayName() : blockMaterial.name();
-        player.sendMessage("§eВыберите действие для блока: §f" + blockName);
-    }
-
-    /**
-     * Открывает уникальный drag-and-drop GUI для настройки параметров блока
-     * Implements reference system-style: universal blocks with GUI configuration
+     * Открывает GUI параметров для указанного блока кода
      */
     private void openParameterConfigGUI(Player player, Location blockLocation, CodeBlock codeBlock, BlockConfigService.BlockConfig config) {
-        // Создаем и открываем уникальный GUI для конкретного действия
-        ActionParameterGUI gui = new ActionParameterGUI(
-            plugin, player, blockLocation, codeBlock.getAction());
+        plugin.getLogger().info("Opening parameter config GUI for player " + player.getName() + " at " + blockLocation);
+        ActionParameterGUI gui = new ActionParameterGUI(plugin, player, blockLocation, codeBlock.getAction());
         gui.open();
-        
-        player.sendMessage("§eОткрытие настройки параметров для действия: §f" + config.getDisplayName());
+        plugin.getLogger().info("Opened parameter GUI for player " + player.getName() + " at " + blockLocation);
+    }
+    
+    /**
+     * Переключает тип скобки (открытая/закрытая) для блока кода
+     */
+    private void toggleBracketType(CodeBlock codeBlock, Block block, Player player) {
+        plugin.getLogger().info("Toggling bracket type for player " + player.getName());
+        CodeBlock.BracketType newType = codeBlock.getBracketType() == CodeBlock.BracketType.OPEN ? 
+            CodeBlock.BracketType.CLOSE : CodeBlock.BracketType.OPEN;
+        codeBlock.setBracketType(newType);
+        setPistonDirection(block, newType);
+        updateBracketSign(block.getLocation(), newType);
+        player.sendMessage("§aСкобка переключена на: " + newType.getDisplayName());
+    }
+    
+    /**
+     * Обновляет табличку на скобке
+     */
+    private void updateBracketSign(Location location, CodeBlock.BracketType bracketType) {
+        plugin.getLogger().info("Updating bracket sign at " + location + " to " + bracketType.getDisplayName());
+        setSignOnBlock(location, bracketType.getDisplayName());
+    }
+    
+
+    
+    /**
+     * Проверяет, является ли предмет инструментом
+     */
+    private boolean isTool(ItemStack itemStack) {
+        Material type = itemStack.getType();
+        return type.name().endsWith("_PICKAXE") ||
+            type.name().endsWith("_AXE") ||
+            type.name().endsWith("_SHOVEL") ||
+            type.name().endsWith("_HOE") ||
+            type == Material.SHEARS;
     }
     
     /**
@@ -1170,31 +1235,64 @@ public class BlockPlacementHandler implements Listener {
     public boolean isInDevWorld(Player player) {  // Changed from private to public
         String worldName = player.getWorld().getName();
         // Проверяем разные варианты названий миров разработки
-        return worldName.contains("dev") || worldName.contains("Dev") || 
+        boolean isDev = worldName.contains("dev") || worldName.contains("Dev") || 
                worldName.contains("разработка") || worldName.contains("Разработка") ||
                worldName.contains("creative") || worldName.contains("Creative") ||
-               worldName.contains("-code") || worldName.endsWith("-code"); // 🔧 FIX: Add -code suffix detection for dev worlds
-    }
-
-    /**
-     * Проверяет, является ли предмет инструментом
-     */
-    private boolean isTool(ItemStack item) {
-        if (item == null) return false;
+               worldName.contains("-code") || worldName.endsWith("-code") || 
+               worldName.contains("_code") || worldName.endsWith("_dev") ||
+               worldName.contains("megacreative_"); // 🔧 FIX: Add megacreative_ pattern matching
         
-        Material type = item.getType();
-        return type == Material.WOODEN_AXE || type == Material.STONE_AXE || 
-               type == Material.IRON_AXE || type == Material.DIAMOND_AXE || 
-               type == Material.NETHERITE_AXE || type == Material.WOODEN_PICKAXE || 
-               type == Material.STONE_PICKAXE || type == Material.IRON_PICKAXE || 
-               type == Material.DIAMOND_PICKAXE || type == Material.NETHERITE_PICKAXE ||
-               type == Material.WOODEN_SHOVEL || type == Material.STONE_SHOVEL || 
-               type == Material.IRON_SHOVEL || type == Material.DIAMOND_SHOVEL || 
-               type == Material.NETHERITE_SHOVEL || type == Material.WOODEN_HOE || 
-               type == Material.STONE_HOE || type == Material.IRON_HOE || 
-               type == Material.DIAMOND_HOE || type == Material.NETHERITE_HOE;
+        plugin.getLogger().info("Checking if world " + worldName + " is dev world: " + isDev);
+        return isDev;
     }
-
+    
+    /**
+     * Обрабатывает взаимодействие со стрелой NOT (инвертирование условия)
+     */
+    private void handleArrowNotInteraction(Player player, Block block) {
+        if (block == null) return;
+        
+        Location location = block.getLocation();
+        if (blockCodeBlocks.containsKey(location)) {
+            CodeBlock codeBlock = blockCodeBlocks.get(location);
+            if (codeBlock.getAction().startsWith("IF")) {
+                String newAction = "NOT " + codeBlock.getAction();
+                codeBlock.setAction(newAction);
+                setSignOnBlock(location, newAction);
+                player.sendMessage("§aУсловие инвертировано на: " + newAction);
+            }
+        }
+    }
+    
+    /**
+     * Обрабатывает нажатие на "умную" табличку
+     * @param clickedBlock Табличка, на которую кликнул игрок
+     * @param player Игрок, который кликнул по табличке
+     * @return True, если табличка была умной и интерфейс открыт; иначе False
+     */
+    private boolean handleSmartSignClick(Block clickedBlock, Player player) {
+        plugin.getLogger().info("Handling smart sign click by " + player.getName());
+        if (clickedBlock.getState() instanceof Sign) {
+            Sign sign = (Sign) clickedBlock.getState();
+            String[] lines = sign.getLines();
+            
+            if (lines.length > 1 && lines[1].contains("ID:")) {
+                String actionId = lines[1].substring(lines[1].indexOf(": ") + 2);
+                plugin.getLogger().info("Found smart sign with action ID: " + actionId);
+                
+                Location blockLocation = clickedBlock.getLocation().subtract(0, 1, 0);
+                CodeBlock codeBlock = blockCodeBlocks.get(blockLocation);
+                if (codeBlock != null) {
+                    plugin.getLogger().info("Found code block at " + blockLocation + " with action: " + codeBlock.getAction());
+                    handleBlockInteraction(player, blockLocation);
+                    return true;
+                }
+            }
+        }
+        plugin.getLogger().info("Not a smart sign - no action performed");
+        return false;
+    }
+    
     /**
      * Исправленная логика установки таблички.
      * Implements reference system-style: visual code construction with feedback
@@ -1279,231 +1377,6 @@ public class BlockPlacementHandler implements Listener {
             autoConnection.synchronizeWithPlacementHandler(this);
             plugin.getLogger().info("BlockPlacementHandler synchronized with AutoConnectionManager");
         }
-    }
-    
-    /**
-     * Toggles the bracket type and updates the visual representation
-     */
-    private void toggleBracketType(CodeBlock codeBlock, Block pistonBlock, Player player) {
-        CodeBlock.BracketType currentType = codeBlock.getBracketType();
-        CodeBlock.BracketType newType = (currentType == CodeBlock.BracketType.OPEN) ? 
-            CodeBlock.BracketType.CLOSE : CodeBlock.BracketType.OPEN;
-        
-        codeBlock.setBracketType(newType);
-        setPistonDirection(pistonBlock, newType);
-        
-        player.sendMessage("§aСкобка изменена на: §f" + newType.getSymbol() + " " + newType.getDisplayName());
-        
-        // Update the sign to reflect the new bracket type
-        updateBracketSign(pistonBlock.getLocation(), newType);
-        
-        // ВАЖНО: Сохраняем мир после изменения типа скобки
-        var creativeWorld = plugin.getWorldManager().findCreativeWorldByBukkit(player.getWorld());
-        if (creativeWorld != null) {
-            plugin.getWorldManager().saveWorld(creativeWorld);
-        }
-        
-        plugin.getLogger().info("Bracket type toggled to: " + newType + " at " + pistonBlock.getLocation());
-    }
-    
-    /**
-     * 🎆 ENHANCED: Updates the sign for a bracket block
-     * Implements reference system-style: visual code construction with feedback
-     */
-    private void updateBracketSign(Location location, CodeBlock.BracketType bracketType) {
-        removeSignFromBlock(location); // Remove existing sign first
-
-        Block block = location.getBlock();
-        BlockFace[] faces = {BlockFace.NORTH, BlockFace.EAST, BlockFace.SOUTH, BlockFace.WEST};
-        
-        for (BlockFace face : faces) {
-            Block signBlock = block.getRelative(face);
-            if (signBlock.getType().isAir()) {
-                signBlock.setType(Material.OAK_WALL_SIGN, false);
-                
-                WallSign wallSignData = (WallSign) signBlock.getBlockData();
-                wallSignData.setFacing(face);
-                signBlock.setBlockData(wallSignData);
-                
-                Sign signState = (Sign) signBlock.getState();
-                signState.setLine(0, "§8============");
-                signState.setLine(1, "§6" + bracketType.getSymbol());
-                signState.setLine(2, "§7" + bracketType.getDisplayName());
-                signState.setLine(3, "§8============");
-                signState.update(true);
-                
-                return;
-            }
-        }
-    }
-    
-    /**
-     * Handles Arrow NOT interaction for negating conditions
-     */
-    private void handleArrowNotInteraction(Player player, Block clickedBlock) {
-        if (clickedBlock == null) {
-            player.sendMessage("§cОшибка: Не удалось определить блок!");
-            return;
-        }
-        
-        Location location = clickedBlock.getLocation();
-        CodeBlock codeBlock = blockCodeBlocks.get(location);
-        
-        if (codeBlock == null) {
-            player.sendMessage("§cОшибка: Это не блок кода!");
-            return;
-        }
-        
-        // Проверяем, является ли это блоком условия
-        BlockConfigService.BlockConfig config = blockConfigService.getBlockConfig(codeBlock.getAction());
-        if (config == null || !"CONDITION".equals(config.getType())) {
-            player.sendMessage("§cОшибка: Стрелку НЕ можно применять только к блокам условий!");
-            return;
-        }
-        
-        // Переключаем параметр negated
-        boolean currentNegated = false;
-        if (codeBlock.getParameter("negated") != null) {
-            currentNegated = Boolean.parseBoolean(codeBlock.getParameter("negated").toString());
-        }
-        
-        boolean newNegated = !currentNegated;
-        codeBlock.setParameter("negated", newNegated);
-        
-        // Обновляем табличку, чтобы показать состояние отрицания
-        updateConditionSign(location, config.getDisplayName(), newNegated);
-        
-        if (newNegated) {
-            player.sendMessage("§a✓ Отрицание добавлено к условию: §fНЕ " + config.getDisplayName());
-        } else {
-            player.sendMessage("§c✗ Отрицание убрано с условия: §f" + config.getDisplayName());
-        }
-        
-        plugin.getLogger().info("Arrow NOT applied to condition block at " + location + ", negated: " + newNegated);
-    }
-    
-    /**
-     * Updates the sign for a condition block to show negation status
-     */
-    private void updateConditionSign(Location location, String displayName, boolean negated) {
-        // Удаляем старую табличку и создаем новую
-        removeSignFromBlock(location);
-        
-        Block block = location.getBlock();
-        BlockFace[] faces = {BlockFace.NORTH, BlockFace.EAST, BlockFace.SOUTH, BlockFace.WEST};
-        
-        for (BlockFace face : faces) {
-            Block signBlock = block.getRelative(face);
-            if (signBlock.getType().isAir()) {
-                signBlock.setType(Material.OAK_WALL_SIGN, false);
-                
-                org.bukkit.block.data.type.WallSign wallSignData = (org.bukkit.block.data.type.WallSign) signBlock.getBlockData();
-                wallSignData.setFacing(face);
-                signBlock.setBlockData(wallSignData);
-                
-                org.bukkit.block.Sign signState = (Sign) signBlock.getState();
-                signState.setLine(0, "§8============");
-                
-                if (negated) {
-                    signState.setLine(1, "§cНЕ " + displayName.substring(0, Math.min(displayName.length(), 12)));
-                    signState.setLine(2, "§7(отрицание)");
-                } else {
-                    String line2 = displayName.length() > 15 ? displayName.substring(0, 15) : displayName;
-                    signState.setLine(1, line2);
-                    signState.setLine(2, "§7Кликните ПКМ");
-                }
-                signState.setLine(3, "§8============");
-                signState.update(true);
-                
-                return;
-            }
-        }
-    }
-    
-    /**
-     * 🎆 ENHANCED: Handles smart sign clicks to open configuration GUIs
-     * This restores the reference system "magic" of clicking signs to configure blocks
-     */
-    private boolean handleSmartSignClick(Block signBlock, Player player) {
-        // 🔧 FIX: Add debug logging
-        plugin.getLogger().info("Player " + player.getName() + " clicked sign at " + signBlock.getLocation());
-        
-        if (!(signBlock.getState() instanceof Sign)) {
-            plugin.getLogger().info("Block at " + signBlock.getLocation() + " is not a sign");
-            return false;
-        }
-        
-        Sign sign = (Sign) signBlock.getState();
-        
-        // Check if this is a smart sign (has our special markers)
-        String[] lines = sign.getLines();
-        // 🔧 FIX: Enhanced smart sign detection with more patterns
-        boolean isSmartSign = false;
-        plugin.getLogger().info("Checking sign lines for player " + player.getName() + ":");
-        for (int i = 0; i < lines.length; i++) {
-            plugin.getLogger().info("Line " + i + ": " + lines[i]);
-        }
-        
-        for (String line : lines) {
-            String cleanLine = ChatColor.stripColor(line).toLowerCase().trim();
-            plugin.getLogger().info("Checking clean line: " + cleanLine);
-            if (cleanLine.contains("клик для настройки") || cleanLine.contains("кликните пкм") || 
-                cleanLine.contains("click to configure") || cleanLine.contains("right-click") ||
-                cleanLine.contains("★") || cleanLine.contains("megacreative") || cleanLine.contains("кликните") ||
-                cleanLine.contains("настройка") || cleanLine.contains("configure") || cleanLine.contains("setup") ||
-                cleanLine.contains("magic") || cleanLine.contains("code") || cleanLine.contains("блок") ||
-                cleanLine.contains("[megacreative]")) { // 🔧 FIX: Add [megacreative] pattern from logs
-                isSmartSign = true;
-                plugin.getLogger().info("Found smart sign pattern in line: " + cleanLine);
-                break;
-            }
-        }
-        
-        if (!isSmartSign) {
-            plugin.getLogger().info("Sign at " + signBlock.getLocation() + " is not a smart sign for player " + player.getName());
-            return false;
-        }
-        plugin.getLogger().info("Sign at " + signBlock.getLocation() + " is a smart sign for player " + player.getName());
-        
-        // Find the associated code block (sign should be adjacent to it)
-        BlockFace[] adjacentFaces = {BlockFace.NORTH, BlockFace.SOUTH, BlockFace.EAST, BlockFace.WEST};
-        
-        for (BlockFace face : adjacentFaces) {
-            Block adjacentBlock = signBlock.getRelative(face);
-            Location blockLoc = adjacentBlock.getLocation();
-            
-            plugin.getLogger().info("Checking adjacent block at " + blockLoc + " for player " + player.getName() + ", face: " + face);
-            
-            if (blockCodeBlocks.containsKey(blockLoc)) {
-                plugin.getLogger().info("Found code block at " + blockLoc + " for player " + player.getName());
-                CodeBlock codeBlock = blockCodeBlocks.get(blockLoc);
-                
-                // Open appropriate GUI based on block state
-                if (codeBlock.getAction() == null || "NOT_SET".equals(codeBlock.getAction())) {
-                    plugin.getLogger().info("Opening action selection GUI for player " + player.getName());
-                    // No action set - open action selection GUI
-                    openActionSelectionGUI(player, blockLoc, adjacentBlock.getType());
-                } else {
-                    // Action already set - open parameter configuration GUI
-                    BlockConfigService.BlockConfig config = blockConfigService.getBlockConfig(codeBlock.getAction());
-                    if (config != null) {
-                        plugin.getLogger().info("Opening parameter config GUI for player " + player.getName());
-                        openParameterConfigGUI(player, blockLoc, codeBlock, config);
-                    } else {
-                        player.sendMessage("§cОшибка: Не удалось найти конфигурацию для действия " + codeBlock.getAction());
-                    }
-                }
-                
-                // Add magical click effects
-                player.spawnParticle(org.bukkit.Particle.VILLAGER_HAPPY, 
-                    signBlock.getLocation().add(0.5, 0.5, 0.5), 3, 0.1, 0.1, 0.1, 0.1);
-                player.playSound(signBlock.getLocation(), org.bukkit.Sound.UI_BUTTON_CLICK, 0.8f, 1.2f);
-                
-                return true; // Successfully handled
-            }
-        }
-        
-        return false; // Not a smart sign or no associated block found
     }
     
     /**
@@ -1957,9 +1830,11 @@ public class BlockPlacementHandler implements Listener {
                         if (bracketBlock != null) {
                             blockCodeBlocks.put(newLoc, bracketBlock);
                             
-                            // Update signs
-                            removeSignFromBlock(adjacentLoc);
-                            updateBracketSign(newLoc, bracketBlock.getBracketType());
+                            // Remove old block and sign
+                            removeBracketPiston(adjacentLoc, null); // No player in piston events
+                            
+                            // Create new bracket at the new location with proper direction
+                            createBracketPiston(newLoc, bracketBlock.getBracketType(), null, direction); // No player in piston events
                             
                             // Add visual effect
                             world.spawnParticle(org.bukkit.Particle.ENCHANTMENT_TABLE, newLoc.add(0.5, 0.5, 0.5), 5, 0.3, 0.3, 0.3, 1.0);
@@ -1976,29 +1851,32 @@ public class BlockPlacementHandler implements Listener {
      * the brackets move to maintain the proper distance
      */
     private void handleBracketRepositioning(Location newBlockLocation, Player player) {
+        plugin.getLogger().info("Handling bracket repositioning at " + newBlockLocation);
+        
         // Check adjacent locations for existing brackets in all directions
         BlockFace[] directions = {BlockFace.EAST, BlockFace.WEST, BlockFace.NORTH, BlockFace.SOUTH};
         
         for (BlockFace direction : directions) {
-            // Look for opening bracket in this direction
-            Location openBracketLoc = findBracketInDirection(newBlockLocation, direction, CodeBlock.BracketType.OPEN);
+            // Look for opening bracket in the opposite direction (behind the new block)
+            Location openBracketLoc = findBracketInDirection(newBlockLocation, direction.getOppositeFace(), CodeBlock.BracketType.OPEN);
             if (openBracketLoc != null) {
-                // Look for corresponding closing bracket
-                Location closeBracketLoc = findBracketInDirection(openBracketLoc, direction, CodeBlock.BracketType.CLOSE);
+                plugin.getLogger().info("Found opening bracket at " + openBracketLoc);
+                // Look for corresponding closing bracket in the same direction as the new block
+                Location closeBracketLoc = findBracketInDirection(newBlockLocation, direction, CodeBlock.BracketType.CLOSE);
                 if (closeBracketLoc != null) {
+                    plugin.getLogger().info("Found closing bracket at " + closeBracketLoc);
                     // Calculate the new positions for brackets (3 blocks apart from the new block)
-                    Location newOpenBracketLoc = newBlockLocation.clone().add(direction.getModX() * 1, 0, direction.getModZ() * 1);
+                    Location newOpenBracketLoc = newBlockLocation.clone().add(direction.getOppositeFace().getModX() * 1, 0, direction.getOppositeFace().getModZ() * 1);
                     Location newCloseBracketLoc = newBlockLocation.clone().add(direction.getModX() * 3, 0, direction.getModZ() * 3);
                     
-                    // Move the brackets to their new positions
-                    moveBracket(openBracketLoc, newOpenBracketLoc, CodeBlock.BracketType.OPEN, player);
-                    moveBracket(closeBracketLoc, newCloseBracketLoc, CodeBlock.BracketType.CLOSE, player);
+                    plugin.getLogger().info("Moving brackets to new positions: " + newOpenBracketLoc + " and " + newCloseBracketLoc);
                     
-                    // Update piston directions
-                    updateBracketPistonDirection(newOpenBracketLoc.getBlock(), CodeBlock.BracketType.OPEN, direction);
-                    updateBracketPistonDirection(newCloseBracketLoc.getBlock(), CodeBlock.BracketType.CLOSE, direction);
+                    // Move the brackets to their new positions
+                    moveBracket(openBracketLoc, newOpenBracketLoc, CodeBlock.BracketType.OPEN, player, direction.getOppositeFace());
+                    moveBracket(closeBracketLoc, newCloseBracketLoc, CodeBlock.BracketType.CLOSE, player, direction);
                     
                     player.sendMessage("§a✓ Brackets repositioned to maintain proper distance");
+                    plugin.getLogger().info("Brackets repositioned for player " + player.getName() + " at " + newBlockLocation);
                     return; // Only handle one pair of brackets
                 }
             }
@@ -2020,6 +1898,7 @@ public class BlockPlacementHandler implements Listener {
             if (blockCodeBlocks.containsKey(checkLocation)) {
                 CodeBlock codeBlock = blockCodeBlocks.get(checkLocation);
                 if (codeBlock != null && codeBlock.isBracket() && codeBlock.getBracketType() == bracketType) {
+                    plugin.getLogger().info("Found " + bracketType + " bracket at " + checkLocation);
                     return checkLocation;
                 }
             }
@@ -2030,16 +1909,21 @@ public class BlockPlacementHandler implements Listener {
     /**
      * 🔧 FIX: Move a bracket from one location to another
      */
-    private void moveBracket(Location oldLocation, Location newLocation, CodeBlock.BracketType bracketType, Player player) {
+    private void moveBracket(Location oldLocation, Location newLocation, CodeBlock.BracketType bracketType, Player player, BlockFace direction) {
         // Get the code block
         CodeBlock codeBlock = blockCodeBlocks.remove(oldLocation);
-        if (codeBlock == null) return;
+        if (codeBlock == null) {
+            plugin.getLogger().info("No code block found at " + oldLocation);
+            return;
+        }
+        
+        plugin.getLogger().info("Moving bracket from " + oldLocation + " to " + newLocation);
         
         // Remove old block and sign
         removeBracketPiston(oldLocation, player);
         
         // Create new bracket at the new location
-        createBracketPiston(newLocation, bracketType, player, BlockFace.EAST); // Direction will be updated later
+        createBracketPiston(newLocation, bracketType, player, direction);
         
         // Update our tracking
         blockCodeBlocks.put(newLocation, codeBlock);
@@ -2059,6 +1943,7 @@ public class BlockPlacementHandler implements Listener {
             }
             
             pistonBlock.setBlockData(pistonData);
+            plugin.getLogger().info("Updated piston direction at " + pistonBlock.getLocation() + " to " + pistonData.getFacing());
         }
     }
     

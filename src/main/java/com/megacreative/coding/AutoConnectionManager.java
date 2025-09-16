@@ -83,11 +83,17 @@ public class AutoConnectionManager implements Listener {
         ItemStack itemInHand = event.getItemInHand();
 
         // Check if this is a dev world
-        if (!isDevWorld(block.getWorld())) return;
+        if (!isDevWorld(block.getWorld())) {
+            plugin.getLogger().info("AutoConnectionManager: Block placement not in dev world: " + block.getWorld().getName());
+            return;
+        }
+        
+        plugin.getLogger().info("AutoConnectionManager: Processing block placement by " + player.getName() + " at " + location);
         
         // Check if this is a code block by checking if BlockPlacementHandler created a CodeBlock
         BlockPlacementHandler placementHandler = plugin.getBlockPlacementHandler();
         if (placementHandler == null || !placementHandler.hasCodeBlock(location)) {
+            plugin.getLogger().info("AutoConnectionManager: Not a code block or not handled by BlockPlacementHandler at " + location);
             return; // Not a code block or not handled by BlockPlacementHandler
         }
 
@@ -114,8 +120,10 @@ public class AutoConnectionManager implements Listener {
             String blockName = config != null ? config.getDisplayName() : "Unknown Block";
             
             // Уменьшен спам - сообщение только важных событий
-            plugin.getLogger().fine("Block '" + blockName + "' placed and auto-connected at " + location + " for player " + player.getName());
+            plugin.getLogger().info("Block '" + blockName + "' placed and auto-connected at " + location + " for player " + player.getName());
             plugin.getLogger().fine("Auto-connected CodeBlock at " + location + " for player " + player.getName());
+        } else {
+            plugin.getLogger().warning("AutoConnectionManager: CodeBlock is null at " + location);
         }
     }
     

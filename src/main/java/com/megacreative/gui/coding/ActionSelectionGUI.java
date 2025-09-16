@@ -170,7 +170,7 @@ public class ActionSelectionGUI implements GUIManager.ManagedGUIInterface {
         player.sendMessage("§eDebug: Checking material " + blockMaterial.name());
         
         // Get available actions for this block material using BlockConfigService
-        List<String> availableActions = blockConfigService.getAvailableActions(blockMaterial);
+        List<String> availableActions = blockConfigService.getActionsForMaterial(blockMaterial);
         
         player.sendMessage("§eDebug: Available actions count: " + (availableActions != null ? availableActions.size() : "null"));
         
@@ -232,9 +232,12 @@ public class ActionSelectionGUI implements GUIManager.ManagedGUIInterface {
                 
                 // Fallback to getting actions from material mapping
                 if (actions.isEmpty()) {
-                    actions = blockConfigService.getAvailableActions(blockMaterial);
+                    actions = blockConfigService.getActionsForMaterial(blockMaterial);
                 }
                 
+                // 🔧 FIX: Remove the problematic fallback that loads ALL actions from ALL blocks
+                // This was causing gaming actions to appear in variable blocks
+                /*
                 // Final fallback - use all actions from the config
                 if (actions.isEmpty()) {
                     // Get all action IDs from the blocks section
@@ -260,6 +263,7 @@ public class ActionSelectionGUI implements GUIManager.ManagedGUIInterface {
                         }
                     }
                 }
+                */
                 
                 if (actions != null && !actions.isEmpty()) {
                     availableActions = actions;
@@ -283,13 +287,56 @@ public class ActionSelectionGUI implements GUIManager.ManagedGUIInterface {
             }
             
             // If we still don't have actions, use default actions as fallback
+            // 🔧 FIX: Use only appropriate default actions for this block type
             if (availableActions == null || availableActions.isEmpty()) {
-                // 🔧 FIX: Add default actions as fallback
+                // 🔧 FIX: Add default actions based on block type
                 availableActions = new ArrayList<>();
-                availableActions.add("sendMessage");
-                availableActions.add("teleport");
-                availableActions.add("giveItem");
-                player.sendMessage("§6Using default actions as fallback");
+                
+                // Get the block config to determine appropriate default actions
+                var defaultBlockConfig = blockConfigService.getBlockConfigByMaterial(blockMaterial);
+                if (defaultBlockConfig != null) {
+                    String blockType = defaultBlockConfig.getType();
+                    
+                    // Add appropriate default actions based on block type
+                    switch (blockType) {
+                        case "ACTION":
+                            // For variable blocks (IRON_BLOCK), add variable-related default actions
+                            if (blockMaterial == Material.IRON_BLOCK) {
+                                availableActions.add("setVar");
+                                availableActions.add("getVar");
+                                availableActions.add("addVar");
+                                availableActions.add("subVar");
+                                player.sendMessage("§6Using variable default actions as fallback");
+                            } 
+                            // For gaming action blocks (NETHERITE_BLOCK), add gaming default actions
+                            else if (blockMaterial == Material.NETHERITE_BLOCK) {
+                                availableActions.add("setTime");
+                                availableActions.add("setWeather");
+                                availableActions.add("setBlock");
+                                player.sendMessage("§6Using gaming default actions as fallback");
+                            }
+                            // For other action blocks, use general defaults
+                            else {
+                                availableActions.add("sendMessage");
+                                availableActions.add("teleport");
+                                availableActions.add("giveItem");
+                                player.sendMessage("§6Using general default actions as fallback");
+                            }
+                            break;
+                        default:
+                            availableActions.add("sendMessage");
+                            availableActions.add("teleport");
+                            availableActions.add("giveItem");
+                            player.sendMessage("§6Using general default actions as fallback");
+                            break;
+                    }
+                } else {
+                    // Fallback to general defaults
+                    availableActions.add("sendMessage");
+                    availableActions.add("teleport");
+                    availableActions.add("giveItem");
+                    player.sendMessage("§6Using general default actions as fallback");
+                }
             }
         }
         
@@ -420,6 +467,17 @@ public class ActionSelectionGUI implements GUIManager.ManagedGUIInterface {
             
             case "explosion":
                 return "💥 Разрушение";
+            
+            case "createScoreboard":
+            case "setScore":
+            case "incrementScore":
+            case "createTeam":
+            case "addPlayerToTeam":
+                return "🏆 Скорборды и команды";
+            
+            case "saveLocation":
+            case "getLocation":
+                return "📍 Локации";
             
             default:
                 return "🔧 Основные";
@@ -553,6 +611,16 @@ public class ActionSelectionGUI implements GUIManager.ManagedGUIInterface {
                 return Material.SLIME_BALL;
             case "asyncloop":
                 return Material.REPEATER;
+            case "createScoreboard":
+            case "setScore":
+            case "incrementScore":
+                return Material.OAK_SIGN;
+            case "createTeam":
+            case "addPlayerToTeam":
+                return Material.WHITE_BANNER;
+            case "saveLocation":
+            case "getLocation":
+                return Material.COMPASS;
             default:
                 return Material.STONE;
         }
@@ -603,10 +671,17 @@ public class ActionSelectionGUI implements GUIManager.ManagedGUIInterface {
             case "wait": return "Ожидание";
             case "randomnumber": return "Случайное число";
             case "asyncloop": return "Асинхронный цикл";
+            case "createScoreboard": return "Создать скорборд";
+            case "setScore": return "Установить счет";
+            case "incrementScore": return "Увеличить счет";
+            case "createTeam": return "Создать команду";
+            case "addPlayerToTeam": return "Добавить игрока в команду";
+            case "saveLocation": return "Сохранить локацию";
+            case "getLocation": return "Получить локацию";
             default: return actionId;
         }
     }
-    
+
     /**
      * Получает описание действия
      *
@@ -652,6 +727,13 @@ public class ActionSelectionGUI implements GUIManager.ManagedGUIInterface {
             case "wait": return "Задержка выполнения";
             case "randomnumber": return "Генерирует случайное число";
             case "asyncloop": return "Повторяет действие асинхронно";
+            case "createScoreboard": return "Создает скорборд";
+            case "setScore": return "Устанавливает счет в скорборде";
+            case "incrementScore": return "Увеличивает счет в скорборде";
+            case "createTeam": return "Создает команду";
+            case "addPlayerToTeam": return "Добавляет игрока в команду";
+            case "saveLocation": return "Сохраняет локацию";
+            case "getLocation": return "Получает сохраненную локацию";
             default: return "Действие " + actionId;
         }
     }
