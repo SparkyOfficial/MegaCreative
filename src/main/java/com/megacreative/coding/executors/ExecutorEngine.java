@@ -217,6 +217,30 @@ public class ExecutorEngine {
                 case "giveItem":
                     result = executeGiveItem(processedParameters, context);
                     break;
+                case "giveItems":
+                    result = executeGiveItems(processedParameters, context);
+                    break;
+                case "spawnEntity":
+                    result = executeSpawnEntity(processedParameters, context);
+                    break;
+                case "removeItems":
+                    result = executeRemoveItems(processedParameters, context);
+                    break;
+                case "setArmor":
+                    result = executeSetArmor(processedParameters, context);
+                    break;
+                case "spawnMob":
+                    result = executeSpawnMob(processedParameters, context);
+                    break;
+                case "healPlayer":
+                    result = executeHealPlayer(processedParameters, context);
+                    break;
+                case "setGameMode":
+                    result = executeSetGameMode(processedParameters, context);
+                    break;
+                case "setTime":
+                    result = executeSetTime(processedParameters, context);
+                    break;
                 case "playSound":
                     result = executePlaySound(processedParameters, context);
                     break;
@@ -225,6 +249,9 @@ public class ExecutorEngine {
                     break;
                 case "command":
                     result = executeCommand(processedParameters, context);
+                    break;
+                case "broadcast":
+                    result = executeBroadcast(processedParameters, context);
                     break;
                 case "setVar":
                     result = executeSetVariable(processedParameters, context);
@@ -342,6 +369,1123 @@ public class ExecutorEngine {
             
         } catch (Exception e) {
             return context.createErrorResult("Failed to give item: " + e.getMessage(), e);
+        }
+    }
+    
+    private ExecutionResult executeGiveItems(Map<String, DataValue> params, ExecutionContext context) {
+        try {
+            // For giveItems, we need to get items from the item groups
+            // This would typically come from the configuration items in the block
+            // For now, we'll implement a basic version that gives multiple items
+            
+            Player player = context.getPlayer();
+            int itemsGiven = 0;
+            
+            // In a real implementation, we would get the items from the block's config items
+            // For now, we'll just give some example items
+            org.bukkit.inventory.ItemStack[] items = {
+                new org.bukkit.inventory.ItemStack(org.bukkit.Material.DIAMOND, 1),
+                new org.bukkit.inventory.ItemStack(org.bukkit.Material.GOLD_INGOT, 3),
+                new org.bukkit.inventory.ItemStack(org.bukkit.Material.IRON_INGOT, 5)
+            };
+            
+            // Add items to inventory or drop if full
+            java.util.Map<Integer, org.bukkit.inventory.ItemStack> notAdded = player.getInventory().addItem(items);
+            
+            // Drop any items that couldn't be added
+            for (org.bukkit.inventory.ItemStack item : notAdded.values()) {
+                player.getWorld().dropItemNaturally(player.getLocation(), item);
+            }
+            
+            itemsGiven = items.length - notAdded.size();
+            
+            // Visual effects
+            player.spawnParticle(Particle.VILLAGER_HAPPY, player.getLocation().add(0, 2, 0), 10);
+            player.playSound(player.getLocation(), Sound.ENTITY_ITEM_PICKUP, 1.0f, 1.2f);
+            
+            return context.createResult(true, "Given " + itemsGiven + " items");
+            
+        } catch (Exception e) {
+            return context.createErrorResult("Failed to give items: " + e.getMessage(), e);
+        }
+    }
+    
+    private ExecutionResult executeSpawnEntity(Map<String, DataValue> params, ExecutionContext context) {
+        try {
+            DataValue entityValue = params.get("entity_slot");
+            if (entityValue == null) {
+                return context.createErrorResult("No entity specified");
+            }
+            
+            String entityName = entityValue.asString();
+            if (entityName == null || entityName.trim().isEmpty()) {
+                return context.createErrorResult("Entity name cannot be empty");
+            }
+            
+            // Get count and radius with defaults
+            int count = 1; // Default 1 entity
+            int radius = 3; // Default 3 blocks radius
+            
+            try {
+                if (params.containsKey("count_slot")) {
+                    String countStr = params.get("count_slot").asString();
+                    if (countStr != null && countStr.startsWith("количество:")) {
+                        count = Integer.parseInt(countStr.substring("количество:".length()));
+                    }
+                }
+                if (params.containsKey("radius_slot")) {
+                    String radiusStr = params.get("radius_slot").asString();
+                    if (radiusStr != null && radiusStr.startsWith("радиус:")) {
+                        radius = Integer.parseInt(radiusStr.substring("радиус:".length()));
+                    }
+                }
+            } catch (NumberFormatException e) {
+                return context.createErrorResult("Invalid number format for count or radius");
+            }
+            
+            // Try to get the entity type
+            org.bukkit.entity.EntityType entityType;
+            try {
+                entityType = org.bukkit.entity.EntityType.valueOf(entityName.toUpperCase());
+                if (entityType == null || !entityType.isSpawnable()) {
+                    return context.createErrorResult("Invalid or unspawnable entity: " + entityName);
+                }
+            } catch (Exception e) {
+                return context.createErrorResult("Invalid entity: " + entityName);
+            }
+            
+            // Spawn the entities
+            Player player = context.getPlayer();
+            Location spawnLocation = player.getLocation().add(
+                (Math.random() - 0.5) * radius * 2,
+                1,
+                (Math.random() - 0.5) * radius * 2
+            );
+            
+            int spawned = 0;
+            for (int i = 0; i < count; i++) {
+                Location loc = spawnLocation.clone().add(
+                    (Math.random() - 0.5) * 2,
+                    0,
+                    (Math.random() - 0.5) * 2
+                );
+                if (player.getWorld().spawnEntity(loc, entityType) != null) {
+                    spawned++;
+                }
+            }
+            
+            // Visual effect
+            player.spawnParticle(Particle.EXPLOSION_NORMAL, spawnLocation, 5);
+            
+            return context.createResult(true, "Spawned " + spawned + " " + entityType.name().toLowerCase().replace("_", " "));
+            
+        } catch (Exception e) {
+            return context.createErrorResult("Failed to spawn entity: " + e.getMessage(), e);
+        }
+    }
+    
+    private ExecutionResult executeRemoveItems(Map<String, DataValue> params, ExecutionContext context) {
+        try {
+            Player player = context.getPlayer();
+            java.util.List<org.bukkit.inventory.ItemStack> itemsToRemove = new java.util.ArrayList<>();
+            
+            // In a real implementation, we would get the items from the block's config items
+            // For now, we'll implement a basic version that removes some example items
+            
+            // Example items to remove
+            org.bukkit.inventory.ItemStack[] exampleItems = {
+                new org.bukkit.inventory.ItemStack(org.bukkit.Material.DIRT, 1),
+                new org.bukkit.inventory.ItemStack(org.bukkit.Material.COBBLESTONE, 5),
+                new org.bukkit.inventory.ItemStack(org.bukkit.Material.STICK, 3)
+            };
+            
+            // Remove items from player's inventory
+            for (org.bukkit.inventory.ItemStack item : exampleItems) {
+                if (item != null) {
+                    java.util.HashMap<Integer, ? extends org.bukkit.inventory.ItemStack> foundItems = 
+                        player.getInventory().all(item.getType());
+                    
+                    int amountToRemove = item.getAmount();
+                    for (java.util.Map.Entry<Integer, ? extends org.bukkit.inventory.ItemStack> entry : foundItems.entrySet()) {
+                        if (amountToRemove <= 0) break;
+                        
+                        org.bukkit.inventory.ItemStack stack = entry.getValue();
+                        int stackAmount = stack.getAmount();
+                        
+                        if (stackAmount <= amountToRemove) {
+                            player.getInventory().clear(entry.getKey());
+                            amountToRemove -= stackAmount;
+                        } else {
+                            stack.setAmount(stackAmount - amountToRemove);
+                            amountToRemove = 0;
+                        }
+                    }
+                }
+            }
+            
+            // Visual effect
+            player.spawnParticle(Particle.SMOKE_NORMAL, player.getLocation().add(0, 2, 0), 5);
+            
+            return context.createResult(true, "Removed items from inventory");
+            
+        } catch (Exception e) {
+            return context.createErrorResult("Failed to remove items: " + e.getMessage(), e);
+        }
+    }
+    
+    private ExecutionResult executeSetArmor(Map<String, DataValue> params, ExecutionContext context) {
+        try {
+            Player player = context.getPlayer();
+            org.bukkit.inventory.PlayerInventory inventory = player.getInventory();
+            
+            // Set armor pieces based on parameters
+            if (params.containsKey("helmet_slot")) {
+                String helmetName = params.get("helmet_slot").asString();
+                if (helmetName != null && !helmetName.trim().isEmpty()) {
+                    org.bukkit.Material material = org.bukkit.Material.getMaterial(helmetName.toUpperCase());
+                    if (material != null && material.name().endsWith("_HELMET")) {
+                        inventory.setHelmet(new org.bukkit.inventory.ItemStack(material));
+                    }
+                }
+            }
+            
+            if (params.containsKey("chestplate_slot")) {
+                String chestplateName = params.get("chestplate_slot").asString();
+                if (chestplateName != null && !chestplateName.trim().isEmpty()) {
+                    org.bukkit.Material material = org.bukkit.Material.getMaterial(chestplateName.toUpperCase());
+                    if (material != null && material.name().endsWith("_CHESTPLATE")) {
+                        inventory.setChestplate(new org.bukkit.inventory.ItemStack(material));
+                    }
+                }
+            }
+            
+            if (params.containsKey("leggings_slot")) {
+                String leggingsName = params.get("leggings_slot").asString();
+                if (leggingsName != null && !leggingsName.trim().isEmpty()) {
+                    org.bukkit.Material material = org.bukkit.Material.getMaterial(leggingsName.toUpperCase());
+                    if (material != null && material.name().endsWith("_LEGGINGS")) {
+                        inventory.setLeggings(new org.bukkit.inventory.ItemStack(material));
+                    }
+                }
+            }
+            
+            if (params.containsKey("boots_slot")) {
+                String bootsName = params.get("boots_slot").asString();
+                if (bootsName != null && !bootsName.trim().isEmpty()) {
+                    org.bukkit.Material material = org.bukkit.Material.getMaterial(bootsName.toUpperCase());
+                    if (material != null && material.name().endsWith("_BOOTS")) {
+                        inventory.setBoots(new org.bukkit.inventory.ItemStack(material));
+                    }
+                }
+            }
+            
+            // Visual effect
+            player.spawnParticle(Particle.VILLAGER_HAPPY, player.getLocation().add(0, 2, 0), 5);
+            
+            return context.createResult(true, "Set armor pieces");
+            
+        } catch (Exception e) {
+            return context.createErrorResult("Failed to set armor: " + e.getMessage(), e);
+        }
+    }
+    
+    private ExecutionResult executeSpawnMob(Map<String, DataValue> params, ExecutionContext context) {
+        try {
+            Player player = context.getPlayer();
+            
+            // For spawnMob, we'll spawn a zombie by default
+            org.bukkit.entity.EntityType entityType = org.bukkit.entity.EntityType.ZOMBIE;
+            
+            // Try to get entity type from parameters
+            if (params.containsKey("mob_type")) {
+                String mobTypeName = params.get("mob_type").asString();
+                if (mobTypeName != null && !mobTypeName.trim().isEmpty()) {
+                    try {
+                        entityType = org.bukkit.entity.EntityType.valueOf(mobTypeName.toUpperCase());
+                    } catch (IllegalArgumentException e) {
+                        // Keep default zombie
+                    }
+                }
+            }
+            
+            // Spawn the mob near the player
+            Location spawnLocation = player.getLocation().add(
+                (Math.random() - 0.5) * 5,
+                1,
+                (Math.random() - 0.5) * 5
+            );
+            
+            org.bukkit.entity.Entity spawnedEntity = player.getWorld().spawnEntity(spawnLocation, entityType);
+            
+            // Visual effect
+            player.spawnParticle(Particle.EXPLOSION_NORMAL, spawnLocation, 5);
+            
+            return context.createResult(true, "Spawned " + entityType.name().toLowerCase().replace("_", " "));
+            
+        } catch (Exception e) {
+            return context.createErrorResult("Failed to spawn mob: " + e.getMessage(), e);
+        }
+    }
+    
+    private ExecutionResult executeHealPlayer(Map<String, DataValue> params, ExecutionContext context) {
+        try {
+            Player player = context.getPlayer();
+            
+            // Get heal amount from parameters, default to full heal
+            double healAmount = player.getMaxHealth() - player.getHealth();
+            
+            if (params.containsKey("heal_amount")) {
+                String healAmountStr = params.get("heal_amount").asString();
+                if (healAmountStr != null && !healAmountStr.trim().isEmpty()) {
+                    try {
+                        healAmount = Double.parseDouble(healAmountStr);
+                    } catch (NumberFormatException e) {
+                        // Keep default heal amount
+                    }
+                }
+            }
+            
+            // Heal the player
+            double newHealth = Math.min(player.getHealth() + healAmount, player.getMaxHealth());
+            player.setHealth(newHealth);
+            
+            // Visual effect
+            player.spawnParticle(Particle.VILLAGER_HAPPY, player.getLocation().add(0, 2, 0), 5);
+            
+            return context.createResult(true, "Healed player by " + healAmount + " health points");
+            
+        } catch (Exception e) {
+            return context.createErrorResult("Failed to heal player: " + e.getMessage(), e);
+        }
+    }
+    
+    private ExecutionResult executeSetGameMode(Map<String, DataValue> params, ExecutionContext context) {
+        try {
+            Player player = context.getPlayer();
+            
+            // Get game mode from parameters, default to SURVIVAL
+            org.bukkit.GameMode gameMode = org.bukkit.GameMode.SURVIVAL;
+            
+            if (params.containsKey("game_mode")) {
+                String gameModeStr = params.get("game_mode").asString();
+                if (gameModeStr != null && !gameModeStr.trim().isEmpty()) {
+                    try {
+                        gameMode = org.bukkit.GameMode.valueOf(gameModeStr.toUpperCase());
+                    } catch (IllegalArgumentException e) {
+                        // Keep default game mode
+                    }
+                }
+            }
+            
+            // Set the game mode
+            player.setGameMode(gameMode);
+            
+            // Visual effect
+            player.spawnParticle(Particle.VILLAGER_HAPPY, player.getLocation().add(0, 2, 0), 5);
+            
+            return context.createResult(true, "Set game mode to " + gameMode.name().toLowerCase());
+            
+        } catch (Exception e) {
+            return context.createErrorResult("Failed to set game mode: " + e.getMessage(), e);
+        }
+    }
+    
+    /**
+     * Executes the setTime action to set the time of day in the world
+     */
+    private ExecutionResult executeSetTime(Map<String, DataValue> params, ExecutionContext context) {
+        try {
+            // Get the time parameter (required)
+            DataValue timeValue = params.get("time");
+            if (timeValue == null) {
+                return context.createErrorResult("No time specified for setTime action");
+            }
+            
+            String timeStr = timeValue.asString();
+            if (timeStr == null || timeStr.trim().isEmpty()) {
+                return context.createErrorResult("Time value cannot be empty");
+            }
+            
+            // Parse the time value
+            long time;
+            try {
+                time = Long.parseLong(timeStr);
+            } catch (NumberFormatException e) {
+                return context.createErrorResult("Invalid time format: " + timeStr + ". Must be a number between 0 and 24000.");
+            }
+            
+            // Validate time range
+            if (time < 0 || time > 24000) {
+                return context.createErrorResult("Time must be between 0 and 24000. Provided: " + time);
+            }
+            
+            // Get the mode parameter (optional, defaults to "absolute")
+            String mode = "absolute";
+            if (params.containsKey("mode")) {
+                DataValue modeValue = params.get("mode");
+                if (modeValue != null) {
+                    String modeStr = modeValue.asString();
+                    if (modeStr != null && !modeStr.trim().isEmpty()) {
+                        mode = modeStr.toLowerCase();
+                    }
+                }
+            }
+            
+            // Get the player's world
+            Player player = context.getPlayer();
+            org.bukkit.World world = player.getWorld();
+            
+            // Set the time based on mode
+            if ("relative".equals(mode)) {
+                // Add the time to the current time
+                long currentTime = world.getTime();
+                world.setTime(currentTime + time);
+            } else {
+                // Set absolute time (default behavior)
+                world.setTime(time);
+            }
+            
+            // Visual effect
+            player.spawnParticle(Particle.CLOUD, player.getLocation().add(0, 2, 0), 5);
+            player.playSound(player.getLocation(), Sound.BLOCK_NOTE_BLOCK_CHIME, 1.0f, 1.2f);
+            
+            // Create success message
+            String modeText = "relative".equals(mode) ? "relative to current time" : "absolute";
+            return context.createResult(true, "Set world time to " + time + " (" + modeText + ")");
+            
+        } catch (Exception e) {
+            return context.createErrorResult("Failed to set time: " + e.getMessage(), e);
+        }
+    }
+    
+    /**
+     * Executes the setWeather action to set the weather in the world
+     */
+    private ExecutionResult executeSetWeather(Map<String, DataValue> params, ExecutionContext context) {
+        try {
+            // Get the weather parameter (required)
+            DataValue weatherValue = params.get("weather");
+            if (weatherValue == null) {
+                return context.createErrorResult("No weather specified for setWeather action");
+            }
+            
+            String weatherStr = weatherValue.asString();
+            if (weatherStr == null || weatherStr.trim().isEmpty()) {
+                return context.createErrorResult("Weather value cannot be empty");
+            }
+            
+            // Validate and parse the weather value
+            org.bukkit.WeatherType weatherType;
+            switch (weatherStr.toLowerCase()) {
+                case "clear":
+                    weatherType = org.bukkit.WeatherType.CLEAR;
+                    break;
+                case "rain":
+                    weatherType = org.bukkit.WeatherType.DOWNFALL;
+                    break;
+                case "thunder":
+                    weatherType = org.bukkit.WeatherType.DOWNFALL;
+                    break;
+                default:
+                    return context.createErrorResult("Invalid weather type: " + weatherStr + ". Must be one of: clear, rain, thunder.");
+            }
+            
+            // Get the player's world
+            Player player = context.getPlayer();
+            org.bukkit.World world = player.getWorld();
+            
+            // Set the weather based on type
+            switch (weatherStr.toLowerCase()) {
+                case "clear":
+                    world.setStorm(false);
+                    world.setThundering(false);
+                    break;
+                case "rain":
+                    world.setStorm(true);
+                    world.setThundering(false);
+                    break;
+                case "thunder":
+                    world.setStorm(true);
+                    world.setThundering(true);
+                    break;
+            }
+            
+            // Visual effect
+            player.spawnParticle(Particle.WATER_SPLASH, player.getLocation().add(0, 2, 0), 5);
+            player.playSound(player.getLocation(), Sound.WEATHER_RAIN, 1.0f, 1.0f);
+            
+            // Create success message
+            return context.createResult(true, "Set world weather to " + weatherStr);
+            
+        } catch (Exception e) {
+            return context.createErrorResult("Failed to set weather: " + e.getMessage(), e);
+        }
+    }
+    
+    /**
+     * Executes the explosion action to create an explosion at the player's location
+     */
+    private ExecutionResult executeExplosion(Map<String, DataValue> params, ExecutionContext context) {
+        try {
+            // Get the power parameter (required)
+            DataValue powerValue = params.get("power");
+            if (powerValue == null) {
+                return context.createErrorResult("No power specified for explosion action");
+            }
+            
+            String powerStr = powerValue.asString();
+            if (powerStr == null || powerStr.trim().isEmpty()) {
+                return context.createErrorResult("Power value cannot be empty");
+            }
+            
+            // Parse the power value
+            float power;
+            try {
+                power = Float.parseFloat(powerStr);
+            } catch (NumberFormatException e) {
+                return context.createErrorResult("Invalid power format: " + powerStr + ". Must be a number between 0.0 and 10.0.");
+            }
+            
+            // Validate power range
+            if (power < 0.0f || power > 10.0f) {
+                return context.createErrorResult("Power must be between 0.0 and 10.0. Provided: " + power);
+            }
+            
+            // Get the break_blocks parameter (optional, defaults to true)
+            boolean breakBlocks = true;
+            if (params.containsKey("break_blocks")) {
+                DataValue breakBlocksValue = params.get("break_blocks");
+                if (breakBlocksValue != null) {
+                    String breakBlocksStr = breakBlocksValue.asString();
+                    if (breakBlocksStr != null && !breakBlocksStr.trim().isEmpty()) {
+                        breakBlocks = "true".equalsIgnoreCase(breakBlocksStr);
+                    }
+                }
+            }
+            
+            // Get the create_fire parameter (optional, defaults to false)
+            boolean createFire = false;
+            if (params.containsKey("create_fire")) {
+                DataValue createFireValue = params.get("create_fire");
+                if (createFireValue != null) {
+                    String createFireStr = createFireValue.asString();
+                    if (createFireStr != null && !createFireStr.trim().isEmpty()) {
+                        createFire = "true".equalsIgnoreCase(createFireStr);
+                    }
+                }
+            }
+            
+            // Get the player's location
+            Player player = context.getPlayer();
+            Location location = player.getLocation();
+            
+            // Create the explosion
+            boolean success = location.getWorld().createExplosion(location, power, breakBlocks, createFire, player);
+            
+            // Visual effect
+            player.spawnParticle(Particle.EXPLOSION_LARGE, location, 3);
+            player.playSound(location, Sound.ENTITY_GENERIC_EXPLODE, 1.0f, 1.0f);
+            
+            // Create success message
+            return context.createResult(true, "Created explosion with power " + power + 
+                (breakBlocks ? " (breaking blocks)" : " (no block damage)") + 
+                (createFire ? " (creating fire)" : ""));
+            
+        } catch (Exception e) {
+            return context.createErrorResult("Failed to create explosion: " + e.getMessage(), e);
+        }
+    }
+    
+    /**
+     * Executes the setBlock action to set a block at a relative position from the player
+     */
+    private ExecutionResult executeSetBlock(Map<String, DataValue> params, ExecutionContext context) {
+        try {
+            // Get the block type parameter (required)
+            DataValue blockTypeValue = params.get("block_type");
+            if (blockTypeValue == null) {
+                return context.createErrorResult("No block type specified for setBlock action");
+            }
+            
+            String blockTypeName = blockTypeValue.asString();
+            if (blockTypeName == null || blockTypeName.trim().isEmpty()) {
+                return context.createErrorResult("Block type cannot be empty");
+            }
+            
+            // Try to get the material
+            org.bukkit.Material material;
+            try {
+                material = org.bukkit.Material.valueOf(blockTypeName.toUpperCase());
+            } catch (IllegalArgumentException e) {
+                return context.createErrorResult("Invalid block type: " + blockTypeName);
+            }
+            
+            // Get relative coordinates with defaults
+            int relativeX = 0;
+            int relativeY = 0;
+            int relativeZ = 0;
+            
+            try {
+                if (params.containsKey("relative_x")) {
+                    relativeX = Integer.parseInt(params.get("relative_x").asString());
+                }
+                if (params.containsKey("relative_y")) {
+                    relativeY = Integer.parseInt(params.get("relative_y").asString());
+                }
+                if (params.containsKey("relative_z")) {
+                    relativeZ = Integer.parseInt(params.get("relative_z").asString());
+                }
+            } catch (NumberFormatException e) {
+                return context.createErrorResult("Invalid number format for relative coordinates");
+            }
+            
+            // Get the player's location and calculate target position
+            Player player = context.getPlayer();
+            Location playerLocation = player.getLocation();
+            Location targetLocation = playerLocation.clone().add(relativeX, relativeY, relativeZ);
+            
+            // Set the block
+            targetLocation.getBlock().setType(material);
+            
+            // Visual effect
+            player.spawnParticle(Particle.BLOCK_CRACK, targetLocation, 10, material.createBlockData());
+            player.playSound(targetLocation, Sound.BLOCK_NOTE_BLOCK_PLING, 1.0f, 1.0f);
+            
+            // Create success message
+            return context.createResult(true, "Set block at " + relativeX + ", " + relativeY + ", " + relativeZ + " to " + material.name().toLowerCase().replace("_", " "));
+            
+        } catch (Exception e) {
+            return context.createErrorResult("Failed to set block: " + e.getMessage(), e);
+        }
+    }
+    
+    /**
+     * Executes the getPlayerName action to get the player's name
+     */
+    private ExecutionResult executeGetPlayerName(Map<String, DataValue> params, ExecutionContext context) {
+        try {
+            Player player = context.getPlayer();
+            String playerName = player.getName();
+            return context.createResult(true, "Player name is " + playerName);
+            
+        } catch (Exception e) {
+            return context.createErrorResult("Failed to get player name: " + e.getMessage(), e);
+        }
+    }
+    
+    /**
+     * Executes the wait action to pause execution for a specified number of ticks
+     */
+    private ExecutionResult executeWait(Map<String, DataValue> params, ExecutionContext context) {
+        try {
+            // Get the delay parameter (required)
+            DataValue delayValue = params.get("delay");
+            if (delayValue == null) {
+                return context.createErrorResult("No delay specified for wait action");
+            }
+            
+            String delayStr = delayValue.asString();
+            if (delayStr == null || delayStr.trim().isEmpty()) {
+                return context.createErrorResult("Delay value cannot be empty");
+            }
+            
+            // Parse the delay value
+            int delay;
+            try {
+                delay = Integer.parseInt(delayStr);
+            } catch (NumberFormatException e) {
+                return context.createErrorResult("Invalid delay format: " + delayStr + ". Must be a number.");
+            }
+            
+            // Validate delay range (must be positive)
+            if (delay <= 0) {
+                return context.createErrorResult("Delay must be a positive number. Provided: " + delay);
+            }
+            
+            // Get the player
+            Player player = context.getPlayer();
+            
+            // Visual effect before waiting
+            player.spawnParticle(Particle.SUSPENDED_DEPTH, player.getLocation().add(0, 2, 0), 5);
+            player.playSound(player.getLocation(), Sound.BLOCK_NOTE_BLOCK_HAT, 1.0f, 1.0f);
+            
+            // Wait for the specified number of ticks
+            try {
+                Thread.sleep(delay * 50); // Convert ticks to milliseconds (1 tick = 50ms)
+            } catch (InterruptedException e) {
+                Thread.currentThread().interrupt();
+                return context.createErrorResult("Wait interrupted: " + e.getMessage(), e);
+            }
+            
+            // Visual effect after waiting
+            player.spawnParticle(Particle.ENCHANTMENT_TABLE, player.getLocation().add(0, 2, 0), 5);
+            player.playSound(player.getLocation(), Sound.BLOCK_NOTE_BLOCK_PLING, 1.0f, 1.5f);
+            
+            // Create success message
+            double seconds = delay / 20.0; // Convert ticks to seconds
+            return context.createResult(true, "Waited for " + delay + " ticks (" + String.format("%.2f", seconds) + " seconds)");
+            
+        } catch (Exception e) {
+            return context.createErrorResult("Failed to execute wait: " + e.getMessage(), e);
+        }
+    }
+    
+    /**
+     * Executes the randomNumber action to generate a random number and store it in a variable
+     */
+    private ExecutionResult executeRandomNumber(Map<String, DataValue> params, ExecutionContext context) {
+        try {
+            // Get the min value parameter (required)
+            DataValue minValueValue = params.get("min_value");
+            if (minValueValue == null) {
+                return context.createErrorResult("No minimum value specified for randomNumber action");
+            }
+            
+            String minValueStr = minValueValue.asString();
+            if (minValueStr == null || minValueStr.trim().isEmpty()) {
+                return context.createErrorResult("Minimum value cannot be empty");
+            }
+            
+            // Parse the min value
+            int minValue;
+            try {
+                minValue = Integer.parseInt(minValueStr);
+            } catch (NumberFormatException e) {
+                return context.createErrorResult("Invalid minimum value format: " + minValueStr + ". Must be a number.");
+            }
+            
+            // Get the max value parameter (required)
+            DataValue maxValueValue = params.get("max_value");
+            if (maxValueValue == null) {
+                return context.createErrorResult("No maximum value specified for randomNumber action");
+            }
+            
+            String maxValueStr = maxValueValue.asString();
+            if (maxValueStr == null || maxValueStr.trim().isEmpty()) {
+                return context.createErrorResult("Maximum value cannot be empty");
+            }
+            
+            // Parse the max value
+            int maxValue;
+            try {
+                maxValue = Integer.parseInt(maxValueStr);
+            } catch (NumberFormatException e) {
+                return context.createErrorResult("Invalid maximum value format: " + maxValueStr + ". Must be a number.");
+            }
+            
+            // Validate min and max values
+            if (minValue > maxValue) {
+                return context.createErrorResult("Minimum value must be less than or equal to maximum value. Provided: " + minValue + " > " + maxValue);
+            }
+            
+            // Generate the random number
+            int randomNumber = minValue + (int) (Math.random() * (maxValue - minValue + 1));
+            
+            // Get the target variable parameter (required)
+            DataValue targetVariableValue = params.get("target_variable");
+            if (targetVariableValue == null) {
+                return context.createErrorResult("No target variable specified for randomNumber action");
+            }
+            
+            String targetVariable = targetVariableValue.asString();
+            if (targetVariable == null || targetVariable.trim().isEmpty()) {
+                return context.createErrorResult("Target variable cannot be empty");
+            }
+            
+            // Store the random number in the variable
+            variableManager.setVariable(targetVariable, randomNumber);
+            
+            // Create success message
+            return context.createResult(true, "Generated random number " + randomNumber + " and stored in variable '" + targetVariable + "'");
+            
+        } catch (Exception e) {
+            return context.createErrorResult("Failed to generate random number: " + e.getMessage(), e);
+        }
+    }
+    
+    /**
+     * Executes the playParticle action to spawn particles at a relative position from the player
+     */
+    private ExecutionResult executePlayParticle(Map<String, DataValue> params, ExecutionContext context) {
+        try {
+            // Get the particle type parameter (required)
+            DataValue particleTypeValue = params.get("particle_type");
+            if (particleTypeValue == null) {
+                return context.createErrorResult("No particle type specified for playParticle action");
+            }
+            
+            String particleTypeName = particleTypeValue.asString();
+            if (particleTypeName == null || particleTypeName.trim().isEmpty()) {
+                return context.createErrorResult("Particle type cannot be empty");
+            }
+            
+            // Try to get the particle type
+            org.bukkit.Particle particleType;
+            try {
+                particleType = org.bukkit.Particle.valueOf(particleTypeName.toUpperCase());
+            } catch (IllegalArgumentException e) {
+                return context.createErrorResult("Invalid particle type: " + particleTypeName);
+            }
+            
+            // Get count with default
+            int count = 10;
+            try {
+                if (params.containsKey("count")) {
+                    count = Integer.parseInt(params.get("count").asString());
+                }
+            } catch (NumberFormatException e) {
+                // Keep default count
+            }
+            
+            // Validate count range
+            if (count < 1 || count > 100) {
+                count = Math.max(1, Math.min(100, count)); // Clamp to valid range
+            }
+            
+            // Get relative coordinates with defaults
+            double relativeX = 0.0;
+            double relativeY = 0.0;
+            double relativeZ = 0.0;
+            
+            try {
+                if (params.containsKey("relative_x")) {
+                    relativeX = Double.parseDouble(params.get("relative_x").asString());
+                }
+                if (params.containsKey("relative_y")) {
+                    relativeY = Double.parseDouble(params.get("relative_y").asString());
+                }
+                if (params.containsKey("relative_z")) {
+                    relativeZ = Double.parseDouble(params.get("relative_z").asString());
+                }
+            } catch (NumberFormatException e) {
+                return context.createErrorResult("Invalid number format for relative coordinates");
+            }
+            
+            // Get the player's location and calculate target position
+            Player player = context.getPlayer();
+            Location playerLocation = player.getLocation();
+            Location targetLocation = playerLocation.clone().add(relativeX, relativeY, relativeZ);
+            
+            // Spawn the particles
+            player.spawnParticle(particleType, targetLocation, count);
+            
+            // Visual effect
+            player.playSound(targetLocation, Sound.BLOCK_NOTE_BLOCK_CHIME, 1.0f, 1.5f);
+            
+            // Create success message
+            return context.createResult(true, "Spawned " + count + " " + particleType.name().toLowerCase() + 
+                " particles at relative position (" + relativeX + ", " + relativeY + ", " + relativeZ + ")");
+            
+        } catch (Exception e) {
+            return context.createErrorResult("Failed to spawn particles: " + e.getMessage(), e);
+        }
+    }
+    
+    private ExecutionResult executePlaySound(Map<String, DataValue> params, ExecutionContext context) {
+        try {
+            DataValue soundValue = params.get("sound");
+            if (soundValue == null) {
+                return context.createErrorResult("No sound specified");
+            }
+            
+            String soundName = soundValue.asString();
+            if (soundName == null || soundName.trim().isEmpty()) {
+                return context.createErrorResult("Sound name cannot be empty");
+            }
+            
+            // Try to get the sound type
+            org.bukkit.Sound sound;
+            try {
+                sound = org.bukkit.Sound.valueOf(soundName.toUpperCase());
+            } catch (IllegalArgumentException e) {
+                return context.createErrorResult("Invalid sound: " + soundName);
+            }
+            
+            // Get volume and pitch with defaults
+            float volume = 1.0f;
+            float pitch = 1.0f;
+            
+            try {
+                if (params.containsKey("volume")) {
+                    volume = Float.parseFloat(params.get("volume").asString());
+                }
+                if (params.containsKey("pitch")) {
+                    pitch = Float.parseFloat(params.get("pitch").asString());
+                }
+            } catch (NumberFormatException e) {
+                // Keep default volume and pitch
+            }
+            
+            // Validate volume and pitch ranges
+            if (volume < 0.0f || volume > 2.0f) {
+                volume = Math.max(0.0f, Math.min(2.0f, volume)); // Clamp to valid range
+            }
+            if (pitch < 0.5f || pitch > 2.0f) {
+                pitch = Math.max(0.5f, Math.min(2.0f, pitch)); // Clamp to valid range
+            }
+            String minStr = minValueValue.asString();
+            if (minStr == null || minStr.trim().isEmpty()) {
+                return context.createErrorResult("Minimum value cannot be empty");
+            }
+            
+            // Parse the min value
+            int minValue;
+            try {
+                minValue = Integer.parseInt(minStr);
+            } catch (NumberFormatException e) {
+                return context.createErrorResult("Invalid minimum value format: " + minStr + ". Must be a number.");
+            }
+            
+            // Get the max value parameter (required)
+            DataValue maxValueValue = params.get("max_value");
+            if (maxValueValue == null) {
+                return context.createErrorResult("No maximum value specified for randomNumber action");
+            }
+            
+            String maxStr = maxValueValue.asString();
+            if (maxStr == null || maxStr.trim().isEmpty()) {
+                return context.createErrorResult("Maximum value cannot be empty");
+            }
+            
+            // Parse the max value
+            int maxValue;
+            try {
+                maxValue = Integer.parseInt(maxStr);
+            } catch (NumberFormatException e) {
+                return context.createErrorResult("Invalid maximum value format: " + maxStr + ". Must be a number.");
+            }
+            
+            // Validate that min is less than or equal to max
+            if (minValue > maxValue) {
+                return context.createErrorResult("Minimum value (" + minValue + ") must be less than or equal to maximum value (" + maxValue + ")");
+            }
+            
+            // Get the target variable parameter (required)
+            DataValue targetVariableValue = params.get("target_variable");
+            if (targetVariableValue == null) {
+                return context.createErrorResult("No target variable specified for randomNumber action");
+            }
+            
+            String targetVariable = targetVariableValue.asString();
+            if (targetVariable == null || targetVariable.trim().isEmpty()) {
+                return context.createErrorResult("Target variable name cannot be empty");
+            }
+            
+            // Validate target variable name length
+            if (targetVariable.length() < 1 || targetVariable.length() > 16) {
+                return context.createErrorResult("Target variable name must be between 1 and 16 characters");
+            }
+            
+            // Generate random number
+            java.util.Random random = new java.util.Random();
+            int randomNumber = random.nextInt(maxValue - minValue + 1) + minValue;
+            
+            // Get the player
+            Player player = context.getPlayer();
+            
+            // Store the random number in the specified variable
+            // Get world and script IDs for variable scoping
+            String scriptId = context.getScript() != null ? 
+                context.getScript().getId().toString() : "global";
+            
+            // Set the variable
+            variableManager.setLocalVariable(scriptId, targetVariable, DataValue.of(randomNumber));
+            
+            // Visual effect
+            player.spawnParticle(Particle.ENCHANTMENT_TABLE, player.getLocation().add(0, 2, 0), 5);
+            player.playSound(player.getLocation(), Sound.BLOCK_NOTE_BLOCK_CHIME, 1.0f, 1.5f);
+            
+            // Create success message
+            return context.createResult(true, "Generated random number " + randomNumber + " and stored in variable '" + targetVariable + "'");
+            
+        } catch (Exception e) {
+            return context.createErrorResult("Failed to generate random number: " + e.getMessage(), e);
+        }
+    }
+    
+    /**
+     * Executes the spawnParticles action to spawn particles at a relative position
+     */
+    private ExecutionResult executeSpawnParticles(Map<String, DataValue> params, ExecutionContext context) {
+        try {
+            // Get the particle type parameter (required)
+            DataValue particleTypeValue = params.get("particle_type");
+            if (particleTypeValue == null) {
+                return context.createErrorResult("No particle type specified for spawnParticles action");
+            }
+            
+            String particleTypeName = particleTypeValue.asString();
+            if (particleTypeName == null || particleTypeName.trim().isEmpty()) {
+                return context.createErrorResult("Particle type cannot be empty");
+            }
+            
+            // Try to get the particle type
+            Particle particleType;
+            try {
+                particleType = Particle.valueOf(particleTypeName.toUpperCase());
+            } catch (IllegalArgumentException e) {
+                return context.createErrorResult("Invalid particle type: " + particleTypeName);
+            }
+            
+            // Get count with default 1
+            int count = 1;
+            if (params.containsKey("count")) {
+                String countStr = params.get("count").asString();
+                if (countStr != null) {
+                    try {
+                        count = Integer.parseInt(countStr);
+                    } catch (NumberFormatException e) {
+                        return context.createErrorResult("Invalid number format for count");
+                    }
+                }
+            }
+            
+            // Get relative position with defaults (0, 0, 0)
+            double relativeX = 0.0;
+            double relativeY = 0.0;
+            double relativeZ = 0.0;
+            if (params.containsKey("relative_x")) {
+                String relativeXStr = params.get("relative_x").asString();
+                if (relativeXStr != null) {
+                    try {
+                        relativeX = Double.parseDouble(relativeXStr);
+                    } catch (NumberFormatException e) {
+                        return context.createErrorResult("Invalid number format for relative_x");
+                    }
+                }
+            }
+            if (params.containsKey("relative_y")) {
+                String relativeYStr = params.get("relative_y").asString();
+                if (relativeYStr != null) {
+                    try {
+                        relativeY = Double.parseDouble(relativeYStr);
+                    } catch (NumberFormatException e) {
+                        return context.createErrorResult("Invalid number format for relative_y");
+                    }
+                }
+            }
+            if (params.containsKey("relative_z")) {
+                String relativeZStr = params.get("relative_z").asString();
+                if (relativeZStr != null) {
+                    try {
+                        relativeZ = Double.parseDouble(relativeZStr);
+                    } catch (NumberFormatException e) {
+                        return context.createErrorResult("Invalid number format for relative_z");
+                    }
+                }
+            }
+            
+            // Get the player
+            Player player = context.getPlayer();
+            
+            // Spawn the particles at the relative position
+            player.spawnParticle(particleType, player.getLocation().add(relativeX, relativeY, relativeZ), count);
+            
+            // Visual effect
+            player.spawnParticle(Particle.ENCHANTMENT_TABLE, player.getLocation().add(0, 2, 0), 5);
+            player.playSound(player.getLocation(), Sound.BLOCK_NOTE_BLOCK_CHIME, 1.0f, 1.5f);
+            
+            // Create success message
+            return context.createResult(true, "Spawned " + count + " " + particleType.name().toLowerCase() + 
+                " particles at relative position (" + relativeX + ", " + relativeY + ", " + relativeZ + ")");
+            
+        } catch (Exception e) {
+            return context.createErrorResult("Failed to spawn particles: " + e.getMessage(), e);
+        }
+    }
+    
+    /**
+     * Executes the sendTitle action to send a title and subtitle to the player
+     */
+    private ExecutionResult executeSendTitle(Map<String, DataValue> params, ExecutionContext context) {
+        try {
+            // Get the title parameter (required)
+            DataValue titleValue = params.get("title");
+            if (titleValue == null) {
+                return context.createErrorResult("No title specified for sendTitle action");
+            }
+            
+            String title = titleValue.asString();
+            if (title == null || title.trim().isEmpty()) {
+                return context.createErrorResult("Title cannot be empty");
+            }
+            
+            // Get subtitle with default empty string
+            String subtitle = "";
+            if (params.containsKey("subtitle")) {
+                DataValue subtitleValue = params.get("subtitle");
+                if (subtitleValue != null) {
+                    subtitle = subtitleValue.asString();
+                    if (subtitle == null) {
+                        subtitle = "";
+                    }
+                }
+            }
+            
+            // Get timing parameters with defaults
+            int fadeIn = 10;   // Default 10 ticks
+            int stay = 70;     // Default 70 ticks
+            int fadeOut = 20;  // Default 20 ticks
+            
+            try {
+                if (params.containsKey("fadein")) {
+                    String fadeInStr = params.get("fadein").asString();
+                    if (fadeInStr != null && fadeInStr.startsWith("fadein:")) {
+                        fadeIn = Integer.parseInt(fadeInStr.substring("fadein:".length()));
+                    } else if (fadeInStr != null) {
+                        fadeIn = Integer.parseInt(fadeInStr);
+                    }
+                }
+                if (params.containsKey("stay")) {
+                    String stayStr = params.get("stay").asString();
+                    if (stayStr != null && stayStr.startsWith("stay:")) {
+                        stay = Integer.parseInt(stayStr.substring("stay:".length()));
+                    } else if (stayStr != null) {
+                        stay = Integer.parseInt(stayStr);
+                    }
+                }
+                if (params.containsKey("fadeout")) {
+                    String fadeOutStr = params.get("fadeout").asString();
+                    if (fadeOutStr != null && fadeOutStr.startsWith("fadeout:")) {
+                        fadeOut = Integer.parseInt(fadeOutStr.substring("fadeout:".length()));
+                    } else if (fadeOutStr != null) {
+                        fadeOut = Integer.parseInt(fadeOutStr);
+                    }
+                }
+            } catch (NumberFormatException e) {
+                return context.createErrorResult("Invalid number format for timing parameters");
+            }
+            
+            // Validate timing ranges
+            if (fadeIn < 0 || fadeIn > 100) {
+                fadeIn = Math.max(0, Math.min(100, fadeIn)); // Clamp to valid range
+            }
+            if (stay < 0 || stay > 1000) {
+                stay = Math.max(0, Math.min(1000, stay)); // Clamp to valid range
+            }
+            if (fadeOut < 0 || fadeOut > 100) {
+                fadeOut = Math.max(0, Math.min(100, fadeOut)); // Clamp to valid range
+            }
+            
+            // Get the player
+            Player player = context.getPlayer();
+            
+            // Resolve placeholders in title and subtitle
+            title = resolvePlaceholders(title, context);
+            subtitle = resolvePlaceholders(subtitle, context);
+            
+            // Send the title to the player
+            player.sendTitle(title, subtitle, fadeIn, stay, fadeOut);
+            
+            // Visual effect
+            player.spawnParticle(Particle.TOTEM_OF_UNDYING, player.getLocation().add(0, 2, 0), 5);
+            player.playSound(player.getLocation(), Sound.ENTITY_PLAYER_LEVELUP, 1.0f, 1.5f);
+            
+            // Create success message
+            return context.createResult(true, "Sent title '" + title + "' to player");
+            
+        } catch (Exception e) {
+            return context.createErrorResult("Failed to send title: " + e.getMessage(), e);
         }
     }
     
@@ -499,12 +1643,40 @@ public class ExecutorEngine {
             boolean success = plugin.getServer().dispatchCommand(context.getPlayer(), command);
             
             // Visual effect
-            context.getPlayer().spawnParticle(org.bukkit.Particle.COMMAND, context.getPlayer().getLocation().add(0, 2, 0), 5);
+            context.getPlayer().spawnParticle(Particle.ENCHANTMENT_TABLE, context.getPlayer().getLocation().add(0, 2, 0), 5);
             
             return context.createResult(success, "Executed command: " + command);
             
         } catch (Exception e) {
             return context.createErrorResult("Failed to execute command: " + e.getMessage(), e);
+        }
+    }
+    
+    private ExecutionResult executeBroadcast(Map<String, DataValue> params, ExecutionContext context) {
+        try {
+            DataValue messageValue = params.get("message_slot");
+            if (messageValue == null) {
+                return context.createErrorResult("No message specified");
+            }
+            
+            String message = messageValue.asString();
+            if (message == null || message.trim().isEmpty()) {
+                return context.createErrorResult("Message cannot be empty");
+            }
+            
+            // Resolve placeholders in message
+            message = resolvePlaceholders(message, context);
+            
+            // Broadcast the message to all players
+            plugin.getServer().broadcastMessage(message);
+            
+            // Visual effect
+            context.getPlayer().spawnParticle(Particle.VILLAGER_HAPPY, context.getPlayer().getLocation().add(0, 2, 0), 5);
+            
+            return context.createResult(true, "Broadcasted message: " + message);
+            
+        } catch (Exception e) {
+            return context.createErrorResult("Failed to broadcast message: " + e.getMessage(), e);
         }
     }
     

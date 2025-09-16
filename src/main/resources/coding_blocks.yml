@@ -813,7 +813,7 @@ action_configurations:
   checkWorldWeather:
     slots:
       0:
-        name: "§aПогода"
+        name: "§аПогода"
         description: "§7Положите бумагу с типом погоды (clear, rain, thunder)"
         placeholder_item: "PAPER"
         slot_name: "weather_slot"
@@ -1014,6 +1014,185 @@ action_configurations:
         description: "§7Положите бумагу с относительной координатой Z (по умолчанию 0)"
         placeholder_item: "PAPER"
         slot_name: "relativeZ"
+
+  # Конфигурация для действия setTime
+  setTime:
+    slots:
+      0:
+        name: "§aВремя суток"
+        description: "§7Положите бумагу с временем суток (0-24000)"
+        placeholder_item: "PAPER"
+        slot_name: "time"
+        required: true
+        validation: "number_range:0-24000"
+        hint: "Время суток от 0 до 24000 (0 = рассвет, 6000 = полдень, 12000 = закат, 18000 = полночь)"
+      1:
+        name: "§bРежим времени"
+        description: "§7Положите бумагу с режимом времени (relative, absolute)"
+        placeholder_item: "PAPER"
+        slot_name: "mode"
+        validation: "enum:relative,absolute"
+        default_value: "absolute"
+        hint: "relative - добавить к текущему времени, absolute - установить конкретное время"
+
+  # Конфигурация для действия setWeather
+  setWeather:
+    slots:
+      0:
+        name: "§aТип погоды"
+        description: "§7Положите бумагу с типом погоды (clear, rain, thunder)"
+        placeholder_item: "PAPER"
+        slot_name: "weather"
+        required: true
+        validation: "enum:clear,rain,thunder"
+        hint: "Выберите тип погоды: clear (ясно), rain (дождь), thunder (гроза)"
+
+  # Конфигурация для действия explosion
+  explosion:
+    slots:
+      0:
+        name: "§aСила взрыва"
+        description: "§7Положите бумагу с силой взрыва (0.0-10.0)"
+        placeholder_item: "PAPER"
+        slot_name: "power"
+        required: true
+        validation: "number_range:0.0-10.0"
+        hint: "Сила взрыва от 0.0 до 10.0 (меньше 1.0 - без разрушения блоков)"
+      1:
+        name: "§bРазрушать блоки"
+        description: "§7Положите бумагу с 'true' или 'false'"
+        placeholder_item: "PAPER"
+        slot_name: "break_blocks"
+        validation: "enum:true,false"
+        default_value: "true"
+        hint: "true - разрушать блоки, false - не разрушать блоки"
+      2:
+        name: "§cСоздать огонь"
+        description: "§7Положите бумагу с 'true' или 'false'"
+        placeholder_item: "PAPER"
+        slot_name: "create_fire"
+        validation: "enum:true,false"
+        default_value: "false"
+        hint: "true - создать огонь, false - не создавать огонь"
+
+  # Конфигурация для действия setBlock
+  setBlock:
+    slots:
+      0:
+        name: "§aТип блока"
+        description: "§7Положите предмет блока для установки"
+        placeholder_item: "STONE"
+        slot_name: "block_type"
+        required: true
+        hint: "Выберите тип блока для установки"
+      1:
+        name: "§bОтносительная координата X"
+        description: "§7Положите бумагу с относительной координатой X (по умолчанию 0)"
+        placeholder_item: "PAPER"
+        slot_name: "relative_x"
+        validation: "number"
+        default_value: "0"
+        hint: "Относительная координата X от игрока"
+      2:
+        name: "§cОтносительная координата Y"
+        description: "§7Положите бумагу с относительной координатой Y (по умолчанию 0)"
+        placeholder_item: "PAPER"
+        slot_name: "relative_y"
+        validation: "number"
+        default_value: "0"
+        hint: "Относительная координата Y от игрока"
+      3:
+        name: "§dОтносительная координата Z"
+        description: "§7Положите бумагу с относительной координатой Z (по умолчанию 0)"
+        placeholder_item: "PAPER"
+        slot_name: "relative_z"
+        validation: "number"
+        default_value: "0"
+        hint: "Относительная координата Z от игрока"
+
+  # Конфигурация для действия getPlayerName
+  getPlayerName:
+    slots:
+      0:
+        name: "§aЦелевая переменная"
+        description: "§7Положите бумагу с названием переменной для сохранения имени игрока"
+        placeholder_item: "PAPER"
+        slot_name: "target_variable"
+        required: true
+        validation: "length:1-16"
+        hint: "Имя переменной должно содержать от 1 до 16 символов"
+
+  # Конфигурация для действия randomNumber
+  randomNumber:
+    slots:
+      0:
+        name: "§aМинимальное значение"
+        description: "§7Положите бумагу с минимальным значением"
+        placeholder_item: "PAPER"
+        slot_name: "min_value"
+        required: true
+        validation: "number"
+        hint: "Минимальное значение для генерации случайного числа"
+      1:
+        name: "§bМаксимальное значение"
+        description: "§7Положите бумагу с максимальным значением"
+        placeholder_item: "PAPER"
+        slot_name: "max_value"
+        required: true
+        validation: "number"
+        hint: "Максимальное значение для генерации случайного числа"
+      2:
+        name: "§cЦелевая переменная"
+        description: "§7Положите бумагу с названием переменной для сохранения результата"
+        placeholder_item: "PAPER"
+        slot_name: "target_variable"
+        required: true
+        validation: "length:1-16"
+        hint: "Имя переменной должно содержать от 1 до 16 символов"
+
+  # Конфигурация для действия playParticle
+  playParticle:
+    slots:
+      0:
+        name: "§aТип частицы"
+        description: "§7Положите бумагу с названием типа частицы"
+        placeholder_item: "PAPER"
+        slot_name: "particle_type"
+        required: true
+        validation: "length:1-50"
+        hint: "Название типа частицы (например: REDSTONE, SMOKE_NORMAL, etc.)"
+      1:
+        name: "§bКоличество частиц"
+        description: "§7Положите бумагу с количеством частиц (по умолчанию 10)"
+        placeholder_item: "PAPER"
+        slot_name: "count"
+        validation: "number_range:1-100"
+        default_value: "10"
+        hint: "Количество частиц от 1 до 100"
+      2:
+        name: "§cОтносительная координата X"
+        description: "§7Положите бумагу с относительной координатой X (по умолчанию 0)"
+        placeholder_item: "PAPER"
+        slot_name: "relative_x"
+        validation: "number"
+        default_value: "0"
+        hint: "Относительная координата X от игрока"
+      3:
+        name: "§dОтносительная координата Y"
+        description: "§7Положите бумагу с относительной координатой Y (по умолчанию 0)"
+        placeholder_item: "PAPER"
+        slot_name: "relative_y"
+        validation: "number"
+        default_value: "0"
+        hint: "Относительная координата Y от игрока"
+      4:
+        name: "§eОтносительная координата Z"
+        description: "§7Положите бумагу с относительной координатой Z (по умолчанию 0)"
+        placeholder_item: "PAPER"
+        slot_name: "relative_z"
+        validation: "number"
+        default_value: "0"
+        hint: "Относительная координата Z от игрока"
 
 # Настройки по умолчанию
 defaults:
