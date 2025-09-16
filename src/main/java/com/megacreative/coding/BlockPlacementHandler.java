@@ -1150,8 +1150,36 @@ public class BlockPlacementHandler implements Listener {
             if (config != null) {
                 String blockType = config.getType();
                 
-                // Open the appropriate GUI based on block type
-                if ("EVENT".equals(blockType)) {
+                // Open the appropriate GUI based on block material and type
+                if (codeBlock.getMaterial() == Material.IRON_BLOCK) {
+                    // Open VariableBlockGUI for iron blocks (variables)
+                    com.megacreative.gui.coding.variable.VariableBlockGUI variableGui = 
+                        new com.megacreative.gui.coding.variable.VariableBlockGUI(plugin, player, blockLocation, codeBlock.getMaterial());
+                    variableGui.open();
+                    plugin.getLogger().info("Opened VariableBlockGUI for player " + player.getName() + " at " + blockLocation);
+                    player.sendMessage("§aОткрыта настройка переменной!");
+                } else if (codeBlock.getMaterial() == Material.OBSIDIAN) {
+                    // Open VariableConditionBlockGUI for obsidian blocks (variable conditions)
+                    com.megacreative.gui.coding.variable_condition.VariableConditionBlockGUI variableConditionGui = 
+                        new com.megacreative.gui.coding.variable_condition.VariableConditionBlockGUI(plugin, player, blockLocation, codeBlock.getMaterial());
+                    variableConditionGui.open();
+                    plugin.getLogger().info("Opened VariableConditionBlockGUI for player " + player.getName() + " at " + blockLocation);
+                    player.sendMessage("§aОткрыта настройка условия переменной!");
+                } else if (codeBlock.getMaterial() == Material.NETHERITE_BLOCK) {
+                    // Open GameActionBlockGUI for netherite blocks (game actions)
+                    com.megacreative.gui.coding.game_action.GameActionBlockGUI gameActionGui = 
+                        new com.megacreative.gui.coding.game_action.GameActionBlockGUI(plugin, player, blockLocation, codeBlock.getMaterial());
+                    gameActionGui.open();
+                    plugin.getLogger().info("Opened GameActionBlockGUI for player " + player.getName() + " at " + blockLocation);
+                    player.sendMessage("§aОткрыта настройка игрового действия!");
+                } else if (codeBlock.getMaterial() == Material.REDSTONE_BLOCK) {
+                    // Open GameConditionBlockGUI for redstone blocks (game conditions)
+                    com.megacreative.gui.coding.game_condition.GameConditionBlockGUI gameConditionGui = 
+                        new com.megacreative.gui.coding.game_condition.GameConditionBlockGUI(plugin, player, blockLocation, codeBlock.getMaterial());
+                    gameConditionGui.open();
+                    plugin.getLogger().info("Opened GameConditionBlockGUI for player " + player.getName() + " at " + blockLocation);
+                    player.sendMessage("§aОткрыта настройка игрового условия!");
+                } else if ("EVENT".equals(blockType)) {
                     // Open EventSelectionGUI for event blocks
                     EventSelectionGUI eventGui = new EventSelectionGUI(plugin, player, blockLocation, codeBlock.getMaterial());
                     eventGui.open();
