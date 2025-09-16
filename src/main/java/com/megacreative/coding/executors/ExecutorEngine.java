@@ -36,7 +36,7 @@ public class ExecutorEngine {
     private final BlockConfigService blockConfigService;
     
     // Execution tracking
-    private final Map<String, ExecutorEngine.ExecutionContext> activeExecutions = new ConcurrentHashMap<>();
+    private final Map<String, ExecutionContext> activeExecutions = new ConcurrentHashMap<>();
     private final Map<String, ExecutionStats> executionStats = new ConcurrentHashMap<>();
     
     // Visual feedback
@@ -55,7 +55,7 @@ public class ExecutorEngine {
     public CompletableFuture<ExecutionResult> executeScript(CodeScript script, Player player, String trigger) {
         String executionId = UUID.randomUUID().toString();
         
-        ExecutorEngine.ExecutionContext context = new ExecutorEngine.ExecutionContext(executionId, script, player, trigger);
+        ExecutionContext context = new ExecutionContext(executionId, script, player, trigger);
         // Set additional context properties as needed
         activeExecutions.put(executionId, context);
         
