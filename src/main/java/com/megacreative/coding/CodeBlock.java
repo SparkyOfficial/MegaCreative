@@ -4,6 +4,7 @@ import com.megacreative.coding.values.DataValue;
 import org.bukkit.Material;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.inventory.meta.ItemMeta;
+import org.bukkit.Location;
 
 import java.util.*;
 
@@ -41,6 +42,9 @@ public class CodeBlock implements Cloneable {
     
     /** Bracket type for grouping blocks */
     private BracketType bracketType = null;
+    
+    /** Location of the block in the world */
+    private org.bukkit.Location location;
     
     // ===== ENUMS =====
     
@@ -163,6 +167,14 @@ public class CodeBlock implements Cloneable {
     
     public boolean isBracket() {
         return bracketType != null;
+    }
+    
+    public org.bukkit.Location getLocation() {
+        return location;
+    }
+    
+    public void setLocation(org.bukkit.Location location) {
+        this.location = location;
     }
     
     // ===== MAIN METHODS =====
@@ -616,17 +628,6 @@ public class CodeBlock implements Cloneable {
                '}';
     }
     
-    // ===== HELPER METHODS =====
-    
-    /**
-     * Gets the location of this block
-     * @return The location of the block or null if not defined
-     */
-    public org.bukkit.Location getLocation() {
-        // In a real implementation, this should return the actual location of the block
-        return null;
-    }
-
     /**
      * Gets the condition of this block
      * @return The execution condition or an empty string if not defined
