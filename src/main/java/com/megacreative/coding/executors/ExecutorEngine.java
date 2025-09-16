@@ -292,6 +292,21 @@ public class ExecutorEngine {
                 case "saveLocation":
                     result = executeSaveLocation(processedParameters, context);
                     break;
+                case "getLocation":
+                    result = executeGetLocation(processedParameters, context);
+                    break;
+                case "isNight":
+                    result = executeIsNight(block, processedParameters, context);
+                    break;
+                case "isRiding":
+                    result = executeIsRiding(block, processedParameters, context);
+                    break;
+                case "checkPlayerInventory":
+                    result = executeCheckPlayerInventory(block, processedParameters, context);
+                    break;
+                case "setWeather":
+                    result = executeSetWeather(processedParameters, context);
+                    break;
                 default:
                     return context.createErrorResult("Unknown action: " + action);
             }
@@ -396,6 +411,1017 @@ public class ExecutorEngine {
             
             // Visual effects
             player.spawnParticle(Particle.VILLAGER_HAPPY, player.getLocation().add(0, 2, 0), 5);
+            return context.createResult(true, "Item given");
+            
+        } catch (Exception e) {
+            return context.createErrorResult("Failed to give item: " + e.getMessage(), e);
+        }
+    }
+    
+    private ExecutionResult executeGiveItems(Map<String, DataValue> params, ExecutionContext context) {
+        try {
+            DataValue itemsValue = params.get("items");
+            if (itemsValue == null) {
+                return context.createErrorResult("No items specified");
+            }
+            
+            List<DataValue> items = itemsValue.asList();
+            if (items == null || items.isEmpty()) {
+                return context.createErrorResult("Items list cannot be empty");
+            }
+            
+            Player player = context.getPlayer();
+            for (DataValue itemValue : items) {
+                String materialName = itemValue.asString();
+                if (materialName == null || materialName.trim().isEmpty()) {
+                    return context.createErrorResult("Item name cannot be empty");
+                }
+                
+                // Try to get the material
+                org.bukkit.Material material;
+                try {
+                    material = org.bukkit.Material.valueOf(materialName.toUpperCase());
+                } catch (IllegalArgumentException e) {
+                    return context.createErrorResult("Invalid item material: " + materialName);
+                }
+                
+                // Create and give the item
+                org.bukkit.inventory.ItemStack item = new org.bukkit.inventory.ItemStack(material, 1);
+                
+                // Add to inventory or drop if full
+                if (player.getInventory().firstEmpty() == -1) {
+                    player.getWorld().dropItemNaturally(player.getLocation(), item);
+                    player.sendMessage("§eYour inventory is full, the item was dropped at your feet!");
+                } else {
+                    player.getInventory().addItem(item);
+                }
+            }
+            
+            // Visual effects
+            player.spawnParticle(Particle.VILLAGER_HAPPY, player.getLocation().add(0, 2, 0), 5);
+            return context.createResult(true, "Items given");
+            
+        } catch (Exception e) {
+            return context.createErrorResult("Failed to give items: " + e.getMessage(), e);
+        }
+    }
+    
+    private ExecutionResult executeSpawnEntity(Map<String, DataValue> params, ExecutionContext context) {
+        try {
+            DataValue entityValue = params.get("entity");
+            if (entityValue == null) {
+                return context.createErrorResult("No entity specified");
+            }
+            
+            String entityName = entityValue.asString();
+            if (entityName == null || entityName.trim().isEmpty()) {
+                return context.createErrorResult("Entity name cannot be empty");
+            }
+            
+            // Try to get the entity type
+            org.bukkit.entity.EntityType entityType;
+            try {
+                entityType = org.bukkit.entity.EntityType.valueOf(entityName.toUpperCase());
+            } catch (IllegalArgumentException e) {
+                return context.createErrorResult("Invalid entity type: " + entityName);
+            }
+            
+            // Spawn the entity at the player's location
+            Player player = context.getPlayer();
+            Location location = player.getLocation();
+            player.getWorld().spawnEntity(location, entityType);
+            
+            // Visual effects
+            player.spawnParticle(Particle.EXPLOSION_NORMAL, location, 10);
+            player.playSound(location, Sound.ENTITY_GENERIC_EXPLODE, 1.0f, 1.0f);
+            
+            return context.createResult(true, "Entity spawned");
+            
+        } catch (Exception e) {
+            return context.createErrorResult("Failed to spawn entity: " + e.getMessage(), e);
+        }
+    }
+    
+    private ExecutionResult executeRemoveItems(Map<String, DataValue> params, ExecutionContext context) {
+        try {
+            DataValue itemsValue = params.get("items");
+            if (itemsValue == null) {
+                return context.createErrorResult("No items specified");
+            }
+            
+            List<DataValue> items = itemsValue.asList();
+            if (items == null || items.isEmpty()) {
+                return context.createErrorResult("Items list cannot be empty");
+            }
+            
+            Player player = context.getPlayer();
+            for (DataValue itemValue : items) {
+                String materialName = itemValue.asString();
+                if (materialName == null || materialName.trim().isEmpty()) {
+                    return context.createErrorResult("Item name cannot be empty");
+                }
+                
+                // Try to get the material
+                org.bukkit.Material material;
+                try {
+                    material = org.bukkit.Material.valueOf(materialName.toUpperCase());
+                } catch (IllegalArgumentException e) {
+                    return context.createErrorResult("Invalid item material: " + materialName);
+                }
+                
+                // Remove the item from the player's inventory
+                player.getInventory().remove(material);
+            }
+            
+            // Visual effects
+            player.spawnParticle(Particle.ITEM_CRACK, player.getLocation().add(0, 2, 0), 5);
+            return context.createResult(true, "Items removed");
+            
+        } catch (Exception e) {
+            return context.createErrorResult("Failed to remove items: " + e.getMessage(), e);
+        }
+    }
+    
+    private ExecutionResult executeSetArmor(Map<String, DataValue> params, ExecutionContext context) {
+        try {
+            DataValue helmetValue = params.get("helmet");
+            DataValue chestplateValue = params.get("chestplate");
+            DataValue leggingsValue = params.get("leggings");
+            DataValue bootsValue = params.get("boots");
+            
+            Player player = context.getPlayer();
+            org.bukkit.inventory.PlayerInventory inventory = player.getInventory();
+            
+            if (helmetValue != null) {
+                String materialName = helmetValue.asString();
+                if (materialName != null && !materialName.trim().isEmpty()) {
+                    org.bukkit.Material material = org.bukkit.Material.valueOf(materialName.toUpperCase());
+                    inventory.setHelmet(new org.bukkit.inventory.ItemStack(material));
+                }
+            }
+            
+            if (chestplateValue != null) {
+                String materialName = chestplateValue.asString();
+                if (materialName != null && !materialName.trim().isEmpty()) {
+                    org.bukkit.Material material = org.bukkit.Material.valueOf(materialName.toUpperCase());
+                    inventory.setChestplate(new org.bukkit.inventory.ItemStack(material));
+                }
+            }
+            
+            if (leggingsValue != null) {
+                String materialName = leggingsValue.asString();
+                if (materialName != null && !materialName.trim().isEmpty()) {
+                    org.bukkit.Material material = org.bukkit.Material.valueOf(materialName.toUpperCase());
+                    inventory.setLeggings(new org.bukkit.inventory.ItemStack(material));
+                }
+            }
+            
+            if (bootsValue != null) {
+                String materialName = bootsValue.asString();
+                if (materialName != null && !materialName.trim().isEmpty()) {
+                    org.bukkit.Material material = org.bukkit.Material.valueOf(materialName.toUpperCase());
+                    inventory.setBoots(new org.bukkit.inventory.ItemStack(material));
+                }
+            }
+            
+            // Visual effects
+            player.spawnParticle(Particle.VILLAGER_HAPPY, player.getLocation().add(0, 2, 0), 5);
+            return context.createResult(true, "Armor set");
+            
+        } catch (Exception e) {
+            return context.createErrorResult("Failed to set armor: " + e.getMessage(), e);
+        }
+    }
+    
+    private ExecutionResult executeSpawnMob(Map<String, DataValue> params, ExecutionContext context) {
+        try {
+            DataValue mobValue = params.get("mob");
+            if (mobValue == null) {
+                return context.createErrorResult("No mob specified");
+            }
+            
+            String mobName = mobValue.asString();
+            if (mobName == null || mobName.trim().isEmpty()) {
+                return context.createErrorResult("Mob name cannot be empty");
+            }
+            
+            // Try to get the entity type
+            org.bukkit.entity.EntityType entityType;
+            try {
+                entityType = org.bukkit.entity.EntityType.valueOf(mobName.toUpperCase());
+            } catch (IllegalArgumentException e) {
+                return context.createErrorResult("Invalid mob type: " + mobName);
+            }
+            
+            // Spawn the mob at the player's location
+            Player player = context.getPlayer();
+            Location location = player.getLocation();
+            player.getWorld().spawnEntity(location, entityType);
+            
+            // Visual effects
+            player.spawnParticle(Particle.EXPLOSION_NORMAL, location, 10);
+            player.playSound(location, Sound.ENTITY_GENERIC_EXPLODE, 1.0f, 1.0f);
+            
+            return context.createResult(true, "Mob spawned");
+            
+        } catch (Exception e) {
+            return context.createErrorResult("Failed to spawn mob: " + e.getMessage(), e);
+        }
+    }
+    
+    private ExecutionResult executeHealPlayer(Map<String, DataValue> params, ExecutionContext context) {
+        try {
+            Player player = context.getPlayer();
+            player.setHealth(player.getMaxHealth());
+            
+            // Visual effects
+            player.spawnParticle(Particle.HEART, player.getLocation().add(0, 2, 0), 5);
+            return context.createResult(true, "Player healed");
+            
+        } catch (Exception e) {
+            return context.createErrorResult("Failed to heal player: " + e.getMessage(), e);
+        }
+    }
+    
+    private ExecutionResult executeSetGameMode(Map<String, DataValue> params, ExecutionContext context) {
+        try {
+            DataValue gameModeValue = params.get("gameMode");
+            if (gameModeValue == null) {
+                return context.createErrorResult("No game mode specified");
+            }
+            
+            String gameModeName = gameModeValue.asString();
+            if (gameModeName == null || gameModeName.trim().isEmpty()) {
+                return context.createErrorResult("Game mode name cannot be empty");
+            }
+            
+            // Try to get the game mode
+            org.bukkit.GameMode gameMode;
+            try {
+                gameMode = org.bukkit.GameMode.valueOf(gameModeName.toUpperCase());
+            } catch (IllegalArgumentException e) {
+                return context.createErrorResult("Invalid game mode: " + gameModeName);
+            }
+            
+            Player player = context.getPlayer();
+            player.setGameMode(gameMode);
+            
+            // Visual effects
+            player.spawnParticle(Particle.VILLAGER_HAPPY, player.getLocation().add(0, 2, 0), 5);
+            return context.createResult(true, "Game mode set");
+            
+        } catch (Exception e) {
+            return context.createErrorResult("Failed to set game mode: " + e.getMessage(), e);
+        }
+    }
+    
+    private ExecutionResult executeSetTime(Map<String, DataValue> params, ExecutionContext context) {
+        try {
+            DataValue timeValue = params.get("time");
+            if (timeValue == null) {
+                return context.createErrorResult("No time specified");
+            }
+            
+            long time = Long.parseLong(timeValue.asString());
+                return context.createErrorResult("Time must be a number");
+            }
+            
+            Player player = context.getPlayer();
+            player.getWorld().setTime(time);
+            
+            // Visual effects
+            player.spawnParticle(Particle.VILLAGER_HAPPY, player.getLocation().add(0, 2, 0), 5);
+            return context.createResult(true, "Time set");
+            
+        } catch (Exception e) {
+            return context.createErrorResult("Failed to set time: " + e.getMessage(), e);
+        }
+    }
+    
+    private ExecutionResult executePlaySound(Map<String, DataValue> params, ExecutionContext context) {
+        try {
+            DataValue soundValue = params.get("sound");
+            if (soundValue == null) {
+                return context.createErrorResult("No sound specified");
+            }
+            
+            String soundName = soundValue.asString();
+            if (soundName == null || soundName.trim().isEmpty()) {
+                return context.createErrorResult("Sound name cannot be empty");
+            }
+            
+            // Try to get the sound
+            org.bukkit.Sound sound;
+            try {
+                sound = org.bukkit.Sound.valueOf(soundName.toUpperCase());
+            } catch (IllegalArgumentException e) {
+                return context.createErrorResult("Invalid sound: " + soundName);
+            }
+            
+            Player player = context.getPlayer();
+            Location location = player.getLocation();
+            player.playSound(location, sound, 1.0f, 1.0f);
+            
+            // Visual effects
+            player.spawnParticle(Particle.NOTE, location, 10);
+            return context.createResult(true, "Sound played");
+            
+        } catch (Exception e) {
+            return context.createErrorResult("Failed to play sound: " + e.getMessage(), e);
+        }
+    }
+    
+    private ExecutionResult executeEffect(Map<String, DataValue> params, ExecutionContext context) {
+        try {
+            DataValue effectValue = params.get("effect");
+            if (effectValue == null) {
+                return context.createErrorResult("No effect specified");
+            }
+            
+            String effectName = effectValue.asString();
+            if (effectName == null || effectName.trim().isEmpty()) {
+                return context.createErrorResult("Effect name cannot be empty");
+            }
+            
+            // Try to get the particle effect
+            org.bukkit.Particle effect;
+            try {
+                effect = org.bukkit.Particle.valueOf(effectName.toUpperCase());
+            } catch (IllegalArgumentException e) {
+                return context.createErrorResult("Invalid effect: " + effectName);
+            }
+            
+            Player player = context.getPlayer();
+            Location location = player.getLocation();
+            player.spawnParticle(effect, location, 10);
+            
+            return context.createResult(true, "Effect played");
+            
+        } catch (Exception e) {
+            return context.createErrorResult("Failed to play effect: " + e.getMessage(), e);
+        }
+    }
+    
+    private ExecutionResult executeCommand(Map<String, DataValue> params, ExecutionContext context) {
+        try {
+            DataValue commandValue = params.get("command");
+            if (commandValue == null) {
+                return context.createErrorResult("No command specified");
+            }
+            
+            String command = commandValue.asString();
+            if (command == null || command.trim().isEmpty()) {
+                return context.createErrorResult("Command cannot be empty");
+            }
+            
+            Player player = context.getPlayer();
+            player.performCommand(command);
+            
+            // Visual effects
+            player.spawnParticle(Particle.VILLAGER_HAPPY, player.getLocation().add(0, 2, 0), 5);
+            return context.createResult(true, "Command executed");
+            
+        } catch (Exception e) {
+            return context.createErrorResult("Failed to execute command: " + e.getMessage(), e);
+        }
+    }
+    
+    private ExecutionResult executeBroadcast(Map<String, DataValue> params, ExecutionContext context) {
+        try {
+            DataValue messageValue = params.get("message");
+            if (messageValue == null) {
+                return context.createErrorResult("No message specified");
+            }
+            
+            String message = messageValue.asString();
+            if (message == null || message.trim().isEmpty()) {
+                return context.createErrorResult("Message cannot be empty");
+            }
+            
+            // Resolve placeholders and broadcast message
+            message = resolvePlaceholders(message, context);
+            plugin.getServer().broadcastMessage(message);
+            
+            return context.createResult(true, "Message broadcasted");
+            
+        } catch (Exception e) {
+            return context.createErrorResult("Failed to broadcast message: " + e.getMessage(), e);
+        }
+    }
+    
+    private ExecutionResult executeSetVariable(Map<String, DataValue> params, ExecutionContext context) {
+        try {
+            DataValue nameValue = params.get("name");
+            DataValue valueValue = params.get("value");
+            if (nameValue == null || valueValue == null) {
+                return context.createErrorResult("Name and value must be specified");
+            }
+            
+            String name = nameValue.asString();
+            if (name == null || name.trim().isEmpty()) {
+                return context.createErrorResult("Variable name cannot be empty");
+            }
+            
+            variableManager.setVariable(name, valueValue);
+            
+            // Visual effects
+            Player player = context.getPlayer();
+            player.spawnParticle(Particle.VILLAGER_HAPPY, player.getLocation().add(0, 2, 0), 5);
+            return context.createResult(true, "Variable set");
+            
+        } catch (Exception e) {
+            return context.createErrorResult("Failed to set variable: " + e.getMessage(), e);
+        }
+    }
+    
+    private ExecutionResult executeIfVariable(com.megacreative.coding.CodeBlock block, Map<String, DataValue> params, ExecutionContext context) {
+        try {
+            DataValue nameValue = params.get("name");
+            DataValue valueValue = params.get("value");
+            if (nameValue == null || valueValue == null) {
+                return context.createErrorResult("Name and value must be specified");
+            }
+            
+            String name = nameValue.asString();
+            if (name == null || name.trim().isEmpty()) {
+                return context.createErrorResult("Variable name cannot be empty");
+            }
+            
+            DataValue variableValue = variableManager.getVariable(name);
+            if (variableValue == null) {
+                return context.createErrorResult("Variable not found: " + name);
+            }
+            
+            if (variableValue.equals(valueValue)) {
+                var nextBlock = block.getNextBlock();
+                if (nextBlock != null) {
+                    return executeBlock(nextBlock, context);
+                }
+            }
+            
+            return context.createResult(true, "Condition not met");
+            
+        } catch (Exception e) {
+            return context.createErrorResult("Failed to check variable: " + e.getMessage(), e);
+        }
+    }
+    
+    private ExecutionResult executeIfVarGreater(com.megacreative.coding.CodeBlock block, Map<String, DataValue> params, ExecutionContext context) {
+        try {
+            DataValue nameValue = params.get("name");
+            DataValue valueValue = params.get("value");
+            if (nameValue == null || valueValue == null) {
+                return context.createErrorResult("Name and value must be specified");
+            }
+            
+            String name = nameValue.asString();
+            if (name == null || name.trim().isEmpty()) {
+                return context.createErrorResult("Variable name cannot be empty");
+            }
+            
+            DataValue variableValue = variableManager.getVariable(name);
+            if (variableValue == null) {
+                return context.createErrorResult("Variable not found: " + name);
+            }
+            
+            if (variableValue.asNumber() != null && valueValue.asNumber() != null) {
+                double variableNumber = variableValue.asNumber().doubleValue();
+                double valueNumber = valueValue.asNumber().doubleValue();
+                
+                if (variableNumber > valueNumber) {
+                    var nextBlock = block.getNextBlock();
+                    if (nextBlock != null) {
+                        return executeBlock(nextBlock, context);
+                    }
+                }
+            } else {
+                return context.createErrorResult("Variable and value must be numbers");
+            }
+            
+            return context.createResult(true, "Condition not met");
+            
+        } catch (Exception e) {
+            return context.createErrorResult("Failed to check variable: " + e.getMessage(), e);
+        }
+    }
+    
+    private ExecutionResult executeIfVarLess(com.megacreative.coding.CodeBlock block, Map<String, DataValue> params, ExecutionContext context) {
+        try {
+            DataValue nameValue = params.get("name");
+            DataValue valueValue = params.get("value");
+            if (nameValue == null || valueValue == null) {
+                return context.createErrorResult("Name and value must be specified");
+            }
+            
+            String name = nameValue.asString();
+            if (name == null || name.trim().isEmpty()) {
+                return context.createErrorResult("Variable name cannot be empty");
+            }
+            
+            DataValue variableValue = variableManager.getVariable(name);
+            if (variableValue == null) {
+                return context.createErrorResult("Variable not found: " + name);
+            }
+            
+            if (variableValue.isNumber() && valueValue.isNumber()) {
+                double variableNumber = variableValue.asDouble();
+                double valueNumber = valueValue.asDouble();
+                
+                if (variableNumber < valueNumber) {
+                    var nextBlock = block.getNextBlock();
+                    if (nextBlock != null) {
+                        return executeBlock(nextBlock, context);
+                    }
+                }
+            } else {
+                return context.createErrorResult("Variable and value must be numbers");
+            }
+            
+            return context.createResult(true, "Condition not met");
+            
+        } catch (Exception e) {
+            return context.createErrorResult("Failed to check variable: " + e.getMessage(), e);
+        }
+    }
+    
+    private ExecutionResult executeCompareVariable(com.megacreative.coding.CodeBlock block, Map<String, DataValue> params, ExecutionContext context) {
+        try {
+            DataValue nameValue = params.get("name");
+            DataValue valueValue = params.get("value");
+            if (nameValue == null || valueValue == null) {
+                return context.createErrorResult("Name and value must be specified");
+            }
+            
+            String name = nameValue.asString();
+            if (name == null || name.trim().isEmpty()) {
+                return context.createErrorResult("Variable name cannot be empty");
+            }
+            
+            DataValue variableValue = variableManager.getVariable(name);
+            if (variableValue == null) {
+                return context.createErrorResult("Variable not found: " + name);
+            }
+            
+            if (variableValue.equals(valueValue)) {
+                var nextBlock = block.getNextBlock();
+                if (nextBlock != null) {
+                    return executeBlock(nextBlock, context);
+                }
+            }
+            
+            return context.createResult(true, "Condition not met");
+            
+        } catch (Exception e) {
+            return context.createErrorResult("Failed to compare variable: " + e.getMessage(), e);
+        }
+    }
+    
+    private ExecutionResult executeSendActionBar(Map<String, DataValue> params, ExecutionContext context) {
+        try {
+            DataValue messageValue = params.get("message");
+            if (messageValue == null) {
+                return context.createErrorResult("No message specified");
+            }
+            
+            String message = messageValue.asString();
+            if (message == null || message.trim().isEmpty()) {
+                return context.createErrorResult("Message cannot be empty");
+            }
+            
+            // Resolve placeholders and send message
+            message = resolvePlaceholders(message, context);
+            Player player = context.getPlayer();
+            player.sendActionBar(message);
+            
+            return context.createResult(true, "Action bar sent");
+            
+        } catch (Exception e) {
+            return context.createErrorResult("Failed to send action bar: " + e.getMessage(), e);
+        }
+    }
+    
+    private ExecutionResult executeExecuteAsyncCommand(Map<String, DataValue> params, ExecutionContext context) {
+        try {
+            DataValue commandValue = params.get("command");
+            if (commandValue == null) {
+                return context.createErrorResult("No command specified");
+            }
+            
+            String command = commandValue.asString();
+            if (command == null || command.trim().isEmpty()) {
+                return context.createErrorResult("Command cannot be empty");
+            }
+            
+            Player player = context.getPlayer();
+            plugin.getServer().getScheduler().runTaskAsynchronously(plugin, () -> player.performCommand(command));
+            
+            // Visual effects
+            player.spawnParticle(Particle.VILLAGER_HAPPY, player.getLocation().add(0, 2, 0), 5);
+            return context.createResult(true, "Command executed asynchronously");
+            
+        } catch (Exception e) {
+            return context.createErrorResult("Failed to execute command asynchronously: " + e.getMessage(), e);
+        }
+    }
+    
+    private ExecutionResult executeCreateScoreboard(Map<String, DataValue> params, ExecutionContext context) {
+        try {
+            DataValue nameValue = params.get("name");
+            if (nameValue == null) {
+                return context.createErrorResult("No name specified");
+            }
+            
+            String name = nameValue.asString();
+            if (name == null || name.trim().isEmpty()) {
+                return context.createErrorResult("Name cannot be empty");
+            }
+            
+            Player player = context.getPlayer();
+            org.bukkit.scoreboard.Scoreboard scoreboard = plugin.getServer().getScoreboardManager().getNewScoreboard();
+            org.bukkit.scoreboard.Objective objective = scoreboard.registerNewObjective("main", "dummy", name);
+            objective.setDisplaySlot(org.bukkit.scoreboard.DisplaySlot.SIDEBAR);
+            player.setScoreboard(scoreboard);
+            
+            // Visual effects
+            player.spawnParticle(Particle.VILLAGER_HAPPY, player.getLocation().add(0, 2, 0), 5);
+            return context.createResult(true, "Scoreboard created");
+            
+        } catch (Exception e) {
+            return context.createErrorResult("Failed to create scoreboard: " + e.getMessage(), e);
+        }
+    }
+    
+    private ExecutionResult executeSetScore(Map<String, DataValue> params, ExecutionContext context) {
+        try {
+            DataValue nameValue = params.get("name");
+            DataValue scoreValue = params.get("score");
+            if (nameValue == null || scoreValue == null) {
+                return context.createErrorResult("Name and score must be specified");
+            }
+            
+            String name = nameValue.asString();
+            if (name == null || name.trim().isEmpty()) {
+                return context.createErrorResult("Name cannot be empty");
+            }
+            
+            Integer score = scoreValue.asInt();
+            if (score == null) {
+                return context.createErrorResult("Score must be a number");
+            }
+            
+            Player player = context.getPlayer();
+            org.bukkit.scoreboard.Scoreboard scoreboard = player.getScoreboard();
+            org.bukkit.scoreboard.Objective objective = scoreboard.getObjective("main");
+            if (objective == null) {
+                return context.createErrorResult("Scoreboard not found");
+            }
+            
+            objective.getScore(name).setScore(score);
+            
+            // Visual effects
+            player.spawnParticle(Particle.VILLAGER_HAPPY, player.getLocation().add(0, 2, 0), 5);
+            return context.createResult(true, "Score set");
+            
+        } catch (Exception e) {
+            return context.createErrorResult("Failed to set score: " + e.getMessage(), e);
+        }
+    }
+    
+    private ExecutionResult executeIncrementScore(Map<String, DataValue> params, ExecutionContext context) {
+        try {
+            DataValue nameValue = params.get("name");
+            DataValue incrementValue = params.get("increment");
+            if (nameValue == null || incrementValue == null) {
+                return context.createErrorResult("Name and increment must be specified");
+            }
+            
+            String name = nameValue.asString();
+            if (name == null || name.trim().isEmpty()) {
+                return context.createErrorResult("Name cannot be empty");
+            }
+            
+            Integer increment = incrementValue.asInt();
+            if (increment == null) {
+                return context.createErrorResult("Increment must be a number");
+            }
+            
+            Player player = context.getPlayer();
+            org.bukkit.scoreboard.Scoreboard scoreboard = player.getScoreboard();
+            org.bukkit.scoreboard.Objective objective = scoreboard.getObjective("main");
+            if (objective == null) {
+                return context.createErrorResult("Scoreboard not found");
+            }
+            
+            org.bukkit.scoreboard.Score score = objective.getScore(name);
+            score.setScore(score.getScore() + increment);
+            
+            // Visual effects
+            player.spawnParticle(Particle.VILLAGER_HAPPY, player.getLocation().add(0, 2, 0), 5);
+            return context.createResult(true, "Score incremented");
+            
+        } catch (Exception e) {
+            return context.createErrorResult("Failed to increment score: " + e.getMessage(), e);
+        }
+    }
+    
+    private ExecutionResult executeCreateTeam(Map<String, DataValue> params, ExecutionContext context) {
+        try {
+            DataValue nameValue = params.get("name");
+            if (nameValue == null) {
+                return context.createErrorResult("No name specified");
+            }
+            
+            String name = nameValue.asString();
+            if (name == null || name.trim().isEmpty()) {
+                return context.createErrorResult("Name cannot be empty");
+            }
+            
+            Player player = context.getPlayer();
+            org.bukkit.scoreboard.Scoreboard scoreboard = player.getScoreboard();
+            org.bukkit.scoreboard.Team team = scoreboard.registerNewTeam(name);
+            
+            // Visual effects
+            player.spawnParticle(Particle.VILLAGER_HAPPY, player.getLocation().add(0, 2, 0), 5);
+            return context.createResult(true, "Team created");
+            
+        } catch (Exception e) {
+            return context.createErrorResult("Failed to create team: " + e.getMessage(), e);
+        }
+    }
+    
+    private ExecutionResult executeAddPlayerToTeam(Map<String, DataValue> params, ExecutionContext context) {
+        try {
+            DataValue teamNameValue = params.get("teamName");
+            DataValue playerNameValue = params.get("playerName");
+            if (teamNameValue == null || playerNameValue == null) {
+                return context.createErrorResult("Team name and player name must be specified");
+            }
+            
+            String teamName = teamNameValue.asString();
+            if (teamName == null || teamName.trim().isEmpty()) {
+                return context.createErrorResult("Team name cannot be empty");
+            }
+            
+            String playerName = playerNameValue.asString();
+            if (playerName == null || playerName.trim().isEmpty()) {
+                return context.createErrorResult("Player name cannot be empty");
+            }
+            
+            Player player = context.getPlayer();
+            org.bukkit.scoreboard.Scoreboard scoreboard = player.getScoreboard();
+            org.bukkit.scoreboard.Team team = scoreboard.getTeam(teamName);
+            if (team == null) {
+                return context.createErrorResult("Team not found: " + teamName);
+            }
+            
+            Player targetPlayer = plugin.getServer().getPlayer(playerName);
+            if (targetPlayer == null) {
+                return context.createErrorResult("Player not found: " + playerName);
+            }
+            
+            team.addEntry(targetPlayer.getName());
+            
+            // Visual effects
+            player.spawnParticle(Particle.VILLAGER_HAPPY, player.getLocation().add(0, 2, 0), 5);
+            return context.createResult(true, "Player added to team");
+            
+        } catch (Exception e) {
+            return context.createErrorResult("Failed to add player to team: " + e.getMessage(), e);
+        }
+    }
+    
+    private ExecutionResult executeSaveLocation(Map<String, DataValue> params, ExecutionContext context) {
+        try {
+            DataValue nameValue = params.get("name");
+            if (nameValue == null) {
+                return context.createErrorResult("No name specified");
+            }
+            
+            String name = nameValue.asString();
+            if (name == null || name.trim().isEmpty()) {
+                return context.createErrorResult("Name cannot be empty");
+            }
+            
+            Player player = context.getPlayer();
+            Location location = player.getLocation();
+            variableManager.setVariable(name, DataValue.of(location));
+            
+            // Visual effects
+            player.spawnParticle(Particle.VILLAGER_HAPPY, player.getLocation().add(0, 2, 0), 5);
+            return context.createResult(true, "Location saved");
+            
+        } catch (Exception e) {
+            return context.createErrorResult("Failed to save location: " + e.getMessage(), e);
+        }
+    }
+    
+    private ExecutionResult executeGetLocation(Map<String, DataValue> params, ExecutionContext context) {
+        try {
+            DataValue nameValue = params.get("name");
+            if (nameValue == null) {
+                return context.createErrorResult("No name specified");
+            }
+            
+            String name = nameValue.asString();
+            if (name == null || name.trim().isEmpty()) {
+                return context.createErrorResult("Name cannot be empty");
+            }
+            
+            DataValue locationValue = variableManager.getVariable(name);
+            if (locationValue == null) {
+                return context.createErrorResult("Location not found: " + name);
+            }
+            
+            Location location = locationValue.asLocation();
+            if (location == null) {
+                return context.createErrorResult("Invalid location value");
+            }
+            
+            Player player = context.getPlayer();
+            player.teleport(location);
+            
+            // Visual effects
+            player.spawnParticle(Particle.VILLAGER_HAPPY, player.getLocation().add(0, 2, 0), 5);
+            return context.createResult(true, "Location retrieved");
+            
+        } catch (Exception e) {
+            return context.createErrorResult("Failed to get location: " + e.getMessage(), e);
+        }
+    }
+    
+    private ExecutionResult executeIsNight(com.megacreative.coding.CodeBlock block, Map<String, DataValue> params, ExecutionContext context) {
+        try {
+            Player player = context.getPlayer();
+            if (player.getWorld().getTime() >= 12000) {
+                var nextBlock = block.getNextBlock();
+                if (nextBlock != null) {
+                    return executeBlock(nextBlock, context);
+                }
+            }
+            
+            return context.createResult(true, "Condition not met");
+            
+        } catch (Exception e) {
+            return context.createErrorResult("Failed to check if it's night: " + e.getMessage(), e);
+        }
+    }
+    
+    private ExecutionResult executeIsRiding(com.megacreative.coding.CodeBlock block, Map<String, DataValue> params, ExecutionContext context) {
+        try {
+            Player player = context.getPlayer();
+            if (player.isInsideVehicle()) {
+                var nextBlock = block.getNextBlock();
+                if (nextBlock != null) {
+                    return executeBlock(nextBlock, context);
+                }
+            }
+            
+            return context.createResult(true, "Condition not met");
+            
+        } catch (Exception e) {
+            return context.createErrorResult("Failed to check if player is riding: " + e.getMessage(), e);
+        }
+    }
+    
+    private ExecutionResult executeCheckPlayerInventory(com.megacreative.coding.CodeBlock block, Map<String, DataValue> params, ExecutionContext context) {
+        try {
+            DataValue itemValue = params.get("item");
+            if (itemValue == null) {
+                return context.createErrorResult("No item specified");
+            }
+            
+            String materialName = itemValue.asString();
+            if (materialName == null || materialName.trim().isEmpty()) {
+                return context.createErrorResult("Item name cannot be empty");
+            }
+            
+            // Try to get the material
+            org.bukkit.Material material;
+            try {
+                material = org.bukkit.Material.valueOf(materialName.toUpperCase());
+            } catch (IllegalArgumentException e) {
+                return context.createErrorResult("Invalid item material: " + materialName);
+            }
+            
+            Player player = context.getPlayer();
+            org.bukkit.inventory.PlayerInventory inventory = player.getInventory();
+            if (inventory.contains(material)) {
+                var nextBlock = block.getNextBlock();
+                if (nextBlock != null) {
+                    return executeBlock(nextBlock, context);
+                }
+            }
+            
+            return context.createResult(true, "Condition not met");
+            
+        } catch (Exception e) {
+            return context.createErrorResult("Failed to check player inventory: " + e.getMessage(), e);
+        }
+    }
+    
+    // === HELPER METHODS ===
+    
+    private void startVisualUpdater() {
+        new BukkitRunnable() {
+            @Override
+            public void run() {
+                for (var entry : visualIndicators.entrySet()) {
+                    Location location = entry.getKey();
+                    VisualIndicator indicator = entry.getValue();
+                    
+                    if (indicator.isExpired()) {
+                        visualIndicators.remove(location);
+                    } else {
+                        indicator.update();
+                    }
+                }
+            }
+        }.runTaskTimer(plugin, 0, 20);
+    }
+    
+    private void showExecutionStart(ExecutionContext context) {
+        Player player = context.getPlayer();
+        Location location = player.getLocation();
+        visualIndicators.put(location, new VisualIndicator(location, VisualIndicator.Type.START));
+        player.spawnParticle(Particle.VILLAGER_HAPPY, location, 10);
+        player.playSound(location, Sound.BLOCK_NOTE_BLOCK_PLING, 1.0f, 1.0f);
+    }
+    
+    private void showExecutionComplete(ExecutionContext context, ExecutionResult result) {
+        Player player = context.getPlayer();
+        Location location = player.getLocation();
+        visualIndicators.put(location, new VisualIndicator(location, VisualIndicator.Type.COMPLETE));
+        player.spawnParticle(Particle.VILLAGER_HAPPY, location, 10);
+        player.playSound(location, Sound.BLOCK_NOTE_BLOCK_PLING, 1.0f, 1.0f);
+    }
+    
+    private void showExecutionError(ExecutionContext context, Exception e) {
+        Player player = context.getPlayer();
+        Location location = player.getLocation();
+        visualIndicators.put(location, new VisualIndicator(location, VisualIndicator.Type.ERROR));
+        player.spawnParticle(Particle.VILLAGER_ANGRY, location, 10);
+        player.playSound(location, Sound.BLOCK_NOTE_BLOCK_PLING, 1.0f, 1.0f);
+    }
+    
+    private void showBlockExecution(com.megacreative.coding.CodeBlock block, ExecutionContext context) {
+        Location location = block.getLocation();
+        visualIndicators.put(location, new VisualIndicator(location, VisualIndicator.Type.EXECUTING));
+        location.getWorld().spawnParticle(Particle.VILLAGER_HAPPY, location, 10);
+    }
+    
+    private void showBlockComplete(com.megacreative.coding.CodeBlock block, ExecutionContext context) {
+        Location location = block.getLocation();
+        visualIndicators.put(location, new VisualIndicator(location, VisualIndicator.Type.COMPLETE));
+        location.getWorld().spawnParticle(Particle.VILLAGER_HAPPY, location, 10);
+    }
+    
+    private void showBlockError(com.megacreative.coding.CodeBlock block, ExecutionContext context, String message) {
+        Location location = block.getLocation();
+        visualIndicators.put(location, new VisualIndicator(location, VisualIndicator.Type.ERROR));
+        location.getWorld().spawnParticle(Particle.VILLAGER_ANGRY, location, 10);
+    }
+    
+    private Map<String, DataValue> preprocessParameters(com.megacreative.coding.CodeBlock block, ExecutionContext context) {
+        Map<String, DataValue> parameters = block.getParameters() != null ? block.getParameters() : new HashMap<>();
+        Map<String, DataValue> processedParameters = new HashMap<>();
+        
+        for (var entry : parameters.entrySet()) {
+            String paramName = entry.getKey();
+            DataValue paramValue = entry.getValue();
+            
+            // Resolve placeholders in parameter value
+            String resolvedValue = resolvePlaceholders(paramValue.asString(), context);
+            processedParameters.put(paramName, DataValue.of(resolvedValue));
+        }
+        
+        return processedParameters;
+    }
+    
+    private String resolvePlaceholders(String value, ExecutionContext context) {
+        ReferenceSystemPlaceholderResolver resolver = new ReferenceSystemPlaceholderResolver();
+        resolver.setVariableManager(variableManager);
+        resolver.setPlayer(context.getPlayer());
+        return resolver.resolve(value);
+    }
+    
+    private String validateBlockParameters(com.megacreative.coding.CodeBlock block, Map<String, DataValue> processedParameters) {
+        String action = block.getAction();
+        var config = blockConfigService.getBlockConfig(action);
+        if (config == null) {
+            return "No configuration found for action: " + action;
+        }
+        
+        for (var paramConfig : config.getParameters()) {
+            String paramName = paramConfig.getName();
+            DataValue paramValue = processedParameters.get(paramName);
+            
+            if (paramConfig.isRequired() && paramValue == null) {
+                return "Missing required parameter: " + paramName;
+            }
+            
+            if (paramValue != null && !paramConfig.getType().equals(paramValue.getType())) {
+                return "Invalid type for parameter '" + paramName + "'. Expected: " + paramConfig.getType() + ", but got: " + paramValue.getType();
+            }
             player.playSound(player.getLocation(), Sound.ENTITY_ITEM_PICKUP, 1.0f, 1.2f);
             
             return context.createResult(true, "Given " + material.name().toLowerCase().replace("_", " "));
@@ -787,6 +1813,70 @@ public class ExecutorEngine {
             
         } catch (Exception e) {
             return context.createErrorResult("Failed to set time: " + e.getMessage(), e);
+        }
+    }
+    
+    /**
+     * Executes the setWeather action to set the weather in the world
+     */
+    private ExecutionResult executeSetWeather(Map<String, DataValue> params, ExecutionContext context) {
+        try {
+            // Get the weather parameter (required)
+            DataValue weatherValue = params.get("weather");
+            if (weatherValue == null) {
+                return context.createErrorResult("No weather specified for setWeather action");
+            }
+            
+            String weatherStr = weatherValue.asString();
+            if (weatherStr == null || weatherStr.trim().isEmpty()) {
+                return context.createErrorResult("Weather value cannot be empty");
+            }
+            
+            // Validate and parse the weather value
+            org.bukkit.WeatherType weatherType;
+            switch (weatherStr.toLowerCase()) {
+                case "clear":
+                    weatherType = org.bukkit.WeatherType.CLEAR;
+                    break;
+                case "rain":
+                    weatherType = org.bukkit.WeatherType.DOWNFALL;
+                    break;
+                case "thunder":
+                    weatherType = org.bukkit.WeatherType.DOWNFALL;
+                    break;
+                default:
+                    return context.createErrorResult("Invalid weather type: " + weatherStr + ". Must be one of: clear, rain, thunder.");
+            }
+            
+            // Get the player's world
+            Player player = context.getPlayer();
+            org.bukkit.World world = player.getWorld();
+            
+            // Set the weather based on type
+            switch (weatherStr.toLowerCase()) {
+                case "clear":
+                    world.setStorm(false);
+                    world.setThundering(false);
+                    break;
+                case "rain":
+                    world.setStorm(true);
+                    world.setThundering(false);
+                    break;
+                case "thunder":
+                    world.setStorm(true);
+                    world.setThundering(true);
+                    break;
+            }
+            
+            // Visual effect
+            player.spawnParticle(Particle.WATER_SPLASH, player.getLocation().add(0, 2, 0), 5);
+            player.playSound(player.getLocation(), Sound.WEATHER_RAIN, 1.0f, 1.0f);
+            
+            // Create success message
+            return context.createResult(true, "Set world weather to " + weatherStr);
+            
+        } catch (Exception e) {
+            return context.createErrorResult("Failed to set weather: " + e.getMessage(), e);
         }
     }
     
@@ -2157,6 +3247,280 @@ public class ExecutorEngine {
             
         } catch (Exception e) {
             return context.createErrorResult("Failed to get location: " + e.getMessage(), e);
+        }
+    }
+    
+    /**
+     * Executes the isNight condition to check if it's night time in the player's world
+     */
+    private ExecutionResult executeIsNight(com.megacreative.coding.CodeBlock block, 
+                                         Map<String, DataValue> params, ExecutionContext context) {
+        try {
+            // Get the time parameter (required)
+            DataValue timeValue = params.get("time_slot");
+            if (timeValue == null) {
+                return context.createErrorResult("No time specified for isNight condition");
+            }
+            
+            String timeStr = timeValue.asString();
+            if (timeStr == null || timeStr.trim().isEmpty()) {
+                return context.createErrorResult("Time value cannot be empty");
+            }
+            
+            // Validate time value (night or day as per config)
+            if (!"night".equalsIgnoreCase(timeStr) && !"day".equalsIgnoreCase(timeStr)) {
+                return context.createErrorResult("Time must be either 'night' or 'day'. Provided: " + timeStr);
+            }
+            
+            // Get the player
+            Player player = context.getPlayer();
+            
+            // Check if it's night (time between 12542 and 23459 is considered night in Minecraft)
+            long time = player.getWorld().getTime();
+            boolean isNightTime = (time >= 12542 && time <= 23459);
+            boolean checkForNight = "night".equalsIgnoreCase(timeStr);
+            
+            // Check condition
+            boolean condition = (checkForNight && isNightTime) || (!checkForNight && !isNightTime);
+            
+            // Log the condition check
+            plugin.getLogger().fine(String.format("Condition check: isNight=%s, checkForNight=%s -> %s",
+                isNightTime, checkForNight, condition));
+            
+            // Execute child blocks if condition is true and there are children
+            if (condition && block.getChildren() != null && !block.getChildren().isEmpty()) {
+                for (var childBlock : block.getChildren()) {
+                    if (childBlock == null) continue;
+                    
+                    ExecutionResult childResult = executeBlockChain(childBlock, context);
+                    if (!childResult.isSuccess()) {
+                        return childResult; // Return first failure
+                    }
+                    
+                    // Stop if execution was cancelled
+                    if (context.isCancelled()) {
+                        return context.createResult(false, "Execution cancelled");
+                    }
+                }
+            }
+            
+            // Visual feedback
+            if (condition) {
+                player.spawnParticle(Particle.VILLAGER_HAPPY, player.getLocation().add(0, 2, 0), 3);
+            } else {
+                player.spawnParticle(Particle.SMOKE_NORMAL, player.getLocation().add(0, 2, 0), 3);
+            }
+            
+            return context.createResult(true, "Condition evaluated: " + condition);
+            
+        } catch (Exception e) {
+            return context.createErrorResult("Failed to evaluate isNight condition: " + e.getMessage(), e);
+        }
+    }
+    
+    /**
+     * Executes the isRiding condition to check if the player is riding a specific entity
+     */
+    private ExecutionResult executeIsRiding(com.megacreative.coding.CodeBlock block, 
+                                         Map<String, DataValue> params, ExecutionContext context) {
+        try {
+            // Get the entity parameter (required)
+            DataValue entityValue = params.get("entity_slot");
+            if (entityValue == null) {
+                return context.createErrorResult("No entity specified for isRiding condition");
+            }
+            
+            String entityStr = entityValue.asString();
+            if (entityStr == null || entityStr.trim().isEmpty()) {
+                return context.createErrorResult("Entity value cannot be empty");
+            }
+            
+            // Validate entity value (horse, boat, pig, strider as per config)
+            if (!"horse".equalsIgnoreCase(entityStr) && 
+                !"boat".equalsIgnoreCase(entityStr) && 
+                !"pig".equalsIgnoreCase(entityStr) && 
+                !"strider".equalsIgnoreCase(entityStr)) {
+                return context.createErrorResult("Entity must be one of: horse, boat, pig, strider. Provided: " + entityStr);
+            }
+            
+            // Get the player
+            Player player = context.getPlayer();
+            
+            // Check if player is riding something
+            boolean isRiding = player.isInsideVehicle();
+            boolean condition = false;
+            
+            if (isRiding) {
+                org.bukkit.entity.Entity vehicle = player.getVehicle();
+                if (vehicle != null) {
+                    // Check specific entity type
+                    switch (entityStr.toLowerCase()) {
+                        case "horse":
+                            condition = vehicle instanceof org.bukkit.entity.Horse;
+                            break;
+                        case "boat":
+                            condition = vehicle instanceof org.bukkit.entity.Boat;
+                            break;
+                        case "pig":
+                            condition = vehicle instanceof org.bukkit.entity.Pig;
+                            break;
+                        case "strider":
+                            condition = vehicle instanceof org.bukkit.entity.Strider;
+                            break;
+                    }
+                }
+            }
+            
+            // Log the condition check
+            plugin.getLogger().fine(String.format("Condition check: isRiding=%s, entity=%s -> %s",
+                isRiding, entityStr, condition));
+            
+            // Execute child blocks if condition is true and there are children
+            if (condition && block.getChildren() != null && !block.getChildren().isEmpty()) {
+                for (var childBlock : block.getChildren()) {
+                    if (childBlock == null) continue;
+                    
+                    ExecutionResult childResult = executeBlockChain(childBlock, context);
+                    if (!childResult.isSuccess()) {
+                        return childResult; // Return first failure
+                    }
+                    
+                    // Stop if execution was cancelled
+                    if (context.isCancelled()) {
+                        return context.createResult(false, "Execution cancelled");
+                    }
+                }
+            }
+            
+            // Visual feedback
+            if (condition) {
+                player.spawnParticle(Particle.VILLAGER_HAPPY, player.getLocation().add(0, 2, 0), 3);
+            } else {
+                player.spawnParticle(Particle.SMOKE_NORMAL, player.getLocation().add(0, 2, 0), 3);
+            }
+            
+            return context.createResult(true, "Condition evaluated: " + condition);
+            
+        } catch (Exception e) {
+            return context.createErrorResult("Failed to evaluate isRiding condition: " + e.getMessage(), e);
+        }
+    }
+    
+    /**
+     * Executes the checkPlayerInventory condition to check if the player has specific items in their inventory
+     */
+    private ExecutionResult executeCheckPlayerInventory(com.megacreative.coding.CodeBlock block, 
+                                                     Map<String, DataValue> params, ExecutionContext context) {
+        try {
+            // Get the item parameter (required)
+            DataValue itemValue = params.get("item_slot");
+            if (itemValue == null) {
+                return context.createErrorResult("No item specified for checkPlayerInventory condition");
+            }
+            
+            String itemStr = itemValue.asString();
+            if (itemStr == null || itemStr.trim().isEmpty()) {
+                return context.createErrorResult("Item value cannot be empty");
+            }
+            
+            // Try to get the material
+            org.bukkit.Material material;
+            try {
+                material = org.bukkit.Material.valueOf(itemStr.toUpperCase());
+            } catch (IllegalArgumentException e) {
+                return context.createErrorResult("Invalid item material: " + itemStr);
+            }
+            
+            // Get optional amount parameter (defaults to 1)
+            int amount = 1;
+            if (params.containsKey("amount_slot")) {
+                DataValue amountValue = params.get("amount_slot");
+                if (amountValue != null) {
+                    String amountStr = amountValue.asString();
+                    if (amountStr != null && !amountStr.trim().isEmpty()) {
+                        try {
+                            amount = Integer.parseInt(amountStr);
+                        } catch (NumberFormatException e) {
+                            // Keep default amount of 1
+                        }
+                    }
+                }
+            }
+            
+            // Get optional check type parameter (defaults to "has")
+            String checkType = "has";
+            if (params.containsKey("check_type_slot")) {
+                DataValue checkTypeValue = params.get("check_type_slot");
+                if (checkTypeValue != null) {
+                    String checkTypeStr = checkTypeValue.asString();
+                    if (checkTypeStr != null && !checkTypeStr.trim().isEmpty()) {
+                        checkType = checkTypeStr.toLowerCase();
+                    }
+                }
+            }
+            
+            // Validate check type
+            if (!"has".equals(checkType) && !"missing".equals(checkType) && !"exact".equals(checkType)) {
+                return context.createErrorResult("Check type must be one of: has, missing, exact. Provided: " + checkType);
+            }
+            
+            // Get the player
+            Player player = context.getPlayer();
+            
+            // Check player's inventory for the item
+            int itemCount = 0;
+            for (ItemStack item : player.getInventory().getContents()) {
+                if (item != null && item.getType() == material) {
+                    itemCount += item.getAmount();
+                }
+            }
+            
+            // Evaluate condition based on check type
+            boolean condition = false;
+            switch (checkType) {
+                case "has":
+                    condition = itemCount >= amount;
+                    break;
+                case "missing":
+                    condition = itemCount < amount;
+                    break;
+                case "exact":
+                    condition = itemCount == amount;
+                    break;
+            }
+            
+            // Log the condition check
+            plugin.getLogger().fine(String.format("Condition check: itemCount=%d, required=%d, checkType=%s -> %s",
+                itemCount, amount, checkType, condition));
+            
+            // Execute child blocks if condition is true and there are children
+            if (condition && block.getChildren() != null && !block.getChildren().isEmpty()) {
+                for (var childBlock : block.getChildren()) {
+                    if (childBlock == null) continue;
+                    
+                    ExecutionResult childResult = executeBlockChain(childBlock, context);
+                    if (!childResult.isSuccess()) {
+                        return childResult; // Return first failure
+                    }
+                    
+                    // Stop if execution was cancelled
+                    if (context.isCancelled()) {
+                        return context.createResult(false, "Execution cancelled");
+                    }
+                }
+            }
+            
+            // Visual feedback
+            if (condition) {
+                player.spawnParticle(Particle.VILLAGER_HAPPY, player.getLocation().add(0, 2, 0), 3);
+            } else {
+                player.spawnParticle(Particle.SMOKE_NORMAL, player.getLocation().add(0, 2, 0), 3);
+            }
+            
+            return context.createResult(true, "Condition evaluated: " + condition);
+            
+        } catch (Exception e) {
+            return context.createErrorResult("Failed to evaluate checkPlayerInventory condition: " + e.getMessage(), e);
         }
     }
     
