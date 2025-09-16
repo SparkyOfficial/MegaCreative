@@ -289,6 +289,9 @@ public class ExecutorEngine {
                 case "addPlayerToTeam":
                     result = executeAddPlayerToTeam(processedParameters, context);
                     break;
+                case "saveLocation":
+                    result = executeSaveLocation(processedParameters, context);
+                    break;
                 default:
                     return context.createErrorResult("Unknown action: " + action);
             }
@@ -2085,6 +2088,75 @@ public class ExecutorEngine {
             
         } catch (Exception e) {
             return context.createErrorResult("Failed to save location: " + e.getMessage(), e);
+        }
+    }
+    
+    /**
+     * Executes the getLocation action to retrieve a saved location and store it in a variable
+     */
+    private ExecutionResult executeGetLocation(Map<String, DataValue> params, ExecutionContext context) {
+        try {
+            // Get the location name parameter (required)
+            DataValue locationNameValue = params.get("locationName");
+            if (locationNameValue == null) {
+                return context.createErrorResult("No location name specified for getLocation action");
+            }
+            
+            String locationName = locationNameValue.asString();
+            if (locationName == null || locationName.trim().isEmpty()) {
+                return context.createErrorResult("Location name cannot be empty");
+            }
+            
+            // Validate location name length (1-32 characters as per config)
+            if (locationName.length() < 1 || locationName.length() > 32) {
+                return context.createErrorResult("Location name must be between 1 and 32 characters. Provided: " + locationName.length());
+            }
+            
+            // Get the target variable parameter (required)
+            DataValue targetVariableValue = params.get("targetVariable");
+            if (targetVariableValue == null) {
+                return context.createErrorResult("No target variable specified for getLocation action");
+            }
+            
+            String targetVariable = targetVariableValue.asString();
+            if (targetVariable == null || targetVariable.trim().isEmpty()) {
+                return context.createErrorResult("Target variable cannot be empty");
+            }
+            
+            // Validate target variable length (1-16 characters as per config)
+            if (targetVariable.length() < 1 || targetVariable.length() > 16) {
+                return context.createErrorResult("Target variable must be between 1 and 16 characters. Provided: " + targetVariable.length());
+            }
+            
+            // Get the player
+            Player player = context.getPlayer();
+            
+            // Get location from variable manager
+            String scriptId = context.getScript() != null ? 
+                context.getScript().getId().toString() : "global";
+            DataValue locationValue = variableManager.getLocalVariable(scriptId, "location_" + locationName);
+            
+            if (locationValue == null) {
+                return context.createErrorResult("Location not found: " + locationName);
+            }
+            
+            String locationString = locationValue.asString();
+            if (locationString == null || locationString.trim().isEmpty()) {
+                return context.createErrorResult("Location data is invalid: " + locationName);
+            }
+            
+            // Store location in target variable
+            variableManager.setLocalVariable(scriptId, targetVariable, DataValue.of(locationString));
+            
+            // Visual effect
+            player.spawnParticle(Particle.ENCHANTMENT_TABLE, player.getLocation().add(0, 2, 0), 5);
+            player.playSound(player.getLocation(), Sound.BLOCK_NOTE_BLOCK_CHIME, 1.0f, 1.5f);
+            
+            // Create success message
+            return context.createResult(true, "Retrieved location '" + locationName + "' and stored in variable '" + targetVariable + "'");
+            
+        } catch (Exception e) {
+            return context.createErrorResult("Failed to get location: " + e.getMessage(), e);
         }
     }
     
