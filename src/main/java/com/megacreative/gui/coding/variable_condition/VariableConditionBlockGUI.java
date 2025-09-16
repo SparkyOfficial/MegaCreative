@@ -124,77 +124,17 @@ public class VariableConditionBlockGUI implements GUIManager.ManagedGUIInterface
         
         player.sendMessage("§eDebug: Available variable conditions count: " + (availableConditions != null ? availableConditions.size() : "null"));
         
-        // Enhanced variable condition loading logic
+        // Simple fallback to default variable conditions if none found
         if (availableConditions == null || availableConditions.isEmpty()) {
             player.sendMessage("§cОшибка: Нет доступных условий для блока переменной " + blockMaterial.name());
             
-            // Try to get all block configs for debugging
-            var allConfigs = blockConfigService.getAllBlockConfigs();
-            player.sendMessage("§eDebug: Total block configs: " + allConfigs.size());
-            
-            // Check if this material is recognized as a code block
-            boolean isCodeBlock = blockConfigService.isCodeBlock(blockMaterial);
-            player.sendMessage("§eDebug: Is code block: " + isCodeBlock);
-            
-            // Try to get block config by material
-            var blockConfig = blockConfigService.getBlockConfigByMaterial(blockMaterial);
-            if (blockConfig != null) {
-                player.sendMessage("§eDebug: Block config found: " + blockConfig.getId() + " - " + blockConfig.getDisplayName());
-                player.sendMessage("§eDebug: Block type: " + blockConfig.getType());
-                player.sendMessage("§eDebug: Default condition: " + blockConfig.getDefaultAction());
-                
-                // Load conditions from the block configuration's actions list
-                List<String> conditions = new ArrayList<>();
-                
-                // First, try to get actions directly from the block config
-                if (blockConfig.getParameters().containsKey("actions")) {
-                    // This is for backward compatibility with old config format
-                    Object actionsObj = blockConfig.getParameters().get("actions");
-                    if (actionsObj instanceof List) {
-                        conditions.addAll((List<String>) actionsObj);
-                        player.sendMessage("§aDebug: Found conditions from block config parameters: " + conditions.size());
-                    }
-                }
-                
-                // Try to get actions from the YAML configuration file
-                conditions = blockConfigService.getActionsForMaterial(blockMaterial);
-                
-                // Fallback to getting conditions from material mapping
-                if (conditions.isEmpty()) {
-                    conditions = blockConfigService.getActionsForMaterial(blockMaterial);
-                }
-                
-                if (conditions != null && !conditions.isEmpty()) {
-                    availableConditions = conditions;
-                    player.sendMessage("§aDebug: Found conditions after re-check: " + conditions.size());
-                }
-            } else {
-                player.sendMessage("§eDebug: No block config found for material");
-                
-                // List all available materials for debugging
-                Set<Material> codeBlockMaterials = blockConfigService.getCodeBlockMaterials();
-                player.sendMessage("§eDebug: Available code block materials (" + codeBlockMaterials.size() + "):");
-                int count = 0;
-                for (Material mat : codeBlockMaterials) {
-                    player.sendMessage("§7- " + mat.name());
-                    count++;
-                    if (count >= 10) {
-                        player.sendMessage("§7... and " + (codeBlockMaterials.size() - 10) + " more");
-                        break;
-                    }
-                }
-            }
-            
-            // If we still don't have conditions, use default variable conditions as fallback
-            if (availableConditions == null || availableConditions.isEmpty()) {
-                // Add default variable conditions
-                availableConditions = new ArrayList<>();
-                availableConditions.add("ifVarEquals");
-                availableConditions.add("ifVarGreater");
-                availableConditions.add("ifVarLess");
-                availableConditions.add("compareVariable");
-                player.sendMessage("§6Using variable condition defaults as fallback");
-            }
+            // Use default variable conditions as fallback
+            availableConditions = new ArrayList<>();
+            availableConditions.add("ifVarEquals");
+            availableConditions.add("ifVarGreater");
+            availableConditions.add("ifVarLess");
+            availableConditions.add("compareVariable");
+            player.sendMessage("§6Using variable condition defaults as fallback");
         }
         
         // 🎆 ENHANCED: Group variable conditions by category for better organization

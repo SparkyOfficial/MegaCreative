@@ -124,70 +124,34 @@ public class GameConditionBlockGUI implements GUIManager.ManagedGUIInterface {
         
         player.sendMessage("§eDebug: Available game conditions count: " + (availableConditions != null ? availableConditions.size() : "null"));
         
-        // Enhanced game condition loading logic
+        // If we don't have conditions, try to get them from the block config
         if (availableConditions == null || availableConditions.isEmpty()) {
             player.sendMessage("§cОшибка: Нет доступных условий для блока игровых условий " + blockMaterial.name());
-            
-            // Try to get all block configs for debugging
-            var allConfigs = blockConfigService.getAllBlockConfigs();
-            player.sendMessage("§eDebug: Total block configs: " + allConfigs.size());
-            
-            // Check if this material is recognized as a code block
-            boolean isCodeBlock = blockConfigService.isCodeBlock(blockMaterial);
-            player.sendMessage("§eDebug: Is code block: " + isCodeBlock);
             
             // Try to get block config by material
             var blockConfig = blockConfigService.getBlockConfigByMaterial(blockMaterial);
             if (blockConfig != null) {
                 player.sendMessage("§eDebug: Block config found: " + blockConfig.getId() + " - " + blockConfig.getDisplayName());
-                player.sendMessage("§eDebug: Block type: " + blockConfig.getType());
-                player.sendMessage("§eDebug: Default condition: " + blockConfig.getDefaultAction());
                 
-                // Load conditions from the block configuration's actions list
-                List<String> conditions = new ArrayList<>();
+                // Get conditions directly from the block configuration
+                availableConditions = blockConfig.getActions();
+                player.sendMessage("§aDebug: Found conditions from block config: " + (availableConditions != null ? availableConditions.size() : 0));
                 
-                // First, try to get actions directly from the block config
-                if (blockConfig.getParameters().containsKey("actions")) {
-                    // This is for backward compatibility with old config format
-                    Object actionsObj = blockConfig.getParameters().get("actions");
-                    if (actionsObj instanceof List) {
-                        conditions.addAll((List<String>) actionsObj);
-                        player.sendMessage("§aDebug: Found conditions from block config parameters: " + conditions.size());
+                // If still no conditions, try to get default action
+                if (availableConditions == null || availableConditions.isEmpty()) {
+                    String defaultAction = blockConfig.getDefaultAction();
+                    if (defaultAction != null && !defaultAction.isEmpty()) {
+                        availableConditions = new ArrayList<>();
+                        availableConditions.add(defaultAction);
+                        player.sendMessage("§aDebug: Using default action: " + defaultAction);
                     }
-                }
-                
-                // Try to get actions from the YAML configuration file
-                conditions = blockConfigService.getActionsForMaterial(blockMaterial);
-                
-                // Fallback to getting conditions from material mapping
-                if (conditions.isEmpty()) {
-                    conditions = blockConfigService.getActionsForMaterial(blockMaterial);
-                }
-                
-                if (conditions != null && !conditions.isEmpty()) {
-                    availableConditions = conditions;
-                    player.sendMessage("§aDebug: Found conditions after re-check: " + conditions.size());
                 }
             } else {
                 player.sendMessage("§eDebug: No block config found for material");
-                
-                // List all available materials for debugging
-                Set<Material> codeBlockMaterials = blockConfigService.getCodeBlockMaterials();
-                player.sendMessage("§eDebug: Available code block materials (" + codeBlockMaterials.size() + "):");
-                int count = 0;
-                for (Material mat : codeBlockMaterials) {
-                    player.sendMessage("§7- " + mat.name());
-                    count++;
-                    if (count >= 10) {
-                        player.sendMessage("§7... and " + (codeBlockMaterials.size() - 10) + " more");
-                        break;
-                    }
-                }
             }
             
-            // If we still don't have conditions, use default game conditions as fallback
+            // If we still don't have conditions, use appropriate default game conditions
             if (availableConditions == null || availableConditions.isEmpty()) {
-                // Add default game conditions
                 availableConditions = new ArrayList<>();
                 availableConditions.add("isOp");
                 availableConditions.add("playerGameMode");

@@ -124,81 +124,21 @@ public class PlayerConditionBlockGUI implements GUIManager.ManagedGUIInterface {
         
         player.sendMessage("§eDebug: Available player condition actions count: " + (availableActions != null ? availableActions.size() : "null"));
         
-        // Enhanced player condition action loading logic
+        // Simple fallback to default player condition actions if none found
         if (availableActions == null || availableActions.isEmpty()) {
             player.sendMessage("§cОшибка: Нет доступных условий для блока игрока " + blockMaterial.name());
             
-            // Try to get all block configs for debugging
-            var allConfigs = blockConfigService.getAllBlockConfigs();
-            player.sendMessage("§eDebug: Total block configs: " + allConfigs.size());
-            
-            // Check if this material is recognized as a code block
-            boolean isCodeBlock = blockConfigService.isCodeBlock(blockMaterial);
-            player.sendMessage("§eDebug: Is code block: " + isCodeBlock);
-            
-            // Try to get block config by material
-            var blockConfig = blockConfigService.getBlockConfigByMaterial(blockMaterial);
-            if (blockConfig != null) {
-                player.sendMessage("§eDebug: Block config found: " + blockConfig.getId() + " - " + blockConfig.getDisplayName());
-                player.sendMessage("§eDebug: Block type: " + blockConfig.getType());
-                player.sendMessage("§eDebug: Default action: " + blockConfig.getDefaultAction());
-                
-                // Load actions from the block configuration's actions list
-                List<String> actions = new ArrayList<>();
-                
-                // First, try to get actions directly from the block config
-                if (blockConfig.getParameters().containsKey("actions")) {
-                    // This is for backward compatibility with old config format
-                    Object actionsObj = blockConfig.getParameters().get("actions");
-                    if (actionsObj instanceof List) {
-                        actions.addAll((List<String>) actionsObj);
-                        player.sendMessage("§aDebug: Found actions from block config parameters: " + actions.size());
-                    }
-                }
-                
-                // Try to get actions from the YAML configuration file
-                actions = blockConfigService.getActionsForMaterial(blockMaterial);
-                
-                // Fallback to getting actions from material mapping
-                if (actions.isEmpty()) {
-                    actions = blockConfigService.getActionsForMaterial(blockMaterial);
-                }
-                
-                if (actions != null && !actions.isEmpty()) {
-                    availableActions = actions;
-                    player.sendMessage("§aDebug: Found actions after re-check: " + actions.size());
-                }
-            } else {
-                player.sendMessage("§eDebug: No block config found for material");
-                
-                // List all available materials for debugging
-                Set<Material> codeBlockMaterials = blockConfigService.getCodeBlockMaterials();
-                player.sendMessage("§eDebug: Available code block materials (" + codeBlockMaterials.size() + "):");
-                int count = 0;
-                for (Material mat : codeBlockMaterials) {
-                    player.sendMessage("§7- " + mat.name());
-                    count++;
-                    if (count >= 10) {
-                        player.sendMessage("§7... and " + (codeBlockMaterials.size() - 10) + " more");
-                        break;
-                    }
-                }
-            }
-            
-            // If we still don't have actions, use default player condition actions as fallback
-            if (availableActions == null || availableActions.isEmpty()) {
-                // Add default player condition actions
-                availableActions = new ArrayList<>();
-                availableActions.add("isPlayerOp");
-                availableActions.add("isPlayerFlying");
-                availableActions.add("isPlayerSneaking");
-                availableActions.add("isPlayerSprinting");
-                availableActions.add("isPlayerInWater");
-                availableActions.add("isPlayerInLava");
-                availableActions.add("isPlayerOnGround");
-                availableActions.add("hasPlayerPermission");
-                player.sendMessage("§6Using player condition default actions as fallback");
-            }
+            // Use default player condition actions as fallback
+            availableActions = new ArrayList<>();
+            availableActions.add("isPlayerOp");
+            availableActions.add("isPlayerFlying");
+            availableActions.add("isPlayerSneaking");
+            availableActions.add("isPlayerSprinting");
+            availableActions.add("isPlayerInWater");
+            availableActions.add("isPlayerInLava");
+            availableActions.add("isPlayerOnGround");
+            availableActions.add("hasPlayerPermission");
+            player.sendMessage("§6Using player condition default actions as fallback");
         }
         
         // 🎆 ENHANCED: Group player condition actions by category for better organization
