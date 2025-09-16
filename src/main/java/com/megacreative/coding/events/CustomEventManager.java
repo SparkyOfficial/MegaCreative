@@ -508,22 +508,48 @@ public class CustomEventManager implements Listener {
             // This would integrate with the existing script execution system
             // Called from lines 183 and 262 in the same file
             if (handlerBlock != null) {
-                // Set event data as local variables for the handler
-                for (Map.Entry<String, DataValue> entry : eventData.entrySet()) {
-                    // Set as local variable in the handler's execution context
-                    // This would use the VariableManager to set local scope variables
-                }
-                
-                // Execute the handler block
                 try {
-                    // This would need integration with the execution system
-                    // handlerBlock.execute(source);
-                    // TODO: Implement actual handler execution
-                    // For now, we're just logging that the handler was called
-                    com.megacreative.MegaCreative.getInstance().getLogger().info(
-                        "EventHandler called for player " + (source != null ? source.getName() : "unknown") + 
-                        " in world " + sourceWorld
-                    );
+                    // Get the plugin instance from the MegaCreative singleton
+                    com.megacreative.MegaCreative plugin = com.megacreative.MegaCreative.getInstance();
+                    
+                    // Set event data as local variables for the handler
+                    com.megacreative.coding.variables.VariableManager variableManager = 
+                        plugin.getServiceRegistry().getVariableManager();
+                    
+                    // Set event data as local variables in the player's context
+                    if (source != null && variableManager != null) {
+                        for (Map.Entry<String, DataValue> entry : eventData.entrySet()) {
+                            variableManager.setPlayerVariable(source.getUniqueId(), entry.getKey(), entry.getValue());
+                        }
+                    }
+                    
+                    // Execute the handler block using the script engine
+                    com.megacreative.coding.ScriptEngine scriptEngine = 
+                        plugin.getServiceRegistry().getService(com.megacreative.coding.ScriptEngine.class);
+                    
+                    if (scriptEngine != null) {
+                        // Execute the block asynchronously
+                        scriptEngine.executeBlock(handlerBlock, source, "event_handler")
+                            .thenAccept(result -> {
+                                if (!result.isSuccess()) {
+                                    plugin.getLogger().warning(
+                                        "EventHandler execution failed: " + result.getMessage()
+                                    );
+                                }
+                            })
+                            .exceptionally(throwable -> {
+                                plugin.getLogger().warning(
+                                    "Error in EventHandler: " + throwable.getMessage()
+                                );
+                                return null;
+                            });
+                    } else {
+                        // Fallback to simple execution
+                        plugin.getLogger().info(
+                            "EventHandler called for player " + (source != null ? source.getName() : "unknown") + 
+                            " in world " + sourceWorld
+                        );
+                    }
                 } catch (Exception e) {
                     // Log error but don't propagate to avoid breaking other handlers
                     com.megacreative.MegaCreative.getInstance().getLogger().warning(

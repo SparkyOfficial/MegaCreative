@@ -269,10 +269,10 @@ public class BlockContainerManager {
      * Opens sign editor GUI
      */
     private void openSignEditor(Player player, BlockContainer container) {
-        // TODO: Implement GUI manager
-        // var gui = plugin.getGuiManager().createSignEditorGUI(player, container);
-        // gui.open();
-        player.sendMessage("§eSign editor GUI not yet implemented");
+        // Use the existing ContainerConfigGUI for sign editing as well
+        com.megacreative.gui.ContainerConfigGUI gui = new com.megacreative.gui.ContainerConfigGUI(
+            plugin, player, container.getBlockLocation());
+        gui.open();
     }
     
     /**

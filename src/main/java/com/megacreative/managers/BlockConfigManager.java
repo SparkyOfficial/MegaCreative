@@ -525,7 +525,9 @@ public class BlockConfigManager implements Listener {
                     } else if (typeLine.contains("Boolean")) {
                         return new BooleanValue("True".equalsIgnoreCase(valueStr));
                     } else if (typeLine.contains("List")) {
-                        return new ListValue(); // TODO: Implement list parsing
+                        // Implement list parsing
+                        // Try to parse the list from the value string
+                        return parseListFromString(valueStr);
                     }
                 }
                 
@@ -536,6 +538,84 @@ public class BlockConfigManager implements Listener {
         
         // Fallback
         return new TextValue(item.getType().name().toLowerCase());
+    }
+    
+    /**
+     * Parses a string representation of a list into a ListValue
+     * Supports formats like "[item1,item2,item3]" or "item1,item2,item3"
+     * 
+     * @param listString The string to parse
+     * @return A ListValue containing the parsed items
+     */
+    private ListValue parseListFromString(String listString) {
+        if (listString == null || listString.trim().isEmpty()) {
+            return new ListValue(new ArrayList<>());
+        }
+        
+        // Remove brackets if present
+        String cleanString = listString.trim();
+        if (cleanString.startsWith("[") && cleanString.endsWith("]")) {
+            cleanString = cleanString.substring(1, cleanString.length() - 1);
+        }
+        
+        // Split by comma and create DataValues
+        List<DataValue> values = new ArrayList<>();
+        if (!cleanString.isEmpty()) {
+            // Handle quoted strings that might contain commas
+            String[] items = parseListItems(cleanString);
+            
+            for (String item : items) {
+                String trimmedItem = item.trim();
+                // Try to parse as number first
+                try {
+                    double number = Double.parseDouble(trimmedItem);
+                    values.add(DataValue.fromObject(number));
+                } catch (NumberFormatException e) {
+                    // Treat as string
+                    values.add(DataValue.fromObject(trimmedItem));
+                }
+            }
+        }
+        
+        return new ListValue(values);
+    }
+    
+    /**
+     * Parses list items, handling quoted strings that might contain commas
+     * 
+     * @param input The input string to parse
+     * @return Array of parsed items
+     */
+    private String[] parseListItems(String input) {
+        List<String> items = new ArrayList<>();
+        StringBuilder currentItem = new StringBuilder();
+        boolean inQuotes = false;
+        char quoteChar = '"';
+        
+        for (int i = 0; i < input.length(); i++) {
+            char c = input.charAt(i);
+            
+            if (c == '"' || c == '\'') {
+                if (!inQuotes) {
+                    inQuotes = true;
+                    quoteChar = c;
+                } else if (c == quoteChar) {
+                    inQuotes = false;
+                } else {
+                    currentItem.append(c);
+                }
+            } else if (c == ',' && !inQuotes) {
+                items.add(currentItem.toString());
+                currentItem = new StringBuilder();
+            } else {
+                currentItem.append(c);
+            }
+        }
+        
+        // Add the last item
+        items.add(currentItem.toString());
+        
+        return items.toArray(new String[0]);
     }
     
     /**
