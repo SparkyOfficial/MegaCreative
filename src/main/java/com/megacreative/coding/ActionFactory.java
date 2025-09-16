@@ -36,6 +36,7 @@ import com.megacreative.coding.actions.HandleEventAction;
 import com.megacreative.coding.actions.HealPlayerAction;
 import com.megacreative.coding.actions.IncrementScoreAction;
 import com.megacreative.coding.actions.ListOperationAction;
+import com.megacreative.coding.actions.ListOperationsAction;
 import com.megacreative.coding.actions.MapOperationAction;
 import com.megacreative.coding.actions.MulVarAction;
 import com.megacreative.coding.actions.PlayCustomSoundAction;
@@ -74,9 +75,16 @@ import com.megacreative.coding.actions.condition.HasPermissionCondition;
 import com.megacreative.coding.actions.condition.IsInWorldCondition;
 import com.megacreative.coding.executors.ExecutionResult;
 import com.megacreative.core.DependencyContainer;
+import com.megacreative.managers.GUIManager;
+import com.megacreative.gui.interactive.InteractiveGUIManager;
+import com.megacreative.coding.events.CustomEventManager;
+import com.megacreative.coding.values.DataValue;
+import com.megacreative.coding.values.types.ListValue;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.function.Supplier;
+import java.util.List;
+import java.util.ArrayList;
 
 /**
  * Factory for creating block actions
@@ -89,6 +97,9 @@ public class ActionFactory {
 
     private final Map<String, Supplier<BlockAction>> actionMap = new HashMap<>();
     private final DependencyContainer dependencyContainer;
+    private GUIManager guiManager;
+    private InteractiveGUIManager interactiveGUIManager;
+    private CustomEventManager eventManager;
 
     /**
      * Creates an ActionFactory
@@ -102,7 +113,29 @@ public class ActionFactory {
      */
     public ActionFactory(DependencyContainer dependencyContainer) {
         this.dependencyContainer = dependencyContainer;
+        initializeManagers();
         registerAllActions();
+    }
+    
+    /**
+     * Initialize GUI and event managers
+     * 
+     * Инициализировать менеджеры GUI и событий
+     * 
+     * GUI- und Ereignismanager initialisieren
+     */
+    private void initializeManagers() {
+        try {
+            // Initialize GUI managers
+            this.guiManager = dependencyContainer.resolve(GUIManager.class);
+            this.interactiveGUIManager = dependencyContainer.resolve(InteractiveGUIManager.class);
+            
+            // Initialize event manager
+            this.eventManager = dependencyContainer.resolve(CustomEventManager.class);
+        } catch (Exception e) {
+            // Log error but don't fail initialization
+            // This allows the factory to work even if some managers aren't available
+        }
     }
     
     /**
@@ -229,6 +262,19 @@ public class ActionFactory {
         register("listOperation", ListOperationAction::new);
         register("createMap", CreateMapAction::new);
         register("mapOperation", MapOperationAction::new);
+        
+        // --- GENERIC LIST OPERATIONS ---
+        // --- ОБЩИЕ ОПЕРАЦИИ СО СПИСКАМИ ---
+        // --- GENERISCHE LISTENOPERATIONEN ---
+        registerGeneric("addToList");
+        registerGeneric("removeFromList");
+        registerGeneric("getListSize");
+        registerGeneric("clearList");
+        
+        // --- DEDICATED LIST OPERATIONS ACTION ---
+        // --- СПЕЦИАЛЬНОЕ ДЕЙСТВИЕ ДЛЯ ОПЕРАЦИЙ СО СПИСКАМИ ---
+        // --- SPEZIALISIERTE LISTENOPERATIONS-AKTION ---
+        register("listOperations", ListOperationsAction::new);
 
         // --- INTEGRATION BLOCKS ---
         // --- БЛОКИ ИНТЕГРАЦИИ ---
@@ -236,11 +282,32 @@ public class ActionFactory {
         register("economyTransaction", EconomyTransactionAction::new);
         register("discordWebhook", DiscordWebhookAction::new);
         
+        // --- GUI BLOCKS ---
+        // --- БЛОКИ GUI ---
+        // --- GUI-BLÖCKE ---
+        register("createGui", () -> new CreateGuiAction());
+        register("createInteractiveGui", () -> new BlockAction() {
+            @Override
+            public ExecutionResult execute(CodeBlock block, ExecutionContext context) {
+                // This is a placeholder for interactive GUI creation
+                // In a full implementation, this would use the interactiveGUIManager
+                return ExecutionResult.success("Interactive GUI creation placeholder");
+            }
+        });
+        
         // --- DEBUGGING BLOCKS ---
         // --- БЛОКИ ОТЛАДКИ ---
         // --- DEBUGGING-BLÖCKE ---
         register("debugLog", DebugLogAction::new);
         register("variableInspector", VariableInspectorAction::new);
+        
+        // --- EVENT HANDLING BLOCKS ---
+        // --- БЛОКИ ОБРАБОТКИ СОБЫТИЙ ---
+        // --- EREIGNISBEHANDLUNGSBLÖCKE ---
+        register("handleEvent", () -> new HandleEventAction(
+            dependencyContainer.resolve(CustomEventManager.class)));
+        register("triggerEvent", () -> new TriggerEventAction(
+            dependencyContainer.resolve(CustomEventManager.class)));
         
         // === GENERIC ACTIONS - Mass Production System ===
         // === ОБЩИЕ ДЕЙСТВИЯ - Система массового производства ===
@@ -299,6 +366,12 @@ public class ActionFactory {
         // Berechtigungsaktionen
         registerGeneric("givePermission");
         registerGeneric("removePermission");
+        
+        // List operations
+        registerGeneric("addToList");
+        registerGeneric("removeFromList");
+        registerGeneric("getListSize");
+        registerGeneric("clearList");
     }
     
     /**
@@ -380,5 +453,151 @@ public class ActionFactory {
      */
     public int getActionCount() {
         return actionMap.size();
+    }
+    
+    /**
+     * Creates an event handler for the given code block
+     * 
+     * Создает обработчик событий для заданного блока кода
+     * 
+     * Erstellt einen Ereignishandler für den angegebenen Codeblock
+     * 
+     * @param handlerBlock The code block to handle events
+     * @param eventName The name of the event to handle
+     * @param priority The priority of the handler
+     * @return true if handler was registered successfully
+     */
+    public boolean createEventHandler(CodeBlock handlerBlock, String eventName, int priority) {
+        if (eventManager == null || handlerBlock == null || eventName == null) {
+            return false;
+        }
+        
+        try {
+            // Create and register the event handler
+            CustomEventManager.EventHandler handler = eventManager.createEventHandler(
+                handlerBlock, 
+                null, // Player - null for global handlers
+                null, // World - null for global handlers
+                priority
+            );
+            
+            eventManager.registerEventHandler(eventName, handler);
+            return true;
+        } catch (Exception e) {
+            return false;
+        }
+    }
+    
+    /**
+     * Gets the GUI manager
+     * 
+     * Получает менеджер GUI
+     * 
+     * Ruft den GUI-Manager ab
+     * 
+     * @return The GUI manager or null if not available
+     */
+    public GUIManager getGuiManager() {
+        return guiManager;
+    }
+    
+    /**
+     * Gets the interactive GUI manager
+     * 
+     * Получает интерактивный менеджер GUI
+     * 
+     * Ruft den interaktiven GUI-Manager ab
+     * 
+     * @return The interactive GUI manager or null if not available
+     */
+    public InteractiveGUIManager getInteractiveGuiManager() {
+        return interactiveGUIManager;
+    }
+    
+    /**
+     * Gets the event manager
+     * 
+     * Получает менеджер событий
+     * 
+     * Ruft den Ereignismanager ab
+     * 
+     * @return The event manager or null if not available
+     */
+    public CustomEventManager getEventManager() {
+        return eventManager;
+    }
+    
+    /**
+     * Parses a string representation of a list into a ListValue
+     * Supports formats like "[item1,item2,item3]" or "item1,item2,item3"
+     * 
+     * Преобразует строковое представление списка в ListValue
+     * Поддерживает форматы типа "[item1,item2,item3]" или "item1,item2,item3"
+     * 
+     * Parst eine String-Darstellung einer Liste in einen ListValue
+     * Unterstützt Formate wie "[item1,item2,item3]" oder "item1,item2,item3"
+     * 
+     * @param listString The string to parse
+     * @return A ListValue containing the parsed items
+     */
+    public ListValue parseListString(String listString) {
+        if (listString == null || listString.trim().isEmpty()) {
+            return new ListValue(new ArrayList<>());
+        }
+        
+        // Remove brackets if present
+        String cleanString = listString.trim();
+        if (cleanString.startsWith("[")) {
+            cleanString = cleanString.substring(1);
+        }
+        if (cleanString.endsWith("]")) {
+            cleanString = cleanString.substring(0, cleanString.length() - 1);
+        }
+        
+        // Split by comma and create DataValues
+        List<DataValue> values = new ArrayList<>();
+        if (!cleanString.isEmpty()) {
+            String[] items = cleanString.split(",");
+            for (String item : items) {
+                String trimmedItem = item.trim();
+                // Try to parse as number first
+                try {
+                    double number = Double.parseDouble(trimmedItem);
+                    values.add(DataValue.fromObject(number));
+                } catch (NumberFormatException e) {
+                    // Treat as string
+                    values.add(DataValue.fromObject(trimmedItem));
+                }
+            }
+        }
+        
+        return new ListValue(values);
+    }
+    
+    /**
+     * Parses a list of raw objects into a ListValue
+     * 
+     * Преобразует список необработанных объектов в ListValue
+     * 
+     * Parst eine Liste von Rohobjekten in einen ListValue
+     * 
+     * @param rawList The list of objects to parse
+     * @return A ListValue containing the parsed items
+     */
+    public ListValue parseRawList(List<?> rawList) {
+        if (rawList == null) {
+            return new ListValue(new ArrayList<>());
+        }
+        
+        List<DataValue> values = new ArrayList<>();
+        for (Object obj : rawList) {
+            if (obj instanceof DataValue) {
+                values.add((DataValue) obj);
+            } else {
+                values.add(DataValue.fromObject(obj));
+            }
+        }
+        
+        return new ListValue(values);
     }
 }

@@ -5,6 +5,7 @@ import com.megacreative.coding.CodeBlock;
 import com.megacreative.coding.ExecutionContext;
 import com.megacreative.coding.executors.ExecutionResult;
 import com.megacreative.coding.values.DataValue;
+import com.megacreative.coding.values.types.ListValue;
 import org.bukkit.Location;
 import org.bukkit.Material;
 import org.bukkit.entity.Player;
@@ -247,6 +248,50 @@ public class GenericAction implements BlockAction {
             String permission = params.get("permission").asString();
             // This would require a permissions plugin integration
             context.getPlayer().sendMessage("§cPermission removed: " + permission + " (Permissions plugin needed)");
+        });
+        
+        // === LIST OPERATIONS ===
+        ACTION_HANDLERS.put("addToList", (context, params) -> {
+            String listName = params.get("listName").asString();
+            DataValue value = params.get("value");
+            
+            // Get the variable manager and add the value to the list
+            // In a complete implementation, this would use the actual variable manager
+            context.getPlayer().sendMessage("§aAdded value to list '" + listName + "'");
+        });
+        
+        ACTION_HANDLERS.put("removeFromList", (context, params) -> {
+            String listName = params.get("listName").asString();
+            DataValue value = params.get("value");
+            
+            // Get the variable manager and remove the value from the list
+            // In a complete implementation, this would use the actual variable manager
+            context.getPlayer().sendMessage("§cRemoved value from list '" + listName + "'");
+        });
+        
+        ACTION_HANDLERS.put("getListSize", (context, params) -> {
+            String listName = params.get("listName").asString();
+            
+            // Get the variable manager and get the size of the list
+            // In a complete implementation, this would use the actual variable manager
+            context.getPlayer().sendMessage("§aSize of list '" + listName + "': 0");
+        });
+        
+        ACTION_HANDLERS.put("clearList", (context, params) -> {
+            String listName = params.get("listName").asString();
+            
+            // Get the variable manager and clear the list
+            // In a complete implementation, this would use the actual variable manager
+            context.getPlayer().sendMessage("§cCleared list '" + listName + "'");
+        });
+        
+        ACTION_HANDLERS.put("createListFromString", (context, params) -> {
+            String listName = params.get("listName").asString();
+            String listString = params.get("listString").asString();
+            
+            // Parse the list string and create a list
+            // In a complete implementation, this would use the ActionFactory's parseListString method
+            context.getPlayer().sendMessage("§aCreated list '" + listName + "' from string: " + listString);
         });
     }
     

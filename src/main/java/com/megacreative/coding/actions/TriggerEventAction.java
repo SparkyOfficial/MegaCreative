@@ -5,15 +5,16 @@ import com.megacreative.coding.CodeBlock;
 import com.megacreative.coding.ExecutionContext;
 import com.megacreative.coding.ParameterResolver;
 import com.megacreative.coding.events.CustomEventManager;
+import com.megacreative.coding.executors.ExecutionResult;
 import com.megacreative.coding.values.DataValue;
-import com.megacreative.coding.variables.VariableManager;
+import com.megacreative.coding.values.types.ListValue;
 import org.bukkit.entity.Player;
 
 import java.util.HashMap;
 import java.util.Map;
 
 /**
- * Action that triggers a custom event with data
+ * Action that triggers a custom event with specified data
  */
 public class TriggerEventAction implements BlockAction {
     
@@ -24,10 +25,11 @@ public class TriggerEventAction implements BlockAction {
     }
     
     @Override
-    public void execute(ExecutionContext context) {
+    public ExecutionResult execute(CodeBlock block, ExecutionContext context) {
         Player player = context.getPlayer();
-        CodeBlock block = context.getCurrentBlock();
-        if (player == null || block == null) return;
+        if (player == null) {
+            return ExecutionResult.error("No player available");
+        }
         
         ParameterResolver resolver = new ParameterResolver(context);
         
@@ -35,43 +37,44 @@ public class TriggerEventAction implements BlockAction {
             // Get event name from parameters
             DataValue rawEventName = block.getParameter("eventName");
             if (rawEventName == null) {
-                player.sendMessage("§cEvent name is required");
-                return;
+                return ExecutionResult.error("Event name is required");
             }
             
             String eventName = resolver.resolve(context, rawEventName).asString();
             if (eventName == null || eventName.trim().isEmpty()) {
-                player.sendMessage("§cInvalid event name");
-                return;
+                return ExecutionResult.error("Invalid event name");
             }
             
-            // Collect event data from parameters that start with "data_"
+            // Prepare event data from parameters
             Map<String, DataValue> eventData = new HashMap<>();
             
-            // Get all block parameters
-            Map<String, DataValue> allParams = block.getParameters();
-            if (allParams != null) {
-                for (Map.Entry<String, DataValue> entry : allParams.entrySet()) {
-                    String paramName = entry.getKey();
-                    if (paramName.startsWith("data_")) {
-                        String dataFieldName = paramName.substring(5); // Remove "data_" prefix
-                        DataValue resolvedValue = resolver.resolve(context, entry.getValue());
-                        eventData.put(dataFieldName, resolvedValue);
+            // Add all parameters except eventName, worldName, and global as event data
+            for (Map.Entry<String, ?> entry : block.getParameters().entrySet()) {
+                String paramName = entry.getKey();
+                if (!"eventName".equals(paramName) && !"worldName".equals(paramName) && !"global".equals(paramName)) {
+                    Object paramValue = entry.getValue();
+                    if (paramValue instanceof DataValue) {
+                        eventData.put(paramName, resolver.resolve(context, (DataValue) paramValue));
+                    } else {
+                        eventData.put(paramName, DataValue.fromObject(paramValue));
                     }
                 }
             }
             
-            // Get world name
+            // Get world name (optional)
             String worldName = player.getWorld().getName();
+            DataValue rawWorld = block.getParameter("worldName");
+            if (rawWorld != null) {
+                worldName = resolver.resolve(context, rawWorld).asString();
+            }
             
             // Trigger the event
             eventManager.triggerEvent(eventName, eventData, player, worldName);
             
-            // Send confirmation to player
-            player.sendMessage("§a✓ Triggered event: " + eventName);
+            return ExecutionResult.success("Event triggered: " + eventName);
             
         } catch (Exception e) {
-            player.sendMessage("§c✗ Failed to trigger event: " + e.getMessage());
+            return ExecutionResult.error("Failed to trigger event: " + e.getMessage());
         }
     }
 }
