@@ -124,73 +124,26 @@ public class ConditionSelectionGUI implements GUIManager.ManagedGUIInterface {
         
         player.sendMessage("§eDebug: Available conditions count: " + (availableConditions != null ? availableConditions.size() : "null"));
         
-        // If we don't have conditions, try to get them from the block config
+        // Simple fallback to default conditions if none found
         if (availableConditions == null || availableConditions.isEmpty()) {
             player.sendMessage("§cОшибка: Нет доступных условий для блока " + blockMaterial.name());
             
-            // Try to get block config by material
-            var blockConfig = blockConfigService.getBlockConfigByMaterial(blockMaterial);
-            if (blockConfig != null) {
-                player.sendMessage("§eDebug: Block config found: " + blockConfig.getId() + " - " + blockConfig.getDisplayName());
-                
-                // Get conditions directly from the block configuration
-                availableConditions = blockConfig.getActions();
-                player.sendMessage("§aDebug: Found conditions from block config: " + (availableConditions != null ? availableConditions.size() : 0));
-                
-                // If still no conditions, try to get default action
-                if (availableConditions == null || availableConditions.isEmpty()) {
-                    String defaultAction = blockConfig.getDefaultAction();
-                    if (defaultAction != null && !defaultAction.isEmpty()) {
-                        availableConditions = new ArrayList<>();
-                        availableConditions.add(defaultAction);
-                        player.sendMessage("§aDebug: Using default action: " + defaultAction);
-                    }
-                }
-            } else {
-                player.sendMessage("§eDebug: No block config found for material");
-            }
+            // Use appropriate default conditions based on block type
+            availableConditions = new ArrayList<>();
             
-            // If we still don't have conditions, use appropriate default conditions based on block type
-            if (availableConditions == null || availableConditions.isEmpty()) {
-                availableConditions = new ArrayList<>();
-                
-                // Get the block config to determine appropriate default conditions
-                var defaultBlockConfig = blockConfigService.getBlockConfigByMaterial(blockMaterial);
-                if (defaultBlockConfig != null) {
-                    String blockType = defaultBlockConfig.getType();
-                    
-                    // Add appropriate default conditions based on block type
-                    switch (blockType) {
-                        case "CONDITION":
-                            // For variable condition blocks (OBSIDIAN), add variable-related default conditions
-                            if (blockMaterial == Material.OBSIDIAN) {
-                                availableConditions.add("ifVarEquals");
-                                availableConditions.add("ifVarGreater");
-                                availableConditions.add("ifVarLess");
-                                player.sendMessage("§6Using variable condition defaults as fallback");
-                            } 
-                            // For other condition blocks, use general defaults
-                            else {
-                                availableConditions.add("hasItem");
-                                availableConditions.add("isOp");
-                                availableConditions.add("hasPermission");
-                                player.sendMessage("§6Using general condition defaults as fallback");
-                            }
-                            break;
-                        default:
-                            availableConditions.add("hasItem");
-                            availableConditions.add("isOp");
-                            availableConditions.add("hasPermission");
-                            player.sendMessage("§6Using general condition defaults as fallback");
-                            break;
-                    }
-                } else {
-                    // Fallback to general defaults
-                    availableConditions.add("hasItem");
-                    availableConditions.add("isOp");
-                    availableConditions.add("hasPermission");
-                    player.sendMessage("§6Using general condition defaults as fallback");
-                }
+            // Add appropriate default conditions based on block material
+            if (blockMaterial == Material.OBSIDIAN) {
+                // For variable condition blocks (OBSIDIAN), add variable-related default conditions
+                availableConditions.add("ifVarEquals");
+                availableConditions.add("ifVarGreater");
+                availableConditions.add("ifVarLess");
+                player.sendMessage("§6Using variable condition defaults as fallback");
+            } else {
+                // For other condition blocks, use general defaults
+                availableConditions.add("hasItem");
+                availableConditions.add("isOp");
+                availableConditions.add("hasPermission");
+                player.sendMessage("§6Using general condition defaults as fallback");
             }
         }
         

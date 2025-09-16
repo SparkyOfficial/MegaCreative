@@ -124,45 +124,21 @@ public class EntityConditionBlockGUI implements GUIManager.ManagedGUIInterface {
         
         player.sendMessage("§eDebug: Available entity condition actions count: " + (availableActions != null ? availableActions.size() : "null"));
         
-        // If we don't have actions, try to get them from the block config
+        // Simple fallback to default entity condition actions if none found
         if (availableActions == null || availableActions.isEmpty()) {
             player.sendMessage("§cОшибка: Нет доступных условий для блока сущности " + blockMaterial.name());
             
-            // Try to get block config by material
-            var blockConfig = blockConfigService.getBlockConfigByMaterial(blockMaterial);
-            if (blockConfig != null) {
-                player.sendMessage("§eDebug: Block config found: " + blockConfig.getId() + " - " + blockConfig.getDisplayName());
-                
-                // Get actions directly from the block configuration
-                availableActions = blockConfig.getActions();
-                player.sendMessage("§aDebug: Found actions from block config: " + (availableActions != null ? availableActions.size() : 0));
-                
-                // If still no actions, try to get default action
-                if (availableActions == null || availableActions.isEmpty()) {
-                    String defaultAction = blockConfig.getDefaultAction();
-                    if (defaultAction != null && !defaultAction.isEmpty()) {
-                        availableActions = new ArrayList<>();
-                        availableActions.add(defaultAction);
-                        player.sendMessage("§aDebug: Using default action: " + defaultAction);
-                    }
-                }
-            } else {
-                player.sendMessage("§eDebug: No block config found for material");
-            }
-            
-            // If we still don't have actions, use appropriate default entity condition actions
-            if (availableActions == null || availableActions.isEmpty()) {
-                availableActions = new ArrayList<>();
-                availableActions.add("isEntityAlive");
-                availableActions.add("isEntityOnFire");
-                availableActions.add("isEntityInWater");
-                availableActions.add("isEntityInLava");
-                availableActions.add("isEntitySneaking");
-                availableActions.add("isEntitySprinting");
-                availableActions.add("isEntityFlying");
-                availableActions.add("hasEntityPassenger");
-                player.sendMessage("§6Using entity condition default actions as fallback");
-            }
+            // Use default entity condition actions as fallback
+            availableActions = new ArrayList<>();
+            availableActions.add("isEntityAlive");
+            availableActions.add("isEntityOnFire");
+            availableActions.add("isEntityInWater");
+            availableActions.add("isEntityInLava");
+            availableActions.add("isEntitySneaking");
+            availableActions.add("isEntitySprinting");
+            availableActions.add("isEntityFlying");
+            availableActions.add("hasEntityPassenger");
+            player.sendMessage("§6Using entity condition default actions as fallback");
         }
         
         // 🎆 ENHANCED: Group entity condition actions by category for better organization

@@ -174,88 +174,33 @@ public class ActionSelectionGUI implements GUIManager.ManagedGUIInterface {
         
         player.sendMessage("§eDebug: Available actions count: " + (availableActions != null ? availableActions.size() : "null"));
         
-        // If we don't have actions, try to get them from the block config
+        // Simple fallback to default actions if none found
         if (availableActions == null || availableActions.isEmpty()) {
             player.sendMessage("§cОшибка: Нет доступных действий для блока " + blockMaterial.name());
             
-            // Try to get block config by material
-            var blockConfig = blockConfigService.getBlockConfigByMaterial(blockMaterial);
-            if (blockConfig != null) {
-                player.sendMessage("§eDebug: Block config found: " + blockConfig.getId() + " - " + blockConfig.getDisplayName());
-                
-                // Get actions directly from the block configuration
-                availableActions = blockConfig.getActions();
-                player.sendMessage("§aDebug: Found actions from block config: " + (availableActions != null ? availableActions.size() : 0));
-                
-                // If still no actions, try to get default action
-                if (availableActions == null || availableActions.isEmpty()) {
-                    String defaultAction = blockConfig.getDefaultAction();
-                    if (defaultAction != null && !defaultAction.isEmpty()) {
-                        availableActions = new ArrayList<>();
-                        availableActions.add(defaultAction);
-                        player.sendMessage("§aDebug: Using default action: " + defaultAction);
-                    }
-                }
-            } else {
-                player.sendMessage("§eDebug: No block config found for material");
-            }
+            // Use appropriate default actions based on block type
+            availableActions = new ArrayList<>();
             
-            // If we still don't have actions, use appropriate default actions based on block type
-            if (availableActions == null || availableActions.isEmpty()) {
-                availableActions = new ArrayList<>();
-                
-                // Get the block config to determine appropriate default actions
-                var defaultBlockConfig = blockConfigService.getBlockConfigByMaterial(blockMaterial);
-                if (defaultBlockConfig != null) {
-                    String blockType = defaultBlockConfig.getType();
-                    
-                    // Add appropriate default actions based on block type
-                    switch (blockType) {
-                        case "ACTION":
-                            // For variable blocks (IRON_BLOCK), add variable-related default actions
-                            if (blockMaterial == Material.IRON_BLOCK) {
-                                availableActions.add("setVar");
-                                availableActions.add("getVar");
-                                availableActions.add("addVar");
-                                availableActions.add("subVar");
-                                player.sendMessage("§6Using variable default actions as fallback");
-                            } 
-                            // For gaming action blocks (NETHERITE_BLOCK), add gaming default actions
-                            else if (blockMaterial == Material.NETHERITE_BLOCK) {
-                                availableActions.add("setTime");
-                                availableActions.add("setWeather");
-                                availableActions.add("setBlock");
-                                player.sendMessage("§6Using gaming default actions as fallback");
-                            }
-                            // For other action blocks, use general defaults
-                            else {
-                                availableActions.add("sendMessage");
-                                availableActions.add("teleport");
-                                availableActions.add("giveItem");
-                                player.sendMessage("§6Using general default actions as fallback");
-                            }
-                            break;
-                        case "CONDITION":
-                            // For condition blocks, add appropriate default conditions
-                            availableActions.add("hasItem");
-                            availableActions.add("isOp");
-                            availableActions.add("compareVariable");
-                            player.sendMessage("§6Using condition default actions as fallback");
-                            break;
-                        default:
-                            availableActions.add("sendMessage");
-                            availableActions.add("teleport");
-                            availableActions.add("giveItem");
-                            player.sendMessage("§6Using general default actions as fallback");
-                            break;
-                    }
-                } else {
-                    // Fallback to general defaults
-                    availableActions.add("sendMessage");
-                    availableActions.add("teleport");
-                    availableActions.add("giveItem");
-                    player.sendMessage("§6Using general default actions as fallback");
-                }
+            // Add appropriate default actions based on block material
+            if (blockMaterial == Material.IRON_BLOCK) {
+                // For variable blocks (IRON_BLOCK), add variable-related default actions
+                availableActions.add("setVar");
+                availableActions.add("getVar");
+                availableActions.add("addVar");
+                availableActions.add("subVar");
+                player.sendMessage("§6Using variable default actions as fallback");
+            } else if (blockMaterial == Material.NETHERITE_BLOCK) {
+                // For gaming action blocks (NETHERITE_BLOCK), add gaming default actions
+                availableActions.add("setTime");
+                availableActions.add("setWeather");
+                availableActions.add("setBlock");
+                player.sendMessage("§6Using gaming default actions as fallback");
+            } else {
+                // For other action blocks, use general defaults
+                availableActions.add("sendMessage");
+                availableActions.add("teleport");
+                availableActions.add("giveItem");
+                player.sendMessage("§6Using general default actions as fallback");
             }
         }
         

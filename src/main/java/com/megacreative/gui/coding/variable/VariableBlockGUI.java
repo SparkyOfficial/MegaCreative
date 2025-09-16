@@ -124,47 +124,23 @@ public class VariableBlockGUI implements GUIManager.ManagedGUIInterface {
         
         player.sendMessage("§eDebug: Available variable actions count: " + (availableActions != null ? availableActions.size() : "null"));
         
-        // If we don't have actions, try to get them from the block config
+        // Simple fallback to default variable actions if none found
         if (availableActions == null || availableActions.isEmpty()) {
             player.sendMessage("§cОшибка: Нет доступных действий для блока переменной " + blockMaterial.name());
             
-            // Try to get block config by material
-            var blockConfig = blockConfigService.getBlockConfigByMaterial(blockMaterial);
-            if (blockConfig != null) {
-                player.sendMessage("§eDebug: Block config found: " + blockConfig.getId() + " - " + blockConfig.getDisplayName());
-                
-                // Get actions directly from the block configuration
-                availableActions = blockConfig.getActions();
-                player.sendMessage("§aDebug: Found actions from block config: " + (availableActions != null ? availableActions.size() : 0));
-                
-                // If still no actions, try to get default action
-                if (availableActions == null || availableActions.isEmpty()) {
-                    String defaultAction = blockConfig.getDefaultAction();
-                    if (defaultAction != null && !defaultAction.isEmpty()) {
-                        availableActions = new ArrayList<>();
-                        availableActions.add(defaultAction);
-                        player.sendMessage("§aDebug: Using default action: " + defaultAction);
-                    }
-                }
-            } else {
-                player.sendMessage("§eDebug: No block config found for material");
-            }
-            
-            // If we still don't have actions, use appropriate default variable actions
-            if (availableActions == null || availableActions.isEmpty()) {
-                availableActions = new ArrayList<>();
-                availableActions.add("setVar");
-                availableActions.add("getVar");
-                availableActions.add("addVar");
-                availableActions.add("subVar");
-                availableActions.add("mulVar");
-                availableActions.add("divVar");
-                availableActions.add("setGlobalVar");
-                availableActions.add("getGlobalVar");
-                availableActions.add("setServerVar");
-                availableActions.add("getServerVar");
-                player.sendMessage("§6Using variable default actions as fallback");
-            }
+            // Use default variable actions as fallback
+            availableActions = new ArrayList<>();
+            availableActions.add("setVar");
+            availableActions.add("getVar");
+            availableActions.add("addVar");
+            availableActions.add("subVar");
+            availableActions.add("mulVar");
+            availableActions.add("divVar");
+            availableActions.add("setGlobalVar");
+            availableActions.add("getGlobalVar");
+            availableActions.add("setServerVar");
+            availableActions.add("getServerVar");
+            player.sendMessage("§6Using variable default actions as fallback");
         }
         
         // 🎆 ENHANCED: Group variable actions by category for better organization

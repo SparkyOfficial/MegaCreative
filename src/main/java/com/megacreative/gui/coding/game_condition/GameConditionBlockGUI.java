@@ -124,44 +124,20 @@ public class GameConditionBlockGUI implements GUIManager.ManagedGUIInterface {
         
         player.sendMessage("§eDebug: Available game conditions count: " + (availableConditions != null ? availableConditions.size() : "null"));
         
-        // If we don't have conditions, try to get them from the block config
+        // Simple fallback to default game conditions if none found
         if (availableConditions == null || availableConditions.isEmpty()) {
             player.sendMessage("§cОшибка: Нет доступных условий для блока игровых условий " + blockMaterial.name());
             
-            // Try to get block config by material
-            var blockConfig = blockConfigService.getBlockConfigByMaterial(blockMaterial);
-            if (blockConfig != null) {
-                player.sendMessage("§eDebug: Block config found: " + blockConfig.getId() + " - " + blockConfig.getDisplayName());
-                
-                // Get conditions directly from the block configuration
-                availableConditions = blockConfig.getActions();
-                player.sendMessage("§aDebug: Found conditions from block config: " + (availableConditions != null ? availableConditions.size() : 0));
-                
-                // If still no conditions, try to get default action
-                if (availableConditions == null || availableConditions.isEmpty()) {
-                    String defaultAction = blockConfig.getDefaultAction();
-                    if (defaultAction != null && !defaultAction.isEmpty()) {
-                        availableConditions = new ArrayList<>();
-                        availableConditions.add(defaultAction);
-                        player.sendMessage("§aDebug: Using default action: " + defaultAction);
-                    }
-                }
-            } else {
-                player.sendMessage("§eDebug: No block config found for material");
-            }
-            
-            // If we still don't have conditions, use appropriate default game conditions
-            if (availableConditions == null || availableConditions.isEmpty()) {
-                availableConditions = new ArrayList<>();
-                availableConditions.add("isOp");
-                availableConditions.add("playerGameMode");
-                availableConditions.add("playerHealth");
-                availableConditions.add("hasItem");
-                availableConditions.add("hasPermission");
-                availableConditions.add("isInWorld");
-                availableConditions.add("worldTime");
-                player.sendMessage("§6Using game condition defaults as fallback");
-            }
+            // Use default game conditions as fallback
+            availableConditions = new ArrayList<>();
+            availableConditions.add("isOp");
+            availableConditions.add("playerGameMode");
+            availableConditions.add("playerHealth");
+            availableConditions.add("hasItem");
+            availableConditions.add("hasPermission");
+            availableConditions.add("isInWorld");
+            availableConditions.add("worldTime");
+            player.sendMessage("§6Using game condition defaults as fallback");
         }
         
         // 🎆 ENHANCED: Group game conditions by category for better organization
