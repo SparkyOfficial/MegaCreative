@@ -1194,6 +1194,316 @@ action_configurations:
         default_value: "0"
         hint: "Относительная координата Z от игрока"
 
+  # Конфигурация для события onJoin
+  onJoin:
+    slots:
+      0:
+        name: "§aСообщение при входе"
+        description: "§7Положите бумагу с сообщением при входе игрока (оставьте пустым для отключения)"
+        placeholder_item: "PAPER"
+        slot_name: "join_message"
+        validation: "length:0-200"
+        hint: "Сообщение при входе игрока (до 200 символов)"
+
+  # Конфигурация для события onLeave
+  onLeave:
+    slots:
+      0:
+        name: "§aСообщение при выходе"
+        description: "§7Положите бумагу с сообщением при выходе игрока (оставьте пустым для отключения)"
+        placeholder_item: "PAPER"
+        slot_name: "leave_message"
+        validation: "length:0-200"
+        hint: "Сообщение при выходе игрока (до 200 символов)"
+
+  # Конфигурация для события onChat
+  onChat:
+    slots:
+      0:
+        name: "§aФормат чата"
+        description: "§7Положите бумагу с форматом чата (оставьте пустым для стандартного)"
+        placeholder_item: "PAPER"
+        slot_name: "chat_format"
+        validation: "length:0-200"
+        hint: "Формат чата (до 200 символов)"
+
+  # Конфигурация для события onBlockBreak
+  onBlockBreak:
+    slots:
+      0:
+        name: "§aТип блока"
+        description: "§7Положите предмет блока для отслеживания (оставьте пустым для всех блоков)"
+        placeholder_item: "STONE"
+        slot_name: "block_type"
+        hint: "Тип блока для отслеживания"
+
+  # Конфигурация для события onBlockPlace
+  onBlockPlace:
+    slots:
+      0:
+        name: "§aТип блока"
+        description: "§7Положите предмет блока для отслеживания (оставьте пустым для всех блоков)"
+        placeholder_item: "STONE"
+        slot_name: "block_type"
+        hint: "Тип блока для отслеживания"
+
+  # Конфигурация для события onPlayerMove
+  onPlayerMove:
+    slots:
+      0:
+        name: "§aРасстояние"
+        description: "§7Положите бумагу с расстоянием для срабатывания (по умолчанию 1)"
+        placeholder_item: "PAPER"
+        slot_name: "distance"
+        validation: "number_range:0.1-100"
+        default_value: "1"
+        hint: "Расстояние для срабатывания события"
+
+  # Конфигурация для события onPlayerDeath
+  onPlayerDeath:
+    slots:
+      0:
+        name: "§aСообщение о смерти"
+        description: "§7Положите бумагу с сообщением о смерти (оставьте пустым для стандартного)"
+        placeholder_item: "PAPER"
+        slot_name: "death_message"
+        validation: "length:0-200"
+        hint: "Сообщение о смерти игрока (до 200 символов)"
+
+  # Конфигурация для события onCommand
+  onCommand:
+    slots:
+      0:
+        name: "§aКоманда"
+        description: "§7Положите бумагу с названием команды"
+        placeholder_item: "PAPER"
+        slot_name: "command"
+        required: true
+        validation: "length:1-50"
+        hint: "Название команды (до 50 символов)"
+
+  # Конфигурация для события onTick
+  onTick:
+    slots:
+      0:
+        name: "§aИнтервал"
+        description: "§7Положите бумагу с интервалом в тиках (по умолчанию 20)"
+        placeholder_item: "PAPER"
+        slot_name: "interval"
+        validation: "number_range:1-1200"
+        default_value: "20"
+        hint: "Интервал в тиках (1-1200)"
+
+  # Конфигурация для действия teleport
+  teleport:
+    slots:
+      0:
+        name: "§aКоордината X"
+        description: "§7Положите бумагу с координатой X"
+        placeholder_item: "PAPER"
+        slot_name: "x"
+        required: true
+        validation: "number"
+        hint: "Координата X для телепортации"
+      1:
+        name: "§bКоордината Y"
+        description: "§7Положите бумагу с координатой Y"
+        placeholder_item: "PAPER"
+        slot_name: "y"
+        required: true
+        validation: "number"
+        hint: "Координата Y для телепортации"
+      2:
+        name: "§cКоордината Z"
+        description: "§7Положите бумагу с координатой Z"
+        placeholder_item: "PAPER"
+        slot_name: "z"
+        required: true
+        validation: "number"
+        hint: "Координата Z для телепортации"
+      3:
+        name: "§dМир"
+        description: "§7Положите бумагу с названием мира (оставьте пустым для текущего)"
+        placeholder_item: "PAPER"
+        slot_name: "world"
+        validation: "length:0-50"
+        hint: "Название мира для телепортации"
+
+  # Конфигурация для действия giveItems
+  giveItems:
+    item_groups:
+      items_to_give:
+        slots: [0, 1, 2, 3, 4, 5, 6, 7, 8]
+        name: "§aПредметы для выдачи"
+        description: "§7Положите сюда все предметы, которые нужно выдать игроку"
+        placeholder_item: "CHEST"
+
+  # Конфигурация для действия spawnMob
+  spawnMob:
+    slots:
+      0:
+        name: "§aТип существа"
+        description: "§7Положите предмет, символизирующий существо для спавна"
+        placeholder_item: "ZOMBIE_HEAD"
+        slot_name: "mob_type"
+        required: true
+        hint: "Тип существа для спавна"
+      1:
+        name: "§bКоличество"
+        description: "§7Положите бумагу с количеством существ (по умолчанию 1)"
+        placeholder_item: "PAPER"
+        slot_name: "count"
+        validation: "number_range:1-100"
+        default_value: "1"
+        hint: "Количество существ для спавна"
+      2:
+        name: "§cОтносительная координата X"
+        description: "§7Положите бумагу с относительной координатой X (по умолчанию 0)"
+        placeholder_item: "PAPER"
+        slot_name: "relative_x"
+        validation: "number"
+        default_value: "0"
+        hint: "Относительная координата X от игрока"
+      3:
+        name: "§dОтносительная координата Y"
+        description: "§7Положите бумагу с относительной координатой Y (по умолчанию 0)"
+        placeholder_item: "PAPER"
+        slot_name: "relative_y"
+        validation: "number"
+        default_value: "0"
+        hint: "Относительная координата Y от игрока"
+      4:
+        name: "§eОтносительная координата Z"
+        description: "§7Положите бумагу с относительной координатой Z (по умолчанию 0)"
+        placeholder_item: "PAPER"
+        slot_name: "relative_z"
+        validation: "number"
+        default_value: "0"
+        hint: "Относительная координата Z от игрока"
+
+  # Конфигурация для действия healPlayer
+  healPlayer:
+    slots:
+      0:
+        name: "§aКоличество здоровья"
+        description: "§7Положите бумагу с количеством здоровья для восстановления (оставьте пустым для полного лечения)"
+        placeholder_item: "PAPER"
+        slot_name: "heal_amount"
+        validation: "number_range:0.5-20"
+        hint: "Количество здоровья для восстановления"
+
+  # Конфигурация для действия setGameMode
+  setGameMode:
+    slots:
+      0:
+        name: "§aРежим игры"
+        description: "§7Положите предмет, символизирующий режим игры (GRASS_BLOCK = SURVIVAL, BEDROCK = CREATIVE, SIGN = ADVENTURE, BARRIER = SPECTATOR)"
+        placeholder_item: "GRASS_BLOCK"
+        slot_name: "game_mode"
+        required: true
+        validation: "enum:SURVIVAL,CREATIVE,ADVENTURE,SPECTATOR"
+        hint: "Режим игры для установки"
+
+  # Конфигурация для условия isOp
+  isOp:
+    slots:
+      0:
+        name: "§aСтатус оператора"
+        description: "§7Положите бумагу с 'true' или 'false'"
+        placeholder_item: "PAPER"
+        slot_name: "op_status"
+        validation: "enum:true,false"
+        default_value: "true"
+        hint: "true - игрок является оператором, false - игрок не является оператором"
+
+  # Конфигурация для действия repeat
+  repeat:
+    slots:
+      0:
+        name: "§aКоличество повторений"
+        description: "§7Положите бумагу с количеством повторений (-1 для бесконечного)"
+        placeholder_item: "PAPER"
+        slot_name: "count"
+        validation: "number"
+        default_value: "-1"
+        hint: "Количество повторений (-1 для бесконечного)"
+
+  # Конфигурация для действия repeatTrigger
+  repeatTrigger:
+    slots:
+      0:
+        name: "§aКоличество повторений"
+        description: "§7Положите бумагу с количеством повторений (-1 для бесконечного)"
+        placeholder_item: "PAPER"
+        slot_name: "count"
+        validation: "number"
+        default_value: "-1"
+        hint: "Количество повторений (-1 для бесконечного)"
+      1:
+        name: "§bИнтервал"
+        description: "§7Положите бумагу с интервалом в тиках (по умолчанию 20)"
+        placeholder_item: "PAPER"
+        slot_name: "interval"
+        validation: "number_range:1-1200"
+        default_value: "20"
+        hint: "Интервал между повторениями в тиках"
+
+  # Конфигурация для действия callFunction
+  callFunction:
+    slots:
+      0:
+        name: "§aИмя функции"
+        description: "§7Положите бумагу с названием функции для вызова"
+        placeholder_item: "PAPER"
+        slot_name: "function_name"
+        required: true
+        validation: "length:1-50"
+        hint: "Название функции для вызова"
+
+  # Конфигурация для действия saveFunction
+  saveFunction:
+    slots:
+      0:
+        name: "§aИмя функции"
+        description: "§7Положите бумагу с названием функции для сохранения"
+        placeholder_item: "PAPER"
+        slot_name: "function_name"
+        required: true
+        validation: "length:1-50"
+        hint: "Название функции для сохранения"
+
+  # Конфигурация для действия else
+  else:
+    slots: {}
+
+  # Конфигурация для действия getVar
+  getVar:
+    slots:
+      0:
+        name: "§aИмя переменной"
+        description: "§7Положите бумагу с названием переменной"
+        placeholder_item: "PAPER"
+        slot_name: "name"
+        required: true
+        validation: "length:1-16"
+        hint: "Имя переменной для получения"
+      1:
+        name: "§bЦелевая переменная"
+        description: "§7Положите бумагу с названием целевой переменной"
+        placeholder_item: "PAPER"
+        slot_name: "target"
+        required: true
+        validation: "length:1-16"
+        hint: "Имя целевой переменной"
+
+  # Конфигурация для действия openBracket
+  openBracket:
+    slots: {}
+
+  # Конфигурация для действия closeBracket
+  closeBracket:
+    slots: {}
+
 # Настройки по умолчанию
 defaults:
   max_blocks_per_script: 100
