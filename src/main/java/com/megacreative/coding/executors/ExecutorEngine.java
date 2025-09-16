@@ -268,6 +268,27 @@ public class ExecutorEngine {
                 case "compareVariable":
                     result = executeCompareVariable(block, processedParameters, context);
                     break;
+                case "sendActionBar":
+                    result = executeSendActionBar(processedParameters, context);
+                    break;
+                case "executeAsyncCommand":
+                    result = executeExecuteAsyncCommand(processedParameters, context);
+                    break;
+                case "createScoreboard":
+                    result = executeCreateScoreboard(processedParameters, context);
+                    break;
+                case "setScore":
+                    result = executeSetScore(processedParameters, context);
+                    break;
+                case "incrementScore":
+                    result = executeIncrementScore(processedParameters, context);
+                    break;
+                case "createTeam":
+                    result = executeCreateTeam(processedParameters, context);
+                    break;
+                case "addPlayerToTeam":
+                    result = executeAddPlayerToTeam(processedParameters, context);
+                    break;
                 default:
                     return context.createErrorResult("Unknown action: " + action);
             }
@@ -1603,6 +1624,467 @@ public class ExecutorEngine {
             
         } catch (Exception e) {
             return context.createErrorResult("Failed to send action bar message: " + e.getMessage(), e);
+        }
+    }
+    
+    /**
+     * Executes the executeAsyncCommand action to run a command asynchronously
+     */
+    private ExecutionResult executeExecuteAsyncCommand(Map<String, DataValue> params, ExecutionContext context) {
+        try {
+            // Get the command parameter (required)
+            DataValue commandValue = params.get("command");
+            if (commandValue == null) {
+                return context.createErrorResult("No command specified for executeAsyncCommand action");
+            }
+            
+            String command = commandValue.asString();
+            if (command == null || command.trim().isEmpty()) {
+                return context.createErrorResult("Command cannot be empty");
+            }
+            
+            // Validate command format using regex from config
+            if (!command.matches("^[\\w/][\\w\\s\\-._~:/?#\\[\\]@!$&'()*+,;=]*$")) {
+                return context.createErrorResult("Command format is invalid");
+            }
+            
+            // Resolve placeholders in command
+            command = resolvePlaceholders(command, context);
+            
+            // Get the player (must be final for lambda)
+            final Player player = context.getPlayer();
+            final String finalCommand = command;
+            
+            // Execute command asynchronously
+            plugin.getServer().getScheduler().runTaskAsynchronously(plugin, new Runnable() {
+                @Override
+                public void run() {
+                    try {
+                        boolean success = plugin.getServer().dispatchCommand(player, finalCommand);
+                        if (success) {
+                            player.sendMessage("§aCommand executed successfully: " + finalCommand);
+                        } else {
+                            player.sendMessage("§cCommand execution failed: " + finalCommand);
+                        }
+                    } catch (Exception e) {
+                        player.sendMessage("§cError executing command: " + e.getMessage());
+                        plugin.getLogger().warning("Async command execution failed: " + e.getMessage());
+                    }
+                }
+            });
+            
+            // Visual effect
+            player.spawnParticle(Particle.ENCHANTMENT_TABLE, player.getLocation().add(0, 2, 0), 5);
+            player.playSound(player.getLocation(), Sound.BLOCK_NOTE_BLOCK_CHIME, 1.0f, 1.5f);
+            
+            // Create success message
+            return context.createResult(true, "Executing command asynchronously: " + command);
+            
+        } catch (Exception e) {
+            return context.createErrorResult("Failed to execute async command: " + e.getMessage(), e);
+        }
+    }
+    
+    /**
+     * Executes the createScoreboard action to create a scoreboard for the player
+     */
+    private ExecutionResult executeCreateScoreboard(Map<String, DataValue> params, ExecutionContext context) {
+        try {
+            // Get the title parameter (required)
+            DataValue titleValue = params.get("title");
+            if (titleValue == null) {
+                return context.createErrorResult("No title specified for createScoreboard action");
+            }
+            
+            String title = titleValue.asString();
+            if (title == null || title.trim().isEmpty()) {
+                return context.createErrorResult("Title cannot be empty");
+            }
+            
+            // Validate title length (1-32 characters as per config)
+            if (title.length() < 1 || title.length() > 32) {
+                return context.createErrorResult("Title must be between 1 and 32 characters. Provided: " + title.length());
+            }
+            
+            // Resolve placeholders in the title
+            title = resolvePlaceholders(title, context);
+            
+            // Get the player
+            Player player = context.getPlayer();
+            
+            // Create scoreboard
+            org.bukkit.scoreboard.ScoreboardManager scoreboardManager = plugin.getServer().getScoreboardManager();
+            if (scoreboardManager == null) {
+                return context.createErrorResult("Scoreboard manager is not available");
+            }
+            
+            org.bukkit.scoreboard.Scoreboard scoreboard = scoreboardManager.getNewScoreboard();
+            org.bukkit.scoreboard.Objective objective = scoreboard.registerNewObjective("megacreative", "dummy", title);
+            objective.setDisplaySlot(org.bukkit.scoreboard.DisplaySlot.SIDEBAR);
+            
+            // Set the scoreboard for the player
+            player.setScoreboard(scoreboard);
+            
+            // Visual effect
+            player.spawnParticle(Particle.VILLAGER_HAPPY, player.getLocation().add(0, 2, 0), 5);
+            player.playSound(player.getLocation(), Sound.BLOCK_NOTE_BLOCK_BELL, 1.0f, 1.5f);
+            
+            // Create success message
+            return context.createResult(true, "Created scoreboard with title: " + title);
+            
+        } catch (Exception e) {
+            return context.createErrorResult("Failed to create scoreboard: " + e.getMessage(), e);
+        }
+    }
+    
+    /**
+     * Executes the setScore action to set a score on the player's scoreboard
+     */
+    private ExecutionResult executeSetScore(Map<String, DataValue> params, ExecutionContext context) {
+        try {
+            // Get the key parameter (required)
+            DataValue keyValue = params.get("key");
+            if (keyValue == null) {
+                return context.createErrorResult("No key specified for setScore action");
+            }
+            
+            String key = keyValue.asString();
+            if (key == null || key.trim().isEmpty()) {
+                return context.createErrorResult("Key cannot be empty");
+            }
+            
+            // Validate key length (1-16 characters as per config)
+            if (key.length() < 1 || key.length() > 16) {
+                return context.createErrorResult("Key must be between 1 and 16 characters. Provided: " + key.length());
+            }
+            
+            // Get the value parameter (required)
+            DataValue valueValue = params.get("value");
+            if (valueValue == null) {
+                return context.createErrorResult("No value specified for setScore action");
+            }
+            
+            String valueStr = valueValue.asString();
+            if (valueStr == null || valueStr.trim().isEmpty()) {
+                return context.createErrorResult("Value cannot be empty");
+            }
+            
+            // Parse the value as an integer
+            int value;
+            try {
+                value = Integer.parseInt(valueStr);
+            } catch (NumberFormatException e) {
+                return context.createErrorResult("Value must be a number. Provided: " + valueStr);
+            }
+            
+            // Get the player
+            Player player = context.getPlayer();
+            
+            // Get the player's scoreboard
+            org.bukkit.scoreboard.Scoreboard scoreboard = player.getScoreboard();
+            if (scoreboard == null) {
+                return context.createErrorResult("Player has no scoreboard");
+            }
+            
+            // Get the objective (assuming the default objective from createScoreboard)
+            org.bukkit.scoreboard.Objective objective = scoreboard.getObjective("megacreative");
+            if (objective == null) {
+                return context.createErrorResult("No scoreboard objective found");
+            }
+            
+            // Set the score
+            org.bukkit.scoreboard.Score score = objective.getScore(key);
+            score.setScore(value);
+            
+            // Visual effect
+            player.spawnParticle(Particle.VILLAGER_HAPPY, player.getLocation().add(0, 2, 0), 3);
+            player.playSound(player.getLocation(), Sound.BLOCK_NOTE_BLOCK_CHIME, 1.0f, 1.5f);
+            
+            // Create success message
+            return context.createResult(true, "Set score '" + key + "' to " + value);
+            
+        } catch (Exception e) {
+            return context.createErrorResult("Failed to set score: " + e.getMessage(), e);
+        }
+    }
+    
+    /**
+     * Executes the incrementScore action to increment a score on the player's scoreboard
+     */
+    private ExecutionResult executeIncrementScore(Map<String, DataValue> params, ExecutionContext context) {
+        try {
+            // Get the key parameter (required)
+            DataValue keyValue = params.get("key");
+            if (keyValue == null) {
+                return context.createErrorResult("No key specified for incrementScore action");
+            }
+            
+            String key = keyValue.asString();
+            if (key == null || key.trim().isEmpty()) {
+                return context.createErrorResult("Key cannot be empty");
+            }
+            
+            // Validate key length (1-16 characters as per config)
+            if (key.length() < 1 || key.length() > 16) {
+                return context.createErrorResult("Key must be between 1 and 16 characters. Provided: " + key.length());
+            }
+            
+            // Get the increment parameter (required)
+            DataValue incrementValue = params.get("increment");
+            if (incrementValue == null) {
+                return context.createErrorResult("No increment value specified for incrementScore action");
+            }
+            
+            String incrementStr = incrementValue.asString();
+            if (incrementStr == null || incrementStr.trim().isEmpty()) {
+                return context.createErrorResult("Increment value cannot be empty");
+            }
+            
+            // Parse the increment as an integer
+            int increment;
+            try {
+                increment = Integer.parseInt(incrementStr);
+            } catch (NumberFormatException e) {
+                return context.createErrorResult("Increment value must be a number. Provided: " + incrementStr);
+            }
+            
+            // Get the player
+            Player player = context.getPlayer();
+            
+            // Get the player's scoreboard
+            org.bukkit.scoreboard.Scoreboard scoreboard = player.getScoreboard();
+            if (scoreboard == null) {
+                return context.createErrorResult("Player has no scoreboard");
+            }
+            
+            // Get the objective (assuming the default objective from createScoreboard)
+            org.bukkit.scoreboard.Objective objective = scoreboard.getObjective("megacreative");
+            if (objective == null) {
+                return context.createErrorResult("No scoreboard objective found");
+            }
+            
+            // Get the current score and increment it
+            org.bukkit.scoreboard.Score score = objective.getScore(key);
+            int currentValue = score.getScore();
+            score.setScore(currentValue + increment);
+            
+            // Visual effect
+            player.spawnParticle(Particle.VILLAGER_HAPPY, player.getLocation().add(0, 2, 0), 3);
+            player.playSound(player.getLocation(), Sound.BLOCK_NOTE_BLOCK_CHIME, 1.0f, 1.5f);
+            
+            // Create success message
+            return context.createResult(true, "Incremented score '" + key + "' by " + increment + " (new value: " + (currentValue + increment) + ")");
+            
+        } catch (Exception e) {
+            return context.createErrorResult("Failed to increment score: " + e.getMessage(), e);
+        }
+    }
+    
+    /**
+     * Executes the createTeam action to create a team on the player's scoreboard
+     */
+    private ExecutionResult executeCreateTeam(Map<String, DataValue> params, ExecutionContext context) {
+        try {
+            // Get the team name parameter (required)
+            DataValue teamNameValue = params.get("teamName");
+            if (teamNameValue == null) {
+                return context.createErrorResult("No team name specified for createTeam action");
+            }
+            
+            String teamName = teamNameValue.asString();
+            if (teamName == null || teamName.trim().isEmpty()) {
+                return context.createErrorResult("Team name cannot be empty");
+            }
+            
+            // Validate team name length (1-16 characters as per config)
+            if (teamName.length() < 1 || teamName.length() > 16) {
+                return context.createErrorResult("Team name must be between 1 and 16 characters. Provided: " + teamName.length());
+            }
+            
+            // Get optional parameters
+            String displayName = "";
+            String prefix = "";
+            String suffix = "";
+            
+            if (params.containsKey("displayName")) {
+                DataValue displayNameValue = params.get("displayName");
+                if (displayNameValue != null) {
+                    displayName = displayNameValue.asString();
+                    if (displayName == null) displayName = "";
+                }
+            }
+            
+            if (params.containsKey("prefix")) {
+                DataValue prefixValue = params.get("prefix");
+                if (prefixValue != null) {
+                    prefix = prefixValue.asString();
+                    if (prefix == null) prefix = "";
+                }
+                // Validate prefix length (0-16 characters as per config)
+                if (prefix.length() > 16) {
+                    prefix = prefix.substring(0, 16);
+                }
+            }
+            
+            if (params.containsKey("suffix")) {
+                DataValue suffixValue = params.get("suffix");
+                if (suffixValue != null) {
+                    suffix = suffixValue.asString();
+                    if (suffix == null) suffix = "";
+                }
+                // Validate suffix length (0-16 characters as per config)
+                if (suffix.length() > 16) {
+                    suffix = suffix.substring(0, 16);
+                }
+            }
+            
+            // Get the player
+            Player player = context.getPlayer();
+            
+            // Get the player's scoreboard
+            org.bukkit.scoreboard.Scoreboard scoreboard = player.getScoreboard();
+            if (scoreboard == null) {
+                return context.createErrorResult("Player has no scoreboard");
+            }
+            
+            // Create or get the team
+            org.bukkit.scoreboard.Team team = scoreboard.getTeam(teamName);
+            if (team == null) {
+                team = scoreboard.registerNewTeam(teamName);
+            }
+            
+            // Set team properties
+            team.setDisplayName(displayName.isEmpty() ? teamName : displayName);
+            team.setPrefix(prefix);
+            team.setSuffix(suffix);
+            
+            // Visual effect
+            player.spawnParticle(Particle.VILLAGER_HAPPY, player.getLocation().add(0, 2, 0), 5);
+            player.playSound(player.getLocation(), Sound.BLOCK_NOTE_BLOCK_BELL, 1.0f, 1.5f);
+            
+            // Create success message
+            return context.createResult(true, "Created team '" + teamName + "' with display name '" + team.getDisplayName() + "'");
+            
+        } catch (Exception e) {
+            return context.createErrorResult("Failed to create team: " + e.getMessage(), e);
+        }
+    }
+    
+    /**
+     * Executes the addPlayerToTeam action to add a player to a team
+     */
+    private ExecutionResult executeAddPlayerToTeam(Map<String, DataValue> params, ExecutionContext context) {
+        try {
+            // Get the team name parameter (required)
+            DataValue teamNameValue = params.get("teamName");
+            if (teamNameValue == null) {
+                return context.createErrorResult("No team name specified for addPlayerToTeam action");
+            }
+            
+            String teamName = teamNameValue.asString();
+            if (teamName == null || teamName.trim().isEmpty()) {
+                return context.createErrorResult("Team name cannot be empty");
+            }
+            
+            // Validate team name length (1-16 characters as per config)
+            if (teamName.length() < 1 || teamName.length() > 16) {
+                return context.createErrorResult("Team name must be between 1 and 16 characters. Provided: " + teamName.length());
+            }
+            
+            // Get the target player parameter (optional, defaults to current player)
+            Player targetPlayer = context.getPlayer();
+            if (params.containsKey("targetPlayer")) {
+                DataValue targetPlayerValue = params.get("targetPlayer");
+                if (targetPlayerValue != null) {
+                    String targetPlayerName = targetPlayerValue.asString();
+                    if (targetPlayerName != null && !targetPlayerName.trim().isEmpty()) {
+                        targetPlayer = plugin.getServer().getPlayer(targetPlayerName);
+                        if (targetPlayer == null) {
+                            return context.createErrorResult("Player not found: " + targetPlayerName);
+                        }
+                    }
+                }
+            }
+            
+            // Get the player
+            Player player = context.getPlayer();
+            
+            // Get the player's scoreboard
+            org.bukkit.scoreboard.Scoreboard scoreboard = player.getScoreboard();
+            if (scoreboard == null) {
+                return context.createErrorResult("Player has no scoreboard");
+            }
+            
+            // Get the team
+            org.bukkit.scoreboard.Team team = scoreboard.getTeam(teamName);
+            if (team == null) {
+                return context.createErrorResult("Team not found: " + teamName);
+            }
+            
+            // Add player to team
+            team.addEntry(targetPlayer.getName());
+            
+            // Visual effect
+            player.spawnParticle(Particle.VILLAGER_HAPPY, player.getLocation().add(0, 2, 0), 5);
+            player.playSound(player.getLocation(), Sound.BLOCK_NOTE_BLOCK_BELL, 1.0f, 1.5f);
+            
+            // Create success message
+            String message = targetPlayer.equals(player) ? 
+                "Added you to team '" + teamName + "'" : 
+                "Added player '" + targetPlayer.getName() + "' to team '" + teamName + "'";
+            return context.createResult(true, message);
+            
+        } catch (Exception e) {
+            return context.createErrorResult("Failed to add player to team: " + e.getMessage(), e);
+        }
+    }
+    
+    /**
+     * Executes the saveLocation action to save a player's current location
+     */
+    private ExecutionResult executeSaveLocation(Map<String, DataValue> params, ExecutionContext context) {
+        try {
+            // Get the location name parameter (required)
+            DataValue locationNameValue = params.get("locationName");
+            if (locationNameValue == null) {
+                return context.createErrorResult("No location name specified for saveLocation action");
+            }
+            
+            String locationName = locationNameValue.asString();
+            if (locationName == null || locationName.trim().isEmpty()) {
+                return context.createErrorResult("Location name cannot be empty");
+            }
+            
+            // Validate location name length (1-32 characters as per config)
+            if (locationName.length() < 1 || locationName.length() > 32) {
+                return context.createErrorResult("Location name must be between 1 and 32 characters. Provided: " + locationName.length());
+            }
+            
+            // Get the player
+            Player player = context.getPlayer();
+            Location location = player.getLocation();
+            
+            // Create location string representation
+            String locationString = String.format("%s:%.2f,%.2f,%.2f:%.2f,%.2f", 
+                player.getWorld().getName(),
+                location.getX(), location.getY(), location.getZ(),
+                location.getYaw(), location.getPitch());
+            
+            // Save location to variable manager
+            String scriptId = context.getScript() != null ? 
+                context.getScript().getId().toString() : "global";
+            variableManager.setLocalVariable(scriptId, "location_" + locationName, DataValue.of(locationString));
+            
+            // Visual effect
+            player.spawnParticle(Particle.PORTAL, location.add(0, 2, 0), 10);
+            player.playSound(location, Sound.ENTITY_ENDERMAN_TELEPORT, 1.0f, 1.0f);
+            
+            // Create success message
+            return context.createResult(true, "Saved location '" + locationName + "' at " + 
+                String.format("%.2f, %.2f, %.2f", location.getX(), location.getY(), location.getZ()));
+            
+        } catch (Exception e) {
+            return context.createErrorResult("Failed to save location: " + e.getMessage(), e);
         }
     }
     
