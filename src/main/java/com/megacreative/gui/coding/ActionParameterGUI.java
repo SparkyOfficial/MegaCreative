@@ -287,7 +287,7 @@ public class ActionParameterGUI implements GUIManager.ManagedGUIInterface {
      *
      * Sets up item groups based on configuration
      *
-     * Richtet Artikelgruppen basierend auf der Konfiguration ein
+     * Richtet Artikelgruppen basierend auf der Konфигuration ein
      */
     private void setupItemGroups(org.bukkit.configuration.ConfigurationSection itemGroupsConfig) {
         for (String groupKey : itemGroupsConfig.getKeys(false)) {
@@ -399,8 +399,11 @@ public class ActionParameterGUI implements GUIManager.ManagedGUIInterface {
         
         // 🎆 ENHANCED: Check validation status before saving
         boolean hasErrors = false;
+        boolean hasWarnings = false;
         List<String> errorMessages = new ArrayList<>();
+        List<String> warningMessages = new ArrayList<>();
         
+        // Check for validation errors
         for (Map.Entry<Integer, String> entry : slotValidationErrors.entrySet()) {
             if (entry.getValue() != null) {
                 hasErrors = true;
@@ -408,12 +411,30 @@ public class ActionParameterGUI implements GUIManager.ManagedGUIInterface {
             }
         }
         
+        // Check for required slots that are empty
+        for (int slot = 0; slot < inventory.getSize(); slot++) {
+            if (isSlotRequired(slot)) {
+                ItemStack item = inventory.getItem(slot);
+                if (item == null || item.getType().isAir() || isPlaceholderItem(item)) {
+                    hasWarnings = true;
+                    warningMessages.add("Слот " + slot + ": Обязательный параметр не заполнен");
+                }
+            }
+        }
+        
+        // Provide feedback to player
         if (hasErrors && !errorMessages.isEmpty()) {
             player.sendMessage("§c⚠ Обнаружены ошибки в конфигурации:");
             for (String error : errorMessages) {
                 player.sendMessage("§c  • " + error);
             }
-            player.sendMessage("§eКонфигурация сохранена, но может работать некорректно.");
+        }
+        
+        if (hasWarnings && !warningMessages.isEmpty()) {
+            player.sendMessage("§e⚠ Обнаружены предупреждения:");
+            for (String warning : warningMessages) {
+                player.sendMessage("§e  • " + warning);
+            }
         }
         
         // Clear existing configuration
@@ -436,13 +457,21 @@ public class ActionParameterGUI implements GUIManager.ManagedGUIInterface {
         }
         
         if (savedItems > 0) {
-            if (validItems == savedItems) {
+            if (validItems == savedItems && !hasErrors) {
                 player.sendMessage("§a✓ Сохранено " + savedItems + " параметров для действия " + actionId);
+                player.playSound(player.getLocation(), org.bukkit.Sound.ENTITY_EXPERIENCE_ORB_PICKUP, 1.0f, 1.2f);
+                player.spawnParticle(org.bukkit.Particle.VILLAGER_HAPPY, player.getLocation().add(0, 1, 0), 15, 0.5, 0.5, 0.5, 1);
+            } else if (hasErrors) {
+                player.sendMessage("§e⚠ Сохранено " + savedItems + " параметров (" + validItems + " корректных) для " + actionId);
+                player.sendMessage("§cНекоторые параметры содержат ошибки и могут работать некорректно!");
+                player.playSound(player.getLocation(), org.bukkit.Sound.BLOCK_NOTE_BLOCK_BASS, 1.0f, 0.8f);
             } else {
                 player.sendMessage("§e⚠ Сохранено " + savedItems + " параметров (" + validItems + " корректных) для " + actionId);
+                player.playSound(player.getLocation(), org.bukkit.Sound.BLOCK_NOTE_BLOCK_PLING, 1.0f, 1.0f);
             }
         } else {
             player.sendMessage("§eℹ Конфигурация очищена для действия " + actionId);
+            player.playSound(player.getLocation(), org.bukkit.Sound.BLOCK_NOTE_BLOCK_CHIME, 1.0f, 1.0f);
         }
         
         // Reset unsaved changes flag
@@ -528,14 +557,26 @@ public class ActionParameterGUI implements GUIManager.ManagedGUIInterface {
         
         String itemName = item.getItemMeta().getDisplayName();
         
-        // Action-specific validation
+        // Get slot name from configuration
+        String slotName = getSlotName(slot);
+        
+        // Action-specific validation based on slot name
+        if (slotName != null) {
+            // Validate based on slot name and validation rules from config
+            String validationError = validateItemBySlotName(slotName, item);
+            if (validationError != null) {
+                return validationError;
+            }
+        }
+        
+        // Fallback to action-specific validation
         switch (actionId.toLowerCase()) {
             case "sendmessage":
                 if (slot == 0 && itemName.trim().isEmpty()) {
                     return "Сообщение не может быть пустым";
                 }
                 break;
-            case "executeAsyncCommand":
+            case "executeasynccommand":
                 if (slot == 0 && !itemName.startsWith("/") && !itemName.contains(":")) {
                     return "Команда должна начинаться с '/' или содержать ':'";
                 }
@@ -548,9 +589,236 @@ public class ActionParameterGUI implements GUIManager.ManagedGUIInterface {
                     return "Задержка должна быть числом";
                 }
                 break;
+            case "giveitem":
+                if (slot == 0 && item.getType().isAir()) {
+                    return "Предмет не может быть пустым";
+                }
+                if (slot == 1 && !isValidNumber(itemName)) {
+                    return "Количество должно быть числом";
+                }
+                break;
+            case "playsound":
+                if (slot == 0 && !isValidSoundName(itemName)) {
+                    return "Неверное имя звука";
+                }
+                if (slot == 1 && !isValidNumberInRange(itemName, 0.0, 1.0)) {
+                    return "Громкость должна быть от 0.0 до 1.0";
+                }
+                if (slot == 2 && !isValidNumberInRange(itemName, 0.5, 2.0)) {
+                    return "Тон должен быть от 0.5 до 2.0";
+                }
+                break;
+            case "effect":
+                if (slot == 0 && !isValidEffectName(itemName)) {
+                    return "Неверное имя эффекта";
+                }
+                if (slot == 1 && !isValidNumber(itemName)) {
+                    return "Длительность должна быть числом";
+                }
+                if (slot == 2 && !isValidNumberInRange(itemName, 1, 255)) {
+                    return "Уровень должен быть от 1 до 255";
+                }
+                break;
+            case "wait":
+                if (slot == 0 && !isValidNumber(itemName)) {
+                    return "Время ожидания должно быть числом";
+                }
+                break;
         }
         
         return null; // No error
+    }
+    
+    /**
+     * 🎆 УЛУЧШЕННОЕ: Получает имя слота из конфигурации
+     *
+     * 🎆 ENHANCED: Get slot name from configuration
+     *
+     * 🎆 ERWEITERT: Ruft den Slot-Namen aus der Konfiguration ab
+     */
+    private String getSlotName(int slot) {
+        var actionConfigurations = blockConfigService.getActionConfigurations();
+        if (actionConfigurations == null) return null;
+        
+        var actionConfig = actionConfigurations.getConfigurationSection(actionId);
+        if (actionConfig == null) return null;
+        
+        var slotsConfig = actionConfig.getConfigurationSection("slots");
+        if (slotsConfig == null) return null;
+        
+        var slotConfig = slotsConfig.getConfigurationSection(String.valueOf(slot));
+        if (slotConfig == null) return null;
+        
+        return slotConfig.getString("slot_name");
+    }
+    
+    /**
+     * 🎆 УЛУЧШЕННОЕ: Проверяет предмет по имени слота и правилам валидации
+     *
+     * 🎆 ENHANCED: Validate item by slot name and validation rules
+     *
+     * 🎆 ERWEITERT: Validiert den Artikel nach Slot-Name und Validierungsregeln
+     */
+    private String validateItemBySlotName(String slotName, ItemStack item) {
+        var actionConfigurations = blockConfigService.getActionConfigurations();
+        if (actionConfigurations == null) return null;
+        
+        var actionConfig = actionConfigurations.getConfigurationSection(actionId);
+        if (actionConfig == null) return null;
+        
+        var slotsConfig = actionConfig.getConfigurationSection("slots");
+        if (slotsConfig == null) return null;
+        
+        // Find the slot configuration by slot_name
+        for (String slotKey : slotsConfig.getKeys(false)) {
+            var slotConfig = slotsConfig.getConfigurationSection(slotKey);
+            if (slotConfig != null) {
+                String configSlotName = slotConfig.getString("slot_name");
+                if (slotName.equals(configSlotName)) {
+                    // Found the slot, check validation rules
+                    String validation = slotConfig.getString("validation");
+                    if (validation != null) {
+                        return validateItemByRule(item, validation);
+                    }
+                    break;
+                }
+            }
+        }
+        
+        return null; // No validation rule found
+    }
+    
+    /**
+     * 🎆 УЛУЧШЕННОЕ: Проверяет предмет по правилу валидации
+     *
+     * 🎆 ENHANCED: Validate item by validation rule
+     *
+     * 🎆 ERWEITERT: Validiert den Artikel nach Validierungsregel
+     */
+    private String validateItemByRule(ItemStack item, String validationRule) {
+        String itemName = item.hasItemMeta() ? item.getItemMeta().getDisplayName() : "";
+        
+        switch (validationRule) {
+            case "number":
+                if (!isValidNumber(itemName)) {
+                    return "Значение должно быть числом";
+                }
+                break;
+            case "sound_name":
+                if (!isValidSoundName(itemName)) {
+                    return "Неверное имя звука";
+                }
+                break;
+            case "effect_name":
+                if (!isValidEffectName(itemName)) {
+                    return "Неверное имя эффекта";
+                }
+                break;
+            default:
+                // Handle range validations like "number_range:0.0-1.0"
+                if (validationRule.startsWith("number_range:")) {
+                    String range = validationRule.substring("number_range:".length());
+                    String[] parts = range.split("-");
+                    if (parts.length == 2) {
+                        try {
+                            double min = Double.parseDouble(parts[0]);
+                            double max = Double.parseDouble(parts[1]);
+                            if (!isValidNumberInRange(itemName, min, max)) {
+                                return "Значение должно быть от " + min + " до " + max;
+                            }
+                        } catch (NumberFormatException e) {
+                            return "Неверный формат диапазона";
+                        }
+                    }
+                }
+                break;
+        }
+        
+        return null; // No error
+    }
+    
+    /**
+     * 🎆 УЛУЧШЕННОЕ: Проверяет, представляет ли строка допустимое имя звука
+     *
+     * 🎆 ENHANCED: Check if string represents a valid sound name
+     *
+     * 🎆 ERWEITERT: Prüft, ob die Zeichenfolge einen gültigen Klangnamen darstellt
+     */
+    private boolean isValidSoundName(String soundName) {
+        if (soundName == null || soundName.trim().isEmpty()) return false;
+        
+        // Remove color codes and common prefixes
+        String cleaned = soundName.replaceAll("§[0-9a-fk-or]", "").trim();
+        
+        // Check for common sound name patterns
+        return cleaned.contains(":") || 
+               cleaned.startsWith("minecraft:") || 
+               cleaned.contains("block.") || 
+               cleaned.contains("entity.") || 
+               cleaned.contains("item.") || 
+               cleaned.contains("music.") || 
+               cleaned.contains("ambient.");
+    }
+    
+    /**
+     * 🎆 УЛУЧШЕННОЕ: Проверяет, представляет ли строка допустимое имя эффекта
+     *
+     * 🎆 ENHANCED: Check if string represents a valid effect name
+     *
+     * 🎆 ERWEITERT: Prüft, ob die Zeichenfolge einen gültigen Effektnamen darstellt
+     */
+    private boolean isValidEffectName(String effectName) {
+        if (effectName == null || effectName.trim().isEmpty()) return false;
+        
+        // Remove color codes and common prefixes
+        String cleaned = effectName.replaceAll("§[0-9a-fk-or]", "").trim();
+        
+        // Check for common effect names
+        String[] validEffects = {
+            "SPEED", "SLOW", "FAST_DIGGING", "SLOW_DIGGING", "INCREASE_DAMAGE", 
+            "HEAL", "HARM", "JUMP", "CONFUSION", "REGENERATION", "DAMAGE_RESISTANCE",
+            "FIRE_RESISTANCE", "WATER_BREATHING", "INVISIBILITY", "BLINDNESS",
+            "NIGHT_VISION", "HUNGER", "WEAKNESS", "POISON", "WITHER", "HEALTH_BOOST",
+            "ABSORPTION", "SATURATION", "GLOWING", "LEVITATION", "LUCK", "UNLUCK",
+            "SLOW_FALLING", "CONDUIT_POWER", "DOLPHINS_GRACE", "BAD_OMEN", "HERO_OF_THE_VILLAGE"
+        };
+        
+        for (String effect : validEffects) {
+            if (effect.equalsIgnoreCase(cleaned)) {
+                return true;
+            }
+        }
+        
+        return false;
+    }
+    
+    /**
+     * 🎆 УЛУЧШЕННОЕ: Проверяет, представляет ли строка допустимое число в диапазоне
+     *
+     * 🎆 ENHANCED: Check if string represents a valid number in range
+     *
+     * 🎆 ERWEITERT: Prüft, ob die Zeichenfolge eine gültige Zahl im Bereich darstellt
+     */
+    private boolean isValidNumberInRange(String str, double min, double max) {
+        if (str == null || str.trim().isEmpty()) return false;
+        
+        // Remove color codes and common prefixes
+        String cleaned = str.replaceAll("§[0-9a-fk-or]", "").trim();
+        
+        // Check for pattern like "value:5" or "amount:20"
+        if (cleaned.contains(":")) {
+            String[] parts = cleaned.split(":");
+            if (parts.length == 2) {
+                cleaned = parts[1].trim();
+            }
+        }
+        
+        try {
+            double value = Double.parseDouble(cleaned);
+            return value >= min && value <= max;
+        } catch (NumberFormatException e) {
+            return false;
+        }
     }
     
     /**
@@ -578,7 +846,13 @@ public class ActionParameterGUI implements GUIManager.ManagedGUIInterface {
             Integer.parseInt(cleaned);
             return true;
         } catch (NumberFormatException e) {
-            return false;
+            // Try parsing as double for decimal numbers
+            try {
+                Double.parseDouble(cleaned);
+                return true;
+            } catch (NumberFormatException e2) {
+                return false;
+            }
         }
     }
     
@@ -600,13 +874,29 @@ public class ActionParameterGUI implements GUIManager.ManagedGUIInterface {
         if (lore == null) lore = new ArrayList<>();
         
         // Remove old validation messages
-        lore.removeIf(line -> line.contains("✓") || line.contains("✗") || line.contains("Ошибка:"));
+        lore.removeIf(line -> line.contains("✓") || line.contains("✗") || line.contains("Ошибка:") || line.contains("Статус:"));
         
-        // Add new validation status
+        // Add new validation status with enhanced visual feedback
         if (isValid) {
             lore.add("§a✓ Параметр корректен");
+            lore.add("§7Статус: §aГотов к использованию");
+            
+            // Add glow effect for valid items
+            if (meta.hasEnchants()) {
+                meta.removeEnchant(org.bukkit.enchantments.Enchantment.DURABILITY);
+            }
+            meta.addEnchant(org.bukkit.enchantments.Enchantment.DURABILITY, 1, true);
         } else if (error != null) {
             lore.add("§c✗ Ошибка: " + error);
+            lore.add("§7Статус: §cТребуется исправление");
+            
+            // Add red glow effect for invalid items
+            if (meta.hasEnchants()) {
+                meta.removeEnchant(org.bukkit.enchantments.Enchantment.DURABILITY);
+            }
+            meta.addEnchant(org.bukkit.enchantments.Enchantment.DAMAGE_ALL, 1, true);
+        } else {
+            lore.add("§7Статус: §eОжидает проверки");
         }
         
         meta.setLore(lore);
@@ -614,6 +904,14 @@ public class ActionParameterGUI implements GUIManager.ManagedGUIInterface {
         
         // Update item in inventory
         inventory.setItem(slot, currentItem);
+        
+        // Add particle effect for validation feedback
+        Location effectLoc = player.getLocation().add(0, 1, 0);
+        if (isValid) {
+            player.spawnParticle(org.bukkit.Particle.VILLAGER_HAPPY, effectLoc, 5, 0.3, 0.3, 0.3, 0.1);
+        } else if (error != null) {
+            player.spawnParticle(org.bukkit.Particle.FLAME, effectLoc, 5, 0.3, 0.3, 0.3, 0.05);
+        }
     }
     
     /**

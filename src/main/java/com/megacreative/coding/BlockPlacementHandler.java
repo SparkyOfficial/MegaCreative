@@ -261,8 +261,8 @@ public class BlockPlacementHandler implements Listener {
     }
     
     /**
-     * Создает структуру для блоков-конструкторов
-     * Реализует стиль: визуальное построение кода с обратной связью
+     * Creates structure for constructor blocks
+     * Implements reference system-style: visual code construction with feedback
      */
     private void buildStructureFor(BlockPlaceEvent event, BlockConfigService.BlockConfig config) {
         Block placedBlock = event.getBlock();
@@ -295,7 +295,7 @@ public class BlockPlacementHandler implements Listener {
             );
             
             // 1. Create bracket pistons with proper orientation
-            createBracketPiston(openBracketLoc, CodeBlock.BracketType.OPEN, player, buildDirection);
+            createBracketPiston(openBracketLoc, CodeBlock.BracketType.OPEN, player, buildDirection.getOppositeFace());
             createBracketPiston(closeBracketLoc, CodeBlock.BracketType.CLOSE, player, buildDirection);
             
             // 2. Create smart sign on main block that opens configuration GUI
@@ -1931,21 +1931,47 @@ public class BlockPlacementHandler implements Listener {
                 Location closeBracketLoc = findBracketInDirection(newBlockLocation, direction, CodeBlock.BracketType.CLOSE);
                 if (closeBracketLoc != null) {
                     plugin.getLogger().info("Found closing bracket at " + closeBracketLoc);
-                    // Calculate the new positions for brackets (3 blocks apart from the new block)
-                    Location newOpenBracketLoc = newBlockLocation.clone().add(direction.getOppositeFace().getModX() * 1, 0, direction.getOppositeFace().getModZ() * 1);
-                    Location newCloseBracketLoc = newBlockLocation.clone().add(direction.getModX() * 3, 0, direction.getModZ() * 3);
                     
-                    plugin.getLogger().info("Moving brackets to new positions: " + newOpenBracketLoc + " and " + newCloseBracketLoc);
+                    // Calculate the distance between brackets
+                    int distance = calculateDistance(openBracketLoc, closeBracketLoc, direction);
+                    plugin.getLogger().info("Distance between brackets: " + distance);
                     
-                    // Move the brackets to their new positions
-                    moveBracket(openBracketLoc, newOpenBracketLoc, CodeBlock.BracketType.OPEN, player, direction.getOppositeFace());
-                    moveBracket(closeBracketLoc, newCloseBracketLoc, CodeBlock.BracketType.CLOSE, player, direction);
-                    
-                    player.sendMessage("§a✓ Brackets repositioned to maintain proper distance");
-                    plugin.getLogger().info("Brackets repositioned for player " + player.getName() + " at " + newBlockLocation);
-                    return; // Only handle one pair of brackets
+                    // If distance is less than minimum (3), reposition brackets
+                    if (distance < 3) {
+                        // Calculate the new positions for brackets (3 blocks apart from the new block)
+                        Location newOpenBracketLoc = newBlockLocation.clone().add(direction.getOppositeFace().getModX() * 1, 0, direction.getOppositeFace().getModZ() * 1);
+                        Location newCloseBracketLoc = newBlockLocation.clone().add(direction.getModX() * 3, 0, direction.getModZ() * 3);
+                        
+                        plugin.getLogger().info("Moving brackets to new positions: " + newOpenBracketLoc + " and " + newCloseBracketLoc);
+                        
+                        // Move the brackets to their new positions
+                        moveBracket(openBracketLoc, newOpenBracketLoc, CodeBlock.BracketType.OPEN, player, direction.getOppositeFace());
+                        moveBracket(closeBracketLoc, newCloseBracketLoc, CodeBlock.BracketType.CLOSE, player, direction);
+                        
+                        player.sendMessage("§a✓ Brackets repositioned to maintain proper distance");
+                        plugin.getLogger().info("Brackets repositioned for player " + player.getName() + " at " + newBlockLocation);
+                        return; // Only handle one pair of brackets
+                    }
                 }
             }
+        }
+    }
+    
+    /**
+     * 🔧 FIX: Calculate distance between two locations in a specific direction
+     */
+    private int calculateDistance(Location loc1, Location loc2, BlockFace direction) {
+        switch (direction) {
+            case EAST:
+                return Math.abs(loc2.getBlockX() - loc1.getBlockX());
+            case WEST:
+                return Math.abs(loc1.getBlockX() - loc2.getBlockX());
+            case NORTH:
+                return Math.abs(loc1.getBlockZ() - loc2.getBlockZ());
+            case SOUTH:
+                return Math.abs(loc2.getBlockZ() - loc1.getBlockZ());
+            default:
+                return 0;
         }
     }
     

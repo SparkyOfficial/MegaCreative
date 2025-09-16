@@ -174,122 +174,34 @@ public class ActionSelectionGUI implements GUIManager.ManagedGUIInterface {
         
         player.sendMessage("§eDebug: Available actions count: " + (availableActions != null ? availableActions.size() : "null"));
         
-        // 🔧 FIX: Enhanced action loading logic
+        // If we don't have actions, try to get them from the block config
         if (availableActions == null || availableActions.isEmpty()) {
             player.sendMessage("§cОшибка: Нет доступных действий для блока " + blockMaterial.name());
-            
-            // Try to get all block configs for debugging
-            var allConfigs = blockConfigService.getAllBlockConfigs();
-            player.sendMessage("§eDebug: Total block configs: " + allConfigs.size());
-            
-            // Check if this material is recognized as a code block
-            boolean isCodeBlock = blockConfigService.isCodeBlock(blockMaterial);
-            player.sendMessage("§eDebug: Is code block: " + isCodeBlock);
             
             // Try to get block config by material
             var blockConfig = blockConfigService.getBlockConfigByMaterial(blockMaterial);
             if (blockConfig != null) {
                 player.sendMessage("§eDebug: Block config found: " + blockConfig.getId() + " - " + blockConfig.getDisplayName());
-                player.sendMessage("§eDebug: Block type: " + blockConfig.getType());
-                player.sendMessage("§eDebug: Default action: " + blockConfig.getDefaultAction());
                 
-                // 🔧 FIX: Load actions from the block configuration's actions list
-                List<String> actions = new ArrayList<>();
+                // Get actions directly from the block configuration
+                availableActions = blockConfig.getActions();
+                player.sendMessage("§aDebug: Found actions from block config: " + (availableActions != null ? availableActions.size() : 0));
                 
-                // First, try to get actions directly from the block config
-                if (blockConfig.getParameters().containsKey("actions")) {
-                    // This is for backward compatibility with old config format
-                    Object actionsObj = blockConfig.getParameters().get("actions");
-                    if (actionsObj instanceof List) {
-                        actions.addAll((List<String>) actionsObj);
-                        player.sendMessage("§aDebug: Found actions from block config parameters: " + actions.size());
+                // If still no actions, try to get default action
+                if (availableActions == null || availableActions.isEmpty()) {
+                    String defaultAction = blockConfig.getDefaultAction();
+                    if (defaultAction != null && !defaultAction.isEmpty()) {
+                        availableActions = new ArrayList<>();
+                        availableActions.add(defaultAction);
+                        player.sendMessage("§aDebug: Using default action: " + defaultAction);
                     }
-                }
-                
-                // Try to get actions from the YAML configuration file
-                File configFile = new File(plugin.getDataFolder(), "coding_blocks.yml");
-                if (configFile.exists()) {
-                    YamlConfiguration yamlConfig = YamlConfiguration.loadConfiguration(configFile);
-                    ConfigurationSection blocksSection = yamlConfig.getConfigurationSection("blocks");
-                    if (blocksSection != null) {
-                        ConfigurationSection blockSection = blocksSection.getConfigurationSection(blockConfig.getId());
-                        if (blockSection != null) {
-                            List<String> blockActions = blockSection.getStringList("actions");
-                            if (!blockActions.isEmpty()) {
-                                actions.addAll(blockActions);
-                                player.sendMessage("§aDebug: Found actions from YAML config: " + blockActions.size());
-                            } else {
-                                // 🔧 FIX: If no actions list, try to get default action
-                                String defaultAction = blockSection.getString("default_action");
-                                if (defaultAction != null && !defaultAction.isEmpty()) {
-                                    actions.add(defaultAction);
-                                    player.sendMessage("§aDebug: Found default action from YAML config: " + defaultAction);
-                                }
-                            }
-                        }
-                    }
-                }
-                
-                // Fallback to getting actions from material mapping
-                if (actions.isEmpty()) {
-                    actions = blockConfigService.getActionsForMaterial(blockMaterial);
-                }
-                
-                // 🔧 FIX: Remove the problematic fallback that loads ALL actions from ALL blocks
-                // This was causing gaming actions to appear in variable blocks
-                /*
-                // Final fallback - use all actions from the config
-                if (actions.isEmpty()) {
-                    // Get all action IDs from the blocks section
-                    File configFileFallback = new File(plugin.getDataFolder(), "coding_blocks.yml");
-                    if (configFileFallback.exists()) {
-                        YamlConfiguration yamlConfigFallback = YamlConfiguration.loadConfiguration(configFileFallback);
-                        ConfigurationSection blocksSectionFallback = yamlConfigFallback.getConfigurationSection("blocks");
-                        if (blocksSectionFallback != null) {
-                            for (String blockId : blocksSectionFallback.getKeys(false)) {
-                                ConfigurationSection blockSection = blocksSectionFallback.getConfigurationSection(blockId);
-                                if (blockSection != null) {
-                                    List<String> blockActions = blockSection.getStringList("actions");
-                                    if (!blockActions.isEmpty()) {
-                                        actions.addAll(blockActions);
-                                    } else {
-                                        String defaultAction = blockSection.getString("default_action");
-                                        if (defaultAction != null && !defaultAction.isEmpty()) {
-                                            actions.add(defaultAction);
-                                        }
-                                    }
-                                }
-                            }
-                        }
-                    }
-                }
-                */
-                
-                if (actions != null && !actions.isEmpty()) {
-                    availableActions = actions;
-                    player.sendMessage("§aDebug: Found actions after re-check: " + actions.size());
                 }
             } else {
                 player.sendMessage("§eDebug: No block config found for material");
-                
-                // List all available materials for debugging
-                Set<Material> codeBlockMaterials = blockConfigService.getCodeBlockMaterials();
-                player.sendMessage("§eDebug: Available code block materials (" + codeBlockMaterials.size() + "):");
-                int count = 0;
-                for (Material mat : codeBlockMaterials) {
-                    player.sendMessage("§7- " + mat.name());
-                    count++;
-                    if (count >= 10) {
-                        player.sendMessage("§7... and " + (codeBlockMaterials.size() - 10) + " more");
-                        break;
-                    }
-                }
             }
             
-            // If we still don't have actions, use default actions as fallback
-            // 🔧 FIX: Use only appropriate default actions for this block type
+            // If we still don't have actions, use appropriate default actions based on block type
             if (availableActions == null || availableActions.isEmpty()) {
-                // 🔧 FIX: Add default actions based on block type
                 availableActions = new ArrayList<>();
                 
                 // Get the block config to determine appropriate default actions
@@ -322,6 +234,13 @@ public class ActionSelectionGUI implements GUIManager.ManagedGUIInterface {
                                 availableActions.add("giveItem");
                                 player.sendMessage("§6Using general default actions as fallback");
                             }
+                            break;
+                        case "CONDITION":
+                            // For condition blocks, add appropriate default conditions
+                            availableActions.add("hasItem");
+                            availableActions.add("isOp");
+                            availableActions.add("compareVariable");
+                            player.sendMessage("§6Using condition default actions as fallback");
                             break;
                         default:
                             availableActions.add("sendMessage");
