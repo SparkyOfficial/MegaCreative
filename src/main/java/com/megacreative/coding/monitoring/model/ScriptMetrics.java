@@ -127,4 +127,14 @@ public class ScriptMetrics {
     public ActionMetrics getActionMetrics(String actionType) {
         return actionMetrics.get(actionType);
     }
+    
+    /**
+     * Gets the error rate as a decimal (0.0 to 1.0)
+     * @return Error rate
+     */
+    public double getErrorRate() {
+        return executionCount.get() > 0 
+            ? (double) failureCount.get() / executionCount.get() 
+            : 0.0;
+    }
 }

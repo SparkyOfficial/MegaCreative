@@ -11,19 +11,26 @@ public class SystemPerformanceReport {
     private final int activePlayerCount;
     private final int scriptProfilesCount;
     private final MemoryUsage memoryUsage;
+    private final GarbageCollectionMonitor.GcStatistics gcStatistics;
     private final Collection<Bottleneck> bottlenecks;
     private final int uniqueActionTypes;
+    private final long uptimeMs;
     
     public SystemPerformanceReport(long totalExecutions, long totalExecutionTime, 
                                  int activePlayerCount, int scriptProfilesCount,
-                                 MemoryUsage memoryUsage, Collection<Bottleneck> bottlenecks) {
+                                 MemoryUsage memoryUsage, 
+                                 GarbageCollectionMonitor.GcStatistics gcStatistics,
+                                 Collection<Bottleneck> bottlenecks,
+                                 long uptimeMs) {
         this.totalExecutions = totalExecutions;
         this.totalExecutionTime = totalExecutionTime;
         this.activePlayerCount = activePlayerCount;
         this.scriptProfilesCount = scriptProfilesCount;
         this.memoryUsage = memoryUsage;
+        this.gcStatistics = gcStatistics;
         this.bottlenecks = bottlenecks != null ? new ArrayList<>(bottlenecks) : Collections.emptyList();
         this.uniqueActionTypes = 0; // This would be calculated from actual data
+        this.uptimeMs = uptimeMs;
     }
     
     public long getTotalExecutions() {
@@ -46,6 +53,10 @@ public class SystemPerformanceReport {
         return memoryUsage;
     }
     
+    public GarbageCollectionMonitor.GcStatistics getGcStatistics() {
+        return gcStatistics;
+    }
+    
     public Collection<Bottleneck> getBottlenecks() {
         return Collections.unmodifiableCollection(bottlenecks);
     }
@@ -56,5 +67,9 @@ public class SystemPerformanceReport {
     
     public double getAverageExecutionTime() {
         return totalExecutions > 0 ? (double) totalExecutionTime / totalExecutions : 0.0;
+    }
+    
+    public long getUptimeMs() {
+        return uptimeMs;
     }
 }

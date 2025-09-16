@@ -4,6 +4,7 @@ package com.megacreative.coding.monitoring.model;
  * Monitors memory usage for the application
  */
 public class MemoryMonitor {
+    private final GarbageCollectionMonitor gcMonitor = new GarbageCollectionMonitor();
     private volatile boolean isRunning = true;
     
     /**
@@ -21,9 +22,18 @@ public class MemoryMonitor {
     }
     
     /**
+     * Gets the current garbage collection statistics
+     * @return GcStatistics object containing GC information
+     */
+    public GarbageCollectionMonitor.GcStatistics getGcStatistics() {
+        return gcMonitor.getCurrentStatistics();
+    }
+    
+    /**
      * Starts the memory monitoring thread
      */
     public void start() {
+        gcMonitor.start();
         // Start monitoring thread if needed
         // This could be implemented to periodically log memory usage
     }
@@ -33,6 +43,7 @@ public class MemoryMonitor {
      */
     public void stop() {
         isRunning = false;
+        gcMonitor.stop();
     }
     
     /**

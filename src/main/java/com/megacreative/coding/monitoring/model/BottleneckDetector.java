@@ -2,21 +2,73 @@ package com.megacreative.coding.monitoring.model;
 
 import java.util.*;
 import java.util.concurrent.*;
+import java.util.logging.Logger;
 
 /**
  * Detects performance bottlenecks in script execution
  */
 public class BottleneckDetector {
+    private static final Logger log = Logger.getLogger(BottleneckDetector.class.getName());
+    
     private final Map<String, Bottleneck> bottlenecks = new ConcurrentHashMap<>();
-    private volatile boolean isRunning = true;
+    private final ScheduledExecutorService scheduler = Executors.newScheduledThreadPool(1);
+    private volatile boolean isRunning = false;
+    private ScheduledFuture<?> detectionTask;
     
     /**
      * Detects bottlenecks in the provided script metrics
      * @param metrics Collection of script metrics to analyze
      */
     public void detectBottlenecks(Collection<ScriptMetrics> metrics) {
-        // Implementation would analyze metrics and identify potential bottlenecks
-        // For now, this is a placeholder for the actual detection logic
+        if (metrics == null || metrics.isEmpty()) {
+            return;
+        }
+        
+        // Clear previous bottlenecks for re-analysis
+        bottlenecks.clear();
+        
+        for (ScriptMetrics metric : metrics) {
+            // Check for slow average execution time
+            double avgTime = metric.getAverageExecutionTime();
+            if (avgTime > 100) { // More than 100ms average
+                Bottleneck bottleneck = new Bottleneck(
+                    metric.getScriptName(),
+                    "OverallExecution",
+                    "Script has high average execution time: " + String.format("%.2f", avgTime) + "ms",
+                    Bottleneck.Severity.HIGH,
+                    "Consider optimizing expensive operations or breaking script into smaller parts"
+                );
+                bottlenecks.put(metric.getScriptName() + "_avg_time", bottleneck);
+            }
+            
+            // Check for high error rates
+            double errorRate = metric.getErrorRate();
+            if (errorRate > 0.1) { // More than 10% error rate
+                Bottleneck bottleneck = new Bottleneck(
+                    metric.getScriptName(),
+                    "ErrorRate",
+                    "Script has high error rate: " + String.format("%.1f", errorRate * 100) + "%",
+                    Bottleneck.Severity.MEDIUM,
+                    "Investigate and fix script errors to improve reliability"
+                );
+                bottlenecks.put(metric.getScriptName() + "_error_rate", bottleneck);
+            }
+            
+            // Check for peak execution times
+            long peakTime = metric.getPeakExecutionTime();
+            if (peakTime > 500) { // More than 500ms peak
+                Bottleneck bottleneck = new Bottleneck(
+                    metric.getScriptName(),
+                    "PeakExecution",
+                    "Script has very high peak execution time: " + peakTime + "ms",
+                    Bottleneck.Severity.CRITICAL,
+                    "This may cause noticeable lag. Optimize the most expensive operations"
+                );
+                bottlenecks.put(metric.getScriptName() + "_peak_time", bottleneck);
+            }
+        }
+        
+        log.info("Detected " + bottlenecks.size() + " potential bottlenecks");
     }
     
     /**
@@ -31,8 +83,21 @@ public class BottleneckDetector {
      * Starts the bottleneck detection service
      */
     public void start() {
-        // Start background thread for continuous monitoring
-        isRunning = true;
+        if (!isRunning) {
+            isRunning = true;
+            // Start background thread for continuous monitoring (every 30 seconds)
+            detectionTask = scheduler.scheduleAtFixedRate(this::performPeriodicDetection, 30, 30, TimeUnit.SECONDS);
+            log.info("BottleneckDetector started");
+        }
+    }
+    
+    /**
+     * Performs periodic bottleneck detection
+     */
+    private void performPeriodicDetection() {
+        // This would be called periodically to check for new bottlenecks
+        // In a real implementation, this would have access to the latest metrics
+        // For now, it's a placeholder
     }
     
     /**
@@ -40,6 +105,11 @@ public class BottleneckDetector {
      */
     public void stop() {
         isRunning = false;
+        if (detectionTask != null) {
+            detectionTask.cancel(false);
+        }
+        scheduler.shutdown();
+        log.info("BottleneckDetector stopped");
     }
     
     /**

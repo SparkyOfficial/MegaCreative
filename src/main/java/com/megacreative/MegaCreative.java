@@ -296,6 +296,10 @@ public class MegaCreative extends JavaPlugin {
         // Enemy player management command
         getCommand("enemy").setExecutor(new EnemyPlayerCommand(this));
         getCommand("enemy").setTabCompleter(new EnemyPlayerCommand(this));
+        
+        // Performance monitoring command
+        getCommand("performance").setExecutor(new PerformanceCommand(this));
+        getCommand("performance").setTabCompleter(new PerformanceCommand(this));
     }
     
     /**

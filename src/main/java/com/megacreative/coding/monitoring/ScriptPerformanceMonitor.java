@@ -20,6 +20,7 @@ public class ScriptPerformanceMonitor {
     private static final Logger log = Logger.getLogger(ScriptPerformanceMonitor.class.getName());
     
     private final Plugin plugin;
+    private final long startTime;
     
     // Performance tracking data structures
     private final Map<UUID, PlayerScriptMetrics> playerMetrics = new ConcurrentHashMap<>();
@@ -68,6 +69,7 @@ public class ScriptPerformanceMonitor {
     
     public ScriptPerformanceMonitor(Plugin plugin) {
         this.plugin = plugin;
+        this.startTime = System.currentTimeMillis();
         
         // Load performance thresholds from config
         this.slowExecutionThreshold = plugin.getConfig().getLong("coding.performance.slow_execution_threshold", 50);
@@ -212,7 +214,9 @@ public class ScriptPerformanceMonitor {
             playerMetrics.size(),
             scriptProfiles.size(),
             memoryMonitor.getCurrentUsage(),
-            bottleneckDetector.getBottlenecks()
+            memoryMonitor.getGcStatistics(),
+            bottleneckDetector.getBottlenecks(),
+            System.currentTimeMillis() - startTime
         );
     }
     
@@ -234,5 +238,13 @@ public class ScriptPerformanceMonitor {
         executionSampler.stop();
         memoryMonitor.stop();
         bottleneckDetector.stop();
+    }
+    
+    /**
+     * Gets the uptime of the performance monitor in milliseconds
+     * @return Uptime in milliseconds
+     */
+    public long getUptimeMs() {
+        return System.currentTimeMillis() - startTime;
     }
 }

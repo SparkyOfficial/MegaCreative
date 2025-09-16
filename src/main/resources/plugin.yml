@@ -43,6 +43,7 @@ permissions:
       megacreative.command.hub: true
       megacreative.command.function: true
       megacreative.command.interactive: true
+  megacreative.command.performance: true
 
   megacreative.admin:
     description: Admin permissions
@@ -274,3 +275,14 @@ commands:
     usage: /<command> <add|remove|list|info> [player]
     permission: megacreative.admin
     aliases: [enemies]
+
+  performance:
+    description: Performance monitoring and optimization
+    usage: |
+      &6/performance report &f- Show system performance report
+      &6/performance script <name> &f- Show script performance details
+      &6/performance optimize <name> &f- Show optimization suggestions
+      &6/performance bottlenecks &f- Show detected performance bottlenecks
+      &6/performance clear &f- Clear performance data (admin only)
+    permission: megacreative.user
+    aliases: [perf, monitor]
