@@ -1319,6 +1319,70 @@ public class ExecutorEngine {
         }
     }
     
+    /**
+     * Executes the setWeather action to set the weather in the world
+     */
+    private ExecutionResult executeSetWeather(Map<String, DataValue> params, ExecutionContext context) {
+        try {
+            // Get the weather parameter (required)
+            DataValue weatherValue = params.get("weather");
+            if (weatherValue == null) {
+                return context.createErrorResult("No weather specified for setWeather action");
+            }
+            
+            String weatherStr = weatherValue.asString();
+            if (weatherStr == null || weatherStr.trim().isEmpty()) {
+                return context.createErrorResult("Weather value cannot be empty");
+            }
+            
+            // Validate and parse the weather value
+            org.bukkit.WeatherType weatherType;
+            switch (weatherStr.toLowerCase()) {
+                case "clear":
+                    weatherType = org.bukkit.WeatherType.CLEAR;
+                    break;
+                case "rain":
+                    weatherType = org.bukkit.WeatherType.DOWNFALL;
+                    break;
+                case "thunder":
+                    weatherType = org.bukkit.WeatherType.DOWNFALL;
+                    break;
+                default:
+                    return context.createErrorResult("Invalid weather type: " + weatherStr + ". Must be one of: clear, rain, thunder.");
+            }
+            
+            // Get the player's world
+            Player player = context.getPlayer();
+            org.bukkit.World world = player.getWorld();
+            
+            // Set the weather based on type
+            switch (weatherStr.toLowerCase()) {
+                case "clear":
+                    world.setStorm(false);
+                    world.setThundering(false);
+                    break;
+                case "rain":
+                    world.setStorm(true);
+                    world.setThundering(false);
+                    break;
+                case "thunder":
+                    world.setStorm(true);
+                    world.setThundering(true);
+                    break;
+            }
+            
+            // Visual effect
+            player.spawnParticle(Particle.WATER_SPLASH, player.getLocation().add(0, 2, 0), 5);
+            player.playSound(player.getLocation(), Sound.WEATHER_RAIN, 1.0f, 1.0f);
+            
+            // Create success message
+            return context.createResult(true, "Set world weather to " + weatherStr);
+            
+        } catch (Exception e) {
+            return context.createErrorResult("Failed to set weather: " + e.getMessage(), e);
+        }
+    }
+    
     // === HELPER METHODS ===
     
     private void startVisualUpdater() {
@@ -1422,13 +1486,9 @@ public class ExecutorEngine {
             if (paramValue != null && !paramConfig.getType().equals(paramValue.getType())) {
                 return "Invalid type for parameter '" + paramName + "'. Expected: " + paramConfig.getType() + ", but got: " + paramValue.getType();
             }
-            player.playSound(player.getLocation(), Sound.ENTITY_ITEM_PICKUP, 1.0f, 1.2f);
-            
-            return context.createResult(true, "Given " + material.name().toLowerCase().replace("_", " "));
-            
-        } catch (Exception e) {
-            return context.createErrorResult("Failed to give item: " + e.getMessage(), e);
         }
+        
+        return null; // No validation errors
     }
     
     private ExecutionResult executeGiveItems(Map<String, DataValue> params, ExecutionContext context) {
