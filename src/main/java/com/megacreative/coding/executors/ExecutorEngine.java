@@ -220,6 +220,12 @@ public class ExecutorEngine {
                 case "playSound":
                     result = executePlaySound(processedParameters, context);
                     break;
+                case "effect":
+                    result = executeEffect(processedParameters, context);
+                    break;
+                case "command":
+                    result = executeCommand(processedParameters, context);
+                    break;
                 case "setVar":
                     result = executeSetVariable(processedParameters, context);
                     break;
@@ -417,6 +423,88 @@ public class ExecutorEngine {
                 
         } catch (Exception e) {
             return context.createErrorResult("Failed to set variable: " + e.getMessage(), e);
+        }
+    }
+    
+    private ExecutionResult executeEffect(Map<String, DataValue> params, ExecutionContext context) {
+        try {
+            DataValue effectValue = params.get("effect_type");
+            if (effectValue == null) {
+                return context.createErrorResult("No effect specified");
+            }
+            
+            String effectName = effectValue.asString();
+            if (effectName == null || effectName.trim().isEmpty()) {
+                return context.createErrorResult("Effect name cannot be empty");
+            }
+            
+            // Get duration and amplifier with defaults
+            int duration = 30; // Default 30 seconds
+            int amplifier = 1; // Default level 1
+            
+            try {
+                if (params.containsKey("duration")) {
+                    duration = Integer.parseInt(params.get("duration").asString());
+                }
+                if (params.containsKey("amplifier")) {
+                    amplifier = Integer.parseInt(params.get("amplifier").asString());
+                }
+            } catch (NumberFormatException e) {
+                return context.createErrorResult("Invalid number format for duration or amplifier");
+            }
+            
+            // Try to get the effect
+            org.bukkit.potion.PotionEffectType effectType;
+            try {
+                effectType = org.bukkit.potion.PotionEffectType.getByName(effectName.toUpperCase());
+                if (effectType == null) {
+                    return context.createErrorResult("Invalid effect: " + effectName);
+                }
+            } catch (Exception e) {
+                return context.createErrorResult("Invalid effect: " + effectName);
+            }
+            
+            // Apply the effect
+            Player player = context.getPlayer();
+            org.bukkit.potion.PotionEffect effect = new org.bukkit.potion.PotionEffect(
+                effectType, duration * 20, amplifier - 1, false, true);
+            player.addPotionEffect(effect);
+            
+            // Visual effect
+            player.spawnParticle(org.bukkit.Particle.SPELL_WITCH, player.getLocation().add(0, 2, 0), 5);
+            
+            return context.createResult(true, "Applied effect: " + effectType.getName().toLowerCase().replace("_", " "));
+            
+        } catch (Exception e) {
+            return context.createErrorResult("Failed to apply effect: " + e.getMessage(), e);
+        }
+    }
+    
+    private ExecutionResult executeCommand(Map<String, DataValue> params, ExecutionContext context) {
+        try {
+            DataValue commandValue = params.get("command_slot");
+            if (commandValue == null) {
+                return context.createErrorResult("No command specified");
+            }
+            
+            String command = commandValue.asString();
+            if (command == null || command.trim().isEmpty()) {
+                return context.createErrorResult("Command cannot be empty");
+            }
+            
+            // Resolve placeholders in command
+            command = resolvePlaceholders(command, context);
+            
+            // Execute the command
+            boolean success = plugin.getServer().dispatchCommand(context.getPlayer(), command);
+            
+            // Visual effect
+            context.getPlayer().spawnParticle(org.bukkit.Particle.COMMAND, context.getPlayer().getLocation().add(0, 2, 0), 5);
+            
+            return context.createResult(success, "Executed command: " + command);
+            
+        } catch (Exception e) {
+            return context.createErrorResult("Failed to execute command: " + e.getMessage(), e);
         }
     }
     
