@@ -12,16 +12,6 @@ import java.util.Objects;
 import java.util.concurrent.ConcurrentHashMap;
 
 /**
- * Priority levels for optimization suggestions
- */
-enum OptimizationPriority {
-    CRITICAL,  // Critical issues that should be fixed immediately
-    HIGH,      // High priority optimizations
-    MEDIUM,    // Medium priority optimizations
-    LOW        // Low priority or minor optimizations
-}
-
-/**
  * Interface for defining optimization rules
  */
 interface OptimizationRule {

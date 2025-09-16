@@ -1,6 +1,8 @@
 package com.megacreative.commands;
 
 import com.megacreative.MegaCreative;
+import com.megacreative.coding.monitoring.AdvancedScriptOptimizer;
+import com.megacreative.coding.monitoring.OptimizationPriority;
 import com.megacreative.coding.monitoring.model.*;
 import org.bukkit.command.Command;
 import org.bukkit.command.CommandExecutor;
@@ -189,12 +191,15 @@ public class PerformanceCommand implements CommandExecutor, TabCompleter {
             player.sendMessage("§aNo optimization suggestions found! Script is well optimized.");
         } else {
             for (com.megacreative.coding.monitoring.AdvancedScriptOptimizer.OptimizationSuggestion suggestion : suggestions) {
-                String color = switch (suggestion.getPriority()) {
-                    case CRITICAL -> "§4";
-                    case HIGH -> "§c";
-                    case MEDIUM -> "§e";
-                    case LOW -> "§7";
-                };
+                String color = "§7"; // Default to LOW
+                com.megacreative.coding.monitoring.OptimizationPriority priority = suggestion.getPriority();
+                if (priority == com.megacreative.coding.monitoring.OptimizationPriority.CRITICAL) {
+                    color = "§4";
+                } else if (priority == com.megacreative.coding.monitoring.OptimizationPriority.HIGH) {
+                    color = "§c";
+                } else if (priority == com.megacreative.coding.monitoring.OptimizationPriority.MEDIUM) {
+                    color = "§e";
+                }
                 
                 player.sendMessage(color + "» [" + suggestion.getPriority() + "] " + suggestion.getDescription());
                 player.sendMessage("§7  Recommendation: " + suggestion.getRecommendation());
@@ -233,12 +238,14 @@ public class PerformanceCommand implements CommandExecutor, TabCompleter {
                 
                 List<Bottleneck> list = grouped.get(severity);
                 if (list != null && !list.isEmpty()) {
-                    String color = switch (severity) {
-                        case CRITICAL -> "§4";
-                        case HIGH -> "§c";
-                        case MEDIUM -> "§e";
-                        case LOW -> "§7";
-                    };
+                    String color = "§7"; // Default to LOW
+                    if (severity == Bottleneck.Severity.CRITICAL) {
+                        color = "§4";
+                    } else if (severity == Bottleneck.Severity.HIGH) {
+                        color = "§c";
+                    } else if (severity == Bottleneck.Severity.MEDIUM) {
+                        color = "§e";
+                    }
                     
                     player.sendMessage(color + severity + " Severity:");
                     for (Bottleneck bottleneck : list) {
