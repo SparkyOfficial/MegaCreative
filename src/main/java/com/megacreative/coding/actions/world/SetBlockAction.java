@@ -55,11 +55,12 @@ public class SetBlockAction implements BlockAction {
                 material = Material.STONE;
             }
 
-            // Set the block
-            // Note: This is a simplified implementation - in a real system, you would set the actual block
-            context.getPlugin().getLogger().info(
-                    "Setting block " + material + " at relative position (" + relativeX + ", " + relativeY + ", " + relativeZ + ")"
-            );
+            // Calculate the actual position
+            org.bukkit.Location playerLocation = player.getLocation();
+            org.bukkit.Location targetLocation = playerLocation.clone().add(relativeX, relativeY, relativeZ);
+
+            // Set the block in the world
+            targetLocation.getBlock().setType(material);
 
             return ExecutionResult.success("Block set successfully");
 

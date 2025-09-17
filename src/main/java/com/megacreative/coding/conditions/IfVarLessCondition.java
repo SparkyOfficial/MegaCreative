@@ -5,6 +5,7 @@ import com.megacreative.coding.CodeBlock;
 import com.megacreative.coding.ExecutionContext;
 import com.megacreative.coding.ParameterResolver;
 import com.megacreative.coding.values.DataValue;
+import com.megacreative.coding.variables.VariableManager;
 import com.megacreative.services.BlockConfigService;
 import org.bukkit.entity.Player;
 import org.bukkit.inventory.ItemStack;
@@ -58,13 +59,40 @@ public class IfVarLessCondition implements BlockCondition {
             }
 
             // Get the variable manager to retrieve the variable value
-            // Note: This is a simplified implementation - in a real system, you would retrieve the actual variable value
-            String varValueStr = "5.0"; // Placeholder for actual variable value retrieval
+            VariableManager variableManager = context.getPlugin().getVariableManager();
+            
+            // Try to get the variable value from different scopes
+            DataValue varValueData = null;
+            
+            // Try player variables first
+            if (varValueData == null) {
+                varValueData = variableManager.getPlayerVariable(player.getUniqueId(), varName);
+            }
+            
+            // Try local variables
+            if (varValueData == null) {
+                varValueData = variableManager.getLocalVariable(context.getScriptId(), varName);
+            }
+            
+            // Try global variables
+            if (varValueData == null) {
+                varValueData = variableManager.getGlobalVariable(varName);
+            }
+            
+            // Try server variables
+            if (varValueData == null) {
+                varValueData = variableManager.getServerVariable(varName);
+            }
+            
+            // If we couldn't find the variable, return false
+            if (varValueData == null) {
+                return false;
+            }
             
             // Parse the variable value as a number
             double varValue;
             try {
-                varValue = Double.parseDouble(varValueStr);
+                varValue = varValueData.asNumber().doubleValue();
             } catch (NumberFormatException e) {
                 return false;
             }
