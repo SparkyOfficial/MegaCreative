@@ -68,7 +68,75 @@ public class TargetSelector {
                 break;
         }
         
+        // Apply filters based on selector arguments
+        if (selectorArgument != null && !selectorArgument.isEmpty()) {
+            targets = applyFilters(targets, context);
+        }
+        
         return targets;
+    }
+    
+    /**
+     * Applies filters to the target list based on selector arguments
+     * @param targets The list of potential targets
+     * @param context The execution context
+     * @return Filtered list of targets
+     */
+    private List<Player> applyFilters(List<Player> targets, ExecutionContext context) {
+        // Parse the selector arguments
+        String[] args = selectorArgument.split(",");
+        List<Player> filteredTargets = new ArrayList<>(targets);
+        
+        for (String arg : args) {
+            String[] parts = arg.split("=");
+            if (parts.length == 2) {
+                String key = parts[0].trim();
+                String value = parts[1].trim();
+                
+                switch (key) {
+                    case "r": // Radius
+                        try {
+                            double radius = Double.parseDouble(value);
+                            Location playerLocation = context.getPlayer().getLocation();
+                            filteredTargets.removeIf(player -> 
+                                player.getLocation().distance(playerLocation) > radius);
+                        } catch (NumberFormatException e) {
+                            // Invalid radius, ignore
+                        }
+                        break;
+                        
+                    case "m": // Game mode
+                        try {
+                            int gameMode = Integer.parseInt(value);
+                            org.bukkit.GameMode mode = org.bukkit.GameMode.getByValue(gameMode);
+                            if (mode != null) {
+                                filteredTargets.removeIf(player -> 
+                                    player.getGameMode() != mode);
+                            }
+                        } catch (NumberFormatException e) {
+                            // Invalid game mode, ignore
+                        }
+                        break;
+                        
+                    case "name": // Player name
+                        filteredTargets.removeIf(player -> 
+                            !player.getName().equals(value));
+                        break;
+                        
+                    case "team": // Team name
+                        // This would require scoreboard integration
+                        break;
+                        
+                    case "x":
+                    case "y":
+                    case "z": // Coordinates for distance calculation
+                        // These are handled with 'r' parameter
+                        break;
+                }
+            }
+        }
+        
+        return filteredTargets;
     }
     
     /**
@@ -151,19 +219,48 @@ public class TargetSelector {
      * @return A TargetSelector instance
      */
     private static TargetSelector parseAdvancedSelector(String selector) {
-        // For now, just return a basic selector
-        // In a full implementation, we would parse the arguments
-        if (selector.startsWith("@p[")) {
-            return new TargetSelector(TargetType.NEAREST, selector);
-        } else if (selector.startsWith("@r[")) {
-            return new TargetSelector(TargetType.RANDOM, selector);
-        } else if (selector.startsWith("@a[")) {
-            return new TargetSelector(TargetType.ALL, selector);
-        } else if (selector.startsWith("@s[")) {
+        // Parse selectors with arguments like @p[x=10,y=20,z=30,r=5]
+        int bracketStart = selector.indexOf('[');
+        int bracketEnd = selector.indexOf(']');
+        
+        if (bracketStart == -1 || bracketEnd == -1 || bracketEnd <= bracketStart) {
+            // Invalid format, return basic selector
+            if (selector.startsWith("@p")) {
+                return new TargetSelector(TargetType.NEAREST, selector);
+            } else if (selector.startsWith("@r")) {
+                return new TargetSelector(TargetType.RANDOM, selector);
+            } else if (selector.startsWith("@a")) {
+                return new TargetSelector(TargetType.ALL, selector);
+            } else if (selector.startsWith("@s")) {
+                return new TargetSelector(TargetType.SELF, selector);
+            }
             return new TargetSelector(TargetType.SELF, selector);
         }
         
-        return new TargetSelector(TargetType.SELF, selector);
+        // Extract the selector type
+        String selectorType = selector.substring(0, bracketStart);
+        // Extract the arguments part
+        String arguments = selector.substring(bracketStart + 1, bracketEnd);
+        
+        TargetType targetType;
+        switch (selectorType) {
+            case "@p":
+                targetType = TargetType.NEAREST;
+                break;
+            case "@r":
+                targetType = TargetType.RANDOM;
+                break;
+            case "@a":
+                targetType = TargetType.ALL;
+                break;
+            case "@s":
+                targetType = TargetType.SELF;
+                break;
+            default:
+                targetType = TargetType.SELF;
+        }
+        
+        return new TargetSelector(targetType, arguments);
     }
     
     // Getters

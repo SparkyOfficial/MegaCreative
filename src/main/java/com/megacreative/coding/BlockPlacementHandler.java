@@ -455,7 +455,8 @@ public class BlockPlacementHandler implements Listener {
             containerLocation.getWorld().playSound(containerLocation, 
                 org.bukkit.Sound.BLOCK_WOOD_PLACE, 0.7f, 1.3f);
             
-            // Pre-populate container with placeholder items based on action configuration
+            // Populate container with items based on action configuration
+            // This provides a better user experience by showing what parameters are needed
             populateContainerWithPlaceholders(containerBlock, actionId);
         }
     }

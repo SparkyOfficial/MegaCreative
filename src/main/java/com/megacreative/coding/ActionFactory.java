@@ -26,7 +26,7 @@ import com.megacreative.coding.actions.ExecuteAsyncCommandAction;
 import com.megacreative.coding.actions.ExplosionAction;
 import com.megacreative.coding.actions.ForEachAction;
 import com.megacreative.coding.actions.FunctionCallAction;
-import com.megacreative.coding.actions.GenericAction;
+import com.megacreative.coding.actions.base.GenericAction;
 import com.megacreative.coding.actions.GetGlobalVarAction;
 import com.megacreative.coding.actions.world.GetLocationAction;
 import com.megacreative.coding.actions.GetPlayerNameAction;
@@ -75,11 +75,12 @@ import com.megacreative.coding.actions.WaitAction;
 import com.megacreative.coding.actions.condition.HasItemCondition;
 import com.megacreative.coding.actions.condition.HasPermissionCondition;
 import com.megacreative.coding.actions.condition.IsInWorldCondition;
-import com.megacreative.coding.executors.ExecutionResult;
 import com.megacreative.core.DependencyContainer;
 import com.megacreative.managers.GUIManager;
 import com.megacreative.gui.interactive.InteractiveGUIManager;
+import com.megacreative.coding.ExecutionContext;
 import com.megacreative.coding.events.CustomEventManager;
+import com.megacreative.coding.executors.ExecutionResult;
 import com.megacreative.coding.values.DataValue;
 import com.megacreative.coding.values.types.ListValue;
 import java.util.HashMap;
@@ -459,20 +460,9 @@ public class ActionFactory {
         // Зарегистрировать действие, если оно еще не зарегистрировано
         // Die Aktion registrieren, wenn sie noch nicht registriert ist
         if (!actionMap.containsKey(actionId)) {
-            // For now, we'll register a generic action placeholder
-            // Пока что мы зарегистрируем общий заполнитель действия
-            // Vorerst registrieren wir einen generischen Aktionsplatzhalter
-            // In a more advanced implementation, you might want to store display names separately
-            // В более продвинутой реализации вы можете хранить отображаемые имена отдельно
-            // In einer fortschrittlicheren Implementierung möchten Sie möglicherweise Anzeigenamen separat speichern
-            register(actionId, () -> new BlockAction() {
-                @Override
-                public ExecutionResult execute(CodeBlock block, ExecutionContext context) {
-                    return ExecutionResult.error("Action not implemented: " + actionId);
-                    // Действие не реализовано:
-                    // Aktion nicht implementiert:
-                }
-            });
+            // Register a generic action that can be configured later
+            // This provides a more flexible approach than the previous placeholder implementation
+            register(actionId, GenericAction::new);
         }
     }
     

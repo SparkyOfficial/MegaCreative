@@ -395,17 +395,21 @@ public class ReferenceSystemEventsListener implements Listener {
         ScriptEngine scriptEngine = plugin.getServiceRegistry().getService(ScriptEngine.class);
         if (scriptEngine != null) {
             // Create execution context with proper parameters
-            // ExecutionContext context = new ExecutionContext(
-            //     plugin, 
-            //     player, 
-            //     null, // creativeWorld
-            //     null, // event
-            //     null, // blockLocation
-            //     null  // currentBlock
-            // );
+            ExecutionContext context = new ExecutionContext.Builder()
+                .plugin(plugin)
+                .player(player)
+                .creativeWorld(plugin.getWorldManager().findCreativeWorldByBukkit(player != null ? player.getWorld() : null))
+                .build();
             
-            // Pass the context and parameters to the script engine for execution
-            // This is a simplified approach - you may need to adapt based on your actual implementation
+            // Execute the script
+            scriptEngine.executeScript(script, player, eventType).thenAccept(result -> {
+                if (!result.isSuccess()) {
+                    plugin.getLogger().warning("Script execution failed for " + eventType + ": " + result.getMessage());
+                }
+            }).exceptionally(throwable -> {
+                plugin.getLogger().severe("Script execution error for " + eventType + ": " + throwable.getMessage());
+                return null;
+            });
         }
     }
 }

@@ -245,18 +245,24 @@ public class AsyncLoopControl implements BlockAction {
          */
         private void executeChildBlock(ExecutionContext childContext, CodeBlock childBlock) {
             // This should integrate with the existing action registry system
-            // For demonstration, we'll show the structure
             String action = childBlock.getAction();
             
             if (action != null) {
-                // The actual implementation would look up the action in the registry
-                // and execute it. This is a simplified version.
-                
-                // Example integration point:
-                // BlockAction blockAction = context.getPlugin().getActionRegistry().getAction(action);
-                // if (blockAction != null) {
-                //     blockAction.execute(childContext);
-                // }
+                // Get the action factory from the plugin's service registry
+                com.megacreative.coding.ActionFactory actionFactory = context.getPlugin().getServiceRegistry().getService(com.megacreative.coding.ActionFactory.class);
+                if (actionFactory != null) {
+                    // Create and execute the action
+                    com.megacreative.coding.BlockAction blockAction = actionFactory.createAction(action);
+                    if (blockAction != null) {
+                        try {
+                            blockAction.execute(childBlock, childContext);
+                        } catch (Exception e) {
+                            context.getPlugin().getLogger().severe("Error executing action " + action + " in async loop: " + e.getMessage());
+                        }
+                    } else {
+                        context.getPlugin().getLogger().warning("Unknown action in async loop: " + action);
+                    }
+                }
                 
                 if (context.isDebugMode()) {
                     Player player = context.getPlayer();

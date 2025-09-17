@@ -30,6 +30,7 @@ public class AutoConnectionManager implements Listener {
     private final BlockConfigService blockConfigService;
     private final Map<Location, CodeBlock> locationToBlock = new HashMap<>();
     private final Map<UUID, List<CodeBlock>> playerScriptBlocks = new HashMap<>();
+    private final Map<Location, Player> blockOwners = new HashMap<>(); // Track block owners
     
     public AutoConnectionManager(MegaCreative plugin, BlockConfigService blockConfigService) {
         this.plugin = plugin;
@@ -132,6 +133,9 @@ public class AutoConnectionManager implements Listener {
             // Add to our tracking map
             locationToBlock.put(location, codeBlock);
             
+            // Track block owner
+            blockOwners.put(location, player);
+            
             // Add to player's script blocks
             addBlockToPlayerScript(player, codeBlock);
             
@@ -173,6 +177,9 @@ public class AutoConnectionManager implements Listener {
             
             // Remove from our tracking
             locationToBlock.remove(location);
+            
+            // Remove block owner tracking
+            blockOwners.remove(location);
             
             // Remove from player script
             removeBlockFromPlayerScript(event.getPlayer(), codeBlock);
@@ -922,43 +929,127 @@ public class AutoConnectionManager implements Listener {
      * Disconnects a block from its neighbors
      */
     public void disconnectBlock(CodeBlock codeBlock, Location location) {
-        // Implementation would go here
-        // This is a placeholder to fix compilation errors
+        if (codeBlock == null || location == null) {
+            return;
+        }
+        
+        // Get the line number for this location
+        int line = DevWorldGenerator.getCodeLineFromZ(location.getBlockZ());
+        if (line == -1) return;
+        
+        // Disconnect from previous block in the same line
+        Location prevLocation = getPreviousLocationInLine(location);
+        if (prevLocation != null) {
+            CodeBlock prevBlock = locationToBlock.get(prevLocation);
+            if (prevBlock != null && prevBlock.getNextBlock() == codeBlock) {
+                prevBlock.setNextBlock(null);
+                if (plugin != null) {
+                    plugin.getLogger().fine("Disconnected previous block at " + prevLocation);
+                }
+            }
+        }
+        
+        // Disconnect from next block in the same line
+        Location nextLocation = getNextLocationInLine(location);
+        if (nextLocation != null) {
+            CodeBlock nextBlock = locationToBlock.get(nextLocation);
+            if (nextBlock != null && codeBlock.getNextBlock() == nextBlock) {
+                codeBlock.setNextBlock(null);
+                if (plugin != null) {
+                    plugin.getLogger().fine("Disconnected next block at " + nextLocation);
+                }
+            }
+        }
+        
+        // Disconnect from parent blocks
+        // Find all blocks that have this block as a child and remove it
+        for (CodeBlock parentBlock : locationToBlock.values()) {
+            if (parentBlock.getChildren().contains(codeBlock)) {
+                parentBlock.getChildren().remove(codeBlock);
+                if (plugin != null) {
+                    plugin.getLogger().fine("Removed child relationship from parent block");
+                }
+            }
+        }
+        
+        if (plugin != null) {
+            plugin.getLogger().fine("Disconnected block at " + location);
+        }
     }
     
     /**
      * Gets the previous location in the same line
      */
     public Location getPreviousLocationInLine(Location location) {
-        // Implementation would go here
-        // This is a placeholder to fix compilation errors
-        return null;
+        if (location == null) return null;
+        
+        int line = DevWorldGenerator.getCodeLineFromZ(location.getBlockZ());
+        if (line == -1) return null;
+        
+        int currentX = location.getBlockX();
+        if (currentX <= 0) return null;
+        
+        // Return the previous block in the same line
+        return new Location(location.getWorld(), currentX - 1, location.getBlockY(), location.getBlockZ());
     }
     
     /**
      * Gets the next location in the same line
      */
     public Location getNextLocationInLine(Location location) {
-        // Implementation would go here
-        // This is a placeholder to fix compilation errors
-        return null;
+        if (location == null) return null;
+        
+        int line = DevWorldGenerator.getCodeLineFromZ(location.getBlockZ());
+        if (line == -1) return null;
+        
+        int currentX = location.getBlockX();
+        int maxBlocksPerLine = DevWorldGenerator.getBlocksPerLine();
+        
+        if (currentX >= maxBlocksPerLine - 1) return null;
+        
+        // Return the next block in the same line
+        return new Location(location.getWorld(), currentX + 1, location.getBlockY(), location.getBlockZ());
     }
     
     /**
      * Finds the owner of a block
      */
     public Player findBlockOwner(Location location) {
-        // Implementation would go here
-        // This is a placeholder to fix compilation errors
-        return null;
+        if (location == null || plugin == null) return null;
+        
+        // Track which player placed each block using a mapping
+        if (blockOwners.containsKey(location)) {
+            return blockOwners.get(location);
+        }
+        
+        // Fallback to finding the closest player if no owner is tracked
+        Player closestPlayer = null;
+        double closestDistance = Double.MAX_VALUE;
+        
+        for (Player player : location.getWorld().getPlayers()) {
+            double distance = player.getLocation().distanceSquared(location);
+            if (distance < closestDistance) {
+                closestDistance = distance;
+                closestPlayer = player;
+            }
+        }
+        
+        return closestPlayer;
     }
     
     /**
      * Gets the location for a block
      */
     public Location getLocationForBlock(CodeBlock block) {
-        // Implementation would go here
-        // This is a placeholder to fix compilation errors
+        if (block == null) return null;
+        
+        // Search through our location mapping to find the location for this block
+        for (Map.Entry<Location, CodeBlock> entry : locationToBlock.entrySet()) {
+            if (entry.getValue() == block) {
+                return entry.getKey();
+            }
+        }
+        
         return null;
     }
 

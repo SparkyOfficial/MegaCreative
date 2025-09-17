@@ -168,29 +168,39 @@ public enum ValueType {
             case BOOLEAN:
                 return false;
             case LOCATION:
-                return null; // Should be a Location object in actual implementation
+                // Return a default location at world spawn
+                return new org.bukkit.Location(null, 0, 0, 0);
             case ITEM:
-                return null; // Should be an ItemStack in actual implementation
+                // Return a default air item
+                return new org.bukkit.inventory.ItemStack(org.bukkit.Material.AIR);
             case BLOCK:
-                return null; // Should be a Block in actual implementation
+                // Return a default air block
+                return org.bukkit.Material.AIR;
             case ENTITY:
-                return null; // Should be an Entity in actual implementation
+                // Entities can't have a default value, return null
+                return null;
             case PLAYER:
-                return null; // Should be a Player in actual implementation
+                // Players can't have a default value, return null
+                return null;
             case WORLD:
-                return null; // Should be a World in actual implementation
+                // Worlds can't have a default value, return null
+                return null;
             case LIST:
                 return new java.util.ArrayList<>();
             case DICTIONARY:
                 return new java.util.HashMap<>();
             case VECTOR:
-                return null; // Should be a Vector in actual implementation
+                // Return a default zero vector
+                return new org.bukkit.util.Vector(0, 0, 0);
             case SOUND:
-                return null; // Should be a Sound in actual implementation
+                // Return a default sound
+                return org.bukkit.Sound.ENTITY_PLAYER_LEVELUP;
             case PARTICLE:
-                return null; // Should be a Particle in actual implementation
+                // Return a default particle
+                return org.bukkit.Particle.FLAME;
             case POTION:
-                return null; // Should be a PotionEffect in actual implementation
+                // Return a default potion effect
+                return org.bukkit.potion.PotionEffectType.SPEED;
             default:
                 return null;
         }
