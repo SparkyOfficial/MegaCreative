@@ -6,6 +6,7 @@ import com.megacreative.coding.CodeScript;
 import com.megacreative.coding.executors.ExecutionResult;
 import com.megacreative.models.CreativeWorld;
 import com.megacreative.services.BlockConfigService;
+import com.megacreative.interfaces.IWorldManager;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.Listener;
 import org.bukkit.event.player.PlayerMoveEvent;
@@ -57,15 +58,22 @@ public class PlayerEventsListener implements Listener {
 
     public PlayerEventsListener(MegaCreative plugin) {
         this.plugin = plugin;
-        // Получаем ScriptEngine из ServiceRegistry
-        this.scriptEngine = plugin.getServiceRegistry().getService(ScriptEngine.class);
-        this.blockConfigService = plugin.getServiceRegistry().getBlockConfigService();
+        // Add null checks for service registry
+        if (plugin != null && plugin.getServiceRegistry() != null) {
+            this.scriptEngine = plugin.getServiceRegistry().getService(ScriptEngine.class);
+            this.blockConfigService = plugin.getServiceRegistry().getBlockConfigService();
+        } else {
+            this.scriptEngine = null;
+            this.blockConfigService = null;
+        }
         
         // 🚀 PERFORMANCE: Построить карту обработчиков при инициализации
         rebuildEventHandlerMaps();
         
         // 🎆 FRAMELAND: Initialize comprehensive event system
-        plugin.getLogger().info("🎆 PlayerEventsListener initialized with reference system integration");
+        if (plugin != null) {
+            plugin.getLogger().info("🎆 PlayerEventsListener initialized with reference system integration");
+        }
     }
     
     /**
@@ -75,7 +83,13 @@ public class PlayerEventsListener implements Listener {
     public void rebuildEventHandlerMaps() {
         worldEventScripts.clear();
         
-        List<CreativeWorld> worlds = plugin.getWorldManager().getCreativeWorlds();
+        // Check if plugin and world manager are available
+        IWorldManager worldManager = getWorldManager();
+        if (worldManager == null) {
+            return;
+        }
+        
+        List<CreativeWorld> worlds = worldManager.getCreativeWorlds();
         for (CreativeWorld world : worlds) {
             if (world.getScripts() == null) continue;
             
@@ -92,9 +106,21 @@ public class PlayerEventsListener implements Listener {
             }
         }
         
-        plugin.getLogger().info("🚀 Event handler maps rebuilt - optimized for " + 
-            worldEventScripts.size() + " event types across " + worlds.size() + " worlds");
-        plugin.getLogger().info("🎆 Reference system integration: Enhanced event coverage active");
+        if (plugin != null) {
+            plugin.getLogger().info("🚀 Event handler maps rebuilt - optimized for " + 
+                worldEventScripts.size() + " event types across " + worlds.size() + " worlds");
+            plugin.getLogger().info("🎆 Reference system integration: Enhanced event coverage active");
+        }
+    }
+    
+    /**
+     * Helper method to get world manager safely
+     */
+    private IWorldManager getWorldManager() {
+        if (plugin == null || plugin.getServiceRegistry() == null) {
+            return null;
+        }
+        return plugin.getServiceRegistry().getWorldManager();
     }
     
     /**
@@ -118,7 +144,9 @@ public class PlayerEventsListener implements Listener {
         }
 
         // Find the creative world
-        CreativeWorld creativeWorld = plugin.getWorldManager().findCreativeWorldByBukkit(event.getPlayer().getWorld());
+        IWorldManager worldManager = getWorldManager();
+        if (worldManager == null) return;
+        CreativeWorld creativeWorld = worldManager.findCreativeWorldByBukkit(event.getPlayer().getWorld());
         if (creativeWorld == null) return;
         
         // Check if player can code in this world
@@ -133,9 +161,13 @@ public class PlayerEventsListener implements Listener {
                 scriptEngine.executeScript(script, event.getPlayer(), "player_move")
                     .whenComplete((result, throwable) -> {
                         if (throwable != null) {
-                            plugin.getLogger().warning("Move script execution failed with exception: " + throwable.getMessage());
+                            if (plugin != null) {
+                                plugin.getLogger().warning("Move script execution failed with exception: " + throwable.getMessage());
+                            }
                         } else if (result != null && !result.isSuccess()) {
-                            plugin.getLogger().warning("Move script execution failed: " + result.getMessage());
+                            if (plugin != null) {
+                                plugin.getLogger().warning("Move script execution failed: " + result.getMessage());
+                            }
                         }
                     });
             }
@@ -146,7 +178,9 @@ public class PlayerEventsListener implements Listener {
     @EventHandler
     public void onPlayerJoin(PlayerJoinEvent event) {
         // Find the creative world
-        CreativeWorld creativeWorld = plugin.getWorldManager().findCreativeWorldByBukkit(event.getPlayer().getWorld());
+        IWorldManager worldManager = getWorldManager();
+        if (worldManager == null) return;
+        CreativeWorld creativeWorld = worldManager.findCreativeWorldByBukkit(event.getPlayer().getWorld());
         if (creativeWorld == null) return;
         
         // Only execute in PLAY mode, allow coding in DEV mode but don't execute scripts
@@ -163,11 +197,17 @@ public class PlayerEventsListener implements Listener {
                 scriptEngine.executeScript(script, event.getPlayer(), "player_join")
                     .whenComplete((result, throwable) -> {
                         if (throwable != null) {
-                            plugin.getLogger().warning("Join script execution failed with exception: " + throwable.getMessage());
+                            if (plugin != null) {
+                                plugin.getLogger().warning("Join script execution failed with exception: " + throwable.getMessage());
+                            }
                         } else if (result != null && !result.isSuccess()) {
-                            plugin.getLogger().warning("Join script execution failed: " + result.getMessage());
+                            if (plugin != null) {
+                                plugin.getLogger().warning("Join script execution failed: " + result.getMessage());
+                            }
                         } else {
-                            plugin.getLogger().info("Successfully executed onJoin script for player: " + event.getPlayer().getName());
+                            if (plugin != null) {
+                                plugin.getLogger().info("Successfully executed onJoin script for player: " + event.getPlayer().getName());
+                            }
                         }
                     });
             }
@@ -178,7 +218,9 @@ public class PlayerEventsListener implements Listener {
     @EventHandler
     public void onPlayerQuit(PlayerQuitEvent event) {
         // Find the creative world
-        CreativeWorld creativeWorld = plugin.getWorldManager().findCreativeWorldByBukkit(event.getPlayer().getWorld());
+        IWorldManager worldManager = getWorldManager();
+        if (worldManager == null) return;
+        CreativeWorld creativeWorld = worldManager.findCreativeWorldByBukkit(event.getPlayer().getWorld());
         if (creativeWorld == null) return;
         
         // Check if player can code in this world
@@ -196,9 +238,13 @@ public class PlayerEventsListener implements Listener {
                         scriptEngine.executeScript(script, event.getPlayer(), "player_leave")
                             .whenComplete((result, throwable) -> {
                                 if (throwable != null) {
-                                    plugin.getLogger().warning("Leave script execution failed with exception: " + throwable.getMessage());
+                                    if (plugin != null) {
+                                        plugin.getLogger().warning("Leave script execution failed with exception: " + throwable.getMessage());
+                                    }
                                 } else if (result != null && !result.isSuccess()) {
-                                    plugin.getLogger().warning("Leave script execution failed: " + result.getMessage());
+                                    if (plugin != null) {
+                                        plugin.getLogger().warning("Leave script execution failed: " + result.getMessage());
+                                    }
                                 }
                             });
                     }
@@ -211,7 +257,9 @@ public class PlayerEventsListener implements Listener {
     @EventHandler
     public void onPlayerChat(AsyncPlayerChatEvent event) {
         // Find the creative world
-        CreativeWorld creativeWorld = plugin.getWorldManager().findCreativeWorldByBukkit(event.getPlayer().getWorld());
+        IWorldManager worldManager = getWorldManager();
+        if (worldManager == null) return;
+        CreativeWorld creativeWorld = worldManager.findCreativeWorldByBukkit(event.getPlayer().getWorld());
         if (creativeWorld == null) return;
         
         // Check if player can code in this world
@@ -226,9 +274,13 @@ public class PlayerEventsListener implements Listener {
                 scriptEngine.executeScript(script, event.getPlayer(), "player_chat")
                     .whenComplete((result, throwable) -> {
                         if (throwable != null) {
-                            plugin.getLogger().warning("Chat script execution failed with exception: " + throwable.getMessage());
+                            if (plugin != null) {
+                                plugin.getLogger().warning("Chat script execution failed with exception: " + throwable.getMessage());
+                            }
                         } else if (result != null && !result.isSuccess()) {
-                            plugin.getLogger().warning("Chat script execution failed: " + result.getMessage());
+                            if (plugin != null) {
+                                plugin.getLogger().warning("Chat script execution failed: " + result.getMessage());
+                            }
                         }
                     });
             }
@@ -239,7 +291,9 @@ public class PlayerEventsListener implements Listener {
     @EventHandler
     public void onPlayerCommandPreprocess(PlayerCommandPreprocessEvent event) {
         // Find the creative world
-        CreativeWorld creativeWorld = plugin.getWorldManager().findCreativeWorldByBukkit(event.getPlayer().getWorld());
+        IWorldManager worldManager = getWorldManager();
+        if (worldManager == null) return;
+        CreativeWorld creativeWorld = worldManager.findCreativeWorldByBukkit(event.getPlayer().getWorld());
         if (creativeWorld == null) return;
         
         // Check if player can code in this world
@@ -254,9 +308,13 @@ public class PlayerEventsListener implements Listener {
                 scriptEngine.executeScript(script, event.getPlayer(), "player_command")
                             .whenComplete((result, throwable) -> {
                                 if (throwable != null) {
-                                    plugin.getLogger().warning("Command script execution failed with exception: " + throwable.getMessage());
+                                    if (plugin != null) {
+                                        plugin.getLogger().warning("Command script execution failed with exception: " + throwable.getMessage());
+                                    }
                                 } else if (result != null && !result.isSuccess()) {
-                                    plugin.getLogger().warning("Command script execution failed: " + result.getMessage());
+                                    if (plugin != null) {
+                                        plugin.getLogger().warning("Command script execution failed: " + result.getMessage());
+                                    }
                                 }
                             });
             }
@@ -267,7 +325,9 @@ public class PlayerEventsListener implements Listener {
     @EventHandler
     public void onPlayerDeath(PlayerDeathEvent event) {
         // Find the creative world
-        CreativeWorld creativeWorld = plugin.getWorldManager().findCreativeWorldByBukkit(event.getEntity().getWorld());
+        IWorldManager worldManager = getWorldManager();
+        if (worldManager == null) return;
+        CreativeWorld creativeWorld = worldManager.findCreativeWorldByBukkit(event.getEntity().getWorld());
         if (creativeWorld == null) return;
         
         // Check if player can code in this world
@@ -282,9 +342,13 @@ public class PlayerEventsListener implements Listener {
                 scriptEngine.executeScript(script, event.getEntity(), "player_death")
                             .whenComplete((result, throwable) -> {
                                 if (throwable != null) {
-                                    plugin.getLogger().warning("Death script execution failed with exception: " + throwable.getMessage());
+                                    if (plugin != null) {
+                                        plugin.getLogger().warning("Death script execution failed with exception: " + throwable.getMessage());
+                                    }
                                 } else if (result != null && !result.isSuccess()) {
-                                    plugin.getLogger().warning("Death script execution failed: " + result.getMessage());
+                                    if (plugin != null) {
+                                        plugin.getLogger().warning("Death script execution failed: " + result.getMessage());
+                                    }
                                 }
                             });
             }
@@ -295,7 +359,9 @@ public class PlayerEventsListener implements Listener {
     @EventHandler
     public void onBlockPlace(BlockPlaceEvent event) {
         // Find the creative world
-        CreativeWorld creativeWorld = plugin.getWorldManager().findCreativeWorldByBukkit(event.getPlayer().getWorld());
+        IWorldManager worldManager = getWorldManager();
+        if (worldManager == null) return;
+        CreativeWorld creativeWorld = worldManager.findCreativeWorldByBukkit(event.getPlayer().getWorld());
         if (creativeWorld == null) return;
         
         // Check if player can code in this world
@@ -310,9 +376,13 @@ public class PlayerEventsListener implements Listener {
                 scriptEngine.executeScript(script, event.getPlayer(), "block_place")
                             .whenComplete((result, throwable) -> {
                                 if (throwable != null) {
-                                    plugin.getLogger().warning("Block place script execution failed with exception: " + throwable.getMessage());
+                                    if (plugin != null) {
+                                        plugin.getLogger().warning("Block place script execution failed with exception: " + throwable.getMessage());
+                                    }
                                 } else if (result != null && !result.isSuccess()) {
-                                    plugin.getLogger().warning("Block place script execution failed: " + result.getMessage());
+                                    if (plugin != null) {
+                                        plugin.getLogger().warning("Block place script execution failed: " + result.getMessage());
+                                    }
                                 }
                             });
             }
@@ -323,7 +393,9 @@ public class PlayerEventsListener implements Listener {
     @EventHandler
     public void onBlockBreak(BlockBreakEvent event) {
         // Find the creative world
-        CreativeWorld creativeWorld = plugin.getWorldManager().findCreativeWorldByBukkit(event.getPlayer().getWorld());
+        IWorldManager worldManager = getWorldManager();
+        if (worldManager == null) return;
+        CreativeWorld creativeWorld = worldManager.findCreativeWorldByBukkit(event.getPlayer().getWorld());
         if (creativeWorld == null) return;
         
         // Check if player can code in this world
@@ -338,9 +410,13 @@ public class PlayerEventsListener implements Listener {
                 scriptEngine.executeScript(script, event.getPlayer(), "block_break")
                             .whenComplete((result, throwable) -> {
                                 if (throwable != null) {
-                                    plugin.getLogger().warning("Block break script execution failed with exception: " + throwable.getMessage());
+                                    if (plugin != null) {
+                                        plugin.getLogger().warning("Block break script execution failed with exception: " + throwable.getMessage());
+                                    }
                                 } else if (result != null && !result.isSuccess()) {
-                                    plugin.getLogger().warning("Block break script execution failed: " + result.getMessage());
+                                    if (plugin != null) {
+                                        plugin.getLogger().warning("Block break script execution failed: " + result.getMessage());
+                                    }
                                 }
                             });
             }
@@ -351,7 +427,9 @@ public class PlayerEventsListener implements Listener {
     @EventHandler
     public void onPlayerLevelChange(PlayerLevelChangeEvent event) {
         // Find the creative world
-        CreativeWorld creativeWorld = plugin.getWorldManager().findCreativeWorldByBukkit(event.getPlayer().getWorld());
+        IWorldManager worldManager = getWorldManager();
+        if (worldManager == null) return;
+        CreativeWorld creativeWorld = worldManager.findCreativeWorldByBukkit(event.getPlayer().getWorld());
         if (creativeWorld == null) return;
         
         // Check if player can code in this world
@@ -366,9 +444,13 @@ public class PlayerEventsListener implements Listener {
                 scriptEngine.executeScript(script, event.getPlayer(), "player_level_up")
                             .whenComplete((result, throwable) -> {
                                 if (throwable != null) {
-                                    plugin.getLogger().warning("Level up script execution failed with exception: " + throwable.getMessage());
+                                    if (plugin != null) {
+                                        plugin.getLogger().warning("Level up script execution failed with exception: " + throwable.getMessage());
+                                    }
                                 } else if (result != null && !result.isSuccess()) {
-                                    plugin.getLogger().warning("Level up script execution failed: " + result.getMessage());
+                                    if (plugin != null) {
+                                        plugin.getLogger().warning("Level up script execution failed: " + result.getMessage());
+                                    }
                                 }
                             });
             }
@@ -385,7 +467,9 @@ public class PlayerEventsListener implements Listener {
         updateTPS();
         
         // Get all creative worlds
-        List<CreativeWorld> creativeWorlds = plugin.getWorldManager().getCreativeWorlds();
+        IWorldManager worldManager = getWorldManager();
+        if (worldManager == null) return;
+        List<CreativeWorld> creativeWorlds = worldManager.getCreativeWorlds();
         
         // Iterate through each creative world
         for (CreativeWorld creativeWorld : creativeWorlds) {
@@ -399,9 +483,13 @@ public class PlayerEventsListener implements Listener {
                         scriptEngine.executeScript(script, player, "tick")
                             .whenComplete((result, throwable) -> {
                                 if (throwable != null) {
-                                    plugin.getLogger().warning("Tick script execution failed with exception: " + throwable.getMessage());
+                                    if (plugin != null) {
+                                        plugin.getLogger().warning("Tick script execution failed with exception: " + throwable.getMessage());
+                                    }
                                 } else if (result != null && !result.isSuccess()) {
-                                    plugin.getLogger().warning("Tick script execution failed: " + result.getMessage());
+                                    if (plugin != null) {
+                                        plugin.getLogger().warning("Tick script execution failed: " + result.getMessage());
+                                    }
                                 }
                             });
                     }
@@ -424,7 +512,7 @@ public class PlayerEventsListener implements Listener {
         }
         
         // Log TPS if it drops significantly
-        if (tps < 15.0) {
+        if (tps < 15.0 && plugin != null) {
             plugin.getLogger().warning("Server TPS dropped to: " + String.format("%.2f", tps));
         }
     }

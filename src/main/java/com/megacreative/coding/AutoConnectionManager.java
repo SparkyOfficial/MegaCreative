@@ -4,6 +4,7 @@ import com.megacreative.MegaCreative;
 import com.megacreative.models.CreativeWorld;
 import com.megacreative.services.BlockConfigService;
 import com.megacreative.worlds.DevWorldGenerator;
+import com.megacreative.interfaces.IWorldManager;
 import org.bukkit.Location;
 import org.bukkit.Material;
 import org.bukkit.World;
@@ -33,6 +34,26 @@ public class AutoConnectionManager implements Listener {
     public AutoConnectionManager(MegaCreative plugin, BlockConfigService blockConfigService) {
         this.plugin = plugin;
         this.blockConfigService = blockConfigService;
+    }
+    
+    /**
+     * Helper method to get world manager safely
+     */
+    private IWorldManager getWorldManager() {
+        if (plugin == null || plugin.getServiceRegistry() == null) {
+            return null;
+        }
+        return plugin.getServiceRegistry().getWorldManager();
+    }
+    
+    /**
+     * Helper method to get block placement handler safely
+     */
+    private BlockPlacementHandler getBlockPlacementHandler() {
+        if (plugin == null || plugin.getServiceRegistry() == null) {
+            return null;
+        }
+        return plugin.getServiceRegistry().getBlockPlacementHandler();
     }
     
     /**
@@ -66,7 +87,9 @@ public class AutoConnectionManager implements Listener {
             }
         }
         
-        plugin.getLogger().fine("Synchronized " + placementBlocks.size() + " blocks with AutoConnectionManager");
+        if (plugin != null) {
+            plugin.getLogger().fine("Synchronized " + placementBlocks.size() + " blocks with AutoConnectionManager");
+        }
     }
     
     /**
@@ -84,16 +107,22 @@ public class AutoConnectionManager implements Listener {
 
         // Check if this is a dev world
         if (!isDevWorld(block.getWorld())) {
-            plugin.getLogger().info("AutoConnectionManager: Block placement not in dev world: " + block.getWorld().getName());
+            if (plugin != null) {
+                plugin.getLogger().info("AutoConnectionManager: Block placement not in dev world: " + block.getWorld().getName());
+            }
             return;
         }
         
-        plugin.getLogger().info("AutoConnectionManager: Processing block placement by " + player.getName() + " at " + location);
+        if (plugin != null) {
+            plugin.getLogger().info("AutoConnectionManager: Processing block placement by " + player.getName() + " at " + location);
+        }
         
         // Check if this is a code block by checking if BlockPlacementHandler created a CodeBlock
-        BlockPlacementHandler placementHandler = plugin.getBlockPlacementHandler();
+        BlockPlacementHandler placementHandler = getBlockPlacementHandler();
         if (placementHandler == null || !placementHandler.hasCodeBlock(location)) {
-            plugin.getLogger().info("AutoConnectionManager: Not a code block or not handled by BlockPlacementHandler at " + location);
+            if (plugin != null) {
+                plugin.getLogger().info("AutoConnectionManager: Not a code block or not handled by BlockPlacementHandler at " + location);
+            }
             return; // Not a code block or not handled by BlockPlacementHandler
         }
 
@@ -120,16 +149,17 @@ public class AutoConnectionManager implements Listener {
             String blockName = config != null ? config.getDisplayName() : "Unknown Block";
             
             // Уменьшен спам - сообщение только важных событий
-            plugin.getLogger().info("Block '" + blockName + "' placed and auto-connected at " + location + " for player " + player.getName());
-            plugin.getLogger().fine("Auto-connected CodeBlock at " + location + " for player " + player.getName());
+            if (plugin != null) {
+                plugin.getLogger().info("Block '" + blockName + "' placed and auto-connected at " + location + " for player " + player.getName());
+                plugin.getLogger().fine("Auto-connected CodeBlock at " + location + " for player " + player.getName());
+            }
         } else {
-            plugin.getLogger().warning("AutoConnectionManager: CodeBlock is null at " + location);
+            if (plugin != null) {
+                plugin.getLogger().warning("AutoConnectionManager: CodeBlock is null at " + location);
+            }
         }
     }
     
-    /**
-     * Enhanced block break handler with proper disconnection and synchronization
-     */
     @EventHandler(priority = EventPriority.MONITOR)
     public void onBlockBreak(BlockBreakEvent event) {
         if (event.isCancelled()) return;
@@ -153,10 +183,12 @@ public class AutoConnectionManager implements Listener {
             }
             
             // Also ensure BlockPlacementHandler is synchronized
-            BlockPlacementHandler placementHandler = plugin.getBlockPlacementHandler();
+            BlockPlacementHandler placementHandler = getBlockPlacementHandler();
             if (placementHandler != null) {
                 // The BlockPlacementHandler should handle this in its own event handler
-                plugin.getLogger().fine("CodeBlock disconnected at " + location);
+                if (plugin != null) {
+                    plugin.getLogger().fine("CodeBlock disconnected at " + location);
+                }
             }
             
             event.getPlayer().sendMessage("§cБлок кода удален и отсоединён от цепочки!");
@@ -171,7 +203,9 @@ public class AutoConnectionManager implements Listener {
         int line = DevWorldGenerator.getCodeLineFromZ(location.getBlockZ());
         if (line == -1) return;
         
-        plugin.getLogger().fine("Auto-connecting block at " + location + " (line " + line + ")");
+        if (plugin != null) {
+            plugin.getLogger().fine("Auto-connecting block at " + location + " (line " + line + ")");
+        }
         
         // Step 1: Connect with previous block in the same line (horizontal connection)
         Location prevLocation = getPreviousLocationInLine(location);
@@ -179,7 +213,9 @@ public class AutoConnectionManager implements Listener {
             CodeBlock prevBlock = locationToBlock.get(prevLocation);
             if (prevBlock != null) {
                 prevBlock.setNextBlock(codeBlock);
-                plugin.getLogger().fine("Connected horizontal: " + prevLocation + " -> " + location);
+                if (plugin != null) {
+                    plugin.getLogger().fine("Connected horizontal: " + prevLocation + " -> " + location);
+                }
                 
                 // Add visual feedback for connection
                 addConnectionEffect(prevLocation, location);
@@ -192,7 +228,9 @@ public class AutoConnectionManager implements Listener {
             CodeBlock nextBlock = locationToBlock.get(nextLocation);
             if (nextBlock != null) {
                 codeBlock.setNextBlock(nextBlock);
-                plugin.getLogger().fine("Connected horizontal: " + location + " -> " + nextLocation);
+                if (plugin != null) {
+                    plugin.getLogger().fine("Connected horizontal: " + location + " -> " + nextLocation);
+                }
                 
                 // Add visual feedback for connection
                 addConnectionEffect(location, nextLocation);
@@ -216,7 +254,9 @@ public class AutoConnectionManager implements Listener {
             CodeBlock parentBlock = findParentBlock(location, line);
             if (parentBlock != null) {
                 parentBlock.addChild(codeBlock);
-                plugin.getLogger().fine("Added child relationship: parent at line " + line + " -> child at " + location);
+                if (plugin != null) {
+                    plugin.getLogger().fine("Added child relationship: parent at line " + line + " -> child at " + location);
+                }
             }
         }
         
@@ -265,7 +305,9 @@ public class AutoConnectionManager implements Listener {
                     } else if (checkBlock.getBracketType() == CodeBlock.BracketType.OPEN) {
                         if (bracketBalance == 0) {
                             // Found unmatched opening bracket - this is our parent!
-                            plugin.getLogger().fine("Found bracket parent at (" + x + ", " + line + ") for child at " + childLocation);
+                            if (plugin != null) {
+                                plugin.getLogger().fine("Found bracket parent at (" + x + ", " + line + ") for child at " + childLocation);
+                            }
                             return checkBlock;
                         } else {
                             bracketBalance--; // Match this opening bracket with previous closing bracket
@@ -292,7 +334,9 @@ public class AutoConnectionManager implements Listener {
                 CodeBlock parentBlock = locationToBlock.get(parentLocation);
                 
                 if (parentBlock != null && isControlBlock(parentBlock)) {
-                    plugin.getLogger().fine("Found indentation parent at (" + parentX + ", " + parentLine + ") for child at " + childLocation);
+                    if (plugin != null) {
+                        plugin.getLogger().fine("Found indentation parent at (" + parentX + ", " + parentLine + ") for child at " + childLocation);
+                    }
                     return parentBlock;
                 }
             }
@@ -343,30 +387,18 @@ public class AutoConnectionManager implements Listener {
                     return Integer.compare(locA.getBlockX(), locB.getBlockX());
                 });
                 
-                plugin.getLogger().fine("Updated player script blocks for: " + owner.getName());
+                if (plugin != null) {
+                    plugin.getLogger().fine("Updated player script blocks for: " + owner.getName());
+                }
             }
         } else {
             // Fallback to the simplified approach if owner cannot be determined
             for (Map.Entry<UUID, List<CodeBlock>> entry : playerScriptBlocks.entrySet()) {
                 List<CodeBlock> blocks = entry.getValue();
-                
-                // Add to player's blocks if not already present
-                if (!blocks.contains(codeBlock)) {
-                    blocks.add(codeBlock);
-                    
-                    // Sort blocks by location for proper execution order
-                    blocks.sort((a, b) -> {
-                        Location locA = getLocationForBlock(a);
-                        Location locB = getLocationForBlock(b);
-                        if (locA == null || locB == null) return 0;
-                        
-                        // Sort by Z (line) first, then by X (position in line)
-                        int lineCompare = Integer.compare(locA.getBlockZ(), locB.getBlockZ());
-                        if (lineCompare != 0) return lineCompare;
-                        return Integer.compare(locA.getBlockX(), locB.getBlockX());
-                    });
-                    
-                    plugin.getLogger().fine("Updated player script blocks for: " + entry.getKey());
+                if (blocks.contains(codeBlock)) {
+                    if (plugin != null) {
+                        plugin.getLogger().fine("Updated player script blocks for: " + entry.getKey());
+                    }
                     break;
                 }
             }
@@ -374,210 +406,70 @@ public class AutoConnectionManager implements Listener {
     }
     
     /**
-     * Enhanced child block connection with proper hierarchy management
-     * Connects child blocks for conditionals and loops with better logic
+     * Looks for child blocks (indented blocks) for control structures
      */
     private void connectChildBlocks(CodeBlock parentBlock, Location parentLocation) {
         int parentLine = DevWorldGenerator.getCodeLineFromZ(parentLocation.getBlockZ());
         
-        plugin.getLogger().fine("Looking for child blocks for parent at line " + parentLine);
+        if (plugin != null) {
+            plugin.getLogger().fine("Looking for child blocks for parent at line " + parentLine);
+        }
         
-        // Look for indented blocks in subsequent lines
+        // Look for indented blocks in subsequent lines (children)
         for (int childLine = parentLine + 1; childLine < parentLine + 10 && childLine < DevWorldGenerator.getLinesCount(); childLine++) {
             int childZ = DevWorldGenerator.getZForCodeLine(childLine);
             
             // Check different indentation levels (X > 0 means indented)
-            boolean foundChildInLine = false;
-            
-            for (int childX = 1; childX <= 5; childX++) { // Check indentation levels 1-5
+            for (int childX = 1; childX <= 5; childX++) {
                 Location childLocation = new Location(parentLocation.getWorld(), childX, parentLocation.getBlockY(), childZ);
                 CodeBlock childBlock = locationToBlock.get(childLocation);
                 
                 if (childBlock != null) {
-                    // Only add as child if not already connected
-                    if (!parentBlock.getChildren().contains(childBlock)) {
-                        parentBlock.addChild(childBlock);
+                    parentBlock.addChild(childBlock);
+                    if (plugin != null) {
                         plugin.getLogger().fine("Connected child: parent line " + parentLine + " -> child at (" + childX + ", " + childLine + ")");
-                        foundChildInLine = true;
                     }
+                    buildBlockChain(childBlock, childLocation); // Recursively build child chain
                 }
             }
             
-            // If no indented blocks found in this line and it's not empty, stop searching
-            // (This handles the case where the conditional/loop block ends)
-            if (!foundChildInLine) {
-                // Check if there's any block at X=0 (non-indented) which would end the child section
-                Location endLocation = new Location(parentLocation.getWorld(), 0, parentLocation.getBlockY(), childZ);
-                if (locationToBlock.containsKey(endLocation)) {
+            // If we find a non-indented block, stop looking for children
+            Location endLocation = new Location(parentLocation.getWorld(), 0, parentLocation.getBlockY(), childZ);
+            if (locationToBlock.containsKey(endLocation)) {
+                if (plugin != null) {
                     plugin.getLogger().fine("Found non-indented block at line " + childLine + ", ending child search");
-                    break;
                 }
+                break;
             }
         }
     }
     
     /**
-     * Отключает блок от соседних блоков
+     * Adds a block to a player's script blocks
      */
-    private void disconnectBlock(CodeBlock codeBlock, Location location) {
-        // Находим предыдущий блок и обновляем его ссылку
-        Location prevLocation = getPreviousLocationInLine(location);
-        if (prevLocation != null) {
-            CodeBlock prevBlock = locationToBlock.get(prevLocation);
-            if (prevBlock != null && prevBlock.getNextBlock() == codeBlock) {
-                // Ищем следующий блок для переподключения
-                CodeBlock nextBlock = codeBlock.getNextBlock();
-                prevBlock.setNextBlock(nextBlock);
-            }
-        }
-        
-        // Удаляем из дочерних блоков родительского блока
-        for (CodeBlock block : locationToBlock.values()) {
-            block.getChildren().remove(codeBlock);
-        }
-    }
-    
-    /**
-     * Получает предыдущую позицию в той же линии
-     */
-    private Location getPreviousLocationInLine(Location location) {
-        int prevX = location.getBlockX() - 1;
-        if (prevX < 0) return null;
-        
-        return new Location(location.getWorld(), prevX, location.getBlockY(), location.getBlockZ());
-    }
-    
-    /**
-     * Получает следующую позицию в той же линии
-     */
-    private Location getNextLocationInLine(Location location) {
-        int nextX = location.getBlockX() + 1;
-        if (nextX >= DevWorldGenerator.getBlocksPerLine()) return null;
-        
-        return new Location(location.getWorld(), nextX, location.getBlockY(), location.getBlockZ());
-    }
-    
-    /**
-     * Создает CodeBlock на основе материала блока
-     */
-    private CodeBlock createCodeBlockFromMaterial(Material material, Location location) {
-        String action = determineActionFromMaterial(material);
-        if (action == null) return null;
-        
-        CodeBlock codeBlock = new CodeBlock(material, action);
-        // Note: We're removing the plugin dependency from CodeBlock in a later step
-        
-        return codeBlock;
-    }
-    
-    /**
-     * Определяет действие блока на основе его материала
-     * Теперь использует конфигурацию из coding_blocks.yml
-     */
-    private String determineActionFromMaterial(Material material) {
-        // Get the first block config for this material as a fallback
-        BlockConfigService.BlockConfig config = blockConfigService.getFirstBlockConfig(material);
-        return config != null ? config.getId() : null;
-    }
-    
-    /**
-     * Gets the block type for a material using the new configuration system
-     */
-    private String getBlockType(Material material) {
-        BlockConfigService.BlockConfig config = blockConfigService.getFirstBlockConfig(material);
-        return config != null ? config.getType() : "ACTION";
-    }
-    
-    /**
-     * Finds the player who owns a block at the specified location
-     * Uses a more sophisticated approach than the simplified method
-     */
-    private Player findBlockOwner(Location location) {
-        if (location == null || location.getWorld() == null) {
-            return null;
-        }
-        
-        World world = location.getWorld();
-        
-        // First, try to find a player who is close to the block
-        Collection<? extends Player> players = world.getPlayers();
-        for (Player player : players) {
-            // Check if player is within a reasonable distance (32 blocks)
-            if (player.getLocation().distanceSquared(location) < 1024) { // 32^2 = 1024
-                return player;
-            }
-        }
-        
-        // If no nearby player, try to find the player who last interacted with a block in this area
-        // This would require tracking player interactions, which is more complex
-        
-        // Fallback to the first player in the world
-        if (!players.isEmpty()) {
-            return players.iterator().next();
-        }
-        
-        return null;
-    }
-    
-    /**
-     * Checks if a block type is a control or event block using the new configuration system
-     */
-    private boolean isControlOrEventBlock(String blockType) {
-        return blockConfigService.isControlOrEventBlock(blockType);
-    }
-    
-    /**
-     * Gets the location for a CodeBlock by searching through the location map
-     */
-    private Location getLocationForBlock(CodeBlock targetBlock) {
-        for (Map.Entry<Location, CodeBlock> entry : locationToBlock.entrySet()) {
-            if (entry.getValue().equals(targetBlock)) {
-                return entry.getKey();
-            }
-        }
-        return null;
-    }
-    
-    /**
-     * Enhanced block addition to player script tracking
-     * Maintains proper ordering and relationships
-     */
-    private void addBlockToPlayerScript(Player player, CodeBlock codeBlock) {
+    private void addBlockToPlayerScript(Player player, CodeBlock block) {
         UUID playerId = player.getUniqueId();
         List<CodeBlock> blocks = playerScriptBlocks.computeIfAbsent(playerId, k -> new ArrayList<>());
         
-        if (!blocks.contains(codeBlock)) {
-            blocks.add(codeBlock);
-            
-            // Sort blocks by location for proper execution order
-            blocks.sort((a, b) -> {
-                Location locA = getLocationForBlock(a);
-                Location locB = getLocationForBlock(b);
-                if (locA == null || locB == null) return 0;
-                
-                // Sort by Z (line) first, then by X (position in line)
-                int lineCompare = Integer.compare(locA.getBlockZ(), locB.getBlockZ());
-                if (lineCompare != 0) return lineCompare;
-                return Integer.compare(locA.getBlockX(), locB.getBlockX());
-            });
-            
-            plugin.getLogger().fine("Added CodeBlock to player " + player.getName() + " script. Total blocks: " + blocks.size());
+        if (!blocks.contains(block)) {
+            blocks.add(block);
+            if (plugin != null) {
+                plugin.getLogger().fine("Added CodeBlock to player " + player.getName() + " script. Total blocks: " + blocks.size());
+            }
         }
     }
     
     /**
-     * Removes a block from player script tracking
+     * Removes a block from a player's script blocks
      */
-    private void removeBlockFromPlayerScript(Player player, CodeBlock codeBlock) {
+    private void removeBlockFromPlayerScript(Player player, CodeBlock block) {
         UUID playerId = player.getUniqueId();
         List<CodeBlock> blocks = playerScriptBlocks.get(playerId);
         
-        if (blocks != null) {
-            blocks.remove(codeBlock);
-            if (blocks.isEmpty()) {
-                playerScriptBlocks.remove(playerId);
+        if (blocks != null && blocks.remove(block)) {
+            if (plugin != null) {
+                plugin.getLogger().fine("Removed CodeBlock from player " + player.getName() + " script. Remaining blocks: " + blocks.size());
             }
-            plugin.getLogger().fine("Removed CodeBlock from player " + player.getName() + " script. Remaining blocks: " + blocks.size());
         }
     }
     
@@ -607,8 +499,14 @@ public class AutoConnectionManager implements Listener {
                 return;
             }
             
-            // Find the creative world
-            com.megacreative.models.CreativeWorld creativeWorld = plugin.getWorldManager().findCreativeWorldByBukkit(location.getWorld());
+            // Find the creative world using service registry
+            com.megacreative.interfaces.IWorldManager worldManager = getWorldManager();
+            if (worldManager == null) {
+                plugin.getLogger().warning("World manager not available");
+                return;
+            }
+            
+            com.megacreative.models.CreativeWorld creativeWorld = worldManager.findCreativeWorldByBukkit(location.getWorld());
             if (creativeWorld != null) {
                 // Add the script to the world
                 List<CodeScript> scripts = creativeWorld.getScripts();
@@ -625,7 +523,7 @@ public class AutoConnectionManager implements Listener {
                 scripts.add(script);
                 
                 // Save the creative world to persist the script
-                plugin.getWorldManager().saveWorld(creativeWorld);
+                worldManager.saveWorld(creativeWorld);
                 
                 player.sendMessage("§a✓ Скрипт скомпилирован и создан для события: §f" + eventBlock.getAction());
                 plugin.getLogger().fine("Compiled and added script for event block: " + eventBlock.getAction() + " in world: " + creativeWorld.getName());
@@ -643,8 +541,14 @@ public class AutoConnectionManager implements Listener {
      */
     public void removeScript(CodeBlock eventBlock, Location location) {
         try {
-            // Find the creative world
-            com.megacreative.models.CreativeWorld creativeWorld = plugin.getWorldManager().findCreativeWorldByBukkit(location.getWorld());
+            // Find the creative world using service registry
+            com.megacreative.interfaces.IWorldManager worldManager = getWorldManager();
+            if (worldManager == null) {
+                plugin.getLogger().warning("World manager not available");
+                return;
+            }
+            
+            com.megacreative.models.CreativeWorld creativeWorld = worldManager.findCreativeWorldByBukkit(location.getWorld());
             if (creativeWorld != null) {
                 // Remove the script from the world
                 List<CodeScript> scripts = creativeWorld.getScripts();
@@ -657,7 +561,7 @@ public class AutoConnectionManager implements Listener {
                     
                     if (removed) {
                         // Save the creative world to persist the change
-                        plugin.getWorldManager().saveWorld(creativeWorld);
+                        worldManager.saveWorld(creativeWorld);
                         plugin.getLogger().fine("Removed script for event block: " + eventBlock.getAction() + " from world: " + creativeWorld.getName());
                     }
                 }
@@ -735,14 +639,16 @@ public class AutoConnectionManager implements Listener {
      * Forces synchronization with BlockPlacementHandler and rebuilds connections
      */
     public void forceSynchronization() {
-        BlockPlacementHandler placementHandler = plugin.getBlockPlacementHandler();
+        BlockPlacementHandler placementHandler = getBlockPlacementHandler();
         if (placementHandler != null) {
             synchronizeWithPlacementHandler(placementHandler);
             
             // Rebuild connections for all loaded worlds
-            for (World world : plugin.getServer().getWorlds()) {
-                if (isDevWorld(world)) {
-                    rebuildWorldConnections(world);
+            if (plugin != null) {
+                for (World world : plugin.getServer().getWorlds()) {
+                    if (isDevWorld(world)) {
+                        rebuildWorldConnections(world);
+                    }
                 }
             }
         }
@@ -875,9 +781,20 @@ public class AutoConnectionManager implements Listener {
      * This should be called when the world is loaded or when significant changes are made
      */
     public void recompileWorldScripts(org.bukkit.World world) {
-        plugin.getLogger().fine("Recompiling all scripts for world: " + world.getName());
+        if (plugin != null) {
+            plugin.getLogger().fine("Recompiling all scripts for world: " + world.getName());
+        }
         
-        com.megacreative.models.CreativeWorld creativeWorld = plugin.getWorldManager().findCreativeWorldByBukkit(world);
+        // Use service registry to get world manager
+        IWorldManager worldManager = getWorldManager();
+        if (worldManager == null) {
+            if (plugin != null) {
+                plugin.getLogger().warning("World manager not available");
+            }
+            return;
+        }
+        
+        com.megacreative.models.CreativeWorld creativeWorld = worldManager.findCreativeWorldByBukkit(world);
         if (creativeWorld == null) return;
         
         // Clear existing scripts
@@ -897,24 +814,32 @@ public class AutoConnectionManager implements Listener {
                     if (compiledScript != null) {
                         newScripts.add(compiledScript);
                         scriptCount++;
-                        plugin.getLogger().fine("Successfully compiled script: " + compiledScript.getName());
+                        if (plugin != null) {
+                            plugin.getLogger().fine("Successfully compiled script: " + compiledScript.getName());
+                        }
                     } else {
                         errorCount++;
-                        plugin.getLogger().warning("Failed to compile script from event block at " + entry.getKey());
+                        if (plugin != null) {
+                            plugin.getLogger().warning("Failed to compile script from event block at " + entry.getKey());
+                        }
                     }
                 } catch (Exception e) {
                     errorCount++;
-                    plugin.getLogger().severe("Error compiling script from event block at " + entry.getKey() + ": " + e.getMessage());
-                    e.printStackTrace();
+                    if (plugin != null) {
+                        plugin.getLogger().severe("Error compiling script from event block at " + entry.getKey() + ": " + e.getMessage());
+                        e.printStackTrace();
+                    }
                 }
             }
         }
         
         // Update the creative world with new scripts
         creativeWorld.setScripts(newScripts);
-        plugin.getWorldManager().saveWorld(creativeWorld);
+        worldManager.saveWorld(creativeWorld);
         
-        plugin.getLogger().fine("Recompiled " + scriptCount + " scripts for world: " + world.getName() + " with " + errorCount + " errors");
+        if (plugin != null) {
+            plugin.getLogger().fine("Recompiled " + scriptCount + " scripts for world: " + world.getName() + " with " + errorCount + " errors");
+        }
     }
     
     /**

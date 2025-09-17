@@ -22,6 +22,7 @@ import java.io.File;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.io.IOException;
 import java.nio.file.Paths;
 import java.util.Map;
 import java.util.HashMap;
@@ -151,7 +152,12 @@ public class CodingManagerImpl implements ICodingManager {
     public CodeScript getScript(String name) {
         // Search for a script by name with enhanced matching
         // Search through all worlds for a script with the given name
-        for (CreativeWorld world : plugin.getWorldManager().getCreativeWorlds()) {
+        if (worldManager == null) {
+            logger.warning("World manager not available");
+            return null;
+        }
+        
+        for (CreativeWorld world : worldManager.getCreativeWorlds()) {
             if (world.getScripts() != null) {
                 for (CodeScript script : world.getScripts()) {
                     // Exact match first
@@ -225,7 +231,12 @@ public class CodingManagerImpl implements ICodingManager {
         logger.info("Deleting script: " + scriptName);
         
         // Find and remove the script from all worlds
-        for (CreativeWorld world : plugin.getWorldManager().getCreativeWorlds()) {
+        if (worldManager == null) {
+            logger.warning("World manager not available");
+            return;
+        }
+        
+        for (CreativeWorld world : worldManager.getCreativeWorlds()) {
             if (world.getScripts() != null) {
                 // Remove from memory
                 CodeScript scriptToRemove = null;

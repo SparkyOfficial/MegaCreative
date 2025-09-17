@@ -29,7 +29,12 @@ public class FunctionCallAction implements BlockAction {
     
     public FunctionCallAction(MegaCreative plugin) {
         this.plugin = plugin;
-        this.functionManager = plugin.getServiceRegistry().getService(AdvancedFunctionManager.class);
+        // Add null check for service registry
+        if (plugin.getServiceRegistry() != null) {
+            this.functionManager = plugin.getServiceRegistry().getService(AdvancedFunctionManager.class);
+        } else {
+            this.functionManager = null;
+        }
     }
 
     @Override
@@ -38,6 +43,11 @@ public class FunctionCallAction implements BlockAction {
         
         if (block == null || player == null) {
             return ExecutionResult.error("Invalid execution context for function call");
+        }
+        
+        // Check if functionManager is available
+        if (functionManager == null) {
+            return ExecutionResult.error("Function manager is not available");
         }
         
         // Get function name from block parameters

@@ -57,7 +57,12 @@ public class FunctionCommand implements CommandExecutor, TabCompleter {
      */
     public FunctionCommand(MegaCreative plugin) {
         this.plugin = plugin;
-        this.functionManager = plugin.getServiceRegistry().getService(AdvancedFunctionManager.class);
+        // Add null check for service registry
+        if (plugin.getServiceRegistry() != null) {
+            this.functionManager = plugin.getServiceRegistry().getService(AdvancedFunctionManager.class);
+        } else {
+            this.functionManager = null;
+        }
     }
 
     /**
@@ -90,6 +95,12 @@ public class FunctionCommand implements CommandExecutor, TabCompleter {
         }
         
         Player player = (Player) sender;
+        
+        // Check if functionManager is available
+        if (functionManager == null) {
+            player.sendMessage(ChatColor.RED + "Function manager not available.");
+            return true;
+        }
         
         if (args.length == 0) {
             showHelp(player);

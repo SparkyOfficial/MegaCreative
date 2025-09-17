@@ -28,7 +28,12 @@ public class DefineFunctionAction implements BlockAction {
     
     public DefineFunctionAction(MegaCreative plugin) {
         this.plugin = plugin;
-        this.functionManager = plugin.getServiceRegistry().getService(AdvancedFunctionManager.class);
+        // Add null check for service registry
+        if (plugin.getServiceRegistry() != null) {
+            this.functionManager = plugin.getServiceRegistry().getService(AdvancedFunctionManager.class);
+        } else {
+            this.functionManager = null;
+        }
     }
 
     @Override
@@ -37,6 +42,11 @@ public class DefineFunctionAction implements BlockAction {
         
         if (block == null || player == null) {
             return ExecutionResult.error("Invalid execution context for function definition");
+        }
+        
+        // Check if functionManager is available
+        if (functionManager == null) {
+            return ExecutionResult.error("Function manager is not available");
         }
         
         try {
@@ -202,6 +212,6 @@ public class DefineFunctionAction implements BlockAction {
     }
 
     public String getDescription() {
-        return "🎆 Defines a new user function with parameters and body";
+        return " YYS Defines a new user function with parameters and body";
     }
 }

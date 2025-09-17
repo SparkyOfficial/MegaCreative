@@ -9,6 +9,7 @@ import com.megacreative.core.ServiceRegistry;
 import com.megacreative.config.ConfigurationValidator;
 import com.megacreative.exceptions.ConfigurationException;
 import com.megacreative.coding.events.PlayerEventsListener;
+import com.megacreative.coding.debug.VisualDebugger;
 import org.bukkit.entity.Player;
 import org.bukkit.plugin.java.JavaPlugin;
 import org.bukkit.scheduler.BukkitRunnable;
@@ -170,13 +171,18 @@ public class MegaCreative extends JavaPlugin {
             public void run() {
                 // Trigger onTick event for all creative worlds
                 // This will be handled by the PlayerEventsListener
-                serviceRegistry.getPlayerEventsListener().onTick();
-                
-                // Check TPS every 20 ticks (1 second)
-                tpsCheckCounter++;
-                if (tpsCheckCounter >= 20) {
-                    serviceRegistry.getPlayerEventsListener().onServerTPS();
-                    tpsCheckCounter = 0;
+                if (serviceRegistry != null) {
+                    PlayerEventsListener listener = serviceRegistry.getPlayerEventsListener();
+                    if (listener != null) {
+                        listener.onTick();
+                        
+                        // Check TPS every 20 ticks (1 second)
+                        tpsCheckCounter++;
+                        if (tpsCheckCounter >= 20) {
+                            listener.onServerTPS();
+                            tpsCheckCounter = 0;
+                        }
+                    }
                 }
             }
         }.runTaskTimer(this, 1L, 1L); // Run every tick
@@ -189,83 +195,25 @@ public class MegaCreative extends JavaPlugin {
      *
      * Registriert alle Plugin-Befehle
      */
-    // Getters for various managers
-    public com.megacreative.interfaces.IWorldManager getWorldManager() {
-        return serviceRegistry.getWorldManager();
-    }
-    
-    public com.megacreative.interfaces.IPlayerManager getPlayerManager() {
-        return serviceRegistry.getPlayerManager();
-    }
-    
-    public com.megacreative.interfaces.ICodingManager getCodingManager() {
-        return serviceRegistry.getCodingManager();
-    }
-    
-    public com.megacreative.managers.TemplateManager getTemplateManager() {
-        return serviceRegistry.getTemplateManager();
-    }
-    
-    public com.megacreative.managers.ScoreboardManager getScoreboardManager() {
-        return serviceRegistry.getScoreboardManager();
-    }
-    
-    public com.megacreative.interfaces.ITrustedPlayerManager getTrustedPlayerManager() {
-        return serviceRegistry.getTrustedPlayerManager();
-    }
-    
-    public com.megacreative.managers.GUIManager getGuiManager() {
-        return serviceRegistry.getGuiManager();
-    }
-    
-    public com.megacreative.managers.BlockConfigManager getBlockConfigManager() {
-        return serviceRegistry.getBlockConfigManager();
-    }
-    
-    public com.megacreative.coding.variables.VariableManager getVariableManager() {
-        return serviceRegistry.getVariableManager();
-    }
-    
-    public com.megacreative.coding.BlockPlacementHandler getBlockPlacementHandler() {
-        return serviceRegistry.getBlockPlacementHandler();
-    }
-    
-    /**
-     * Gets the VisualDebugger instance
-     * @return VisualDebugger instance
-     */
-    public com.megacreative.coding.debug.VisualDebugger getScriptDebugger() {
-        return serviceRegistry.getScriptDebugger();
-    }
-    
-    /**
-     * Checks if a player is currently debugging
-     * @param player The player to check
-     * @return true if the player is in a debug session
-     */
-    public boolean isDebugging(Player player) {
-        return serviceRegistry.getScriptDebugger().isDebugging(player);
-    }
-    
-    public com.megacreative.coding.monitoring.ScriptPerformanceMonitor getScriptPerformanceMonitor() {
-        return serviceRegistry.getScriptPerformanceMonitor();
-    }
-    
-    public com.megacreative.utils.ConfigManager getConfigManager() {
-        return serviceRegistry.getConfigManager();
-    }
-    
     private void registerCommands() {
         getCommand("megacreative").setExecutor(new MainCommand(this));
         getCommand("myworlds").setExecutor(new MyWorldsCommand(this));
         getCommand("worldbrowser").setExecutor(new WorldBrowserCommand(this));
-        getCommand("join").setExecutor(new JoinCommand(this, serviceRegistry.getWorldManager()));
+        
+        // Add null checks for serviceRegistry before using it
+        if (serviceRegistry != null) {
+            getCommand("join").setExecutor(new JoinCommand(this, serviceRegistry.getWorldManager()));
+            getCommand("build").setExecutor(new BuildCommand(this, serviceRegistry.getWorldManager()));
+            getCommand("switch").setExecutor(new com.megacreative.commands.SwitchCommand(this, serviceRegistry.getWorldManager()));
+            getCommand("hub").setExecutor(new HubCommand(this, serviceRegistry.getPlayerManager()));
+            getCommand("create").setExecutor(new CreateWorldCommand(this, serviceRegistry.getWorldManager()));
+            getCommand("clipboard").setExecutor(new ClipboardCommand(this, serviceRegistry.getCodeBlockClipboard()));
+            getCommand("group").setExecutor(new GroupCommand(serviceRegistry));
+        }
+        
         getCommand("play").setExecutor(new PlayCommand(this));
         getCommand("trusted").setExecutor(new TrustedPlayerCommand(this));
-        getCommand("build").setExecutor(new BuildCommand(this, serviceRegistry.getWorldManager()));
         getCommand("dev").setExecutor(new DevCommand(this));
-        getCommand("switch").setExecutor(new com.megacreative.commands.SwitchCommand(this, serviceRegistry.getWorldManager()));
-        getCommand("hub").setExecutor(new HubCommand(this, serviceRegistry.getPlayerManager()));
         
         getCommand("templates").setExecutor(new TemplatesCommand(this));
         getCommand("worldsettings").setExecutor(new WorldSettingsCommand(this));
@@ -274,9 +222,6 @@ public class MegaCreative extends JavaPlugin {
         getCommand("status").setExecutor(new StatusCommand(this));
         getCommand("addfloor").setExecutor(new AddFloorCommand(this));
         getCommand("workspace").setExecutor(new WorkspaceCommand(this));
-        getCommand("create").setExecutor(new CreateWorldCommand(this, serviceRegistry.getWorldManager()));
-        getCommand("clipboard").setExecutor(new ClipboardCommand(this, serviceRegistry.getCodeBlockClipboard()));
-        getCommand("group").setExecutor(new GroupCommand(serviceRegistry));
         getCommand("delete").setExecutor(new DeleteCommand(this));
         
         // Register function management command
@@ -318,17 +263,30 @@ public class MegaCreative extends JavaPlugin {
         getServer().getPluginManager().registerEvents(new BlockBreakListener(this), this);
         getServer().getPluginManager().registerEvents(new PlayerDeathListener(this), this);
         getServer().getPluginManager().registerEvents(new CommandListener(this), this);
-        // Use DevWorldProtectionListener from ServiceRegistry instead of creating new instance
-        getServer().getPluginManager().registerEvents(serviceRegistry.getDevWorldProtectionListener(), this);
-        getServer().getPluginManager().registerEvents(new PlayerWorldChangeListener(this), this);
         
-        // Service-specific listeners
-        getServer().getPluginManager().registerEvents(serviceRegistry.getBlockPlacementHandler(), this);
-        getServer().getPluginManager().registerEvents(serviceRegistry.getAutoConnectionManager(), this);
-        getServer().getPluginManager().registerEvents(serviceRegistry.getDevInventoryManager(), this);
-        getServer().getPluginManager().registerEvents(serviceRegistry.getGuiManager(), this);
-        getServer().getPluginManager().registerEvents(serviceRegistry.getCustomEventManager(), this);
-        getServer().getPluginManager().registerEvents(new BlockGroupListener(serviceRegistry), this);
+        // Add null checks for serviceRegistry before using it
+        if (serviceRegistry != null) {
+            // Use DevWorldProtectionListener from ServiceRegistry instead of creating new instance
+            getServer().getPluginManager().registerEvents(serviceRegistry.getDevWorldProtectionListener(), this);
+            getServer().getPluginManager().registerEvents(new PlayerWorldChangeListener(this), this);
+            
+            // Service-specific listeners
+            getServer().getPluginManager().registerEvents(serviceRegistry.getBlockPlacementHandler(), this);
+            getServer().getPluginManager().registerEvents(serviceRegistry.getAutoConnectionManager(), this);
+            getServer().getPluginManager().registerEvents(serviceRegistry.getDevInventoryManager(), this);
+            getServer().getPluginManager().registerEvents(serviceRegistry.getGuiManager(), this);
+            getServer().getPluginManager().registerEvents(serviceRegistry.getCustomEventManager(), this);
+            getServer().getPluginManager().registerEvents(new BlockGroupListener(serviceRegistry), this);
+            
+            // Register our new PlayerEventsListener
+            getServer().getPluginManager().registerEvents(serviceRegistry.getPlayerEventsListener(), this);
+            
+            // 🎆 ENHANCED: Register comprehensive world protection listener
+            getServer().getPluginManager().registerEvents(new com.megacreative.listeners.WorldProtectionListener(this, serviceRegistry.getWorldManager()), this);
+            
+            // Register enemy player restriction manager
+            getServer().getPluginManager().registerEvents(serviceRegistry.getEnemyPlayerRestrictionManager(), this);
+        }
         
         // Register CodeMoverListener for advanced code manipulation
         getServer().getPluginManager().registerEvents(new com.megacreative.listeners.CodeMoverListener(this), this);
@@ -339,17 +297,8 @@ public class MegaCreative extends JavaPlugin {
         // Register runCode execution engine
         getServer().getPluginManager().registerEvents(new runCode(this), this);
         
-        // Register our new PlayerEventsListener
-        getServer().getPluginManager().registerEvents(serviceRegistry.getPlayerEventsListener(), this);
-        
-        // 🎆 ENHANCED: Register comprehensive world protection listener
-        getServer().getPluginManager().registerEvents(new com.megacreative.listeners.WorldProtectionListener(this, serviceRegistry.getWorldManager()), this);
-        
         // 🎆 ENHANCED: Register world load listener for code block hydration
         getServer().getPluginManager().registerEvents(new com.megacreative.listeners.WorldLoadListener(this), this);
-        
-        // Register enemy player restriction manager
-        getServer().getPluginManager().registerEvents(serviceRegistry.getEnemyPlayerRestrictionManager(), this);
     }
     
     // Static access and service delegation
