@@ -46,6 +46,25 @@ public class AsyncLoopAction implements BlockAction {
                         return;
                     }
                     
+                    // Check for break flag
+                    if (context.hasBreakFlag()) {
+                        context.clearBreakFlag();
+                        activeLoops.remove(loopId);
+                        this.cancel();
+                        if (context.getPlayer() != null) {
+                            context.getPlayer().sendMessage("§aAsync loop terminated by break statement");
+                        }
+                        return;
+                    }
+                    
+                    // Check for continue flag
+                    if (context.hasContinueFlag()) {
+                        context.clearContinueFlag();
+                        // Skip this iteration
+                        count++;
+                        return;
+                    }
+                    
                     // Execute the child blocks
                     try {
                         context.getPlugin().getServer().getScheduler().runTask(context.getPlugin(), () -> {

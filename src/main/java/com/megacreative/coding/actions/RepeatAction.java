@@ -55,6 +55,20 @@ public class RepeatAction implements BlockAction {
                     // Создаем новый контекст для каждой итерации
                     ExecutionContext loopContext = context.withCurrentBlock(nextBlock, context.getBlockLocation());
                     
+                    // Check for break flag before executing iteration
+                    if (context.hasBreakFlag()) {
+                        context.clearBreakFlag();
+                        player.sendMessage("§aRepeat loop terminated by break statement at iteration " + (currentIndex + 1));
+                        break;
+                    }
+                    
+                    // Check for continue flag
+                    if (context.hasContinueFlag()) {
+                        context.clearContinueFlag();
+                        player.sendMessage("§aSkipping iteration " + (currentIndex + 1) + " due to continue statement");
+                        continue;
+                    }
+                    
                     // Добавляем переменную с номером итерации
                     loopContext.setVariable("loopIndex", currentIndex + 1);
                     loopContext.setVariable("loopCount", times);
@@ -70,6 +84,20 @@ public class RepeatAction implements BlockAction {
                     } catch (Exception e) {
                         player.sendMessage("§cОшибка в итерации " + (currentIndex + 1) + ": " + e.getMessage());
                         break;
+                    }
+                    
+                    // Check for break flag after executing iteration
+                    if (context.hasBreakFlag()) {
+                        context.clearBreakFlag();
+                        player.sendMessage("§aRepeat loop terminated by break statement at iteration " + (currentIndex + 1));
+                        break;
+                    }
+                    
+                    // Check for continue flag after executing iteration
+                    if (context.hasContinueFlag()) {
+                        context.clearContinueFlag();
+                        player.sendMessage("§aContinuing to next iteration after iteration " + (currentIndex + 1));
+                        continue;
                     }
                 }
                 

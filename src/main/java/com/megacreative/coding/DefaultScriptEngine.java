@@ -315,6 +315,24 @@ public class DefaultScriptEngine implements ScriptEngine, EnhancedScriptEngine {
                         // Check condition first
                         BlockCondition whileCondition = conditionFactory.createCondition(block.getCondition());
                         if (whileCondition != null && whileCondition.evaluate(block, context)) {
+                            // Check for break flag before executing body
+                            if (context.hasBreakFlag()) {
+                                context.clearBreakFlag();
+                                // Exit loop and continue with next block
+                                return processBlock(block.getNextBlock(), context, recursionDepth + 1);
+                            }
+                            
+                            // Check for continue flag
+                            if (context.hasContinueFlag()) {
+                                context.clearContinueFlag();
+                                // Skip to next iteration without executing body
+                                if (recursionDepth < MAX_RECURSION_DEPTH - 1) {
+                                    return processBlock(block, context, recursionDepth + 1);
+                                } else {
+                                    return ExecutionResult.error("Max recursion depth exceeded in while loop.");
+                                }
+                            }
+                            
                             // Execute body
                             if (!block.getChildren().isEmpty()) {
                                 ExecutionResult childResult = processBlock(block.getChildren().get(0), context, recursionDepth + 1);
@@ -322,6 +340,24 @@ public class DefaultScriptEngine implements ScriptEngine, EnhancedScriptEngine {
                                 // Check if execution was terminated (e.g., by a return statement)
                                 if (childResult.isTerminated()) {
                                     return childResult; // Stop execution and return the result
+                                }
+                                
+                                // Check for break flag after executing body
+                                if (context.hasBreakFlag()) {
+                                    context.clearBreakFlag();
+                                    // Exit loop and continue with next block
+                                    return processBlock(block.getNextBlock(), context, recursionDepth + 1);
+                                }
+                                
+                                // Check for continue flag after executing body
+                                if (context.hasContinueFlag()) {
+                                    context.clearContinueFlag();
+                                    // Skip to next iteration
+                                    if (recursionDepth < MAX_RECURSION_DEPTH - 1) {
+                                        return processBlock(block, context, recursionDepth + 1);
+                                    } else {
+                                        return ExecutionResult.error("Max recursion depth exceeded in while loop.");
+                                    }
                                 }
                             }
                             // After body execution, loop back to the same while block to check condition again

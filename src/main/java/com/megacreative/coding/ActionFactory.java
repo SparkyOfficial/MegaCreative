@@ -5,6 +5,8 @@ import com.megacreative.coding.actions.AddVarAction;
 import com.megacreative.coding.actions.AsyncLoopAction;
 import com.megacreative.coding.actions.BroadcastAction;
 import com.megacreative.coding.actions.CallFunctionAction;
+import com.megacreative.coding.actions.control.BreakAction;
+import com.megacreative.coding.actions.control.ContinueAction;
 import com.megacreative.coding.actions.CommandAction;
 import com.megacreative.coding.actions.ConditionalBranchAction;
 import com.megacreative.coding.actions.CreateGuiAction;
@@ -239,6 +241,10 @@ public class ActionFactory {
         // Предполагая, что у него есть часть действия
         // Vorausgesetzt, dass es einen Aktionsteil hat
         register("timedExecution", TimedExecutionAction::new);
+        
+        // Loop control actions
+        register("break", () -> new BreakAction((com.megacreative.MegaCreative) dependencyContainer.resolve(com.megacreative.MegaCreative.class)));
+        register("continue", () -> new ContinueAction((com.megacreative.MegaCreative) dependencyContainer.resolve(com.megacreative.MegaCreative.class)));
 
         // --- FUNCTION BLOCKS ---
         // --- БЛОКИ ФУНКЦИЙ ---
