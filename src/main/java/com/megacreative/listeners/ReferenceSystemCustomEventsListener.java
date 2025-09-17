@@ -41,10 +41,10 @@ public class ReferenceSystemCustomEventsListener implements Listener {
     private final Map<String, CodeScript> regionScripts = new ConcurrentHashMap<>();
     private final Map<String, CodeScript> variableScripts = new ConcurrentHashMap<>();
     private final Map<String, CodeScript> timerScripts = new ConcurrentHashMap<>();
-    private final Map<String, CodeScript> customActionScripts = new ConcurrentHashMap<>();
+    private final Map<String, CodeScript> actionScripts = new ConcurrentHashMap<>();
     private final Map<String, CodeScript> scoreScripts = new ConcurrentHashMap<>();
     private final Map<String, CodeScript> functionScripts = new ConcurrentHashMap<>();
-    private final Map<String, CodeScript> worldModeScripts = new ConcurrentHashMap<>();
+    private final Map<String, CodeScript> worldScripts = new ConcurrentHashMap<>();
     
     public ReferenceSystemCustomEventsListener(MegaCreative plugin) {
         this.plugin = plugin;
@@ -260,29 +260,26 @@ public class ReferenceSystemCustomEventsListener implements Listener {
         // Execute the script with the context
         ScriptEngine scriptEngine = plugin.getServiceRegistry().getService(ScriptEngine.class);
         if (scriptEngine != null) {
-            // Create execution context with proper parameters
             try {
-                com.megacreative.models.CreativeWorld creativeWorld = plugin.getWorldManager().getWorldForPlayer(player);
-                ExecutionContext context = new ExecutionContext(
-                    plugin, 
-                    player, 
-                    creativeWorld, 
-                    null, // event
-                    null, // blockLocation
-                    script.getRootBlock()  // currentBlock
-                );
-                
-                // Add event data to context
-                context.setVariable("event_type", eventType);
-                context.setVariable("event_value", eventValue);
-                if (data != null) {
-                    for (Map.Entry<String, Object> entry : data.entrySet()) {
-                        context.setVariable(entry.getKey(), entry.getValue());
+                // Set event data as player variables before execution
+                com.megacreative.coding.variables.VariableManager variableManager = scriptEngine.getVariableManager();
+                if (variableManager != null) {
+                    // Add event data to player variables
+                    variableManager.setPlayerVariable(player.getUniqueId(), "event_type", 
+                        com.megacreative.coding.values.DataValue.of(eventType));
+                    variableManager.setPlayerVariable(player.getUniqueId(), "event_value", 
+                        com.megacreative.coding.values.DataValue.of(eventValue));
+                    
+                    if (data != null) {
+                        for (Map.Entry<String, Object> entry : data.entrySet()) {
+                            variableManager.setPlayerVariable(player.getUniqueId(), entry.getKey(), 
+                                com.megacreative.coding.values.DataValue.fromObject(entry.getValue()));
+                        }
                     }
                 }
                 
-                // Execute the script
-                scriptEngine.executeScript(script, context);
+                // Execute the script using the correct method signature
+                scriptEngine.executeScript(script, player, eventType);
             } catch (Exception e) {
                 plugin.getLogger().severe("Error executing custom event script: " + e.getMessage());
                 e.printStackTrace();

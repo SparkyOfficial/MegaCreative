@@ -8,6 +8,7 @@ import com.megacreative.models.CreativeWorld;
 // 🎆 Reference system-style execution modes
 import com.megacreative.coding.executors.AdvancedExecutionEngine.ExecutionMode;
 import com.megacreative.coding.executors.AdvancedExecutionEngine.Priority;
+import com.megacreative.coding.executors.ExecutionResult;
 import org.bukkit.Location;
 import org.bukkit.entity.Player;
 import org.bukkit.event.Event;
@@ -23,6 +24,15 @@ import java.util.UUID;
  * Передается между блоками во время исполнения.
  */
 public class ExecutionContext {
+
+    // Fields for executor engine compatibility
+    private String executionId;
+    private CodeScript script;
+    private Player playerField;
+    private String trigger;
+    private long startTime;
+    private CodeBlock currentBlockField;
+    private boolean cancelledField = false;
 
     private final MegaCreative plugin; // Ссылка на основной плагин
     private final Player player; // Игрок, который вызвал событие (может быть null)
@@ -86,6 +96,98 @@ public class ExecutionContext {
         this.variableManager = plugin.getVariableManager();
         this.scriptId = currentBlock != null ? currentBlock.getId().toString() : "global";
         this.worldId = creativeWorld != null ? creativeWorld.getId() : "global";
+    }
+    
+    /**
+     * Constructor for executor engine compatibility
+     */
+    public ExecutionContext(String executionId, CodeScript script, Player player, String trigger) {
+        this.executionId = executionId;
+        this.script = script;
+        this.playerField = player;
+        this.trigger = trigger;
+        this.startTime = System.currentTimeMillis();
+        // For now, we'll get the plugin instance from the MegaCreative singleton
+        this.plugin = com.megacreative.MegaCreative.getInstance();
+        this.player = player;
+        this.creativeWorld = null;
+        this.event = null;
+        this.blockLocation = null;
+        this.currentBlock = null;
+        this.currentBlockField = null;
+        this.variableManager = this.plugin.getVariableManager();
+        this.scriptId = "global";
+        this.worldId = "global";
+    }
+    
+    public String getExecutionId() {
+        return executionId;
+    }
+    
+    public CodeScript getScript() {
+        return script;
+    }
+    
+    public Player getPlayer() {
+        return playerField != null ? playerField : player;
+    }
+    
+    public String getTrigger() {
+        return trigger;
+    }
+    
+    public long getStartTime() {
+        return startTime;
+    }
+    
+    public void setStartTime(long startTime) {
+        this.startTime = startTime;
+    }
+    
+    public CodeBlock getCurrentBlock() {
+        return currentBlockField != null ? currentBlockField : currentBlock;
+    }
+    
+    public void setCurrentBlock(CodeBlock currentBlock) {
+        this.currentBlockField = currentBlock;
+    }
+    
+    public MegaCreative getPlugin() {
+        return plugin;
+    }
+    
+    /**
+     * Creates a successful execution result
+     */
+    public ExecutionResult createResult(boolean success, String message) {
+        return new ExecutionResult.Builder()
+            .success(success)
+            .message(message)
+            .executedBlock(getCurrentBlock())
+            .executor(getPlayer())
+            .executionTime(System.currentTimeMillis() - startTime)
+            .build();
+    }
+    
+    /**
+     * Creates an error execution result
+     */
+    public ExecutionResult createErrorResult(String message) {
+        return createErrorResult(message, null);
+    }
+    
+    /**
+     * Creates an error execution result with exception
+     */
+    public ExecutionResult createErrorResult(String message, Throwable error) {
+        return new ExecutionResult.Builder()
+            .success(false)
+            .message(message)
+            .executedBlock(getCurrentBlock())
+            .executor(getPlayer())
+            .error(error)
+            .executionTime(System.currentTimeMillis() - startTime)
+            .build();
     }
     
     public ExecutionContext withCurrentBlock(CodeBlock currentBlock, Location newLocation) {
@@ -315,13 +417,6 @@ public class ExecutionContext {
     
     
     // Геттеры
-    public MegaCreative getPlugin() {
-        return plugin;
-    }
-    
-    public Player getPlayer() {
-        return player;
-    }
     
     public CreativeWorld getCreativeWorld() {
         return creativeWorld;
@@ -400,10 +495,6 @@ public class ExecutionContext {
         if (plugin != null && plugin.getLogger() != null) {
             plugin.getLogger().fine("Continue flag cleared");
         }
-    }
-    
-    public CodeBlock getCurrentBlock() {
-        return currentBlock;
     }
     
     /**

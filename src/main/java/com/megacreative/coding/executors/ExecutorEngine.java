@@ -167,45 +167,19 @@ public class ExecutorEngine {
     }
     
     /**
-     * Executes a single block with type-specific handling and enhanced parameter validation
+     * Executes a single block with type-specific handling
+     * @param block The block to execute
+     * @param context The execution context
+     * @return The execution result
      */
     private ExecutionResult executeBlock(CodeBlock block, ExecutionContext context) {
         try {
             String action = block.getAction();
-            Map<String, DataValue> parameters = block.getParameters() != null ? block.getParameters() : new HashMap<>();
+            Map<String, DataValue> parameters = block.getParameters();
             
-            // Log block execution
-            plugin.getLogger().fine("Executing block: " + action + " with params: " + parameters);
-            
-            // 🎆 ENHANCED: Preprocess parameters with validation and placeholder resolution
+            // Preprocess parameters
             Map<String, DataValue> processedParameters = preprocessParameters(block, context);
             
-            // Check for validation errors
-            String validationError = validateBlockParameters(block, processedParameters);
-            if (validationError != null) {
-                // Create detailed error result with validation information
-                Map<String, Object> errorDetails = new HashMap<>();
-                errorDetails.put("action", action);
-                errorDetails.put("validationError", validationError);
-                errorDetails.put("processedParameters", processedParameters);
-                
-                ExecutionResult errorResult = new ExecutionResult.Builder()
-                    .success(false)
-                    .message("Parameter validation failed: " + validationError)
-                    .executedBlock(block)
-                    .executor(context.getPlayer())
-                    .executionTime(System.currentTimeMillis() - context.getStartTime())
-                    .details(errorDetails)
-                    .build();
-                
-                // Log the details
-                plugin.getLogger().warning("Validation failed for action '" + action + "': " + validationError);
-                plugin.getLogger().warning("Parameters: " + processedParameters);
-                
-                return errorResult;
-            }
-            
-            // Execute the appropriate action
             ExecutionResult result;
             switch (action) {
                 case "sendMessage":
@@ -304,26 +278,139 @@ public class ExecutorEngine {
                 case "isRiding":
                     result = executeIsRiding(block, processedParameters, context);
                     break;
-                case "checkPlayerInventory":
-                    result = executeCheckPlayerInventory(block, processedParameters, context);
+                case "isSneaking":
+                    result = executeIsSneaking(block, processedParameters, context);
                     break;
                 default:
-                    return context.createErrorResult("Unknown action: " + action);
-            }
-            
-            // Log the result
-            if (result.isSuccess()) {
-                plugin.getLogger().fine("Block executed successfully: " + action);
-            } else {
-                plugin.getLogger().warning("Block execution failed: " + action + ". Error: " + result.getMessage());
+                    result = context.createErrorResult("Unknown action: " + action);
+                    break;
             }
             
             return result;
             
         } catch (Exception e) {
-            plugin.getLogger().severe("Unexpected error executing block: " + e.getMessage() + ". Stack trace: " + java.util.Arrays.toString(e.getStackTrace()));
-            return context.createErrorResult(e);
+            plugin.getLogger().severe("Unexpected error executing block: " + e.getMessage());
+            return context.createErrorResult("Unexpected error executing block: " + e.getMessage(), e);
         }
+    }
+    
+    /**
+     * Shows visual indicator for block execution start
+     */
+    private void showBlockExecution(CodeBlock block, ExecutionContext context) {
+        Location location = block.getLocation();
+        if (location != null) {
+            location.getWorld().spawnParticle(Particle.VILLAGER_HAPPY, location, 1);
+        }
+    }
+    
+    /**
+     * Shows visual indicator for block execution completion
+     */
+    private void showBlockComplete(CodeBlock block, ExecutionContext context) {
+        Location location = block.getLocation();
+        if (location != null) {
+            location.getWorld().playSound(location, Sound.BLOCK_NOTE_BLOCK_PLING, 1, 1.5f);
+        }
+    }
+    
+    /**
+     * Shows visual indicator for block execution error
+     */
+    private void showBlockError(CodeBlock block, ExecutionContext context, String errorMessage) {
+        Location location = block.getLocation();
+        if (location != null) {
+            location.getWorld().spawnParticle(Particle.SMOKE_NORMAL, location, 1);
+        }
+    }
+    
+    /**
+     * Shows visual indicator for script execution start
+     */
+    private void showExecutionStart(ExecutionContext context) {
+        Location playerLocation = context.getPlayer().getLocation();
+        playerLocation.getWorld().spawnParticle(Particle.EXPLOSION_NORMAL, playerLocation, 1);
+    }
+    
+    /**
+     * Shows visual indicator for script execution completion
+     */
+    private void showExecutionComplete(ExecutionContext context, ExecutionResult result) {
+        Location playerLocation = context.getPlayer().getLocation();
+        playerLocation.getWorld().playSound(playerLocation, Sound.BLOCK_NOTE_BLOCK_PLING, 1, 1.5f);
+    }
+    
+    /**
+     * Shows visual indicator for script execution error
+     */
+    private void showExecutionError(ExecutionContext context, Exception e) {
+        Location playerLocation = context.getPlayer().getLocation();
+        playerLocation.getWorld().spawnParticle(Particle.SMOKE_NORMAL, playerLocation, 1);
+    }
+    
+    /**
+     * Starts a visual updater task to manage visual indicators
+     */
+    private void startVisualUpdater() {
+        new BukkitRunnable() {
+            @Override
+            public void run() {
+                visualIndicators.values().forEach(indicator -> {
+                    if (indicator.isExpired()) {
+                        indicator.getLocation().getWorld().spawnParticle(Particle.SMOKE_NORMAL, indicator.getLocation(), 1);
+                        visualIndicators.remove(indicator.getLocation());
+                    } else {
+                        indicator.getLocation().getWorld().spawnParticle(Particle.VILLAGER_HAPPY, indicator.getLocation(), 1);
+                    }
+                });
+            }
+        }.runTaskTimer(plugin, 0, 20);
+    }
+    
+    /**
+     * Validates the script before execution
+     * @param script The script to validate
+     * @return true if the script is valid, false otherwise
+     */
+    private boolean validateScript(CodeScript script) {
+        // Add validation logic here
+        return true;
+    }
+    
+    /**
+     * Validates the parameters of a block before execution
+     * @param block The block to validate
+     * @param parameters The processed parameters of the block
+     * @return A validation error message if validation fails, null otherwise
+     */
+    private String validateBlockParameters(CodeBlock block, Map<String, DataValue> parameters) {
+        // Add validation logic here
+        return null;
+    }
+    
+    /**
+     * Preprocesses the parameters of a block
+     * @param block The block to preprocess
+     * @param context The execution context
+     * @return The processed parameters
+     */
+    private Map<String, DataValue> preprocessParameters(CodeBlock block, ExecutionContext context) {
+        Map<String, DataValue> processedParams = new HashMap<>();
+        
+        if (block.getParameters() != null) {
+            var parameterResolver = new ParameterResolver(context);
+            
+            for (Map.Entry<String, DataValue> entry : block.getParameters().entrySet()) {
+                String key = entry.getKey();
+                DataValue value = entry.getValue();
+                
+                // Resolve placeholders in string values
+                DataValue resolvedValue = parameterResolver.resolve(context, value);
+                processedParams.put(key, resolvedValue);
+            }
+        }
+        
+        return processedParams;
     }
     
     // === SPECIFIC ACTION EXECUTORS ===
@@ -340,10 +427,10 @@ public class ExecutorEngine {
                 return context.createErrorResult("Message cannot be empty");
             }
             
-            // Resolve placeholders and send message
+            // Resolve placeholders
             message = resolvePlaceholders(message, context);
-            context.getPlayer().sendMessage(message);
             
+            context.getPlayer().sendMessage(message);
             return context.createResult(true, "Message sent");
             
         } catch (Exception e) {
@@ -358,7 +445,6 @@ public class ExecutorEngine {
                 return context.createErrorResult("No location specified for teleport");
             }
             
-            // Parse the location string
             String locationStr = locationValue.asString();
             if (locationStr == null || locationStr.trim().isEmpty()) {
                 return context.createErrorResult("Invalid location string");
@@ -521,72 +607,34 @@ public class ExecutorEngine {
     
     private ExecutionResult executeSpawnEntity(Map<String, DataValue> params, ExecutionContext context) {
         try {
-            DataValue entityValue = params.get("entity_slot");
-            if (entityValue == null) {
-                return context.createErrorResult("No entity specified");
+            DataValue entityTypeValue = params.get("entityType");
+            if (entityTypeValue == null) {
+                return context.createErrorResult("No entity type specified");
             }
             
-            String entityName = entityValue.asString();
-            if (entityName == null || entityName.trim().isEmpty()) {
-                return context.createErrorResult("Entity name cannot be empty");
-            }
-            
-            // Get count and radius with defaults
-            int count = 1; // Default 1 entity
-            int radius = 3; // Default 3 blocks radius
-            
-            try {
-                if (params.containsKey("count_slot")) {
-                    String countStr = params.get("count_slot").asString();
-                    if (countStr != null && countStr.startsWith("количество:")) {
-                        count = Integer.parseInt(countStr.substring("количество:".length()));
-                    }
-                }
-                if (params.containsKey("radius_slot")) {
-                    String radiusStr = params.get("radius_slot").asString();
-                    if (radiusStr != null && radiusStr.startsWith("радиус:")) {
-                        radius = Integer.parseInt(radiusStr.substring("радиус:".length()));
-                    }
-                }
-            } catch (NumberFormatException e) {
-                return context.createErrorResult("Invalid number format for count or radius");
+            String entityTypeName = entityTypeValue.asString();
+            if (entityTypeName == null || entityTypeName.trim().isEmpty()) {
+                return context.createErrorResult("Entity type cannot be empty");
             }
             
             // Try to get the entity type
             org.bukkit.entity.EntityType entityType;
             try {
-                entityType = org.bukkit.entity.EntityType.valueOf(entityName.toUpperCase());
-                if (entityType == null || !entityType.isSpawnable()) {
-                    return context.createErrorResult("Invalid or unspawnable entity: " + entityName);
-                }
-            } catch (Exception e) {
-                return context.createErrorResult("Invalid entity: " + entityName);
+                entityType = org.bukkit.entity.EntityType.valueOf(entityTypeName.toUpperCase());
+            } catch (IllegalArgumentException e) {
+                return context.createErrorResult("Invalid entity type: " + entityTypeName);
             }
             
-            // Spawn the entities
+            // Spawn the entity at player location
             Player player = context.getPlayer();
-            Location spawnLocation = player.getLocation().add(
-                (Math.random() - 0.5) * radius * 2,
-                1,
-                (Math.random() - 0.5) * radius * 2
-            );
+            Location location = player.getLocation();
+            org.bukkit.entity.Entity entity = location.getWorld().spawnEntity(location, entityType);
             
-            int spawned = 0;
-            for (int i = 0; i < count; i++) {
-                Location loc = spawnLocation.clone().add(
-                    (Math.random() - 0.5) * 2,
-                    0,
-                    (Math.random() - 0.5) * 2
-                );
-                if (player.getWorld().spawnEntity(loc, entityType) != null) {
-                    spawned++;
-                }
-            }
+            // Visual effects
+            player.spawnParticle(Particle.EXPLOSION_NORMAL, location, 5);
+            player.playSound(location, Sound.ENTITY_GENERIC_EXPLODE, 1.0f, 1.0f);
             
-            // Visual effect
-            player.spawnParticle(Particle.EXPLOSION_NORMAL, spawnLocation, 5);
-            
-            return context.createResult(true, "Spawned " + spawned + " " + entityType.name().toLowerCase().replace("_", " "));
+            return context.createResult(true, "Spawned " + entityType.name().toLowerCase().replace("_", " "));
             
         } catch (Exception e) {
             return context.createErrorResult("Failed to spawn entity: " + e.getMessage(), e);
@@ -595,32 +643,31 @@ public class ExecutorEngine {
     
     private ExecutionResult executeRemoveItems(Map<String, DataValue> params, ExecutionContext context) {
         try {
-            Player player = context.getPlayer();
-            
-            // Get the actual items to remove from parameters
-            // Items should be in format "MATERIAL1:COUNT1,MATERIAL2:COUNT2,..." or just "MATERIAL1,MATERIAL2,..." (count = 1)
             DataValue itemsValue = params.get("items");
             if (itemsValue == null) {
-                return context.createErrorResult("No items specified for removal");
+                return context.createErrorResult("No items specified");
             }
             
+            Player player = context.getPlayer();
+            int itemsRemoved = 0;
+            
+            // Get the actual items from the parameters
+            // Items should be in format "MATERIAL1:COUNT1,MATERIAL2:COUNT2,..." or just "MATERIAL1,MATERIAL2,..." (count = 1)
             String itemsStr = itemsValue.asString();
             if (itemsStr == null || itemsStr.trim().isEmpty()) {
-                return context.createErrorResult("Invalid items string for removal");
+                return context.createErrorResult("Invalid items string");
             }
             
             String[] itemPairs = itemsStr.split(",");
-            int itemsRemoved = 0;
             
-            // Remove items from player's inventory
             for (String itemPair : itemPairs) {
                 String[] parts = itemPair.trim().split(":");
                 String materialName = parts[0].trim();
-                int countToRemove = 1; // Default count
+                int count = 1; // Default count
                 
                 if (parts.length > 1) {
                     try {
-                        countToRemove = Integer.parseInt(parts[1].trim());
+                        count = Integer.parseInt(parts[1].trim());
                     } catch (NumberFormatException e) {
                         // Keep default count of 1
                     }
@@ -631,38 +678,22 @@ public class ExecutorEngine {
                 try {
                     material = org.bukkit.Material.valueOf(materialName.toUpperCase());
                 } catch (IllegalArgumentException e) {
-                    context.getPlugin().getLogger().warning("Invalid item material for removal: " + materialName);
-                    continue; // Skip this item
+                    return context.createErrorResult("Invalid item material: " + materialName);
                 }
                 
-                // Find and remove items from inventory
-                java.util.HashMap<Integer, ? extends org.bukkit.inventory.ItemStack> foundItems = 
-                    player.getInventory().all(material);
+                // Remove the items
+                org.bukkit.inventory.ItemStack itemToRemove = new org.bukkit.inventory.ItemStack(material, count);
+                java.util.Map<Integer, org.bukkit.inventory.ItemStack> notRemoved = player.getInventory().removeItem(itemToRemove);
                 
-                int amountRemoved = 0;
-                for (java.util.Map.Entry<Integer, ? extends org.bukkit.inventory.ItemStack> entry : foundItems.entrySet()) {
-                    if (amountRemoved >= countToRemove) break;
-                    
-                    org.bukkit.inventory.ItemStack stack = entry.getValue();
-                    int stackAmount = stack.getAmount();
-                    int toRemoveFromStack = Math.min(stackAmount, countToRemove - amountRemoved);
-                    
-                    if (toRemoveFromStack >= stackAmount) {
-                        player.getInventory().clear(entry.getKey());
-                        amountRemoved += stackAmount;
-                    } else {
-                        stack.setAmount(stackAmount - toRemoveFromStack);
-                        amountRemoved += toRemoveFromStack;
-                    }
-                }
-                
-                itemsRemoved += amountRemoved;
+                // Count how many were actually removed
+                itemsRemoved += count - notRemoved.size();
             }
             
-            // Visual effect
-            player.spawnParticle(org.bukkit.Particle.SMOKE_NORMAL, player.getLocation().add(0, 2, 0), 5);
+            // Visual effects
+            player.spawnParticle(Particle.SMOKE_NORMAL, player.getLocation().add(0, 2, 0), 5);
+            player.playSound(player.getLocation(), Sound.BLOCK_FIRE_EXTINGUISH, 1.0f, 1.0f);
             
-            return context.createResult(true, "Removed " + itemsRemoved + " items from inventory");
+            return context.createResult(true, "Removed " + itemsRemoved + " items");
             
         } catch (Exception e) {
             return context.createErrorResult("Failed to remove items: " + e.getMessage(), e);
@@ -671,52 +702,56 @@ public class ExecutorEngine {
     
     private ExecutionResult executeSetArmor(Map<String, DataValue> params, ExecutionContext context) {
         try {
+            DataValue armorValue = params.get("armor");
+            if (armorValue == null) {
+                return context.createErrorResult("No armor specified");
+            }
+            
+            String armorStr = armorValue.asString();
+            if (armorStr == null || armorStr.trim().isEmpty()) {
+                return context.createErrorResult("Armor cannot be empty");
+            }
+            
             Player player = context.getPlayer();
             org.bukkit.inventory.PlayerInventory inventory = player.getInventory();
             
-            // Set armor pieces based on parameters
-            if (params.containsKey("helmet_slot")) {
-                String helmetName = params.get("helmet_slot").asString();
-                if (helmetName != null && !helmetName.trim().isEmpty()) {
-                    org.bukkit.Material material = org.bukkit.Material.getMaterial(helmetName.toUpperCase());
-                    if (material != null && material.name().endsWith("_HELMET")) {
-                        inventory.setHelmet(new org.bukkit.inventory.ItemStack(material));
+            // Parse armor string in format "helmet,chestplate,leggings,boots"
+            String[] armorParts = armorStr.split(",");
+            if (armorParts.length != 4) {
+                return context.createErrorResult("Invalid armor format. Expected: helmet,chestplate,leggings,boots");
+            }
+            
+            // Set armor pieces
+            for (int i = 0; i < 4; i++) {
+                String materialName = armorParts[i].trim();
+                if (!materialName.isEmpty()) {
+                    try {
+                        org.bukkit.Material material = org.bukkit.Material.valueOf(materialName.toUpperCase());
+                        org.bukkit.inventory.ItemStack armorItem = new org.bukkit.inventory.ItemStack(material, 1);
+                        switch (i) {
+                            case 0: // Helmet
+                                inventory.setHelmet(armorItem);
+                                break;
+                            case 1: // Chestplate
+                                inventory.setChestplate(armorItem);
+                                break;
+                            case 2: // Leggings
+                                inventory.setLeggings(armorItem);
+                                break;
+                            case 3: // Boots
+                                inventory.setBoots(armorItem);
+                                break;
+                        }
+                    } catch (IllegalArgumentException e) {
+                        return context.createErrorResult("Invalid armor material: " + materialName);
                     }
                 }
             }
             
-            if (params.containsKey("chestplate_slot")) {
-                String chestplateName = params.get("chestplate_slot").asString();
-                if (chestplateName != null && !chestplateName.trim().isEmpty()) {
-                    org.bukkit.Material material = org.bukkit.Material.getMaterial(chestplateName.toUpperCase());
-                    if (material != null && material.name().endsWith("_CHESTPLATE")) {
-                        inventory.setChestplate(new org.bukkit.inventory.ItemStack(material));
-                    }
-                }
-            }
+            // Visual effects
+            player.spawnParticle(Particle.TOTEM, player.getLocation().add(0, 2, 0), 10);
+            player.playSound(player.getLocation(), Sound.ITEM_ARMOR_EQUIP_GENERIC, 1.0f, 1.0f);
             
-            if (params.containsKey("leggings_slot")) {
-                String leggingsName = params.get("leggings_slot").asString();
-                if (leggingsName != null && !leggingsName.trim().isEmpty()) {
-                    org.bukkit.Material material = org.bukkit.Material.getMaterial(leggingsName.toUpperCase());
-                    if (material != null && material.name().endsWith("_LEGGINGS")) {
-                        inventory.setLeggings(new org.bukkit.inventory.ItemStack(material));
-                    }
-                }
-            }
-            
-            if (params.containsKey("boots_slot")) {
-                String bootsName = params.get("boots_slot").asString();
-                if (bootsName != null && !bootsName.trim().isEmpty()) {
-                    org.bukkit.Material material = org.bukkit.Material.getMaterial(bootsName.toUpperCase());
-                    if (material != null && material.name().endsWith("_BOOTS")) {
-                        inventory.setBoots(new org.bukkit.inventory.ItemStack(material));
-                    }
-                }
-            }
-            
-            // Visual effect
-            player.spawnParticle(Particle.VILLAGER_HAPPY, player.getLocation().add(0, 2, 0), 5);
             return context.createResult(true, "Armor set");
             
         } catch (Exception e) {
@@ -726,36 +761,39 @@ public class ExecutorEngine {
     
     private ExecutionResult executeSpawnMob(Map<String, DataValue> params, ExecutionContext context) {
         try {
-            Player player = context.getPlayer();
-            
-            // For spawnMob, we'll spawn a zombie by default
-            org.bukkit.entity.EntityType entityType = org.bukkit.entity.EntityType.ZOMBIE;
-            
-            // Try to get entity type from parameters
-            if (params.containsKey("mob_type")) {
-                String mobTypeName = params.get("mob_type").asString();
-                if (mobTypeName != null && !mobTypeName.trim().isEmpty()) {
-                    try {
-                        entityType = org.bukkit.entity.EntityType.valueOf(mobTypeName.toUpperCase());
-                    } catch (IllegalArgumentException e) {
-                        // Keep default zombie
-                    }
-                }
+            DataValue mobTypeValue = params.get("mobType");
+            if (mobTypeValue == null) {
+                return context.createErrorResult("No mob type specified");
             }
             
-            // Spawn the mob near the player
-            Location spawnLocation = player.getLocation().add(
-                (Math.random() - 0.5) * 5,
-                1,
-                (Math.random() - 0.5) * 5
-            );
+            String mobTypeName = mobTypeValue.asString();
+            if (mobTypeName == null || mobTypeName.trim().isEmpty()) {
+                return context.createErrorResult("Mob type cannot be empty");
+            }
             
-            org.bukkit.entity.Entity spawnedEntity = player.getWorld().spawnEntity(spawnLocation, entityType);
+            // Try to get the mob type
+            org.bukkit.entity.EntityType mobType;
+            try {
+                mobType = org.bukkit.entity.EntityType.valueOf(mobTypeName.toUpperCase());
+            } catch (IllegalArgumentException e) {
+                return context.createErrorResult("Invalid mob type: " + mobTypeName);
+            }
             
-            // Visual effect
-            player.spawnParticle(Particle.EXPLOSION_NORMAL, spawnLocation, 5);
+            // Check if it's a living entity
+            if (!org.bukkit.entity.LivingEntity.class.isAssignableFrom(mobType.getEntityClass())) {
+                return context.createErrorResult("Entity type is not a living entity: " + mobTypeName);
+            }
             
-            return context.createResult(true, "Spawned " + entityType.name().toLowerCase().replace("_", " "));
+            // Spawn the mob at player location
+            Player player = context.getPlayer();
+            Location location = player.getLocation();
+            org.bukkit.entity.Entity entity = location.getWorld().spawnEntity(location, mobType);
+            
+            // Visual effects
+            player.spawnParticle(Particle.EXPLOSION_LARGE, location, 3);
+            player.playSound(location, Sound.ENTITY_GENERIC_EXPLODE, 1.0f, 0.8f);
+            
+            return context.createResult(true, "Spawned " + mobType.name().toLowerCase().replace("_", " "));
             
         } catch (Exception e) {
             return context.createErrorResult("Failed to spawn mob: " + e.getMessage(), e);
@@ -764,28 +802,29 @@ public class ExecutorEngine {
     
     private ExecutionResult executeHealPlayer(Map<String, DataValue> params, ExecutionContext context) {
         try {
-            Player player = context.getPlayer();
+            DataValue healAmountValue = params.get("healAmount");
+            double healAmount = 20.0; // Default to full health
             
-            // Get heal amount from parameters, default to full heal
-            double healAmount = player.getMaxHealth() - player.getHealth();
-            
-            if (params.containsKey("heal_amount")) {
-                String healAmountStr = params.get("heal_amount").asString();
-                if (healAmountStr != null && !healAmountStr.trim().isEmpty()) {
-                    try {
-                        healAmount = Double.parseDouble(healAmountStr);
-                    } catch (NumberFormatException e) {
-                        // Keep default heal amount
-                    }
+            if (healAmountValue != null) {
+                try {
+                    healAmount = healAmountValue.asNumber().doubleValue();
+                } catch (NumberFormatException e) {
+                    return context.createErrorResult("Invalid heal amount: " + healAmountValue.asString());
                 }
             }
             
-            // Heal the player
-            double newHealth = Math.min(player.getHealth() + healAmount, player.getMaxHealth());
-            player.setHealth(newHealth);
+            Player player = context.getPlayer();
             
-            // Visual effect
-            player.spawnParticle(Particle.VILLAGER_HAPPY, player.getLocation().add(0, 2, 0), 5);
+            // Heal the player
+            org.bukkit.entity.Damageable damageable = (org.bukkit.entity.Damageable) player;
+            double currentHealth = damageable.getHealth();
+            double maxHealth = damageable.getMaxHealth();
+            double newHealth = Math.min(maxHealth, currentHealth + healAmount);
+            damageable.setHealth(newHealth);
+            
+            // Visual effects
+            player.spawnParticle(Particle.HEART, player.getLocation().add(0, 2, 0), 5);
+            player.playSound(player.getLocation(), Sound.BLOCK_NOTE_BLOCK_PLING, 1.0f, 1.5f);
             
             return context.createResult(true, "Healed player by " + healAmount + " health points");
             
@@ -796,27 +835,31 @@ public class ExecutorEngine {
     
     private ExecutionResult executeSetGameMode(Map<String, DataValue> params, ExecutionContext context) {
         try {
-            Player player = context.getPlayer();
+            DataValue gameModeValue = params.get("gameMode");
+            if (gameModeValue == null) {
+                return context.createErrorResult("No game mode specified");
+            }
             
-            // Get game mode from parameters, default to SURVIVAL
-            org.bukkit.GameMode gameMode = org.bukkit.GameMode.SURVIVAL;
+            String gameModeName = gameModeValue.asString();
+            if (gameModeName == null || gameModeName.trim().isEmpty()) {
+                return context.createErrorResult("Game mode cannot be empty");
+            }
             
-            if (params.containsKey("game_mode")) {
-                String gameModeStr = params.get("game_mode").asString();
-                if (gameModeStr != null && !gameModeStr.trim().isEmpty()) {
-                    try {
-                        gameMode = org.bukkit.GameMode.valueOf(gameModeStr.toUpperCase());
-                    } catch (IllegalArgumentException e) {
-                        // Keep default game mode
-                    }
-                }
+            // Try to get the game mode
+            org.bukkit.GameMode gameMode;
+            try {
+                gameMode = org.bukkit.GameMode.valueOf(gameModeName.toUpperCase());
+            } catch (IllegalArgumentException e) {
+                return context.createErrorResult("Invalid game mode: " + gameModeName);
             }
             
             // Set the game mode
+            Player player = context.getPlayer();
             player.setGameMode(gameMode);
             
-            // Visual effect
-            player.spawnParticle(Particle.VILLAGER_HAPPY, player.getLocation().add(0, 2, 0), 5);
+            // Visual effects
+            player.spawnParticle(Particle.TOTEM, player.getLocation().add(0, 2, 0), 10);
+            player.playSound(player.getLocation(), Sound.BLOCK_NOTE_BLOCK_CHIME, 1.0f, 1.0f);
             
             return context.createResult(true, "Set game mode to " + gameMode.name().toLowerCase());
             
@@ -825,132 +868,76 @@ public class ExecutorEngine {
         }
     }
     
-    /**
-     * Executes the setTime action to set the time of day in the world
-     */
     private ExecutionResult executeSetTime(Map<String, DataValue> params, ExecutionContext context) {
         try {
-            // Get the time parameter (required)
             DataValue timeValue = params.get("time");
             if (timeValue == null) {
-                return context.createErrorResult("No time specified for setTime action");
+                return context.createErrorResult("No time specified");
             }
             
-            String timeStr = timeValue.asString();
-            if (timeStr == null || timeStr.trim().isEmpty()) {
-                return context.createErrorResult("Time value cannot be empty");
-            }
-            
-            // Parse the time value
             long time;
             try {
-                time = Long.parseLong(timeStr);
+                time = timeValue.asNumber().longValue();
             } catch (NumberFormatException e) {
-                return context.createErrorResult("Invalid time format: " + timeStr + ". Must be a number between 0 and 24000.");
+                return context.createErrorResult("Invalid time value: " + timeValue.asString());
             }
             
-            // Validate time range
-            if (time < 0 || time > 24000) {
-                return context.createErrorResult("Time must be between 0 and 24000. Provided: " + time);
-            }
-            
-            // Get the mode parameter (optional, defaults to "absolute")
-            String mode = "absolute";
-            if (params.containsKey("mode")) {
-                DataValue modeValue = params.get("mode");
-                if (modeValue != null) {
-                    String modeStr = modeValue.asString();
-                    if (modeStr != null && !modeStr.trim().isEmpty()) {
-                        mode = modeStr.toLowerCase();
-                    }
-                }
-            }
-            
-            // Get the player's world
+            // Set the time
             Player player = context.getPlayer();
-            org.bukkit.World world = player.getWorld();
+            player.getWorld().setTime(time);
             
-            // Set the time based on mode
-            if ("relative".equals(mode)) {
-                // Add the time to the current time
-                long currentTime = world.getTime();
-                world.setTime(currentTime + time);
-            } else {
-                // Set absolute time (default behavior)
-                world.setTime(time);
-            }
-            
-            // Visual effect
+            // Visual effects
             player.spawnParticle(Particle.CLOUD, player.getLocation().add(0, 2, 0), 5);
-            player.playSound(player.getLocation(), Sound.BLOCK_NOTE_BLOCK_CHIME, 1.0f, 1.2f);
+            player.playSound(player.getLocation(), Sound.BLOCK_NOTE_BLOCK_BASS, 1.0f, 1.0f);
             
-            // Create success message
-            String modeText = "relative".equals(mode) ? "relative to current time" : "absolute";
-            return context.createResult(true, "Set world time to " + time + " (" + modeText + ")");
+            return context.createResult(true, "Set world time to " + time);
             
         } catch (Exception e) {
             return context.createErrorResult("Failed to set time: " + e.getMessage(), e);
         }
     }
     
-    /**
-     * Executes the setWeather action to set the weather in the world
-     */
     private ExecutionResult executeSetWeather(Map<String, DataValue> params, ExecutionContext context) {
         try {
-            // Get the weather parameter (required)
             DataValue weatherValue = params.get("weather");
             if (weatherValue == null) {
-                return context.createErrorResult("No weather specified for setWeather action");
+                return context.createErrorResult("No weather specified");
             }
             
             String weatherStr = weatherValue.asString();
             if (weatherStr == null || weatherStr.trim().isEmpty()) {
-                return context.createErrorResult("Weather value cannot be empty");
+                return context.createErrorResult("Weather cannot be empty");
             }
             
-            // Validate and parse the weather value
-            org.bukkit.WeatherType weatherType;
-            switch (weatherStr.toLowerCase()) {
-                case "clear":
-                    weatherType = org.bukkit.WeatherType.CLEAR;
-                    break;
-                case "rain":
-                    weatherType = org.bukkit.WeatherType.DOWNFALL;
-                    break;
-                case "thunder":
-                    weatherType = org.bukkit.WeatherType.DOWNFALL;
-                    break;
-                default:
-                    return context.createErrorResult("Invalid weather type: " + weatherStr + ". Must be one of: clear, rain, thunder.");
-            }
-            
-            // Get the player's world
             Player player = context.getPlayer();
             org.bukkit.World world = player.getWorld();
             
-            // Set the weather based on type
+            // Set weather based on input
             switch (weatherStr.toLowerCase()) {
                 case "clear":
+                case "sunny":
                     world.setStorm(false);
                     world.setThundering(false);
                     break;
                 case "rain":
+                case "storm":
                     world.setStorm(true);
                     world.setThundering(false);
                     break;
                 case "thunder":
+                case "thunderstorm":
                     world.setStorm(true);
                     world.setThundering(true);
                     break;
+                default:
+                    return context.createErrorResult("Invalid weather type: " + weatherStr);
             }
             
-            // Visual effect
-            player.spawnParticle(Particle.WATER_SPLASH, player.getLocation().add(0, 2, 0), 5);
+            // Visual effects
+            player.spawnParticle(Particle.WATER_DROP, player.getLocation().add(0, 2, 0), 10);
             player.playSound(player.getLocation(), Sound.WEATHER_RAIN, 1.0f, 1.0f);
             
-            // Create success message
-            return context.createResult(true, "Set world weather to " + weatherStr);
+            return context.createResult(true, "Set weather to " + weatherStr);
             
         } catch (Exception e) {
             return context.createErrorResult("Failed to set weather: " + e.getMessage(), e);
@@ -966,22 +953,7 @@ public class ExecutorEngine {
             
             String soundName = soundValue.asString();
             if (soundName == null || soundName.trim().isEmpty()) {
-                return context.createErrorResult("Sound name cannot be empty");
-            }
-            
-            // Get volume and pitch with defaults
-            float volume = 1.0f;
-            float pitch = 1.0f;
-            
-            try {
-                if (params.containsKey("volume")) {
-                    volume = Float.parseFloat(params.get("volume").asString());
-                }
-                if (params.containsKey("pitch")) {
-                    pitch = Float.parseFloat(params.get("pitch").asString());
-                }
-            } catch (NumberFormatException e) {
-                return context.createErrorResult("Invalid number format for volume or pitch");
+                return context.createErrorResult("Sound cannot be empty");
             }
             
             // Try to get the sound
@@ -992,15 +964,16 @@ public class ExecutorEngine {
                 return context.createErrorResult("Invalid sound: " + soundName);
             }
             
-            // Play the sound
             Player player = context.getPlayer();
             Location location = player.getLocation();
-            player.playSound(location, sound, volume, pitch);
             
-            // Visual effect
-            player.spawnParticle(Particle.NOTE, location.add(0, 2, 0), 5);
+            // Play the sound
+            player.playSound(location, sound, 1.0f, 1.0f);
             
-            return context.createResult(true, "Played sound: " + sound.name().toLowerCase().replace("_", " "));
+            // Visual effects
+            player.spawnParticle(Particle.NOTE, location.add(0, 2, 0), 3);
+            
+            return context.createResult(true, "Played sound " + sound.name().toLowerCase());
             
         } catch (Exception e) {
             return context.createErrorResult("Failed to play sound: " + e.getMessage(), e);
@@ -1016,25 +989,56 @@ public class ExecutorEngine {
             
             String effectName = effectValue.asString();
             if (effectName == null || effectName.trim().isEmpty()) {
-                return context.createErrorResult("Effect name cannot be empty");
+                return context.createErrorResult("Effect cannot be empty");
             }
             
-            // Try to get the particle effect
-            org.bukkit.Particle effect;
+            // Try to get the effect
+            org.bukkit.potion.PotionEffectType effectType;
             try {
-                effect = org.bukkit.Particle.valueOf(effectName.toUpperCase());
-            } catch (IllegalArgumentException e) {
+                effectType = org.bukkit.potion.PotionEffectType.getByName(effectName.toUpperCase());
+                if (effectType == null) {
+                    return context.createErrorResult("Invalid effect: " + effectName);
+                }
+            } catch (Exception e) {
                 return context.createErrorResult("Invalid effect: " + effectName);
             }
             
-            Player player = context.getPlayer();
-            Location location = player.getLocation();
-            player.spawnParticle(effect, location, 10);
+            // Get duration and amplifier (optional)
+            int duration = 600; // 30 seconds default
+            int amplifier = 0; // Level 1 default
             
-            return context.createResult(true, "Effect played");
+            DataValue durationValue = params.get("duration");
+            if (durationValue != null) {
+                try {
+                    duration = durationValue.asNumber().intValue();
+                } catch (NumberFormatException e) {
+                    // Keep default duration
+                }
+            }
+            
+            DataValue amplifierValue = params.get("amplifier");
+            if (amplifierValue != null) {
+                try {
+                    amplifier = amplifierValue.asNumber().intValue();
+                } catch (NumberFormatException e) {
+                    // Keep default amplifier
+                }
+            }
+            
+            Player player = context.getPlayer();
+            
+            // Apply the effect
+            org.bukkit.potion.PotionEffect effect = new org.bukkit.potion.PotionEffect(effectType, duration, amplifier);
+            player.addPotionEffect(effect);
+            
+            // Visual effects
+            player.spawnParticle(Particle.SPELL_WITCH, player.getLocation().add(0, 2, 0), 10);
+            player.playSound(player.getLocation(), Sound.BLOCK_BREWING_STAND_BREW, 1.0f, 1.0f);
+            
+            return context.createResult(true, "Applied effect " + effectType.getName());
             
         } catch (Exception e) {
-            return context.createErrorResult("Failed to play effect: " + e.getMessage(), e);
+            return context.createErrorResult("Failed to apply effect: " + e.getMessage(), e);
         }
     }
     
@@ -1051,11 +1055,14 @@ public class ExecutorEngine {
             }
             
             Player player = context.getPlayer();
-            player.performCommand(command);
+            
+            // Execute the command
+            boolean success = player.performCommand(command);
             
             // Visual effects
-            player.spawnParticle(Particle.VILLAGER_HAPPY, player.getLocation().add(0, 2, 0), 5);
-            return context.createResult(true, "Command executed");
+            player.spawnParticle(Particle.ENCHANTMENT_TABLE, player.getLocation().add(0, 2, 0), 5);
+            
+            return context.createResult(true, "Executed command: " + command);
             
         } catch (Exception e) {
             return context.createErrorResult("Failed to execute command: " + e.getMessage(), e);
@@ -1074,11 +1081,18 @@ public class ExecutorEngine {
                 return context.createErrorResult("Message cannot be empty");
             }
             
-            // Resolve placeholders and broadcast message
+            // Resolve placeholders
             message = resolvePlaceholders(message, context);
-            plugin.getServer().broadcastMessage(message);
             
-            return context.createResult(true, "Message broadcasted");
+            // Broadcast the message
+            org.bukkit.Bukkit.broadcastMessage(message);
+            
+            // Visual effects
+            for (Player onlinePlayer : org.bukkit.Bukkit.getOnlinePlayers()) {
+                onlinePlayer.spawnParticle(Particle.TOTEM, onlinePlayer.getLocation().add(0, 2, 0), 3);
+            }
+            
+            return context.createResult(true, "Broadcast message");
             
         } catch (Exception e) {
             return context.createErrorResult("Failed to broadcast message: " + e.getMessage(), e);
@@ -1087,23 +1101,29 @@ public class ExecutorEngine {
     
     private ExecutionResult executeSetVariable(Map<String, DataValue> params, ExecutionContext context) {
         try {
-            DataValue nameValue = params.get("name");
-            DataValue valueValue = params.get("value");
-            if (nameValue == null || valueValue == null) {
-                return context.createErrorResult("Name and value must be specified");
+            DataValue varNameValue = params.get("varName");
+            if (varNameValue == null) {
+                return context.createErrorResult("No variable name specified");
             }
             
-            String name = nameValue.asString();
-            if (name == null || name.trim().isEmpty()) {
+            String varName = varNameValue.asString();
+            if (varName == null || varName.trim().isEmpty()) {
                 return context.createErrorResult("Variable name cannot be empty");
             }
             
-            variableManager.setPlayerVariable(context.getPlayer().getUniqueId(), name, valueValue);
+            DataValue varValue = params.get("varValue");
+            if (varValue == null) {
+                return context.createErrorResult("No variable value specified");
+            }
+            
+            // Set the variable in the context
+            context.setVariable(varName, varValue.getValue());
             
             // Visual effects
             Player player = context.getPlayer();
-            player.spawnParticle(Particle.VILLAGER_HAPPY, player.getLocation().add(0, 2, 0), 5);
-            return context.createResult(true, "Variable set");
+            player.spawnParticle(Particle.ENCHANTMENT_TABLE, player.getLocation().add(0, 2, 0), 5);
+            
+            return context.createResult(true, "Set variable " + varName);
             
         } catch (Exception e) {
             return context.createErrorResult("Failed to set variable: " + e.getMessage(), e);
@@ -1112,143 +1132,260 @@ public class ExecutorEngine {
     
     private ExecutionResult executeIfVariable(CodeBlock block, Map<String, DataValue> params, ExecutionContext context) {
         try {
-            DataValue nameValue = params.get("name");
-            DataValue valueValue = params.get("value");
-            if (nameValue == null || valueValue == null) {
-                return context.createErrorResult("Name and value must be specified");
+            DataValue varNameValue = params.get("varName");
+            if (varNameValue == null) {
+                return context.createErrorResult("No variable name specified");
             }
             
-            String name = nameValue.asString();
-            if (name == null || name.trim().isEmpty()) {
+            String varName = varNameValue.asString();
+            if (varName == null || varName.trim().isEmpty()) {
                 return context.createErrorResult("Variable name cannot be empty");
             }
             
-            DataValue variableValue = variableManager.getPlayerVariable(context.getPlayer().getUniqueId(), name);
-            if (variableValue == null) {
-                return context.createErrorResult("Variable not found: " + name);
+            DataValue expectedValue = params.get("expectedValue");
+            if (expectedValue == null) {
+                return context.createErrorResult("No expected value specified");
             }
             
-            if (variableValue.equals(valueValue)) {
-                var nextBlock = block.getNextBlock();
-                if (nextBlock != null) {
-                    return executeBlock(nextBlock, context);
-                }
+            // Get the actual variable value
+            Object actualValue = context.getVariable(varName);
+            if (actualValue == null) {
+                actualValue = ""; // Default to empty string for comparison
             }
             
-            return context.createResult(true, "Condition not met");
+            // Compare values
+            boolean conditionMet = actualValue.toString().equals(expectedValue.asString());
+            
+            // Set the result for else block handling
+            context.setLastConditionResult(conditionMet);
+            
+            // Visual effects
+            Player player = context.getPlayer();
+            Particle particle = conditionMet ? Particle.VILLAGER_HAPPY : Particle.SMOKE_NORMAL;
+            player.spawnParticle(particle, player.getLocation().add(0, 2, 0), 5);
+            
+            return context.createResult(true, "Condition evaluated: " + conditionMet);
             
         } catch (Exception e) {
-            return context.createErrorResult("Failed to check variable: " + e.getMessage(), e);
+            return context.createErrorResult("Failed to evaluate condition: " + e.getMessage(), e);
         }
     }
     
     private ExecutionResult executeIfVarGreater(CodeBlock block, Map<String, DataValue> params, ExecutionContext context) {
         try {
-            DataValue nameValue = params.get("name");
-            DataValue valueValue = params.get("value");
-            if (nameValue == null || valueValue == null) {
-                return context.createErrorResult("Name and value must be specified");
+            DataValue varNameValue = params.get("varName");
+            if (varNameValue == null) {
+                return context.createErrorResult("No variable name specified");
             }
             
-            String name = nameValue.asString();
-            if (name == null || name.trim().isEmpty()) {
+            String varName = varNameValue.asString();
+            if (varName == null || varName.trim().isEmpty()) {
                 return context.createErrorResult("Variable name cannot be empty");
             }
             
-            DataValue variableValue = variableManager.getPlayerVariable(context.getPlayer().getUniqueId(), name);
-            if (variableValue == null) {
-                return context.createErrorResult("Variable not found: " + name);
+            DataValue thresholdValue = params.get("threshold");
+            if (thresholdValue == null) {
+                return context.createErrorResult("No threshold specified");
             }
             
-            if (variableValue.asNumber() != null && valueValue.asNumber() != null) {
-                double variableNumber = variableValue.asNumber().doubleValue();
-                double valueNumber = valueValue.asNumber().doubleValue();
-                
-                if (variableNumber > valueNumber) {
-                    var nextBlock = block.getNextBlock();
-                    if (nextBlock != null) {
-                        return executeBlock(nextBlock, context);
-                    }
-                }
-            } else {
-                return context.createErrorResult("Variable and value must be numbers");
+            // Get the actual variable value
+            Object actualValue = context.getVariable(varName);
+            if (actualValue == null) {
+                actualValue = 0; // Default to 0 for comparison
             }
             
-            return context.createResult(true, "Condition not met");
+            // Convert to numbers for comparison
+            double actualNum, thresholdNum;
+            try {
+                actualNum = Double.parseDouble(actualValue.toString());
+                thresholdNum = thresholdValue.asNumber().doubleValue();
+            } catch (NumberFormatException e) {
+                return context.createErrorResult("Cannot compare non-numeric values");
+            }
+            
+            // Compare values
+            boolean conditionMet = actualNum > thresholdNum;
+            
+            // Set the result for else block handling
+            context.setLastConditionResult(conditionMet);
+            
+            // Visual effects
+            Player player = context.getPlayer();
+            Particle particle = conditionMet ? Particle.VILLAGER_HAPPY : Particle.SMOKE_NORMAL;
+            player.spawnParticle(particle, player.getLocation().add(0, 2, 0), 5);
+            
+            return context.createResult(true, "Condition evaluated: " + conditionMet);
             
         } catch (Exception e) {
-            return context.createErrorResult("Failed to check variable: " + e.getMessage(), e);
+            return context.createErrorResult("Failed to evaluate condition: " + e.getMessage(), e);
         }
     }
     
     private ExecutionResult executeIfVarLess(CodeBlock block, Map<String, DataValue> params, ExecutionContext context) {
         try {
-            DataValue nameValue = params.get("name");
-            DataValue valueValue = params.get("value");
-            if (nameValue == null || valueValue == null) {
-                return context.createErrorResult("Name and value must be specified");
+            DataValue varNameValue = params.get("varName");
+            if (varNameValue == null) {
+                return context.createErrorResult("No variable name specified");
             }
             
-            String name = nameValue.asString();
-            if (name == null || name.trim().isEmpty()) {
+            String varName = varNameValue.asString();
+            if (varName == null || varName.trim().isEmpty()) {
                 return context.createErrorResult("Variable name cannot be empty");
             }
             
-            DataValue variableValue = variableManager.getPlayerVariable(context.getPlayer().getUniqueId(), name);
-            if (variableValue == null) {
-                return context.createErrorResult("Variable not found: " + name);
+            DataValue thresholdValue = params.get("threshold");
+            if (thresholdValue == null) {
+                return context.createErrorResult("No threshold specified");
             }
             
-            if (variableValue.asNumber() != null && valueValue.asNumber() != null) {
-                double variableNumber = variableValue.asNumber().doubleValue();
-                double valueNumber = valueValue.asNumber().doubleValue();
-                
-                if (variableNumber < valueNumber) {
-                    var nextBlock = block.getNextBlock();
-                    if (nextBlock != null) {
-                        return executeBlock(nextBlock, context);
-                    }
-                }
-            } else {
-                return context.createErrorResult("Variable and value must be numbers");
+            // Get the actual variable value
+            Object actualValue = context.getVariable(varName);
+            if (actualValue == null) {
+                actualValue = 0; // Default to 0 for comparison
             }
             
-            return context.createResult(true, "Condition not met");
+            // Convert to numbers for comparison
+            double actualNum, thresholdNum;
+            try {
+                actualNum = Double.parseDouble(actualValue.toString());
+                thresholdNum = thresholdValue.asNumber().doubleValue();
+            } catch (NumberFormatException e) {
+                return context.createErrorResult("Cannot compare non-numeric values");
+            }
+            
+            // Compare values
+            boolean conditionMet = actualNum < thresholdNum;
+            
+            // Set the result for else block handling
+            context.setLastConditionResult(conditionMet);
+            
+            // Visual effects
+            Player player = context.getPlayer();
+            Particle particle = conditionMet ? Particle.VILLAGER_HAPPY : Particle.SMOKE_NORMAL;
+            player.spawnParticle(particle, player.getLocation().add(0, 2, 0), 5);
+            
+            return context.createResult(true, "Condition evaluated: " + conditionMet);
             
         } catch (Exception e) {
-            return context.createErrorResult("Failed to check variable: " + e.getMessage(), e);
+            return context.createErrorResult("Failed to evaluate condition: " + e.getMessage(), e);
         }
     }
     
     private ExecutionResult executeCompareVariable(CodeBlock block, Map<String, DataValue> params, ExecutionContext context) {
         try {
-            DataValue nameValue = params.get("name");
-            DataValue valueValue = params.get("value");
-            if (nameValue == null || valueValue == null) {
-                return context.createErrorResult("Name and value must be specified");
+            DataValue var1NameValue = params.get("var1Name");
+            if (var1NameValue == null) {
+                return context.createErrorResult("No first variable name specified");
             }
             
-            String name = nameValue.asString();
-            if (name == null || name.trim().isEmpty()) {
-                return context.createErrorResult("Variable name cannot be empty");
+            String var1Name = var1NameValue.asString();
+            if (var1Name == null || var1Name.trim().isEmpty()) {
+                return context.createErrorResult("First variable name cannot be empty");
             }
             
-            DataValue variableValue = variableManager.getPlayerVariable(context.getPlayer().getUniqueId(), name);
-            if (variableValue == null) {
-                return context.createErrorResult("Variable not found: " + name);
+            DataValue var2NameValue = params.get("var2Name");
+            if (var2NameValue == null) {
+                return context.createErrorResult("No second variable name specified");
             }
             
-            if (variableValue.equals(valueValue)) {
-                var nextBlock = block.getNextBlock();
-                if (nextBlock != null) {
-                    return executeBlock(nextBlock, context);
-                }
+            String var2Name = var2NameValue.asString();
+            if (var2Name == null || var2Name.trim().isEmpty()) {
+                return context.createErrorResult("Second variable name cannot be empty");
             }
             
-            return context.createResult(true, "Condition not met");
+            DataValue operatorValue = params.get("operator");
+            if (operatorValue == null) {
+                return context.createErrorResult("No operator specified");
+            }
+            
+            String operator = operatorValue.asString();
+            if (operator == null || operator.trim().isEmpty()) {
+                return context.createErrorResult("Operator cannot be empty");
+            }
+            
+            // Get the actual variable values
+            Object var1Value = context.getVariable(var1Name);
+            Object var2Value = context.getVariable(var2Name);
+            
+            if (var1Value == null) var1Value = "";
+            if (var2Value == null) var2Value = "";
+            
+            // Convert to numbers if possible
+            Double num1 = null, num2 = null;
+            try {
+                num1 = Double.parseDouble(var1Value.toString());
+                num2 = Double.parseDouble(var2Value.toString());
+            } catch (NumberFormatException e) {
+                // Not numeric, will do string comparison
+            }
+            
+            // Perform comparison based on operator
+            boolean conditionMet;
+            switch (operator) {
+                case "==":
+                case "equals":
+                    if (num1 != null && num2 != null) {
+                        conditionMet = Math.abs(num1 - num2) < 0.0001; // Floating point comparison
+                    } else {
+                        conditionMet = var1Value.toString().equals(var2Value.toString());
+                    }
+                    break;
+                case "!=":
+                case "notEquals":
+                    if (num1 != null && num2 != null) {
+                        conditionMet = Math.abs(num1 - num2) >= 0.0001; // Floating point comparison
+                    } else {
+                        conditionMet = !var1Value.toString().equals(var2Value.toString());
+                    }
+                    break;
+                case ">":
+                case "greater":
+                    if (num1 != null && num2 != null) {
+                        conditionMet = num1 > num2;
+                    } else {
+                        conditionMet = var1Value.toString().compareTo(var2Value.toString()) > 0;
+                    }
+                    break;
+                case "<":
+                case "less":
+                    if (num1 != null && num2 != null) {
+                        conditionMet = num1 < num2;
+                    } else {
+                        conditionMet = var1Value.toString().compareTo(var2Value.toString()) < 0;
+                    }
+                    break;
+                case ">=":
+                case "greaterEquals":
+                    if (num1 != null && num2 != null) {
+                        conditionMet = num1 >= num2;
+                    } else {
+                        conditionMet = var1Value.toString().compareTo(var2Value.toString()) >= 0;
+                    }
+                    break;
+                case "<=":
+                case "lessEquals":
+                    if (num1 != null && num2 != null) {
+                        conditionMet = num1 <= num2;
+                    } else {
+                        conditionMet = var1Value.toString().compareTo(var2Value.toString()) <= 0;
+                    }
+                    break;
+                default:
+                    return context.createErrorResult("Invalid operator: " + operator);
+            }
+            
+            // Set the result for else block handling
+            context.setLastConditionResult(conditionMet);
+            
+            // Visual effects
+            Player player = context.getPlayer();
+            Particle particle = conditionMet ? Particle.VILLAGER_HAPPY : Particle.SMOKE_NORMAL;
+            player.spawnParticle(particle, player.getLocation().add(0, 2, 0), 5);
+            
+            return context.createResult(true, "Condition evaluated: " + conditionMet);
             
         } catch (Exception e) {
-            return context.createErrorResult("Failed to compare variable: " + e.getMessage(), e);
+            return context.createErrorResult("Failed to evaluate condition: " + e.getMessage(), e);
         }
     }
     
@@ -1264,15 +1401,20 @@ public class ExecutorEngine {
                 return context.createErrorResult("Message cannot be empty");
             }
             
-            // Resolve placeholders and send message
+            // Resolve placeholders
             message = resolvePlaceholders(message, context);
+            
+            // Send action bar message
             Player player = context.getPlayer();
             player.sendActionBar(message);
             
-            return context.createResult(true, "Action bar sent");
+            // Visual effects
+            player.spawnParticle(Particle.TOTEM, player.getLocation().add(0, 2, 0), 3);
+            
+            return context.createResult(true, "Sent action bar message");
             
         } catch (Exception e) {
-            return context.createErrorResult("Failed to send action bar: " + e.getMessage(), e);
+            return context.createErrorResult("Failed to send action bar message: " + e.getMessage(), e);
         }
     }
     
@@ -1289,38 +1431,57 @@ public class ExecutorEngine {
             }
             
             Player player = context.getPlayer();
-            plugin.getServer().getScheduler().runTaskAsynchronously(plugin, () -> player.performCommand(command));
+            
+            // Execute the command asynchronously
+            org.bukkit.Bukkit.getScheduler().runTaskAsynchronously(plugin, () -> {
+                try {
+                    boolean success = org.bukkit.Bukkit.dispatchCommand(org.bukkit.Bukkit.getConsoleSender(), command);
+                    plugin.getLogger().info("Async command executed: " + command + " (success: " + success + ")");
+                } catch (Exception e) {
+                    plugin.getLogger().severe("Failed to execute async command: " + command + " - " + e.getMessage());
+                }
+            });
             
             // Visual effects
-            player.spawnParticle(Particle.VILLAGER_HAPPY, player.getLocation().add(0, 2, 0), 5);
-            return context.createResult(true, "Command executed asynchronously");
+            player.spawnParticle(Particle.SPELL_INSTANT, player.getLocation().add(0, 2, 0), 5);
+            
+            return context.createResult(true, "Executing async command: " + command);
             
         } catch (Exception e) {
-            return context.createErrorResult("Failed to execute command asynchronously: " + e.getMessage(), e);
+            return context.createErrorResult("Failed to execute async command: " + e.getMessage(), e);
         }
     }
     
     private ExecutionResult executeCreateScoreboard(Map<String, DataValue> params, ExecutionContext context) {
         try {
-            DataValue nameValue = params.get("name");
-            if (nameValue == null) {
-                return context.createErrorResult("No name specified");
+            DataValue scoreboardNameValue = params.get("scoreboardName");
+            if (scoreboardNameValue == null) {
+                return context.createErrorResult("No scoreboard name specified");
             }
             
-            String name = nameValue.asString();
-            if (name == null || name.trim().isEmpty()) {
-                return context.createErrorResult("Name cannot be empty");
+            String scoreboardName = scoreboardNameValue.asString();
+            if (scoreboardName == null || scoreboardName.trim().isEmpty()) {
+                return context.createErrorResult("Scoreboard name cannot be empty");
             }
             
             Player player = context.getPlayer();
-            org.bukkit.scoreboard.Scoreboard scoreboard = plugin.getServer().getScoreboardManager().getNewScoreboard();
-            org.bukkit.scoreboard.Objective objective = scoreboard.registerNewObjective("main", "dummy", name);
+            
+            // Create scoreboard
+            org.bukkit.scoreboard.ScoreboardManager manager = org.bukkit.Bukkit.getScoreboardManager();
+            org.bukkit.scoreboard.Scoreboard board = manager.getNewScoreboard();
+            
+            // Create objective
+            org.bukkit.scoreboard.Objective objective = board.registerNewObjective(scoreboardName, "dummy", scoreboardName);
             objective.setDisplaySlot(org.bukkit.scoreboard.DisplaySlot.SIDEBAR);
-            player.setScoreboard(scoreboard);
+            
+            // Set player's scoreboard
+            player.setScoreboard(board);
             
             // Visual effects
-            player.spawnParticle(Particle.VILLAGER_HAPPY, player.getLocation().add(0, 2, 0), 5);
-            return context.createResult(true, "Scoreboard created");
+            player.spawnParticle(Particle.TOTEM, player.getLocation().add(0, 2, 0), 10);
+            player.playSound(player.getLocation(), Sound.BLOCK_NOTE_BLOCK_BELL, 1.0f, 1.5f);
+            
+            return context.createResult(true, "Created scoreboard: " + scoreboardName);
             
         } catch (Exception e) {
             return context.createErrorResult("Failed to create scoreboard: " + e.getMessage(), e);
@@ -1329,34 +1490,47 @@ public class ExecutorEngine {
     
     private ExecutionResult executeSetScore(Map<String, DataValue> params, ExecutionContext context) {
         try {
-            DataValue nameValue = params.get("name");
+            DataValue objectiveNameValue = params.get("objectiveName");
+            if (objectiveNameValue == null) {
+                return context.createErrorResult("No objective name specified");
+            }
+            
+            String objectiveName = objectiveNameValue.asString();
+            if (objectiveName == null || objectiveName.trim().isEmpty()) {
+                return context.createErrorResult("Objective name cannot be empty");
+            }
+            
             DataValue scoreValue = params.get("score");
-            if (nameValue == null || scoreValue == null) {
-                return context.createErrorResult("Name and score must be specified");
+            if (scoreValue == null) {
+                return context.createErrorResult("No score specified");
             }
             
-            String name = nameValue.asString();
-            if (name == null || name.trim().isEmpty()) {
-                return context.createErrorResult("Name cannot be empty");
-            }
-            
-            Integer score = scoreValue.asNumber() != null ? scoreValue.asNumber().intValue() : null;
-            if (score == null) {
-                return context.createErrorResult("Score must be a number");
+            int score;
+            try {
+                score = scoreValue.asNumber().intValue();
+            } catch (NumberFormatException e) {
+                return context.createErrorResult("Invalid score value: " + scoreValue.asString());
             }
             
             Player player = context.getPlayer();
-            org.bukkit.scoreboard.Scoreboard scoreboard = player.getScoreboard();
-            org.bukkit.scoreboard.Objective objective = scoreboard.getObjective("main");
+            org.bukkit.scoreboard.Scoreboard board = player.getScoreboard();
+            
+            // Get or create objective
+            org.bukkit.scoreboard.Objective objective = board.getObjective(objectiveName);
             if (objective == null) {
-                return context.createErrorResult("Scoreboard not found");
+                objective = board.registerNewObjective(objectiveName, "dummy", objectiveName);
+                objective.setDisplaySlot(org.bukkit.scoreboard.DisplaySlot.SIDEBAR);
             }
             
-            objective.getScore(name).setScore(score);
+            // Set score
+            org.bukkit.scoreboard.Score playerScore = objective.getScore(player.getName());
+            playerScore.setScore(score);
             
             // Visual effects
             player.spawnParticle(Particle.VILLAGER_HAPPY, player.getLocation().add(0, 2, 0), 5);
-            return context.createResult(true, "Score set");
+            player.playSound(player.getLocation(), Sound.ENTITY_EXPERIENCE_ORB_PICKUP, 1.0f, 1.0f);
+            
+            return context.createResult(true, "Set score to " + score);
             
         } catch (Exception e) {
             return context.createErrorResult("Failed to set score: " + e.getMessage(), e);
@@ -1365,35 +1539,48 @@ public class ExecutorEngine {
     
     private ExecutionResult executeIncrementScore(Map<String, DataValue> params, ExecutionContext context) {
         try {
-            DataValue nameValue = params.get("name");
+            DataValue objectiveNameValue = params.get("objectiveName");
+            if (objectiveNameValue == null) {
+                return context.createErrorResult("No objective name specified");
+            }
+            
+            String objectiveName = objectiveNameValue.asString();
+            if (objectiveName == null || objectiveName.trim().isEmpty()) {
+                return context.createErrorResult("Objective name cannot be empty");
+            }
+            
             DataValue incrementValue = params.get("increment");
-            if (nameValue == null || incrementValue == null) {
-                return context.createErrorResult("Name and increment must be specified");
-            }
+            int increment = 1; // Default increment
             
-            String name = nameValue.asString();
-            if (name == null || name.trim().isEmpty()) {
-                return context.createErrorResult("Name cannot be empty");
-            }
-            
-            Integer increment = incrementValue.asNumber() != null ? incrementValue.asNumber().intValue() : null;
-            if (increment == null) {
-                return context.createErrorResult("Increment must be a number");
+            if (incrementValue != null) {
+                try {
+                    increment = incrementValue.asNumber().intValue();
+                } catch (NumberFormatException e) {
+                    // Keep default increment
+                }
             }
             
             Player player = context.getPlayer();
-            org.bukkit.scoreboard.Scoreboard scoreboard = player.getScoreboard();
-            org.bukkit.scoreboard.Objective objective = scoreboard.getObjective("main");
+            org.bukkit.scoreboard.Scoreboard board = player.getScoreboard();
+            
+            // Get or create objective
+            org.bukkit.scoreboard.Objective objective = board.getObjective(objectiveName);
             if (objective == null) {
-                return context.createErrorResult("Scoreboard not found");
+                objective = board.registerNewObjective(objectiveName, "dummy", objectiveName);
+                objective.setDisplaySlot(org.bukkit.scoreboard.DisplaySlot.SIDEBAR);
             }
             
-            org.bukkit.scoreboard.Score score = objective.getScore(name);
-            score.setScore(score.getScore() + increment);
+            // Get current score and increment
+            org.bukkit.scoreboard.Score playerScore = objective.getScore(player.getName());
+            int currentScore = playerScore.getScore();
+            int newScore = currentScore + increment;
+            playerScore.setScore(newScore);
             
             // Visual effects
             player.spawnParticle(Particle.VILLAGER_HAPPY, player.getLocation().add(0, 2, 0), 5);
-            return context.createResult(true, "Score incremented");
+            player.playSound(player.getLocation(), Sound.ENTITY_EXPERIENCE_ORB_PICKUP, 1.0f, 1.0f);
+            
+            return context.createResult(true, "Incremented score by " + increment);
             
         } catch (Exception e) {
             return context.createErrorResult("Failed to increment score: " + e.getMessage(), e);
@@ -1402,23 +1589,49 @@ public class ExecutorEngine {
     
     private ExecutionResult executeCreateTeam(Map<String, DataValue> params, ExecutionContext context) {
         try {
-            DataValue nameValue = params.get("name");
-            if (nameValue == null) {
-                return context.createErrorResult("No name specified");
+            DataValue teamNameValue = params.get("teamName");
+            if (teamNameValue == null) {
+                return context.createErrorResult("No team name specified");
             }
             
-            String name = nameValue.asString();
-            if (name == null || name.trim().isEmpty()) {
-                return context.createErrorResult("Name cannot be empty");
+            String teamName = teamNameValue.asString();
+            if (teamName == null || teamName.trim().isEmpty()) {
+                return context.createErrorResult("Team name cannot be empty");
             }
             
             Player player = context.getPlayer();
-            org.bukkit.scoreboard.Scoreboard scoreboard = player.getScoreboard();
-            org.bukkit.scoreboard.Team team = scoreboard.registerNewTeam(name);
+            org.bukkit.scoreboard.Scoreboard board = player.getScoreboard();
+            
+            // Create or get team
+            org.bukkit.scoreboard.Team team = board.getTeam(teamName);
+            if (team == null) {
+                team = board.registerNewTeam(teamName);
+            }
+            
+            // Set team properties if provided
+            DataValue displayNameValue = params.get("displayName");
+            if (displayNameValue != null) {
+                team.setDisplayName(displayNameValue.asString());
+            }
+            
+            DataValue prefixValue = params.get("prefix");
+            if (prefixValue != null) {
+                team.setPrefix(prefixValue.asString());
+            }
+            
+            DataValue suffixValue = params.get("suffix");
+            if (suffixValue != null) {
+                team.setSuffix(suffixValue.asString());
+            }
+            
+            // Add player to team
+            team.addEntry(player.getName());
             
             // Visual effects
-            player.spawnParticle(Particle.VILLAGER_HAPPY, player.getLocation().add(0, 2, 0), 5);
-            return context.createResult(true, "Team created");
+            player.spawnParticle(Particle.TOTEM, player.getLocation().add(0, 2, 0), 10);
+            player.playSound(player.getLocation(), Sound.BLOCK_NOTE_BLOCK_BELL, 1.0f, 1.5f);
+            
+            return context.createResult(true, "Created team: " + teamName);
             
         } catch (Exception e) {
             return context.createErrorResult("Failed to create team: " + e.getMessage(), e);
@@ -1428,14 +1641,18 @@ public class ExecutorEngine {
     private ExecutionResult executeAddPlayerToTeam(Map<String, DataValue> params, ExecutionContext context) {
         try {
             DataValue teamNameValue = params.get("teamName");
-            DataValue playerNameValue = params.get("playerName");
-            if (teamNameValue == null || playerNameValue == null) {
-                return context.createErrorResult("Team name and player name must be specified");
+            if (teamNameValue == null) {
+                return context.createErrorResult("No team name specified");
             }
             
             String teamName = teamNameValue.asString();
             if (teamName == null || teamName.trim().isEmpty()) {
                 return context.createErrorResult("Team name cannot be empty");
+            }
+            
+            DataValue playerNameValue = params.get("playerName");
+            if (playerNameValue == null) {
+                return context.createErrorResult("No player name specified");
             }
             
             String playerName = playerNameValue.asString();
@@ -1444,22 +1661,22 @@ public class ExecutorEngine {
             }
             
             Player player = context.getPlayer();
-            org.bukkit.scoreboard.Scoreboard scoreboard = player.getScoreboard();
-            org.bukkit.scoreboard.Team team = scoreboard.getTeam(teamName);
+            org.bukkit.scoreboard.Scoreboard board = player.getScoreboard();
+            
+            // Get team
+            org.bukkit.scoreboard.Team team = board.getTeam(teamName);
             if (team == null) {
                 return context.createErrorResult("Team not found: " + teamName);
             }
             
-            Player targetPlayer = plugin.getServer().getPlayer(playerName);
-            if (targetPlayer == null) {
-                return context.createErrorResult("Player not found: " + playerName);
-            }
-            
-            team.addEntry(targetPlayer.getName());
+            // Add player to team
+            team.addEntry(playerName);
             
             // Visual effects
             player.spawnParticle(Particle.VILLAGER_HAPPY, player.getLocation().add(0, 2, 0), 5);
-            return context.createResult(true, "Player added to team");
+            player.playSound(player.getLocation(), Sound.ENTITY_EXPERIENCE_ORB_PICKUP, 1.0f, 1.0f);
+            
+            return context.createResult(true, "Added player to team: " + playerName);
             
         } catch (Exception e) {
             return context.createErrorResult("Failed to add player to team: " + e.getMessage(), e);
@@ -1468,22 +1685,26 @@ public class ExecutorEngine {
     
     private ExecutionResult executeSaveLocation(Map<String, DataValue> params, ExecutionContext context) {
         try {
-            DataValue nameValue = params.get("name");
-            if (nameValue == null) {
-                return context.createErrorResult("No name specified");
+            DataValue locationNameValue = params.get("locationName");
+            if (locationNameValue == null) {
+                return context.createErrorResult("No location name specified");
             }
             
-            String name = nameValue.asString();
-            if (name == null || name.trim().isEmpty()) {
-                return context.createErrorResult("Name cannot be empty");
+            String locationName = locationNameValue.asString();
+            if (locationName == null || locationName.trim().isEmpty()) {
+                return context.createErrorResult("Location name cannot be empty");
             }
             
             Player player = context.getPlayer();
             Location location = player.getLocation();
-            variableManager.setPlayerVariable(context.getPlayer().getUniqueId(), name, DataValue.of(location));
+            
+            // Save location as a variable
+            context.setVariable(locationName, location);
             
             // Visual effects
-            player.spawnParticle(Particle.VILLAGER_HAPPY, player.getLocation().add(0, 2, 0), 5);
+            player.spawnParticle(Particle.PORTAL, location, 10);
+            player.playSound(location, Sound.BLOCK_END_PORTAL_FRAME_FILL, 1.0f, 1.0f);
+            
             return context.createResult(true, "Location saved");
             
         } catch (Exception e) {
@@ -1493,31 +1714,32 @@ public class ExecutorEngine {
     
     private ExecutionResult executeGetLocation(Map<String, DataValue> params, ExecutionContext context) {
         try {
-            DataValue nameValue = params.get("name");
-            if (nameValue == null) {
-                return context.createErrorResult("No name specified");
+            DataValue locationNameValue = params.get("locationName");
+            if (locationNameValue == null) {
+                return context.createErrorResult("No location name specified");
             }
             
-            String name = nameValue.asString();
-            if (name == null || name.trim().isEmpty()) {
-                return context.createErrorResult("Name cannot be empty");
+            String locationName = locationNameValue.asString();
+            if (locationName == null || locationName.trim().isEmpty()) {
+                return context.createErrorResult("Location name cannot be empty");
             }
             
-            DataValue locationValue = variableManager.getPlayerVariable(context.getPlayer().getUniqueId(), name);
-            if (locationValue == null) {
-                return context.createErrorResult("Location not found: " + name);
+            // Get location from variable
+            Object locationObj = context.getVariable(locationName);
+            if (!(locationObj instanceof Location)) {
+                return context.createErrorResult("Variable " + locationName + " is not a location");
             }
             
-            Location location = locationValue.getType() == com.megacreative.coding.values.ValueType.LOCATION ? (Location) locationValue.getValue() : null;
-            if (location == null) {
-                return context.createErrorResult("Invalid location value");
-            }
-            
+            Location location = (Location) locationObj;
             Player player = context.getPlayer();
+            
+            // Teleport player to location
             player.teleport(location);
             
             // Visual effects
-            player.spawnParticle(Particle.VILLAGER_HAPPY, player.getLocation().add(0, 2, 0), 5);
+            player.spawnParticle(Particle.PORTAL, location, 20);
+            player.playSound(location, Sound.ENTITY_ENDERMAN_TELEPORT, 1.0f, 1.0f);
+            
             return context.createResult(true, "Location retrieved");
             
         } catch (Exception e) {
@@ -1528,194 +1750,95 @@ public class ExecutorEngine {
     private ExecutionResult executeIsNight(CodeBlock block, Map<String, DataValue> params, ExecutionContext context) {
         try {
             Player player = context.getPlayer();
-            if (player.getWorld().getTime() >= 12000) {
-                var nextBlock = block.getNextBlock();
-                if (nextBlock != null) {
-                    return executeBlock(nextBlock, context);
-                }
-            }
+            long time = player.getWorld().getTime();
             
-            return context.createResult(true, "Condition not met");
+            // Night is from 13000 to 23000 ticks
+            boolean isNight = time >= 13000 && time <= 23000;
+            
+            // Set the result for else block handling
+            context.setLastConditionResult(isNight);
+            
+            // Visual effects
+            Particle particle = isNight ? Particle.VILLAGER_HAPPY : Particle.SMOKE_NORMAL;
+            player.spawnParticle(particle, player.getLocation().add(0, 2, 0), 5);
+            
+            return context.createResult(true, "Condition evaluated: " + isNight);
             
         } catch (Exception e) {
-            return context.createErrorResult("Failed to check if it's night: " + e.getMessage(), e);
+            return context.createErrorResult("Failed to evaluate condition: " + e.getMessage(), e);
         }
     }
     
     private ExecutionResult executeIsRiding(CodeBlock block, Map<String, DataValue> params, ExecutionContext context) {
         try {
             Player player = context.getPlayer();
-            if (player.isInsideVehicle()) {
-                var nextBlock = block.getNextBlock();
-                if (nextBlock != null) {
-                    return executeBlock(nextBlock, context);
-                }
-            }
+            boolean isRiding = player.isInsideVehicle();
             
-            return context.createResult(true, "Condition not met");
+            // Set the result for else block handling
+            context.setLastConditionResult(isRiding);
+            
+            // Visual effects
+            Particle particle = isRiding ? Particle.VILLAGER_HAPPY : Particle.SMOKE_NORMAL;
+            player.spawnParticle(particle, player.getLocation().add(0, 2, 0), 5);
+            
+            return context.createResult(true, "Condition evaluated: " + isRiding);
             
         } catch (Exception e) {
-            return context.createErrorResult("Failed to check if player is riding: " + e.getMessage(), e);
+            return context.createErrorResult("Failed to evaluate condition: " + e.getMessage(), e);
         }
     }
     
-    private ExecutionResult executeCheckPlayerInventory(CodeBlock block, Map<String, DataValue> params, ExecutionContext context) {
+    private ExecutionResult executeIsSneaking(CodeBlock block, Map<String, DataValue> params, ExecutionContext context) {
         try {
-            DataValue itemValue = params.get("item");
-            if (itemValue == null) {
-                return context.createErrorResult("No item specified");
-            }
-            
-            String materialName = itemValue.asString();
-            if (materialName == null || materialName.trim().isEmpty()) {
-                return context.createErrorResult("Item name cannot be empty");
-            }
-            
-            // Try to get the material
-            org.bukkit.Material material;
-            try {
-                material = org.bukkit.Material.valueOf(materialName.toUpperCase());
-            } catch (IllegalArgumentException e) {
-                return context.createErrorResult("Invalid item material: " + materialName);
-            }
-            
             Player player = context.getPlayer();
-            org.bukkit.inventory.PlayerInventory inventory = player.getInventory();
-            if (inventory.contains(material)) {
-                var nextBlock = block.getNextBlock();
-                if (nextBlock != null) {
-                    return executeBlock(nextBlock, context);
-                }
-            }
+            boolean isSneaking = player.isSneaking();
             
-            return context.createResult(true, "Condition not met");
+            // Set the result for else block handling
+            context.setLastConditionResult(isSneaking);
+            
+            // Visual effects
+            Particle particle = isSneaking ? Particle.VILLAGER_HAPPY : Particle.SMOKE_NORMAL;
+            player.spawnParticle(particle, player.getLocation().add(0, 2, 0), 5);
+            
+            return context.createResult(true, "Condition evaluated: " + isSneaking);
             
         } catch (Exception e) {
-            return context.createErrorResult("Failed to check player inventory: " + e.getMessage(), e);
+            return context.createErrorResult("Failed to evaluate condition: " + e.getMessage(), e);
         }
     }
     
-    // === HELPER METHODS ===
+    // === UTILITY METHODS ===
     
-    private void startVisualUpdater() {
-        new BukkitRunnable() {
-            @Override
-            public void run() {
-                for (var entry : visualIndicators.entrySet()) {
-                    Location location = entry.getKey();
-                    VisualIndicator indicator = entry.getValue();
-                    
-                    if (indicator.isExpired()) {
-                        visualIndicators.remove(location);
-                    } else {
-                        indicator.update();
-                    }
+    private String resolvePlaceholders(String text, ExecutionContext context) {
+        if (text == null) return null;
+        
+        // Use the placeholder resolver if available
+        if (context.getPlugin() != null) {
+            try {
+                ReferenceSystemPlaceholderResolver resolver = context.getPlugin().getServiceRegistry()
+                    .getService(ReferenceSystemPlaceholderResolver.class);
+                if (resolver != null) {
+                    return resolver.resolvePlaceholders(text, context);
                 }
-            }
-        }.runTaskTimer(plugin, 0, 20);
-    }
-    
-    private void showExecutionStart(ExecutionContext context) {
-        Player player = context.getPlayer();
-        Location location = player.getLocation();
-        visualIndicators.put(location, new VisualIndicator(location, IndicatorType.EXECUTING, System.currentTimeMillis() + 5000));
-        player.spawnParticle(Particle.VILLAGER_HAPPY, location, 10);
-        player.playSound(location, Sound.BLOCK_NOTE_BLOCK_PLING, 1.0f, 1.0f);
-    }
-    
-    private void showExecutionComplete(ExecutionContext context, ExecutionResult result) {
-        Player player = context.getPlayer();
-        Location location = player.getLocation();
-        visualIndicators.put(location, new VisualIndicator(location, IndicatorType.COMPLETED, System.currentTimeMillis() + 5000));
-        player.spawnParticle(Particle.VILLAGER_HAPPY, location, 10);
-        player.playSound(location, Sound.BLOCK_NOTE_BLOCK_PLING, 1.0f, 1.0f);
-    }
-    
-    private void showExecutionError(ExecutionContext context, Exception e) {
-        Player player = context.getPlayer();
-        Location location = player.getLocation();
-        visualIndicators.put(location, new VisualIndicator(location, IndicatorType.ERROR, System.currentTimeMillis() + 5000));
-        player.spawnParticle(Particle.VILLAGER_ANGRY, location, 10);
-        player.playSound(location, Sound.BLOCK_NOTE_BLOCK_PLING, 1.0f, 1.0f);
-    }
-    
-    private void showBlockExecution(CodeBlock block, ExecutionContext context) {
-        Location location = block.getLocation();
-        visualIndicators.put(location, new VisualIndicator(location, IndicatorType.EXECUTING, System.currentTimeMillis() + 5000));
-        location.getWorld().spawnParticle(Particle.VILLAGER_HAPPY, location, 10);
-    }
-    
-    private void showBlockComplete(CodeBlock block, ExecutionContext context) {
-        Location location = block.getLocation();
-        visualIndicators.put(location, new VisualIndicator(location, IndicatorType.COMPLETED, System.currentTimeMillis() + 5000));
-        location.getWorld().spawnParticle(Particle.VILLAGER_HAPPY, location, 10);
-    }
-    
-    private void showBlockError(CodeBlock block, ExecutionContext context, String message) {
-        Location location = block.getLocation();
-        visualIndicators.put(location, new VisualIndicator(location, IndicatorType.ERROR, System.currentTimeMillis() + 5000));
-        location.getWorld().spawnParticle(Particle.VILLAGER_ANGRY, location, 10);
-    }
-    
-    private Map<String, DataValue> preprocessParameters(CodeBlock block, ExecutionContext context) {
-        Map<String, DataValue> parameters = block.getParameters() != null ? block.getParameters() : new HashMap<>();
-        Map<String, DataValue> processedParameters = new HashMap<>();
-        
-        for (var entry : parameters.entrySet()) {
-            String paramName = entry.getKey();
-            DataValue paramValue = entry.getValue();
-            
-            // Resolve placeholders in parameter value
-            String resolvedValue = resolvePlaceholders(paramValue.asString(), context);
-            processedParameters.put(paramName, DataValue.of(resolvedValue));
-        }
-        
-        return processedParameters;
-    }
-    
-    private String resolvePlaceholders(String value, ExecutionContext context) {
-        // Create a compatible ExecutionContext for the resolver
-        com.megacreative.coding.ExecutionContext compatibleContext = 
-            new com.megacreative.coding.ExecutionContext(plugin, context.getPlayer(), null, null, null, context.getCurrentBlock());
-        return ReferenceSystemPlaceholderResolver.resolvePlaceholders(value, compatibleContext);
-    }
-    
-    private String validateBlockParameters(CodeBlock block, Map<String, DataValue> processedParameters) {
-        String action = block.getAction();
-        var config = blockConfigService.getBlockConfig(action);
-        if (config == null) {
-            return "No configuration found for action: " + action;
-        }
-        
-        // Since config.getParameters() returns Map<String, Object>, we need to handle it differently
-        // For now, we'll skip detailed parameter validation and just check if required parameters exist
-        for (Map.Entry<String, Object> entry : config.getParameters().entrySet()) {
-            String paramName = entry.getKey();
-            Object paramConfig = entry.getValue();
-            
-            // Basic required parameter check
-            if (paramName != null && processedParameters.get(paramName) == null) {
-                // We can't easily check if it's required without a proper ParameterConfig class
-                // So we'll just log that the parameter is missing but not fail
-                // In a full implementation, we'd have proper parameter configuration objects
+            } catch (Exception e) {
+                // Fall back to simple placeholder resolution
+                context.getPlugin().getLogger().warning("Failed to resolve placeholders: " + e.getMessage());
             }
         }
         
-        return null; // No validation errors
+        // Simple placeholder resolution as fallback
+        return text.replace("{player}", context.getPlayer().getName())
+                  .replace("{world}", context.getPlayer().getWorld().getName())
+                  .replace("{x}", String.valueOf(context.getPlayer().getLocation().getX()))
+                  .replace("{y}", String.valueOf(context.getPlayer().getLocation().getY()))
+                  .replace("{z}", String.valueOf(context.getPlayer().getLocation().getZ()));
     }
     
-    private boolean validateScript(CodeScript script) {
-        if (script.getRootBlock() == null) {
-            return false;
-        }
-        
-        // Additional validation logic
-        return script.isValid();
-    }
+    // === STATISTICS AND MONITORING ===
     
     private void updateExecutionStats(ExecutionContext context, ExecutionResult result) {
-        String scriptId = context.getScript().getId().toString();
-        ExecutionStats stats = executionStats.computeIfAbsent(scriptId, k -> new ExecutionStats());
+        String executionId = context.getExecutionId();
+        ExecutionStats stats = executionStats.computeIfAbsent(executionId, k -> new ExecutionStats());
         
         stats.incrementExecutions();
         if (result.isSuccess()) {
@@ -1723,15 +1846,15 @@ public class ExecutorEngine {
         } else {
             stats.incrementFailures();
         }
-        
-        long duration = System.currentTimeMillis() - context.getStartTime();
-        stats.addExecutionTime(duration);
+        stats.addExecutionTime(result.getExecutionTime());
     }
+    
+    // === SHUTDOWN AND CLEANUP ===
     
     public void shutdown() {
         // Cancel all active executions
         for (ExecutionContext context : activeExecutions.values()) {
-            context.cancel();
+            context.setCancelled(true);
         }
         
         activeExecutions.clear();
@@ -1795,87 +1918,5 @@ class ExecutionStats {
     public int getFailures() { return failures; }
     public double getAverageExecutionTime() { 
         return totalExecutions > 0 ? (double) totalExecutionTime / totalExecutions : 0; 
-    }
-}
-
-class ExecutionContext {
-    private final String executionId;
-    private final CodeScript script;
-    private final Player player;
-    private final String trigger;
-    private long startTime;
-    private boolean cancelled = false;
-    private CodeBlock currentBlock;
-    
-    public ExecutionContext(String executionId, CodeScript script, Player player, String trigger) {
-        this.executionId = executionId;
-        this.script = script;
-        this.player = player;
-        this.trigger = trigger;
-        this.startTime = System.currentTimeMillis();
-    }
-    
-    // Getters
-    public String getExecutionId() { return executionId; }
-    public CodeScript getScript() { return script; }
-    public Player getPlayer() { return player; }
-    public String getTrigger() { return trigger; }
-    public long getStartTime() { return startTime; }
-    public boolean isCancelled() { return cancelled; }
-    public CodeBlock getCurrentBlock() { return currentBlock; }
-    
-    // Setters
-    public void setStartTime(long startTime) { this.startTime = startTime; }
-    public void setCurrentBlock(CodeBlock block) { this.currentBlock = block; }
-    
-    // Control methods
-    public void cancel() { this.cancelled = true; }
-    
-    /**
-     * Creates a success result with the given message
-     */
-    public ExecutionResult createResult(boolean success, String message) {
-        return new ExecutionResult.Builder()
-            .success(success)
-            .message(message)
-            .executedBlock(currentBlock)
-            .executor(player)
-            .executionTime(System.currentTimeMillis() - startTime)
-            .build();
-    }
-    
-    /**
-     * Creates a success result with the default message
-     */
-    public ExecutionResult createResult(boolean success) {
-        return createResult(success, success ? "Operation completed successfully" : "Operation failed");
-    }
-    
-    /**
-     * Creates an error result with the given message and throwable
-     */
-    public ExecutionResult createErrorResult(String errorMessage, Throwable error) {
-        return new ExecutionResult.Builder()
-            .success(false)
-            .message(errorMessage)
-            .executedBlock(currentBlock)
-            .executor(player)
-            .error(error)
-            .executionTime(System.currentTimeMillis() - startTime)
-            .build();
-    }
-    
-    /**
-     * Creates an error result with the given message
-     */
-    public ExecutionResult createErrorResult(String errorMessage) {
-        return createErrorResult(errorMessage, null);
-    }
-    
-    /**
-     * Creates an error result from an exception
-     */
-    public ExecutionResult createErrorResult(Throwable error) {
-        return createErrorResult(error.getMessage(), error);
     }
 }

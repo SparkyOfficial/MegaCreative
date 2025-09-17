@@ -149,6 +149,14 @@ public enum ValueType {
     }
     
     /**
+     * Checks if this type represents a number
+     * @return true if this type is a number
+     */
+    public boolean isNumber() {
+        return this == NUMBER;
+    }
+    
+    /**
      * Gets the default value for this type
      */
     public Object getDefaultValue() {
