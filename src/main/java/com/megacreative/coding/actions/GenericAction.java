@@ -15,10 +15,10 @@ import org.bukkit.inventory.ItemStack;
 import org.bukkit.potion.PotionEffect;
 import org.bukkit.potion.PotionEffectType;
 
-import java.util.ArrayList;
-import java.util.Map;
+import java.util.*;
 import java.util.function.BiConsumer;
-import java.util.HashMap;
+import java.util.function.Function;
+
 
 /**
  * Universal action handler that can process 90% of all simple actions
@@ -36,24 +36,48 @@ public class GenericAction implements BlockAction {
     @Override
     public ExecutionResult execute(CodeBlock block, ExecutionContext context) {
         try {
-            String actionId = block.getAction();
-            Map<String, DataValue> params = block.getParameters();
+            // Get the action type from the block
+            String actionType = block.getAction();
             
-            // Get the action handler
-            BiConsumer<ExecutionContext, Map<String, DataValue>> handler = ACTION_HANDLERS.get(actionId);
-            if (handler != null) {
-                handler.accept(context, params);
-                return ExecutionResult.success();
-            } else {
-                context.getPlugin().getLogger().warning("Unknown generic action: " + actionId);
-                return ExecutionResult.error("Unknown action: " + actionId);
+            // Get parameters from the block
+            Map<String, DataValue> params = new HashMap<>();
+            for (String paramName : block.getParameters().keySet()) {
+                params.put(paramName, block.getParameter(paramName));
             }
             
+            // Check if player is required for this action and if player is available
+            if (isPlayerRequired(actionType) && context.getPlayer() == null) {
+                return ExecutionResult.error("Player required for action: " + actionType);
+            }
+            
+            // Execute the action
+            BiConsumer<ExecutionContext, Map<String, DataValue>> handler = ACTION_HANDLERS.get(actionType);
+            if (handler != null) {
+                handler.accept(context, params);
+                return ExecutionResult.success("Action executed successfully: " + actionType);
+            } else {
+                return ExecutionResult.error("Unknown action type: " + actionType);
+            }
         } catch (Exception e) {
-            context.getPlugin().getLogger().severe("Error executing generic action " + block.getAction() + ": " + e.getMessage());
-            context.getPlugin().getLogger().severe("Stack trace: " + java.util.Arrays.toString(e.getStackTrace()));
-            return ExecutionResult.error("Action execution error: " + e.getMessage());
+            return ExecutionResult.error("Failed to execute action: " + e.getMessage());
         }
+    }
+    
+    /**
+     * Checks if a player is required for the specified action type
+     */
+    private boolean isPlayerRequired(String actionType) {
+        // Actions that require a player
+        Set<String> playerRequiredActions = new HashSet<>(Arrays.asList(
+            "sendMessage", "sendTitle", "teleport", "giveItem", "removeItem",
+            "setHealth", "setFood", "addPotionEffect", "removePotionEffect",
+            "playSound", "kick", "heal", "kill", "clearInventory", "fly",
+            "lightning", "explosion", "setBlock", "breakBlock", "setTime",
+            "setWeather", "setGameMode", "giveMoney", "takeMoney",
+            "givePermission", "removePermission"
+        ));
+        
+        return playerRequiredActions.contains(actionType);
     }
     
     /**
@@ -187,6 +211,7 @@ public class GenericAction implements BlockAction {
             boolean breakBlocks = params.containsKey("breakBlocks") ? params.get("breakBlocks").asBoolean() : false;
             context.getPlayer().getLocation().getWorld().createExplosion(context.getPlayer().getLocation(), power, false, breakBlocks);
         });
+        
         
         // === WORLD ACTIONS ===
         ACTION_HANDLERS.put("setBlock", (context, params) -> {

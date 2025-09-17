@@ -29,6 +29,11 @@ public class AsyncLoopAction implements BlockAction {
                 return ExecutionResult.error("Loop has no blocks inside to execute.");
             }
             
+            // Check if player is available
+            if (context.getPlayer() == null) {
+                return ExecutionResult.error("Player required for async loop");
+            }
+            
             // Generate a unique ID for this loop
             String loopId = context.getPlayer().getUniqueId().toString() + "_" + System.currentTimeMillis();
             

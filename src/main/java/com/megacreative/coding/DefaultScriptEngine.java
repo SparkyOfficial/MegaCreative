@@ -379,6 +379,12 @@ public class DefaultScriptEngine implements ScriptEngine, EnhancedScriptEngine {
                         if (listValue != null && listValue instanceof ListValue && itemVariable != null) {
                             ListValue list = (ListValue) listValue;
                             VariableManager variableManager = getVariableManager();
+                            
+                            // Check if player is available
+                            if (context.getPlayer() == null) {
+                                return ExecutionResult.error("Player required for forEach loop");
+                            }
+                            
                             UUID playerId = context.getPlayer().getUniqueId();
                             
                             // Store original variable value
