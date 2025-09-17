@@ -67,6 +67,19 @@ public interface DataValue extends ConfigurationSerializable, Cloneable {
     }
     
     /**
+     * Checks if this value represents a number
+     * @return true if this value is a number or can be converted to a number
+     */
+    default boolean isNumber() {
+        try {
+            asNumber();
+            return true;
+        } catch (NumberFormatException e) {
+            return false;
+        }
+    }
+    
+    /**
      * Gets a human-readable description of this value
      */
     String getDescription();

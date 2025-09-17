@@ -19,6 +19,7 @@ public class ExecutionResult {
     private final Map<String, Object> details;
     private boolean terminated = false;
     private Object returnValue;
+    private boolean paused = false;
 
     private ExecutionResult(Builder builder) {
         this.success = builder.success;
@@ -84,6 +85,20 @@ public class ExecutionResult {
     }
 
     /**
+     * Checks if the execution should be paused
+     */
+    public boolean isPaused() {
+        return paused;
+    }
+
+    /**
+     * Sets whether the execution should be paused
+     */
+    public void setPaused(boolean paused) {
+        this.paused = paused;
+    }
+
+    /**
      * Creates a success result with a message
      */
     public static ExecutionResult success(String message) {
@@ -137,6 +152,23 @@ public class ExecutionResult {
      */
     public static ExecutionResult error(Throwable error) {
         return error(error.getMessage(), error);
+    }
+
+    /**
+     * Creates a new ExecutionResult with pause flag set
+     */
+    public ExecutionResult withPause() {
+        ExecutionResult result = new Builder()
+            .success(this.success)
+            .message(this.message)
+            .executedBlock(this.executedBlock)
+            .executor(this.executor)
+            .error(this.error)
+            .executionTime(this.executionTime)
+            .details(this.details)
+            .build();
+        result.setPaused(true);
+        return result;
     }
 
     /**

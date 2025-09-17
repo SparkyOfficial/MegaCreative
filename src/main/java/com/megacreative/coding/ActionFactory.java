@@ -28,7 +28,7 @@ import com.megacreative.coding.actions.ForEachAction;
 import com.megacreative.coding.actions.FunctionCallAction;
 import com.megacreative.coding.actions.GenericAction;
 import com.megacreative.coding.actions.GetGlobalVarAction;
-import com.megacreative.coding.actions.GetLocationAction;
+import com.megacreative.coding.actions.world.GetLocationAction;
 import com.megacreative.coding.actions.GetPlayerNameAction;
 import com.megacreative.coding.actions.GetServerVarAction;
 import com.megacreative.coding.actions.GetVarAction;
