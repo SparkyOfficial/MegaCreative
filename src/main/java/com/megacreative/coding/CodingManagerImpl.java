@@ -18,6 +18,11 @@ import org.bukkit.entity.Player;
 import org.bukkit.event.player.PlayerInteractEvent;
 import org.bukkit.event.player.PlayerQuitEvent;
 
+import java.io.File;
+import java.io.IOException;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.util.Map;
 import java.util.HashMap;
 import java.util.concurrent.CompletableFuture;
@@ -28,11 +33,22 @@ public class CodingManagerImpl implements ICodingManager {
     private final MegaCreative plugin;
     private final IWorldManager worldManager;
     private final Logger logger;
+    private final Path scriptsDirectory;
     
     public CodingManagerImpl(MegaCreative plugin, IWorldManager worldManager) {
         this.plugin = plugin;
         this.worldManager = worldManager;
         this.logger = plugin.getLogger();
+        this.scriptsDirectory = Paths.get(plugin.getDataFolder().getAbsolutePath(), "scripts");
+        
+        // Create scripts directory if it doesn't exist
+        if (!Files.exists(scriptsDirectory)) {
+            try {
+                Files.createDirectories(scriptsDirectory);
+            } catch (IOException e) {
+                logger.severe("Failed to create scripts directory: " + e.getMessage());
+            }
+        }
     }
     
     @Override
@@ -68,20 +84,58 @@ public class CodingManagerImpl implements ICodingManager {
     
     @Override
     public void loadScriptsForWorld(CreativeWorld world) {
-        // In a real implementation, this would load scripts from storage
-        // For now, we'll just ensure the scripts list is initialized
+        // Load scripts from storage
+        String worldName = world.getName();
+        Path worldScriptsDir = scriptsDirectory.resolve(worldName);
+        
+        if (!Files.exists(worldScriptsDir)) {
+            try {
+                Files.createDirectories(worldScriptsDir);
+            } catch (IOException e) {
+                logger.severe("Failed to create world scripts directory for " + worldName + ": " + e.getMessage());
+                // Initialize empty scripts list
+                if (world.getScripts() == null) {
+                    world.setScripts(new java.util.ArrayList<>());
+                }
+                return;
+            }
+        }
+        
+        // Initialize scripts list
         if (world.getScripts() == null) {
             world.setScripts(new java.util.ArrayList<>());
+        } else {
+            world.getScripts().clear();
         }
-        logger.info("Loaded scripts for world: " + world.getName());
+        
+        // Load all script files from the world directory
+        try {
+            Files.list(worldScriptsDir)
+                .filter(path -> path.toString().endsWith(".json"))
+                .forEach(path -> {
+                    try {
+                        String content = new String(Files.readAllBytes(path));
+                        CodeScript script = CodeScript.fromJson(content);
+                        if (script != null) {
+                            world.getScripts().add(script);
+                            logger.info("Loaded script: " + script.getName() + " for world: " + worldName);
+                        }
+                    } catch (Exception e) {
+                        logger.severe("Failed to load script from " + path.toString() + ": " + e.getMessage());
+                    }
+                });
+        } catch (IOException e) {
+            logger.severe("Failed to list script files for world " + worldName + ": " + e.getMessage());
+        }
+        
+        logger.info("Loaded " + world.getScripts().size() + " scripts for world: " + worldName);
     }
     
     @Override
     public void unloadScriptsForWorld(CreativeWorld world) {
-        // In a real implementation, this would save scripts to storage
-        // For now, we'll just clear the scripts list
+        // Save scripts to storage before clearing
         if (world.getScripts() != null) {
-            // Save scripts before clearing
+            // Save all scripts
             for (CodeScript script : world.getScripts()) {
                 saveScript(script);
             }
@@ -123,14 +177,37 @@ public class CodingManagerImpl implements ICodingManager {
     
     @Override
     public void saveScript(CodeScript script) {
-        // In a real implementation, this would save a script to storage
-        logger.info("Saved script: " + script.getName());
-        // In a more complete implementation, we would serialize the script to a file or database
+        // Save a script to storage
+        if (script.getWorldName() == null || script.getWorldName().isEmpty()) {
+            logger.warning("Cannot save script without world name: " + script.getName());
+            return;
+        }
+        
+        // Create world directory if it doesn't exist
+        Path worldScriptsDir = scriptsDirectory.resolve(script.getWorldName());
+        if (!Files.exists(worldScriptsDir)) {
+            try {
+                Files.createDirectories(worldScriptsDir);
+            } catch (IOException e) {
+                logger.severe("Failed to create world scripts directory for " + script.getWorldName() + ": " + e.getMessage());
+                return;
+            }
+        }
+        
+        // Save script to file
+        Path scriptFile = worldScriptsDir.resolve(script.getName() + ".json");
+        try {
+            String json = script.toJson();
+            Files.write(scriptFile, json.getBytes());
+            logger.info("Saved script: " + script.getName() + " to " + scriptFile.toString());
+        } catch (Exception e) {
+            logger.severe("Failed to save script " + script.getName() + ": " + e.getMessage());
+        }
     }
     
     @Override
     public void cancelScriptExecution(String scriptId) {
-        // In a real implementation, this would cancel a running script
+        // Cancel a running script
         logger.info("Cancelled script execution: " + scriptId);
         // Get the script engine and cancel the execution
         ScriptEngine engine = getScriptEngine();
@@ -141,12 +218,35 @@ public class CodingManagerImpl implements ICodingManager {
     
     @Override
     public void deleteScript(String scriptName) {
-        // In a real implementation, this would delete a script from storage
-        logger.info("Deleted script: " + scriptName);
+        // Delete a script from storage
+        logger.info("Deleting script: " + scriptName);
+        
         // Find and remove the script from all worlds
         for (CreativeWorld world : plugin.getWorldManager().getCreativeWorlds()) {
             if (world.getScripts() != null) {
-                world.getScripts().removeIf(script -> script.getName().equals(scriptName));
+                // Remove from memory
+                CodeScript scriptToRemove = null;
+                for (CodeScript script : world.getScripts()) {
+                    if (script.getName().equals(scriptName)) {
+                        scriptToRemove = script;
+                        break;
+                    }
+                }
+                
+                if (scriptToRemove != null) {
+                    world.getScripts().remove(scriptToRemove);
+                    
+                    // Delete from storage
+                    Path scriptFile = scriptsDirectory.resolve(world.getName()).resolve(scriptName + ".json");
+                    try {
+                        if (Files.exists(scriptFile)) {
+                            Files.delete(scriptFile);
+                            logger.info("Deleted script file: " + scriptFile.toString());
+                        }
+                    } catch (IOException e) {
+                        logger.severe("Failed to delete script file " + scriptFile.toString() + ": " + e.getMessage());
+                    }
+                }
             }
         }
     }
