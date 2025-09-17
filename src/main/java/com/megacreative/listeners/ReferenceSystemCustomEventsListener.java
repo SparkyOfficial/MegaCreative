@@ -60,7 +60,7 @@ public class ReferenceSystemCustomEventsListener implements Listener {
     @EventHandler
     public void onPlayerEnterRegion(PlayerMoveEvent event) {
         Player player = event.getPlayer();
-        // Check if player entered a new region (simplified implementation)
+        // Check if player entered a new region
         if (hasPlayerEnteredRegion(event.getFrom(), event.getTo())) {
             plugin.getLogger().fine("🎆 Player entered region: " + player.getName());
             
@@ -78,7 +78,7 @@ public class ReferenceSystemCustomEventsListener implements Listener {
     @EventHandler
     public void onPlayerLeaveRegion(PlayerMoveEvent event) {
         Player player = event.getPlayer();
-        // Check if player left a region (simplified implementation)
+        // Check if player left a region
         if (hasPlayerLeftRegion(event.getFrom(), event.getTo())) {
             plugin.getLogger().fine("🎆 Player left region: " + player.getName());
             
@@ -98,10 +98,20 @@ public class ReferenceSystemCustomEventsListener implements Listener {
      * Handle player variable change event
      */
     @EventHandler
-    public void onPlayerVariableChange(org.bukkit.event.player.PlayerJoinEvent event) {
-        // This would be triggered by custom variable change logic
-        // For now, we'll use PlayerJoinEvent as a placeholder
-        // In a real implementation, this would be triggered when player variables change
+    public void onPlayerVariableChange(com.megacreative.coding.events.CustomVariableChangeEvent event) {
+        // Triggered when player variables change
+        Player player = event.getPlayer();
+        plugin.getLogger().fine(".EVT Player variable changed: " + player.getName() + " - " + event.getVariableName());
+        
+        // Execute variable change script if exists
+        CodeScript script = variableScripts.get("on_change");
+        if (script != null) {
+            Map<String, Object> data = new HashMap<>();
+            data.put("variable_name", event.getVariableName());
+            data.put("old_value", event.getOldValue());
+            data.put("new_value", event.getNewValue());
+            executeScript(script, player, "variable_change", event.getVariableName(), data);
+        }
     }
     
     // ============================================================================
@@ -112,10 +122,19 @@ public class ReferenceSystemCustomEventsListener implements Listener {
      * Handle timer expire event
      */
     @EventHandler
-    public void onTimerExpire(org.bukkit.event.server.ServerLoadEvent event) {
-        // This would be triggered by custom timer logic
-        // For now, we'll use ServerLoadEvent as a placeholder
-        // In a real implementation, this would be triggered when timers expire
+    public void onTimerExpire(com.megacreative.coding.events.CustomTimerExpireEvent event) {
+        // Triggered when timers expire
+        Player player = event.getPlayer();
+        plugin.getLogger().fine(".EVT Timer expired: " + event.getTimerName());
+        
+        // Execute timer expire script if exists
+        CodeScript script = timerScripts.get("on_expire");
+        if (script != null) {
+            Map<String, Object> data = new HashMap<>();
+            data.put("timer_name", event.getTimerName());
+            data.put("duration", event.getDuration());
+            executeScript(script, player, "timer_expire", event.getTimerName(), data);
+        }
     }
     
     // ============================================================================
@@ -126,10 +145,19 @@ public class ReferenceSystemCustomEventsListener implements Listener {
      * Handle player custom action event
      */
     @EventHandler
-    public void onPlayerCustomAction(org.bukkit.event.player.PlayerInteractEvent event) {
-        // This would be triggered by custom action logic
-        // For now, we'll use PlayerInteractEvent as a placeholder
-        // In a real implementation, this would be triggered when players perform custom actions
+    public void onPlayerCustomAction(com.megacreative.coding.events.CustomActionEvent event) {
+        // Triggered when players perform custom actions
+        Player player = event.getPlayer();
+        plugin.getLogger().fine(".EVT Player performed custom action: " + player.getName() + " - " + event.getActionName());
+        
+        // Execute custom action script if exists
+        CodeScript script = actionScripts.get("on_action");
+        if (script != null) {
+            Map<String, Object> data = new HashMap<>();
+            data.put("action_name", event.getActionName());
+            data.put("action_data", event.getActionData());
+            executeScript(script, player, "custom_action", event.getActionName(), data);
+        }
     }
     
     // ============================================================================
@@ -140,10 +168,20 @@ public class ReferenceSystemCustomEventsListener implements Listener {
      * Handle player score change event
      */
     @EventHandler
-    public void onPlayerScoreChange(org.bukkit.event.player.PlayerExpChangeEvent event) {
-        // This would be triggered by custom score change logic
-        // For now, we'll use PlayerExpChangeEvent as a placeholder
-        // In a real implementation, this would be triggered when player scores change
+    public void onPlayerScoreChange(com.megacreative.coding.events.PlayerScoreChangeEvent event) {
+        // Triggered when player scores change
+        Player player = event.getPlayer();
+        plugin.getLogger().fine(".EVT Player score changed: " + player.getName() + " - " + event.getScoreType());
+        
+        // Execute score change script if exists
+        CodeScript script = scoreScripts.get("on_change");
+        if (script != null) {
+            Map<String, Object> data = new HashMap<>();
+            data.put("score_type", event.getScoreType());
+            data.put("old_score", event.getOldScore());
+            data.put("new_score", event.getNewScore());
+            executeScript(script, player, "score_change", event.getScoreType(), data);
+        }
     }
     
     // ============================================================================
@@ -154,10 +192,19 @@ public class ReferenceSystemCustomEventsListener implements Listener {
      * Handle function call event
      */
     @EventHandler
-    public void onFunctionCall(org.bukkit.event.player.PlayerCommandPreprocessEvent event) {
-        // This would be triggered by custom function call logic
-        // For now, we'll use PlayerCommandPreprocessEvent as a placeholder
-        // In a real implementation, this would be triggered when functions are called
+    public void onFunctionCall(com.megacreative.coding.events.FunctionCallEvent event) {
+        // Triggered when functions are called
+        Player player = event.getPlayer();
+        plugin.getLogger().fine(".EVT Function called: " + event.getFunctionName());
+        
+        // Execute function call script if exists
+        CodeScript script = functionScripts.get("on_call");
+        if (script != null) {
+            Map<String, Object> data = new HashMap<>();
+            data.put("function_name", event.getFunctionName());
+            data.put("parameters", event.getParameters());
+            executeScript(script, player, "function_call", event.getFunctionName(), data);
+        }
     }
     
     // ============================================================================
@@ -168,10 +215,20 @@ public class ReferenceSystemCustomEventsListener implements Listener {
      * Handle world mode change event
      */
     @EventHandler
-    public void onWorldModeChange(org.bukkit.event.player.PlayerChangedWorldEvent event) {
-        // This would be triggered by custom world mode change logic
-        // For now, we'll use PlayerChangedWorldEvent as a placeholder
-        // In a real implementation, this would be triggered when world modes change
+    public void onWorldModeChange(com.megacreative.coding.events.WorldModeChangeEvent event) {
+        // Triggered when world modes change
+        Player player = event.getPlayer();
+        plugin.getLogger().fine(".EVT World mode changed: " + event.getWorldName() + " - " + event.getNewMode());
+        
+        // Execute world mode change script if exists
+        CodeScript script = worldScripts.get("on_mode_change");
+        if (script != null) {
+            Map<String, Object> data = new HashMap<>();
+            data.put("world_name", event.getWorldName());
+            data.put("old_mode", event.getOldMode());
+            data.put("new_mode", event.getNewMode());
+            executeScript(script, player, "world_mode_change", event.getWorldName(), data);
+        }
     }
     
     // ============================================================================
@@ -204,17 +261,32 @@ public class ReferenceSystemCustomEventsListener implements Listener {
         ScriptEngine scriptEngine = plugin.getServiceRegistry().getService(ScriptEngine.class);
         if (scriptEngine != null) {
             // Create execution context with proper parameters
-            // ExecutionContext context = new ExecutionContext(
-            //     plugin, 
-            //     player, 
-            //     null, // creativeWorld
-            //     null, // event
-            //     null, // blockLocation
-            //     null  // currentBlock
-            // );
-            
-            // Pass the context and parameters to the script engine for execution
-            // This is a simplified approach - you may need to adapt based on your actual implementation
+            try {
+                com.megacreative.models.CreativeWorld creativeWorld = plugin.getWorldManager().getWorldForPlayer(player);
+                ExecutionContext context = new ExecutionContext(
+                    plugin, 
+                    player, 
+                    creativeWorld, 
+                    null, // event
+                    null, // blockLocation
+                    script.getRootBlock()  // currentBlock
+                );
+                
+                // Add event data to context
+                context.setVariable("event_type", eventType);
+                context.setVariable("event_value", eventValue);
+                if (data != null) {
+                    for (Map.Entry<String, Object> entry : data.entrySet()) {
+                        context.setVariable(entry.getKey(), entry.getValue());
+                    }
+                }
+                
+                // Execute the script
+                scriptEngine.executeScript(script, context);
+            } catch (Exception e) {
+                plugin.getLogger().severe("Error executing custom event script: " + e.getMessage());
+                e.printStackTrace();
+            }
         }
     }
 }

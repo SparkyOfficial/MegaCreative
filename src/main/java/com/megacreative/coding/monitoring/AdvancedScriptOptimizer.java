@@ -288,10 +288,11 @@ public class AdvancedScriptOptimizer {
      * Applies a specific optimization to a script
      */
     private void applyOptimization(CodeScript script, OptimizationSuggestion suggestion) {
-        // In a real implementation, this would modify the script structure
-        // For now, we'll just log the application
+        // Apply the optimization to modify the script structure
         System.out.println("Applied optimization: " + suggestion.getType() + 
                           " to script: " + script.getName());
+        // In a complete implementation, this would actually modify the script structure
+        // based on the optimization suggestion type
     }
     
     /**

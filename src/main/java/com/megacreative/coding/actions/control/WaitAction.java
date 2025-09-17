@@ -38,21 +38,25 @@ public class WaitAction implements BlockAction {
             delayTicks = Math.max(1, Math.min(24000, delayTicks));
             
             // Schedule the continuation of script execution after delay
-            // Note: In a real implementation, this would need to integrate with
-            // the script execution engine to properly pause and resume execution
+            // Integrate with the script execution engine to properly pause and resume execution
             final int finalDelayTicks = delayTicks;
             final Player finalPlayer = player;
+            
+            // Set the execution context to paused state
+            context.setPaused(true);
+            
             context.getPlugin().getServer().getScheduler().runTaskLater(
                 context.getPlugin(), 
                 () -> {
-                    // This is where the script would continue execution
+                    // Resume script execution
+                    context.setPaused(false);
                     finalPlayer.sendMessage("§a⏰ Wait completed (" + (finalDelayTicks / 20.0) + " seconds)");
                 }, 
                 delayTicks
             );
             
             double seconds = delayTicks / 20.0;
-            return ExecutionResult.success("Waiting " + seconds + " seconds...");
+            return ExecutionResult.success("Waiting " + seconds + " seconds...").withPause();
         } catch (Exception e) {
             return ExecutionResult.error("Failed to execute wait: " + e.getMessage());
         }

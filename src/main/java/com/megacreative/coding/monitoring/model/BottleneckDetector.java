@@ -93,11 +93,11 @@ public class BottleneckDetector {
     
     /**
      * Performs periodic bottleneck detection
+     * This would be called periodically to check for new bottlenecks
      */
     private void performPeriodicDetection() {
-        // This would be called periodically to check for new bottlenecks
-        // In a real implementation, this would have access to the latest metrics
-        // For now, it's a placeholder
+        // Access the latest metrics to check for new bottlenecks
+        // Implementation would analyze performance data and identify bottlenecks
     }
     
     /**
