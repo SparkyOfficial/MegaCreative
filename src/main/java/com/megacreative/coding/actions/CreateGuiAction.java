@@ -4,6 +4,7 @@ import com.megacreative.coding.BlockAction;
 import com.megacreative.coding.CodeBlock;
 import com.megacreative.coding.ExecutionContext;
 import com.megacreative.coding.ParameterResolver;
+import com.megacreative.coding.executors.ExecutionResult;
 import com.megacreative.coding.values.DataValue;
 import com.megacreative.coding.values.types.ListValue;
 import com.megacreative.coding.values.types.NumberValue;
@@ -21,6 +22,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.UUID;
+import java.util.WeakHashMap;
 
 /**
  * Advanced Create GUI action with DataValue and VariableManager integration
@@ -38,16 +40,17 @@ import java.util.UUID;
  */
 public class CreateGuiAction implements BlockAction {
     
-    // Static storage for GUI click handlers (in a real implementation, this would be managed better)
-    private static final Map<UUID, Map<Integer, CodeBlock>> guiClickHandlers = new HashMap<>();
+    // Improved storage for GUI click handlers using WeakHashMap to prevent memory leaks
+    private static final Map<UUID, Map<Integer, CodeBlock>> guiClickHandlers = new WeakHashMap<>();
     
     @Override
-    public void execute(ExecutionContext context) {
+    public ExecutionResult execute(CodeBlock block, ExecutionContext context) {
         Player player = context.getPlayer();
-        CodeBlock block = context.getCurrentBlock();
         VariableManager variableManager = context.getPlugin().getVariableManager();
         
-        if (player == null || block == null || variableManager == null) return;
+        if (player == null || variableManager == null) {
+            return ExecutionResult.error("No player or variable manager found in execution context");
+        }
         
         ParameterResolver resolver = new ParameterResolver(context);
         
@@ -72,8 +75,7 @@ public class CreateGuiAction implements BlockAction {
             
             // Validate size
             if (size < 9 || size > 54 || size % 9 != 0) {
-                player.sendMessage("§c[CreateGUI] Invalid GUI size: " + size + " (must be 9, 18, 27, 36, 45, or 54)");
-                return;
+                return ExecutionResult.error("Invalid GUI size: " + size + " (must be 9, 18, 27, 36, 45, or 54)");
             }
             
             // Create the inventory
@@ -95,11 +97,10 @@ public class CreateGuiAction implements BlockAction {
             // Open GUI for player
             player.openInventory(gui);
             
-            player.sendMessage("§a[CreateGUI] Opened GUI: " + title + " (" + size + " slots)");
+            return ExecutionResult.success("GUI opened successfully: " + title + " (" + size + " slots)");
             
         } catch (Exception e) {
-            player.sendMessage("§c[CreateGUI] Error creating GUI: " + e.getMessage());
-            context.getPlugin().getLogger().warning("CreateGUI execution error: " + e.getMessage());
+            return ExecutionResult.error("Error creating GUI: " + e.getMessage());
         }
     }
     

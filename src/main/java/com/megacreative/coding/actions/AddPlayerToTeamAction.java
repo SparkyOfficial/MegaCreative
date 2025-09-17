@@ -10,6 +10,8 @@ import com.megacreative.services.BlockConfigService;
 import org.bukkit.entity.Player;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.inventory.meta.ItemMeta;
+import org.bukkit.scoreboard.Scoreboard;
+import org.bukkit.scoreboard.Team;
 
 import java.util.function.Function;
 
@@ -51,11 +53,17 @@ public class AddPlayerToTeamAction implements BlockAction {
                 targetPlayer = player.getName();
             }
 
-            // Add player to the team
-            // Note: This is a simplified implementation - in a real system, you would add the actual player to the team
-            // For now, we'll just log the operation
-            context.getPlugin().getLogger().info("Adding player " + targetPlayer + " to team " + teamName);
+            // Add player to the team using the scoreboard system
+            Scoreboard scoreboard = player.getScoreboard();
+            Team team = scoreboard.getTeam(teamName);
             
+            if (team == null) {
+                return ExecutionResult.error("Team not found: " + teamName);
+            }
+            
+            // Add the player to the team
+            team.addEntry(targetPlayer);
+
             return ExecutionResult.success("Player added to team successfully");
         } catch (Exception e) {
             return ExecutionResult.error("Failed to add player to team: " + e.getMessage());

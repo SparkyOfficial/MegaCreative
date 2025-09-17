@@ -10,6 +10,9 @@ import com.megacreative.services.BlockConfigService;
 import org.bukkit.entity.Player;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.inventory.meta.ItemMeta;
+import org.bukkit.scoreboard.Scoreboard;
+import org.bukkit.scoreboard.Objective;
+import org.bukkit.scoreboard.Score;
 
 import java.util.function.Function;
 
@@ -20,7 +23,7 @@ import java.util.function.Function;
 public class IncrementScoreAction implements BlockAction {
 
     @Override
-public ExecutionResult execute(CodeBlock block, ExecutionContext context) {
+    public ExecutionResult execute(CodeBlock block, ExecutionContext context) {
         Player player = context.getPlayer();
         if (player == null) {
             return ExecutionResult.error("No player found in execution context");
@@ -54,11 +57,20 @@ public ExecutionResult execute(CodeBlock block, ExecutionContext context) {
                 return ExecutionResult.error("Invalid increment value: " + incrementStr);
             }
 
-            // Increment the score
-            // Note: This is a simplified implementation - in a real system, you would increment the actual score
-            // For now, we'll just log the operation
-            context.getPlugin().getLogger().info("Incrementing score " + key + " by " + increment);
+            // Increment the score using the Bukkit scoreboard system
+            Scoreboard scoreboard = player.getScoreboard();
+            if (scoreboard == null) {
+                return ExecutionResult.error("No scoreboard found for player");
+            }
             
+            Objective objective = scoreboard.getObjective("main");
+            if (objective == null) {
+                return ExecutionResult.error("No main objective found on scoreboard");
+            }
+            
+            Score score = objective.getScore(key);
+            score.setScore(score.getScore() + increment);
+
             return ExecutionResult.success("Score incremented successfully");
         } catch (Exception e) {
             return ExecutionResult.error("Failed to increment score: " + e.getMessage());

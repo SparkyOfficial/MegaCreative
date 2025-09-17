@@ -10,6 +10,9 @@ import com.megacreative.services.BlockConfigService;
 import org.bukkit.entity.Player;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.inventory.meta.ItemMeta;
+import org.bukkit.scoreboard.Scoreboard;
+import org.bukkit.scoreboard.Objective;
+import org.bukkit.scoreboard.Score;
 
 import java.util.function.Function;
 
@@ -54,11 +57,20 @@ public class SetScoreAction implements BlockAction {
                 return ExecutionResult.error("Invalid score value: " + valueStr);
             }
 
-            // Set the score
-            // Note: This is a simplified implementation - in a real system, you would set the actual score
-            // For now, we'll just log the operation
-            context.getPlugin().getLogger().info("Setting score " + key + " to " + value);
+            // Set the score using the Bukkit scoreboard system
+            Scoreboard scoreboard = player.getScoreboard();
+            if (scoreboard == null) {
+                return ExecutionResult.error("No scoreboard found for player");
+            }
             
+            Objective objective = scoreboard.getObjective("main");
+            if (objective == null) {
+                return ExecutionResult.error("No main objective found on scoreboard");
+            }
+            
+            Score score = objective.getScore(key);
+            score.setScore(value);
+
             return ExecutionResult.success("Score set successfully");
         } catch (Exception e) {
             return ExecutionResult.error("Failed to set score: " + e.getMessage());

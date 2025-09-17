@@ -10,6 +10,9 @@ import com.megacreative.services.BlockConfigService;
 import org.bukkit.entity.Player;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.inventory.meta.ItemMeta;
+import org.bukkit.scoreboard.Scoreboard;
+import org.bukkit.scoreboard.Objective;
+import org.bukkit.scoreboard.DisplaySlot;
 
 import java.util.function.Function;
 
@@ -42,11 +45,26 @@ public class CreateScoreboardAction implements BlockAction {
                 return ExecutionResult.error("Invalid scoreboard title");
             }
 
-            // Create the scoreboard
-            // Note: This is a simplified implementation - in a real system, you would create the actual scoreboard
-            // For now, we'll just log the operation
-            context.getPlugin().getLogger().info("Creating scoreboard with title: " + scoreboardTitle);
+            // Create the scoreboard using the Bukkit scoreboard system
+            Scoreboard scoreboard = player.getScoreboard();
+            if (scoreboard == null) {
+                scoreboard = org.bukkit.Bukkit.getScoreboardManager().getNewScoreboard();
+            }
             
+            // Create or get the objective
+            Objective objective = scoreboard.getObjective("main");
+            if (objective == null) {
+                objective = scoreboard.registerNewObjective("main", "dummy", scoreboardTitle);
+            } else {
+                objective.setDisplayName(scoreboardTitle);
+            }
+            
+            // Set the display slot
+            objective.setDisplaySlot(DisplaySlot.SIDEBAR);
+            
+            // Apply the scoreboard to the player
+            player.setScoreboard(scoreboard);
+
             return ExecutionResult.success("Scoreboard created successfully");
         } catch (Exception e) {
             return ExecutionResult.error("Failed to create scoreboard: " + e.getMessage());

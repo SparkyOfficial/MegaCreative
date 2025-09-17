@@ -6,7 +6,9 @@ import com.megacreative.coding.ExecutionContext;
 import com.megacreative.coding.ParameterResolver;
 import com.megacreative.coding.executors.ExecutionResult;
 import com.megacreative.coding.values.DataValue;
+import com.megacreative.coding.variables.VariableManager;
 import com.megacreative.services.BlockConfigService;
+import org.bukkit.Location;
 import org.bukkit.entity.Player;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.inventory.meta.ItemMeta;
@@ -49,10 +51,16 @@ public class GetLocationAction implements BlockAction {
                 return ExecutionResult.error("Invalid target variable");
             }
 
-            // Log operation (simplified, replace with real location retrieval)
-            context.getPlugin().getLogger().info(
-                    "Getting location " + locationName + " into variable " + targetVariable
-            );
+            // Get the location using the VariableManager
+            VariableManager variableManager = context.getPlugin().getVariableManager();
+            DataValue locationValue = variableManager.getPlayerVariable(player.getUniqueId(), locationName);
+            
+            if (locationValue == null) {
+                return ExecutionResult.error("Location not found: " + locationName);
+            }
+            
+            // Store the location in the target variable
+            variableManager.setPlayerVariable(player.getUniqueId(), targetVariable, locationValue);
 
             return ExecutionResult.success("Location retrieved successfully");
 

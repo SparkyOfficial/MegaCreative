@@ -10,6 +10,8 @@ import com.megacreative.services.BlockConfigService;
 import org.bukkit.entity.Player;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.inventory.meta.ItemMeta;
+import org.bukkit.scoreboard.Scoreboard;
+import org.bukkit.scoreboard.Team;
 
 import java.util.function.Function;
 
@@ -54,11 +56,23 @@ public class CreateTeamAction implements BlockAction {
                 return ExecutionResult.error("Invalid team name");
             }
 
-            // Create the team
-            // Note: This is a simplified implementation - in a real system, you would create the actual team
-            // For now, we'll just log the operation
-            context.getPlugin().getLogger().info("Creating team " + teamName + " with display name: " + displayName + ", prefix: " + prefix + ", suffix: " + suffix);
+            // Create the team using the scoreboard system
+            Scoreboard scoreboard = player.getScoreboard();
+            Team team = scoreboard.registerNewTeam(teamName);
             
+            // Set team properties
+            if (displayName != null && !displayName.isEmpty()) {
+                team.setDisplayName(displayName);
+            }
+            
+            if (prefix != null && !prefix.isEmpty()) {
+                team.setPrefix(prefix);
+            }
+            
+            if (suffix != null && !suffix.isEmpty()) {
+                team.setSuffix(suffix);
+            }
+
             return ExecutionResult.success("Team created successfully");
         } catch (Exception e) {
             return ExecutionResult.error("Failed to create team: " + e.getMessage());
