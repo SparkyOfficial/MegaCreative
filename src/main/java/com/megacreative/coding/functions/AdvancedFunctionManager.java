@@ -280,10 +280,14 @@ public class AdvancedFunctionManager {
             // Execute function script
             return scriptEngine.executeScript(functionScript, context.getCaller(), "function_call")
                 .thenApply(result -> {
-                    // Handle return value
+                    // Handle return value and termination
                     Object returnValue = scriptContext.getVariable("return");
                     if (returnValue != null) {
-                        result = ExecutionResult.success("Function executed with return value: " + returnValue);
+                        ExecutionResult newResult = ExecutionResult.success("Function executed with return value: " + returnValue);
+                        newResult.setReturnValue(returnValue);
+                        // Preserve termination status
+                        newResult.setTerminated(result.isTerminated());
+                        return newResult;
                     }
                     return result;
                 });

@@ -74,7 +74,13 @@ public class FunctionCallAction implements BlockAction {
                 }
                 
                 plugin.getLogger().info("🎆 Function '" + functionName + "' executed successfully");
-                return ExecutionResult.success("Function call completed: " + functionName);
+                
+                // Create result that preserves termination status
+                ExecutionResult callResult = ExecutionResult.success("Function call completed: " + functionName);
+                callResult.setReturnValue(returnValue);
+                callResult.setTerminated(result.isTerminated());
+                
+                return callResult;
             } else {
                 plugin.getLogger().warning("🎆 Function '" + functionName + "' execution failed: " + result.getMessage());
                 return result;

@@ -223,6 +223,10 @@ public class DefaultScriptEngine implements ScriptEngine, EnhancedScriptEngine {
                 ExecutionResult result = action.execute(block, context);
                 // Если действие прошло успешно, переходим к следующему блоку
                 if (result.isSuccess()) {
+                    // Check if execution was terminated (e.g., by a return statement)
+                    if (result.isTerminated()) {
+                        return result; // Stop execution and return the result
+                    }
                     return processBlock(block.getNextBlock(), context, recursionDepth + 1);
                 }
                 return result; // Если была ошибка, останавливаемся
@@ -253,6 +257,10 @@ public class DefaultScriptEngine implements ScriptEngine, EnhancedScriptEngine {
                                 if (!childResult.isSuccess()) {
                                     return childResult; // Stop on first error
                                 }
+                                // Check if execution was terminated (e.g., by a return statement)
+                                if (childResult.isTerminated()) {
+                                    return childResult; // Stop execution and return the result
+                                }
                             }
                         }
                         // After executing the bracket (or skipping it), go to the NEXT block AFTER this bracket
@@ -275,6 +283,10 @@ public class DefaultScriptEngine implements ScriptEngine, EnhancedScriptEngine {
                                 ExecutionResult childResult = processBlock(block.getChildren().get(0), context, recursionDepth + 1);
                                 // If the child branch ended with an error, stop
                                 if (!childResult.isSuccess()) return childResult;
+                                // Check if execution was terminated (e.g., by a return statement)
+                                if (childResult.isTerminated()) {
+                                    return childResult; // Stop execution and return the result
+                                }
                             }
                         }
                         // Regardless of the result, after IF we go to the next block in the MAIN chain
@@ -289,6 +301,10 @@ public class DefaultScriptEngine implements ScriptEngine, EnhancedScriptEngine {
                                 ExecutionResult childResult = processBlock(block.getChildren().get(0), context, recursionDepth + 1);
                                 // If the child branch ended with an error, stop
                                 if (!childResult.isSuccess()) return childResult;
+                                // Check if execution was terminated (e.g., by a return statement)
+                                if (childResult.isTerminated()) {
+                                    return childResult; // Stop execution and return the result
+                                }
                             }
                         }
                         // After ELSE we go to the next block in the MAIN chain
@@ -303,6 +319,10 @@ public class DefaultScriptEngine implements ScriptEngine, EnhancedScriptEngine {
                             if (!block.getChildren().isEmpty()) {
                                 ExecutionResult childResult = processBlock(block.getChildren().get(0), context, recursionDepth + 1);
                                 if (!childResult.isSuccess()) return childResult;
+                                // Check if execution was terminated (e.g., by a return statement)
+                                if (childResult.isTerminated()) {
+                                    return childResult; // Stop execution and return the result
+                                }
                             }
                             // After body execution, loop back to the same while block to check condition again
                             // But limit recursion to prevent stack overflow
@@ -338,6 +358,10 @@ public class DefaultScriptEngine implements ScriptEngine, EnhancedScriptEngine {
                                     if (!block.getChildren().isEmpty()) {
                                         ExecutionResult childResult = processBlock(block.getChildren().get(0), context, recursionDepth + 1);
                                         if (!childResult.isSuccess()) return childResult;
+                                        // Check if execution was terminated (e.g., by a return statement)
+                                        if (childResult.isTerminated()) {
+                                            return childResult; // Stop execution and return the result
+                                        }
                                     }
                                 }
                             } finally {
