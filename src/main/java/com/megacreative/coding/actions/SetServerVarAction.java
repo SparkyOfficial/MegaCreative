@@ -6,6 +6,7 @@ import com.megacreative.coding.ExecutionContext;
 import com.megacreative.coding.ParameterResolver;
 import com.megacreative.coding.executors.ExecutionResult;
 import com.megacreative.coding.values.DataValue;
+import com.megacreative.coding.variables.VariableManager;
 import com.megacreative.services.BlockConfigService;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.inventory.meta.ItemMeta;
@@ -44,9 +45,10 @@ public class SetServerVarAction implements BlockAction {
                 return ExecutionResult.error("Invalid variable name");
             }
 
-            // Get the variable manager to set the variable
-            // Note: This is a simplified implementation - in a real system, you would set the actual variable
-            // For now, we'll just log the operation
+            // Get the variable manager to set the actual variable
+            VariableManager variableManager = context.getPlugin().getVariableManager();
+            variableManager.setServerVariable(varName, DataValue.of(valueStr));
+            
             context.getPlugin().getLogger().info("Setting server variable " + varName + " to " + valueStr);
             
             return ExecutionResult.success("Server variable set successfully");

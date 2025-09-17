@@ -5,6 +5,7 @@ import com.megacreative.coding.CodeBlock;
 import com.megacreative.coding.ExecutionContext;
 import com.megacreative.coding.ParameterResolver;
 import com.megacreative.coding.values.DataValue;
+import com.megacreative.coding.variables.VariableManager;
 import com.megacreative.services.BlockConfigService;
 import org.bukkit.entity.Player;
 import org.bukkit.inventory.ItemStack;
@@ -49,14 +50,53 @@ public class IfVarEqualsCondition implements BlockCondition {
                 return false;
             }
 
-            // Get the variable manager to retrieve the variable value
-            // Note: This is a simplified implementation - in a real system, you would retrieve the actual variable value
-            String varValue = "test"; // Placeholder for actual variable value retrieval
+            // Get the actual variable value from the VariableManager
+            VariableManager variableManager = context.getPlugin().getVariableManager();
+            Object varValue = null;
+            
+            // Try to get the variable from different scopes
+            // First try player variables
+            if (player != null) {
+                DataValue playerVar = variableManager.getPlayerVariable(player.getUniqueId(), varName);
+                if (playerVar != null) {
+                    varValue = playerVar.getValue();
+                }
+            }
+            
+            // If not found, try local variables
+            if (varValue == null) {
+                DataValue localVar = variableManager.getLocalVariable(context.getScriptId(), varName);
+                if (localVar != null) {
+                    varValue = localVar.getValue();
+                }
+            }
+            
+            // If not found, try global variables
+            if (varValue == null) {
+                DataValue globalVar = variableManager.getGlobalVariable(varName);
+                if (globalVar != null) {
+                    varValue = globalVar.getValue();
+                }
+            }
+            
+            // If not found, try server variables
+            if (varValue == null) {
+                DataValue serverVar = variableManager.getServerVariable(varName);
+                if (serverVar != null) {
+                    varValue = serverVar.getValue();
+                }
+            }
 
             // Compare the variable value with the specified value
-            return varValue != null && varValue.equals(compareValue);
+            if (varValue != null) {
+                return varValue.toString().equals(compareValue);
+            } else {
+                // If variable doesn't exist, compare with empty string
+                return "".equals(compareValue);
+            }
         } catch (Exception e) {
             // If there's an error, return false
+            context.getPlugin().getLogger().warning("Error in IfVarEqualsCondition: " + e.getMessage());
             return false;
         }
     }

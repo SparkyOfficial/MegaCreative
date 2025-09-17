@@ -6,6 +6,7 @@ import com.megacreative.coding.ExecutionContext;
 import com.megacreative.coding.ParameterResolver;
 import com.megacreative.coding.executors.ExecutionResult;
 import com.megacreative.coding.values.DataValue;
+import com.megacreative.coding.variables.VariableManager;
 import com.megacreative.services.BlockConfigService;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.inventory.meta.ItemMeta;
@@ -48,9 +49,14 @@ public class GetServerVarAction implements BlockAction {
                 return ExecutionResult.error("Invalid target variable");
             }
 
-            // Get the variable manager to get the variable
-            // Note: This is a simplified implementation - in a real system, you would get the actual variable
-            // For now, we'll just log the operation
+            // Get the actual variable value from the VariableManager
+            VariableManager variableManager = context.getPlugin().getVariableManager();
+            DataValue serverVar = variableManager.getServerVariable(varName);
+            Object varValue = serverVar != null ? serverVar.getValue() : "";
+            
+            // Store the value in the target variable (using local scope)
+            variableManager.setLocalVariable(context.getScriptId(), targetVar, DataValue.of(varValue));
+            
             context.getPlugin().getLogger().info("Getting server variable " + varName + " into " + targetVar);
             
             return ExecutionResult.success("Server variable retrieved successfully");

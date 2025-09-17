@@ -6,7 +6,9 @@ import com.megacreative.coding.ExecutionContext;
 import com.megacreative.coding.ParameterResolver;
 import com.megacreative.coding.executors.ExecutionResult;
 import com.megacreative.coding.values.DataValue;
+import com.megacreative.coding.variables.VariableManager;
 import com.megacreative.services.BlockConfigService;
+import org.bukkit.entity.Player;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.inventory.meta.ItemMeta;
 
@@ -52,10 +54,87 @@ public class SubVarAction implements BlockAction {
                 return ExecutionResult.error("Invalid value: " + valueStr);
             }
 
-            // Get the variable manager to update the variable
-            // Note: This is a simplified implementation - in a real system, you would update the actual variable
-            // For now, we'll just log the operation
-            context.getPlugin().getLogger().info("Subtracting " + value + " from variable " + varName);
+            // Get the actual variable value from the VariableManager
+            VariableManager variableManager = context.getPlugin().getVariableManager();
+            Player player = context.getPlayer();
+            
+            // Try to get the variable from different scopes
+            DataValue currentVar = null;
+            String scopeContext = null;
+            VariableManager.VariableScope scope = null;
+            
+            // First try player variables
+            if (player != null) {
+                currentVar = variableManager.getPlayerVariable(player.getUniqueId(), varName);
+                if (currentVar != null) {
+                    scope = VariableManager.VariableScope.PLAYER;
+                    scopeContext = player.getUniqueId().toString();
+                }
+            }
+            
+            // If not found, try local variables
+            if (currentVar == null) {
+                currentVar = variableManager.getLocalVariable(context.getScriptId(), varName);
+                if (currentVar != null) {
+                    scope = VariableManager.VariableScope.LOCAL;
+                    scopeContext = context.getScriptId();
+                }
+            }
+            
+            // If not found, try global variables
+            if (currentVar == null) {
+                currentVar = variableManager.getGlobalVariable(varName);
+                if (currentVar != null) {
+                    scope = VariableManager.VariableScope.GLOBAL;
+                    scopeContext = "global";
+                }
+            }
+            
+            // If not found, try server variables
+            if (currentVar == null) {
+                currentVar = variableManager.getServerVariable(varName);
+                if (currentVar != null) {
+                    scope = VariableManager.VariableScope.SERVER;
+                    scopeContext = "server";
+                }
+            }
+            
+            // Get current value or default to 0
+            double currentValue = 0.0;
+            if (currentVar != null) {
+                try {
+                    currentValue = currentVar.asNumber().doubleValue();
+                } catch (NumberFormatException e) {
+                    // If current value is not a number, treat as 0
+                    currentValue = 0.0;
+                }
+            }
+            
+            // Calculate new value
+            double newValue = currentValue - value;
+            
+            // Set the updated value based on the scope
+            DataValue newValueData = DataValue.of(newValue);
+            switch (scope) {
+                case PLAYER:
+                    variableManager.setPlayerVariable(player.getUniqueId(), varName, newValueData);
+                    break;
+                case LOCAL:
+                    variableManager.setLocalVariable(context.getScriptId(), varName, newValueData);
+                    break;
+                case GLOBAL:
+                    variableManager.setGlobalVariable(varName, newValueData);
+                    break;
+                case SERVER:
+                    variableManager.setServerVariable(varName, newValueData);
+                    break;
+                default:
+                    // If variable doesn't exist, create it as a local variable
+                    variableManager.setLocalVariable(context.getScriptId(), varName, newValueData);
+                    break;
+            }
+            
+            context.getPlugin().getLogger().info("Subtracting " + value + " from variable " + varName + " (new value: " + newValue + ")");
             
             return ExecutionResult.success("Variable updated successfully");
         } catch (Exception e) {

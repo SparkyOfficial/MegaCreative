@@ -5,6 +5,7 @@ import com.megacreative.coding.CodeBlock;
 import com.megacreative.coding.ExecutionContext;
 import com.megacreative.coding.ParameterResolver;
 import com.megacreative.coding.values.DataValue;
+import com.megacreative.coding.variables.VariableManager;
 import com.megacreative.services.BlockConfigService;
 import org.bukkit.entity.Player;
 import org.bukkit.inventory.ItemStack;
@@ -57,10 +58,80 @@ public class CompareVariableCondition implements BlockCondition {
                 return false;
             }
 
-            // Get the variable manager to retrieve the variable values
-            // Note: This is a simplified implementation - in a real system, you would retrieve the actual variable values
-            String var1ValueStr = "test1"; // Placeholder for actual variable value retrieval
-            String var2ValueStr = "test2"; // Placeholder for actual variable value retrieval
+            // Get the actual variable values from the VariableManager
+            VariableManager variableManager = context.getPlugin().getVariableManager();
+            Object var1ValueObj = null;
+            Object var2ValueObj = null;
+            
+            // Try to get the first variable from different scopes
+            // First try player variables
+            if (player != null) {
+                DataValue playerVar = variableManager.getPlayerVariable(player.getUniqueId(), var1Name);
+                if (playerVar != null) {
+                    var1ValueObj = playerVar.getValue();
+                }
+            }
+            
+            // If not found, try local variables
+            if (var1ValueObj == null) {
+                DataValue localVar = variableManager.getLocalVariable(context.getScriptId(), var1Name);
+                if (localVar != null) {
+                    var1ValueObj = localVar.getValue();
+                }
+            }
+            
+            // If not found, try global variables
+            if (var1ValueObj == null) {
+                DataValue globalVar = variableManager.getGlobalVariable(var1Name);
+                if (globalVar != null) {
+                    var1ValueObj = globalVar.getValue();
+                }
+            }
+            
+            // If not found, try server variables
+            if (var1ValueObj == null) {
+                DataValue serverVar = variableManager.getServerVariable(var1Name);
+                if (serverVar != null) {
+                    var1ValueObj = serverVar.getValue();
+                }
+            }
+            
+            // Try to get the second variable from different scopes
+            // First try player variables
+            if (player != null) {
+                DataValue playerVar = variableManager.getPlayerVariable(player.getUniqueId(), var2Name);
+                if (playerVar != null) {
+                    var2ValueObj = playerVar.getValue();
+                }
+            }
+            
+            // If not found, try local variables
+            if (var2ValueObj == null) {
+                DataValue localVar = variableManager.getLocalVariable(context.getScriptId(), var2Name);
+                if (localVar != null) {
+                    var2ValueObj = localVar.getValue();
+                }
+            }
+            
+            // If not found, try global variables
+            if (var2ValueObj == null) {
+                DataValue globalVar = variableManager.getGlobalVariable(var2Name);
+                if (globalVar != null) {
+                    var2ValueObj = globalVar.getValue();
+                }
+            }
+            
+            // If not found, try server variables
+            if (var2ValueObj == null) {
+                DataValue serverVar = variableManager.getServerVariable(var2Name);
+                if (serverVar != null) {
+                    var2ValueObj = serverVar.getValue();
+                }
+            }
+
+            // Convert values to strings for comparison
+            String var1ValueStr = var1ValueObj != null ? var1ValueObj.toString() : "";
+            String var2ValueStr = var2ValueObj != null ? var2ValueObj.toString() : "";
 
             // Compare the variables based on the operator
             switch (operator) {
@@ -111,6 +182,7 @@ public class CompareVariableCondition implements BlockCondition {
             }
         } catch (Exception e) {
             // If there's an error, return false
+            context.getPlugin().getLogger().warning("Error in CompareVariableCondition: " + e.getMessage());
             return false;
         }
     }
