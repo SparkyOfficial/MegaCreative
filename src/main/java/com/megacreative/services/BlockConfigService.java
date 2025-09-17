@@ -475,6 +475,7 @@ public class BlockConfigService {
         private final StructureConfig structure;
         private final Map<String, Object> parameters;
         private final List<String> actions;
+        private final Map<String, ParameterConfig> actionParameters; // New field for action parameters
 
         /**
          * Creates block configuration from configuration section
@@ -531,6 +532,30 @@ public class BlockConfigService {
             
             // Store actions list
             this.actions = section.getStringList("actions");
+            
+            // Load action parameters
+            this.actionParameters = new HashMap<>();
+            ConfigurationSection actionConfigurations = plugin.getServiceRegistry().getBlockConfigService().getActionConfigurations();
+            if (actionConfigurations != null) {
+                for (String action : this.actions) {
+                    ConfigurationSection actionSection = actionConfigurations.getConfigurationSection(action);
+                    if (actionSection != null) {
+                        ConfigurationSection slots = actionSection.getConfigurationSection("slots");
+                        if (slots != null) {
+                            for (String slotKey : slots.getKeys(false)) {
+                                ConfigurationSection slotSection = slots.getConfigurationSection(slotKey);
+                                if (slotSection != null) {
+                                    String slotName = slotSection.getString("slot_name");
+                                    if (slotName != null) {
+                                        ParameterConfig paramConfig = new ParameterConfig(slotSection);
+                                        this.actionParameters.put(slotName, paramConfig);
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+            }
         }
         
         // 🔧 FIX: Add setter for material
@@ -554,6 +579,7 @@ public class BlockConfigService {
         public StructureConfig getStructure() { return structure; }
         public Map<String, Object> getParameters() { return parameters; }
         public List<String> getActions() { return actions != null ? new ArrayList<>(actions) : new ArrayList<>(); }
+        public Map<String, ParameterConfig> getActionParameters() { return actionParameters; } // New getter
     }
     
     /**
@@ -588,5 +614,40 @@ public class BlockConfigService {
         public Material getBrackets() { return brackets; }
         public boolean hasSign() { return hasSign; }
         public int getBracketDistance() { return bracketDistance; }
+    }
+    
+    /**
+     * Configuration for action parameters
+     */
+    public static class ParameterConfig {
+        private final String slotName;
+        private final String name;
+        private final String description;
+        private final String placeholderItem;
+        private final boolean required;
+        private final String validation;
+        private final String defaultValue;
+        private final String hint;
+        
+        public ParameterConfig(ConfigurationSection section) {
+            this.slotName = section.getString("slot_name");
+            this.name = section.getString("name");
+            this.description = section.getString("description");
+            this.placeholderItem = section.getString("placeholder_item");
+            this.required = section.getBoolean("required", false);
+            this.validation = section.getString("validation");
+            this.defaultValue = section.getString("default_value");
+            this.hint = section.getString("hint");
+        }
+        
+        // Getters
+        public String getSlotName() { return slotName; }
+        public String getName() { return name; }
+        public String getDescription() { return description; }
+        public String getPlaceholderItem() { return placeholderItem; }
+        public boolean isRequired() { return required; }
+        public String getValidation() { return validation; }
+        public String getDefaultValue() { return defaultValue; }
+        public String getHint() { return hint; }
     }
 }

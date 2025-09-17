@@ -3,14 +3,7 @@ package com.megacreative.testing;
 import com.megacreative.MegaCreative;
 import com.megacreative.coding.CodeBlock;
 import com.megacreative.coding.CodeScript;
-import com.megacreative.coding.actions.SetVarAction;
-import com.megacreative.coding.conditions.VarEqualsCondition;
-import com.megacreative.coding.debug.VisualDebugger;
-import com.megacreative.coding.variables.VariableManager;
-import com.megacreative.coding.variables.IVariableManager.VariableScope;
-import com.megacreative.coding.values.DataValue;
 import org.bukkit.Material;
-
 import java.util.UUID;
 
 /**
@@ -80,7 +73,7 @@ public class SampleTestSuite {
     private static CodeScript createComparisonScript() {
         CodeBlock compareBlock = new CodeBlock();
         compareBlock.setId(UUID.randomUUID());
-        compareBlock.setAction("varEquals");
+        compareBlock.setAction("ifVarEquals"); // Use setAction for conditions
         compareBlock.setMaterial(Material.OAK_PLANKS);
         compareBlock.setParameter("variableName", "compareVar");
         compareBlock.setParameter("compareValue", "42");
@@ -121,7 +114,7 @@ public class SampleTestSuite {
         // Condition block
         CodeBlock conditionBlock = new CodeBlock();
         conditionBlock.setId(UUID.randomUUID());
-        conditionBlock.setAction("varEquals");
+        conditionBlock.setAction("ifVarEquals"); // Use setAction for conditions
         conditionBlock.setMaterial(Material.OAK_PLANKS);
         conditionBlock.setParameter("variableName", "conditionVar");
         conditionBlock.setParameter("compareValue", "true");

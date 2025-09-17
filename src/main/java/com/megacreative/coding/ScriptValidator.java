@@ -160,6 +160,9 @@ public class ScriptValidator {
                 errors.add(new ValidationError(ValidationError.Severity.ERROR, 
                     "Unknown block action: " + block.getAction(), block, "action"));
             } else {
+                // Validate block parameters against configuration
+                validateBlockParameters(block, config, errors, warnings);
+                
                 // Validate block type matches configuration
                 String expectedType = config.getType();
                 if (!isValidBlockType(block, expectedType)) {
@@ -168,9 +171,6 @@ public class ScriptValidator {
                 }
             }
         }
-        
-        // Validate parameters
-        validateParameters(block, errors, warnings);
         
         // Validate children
         for (CodeBlock child : block.getChildren()) {
@@ -190,17 +190,12 @@ public class ScriptValidator {
     }
     
     /**
-     * Validates block parameters
+     * Validates block parameters against configuration
      */
-    private void validateParameters(CodeBlock block, List<ValidationError> errors, List<ValidationError> warnings) {
-        if (block.getParameters() == null) return;
-        
-        // Get block configuration to validate required parameters
-        BlockConfigService.BlockConfig config = blockConfigService.getBlockConfig(block.getAction());
-        if (config == null) return;
-        
+    private void validateBlockParameters(CodeBlock block, BlockConfigService.BlockConfig config, 
+                                       List<ValidationError> errors, List<ValidationError> warnings) {
         // Check required parameters
-        Map<String, BlockConfigService.ParameterConfig> paramConfigs = config.getParameters();
+        Map<String, BlockConfigService.ParameterConfig> paramConfigs = config.getActionParameters(); // Fixed: use getActionParameters()
         if (paramConfigs != null) {
             for (Map.Entry<String, BlockConfigService.ParameterConfig> entry : paramConfigs.entrySet()) {
                 String paramName = entry.getKey();
@@ -225,9 +220,9 @@ public class ScriptValidator {
             }
             
             // Check for empty values in required parameters
-            if (value.isEmpty()) {
-                BlockConfigService.ParameterConfig paramConfig = paramConfigs != null ? paramConfigs.get(paramName) : null;
-                if (paramConfig != null && paramConfig.isRequired()) {
+            BlockConfigService.ParameterConfig paramConfig = paramConfigs != null ? paramConfigs.get(paramName) : null;
+            if (paramConfig != null && paramConfig.isRequired()) {
+                if (value.isEmpty()) {
                     errors.add(new ValidationError(ValidationError.Severity.ERROR, 
                         "Required parameter is empty: " + paramName, block, paramName));
                 }
