@@ -180,7 +180,7 @@ public class PerformanceCommand implements CommandExecutor, TabCompleter {
         }
         
         com.megacreative.coding.monitoring.AdvancedScriptOptimizer optimizer = 
-            new com.megacreative.coding.monitoring.AdvancedScriptOptimizer(plugin.getScriptPerformanceMonitor());
+            new com.megacreative.coding.monitoring.AdvancedScriptOptimizer(plugin, plugin.getScriptPerformanceMonitor());
         
         com.megacreative.coding.monitoring.AdvancedScriptOptimizer.ScriptOptimizationReport report = 
             optimizer.analyzeScript(script);

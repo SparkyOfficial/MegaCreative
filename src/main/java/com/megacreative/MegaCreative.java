@@ -245,6 +245,10 @@ public class MegaCreative extends JavaPlugin {
         // Performance monitoring command
         getCommand("performance").setExecutor(new PerformanceCommand(this));
         getCommand("performance").setTabCompleter(new PerformanceCommand(this));
+        
+        // Test command
+        getCommand("test").setExecutor(new TestCommand(this));
+        getCommand("test").setTabCompleter(new TestCommand(this));
     }
     
     /**
@@ -449,6 +453,16 @@ public class MegaCreative extends JavaPlugin {
             return null;
         }
         return serviceRegistry.getScriptPerformanceMonitor();
+    }
+    
+    /**
+     * Gets the script test runner
+     */
+    public com.megacreative.testing.ScriptTestRunner getTestRunner() {
+        if (serviceRegistry == null) {
+            return null;
+        }
+        return serviceRegistry.getScriptTestRunner();
     }
     
     // Legacy methods for backward compatibility - these should be migrated to use GUIManager

@@ -34,6 +34,7 @@ public class VisualDebugger {
     private final Map<UUID, BreakpointManager> breakpointManagers = new ConcurrentHashMap<>();
     private final Map<UUID, ExecutionTracer> executionTracers = new ConcurrentHashMap<>();
     private final Map<UUID, VariableWatcher> variableWatchers = new ConcurrentHashMap<>();
+    private final Map<UUID, PerformanceProfiler> performanceProfilers = new ConcurrentHashMap<>();
     
     // Advanced visual debugger
     private final AdvancedVisualDebugger advancedDebugger;
@@ -48,6 +49,7 @@ public class VisualDebugger {
                 breakpointManagers.computeIfAbsent(player.getUniqueId(), k -> new BreakpointManager());
                 executionTracers.computeIfAbsent(player.getUniqueId(), k -> new ExecutionTracer());
                 variableWatchers.computeIfAbsent(player.getUniqueId(), k -> new VariableWatcher());
+                performanceProfilers.computeIfAbsent(player.getUniqueId(), k -> new PerformanceProfiler());
             }
         }, 20L, 6000L); // Check every 5 minutes
     }
@@ -81,6 +83,7 @@ public class VisualDebugger {
             breakpointManagers.remove(player.getUniqueId());
             executionTracers.remove(player.getUniqueId());
             variableWatchers.remove(player.getUniqueId());
+            performanceProfilers.remove(player.getUniqueId());
             
             player.sendMessage("§c✖ Visual debugger stopped");
         }
@@ -294,6 +297,43 @@ public class VisualDebugger {
     }
     
     /**
+     * Starts performance profiling for a player
+     */
+    public void startProfiling(Player player) {
+        PerformanceProfiler profiler = performanceProfilers.computeIfAbsent(
+            player.getUniqueId(),
+            k -> new PerformanceProfiler()
+        );
+        
+        profiler.startProfiling();
+        player.sendMessage("§a✓ Performance profiling started");
+    }
+    
+    /**
+     * Stops performance profiling for a player
+     */
+    public void stopProfiling(Player player) {
+        PerformanceProfiler profiler = performanceProfilers.get(player.getUniqueId());
+        if (profiler != null) {
+            profiler.stopProfiling();
+            player.sendMessage("§c✖ Performance profiling stopped");
+        }
+    }
+    
+    /**
+     * Shows performance profile for a player
+     */
+    public void showProfile(Player player) {
+        PerformanceProfiler profiler = performanceProfilers.get(player.getUniqueId());
+        if (profiler == null) {
+            player.sendMessage("§cNo performance profile available");
+            return;
+        }
+        
+        profiler.showProfile(player);
+    }
+    
+    /**
      * Toggles debug mode for a player
      */
     public boolean toggleDebug(Player player) {
@@ -322,6 +362,12 @@ public class VisualDebugger {
         if (session == null) return;
         
         player.sendMessage("§a▶ Starting script: " + script.getName());
+        
+        // Start performance profiling
+        PerformanceProfiler profiler = performanceProfilers.get(player.getUniqueId());
+        if (profiler != null) {
+            profiler.startScript(script.getName());
+        }
     }
     
     /**
@@ -332,6 +378,12 @@ public class VisualDebugger {
         if (session == null) return;
         
         player.sendMessage("§c▣ Script ended: " + script.getName());
+        
+        // End performance profiling
+        PerformanceProfiler profiler = performanceProfilers.get(player.getUniqueId());
+        if (profiler != null) {
+            profiler.endScript();
+        }
     }
     
     /**
@@ -404,6 +456,11 @@ public class VisualDebugger {
         VariableWatcher watcher = variableWatchers.get(player.getUniqueId());
         if (watcher != null) {
             player.sendMessage("§fWatched Variables: " + watcher.getWatches().size());
+        }
+        
+        PerformanceProfiler profiler = performanceProfilers.get(player.getUniqueId());
+        if (profiler != null && profiler.isProfiling()) {
+            player.sendMessage("§fPerformance Profiling: §aActive");
         }
     }
     
@@ -536,6 +593,7 @@ public class VisualDebugger {
         breakpointManagers.clear();
         executionTracers.clear();
         variableWatchers.clear();
+        performanceProfilers.clear();
         
         // Shutdown advanced debugger
         if (advancedDebugger != null) {
@@ -683,6 +741,75 @@ public class VisualDebugger {
         
         public boolean hasWatches() {
             return !watches.isEmpty();
+        }
+    }
+    
+    /**
+     * Profiles script performance
+     */
+    public static class PerformanceProfiler {
+        private boolean profiling = false;
+        private long startTime = 0;
+        private long endTime = 0;
+        private String currentScript = "";
+        private final Map<String, Long> scriptExecutionTimes = new ConcurrentHashMap<>();
+        private final Map<String, Integer> scriptExecutionCounts = new ConcurrentHashMap<>();
+        
+        public void startProfiling() {
+            profiling = true;
+            startTime = System.currentTimeMillis();
+        }
+        
+        public void stopProfiling() {
+            profiling = false;
+            endTime = System.currentTimeMillis();
+        }
+        
+        public void startScript(String scriptName) {
+            if (profiling) {
+                currentScript = scriptName;
+                scriptExecutionTimes.putIfAbsent(scriptName, 0L);
+                scriptExecutionCounts.putIfAbsent(scriptName, 0);
+            }
+        }
+        
+        public void endScript() {
+            if (profiling && !currentScript.isEmpty()) {
+                long executionTime = System.currentTimeMillis() - startTime;
+                scriptExecutionTimes.merge(currentScript, executionTime, Long::sum);
+                scriptExecutionCounts.merge(currentScript, 1, Integer::sum);
+                currentScript = "";
+            }
+        }
+        
+        public boolean isProfiling() {
+            return profiling;
+        }
+        
+        public void showProfile(Player player) {
+            if (!profiling) {
+                player.sendMessage("§cPerformance profiling is not active");
+                return;
+            }
+            
+            player.sendMessage("§6=== Performance Profile ===");
+            player.sendMessage("§7Total profiling time: §f" + (endTime - startTime) + "ms");
+            
+            if (scriptExecutionTimes.isEmpty()) {
+                player.sendMessage("§eNo script execution data available");
+                return;
+            }
+            
+            player.sendMessage("§a§lScript Execution Times:");
+            for (Map.Entry<String, Long> entry : scriptExecutionTimes.entrySet()) {
+                String scriptName = entry.getKey();
+                long totalTime = entry.getValue();
+                int count = scriptExecutionCounts.getOrDefault(scriptName, 0);
+                double avgTime = count > 0 ? (double) totalTime / count : 0;
+                
+                player.sendMessage("§7- §f" + scriptName + " §7: §f" + totalTime + "ms §8(total), §f" + 
+                    String.format("%.2f", avgTime) + "ms §8(avg), §f" + count + "x §8(count)");
+            }
         }
     }
 }

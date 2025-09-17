@@ -121,11 +121,17 @@ public class DebugCommand implements CommandExecutor, TabCompleter {
             case "trace":
                 handleTraceCommand(player, args);
                 break;
+            case "profile":
+                handleProfileCommand(player, args);
+                break;
             case "performance":
                 handlePerformanceCommand(player, args);
                 break;
             case "visualize":
                 handleVisualizationCommand(player, args);
+                break;
+            case "stats":
+                debugger.showDebugStats(player);
                 break;
             case "help":
                 showHelp(player);
@@ -153,6 +159,47 @@ public class DebugCommand implements CommandExecutor, TabCompleter {
      * @param args Befehlsargumente
      */
     private void handleBreakpointCommand(Player player, String[] args) {
+        if (args.length < 2) {
+            player.sendMessage("§cИспользование: /debug breakpoint <set|remove|list> [x y z] [condition]");
+            return;
+        }
+
+        String action = args[1].toLowerCase();
+        VisualDebugger debugger = plugin.getScriptDebugger();
+        
+        switch (action) {
+            case "set":
+                Location location = player.getLocation();
+                String condition = null;
+                
+                if (args.length >= 3) {
+                    // Try to parse condition
+                    StringBuilder conditionBuilder = new StringBuilder();
+                    for (int i = 2; i < args.length; i++) {
+                        if (conditionBuilder.length() > 0) {
+                            conditionBuilder.append(" ");
+                        }
+                        conditionBuilder.append(args[i]);
+                    }
+                    condition = conditionBuilder.toString();
+                }
+                
+                debugger.addBreakpoint(player, location, condition);
+                break;
+                
+            case "remove":
+                debugger.removeBreakpoint(player, player.getLocation());
+                break;
+                
+            case "list":
+                debugger.listBreakpoints(player);
+                break;
+                
+            default:
+                player.sendMessage("§cНеизвестное действие для точек останова: " + action);
+                player.sendMessage("§7Доступные действия: set, remove, list");
+                break;
+        }
     }
 
     /**
@@ -265,6 +312,44 @@ public class DebugCommand implements CommandExecutor, TabCompleter {
                 
             default:
                 player.sendMessage("§cНеизвестное действие для трассировки: " + action);
+                player.sendMessage("§7Доступные действия: start, stop, show");
+                break;
+        }
+    }
+
+    /**
+     * Обрабатывает подкоманды профилирования
+     * @param player игрок, выполняющий команду
+     * @param args аргументы команды
+     *
+     * Handles profile subcommands
+     * @param player player executing the command
+     * @param args command arguments
+     */
+    private void handleProfileCommand(Player player, String[] args) {
+        if (args.length < 2) {
+            player.sendMessage("§cИспользование: /debug profile <start|stop|show>");
+            return;
+        }
+
+        String action = args[1].toLowerCase();
+        VisualDebugger debugger = plugin.getScriptDebugger();
+        
+        switch (action) {
+            case "start":
+                debugger.startProfiling(player);
+                break;
+                
+            case "stop":
+                debugger.stopProfiling(player);
+                break;
+                
+            case "show":
+                debugger.showProfile(player);
+                break;
+                
+            default:
+                player.sendMessage("§cНеизвестное действие для профилирования: " + action);
                 player.sendMessage("§7Доступные действия: start, stop, show");
                 break;
         }
@@ -405,6 +490,7 @@ public class DebugCommand implements CommandExecutor, TabCompleter {
         player.sendMessage("§7/debug breakpoint <set|remove|list> [x y z] [condition] §8- управление точками останова");
         player.sendMessage("§7/debug watch <add|remove|list> [variable] [expression] §8- наблюдение за переменными");
         player.sendMessage("§7/debug trace <start|stop|show> [maxSteps] §8- трассировка выполнения");
+        player.sendMessage("§7/debug profile <start|stop|show> §8- профилирование производительности");
         player.sendMessage("§7/debug performance <report> §8- анализ производительности");
         player.sendMessage("§7/debug visualize <block|flow|performance|group> [on|off] §8- визуализация выполнения");
         player.sendMessage("§7/debug help §8- показать эту справку");
@@ -453,6 +539,7 @@ public class DebugCommand implements CommandExecutor, TabCompleter {
             completions.add("breakpoint");
             completions.add("watch");
             completions.add("trace");
+            completions.add("profile");
             completions.add("performance");
             completions.add("visualize");
             completions.add("help");
@@ -469,6 +556,11 @@ public class DebugCommand implements CommandExecutor, TabCompleter {
                     completions.add("list");
                     break;
                 case "trace":
+                    completions.add("start");
+                    completions.add("stop");
+                    completions.add("show");
+                    break;
+                case "profile":
                     completions.add("start");
                     completions.add("stop");
                     completions.add("show");

@@ -32,7 +32,7 @@ public class ScriptPerformanceMonitor {
     // Advanced monitoring features
     private final com.megacreative.coding.monitoring.model.ExecutionSampler executionSampler = 
         new com.megacreative.coding.monitoring.model.ExecutionSampler();
-    private final MemoryMonitor memoryMonitor = new MemoryMonitor();
+    private final MemoryMonitor memoryMonitor;
     private final BottleneckDetector bottleneckDetector = new BottleneckDetector();
     
     // Performance thresholds (loaded from config)
@@ -75,6 +75,9 @@ public class ScriptPerformanceMonitor {
         this.slowExecutionThreshold = plugin.getConfig().getLong("coding.performance.slow_execution_threshold", 50);
         this.memoryWarningThreshold = plugin.getConfig().getLong("coding.performance.memory_warning_threshold", 100 * 1024 * 1024);
         this.maxConcurrentScripts = plugin.getConfig().getInt("coding.max_concurrent_scripts", 20);
+        
+        // Initialize memory monitor with logger
+        this.memoryMonitor = new MemoryMonitor(plugin.getLogger());
         
         // Start monitoring services
         executionSampler.start();

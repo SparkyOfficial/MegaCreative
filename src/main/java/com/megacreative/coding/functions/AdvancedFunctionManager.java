@@ -325,19 +325,27 @@ public class AdvancedFunctionManager {
                 functionName.startsWith("min") || functionName.startsWith("max") ||
                 functionName.startsWith("sin") || functionName.startsWith("cos") ||
                 functionName.startsWith("tan") || functionName.startsWith("log") ||
-                functionName.startsWith("exp")) {
+                functionName.startsWith("exp") || functionName.startsWith("acos") ||
+                functionName.startsWith("asin") || functionName.startsWith("atan") ||
+                functionName.startsWith("cbrt") || functionName.startsWith("hypot") ||
+                functionName.startsWith("toDegrees") || functionName.startsWith("toRadians")) {
                 // Math functions
                 result = executeMathFunction(functionName, arguments);
             } else if (functionName.startsWith("length") || functionName.startsWith("toUpperCase") ||
                        functionName.startsWith("toLowerCase") || functionName.startsWith("substring") ||
                        functionName.startsWith("contains") || functionName.startsWith("startsWith") ||
                        functionName.startsWith("endsWith") || functionName.startsWith("replace") ||
-                       functionName.startsWith("trim") || functionName.startsWith("split")) {
+                       functionName.startsWith("trim") || functionName.startsWith("split") ||
+                       functionName.startsWith("indexOf") || functionName.startsWith("lastIndexOf") ||
+                       functionName.startsWith("concat") || functionName.startsWith("repeat")) {
                 // String functions
                 result = executeStringFunction(functionName, arguments);
             } else if (functionName.startsWith("random") || functionName.startsWith("currentTimeMillis") ||
                        functionName.startsWith("format") || functionName.startsWith("join") ||
-                       functionName.startsWith("size")) {
+                       functionName.startsWith("size") || functionName.startsWith("list") ||
+                       functionName.startsWith("map") || functionName.startsWith("range") ||
+                       functionName.startsWith("sort") || functionName.startsWith("reverse") ||
+                       functionName.startsWith("shuffle")) {
                 // Utility functions
                 result = executeUtilityFunction(functionName, arguments);
             }
@@ -388,6 +396,20 @@ public class AdvancedFunctionManager {
                     return Math.log(arguments[0].asNumber().doubleValue());
                 case "exp":
                     return Math.exp(arguments[0].asNumber().doubleValue());
+                case "acos":
+                    return Math.acos(arguments[0].asNumber().doubleValue());
+                case "asin":
+                    return Math.asin(arguments[0].asNumber().doubleValue());
+                case "atan":
+                    return Math.atan(arguments[0].asNumber().doubleValue());
+                case "cbrt":
+                    return Math.cbrt(arguments[0].asNumber().doubleValue());
+                case "hypot":
+                    return Math.hypot(arguments[0].asNumber().doubleValue(), arguments[1].asNumber().doubleValue());
+                case "toDegrees":
+                    return Math.toDegrees(arguments[0].asNumber().doubleValue());
+                case "toRadians":
+                    return Math.toRadians(arguments[0].asNumber().doubleValue());
                 default:
                     return 0.0;
             }
@@ -438,6 +460,18 @@ public class AdvancedFunctionManager {
                         list.add(DataValue.of(part));
                     }
                     return new ListValue(list);
+                case "indexOf":
+                    String searchStr = arguments[1].asString();
+                    return (double) str.indexOf(searchStr);
+                case "lastIndexOf":
+                    String searchStr2 = arguments[1].asString();
+                    return (double) str.lastIndexOf(searchStr2);
+                case "concat":
+                    String str2 = arguments[1].asString();
+                    return str + str2;
+                case "repeat":
+                    int count = arguments[1].asNumber().intValue();
+                    return str.repeat(Math.max(0, count));
                 default:
                     return "";
             }
@@ -490,6 +524,68 @@ public class AdvancedFunctionManager {
                         return (double) list.size();
                     }
                     return 0.0;
+                case "list":
+                    // Create a new list from arguments
+                    List<DataValue> newList = new ArrayList<>();
+                    for (DataValue arg : arguments) {
+                        newList.add(arg);
+                    }
+                    return new ListValue(newList);
+                case "map":
+                    // Create a map from key-value pairs
+                    Map<String, DataValue> newMap = new HashMap<>();
+                    for (int i = 0; i < arguments.length - 1; i += 2) {
+                        String key = arguments[i].asString();
+                        DataValue value = arguments[i + 1];
+                        newMap.put(key, value);
+                    }
+                    return newMap;
+                case "range":
+                    // Create a list with numbers in a range
+                    double start = arguments[0].asNumber().doubleValue();
+                    double end = arguments[1].asNumber().doubleValue();
+                    double step = arguments.length > 2 ? arguments[2].asNumber().doubleValue() : 1.0;
+                    List<DataValue> rangeList = new ArrayList<>();
+                    for (double i = start; i < end; i += step) {
+                        rangeList.add(DataValue.of(i));
+                    }
+                    return new ListValue(rangeList);
+                case "sort":
+                    // Sort a list
+                    if (arguments[0].getType() == ValueType.LIST) {
+                        ListValue list = (ListValue) arguments[0];
+                        List<DataValue> sortedList = new ArrayList<DataValue>(list.getValues());
+                        Collections.sort(sortedList, new Comparator<DataValue>() {
+                            @Override
+                            public int compare(DataValue a, DataValue b) {
+                                if (a.getType() == ValueType.NUMBER && b.getType() == ValueType.NUMBER) {
+                                    return Double.compare(a.asNumber().doubleValue(), b.asNumber().doubleValue());
+                                } else {
+                                    return a.asString().compareTo(b.asString());
+                                }
+                            }
+                        });
+                        return new ListValue(sortedList);
+                    }
+                    return arguments[0];
+                case "reverse":
+                    // Reverse a list
+                    if (arguments[0].getType() == ValueType.LIST) {
+                        ListValue list = (ListValue) arguments[0];
+                        List<DataValue> reversedList = new ArrayList<DataValue>(list.getValues());
+                        Collections.reverse(reversedList);
+                        return new ListValue(reversedList);
+                    }
+                    return arguments[0];
+                case "shuffle":
+                    // Shuffle a list
+                    if (arguments[0].getType() == ValueType.LIST) {
+                        ListValue list = (ListValue) arguments[0];
+                        List<DataValue> shuffledList = new ArrayList<DataValue>(list.getValues());
+                        Collections.shuffle(shuffledList);
+                        return new ListValue(shuffledList);
+                    }
+                    return arguments[0];
                 default:
                     return "";
             }
@@ -653,6 +749,13 @@ public class AdvancedFunctionManager {
             mathLib.addFunction(createMathFunction("tan", "Returns the trigonometric tangent of an angle", ValueType.NUMBER, 1));
             mathLib.addFunction(createMathFunction("log", "Returns the natural logarithm of a number", ValueType.NUMBER, 1));
             mathLib.addFunction(createMathFunction("exp", "Returns Euler's number e raised to the power of a number", ValueType.NUMBER, 1));
+            mathLib.addFunction(createMathFunction("acos", "Returns the arc cosine of a value", ValueType.NUMBER, 1));
+            mathLib.addFunction(createMathFunction("asin", "Returns the arc sine of a value", ValueType.NUMBER, 1));
+            mathLib.addFunction(createMathFunction("atan", "Returns the arc tangent of a value", ValueType.NUMBER, 1));
+            mathLib.addFunction(createMathFunction("cbrt", "Returns the cube root of a number", ValueType.NUMBER, 1));
+            mathLib.addFunction(createMathFunction("hypot", "Returns sqrt(x^2 + y^2) without intermediate overflow or underflow", ValueType.NUMBER, 2));
+            mathLib.addFunction(createMathFunction("toDegrees", "Converts an angle measured in radians to an approximately equivalent angle measured in degrees", ValueType.NUMBER, 1));
+            mathLib.addFunction(createMathFunction("toRadians", "Converts an angle measured in degrees to an approximately equivalent angle measured in radians", ValueType.NUMBER, 1));
             
             libraries.put("math", mathLib);
         } catch (Exception e) {
@@ -675,6 +778,10 @@ public class AdvancedFunctionManager {
             stringLib.addFunction(createStringFunction("replace", "Replaces all occurrences of a substring with another substring", ValueType.TEXT, 3)); // string, target, replacement
             stringLib.addFunction(createStringFunction("trim", "Removes whitespace from both ends of a string", ValueType.TEXT, 1));
             stringLib.addFunction(createStringFunction("split", "Splits a string into a list by a delimiter", ValueType.LIST, 2));
+            stringLib.addFunction(createStringFunction("indexOf", "Returns the index of the first occurrence of a substring", ValueType.NUMBER, 2));
+            stringLib.addFunction(createStringFunction("lastIndexOf", "Returns the index of the last occurrence of a substring", ValueType.NUMBER, 2));
+            stringLib.addFunction(createStringFunction("concat", "Concatenates two strings", ValueType.TEXT, 2));
+            stringLib.addFunction(createStringFunction("repeat", "Repeats a string a specified number of times", ValueType.TEXT, 2));
             
             libraries.put("string", stringLib);
         } catch (Exception e) {
@@ -693,6 +800,12 @@ public class AdvancedFunctionManager {
             utilLib.addFunction(createUtilityFunction("format", "Formats a string with arguments", ValueType.TEXT, -1)); // Variable arguments
             utilLib.addFunction(createUtilityFunction("join", "Joins a list of values with a separator", ValueType.TEXT, 2));
             utilLib.addFunction(createUtilityFunction("size", "Returns the size of a list or map", ValueType.NUMBER, 1));
+            utilLib.addFunction(createUtilityFunction("list", "Creates a new list from arguments", ValueType.LIST, -1)); // Variable arguments
+            utilLib.addFunction(createUtilityFunction("map", "Creates a new map from key-value pairs", ValueType.DICTIONARY, -1)); // Variable arguments
+            utilLib.addFunction(createUtilityFunction("range", "Creates a list with numbers in a range", ValueType.LIST, -1)); // 2-3 arguments
+            utilLib.addFunction(createUtilityFunction("sort", "Sorts a list", ValueType.LIST, 1));
+            utilLib.addFunction(createUtilityFunction("reverse", "Reverses a list", ValueType.LIST, 1));
+            utilLib.addFunction(createUtilityFunction("shuffle", "Shuffles a list randomly", ValueType.LIST, 1));
             
             libraries.put("util", utilLib);
         } catch (Exception e) {

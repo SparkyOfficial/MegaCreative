@@ -1,11 +1,26 @@
 package com.megacreative.coding.monitoring.model;
 
+import java.util.concurrent.Executors;
+import java.util.concurrent.ScheduledExecutorService;
+import java.util.concurrent.TimeUnit;
+import java.util.logging.Logger;
+
 /**
  * Monitors memory usage for the application
  */
 public class MemoryMonitor {
     private final GarbageCollectionMonitor gcMonitor = new GarbageCollectionMonitor();
-    private volatile boolean isRunning = true;
+    private final ScheduledExecutorService scheduler = Executors.newScheduledThreadPool(1);
+    private volatile boolean isRunning = false;
+    private Logger logger;
+    
+    public MemoryMonitor() {
+        // Default constructor
+    }
+    
+    public MemoryMonitor(Logger logger) {
+        this.logger = logger;
+    }
     
     /**
      * Gets the current memory usage statistics
@@ -33,9 +48,32 @@ public class MemoryMonitor {
      * Starts the memory monitoring thread
      */
     public void start() {
-        gcMonitor.start();
-        // Start monitoring thread if needed
-        // This could be implemented to periodically log memory usage
+        if (!isRunning) {
+            isRunning = true;
+            gcMonitor.start();
+            
+            // Start monitoring thread to periodically log memory usage
+            scheduler.scheduleAtFixedRate(this::logMemoryUsage, 0, 30, TimeUnit.SECONDS);
+        }
+    }
+    
+    /**
+     * Logs current memory usage to the logger
+     */
+    private void logMemoryUsage() {
+        if (logger != null) {
+            MemoryUsage usage = getCurrentUsage();
+            GarbageCollectionMonitor.GcStatistics gcStats = getGcStatistics();
+            
+            logger.info(String.format(
+                "Memory Usage: %.1fMB / %.1fMB (%.1f%%) | GC Collections: %d | GC Time: %dms",
+                usage.getUsedMemoryMB(),
+                usage.getMaxMemoryMB(),
+                usage.getMemoryUsagePercentage(),
+                gcStats.getTotalGcCount(),
+                gcStats.getTotalGcTime()
+            ));
+        }
     }
     
     /**
@@ -44,6 +82,7 @@ public class MemoryMonitor {
     public void stop() {
         isRunning = false;
         gcMonitor.stop();
+        scheduler.shutdown();
     }
     
     /**

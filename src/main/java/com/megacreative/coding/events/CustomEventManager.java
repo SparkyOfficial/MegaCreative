@@ -8,6 +8,7 @@ import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.Listener;
 import org.bukkit.event.player.PlayerJoinEvent;
+import org.bukkit.event.player.PlayerMoveEvent;
 import org.bukkit.event.player.PlayerQuitEvent;
 
 import java.util.*;
@@ -47,9 +48,13 @@ public class CustomEventManager implements Listener {
     // Event correlation engine
     private final EventCorrelationEngine correlationEngine;
     
+    // Region detection system
+    private final RegionDetectionSystem regionDetectionSystem;
+    
     public CustomEventManager(MegaCreative plugin) {
         this.plugin = plugin;
         this.correlationEngine = new EventCorrelationEngine(this);
+        this.regionDetectionSystem = new RegionDetectionSystem(plugin, this);
         initializeBuiltInEvents();
         startCorrelationCleanupTask();
     }
@@ -431,6 +436,25 @@ public class CustomEventManager implements Listener {
             .addDataField("priority", Integer.class, false, "Message priority");
         userMessageEvent.addTag("communication");
         registerEvent(userMessageEvent);
+        
+        // Region events
+        CustomEvent regionEnterEvent = new CustomEvent("regionEnter", "system")
+            .addDataField("player", Player.class, true, "Player who entered the region")
+            .addDataField("regionId", String.class, true, "ID of the region entered")
+            .addDataField("regionName", String.class, true, "Name of the region entered")
+            .addDataField("world", String.class, true, "World where the region is located");
+        regionEnterEvent.addTag("region");
+        regionEnterEvent.addTag("movement");
+        registerEvent(regionEnterEvent);
+        
+        CustomEvent regionExitEvent = new CustomEvent("regionExit", "system")
+            .addDataField("player", Player.class, true, "Player who exited the region")
+            .addDataField("regionId", String.class, true, "ID of the region exited")
+            .addDataField("regionName", String.class, true, "Name of the region exited")
+            .addDataField("world", String.class, true, "World where the region is located");
+        regionExitEvent.addTag("region");
+        regionExitEvent.addTag("movement");
+        registerEvent(regionExitEvent);
     }
     
     /**
@@ -443,6 +467,9 @@ public class CustomEventManager implements Listener {
         data.put("firstTime", DataValue.fromObject(!event.getPlayer().hasPlayedBefore()));
         
         triggerEvent("playerConnect", data, event.getPlayer(), event.getPlayer().getWorld().getName());
+        
+        // Update region tracking for the player
+        regionDetectionSystem.updatePlayerRegions(event.getPlayer());
     }
     
     @org.bukkit.event.EventHandler
@@ -452,6 +479,21 @@ public class CustomEventManager implements Listener {
         data.put("reason", DataValue.fromObject(event.getQuitMessage()));
         
         triggerEvent("playerDisconnect", data, event.getPlayer(), event.getPlayer().getWorld().getName());
+        
+        // Clean up region tracking for the player
+        regionDetectionSystem.cleanupPlayerTracking(event.getPlayer().getUniqueId());
+    }
+    
+    @org.bukkit.event.EventHandler
+    public void onPlayerMove(PlayerMoveEvent event) {
+        // Only process if the player actually moved to a different block
+        if (event.getFrom().getBlockX() != event.getTo().getBlockX() ||
+            event.getFrom().getBlockY() != event.getTo().getBlockY() ||
+            event.getFrom().getBlockZ() != event.getTo().getBlockZ()) {
+            
+            // Update region tracking for the player
+            regionDetectionSystem.updatePlayerRegions(event.getPlayer());
+        }
     }
     
     /**
@@ -459,6 +501,13 @@ public class CustomEventManager implements Listener {
      */
     public EventCorrelationEngine getCorrelationEngine() {
         return correlationEngine;
+    }
+    
+    /**
+     * Gets the region detection system
+     */
+    public RegionDetectionSystem getRegionDetectionSystem() {
+        return regionDetectionSystem;
     }
     
     /**
