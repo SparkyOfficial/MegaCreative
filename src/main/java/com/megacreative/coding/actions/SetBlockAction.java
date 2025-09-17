@@ -7,6 +7,7 @@ import com.megacreative.coding.ParameterResolver;
 import com.megacreative.coding.executors.ExecutionResult;
 import com.megacreative.coding.values.DataValue;
 import com.megacreative.services.BlockConfigService;
+import org.bukkit.Location;
 import org.bukkit.Material;
 import org.bukkit.entity.Player;
 import org.bukkit.inventory.ItemStack;
@@ -55,9 +56,13 @@ public class SetBlockAction implements BlockAction {
                 material = Material.STONE;
             }
 
-            // Set the block
-            // Note: This is a simplified implementation - in a real system, you would set the actual block
-            // For now, we'll just log the operation
+            // Calculate the target location
+            Location playerLocation = player.getLocation();
+            Location targetLocation = playerLocation.clone().add(relativeX, relativeY, relativeZ);
+            
+            // Set the actual block in the world
+            targetLocation.getBlock().setType(material);
+            
             context.getPlugin().getLogger().info("Setting block " + material + " at relative position (" + relativeX + ", " + relativeY + ", " + relativeZ + ")");
             
             return ExecutionResult.success("Block set successfully");
