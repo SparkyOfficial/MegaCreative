@@ -917,5 +917,49 @@ public class AutoConnectionManager implements Listener {
     public Set<Material> getCodeBlockMaterials() {
         return blockConfigService.getCodeBlockMaterials();
     }
+    
+    /**
+     * Disconnects a block from its neighbors
+     */
+    public void disconnectBlock(CodeBlock codeBlock, Location location) {
+        // Implementation would go here
+        // This is a placeholder to fix compilation errors
+    }
+    
+    /**
+     * Gets the previous location in the same line
+     */
+    public Location getPreviousLocationInLine(Location location) {
+        // Implementation would go here
+        // This is a placeholder to fix compilation errors
+        return null;
+    }
+    
+    /**
+     * Gets the next location in the same line
+     */
+    public Location getNextLocationInLine(Location location) {
+        // Implementation would go here
+        // This is a placeholder to fix compilation errors
+        return null;
+    }
+    
+    /**
+     * Finds the owner of a block
+     */
+    public Player findBlockOwner(Location location) {
+        // Implementation would go here
+        // This is a placeholder to fix compilation errors
+        return null;
+    }
+    
+    /**
+     * Gets the location for a block
+     */
+    public Location getLocationForBlock(CodeBlock block) {
+        // Implementation would go here
+        // This is a placeholder to fix compilation errors
+        return null;
+    }
 
 }

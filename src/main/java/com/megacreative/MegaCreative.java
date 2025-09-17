@@ -315,10 +315,140 @@ public class MegaCreative extends JavaPlugin {
     }
     
     /**
+     * Gets the VariableManager instance
+     */
+    public com.megacreative.coding.variables.VariableManager getVariableManager() {
+        if (serviceRegistry == null) {
+            return null;
+        }
+        return serviceRegistry.getVariableManager();
+    }
+    
+    /**
+     * Gets the IWorldManager instance
+     */
+    public com.megacreative.interfaces.IWorldManager getWorldManager() {
+        if (serviceRegistry == null) {
+            return null;
+        }
+        return serviceRegistry.getWorldManager();
+    }
+    
+    /**
+     * Gets the GUIManager instance
+     */
+    public com.megacreative.managers.GUIManager getGuiManager() {
+        if (serviceRegistry == null) {
+            return null;
+        }
+        return serviceRegistry.getGuiManager();
+    }
+    
+    /**
+     * Gets the BlockPlacementHandler instance
+     */
+    public com.megacreative.coding.BlockPlacementHandler getBlockPlacementHandler() {
+        if (serviceRegistry == null) {
+            return null;
+        }
+        return serviceRegistry.getBlockPlacementHandler();
+    }
+    
+    /**
+     * Gets the TemplateManager instance
+     */
+    public com.megacreative.managers.TemplateManager getTemplateManager() {
+        if (serviceRegistry == null) {
+            return null;
+        }
+        return serviceRegistry.getTemplateManager();
+    }
+    
+    /**
+     * Gets the TrustedPlayerManager instance
+     */
+    public com.megacreative.interfaces.ITrustedPlayerManager getTrustedPlayerManager() {
+        if (serviceRegistry == null) {
+            return null;
+        }
+        return serviceRegistry.getTrustedPlayerManager();
+    }
+    
+    /**
+     * Gets the CodeBlockClipboard instance
+     */
+    public com.megacreative.tools.CodeBlockClipboard getCodeBlockClipboard() {
+        if (serviceRegistry == null) {
+            return null;
+        }
+        return serviceRegistry.getCodeBlockClipboard();
+    }
+    
+    /**
      * Gets the dependency container
      */
     public DependencyContainer getDependencyContainer() {
         return dependencyContainer;
+    }
+    
+    /**
+     * Gets the player manager
+     */
+    public com.megacreative.managers.PlayerManagerImpl getPlayerManager() {
+        if (serviceRegistry == null) {
+            return null;
+        }
+        return (com.megacreative.managers.PlayerManagerImpl) serviceRegistry.getPlayerManager();
+    }
+    
+    /**
+     * Gets the config manager
+     */
+    public com.megacreative.utils.ConfigManager getConfigManager() {
+        if (serviceRegistry == null) {
+            return null;
+        }
+        return serviceRegistry.getConfigManager();
+    }
+    
+    /**
+     * Gets the scoreboard manager
+     */
+    public com.megacreative.managers.ScoreboardManager getScoreboardManager() {
+        if (serviceRegistry == null) {
+            return null;
+        }
+        return serviceRegistry.getScoreboardManager();
+    }
+    
+    /**
+     * Gets the coding manager
+     */
+    public com.megacreative.interfaces.ICodingManager getCodingManager() {
+        if (serviceRegistry == null) {
+            return null;
+        }
+        return serviceRegistry.getCodingManager();
+    }
+    
+    /**
+     * Gets the script debugger
+     */
+    public com.megacreative.coding.debug.VisualDebugger getScriptDebugger() {
+        if (serviceRegistry == null) {
+            return null;
+        }
+        return serviceRegistry.getScriptDebugger();
+    }
+    
+    /**
+     * Gets the script performance monitor
+     */
+    public com.megacreative.coding.monitoring.ScriptPerformanceMonitor getScriptPerformanceMonitor() {
+        if (serviceRegistry == null) {
+            return null;
+        }
+        return serviceRegistry.getScriptPerformanceMonitor();
     }
     
     // Legacy methods for backward compatibility - these should be migrated to use GUIManager
