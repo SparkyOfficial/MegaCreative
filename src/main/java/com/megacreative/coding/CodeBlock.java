@@ -598,6 +598,7 @@ public class CodeBlock implements Cloneable {
             }
             
             // Important: don't copy nextBlock and children to avoid unpredictable connections
+            // These should be set up properly by the connection logic after cloning
             cloned.nextBlock = null;
             cloned.children = new ArrayList<>();
             

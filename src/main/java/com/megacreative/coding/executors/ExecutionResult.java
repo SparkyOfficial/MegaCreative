@@ -168,6 +168,9 @@ public class ExecutionResult {
             .details(this.details)
             .build();
         result.setPaused(true);
+        // Copy other important fields
+        result.setTerminated(this.terminated);
+        result.setReturnValue(this.returnValue);
         return result;
     }
 

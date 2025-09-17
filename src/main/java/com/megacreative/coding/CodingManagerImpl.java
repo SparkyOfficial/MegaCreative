@@ -25,6 +25,7 @@ import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.Map;
 import java.util.HashMap;
+import java.nio.charset.StandardCharsets;
 import java.util.concurrent.CompletableFuture;
 import java.util.logging.Logger;
 
@@ -114,7 +115,7 @@ public class CodingManagerImpl implements ICodingManager {
                 .filter(path -> path.toString().endsWith(".json"))
                 .forEach(path -> {
                     try {
-                        String content = new String(Files.readAllBytes(path));
+                        String content = new String(Files.readAllBytes(path), StandardCharsets.UTF_8);
                         CodeScript script = com.megacreative.utils.JsonSerializer.deserializeScript(content);
                         if (script != null) {
                             // Set the world name for the script
@@ -200,7 +201,7 @@ public class CodingManagerImpl implements ICodingManager {
         Path scriptFile = worldScriptsDir.resolve(script.getName() + ".json");
         try {
             String json = com.megacreative.utils.JsonSerializer.serializeScript(script);
-            Files.write(scriptFile, json.getBytes());
+            Files.write(scriptFile, json.getBytes(StandardCharsets.UTF_8));
             logger.info("Saved script: " + script.getName() + " to " + scriptFile.toString());
         } catch (Exception e) {
             logger.severe("Failed to save script " + script.getName() + ": " + e.getMessage());

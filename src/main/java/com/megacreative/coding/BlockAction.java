@@ -15,13 +15,8 @@ public interface BlockAction {
      * @return Результат выполнения действия
      */
     default ExecutionResult execute(CodeBlock block, ExecutionContext context) {
-        // Default implementation for backward compatibility
-        try {
-            execute(context);
-            return ExecutionResult.success();
-        } catch (Exception e) {
-            return ExecutionResult.error("Error executing action: " + e.getMessage());
-        }
+        // Default implementation that returns an error for backward compatibility
+        return ExecutionResult.error("Action not implemented. Please implement execute(CodeBlock, ExecutionContext) method.");
     }
     
     /**
