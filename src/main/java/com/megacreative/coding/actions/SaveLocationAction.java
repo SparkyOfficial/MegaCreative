@@ -42,12 +42,17 @@ public class SaveLocationAction implements BlockAction {
                 return ExecutionResult.error("Invalid location name");
             }
 
-            // Save the location
-            // Note: This is a simplified implementation - in a real system, you would save the actual location
-            // For now, we'll just log the operation
-            context.getPlugin().getLogger().info("Saving location " + locName + " at player's current position");
+            // Save the location using the VariableManager
+            com.megacreative.coding.variables.VariableManager variableManager = context.getPlugin().getVariableManager();
+            org.bukkit.Location location = player.getLocation();
             
-            return ExecutionResult.success("Location saved successfully");
+            // Convert location to a string format "x,y,z,world"
+            String locationStr = location.getX() + "," + location.getY() + "," + location.getZ() + "," + location.getWorld().getName();
+            
+            // Store the location as a player variable
+            variableManager.setPlayerVariable(player.getUniqueId(), locName, DataValue.of(locationStr));
+            
+            return ExecutionResult.success("Location '" + locName + "' saved successfully at " + locationStr);
         } catch (Exception e) {
             return ExecutionResult.error("Failed to save location: " + e.getMessage());
         }

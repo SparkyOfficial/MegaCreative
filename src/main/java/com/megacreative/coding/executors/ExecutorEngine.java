@@ -357,19 +357,50 @@ public class ExecutorEngine {
                 return context.createErrorResult("No location specified for teleport");
             }
             
-            // In a real implementation, you'd parse the location string
-            // For now, we'll just show an effect at the current location
+            // Parse the location string
+            String locationStr = locationValue.asString();
+            if (locationStr == null || locationStr.trim().isEmpty()) {
+                return context.createErrorResult("Invalid location string");
+            }
+            
             Player player = context.getPlayer();
             Location currentLoc = player.getLocation();
             
+            // Parse location string in format "x,y,z" or "x,y,z,world"
+            String[] parts = locationStr.split(",");
+            if (parts.length < 3) {
+                return context.createErrorResult("Invalid location format. Expected: x,y,z or x,y,z,world");
+            }
+            
+            double x, y, z;
+            try {
+                x = Double.parseDouble(parts[0].trim());
+                y = Double.parseDouble(parts[1].trim());
+                z = Double.parseDouble(parts[2].trim());
+            } catch (NumberFormatException e) {
+                return context.createErrorResult("Invalid coordinate values in location string");
+            }
+            
+            // Determine world
+            org.bukkit.World world = currentLoc.getWorld();
+            if (parts.length >= 4 && !parts[3].trim().isEmpty()) {
+                world = org.bukkit.Bukkit.getWorld(parts[3].trim());
+                if (world == null) {
+                    return context.createErrorResult("World not found: " + parts[3].trim());
+                }
+            }
+            
+            // Create target location
+            Location targetLocation = new Location(world, x, y, z);
+            
+            // Teleport the player
+            player.teleport(targetLocation);
+            
             // Visual effects
-            player.spawnParticle(Particle.PORTAL, currentLoc, 20);
-            player.playSound(currentLoc, Sound.ENTITY_ENDERMAN_TELEPORT, 1.0f, 1.0f);
+            player.spawnParticle(org.bukkit.Particle.PORTAL, currentLoc, 20);
+            player.playSound(currentLoc, org.bukkit.Sound.ENTITY_ENDERMAN_TELEPORT, 1.0f, 1.0f);
             
-            // In a real implementation, you'd do the actual teleport here
-            // player.teleport(targetLocation);
-            
-            return context.createResult(true, "Teleport effect played");
+            return context.createResult(true, "Teleported to " + locationStr);
             
         } catch (Exception e) {
             return context.createErrorResult("Teleport failed: " + e.getMessage(), e);
@@ -424,19 +455,47 @@ public class ExecutorEngine {
                 return context.createErrorResult("No items specified");
             }
             
-            // In a real implementation, we would get the items from the block's config items
-            // For now, we'll implement a basic version that gives multiple items
-            
             Player player = context.getPlayer();
             int itemsGiven = 0;
             
-            // In a real implementation, we would get the items from the block's config items
-            // For now, we'll just give some example items
-            org.bukkit.inventory.ItemStack[] items = {
-                new org.bukkit.inventory.ItemStack(org.bukkit.Material.DIAMOND, 1),
-                new org.bukkit.inventory.ItemStack(org.bukkit.Material.GOLD_INGOT, 3),
-                new org.bukkit.inventory.ItemStack(org.bukkit.Material.IRON_INGOT, 5)
-            };
+            // Get the actual items from the parameters
+            // Items should be in format "MATERIAL1:COUNT1,MATERIAL2:COUNT2,..." or just "MATERIAL1,MATERIAL2,..." (count = 1)
+            String itemsStr = itemsValue.asString();
+            if (itemsStr == null || itemsStr.trim().isEmpty()) {
+                return context.createErrorResult("Invalid items string");
+            }
+            
+            String[] itemPairs = itemsStr.split(",");
+            java.util.List<org.bukkit.inventory.ItemStack> itemsToGive = new java.util.ArrayList<>();
+            
+            for (String itemPair : itemPairs) {
+                String[] parts = itemPair.trim().split(":");
+                String materialName = parts[0].trim();
+                int count = 1; // Default count
+                
+                if (parts.length > 1) {
+                    try {
+                        count = Integer.parseInt(parts[1].trim());
+                    } catch (NumberFormatException e) {
+                        // Keep default count of 1
+                    }
+                }
+                
+                // Try to get the material
+                org.bukkit.Material material;
+                try {
+                    material = org.bukkit.Material.valueOf(materialName.toUpperCase());
+                } catch (IllegalArgumentException e) {
+                    return context.createErrorResult("Invalid item material: " + materialName);
+                }
+                
+                // Create the item
+                org.bukkit.inventory.ItemStack item = new org.bukkit.inventory.ItemStack(material, count);
+                itemsToGive.add(item);
+            }
+            
+            // Convert list to array
+            org.bukkit.inventory.ItemStack[] items = itemsToGive.toArray(new org.bukkit.inventory.ItemStack[0]);
             
             // Add items to inventory or drop if full
             java.util.Map<Integer, org.bukkit.inventory.ItemStack> notAdded = player.getInventory().addItem(items);
@@ -449,8 +508,8 @@ public class ExecutorEngine {
             itemsGiven = items.length - notAdded.size();
             
             // Visual effects
-            player.spawnParticle(Particle.VILLAGER_HAPPY, player.getLocation().add(0, 2, 0), 10);
-            player.playSound(player.getLocation(), Sound.ENTITY_ITEM_PICKUP, 1.0f, 1.2f);
+            player.spawnParticle(org.bukkit.Particle.VILLAGER_HAPPY, player.getLocation().add(0, 2, 0), 10);
+            player.playSound(player.getLocation(), org.bukkit.Sound.ENTITY_ITEM_PICKUP, 1.0f, 1.2f);
             
             return context.createResult(true, "Given " + itemsGiven + " items");
             
@@ -537,44 +596,72 @@ public class ExecutorEngine {
         try {
             Player player = context.getPlayer();
             
-            // In a real implementation, we would get the items from the block's config items
-            // For now, we'll implement a basic version that removes some example items
+            // Get the actual items to remove from parameters
+            // Items should be in format "MATERIAL1:COUNT1,MATERIAL2:COUNT2,..." or just "MATERIAL1,MATERIAL2,..." (count = 1)
+            DataValue itemsValue = params.get("items");
+            if (itemsValue == null) {
+                return context.createErrorResult("No items specified for removal");
+            }
             
-            // Example items to remove
-            org.bukkit.inventory.ItemStack[] exampleItems = {
-                new org.bukkit.inventory.ItemStack(org.bukkit.Material.DIRT, 1),
-                new org.bukkit.inventory.ItemStack(org.bukkit.Material.COBBLESTONE, 5),
-                new org.bukkit.inventory.ItemStack(org.bukkit.Material.STICK, 3)
-            };
+            String itemsStr = itemsValue.asString();
+            if (itemsStr == null || itemsStr.trim().isEmpty()) {
+                return context.createErrorResult("Invalid items string for removal");
+            }
+            
+            String[] itemPairs = itemsStr.split(",");
+            int itemsRemoved = 0;
             
             // Remove items from player's inventory
-            for (org.bukkit.inventory.ItemStack item : exampleItems) {
-                if (item != null) {
-                    java.util.HashMap<Integer, ? extends org.bukkit.inventory.ItemStack> foundItems = 
-                        player.getInventory().all(item.getType());
-                    
-                    int amountToRemove = item.getAmount();
-                    for (java.util.Map.Entry<Integer, ? extends org.bukkit.inventory.ItemStack> entry : foundItems.entrySet()) {
-                        if (amountToRemove <= 0) break;
-                        
-                        org.bukkit.inventory.ItemStack stack = entry.getValue();
-                        int stackAmount = stack.getAmount();
-                        
-                        if (stackAmount <= amountToRemove) {
-                            player.getInventory().clear(entry.getKey());
-                            amountToRemove -= stackAmount;
-                        } else {
-                            stack.setAmount(stackAmount - amountToRemove);
-                            amountToRemove = 0;
-                        }
+            for (String itemPair : itemPairs) {
+                String[] parts = itemPair.trim().split(":");
+                String materialName = parts[0].trim();
+                int countToRemove = 1; // Default count
+                
+                if (parts.length > 1) {
+                    try {
+                        countToRemove = Integer.parseInt(parts[1].trim());
+                    } catch (NumberFormatException e) {
+                        // Keep default count of 1
                     }
                 }
+                
+                // Try to get the material
+                org.bukkit.Material material;
+                try {
+                    material = org.bukkit.Material.valueOf(materialName.toUpperCase());
+                } catch (IllegalArgumentException e) {
+                    context.getPlugin().getLogger().warning("Invalid item material for removal: " + materialName);
+                    continue; // Skip this item
+                }
+                
+                // Find and remove items from inventory
+                java.util.HashMap<Integer, ? extends org.bukkit.inventory.ItemStack> foundItems = 
+                    player.getInventory().all(material);
+                
+                int amountRemoved = 0;
+                for (java.util.Map.Entry<Integer, ? extends org.bukkit.inventory.ItemStack> entry : foundItems.entrySet()) {
+                    if (amountRemoved >= countToRemove) break;
+                    
+                    org.bukkit.inventory.ItemStack stack = entry.getValue();
+                    int stackAmount = stack.getAmount();
+                    int toRemoveFromStack = Math.min(stackAmount, countToRemove - amountRemoved);
+                    
+                    if (toRemoveFromStack >= stackAmount) {
+                        player.getInventory().clear(entry.getKey());
+                        amountRemoved += stackAmount;
+                    } else {
+                        stack.setAmount(stackAmount - toRemoveFromStack);
+                        amountRemoved += toRemoveFromStack;
+                    }
+                }
+                
+                itemsRemoved += amountRemoved;
             }
             
             // Visual effect
-            player.spawnParticle(Particle.SMOKE_NORMAL, player.getLocation().add(0, 2, 0), 5);
+            player.spawnParticle(org.bukkit.Particle.SMOKE_NORMAL, player.getLocation().add(0, 2, 0), 5);
             
-            return context.createResult(true, "Removed items from inventory");
+            return context.createResult(true, "Removed " + itemsRemoved + " items from inventory");
             
         } catch (Exception e) {
             return context.createErrorResult("Failed to remove items: " + e.getMessage(), e);

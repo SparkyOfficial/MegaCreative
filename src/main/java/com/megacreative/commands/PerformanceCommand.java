@@ -172,8 +172,12 @@ public class PerformanceCommand implements CommandExecutor, TabCompleter {
             return;
         }
         
-        // Get the script (this would need to be retrieved from the actual script system)
-        com.megacreative.coding.CodeScript script = null; // In a real implementation, retrieve the actual script
+        // Get the script from the actual script system
+        com.megacreative.coding.CodeScript script = plugin.getCodingManager().getScript(scriptName);
+        if (script == null) {
+            player.sendMessage("§cScript '" + scriptName + "' not found!");
+            return;
+        }
         
         com.megacreative.coding.monitoring.AdvancedScriptOptimizer optimizer = 
             new com.megacreative.coding.monitoring.AdvancedScriptOptimizer(plugin.getScriptPerformanceMonitor());

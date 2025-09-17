@@ -45,10 +45,49 @@ public class WorldGuardRegionCheckCondition implements BlockCondition {
                 return false;
             }
             
-            // For now, we'll return false as we don't have direct access to WorldGuard API
-            // In a real implementation, you would check if the player is in the specified region
-            context.getPlugin().getLogger().warning("WorldGuardRegionCheckCondition: WorldGuard integration not fully implemented.");
-            return false;
+            // Try to get WorldGuard API
+            try {
+                // Use reflection to access WorldGuard API to avoid direct dependency
+                Class<?> worldGuardClass = Class.forName("com.sk89q.worldguard.WorldGuard");
+                Object worldGuardInstance = worldGuardClass.getMethod("getInstance").invoke(null);
+                Object platform = worldGuardInstance.getClass().getMethod("getPlatform").invoke(worldGuardInstance);
+                Object regionContainer = platform.getClass().getMethod("getRegionContainer").invoke(platform);
+                
+                // Get the world wrapper
+                Class<?> worldEditWorldClass = Class.forName("com.sk89q.worldedit.world.World");
+                Class<?> bukkitAdapterClass = Class.forName("com.sk89q.worldedit.bukkit.BukkitAdapter");
+                Object worldEditWorld = bukkitAdapterClass.getMethod("adapt", World.class).invoke(null, world);
+                
+                // Get region manager for the world
+                Object regionManager = regionContainer.getClass().getMethod("get", worldEditWorldClass).invoke(regionContainer, worldEditWorld);
+                if (regionManager == null) {
+                    context.getPlugin().getLogger().warning("WorldGuardRegionCheckCondition: No region manager for world '" + worldName + "'.");
+                    return false;
+                }
+                
+                // Get the region
+                Class<?> protectedRegionClass = Class.forName("com.sk89q.worldguard.protection.regions.ProtectedRegion");
+                Object region = regionManager.getClass().getMethod("getRegion", String.class).invoke(regionManager, regionName);
+                if (region == null) {
+                    context.getPlugin().getLogger().warning("WorldGuardRegionCheckCondition: Region '" + regionName + "' not found in world '" + worldName + "'.");
+                    return false;
+                }
+                
+                // Check if player is in the region
+                Class<?> locationClass = Class.forName("com.sk89q.worldedit.util.Location");
+                Class<?> vector3Class = Class.forName("com.sk89q.worldedit.math.Vector3");
+                Object playerLocation = bukkitAdapterClass.getMethod("adapt", org.bukkit.Location.class).invoke(null, player.getLocation());
+                Object vector3 = vector3Class.getMethod("at", double.class, double.class, double.class)
+                    .invoke(null, player.getLocation().getX(), player.getLocation().getY(), player.getLocation().getZ());
+                Object weLocation = locationClass.getConstructor(worldEditWorldClass, vector3Class).newInstance(worldEditWorld, vector3);
+                
+                boolean isInsideRegion = (Boolean) region.getClass().getMethod("contains", vector3Class).invoke(region, vector3);
+                return isInsideRegion;
+                
+            } catch (Exception e) {
+                context.getPlugin().getLogger().warning("WorldGuardRegionCheckCondition: Failed to check region '" + regionName + "' - " + e.getMessage());
+                return false;
+            }
 
         } catch (Exception e) {
             context.getPlugin().getLogger().severe("Error evaluating WorldGuardRegionCheckCondition: " + e.getMessage());

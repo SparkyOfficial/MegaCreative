@@ -115,8 +115,10 @@ public class CodingManagerImpl implements ICodingManager {
                 .forEach(path -> {
                     try {
                         String content = new String(Files.readAllBytes(path));
-                        CodeScript script = CodeScript.fromJson(content);
+                        CodeScript script = com.megacreative.utils.JsonSerializer.deserializeScript(content);
                         if (script != null) {
+                            // Set the world name for the script
+                            script.setWorldName(world.getName());
                             world.getScripts().add(script);
                             logger.info("Loaded script: " + script.getName() + " for world: " + worldName);
                         }
@@ -197,7 +199,7 @@ public class CodingManagerImpl implements ICodingManager {
         // Save script to file
         Path scriptFile = worldScriptsDir.resolve(script.getName() + ".json");
         try {
-            String json = script.toJson();
+            String json = com.megacreative.utils.JsonSerializer.serializeScript(script);
             Files.write(scriptFile, json.getBytes());
             logger.info("Saved script: " + script.getName() + " to " + scriptFile.toString());
         } catch (Exception e) {

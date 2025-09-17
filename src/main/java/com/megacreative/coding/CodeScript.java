@@ -25,6 +25,9 @@ public class CodeScript {
     private ScriptType type = ScriptType.EVENT; // По умолчанию - событие
     private final CodeBlock rootBlock; // Начальный блок-событие
     
+    // 🎆 ENHANCED: Add world name field for script persistence
+    private String worldName;
+    
     // Поля для шаблонов
     private boolean isTemplate = false;
     private String author;
@@ -91,6 +94,15 @@ public class CodeScript {
     
     public CodeBlock getRootBlock() { 
         return rootBlock; 
+    }
+    
+    // 🎆 ENHANCED: Add getter and setter for world name
+    public String getWorldName() {
+        return worldName;
+    }
+    
+    public void setWorldName(String worldName) {
+        this.worldName = worldName;
     }
     
     public boolean isTemplate() { 
@@ -167,12 +179,13 @@ public class CodeScript {
                Objects.equals(name, that.name) &&
                type == that.type &&
                Objects.equals(rootBlock, that.rootBlock) &&
+               Objects.equals(worldName, that.worldName) &&
                Objects.equals(author, that.author) &&
                Objects.equals(description, that.description);
     }
     
     @Override
     public int hashCode() {
-        return Objects.hash(id, name, enabled, type, rootBlock, isTemplate, author, description);
+        return Objects.hash(id, name, enabled, type, rootBlock, worldName, isTemplate, author, description);
     }
 }
