@@ -306,8 +306,14 @@ public class PerformanceCommand implements CommandExecutor, TabCompleter {
         if (args.length == 1) {
             completions.addAll(Arrays.asList("report", "script", "optimize", "bottlenecks", "clear"));
         } else if (args.length == 2 && (args[0].equalsIgnoreCase("script") || args[0].equalsIgnoreCase("optimize"))) {
-            // In a real implementation, this would return actual script names
-            completions.addAll(Arrays.asList("exampleScript1", "exampleScript2"));
+            // Return actual script names from all worlds
+            for (com.megacreative.models.CreativeWorld world : plugin.getWorldManager().getCreativeWorlds()) {
+                if (world.getScripts() != null) {
+                    for (com.megacreative.coding.CodeScript script : world.getScripts()) {
+                        completions.add(script.getName());
+                    }
+                }
+            }
         }
         
         // Filter based on what the player has typed so far
