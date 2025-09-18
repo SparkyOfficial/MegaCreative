@@ -123,6 +123,13 @@ public class ScriptTestRunner {
     }
     
     /**
+     * Gets the names of all available test suites
+     */
+    public List<String> getAvailableTestSuites() {
+        return new ArrayList<>(testSuites.keySet());
+    }
+    
+    /**
      * Represents a test suite containing multiple test cases
      */
     public class TestSuite {

@@ -148,8 +148,20 @@ public class TestCommand implements CommandExecutor, TabCompleter {
         }
         
         player.sendMessage("§e=== Available Test Suites ===");
-        // In a real implementation, we would list the available test suites
-        player.sendMessage("§7No test suites available yet. Create one with /test create");
+        // List available test suites
+        ScriptTestRunner testRunnerInstance = plugin.getTestRunner();
+        if (testRunnerInstance != null) {
+            java.util.List<String> suites = testRunnerInstance.getAvailableTestSuites();
+            if (suites.isEmpty()) {
+                player.sendMessage("§7No test suites available yet. Create one with /test create");
+            } else {
+                for (String suite : suites) {
+                    player.sendMessage("§a- " + suite);
+                }
+            }
+        } else {
+            player.sendMessage("§cTest runner is not available!");
+        }
     }
     
     private void handleCreateCommand(Player player, String[] args) {
@@ -209,8 +221,11 @@ public class TestCommand implements CommandExecutor, TabCompleter {
             switch (args[0].toLowerCase()) {
                 case "run":
                 case "create":
-                    // In a real implementation, we would provide available test suites
-                    completions.add("example-suite");
+                    // Provide available test suites
+                    ScriptTestRunner testRunnerInstance = plugin.getTestRunner();
+                    if (testRunnerInstance != null) {
+                        completions.addAll(testRunnerInstance.getAvailableTestSuites());
+                    }
                     break;
             }
         }

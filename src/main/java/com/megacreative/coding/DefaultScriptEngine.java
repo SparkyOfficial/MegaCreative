@@ -500,8 +500,48 @@ public class DefaultScriptEngine implements ScriptEngine, EnhancedScriptEngine {
                     }
                     
                 case "FUNCTION":
-                    // Function processing - this is the next big step.
-                    // For now, just go to the next block.
+                    // Enhanced function processing with actual implementation
+                    String functionName = block.getAction();
+                    
+                    // Handle function call action
+                    if ("callFunction".equals(functionName)) {
+                        // Get function name parameter
+                        DataValue functionNameValue = block.getParameter("functionName");
+                        if (functionNameValue != null && !functionNameValue.isEmpty()) {
+                            String funcName = functionNameValue.asString();
+                            
+                            // Get function manager
+                            com.megacreative.coding.functions.AdvancedFunctionManager functionManager = 
+                                plugin.getServiceRegistry().getAdvancedFunctionManager();
+                            
+                            if (functionManager != null) {
+                                try {
+                                    // Execute the function
+                                    java.util.concurrent.CompletableFuture<ExecutionResult> futureResult = 
+                                        functionManager.executeFunction(funcName, context.getPlayer(), new com.megacreative.coding.values.DataValue[0]);
+                                    ExecutionResult functionResult = futureResult.get();
+                                    
+                                    // Process the result
+                                    if (functionResult.isTerminated()) {
+                                        return functionResult; // Stop execution and return the result
+                                    }
+                                    
+                                    if (!functionResult.isSuccess()) {
+                                        return functionResult; // Return error
+                                    }
+                                } catch (Exception e) {
+                                    String errorMsg = "Error executing function " + funcName + ": " + e.getMessage();
+                                    plugin.getLogger().severe(errorMsg);
+                                    return ExecutionResult.error(errorMsg);
+                                }
+                            } else {
+                                String errorMsg = "Function manager not available";
+                                plugin.getLogger().warning(errorMsg);
+                                return ExecutionResult.error(errorMsg);
+                            }
+                        }
+                    }
+                    // For other function-related actions, just go to the next block
                     return processBlock(block.getNextBlock(), context, recursionDepth + 1);
 
                 default:

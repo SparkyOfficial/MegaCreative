@@ -933,47 +933,56 @@ public class AutoConnectionManager implements Listener {
             return;
         }
         
-        // Get the line number for this location
-        int line = DevWorldGenerator.getCodeLineFromZ(location.getBlockZ());
-        if (line == -1) return;
-        
-        // Disconnect from previous block in the same line
-        Location prevLocation = getPreviousLocationInLine(location);
-        if (prevLocation != null) {
-            CodeBlock prevBlock = locationToBlock.get(prevLocation);
-            if (prevBlock != null && prevBlock.getNextBlock() == codeBlock) {
-                prevBlock.setNextBlock(null);
-                if (plugin != null) {
-                    plugin.getLogger().fine("Disconnected previous block at " + prevLocation);
+        try {
+            // Get the line number for this location
+            int line = DevWorldGenerator.getCodeLineFromZ(location.getBlockZ());
+            if (line == -1) return;
+            
+            // Disconnect from previous block in the same line
+            Location prevLocation = getPreviousLocationInLine(location);
+            if (prevLocation != null) {
+                CodeBlock prevBlock = locationToBlock.get(prevLocation);
+                if (prevBlock != null && prevBlock.getNextBlock() == codeBlock) {
+                    prevBlock.setNextBlock(null);
+                    if (plugin != null) {
+                        plugin.getLogger().fine("Disconnected previous block at " + prevLocation);
+                    }
                 }
             }
-        }
-        
-        // Disconnect from next block in the same line
-        Location nextLocation = getNextLocationInLine(location);
-        if (nextLocation != null) {
-            CodeBlock nextBlock = locationToBlock.get(nextLocation);
-            if (nextBlock != null && codeBlock.getNextBlock() == nextBlock) {
-                codeBlock.setNextBlock(null);
-                if (plugin != null) {
-                    plugin.getLogger().fine("Disconnected next block at " + nextLocation);
+            
+            // Disconnect from next block in the same line
+            Location nextLocation = getNextLocationInLine(location);
+            if (nextLocation != null) {
+                CodeBlock nextBlock = locationToBlock.get(nextLocation);
+                if (nextBlock != null && codeBlock.getNextBlock() == nextBlock) {
+                    codeBlock.setNextBlock(null);
+                    if (plugin != null) {
+                        plugin.getLogger().fine("Disconnected next block at " + nextLocation);
+                    }
                 }
             }
-        }
-        
-        // Disconnect from parent blocks
-        // Find all blocks that have this block as a child and remove it
-        for (CodeBlock parentBlock : locationToBlock.values()) {
-            if (parentBlock.getChildren().contains(codeBlock)) {
-                parentBlock.getChildren().remove(codeBlock);
-                if (plugin != null) {
-                    plugin.getLogger().fine("Removed child relationship from parent block");
+            
+            // Disconnect from parent blocks
+            // Find all blocks that have this block as a child and remove it
+            for (CodeBlock parentBlock : new ArrayList<>(locationToBlock.values())) {
+                if (parentBlock.getChildren().contains(codeBlock)) {
+                    parentBlock.getChildren().remove(codeBlock);
+                    if (plugin != null) {
+                        plugin.getLogger().fine("Removed child relationship from parent block at " + getLocationForBlock(parentBlock));
+                    }
                 }
             }
-        }
-        
-        if (plugin != null) {
-            plugin.getLogger().fine("Disconnected block at " + location);
+            
+            // Remove from our tracking
+            locationToBlock.remove(location);
+            
+            if (plugin != null) {
+                plugin.getLogger().fine("Disconnected block at " + location);
+            }
+        } catch (Exception e) {
+            if (plugin != null) {
+                plugin.getLogger().warning("Error disconnecting block at " + location + ": " + e.getMessage());
+            }
         }
     }
     
@@ -990,7 +999,7 @@ public class AutoConnectionManager implements Listener {
         if (currentX <= 0) return null;
         
         // Return the previous block in the same line
-        return new Location(location.getWorld(), currentX - 1, location.getBlockY(), location.getBlockZ());
+        return new Location(location.getWorld(), currentX - 1, location.getBlockY(), location.getBlockZ()).clone();
     }
     
     /**
@@ -1008,7 +1017,7 @@ public class AutoConnectionManager implements Listener {
         if (currentX >= maxBlocksPerLine - 1) return null;
         
         // Return the next block in the same line
-        return new Location(location.getWorld(), currentX + 1, location.getBlockY(), location.getBlockZ());
+        return new Location(location.getWorld(), currentX + 1, location.getBlockY(), location.getBlockZ()).clone();
     }
     
     /**
@@ -1022,19 +1031,36 @@ public class AutoConnectionManager implements Listener {
             return blockOwners.get(location);
         }
         
-        // Fallback to finding the closest player if no owner is tracked
+        // Try to find the owner by checking nearby players within a reasonable distance
         Player closestPlayer = null;
-        double closestDistance = Double.MAX_VALUE;
+        double closestDistance = 16.0; // Max distance in blocks
         
         for (Player player : location.getWorld().getPlayers()) {
-            double distance = player.getLocation().distanceSquared(location);
-            if (distance < closestDistance) {
-                closestDistance = distance;
-                closestPlayer = player;
+            // Only consider players in creative mode
+            if (player.getGameMode() == org.bukkit.GameMode.CREATIVE) {
+                double distance = player.getLocation().distanceSquared(location);
+                if (distance < closestDistance * closestDistance && distance < closestDistance) {
+                    closestDistance = distance;
+                    closestPlayer = player;
+                }
             }
         }
         
-        return closestPlayer;
+        // If we found a nearby creative player, return them
+        if (closestPlayer != null) {
+            return closestPlayer;
+        }
+        
+        // Last resort: find any player, but only if very close
+        double lastResortDistance = 8.0;
+        for (Player player : location.getWorld().getPlayers()) {
+            double distance = player.getLocation().distanceSquared(location);
+            if (distance < lastResortDistance * lastResortDistance) {
+                return player;
+            }
+        }
+        
+        return null;
     }
     
     /**
@@ -1046,7 +1072,7 @@ public class AutoConnectionManager implements Listener {
         // Search through our location mapping to find the location for this block
         for (Map.Entry<Location, CodeBlock> entry : locationToBlock.entrySet()) {
             if (entry.getValue() == block) {
-                return entry.getKey();
+                return entry.getKey().clone(); // Return a clone to prevent external modification
             }
         }
         

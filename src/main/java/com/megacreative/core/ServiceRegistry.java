@@ -986,6 +986,17 @@ public class ServiceRegistry {
     }
     
     /**
+     * 🎆 Reference system: Get Advanced Function Manager
+     *
+     * 🎆 Reference system: Получить продвинутый менеджер функций
+     *
+     * 🎆 Reference system: Erweiterten Funktionsmanager abrufen
+     */
+    public AdvancedFunctionManager getAdvancedFunctionManager() {
+        return advancedFunctionManager;
+    }
+    
+    /**
      * 🎆 Reference system: Get Interactive GUI Manager
      *
      * 🎆 Reference system: Получить интерактивный менеджер GUI
