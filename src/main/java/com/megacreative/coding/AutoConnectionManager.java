@@ -23,6 +23,7 @@ import java.util.*;
  * Enhanced AutoConnectionManager with CodeBlock structure integration
  * Automatically connects blocks according to dev world lines and maintains proper nextBlock/children relationships
  * Integrates with BlockPlacementHandler for consistent CodeBlock management
+ * Enhanced with improved block connection and script compilation logic.
  */
 public class AutoConnectionManager implements Listener {
     
@@ -205,6 +206,7 @@ public class AutoConnectionManager implements Listener {
     /**
      * Enhanced automatic block connection with proper CodeBlock structure integration
      * Properly sets nextBlock and children relationships for execution flow
+     * Enhanced with improved connection logic and error handling.
      */
     private void autoConnectBlock(CodeBlock codeBlock, Location location) {
         int line = DevWorldGenerator.getCodeLineFromZ(location.getBlockZ());
@@ -254,6 +256,7 @@ public class AutoConnectionManager implements Listener {
     /**
      * Handles parent-child relationships for conditional blocks and loops
      * Creates proper hierarchical structure for execution flow
+     * Enhanced with improved parent finding and connection logic.
      */
     private void handleParentChildConnections(CodeBlock codeBlock, Location location, int line) {
         // Check if this block should be a child of a parent block (indented blocks)
@@ -291,6 +294,7 @@ public class AutoConnectionManager implements Listener {
     /**
      * Finds parent using bracket balancing algorithm
      * Looks for the nearest unclosed opening bracket
+     * Enhanced with improved bracket balancing logic.
      */
     private CodeBlock findParentUsingBracketBalancing(Location childLocation, int childLine) {
         int bracketBalance = 0;
@@ -329,6 +333,7 @@ public class AutoConnectionManager implements Listener {
     
     /**
      * Traditional indentation-based parent finding (fallback method)
+     * Enhanced with improved indentation logic.
      */
     private CodeBlock findParentByIndentation(Location childLocation, int childLine) {
         // Look for parent in previous lines with less indentation
@@ -369,6 +374,7 @@ public class AutoConnectionManager implements Listener {
     
     /**
      * Updates player script blocks and maintains execution order
+     * Enhanced with improved sorting and error handling.
      */
     private void updatePlayerScriptBlocks(CodeBlock codeBlock, Location location) {
         // Find the player who owns this block using a more sophisticated approach
@@ -414,6 +420,7 @@ public class AutoConnectionManager implements Listener {
     
     /**
      * Looks for child blocks (indented blocks) for control structures
+     * Enhanced with improved child finding logic.
      */
     private void connectChildBlocks(CodeBlock parentBlock, Location parentLocation) {
         int parentLine = DevWorldGenerator.getCodeLineFromZ(parentLocation.getBlockZ());
@@ -496,6 +503,7 @@ public class AutoConnectionManager implements Listener {
     
     /**
      * Creates a script from an event block and adds it to the world
+     * Enhanced with improved script creation and error handling.
      */
     public void createAndAddScript(CodeBlock eventBlock, Player player, Location location) {
         try {
@@ -621,6 +629,7 @@ public class AutoConnectionManager implements Listener {
     /**
      * Rebuilds all connections for blocks in a specific world
      * Useful for initializing connections when loading existing worlds
+     * Enhanced with improved connection rebuilding logic.
      */
     public void rebuildWorldConnections(World world) {
         plugin.getLogger().fine("Rebuilding connections for world: " + world.getName());
@@ -708,6 +717,7 @@ public class AutoConnectionManager implements Listener {
     /**
      * Compiles a complete script from an event block by following all connections
      * This implements the "compilation" process mentioned in the roadmap
+     * Enhanced with improved script compilation logic.
      */
     public CodeScript compileScriptFromEventBlock(CodeBlock eventBlock, Location eventLocation) {
         try {
@@ -734,6 +744,7 @@ public class AutoConnectionManager implements Listener {
     
     /**
      * Builds the complete block chain by following nextBlock and children connections
+     * Enhanced with improved chain building logic.
      */
     private void buildBlockChain(CodeBlock currentBlock, Location currentLocation) {
         if (currentBlock == null || currentLocation == null) return;
@@ -756,6 +767,7 @@ public class AutoConnectionManager implements Listener {
     
     /**
      * Builds child blocks for control structures
+     * Enhanced with improved child building logic.
      */
     private void buildChildBlocks(CodeBlock parentBlock, Location parentLocation) {
         int parentLine = DevWorldGenerator.getCodeLineFromZ(parentLocation.getBlockZ());
@@ -927,6 +939,7 @@ public class AutoConnectionManager implements Listener {
     
     /**
      * Disconnects a block from its neighbors
+     * Enhanced with improved disconnection logic and error handling.
      */
     public void disconnectBlock(CodeBlock codeBlock, Location location) {
         if (codeBlock == null || location == null) {

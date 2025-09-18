@@ -22,6 +22,7 @@ import java.util.UUID;
 /**
  * Хранит всю информацию, необходимую для выполнения одного скрипта.
  * Передается между блоками во время исполнения.
+ * Enhanced with improved variable scope resolution.
  */
 public class ExecutionContext {
 
@@ -205,7 +206,7 @@ public class ExecutionContext {
     }
     
     /**
-     * Gets a variable value by name.
+     * Gets a variable value by name with enhanced scope resolution.
      * @param name The name of the variable
      * @return The variable value, or null if not found
      */
@@ -214,22 +215,53 @@ public class ExecutionContext {
             return null;
         }
         
-        // Get from variable manager
-        DataValue value = variableManager.getLocalVariable(scriptId, name);
+        // Use enhanced variable resolution with fallback mechanism
+        String context = getPlayerContext();
+        DataValue value = variableManager.resolveVariable(name, context);
         return value != null ? value.getValue() : null;
     }
     
     /**
-     * Получает все переменные текущего скрипта
+     * Gets a variable with explicit scope.
+     * @param name The name of the variable
+     * @param scope The scope to look in
+     * @return The variable value, or null if not found
+     */
+    public Object getVariable(String name, VariableScope scope) {
+        if (name == null || name.isEmpty() || scope == null) {
+            return null;
+        }
+        
+        String context = getPlayerContext();
+        DataValue value = variableManager.getVariable(name, scope, context);
+        return value != null ? value.getValue() : null;
+    }
+    
+    /**
+     * Gets all variables across all scopes for this execution context.
+     * @return A map of variable names to their values
      */
     public Map<String, Object> getVariables() {
-        if (scriptId == null) {
-            return new HashMap<>();
-        }
-        Map<String, DataValue> scriptVars = variableManager.getPlayerVariables(UUID.fromString(scriptId));
+        String context = getPlayerContext();
+        Map<String, DataValue> dataValues = variableManager.getAllVariables(context);
         Map<String, Object> result = new HashMap<>();
-        scriptVars.forEach((k, v) -> result.put(k, v != null ? v.getValue() : null));
+        
+        dataValues.forEach((name, value) -> {
+            result.put(name, value != null ? value.getValue() : null);
+        });
+        
         return result;
+    }
+    
+    /**
+     * Gets the player context for variable resolution.
+     * @return The player UUID as string, or script ID if no player
+     */
+    private String getPlayerContext() {
+        if (player != null) {
+            return player.getUniqueId().toString();
+        }
+        return scriptId != null ? scriptId : "global";
     }
     
     /**

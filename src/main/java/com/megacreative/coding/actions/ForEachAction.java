@@ -273,6 +273,34 @@ public class ForEachAction implements BlockAction {
                 if (!result.isSuccess()) {
                     return result;
                 }
+                
+                // Check for break conditions or script interruption
+                if (context.isCancelled()) {
+                    Player player = context.getPlayer();
+                    if (player != null) {
+                        player.sendMessage("§c[ForEach] Loop cancelled by external interruption");
+                    }
+                    return ExecutionResult.success("Loop cancelled");
+                }
+                
+                if (context.hasBreakFlag()) {
+                    context.clearBreakFlag(); // Clear the break flag
+                    Player player = context.getPlayer();
+                    if (player != null) {
+                        player.sendMessage("§a[ForEach] Loop interrupted by break statement");
+                    }
+                    return ExecutionResult.success("Loop terminated by break");
+                }
+                
+                // Check for continue flag
+                if (context.hasContinueFlag()) {
+                    context.clearContinueFlag(); // Clear the continue flag
+                    Player player = context.getPlayer();
+                    if (player != null) {
+                        player.sendMessage("§a[ForEach] Continuing to next iteration due to continue statement");
+                    }
+                    // Continue to next iteration (handled by the loop in executeForEachLoop)
+                }
             } catch (Exception e) {
                 Player player = context.getPlayer();
                 if (player != null) {

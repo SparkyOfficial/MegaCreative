@@ -5,11 +5,13 @@ import com.megacreative.coding.values.ValueType;
 import org.bukkit.entity.Player;
 
 import java.util.Map;
+import java.util.HashMap;
 import java.util.UUID;
 
 /**
  * Interface for managing variables in the MegaCreative plugin.
  * Handles different scopes of variables: local, global, persistent, and dynamic.
+ * Enhanced with improved scope resolution capabilities.
  */
 public interface IVariableManager {
     
@@ -67,6 +69,21 @@ public interface IVariableManager {
     boolean hasVariable(String name, VariableScope scope, String context);
     void removeVariable(String name, VariableScope scope, String context);
     
+    // Enhanced variable resolution with fallback mechanism
+    default DataValue resolveVariable(String name, String context) {
+        // Default implementation will be overridden in VariableManager
+        return getVariable(name, VariableScope.LOCAL, context);
+    }
+    
+    // Enhanced variable resolution with explicit scope precedence
+    default DataValue resolveVariableWithScopes(String name, String context, VariableScope... scopes) {
+        // Default implementation will be overridden in VariableManager
+        if (scopes.length > 0) {
+            return getVariable(name, scopes[0], context);
+        }
+        return null;
+    }
+    
     // Convenience methods for different scopes
     void setLocalVariable(String context, String name, DataValue value);
     DataValue getLocalVariable(String context, String name);
@@ -107,4 +124,10 @@ public interface IVariableManager {
     
     // Additional utility methods
     void incrementPlayerVariable(UUID playerId, String name, double amount);
+    
+    // Enhanced utility methods
+    default Map<String, DataValue> getAllVariables(String context) {
+        // Default implementation will be overridden in VariableManager
+        return new HashMap<>();
+    }
 }

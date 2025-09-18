@@ -17,6 +17,7 @@ import java.util.logging.Level;
 /**
  * Manages variables for the MegaCreative plugin.
  * Handles different scopes of variables including local, global, player, and persistent variables.
+ * Enhanced with improved scope resolution and fallback mechanisms.
  */
 public class VariableManager implements IVariableManager {
     
@@ -109,6 +110,79 @@ public class VariableManager implements IVariableManager {
             default:
                 return null;
         }
+    }
+    
+    /**
+     * Enhanced variable resolution with fallback mechanism
+     * Tries to resolve a variable by searching through scopes in order of precedence
+     * @param name The name of the variable to resolve
+     * @param context The context identifier (player UUID, script ID, etc.)
+     * @return The resolved variable value or null if not found
+     */
+    public DataValue resolveVariable(String name, String context) {
+        if (name == null || name.isEmpty()) {
+            return null;
+        }
+        
+        // Try to resolve the variable with a smart scope resolution order
+        DataValue value;
+        
+        // 1. Try player scope if context is a valid UUID
+        if (context != null) {
+            try {
+                UUID playerId = UUID.fromString(context);
+                value = getPlayerVariable(playerId, name);
+                if (value != null) return value;
+            } catch (IllegalArgumentException e) {
+                // Not a valid UUID, continue with other scopes
+            }
+            
+            // 2. Try local scope
+            value = getLocalVariable(context, name);
+            if (value != null) return value;
+        }
+        
+        // 3. Try global scope
+        value = getGlobalVariable(name);
+        if (value != null) return value;
+        
+        // 4. Try server scope
+        value = getServerVariable(name);
+        if (value != null) return value;
+        
+        // 5. Try persistent scope
+        value = getPersistentVariable(name);
+        if (value != null) return value;
+        
+        // 6. Try dynamic variables
+        DynamicVariable dynamicVar = dynamicVariables.get(name);
+        if (dynamicVar != null) return dynamicVar.getValue();
+        
+        // Variable not found in any scope
+        return null;
+    }
+    
+    /**
+     * Enhanced variable resolution with explicit scope precedence
+     * Allows specifying the order in which scopes should be checked
+     * @param name The name of the variable to resolve
+     * @param context The context identifier
+     * @param scopes The order of scopes to check
+     * @return The resolved variable value or null if not found
+     */
+    public DataValue resolveVariableWithScopes(String name, String context, VariableScope... scopes) {
+        if (name == null || name.isEmpty() || scopes == null || scopes.length == 0) {
+            return null;
+        }
+        
+        for (VariableScope scope : scopes) {
+            DataValue value = getVariable(name, scope, context);
+            if (value != null) {
+                return value;
+            }
+        }
+        
+        return null;
     }
     
     @Override
@@ -659,6 +733,54 @@ public class VariableManager implements IVariableManager {
         }
         
         setPlayerVariable(playerId, name, DataValue.of(currentValue + amount));
+    }
+    
+    /**
+     * Gets all variables across all scopes for a given context
+     * @param context The context identifier (player UUID, script ID, etc.)
+     * @return A map of variable names to their values across all scopes
+     */
+    public Map<String, DataValue> getAllVariables(String context) {
+        Map<String, DataValue> allVariables = new HashMap<>();
+        
+        // Add local variables if context is provided
+        if (context != null) {
+            Map<String, DataValue> locals = localVariables.get(context);
+            if (locals != null) {
+                allVariables.putAll(locals);
+            }
+            
+            // Add player variables if context is a valid UUID
+            try {
+                UUID playerId = UUID.fromString(context);
+                Map<String, DataValue> playerVars = playerVariables.get(playerId);
+                if (playerVars != null) {
+                    allVariables.putAll(playerVars);
+                }
+            } catch (IllegalArgumentException e) {
+                // Context is not a player UUID, continue
+            }
+        }
+        
+        // Add global variables
+        for (Map<String, DataValue> worldVars : globalVariables.values()) {
+            if (worldVars != null) {
+                allVariables.putAll(worldVars);
+            }
+        }
+        
+        // Add server variables
+        allVariables.putAll(serverVariables);
+        
+        // Add persistent variables
+        allVariables.putAll(persistentVariables);
+        
+        // Add dynamic variables
+        for (Map.Entry<String, DynamicVariable> entry : dynamicVariables.entrySet()) {
+            allVariables.put(entry.getKey(), entry.getValue().getValue());
+        }
+        
+        return allVariables;
     }
     
     private void updateMetadata(String name, VariableScope scope, ValueType type) {

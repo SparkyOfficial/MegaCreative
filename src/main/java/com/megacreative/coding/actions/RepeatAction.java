@@ -75,29 +75,29 @@ public class RepeatAction implements BlockAction {
                     
                     // Выполняем блок синхронно в основном потоке
                     try {
-                        scriptEngine.executeBlockChain(nextBlock, player, "repeat_loop")
+                        ExecutionResult result = scriptEngine.executeBlockChain(nextBlock, player, "repeat_loop")
                             .exceptionally(throwable -> {
                                 player.sendMessage("§cОшибка в итерации " + (currentIndex + 1) + ": " + throwable.getMessage());
                                 return null;
                             })
                             .join(); // Ждем завершения итерации
+                            
+                        // Check for break flag after executing iteration
+                        if (context.hasBreakFlag()) {
+                            context.clearBreakFlag();
+                            player.sendMessage("§aRepeat loop terminated by break statement at iteration " + (currentIndex + 1));
+                            break;
+                        }
+                        
+                        // Check for continue flag after executing iteration
+                        if (context.hasContinueFlag()) {
+                            context.clearContinueFlag();
+                            player.sendMessage("§aContinuing to next iteration after iteration " + (currentIndex + 1));
+                            continue;
+                        }
                     } catch (Exception e) {
                         player.sendMessage("§cОшибка в итерации " + (currentIndex + 1) + ": " + e.getMessage());
                         break;
-                    }
-                    
-                    // Check for break flag after executing iteration
-                    if (context.hasBreakFlag()) {
-                        context.clearBreakFlag();
-                        player.sendMessage("§aRepeat loop terminated by break statement at iteration " + (currentIndex + 1));
-                        break;
-                    }
-                    
-                    // Check for continue flag after executing iteration
-                    if (context.hasContinueFlag()) {
-                        context.clearContinueFlag();
-                        player.sendMessage("§aContinuing to next iteration after iteration " + (currentIndex + 1));
-                        continue;
                     }
                 }
                 

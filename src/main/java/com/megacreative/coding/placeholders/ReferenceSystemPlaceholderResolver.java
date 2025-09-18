@@ -21,6 +21,7 @@ import java.util.regex.Pattern;
  * - Modern style: ${variable}
  * - Classic style: %variable%
  * - Advanced features: prefix[variable|default]~, math[variable+5]~
+ * Enhanced with improved variable scope resolution.
  */
 public class ReferenceSystemPlaceholderResolver {
     
@@ -185,10 +186,12 @@ public class ReferenceSystemPlaceholderResolver {
             }
         }
         
-        // Variable placeholders
+        // Variable placeholders with enhanced scope resolution
         VariableManager variableManager = context.getPlugin().getServiceRegistry().getVariableManager();
         if (variableManager != null && player != null) {
-            DataValue value = variableManager.getPlayerVariable(player.getUniqueId(), placeholder);
+            // Use enhanced variable resolution with fallback mechanism
+            String playerContext = player.getUniqueId().toString();
+            DataValue value = variableManager.resolveVariable(placeholder, playerContext);
             if (value != null && !value.isEmpty()) {
                 return value.asString();
             }
@@ -218,6 +221,7 @@ public class ReferenceSystemPlaceholderResolver {
     
     /**
      * Variable placeholder handler: apple[variable]~, var[variable]~
+     * Enhanced with improved variable scope resolution.
      */
     public static class VariablePlaceholderHandler implements PlaceholderHandler {
         @Override
@@ -232,7 +236,9 @@ public class ReferenceSystemPlaceholderResolver {
                 return defaultValue;
             }
             
-            DataValue value = variableManager.getPlayerVariable(player.getUniqueId(), content);
+            // Use enhanced variable resolution with fallback mechanism
+            String playerContext = player.getUniqueId().toString();
+            DataValue value = variableManager.resolveVariable(content, playerContext);
             return value != null && !value.isEmpty() ? value.asString() : defaultValue;
         }
     }

@@ -39,7 +39,7 @@ public class ContinueAction implements BlockAction {
                 player.sendMessage("§aContinue statement executed");
             }
             
-            return ExecutionResult.success("Continue executed");
+            return ExecutionResult.success("Continue executed").withPause();
             
         } catch (Exception e) {
             plugin.getLogger().warning("🎆 Continue action failed: " + e.getMessage());

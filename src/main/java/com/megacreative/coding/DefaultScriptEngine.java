@@ -431,7 +431,7 @@ public class DefaultScriptEngine implements ScriptEngine, EnhancedScriptEngine {
                             return processBlock(block.getNextBlock(), context, recursionDepth + 1);
                             
                         case "forEach":
-                            // For each implementation
+                            // For each implementation with break/continue support
                             DataValue listValue = block.getParameter("list");
                             String itemVariable = block.getParameter("itemVariable").asString();
                             
@@ -454,6 +454,20 @@ public class DefaultScriptEngine implements ScriptEngine, EnhancedScriptEngine {
                                 try {
                                     // Iterate through list items
                                     for (DataValue item : list.getValues()) {
+                                        // Check for break flag before executing body
+                                        if (context.hasBreakFlag()) {
+                                            context.clearBreakFlag();
+                                            // Exit loop and continue with next block
+                                            return processBlock(block.getNextBlock(), context, recursionDepth + 1);
+                                        }
+                                        
+                                        // Check for continue flag
+                                        if (context.hasContinueFlag()) {
+                                            context.clearContinueFlag();
+                                            // Skip to next iteration without executing body
+                                            continue;
+                                        }
+                                        
                                         // Set current item as variable
                                         variableManager.setPlayerVariable(playerId, itemVariable, item);
                                         
@@ -464,6 +478,20 @@ public class DefaultScriptEngine implements ScriptEngine, EnhancedScriptEngine {
                                             // Check if execution was terminated (e.g., by a return statement)
                                             if (childResult.isTerminated()) {
                                                 return childResult; // Stop execution and return the result
+                                            }
+                                            
+                                            // Check for break flag after executing body
+                                            if (context.hasBreakFlag()) {
+                                                context.clearBreakFlag();
+                                                // Exit loop and continue with next block
+                                                return processBlock(block.getNextBlock(), context, recursionDepth + 1);
+                                            }
+                                            
+                                            // Check for continue flag after executing body
+                                            if (context.hasContinueFlag()) {
+                                                context.clearContinueFlag();
+                                                // Skip to next iteration
+                                                continue;
                                             }
                                         }
                                     }
@@ -516,18 +544,45 @@ public class DefaultScriptEngine implements ScriptEngine, EnhancedScriptEngine {
                             
                             if (functionManager != null) {
                                 try {
+                                    // Prepare function arguments from block parameters
+                                    java.util.List<com.megacreative.coding.values.DataValue> arguments = new java.util.ArrayList<>();
+                                    
+                                    // Collect all parameters that start with "arg_" or are numbered
+                                    for (String paramName : block.getParameters().keySet()) {
+                                        if (paramName.startsWith("arg_") || paramName.matches("arg\\d+")) {
+                                            arguments.add(block.getParameter(paramName));
+                                        }
+                                    }
+                                    
                                     // Execute the function
                                     java.util.concurrent.CompletableFuture<ExecutionResult> futureResult = 
-                                        functionManager.executeFunction(funcName, context.getPlayer(), new com.megacreative.coding.values.DataValue[0]);
+                                        functionManager.executeFunction(funcName, context.getPlayer(), arguments.toArray(new com.megacreative.coding.values.DataValue[0]));
                                     ExecutionResult functionResult = futureResult.get();
                                     
                                     // Process the result
                                     if (functionResult.isTerminated()) {
-                                        return functionResult; // Stop execution and return the result
+                                        // Preserve termination status and return value
+                                        ExecutionResult functionCallResult = ExecutionResult.success("Function call completed with return: " + funcName);
+                                        functionCallResult.setTerminated(true);
+                                        if (functionResult.getReturnValue() != null) {
+                                            functionCallResult.setReturnValue(functionResult.getReturnValue());
+                                            // Store return value in context for use by subsequent blocks
+                                            context.setVariable("last_function_return", functionResult.getReturnValue());
+                                        }
+                                        return functionCallResult; // Stop execution and return the result
                                     }
                                     
-                                    if (!functionResult.isSuccess()) {
-                                        return functionResult; // Return error
+                                    // Handle successful function execution without termination
+                                    if (functionResult.isSuccess()) {
+                                        // Store return value in context for use by subsequent blocks
+                                        if (functionResult.getReturnValue() != null) {
+                                            context.setVariable("last_function_return", functionResult.getReturnValue());
+                                        }
+                                        // Continue with next block
+                                        return processBlock(block.getNextBlock(), context, recursionDepth + 1);
+                                    } else {
+                                        // Return error
+                                        return functionResult;
                                     }
                                 } catch (Exception e) {
                                     String errorMsg = "Error executing function " + funcName + ": " + e.getMessage();

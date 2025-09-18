@@ -50,6 +50,7 @@ public class ConnectionDebugGUI implements GUIManager.ManagedGUIInterface {
     private final Inventory inventory;
     private final GUIManager guiManager;
     private final BlockPlacementHandler blockPlacementHandler;
+    private final com.megacreative.coding.AutoConnectionManager autoConnectionManager;
     
     private final Map<Integer, Location> slotToBlockLocation = new HashMap<>();
     
@@ -75,6 +76,7 @@ public class ConnectionDebugGUI implements GUIManager.ManagedGUIInterface {
         this.rootBlockLocation = rootBlockLocation;
         this.guiManager = plugin.getGuiManager();
         this.blockPlacementHandler = plugin.getBlockPlacementHandler();
+        this.autoConnectionManager = plugin.getServiceRegistry().getAutoConnectionManager();
         
         this.inventory = Bukkit.createInventory(null, 54, "§8🔗 Связи блоков");
         
@@ -186,6 +188,35 @@ public class ConnectionDebugGUI implements GUIManager.ManagedGUIInterface {
     }
     
     /**
+     * Checks if a block has a parent block
+     */
+    private boolean hasParentBlock(CodeBlock block) {
+        if (block == null || autoConnectionManager == null) {
+            return false;
+        }
+        
+        // Search through all blocks to see if any block has this block as a child
+        try {
+            // Use reflection to access the private locationToBlock field
+            java.lang.reflect.Field locationToBlockField = autoConnectionManager.getClass().getDeclaredField("locationToBlock");
+            locationToBlockField.setAccessible(true);
+            Map<Location, CodeBlock> locationToBlock = (Map<Location, CodeBlock>) locationToBlockField.get(autoConnectionManager);
+            
+            // Search for any block that has this block as a child
+            for (CodeBlock parentBlock : locationToBlock.values()) {
+                if (parentBlock != null && parentBlock.getChildren().contains(block)) {
+                    return true;
+                }
+            }
+        } catch (Exception e) {
+            // If reflection fails, return false
+            return false;
+        }
+        
+        return false;
+    }
+    
+    /**
      * Создает элемент информации о блоке
      *
      * Creates block info item
@@ -233,10 +264,11 @@ public class ConnectionDebugGUI implements GUIManager.ManagedGUIInterface {
         if (!block.getChildren().isEmpty()) {
             lore.add("§b↓ Дочерних блоков: " + block.getChildren().size());
         }
-        // Note: Parent relationship tracking would need to be implemented separately
-        // if (block.getParent() != null) {
-        //     lore.add("§c↑ Имеет родительский блок");
-        // }
+        
+        // Check for parent relationship
+        if (hasParentBlock(block)) {
+            lore.add("§c↑ Имеет родительский блок");
+        }
         
         if (isRoot) {
             lore.add("");
@@ -334,15 +366,38 @@ public class ConnectionDebugGUI implements GUIManager.ManagedGUIInterface {
     }
     
     /**
-     * Находит расположение блока
+     * Finds block location
      *
      * Finds block location
      *
      * Findet die Blockposition
      */
     private Location findBlockLocation(CodeBlock block) {
-        // This would need to be implemented based on how blocks are tracked
-        // For now, return null as placeholder
+        // Implementation to find block location by searching through the locationToBlock map
+        if (block == null || autoConnectionManager == null) {
+            return null;
+        }
+        
+        // Get the location to block mapping from AutoConnectionManager
+        try {
+            // Use reflection to access the private locationToBlock field
+            java.lang.reflect.Field locationToBlockField = autoConnectionManager.getClass().getDeclaredField("locationToBlock");
+            locationToBlockField.setAccessible(true);
+            Map<Location, CodeBlock> locationToBlock = (Map<Location, CodeBlock>) locationToBlockField.get(autoConnectionManager);
+            
+            // Search for the block location
+            for (Map.Entry<Location, CodeBlock> entry : locationToBlock.entrySet()) {
+                if (entry.getValue() == block) {
+                    return entry.getKey();
+                }
+            }
+        } catch (Exception e) {
+            // Fallback approach - try to get location from block directly
+            if (block.getLocation() != null) {
+                return block.getLocation();
+            }
+        }
+        
         return null;
     }
     

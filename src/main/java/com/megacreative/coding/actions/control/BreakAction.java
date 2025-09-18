@@ -39,10 +39,10 @@ public class BreakAction implements BlockAction {
                 player.sendMessage("§aBreak statement executed");
             }
             
-            return ExecutionResult.success("Break executed");
+            return ExecutionResult.success("Break executed").withPause();
             
         } catch (Exception e) {
-            plugin.getLogger().warning("🎆 Break action failed: " + e.getMessage());
+            plugin.getLogger().warning(".EVT Break action failed: " + e.getMessage());
             return ExecutionResult.error("Break failed: " + e.getMessage());
         }
     }

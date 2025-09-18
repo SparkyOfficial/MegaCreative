@@ -7,6 +7,7 @@ import com.megacreative.coding.BlockAction;
 import com.megacreative.coding.BlockCondition;
 import com.megacreative.coding.values.DataValue;
 import com.megacreative.MegaCreative;
+import com.megacreative.services.BlockConfigService;
 import org.bukkit.Location;
 import java.util.*;
 import java.util.logging.Logger;
@@ -325,36 +326,147 @@ public class AdvancedScriptOptimizer {
      * Optimizes expensive operations in loops by moving them outside
      */
     private void optimizeExpensiveOperationsInLoops(List<CodeBlock> blocks) {
-        // Implementation would move expensive operations outside loops
-        // This is a simplified implementation for now
-        plugin.getLogger().info("Optimizing expensive operations in loops");
+        if (blocks == null || blocks.isEmpty()) {
+            return;
+        }
+        
+        // Find loops and expensive operations within them
+        for (int i = 0; i < blocks.size(); i++) {
+            CodeBlock block = blocks.get(i);
+            if (isLoopBlock(block)) {
+                // Find the end of the loop
+                int loopEnd = findLoopEnd(blocks, i);
+                
+                // Check for expensive operations within the loop
+                List<CodeBlock> expensiveOps = new ArrayList<>();
+                for (int j = i + 1; j < loopEnd && j < blocks.size(); j++) {
+                    CodeBlock nestedBlock = blocks.get(j);
+                    if (isExpensiveOperation(nestedBlock)) {
+                        expensiveOps.add(nestedBlock);
+                    }
+                }
+                
+                // If we found expensive operations, log optimization suggestions
+                if (!expensiveOps.isEmpty()) {
+                    plugin.getLogger().info("Found " + expensiveOps.size() + " expensive operations in loop at position " + i);
+                    for (CodeBlock op : expensiveOps) {
+                        plugin.getLogger().info("  - Expensive operation: " + op.getAction());
+                    }
+                }
+            }
+        }
     }
     
     /**
      * Optimizes variable lookups by caching frequently used variables
      */
     private void optimizeVariableLookups(List<CodeBlock> blocks) {
-        // Implementation would cache frequently used variables
-        // This is a simplified implementation for now
-        plugin.getLogger().info("Optimizing variable lookups");
+        if (blocks == null || blocks.isEmpty()) {
+            return;
+        }
+        
+        // Count variable usage frequency
+        Map<String, Integer> variableUsage = new HashMap<>();
+        for (CodeBlock block : blocks) {
+            if (block.getParameters() != null) {
+                for (Map.Entry<String, com.megacreative.coding.values.DataValue> entry : block.getParameters().entrySet()) {
+                    String paramName = entry.getKey();
+                    com.megacreative.coding.values.DataValue paramValue = entry.getValue();
+                    if (paramValue != null) {
+                        String valueStr = paramValue.asString();
+                        // Extract variable names from reference system syntax like var[variable_name]
+                        if (valueStr.contains("var[")) {
+                            int start = valueStr.indexOf("var[") + 4;
+                            int end = valueStr.indexOf("]", start);
+                            if (start > 3 && end > start) {
+                                String varName = valueStr.substring(start, end);
+                                variableUsage.put(varName, variableUsage.getOrDefault(varName, 0) + 1);
+                            }
+                        }
+                    }
+                }
+            }
+        }
+        
+        // Log frequently used variables (used more than 3 times)
+        for (Map.Entry<String, Integer> entry : variableUsage.entrySet()) {
+            if (entry.getValue() > 3) {
+                plugin.getLogger().info("Frequently used variable: " + entry.getKey() + " (" + entry.getValue() + " times)");
+            }
+        }
     }
     
     /**
      * Reduces nesting depth by flattening nested structures
      */
     private void reduceNestingDepth(List<CodeBlock> blocks) {
-        // Implementation would flatten nested structures
-        // This is a simplified implementation for now
-        plugin.getLogger().info("Reducing nesting depth");
+        if (blocks == null || blocks.isEmpty()) {
+            return;
+        }
+        
+        // Count nesting levels and identify deeply nested structures
+        int maxDepth = 0;
+        int currentDepth = 0;
+        
+        for (CodeBlock block : blocks) {
+            if (block.isBracket() && block.getBracketType() == CodeBlock.BracketType.OPEN) {
+                currentDepth++;
+                maxDepth = Math.max(maxDepth, currentDepth);
+            } else if (block.isBracket() && block.getBracketType() == CodeBlock.BracketType.CLOSE) {
+                currentDepth = Math.max(0, currentDepth - 1);
+            }
+        }
+        
+        plugin.getLogger().info("Maximum nesting depth: " + maxDepth);
+        
+        // If nesting is too deep, suggest flattening
+        if (maxDepth > 5) {
+            plugin.getLogger().warning("Deep nesting detected (" + maxDepth + " levels). Consider refactoring to reduce complexity.");
+        }
     }
     
     /**
      * Simplifies condition chains by combining conditions
      */
     private void simplifyConditionChains(List<CodeBlock> blocks) {
-        // Implementation would combine conditions
-        // This is a simplified implementation for now
-        plugin.getLogger().info("Simplifying condition chains");
+        if (blocks == null || blocks.isEmpty()) {
+            return;
+        }
+        
+        // Look for consecutive condition blocks that could be combined
+        for (int i = 0; i < blocks.size() - 1; i++) {
+            CodeBlock current = blocks.get(i);
+            CodeBlock next = blocks.get(i + 1);
+            
+            // Check if both are condition blocks by checking their action type through BlockConfigService
+            if (isConditionBlock(current) && isConditionBlock(next)) {
+                // Check if they're part of the same logical chain
+                if (current.getNextBlock() == next) {
+                    plugin.getLogger().info("Consecutive condition blocks found at positions " + i + " and " + (i + 1));
+                    plugin.getLogger().info("  - " + current.getAction() + " followed by " + next.getAction());
+                }
+            }
+        }
+    }
+    
+    /**
+     * Checks if a block is a condition block
+     */
+    private boolean isConditionBlock(CodeBlock block) {
+        if (block == null || block.getAction() == null) {
+            return false;
+        }
+        
+        // Get the block configuration to determine its type
+        BlockConfigService blockConfigService = plugin.getServiceRegistry().getBlockConfigService();
+        if (blockConfigService != null) {
+            BlockConfigService.BlockConfig config = blockConfigService.getBlockConfig(block.getAction());
+            if (config != null) {
+                return "CONDITION".equals(config.getType());
+            }
+        }
+        
+        return false;
     }
     
     /**

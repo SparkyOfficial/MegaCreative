@@ -17,6 +17,7 @@ import java.util.function.Function;
 /**
  * Action for getting a variable.
  * This action retrieves variable parameters from the container configuration and gets the variable.
+ * Enhanced with improved variable scope resolution.
  */
 public class GetVarAction implements BlockAction {
 
@@ -50,7 +51,7 @@ public class GetVarAction implements BlockAction {
                 return ExecutionResult.error("Invalid target variable");
             }
 
-            // 🎆 ENHANCED: Actually get the variable using VariableManager
+            // 🎆 ENHANCED: Actually get the variable using VariableManager with improved scope resolution
             Player player = context.getPlayer();
             if (player == null) {
                 return ExecutionResult.error("No player found in execution context");
@@ -61,10 +62,13 @@ public class GetVarAction implements BlockAction {
                 return ExecutionResult.error("Variable manager not available");
             }
             
-            // Get the variable for the player
-            DataValue varValue = variableManager.getPlayerVariable(player.getUniqueId(), varName);
+            // Get the variable with enhanced scope resolution
+            // First try player scope, then fall back to other scopes
+            String playerContext = player.getUniqueId().toString();
+            DataValue varValue = variableManager.resolveVariable(varName, playerContext);
+            
             if (varValue == null) {
-                return ExecutionResult.error("Variable '" + varName + "' not found");
+                return ExecutionResult.error("Variable '" + varName + "' not found in any scope");
             }
             
             // Set the target variable with the retrieved value

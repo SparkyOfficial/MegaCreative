@@ -163,6 +163,7 @@ blocks:
       - "repeat"
       - "repeatTrigger"
       - "asyncLoop"
+      - "whileLoop"
   
   LAPIS_BLOCK:
     name: "Вызвать функцию"
@@ -1503,6 +1504,17 @@ action_configurations:
   # Конфигурация для действия closeBracket
   closeBracket:
     slots: {}
+
+  # Конфигурация для действия whileLoop
+  whileLoop:
+    slots:
+      0:
+        name: "§aУсловие цикла"
+        description: "§7Положите предмет, представляющий условие для цикла"
+        placeholder_item: "PAPER"
+        slot_name: "condition"
+        required: true
+        hint: "Условие для проверки на каждой итерации цикла"
 
 # Настройки по умолчанию
 defaults:

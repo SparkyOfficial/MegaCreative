@@ -75,7 +75,23 @@ public class AsyncLoopAction implements BlockAction {
                         context.getPlugin().getServer().getScheduler().runTask(context.getPlugin(), () -> {
                             // Process the child block chain using the script engine from service registry
                             ScriptEngine scriptEngine = context.getPlugin().getServiceRegistry().getService(ScriptEngine.class);
-                            scriptEngine.executeBlockChain(firstChild, context.getPlayer(), "loop");
+                            if (scriptEngine != null) {
+                                scriptEngine.executeBlockChain(firstChild, context.getPlayer(), "loop")
+                                    .thenAccept(result -> {
+                                        // Check for break/continue flags after execution
+                                        if (context.hasBreakFlag()) {
+                                            context.clearBreakFlag();
+                                            activeLoops.remove(loopId);
+                                            this.cancel();
+                                            if (context.getPlayer() != null) {
+                                                context.getPlayer().sendMessage("§aAsync loop terminated by break statement");
+                                            }
+                                        } else if (context.hasContinueFlag()) {
+                                            context.clearContinueFlag();
+                                            // Continue to next iteration
+                                        }
+                                    });
+                            }
                         });
                     } catch (Exception e) {
                         context.getPlugin().getLogger().severe("Error in async loop: " + e.getMessage());

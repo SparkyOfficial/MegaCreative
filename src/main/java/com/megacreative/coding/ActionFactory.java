@@ -67,6 +67,9 @@ import com.megacreative.coding.actions.SpawnMobAction;
 import com.megacreative.coding.actions.SpawnParticleEffectAction;
 import com.megacreative.coding.actions.SubVarAction;
 import com.megacreative.coding.actions.TeleportAction;
+import com.megacreative.coding.actions.SendCustomTitleAction;
+import com.megacreative.coding.actions.SetPlayerExperienceAction;
+import com.megacreative.coding.actions.TeleportToLocationAction;
 import com.megacreative.coding.actions.TimedExecutionAction;
 import com.megacreative.coding.actions.TriggerCustomEventAction;
 import com.megacreative.coding.actions.TriggerEventAction;
@@ -171,6 +174,7 @@ public class ActionFactory {
         // --- GRUNDLEGENDE SPIELERAKTIONEN ---
         register("sendMessage", SendMessageAction::new);
         register("teleport", TeleportAction::new);
+        register("teleportToLocation", TeleportToLocationAction::new);
         register("giveItem", GiveItemAction::new);
         register("playSound", PlaySoundAction::new);
         register("effect", EffectAction::new);
@@ -191,6 +195,8 @@ public class ActionFactory {
         register("spawnEntity", SpawnEntityAction::new);
         register("removeItems", RemoveItemsAction::new);
         register("setArmor", SetArmorAction::new);
+        register("setExperience", SetPlayerExperienceAction::new);
+        register("sendCustomTitle", SendCustomTitleAction::new);
         register("setGlobalVar", SetGlobalVarAction::new);
         register("getGlobalVar", GetGlobalVarAction::new);
         register("setServerVar", SetServerVarAction::new);

@@ -18,6 +18,7 @@ import java.util.regex.Pattern;
  * - Reference system style: apple[variable]~
  * - Modern style: ${variable}
  * - Classic style: %variable%
+ * Enhanced with improved variable scope resolution.
  */
 public class ParameterResolver {
     private final ExecutionContext context;
@@ -100,16 +101,12 @@ public class ParameterResolver {
             }
         }
 
-        // Handle variable placeholders
+        // Handle variable placeholders with enhanced scope resolution
         VariableManager variableManager = context.getPlugin().getVariableManager();
         if (variableManager != null) {
-            // We need to get the world name from the context
-            String worldName = "global"; // Default to global scope
-            if (context.getCreativeWorld() != null) {
-                worldName = context.getCreativeWorld().getWorldName();
-            }
-            
-            DataValue variableValue = variableManager.getVariable(worldName, IVariableManager.VariableScope.GLOBAL, placeholder);
+            // Use enhanced variable resolution with fallback mechanism
+            String playerContext = getPlayerContext(context);
+            DataValue variableValue = variableManager.resolveVariable(placeholder, playerContext);
             if (variableValue != null) {
                 return variableValue.asString();
             }
@@ -125,5 +122,18 @@ public class ParameterResolver {
 
         // If we can't resolve it, return null
         return null;
+    }
+    
+    /**
+     * Gets the player context for variable resolution.
+     * @param context The execution context
+     * @return The player UUID as string, or script ID if no player
+     */
+    private String getPlayerContext(ExecutionContext context) {
+        Player player = context.getPlayer();
+        if (player != null) {
+            return player.getUniqueId().toString();
+        }
+        return context.getScriptId() != null ? context.getScriptId() : "global";
     }
 }
