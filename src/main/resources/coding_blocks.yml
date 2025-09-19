@@ -59,6 +59,9 @@ blocks:
       - "sendTitle"
       - "sendActionBar"
       - "executeAsyncCommand"
+      - "teleportToLocation"
+      - "setExperience"
+      - "sendCustomTitle"
   
   OAK_PLANKS:
     name: "Условие"
@@ -1515,6 +1518,103 @@ action_configurations:
         slot_name: "condition"
         required: true
         hint: "Условие для проверки на каждой итерации цикла"
+
+  # Конфигурация для действия teleportToLocation
+  teleportToLocation:
+    slots:
+      0:
+        name: "§aКоординаты"
+        description: "§7Положите бумагу с координатами в формате 'x,y,z' или 'world:x,y,z'"
+        placeholder_item: "PAPER"
+        slot_name: "location"
+        required: true
+        validation: "length:1-100"
+        hint: "Формат: '100,64,100' или 'world:100,64,100'"
+      1:
+        name: "§bСообщение при телепортации"
+        description: "§7Положите бумагу с сообщением при телепортации (оставьте пустым для отключения)"
+        placeholder_item: "PAPER"
+        slot_name: "message"
+        validation: "length:0-200"
+        hint: "Сообщение при телепортации"
+      2:
+        name: "§cЭффекты при телепортации"
+        description: "§7Положите бумагу с 'true' или 'false' для включения/выключения эффектов"
+        placeholder_item: "PAPER"
+        slot_name: "effects"
+        validation: "enum:true,false"
+        default_value: "true"
+        hint: "true - включить эффекты, false - выключить эффекты"
+
+  # Конфигурация для действия setExperience
+  setExperience:
+    slots:
+      0:
+        name: "§aОперация"
+        description: "§7Положите бумагу с типом операции (SET, ADD, REMOVE)"
+        placeholder_item: "PAPER"
+        slot_name: "operation"
+        required: true
+        validation: "enum:SET,ADD,REMOVE"
+        hint: "SET - установить уровень, ADD - добавить уровни, REMOVE - удалить уровни"
+      1:
+        name: "§bЗначение"
+        description: "§7Положите бумагу с количеством уровней"
+        placeholder_item: "PAPER"
+        slot_name: "amount"
+        required: true
+        validation: "number_range:0-1000"
+        hint: "Количество уровней опыта"
+      2:
+        name: "§cПрогресс"
+        description: "§7Положите бумагу с прогрессом (0.0-1.0) или оставьте пустым"
+        placeholder_item: "PAPER"
+        slot_name: "progress"
+        validation: "number_range:0.0-1.0"
+        hint: "Прогресс уровня опыта (0.0-1.0)"
+
+  # Конфигурация для действия sendCustomTitle
+  sendCustomTitle:
+    slots:
+      0:
+        name: "§aЗаголовок"
+        description: "§7Положите бумагу с текстом заголовка"
+        placeholder_item: "PAPER"
+        slot_name: "title"
+        required: true
+        validation: "length:1-100"
+        hint: "Текст заголовка (до 100 символов)"
+      1:
+        name: "§bПодзаголовок"
+        description: "§7Положите бумагу с текстом подзаголовка (оставьте пустым для отключения)"
+        placeholder_item: "PAPER"
+        slot_name: "subtitle"
+        validation: "length:0-100"
+        hint: "Текст подзаголовка (до 100 символов)"
+      2:
+        name: "§cВремя появления"
+        description: "§7Положите бумагу с временем появления в тиках (по умолчанию 10)"
+        placeholder_item: "PAPER"
+        slot_name: "fadeIn"
+        validation: "number_range:0-100"
+        default_value: "10"
+        hint: "Время появления в тиках"
+      3:
+        name: "§dВремя отображения"
+        description: "§7Положите бумагу с временем отображения в тиках (по умолчанию 70)"
+        placeholder_item: "PAPER"
+        slot_name: "stay"
+        validation: "number_range:0-1000"
+        default_value: "70"
+        hint: "Время отображения в тиках"
+      4:
+        name: "§eВремя исчезновения"
+        description: "§7Положите бумагу с временем исчезновения в тиках (по умолчанию 20)"
+        placeholder_item: "PAPER"
+        slot_name: "fadeOut"
+        validation: "number_range:0-100"
+        default_value: "20"
+        hint: "Время исчезновения в тиках"
 
 # Настройки по умолчанию
 defaults:
