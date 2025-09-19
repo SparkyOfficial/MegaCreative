@@ -159,72 +159,11 @@ public class ConditionFactory {
                         
                         // If we have a specific evaluation type, use it
                         if (conditionType != null) {
-                            switch (conditionType.asString().toLowerCase()) {
-                                case CONDITION_TYPE_EQUALS:
-                                case CONDITION_TYPE_EQUAL:
-                                    return conditionValue != null && expectedValue != null && 
-                                           conditionValue.asString().equals(expectedValue.asString());
-                                case CONDITION_TYPE_GREATER:
-                                case CONDITION_TYPE_GREATER_THAN:
-                                    if (conditionValue != null && expectedValue != null) {
-                                        try {
-                                            double val1 = Double.parseDouble(conditionValue.asString());
-                                            double val2 = Double.parseDouble(expectedValue.asString());
-                                            return val1 > val2;
-                                        } catch (NumberFormatException e) {
-                                            return false;
-                                        }
-                                    }
-                                    break;
-                                case CONDITION_TYPE_LESS:
-                                case CONDITION_TYPE_LESS_THAN:
-                                    if (conditionValue != null && expectedValue != null) {
-                                        try {
-                                            double val1 = Double.parseDouble(conditionValue.asString());
-                                            double val2 = Double.parseDouble(expectedValue.asString());
-                                            return val1 < val2;
-                                        } catch (NumberFormatException e) {
-                                            return false;
-                                        }
-                                    }
-                                    break;
-                                case CONDITION_TYPE_CONTAINS:
-                                    if (conditionValue != null && expectedValue != null) {
-                                        return conditionValue.asString().contains(expectedValue.asString());
-                                    }
-                                    break;
-                                case CONDITION_TYPE_NOT_EMPTY:
-                                    return conditionValue != null && !conditionValue.asString().isEmpty();
-                                case CONDITION_TYPE_IS_TRUE:
-                                case CONDITION_TYPE_TRUE:
-                                    if (conditionValue != null) {
-                                        return Boolean.parseBoolean(conditionValue.asString());
-                                    }
-                                    break;
-                                case CONDITION_TYPE_IS_FALSE:
-                                case CONDITION_TYPE_FALSE:
-                                    if (conditionValue != null) {
-                                        return !Boolean.parseBoolean(conditionValue.asString());
-                                    }
-                                    break;
-                                default:
-                                    // Default evaluation - check if condition value is truthy
-                                    if (conditionValue != null) {
-                                        String value = conditionValue.asString();
-                                        return !value.isEmpty() && !"false".equalsIgnoreCase(value) && !"0".equals(value);
-                                    }
-                                    break;
-                            }
+                            return evaluateConditionByType(conditionType, conditionValue, expectedValue);
                         }
                         
                         // Default evaluation - check if condition value is truthy
-                        if (conditionValue != null) {
-                            String value = conditionValue.asString();
-                            return !value.isEmpty() && !"false".equalsIgnoreCase(value) && !"0".equals(value);
-                        }
-                        
-                        // If no parameters, default to true to allow execution
-                        return true;
+                        return evaluateDefaultCondition(conditionValue);
                     } catch (Exception e) {
                         context.getPlugin().getLogger().warning("Error evaluating condition " + conditionId + ": " + e.getMessage());
                         // Default to false on error for safety
@@ -233,6 +172,125 @@ public class ConditionFactory {
                 }
             });
         }
+    }
+    
+    /**
+     * Evaluate condition based on its type
+     */
+    private boolean evaluateConditionByType(DataValue conditionType, DataValue conditionValue, DataValue expectedValue) {
+        switch (conditionType.asString().toLowerCase()) {
+            case CONDITION_TYPE_EQUALS:
+            case CONDITION_TYPE_EQUAL:
+                return evaluateEqualsCondition(conditionValue, expectedValue);
+            case CONDITION_TYPE_GREATER:
+            case CONDITION_TYPE_GREATER_THAN:
+                return evaluateGreaterCondition(conditionValue, expectedValue);
+            case CONDITION_TYPE_LESS:
+            case CONDITION_TYPE_LESS_THAN:
+                return evaluateLessCondition(conditionValue, expectedValue);
+            case CONDITION_TYPE_CONTAINS:
+                return evaluateContainsCondition(conditionValue, expectedValue);
+            case CONDITION_TYPE_NOT_EMPTY:
+                return evaluateNotEmptyCondition(conditionValue);
+            case CONDITION_TYPE_IS_TRUE:
+            case CONDITION_TYPE_TRUE:
+                return evaluateTrueCondition(conditionValue);
+            case CONDITION_TYPE_IS_FALSE:
+            case CONDITION_TYPE_FALSE:
+                return evaluateFalseCondition(conditionValue);
+            default:
+                // Default evaluation - check if condition value is truthy
+                return evaluateDefaultCondition(conditionValue);
+        }
+    }
+    
+    /**
+     * Evaluate equals condition
+     */
+    private boolean evaluateEqualsCondition(DataValue conditionValue, DataValue expectedValue) {
+        return conditionValue != null && expectedValue != null && 
+               conditionValue.asString().equals(expectedValue.asString());
+    }
+    
+    /**
+     * Evaluate greater than condition
+     */
+    private boolean evaluateGreaterCondition(DataValue conditionValue, DataValue expectedValue) {
+        if (conditionValue != null && expectedValue != null) {
+            try {
+                double val1 = Double.parseDouble(conditionValue.asString());
+                double val2 = Double.parseDouble(expectedValue.asString());
+                return val1 > val2;
+            } catch (NumberFormatException e) {
+                return false;
+            }
+        }
+        return false;
+    }
+    
+    /**
+     * Evaluate less than condition
+     */
+    private boolean evaluateLessCondition(DataValue conditionValue, DataValue expectedValue) {
+        if (conditionValue != null && expectedValue != null) {
+            try {
+                double val1 = Double.parseDouble(conditionValue.asString());
+                double val2 = Double.parseDouble(expectedValue.asString());
+                return val1 < val2;
+            } catch (NumberFormatException e) {
+                return false;
+            }
+        }
+        return false;
+    }
+    
+    /**
+     * Evaluate contains condition
+     */
+    private boolean evaluateContainsCondition(DataValue conditionValue, DataValue expectedValue) {
+        if (conditionValue != null && expectedValue != null) {
+            return conditionValue.asString().contains(expectedValue.asString());
+        }
+        return false;
+    }
+    
+    /**
+     * Evaluate not empty condition
+     */
+    private boolean evaluateNotEmptyCondition(DataValue conditionValue) {
+        return conditionValue != null && !conditionValue.asString().isEmpty();
+    }
+    
+    /**
+     * Evaluate true condition
+     */
+    private boolean evaluateTrueCondition(DataValue conditionValue) {
+        if (conditionValue != null) {
+            return Boolean.parseBoolean(conditionValue.asString());
+        }
+        return false;
+    }
+    
+    /**
+     * Evaluate false condition
+     */
+    private boolean evaluateFalseCondition(DataValue conditionValue) {
+        if (conditionValue != null) {
+            return !Boolean.parseBoolean(conditionValue.asString());
+        }
+        return false;
+    }
+    
+    /**
+     * Default condition evaluation
+     */
+    private boolean evaluateDefaultCondition(DataValue conditionValue) {
+        if (conditionValue != null) {
+            String value = conditionValue.asString();
+            return !value.isEmpty() && !"false".equalsIgnoreCase(value) && !"0".equals(value);
+        }
+        // If no parameters, default to true to allow execution
+        return true;
     }
     
     public int getConditionCount() {
