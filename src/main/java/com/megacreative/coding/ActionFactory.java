@@ -372,40 +372,103 @@ public class ActionFactory {
         register("createInteractiveGui", () -> new BlockAction() {
             @Override
             public ExecutionResult execute(CodeBlock block, ExecutionContext context) {
-                // Create interactive GUI using the interactiveGUIManager
-                if (interactiveGUIManager != null) {
-                    try {
-                        // Get parameters from the block
-                        String guiTitle = block.getParameter("title") != null ? 
-                            block.getParameter("title").asString() : "Interactive GUI";
-                        int guiSize = block.getParameter("size") != null ? 
-                            block.getParameter("size").asNumber().intValue() : 27;
-                        
-                        // Create the interactive GUI
-                        com.megacreative.gui.interactive.InteractiveGUI interactiveGUI = 
-                            interactiveGUIManager.createInteractiveGUI(context.getPlayer(), guiTitle, guiSize);
-                        
-                        // Add any configured items to the GUI
-                        if (block.getParameter("items") != null) {
-                            // Process items parameter and add to GUI
-                            // This would depend on how items are stored in the block parameters
-                        }
-                        
-                        // Open the GUI for the player
-                        if (context.getPlayer() != null) {
-                            interactiveGUI.open();
-                            return ExecutionResult.success("Interactive GUI created and opened");
-                        } else {
-                            return ExecutionResult.error("No player context available");
-                        }
-                    } catch (Exception e) {
-                        return ExecutionResult.error("Failed to create interactive GUI: " + e.getMessage());
-                    }
-                } else {
-                    return ExecutionResult.error("Interactive GUI manager not available");
-                }
+                return executeCreateInteractiveGui(block, context);
             }
         });
+    }
+    
+    /**
+     * Execute the create interactive GUI action
+     * 
+     * @param block The code block
+     * @param context The execution context
+     * @return Execution result
+     */
+    private ExecutionResult executeCreateInteractiveGui(CodeBlock block, ExecutionContext context) {
+        // Create interactive GUI using the interactiveGUIManager
+        if (interactiveGUIManager == null) {
+            return ExecutionResult.error("Interactive GUI manager not available");
+        }
+        
+        try {
+            return tryCreateInteractiveGui(block, context);
+        } catch (Exception e) {
+            return ExecutionResult.error("Failed to create interactive GUI: " + e.getMessage());
+        }
+    }
+    
+    /**
+     * Try to create the interactive GUI
+     * 
+     * @param block The code block
+     * @param context The execution context
+     * @return Execution result
+     */
+    private ExecutionResult tryCreateInteractiveGui(CodeBlock block, ExecutionContext context) {
+        // Get parameters from the block
+        String guiTitle = getGuiTitle(block);
+        int guiSize = getGuiSize(block);
+        
+        // Create the interactive GUI
+        com.megacreative.gui.interactive.InteractiveGUI interactiveGUI = 
+            interactiveGUIManager.createInteractiveGUI(context.getPlayer(), guiTitle, guiSize);
+        
+        // Add any configured items to the GUI
+        addConfiguredItems(block, interactiveGUI);
+        
+        // Open the GUI for the player
+        return openGui(context, interactiveGUI);
+    }
+    
+    /**
+     * Get the GUI title from the block parameters
+     * 
+     * @param block The code block
+     * @return The GUI title
+     */
+    private String getGuiTitle(CodeBlock block) {
+        return block.getParameter("title") != null ? 
+            block.getParameter("title").asString() : "Interactive GUI";
+    }
+    
+    /**
+     * Get the GUI size from the block parameters
+     * 
+     * @param block The code block
+     * @return The GUI size
+     */
+    private int getGuiSize(CodeBlock block) {
+        return block.getParameter("size") != null ? 
+            block.getParameter("size").asNumber().intValue() : 27;
+    }
+    
+    /**
+     * Add configured items to the GUI
+     * 
+     * @param block The code block
+     * @param interactiveGUI The interactive GUI
+     */
+    private void addConfiguredItems(CodeBlock block, com.megacreative.gui.interactive.InteractiveGUI interactiveGUI) {
+        if (block.getParameter("items") != null) {
+            // Process items parameter and add to GUI
+            // This would depend on how items are stored in the block parameters
+        }
+    }
+    
+    /**
+     * Open the GUI for the player
+     * 
+     * @param context The execution context
+     * @param interactiveGUI The interactive GUI
+     * @return Execution result
+     */
+    private ExecutionResult openGui(ExecutionContext context, com.megacreative.gui.interactive.InteractiveGUI interactiveGUI) {
+        if (context.getPlayer() != null) {
+            interactiveGUI.open();
+            return ExecutionResult.success("Interactive GUI created and opened");
+        } else {
+            return ExecutionResult.error("No player context available");
+        }
     }
     
     /**
