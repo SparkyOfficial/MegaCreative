@@ -60,37 +60,6 @@ import java.util.List;
 public class BlockPlacementHandler implements Listener {
     private static final Logger log = Logger.getLogger(BlockPlacementHandler.class.getName());
     
-    // Constants for messages
-    private static final String ERROR_CODE_BLOCK_NOT_FOUND = "§cОшибка: Блок кода не найден!";
-    private static final String MESSAGE_VARIABLE_CONFIG_OPENED = "§aОткрыта настройка переменной!";
-    private static final String MESSAGE_VARIABLE_CONDITION_CONFIG_OPENED = "§aОткрыта настройка условия переменной!";
-    private static final String MESSAGE_GAME_ACTION_CONFIG_OPENED = "§aОткрыта настройка игрового действия!";
-    private static final String MESSAGE_GAME_CONDITION_CONFIG_OPENED = "§aОткрыта настройка игрового условия!";
-    private static final String MESSAGE_PLAYER_EVENT_CONFIG_OPENED = "§aОткрыта настройка события игрока!";
-    private static final String MESSAGE_GAME_EVENT_CONFIG_OPENED = "§aОткрыта настройка игрового события!";
-    private static final String MESSAGE_ENTITY_EVENT_CONFIG_OPENED = "§aОткрыта настройка события сущности!";
-    private static final String MESSAGE_ENTITY_ACTION_CONFIG_OPENED = "§aОткрыта настройка действия над сущностью!";
-    private static final String MESSAGE_EVENT_SELECTION_OPENED = "§aОткрыта настройка события!";
-    private static final String MESSAGE_CONDITION_SELECTION_OPENED = "§aОткрыта настройка условия!";
-    private static final String MESSAGE_ACTION_SELECTION_OPENED = "§aОткрыта настройка действия!";
-    private static final String MESSAGE_BLOCK_CONFIG_OPENED = "§aОткрыта настройка блока!";
-    private static final String ERROR_GUI_OPEN_FAILED = "§cОшибка при открытии GUI: ";
-    
-    // Constants for materials
-    private static final Material MATERIAL_IRON_BLOCK = Material.IRON_BLOCK;
-    private static final Material MATERIAL_OBSIDIAN = Material.OBSIDIAN;
-    private static final Material MATERIAL_NETHERITE_BLOCK = Material.NETHERITE_BLOCK;
-    private static final Material MATERIAL_REDSTONE_BLOCK = Material.REDSTONE_BLOCK;
-    private static final Material MATERIAL_DIAMOND_BLOCK = Material.DIAMOND_BLOCK;
-    private static final Material MATERIAL_EMERALD_BLOCK = Material.EMERALD_BLOCK;
-    private static final Material MATERIAL_BRICKS = Material.BRICKS;
-    private static final Material MATERIAL_COBBLESTONE = Material.COBBLESTONE;
-    
-    // Constants for block types
-    private static final String BLOCK_TYPE_EVENT = "EVENT";
-    private static final String BLOCK_TYPE_CONDITION = "CONDITION";
-    private static final String BLOCK_TYPE_ACTION = "ACTION";
-    
     private final MegaCreative plugin;
     private final ITrustedPlayerManager trustedPlayerManager;
     private final BlockConfigService blockConfigService;
@@ -169,11 +138,30 @@ public class BlockPlacementHandler implements Listener {
      * Добавляет эффекты создания структуры
      */
     private void addConstructionEffects(Location location, Player player) {
-        // Add visual effect for structure creation
-        Location effectLoc = location.add(0.5, 1.0, 0.5);
-        player.spawnParticle(org.bukkit.Particle.FLAME, effectLoc, 10, 0.2, 0.2, 0.2, 0.1);
-        player.spawnParticle(org.bukkit.Particle.VILLAGER_HAPPY, effectLoc, 10, 0.2, 0.2, 0.2, 0.1);
+        World world = location.getWorld();
+        Location effectLoc = location.clone().add(0.5, 1.0, 0.5);
+        
+        // Create a spiral of particles rising from the block
+        for (int i = 0; i < 15; i++) {
+            double angle = i * 0.418; // 2π/15
+            double x = Math.cos(angle) * 0.5;
+            double z = Math.sin(angle) * 0.5;
+            double y = i * 0.1;
+            
+            Location particleLoc = effectLoc.clone().add(x, y, z);
+            world.spawnParticle(org.bukkit.Particle.ENCHANTMENT_TABLE, particleLoc, 1, 0, 0, 0, 0);
+        }
+        
+        // Add multiple particle effects
+        player.spawnParticle(org.bukkit.Particle.FLAME, effectLoc, 15, 0.3, 0.3, 0.3, 0.1);
+        player.spawnParticle(org.bukkit.Particle.VILLAGER_HAPPY, effectLoc, 15, 0.3, 0.3, 0.3, 0.1);
+        player.spawnParticle(org.bukkit.Particle.CRIT_MAGIC, effectLoc, 10, 0.4, 0.4, 0.4, 0.2);
+        player.spawnParticle(org.bukkit.Particle.SPELL_WITCH, effectLoc, 8, 0.3, 0.3, 0.3, 0.1);
+        
+        // Play multiple sounds for a richer effect
         player.playSound(location, org.bukkit.Sound.BLOCK_NOTE_BLOCK_PLING, 0.8f, 1.5f);
+        player.playSound(location, org.bukkit.Sound.BLOCK_ENCHANTMENT_TABLE_USE, 0.6f, 1.8f);
+        player.playSound(location, org.bukkit.Sound.ENTITY_ILLUSIONER_PREPARE_MIRROR, 0.5f, 1.2f);
     }
 
     /**
@@ -196,74 +184,114 @@ public class BlockPlacementHandler implements Listener {
         
         plugin.getLogger().info("Player " + player.getName() + " placing block in dev world: " + player.getWorld().getName());
         
-        // Проверяем стекло под блоком (как в FrameLand)
+        // Handle glass validation
+        if (!isValidGlassPlacement(player, block)) {
+            return;
+        }
+        
+        // Handle code block placement
+        if (handleCodeBlockPlacement(event, player, block, itemInHand)) {
+            return;
+        }
+        
+        // For regular blocks that aren't code blocks
+        player.sendMessage("§cВы можете размещать только специальные блоки для кодирования!");
+        player.playSound(block.getLocation(), org.bukkit.Sound.ENTITY_VILLAGER_NO, 1.0f, 0.8f);
+    }
+
+    /**
+     * Validates glass placement under code blocks
+     */
+    private boolean isValidGlassPlacement(Player player, Block block) {
         Block glassUnder = player.getWorld().getBlockAt(block.getX(), block.getY() - 1, block.getZ());
         if (glassUnder.getType() != Material.BLUE_STAINED_GLASS && glassUnder.getType() != Material.GRAY_STAINED_GLASS) {
             player.sendMessage("§cВы можете размещать блоки кода только на синее (события) или серое (действия) стекло!");
             player.playSound(block.getLocation(), org.bukkit.Sound.ENTITY_VILLAGER_NO, 1.0f, 0.8f);
-            event.setCancelled(true);
-            return;
+            return false;
         }
-        
+        return true;
+    }
+
+    /**
+     * Handles code block placement logic
+     */
+    private boolean handleCodeBlockPlacement(BlockPlaceEvent event, Player player, Block block, ItemStack itemInHand) {
         // Проверяем, что это универсальный блок для кодирования
         if (!blockConfigService.isCodeBlock(block.getType())) {
-            // Особая обработка для поршней (скобок) - они могут не иметь конфига
-            if (block.getType() == Material.PISTON || block.getType() == Material.STICKY_PISTON) {
-                CodeBlock newCodeBlock = new CodeBlock(block.getType(), "BRACKET"); // Уникальный ID для скобок
-                newCodeBlock.setBracketType(CodeBlock.BracketType.OPEN); // По умолчанию открывающая
-                setPistonDirection(block, CodeBlock.BracketType.OPEN); // Задать направление
-                updateBracketSign(block.getLocation(), CodeBlock.BracketType.OPEN); // Повесить табличку
-                blockCodeBlocks.put(block.getLocation(), newCodeBlock);
-                
-                // Enhanced feedback for bracket placement
-                player.sendMessage("§a✓ Скобка размещена: " + CodeBlock.BracketType.OPEN.getDisplayName());
-                player.sendMessage("§7Кликните правой кнопкой для смены типа");
-                
-                // Add visual effects
-                Location effectLoc = block.getLocation().add(0.5, 0.5, 0.5);
-                player.spawnParticle(org.bukkit.Particle.ENCHANTMENT_TABLE, effectLoc, 10, 0.3, 0.3, 0.3, 1.0);
-                player.playSound(block.getLocation(), org.bukkit.Sound.BLOCK_PISTON_EXTEND, 1.0f, 1.5f);
-                
-                plugin.getLogger().info("Bracket placed by " + player.getName() + " at " + block.getLocation());
-                return; // Завершаем обработку
-            }
-            return; // Это обычный блок, не кодовый
+            return handleNonCodeBlockPlacement(event, player, block);
         }
         
         // Получаем конфиг блока из материала блока
         BlockConfigService.BlockConfig config = blockConfigService.getBlockConfigByMaterial(block.getType());
         
         if (config == null) {
-            // Это не кодовый блок, запрещаем установку
-            player.sendMessage("§cВы можете размещать только специальные блоки для кодирования!");
-            player.playSound(block.getLocation(), org.bukkit.Sound.ENTITY_VILLAGER_NO, 1.0f, 0.8f);
-            return;
+            return false; // This will result in the error message being shown
         }
         
-        // ===============================================
-        //           НОВАЯ ЛОГИКА КОНСТРУКТОРОВ
-        // ===============================================
-        
-        // 1. Проверяем, является ли блок "конструктором"
+        // Handle constructor blocks
         if (config.isConstructor()) {
-            // 2. НЕ отменяем стандартное размещение блока, позволяем ему установиться
-            
-            // 3. Вызываем метод для постройки структуры на следующий тик
-            // Запланируем создание структуры на следующий тик, чтобы событие BlockPlaceEvent полностью завершилось
-            org.bukkit.Bukkit.getScheduler().runTask(plugin, () -> {
-                buildStructureFor(event, config);
-                
-                // 4. Визуальная и аудио обратная связь
-                player.spawnParticle(org.bukkit.Particle.VILLAGER_HAPPY, block.getLocation().add(0.5, 1.0, 0.5), 5, 0.2, 0.2, 0.2, 0.1);
-                player.playSound(block.getLocation(), org.bukkit.Sound.BLOCK_NOTE_BLOCK_PLING, 0.8f, 1.5f);
-                
-                player.sendMessage("§a✓ Структура " + config.getDisplayName() + " создана!");
-                player.sendMessage("§7Кликните по табличке для настройки параметров");
-            });
-            
-            return; // Завершаем обработку, чтобы не создавать блок дважды
+            handleConstructorBlockPlacement(event, config, player, block);
+            return true;
         }
         
+        // Handle regular code blocks
+        handleRegularCodeBlockPlacement(event, config, player, block);
+        return true;
+    }
+
+    /**
+     * Handles non-code block placement (like pistons for brackets)
+     */
+    private boolean handleNonCodeBlockPlacement(BlockPlaceEvent event, Player player, Block block) {
+        // Особая обработка для поршней (скобок) - они могут не иметь конфига
+        if (block.getType() == Material.PISTON || block.getType() == Material.STICKY_PISTON) {
+            CodeBlock newCodeBlock = new CodeBlock(block.getType(), "BRACKET"); // Уникальный ID для скобок
+            newCodeBlock.setBracketType(CodeBlock.BracketType.OPEN); // По умолчанию открывающая
+            setPistonDirection(block, CodeBlock.BracketType.OPEN); // Задать направление
+            updateBracketSign(block.getLocation(), CodeBlock.BracketType.OPEN); // Повесить табличку
+            blockCodeBlocks.put(block.getLocation(), newCodeBlock);
+            
+            // Enhanced feedback for bracket placement
+            player.sendMessage("§a✓ Скобка размещена: " + CodeBlock.BracketType.OPEN.getDisplayName());
+            player.sendMessage("§7Кликните правой кнопкой для смены типа");
+            
+            // Add visual effects
+            Location effectLoc = block.getLocation().add(0.5, 0.5, 0.5);
+            player.spawnParticle(org.bukkit.Particle.ENCHANTMENT_TABLE, effectLoc, 10, 0.3, 0.3, 0.3, 1.0);
+            player.playSound(block.getLocation(), org.bukkit.Sound.BLOCK_PISTON_EXTEND, 1.0f, 1.5f);
+            
+            plugin.getLogger().info("Bracket placed by " + player.getName() + " at " + block.getLocation());
+            return true; // Завершаем обработку
+        }
+        return false; // Это обычный блок, не кодовый
+    }
+
+    /**
+     * Handles constructor block placement
+     */
+    private void handleConstructorBlockPlacement(BlockPlaceEvent event, BlockConfigService.BlockConfig config, 
+                                               Player player, Block block) {
+        // 2. НЕ отменяем стандартное размещение блока, позволяем ему установиться
+        
+        // 3. Вызываем метод для постройки структуры на следующий тик
+        // Запланируем создание структуры на следующий тик, чтобы событие BlockPlaceEvent полностью завершилось
+        org.bukkit.Bukkit.getScheduler().runTask(plugin, () -> {
+            buildStructureFor(event, config);
+            
+            // 4. Визуальная и аудио обратная связь
+            player.spawnParticle(org.bukkit.Particle.VILLAGER_HAPPY, block.getLocation().add(0.5, 1.0, 0.5), 5, 0.2, 0.2, 0.2, 0.1);
+            player.playSound(block.getLocation(), org.bukkit.Sound.BLOCK_NOTE_BLOCK_PLING, 0.8f, 1.5f);
+            
+            player.sendMessage("§a✓ Структура " + config.getDisplayName() + " создана!");
+            player.sendMessage("§7Кликните по табличке для настройки параметров");
+        });
+    }
+
+    /**
+     * Handles regular code block placement
+     */
+    private void handleRegularCodeBlockPlacement(BlockPlaceEvent event, BlockConfigService.BlockConfig config, 
+                                               Player player, Block block) {
         // Для обычных блоков создаем "пустой" блок, который будет настроен через GUI
         // Создаем CodeBlock с ID из конфига, но без действия (пустой блок)
         String actionId = "NOT_SET"; // Пустой блок без действия
@@ -316,7 +344,7 @@ public class BlockPlacementHandler implements Listener {
         
         plugin.getLogger().info("Code block placed by " + player.getName() + " at " + block.getLocation() + " with action: " + actionId);
     }
-    
+
     /**
      * Creates structure for constructor blocks
      * Implements reference system-style: visual code construction with feedback
@@ -333,7 +361,7 @@ public class BlockPlacementHandler implements Listener {
             return;
         }
         
-        // ENHANCED: More intuitive structure creation
+        // ENHANCED: More intuitive structure creation with better visual feedback
         if (config.getType().equals("CONDITION") || config.getType().equals("CONTROL")) {
             int bracketDistance = structure.getBracketDistance();
             
@@ -370,6 +398,9 @@ public class BlockPlacementHandler implements Listener {
             
             // 5. Add directional beam effect to show structure formation
             showStructureBeam(loc, buildDirection, bracketDistance, player);
+            
+            // 6. Add new visual feedback for constructor blocks
+            addConstructorVisualFeedback(loc, player, config.getDisplayName());
         }
         
         // Additional structure types can be added here
@@ -393,6 +424,9 @@ public class BlockPlacementHandler implements Listener {
             }
             
             addConstructionEffects(loc, player);
+            
+            // Add new visual feedback for event constructor blocks
+            addConstructorVisualFeedback(loc, player, config.getDisplayName() + " Event");
         }
         
         // ACTION blocks also get structure building
@@ -404,6 +438,9 @@ public class BlockPlacementHandler implements Listener {
             
             // Add visual effects
             addConstructionEffects(loc, player);
+            
+            // Add new visual feedback for action constructor blocks
+            addConstructorVisualFeedback(loc, player, config.getDisplayName() + " Action");
         }
         
         // VARIABLE blocks
@@ -415,6 +452,9 @@ public class BlockPlacementHandler implements Listener {
             
             // Add visual effects
             addConstructionEffects(loc, player);
+            
+            // Add new visual feedback for variable constructor blocks
+            addConstructorVisualFeedback(loc, player, config.getDisplayName() + " Variable");
         }
         
         // Notify player of successful structure creation
@@ -758,18 +798,39 @@ public class BlockPlacementHandler implements Listener {
         World world = location.getWorld();
         if (world == null) return;
         
-        for (int i = 0; i <= distance; i++) {
-            Location blockLoc = location.clone().add(
-                direction.getModX() * i, 
-                0, 
-                direction.getModZ() * i
-            );
-            
-            // Add visual effect for each block
-            Location effectLoc = blockLoc.add(0.5, 0.5, 0.5);
-            player.spawnParticle(org.bukkit.Particle.VILLAGER_HAPPY, effectLoc, 1, 0.2, 0.2, 0.2, 0.1);
-            player.playSound(blockLoc, org.bukkit.Sound.BLOCK_NOTE_BLOCK_PLING, 0.8f, 1.5f);
+        // Create a moving beam effect using Bukkit scheduler
+        for (int step = 0; step < 3; step++) { // Repeat the effect 3 times
+            for (int i = 0; i <= distance; i++) {
+                final int index = i;
+                final int stepIndex = step;
+                
+                // Schedule particle effect with delay
+                org.bukkit.Bukkit.getScheduler().runTaskLater(plugin, () -> {
+                    Location blockLoc = location.clone().add(
+                        direction.getModX() * index, 
+                        0, 
+                        direction.getModZ() * index
+                    );
+                    
+                    // Add visual effect for each block
+                    Location effectLoc = blockLoc.add(0.5, 0.5, 0.5);
+                    
+                    // Create a more magical effect
+                    world.spawnParticle(org.bukkit.Particle.ENCHANTMENT_TABLE, effectLoc, 3, 0.1, 0.1, 0.1, 0.1);
+                    world.spawnParticle(org.bukkit.Particle.FIREWORKS_SPARK, effectLoc, 2, 0.2, 0.2, 0.2, 0.05);
+                    
+                    // Play sound for the first particle of each step
+                    if (index == 0) {
+                        player.playSound(location, org.bukkit.Sound.BLOCK_NOTE_BLOCK_PLING, 0.8f, 1.5f);
+                    }
+                }, (step * (distance + 1) * 1L) + (index * 1L)); // 1 tick delay between particles
+            }
         }
+        
+        // Final sound effect after all particles are shown
+        org.bukkit.Bukkit.getScheduler().runTaskLater(plugin, () -> {
+            player.playSound(location, org.bukkit.Sound.BLOCK_ENCHANTMENT_TABLE_USE, 1.0f, 1.2f);
+        }, 3 * (distance + 1) + 10); // After all particles + 10 ticks
     }
     
     /**
@@ -1084,19 +1145,8 @@ public class BlockPlacementHandler implements Listener {
         // 🔧 FIX: Add debug logging to see what's happening
         plugin.getLogger().info("Player " + player.getName() + " interacted with block. Action: " + event.getAction() + ", In dev world: " + isInDevWorld(player));
         
-        // Проверяем железный слиток для создания данных
-        if (itemInHand.getType() == Material.IRON_INGOT && itemInHand.hasItemMeta() &&
-            itemInHand.getItemMeta().getDisplayName().contains(CodingItems.DATA_CREATOR_NAME)) {
-            event.setCancelled(true);
-            // Убираем ссылку на несуществующий DataGUI
-            return;
-        }
-        
-        // Проверяем стрелу НЕ для инверсии условий
-        if (itemInHand.getType() == Material.ARROW && itemInHand.hasItemMeta() &&
-            itemInHand.getItemMeta().getDisplayName().contains(CodingItems.ARROW_NOT_NAME)) {
-            handleArrowNotInteraction(player, event.getClickedBlock());
-            event.setCancelled(true);
+        // Handle special items first
+        if (handleSpecialItems(player, itemInHand, event)) {
             return;
         }
         
@@ -1119,13 +1169,8 @@ public class BlockPlacementHandler implements Listener {
         plugin.getLogger().info("Player " + player.getName() + " clicked block at " + location + ", type: " + clickedBlock.getType());
         
         // 🎆 ENHANCED: Check if player clicked on a smart sign
-        if (clickedBlock.getType().name().contains("SIGN") || clickedBlock.getState() instanceof Sign) {
-            plugin.getLogger().info("Player " + player.getName() + " clicked on a sign");
-            if (handleSmartSignClick(clickedBlock, player)) {
-                event.setCancelled(true);
-                player.sendMessage("§aОткрыта настройка через табличку!");
-                return;
-            }
+        if (handleSmartSignInteraction(clickedBlock, player, event)) {
+            return;
         }
         
         // Only process in dev worlds
@@ -1134,6 +1179,67 @@ public class BlockPlacementHandler implements Listener {
             return;
         }
         
+        // Handle code block interactions
+        if (handleCodeBlockInteraction(player, location, itemInHand, event, clickedBlock)) {
+            return;
+        }
+        
+        // Проверяем, кликнул ли игрок по контейнеру над блоком кода
+        if (handleContainerInteraction(player, location, event)) {
+            return;
+        }
+        
+        // 🔧 FIX: Handle block placement for code blocks
+        if (handleBlockPlacementAttempt(player, itemInHand, event)) {
+            return;
+        }
+        
+        plugin.getLogger().info("Player " + player.getName() + " interaction not handled - no code block found at " + location);
+    }
+
+    /**
+     * Handles special items like iron ingots and arrows
+     */
+    private boolean handleSpecialItems(Player player, ItemStack itemInHand, PlayerInteractEvent event) {
+        // Проверяем железный слиток для создания данных
+        if (itemInHand.getType() == Material.IRON_INGOT && itemInHand.hasItemMeta() &&
+            itemInHand.getItemMeta().getDisplayName().contains(CodingItems.DATA_CREATOR_NAME)) {
+            event.setCancelled(true);
+            // Убираем ссылку на несуществующий DataGUI
+            return true;
+        }
+        
+        // Проверяем стрелу НЕ для инверсии условий
+        if (itemInHand.getType() == Material.ARROW && itemInHand.hasItemMeta() &&
+            itemInHand.getItemMeta().getDisplayName().contains(CodingItems.ARROW_NOT_NAME)) {
+            handleArrowNotInteraction(player, event.getClickedBlock());
+            event.setCancelled(true);
+            return true;
+        }
+        
+        return false;
+    }
+
+    /**
+     * Handles smart sign interactions
+     */
+    private boolean handleSmartSignInteraction(Block clickedBlock, Player player, PlayerInteractEvent event) {
+        if (clickedBlock.getType().name().contains("SIGN") || clickedBlock.getState() instanceof Sign) {
+            plugin.getLogger().info("Player " + player.getName() + " clicked on a sign");
+            if (handleSmartSignClick(clickedBlock, player)) {
+                event.setCancelled(true);
+                player.sendMessage("§aОткрыта настройка через табличку!");
+                return true;
+            }
+        }
+        return false;
+    }
+
+    /**
+     * Handles code block interactions
+     */
+    private boolean handleCodeBlockInteraction(Player player, Location location, ItemStack itemInHand, 
+                                             PlayerInteractEvent event, Block clickedBlock) {
         // Проверяем, есть ли уже блок кода на этой локации
         if (blockCodeBlocks.containsKey(location)) {
             // 🔧 FIX: Add debug logging
@@ -1142,7 +1248,7 @@ public class BlockPlacementHandler implements Listener {
             // Предотвращаем открытие GUI, если в руке инструмент
             if (isTool(itemInHand)) {
                 plugin.getLogger().info("Player " + player.getName() + " has tool in hand, not opening GUI");
-                return;
+                return true;
             }
             
             event.setCancelled(true); // Важно, чтобы не открылся, например, верстак
@@ -1155,16 +1261,22 @@ public class BlockPlacementHandler implements Listener {
                 plugin.getLogger().info("Player " + player.getName() + " clicked bracket block, toggling type");
                 toggleBracketType(codeBlock, event.getClickedBlock(), player);
                 player.sendMessage("§aСкобка переключена!");
-                return;
+                return true;
             }
             
             // Handle block interaction with proper GUI opening
             plugin.getLogger().info("Player " + player.getName() + " opening block interaction GUI");
             handleBlockInteraction(player, location);
             player.sendMessage("§aОткрыта настройка блока!");
-            return;
+            return true;
         }
-        
+        return false;
+    }
+
+    /**
+     * Handles container interactions above code blocks
+     */
+    private boolean handleContainerInteraction(Player player, Location location, PlayerInteractEvent event) {
         // Проверяем, кликнул ли игрок по контейнеру над блоком кода
         Location blockBelow = location.clone().add(0, -1, 0);
         CodeBlock codeBlock = blockCodeBlocks.get(blockBelow);
@@ -1182,19 +1294,23 @@ public class BlockPlacementHandler implements Listener {
             } else {
                 player.sendMessage("§cОшибка: Не удалось найти конфигурацию для действия " + codeBlock.getAction());
             }
-            return;
+            return true;
         }
-        
-        // 🔧 FIX: Handle block placement for code blocks
+        return false;
+    }
+
+    /**
+     * Handles block placement attempts
+     */
+    private boolean handleBlockPlacementAttempt(Player player, ItemStack itemInHand, PlayerInteractEvent event) {
         if (event.getAction() == org.bukkit.event.block.Action.RIGHT_CLICK_BLOCK && 
             !itemInHand.getType().isAir() && 
             blockConfigService.isCodeBlock(itemInHand.getType())) {
             // This is a block placement attempt, let the BlockPlaceEvent handle it
             plugin.getLogger().info("Player " + player.getName() + " attempting to place code block");
-            return;
+            return true;
         }
-        
-        plugin.getLogger().info("Player " + player.getName() + " interaction not handled - no code block found at " + location);
+        return false;
     }
 
     /**
@@ -1400,14 +1516,41 @@ public class BlockPlacementHandler implements Listener {
             Sign sign = (Sign) clickedBlock.getState();
             String[] lines = sign.getLines();
             
+            // Enhanced sign detection - check for multiple patterns
+            String actionId = null;
+            
+            // Pattern 1: ID on line 2 (existing pattern)
             if (lines.length > 1 && lines[1].contains("ID:")) {
-                String actionId = lines[1].substring(lines[1].indexOf(": ") + 2);
+                actionId = lines[1].substring(lines[1].indexOf(": ") + 2);
+            }
+            // Pattern 2: ID on line 3
+            else if (lines.length > 2 && lines[2].contains("ID:")) {
+                actionId = lines[2].substring(lines[2].indexOf(": ") + 2);
+            }
+            // Pattern 3: Action name on line 1 or 2
+            else {
+                for (String line : lines) {
+                    if (line != null && !line.trim().isEmpty() && !line.contains("★") && !line.contains("➜")) {
+                        // Try to find a matching action by name
+                        actionId = findActionIdByName(line.trim());
+                        if (actionId != null) {
+                            break;
+                        }
+                    }
+                }
+            }
+            
+            if (actionId != null) {
                 plugin.getLogger().info("Found smart sign with action ID: " + actionId);
                 
                 Location blockLocation = clickedBlock.getLocation().subtract(0, 1, 0);
                 CodeBlock codeBlock = blockCodeBlocks.get(blockLocation);
                 if (codeBlock != null) {
                     plugin.getLogger().info("Found code block at " + blockLocation + " with action: " + codeBlock.getAction());
+                    
+                    // Add visual feedback when clicking sign
+                    addSignClickFeedback(clickedBlock.getLocation(), player);
+                    
                     handleBlockInteraction(player, blockLocation);
                     return true;
                 }
@@ -1446,9 +1589,27 @@ public class BlockPlacementHandler implements Listener {
                 signState.setLine(3, "§6★★★★★★★★★★★★");
                 signState.update(true);
                 
-                // Add visual effects
+                // Add enhanced visual effects
                 Location effectLoc = signBlock.getLocation().add(0.5, 0.5, 0.5);
-                block.getWorld().spawnParticle(org.bukkit.Particle.ENCHANTMENT_TABLE, effectLoc, 5, 0.3, 0.3, 0.3, 1);
+                World world = block.getWorld();
+                
+                // Create a ring of particles around the sign
+                for (int i = 0; i < 8; i++) {
+                    double angle = i * 0.785; // 2π/8
+                    double x = Math.cos(angle) * 0.6;
+                    double z = Math.sin(angle) * 0.6;
+                    
+                    Location particleLoc = effectLoc.clone().add(x, 0, z);
+                    world.spawnParticle(org.bukkit.Particle.ENCHANTMENT_TABLE, particleLoc, 1, 0, 0, 0, 0);
+                }
+                
+                // Add burst effects
+                world.spawnParticle(org.bukkit.Particle.ENCHANTMENT_TABLE, effectLoc, 8, 0.3, 0.3, 0.3, 1);
+                world.spawnParticle(org.bukkit.Particle.FIREWORKS_SPARK, effectLoc, 5, 0.2, 0.2, 0.2, 0.1);
+                
+                // Play sound effect
+                world.playSound(effectLoc, org.bukkit.Sound.BLOCK_WOOD_PLACE, 0.7f, 1.5f);
+                world.playSound(effectLoc, org.bukkit.Sound.BLOCK_ENCHANTMENT_TABLE_USE, 0.5f, 1.8f);
                 
                 return; // ВАЖНО: Выходим из метода после установки ПЕРВОЙ таблички
             }
@@ -2105,6 +2266,82 @@ public class BlockPlacementHandler implements Listener {
      */
     public BlockConfigService.BlockConfig getBlockConfigForMaterial(Material material) {
         return blockConfigService.getFirstBlockConfig(material);
+    }
+    
+    /**
+     * Adds enhanced visual feedback for constructor blocks
+     * Creates a magical effect to show successful structure creation
+     */
+    private void addConstructorVisualFeedback(Location location, Player player, String blockName) {
+        World world = location.getWorld();
+        Location effectLoc = location.clone().add(0.5, 0.5, 0.5);
+        
+        // Create a spiral particle effect around the block
+        for (int i = 0; i < 20; i++) {
+            double angle = i * 0.314; // 2π/20
+            double x = Math.cos(angle) * 0.8;
+            double z = Math.sin(angle) * 0.8;
+            double y = i * 0.1;
+            
+            Location particleLoc = effectLoc.clone().add(x, y, z);
+            world.spawnParticle(org.bukkit.Particle.ENCHANTMENT_TABLE, particleLoc, 1, 0, 0, 0, 0);
+        }
+        
+        // Create a ring of particles around the block
+        for (int i = 0; i < 16; i++) {
+            double angle = i * 0.392; // 2π/16
+            double x = Math.cos(angle) * 1.2;
+            double z = Math.sin(angle) * 1.2;
+            
+            Location particleLoc = effectLoc.clone().add(x, 0, z);
+            world.spawnParticle(org.bukkit.Particle.FIREWORKS_SPARK, particleLoc, 1, 0, 0, 0, 0);
+        }
+        
+        // Add a burst of magical particles
+        world.spawnParticle(org.bukkit.Particle.SPELL_WITCH, effectLoc, 20, 0.5, 0.5, 0.5, 0.1);
+        world.spawnParticle(org.bukkit.Particle.CRIT_MAGIC, effectLoc, 15, 0.5, 0.5, 0.5, 0.2);
+        
+        // Play a magical sound
+        world.playSound(effectLoc, org.bukkit.Sound.BLOCK_ENCHANTMENT_TABLE_USE, 1.0f, 1.5f);
+        world.playSound(effectLoc, org.bukkit.Sound.ENTITY_ILLUSIONER_CAST_SPELL, 0.8f, 1.2f);
+        
+        // Send a title to the player
+        player.sendTitle("§a" + blockName, "§7Структура создана!", 10, 40, 10);
+    }
+    
+    /**
+     * Adds visual feedback when a player clicks on a smart sign
+     * @param signLocation The location of the sign
+     * @param player The player who clicked the sign
+     */
+    private void addSignClickFeedback(Location signLocation, Player player) {
+        World world = signLocation.getWorld();
+        Location effectLoc = signLocation.clone().add(0.5, 0.5, 0.5);
+        
+        // Create a burst of particles around the sign
+        world.spawnParticle(org.bukkit.Particle.HEART, effectLoc, 5, 0.3, 0.3, 0.3, 0.1);
+        world.spawnParticle(org.bukkit.Particle.VILLAGER_HAPPY, effectLoc, 10, 0.4, 0.4, 0.4, 0.2);
+        
+        // Play a sound
+        world.playSound(effectLoc, org.bukkit.Sound.BLOCK_WOODEN_BUTTON_CLICK_ON, 0.7f, 1.5f);
+        
+        // Send a message to the player
+        player.sendMessage("§aОткрытие настроек блока...");
+    }
+    
+    /**
+     * Finds an action ID by its display name
+     * @param displayName The display name to search for
+     * @return The action ID or null if not found
+     */
+    private String findActionIdByName(String displayName) {
+        // Get all block configurations
+        for (BlockConfigService.BlockConfig config : blockConfigService.getAllBlockConfigs()) {
+            if (config.getDisplayName().equalsIgnoreCase(displayName)) {
+                return config.getId();
+            }
+        }
+        return null;
     }
     
 }

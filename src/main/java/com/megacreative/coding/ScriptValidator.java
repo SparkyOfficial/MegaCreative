@@ -9,6 +9,23 @@ import java.util.*;
  */
 public class ScriptValidator {
     
+    // Error message constants
+    private static final String ERROR_SCRIPT_IS_NULL = "Script is null";
+    private static final String ERROR_SCRIPT_NAME_REQUIRED = "Script name is required";
+    private static final String WARNING_SCRIPT_NAME_LONG = "Script name is very long";
+    private static final String ERROR_SCRIPT_ROOT_BLOCK_REQUIRED = "Script must have a root block";
+    private static final String ERROR_BLOCK_MATERIAL_REQUIRED = "Block material is required";
+    private static final String ERROR_BLOCK_ACTION_REQUIRED = "Block action is required";
+    private static final String ERROR_UNKNOWN_BLOCK_ACTION = "Unknown block action: ";
+    private static final String ERROR_REQUIRED_PARAMETER_MISSING = "Required parameter missing: ";
+    private static final String WARNING_PARAMETER_NULL_VALUE = "Parameter has null value: ";
+    private static final String ERROR_REQUIRED_PARAMETER_EMPTY = "Required parameter is empty: ";
+    private static final String ERROR_BLOCK_TYPE_MISMATCH = "Block type mismatch. Expected: ";
+    private static final String ERROR_BRACKET_TYPE_REQUIRED = "Bracket block must have a bracket type";
+    private static final String WARNING_ACTION_DEPRECATED = "Action is deprecated: ";
+    private static final String WARNING_SCRIPT_NO_EXECUTABLE_BLOCKS = "Script has no executable blocks";
+    private static final String WARNING_WHILE_LOOP_PERFORMANCE = "While loops can cause performance issues if not properly bounded";
+    
     private final BlockConfigService blockConfigService;
     
     public ScriptValidator(BlockConfigService blockConfigService) {
@@ -109,7 +126,7 @@ public class ScriptValidator {
      */
     private ValidationResult createNullScriptResult() {
         List<ValidationError> errors = new ArrayList<>();
-        errors.add(new ValidationError(ValidationError.Severity.ERROR, "Script is null", null, null));
+        errors.add(new ValidationError(ValidationError.Severity.ERROR, ERROR_SCRIPT_IS_NULL, null, null));
         return new ValidationResult(false, errors, new ArrayList<>());
     }
     
@@ -118,9 +135,9 @@ public class ScriptValidator {
      */
     private void validateScriptName(CodeScript script, List<ValidationError> errors, List<ValidationError> warnings) {
         if (script.getName() == null || script.getName().trim().isEmpty()) {
-            errors.add(new ValidationError(ValidationError.Severity.ERROR, "Script name is required", null, "name"));
+            errors.add(new ValidationError(ValidationError.Severity.ERROR, ERROR_SCRIPT_NAME_REQUIRED, null, "name"));
         } else if (script.getName().length() > 64) {
-            warnings.add(new ValidationError(ValidationError.Severity.WARNING, "Script name is very long", null, "name"));
+            warnings.add(new ValidationError(ValidationError.Severity.WARNING, WARNING_SCRIPT_NAME_LONG, null, "name"));
         }
     }
     
@@ -129,7 +146,7 @@ public class ScriptValidator {
      */
     private void validateRootBlock(CodeScript script, List<ValidationError> errors, List<ValidationError> warnings) {
         if (script.getRootBlock() == null) {
-            errors.add(new ValidationError(ValidationError.Severity.ERROR, "Script must have a root block", null, "rootBlock"));
+            errors.add(new ValidationError(ValidationError.Severity.ERROR, ERROR_SCRIPT_ROOT_BLOCK_REQUIRED, null, "rootBlock"));
         } else {
             // Validate all blocks in the script
             validateBlockChain(script.getRootBlock(), errors, warnings);
@@ -187,12 +204,12 @@ public class ScriptValidator {
     private void validateBlockFields(CodeBlock block, List<ValidationError> errors) {
         if (block.getMaterial() == null) {
             errors.add(new ValidationError(ValidationError.Severity.ERROR, 
-                "Block material is required", block, "material"));
+                ERROR_BLOCK_MATERIAL_REQUIRED, block, "material"));
         }
         
         if (block.getAction() == null || block.getAction().trim().isEmpty()) {
             errors.add(new ValidationError(ValidationError.Severity.ERROR, 
-                "Block action is required", block, "action"));
+                ERROR_BLOCK_ACTION_REQUIRED, block, "action"));
         }
     }
     
@@ -209,7 +226,7 @@ public class ScriptValidator {
         BlockConfigService.BlockConfig config = blockConfigService.getBlockConfig(action);
         if (config == null) {
             errors.add(new ValidationError(ValidationError.Severity.ERROR, 
-                "Unknown block action: " + action, block, "action"));
+                ERROR_UNKNOWN_BLOCK_ACTION + action, block, "action"));
         } else {
             // Validate block parameters against configuration
             validateBlockParameters(block, config, errors, warnings);
@@ -245,7 +262,7 @@ public class ScriptValidator {
             
             if (paramConfig.isRequired() && !block.hasParameter(paramName)) {
                 errors.add(new ValidationError(ValidationError.Severity.ERROR, 
-                    "Required parameter missing: " + paramName, block, paramName));
+                    ERROR_REQUIRED_PARAMETER_MISSING + paramName, block, paramName));
             }
         }
     }
@@ -261,7 +278,7 @@ public class ScriptValidator {
             
             if (value == null) {
                 warnings.add(new ValidationError(ValidationError.Severity.WARNING, 
-                    "Parameter has null value: " + paramName, block, paramName));
+                    WARNING_PARAMETER_NULL_VALUE + paramName, block, paramName));
                 continue;
             }
             
@@ -270,7 +287,7 @@ public class ScriptValidator {
             if (paramConfig != null && paramConfig.isRequired()) {
                 if (value.isEmpty()) {
                     errors.add(new ValidationError(ValidationError.Severity.ERROR, 
-                        "Required parameter is empty: " + paramName, block, paramName));
+                        ERROR_REQUIRED_PARAMETER_EMPTY + paramName, block, paramName));
                 }
             }
         }
@@ -283,7 +300,7 @@ public class ScriptValidator {
         String expectedType = config.getType();
         if (!isValidBlockType(block, expectedType)) {
             errors.add(new ValidationError(ValidationError.Severity.ERROR, 
-                "Block type mismatch. Expected: " + expectedType, block, "type"));
+                ERROR_BLOCK_TYPE_MISMATCH + expectedType, block, "type"));
         }
     }
     
@@ -303,7 +320,7 @@ public class ScriptValidator {
         if (block.isBracket()) {
             if (block.getBracketType() == null) {
                 errors.add(new ValidationError(ValidationError.Severity.ERROR, 
-                    "Bracket block must have a bracket type", block, "bracketType"));
+                    ERROR_BRACKET_TYPE_REQUIRED, block, "bracketType"));
             }
         }
     }
@@ -315,7 +332,7 @@ public class ScriptValidator {
         // Check for deprecated actions
         if (isDeprecatedAction(block.getAction())) {
             warnings.add(new ValidationError(ValidationError.Severity.WARNING, 
-                "Action is deprecated: " + block.getAction(), block, "action"));
+                WARNING_ACTION_DEPRECATED + block.getAction(), block, "action"));
         }
         
         // Check for potentially problematic parameter combinations
@@ -337,7 +354,7 @@ public class ScriptValidator {
         // Check if script has any executable blocks
         if (!hasExecutableBlocks(script.getRootBlock())) {
             warnings.add(new ValidationError(ValidationError.Severity.WARNING, 
-                "Script has no executable blocks", null, null));
+                WARNING_SCRIPT_NO_EXECUTABLE_BLOCKS, null, null));
         }
         
         // Check for unreachable blocks
@@ -386,7 +403,7 @@ public class ScriptValidator {
         String action = block.getAction();
         if ("whileLoop".equals(action)) {
             warnings.add(new ValidationError(ValidationError.Severity.WARNING, 
-                "While loops can cause performance issues if not properly bounded", block, "action"));
+                WARNING_WHILE_LOOP_PERFORMANCE, block, "action"));
         } else if ("forEach".equals(action)) {
             DataValue listParam = block.getParameter("list");
             if (listParam != null && listParam.getType().getName().equals("List")) {

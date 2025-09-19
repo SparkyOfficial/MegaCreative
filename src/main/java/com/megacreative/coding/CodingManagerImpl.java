@@ -127,8 +127,8 @@ public class CodingManagerImpl implements ICodingManager {
         }
         
         // Load all script files from the world directory
-        try {
-            Files.list(worldScriptsDir)
+        try (java.util.stream.Stream<Path> paths = Files.list(worldScriptsDir)) {
+            paths
                 .filter(path -> path.toString().endsWith(SCRIPT_FILE_EXTENSION))
                 .forEach(path -> {
                     try {
@@ -173,24 +173,52 @@ public class CodingManagerImpl implements ICodingManager {
             return null;
         }
         
+        return findScriptInWorlds(name);
+    }
+    
+    /**
+     * Finds a script by name in all worlds
+     * @param name The name of the script to find
+     * @return The found script or null if not found
+     */
+    private CodeScript findScriptInWorlds(String name) {
         for (CreativeWorld world : worldManager.getCreativeWorlds()) {
-            if (world.getScripts() != null) {
-                for (CodeScript script : world.getScripts()) {
-                    // Exact match first
-                    if (script.getName().equals(name)) {
-                        return script;
-                    }
-                    // Case-insensitive match
-                    if (script.getName().equalsIgnoreCase(name)) {
-                        return script;
-                    }
-                    // Partial match (contains)
-                    if (script.getName().toLowerCase().contains(name.toLowerCase())) {
-                        return script;
-                    }
-                }
+            CodeScript script = findScriptInWorld(world, name);
+            if (script != null) {
+                return script;
             }
         }
+        return null;
+    }
+    
+    /**
+     * Finds a script by name in a specific world
+     * @param world The world to search in
+     * @param name The name of the script to find
+     * @return The found script or null if not found
+     */
+    private CodeScript findScriptInWorld(CreativeWorld world, String name) {
+        if (world.getScripts() == null) {
+            return null;
+        }
+        
+        for (CodeScript script : world.getScripts()) {
+            // Check for exact match first
+            if (script.getName().equals(name)) {
+                return script;
+            }
+            
+            // Check for case-insensitive match
+            if (script.getName().equalsIgnoreCase(name)) {
+                return script;
+            }
+            
+            // Check for partial match (contains)
+            if (script.getName().toLowerCase().contains(name.toLowerCase())) {
+                return script;
+            }
+        }
+        
         return null;
     }
     
@@ -252,32 +280,66 @@ public class CodingManagerImpl implements ICodingManager {
             return;
         }
         
+        deleteScriptFromAllWorlds(scriptName);
+    }
+    
+    /**
+     * Deletes a script from all worlds
+     * @param scriptName The name of the script to delete
+     */
+    private void deleteScriptFromAllWorlds(String scriptName) {
         for (CreativeWorld world : worldManager.getCreativeWorlds()) {
-            if (world.getScripts() != null) {
-                // Remove from memory
-                CodeScript scriptToRemove = null;
-                for (CodeScript script : world.getScripts()) {
-                    if (script.getName().equals(scriptName)) {
-                        scriptToRemove = script;
-                        break;
-                    }
-                }
-                
-                if (scriptToRemove != null) {
-                    world.getScripts().remove(scriptToRemove);
-                    
-                    // Delete from storage
-                    Path scriptFile = scriptsDirectory.resolve(world.getName()).resolve(scriptName + SCRIPT_FILE_EXTENSION);
-                    try {
-                        if (Files.exists(scriptFile)) {
-                            Files.delete(scriptFile);
-                            logger.info(SCRIPT_DELETED + scriptFile.toString());
-                        }
-                    } catch (IOException e) {
-                        logger.severe(SCRIPT_DELETION_FAILED + scriptFile.toString() + ": " + e.getMessage());
-                    }
-                }
+            deleteScriptFromWorld(world, scriptName);
+        }
+    }
+    
+    /**
+     * Deletes a script from a specific world
+     * @param world The world to delete the script from
+     * @param scriptName The name of the script to delete
+     */
+    private void deleteScriptFromWorld(CreativeWorld world, String scriptName) {
+        if (world.getScripts() == null) {
+            return;
+        }
+        
+        // Remove from memory
+        CodeScript scriptToRemove = findScriptByName(world.getScripts(), scriptName);
+        if (scriptToRemove != null) {
+            world.getScripts().remove(scriptToRemove);
+            deleteScriptFile(world, scriptName);
+        }
+    }
+    
+    /**
+     * Finds a script by name in a list of scripts
+     * @param scripts The list of scripts to search
+     * @param scriptName The name of the script to find
+     * @return The found script or null if not found
+     */
+    private CodeScript findScriptByName(java.util.List<CodeScript> scripts, String scriptName) {
+        for (CodeScript script : scripts) {
+            if (script.getName().equals(scriptName)) {
+                return script;
             }
+        }
+        return null;
+    }
+    
+    /**
+     * Deletes a script file from storage
+     * @param world The world the script belongs to
+     * @param scriptName The name of the script file to delete
+     */
+    private void deleteScriptFile(CreativeWorld world, String scriptName) {
+        Path scriptFile = scriptsDirectory.resolve(world.getName()).resolve(scriptName + SCRIPT_FILE_EXTENSION);
+        try {
+            if (Files.exists(scriptFile)) {
+                Files.delete(scriptFile);
+                logger.info(SCRIPT_DELETED + scriptFile.toString());
+            }
+        } catch (IOException e) {
+            logger.severe(SCRIPT_DELETION_FAILED + scriptFile.toString() + ": " + e.getMessage());
         }
     }
     
