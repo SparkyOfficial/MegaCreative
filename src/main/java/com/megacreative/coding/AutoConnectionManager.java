@@ -913,7 +913,7 @@ public class AutoConnectionManager implements Listener {
         if (creativeWorld == null) return;
         
         // Process scripts for the world
-        ScriptCompilationResult result = processWorldScripts(world, creativeWorld);
+        ScriptCompilationResult result = processWorldScripts(world);
         
         // Update the creative world with new scripts
         creativeWorld.setScripts(result.getScripts());

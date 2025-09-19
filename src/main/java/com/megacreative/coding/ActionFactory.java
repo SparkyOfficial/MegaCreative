@@ -448,7 +448,7 @@ public class ActionFactory {
      * @param block The code block
      * @param interactiveGUI The interactive GUI
      */
-    private void addConfiguredItems(CodeBlock block) {
+    private void addConfiguredItems(CodeBlock block, com.megacreative.gui.interactive.InteractiveGUI interactiveGUI) {
         if (block.getParameter("items") != null) {
             // Process items parameter and add to GUI
             // This would depend on how items are stored in the block parameters
