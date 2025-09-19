@@ -14,8 +14,15 @@ import org.bukkit.inventory.meta.ItemMeta;
 
 import java.util.concurrent.CompletableFuture;
 import java.util.function.Function;
+import java.util.logging.Level;
 
 public class RepeatAction implements BlockAction {
+    
+    // Constants for magic numbers
+    private static final int DEFAULT_ITERATION_COUNT = 1;
+    private static final int MIN_ITERATION_COUNT = 1;
+    private static final int MAX_ITERATION_COUNT = 1000;
+    private static final String REPEAT_LOOP_CONTEXT = "repeat_loop";
     
     @Override
     public ExecutionResult execute(CodeBlock block, ExecutionContext context) {
@@ -64,11 +71,11 @@ public class RepeatAction implements BlockAction {
      * Validates the repeat count parameter
      */
     private ExecutionResult validateRepeatCount(int times) {
-        if (times <= 0) {
+        if (times < MIN_ITERATION_COUNT) {
             return ExecutionResult.error(Constants.REPEAT_COUNT_MUST_BE_GREATER_THAN_0);
         }
         
-        if (times > 1000) {
+        if (times > MAX_ITERATION_COUNT) {
             return ExecutionResult.error(Constants.MAXIMUM_REPEAT_COUNT_IS_1000);
         }
         
@@ -90,6 +97,7 @@ public class RepeatAction implements BlockAction {
                 
                 player.sendMessage(String.format(Constants.CYCLE_EXECUTED_N_TIMES, times));
             } catch (Exception e) {
+                logError(context, "Error executing repeat loop: " + e.getMessage(), e);
                 player.sendMessage(String.format(Constants.ERROR_EXECUTING_CYCLE, e.getMessage()));
             }
         });
@@ -170,14 +178,16 @@ public class RepeatAction implements BlockAction {
     private boolean executeIteration(ScriptEngine scriptEngine, CodeBlock nextBlock, 
                                    Player player, ExecutionContext loopContext, int currentIndex) {
         try {
-            ExecutionResult result = scriptEngine.executeBlockChain(nextBlock, player, "repeat_loop")
+            ExecutionResult result = scriptEngine.executeBlockChain(nextBlock, player, REPEAT_LOOP_CONTEXT)
                 .exceptionally(throwable -> {
+                    logError(loopContext, "Error in iteration " + (currentIndex + 1) + ": " + throwable.getMessage(), throwable);
                     player.sendMessage(String.format(Constants.ERROR_IN_ITERATION, currentIndex + 1, throwable.getMessage()));
                     return null;
                 })
                 .join(); // Ждем завершения итерации
             return true;
         } catch (Exception e) {
+            logError(loopContext, "Error in iteration " + (currentIndex + 1) + ": " + e.getMessage(), e);
             player.sendMessage(String.format(Constants.ERROR_IN_ITERATION, currentIndex + 1, e.getMessage()));
             return false;
         }
@@ -206,10 +216,10 @@ public class RepeatAction implements BlockAction {
                 }
             }
         } catch (Exception e) {
-            context.getPlugin().getLogger().warning("Error getting times parameter from container in RepeatAction: " + e.getMessage());
+            logError(context, "Error getting times parameter from container in RepeatAction: " + e.getMessage(), e);
         }
         
-        return 1; // Default to 1 iteration
+        return DEFAULT_ITERATION_COUNT; // Default to 1 iteration
     }
     
     /**
@@ -223,14 +233,23 @@ public class RepeatAction implements BlockAction {
                 if (displayName != null && !displayName.isEmpty()) {
                     // Try to parse times from display name
                     String cleanName = displayName.replaceAll("[§0-9]", "").trim();
-                    return Math.max(1, Integer.parseInt(cleanName));
+                    return Math.max(MIN_ITERATION_COUNT, Integer.parseInt(cleanName));
                 }
             }
             
             // Fallback to item amount
-            return Math.max(1, item.getAmount());
+            return Math.max(MIN_ITERATION_COUNT, item.getAmount());
         } catch (Exception e) {
-            return 1; // Default to 1 iteration
+            return DEFAULT_ITERATION_COUNT; // Default to 1 iteration
+        }
+    }
+    
+    /**
+     * Logs an error with the plugin's logger
+     */
+    private void logError(ExecutionContext context, String message, Throwable throwable) {
+        if (context != null && context.getPlugin() != null) {
+            context.getPlugin().getLogger().log(Level.WARNING, message, throwable);
         }
     }
 }
