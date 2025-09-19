@@ -5,6 +5,7 @@ import com.megacreative.managers.GUIManager;
 import com.megacreative.coding.CodeBlock;
 import com.megacreative.coding.BlockPlacementHandler;
 import com.megacreative.coding.values.DataValue;
+import com.megacreative.coding.Constants;
 import org.bukkit.Bukkit;
 import org.bukkit.Material;
 import org.bukkit.entity.Player;
@@ -78,7 +79,7 @@ public class ConnectionDebugGUI implements GUIManager.ManagedGUIInterface {
         this.blockPlacementHandler = plugin.getBlockPlacementHandler();
         this.autoConnectionManager = plugin.getServiceRegistry().getAutoConnectionManager();
         
-        this.inventory = Bukkit.createInventory(null, 54, "§8🔗 Связи блоков");
+        this.inventory = Bukkit.createInventory(null, 54, Constants.CONNECTION_DEBUG_GUI_TITLE);
         
         setupInventory();
     }
@@ -107,7 +108,7 @@ public class ConnectionDebugGUI implements GUIManager.ManagedGUIInterface {
         // Get root block
         CodeBlock rootBlock = blockPlacementHandler.getCodeBlock(rootBlockLocation);
         if (rootBlock == null) {
-            showError("Блок не найден");
+            showError(Constants.BLOCK_NOT_FOUND);
             return;
         }
         
@@ -148,14 +149,14 @@ public class ConnectionDebugGUI implements GUIManager.ManagedGUIInterface {
             if (current.block.getNextBlock() != null) {
                 Location nextLocation = findBlockLocation(current.block.getNextBlock());
                 if (nextLocation != null && !visitedBlocks.contains(nextLocation)) {
-                    int nextSlot = getNextAvailableSlot(current.slot, "next");
+                    int nextSlot = getNextAvailableSlot(current.slot, Constants.NEXT_SLOT);
                     if (nextSlot != -1) {
                         ItemStack nextItem = createBlockInfoItem(current.block.getNextBlock(), nextLocation, false);
                         inventory.setItem(nextSlot, nextItem);
                         slotToBlockLocation.put(nextSlot, nextLocation);
                         
                         // Add connection arrow
-                        addConnectionArrow(current.slot, nextSlot, "§a→ Следующий");
+                        addConnectionArrow(current.slot, nextSlot, Constants.NEXT_BLOCK_ARROW);
                         
                         toProcess.offer(new BlockConnection(current.block.getNextBlock(), nextLocation, nextSlot, current.depth + 1));
                         visitedBlocks.add(nextLocation);
@@ -169,14 +170,14 @@ public class ConnectionDebugGUI implements GUIManager.ManagedGUIInterface {
                     CodeBlock child = current.block.getChildren().get(i);
                     Location childLocation = findBlockLocation(child);
                     if (childLocation != null && !visitedBlocks.contains(childLocation)) {
-                        int childSlot = getNextAvailableSlot(current.slot, "child" + i);
+                        int childSlot = getNextAvailableSlot(current.slot, Constants.CHILD_SLOT_PREFIX + i);
                         if (childSlot != -1) {
                             ItemStack childItem = createBlockInfoItem(child, childLocation, false);
                             inventory.setItem(childSlot, childItem);
                             slotToBlockLocation.put(childSlot, childLocation);
                             
                             // Add connection arrow
-                            addConnectionArrow(current.slot, childSlot, "§b↓ Дочерний");
+                            addConnectionArrow(current.slot, childSlot, Constants.CHILD_BLOCK_ARROW);
                             
                             toProcess.offer(new BlockConnection(child, childLocation, childSlot, current.depth + 1));
                             visitedBlocks.add(childLocation);
@@ -229,7 +230,7 @@ public class ConnectionDebugGUI implements GUIManager.ManagedGUIInterface {
         ItemMeta meta = item.getItemMeta();
         
         String prefix = isRoot ? "§e★ " : "§7• ";
-        meta.setDisplayName(prefix + "§f" + (block.getAction() != null ? block.getAction() : "Неназначено"));
+        meta.setDisplayName(prefix + "§f" + (block.getAction() != null ? block.getAction() : Constants.BLOCK_UNASSIGNED));
         
         List<String> lore = new ArrayList<>();
         lore.add("§7Координаты: §f" + location.getBlockX() + ", " + location.getBlockY() + ", " + location.getBlockZ());

@@ -183,6 +183,9 @@ public class ReferenceSystemPlaceholderResolver {
                 case "z":
                 case "player_z":
                     return String.valueOf(player.getLocation().getBlockZ());
+                default:
+                    // Return null for unknown placeholders to allow fallback mechanisms
+                    return null;
             }
         }
         
@@ -207,9 +210,10 @@ public class ReferenceSystemPlaceholderResolver {
                 return String.valueOf(Bukkit.getOnlinePlayers().size());
             case "server_max":
                 return String.valueOf(Bukkit.getMaxPlayers());
+            default:
+                // Return null for unknown placeholders to allow fallback mechanisms
+                return null;
         }
-        
-        return null;
     }
     
     /**

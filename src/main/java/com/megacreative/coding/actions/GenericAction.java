@@ -8,6 +8,7 @@ import com.megacreative.coding.values.DataValue;
 import com.megacreative.coding.values.types.ListValue;
 import com.megacreative.core.ServiceRegistry;
 import com.megacreative.coding.variables.VariableManager;
+import com.megacreative.coding.Constants;
 import org.bukkit.Location;
 import org.bukkit.Material;
 import org.bukkit.entity.Player;
@@ -17,8 +18,6 @@ import org.bukkit.potion.PotionEffectType;
 
 import java.util.*;
 import java.util.function.BiConsumer;
-import java.util.function.Function;
-
 
 /**
  * Universal action handler that can process 90% of all simple actions
@@ -36,37 +35,79 @@ public class GenericAction implements BlockAction {
     @Override
     public ExecutionResult execute(CodeBlock block, ExecutionContext context) {
         try {
-            // Get the action type from the block
             String actionType = block.getAction();
-            
-            // Get parameters from the block
-            Map<String, DataValue> params = new HashMap<>();
-            for (String paramName : block.getParameters().keySet()) {
-                params.put(paramName, block.getParameter(paramName));
+            if (actionType == null) {
+                return ExecutionResult.error(Constants.UNKNOWN_ACTION_TYPE + "null");
             }
             
-            // Check if player is required for this action and if player is available
-            if (isPlayerRequired(actionType) && context.getPlayer() == null) {
-                return ExecutionResult.error("Player required for action: " + actionType);
+            // Check if player is required for this action
+            if (requiresPlayer(actionType) && context.getPlayer() == null) {
+                return ExecutionResult.error(Constants.PLAYER_REQUIRED_FOR_ACTION + actionType);
             }
             
-            // Execute the action
+            // Get the action handler
             BiConsumer<ExecutionContext, Map<String, DataValue>> handler = ACTION_HANDLERS.get(actionType);
             if (handler != null) {
-                handler.accept(context, params);
-                return ExecutionResult.success("Action executed successfully: " + actionType);
+                // Execute the handler
+                handler.accept(context, block.getParameters());
+                return ExecutionResult.success(Constants.ACTION_EXECUTED_SUCCESSFULLY + actionType);
             } else {
-                return ExecutionResult.error("Unknown action type: " + actionType);
+                return ExecutionResult.error(Constants.UNKNOWN_ACTION_TYPE + actionType);
             }
         } catch (Exception e) {
-            return ExecutionResult.error("Failed to execute action: " + e.getMessage());
+            return ExecutionResult.error(Constants.FAILED_TO_EXECUTE_ACTION + e.getMessage());
+        }
+    }
+    
+    /**
+     * Helper method to add new action handlers dynamically
+     * Can be used by other plugins or modules to extend functionality
+     */
+    public static void registerActionHandler(String actionId, BiConsumer<ExecutionContext, Map<String, DataValue>> handler) {
+        ACTION_HANDLERS.put(actionId, handler);
+    }
+    
+    /**
+     * Check if action is supported
+     */
+    public static boolean isSupported(String actionId) {
+        return ACTION_HANDLERS.containsKey(actionId);
+    }
+    
+    /**
+     * Parse location string in format "x,y,z" or "x,y,z,world"
+     * @param locString Location string to parse
+     * @param defaultLocation Default location to use if world is not specified
+     * @return Parsed Location object or null if parsing failed
+     */
+    public static Location parseLocationString(String locString) {
+        String[] parts = locString.split(",");
+        if (parts.length < 3) {
+            return null;
+        }
+        
+        try {
+            double x = Double.parseDouble(parts[0]);
+            double y = Double.parseDouble(parts[1]);
+            double z = Double.parseDouble(parts[2]);
+            
+            Location location = new Location(null, x, y, z);
+            if (parts.length > 3) {
+                org.bukkit.World world = org.bukkit.Bukkit.getWorld(parts[3]);
+                if (world != null) {
+                    location.setWorld(world);
+                }
+            }
+            return location;
+        } catch (NumberFormatException e) {
+            return null;
         }
     }
     
     /**
      * Checks if a player is required for the specified action type
      */
-    private boolean isPlayerRequired(String actionType) {
+    private boolean requiresPlayer(String actionType) {
         // Actions that require a player
         Set<String> playerRequiredActions = new HashSet<>(Arrays.asList(
             "sendMessage", "sendTitle", "teleport", "giveItem", "removeItem",
@@ -85,6 +126,18 @@ public class GenericAction implements BlockAction {
      * Add new actions here instead of creating new classes
      */
     private static void initializeActionHandlers() {
+        initializePlayerActions();
+        initializeWorldActions();
+        initializeGameModeActions();
+        initializeEconomyActions();
+        initializePermissionActions();
+        initializeListActions();
+    }
+    
+    /**
+     * Initialize player-related action handlers
+     */
+    private static void initializePlayerActions() {
         // === PLAYER ACTIONS ===
         ACTION_HANDLERS.put("sendMessage", (context, params) -> {
             String message = params.containsKey("message") ? params.get("message").asString() : "Hello World";
@@ -105,14 +158,12 @@ public class GenericAction implements BlockAction {
         ACTION_HANDLERS.put("teleport", (context, params) -> {
             // Location loc = params.get("location").asLocation(); // Need to implement location handling
             String locString = params.get("location").asString();
-            // Parse location string and teleport - full implementation
-            GenericAction action = new GenericAction();
-            Location location = action.parseLocationString(locString, context.getPlayer().getLocation());
+            Location location = parseLocationString(locString);
             if (location != null) {
                 context.getPlayer().teleport(location);
-                context.getPlayer().sendMessage("§aTeleported to: " + location.getX() + ", " + location.getY() + ", " + location.getZ());
+                context.getPlayer().sendMessage(Constants.TELEPORT_SUCCESS + location.getX() + ", " + location.getY() + ", " + location.getZ());
             } else {
-                context.getPlayer().sendMessage("§cInvalid location format: " + locString);
+                context.getPlayer().sendMessage(Constants.INVALID_LOCATION_FORMAT + locString);
             }
         });
         
@@ -211,33 +262,35 @@ public class GenericAction implements BlockAction {
             boolean breakBlocks = params.containsKey("breakBlocks") ? params.get("breakBlocks").asBoolean() : false;
             context.getPlayer().getLocation().getWorld().createExplosion(context.getPlayer().getLocation(), power, false, breakBlocks);
         });
-        
-        
+    }
+    
+    /**
+     * Initialize world-related action handlers
+     */
+    private static void initializeWorldActions() {
         // === WORLD ACTIONS ===
         ACTION_HANDLERS.put("setBlock", (context, params) -> {
             String locString = params.get("location").asString();
             Material material = Material.valueOf(params.get("material").asString());
             
-            GenericAction action = new GenericAction();
-            Location location = action.parseLocationString(locString, context.getPlayer().getLocation());
+            Location location = parseLocationString(locString);
             if (location != null) {
                 location.getBlock().setType(material);
-                context.getPlayer().sendMessage("§aSet block at " + locString + " to " + material);
+                context.getPlayer().sendMessage(Constants.SET_BLOCK_SUCCESS + locString + " to " + material);
             } else {
-                context.getPlayer().sendMessage("§cInvalid location format: " + locString);
+                context.getPlayer().sendMessage(Constants.INVALID_LOCATION_FORMAT + locString);
             }
         });
         
         ACTION_HANDLERS.put("breakBlock", (context, params) -> {
             String locString = params.get("location").asString();
             
-            GenericAction action = new GenericAction();
-            Location location = action.parseLocationString(locString, context.getPlayer().getLocation());
+            Location location = parseLocationString(locString);
             if (location != null) {
                 location.getBlock().setType(Material.AIR);
-                context.getPlayer().sendMessage("§aBroke block at " + locString);
+                context.getPlayer().sendMessage(Constants.BROKE_BLOCK_SUCCESS + locString);
             } else {
-                context.getPlayer().sendMessage("§cInvalid location format: " + locString);
+                context.getPlayer().sendMessage(Constants.INVALID_LOCATION_FORMAT + locString);
             }
         });
         
@@ -255,7 +308,12 @@ public class GenericAction implements BlockAction {
             String message = params.get("message").asString();
             context.getPlayer().getServer().broadcastMessage(message);
         });
-        
+    }
+    
+    /**
+     * Initialize game mode action handlers
+     */
+    private static void initializeGameModeActions() {
         // === GAMEMODE ACTIONS ===
         ACTION_HANDLERS.put("setGameMode", (context, params) -> {
             String mode = params.get("gamemode").asString().toLowerCase();
@@ -272,9 +330,17 @@ public class GenericAction implements BlockAction {
                 case "spectator":
                     context.getPlayer().setGameMode(org.bukkit.GameMode.SPECTATOR);
                     break;
+                default:
+                    context.getPlayer().sendMessage("§cInvalid gamemode: " + mode);
+                    break;
             }
         });
-        
+    }
+    
+    /**
+     * Initialize economy-related action handlers
+     */
+    private static void initializeEconomyActions() {
         // === ECONOMY ACTIONS (if Vault is available) ===
         ACTION_HANDLERS.put("giveMoney", (context, params) -> {
             double amount = params.get("amount").asNumber().doubleValue();
@@ -287,7 +353,12 @@ public class GenericAction implements BlockAction {
             // Implementation would depend on economy plugin integration
             context.getPlayer().sendMessage("§c-$" + amount + " (Economy integration needed)");
         });
-        
+    }
+    
+    /**
+     * Initialize permission-related action handlers
+     */
+    private static void initializePermissionActions() {
         // === PERMISSION ACTIONS ===
         ACTION_HANDLERS.put("givePermission", (context, params) -> {
             String permission = params.get("permission").asString();
@@ -300,7 +371,12 @@ public class GenericAction implements BlockAction {
             // This would require a permissions plugin integration
             context.getPlayer().sendMessage("§cPermission removed: " + permission + " (Permissions plugin needed)");
         });
-        
+    }
+    
+    /**
+     * Initialize list-related action handlers
+     */
+    private static void initializeListActions() {
         // === LIST ACTIONS ===
         ACTION_HANDLERS.put("addItemToList", (context, params) -> {
             String listName = params.get("list").asString();
@@ -358,50 +434,5 @@ public class GenericAction implements BlockAction {
             variableManager.setPlayerVariable(context.getPlayer().getUniqueId(), listName, newList);
             context.getPlayer().sendMessage("§aCreated new list " + listName);
         });
-    }
-    
-    /**
-     * Helper method to add new action handlers dynamically
-     * Can be used by other plugins or modules to extend functionality
-     */
-    public static void registerActionHandler(String actionId, BiConsumer<ExecutionContext, Map<String, DataValue>> handler) {
-        ACTION_HANDLERS.put(actionId, handler);
-    }
-    
-    /**
-     * Check if action is supported
-     */
-    public static boolean isSupported(String actionId) {
-        return ACTION_HANDLERS.containsKey(actionId);
-    }
-    
-    /**
-     * Parse location string in format "x,y,z" or "x,y,z,world"
-     * @param locString Location string to parse
-     * @param defaultLocation Default location to use if world is not specified
-     * @return Parsed Location object or null if parsing failed
-     */
-    public Location parseLocationString(String locString, Location defaultLocation) {
-        String[] parts = locString.split(",");
-        if (parts.length < 3) {
-            return null;
-        }
-        
-        try {
-            double x = Double.parseDouble(parts[0]);
-            double y = Double.parseDouble(parts[1]);
-            double z = Double.parseDouble(parts[2]);
-            
-            Location location = new Location(defaultLocation.getWorld(), x, y, z);
-            if (parts.length > 3) {
-                org.bukkit.World world = org.bukkit.Bukkit.getWorld(parts[3]);
-                if (world != null) {
-                    location.setWorld(world);
-                }
-            }
-            return location;
-        } catch (NumberFormatException e) {
-            return null;
-        }
     }
 }

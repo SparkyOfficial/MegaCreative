@@ -83,6 +83,9 @@ public class ParameterResolver {
                     return String.valueOf(player.getLocation().getY());
                 case "player_z":
                     return String.valueOf(player.getLocation().getZ());
+                default:
+                    // Continue to next placeholder resolution mechanism
+                    break;
             }
         }
 
@@ -98,6 +101,9 @@ public class ParameterResolver {
                     return String.valueOf(location.getZ());
                 case "block_world":
                     return location.getWorld().getName();
+                default:
+                    // Continue to next placeholder resolution mechanism
+                    break;
             }
         }
 
@@ -118,10 +124,10 @@ public class ParameterResolver {
                 return String.valueOf(System.currentTimeMillis());
             case "random":
                 return String.valueOf(Math.random());
+            default:
+                // If we can't resolve it, return null
+                return null;
         }
-
-        // If we can't resolve it, return null
-        return null;
     }
     
     /**

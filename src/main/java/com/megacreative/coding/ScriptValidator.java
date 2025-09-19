@@ -86,33 +86,54 @@ public class ScriptValidator {
      */
     public ValidationResult validateScript(CodeScript script) {
         if (script == null) {
-            List<ValidationError> errors = new ArrayList<>();
-            errors.add(new ValidationError(ValidationError.Severity.ERROR, "Script is null", null, null));
-            return new ValidationResult(false, errors, new ArrayList<>());
+            return createNullScriptResult();
         }
         
         List<ValidationError> errors = new ArrayList<>();
         List<ValidationError> warnings = new ArrayList<>();
         
         // Validate script name
+        validateScriptName(script, errors, warnings);
+        
+        // Validate root block
+        validateRootBlock(script, errors, warnings);
+        
+        // Check for common script issues
+        checkScriptStructure(script, errors, warnings);
+        
+        return new ValidationResult(errors.isEmpty(), errors, warnings);
+    }
+    
+    /**
+     * Creates a validation result for a null script
+     */
+    private ValidationResult createNullScriptResult() {
+        List<ValidationError> errors = new ArrayList<>();
+        errors.add(new ValidationError(ValidationError.Severity.ERROR, "Script is null", null, null));
+        return new ValidationResult(false, errors, new ArrayList<>());
+    }
+    
+    /**
+     * Validates the script name
+     */
+    private void validateScriptName(CodeScript script, List<ValidationError> errors, List<ValidationError> warnings) {
         if (script.getName() == null || script.getName().trim().isEmpty()) {
             errors.add(new ValidationError(ValidationError.Severity.ERROR, "Script name is required", null, "name"));
         } else if (script.getName().length() > 64) {
             warnings.add(new ValidationError(ValidationError.Severity.WARNING, "Script name is very long", null, "name"));
         }
-        
-        // Validate root block
+    }
+    
+    /**
+     * Validates the root block of a script
+     */
+    private void validateRootBlock(CodeScript script, List<ValidationError> errors, List<ValidationError> warnings) {
         if (script.getRootBlock() == null) {
             errors.add(new ValidationError(ValidationError.Severity.ERROR, "Script must have a root block", null, "rootBlock"));
         } else {
             // Validate all blocks in the script
             validateBlockChain(script.getRootBlock(), errors, warnings);
         }
-        
-        // Check for common script issues
-        checkScriptStructure(script, errors, warnings);
-        
-        return new ValidationResult(errors.isEmpty(), errors, warnings);
     }
     
     /**
@@ -145,6 +166,25 @@ public class ScriptValidator {
         if (block == null) return;
         
         // Validate block has required fields
+        validateBlockFields(block, errors);
+        
+        // Validate action and parameters
+        validateBlockAction(block, errors, warnings);
+        
+        // Validate children
+        validateBlockChildren(block, errors, warnings);
+        
+        // Validate bracket consistency
+        validateBracketConsistency(block, errors);
+        
+        // Check for potential issues
+        checkBlockIssues(block, errors, warnings);
+    }
+    
+    /**
+     * Validates block required fields
+     */
+    private void validateBlockFields(CodeBlock block, List<ValidationError> errors) {
         if (block.getMaterial() == null) {
             errors.add(new ValidationError(ValidationError.Severity.ERROR, 
                 "Block material is required", block, "material"));
@@ -153,40 +193,30 @@ public class ScriptValidator {
         if (block.getAction() == null || block.getAction().trim().isEmpty()) {
             errors.add(new ValidationError(ValidationError.Severity.ERROR, 
                 "Block action is required", block, "action"));
+        }
+    }
+    
+    /**
+     * Validates block action and parameters
+     */
+    private void validateBlockAction(CodeBlock block, List<ValidationError> errors, List<ValidationError> warnings) {
+        String action = block.getAction();
+        if (action == null || action.trim().isEmpty()) {
+            return; // Already validated in validateBlockFields
+        }
+        
+        // Validate action exists in configuration
+        BlockConfigService.BlockConfig config = blockConfigService.getBlockConfig(action);
+        if (config == null) {
+            errors.add(new ValidationError(ValidationError.Severity.ERROR, 
+                "Unknown block action: " + action, block, "action"));
         } else {
-            // Validate action exists in configuration
-            BlockConfigService.BlockConfig config = blockConfigService.getBlockConfig(block.getAction());
-            if (config == null) {
-                errors.add(new ValidationError(ValidationError.Severity.ERROR, 
-                    "Unknown block action: " + block.getAction(), block, "action"));
-            } else {
-                // Validate block parameters against configuration
-                validateBlockParameters(block, config, errors, warnings);
-                
-                // Validate block type matches configuration
-                String expectedType = config.getType();
-                if (!isValidBlockType(block, expectedType)) {
-                    errors.add(new ValidationError(ValidationError.Severity.ERROR, 
-                        "Block type mismatch. Expected: " + expectedType, block, "type"));
-                }
-            }
+            // Validate block parameters against configuration
+            validateBlockParameters(block, config, errors, warnings);
+            
+            // Validate block type matches configuration
+            validateBlockType(block, config, errors);
         }
-        
-        // Validate children
-        for (CodeBlock child : block.getChildren()) {
-            validateBlock(child, errors, warnings);
-        }
-        
-        // Validate bracket consistency
-        if (block.isBracket()) {
-            if (block.getBracketType() == null) {
-                errors.add(new ValidationError(ValidationError.Severity.ERROR, 
-                    "Bracket block must have a bracket type", block, "bracketType"));
-            }
-        }
-        
-        // Check for potential issues
-        checkBlockIssues(block, errors, warnings);
     }
     
     /**
@@ -197,18 +227,34 @@ public class ScriptValidator {
         // Check required parameters
         Map<String, BlockConfigService.ParameterConfig> paramConfigs = config.getActionParameters(); // Fixed: use getActionParameters()
         if (paramConfigs != null) {
-            for (Map.Entry<String, BlockConfigService.ParameterConfig> entry : paramConfigs.entrySet()) {
-                String paramName = entry.getKey();
-                BlockConfigService.ParameterConfig paramConfig = entry.getValue();
-                
-                if (paramConfig.isRequired() && !block.hasParameter(paramName)) {
-                    errors.add(new ValidationError(ValidationError.Severity.ERROR, 
-                        "Required parameter missing: " + paramName, block, paramName));
-                }
-            }
+            checkRequiredParameters(block, paramConfigs, errors);
         }
         
         // Validate parameter values
+        validateParameterValues(block, paramConfigs, errors, warnings);
+    }
+    
+    /**
+     * Checks required parameters
+     */
+    private void checkRequiredParameters(CodeBlock block, Map<String, BlockConfigService.ParameterConfig> paramConfigs, 
+                                       List<ValidationError> errors) {
+        for (Map.Entry<String, BlockConfigService.ParameterConfig> entry : paramConfigs.entrySet()) {
+            String paramName = entry.getKey();
+            BlockConfigService.ParameterConfig paramConfig = entry.getValue();
+            
+            if (paramConfig.isRequired() && !block.hasParameter(paramName)) {
+                errors.add(new ValidationError(ValidationError.Severity.ERROR, 
+                    "Required parameter missing: " + paramName, block, paramName));
+            }
+        }
+    }
+    
+    /**
+     * Validates parameter values
+     */
+    private void validateParameterValues(CodeBlock block, Map<String, BlockConfigService.ParameterConfig> paramConfigs, 
+                                       List<ValidationError> errors, List<ValidationError> warnings) {
         for (Map.Entry<String, DataValue> entry : block.getParameters().entrySet()) {
             String paramName = entry.getKey();
             DataValue value = entry.getValue();
@@ -226,6 +272,38 @@ public class ScriptValidator {
                     errors.add(new ValidationError(ValidationError.Severity.ERROR, 
                         "Required parameter is empty: " + paramName, block, paramName));
                 }
+            }
+        }
+    }
+    
+    /**
+     * Validates block type matches configuration
+     */
+    private void validateBlockType(CodeBlock block, BlockConfigService.BlockConfig config, List<ValidationError> errors) {
+        String expectedType = config.getType();
+        if (!isValidBlockType(block, expectedType)) {
+            errors.add(new ValidationError(ValidationError.Severity.ERROR, 
+                "Block type mismatch. Expected: " + expectedType, block, "type"));
+        }
+    }
+    
+    /**
+     * Validates block children
+     */
+    private void validateBlockChildren(CodeBlock block, List<ValidationError> errors, List<ValidationError> warnings) {
+        for (CodeBlock child : block.getChildren()) {
+            validateBlock(child, errors, warnings);
+        }
+    }
+    
+    /**
+     * Validates bracket consistency
+     */
+    private void validateBracketConsistency(CodeBlock block, List<ValidationError> errors) {
+        if (block.isBracket()) {
+            if (block.getBracketType() == null) {
+                errors.add(new ValidationError(ValidationError.Severity.ERROR, 
+                    "Bracket block must have a bracket type", block, "bracketType"));
             }
         }
     }
@@ -352,6 +430,16 @@ public class ScriptValidator {
             report.append("⚠ Script has ").append(result.getWarningCount()).append(" warnings\n");
         }
         
+        appendErrorDetails(result, report);
+        appendWarningDetails(result, report);
+        
+        return report.toString();
+    }
+    
+    /**
+     * Appends error details to the validation report
+     */
+    private void appendErrorDetails(ValidationResult result, StringBuilder report) {
         if (!result.getErrors().isEmpty()) {
             report.append("\n--- Errors ---\n");
             for (ValidationError error : result.getErrors()) {
@@ -365,7 +453,12 @@ public class ScriptValidator {
                 report.append("\n");
             }
         }
-        
+    }
+    
+    /**
+     * Appends warning details to the validation report
+     */
+    private void appendWarningDetails(ValidationResult result, StringBuilder report) {
         if (!result.getWarnings().isEmpty()) {
             report.append("\n--- Warnings ---\n");
             for (ValidationError warning : result.getWarnings()) {
@@ -379,7 +472,5 @@ public class ScriptValidator {
                 report.append("\n");
             }
         }
-        
-        return report.toString();
     }
 }

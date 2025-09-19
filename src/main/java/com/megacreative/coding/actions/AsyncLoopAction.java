@@ -39,70 +39,7 @@ public class AsyncLoopAction implements BlockAction {
             
             CodeBlock firstChild = block.getChildren().get(0);
             
-            BukkitTask task = new BukkitRunnable() {
-                private int count = 0;
-                
-                @Override
-                public void run() {
-                    // Check if we should stop
-                    if ((params.iterations != -1 && count >= params.iterations) || context.isCancelled()) {
-                        activeLoops.remove(loopId);
-                        this.cancel();
-                        return;
-                    }
-                    
-                    // Check for break flag
-                    if (context.hasBreakFlag()) {
-                        context.clearBreakFlag();
-                        activeLoops.remove(loopId);
-                        this.cancel();
-                        if (context.getPlayer() != null) {
-                            context.getPlayer().sendMessage("§aAsync loop terminated by break statement");
-                        }
-                        return;
-                    }
-                    
-                    // Check for continue flag
-                    if (context.hasContinueFlag()) {
-                        context.clearContinueFlag();
-                        // Skip this iteration
-                        count++;
-                        return;
-                    }
-                    
-                    // Execute the child blocks
-                    try {
-                        context.getPlugin().getServer().getScheduler().runTask(context.getPlugin(), () -> {
-                            // Process the child block chain using the script engine from service registry
-                            ScriptEngine scriptEngine = context.getPlugin().getServiceRegistry().getService(ScriptEngine.class);
-                            if (scriptEngine != null) {
-                                scriptEngine.executeBlockChain(firstChild, context.getPlayer(), "loop")
-                                    .thenAccept(result -> {
-                                        // Check for break/continue flags after execution
-                                        if (context.hasBreakFlag()) {
-                                            context.clearBreakFlag();
-                                            activeLoops.remove(loopId);
-                                            this.cancel();
-                                            if (context.getPlayer() != null) {
-                                                context.getPlayer().sendMessage("§aAsync loop terminated by break statement");
-                                            }
-                                        } else if (context.hasContinueFlag()) {
-                                            context.clearContinueFlag();
-                                            // Continue to next iteration
-                                        }
-                                    });
-                            }
-                        });
-                    } catch (Exception e) {
-                        context.getPlugin().getLogger().severe("Error in async loop: " + e.getMessage());
-                        activeLoops.remove(loopId);
-                        this.cancel();
-                        return;
-                    }
-                    
-                    count++;
-                }
-            }.runTaskTimerAsynchronously(context.getPlugin(), 0L, params.delay);
+            BukkitTask task = createLoopTask(block, context, params, firstChild, loopId);
             
             // Store the task so it can be cancelled later if needed
             activeLoops.put(loopId, task);
@@ -112,6 +49,106 @@ public class AsyncLoopAction implements BlockAction {
         } catch (Exception e) {
             return ExecutionResult.error("Error starting async loop: " + e.getMessage());
         }
+    }
+    
+    /**
+     * Creates the loop task for execution
+     */
+    private BukkitTask createLoopTask(CodeBlock block, ExecutionContext context, LoopParams params, 
+                                    CodeBlock firstChild, String loopId) {
+        return new BukkitRunnable() {
+            private int count = 0;
+            
+            @Override
+            public void run() {
+                // Check if we should stop
+                if ((params.iterations != -1 && count >= params.iterations) || context.isCancelled()) {
+                    cleanupLoop(loopId);
+                    this.cancel();
+                    return;
+                }
+                
+                // Check for break flag
+                if (context.hasBreakFlag()) {
+                    handleBreakFlag(context, loopId, this);
+                    return;
+                }
+                
+                // Check for continue flag
+                if (context.hasContinueFlag()) {
+                    handleContinueFlag(context);
+                    count++;
+                    return;
+                }
+                
+                // Execute the child blocks
+                try {
+                    executeChildBlocks(context, firstChild, loopId, this);
+                } catch (Exception e) {
+                    handleExecutionError(context, loopId, this, e);
+                    return;
+                }
+                
+                count++;
+            }
+        }.runTaskTimerAsynchronously(context.getPlugin(), 0L, params.delay);
+    }
+    
+    /**
+     * Cleans up the loop resources
+     */
+    private void cleanupLoop(String loopId) {
+        activeLoops.remove(loopId);
+    }
+    
+    /**
+     * Handles break flag during loop execution
+     */
+    private void handleBreakFlag(ExecutionContext context, String loopId, BukkitRunnable task) {
+        context.clearBreakFlag();
+        cleanupLoop(loopId);
+        task.cancel();
+        if (context.getPlayer() != null) {
+            context.getPlayer().sendMessage("§aAsync loop terminated by break statement");
+        }
+    }
+    
+    /**
+     * Handles continue flag during loop execution
+     */
+    private void handleContinueFlag(ExecutionContext context) {
+        context.clearContinueFlag();
+        // Skip this iteration
+    }
+    
+    /**
+     * Executes child blocks in the loop
+     */
+    private void executeChildBlocks(ExecutionContext context, CodeBlock firstChild, String loopId, BukkitRunnable task) {
+        context.getPlugin().getServer().getScheduler().runTask(context.getPlugin(), () -> {
+            // Process the child block chain using the script engine from service registry
+            ScriptEngine scriptEngine = context.getPlugin().getServiceRegistry().getService(ScriptEngine.class);
+            if (scriptEngine != null) {
+                scriptEngine.executeBlockChain(firstChild, context.getPlayer(), "loop")
+                    .thenAccept(result -> {
+                        // Check for break/continue flags after execution
+                        if (context.hasBreakFlag()) {
+                            handleBreakFlag(context, loopId, task);
+                        } else if (context.hasContinueFlag()) {
+                            handleContinueFlag(context);
+                        }
+                    });
+            }
+        });
+    }
+    
+    /**
+     * Handles execution errors
+     */
+    private void handleExecutionError(ExecutionContext context, String loopId, BukkitRunnable task, Exception e) {
+        context.getPlugin().getLogger().severe("Error in async loop: " + e.getMessage());
+        cleanupLoop(loopId);
+        task.cancel();
     }
     
     /**

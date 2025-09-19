@@ -9,6 +9,7 @@ import com.megacreative.models.CreativeWorld;
 import com.megacreative.coding.executors.AdvancedExecutionEngine.ExecutionMode;
 import com.megacreative.coding.executors.AdvancedExecutionEngine.Priority;
 import com.megacreative.coding.executors.ExecutionResult;
+import com.megacreative.coding.Constants;
 import org.bukkit.Location;
 import org.bukkit.entity.Player;
 import org.bukkit.event.Event;
@@ -95,8 +96,8 @@ public class ExecutionContext {
         this.blockLocation = blockLocation != null ? blockLocation.clone() : null;
         this.currentBlock = currentBlock;
         this.variableManager = plugin.getVariableManager();
-        this.scriptId = currentBlock != null ? currentBlock.getId().toString() : "global";
-        this.worldId = creativeWorld != null ? creativeWorld.getId() : "global";
+        this.scriptId = currentBlock != null ? currentBlock.getId().toString() : Constants.GLOBAL_SCOPE_ID;
+        this.worldId = creativeWorld != null ? creativeWorld.getId() : Constants.GLOBAL_SCOPE_ID;
     }
     
     /**
@@ -117,8 +118,8 @@ public class ExecutionContext {
         this.currentBlock = null;
         this.currentBlockField = null;
         this.variableManager = this.plugin.getVariableManager();
-        this.scriptId = "global";
-        this.worldId = "global";
+        this.scriptId = Constants.GLOBAL_SCOPE_ID;
+        this.worldId = Constants.GLOBAL_SCOPE_ID;
     }
     
     public String getExecutionId() {
@@ -261,7 +262,7 @@ public class ExecutionContext {
         if (player != null) {
             return player.getUniqueId().toString();
         }
-        return scriptId != null ? scriptId : "global";
+        return scriptId != null ? scriptId : Constants.GLOBAL_SCOPE_ID;
     }
     
     /**
@@ -497,7 +498,7 @@ public class ExecutionContext {
         this.breakFlag = breakFlag;
         // Log break flag changes for debugging
         if (plugin != null && plugin.getLogger() != null) {
-            plugin.getLogger().fine("Break flag set to: " + breakFlag);
+            plugin.getLogger().fine(Constants.BREAK_FLAG_SET + breakFlag);
         }
     }
     
@@ -505,7 +506,7 @@ public class ExecutionContext {
         this.breakFlag = false;
         // Log break flag changes for debugging
         if (plugin != null && plugin.getLogger() != null) {
-            plugin.getLogger().fine("Break flag cleared");
+            plugin.getLogger().fine(Constants.BREAK_FLAG_CLEARED);
         }
     }
     
@@ -517,7 +518,7 @@ public class ExecutionContext {
         this.continueFlag = continueFlag;
         // Log continue flag changes for debugging
         if (plugin != null && plugin.getLogger() != null) {
-            plugin.getLogger().fine("Continue flag set to: " + continueFlag);
+            plugin.getLogger().fine(Constants.CONTINUE_FLAG_SET + continueFlag);
         }
     }
     
@@ -525,7 +526,7 @@ public class ExecutionContext {
         this.continueFlag = false;
         // Log continue flag changes for debugging
         if (plugin != null && plugin.getLogger() != null) {
-            plugin.getLogger().fine("Continue flag cleared");
+            plugin.getLogger().fine(Constants.CONTINUE_FLAG_CLEARED);
         }
     }
     
@@ -535,19 +536,19 @@ public class ExecutionContext {
     public String getScriptId() {
         // Generate script ID based on current block or world
         if (currentBlock != null) {
-            return "script_" + currentBlock.getId().toString();
+            return Constants.SCRIPT_ID_PREFIX + currentBlock.getId().toString();
         }
         if (creativeWorld != null) {
-            return "script_" + creativeWorld.getId();
+            return Constants.SCRIPT_ID_PREFIX + creativeWorld.getId();
         }
-        return "script_unknown";
+        return Constants.SCRIPT_UNKNOWN;
     }
     
     /**
      * Gets world ID for variable resolution  
      */
     public String getWorldId() {
-        return creativeWorld != null ? creativeWorld.getId() : "unknown_world";
+        return creativeWorld != null ? creativeWorld.getId() : Constants.UNKNOWN_WORLD_ID;
     }
     
     /**
@@ -556,7 +557,7 @@ public class ExecutionContext {
      */
     public boolean isDebugMode() {
         // Check if player has debug permissions
-        if (player != null && player.hasPermission("megacreative.debug")) {
+        if (player != null && player.hasPermission(Constants.DEBUG_PERMISSION)) {
             return true;
         }
         

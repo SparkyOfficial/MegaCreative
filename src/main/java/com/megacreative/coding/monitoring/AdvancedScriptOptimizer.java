@@ -8,6 +8,7 @@ import com.megacreative.coding.BlockCondition;
 import com.megacreative.coding.values.DataValue;
 import com.megacreative.MegaCreative;
 import com.megacreative.services.BlockConfigService;
+import com.megacreative.coding.Constants;
 import org.bukkit.Location;
 import java.util.*;
 import java.util.logging.Logger;
@@ -63,10 +64,7 @@ public class AdvancedScriptOptimizer {
             performanceMonitor.getScriptProfile(script.getName());
         
         // Check for common optimization opportunities
-        checkLoopOptimizations(script, profile, suggestions);
-        checkConditionalOptimizations(script, profile, suggestions);
-        checkResourceOptimizations(script, profile, suggestions);
-        checkStructureOptimizations(script, profile, suggestions);
+        performOptimizationChecks(script, profile, suggestions);
         
         // Apply optimization rules
         applyOptimizationRules(script, suggestions);
@@ -74,23 +72,16 @@ public class AdvancedScriptOptimizer {
         return new ScriptOptimizationReport(script.getName(), suggestions);
     }
     
-    /**
-     * Automatically applies safe optimizations to a script
-     */
-    public void autoOptimizeScript(CodeScript script) {
-        ScriptOptimizationReport report = analyzeScript(script);
-        
-        // Apply safe optimizations automatically
-        for (OptimizationSuggestion suggestion : report.getSuggestions()) {
-            if (suggestion.isSafeToApply()) {
-                applyOptimization(script, suggestion);
-            }
-        }
+    private void performOptimizationChecks(CodeScript script, 
+                                         ScriptPerformanceProfile profile,
+                                         List<OptimizationSuggestion> suggestions) {
+        checkLoopOptimizations(script, profile, suggestions);
+        checkConditionalOptimizations(script, profile, suggestions);
+        checkResourceOptimizations(script, profile, suggestions);
+        checkStructureOptimizations(script, profile, suggestions);
     }
     
-    /**
-     * Checks for loop-related optimization opportunities
-     */
+    // Loop optimization methods
     private void checkLoopOptimizations(CodeScript script, 
                                       ScriptPerformanceProfile profile,
                                       List<OptimizationSuggestion> suggestions) {
@@ -109,43 +100,51 @@ public class AdvancedScriptOptimizer {
             if (block == null) continue;
             
             // Check for nested loops
-            if (isLoopBlock(block)) {
-                int nestedDepth = calculateLoopNestingDepth(blocks, i);
-                if (nestedDepth > 2) {
-                    suggestions.add(new OptimizationSuggestion(
-                        "DeeplyNestedLoop",
-                        "Loop at position " + i + " is nested " + nestedDepth + " levels deep",
-                        "Consider flattening nested loops or using more efficient data structures",
-                        OptimizationPriority.HIGH,
-                        true,
-                        block.getLocation()
-                    ));
-                }
-            }
+            checkNestedLoopOptimization(block, blocks, i, suggestions);
             
             // Check for loops with expensive operations
-            if (isLoopBlock(block)) {
-                String action = block.getAction();
-                if (action != null) {
-                    ActionPerformanceData actionData = profile.getActionData(action);
-                    if (actionData != null && actionData.getAverageExecutionTime() > 100) {
-                        suggestions.add(new OptimizationSuggestion(
-                            "ExpensiveLoopOperation",
-                            "Loop contains expensive operation: " + block.getAction(),
-                            "Consider moving expensive operations outside the loop or caching results",
-                            OptimizationPriority.MEDIUM,
-                            false,
-                            block.getLocation()
-                        ));
-                    }
+            checkExpensiveLoopOperation(block, profile, suggestions);
+        }
+    }
+    
+    private void checkNestedLoopOptimization(CodeBlock block, List<CodeBlock> blocks, 
+                                           int index, List<OptimizationSuggestion> suggestions) {
+        if (isLoopBlock(block)) {
+            int nestedDepth = calculateLoopNestingDepth(blocks, index);
+            if (nestedDepth > 2) {
+                suggestions.add(new OptimizationSuggestion(
+                    "DeeplyNestedLoop",
+                    "Loop at position " + index + " is nested " + nestedDepth + " levels deep",
+                    "Consider flattening nested loops or using more efficient data structures",
+                    OptimizationPriority.HIGH,
+                    true,
+                    block.getLocation()
+                ));
+            }
+        }
+    }
+    
+    private void checkExpensiveLoopOperation(CodeBlock block, ScriptPerformanceProfile profile,
+                                           List<OptimizationSuggestion> suggestions) {
+        if (isLoopBlock(block)) {
+            String action = block.getAction();
+            if (action != null) {
+                ActionPerformanceData actionData = profile.getActionData(action);
+                if (actionData != null && actionData.getAverageExecutionTime() > 100) {
+                    suggestions.add(new OptimizationSuggestion(
+                        "ExpensiveLoopOperation",
+                        "Loop contains expensive operation: " + block.getAction(),
+                        "Consider moving expensive operations outside the loop or caching results",
+                        OptimizationPriority.MEDIUM,
+                        false,
+                        block.getLocation()
+                    ));
                 }
             }
         }
     }
     
-    /**
-     * Checks for conditional-related optimization opportunities
-     */
+    // Conditional optimization methods
     private void checkConditionalOptimizations(CodeScript script,
                                              ScriptPerformanceProfile profile,
                                              List<OptimizationSuggestion> suggestions) {
@@ -154,41 +153,49 @@ public class AdvancedScriptOptimizer {
             CodeBlock block = blocks.get(i);
             
             // Check for complex condition chains
-            if (isConditionalBlock(block)) {
-                int chainLength = calculateConditionChainLength(blocks, i);
-                if (chainLength > 5) {
-                    suggestions.add(new OptimizationSuggestion(
-                        "LongConditionChain",
-                        "Conditional chain of length " + chainLength + " detected",
-                        "Consider using switch statements or lookup tables for better performance",
-                        OptimizationPriority.MEDIUM,
-                        false,
-                        block.getLocation()
-                    ));
-                }
-            }
+            checkConditionChainOptimization(block, blocks, i, suggestions);
             
             // Check for redundant conditions
-            if (i > 0 && isConditionalBlock(block)) {
-                CodeBlock previousBlock = blocks.get(i - 1);
-                if (isConditionalBlock(previousBlock) && 
-                    block.getCondition().equals(previousBlock.getCondition())) {
-                    suggestions.add(new OptimizationSuggestion(
-                        "RedundantCondition",
-                        "Redundant condition check detected",
-                        "Remove duplicate condition checks to improve performance",
-                        OptimizationPriority.LOW,
-                        true,
-                        block.getLocation()
-                    ));
-                }
+            checkRedundantCondition(block, blocks, i, suggestions);
+        }
+    }
+    
+    private void checkConditionChainOptimization(CodeBlock block, List<CodeBlock> blocks, 
+                                               int index, List<OptimizationSuggestion> suggestions) {
+        if (isConditionalBlock(block)) {
+            int chainLength = calculateConditionChainLength(blocks, index);
+            if (chainLength > 5) {
+                suggestions.add(new OptimizationSuggestion(
+                    "LongConditionChain",
+                    "Conditional chain of length " + chainLength + " detected",
+                    "Consider using switch statements or lookup tables for better performance",
+                    OptimizationPriority.MEDIUM,
+                    false,
+                    block.getLocation()
+                ));
             }
         }
     }
     
-    /**
-     * Checks for resource-related optimization opportunities
-     */
+    private void checkRedundantCondition(CodeBlock block, List<CodeBlock> blocks, 
+                                       int index, List<OptimizationSuggestion> suggestions) {
+        if (index > 0 && isConditionalBlock(block)) {
+            CodeBlock previousBlock = blocks.get(index - 1);
+            if (isConditionalBlock(previousBlock) && 
+                block.getCondition().equals(previousBlock.getCondition())) {
+                suggestions.add(new OptimizationSuggestion(
+                    "RedundantCondition",
+                    "Redundant condition check detected",
+                    "Remove duplicate condition checks to improve performance",
+                    OptimizationPriority.LOW,
+                    true,
+                    block.getLocation()
+                ));
+            }
+        }
+    }
+    
+    // Resource optimization methods
     private void checkResourceOptimizations(CodeScript script,
                                           ScriptPerformanceProfile profile,
                                           List<OptimizationSuggestion> suggestions) {
@@ -196,6 +203,17 @@ public class AdvancedScriptOptimizer {
         Set<String> usedVariables = new HashSet<>();
         
         // Track variable usage
+        trackVariableUsage(script, declaredVariables, usedVariables);
+        
+        // Check for unused variables
+        checkForUnusedVariables(declaredVariables, usedVariables, suggestions);
+        
+        // Check for excessive variable scope
+        checkForExcessiveVariableScope(declaredVariables, suggestions);
+    }
+    
+    private void trackVariableUsage(CodeScript script, Set<String> declaredVariables, 
+                                  Set<String> usedVariables) {
         for (CodeBlock block : script.getBlocks()) {
             // Check for variable declarations
             Map<String, com.megacreative.coding.values.DataValue> parameters = block.getParameters();
@@ -210,8 +228,10 @@ public class AdvancedScriptOptimizer {
                 }
             }
         }
-        
-        // Check for unused variables
+    }
+    
+    private void checkForUnusedVariables(Set<String> declaredVariables, Set<String> usedVariables,
+                                       List<OptimizationSuggestion> suggestions) {
         Set<String> unusedVariables = new HashSet<>(declaredVariables);
         unusedVariables.removeAll(usedVariables);
         
@@ -225,8 +245,10 @@ public class AdvancedScriptOptimizer {
                 null
             ));
         }
-        
-        // Check for excessive variable scope
+    }
+    
+    private void checkForExcessiveVariableScope(Set<String> declaredVariables,
+                                              List<OptimizationSuggestion> suggestions) {
         if (declaredVariables.size() > 50) {
             suggestions.add(new OptimizationSuggestion(
                 "ExcessiveVariableScope",
@@ -239,15 +261,21 @@ public class AdvancedScriptOptimizer {
         }
     }
     
-    /**
-     * Checks for structural optimization opportunities
-     */
+    // Structure optimization methods
     private void checkStructureOptimizations(CodeScript script,
                                            ScriptPerformanceProfile profile,
                                            List<OptimizationSuggestion> suggestions) {
         List<CodeBlock> blocks = script.getBlocks();
         
         // Check for linear script structure (could benefit from grouping)
+        checkLinearStructureOptimization(blocks, suggestions);
+        
+        // Check for repeated action patterns
+        checkRepeatedActionPatterns(blocks, suggestions);
+    }
+    
+    private void checkLinearStructureOptimization(List<CodeBlock> blocks,
+                                                List<OptimizationSuggestion> suggestions) {
         if (blocks.size() > 20 && isLinearStructure(blocks)) {
             suggestions.add(new OptimizationSuggestion(
                 "LinearStructure",
@@ -258,8 +286,10 @@ public class AdvancedScriptOptimizer {
                 null
             ));
         }
-        
-        // Check for repeated action patterns
+    }
+    
+    private void checkRepeatedActionPatterns(List<CodeBlock> blocks,
+                                           List<OptimizationSuggestion> suggestions) {
         Map<String, Integer> actionCounts = new HashMap<>();
         for (CodeBlock block : blocks) {
             actionCounts.merge(block.getAction(), 1, Integer::sum);
@@ -279,9 +309,7 @@ public class AdvancedScriptOptimizer {
         }
     }
     
-    /**
-     * Applies optimization rules to generate suggestions
-     */
+    // Optimization rule methods
     private void applyOptimizationRules(CodeScript script, List<OptimizationSuggestion> suggestions) {
         for (OptimizationRule rule : optimizationRules.values()) {
             List<OptimizationSuggestion> ruleSuggestions = rule.apply(script);
@@ -289,13 +317,10 @@ public class AdvancedScriptOptimizer {
         }
     }
     
-    /**
-     * Applies a specific optimization to a script
-     */
     private void applyOptimization(CodeScript script, OptimizationSuggestion suggestion) {
         // Apply the optimization to modify the script structure
-        plugin.getLogger().info("Applied optimization: " + suggestion.getType() + 
-                               " to script: " + script.getName());
+        plugin.getLogger().info(Constants.APPLIED_OPTIMIZATION + suggestion.getType() + 
+                               Constants.APPLIED_OPTIMIZATION_TO_SCRIPT + script.getName());
         
         // Actually modify the script structure based on the optimization suggestion type
         List<CodeBlock> blocks = script.getBlocks();
@@ -303,28 +328,30 @@ public class AdvancedScriptOptimizer {
             return;
         }
         
-        switch (suggestion.getType()) {
-            case "avoid-expensive-operations-in-loops":
+        applyOptimizationByType(blocks, suggestion.getType());
+    }
+    
+    private void applyOptimizationByType(List<CodeBlock> blocks, String type) {
+        switch (type) {
+            case Constants.AVOID_EXPENSIVE_OPERATIONS_IN_LOOPS:
                 optimizeExpensiveOperationsInLoops(blocks);
                 break;
-            case "minimize-variable-lookups":
+            case Constants.MINIMIZE_VARIABLE_LOOKUPS:
                 optimizeVariableLookups(blocks);
                 break;
-            case "reduce-nesting-depth":
+            case Constants.REDUCE_NESTING_DEPTH:
                 reduceNestingDepth(blocks);
                 break;
-            case "simplify-condition-chains":
+            case Constants.SIMPLIFY_CONDITION_CHAINS:
                 simplifyConditionChains(blocks);
                 break;
             default:
-                plugin.getLogger().warning("Unknown optimization type: " + suggestion.getType());
+                plugin.getLogger().warning(Constants.UNKNOWN_OPTIMIZATION_TYPE + type);
                 break;
         }
     }
     
-    /**
-     * Optimizes expensive operations in loops by moving them outside
-     */
+    // Optimization implementation methods
     private void optimizeExpensiveOperationsInLoops(List<CodeBlock> blocks) {
         if (blocks == null || blocks.isEmpty()) {
             return;
@@ -347,25 +374,33 @@ public class AdvancedScriptOptimizer {
                 }
                 
                 // If we found expensive operations, log optimization suggestions
-                if (!expensiveOps.isEmpty()) {
-                    plugin.getLogger().info("Found " + expensiveOps.size() + " expensive operations in loop at position " + i);
-                    for (CodeBlock op : expensiveOps) {
-                        plugin.getLogger().info("  - Expensive operation: " + op.getAction());
-                    }
-                }
+                logExpensiveOperations(i, expensiveOps);
             }
         }
     }
     
-    /**
-     * Optimizes variable lookups by caching frequently used variables
-     */
+    private void logExpensiveOperations(int loopIndex, List<CodeBlock> expensiveOps) {
+        if (!expensiveOps.isEmpty()) {
+            plugin.getLogger().info(Constants.FOUND_EXPENSIVE_OPERATIONS + expensiveOps.size() + Constants.FOUND_EXPENSIVE_OPERATIONS_SUFFIX + loopIndex);
+            for (CodeBlock op : expensiveOps) {
+                plugin.getLogger().info(Constants.EXPENSIVE_OPERATION + op.getAction());
+            }
+        }
+    }
+    
     private void optimizeVariableLookups(List<CodeBlock> blocks) {
         if (blocks == null || blocks.isEmpty()) {
             return;
         }
         
         // Count variable usage frequency
+        Map<String, Integer> variableUsage = countVariableUsage(blocks);
+        
+        // Log frequently used variables (used more than 3 times)
+        logFrequentlyUsedVariables(variableUsage);
+    }
+    
+    private Map<String, Integer> countVariableUsage(List<CodeBlock> blocks) {
         Map<String, Integer> variableUsage = new HashMap<>();
         for (CodeBlock block : blocks) {
             if (block.getParameters() != null) {
@@ -387,24 +422,34 @@ public class AdvancedScriptOptimizer {
                 }
             }
         }
-        
-        // Log frequently used variables (used more than 3 times)
+        return variableUsage;
+    }
+    
+    private void logFrequentlyUsedVariables(Map<String, Integer> variableUsage) {
         for (Map.Entry<String, Integer> entry : variableUsage.entrySet()) {
             if (entry.getValue() > 3) {
-                plugin.getLogger().info("Frequently used variable: " + entry.getKey() + " (" + entry.getValue() + " times)");
+                plugin.getLogger().info(Constants.FREQUENTLY_USED_VARIABLE + entry.getKey() + " (" + entry.getValue() + Constants.FREQUENTLY_USED_VARIABLE_SUFFIX);
             }
         }
     }
     
-    /**
-     * Reduces nesting depth by flattening nested structures
-     */
     private void reduceNestingDepth(List<CodeBlock> blocks) {
         if (blocks == null || blocks.isEmpty()) {
             return;
         }
         
         // Count nesting levels and identify deeply nested structures
+        int maxDepth = calculateMaxNestingDepth(blocks);
+        
+        plugin.getLogger().info(Constants.MAXIMUM_NESTING_DEPTH + maxDepth);
+        
+        // If nesting is too deep, suggest flattening
+        if (maxDepth > 5) {
+            plugin.getLogger().warning(Constants.DEEP_NESTING_DETECTED + maxDepth + Constants.DEEP_NESTING_DETECTED_SUFFIX);
+        }
+    }
+    
+    private int calculateMaxNestingDepth(List<CodeBlock> blocks) {
         int maxDepth = 0;
         int currentDepth = 0;
         
@@ -416,18 +461,9 @@ public class AdvancedScriptOptimizer {
                 currentDepth = Math.max(0, currentDepth - 1);
             }
         }
-        
-        plugin.getLogger().info("Maximum nesting depth: " + maxDepth);
-        
-        // If nesting is too deep, suggest flattening
-        if (maxDepth > 5) {
-            plugin.getLogger().warning("Deep nesting detected (" + maxDepth + " levels). Consider refactoring to reduce complexity.");
-        }
+        return maxDepth;
     }
     
-    /**
-     * Simplifies condition chains by combining conditions
-     */
     private void simplifyConditionChains(List<CodeBlock> blocks) {
         if (blocks == null || blocks.isEmpty()) {
             return;
@@ -442,16 +478,14 @@ public class AdvancedScriptOptimizer {
             if (isConditionBlock(current) && isConditionBlock(next)) {
                 // Check if they're part of the same logical chain
                 if (current.getNextBlock() == next) {
-                    plugin.getLogger().info("Consecutive condition blocks found at positions " + i + " and " + (i + 1));
-                    plugin.getLogger().info("  - " + current.getAction() + " followed by " + next.getAction());
+                    plugin.getLogger().info(Constants.CONSECUTIVE_CONDITION_BLOCKS + i + Constants.CONSECUTIVE_CONDITION_BLOCKS_SUFFIX + (i + 1));
+                    plugin.getLogger().info(Constants.CONDITION_FOLLOWED_BY + current.getAction() + Constants.CONDITION_FOLLOWED_BY_SUFFIX + next.getAction());
                 }
             }
         }
     }
     
-    /**
-     * Checks if a block is a condition block
-     */
+    // Utility methods
     private boolean isConditionBlock(CodeBlock block) {
         if (block == null || block.getAction() == null) {
             return false;
@@ -469,9 +503,6 @@ public class AdvancedScriptOptimizer {
         return false;
     }
     
-    /**
-     * Finds the end of a loop block
-     */
     private int findLoopEnd(List<CodeBlock> blocks, int startIndex) {
         int depth = 1;
         for (int i = startIndex + 1; i < blocks.size(); i++) {
@@ -488,9 +519,6 @@ public class AdvancedScriptOptimizer {
         return blocks.size();
     }
     
-    /**
-     * Checks if a block represents an expensive operation
-     */
     private boolean isExpensiveOperation(CodeBlock block) {
         if (block == null) return false;
         
@@ -505,9 +533,6 @@ public class AdvancedScriptOptimizer {
                action.contains("async");
     }
     
-    /**
-     * Extracts variable name from reference system syntax
-     */
     private String extractVariableName(String reference) {
         if (reference == null) return null;
         
@@ -522,131 +547,15 @@ public class AdvancedScriptOptimizer {
         return reference;
     }
     
-    /**
-     * Initializes built-in optimization rules
-     */
-    private void initializeOptimizationRules() {
-        // Add common optimization rules
-        optimizationRules.put("avoid-expensive-operations-in-loops", new OptimizationRule() {
-            @Override
-            public List<OptimizationSuggestion> apply(CodeScript script) {
-                List<OptimizationSuggestion> suggestions = new ArrayList<>();
-                
-                // Check for expensive operations in loops
-                List<CodeBlock> blocks = script.getBlocks();
-                if (blocks != null) {
-                    for (int i = 0; i < blocks.size(); i++) {
-                        CodeBlock block = blocks.get(i);
-                        if (isLoopBlock(block)) {
-                            // Check nested blocks for expensive operations
-                            int loopEnd = findLoopEnd(blocks, i);
-                            for (int j = i + 1; j < loopEnd && j < blocks.size(); j++) {
-                                CodeBlock nestedBlock = blocks.get(j);
-                                if (isExpensiveOperation(nestedBlock)) {
-                                    suggestions.add(new OptimizationSuggestion(
-                                        "avoid-expensive-operations-in-loops",
-                                        "Expensive operation found inside loop",
-                                        "Move expensive operations outside the loop or cache results",
-                                        OptimizationPriority.HIGH,
-                                        true,
-                                        nestedBlock.getLocation()
-                                    ));
-                                }
-                            }
-                        }
-                    }
-                }
-                
-                return suggestions;
-            }
-            
-            @Override
-            public String getDescription() {
-                return "Detects and suggests optimizations for expensive operations inside loops";
-            }
-            
-            @Override
-            public OptimizationPriority getPriority() {
-                return OptimizationPriority.HIGH;
-            }
-        });
-        
-        optimizationRules.put("minimize-variable-lookups", new OptimizationRule() {
-            @Override
-            public List<OptimizationSuggestion> apply(CodeScript script) {
-                List<OptimizationSuggestion> suggestions = new ArrayList<>();
-                
-                // Check for repeated variable lookups
-                List<CodeBlock> blocks = script.getBlocks();
-                if (blocks != null) {
-                    Map<String, Integer> variableUsage = new HashMap<>();
-                    
-                    // Count variable usage
-                    for (CodeBlock block : blocks) {
-                        // Check block parameters for variable references
-                        if (block.getParameters() != null) {
-                            for (Map.Entry<String, com.megacreative.coding.values.DataValue> entry : block.getParameters().entrySet()) {
-                                String paramName = entry.getKey();
-                                com.megacreative.coding.values.DataValue paramValue = entry.getValue();
-                                if (paramValue != null && paramValue.asString().contains("var[")) {
-                                    // Extract variable name from reference system syntax
-                                    String varName = extractVariableName(paramValue.asString());
-                                    if (varName != null) {
-                                        variableUsage.put(varName, variableUsage.getOrDefault(varName, 0) + 1);
-                                    }
-                                }
-                            }
-                        }
-                    }
-                    
-                    // Suggest caching for frequently used variables
-                    for (Map.Entry<String, Integer> entry : variableUsage.entrySet()) {
-                        if (entry.getValue() > 3) { // Used more than 3 times
-                            suggestions.add(new OptimizationSuggestion(
-                                "minimize-variable-lookups",
-                                "Variable '" + entry.getKey() + "' looked up " + entry.getValue() + " times",
-                                "Cache the variable value in a local variable to reduce lookups",
-                                OptimizationPriority.MEDIUM,
-                                true,
-                                null // No specific location
-                            ));
-                        }
-                    }
-                }
-                
-                return suggestions;
-            }
-            
-            @Override
-            public String getDescription() {
-                return "Identifies repeated variable lookups that could be cached";
-            }
-            
-            @Override
-            public OptimizationPriority getPriority() {
-                return OptimizationPriority.MEDIUM;
-            }
-        });
-    }
-    
-    /**
-     * Checks if a block represents a loop
-     */
     private boolean isLoopBlock(CodeBlock block) {
         String action = block.getAction();
         return action != null && (action.contains("loop") || action.contains("repeat") || action.contains("while"));
     }
     
-    /**
-     * Checks if a block represents a conditional
-     */
     private boolean isConditionalBlock(CodeBlock block) {
         return block.getCondition() != null;
     }
     
-    /**
-     * Calculates loop nesting depth
-     */
     private int calculateLoopNestingDepth(List<CodeBlock> blocks, int startIndex) {
         int depth = 0;
         int currentDepth = 0;
@@ -664,9 +573,6 @@ public class AdvancedScriptOptimizer {
         return depth;
     }
     
-    /**
-     * Calculates condition chain length
-     */
     private int calculateConditionChainLength(List<CodeBlock> blocks, int startIndex) {
         int length = 0;
         
@@ -682,17 +588,11 @@ public class AdvancedScriptOptimizer {
         return length;
     }
     
-    /**
-     * Checks if a block represents an end/exit block
-     */
     private boolean isEndBlock(CodeBlock block) {
         String action = block.getAction();
         return action != null && (action.contains("end") || action.contains("exit") || action.contains("break"));
     }
     
-    /**
-     * Checks if script has linear structure
-     */
     private boolean isLinearStructure(List<CodeBlock> blocks) {
         // Simple check for linear structure - no branches or loops
         for (CodeBlock block : blocks) {
@@ -701,6 +601,150 @@ public class AdvancedScriptOptimizer {
             }
         }
         return true;
+    }
+    
+    // Rule initialization methods
+    private void initializeOptimizationRules() {
+        initializeExpensiveOperationRule();
+        initializeVariableLookupRule();
+    }
+    
+    private void initializeExpensiveOperationRule() {
+        // Add common optimization rules
+        optimizationRules.put("avoid-expensive-operations-in-loops", new OptimizationRule() {
+            @Override
+            public List<OptimizationSuggestion> apply(CodeScript script) {
+                List<OptimizationSuggestion> suggestions = new ArrayList<>();
+                
+                // Check for expensive operations in loops
+                List<CodeBlock> blocks = script.getBlocks();
+                if (blocks != null) {
+                    checkExpensiveOperationsInLoops(blocks, suggestions);
+                }
+                
+                return suggestions;
+            }
+            
+            @Override
+            public String getDescription() {
+                return "Detects and suggests optimizations for expensive operations inside loops";
+            }
+            
+            @Override
+            public OptimizationPriority getPriority() {
+                return OptimizationPriority.HIGH;
+            }
+        });
+    }
+    
+    private void checkExpensiveOperationsInLoops(List<CodeBlock> blocks, 
+                                               List<OptimizationSuggestion> suggestions) {
+        for (int i = 0; i < blocks.size(); i++) {
+            CodeBlock block = blocks.get(i);
+            if (isLoopBlock(block)) {
+                // Check nested blocks for expensive operations
+                int loopEnd = findLoopEnd(blocks, i);
+                for (int j = i + 1; j < loopEnd && j < blocks.size(); j++) {
+                    CodeBlock nestedBlock = blocks.get(j);
+                    if (isExpensiveOperation(nestedBlock)) {
+                        suggestions.add(new OptimizationSuggestion(
+                            "avoid-expensive-operations-in-loops",
+                            "Expensive operation found inside loop",
+                            "Move expensive operations outside the loop or cache results",
+                            OptimizationPriority.HIGH,
+                            true,
+                            nestedBlock.getLocation()
+                        ));
+                    }
+                }
+            }
+        }
+    }
+    
+    private void initializeVariableLookupRule() {
+        optimizationRules.put("minimize-variable-lookups", new OptimizationRule() {
+            @Override
+            public List<OptimizationSuggestion> apply(CodeScript script) {
+                List<OptimizationSuggestion> suggestions = new ArrayList<>();
+                
+                // Check for repeated variable lookups
+                List<CodeBlock> blocks = script.getBlocks();
+                if (blocks != null) {
+                    Map<String, Integer> variableUsage = new HashMap<>();
+                    
+                    // Count variable usage
+                    countVariableUsageInBlocks(blocks, variableUsage);
+                    
+                    // Suggest caching for frequently used variables
+                    suggestVariableCaching(variableUsage, suggestions);
+                }
+                
+                return suggestions;
+            }
+            
+            @Override
+            public String getDescription() {
+                return "Identifies repeated variable lookups that could be cached";
+            }
+            
+            @Override
+            public OptimizationPriority getPriority() {
+                return OptimizationPriority.MEDIUM;
+            }
+        });
+    }
+    
+    private void countVariableUsageInBlocks(List<CodeBlock> blocks, Map<String, Integer> variableUsage) {
+        for (CodeBlock block : blocks) {
+            // Check block parameters for variable references
+            if (block.getParameters() != null) {
+                for (Map.Entry<String, com.megacreative.coding.values.DataValue> entry : block.getParameters().entrySet()) {
+                    String paramName = entry.getKey();
+                    com.megacreative.coding.values.DataValue paramValue = entry.getValue();
+                    if (paramValue != null && paramValue.asString().contains("var[")) {
+                        // Extract variable name from reference system syntax
+                        String varName = extractVariableName(paramValue.asString());
+                        if (varName != null) {
+                            variableUsage.put(varName, variableUsage.getOrDefault(varName, 0) + 1);
+                        }
+                    }
+                }
+            }
+        }
+    }
+    
+    private void suggestVariableCaching(Map<String, Integer> variableUsage, 
+                                      List<OptimizationSuggestion> suggestions) {
+        for (Map.Entry<String, Integer> entry : variableUsage.entrySet()) {
+            if (entry.getValue() > 3) { // Used more than 3 times
+                suggestions.add(new OptimizationSuggestion(
+                    "minimize-variable-lookups",
+                    "Variable '" + entry.getKey() + "' looked up " + entry.getValue() + " times",
+                    "Cache the variable value in a local variable to reduce lookups",
+                    OptimizationPriority.MEDIUM,
+                    true,
+                    null // No specific location
+                ));
+            }
+        }
+    }
+    
+    /**
+     * Automatically applies safe optimizations to a script
+     */
+    public void autoOptimizeScript(CodeScript script) {
+        ScriptOptimizationReport report = analyzeScript(script);
+        
+        // Apply safe optimizations automatically
+        applySafeOptimizations(script, report);
+    }
+    
+    private void applySafeOptimizations(CodeScript script, ScriptOptimizationReport report) {
+        for (OptimizationSuggestion suggestion : report.getSuggestions()) {
+            if (suggestion.isSafeToApply()) {
+                applyOptimization(script, suggestion);
+            }
+        }
     }
     
     /**
@@ -778,19 +822,27 @@ public class AdvancedScriptOptimizer {
             
             // Count issues by priority
             int critical = 0, high = 0, medium = 0, low = 0;
+            countIssuesByPriority(suggestions, critical, high, medium, low);
+            
+            this.criticalIssues = critical;
+            this.highPriorityIssues = high;
+            this.mediumPriorityIssues = medium;
+            this.lowPriorityIssues = low;
+        }
+        
+        private void countIssuesByPriority(List<OptimizationSuggestion> suggestions, 
+                                         int critical, int high, int medium, int low) {
             for (OptimizationSuggestion suggestion : suggestions) {
                 switch (suggestion.getPriority()) {
                     case CRITICAL: critical++; break;
                     case HIGH: high++; break;
                     case MEDIUM: medium++; break;
                     case LOW: low++; break;
+                    default:
+                        // Unknown priority, ignore
+                        break;
                 }
             }
-            
-            this.criticalIssues = critical;
-            this.highPriorityIssues = high;
-            this.mediumPriorityIssues = medium;
-            this.lowPriorityIssues = low;
         }
         
         /**

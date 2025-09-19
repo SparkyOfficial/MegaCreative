@@ -48,56 +48,45 @@ public class RepeatAction implements BlockAction {
         }
         
         // Запускаем выполнение в асинхронном контексте
+        executeRepeatLoop(times, nextBlock, context, scriptEngine, player);
+        
+        return ExecutionResult.success("Repeat action started");
+    }
+    
+    /**
+     * Executes the repeat loop asynchronously
+     */
+    private void executeRepeatLoop(int times, CodeBlock nextBlock, ExecutionContext context, 
+                                  ScriptEngine scriptEngine, Player player) {
         CompletableFuture.runAsync(() -> {
             try {
                 for (int i = 0; i < times; i++) {
                     final int currentIndex = i; // Создаем effectively final переменную
-                    // Создаем новый контекст для каждой итерации
-                    ExecutionContext loopContext = context.withCurrentBlock(nextBlock, context.getBlockLocation());
                     
-                    // Check for break flag before executing iteration
-                    if (context.hasBreakFlag()) {
-                        context.clearBreakFlag();
-                        player.sendMessage("§aRepeat loop terminated by break statement at iteration " + (currentIndex + 1));
+                    // Check if we should break or continue before executing iteration
+                    if (shouldBreak(context, player, currentIndex + 1)) {
                         break;
                     }
                     
-                    // Check for continue flag
-                    if (context.hasContinueFlag()) {
-                        context.clearContinueFlag();
-                        player.sendMessage("§aSkipping iteration " + (currentIndex + 1) + " due to continue statement");
+                    if (shouldContinue(context, player, currentIndex + 1)) {
                         continue;
                     }
                     
-                    // Добавляем переменную с номером итерации
-                    loopContext.setVariable("loopIndex", currentIndex + 1);
-                    loopContext.setVariable("loopCount", times);
+                    // Create a new context for each iteration
+                    ExecutionContext loopContext = createLoopContext(context, nextBlock, currentIndex, times);
                     
-                    // Выполняем блок синхронно в основном потоке
-                    try {
-                        ExecutionResult result = scriptEngine.executeBlockChain(nextBlock, player, "repeat_loop")
-                            .exceptionally(throwable -> {
-                                player.sendMessage("§cОшибка в итерации " + (currentIndex + 1) + ": " + throwable.getMessage());
-                                return null;
-                            })
-                            .join(); // Ждем завершения итерации
-                            
-                        // Check for break flag after executing iteration
-                        if (context.hasBreakFlag()) {
-                            context.clearBreakFlag();
-                            player.sendMessage("§aRepeat loop terminated by break statement at iteration " + (currentIndex + 1));
-                            break;
-                        }
-                        
-                        // Check for continue flag after executing iteration
-                        if (context.hasContinueFlag()) {
-                            context.clearContinueFlag();
-                            player.sendMessage("§aContinuing to next iteration after iteration " + (currentIndex + 1));
-                            continue;
-                        }
-                    } catch (Exception e) {
-                        player.sendMessage("§cОшибка в итерации " + (currentIndex + 1) + ": " + e.getMessage());
+                    // Execute the block chain for this iteration
+                    if (!executeIteration(scriptEngine, nextBlock, player, loopContext, currentIndex)) {
                         break;
+                    }
+                    
+                    // Check if we should break or continue after executing iteration
+                    if (shouldBreak(context, player, currentIndex + 1)) {
+                        break;
+                    }
+                    
+                    if (shouldContinue(context, player, currentIndex + 1)) {
+                        continue;
                     }
                 }
                 
@@ -106,8 +95,60 @@ public class RepeatAction implements BlockAction {
                 player.sendMessage("§cОшибка при выполнении цикла: " + e.getMessage());
             }
         });
-        
-        return ExecutionResult.success("Repeat action started");
+    }
+    
+    /**
+     * Checks if the loop should break
+     */
+    private boolean shouldBreak(ExecutionContext context, Player player, int iteration) {
+        if (context.hasBreakFlag()) {
+            context.clearBreakFlag();
+            player.sendMessage("§aRepeat loop terminated by break statement at iteration " + iteration);
+            return true;
+        }
+        return false;
+    }
+    
+    /**
+     * Checks if the loop should continue
+     */
+    private boolean shouldContinue(ExecutionContext context, Player player, int iteration) {
+        if (context.hasContinueFlag()) {
+            context.clearContinueFlag();
+            player.sendMessage("§aSkipping iteration " + iteration + " due to continue statement");
+            return true;
+        }
+        return false;
+    }
+    
+    /**
+     * Creates a new execution context for a loop iteration
+     */
+    private ExecutionContext createLoopContext(ExecutionContext context, CodeBlock nextBlock, 
+                                             int currentIndex, int times) {
+        ExecutionContext loopContext = context.withCurrentBlock(nextBlock, context.getBlockLocation());
+        loopContext.setVariable("loopIndex", currentIndex + 1);
+        loopContext.setVariable("loopCount", times);
+        return loopContext;
+    }
+    
+    /**
+     * Executes a single iteration of the loop
+     */
+    private boolean executeIteration(ScriptEngine scriptEngine, CodeBlock nextBlock, 
+                                   Player player, ExecutionContext loopContext, int currentIndex) {
+        try {
+            ExecutionResult result = scriptEngine.executeBlockChain(nextBlock, player, "repeat_loop")
+                .exceptionally(throwable -> {
+                    player.sendMessage("§cОшибка в итерации " + (currentIndex + 1) + ": " + throwable.getMessage());
+                    return null;
+                })
+                .join(); // Ждем завершения итерации
+            return true;
+        } catch (Exception e) {
+            player.sendMessage("§cОшибка в итерации " + (currentIndex + 1) + ": " + e.getMessage());
+            return false;
+        }
     }
     
     /**

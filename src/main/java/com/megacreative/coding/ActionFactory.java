@@ -169,6 +169,26 @@ public class ActionFactory {
      * Registriert alle Aktionen
      */
     private void registerAllActions() {
+        registerBasicPlayerActions();
+        registerNewBasicPlayerActions();
+        registerVariableManipulationActions();
+        registerScoreboardActions();
+        registerLocationActions();
+        registerAdvancedActionBlocks();
+        registerControlFlowBlocks();
+        registerFunctionBlocks();
+        registerDataManipulationBlocks();
+        registerIntegrationBlocks();
+        registerGuiBlocks();
+        registerDebuggingBlocks();
+        registerEventHandlingBlocks();
+        registerGenericActions();
+    }
+    
+    /**
+     * Register basic player actions
+     */
+    private void registerBasicPlayerActions() {
         // --- BASIC PLAYER ACTIONS ---
         // --- ОСНОВНЫЕ ДЕЙСТВИЯ ИГРОКА ---
         // --- GRUNDLEGENDE SPIELERAKTIONEN ---
@@ -187,7 +207,12 @@ public class ActionFactory {
         register("command", CommandAction::new);
         register("setVar", SetVarAction::new);
         register("getVar", GetVarAction::new);
-        
+    }
+    
+    /**
+     * Register new basic player actions
+     */
+    private void registerNewBasicPlayerActions() {
         // --- NEW BASIC PLAYER ACTIONS ---
         // --- НОВЫЕ ОСНОВНЫЕ ДЕЙСТВИЯ ИГРОКА ---
         // --- NEUE GRUNDLEGENDE SPIELERAKTIONEN ---
@@ -208,7 +233,12 @@ public class ActionFactory {
         register("explosion", ExplosionAction::new);
         register("setBlock", SetBlockAction::new);
         register("getPlayerName", GetPlayerNameAction::new);
-        
+    }
+    
+    /**
+     * Register variable manipulation actions
+     */
+    private void registerVariableManipulationActions() {
         // --- VARIABLE MANIPULATION ACTIONS ---
         // --- ДЕЙСТВИЯ МАНИПУЛЯЦИИ ПЕРЕМЕННЫМИ ---
         // --- VARIABLENMANIPULATIONSAKTIONEN ---
@@ -216,7 +246,12 @@ public class ActionFactory {
         register("subVar", SubVarAction::new);
         register("mulVar", MulVarAction::new);
         register("divVar", DivVarAction::new);
-        
+    }
+    
+    /**
+     * Register scoreboard actions
+     */
+    private void registerScoreboardActions() {
         // --- SCOREBOARD ACTIONS ---
         // --- ДЕЙСТВИЯ СКОРБОРДА ---
         // --- SCOREBOARD-AKTIONEN ---
@@ -225,13 +260,23 @@ public class ActionFactory {
         register("incrementScore", IncrementScoreAction::new);
         register("createTeam", CreateTeamAction::new);
         register("addPlayerToTeam", AddPlayerToTeamAction::new);
-        
+    }
+    
+    /**
+     * Register location actions
+     */
+    private void registerLocationActions() {
         // --- LOCATION ACTIONS ---
         // --- ДЕЙСТВИЯ ЛОКАЦИИ ---
         // --- ORTSAKTIONEN ---
         register("saveLocation", SaveLocationAction::new);
         register("getLocation", GetLocationAction::new);
-        
+    }
+    
+    /**
+     * Register advanced action blocks
+     */
+    private void registerAdvancedActionBlocks() {
         // --- ADVANCED ACTION BLOCKS ---
         // --- РАСШИРЕННЫЕ БЛОКИ ДЕЙСТВИЙ ---
         // --- ERWEITERTHE AKTIONSBLÖCKE ---
@@ -239,7 +284,12 @@ public class ActionFactory {
         register("spawnParticleEffect", SpawnParticleEffectAction::new);
         register("sendActionBar", SendActionBarAction::new);
         register("executeAsyncCommand", ExecuteAsyncCommandAction::new);
-
+    }
+    
+    /**
+     * Register control flow blocks
+     */
+    private void registerControlFlowBlocks() {
         // --- CONTROL FLOW BLOCKS (they can have actions) ---
         // --- БЛОКИ УПРАВЛЕНИЯ ПОТОКОМ (они могут иметь действия) ---
         // --- KONTROLLFLUSSBLÖCKE (sie können Aktionen haben) ---
@@ -252,7 +302,12 @@ public class ActionFactory {
         // Loop control actions
         register("break", () -> new BreakAction((com.megacreative.MegaCreative) dependencyContainer.resolve(com.megacreative.MegaCreative.class)));
         register("continue", () -> new ContinueAction((com.megacreative.MegaCreative) dependencyContainer.resolve(com.megacreative.MegaCreative.class)));
-
+    }
+    
+    /**
+     * Register function blocks
+     */
+    private void registerFunctionBlocks() {
         // --- FUNCTION BLOCKS ---
         // --- БЛОКИ ФУНКЦИЙ ---
         // --- FUNKTIONSBLÖCKE ---
@@ -267,7 +322,12 @@ public class ActionFactory {
         register("define_function", () -> new DefineFunctionAction((com.megacreative.MegaCreative) dependencyContainer.resolve(com.megacreative.MegaCreative.class)));
         register("call_function", () -> new FunctionCallAction((com.megacreative.MegaCreative) dependencyContainer.resolve(com.megacreative.MegaCreative.class)));
         register("return", () -> new ReturnAction((com.megacreative.MegaCreative) dependencyContainer.resolve(com.megacreative.MegaCreative.class)));
-
+    }
+    
+    /**
+     * Register data manipulation blocks
+     */
+    private void registerDataManipulationBlocks() {
         // --- DATA MANIPULATION BLOCKS ---
         // --- БЛОКИ МАНИПУЛЯЦИИ ДАННЫМИ ---
         // --- DATENMANIPULATIONSBLÖCKE ---
@@ -288,13 +348,23 @@ public class ActionFactory {
         // --- СПЕЦИАЛЬНОЕ ДЕЙСТВИЕ ДЛЯ ОПЕРАЦИЙ СО СПИСКАМИ ---
         // --- SPEZIALISIERTE LISTENOPERATIONS-AKTION ---
         register("listOperations", ListOperationsAction::new);
-
+    }
+    
+    /**
+     * Register integration blocks
+     */
+    private void registerIntegrationBlocks() {
         // --- INTEGRATION BLOCKS ---
         // --- БЛОКИ ИНТЕГРАЦИИ ---
         // --- INTEGRATIONSBLÖCKE ---
         register("economyTransaction", EconomyTransactionAction::new);
         register("discordWebhook", DiscordWebhookAction::new);
-        
+    }
+    
+    /**
+     * Register GUI blocks
+     */
+    private void registerGuiBlocks() {
         // --- GUI BLOCKS ---
         // --- БЛОКИ GUI ---
         // --- GUI-BLÖCKE ---
@@ -336,13 +406,23 @@ public class ActionFactory {
                 }
             }
         });
-        
+    }
+    
+    /**
+     * Register debugging blocks
+     */
+    private void registerDebuggingBlocks() {
         // --- DEBUGGING BLOCKS ---
         // --- БЛОКИ ОТЛАДКИ ---
         // --- DEBUGGING-BLÖCKE ---
         register("debugLog", DebugLogAction::new);
         register("variableInspector", VariableInspectorAction::new);
-        
+    }
+    
+    /**
+     * Register event handling blocks
+     */
+    private void registerEventHandlingBlocks() {
         // --- EVENT HANDLING BLOCKS ---
         // --- БЛОКИ ОБРАБОТКИ СОБЫТИЙ ---
         // --- EREIGNISBEHANDLUNGSBLÖCKE ---
@@ -350,14 +430,6 @@ public class ActionFactory {
             dependencyContainer.resolve(CustomEventManager.class)));
         register("triggerEvent", () -> new TriggerEventAction(
             dependencyContainer.resolve(CustomEventManager.class)));
-        
-        // === GENERIC ACTIONS - Mass Production System ===
-        // === ОБЩИЕ ДЕЙСТВИЯ - Система массового производства ===
-        // === GENERISCHE AKTIONEN - Massenproduktionssystem ===
-        // Register all simple actions that can be handled by GenericAction
-        // Зарегистрировать все простые действия, которые могут быть обработаны GenericAction
-        // Alle einfachen Aktionen registrieren, die von GenericAction behandelt werden können
-        registerGenericActions();
     }
     
     /**
@@ -371,6 +443,18 @@ public class ActionFactory {
      * Dies ermöglicht das schnelle Hinzufügen neuer Funktionen ohne Erstellung neuer Klassen
      */
     private void registerGenericActions() {
+        registerGenericPlayerActions();
+        registerGenericWorldActions();
+        registerGenericItemActions();
+        registerGenericEconomyActions();
+        registerGenericPermissionActions();
+        registerGenericListOperations();
+    }
+    
+    /**
+     * Register generic player actions
+     */
+    private void registerGenericPlayerActions() {
         // Player actions
         // Действия игрока
         // Spieleraktionen
@@ -382,7 +466,12 @@ public class ActionFactory {
         registerGeneric("removePotionEffect");
         registerGeneric("playSound");
         registerGeneric("setGameMode");
-        
+    }
+    
+    /**
+     * Register generic world actions
+     */
+    private void registerGenericWorldActions() {
         // World actions
         // Действия мира
         // Weltenaktionen
@@ -390,25 +479,45 @@ public class ActionFactory {
         registerGeneric("breakBlock");
         registerGeneric("setTime");
         registerGeneric("setWeather");
-        
+    }
+    
+    /**
+     * Register generic item actions
+     */
+    private void registerGenericItemActions() {
         // Item actions
         // Действия предметов
         // Gegenstandsaktionen
         registerGeneric("giveItem");
         registerGeneric("removeItem");
-        
+    }
+    
+    /**
+     * Register generic economy actions
+     */
+    private void registerGenericEconomyActions() {
         // Economy actions (if vault available)
         // Экономические действия (если доступен vault)
         // Wirtschaftsaktionen (wenn Vault verfügbar)
         registerGeneric("giveMoney");
         registerGeneric("takeMoney");
-        
+    }
+    
+    /**
+     * Register generic permission actions
+     */
+    private void registerGenericPermissionActions() {
         // Permission actions
         // Действия разрешений
         // Berechtigungsaktionen
         registerGeneric("givePermission");
         registerGeneric("removePermission");
-        
+    }
+    
+    /**
+     * Register generic list operations
+     */
+    private void registerGenericListOperations() {
         // List operations
         registerGeneric("addToList");
         registerGeneric("removeFromList");
@@ -576,7 +685,19 @@ public class ActionFactory {
             return new ListValue(new ArrayList<>());
         }
         
-        // Remove brackets if present
+        String cleanString = cleanListString(listString);
+        List<DataValue> values = parseListItems(cleanString);
+        
+        return new ListValue(values);
+    }
+    
+    /**
+     * Cleans the list string by removing brackets
+     * 
+     * @param listString The string to clean
+     * @return The cleaned string
+     */
+    private String cleanListString(String listString) {
         String cleanString = listString.trim();
         if (cleanString.startsWith("[")) {
             cleanString = cleanString.substring(1);
@@ -584,25 +705,42 @@ public class ActionFactory {
         if (cleanString.endsWith("]")) {
             cleanString = cleanString.substring(0, cleanString.length() - 1);
         }
-        
-        // Split by comma and create DataValues
+        return cleanString;
+    }
+    
+    /**
+     * Parses list items from a clean string
+     * 
+     * @param cleanString The clean string to parse
+     * @return A list of DataValues
+     */
+    private List<DataValue> parseListItems(String cleanString) {
         List<DataValue> values = new ArrayList<>();
         if (!cleanString.isEmpty()) {
             String[] items = cleanString.split(",");
             for (String item : items) {
-                String trimmedItem = item.trim();
-                // Try to parse as number first
-                try {
-                    double number = Double.parseDouble(trimmedItem);
-                    values.add(DataValue.fromObject(number));
-                } catch (NumberFormatException e) {
-                    // Treat as string
-                    values.add(DataValue.fromObject(trimmedItem));
-                }
+                DataValue value = parseListItem(item.trim());
+                values.add(value);
             }
         }
-        
-        return new ListValue(values);
+        return values;
+    }
+    
+    /**
+     * Parses a single list item
+     * 
+     * @param item The item to parse
+     * @return A DataValue representing the item
+     */
+    private DataValue parseListItem(String item) {
+        // Try to parse as number first
+        try {
+            double number = Double.parseDouble(item);
+            return DataValue.fromObject(number);
+        } catch (NumberFormatException e) {
+            // Treat as string
+            return DataValue.fromObject(item);
+        }
     }
     
     /**

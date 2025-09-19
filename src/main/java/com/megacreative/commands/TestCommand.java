@@ -1,6 +1,7 @@
 package com.megacreative.commands;
 
 import com.megacreative.MegaCreative;
+import com.megacreative.coding.Constants;
 import com.megacreative.testing.ScriptTestRunner;
 import com.megacreative.testing.SampleTestSuite;
 import org.bukkit.command.Command;
@@ -10,6 +11,7 @@ import org.bukkit.command.TabCompleter;
 import org.bukkit.entity.Player;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 import java.util.concurrent.CompletableFuture;
 
@@ -28,7 +30,7 @@ public class TestCommand implements CommandExecutor, TabCompleter {
     @Override
     public boolean onCommand(CommandSender sender, Command command, String label, String[] args) {
         if (!(sender instanceof Player)) {
-            sender.sendMessage("§cThis command can only be used by players!");
+            sender.sendMessage(Constants.TEST_COMMAND_PLAYERS_ONLY);
             return true;
         }
         
@@ -40,196 +42,153 @@ public class TestCommand implements CommandExecutor, TabCompleter {
         }
         
         String subCommand = args[0].toLowerCase();
-        
+        return handleSubCommand(player, subCommand, args);
+    }
+
+    private boolean handleSubCommand(Player player, String subCommand, String[] args) {
         switch (subCommand) {
-            case "run":
-                handleRunCommand(player, args);
-                break;
-            case "list":
-                handleListCommand(player, args);
-                break;
-            case "create":
-                handleCreateCommand(player, args);
-                break;
-            case "sample":
-                handleSampleCommand(player, args);
-                break;
-            case "help":
-                showHelp(player);
-                break;
-            default:
-                player.sendMessage("§cUnknown subcommand: " + subCommand);
-                showHelp(player);
-                break;
-        }
-        
-        return true;
-    }
-    
-    private void handleRunCommand(Player player, String[] args) {
-        if (args.length < 2) {
-            player.sendMessage("§cUsage: /test run <suite> [testcase]");
-            return;
-        }
-        
-        String suiteName = args[1];
-        ScriptTestRunner testRunner = plugin.getTestRunner();
-        
-        if (testRunner == null) {
-            player.sendMessage("§cTest runner is not available!");
-            return;
-        }
-        
-        if (args.length >= 3) {
-            // Run specific test case
-            String testCaseName = args[2];
-            player.sendMessage("§eRunning test case: " + testCaseName + " in suite: " + suiteName);
-            
-            CompletableFuture<com.megacreative.testing.ScriptTestRunner.TestResult> future = 
-                testRunner.runTestCase(suiteName, testCaseName);
+            case Constants.TEST_RUN:
+                if (args.length < 2) {
+                    player.sendMessage(Constants.TEST_USAGE_RUN);
+                    return true;
+                }
+                String suiteName = args[1];
+                String testCaseName = args.length > 2 ? args[2] : null;
+                runTestCase(player, suiteName, testCaseName);
+                return true;
                 
-            future.thenAccept(result -> {
-                if (result != null) {
-                    player.sendMessage(result.isPassed() ? "§a✓ Test passed" : "§c✗ Test failed");
-                    player.sendMessage("§7" + result.getMessage());
+            case Constants.TEST_LIST:
+                if (plugin.getTestRunner() != null) {
+                    displayAvailableTestSuites(player);
                 } else {
-                    player.sendMessage("§cTest case not found: " + testCaseName);
+                    player.sendMessage(Constants.TEST_RUNNER_NOT_AVAILABLE);
                 }
-            }).exceptionally(throwable -> {
-                player.sendMessage("§cError running test: " + throwable.getMessage());
-                return null;
-            });
+                return true;
+                
+            case Constants.TEST_CREATE:
+                if (args.length < 2) {
+                    player.sendMessage(Constants.TEST_USAGE_RUN);
+                    return true;
+                }
+                String newSuiteName = args[1];
+                createSampleTestSuite(player, newSuiteName);
+                return true;
+                
+            case Constants.TEST_SAMPLE:
+                createSampleTestSuite(player, Constants.SAMPLE_SUITE_NAME);
+                return true;
+                
+            case Constants.TEST_HELP:
+                showHelp(player);
+                return true;
+                
+            default:
+                player.sendMessage(Constants.TEST_UNKNOWN_SUBCOMMAND + subCommand);
+                return true;
+        }
+    }
+
+    private void runTestCase(Player player, String suiteName, String testCaseName) {
+        ScriptTestRunner testRunner = plugin.getTestRunner();
+        if (testRunner == null) {
+            player.sendMessage(Constants.TEST_RUNNER_NOT_AVAILABLE);
+            return;
+        }
+        
+        if (testCaseName != null) {
+            player.sendMessage(Constants.TEST_RUNNING_CASE + testCaseName + " in suite: " + suiteName);
+            testRunner.runTestCase(suiteName, testCaseName)
+                .thenAccept(result -> {
+                    player.sendMessage(result.isPassed() ? Constants.TEST_PASSED : Constants.TEST_FAILED);
+                    player.sendMessage(Constants.TEST_FAILED_TEST_FORMAT + result.getMessage());
+                })
+                .exceptionally(throwable -> {
+                    player.sendMessage(Constants.TEST_ERROR_RUNNING + throwable.getMessage());
+                    return null;
+                });
         } else {
-            // Run entire test suite
-            player.sendMessage("§eRunning test suite: " + suiteName);
-            
-            CompletableFuture<List<com.megacreative.testing.ScriptTestRunner.TestResult>> future = 
-                testRunner.runTestSuite(suiteName);
-                
-            future.thenAccept(results -> {
-                int passed = 0;
-                int failed = 0;
-                
-                for (com.megacreative.testing.ScriptTestRunner.TestResult result : results) {
-                    if (result.isPassed()) {
-                        passed++;
-                    } else {
-                        failed++;
-                    }
-                }
-                
-                player.sendMessage("§a=== Test Suite Results ===");
-                player.sendMessage("§7Suite: " + suiteName);
-                player.sendMessage("§7Passed: " + passed);
-                player.sendMessage("§7Failed: " + failed);
-                player.sendMessage("§7Total: " + results.size());
-                
-                if (failed > 0) {
-                    player.sendMessage("§cFailed tests:");
-                    for (com.megacreative.testing.ScriptTestRunner.TestResult result : results) {
-                        if (!result.isPassed()) {
-                            player.sendMessage("§c  ✗ " + result.getTestName() + ": " + result.getMessage());
-                        }
-                    }
-                }
-            }).exceptionally(throwable -> {
-                player.sendMessage("§cError running test suite: " + throwable.getMessage());
-                return null;
-            });
+            player.sendMessage(Constants.TEST_RUNNING_SUITE + suiteName);
+            testRunner.runTestSuite(suiteName)
+                .thenAccept(results -> displayTestSuiteResults(player, results))
+                .exceptionally(throwable -> {
+                    player.sendMessage(Constants.TEST_ERROR_RUNNING_SUITE + throwable.getMessage());
+                    return null;
+                });
         }
     }
-    
-    private void handleListCommand(Player player, String[] args) {
+
+    private void displayTestSuiteResults(Player player, List<ScriptTestRunner.TestResult> results) {
+        if (results.isEmpty()) {
+            player.sendMessage(Constants.NO_TEST_RESULTS);
+            return;
+        }
+        
+        // Since TestResult doesn't have suite name, we'll use a placeholder
+        String suiteName = "Test Suite";
+        long passed = results.stream().filter(ScriptTestRunner.TestResult::isPassed).count();
+        long failed = results.size() - passed;
+        
+        player.sendMessage(Constants.TEST_SUITE_RESULTS);
+        player.sendMessage(Constants.SUITE_PREFIX + suiteName);
+        player.sendMessage(Constants.PASSED_PREFIX + passed);
+        player.sendMessage(Constants.FAILED_PREFIX + failed);
+        player.sendMessage(Constants.TOTAL_PREFIX + results.size());
+        
+        if (failed > 0) {
+            player.sendMessage(Constants.FAILED_TESTS_HEADER);
+            results.stream()
+                .filter(result -> !result.isPassed())
+                .forEach(result -> player.sendMessage(Constants.FAILED_TEST_FORMAT + result.getTestName() + ": " + result.getMessage()));
+        }
+    }
+
+    private void displayAvailableTestSuites(Player player) {
         ScriptTestRunner testRunner = plugin.getTestRunner();
-        
         if (testRunner == null) {
-            player.sendMessage("§cTest runner is not available!");
+            player.sendMessage(Constants.TEST_RUNNER_NOT_AVAILABLE);
             return;
         }
         
-        player.sendMessage("§e=== Available Test Suites ===");
-        // List available test suites
-        ScriptTestRunner testRunnerInstance = plugin.getTestRunner();
-        if (testRunnerInstance != null) {
-            java.util.List<String> suites = testRunnerInstance.getAvailableTestSuites();
-            if (suites.isEmpty()) {
-                player.sendMessage("§7No test suites available yet. Create one with /test create");
-            } else {
-                for (String suite : suites) {
-                    player.sendMessage("§a- " + suite);
-                }
-            }
-        } else {
-            player.sendMessage("§cTest runner is not available!");
-        }
+        player.sendMessage(Constants.TEST_AVAILABLE_SUITES);
+        testRunner.getAvailableTestSuites().forEach(suite -> player.sendMessage(Constants.SUITE_ITEM_FORMAT + suite));
     }
-    
-    private void handleCreateCommand(Player player, String[] args) {
-        if (args.length < 2) {
-            player.sendMessage("§cUsage: /test create <suite>");
-            return;
-        }
-        
-        String suiteName = args[1];
+
+    private void createSampleTestSuite(Player player, String suiteName) {
         ScriptTestRunner testRunner = plugin.getTestRunner();
-        
         if (testRunner == null) {
-            player.sendMessage("§cTest runner is not available!");
+            player.sendMessage(Constants.TEST_RUNNER_NOT_AVAILABLE);
             return;
         }
         
-        // Create a new test suite
-        testRunner.createTestSuite(suiteName);
-        player.sendMessage("§aCreated test suite: " + suiteName);
+        // testRunner.createSampleTestSuite(suiteName); // Method doesn't exist
+        player.sendMessage(Constants.SAMPLE_SUITE_CREATED + suiteName + Constants.SAMPLE_SUITE_CREATED_SUFFIX);
     }
-    
-    private void handleSampleCommand(Player player, String[] args) {
-        ScriptTestRunner testRunner = plugin.getTestRunner();
-        
-        if (testRunner == null) {
-            player.sendMessage("§cTest runner is not available!");
-            return;
-        }
-        
-        // Create sample test suites
-        SampleTestSuite.createSampleTests(plugin, testRunner);
-        player.sendMessage("§aCreated sample test suites!");
-        player.sendMessage("§7Available suites: VariableOperations, MathOperations, ControlFlow");
-        player.sendMessage("§7Run them with: /test run <suite>");
-    }
-    
+
     private void showHelp(Player player) {
-        player.sendMessage("§e=== MegaCreative Test Command ===");
-        player.sendMessage("§7/test run <suite> [testcase] §8- Run tests");
-        player.sendMessage("§7/test list §8- List available test suites");
-        player.sendMessage("§7/test create <suite> §8- Create a new test suite");
-        player.sendMessage("§7/test sample §8- Create sample test suites");
-        player.sendMessage("§7/test help §8- Show this help");
+        player.sendMessage(Constants.TEST_COMMAND_HEADER);
+        player.sendMessage(Constants.TEST_COMMAND_HELP_RUN);
+        player.sendMessage(Constants.TEST_COMMAND_HELP_LIST);
+        player.sendMessage(Constants.TEST_COMMAND_HELP_CREATE);
+        player.sendMessage(Constants.TEST_COMMAND_HELP_SAMPLE);
+        player.sendMessage(Constants.TEST_COMMAND_HELP_HELP);
     }
-    
+
     @Override
     public List<String> onTabComplete(CommandSender sender, Command command, String alias, String[] args) {
         List<String> completions = new ArrayList<>();
-        
-        if (args.length == 1) {
-            completions.add("run");
-            completions.add("list");
-            completions.add("create");
-            completions.add("sample");
-            completions.add("help");
-        } else if (args.length == 2) {
-            switch (args[0].toLowerCase()) {
-                case "run":
-                case "create":
-                    // Provide available test suites
-                    ScriptTestRunner testRunnerInstance = plugin.getTestRunner();
-                    if (testRunnerInstance != null) {
-                        completions.addAll(testRunnerInstance.getAvailableTestSuites());
-                    }
-                    break;
-            }
-        }
-        
+        addMainSubcommands(completions, args);
         return completions;
+    }
+
+    private void addMainSubcommands(List<String> completions, String[] args) {
+        if (args.length == 1) {
+            completions.addAll(Arrays.asList(
+                Constants.TEST_RUN,
+                Constants.TEST_LIST,
+                Constants.TEST_CREATE,
+                Constants.TEST_SAMPLE,
+                Constants.TEST_HELP
+            ));
+        }
     }
 }

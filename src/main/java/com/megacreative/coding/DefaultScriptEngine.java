@@ -9,6 +9,7 @@ import com.megacreative.services.BlockConfigService;
 import com.megacreative.coding.executors.AdvancedExecutionEngine;
 import com.megacreative.coding.values.DataValue;
 import com.megacreative.coding.values.types.ListValue;
+import com.megacreative.coding.Constants;
 import org.bukkit.Material;
 import org.bukkit.entity.Player;
 import org.bukkit.scheduler.BukkitRunnable;
@@ -83,7 +84,7 @@ public class DefaultScriptEngine implements ScriptEngine, EnhancedScriptEngine {
     @Override
     public CompletableFuture<ExecutionResult> executeScript(CodeScript script, Player player, String trigger) {
         if (script == null || !script.isEnabled() || script.getRootBlock() == null) {
-            return CompletableFuture.completedFuture(ExecutionResult.success("Script is invalid or disabled."));
+            return CompletableFuture.completedFuture(ExecutionResult.success(Constants.SCRIPT_IS_INVALID_OR_DISABLED));
         }
 
         // Validate script before execution
@@ -124,7 +125,7 @@ public class DefaultScriptEngine implements ScriptEngine, EnhancedScriptEngine {
                 } catch (Throwable t) {
                     plugin.getLogger().severe("Critical script execution error: " + t.getMessage());
                     t.printStackTrace();
-                    future.completeExceptionally(new RuntimeException("Critical execution error", t));
+                    future.completeExceptionally(new RuntimeException(Constants.CRITICAL_EXECUTION_ERROR, t));
                 } finally {
                     if (debugger.isDebugging(player)) {
                         debugger.onScriptEnd(player, script);
@@ -140,7 +141,7 @@ public class DefaultScriptEngine implements ScriptEngine, EnhancedScriptEngine {
     @Override
     public CompletableFuture<ExecutionResult> executeBlock(CodeBlock block, Player player, String trigger) {
         if (block == null) {
-            return CompletableFuture.completedFuture(ExecutionResult.success("Block is null."));
+            return CompletableFuture.completedFuture(ExecutionResult.success(Constants.BLOCK_IS_NULL));
         }
 
         ExecutionContext context = new ExecutionContext.Builder()
@@ -166,7 +167,7 @@ public class DefaultScriptEngine implements ScriptEngine, EnhancedScriptEngine {
                 } catch (Throwable t) {
                     plugin.getLogger().severe("Critical block execution error: " + t.getMessage());
                     t.printStackTrace();
-                    future.completeExceptionally(new RuntimeException("Critical execution error", t));
+                    future.completeExceptionally(new RuntimeException(Constants.CRITICAL_EXECUTION_ERROR, t));
                 }
             }
         }.runTask(plugin);
@@ -177,7 +178,7 @@ public class DefaultScriptEngine implements ScriptEngine, EnhancedScriptEngine {
     @Override
     public CompletableFuture<ExecutionResult> executeBlockChain(CodeBlock startBlock, Player player, String trigger) {
         if (startBlock == null) {
-            return CompletableFuture.completedFuture(ExecutionResult.success("Start block is null."));
+            return CompletableFuture.completedFuture(ExecutionResult.success(Constants.START_BLOCK_IS_NULL));
         }
 
         ExecutionContext context = new ExecutionContext.Builder()
@@ -203,7 +204,7 @@ public class DefaultScriptEngine implements ScriptEngine, EnhancedScriptEngine {
                 } catch (Throwable t) {
                     plugin.getLogger().severe("Critical block chain execution error: " + t.getMessage());
                     t.printStackTrace();
-                    future.completeExceptionally(new RuntimeException("Critical execution error", t));
+                    future.completeExceptionally(new RuntimeException(Constants.CRITICAL_EXECUTION_ERROR, t));
                 }
             }
         }.runTask(plugin);
@@ -217,7 +218,7 @@ public class DefaultScriptEngine implements ScriptEngine, EnhancedScriptEngine {
     private ExecutionResult processBlock(CodeBlock block, ExecutionContext context, int recursionDepth) {
         // Check if execution is cancelled
         if (block == null || context.isCancelled()) {
-            return ExecutionResult.success("End of chain or cancelled.");
+            return ExecutionResult.success(Constants.END_OF_CHAIN_OR_CANCELLED);
         }
         
         // Check for pause/step conditions
@@ -225,7 +226,7 @@ public class DefaultScriptEngine implements ScriptEngine, EnhancedScriptEngine {
         
         // Check for instruction limit to prevent infinite loops
         if (context.getInstructionCount() > MAX_INSTRUCTIONS_PER_TICK) {
-            String errorMsg = "Max instructions per tick exceeded. Possible infinite loop detected.";
+            String errorMsg = Constants.MAX_INSTRUCTIONS_EXCEEDED;
             plugin.getLogger().warning(errorMsg + " Player: " + 
                 (context.getPlayer() != null ? context.getPlayer().getName() : "Unknown"));
             return ExecutionResult.error(errorMsg);
@@ -235,7 +236,7 @@ public class DefaultScriptEngine implements ScriptEngine, EnhancedScriptEngine {
         context.incrementInstructionCount();
         
         if (recursionDepth > MAX_RECURSION_DEPTH) {
-            String errorMsg = "Max recursion depth exceeded.";
+            String errorMsg = Constants.MAX_RECURSION_EXCEEDED;
             plugin.getLogger().warning(errorMsg + " Player: " + 
                 (context.getPlayer() != null ? context.getPlayer().getName() : "Unknown"));
             return ExecutionResult.error(errorMsg);
@@ -247,7 +248,7 @@ public class DefaultScriptEngine implements ScriptEngine, EnhancedScriptEngine {
 
         BlockConfigService.BlockConfig config = blockConfigService.getBlockConfig(block.getAction());
         if (config == null) {
-            String errorMsg = "Unknown block action ID: " + block.getAction();
+            String errorMsg = Constants.UNKNOWN_BLOCK_ACTION + block.getAction();
             plugin.getLogger().warning(errorMsg + " Player: " + 
                 (context.getPlayer() != null ? context.getPlayer().getName() : "Unknown"));
             return ExecutionResult.error(errorMsg);
@@ -379,7 +380,7 @@ public class DefaultScriptEngine implements ScriptEngine, EnhancedScriptEngine {
                                     if (recursionDepth < MAX_RECURSION_DEPTH - 1) {
                                         return processBlock(block, context, recursionDepth + 1);
                                     } else {
-                                        String errorMsg = "Max recursion depth exceeded in while loop.";
+                                        String errorMsg = Constants.MAX_RECURSION_EXCEEDED_IN_WHILE_LOOP;
                                         plugin.getLogger().warning(errorMsg + " Player: " + 
                                             (context.getPlayer() != null ? context.getPlayer().getName() : "Unknown"));
                                         return ExecutionResult.error(errorMsg);
@@ -409,7 +410,7 @@ public class DefaultScriptEngine implements ScriptEngine, EnhancedScriptEngine {
                                         if (recursionDepth < MAX_RECURSION_DEPTH - 1) {
                                             return processBlock(block, context, recursionDepth + 1);
                                         } else {
-                                            String errorMsg = "Max recursion depth exceeded in while loop.";
+                                            String errorMsg = Constants.MAX_RECURSION_EXCEEDED_IN_WHILE_LOOP;
                                             plugin.getLogger().warning(errorMsg + " Player: " + 
                                                 (context.getPlayer() != null ? context.getPlayer().getName() : "Unknown"));
                                             return ExecutionResult.error(errorMsg);
@@ -421,7 +422,7 @@ public class DefaultScriptEngine implements ScriptEngine, EnhancedScriptEngine {
                                 if (recursionDepth < MAX_RECURSION_DEPTH - 1) {
                                     return processBlock(block, context, recursionDepth + 1);
                                 } else {
-                                    String errorMsg = "Max recursion depth exceeded in while loop.";
+                                    String errorMsg = Constants.MAX_RECURSION_EXCEEDED_IN_WHILE_LOOP;
                                     plugin.getLogger().warning(errorMsg + " Player: " + 
                                         (context.getPlayer() != null ? context.getPlayer().getName() : "Unknown"));
                                     return ExecutionResult.error(errorMsg);
