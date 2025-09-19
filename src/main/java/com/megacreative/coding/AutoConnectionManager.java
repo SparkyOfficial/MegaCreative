@@ -244,12 +244,10 @@ public class AutoConnectionManager implements Listener {
             
             // Also ensure BlockPlacementHandler is synchronized
             BlockPlacementHandler placementHandler = getBlockPlacementHandler();
-            if (placementHandler != null) {
-                // The BlockPlacementHandler should handle this in its own event handler
-                if (plugin != null) {
+            if (placementHandler != null && plugin != null) {
                     plugin.getLogger().fine("CodeBlock disconnected at " + location);
                 }
-            }
+            
             
             event.getPlayer().sendMessage("§cБлок кода удален и отсоединён от цепочки!");
         }
@@ -611,11 +609,10 @@ public class AutoConnectionManager implements Listener {
         UUID playerId = player.getUniqueId();
         List<CodeBlock> blocks = playerScriptBlocks.get(playerId);
         
-        if (blocks != null && blocks.remove(block)) {
-            if (plugin != null) {
+        if (blocks != null && blocks.remove(block) && plugin != null) {
                 plugin.getLogger().fine("Removed CodeBlock from player " + player.getName() + " script. Remaining blocks: " + blocks.size());
             }
-        }
+        
     }
     
     /**
@@ -867,19 +864,6 @@ public class AutoConnectionManager implements Listener {
     }
     
     /**
-     * Determines if a block should auto-connect to the next block
-     * Control and event blocks don't auto-connect as they have special connection logic
-     */
-    private boolean shouldAutoConnect(String action, String blockType) {
-        // Get the block configuration
-        BlockConfigService.BlockConfig config = blockConfigService.getBlockConfig(action);
-        if (config == null) return true; // Default to auto-connect
-        
-        // Check if it's a control or event block
-        return !blockConfigService.isControlOrEventBlock(config.getType());
-    }
-    
-    /**
      * Compiles a complete script from an event block by following all connections
      * This implements the "compilation" process mentioned in the roadmap
      * Enhanced with improved script compilation logic.
@@ -1024,19 +1008,6 @@ public class AutoConnectionManager implements Listener {
         if (plugin != null) {
             plugin.getLogger().fine("Recompiled " + scriptCount + " scripts for world: " + world.getName() + " with " + errorCount + " errors");
         }
-    }
-    
-    /**
-     * Determines if a block should connect to child blocks (conditionals, loops)
-     * Only control and event blocks can have children
-     */
-    private boolean shouldConnectToChildren(String action, String blockType) {
-        // Get the block configuration
-        BlockConfigService.BlockConfig config = blockConfigService.getBlockConfig(action);
-        if (config == null) return false; // Default to no children
-        
-        // Check if it's a control or event block
-        return blockConfigService.isControlOrEventBlock(config.getType());
     }
     
     /**

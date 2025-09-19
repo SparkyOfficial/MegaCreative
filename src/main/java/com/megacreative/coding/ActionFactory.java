@@ -368,7 +368,7 @@ public class ActionFactory {
         // --- GUI BLOCKS ---
         // --- БЛОКИ GUI ---
         // --- GUI-BLÖCKE ---
-        register("createGui", () -> new CreateGuiAction());
+        register("createGui", CreateGuiAction::new);
         register("createInteractiveGui", () -> new BlockAction() {
             @Override
             public ExecutionResult execute(CodeBlock block, ExecutionContext context) {
