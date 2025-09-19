@@ -821,17 +821,15 @@ public class AdvancedScriptOptimizer {
             this.generatedTime = System.currentTimeMillis();
             
             // Count issues by priority
-            int critical = 0, high = 0, medium = 0, low = 0;
-            countIssuesByPriority(suggestions, critical, high, medium, low);
-            
-            this.criticalIssues = critical;
-            this.highPriorityIssues = high;
-            this.mediumPriorityIssues = medium;
-            this.lowPriorityIssues = low;
+            int[] counts = countIssuesByPriority(suggestions);
+            this.criticalIssues = counts[0];
+            this.highPriorityIssues = counts[1];
+            this.mediumPriorityIssues = counts[2];
+            this.lowPriorityIssues = counts[3];
         }
         
-        private void countIssuesByPriority(List<OptimizationSuggestion> suggestions, 
-                                         int critical, int high, int medium, int low) {
+        private int[] countIssuesByPriority(List<OptimizationSuggestion> suggestions) {
+            int critical = 0, high = 0, medium = 0, low = 0;
             for (OptimizationSuggestion suggestion : suggestions) {
                 switch (suggestion.getPriority()) {
                     case CRITICAL: critical++; break;
@@ -843,6 +841,7 @@ public class AdvancedScriptOptimizer {
                         break;
                 }
             }
+            return new int[]{critical, high, medium, low};
         }
         
         /**
