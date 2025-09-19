@@ -35,6 +35,7 @@ public class AutoConnectionManager implements Listener {
     private static final int MAX_INDENTATION_LEVEL = 5;
     private static final double MAX_OWNER_DISTANCE = 16.0;
     private static final double LAST_RESORT_DISTANCE = 8.0;
+    private static final int MAX_BLOCKS_PER_LINE = DevWorldGenerator.getBlocksPerLine();
     
     private final MegaCreative plugin;
     private final BlockConfigService blockConfigService;
@@ -118,59 +119,101 @@ public class AutoConnectionManager implements Listener {
 
         // Check if this is a dev world
         if (!isDevWorld(block.getWorld())) {
-            if (plugin != null) {
-                plugin.getLogger().info("AutoConnectionManager: Block placement not in dev world: " + block.getWorld().getName());
-            }
+            handleNonDevWorld(block);
             return;
         }
         
-        if (plugin != null) {
-            plugin.getLogger().info("AutoConnectionManager: Processing block placement by " + player.getName() + " at " + location);
-        }
+        logBlockPlacement(player, location);
         
         // Check if this is a code block by checking if BlockPlacementHandler created a CodeBlock
         BlockPlacementHandler placementHandler = getBlockPlacementHandler();
         if (placementHandler == null || !placementHandler.hasCodeBlock(location)) {
-            if (plugin != null) {
-                plugin.getLogger().info("AutoConnectionManager: Not a code block or not handled by BlockPlacementHandler at " + location);
-            }
+            handleNonCodeBlock(location);
             return; // Not a code block or not handled by BlockPlacementHandler
         }
 
         // Get the CodeBlock that was created by BlockPlacementHandler
         CodeBlock codeBlock = placementHandler.getCodeBlock(location);
         if (codeBlock != null) {
-            // Add to our tracking map
-            locationToBlock.put(location, codeBlock);
-            
-            // Track block owner
-            blockOwners.put(location, player);
-            
-            // Add to player's script blocks
-            addBlockToPlayerScript(player, codeBlock);
-            
-            // Auto-connect with neighboring blocks
-            autoConnectBlock(codeBlock, location);
-            
-            // If this is an event block, create a script and add it to the world
-            if (isEventBlock(codeBlock)) {
-                createAndAddScript(codeBlock, player, location);
-            }
-            
-            // Get configuration for display name
-            String displayName = itemInHand.hasItemMeta() ? org.bukkit.ChatColor.stripColor(itemInHand.getItemMeta().getDisplayName()) : "";
-            BlockConfigService.BlockConfig config = blockConfigService.getBlockConfigByDisplayName(displayName);
-            String blockName = config != null ? config.getDisplayName() : "Unknown Block";
-            
-            // Уменьшен спам - сообщение только важных событий
-            if (plugin != null) {
-                plugin.getLogger().info("Block '" + blockName + "' placed and auto-connected at " + location + " for player " + player.getName());
-                plugin.getLogger().fine("Auto-connected CodeBlock at " + location + " for player " + player.getName());
-            }
+            processCodeBlockPlacement(player, location, itemInHand, codeBlock);
         } else {
-            if (plugin != null) {
-                plugin.getLogger().warning("AutoConnectionManager: CodeBlock is null at " + location);
-            }
+            logNullCodeBlock(location);
+        }
+    }
+    
+    /**
+     * Handles the case when a block is placed in a non-dev world
+     */
+    private void handleNonDevWorld(Block block) {
+        if (plugin != null) {
+            plugin.getLogger().info("AutoConnectionManager: Block placement not in dev world: " + block.getWorld().getName());
+        }
+    }
+    
+    /**
+     * Logs block placement information
+     */
+    private void logBlockPlacement(Player player, Location location) {
+        if (plugin != null) {
+            plugin.getLogger().info("AutoConnectionManager: Processing block placement by " + player.getName() + " at " + location);
+        }
+    }
+    
+    /**
+     * Handles the case when a block is not a code block
+     */
+    private void handleNonCodeBlock(Location location) {
+        if (plugin != null) {
+            plugin.getLogger().info("AutoConnectionManager: Not a code block or not handled by BlockPlacementHandler at " + location);
+        }
+    }
+    
+    /**
+     * Processes the placement of a code block
+     */
+    private void processCodeBlockPlacement(Player player, Location location, ItemStack itemInHand, CodeBlock codeBlock) {
+        // Add to our tracking map
+        locationToBlock.put(location, codeBlock);
+        
+        // Track block owner
+        blockOwners.put(location, player);
+        
+        // Add to player's script blocks
+        addBlockToPlayerScript(player, codeBlock);
+        
+        // Auto-connect with neighboring blocks
+        autoConnectBlock(codeBlock, location);
+        
+        // If this is an event block, create a script and add it to the world
+        if (isEventBlock(codeBlock)) {
+            createAndAddScript(codeBlock, player, location);
+        }
+        
+        // Get configuration for display name
+        String displayName = itemInHand.hasItemMeta() ? org.bukkit.ChatColor.stripColor(itemInHand.getItemMeta().getDisplayName()) : "";
+        BlockConfigService.BlockConfig config = blockConfigService.getBlockConfigByDisplayName(displayName);
+        String blockName = config != null ? config.getDisplayName() : "Unknown Block";
+        
+        // Уменьшен спам - сообщение только важных событий
+        logSuccessfulPlacement(player, location, blockName);
+    }
+    
+    /**
+     * Logs successful block placement
+     */
+    private void logSuccessfulPlacement(Player player, Location location, String blockName) {
+        if (plugin != null) {
+            plugin.getLogger().info("Block '" + blockName + "' placed and auto-connected at " + location + " for player " + player.getName());
+            plugin.getLogger().fine("Auto-connected CodeBlock at " + location + " for player " + player.getName());
+        }
+    }
+    
+    /**
+     * Logs when a CodeBlock is null
+     */
+    private void logNullCodeBlock(Location location) {
+        if (plugin != null) {
+            plugin.getLogger().warning("AutoConnectionManager: CodeBlock is null at " + location);
         }
     }
     
@@ -313,7 +356,7 @@ public class AutoConnectionManager implements Listener {
             int lineZ = DevWorldGenerator.getZForCodeLine(line);
             
             // Scan from right to left in this line
-            int startX = (line == childLine) ? childLocation.getBlockX() - 1 : DevWorldGenerator.getBlocksPerLine() - 1;
+            int startX = calculateStartX(line, childLine, childLocation);
             
             for (int x = startX; x >= 0; x--) {
                 Location checkLocation = new Location(childLocation.getWorld(), x, childLocation.getBlockY(), lineZ);
@@ -335,6 +378,13 @@ public class AutoConnectionManager implements Listener {
         }
         
         return null; // No unmatched opening bracket found
+    }
+    
+    /**
+     * Calculates the starting X coordinate for scanning
+     */
+    private int calculateStartX(int line, int childLine, Location childLocation) {
+        return (line == childLine) ? childLocation.getBlockX() - 1 : MAX_BLOCKS_PER_LINE - 1;
     }
     
     /**
@@ -421,39 +471,59 @@ public class AutoConnectionManager implements Listener {
         Player owner = findBlockOwner(location);
         
         if (owner != null) {
-            UUID playerId = owner.getUniqueId();
-            List<CodeBlock> blocks = playerScriptBlocks.computeIfAbsent(playerId, k -> new ArrayList<>());
-            
-            // Add to player's blocks if not already present
-            if (!blocks.contains(codeBlock)) {
-                blocks.add(codeBlock);
-                
-                // Sort blocks by location for proper execution order
-                blocks.sort((a, b) -> {
-                    Location locA = getLocationForBlock(a);
-                    Location locB = getLocationForBlock(b);
-                    if (locA == null || locB == null) return 0;
-                    
-                    // Sort by Z (line) first, then by X (position in line)
-                    int lineCompare = Integer.compare(locA.getBlockZ(), locB.getBlockZ());
-                    if (lineCompare != 0) return lineCompare;
-                    return Integer.compare(locA.getBlockX(), locB.getBlockX());
-                });
-                
-                if (plugin != null) {
-                    plugin.getLogger().fine("Updated player script blocks for: " + owner.getName());
-                }
-            }
+            handleOwnedBlock(codeBlock, owner);
         } else {
-            // Fallback to the simplified approach if owner cannot be determined
-            for (Map.Entry<UUID, List<CodeBlock>> entry : playerScriptBlocks.entrySet()) {
-                List<CodeBlock> blocks = entry.getValue();
-                if (blocks.contains(codeBlock)) {
-                    if (plugin != null) {
-                        plugin.getLogger().fine("Updated player script blocks for: " + entry.getKey());
-                    }
-                    break;
+            handleUnownedBlock(codeBlock);
+        }
+    }
+    
+    /**
+     * Handles a block that has an owner
+     */
+    private void handleOwnedBlock(CodeBlock codeBlock, Player owner) {
+        UUID playerId = owner.getUniqueId();
+        List<CodeBlock> blocks = playerScriptBlocks.computeIfAbsent(playerId, k -> new ArrayList<>());
+        
+        // Add to player's blocks if not already present
+        if (!blocks.contains(codeBlock)) {
+            blocks.add(codeBlock);
+            sortAndLogBlocks(blocks, owner);
+        }
+    }
+    
+    /**
+     * Sorts blocks and logs the update
+     */
+    private void sortAndLogBlocks(List<CodeBlock> blocks, Player owner) {
+        // Sort blocks by location for proper execution order
+        blocks.sort((a, b) -> {
+            Location locA = getLocationForBlock(a);
+            Location locB = getLocationForBlock(b);
+            if (locA == null || locB == null) return 0;
+            
+            // Sort by Z (line) first, then by X (position in line)
+            int lineCompare = Integer.compare(locA.getBlockZ(), locB.getBlockZ());
+            if (lineCompare != 0) return lineCompare;
+            return Integer.compare(locA.getBlockX(), locB.getBlockX());
+        });
+        
+        if (plugin != null) {
+            plugin.getLogger().fine("Updated player script blocks for: " + owner.getName());
+        }
+    }
+    
+    /**
+     * Handles a block that doesn't have an owner
+     */
+    private void handleUnownedBlock(CodeBlock codeBlock) {
+        // Fallback to the simplified approach if owner cannot be determined
+        for (Map.Entry<UUID, List<CodeBlock>> entry : playerScriptBlocks.entrySet()) {
+            List<CodeBlock> blocks = entry.getValue();
+            if (blocks.contains(codeBlock)) {
+                if (plugin != null) {
+                    plugin.getLogger().fine("Updated player script blocks for: " + entry.getKey());
                 }
+                break;
             }
         }
     }
@@ -465,9 +535,7 @@ public class AutoConnectionManager implements Listener {
     private void connectChildBlocks(CodeBlock parentBlock, Location parentLocation) {
         int parentLine = DevWorldGenerator.getCodeLineFromZ(parentLocation.getBlockZ());
         
-        if (plugin != null) {
-            plugin.getLogger().fine("Looking for child blocks for parent at line " + parentLine);
-        }
+        logChildSearch(parentLine);
         
         // Look for indented blocks in subsequent lines (children)
         for (int childLine = parentLine + 1; childLine < parentLine + MAX_CHILD_SEARCH_LINES && childLine < DevWorldGenerator.getLinesCount(); childLine++) {
@@ -479,22 +547,45 @@ public class AutoConnectionManager implements Listener {
                 CodeBlock childBlock = locationToBlock.get(childLocation);
                 
                 if (childBlock != null) {
-                    parentBlock.addChild(childBlock);
-                    if (plugin != null) {
-                        plugin.getLogger().fine("Connected child: parent line " + parentLine + " -> child at (" + childX + ", " + childLine + ")");
-                    }
-                    buildBlockChain(childBlock, childLocation); // Recursively build child chain
+                    connectChildBlock(parentBlock, parentLine, childLine, childX, childBlock, childLocation);
                 }
             }
             
             // If we find a non-indented block, stop looking for children
             Location endLocation = new Location(parentLocation.getWorld(), 0, parentLocation.getBlockY(), childZ);
             if (locationToBlock.containsKey(endLocation)) {
-                if (plugin != null) {
-                    plugin.getLogger().fine("Found non-indented block at line " + childLine + ", ending child search");
-                }
+                handleNonIndentedBlock(childLine);
                 break;
             }
+        }
+    }
+    
+    /**
+     * Logs the start of child search
+     */
+    private void logChildSearch(int parentLine) {
+        if (plugin != null) {
+            plugin.getLogger().fine("Looking for child blocks for parent at line " + parentLine);
+        }
+    }
+    
+    /**
+     * Connects a child block to its parent
+     */
+    private void connectChildBlock(CodeBlock parentBlock, int parentLine, int childLine, int childX, CodeBlock childBlock, Location childLocation) {
+        parentBlock.addChild(childBlock);
+        if (plugin != null) {
+            plugin.getLogger().fine("Connected child: parent line " + parentLine + " -> child at (" + childX + ", " + childLine + ")");
+        }
+        buildBlockChain(childBlock, childLocation); // Recursively build child chain
+    }
+    
+    /**
+     * Handles when a non-indented block is found
+     */
+    private void handleNonIndentedBlock(int childLine) {
+        if (plugin != null) {
+            plugin.getLogger().fine("Found non-indented block at line " + childLine + ", ending child search");
         }
     }
     
