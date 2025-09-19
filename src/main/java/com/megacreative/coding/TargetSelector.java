@@ -11,6 +11,26 @@ import java.util.ArrayList;
  */
 public class TargetSelector {
     
+    // Constants for selector types
+    private static final String SELECTOR_NEAREST = "@p";
+    private static final String SELECTOR_RANDOM = "@r";
+    private static final String SELECTOR_ALL = "@a";
+    private static final String SELECTOR_SELF = "@s";
+    
+    // Constants for selector arguments
+    private static final String ARG_RADIUS = "r";
+    private static final String ARG_GAMEMODE = "m";
+    private static final String ARG_NAME = "name";
+    private static final String ARG_TEAM = "team";
+    private static final String ARG_X = "x";
+    private static final String ARG_Y = "y";
+    private static final String ARG_Z = "z";
+    
+    // Additional constants for selector argument values
+    private static final String COORD_X = "x";
+    private static final String COORD_Y = "y";
+    private static final String COORD_Z = "z";
+    
     public enum TargetType {
         SELF,        // @s - the executing player
         NEAREST,     // @p - nearest player
@@ -66,6 +86,11 @@ public class TargetSelector {
                 // Handle entity selection if needed
                 targets.add(context.getPlayer());
                 break;
+                
+            default:
+                // Default case - add the executing player
+                targets.add(context.getPlayer());
+                break;
         }
         
         // Apply filters based on selector arguments
@@ -94,7 +119,7 @@ public class TargetSelector {
                 String value = parts[1].trim();
                 
                 switch (key) {
-                    case "r": // Radius
+                    case ARG_RADIUS: // Radius
                         try {
                             double radius = Double.parseDouble(value);
                             Location playerLocation = context.getPlayer().getLocation();
@@ -105,7 +130,7 @@ public class TargetSelector {
                         }
                         break;
                         
-                    case "m": // Game mode
+                    case ARG_GAMEMODE: // Game mode
                         try {
                             int gameMode = Integer.parseInt(value);
                             org.bukkit.GameMode mode = org.bukkit.GameMode.getByValue(gameMode);
@@ -118,19 +143,23 @@ public class TargetSelector {
                         }
                         break;
                         
-                    case "name": // Player name
+                    case ARG_NAME: // Player name
                         filteredTargets.removeIf(player -> 
                             !player.getName().equals(value));
                         break;
                         
-                    case "team": // Team name
+                    case ARG_TEAM: // Team name
                         // This would require scoreboard integration
                         break;
                         
-                    case "x":
-                    case "y":
-                    case "z": // Coordinates for distance calculation
+                    case ARG_X:
+                    case ARG_Y:
+                    case ARG_Z: // Coordinates for distance calculation
                         // These are handled with 'r' parameter
+                        break;
+                        
+                    default:
+                        // Default case - no action needed for unknown arguments
                         break;
                 }
             }
@@ -195,13 +224,13 @@ public class TargetSelector {
         // Handle Minecraft-style selectors
         if (selector.startsWith("@")) {
             switch (selector) {
-                case "@p":
+                case SELECTOR_NEAREST:
                     return new TargetSelector(TargetType.NEAREST, null);
-                case "@r":
+                case SELECTOR_RANDOM:
                     return new TargetSelector(TargetType.RANDOM, null);
-                case "@a":
+                case SELECTOR_ALL:
                     return new TargetSelector(TargetType.ALL, null);
-                case "@s":
+                case SELECTOR_SELF:
                     return new TargetSelector(TargetType.SELF, null);
                 default:
                     // Handle selectors with arguments like @p[x=10,y=20,z=30,r=5]
@@ -225,13 +254,13 @@ public class TargetSelector {
         
         if (bracketStart == -1 || bracketEnd == -1 || bracketEnd <= bracketStart) {
             // Invalid format, return basic selector
-            if (selector.startsWith("@p")) {
+            if (selector.startsWith(SELECTOR_NEAREST)) {
                 return new TargetSelector(TargetType.NEAREST, selector);
-            } else if (selector.startsWith("@r")) {
+            } else if (selector.startsWith(SELECTOR_RANDOM)) {
                 return new TargetSelector(TargetType.RANDOM, selector);
-            } else if (selector.startsWith("@a")) {
+            } else if (selector.startsWith(SELECTOR_ALL)) {
                 return new TargetSelector(TargetType.ALL, selector);
-            } else if (selector.startsWith("@s")) {
+            } else if (selector.startsWith(SELECTOR_SELF)) {
                 return new TargetSelector(TargetType.SELF, selector);
             }
             return new TargetSelector(TargetType.SELF, selector);
@@ -244,20 +273,21 @@ public class TargetSelector {
         
         TargetType targetType;
         switch (selectorType) {
-            case "@p":
+            case SELECTOR_NEAREST:
                 targetType = TargetType.NEAREST;
                 break;
-            case "@r":
+            case SELECTOR_RANDOM:
                 targetType = TargetType.RANDOM;
                 break;
-            case "@a":
+            case SELECTOR_ALL:
                 targetType = TargetType.ALL;
                 break;
-            case "@s":
+            case SELECTOR_SELF:
                 targetType = TargetType.SELF;
                 break;
             default:
                 targetType = TargetType.SELF;
+                break;
         }
         
         return new TargetSelector(targetType, arguments);

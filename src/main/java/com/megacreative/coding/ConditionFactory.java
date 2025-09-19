@@ -9,6 +9,20 @@ import java.util.function.Supplier;
 
 public class ConditionFactory {
 
+    // Constants for condition types
+    private static final String CONDITION_TYPE_EQUALS = "equals";
+    private static final String CONDITION_TYPE_EQUAL = "equal";
+    private static final String CONDITION_TYPE_GREATER = "greater";
+    private static final String CONDITION_TYPE_GREATER_THAN = "greater_than";
+    private static final String CONDITION_TYPE_LESS = "less";
+    private static final String CONDITION_TYPE_LESS_THAN = "less_than";
+    private static final String CONDITION_TYPE_CONTAINS = "contains";
+    private static final String CONDITION_TYPE_NOT_EMPTY = "not_empty";
+    private static final String CONDITION_TYPE_IS_TRUE = "is_true";
+    private static final String CONDITION_TYPE_TRUE = "true";
+    private static final String CONDITION_TYPE_IS_FALSE = "is_false";
+    private static final String CONDITION_TYPE_FALSE = "false";
+
     private final Map<String, Supplier<BlockCondition>> conditionMap = new HashMap<>();
 
     public ConditionFactory() {
@@ -53,7 +67,7 @@ public class ConditionFactory {
         register("worldGuardRegionCheck", WorldGuardRegionCheckCondition::new);
         
         // === GENERIC CONDITIONS - Mass Production System ===
-        // Register all simple conditions to use the GenericCondition handler
+        // Register all simple conditions that can be handled by GenericCondition
         registerGenericConditions();
     }
     
@@ -146,12 +160,12 @@ public class ConditionFactory {
                         // If we have a specific evaluation type, use it
                         if (conditionType != null) {
                             switch (conditionType.asString().toLowerCase()) {
-                                case "equals":
-                                case "equal":
+                                case CONDITION_TYPE_EQUALS:
+                                case CONDITION_TYPE_EQUAL:
                                     return conditionValue != null && expectedValue != null && 
                                            conditionValue.asString().equals(expectedValue.asString());
-                                case "greater":
-                                case "greater_than":
+                                case CONDITION_TYPE_GREATER:
+                                case CONDITION_TYPE_GREATER_THAN:
                                     if (conditionValue != null && expectedValue != null) {
                                         try {
                                             double val1 = Double.parseDouble(conditionValue.asString());
@@ -162,8 +176,8 @@ public class ConditionFactory {
                                         }
                                     }
                                     break;
-                                case "less":
-                                case "less_than":
+                                case CONDITION_TYPE_LESS:
+                                case CONDITION_TYPE_LESS_THAN:
                                     if (conditionValue != null && expectedValue != null) {
                                         try {
                                             double val1 = Double.parseDouble(conditionValue.asString());
@@ -174,23 +188,30 @@ public class ConditionFactory {
                                         }
                                     }
                                     break;
-                                case "contains":
+                                case CONDITION_TYPE_CONTAINS:
                                     if (conditionValue != null && expectedValue != null) {
                                         return conditionValue.asString().contains(expectedValue.asString());
                                     }
                                     break;
-                                case "not_empty":
+                                case CONDITION_TYPE_NOT_EMPTY:
                                     return conditionValue != null && !conditionValue.asString().isEmpty();
-                                case "is_true":
-                                case "true":
+                                case CONDITION_TYPE_IS_TRUE:
+                                case CONDITION_TYPE_TRUE:
                                     if (conditionValue != null) {
                                         return Boolean.parseBoolean(conditionValue.asString());
                                     }
                                     break;
-                                case "is_false":
-                                case "false":
+                                case CONDITION_TYPE_IS_FALSE:
+                                case CONDITION_TYPE_FALSE:
                                     if (conditionValue != null) {
                                         return !Boolean.parseBoolean(conditionValue.asString());
+                                    }
+                                    break;
+                                default:
+                                    // Default evaluation - check if condition value is truthy
+                                    if (conditionValue != null) {
+                                        String value = conditionValue.asString();
+                                        return !value.isEmpty() && !"false".equalsIgnoreCase(value) && !"0".equals(value);
                                     }
                                     break;
                             }

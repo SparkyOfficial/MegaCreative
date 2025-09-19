@@ -21,6 +21,40 @@ import java.util.Map;
 
 public class DefaultScriptEngine implements ScriptEngine, EnhancedScriptEngine {
     
+    // Constants for block types
+    private static final String BLOCK_TYPE_EVENT = "EVENT";
+    private static final String BLOCK_TYPE_ACTION = "ACTION";
+    private static final String BLOCK_TYPE_CONDITION = "CONDITION";
+    private static final String BLOCK_TYPE_CONTROL = "CONTROL";
+    private static final String BLOCK_TYPE_FUNCTION = "FUNCTION";
+    
+    // Constants for control block actions
+    private static final String CONTROL_ACTION_CONDITIONAL_BRANCH = "conditionalBranch";
+    private static final String CONTROL_ACTION_ELSE = "else";
+    private static final String CONTROL_ACTION_WHILE_LOOP = "whileLoop";
+    private static final String CONTROL_ACTION_FOR_EACH = "forEach";
+    private static final String CONTROL_ACTION_BREAK = "break";
+    private static final String CONTROL_ACTION_CONTINUE = "continue";
+    
+    // Constants for function actions
+    private static final String FUNCTION_ACTION_CALL_FUNCTION = "callFunction";
+    
+    // Constants for bracket types
+    private static final String BRACKET_OPEN = "OPEN";
+    private static final String BRACKET_CLOSE = "CLOSE";
+    
+    // Constants for error messages
+    private static final String ERROR_SCRIPT_VALIDATION_FAILED = "Script validation failed: ";
+    private static final String ERROR_ACTION_HANDLER_NOT_FOUND = "Action handler not found for: ";
+    private static final String ERROR_CONDITION_HANDLER_NOT_FOUND = "Condition handler not found for: ";
+    private static final String ERROR_MAX_RECURSION_EXCEEDED_IN_WHILE_LOOP = "Maximum recursion depth exceeded in while loop";
+    private static final String ERROR_PLAYER_REQUIRED_FOR_FOREACH = "Player required for forEach loop";
+    private static final String ERROR_FUNCTION_MANAGER_NOT_AVAILABLE = "Function manager not available";
+    private static final String ERROR_EXECUTING_FUNCTION = "Error executing function ";
+    private static final String ERROR_EXECUTING_BLOCK = "Error executing block ";
+    private static final String ERROR_CRITICAL_EXECUTING_BLOCK = "Critical error executing block ";
+    private static final String ERROR_UNSUPPORTED_BLOCK_TYPE = "Unsupported block type: ";
+    
     private final MegaCreative plugin;
     private final VariableManager variableManager;
     private final VisualDebugger debugger;
@@ -63,9 +97,9 @@ public class DefaultScriptEngine implements ScriptEngine, EnhancedScriptEngine {
         // This method can be used to register built-in actions and conditions
         // Register all actions from BlockConfigService
         for (BlockConfigService.BlockConfig config : blockConfigService.getAllBlockConfigs()) {
-            if ("ACTION".equals(config.getType())) {
+            if (BLOCK_TYPE_ACTION.equals(config.getType())) {
                 actionFactory.registerAction(config.getId(), config.getDisplayName());
-            } else if ("CONDITION".equals(config.getType())) {
+            } else if (BLOCK_TYPE_CONDITION.equals(config.getType())) {
                 conditionFactory.registerCondition(config.getId(), config.getDisplayName());
             }
         }
@@ -90,7 +124,7 @@ public class DefaultScriptEngine implements ScriptEngine, EnhancedScriptEngine {
         // Validate script before execution
         ScriptValidator.ValidationResult validationResult = scriptValidator.validateScript(script);
         if (!validationResult.isValid()) {
-            String errorMessage = "Script validation failed: " + 
+            String errorMessage = ERROR_SCRIPT_VALIDATION_FAILED + 
                 validationResult.getErrorCount() + " errors found. " +
                 "First error: " + (validationResult.getErrors().isEmpty() ? "Unknown" : validationResult.getErrors().get(0).getMessage());
             return CompletableFuture.completedFuture(ExecutionResult.error(errorMessage));
@@ -259,361 +293,33 @@ public class DefaultScriptEngine implements ScriptEngine, EnhancedScriptEngine {
         try {
             // --- ОСНОВНАЯ ЛОГИКА ---
             switch (blockType) {
-                case "EVENT":
-                case "ACTION":
-                    BlockAction action = actionFactory.createAction(block.getAction());
-                    if (action == null) {
-                        String errorMsg = "Action handler not found for: " + block.getAction();
-                        plugin.getLogger().warning(errorMsg + " Player: " + 
-                            (context.getPlayer() != null ? context.getPlayer().getName() : "Unknown"));
-                        return ExecutionResult.error(errorMsg);
-                    }
-                    ExecutionResult result = action.execute(block, context);
-                    // Если действие прошло успешно, переходим к следующему блоку
-                    if (result.isSuccess()) {
-                        // Check if execution was terminated (e.g., by a return statement)
-                        if (result.isTerminated()) {
-                            return result; // Stop execution and return the result
-                        }
-                        return processBlock(block.getNextBlock(), context, recursionDepth + 1);
-                    }
-                    return result; // Если была ошибка, останавливаемся
+                case BLOCK_TYPE_EVENT:
+                case BLOCK_TYPE_ACTION:
+                    return processActionBlock(block, context, recursionDepth);
                     
-                case "CONDITION":
-                    BlockCondition condition = conditionFactory.createCondition(block.getAction());
-                    if (condition == null) {
-                        String errorMsg = "Condition handler not found for: " + block.getAction();
-                        plugin.getLogger().warning(errorMsg + " Player: " + 
-                            (context.getPlayer() != null ? context.getPlayer().getName() : "Unknown"));
-                        return ExecutionResult.error(errorMsg);
-                    }
-                    boolean conditionResult = condition.evaluate(block, context);
-                    context.setLastConditionResult(conditionResult);
-                    if (debugger.isDebugging(context.getPlayer())) {
-                        debugger.onConditionResult(context.getPlayer(), block, conditionResult);
-                    }
-                    // Сохраняем результат условия для последующего использования в блоках CONTROL
-                    return processBlock(block.getNextBlock(), context, recursionDepth + 1);
+                case BLOCK_TYPE_CONDITION:
+                    return processConditionBlock(block, context, recursionDepth);
                     
-                case "CONTROL":
-                    // === BRACKET LOGIC ===
-                    if (block.isBracket()) {
-                        if (block.getBracketType() == CodeBlock.BracketType.OPEN) {
-                            // This is an opening bracket {
-                            // All logic inside it should be executed only if the last condition was true
-                            if (context.getLastConditionResult()) {
-                                // Execute all child elements
-                                for (CodeBlock child : block.getChildren()) {
-                                    ExecutionResult childResult = processBlock(child, context, recursionDepth + 1);
-                                    if (!childResult.isSuccess()) {
-                                        return childResult; // Stop on first error
-                                    }
-                                    // Check if execution was terminated (e.g., by a return statement)
-                                    if (childResult.isTerminated()) {
-                                        return childResult; // Stop execution and return the result
-                                    }
-                                }
-                            }
-                            // After executing the bracket (or skipping it), go to the NEXT block AFTER this bracket
-                            return processBlock(findNextBlockAfterBracket(block), context, recursionDepth + 1);
-                        } else {
-                            // Closing bracket } - should not be processed directly
-                            // This is handled by the opening bracket logic
-                            return processBlock(block.getNextBlock(), context, recursionDepth + 1);
-                        }
-                    }
+                case BLOCK_TYPE_CONTROL:
+                    return processControlBlock(block, context, recursionDepth);
                     
-                    // === TRADITIONAL CONTROL LOGIC ===
-                    // Implementing logic for IF/ELSE, LOOP etc.
-                    switch (block.getAction()) {
-                        case "conditionalBranch":
-                            if (context.getLastConditionResult()) {
-                                // The result of the last condition was TRUE, execute child blocks
-                                if (!block.getChildren().isEmpty()) {
-                                    // Execute the first child branch
-                                    ExecutionResult childResult = processBlock(block.getChildren().get(0), context, recursionDepth + 1);
-                                    // If the child branch ended with an error, stop
-                                    if (!childResult.isSuccess()) return childResult;
-                                    // Check if execution was terminated (e.g., by a return statement)
-                                    if (childResult.isTerminated()) {
-                                        return childResult; // Stop execution and return the result
-                                    }
-                                }
-                            }
-                            // Regardless of the result, after IF we go to the next block in the MAIN chain
-                            return processBlock(block.getNextBlock(), context, recursionDepth + 1);
-                            
-                        case "else":
-                            // Processing the ELSE block
-                            if (!context.getLastConditionResult()) {
-                                // The previous condition was FALSE, execute the ELSE block
-                                if (!block.getChildren().isEmpty()) {
-                                    // Execute the first child branch (else body)
-                                    ExecutionResult childResult = processBlock(block.getChildren().get(0), context, recursionDepth + 1);
-                                    // If the child branch ended with an error, stop
-                                    if (!childResult.isSuccess()) return childResult;
-                                    // Check if execution was terminated (e.g., by a return statement)
-                                    if (childResult.isTerminated()) {
-                                        return childResult; // Stop execution and return the result
-                                    }
-                                }
-                            }
-                            // After ELSE we go to the next block in the MAIN chain
-                            return processBlock(block.getNextBlock(), context, recursionDepth + 1);
-                            
-                        case "whileLoop":
-                            // While loop implementation
-                            // Check condition first
-                            BlockCondition whileCondition = conditionFactory.createCondition(block.getCondition());
-                            if (whileCondition != null && whileCondition.evaluate(block, context)) {
-                                // Check for break flag before executing body
-                                if (context.hasBreakFlag()) {
-                                    context.clearBreakFlag();
-                                    // Exit loop and continue with next block
-                                    return processBlock(block.getNextBlock(), context, recursionDepth + 1);
-                                }
-                                
-                                // Check for continue flag
-                                if (context.hasContinueFlag()) {
-                                    context.clearContinueFlag();
-                                    // Skip to next iteration without executing body
-                                    if (recursionDepth < MAX_RECURSION_DEPTH - 1) {
-                                        return processBlock(block, context, recursionDepth + 1);
-                                    } else {
-                                        String errorMsg = Constants.MAX_RECURSION_EXCEEDED_IN_WHILE_LOOP;
-                                        plugin.getLogger().warning(errorMsg + " Player: " + 
-                                            (context.getPlayer() != null ? context.getPlayer().getName() : "Unknown"));
-                                        return ExecutionResult.error(errorMsg);
-                                    }
-                                }
-                                
-                                // Execute body
-                                if (!block.getChildren().isEmpty()) {
-                                    ExecutionResult childResult = processBlock(block.getChildren().get(0), context, recursionDepth + 1);
-                                    if (!childResult.isSuccess()) return childResult;
-                                    // Check if execution was terminated (e.g., by a return statement)
-                                    if (childResult.isTerminated()) {
-                                        return childResult; // Stop execution and return the result
-                                    }
-                                    
-                                    // Check for break flag after executing body
-                                    if (context.hasBreakFlag()) {
-                                        context.clearBreakFlag();
-                                        // Exit loop and continue with next block
-                                        return processBlock(block.getNextBlock(), context, recursionDepth + 1);
-                                    }
-                                    
-                                    // Check for continue flag after executing body
-                                    if (context.hasContinueFlag()) {
-                                        context.clearContinueFlag();
-                                        // Skip to next iteration
-                                        if (recursionDepth < MAX_RECURSION_DEPTH - 1) {
-                                            return processBlock(block, context, recursionDepth + 1);
-                                        } else {
-                                            String errorMsg = Constants.MAX_RECURSION_EXCEEDED_IN_WHILE_LOOP;
-                                            plugin.getLogger().warning(errorMsg + " Player: " + 
-                                                (context.getPlayer() != null ? context.getPlayer().getName() : "Unknown"));
-                                            return ExecutionResult.error(errorMsg);
-                                        }
-                                    }
-                                }
-                                // After body execution, loop back to the same while block to check condition again
-                                // But limit recursion to prevent stack overflow
-                                if (recursionDepth < MAX_RECURSION_DEPTH - 1) {
-                                    return processBlock(block, context, recursionDepth + 1);
-                                } else {
-                                    String errorMsg = Constants.MAX_RECURSION_EXCEEDED_IN_WHILE_LOOP;
-                                    plugin.getLogger().warning(errorMsg + " Player: " + 
-                                        (context.getPlayer() != null ? context.getPlayer().getName() : "Unknown"));
-                                    return ExecutionResult.error(errorMsg);
-                                }
-                            }
-                            // Condition is false, exit loop and continue with next block
-                            return processBlock(block.getNextBlock(), context, recursionDepth + 1);
-                            
-                        case "forEach":
-                            // For each implementation with break/continue support
-                            DataValue listValue = block.getParameter("list");
-                            String itemVariable = block.getParameter("itemVariable").asString();
-                            
-                            if (listValue != null && listValue instanceof ListValue && itemVariable != null) {
-                                ListValue list = (ListValue) listValue;
-                                VariableManager variableManager = getVariableManager();
-                                
-                                // Check if player is available
-                                if (context.getPlayer() == null) {
-                                    String errorMsg = "Player required for forEach loop";
-                                    plugin.getLogger().warning(errorMsg);
-                                    return ExecutionResult.error(errorMsg);
-                                }
-                                
-                                UUID playerId = context.getPlayer().getUniqueId();
-                                
-                                // Store original variable value
-                                DataValue originalValue = variableManager.getPlayerVariable(playerId, itemVariable);
-                                
-                                try {
-                                    // Iterate through list items
-                                    for (DataValue item : list.getValues()) {
-                                        // Check for break flag before executing body
-                                        if (context.hasBreakFlag()) {
-                                            context.clearBreakFlag();
-                                            // Exit loop and continue with next block
-                                            return processBlock(block.getNextBlock(), context, recursionDepth + 1);
-                                        }
-                                        
-                                        // Check for continue flag
-                                        if (context.hasContinueFlag()) {
-                                            context.clearContinueFlag();
-                                            // Skip to next iteration without executing body
-                                            continue;
-                                        }
-                                        
-                                        // Set current item as variable
-                                        variableManager.setPlayerVariable(playerId, itemVariable, item);
-                                        
-                                        // Execute child blocks
-                                        if (!block.getChildren().isEmpty()) {
-                                            ExecutionResult childResult = processBlock(block.getChildren().get(0), context, recursionDepth + 1);
-                                            if (!childResult.isSuccess()) return childResult;
-                                            // Check if execution was terminated (e.g., by a return statement)
-                                            if (childResult.isTerminated()) {
-                                                return childResult; // Stop execution and return the result
-                                            }
-                                            
-                                            // Check for break flag after executing body
-                                            if (context.hasBreakFlag()) {
-                                                context.clearBreakFlag();
-                                                // Exit loop and continue with next block
-                                                return processBlock(block.getNextBlock(), context, recursionDepth + 1);
-                                            }
-                                            
-                                            // Check for continue flag after executing body
-                                            if (context.hasContinueFlag()) {
-                                                context.clearContinueFlag();
-                                                // Skip to next iteration
-                                                continue;
-                                            }
-                                        }
-                                    }
-                                } finally {
-                                    // Restore original variable value
-                                    if (originalValue != null) {
-                                        variableManager.setPlayerVariable(playerId, itemVariable, originalValue);
-                                    } else {
-                                        variableManager.setPlayerVariable(playerId, itemVariable, null);
-                                    }
-                                }
-                            }
-                            return processBlock(block.getNextBlock(), context, recursionDepth + 1);
-                            
-                        case "break":
-                            // Break implementation - set a flag in context to break out of loops
-                            context.setBreakFlag(true);
-                            if (context.getPlayer() != null) {
-                                context.getPlayer().sendMessage("§aBreak statement executed");
-                            }
-                            return ExecutionResult.success("Break executed");
-                            
-                        case "continue":
-                            // Continue implementation - set a flag in context to continue loops
-                            context.setContinueFlag(true);
-                            if (context.getPlayer() != null) {
-                                context.getPlayer().sendMessage("§aContinue statement executed");
-                            }
-                            return ExecutionResult.success("Continue executed");
-                            
-                        default:
-                            // For other CONTROL blocks, just go to the next block
-                            return processBlock(block.getNextBlock(), context, recursionDepth + 1);
-                    }
-                    
-                case "FUNCTION":
-                    // Enhanced function processing with actual implementation
-                    String functionName = block.getAction();
-                    
-                    // Handle function call action
-                    if ("callFunction".equals(functionName)) {
-                        // Get function name parameter
-                        DataValue functionNameValue = block.getParameter("functionName");
-                        if (functionNameValue != null && !functionNameValue.isEmpty()) {
-                            String funcName = functionNameValue.asString();
-                            
-                            // Get function manager
-                            com.megacreative.coding.functions.AdvancedFunctionManager functionManager = 
-                                plugin.getServiceRegistry().getAdvancedFunctionManager();
-                            
-                            if (functionManager != null) {
-                                try {
-                                    // Prepare function arguments from block parameters
-                                    java.util.List<com.megacreative.coding.values.DataValue> arguments = new java.util.ArrayList<>();
-                                    
-                                    // Collect all parameters that start with "arg_" or are numbered
-                                    for (String paramName : block.getParameters().keySet()) {
-                                        if (paramName.startsWith("arg_") || paramName.matches("arg\\d+")) {
-                                            arguments.add(block.getParameter(paramName));
-                                        }
-                                    }
-                                    
-                                    // Execute the function
-                                    java.util.concurrent.CompletableFuture<ExecutionResult> futureResult = 
-                                        functionManager.executeFunction(funcName, context.getPlayer(), arguments.toArray(new com.megacreative.coding.values.DataValue[0]));
-                                    ExecutionResult functionResult = futureResult.get();
-                                    
-                                    // Process the result
-                                    if (functionResult.isTerminated()) {
-                                        // Preserve termination status and return value
-                                        ExecutionResult functionCallResult = ExecutionResult.success("Function call completed with return: " + funcName);
-                                        functionCallResult.setTerminated(true);
-                                        if (functionResult.getReturnValue() != null) {
-                                            functionCallResult.setReturnValue(functionResult.getReturnValue());
-                                            // Store return value in context for use by subsequent blocks
-                                            context.setVariable("last_function_return", functionResult.getReturnValue());
-                                        }
-                                        return functionCallResult; // Stop execution and return the result
-                                    }
-                                    
-                                    // Handle successful function execution without termination
-                                    if (functionResult.isSuccess()) {
-                                        // Store return value in context for use by subsequent blocks
-                                        if (functionResult.getReturnValue() != null) {
-                                            context.setVariable("last_function_return", functionResult.getReturnValue());
-                                        }
-                                        // Continue with next block
-                                        return processBlock(block.getNextBlock(), context, recursionDepth + 1);
-                                    } else {
-                                        // Return error
-                                        return functionResult;
-                                    }
-                                } catch (Exception e) {
-                                    String errorMsg = "Error executing function " + funcName + ": " + e.getMessage();
-                                    plugin.getLogger().severe(errorMsg);
-                                    return ExecutionResult.error(errorMsg);
-                                }
-                            } else {
-                                String errorMsg = "Function manager not available";
-                                plugin.getLogger().warning(errorMsg);
-                                return ExecutionResult.error(errorMsg);
-                            }
-                        }
-                    }
-                    // For other function-related actions, just go to the next block
-                    return processBlock(block.getNextBlock(), context, recursionDepth + 1);
+                case BLOCK_TYPE_FUNCTION:
+                    return processFunctionBlock(block, context, recursionDepth);
 
                 default:
-                    String errorMsg = "Unsupported block type: " + blockType;
+                    String errorMsg = ERROR_UNSUPPORTED_BLOCK_TYPE + blockType;
                     plugin.getLogger().warning(errorMsg + " Player: " + 
                         (context.getPlayer() != null ? context.getPlayer().getName() : "Unknown"));
                     return ExecutionResult.error(errorMsg);
             }
         } catch (Exception e) {
-            String errorMsg = "Error executing block " + block.getAction() + ": " + e.getMessage();
+            String errorMsg = ERROR_EXECUTING_BLOCK + block.getAction() + ": " + e.getMessage();
             plugin.getLogger().severe(errorMsg + " Player: " + 
                 (context.getPlayer() != null ? context.getPlayer().getName() : "Unknown"));
             e.printStackTrace();
             return ExecutionResult.error(errorMsg);
         } catch (Throwable t) {
-            String errorMsg = "Critical error executing block " + block.getAction() + ": " + t.getMessage();
+            String errorMsg = ERROR_CRITICAL_EXECUTING_BLOCK + block.getAction() + ": " + t.getMessage();
             plugin.getLogger().severe(errorMsg + " Player: " + 
                 (context.getPlayer() != null ? context.getPlayer().getName() : "Unknown"));
             t.printStackTrace();
@@ -659,6 +365,362 @@ public class DefaultScriptEngine implements ScriptEngine, EnhancedScriptEngine {
         return openingBracket.getNextBlock();
     }
     
+    /**
+     * Process action blocks (EVENT and ACTION types)
+     */
+    private ExecutionResult processActionBlock(CodeBlock block, ExecutionContext context, int recursionDepth) {
+        BlockAction action = actionFactory.createAction(block.getAction());
+        if (action == null) {
+            String errorMsg = ERROR_ACTION_HANDLER_NOT_FOUND + block.getAction();
+            plugin.getLogger().warning(errorMsg + " Player: " + 
+                (context.getPlayer() != null ? context.getPlayer().getName() : "Unknown"));
+            return ExecutionResult.error(errorMsg);
+        }
+        ExecutionResult result = action.execute(block, context);
+        // Если действие прошло успешно, переходим к следующему блоку
+        if (result.isSuccess()) {
+            // Check if execution was terminated (e.g., by a return statement)
+            if (result.isTerminated()) {
+                return result; // Stop execution and return the result
+            }
+            return processBlock(block.getNextBlock(), context, recursionDepth + 1);
+        }
+        return result; // Если была ошибка, останавливаемся
+    }
+    
+    /**
+     * Process condition blocks
+     */
+    private ExecutionResult processConditionBlock(CodeBlock block, ExecutionContext context, int recursionDepth) {
+        BlockCondition condition = conditionFactory.createCondition(block.getAction());
+        if (condition == null) {
+            String errorMsg = ERROR_CONDITION_HANDLER_NOT_FOUND + block.getAction();
+            plugin.getLogger().warning(errorMsg + " Player: " + 
+                (context.getPlayer() != null ? context.getPlayer().getName() : "Unknown"));
+            return ExecutionResult.error(errorMsg);
+        }
+        boolean conditionResult = condition.evaluate(block, context);
+        context.setLastConditionResult(conditionResult);
+        if (debugger.isDebugging(context.getPlayer())) {
+            debugger.onConditionResult(context.getPlayer(), block, conditionResult);
+        }
+        // Сохраняем результат условия для последующего использования в блоках CONTROL
+        return processBlock(block.getNextBlock(), context, recursionDepth + 1);
+    }
+    
+    /**
+     * Process control blocks
+     */
+    private ExecutionResult processControlBlock(CodeBlock block, ExecutionContext context, int recursionDepth) {
+        // === BRACKET LOGIC ===
+        if (block.isBracket()) {
+            if (block.getBracketType() == CodeBlock.BracketType.OPEN) {
+                // This is an opening bracket {
+                // All logic inside it should be executed only if the last condition was true
+                if (context.getLastConditionResult()) {
+                    // Execute all child elements
+                    for (CodeBlock child : block.getChildren()) {
+                        ExecutionResult childResult = processBlock(child, context, recursionDepth + 1);
+                        if (!childResult.isSuccess()) {
+                            return childResult; // Stop on first error
+                        }
+                        // Check if execution was terminated (e.g., by a return statement)
+                        if (childResult.isTerminated()) {
+                            return childResult; // Stop execution and return the result
+                        }
+                    }
+                }
+                // After executing the bracket (or skipping it), go to the NEXT block AFTER this bracket
+                return processBlock(findNextBlockAfterBracket(block), context, recursionDepth + 1);
+            } else {
+                // Closing bracket } - should not be processed directly
+                // This is handled by the opening bracket logic
+                return processBlock(block.getNextBlock(), context, recursionDepth + 1);
+            }
+        }
+        
+        // === TRADITIONAL CONTROL LOGIC ===
+        // Implementing logic for IF/ELSE, LOOP etc.
+        switch (block.getAction()) {
+            case CONTROL_ACTION_CONDITIONAL_BRANCH:
+                if (context.getLastConditionResult()) {
+                    // The result of the last condition was TRUE, execute child blocks
+                    if (!block.getChildren().isEmpty()) {
+                        // Execute the first child branch
+                        ExecutionResult childResult = processBlock(block.getChildren().get(0), context, recursionDepth + 1);
+                        // If the child branch ended with an error, stop
+                        if (!childResult.isSuccess()) return childResult;
+                        // Check if execution was terminated (e.g., by a return statement)
+                        if (childResult.isTerminated()) {
+                            return childResult; // Stop execution and return the result
+                        }
+                    }
+                }
+                // Regardless of the result, after IF we go to the next block in the MAIN chain
+                return processBlock(block.getNextBlock(), context, recursionDepth + 1);
+                
+            case CONTROL_ACTION_ELSE:
+                // Processing the ELSE block
+                if (!context.getLastConditionResult()) {
+                    // The previous condition was FALSE, execute the ELSE block
+                    if (!block.getChildren().isEmpty()) {
+                        // Execute the first child branch (else body)
+                        ExecutionResult childResult = processBlock(block.getChildren().get(0), context, recursionDepth + 1);
+                        // If the child branch ended with an error, stop
+                        if (!childResult.isSuccess()) return childResult;
+                        // Check if execution was terminated (e.g., by a return statement)
+                        if (childResult.isTerminated()) {
+                            return childResult; // Stop execution and return the result
+                        }
+                    }
+                }
+                // After ELSE we go to the next block in the MAIN chain
+                return processBlock(block.getNextBlock(), context, recursionDepth + 1);
+                
+            case CONTROL_ACTION_WHILE_LOOP:
+                // While loop implementation
+                // Check condition first
+                BlockCondition whileCondition = conditionFactory.createCondition(block.getCondition());
+                if (whileCondition != null && whileCondition.evaluate(block, context)) {
+                    // Check for break flag before executing body
+                    if (context.hasBreakFlag()) {
+                        context.clearBreakFlag();
+                        // Exit loop and continue with next block
+                        return processBlock(block.getNextBlock(), context, recursionDepth + 1);
+                    }
+                    
+                    // Check for continue flag
+                    if (context.hasContinueFlag()) {
+                        context.clearContinueFlag();
+                        // Skip to next iteration without executing body
+                        if (recursionDepth < MAX_RECURSION_DEPTH - 1) {
+                            return processBlock(block, context, recursionDepth + 1);
+                        } else {
+                            String errorMsg = ERROR_MAX_RECURSION_EXCEEDED_IN_WHILE_LOOP;
+                            plugin.getLogger().warning(errorMsg + " Player: " + 
+                                (context.getPlayer() != null ? context.getPlayer().getName() : "Unknown"));
+                            return ExecutionResult.error(errorMsg);
+                        }
+                    }
+                    
+                    // Execute body
+                    if (!block.getChildren().isEmpty()) {
+                        ExecutionResult childResult = processBlock(block.getChildren().get(0), context, recursionDepth + 1);
+                        if (!childResult.isSuccess()) return childResult;
+                        // Check if execution was terminated (e.g., by a return statement)
+                        if (childResult.isTerminated()) {
+                            return childResult; // Stop execution and return the result
+                        }
+                        
+                        // Check for break flag after executing body
+                        if (context.hasBreakFlag()) {
+                            context.clearBreakFlag();
+                            // Exit loop and continue with next block
+                            return processBlock(block.getNextBlock(), context, recursionDepth + 1);
+                        }
+                        
+                        // Check for continue flag after executing body
+                        if (context.hasContinueFlag()) {
+                            context.clearContinueFlag();
+                            // Skip to next iteration
+                            if (recursionDepth < MAX_RECURSION_DEPTH - 1) {
+                                return processBlock(block, context, recursionDepth + 1);
+                            } else {
+                                String errorMsg = ERROR_MAX_RECURSION_EXCEEDED_IN_WHILE_LOOP;
+                                plugin.getLogger().warning(errorMsg + " Player: " + 
+                                    (context.getPlayer() != null ? context.getPlayer().getName() : "Unknown"));
+                                return ExecutionResult.error(errorMsg);
+                            }
+                        }
+                    }
+                    // After body execution, loop back to the same while block to check condition again
+                    // But limit recursion to prevent stack overflow
+                    if (recursionDepth < MAX_RECURSION_DEPTH - 1) {
+                        return processBlock(block, context, recursionDepth + 1);
+                    } else {
+                        String errorMsg = ERROR_MAX_RECURSION_EXCEEDED_IN_WHILE_LOOP;
+                        plugin.getLogger().warning(errorMsg + " Player: " + 
+                            (context.getPlayer() != null ? context.getPlayer().getName() : "Unknown"));
+                        return ExecutionResult.error(errorMsg);
+                    }
+                }
+                // Condition is false, exit loop and continue with next block
+                return processBlock(block.getNextBlock(), context, recursionDepth + 1);
+                
+            case CONTROL_ACTION_FOR_EACH:
+                // For each implementation with break/continue support
+                DataValue listValue = block.getParameter("list");
+                String itemVariable = block.getParameter("itemVariable").asString();
+                
+                if (listValue != null && listValue instanceof ListValue && itemVariable != null) {
+                    ListValue list = (ListValue) listValue;
+                    VariableManager variableManager = getVariableManager();
+                    
+                    // Check if player is available
+                    if (context.getPlayer() == null) {
+                        String errorMsg = ERROR_PLAYER_REQUIRED_FOR_FOREACH;
+                        plugin.getLogger().warning(errorMsg);
+                        return ExecutionResult.error(errorMsg);
+                    }
+                    
+                    UUID playerId = context.getPlayer().getUniqueId();
+                    
+                    // Store original variable value
+                    DataValue originalValue = variableManager.getPlayerVariable(playerId, itemVariable);
+                    
+                    try {
+                        // Iterate through list items
+                        for (DataValue item : list.getValues()) {
+                            // Check for break flag before executing body
+                            if (context.hasBreakFlag()) {
+                                context.clearBreakFlag();
+                                // Exit loop and continue with next block
+                                return processBlock(block.getNextBlock(), context, recursionDepth + 1);
+                            }
+                            
+                            // Check for continue flag
+                            if (context.hasContinueFlag()) {
+                                context.clearContinueFlag();
+                                // Skip to next iteration without executing body
+                                continue;
+                            }
+                            
+                            // Set current item as variable
+                            variableManager.setPlayerVariable(playerId, itemVariable, item);
+                            
+                            // Execute child blocks
+                            if (!block.getChildren().isEmpty()) {
+                                ExecutionResult childResult = processBlock(block.getChildren().get(0), context, recursionDepth + 1);
+                                if (!childResult.isSuccess()) return childResult;
+                                // Check if execution was terminated (e.g., by a return statement)
+                                if (childResult.isTerminated()) {
+                                    return childResult; // Stop execution and return the result
+                                }
+                                
+                                // Check for break flag after executing body
+                                if (context.hasBreakFlag()) {
+                                    context.clearBreakFlag();
+                                    // Exit loop and continue with next block
+                                    return processBlock(block.getNextBlock(), context, recursionDepth + 1);
+                                }
+                                
+                                // Check for continue flag after executing body
+                                if (context.hasContinueFlag()) {
+                                    context.clearContinueFlag();
+                                    // Skip to next iteration
+                                    continue;
+                                }
+                            }
+                        }
+                    } finally {
+                        // Restore original variable value
+                        if (originalValue != null) {
+                            variableManager.setPlayerVariable(playerId, itemVariable, originalValue);
+                        } else {
+                            variableManager.setPlayerVariable(playerId, itemVariable, null);
+                        }
+                    }
+                }
+                return processBlock(block.getNextBlock(), context, recursionDepth + 1);
+                
+            case CONTROL_ACTION_BREAK:
+                // Break implementation - set a flag in context to break out of loops
+                context.setBreakFlag(true);
+                if (context.getPlayer() != null) {
+                    context.getPlayer().sendMessage("§aBreak statement executed");
+                }
+                return ExecutionResult.success("Break executed");
+                
+            case CONTROL_ACTION_CONTINUE:
+                // Continue implementation - set a flag in context to continue loops
+                context.setContinueFlag(true);
+                if (context.getPlayer() != null) {
+                    context.getPlayer().sendMessage("§aContinue statement executed");
+                }
+                return ExecutionResult.success("Continue executed");
+                
+            default:
+                // For other CONTROL blocks, just go to the next block
+                return processBlock(block.getNextBlock(), context, recursionDepth + 1);
+        }
+    }
+    
+    /**
+     * Process function blocks
+     */
+    private ExecutionResult processFunctionBlock(CodeBlock block, ExecutionContext context, int recursionDepth) {
+        // Enhanced function processing with actual implementation
+        String functionName = block.getAction();
+        
+        // Handle function call action
+        if (FUNCTION_ACTION_CALL_FUNCTION.equals(functionName)) {
+            // Get function name parameter
+            DataValue functionNameValue = block.getParameter("functionName");
+            if (functionNameValue != null && !functionNameValue.isEmpty()) {
+                String funcName = functionNameValue.asString();
+                
+                // Get function manager
+                com.megacreative.coding.functions.AdvancedFunctionManager functionManager = 
+                    plugin.getServiceRegistry().getAdvancedFunctionManager();
+                
+                if (functionManager != null) {
+                    try {
+                        // Prepare function arguments from block parameters
+                        java.util.List<com.megacreative.coding.values.DataValue> arguments = new java.util.ArrayList<>();
+                        
+                        // Collect all parameters that start with "arg_" or are numbered
+                        for (String paramName : block.getParameters().keySet()) {
+                            if (paramName.startsWith("arg_") || paramName.matches("arg\\d+")) {
+                                arguments.add(block.getParameter(paramName));
+                            }
+                        }
+                        
+                        // Execute the function
+                        java.util.concurrent.CompletableFuture<ExecutionResult> futureResult = 
+                            functionManager.executeFunction(funcName, context.getPlayer(), arguments.toArray(new com.megacreative.coding.values.DataValue[0]));
+                        ExecutionResult functionResult = futureResult.get();
+                        
+                        // Process the result
+                        if (functionResult.isTerminated()) {
+                            // Preserve termination status and return value
+                            ExecutionResult functionCallResult = ExecutionResult.success("Function call completed with return: " + funcName);
+                            functionCallResult.setTerminated(true);
+                            if (functionResult.getReturnValue() != null) {
+                                functionCallResult.setReturnValue(functionResult.getReturnValue());
+                                // Store return value in context for use by subsequent blocks
+                                context.setVariable("last_function_return", functionResult.getReturnValue());
+                            }
+                            return functionCallResult; // Stop execution and return the result
+                        }
+                        
+                        // Handle successful function execution without termination
+                        if (functionResult.isSuccess()) {
+                            // Store return value in context for use by subsequent blocks
+                            if (functionResult.getReturnValue() != null) {
+                                context.setVariable("last_function_return", functionResult.getReturnValue());
+                            }
+                            // Continue with next block
+                            return processBlock(block.getNextBlock(), context, recursionDepth + 1);
+                        } else {
+                            // Return error
+                            return functionResult;
+                        }
+                    } catch (Exception e) {
+                        String errorMsg = ERROR_EXECUTING_FUNCTION + funcName + ": " + e.getMessage();
+                        plugin.getLogger().severe(errorMsg);
+                        return ExecutionResult.error(errorMsg);
+                    }
+                } else {
+                    String errorMsg = ERROR_FUNCTION_MANAGER_NOT_AVAILABLE;
+                    plugin.getLogger().warning(errorMsg);
+                    return ExecutionResult.error(errorMsg);
+                }
+            }
+        }
+        // For other function-related actions, just go to the next block
+        return processBlock(block.getNextBlock(), context, recursionDepth + 1);
+    }
+    
     // New method to process a chain of blocks without returning to parent
     private ExecutionResult processBlockChain(CodeBlock startBlock, ExecutionContext context, int recursionDepth) {
         CodeBlock current = startBlock;
@@ -701,28 +763,41 @@ public class DefaultScriptEngine implements ScriptEngine, EnhancedScriptEngine {
             // Get all block configs for this material
             java.util.List<BlockConfigService.BlockConfig> configs = blockConfigService.getBlockConfigsForMaterial(material);
             // Find the one that matches the action name
-            for (BlockConfigService.BlockConfig config : configs) {
-                if (actionName.equals(config.getId())) {
-                    String type = config.getType();
-                    if ("EVENT".equals(type)) return BlockType.EVENT;
-                    if ("ACTION".equals(type)) return BlockType.ACTION;
-                    if ("CONDITION".equals(type)) return BlockType.CONDITION;
-                    if ("CONTROL".equals(type)) return BlockType.CONTROL;
-                    if ("FUNCTION".equals(type)) return BlockType.FUNCTION;
-                }
+            BlockType blockType = findBlockTypeInConfigs(configs, actionName);
+            if (blockType != null) {
+                return blockType;
             }
         }
         
         // Fallback to old method if material is not used
         BlockConfigService.BlockConfig config = blockConfigService.getBlockConfig(actionName);
         if (config != null) {
-            String type = config.getType();
-            if ("EVENT".equals(type)) return BlockType.EVENT;
-            if ("ACTION".equals(type)) return BlockType.ACTION;
-            if ("CONDITION".equals(type)) return BlockType.CONDITION;
-            if ("CONTROL".equals(type)) return BlockType.CONTROL;
-            if ("FUNCTION".equals(type)) return BlockType.FUNCTION;
+            return getBlockTypeFromString(config.getType());
         }
+        return null;
+    }
+    
+    /**
+     * Find block type in a list of configurations
+     */
+    private BlockType findBlockTypeInConfigs(java.util.List<BlockConfigService.BlockConfig> configs, String actionName) {
+        for (BlockConfigService.BlockConfig config : configs) {
+            if (actionName.equals(config.getId())) {
+                return getBlockTypeFromString(config.getType());
+            }
+        }
+        return null;
+    }
+    
+    /**
+     * Convert string type to BlockType enum
+     */
+    private BlockType getBlockTypeFromString(String type) {
+        if (BLOCK_TYPE_EVENT.equals(type)) return BlockType.EVENT;
+        if (BLOCK_TYPE_ACTION.equals(type)) return BlockType.ACTION;
+        if (BLOCK_TYPE_CONDITION.equals(type)) return BlockType.CONDITION;
+        if (BLOCK_TYPE_CONTROL.equals(type)) return BlockType.CONTROL;
+        if (BLOCK_TYPE_FUNCTION.equals(type)) return BlockType.FUNCTION;
         return null;
     }
     

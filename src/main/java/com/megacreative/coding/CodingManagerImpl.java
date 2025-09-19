@@ -22,8 +22,6 @@ import java.io.File;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
-import java.io.IOException;
-import java.nio.file.Paths;
 import java.util.Map;
 import java.util.HashMap;
 import java.nio.charset.StandardCharsets;
@@ -31,6 +29,24 @@ import java.util.concurrent.CompletableFuture;
 import java.util.logging.Logger;
 
 public class CodingManagerImpl implements ICodingManager {
+
+    // Constants for script execution messages
+    private static final String SCRIPT_EXECUTION_FAILED_EXCEPTION = "Script execution failed with exception: ";
+    private static final String SCRIPT_EXECUTION_FAILED = "Script execution failed: ";
+    private static final String WORLD_SCRIPTS_DIRECTORY_CREATION_FAILED = "Failed to create world scripts directory for ";
+    private static final String SCRIPT_FILE_LOADING_FAILED = "Failed to load script from ";
+    private static final String WORLD_SCRIPTS_LISTING_FAILED = "Failed to list script files for world ";
+    private static final String SCRIPT_SAVED = "Saved script: ";
+    private static final String SCRIPT_SAVE_FAILED = "Failed to save script ";
+    private static final String SCRIPT_DELETED = "Deleted script file: ";
+    private static final String SCRIPT_DELETION_FAILED = "Failed to delete script file ";
+    private static final String WORLD_MANAGER_NOT_AVAILABLE = "World manager not available";
+    private static final String SCRIPT_WITHOUT_WORLD_NAME = "Cannot save script without world name: ";
+    private static final String CODING_MANAGER_SHUTDOWN_COMPLETED = "CodingManager shutdown completed";
+    
+    // Constants for file extensions
+    private static final String SCRIPT_FILE_EXTENSION = ".json";
+    private static final String SCRIPTS_DIRECTORY_NAME = "scripts";
 
     private final MegaCreative plugin;
     private final IWorldManager worldManager;
@@ -41,7 +57,7 @@ public class CodingManagerImpl implements ICodingManager {
         this.plugin = plugin;
         this.worldManager = worldManager;
         this.logger = plugin.getLogger();
-        this.scriptsDirectory = Paths.get(plugin.getDataFolder().getAbsolutePath(), "scripts");
+        this.scriptsDirectory = Paths.get(plugin.getDataFolder().getAbsolutePath(), SCRIPTS_DIRECTORY_NAME);
         
         // Create scripts directory if it doesn't exist
         if (!Files.exists(scriptsDirectory)) {
@@ -58,7 +74,7 @@ public class CodingManagerImpl implements ICodingManager {
         // Get the script engine from service registry
         ServiceRegistry serviceRegistry = plugin.getServiceRegistry();
         if (serviceRegistry == null) {
-            logger.warning("Service registry not available");
+            logger.warning(WORLD_MANAGER_NOT_AVAILABLE);
             return;
         }
         
@@ -73,12 +89,12 @@ public class CodingManagerImpl implements ICodingManager {
             .whenComplete((result, throwable) -> {
                 // Handle the result
                 if (throwable != null) {
-                    logger.warning("Script execution failed with exception: " + throwable.getMessage());
-                    logError(player, "Script execution failed: " + throwable.getMessage());
+                    logger.warning(SCRIPT_EXECUTION_FAILED_EXCEPTION + throwable.getMessage());
+                    logError(player, SCRIPT_EXECUTION_FAILED + throwable.getMessage());
                 } else if (result != null) {
                     if (!result.isSuccess()) {
-                        logger.warning("Script execution failed: " + result.getMessage());
-                        logError(player, "Script execution failed: " + result.getMessage());
+                        logger.warning(SCRIPT_EXECUTION_FAILED + result.getMessage());
+                        logError(player, SCRIPT_EXECUTION_FAILED + result.getMessage());
                     }
                 }
             });
@@ -94,7 +110,7 @@ public class CodingManagerImpl implements ICodingManager {
             try {
                 Files.createDirectories(worldScriptsDir);
             } catch (IOException e) {
-                logger.severe("Failed to create world scripts directory for " + worldName + ": " + e.getMessage());
+                logger.severe(WORLD_SCRIPTS_DIRECTORY_CREATION_FAILED + worldName + ": " + e.getMessage());
                 // Initialize empty scripts list
                 if (world.getScripts() == null) {
                     world.setScripts(new java.util.ArrayList<>());
@@ -113,7 +129,7 @@ public class CodingManagerImpl implements ICodingManager {
         // Load all script files from the world directory
         try {
             Files.list(worldScriptsDir)
-                .filter(path -> path.toString().endsWith(".json"))
+                .filter(path -> path.toString().endsWith(SCRIPT_FILE_EXTENSION))
                 .forEach(path -> {
                     try {
                         String content = new String(Files.readAllBytes(path), StandardCharsets.UTF_8);
@@ -125,11 +141,11 @@ public class CodingManagerImpl implements ICodingManager {
                             logger.info("Loaded script: " + script.getName() + " for world: " + worldName);
                         }
                     } catch (Exception e) {
-                        logger.severe("Failed to load script from " + path.toString() + ": " + e.getMessage());
+                        logger.severe(SCRIPT_FILE_LOADING_FAILED + path.toString() + ": " + e.getMessage());
                     }
                 });
         } catch (IOException e) {
-            logger.severe("Failed to list script files for world " + worldName + ": " + e.getMessage());
+            logger.severe(WORLD_SCRIPTS_LISTING_FAILED + worldName + ": " + e.getMessage());
         }
         
         logger.info("Loaded " + world.getScripts().size() + " scripts for world: " + worldName);
@@ -153,7 +169,7 @@ public class CodingManagerImpl implements ICodingManager {
         // Search for a script by name with enhanced matching
         // Search through all worlds for a script with the given name
         if (worldManager == null) {
-            logger.warning("World manager not available");
+            logger.warning(WORLD_MANAGER_NOT_AVAILABLE);
             return null;
         }
         
@@ -188,7 +204,7 @@ public class CodingManagerImpl implements ICodingManager {
     public void saveScript(CodeScript script) {
         // Save a script to storage
         if (script.getWorldName() == null || script.getWorldName().isEmpty()) {
-            logger.warning("Cannot save script without world name: " + script.getName());
+            logger.warning(SCRIPT_WITHOUT_WORLD_NAME + script.getName());
             return;
         }
         
@@ -198,19 +214,19 @@ public class CodingManagerImpl implements ICodingManager {
             try {
                 Files.createDirectories(worldScriptsDir);
             } catch (IOException e) {
-                logger.severe("Failed to create world scripts directory for " + script.getWorldName() + ": " + e.getMessage());
+                logger.severe(WORLD_SCRIPTS_DIRECTORY_CREATION_FAILED + script.getWorldName() + ": " + e.getMessage());
                 return;
             }
         }
         
         // Save script to file
-        Path scriptFile = worldScriptsDir.resolve(script.getName() + ".json");
+        Path scriptFile = worldScriptsDir.resolve(script.getName() + SCRIPT_FILE_EXTENSION);
         try {
             String json = com.megacreative.utils.JsonSerializer.serializeScript(script);
             Files.write(scriptFile, json.getBytes(StandardCharsets.UTF_8));
-            logger.info("Saved script: " + script.getName() + " to " + scriptFile.toString());
+            logger.info(SCRIPT_SAVED + script.getName() + " to " + scriptFile.toString());
         } catch (Exception e) {
-            logger.severe("Failed to save script " + script.getName() + ": " + e.getMessage());
+            logger.severe(SCRIPT_SAVE_FAILED + script.getName() + ": " + e.getMessage());
         }
     }
     
@@ -232,7 +248,7 @@ public class CodingManagerImpl implements ICodingManager {
         
         // Find and remove the script from all worlds
         if (worldManager == null) {
-            logger.warning("World manager not available");
+            logger.warning(WORLD_MANAGER_NOT_AVAILABLE);
             return;
         }
         
@@ -251,14 +267,14 @@ public class CodingManagerImpl implements ICodingManager {
                     world.getScripts().remove(scriptToRemove);
                     
                     // Delete from storage
-                    Path scriptFile = scriptsDirectory.resolve(world.getName()).resolve(scriptName + ".json");
+                    Path scriptFile = scriptsDirectory.resolve(world.getName()).resolve(scriptName + SCRIPT_FILE_EXTENSION);
                     try {
                         if (Files.exists(scriptFile)) {
                             Files.delete(scriptFile);
-                            logger.info("Deleted script file: " + scriptFile.toString());
+                            logger.info(SCRIPT_DELETED + scriptFile.toString());
                         }
                     } catch (IOException e) {
-                        logger.severe("Failed to delete script file " + scriptFile.toString() + ": " + e.getMessage());
+                        logger.severe(SCRIPT_DELETION_FAILED + scriptFile.toString() + ": " + e.getMessage());
                     }
                 }
             }
@@ -378,7 +394,7 @@ public class CodingManagerImpl implements ICodingManager {
     @Override
     public void shutdown() {
         // Cleanup resources if needed
-        logger.info("CodingManager shutdown completed");
+        logger.info(CODING_MANAGER_SHUTDOWN_COMPLETED);
     }
     
     private void logError(Player player, String message) {
@@ -394,6 +410,13 @@ public class CodingManagerImpl implements ICodingManager {
             if (debugger != null) {
                 debugger.logError(player, message);
             }
+        }
+    }
+    
+    // Utility class for Paths (since we're using it in the constructor)
+    private static class Paths {
+        public static Path get(String first, String... more) {
+            return java.nio.file.Paths.get(first, more);
         }
     }
 }

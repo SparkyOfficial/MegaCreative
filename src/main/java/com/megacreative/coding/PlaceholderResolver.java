@@ -19,6 +19,19 @@ import java.util.regex.Pattern;
 @Deprecated
 public class PlaceholderResolver {
     
+    // Constants for placeholder patterns
+    private static final String PLAYER_PLACEHOLDER_PREFIX = "%";
+    private static final String PLAYER_PLACEHOLDER_SUFFIX = "%";
+    private static final String VARIABLE_PLACEHOLDER_PREFIX = "${";
+    private static final String VARIABLE_PLACEHOLDER_SUFFIX = "}";
+    
+    // Constants for player placeholders
+    private static final String PLACEHOLDER_PLAYER = "player";
+    private static final String PLACEHOLDER_WORLD = "world";
+    private static final String PLACEHOLDER_X = "x";
+    private static final String PLACEHOLDER_Y = "y";
+    private static final String PLACEHOLDER_Z = "z";
+    
     private static final Pattern PLAYER_PLACEHOLDER_PATTERN = Pattern.compile("%([^%]+)%");
     private static final Pattern VARIABLE_PLACEHOLDER_PATTERN = Pattern.compile("\\$\\{([^}]+)\\}");
     
@@ -103,16 +116,19 @@ public class PlaceholderResolver {
             Location location = player.getLocation();
             
             switch (placeholder.toLowerCase()) {
-                case "player":
+                case PLACEHOLDER_PLAYER:
                     return player.getName();
-                case "world":
+                case PLACEHOLDER_WORLD:
                     return player.getWorld().getName();
-                case "x":
+                case PLACEHOLDER_X:
                     return String.valueOf(location.getBlockX());
-                case "y":
+                case PLACEHOLDER_Y:
                     return String.valueOf(location.getBlockY());
-                case "z":
+                case PLACEHOLDER_Z:
                     return String.valueOf(location.getBlockZ());
+                default:
+                    // Try variable placeholders for unknown player placeholders
+                    break;
             }
         }
         

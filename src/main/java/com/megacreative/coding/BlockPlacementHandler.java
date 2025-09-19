@@ -60,6 +60,37 @@ import java.util.List;
 public class BlockPlacementHandler implements Listener {
     private static final Logger log = Logger.getLogger(BlockPlacementHandler.class.getName());
     
+    // Constants for messages
+    private static final String ERROR_CODE_BLOCK_NOT_FOUND = "§cОшибка: Блок кода не найден!";
+    private static final String MESSAGE_VARIABLE_CONFIG_OPENED = "§aОткрыта настройка переменной!";
+    private static final String MESSAGE_VARIABLE_CONDITION_CONFIG_OPENED = "§aОткрыта настройка условия переменной!";
+    private static final String MESSAGE_GAME_ACTION_CONFIG_OPENED = "§aОткрыта настройка игрового действия!";
+    private static final String MESSAGE_GAME_CONDITION_CONFIG_OPENED = "§aОткрыта настройка игрового условия!";
+    private static final String MESSAGE_PLAYER_EVENT_CONFIG_OPENED = "§aОткрыта настройка события игрока!";
+    private static final String MESSAGE_GAME_EVENT_CONFIG_OPENED = "§aОткрыта настройка игрового события!";
+    private static final String MESSAGE_ENTITY_EVENT_CONFIG_OPENED = "§aОткрыта настройка события сущности!";
+    private static final String MESSAGE_ENTITY_ACTION_CONFIG_OPENED = "§aОткрыта настройка действия над сущностью!";
+    private static final String MESSAGE_EVENT_SELECTION_OPENED = "§aОткрыта настройка события!";
+    private static final String MESSAGE_CONDITION_SELECTION_OPENED = "§aОткрыта настройка условия!";
+    private static final String MESSAGE_ACTION_SELECTION_OPENED = "§aОткрыта настройка действия!";
+    private static final String MESSAGE_BLOCK_CONFIG_OPENED = "§aОткрыта настройка блока!";
+    private static final String ERROR_GUI_OPEN_FAILED = "§cОшибка при открытии GUI: ";
+    
+    // Constants for materials
+    private static final Material MATERIAL_IRON_BLOCK = Material.IRON_BLOCK;
+    private static final Material MATERIAL_OBSIDIAN = Material.OBSIDIAN;
+    private static final Material MATERIAL_NETHERITE_BLOCK = Material.NETHERITE_BLOCK;
+    private static final Material MATERIAL_REDSTONE_BLOCK = Material.REDSTONE_BLOCK;
+    private static final Material MATERIAL_DIAMOND_BLOCK = Material.DIAMOND_BLOCK;
+    private static final Material MATERIAL_EMERALD_BLOCK = Material.EMERALD_BLOCK;
+    private static final Material MATERIAL_BRICKS = Material.BRICKS;
+    private static final Material MATERIAL_COBBLESTONE = Material.COBBLESTONE;
+    
+    // Constants for block types
+    private static final String BLOCK_TYPE_EVENT = "EVENT";
+    private static final String BLOCK_TYPE_CONDITION = "CONDITION";
+    private static final String BLOCK_TYPE_ACTION = "ACTION";
+    
     private final MegaCreative plugin;
     private final ITrustedPlayerManager trustedPlayerManager;
     private final BlockConfigService blockConfigService;
