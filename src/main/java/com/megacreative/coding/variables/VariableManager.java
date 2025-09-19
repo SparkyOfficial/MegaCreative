@@ -376,6 +376,21 @@ public class VariableManager implements IVariableManager {
         serverVariables.clear();
     }
     
+    /**
+     * Gets all global variables
+     */
+    public Map<String, DataValue> getAllGlobalVariables() {
+        Map<String, DataValue> globalMap = globalVariables.get("global");
+        return globalMap != null ? new HashMap<>(globalMap) : new HashMap<>();
+    }
+    
+    /**
+     * Clears all global variables
+     */
+    public void clearGlobalVariables() {
+        globalVariables.clear();
+    }
+    
     @Override
     public Map<String, DataValue> getAllPersistentVariables() {
         return new HashMap<>(persistentVariables);

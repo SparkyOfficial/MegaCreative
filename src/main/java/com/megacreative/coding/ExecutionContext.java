@@ -548,7 +548,7 @@ public class ExecutionContext {
      * Gets world ID for variable resolution  
      */
     public String getWorldId() {
-        return creativeWorld != null ? creativeWorld.getId() : Constants.UNKNOWN_WORLD_ID;
+        return creativeWorld != null ? creativeWorld.getId() : Constants.UNKNOWN_WORLD;
     }
     
     /**

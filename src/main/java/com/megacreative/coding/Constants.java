@@ -189,16 +189,24 @@ public class Constants {
     public static final String CONTINUE_FLAG_CLEARED = "Continue flag cleared";
     
     // ConnectionDebugGUI constants
-    public static final String CONNECTION_DEBUG_GUI_TITLE = "§8🔗 Связи блоков";
-    public static final String BLOCK_NOT_FOUND = "Блок не найден";
-    public static final String BLOCK_UNASSIGNED = "Неназначено";
-    public static final String NEXT_BLOCK_ARROW = "§a→ Следующий";
-    public static final String CHILD_BLOCK_ARROW = "§b↓ Дочерний";
     public static final String NEXT_SLOT = "next";
     public static final String CHILD_SLOT_PREFIX = "child";
     
     // DefaultScriptEngine constants
     public static final String MAX_RECURSION_EXCEEDED_IN_WHILE_LOOP = "Max recursion depth exceeded in while loop.";
+    
+    // RepeatAction constants
+    public static final String PLAYER_OR_BLOCK_IS_NULL = "Player or block is null";
+    public static final String REPEAT_COUNT_MUST_BE_GREATER_THAN_0 = "Repeat count must be greater than 0";
+    public static final String MAXIMUM_REPEAT_COUNT_IS_1000 = "Maximum repeat count is 1000";
+    public static final String NO_BLOCK_TO_REPEAT = "No block to repeat";
+    public static final String FAILED_TO_GET_SCRIPT_ENGINE = "Failed to get ScriptEngine";
+    public static final String REPEAT_ACTION_STARTED = "Repeat action started";
+    public static final String CYCLE_EXECUTED_N_TIMES = "§a🔄 Цикл выполнен %d раз";
+    public static final String ERROR_EXECUTING_CYCLE = "§cОшибка при выполнении цикла: %s";
+    public static final String REPEAT_LOOP_TERMINATED_BY_BREAK = "§aRepeat loop terminated by break statement at iteration %d";
+    public static final String SKIPPING_ITERATION_DUE_TO_CONTINUE = "§aSkipping iteration %d due to continue statement";
+    public static final String ERROR_IN_ITERATION = "§cОшибка в итерации %d: %s";
     
     // Private constructor to prevent instantiation
     private Constants() {
