@@ -57,6 +57,7 @@ import com.megacreative.commands.DebugCommand;
 import com.megacreative.commands.DeleteCommand;
 import com.megacreative.commands.DevCommand;
 import com.megacreative.commands.EnemyPlayerCommand;
+import com.megacreative.commands.ExecuteCommand;
 import com.megacreative.commands.ExecutionCommand;
 import com.megacreative.commands.FunctionCommand;
 import com.megacreative.commands.GroupCommand;
@@ -366,6 +367,10 @@ public class MegaCreative extends JavaPlugin {
             getCommand("performance").setTabCompleter(new PerformanceCommand(this));
         }
         
+        // Execute command for manual script execution
+        if (getCommand("execute") != null) {
+            getCommand("execute").setExecutor(new ExecuteCommand(this));
+        }
             }
     
     /**

@@ -286,3 +286,9 @@ commands:
       &6/performance clear &f- Clear performance data (admin only)
     permission: megacreative.user
     aliases: [perf, monitor]
+
+  execute:
+    description: Execute a script manually for testing
+    usage: /execute
+    permission: megacreative.user
+    aliases: [exec]
