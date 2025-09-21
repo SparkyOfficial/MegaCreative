@@ -459,7 +459,7 @@ public class BlockConfigService {
      *
      * Internal model class for storing data of one block from config
      *
-     * Interne Modellklasse zum Speichern von Daten eines Blocks aus der Konfiguration
+     * Interne Modellklasse zum Speichern von Daten eines Blocks aus der Konфигuration
      */
     public static class BlockConfig {
         private final String id;
@@ -479,18 +479,18 @@ public class BlockConfigService {
 
         /**
          * Creates block configuration from configuration section
-         * @param id Block ID
-         * @param section Block configuration section
+         * @param id Block configuration ID
+         * @param section Configuration section
          * @param plugin Main plugin instance
          *
          * Создает конфигурацию блока из секции конфигурации
-         * @param id ID блока
-         * @param section Секция конфигурации блока
+         * @param id ID конфигурации блока
+         * @param section Секция конфигурации
          * @param plugin Экземпляр основного плагина
          *
          * Erstellt eine Blockkonfiguration aus dem Konfigurationsabschnitt
-         * @param id Block-ID
-         * @param section Blockkonfigurationsabschnitt
+         * @param id Blockkonfigurations-ID
+         * @param section Konfigurationsabschnitt
          * @param plugin Hauptplugin-Instanz
          */
         public BlockConfig(String id, ConfigurationSection section, MegaCreative plugin) {
@@ -533,8 +533,37 @@ public class BlockConfigService {
             // Store actions list
             this.actions = section.getStringList("actions");
             
-            // Load action parameters
+            // Load action parameters - defer this until after service registry is fully initialized
             this.actionParameters = new HashMap<>();
+            // ConfigurationSection actionConfigurations = plugin.getServiceRegistry().getBlockConfigService().getActionConfigurations();
+            // if (actionConfigurations != null) {
+            //     for (String action : this.actions) {
+            //         ConfigurationSection actionSection = actionConfigurations.getConfigurationSection(action);
+            //         if (actionSection != null) {
+            //             ConfigurationSection slots = actionSection.getConfigurationSection("slots");
+            //             if (slots != null) {
+            //                 for (String slotKey : slots.getKeys(false)) {
+            //                     ConfigurationSection slotSection = slots.getConfigurationSection(slotKey);
+            //                     if (slotSection != null) {
+            //                         String slotName = slotSection.getString("slot_name");
+            //                         if (slotName != null) {
+            //                             ParameterConfig paramConfig = new ParameterConfig(slotSection);
+            //                             this.actionParameters.put(slotName, paramConfig);
+            //                         }
+            //                     }
+            //                 }
+            //             }
+            //         }
+            //     }
+            // }
+        }
+        
+        /**
+         * Loads action parameters for this block configuration
+         * This should be called after the service registry is fully initialized
+         */
+        public void loadActionParameters(MegaCreative plugin) {
+            // Load action parameters
             ConfigurationSection actionConfigurations = plugin.getServiceRegistry().getBlockConfigService().getActionConfigurations();
             if (actionConfigurations != null) {
                 for (String action : this.actions) {

@@ -254,6 +254,14 @@ public class ServiceRegistry {
             // ScriptEngine initialisiert mit Aktionen und Bedingungen
         }
         
+        // Now that service registry is fully initialized, load action parameters for all block configs
+        // This fixes the issue where BlockConfig tried to access service registry during construction
+        if (blockConfigService != null) {
+            for (com.megacreative.services.BlockConfigService.BlockConfig config : blockConfigService.getAllBlockConfigs()) {
+                config.loadActionParameters((MegaCreative) plugin);
+            }
+        }
+        
         log.info(" YYS Advanced Function Manager initialized after ScriptEngine registration");
         // YYS Advanced Function Manager инициализирован после регистрации ScriptEngine
         // YYS Advanced Function Manager nach ScriptEngine-Registrierung initialisiert
