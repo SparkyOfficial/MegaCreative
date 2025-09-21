@@ -140,7 +140,7 @@ public class ActionFactory {
             // Initialize event manager
             this.eventManager = dependencyContainer.resolve(CustomEventManager.class);
         } catch (Exception e) {
-            LOGGER.log(java.util.logging.Level.SEVERE, "Failed to initialize managers: " + e.getMessage(), e);
+            LOGGER.log(java.util.logging.Level.SEVERE, e, () -> "Failed to initialize managers: " + e.getMessage());
         }
     }
 
@@ -426,23 +426,8 @@ public class ActionFactory {
      * @param block The code block
      * @param interactiveGUI The interactive GUI
      */
-    private void addConfiguredItems(CodeBlock block, com.megacreative.gui.interactive.InteractiveGUI interactiveGUI) {
-        // Get items from block parameters
-        // This is a placeholder implementation
-        // In a real implementation, you would extract item configurations from the block
-        // and add them to the GUI
-        
-        // Example of how this might work:
-        // List<DataValue> items = block.getParameterList("items");
-        // if (items != null) {
-        //     for (DataValue itemValue : items) {
-        //         // Convert DataValue to ItemStack and add to GUI
-        //         ItemStack item = convertToItemStack(itemValue);
-        //         if (item != null) {
-        //             interactiveGUI.addItem(item);
-        //         }
-        //     }
-        // }
+    private void addConfiguredItems() {
+        // Implementation will be added when needed
     }
 
     /**
@@ -484,39 +469,15 @@ public class ActionFactory {
                 Map<String, Object> itemConfig = (Map<String, Object>) itemObj;
                 processItemConfiguration(itemConfig);
             } else {
-                LOGGER.warning("Invalid item configuration format. Expected Map, got: " + 
-                    (itemObj != null ? itemObj.getClass().getSimpleName() : "null"));
+                LOGGER.warning(() -> String.format("Invalid item configuration format. Expected Map, got: %s", 
+                    itemObj.getClass().getSimpleName()));
             }
         } catch (Exception e) {
-            LOGGER.log(java.util.logging.Level.SEVERE, "Error processing GUI item: " + e.getMessage(), e);
+            LOGGER.log(java.util.logging.Level.SEVERE, e, 
+                () -> "Error processing GUI item: " + e.getMessage());
         }
     }
 
-    /**
-     * Processes the item configuration map
-     * @param config The item configuration map
-     */
-    private void processItemConfiguration(Map<String, Object> config) {
-        // Extract common properties
-        String type = (String) config.getOrDefault("type", "item");
-        String material = (String) config.get("material");
-        String displayName = (String) config.get("name");
-        
-        @SuppressWarnings("unchecked")
-        List<String> lore = (List<String>) config.get("lore");
-        
-        LOGGER.fine(String.format("Processing item: type=%s, material=%s, name=%s", 
-            type, material, displayName));
-            
-        // TODO: Implement actual item creation based on the configuration
-        // This is a placeholder for the actual implementation
-        // ItemStack item = createItemStack(material, displayName, lore);
-        // applyItemProperties(item, config);
-        // return item;
-    }
-
-        // interactiveGUI.addItem(item);
-    
     /**
      * Open the GUI for the player
      * 

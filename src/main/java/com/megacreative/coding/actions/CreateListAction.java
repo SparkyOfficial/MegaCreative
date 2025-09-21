@@ -41,8 +41,8 @@ public class CreateListAction implements BlockAction {
             List<DataValue> initialValues = new ArrayList<>();
             if (initialValuesValue != null && !initialValuesValue.isEmpty()) {
                 DataValue resolvedInitialValues = resolver.resolve(context, initialValuesValue);
-                if (resolvedInitialValues instanceof ListValue) {
-                    initialValues = ((ListValue) resolvedInitialValues).getList(); // Changed from getValues() to getList()
+                if (resolvedInitialValues instanceof ListValue listValue) {
+                    initialValues = listValue.getList();
                 }
             }
             
