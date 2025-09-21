@@ -16,12 +16,22 @@ import java.util.concurrent.CompletableFuture;
  * When executed, it finds and executes the registered function with proper parameter and return value handling.
  */
 public class CallFunctionAction implements BlockAction {
+    private static final String FUNCTION_NAME_PARAM = "function_name";
+    private static final String RETURN_VAR_PARAM = "return_variable";
+    private static final String ARGUMENTS_PARAM = "arguments";
+    private static final String FUNCTION_NOT_FOUND_MSG = "Функция '%s' не найдена.";
+    private static final String FUNCTION_EXECUTED_MSG = "Функция '%s' выполнена успешно.";
+    private static final String FUNCTION_RETURN_MSG = "Функция '%s' выполнена. Возвращаемое значение: %s";
+    private static final String FUNCTION_TERMINATED_MSG = "Функция '%s' завершена оператором return";
+    private static final String FUNCTION_CALL_ERROR_MSG = "Ошибка при вызове функции '%s': %s";
+    private static final String PLAYER_NOT_FOUND_MSG = "Игрок не найден.";
+    private static final String FUNCTION_MANAGER_UNAVAILABLE_MSG = "Менеджер функций не доступен.";
 
     @Override
     public ExecutionResult execute(CodeBlock block, ExecutionContext context) {
         Player player = context.getPlayer();
         if (player == null) {
-            return ExecutionResult.error("Игрок не найден.");
+            return ExecutionResult.error(PLAYER_NOT_FOUND_MSG);
         }
 
         // Initialize functionName to avoid scope issues
@@ -29,21 +39,21 @@ public class CallFunctionAction implements BlockAction {
         
         try {
             // Получаем параметры из блока
-            functionName = block.getParameter("function_name").asString();
+            functionName = block.getParameter(FUNCTION_NAME_PARAM).asString();
             
             // Получаем менеджер функций
             AdvancedFunctionManager functionManager = context.getPlugin().getServiceRegistry().getAdvancedFunctionManager();
             if (functionManager == null) {
-                return ExecutionResult.error("Менеджер функций не доступен.");
+                return ExecutionResult.error(FUNCTION_MANAGER_UNAVAILABLE_MSG);
             }
             
             // Проверяем, существует ли функция
             if (functionManager.findFunction(functionName, player) == null) {
-                return ExecutionResult.error("Функция '" + functionName + "' не найдена.");
+                return ExecutionResult.error(String.format(FUNCTION_NOT_FOUND_MSG, functionName));
             }
             
             // Получаем аргументы функции из блока
-            DataValue[] arguments = getFunctionArguments(block, context);
+            DataValue[] arguments = getFunctionArguments(block);
             
             // Выполняем функцию асинхронно
             CompletableFuture<ExecutionResult> future = functionManager.executeFunction(functionName, player, arguments);
@@ -54,36 +64,42 @@ public class CallFunctionAction implements BlockAction {
             // Обрабатываем возвращаемое значение
             if (result.getReturnValue() != null) {
                 // Сохраняем возвращаемое значение в переменную, если указано
-                DataValue returnValueVar = block.getParameter("return_variable");
+                DataValue returnValueVar = block.getParameter(RETURN_VAR_PARAM);
                 if (returnValueVar != null && !returnValueVar.isEmpty()) {
                     String varName = returnValueVar.asString();
                     context.setVariable(varName, result.getReturnValue());
                 }
                 
-                return ExecutionResult.success("Функция '" + functionName + "' выполнена. Возвращаемое значение: " + result.getReturnValue());
+                return ExecutionResult.success(
+                    String.format(FUNCTION_RETURN_MSG, functionName, result.getReturnValue())
+                );
             }
             
             // Проверяем, была ли функция завершена оператором return
             if (result.isTerminated()) {
                 // Если функция завершена return, то прекращаем выполнение текущего скрипта
-                ExecutionResult terminatedResult = ExecutionResult.success("Функция '" + functionName + "' завершена оператором return");
+                ExecutionResult terminatedResult = ExecutionResult.success(
+                    String.format(FUNCTION_TERMINATED_MSG, functionName)
+                );
                 terminatedResult.setTerminated(true);
                 return terminatedResult;
             }
             
-            return ExecutionResult.success("Функция '" + functionName + "' выполнена успешно.");
+            return ExecutionResult.success(String.format(FUNCTION_EXECUTED_MSG, functionName));
 
         } catch (Exception e) {
-            return ExecutionResult.error("Ошибка при вызове функции '" + functionName + "': " + e.getMessage());
+            return ExecutionResult.error(
+                String.format(FUNCTION_CALL_ERROR_MSG, functionName, e.getMessage())
+            );
         }
     }
     
     /**
      * Получает аргументы функции из блока кода
      */
-    private DataValue[] getFunctionArguments(CodeBlock block, ExecutionContext context) {
+    private DataValue[] getFunctionArguments(CodeBlock block) {
         // Получаем аргументы из параметров блока
-        DataValue argsValue = block.getParameter("arguments");
+        DataValue argsValue = block.getParameter(ARGUMENTS_PARAM);
         if (argsValue != null && argsValue.getValue() instanceof Object[]) {
             Object[] argsArray = (Object[]) argsValue.getValue();
             DataValue[] arguments = new DataValue[argsArray.length];

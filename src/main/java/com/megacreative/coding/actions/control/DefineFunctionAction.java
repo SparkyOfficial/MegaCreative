@@ -22,6 +22,14 @@ import java.util.ArrayList;
  * Allows players to define reusable code blocks with parameters.
  */
 public class DefineFunctionAction implements BlockAction {
+    private static final String PARAM_PREFIX = "param_";
+    private static final String NAME_SUFFIX = "_name";
+    private static final String TYPE_SUFFIX = "_type";
+    private static final String DESC_SUFFIX = "_desc";
+    private static final String REQUIRED_SUFFIX = "_required";
+    private static final String DEFAULT_SUFFIX = "_default";
+    private static final String DEFINE_FUNCTION_ACTION = "define_function";
+    private static final String RETURN_ACTION = "return";
     
     private final MegaCreative plugin;
     private final AdvancedFunctionManager functionManager;
@@ -117,17 +125,22 @@ public class DefineFunctionAction implements BlockAction {
         // Look for parameter definitions in block parameters
         int paramIndex = 0;
         while (true) {
-            String paramName = block.getParameterValue("param_" + paramIndex + "_name", String.class);
+            String paramName = block.getParameterValue(
+                PARAM_PREFIX + paramIndex + NAME_SUFFIX, String.class);
             if (paramName == null) break;
             
-            String typeStr = block.getParameterValue("param_" + paramIndex + "_type", String.class);
+            String typeStr = block.getParameterValue(
+                PARAM_PREFIX + paramIndex + TYPE_SUFFIX, String.class);
             ValueType type = parseValueType(typeStr);
             
-            String description = block.getParameterValue("param_" + paramIndex + "_desc", String.class);
+            String description = block.getParameterValue(
+                PARAM_PREFIX + paramIndex + DESC_SUFFIX, String.class);
             if (description == null) description = "Parameter " + paramName;
             
-            boolean required = block.getParameterValue("param_" + paramIndex + "_required", Boolean.class, true);
-            Object defaultValue = block.getParameterValue("param_" + paramIndex + "_default");
+            boolean required = block.getParameterValue(
+                PARAM_PREFIX + paramIndex + REQUIRED_SUFFIX, Boolean.class, true);
+            Object defaultValue = block.getParameterValue(
+                PARAM_PREFIX + paramIndex + DEFAULT_SUFFIX);
             
             FunctionDefinition.FunctionParameter parameter = new FunctionDefinition.FunctionParameter(
                 paramName, type, required, DataValue.fromObject(defaultValue), description);
@@ -167,20 +180,15 @@ public class DefineFunctionAction implements BlockAction {
      */
     private List<CodeBlock> collectFunctionBlocks(CodeBlock definitionBlock) {
         List<CodeBlock> functionBlocks = new ArrayList<>();
-        
-        // Start from the next block after definition
         CodeBlock currentBlock = definitionBlock.getNextBlock();
         
-        // Collect blocks until we hit another function definition or end
         while (currentBlock != null) {
-            // Stop if we encounter another function definition
-            if ("define_function".equals(currentBlock.getAction())) {
-                break;
-            }
+            String action = currentBlock.getAction();
             
-            // Stop if we encounter a return statement (end of function)
-            if ("return".equals(currentBlock.getAction())) {
-                functionBlocks.add(currentBlock);
+            if (action.equals(DEFINE_FUNCTION_ACTION) || action.equals(RETURN_ACTION)) {
+                if (RETURN_ACTION.equals(action)) {
+                    functionBlocks.add(currentBlock);
+                }
                 break;
             }
             
@@ -190,6 +198,7 @@ public class DefineFunctionAction implements BlockAction {
         
         return functionBlocks;
     }
+    
 
     public boolean canExecute(ExecutionContext context) {
         return context.getCurrentBlock() != null && 

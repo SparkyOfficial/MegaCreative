@@ -15,8 +15,8 @@
     <properties>
         <java.version>21</java.version>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
-        <maven.compiler.source>${java.version}</maven.compiler.source>
-        <maven.compiler.target>${java.version}</maven.compiler.target>
+        <maven.compiler.source>21</maven.compiler.source>
+        <maven.compiler.target>21</maven.compiler.target>
         <maven.compiler.release>21</maven.compiler.release>
         <paper.version>1.20.4</paper.version>
         <paper.api.version>1.20.4-R0.1-SNAPSHOT</paper.api.version>
@@ -126,12 +126,6 @@
                     </execution>
                 </executions>
             </plugin>
-            <!-- SonarQube Scanner -->
-            <plugin>
-                <groupId>org.sonarsource.scanner.maven</groupId>
-                <artifactId>sonar-maven-plugin</artifactId>
-                <version>3.9.1.2184</version>
-            </plugin>
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-compiler-plugin</artifactId>
@@ -144,8 +138,10 @@
                         <arg>-parameters</arg>
                         <arg>-Xlint:all</arg>
                         <arg>-Xdiags:verbose</arg>
+                        <arg>--enable-preview</arg>
+                        <arg>--release</arg>
+                        <arg>21</arg>
                     </compilerArgs>
-                    <compilerArgument>--enable-preview</compilerArgument>
                     <showWarnings>true</showWarnings>
                     <showDeprecation>true</showDeprecation>
                     <!-- Exclude manual test files from compilation -->
@@ -153,6 +149,8 @@
                         <exclude>**/manual_tests_bak/**</exclude>
                         <exclude>**/manual_tests/**</exclude>
                     </excludes>
+                    <fork>true</fork>
+                    <compilerVersion>21</compilerVersion>
                 </configuration>
             </plugin>
             <plugin>
@@ -163,6 +161,7 @@
                     <skipTests>true</skipTests>
                     <argLine>
                         --enable-preview
+                        --release 21
                         -Dfile.encoding=UTF-8
                     </argLine>
                     <trimStackTrace>false</trimStackTrace>

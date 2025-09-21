@@ -86,10 +86,19 @@ public class ItemValue implements DataValue {
 
     @Override
     public DataValue clone() {
-        if (itemStack == null) {
-            return new ItemValue(null);
+        try {
+            ItemValue cloned = (ItemValue) super.clone();
+            if (itemStack != null) {
+                // Use reflection to set the itemStack field since it's final
+                java.lang.reflect.Field itemStackField = ItemValue.class.getDeclaredField("itemStack");
+                itemStackField.setAccessible(true);
+                itemStackField.set(cloned, itemStack.clone());
+            }
+            return cloned;
+        } catch (CloneNotSupportedException | NoSuchFieldException | IllegalAccessException e) {
+            // This should never happen since we implement Cloneable
+            throw new RuntimeException("Clone not supported", e);
         }
-        return new ItemValue(itemStack.clone());
     }
 
     @Override

@@ -127,7 +127,7 @@ public class GenericAction implements BlockAction {
     private static void initializeActionHandlers() {
         // === PLAYER ACTIONS ===
         ACTION_HANDLERS.put("sendMessage", (context, params) -> {
-            String message = params.containsKey("message") ? params.get("message").asString() : DEFAULT_MESSAGE;
+            String message = params.containsKey("message") ? params.get("message").asString() : Constants.DEFAULT_MESSAGE;
             if (context.getPlayer() != null) {
                 context.getPlayer().sendMessage(message);
             }

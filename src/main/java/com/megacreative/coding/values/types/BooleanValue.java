@@ -55,7 +55,17 @@ public class BooleanValue implements DataValue {
     public String getDescription() { return "Boolean: " + value; }
     
     @Override
-    public DataValue clone() { return new BooleanValue(value); }
+    public DataValue clone() {
+        try {
+            BooleanValue cloned = (BooleanValue) super.clone();
+            // The value field is not final, so we can directly assign it
+            cloned.value = value;
+            return cloned;
+        } catch (CloneNotSupportedException e) {
+            // This should never happen since we implement Cloneable
+            throw new RuntimeException("Clone not supported", e);
+        }
+    }
     
     @Override
     public Map<String, Object> serialize() {

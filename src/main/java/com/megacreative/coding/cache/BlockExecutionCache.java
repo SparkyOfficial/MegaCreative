@@ -23,16 +23,23 @@ public class BlockExecutionCache {
     private final int maxSize;
     
     public BlockExecutionCache() {
-        this(DEFAULT_TTL, MAX_CACHE_SIZE);
+        this(DEFAULT_TTL, TimeUnit.MINUTES);
     }
     
     public BlockExecutionCache(long ttl, TimeUnit timeUnit) {
-        this(ttl, timeUnit, MAX_CACHE_SIZE);
+        this.ttlInMillis = timeUnit.toMillis(ttl);
+        this.maxSize = MAX_CACHE_SIZE;
     }
     
     public BlockExecutionCache(long ttl, TimeUnit timeUnit, int maxSize) {
         this.ttlInMillis = timeUnit.toMillis(ttl);
         this.maxSize = maxSize;
+    }
+    
+    // Add constructor to match usage in DefaultScriptEngine
+    public BlockExecutionCache(long ttl, TimeUnit timeUnit, long maxSize) {
+        this.ttlInMillis = timeUnit.toMillis(ttl);
+        this.maxSize = (int) maxSize;
     }
     
     /**

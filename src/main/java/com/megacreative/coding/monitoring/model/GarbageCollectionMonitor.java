@@ -6,6 +6,7 @@ import java.util.List;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
+import java.util.concurrent.atomic.AtomicLong;
 import java.util.logging.Logger;
 
 /**
@@ -19,8 +20,8 @@ public class GarbageCollectionMonitor {
     private volatile boolean isRunning = false;
     private volatile long lastGcCount = 0;
     private volatile long lastGcTime = 0;
-    private volatile long totalGcCount = 0;
-    private volatile long totalGcTime = 0;
+    private final AtomicLong totalGcCount = new AtomicLong(0);
+    private final AtomicLong totalGcTime = new AtomicLong(0);
     
     public GarbageCollectionMonitor() {
         this.gcBeans = ManagementFactory.getGarbageCollectorMXBeans();
@@ -48,10 +49,10 @@ public class GarbageCollectionMonitor {
         lastGcTime = gcTime;
         
         // Update totals
-        totalGcCount += gcCountDelta;
-        totalGcTime += gcTimeDelta;
+        totalGcCount.addAndGet(gcCountDelta);
+        totalGcTime.addAndGet(gcTimeDelta);
         
-        return new GcStatistics(gcCount, gcTime, gcCountDelta, gcTimeDelta, totalGcCount, totalGcTime);
+        return new GcStatistics(gcCount, gcTime, gcCountDelta, gcTimeDelta, totalGcCount.get(), totalGcTime.get());
     }
     
     /**

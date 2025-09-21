@@ -421,6 +421,31 @@ public class ActionFactory {
     }
 
     /**
+     * Add configured items to the interactive GUI
+     * 
+     * @param block The code block
+     * @param interactiveGUI The interactive GUI
+     */
+    private void addConfiguredItems(CodeBlock block, com.megacreative.gui.interactive.InteractiveGUI interactiveGUI) {
+        // Get items from block parameters
+        // This is a placeholder implementation
+        // In a real implementation, you would extract item configurations from the block
+        // and add them to the GUI
+        
+        // Example of how this might work:
+        // List<DataValue> items = block.getParameterList("items");
+        // if (items != null) {
+        //     for (DataValue itemValue : items) {
+        //         // Convert DataValue to ItemStack and add to GUI
+        //         ItemStack item = convertToItemStack(itemValue);
+        //         if (item != null) {
+        //             interactiveGUI.addItem(item);
+        //         }
+        //     }
+        // }
+    }
+
+    /**
      * Get the GUI title from the block parameters
      * 
      * @param block The code block
@@ -503,9 +528,11 @@ public class ActionFactory {
         if (context.getPlayer() != null) {
             interactiveGUI.open();
             return ExecutionResult.success("Interactive GUI created and opened");
-     else {
+        } else {
             return ExecutionResult.error("No player context available");
-        
+        }
+    }
+
     /**
      * Register debugging blocks
      */
@@ -515,7 +542,8 @@ public class ActionFactory {
         // --- DEBUGGING-BLÖCKE ---
         register("debugLog", DebugLogAction::new);
         register("variableInspector", VariableInspectorAction::new);
-    
+    }
+
     /**
      * Register event handling blocks
      */
@@ -527,7 +555,8 @@ public class ActionFactory {
             dependencyContainer.resolve(CustomEventManager.class)));
         register("triggerEvent", () -> new TriggerEventAction(
             dependencyContainer.resolve(CustomEventManager.class)));
-    
+    }
+
     /**
      * Register all simple actions that can be handled by GenericAction
      * This enables rapid addition of new functionality without creating new classes
@@ -545,7 +574,8 @@ public class ActionFactory {
         registerGenericEconomyActions();
         registerGenericPermissionActions();
         registerGenericListOperations();
-    
+    }
+
     /**
      * Register generic player actions
      */
@@ -561,7 +591,8 @@ public class ActionFactory {
         registerGeneric("removePotionEffect");
         registerGeneric("playSound");
         registerGeneric("setGameMode");
-    
+    }
+
     /**
      * Register generic world actions
      */
@@ -573,7 +604,8 @@ public class ActionFactory {
         registerGeneric("breakBlock");
         registerGeneric("setTime");
         registerGeneric("setWeather");
-    
+    }
+
     /**
      * Register generic item actions
      */
@@ -583,7 +615,8 @@ public class ActionFactory {
         // Gegenstandsaktionen
         registerGeneric("giveItem");
         registerGeneric("removeItem");
-    
+    }
+
     /**
      * Register generic economy actions
      */
@@ -593,7 +626,8 @@ public class ActionFactory {
         // Wirtschaftsaktionen (wenn Vault verfügbar)
         registerGeneric("giveMoney");
         registerGeneric("takeMoney");
-    
+    }
+
     /**
      * Register generic permission actions
      */
@@ -603,7 +637,8 @@ public class ActionFactory {
         // Berechtigungsaktionen
         registerGeneric("givePermission");
         registerGeneric("removePermission");
-    
+    }
+
     /**
      * Register generic list operations
      */
@@ -613,7 +648,8 @@ public class ActionFactory {
         registerGeneric("removeFromList");
         registerGeneric("getListSize");
         registerGeneric("clearList");
-    
+    }
+
     /**
      * Helper method to register a generic action
      *
@@ -623,7 +659,8 @@ public class ActionFactory {
      */
     private void registerGeneric(String actionId) {
         register(actionId, GenericAction::new);
-    
+    }
+
     /**
      * Creates an action by ID
      * @param actionId Action ID
@@ -641,8 +678,10 @@ public class ActionFactory {
         Supplier<BlockAction> supplier = actionMap.get(actionId);
         if (supplier != null) {
             return supplier.get();
-            return null;
-    
+        }
+        return null;
+    }
+
     /**
      * Registers an action with display name
      * @param actionId Action ID
@@ -664,7 +703,9 @@ public class ActionFactory {
             // Register a generic action that can be configured later
             // This provides a more flexible approach than the previous placeholder implementation
             register(actionId, GenericAction::new);
-        
+        }
+    }
+
     /**
      * Gets the action count
      * @return Number of registered actions
@@ -677,7 +718,8 @@ public class ActionFactory {
      */
     public int getActionCount() {
         return actionMap.size();
-    
+    }
+
     /**
      * Creates an event handler for the given code block
      * 
@@ -693,7 +735,7 @@ public class ActionFactory {
     public boolean createEventHandler(CodeBlock handlerBlock, String eventName, int priority) {
         if (eventManager == null || handlerBlock == null || eventName == null) {
             return false;
-            
+        }
         try {
             // Create and register the event handler
             CustomEventManager.EventHandler handler = eventManager.createEventHandler(
@@ -705,9 +747,11 @@ public class ActionFactory {
             
             eventManager.registerEventHandler(eventName, handler);
             return true;
-     catch (Exception e) {
+        } catch (Exception e) {
             return false;
-        
+        }
+    }
+
     /**
      * Gets the GUI manager
      * 
@@ -719,7 +763,8 @@ public class ActionFactory {
      */
     public GUIManager getGuiManager() {
         return guiManager;
-    
+    }
+
     /**
      * Gets the interactive GUI manager
      * 
@@ -731,7 +776,8 @@ public class ActionFactory {
      */
     public InteractiveGUIManager getInteractiveGuiManager() {
         return interactiveGUIManager;
-    
+    }
+
     /**
      * Gets the event manager
      * 
@@ -743,7 +789,8 @@ public class ActionFactory {
      */
     public CustomEventManager getEventManager() {
         return eventManager;
-    
+    }
+
     /**
      * Parses a string representation of a list into a ListValue
      * Supports formats like "[item1,item2,item3]" or "item1,item2,item3"
@@ -760,12 +807,13 @@ public class ActionFactory {
     public ListValue parseListString(String listString) {
         if (listString == null || listString.trim().isEmpty()) {
             return new ListValue(new ArrayList<>());
-            
+        }
         String cleanString = cleanListString(listString);
         List<DataValue> values = parseListItems(cleanString);
         
         return new ListValue(values);
-    
+    }
+
     /**
      * Cleans the list string by removing brackets
      * 
@@ -777,9 +825,12 @@ public class ActionFactory {
         if (cleanString.startsWith("[")) {
             cleanString = cleanString.substring(1);
             if (cleanString.endsWith("]")) {
-            cleanString = cleanString.substring(0, cleanString.length() - 1);
-            return cleanString;
-    
+                cleanString = cleanString.substring(0, cleanString.length() - 1);
+            }
+        }
+        return cleanString;
+    }
+
     /**
      * Parses list items from a clean string
      * 
@@ -793,8 +844,11 @@ public class ActionFactory {
             for (String item : items) {
                 DataValue value = parseListItem(item.trim());
                 values.add(value);
-                    return values;
-    
+            }
+        }
+        return values;
+    }
+
     /**
      * Parses a single list item
      * 
@@ -806,10 +860,12 @@ public class ActionFactory {
         try {
             double number = Double.parseDouble(item);
             return DataValue.fromObject(number);
-     catch (NumberFormatException e) {
+        } catch (NumberFormatException e) {
             // Treat as string
             return DataValue.fromObject(item);
-        
+        }
+    }
+
     /**
      * Parses a list of raw objects into a ListValue
      * 
@@ -823,13 +879,15 @@ public class ActionFactory {
     public ListValue parseRawList(List<?> rawList) {
         if (rawList == null) {
             return new ListValue(new ArrayList<>());
-            
+        }
         List<DataValue> values = new ArrayList<>();
         for (Object obj : rawList) {
             if (obj instanceof DataValue) {
                 values.add((DataValue) obj);
-         else {
+            } else {
                 values.add(DataValue.fromObject(obj));
-                    
+            }
+        }
         return new ListValue(values);
+    }
 }

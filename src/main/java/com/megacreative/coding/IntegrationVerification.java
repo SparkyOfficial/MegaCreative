@@ -8,59 +8,63 @@ import com.megacreative.services.BlockConfigService;
 
 import java.util.ArrayList;
 import java.util.UUID;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 
 /**
  * Integration verification to demonstrate that all components work together correctly.
  * This class verifies the complete flow from event triggering to script execution.
  */
 public class IntegrationVerification {
+    private static final Logger LOGGER = Logger.getLogger(IntegrationVerification.class.getName());
     
     public static void main(String[] args) {
-        System.out.println("=== MegaCreative Integration Verification ===");
-        System.out.println();
+        LOGGER.log(Level.INFO, "=== MegaCreative Integration Verification ===");
+        LOGGER.log(Level.INFO, "");
         
         verifyEventSystemIntegration();
         verifyScriptExecutionFlow();
         verifyActionParameterReading();
         
-        System.out.println("=== Integration Verification Complete ===");
-        System.out.println("All components are properly integrated and working together!");
+        LOGGER.log(Level.INFO, "=== Integration Verification Complete ===");
+        LOGGER.log(Level.INFO, "All components are properly integrated and working together!");
+        LOGGER.log(Level.INFO, "");
     }
     
     /**
      * Verify that the event system properly connects to the script engine
      */
     private static void verifyEventSystemIntegration() {
-        System.out.println("1. Event System Integration Verification:");
-        System.out.println("   ✓ PlayerEventsListener receives Bukkit events");
-        System.out.println("   ✓ Finds appropriate CreativeWorld for players");
-        System.out.println("   ✓ Identifies scripts with matching event blocks");
-        System.out.println("   ✓ Calls ScriptEngine to execute scripts");
-        System.out.println();
+        LOGGER.log(Level.INFO, "1. Event System Integration Verification:");
+        LOGGER.log(Level.INFO, "   PlayerEventsListener receives Bukkit events");
+        LOGGER.log(Level.INFO, "   Finds appropriate CreativeWorld for players");
+        LOGGER.log(Level.INFO, "   Identifies scripts with matching event blocks");
+        LOGGER.log(Level.INFO, "   Calls ScriptEngine to execute scripts");
+        LOGGER.log(Level.INFO, "");
     }
     
     /**
      * Verify the script execution flow
      */
     private static void verifyScriptExecutionFlow() {
-        System.out.println("2. Script Execution Flow Verification:");
-        System.out.println("   ✓ ScriptEngine creates ExecutionContext");
-        System.out.println("   ✓ Executes actions in sequence");
-        System.out.println("   ✓ Handles CONTROL flow statements");
-        System.out.println("   ✓ Supports pause/step debugging");
-        System.out.println("   ✓ Manages variable scopes correctly");
-        System.out.println();
+        LOGGER.log(Level.INFO, "2. Script Execution Flow Verification:");
+        LOGGER.log(Level.INFO, "   ScriptEngine creates ExecutionContext");
+        LOGGER.log(Level.INFO, "   Executes actions in sequence");
+        LOGGER.log(Level.INFO, "   Handles CONTROL flow statements");
+        LOGGER.log(Level.INFO, "   Supports pause/step debugging");
+        LOGGER.log(Level.INFO, "   Manages variable scopes correctly");
+        LOGGER.log(Level.INFO, "");
     }
     
     /**
      * Verify that actions can read parameters from GUI configuration
      */
     private static void verifyActionParameterReading() {
-        System.out.println("3. Action Parameter Reading Verification:");
-        System.out.println("   ✓ SendMessageAction reads message from container");
-        System.out.println("   ✓ HasItemCondition reads item parameters");
-        System.out.println("   ✓ All actions use ParameterResolver to resolve variables");
-        System.out.println("   ✓ GUI configuration chests properly store parameters");
-        System.out.println();
+        LOGGER.log(Level.INFO, "3. Action Parameter Reading Verification:");
+        LOGGER.log(Level.INFO, "   SendMessageAction reads message from container");
+        LOGGER.log(Level.INFO, "   HasItemCondition reads item parameters");
+        LOGGER.log(Level.INFO, "   All actions use ParameterResolver to resolve variables");
+        LOGGER.log(Level.INFO, "   GUI configuration chests properly store parameters");
+        LOGGER.log(Level.INFO, "");
     }
 }

@@ -16,6 +16,7 @@ import java.util.*;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.stream.Collectors;
+import java.util.Arrays;
 
 /**
  * 🎆 Reference System-Style Advanced Function Manager
@@ -455,7 +456,7 @@ public class AdvancedFunctionManager {
                 case "split":
                     String delimiter = arguments[1].asString();
                     String[] parts = str.split(delimiter);
-                    List<DataValue> list = new ArrayList<>();
+                    List<DataValue> list = new ArrayList<>(parts.length);
                     for (String part : parts) {
                         list.add(DataValue.of(part));
                     }
@@ -526,10 +527,7 @@ public class AdvancedFunctionManager {
                     return 0.0;
                 case "list":
                     // Create a new list from arguments
-                    List<DataValue> newList = new ArrayList<>();
-                    for (DataValue arg : arguments) {
-                        newList.add(arg);
-                    }
+                    List<DataValue> newList = new ArrayList<>(Arrays.asList(arguments));
                     return new ListValue(newList);
                 case "map":
                     // Create a map from key-value pairs
@@ -962,7 +960,7 @@ public class AdvancedFunctionManager {
         // Add parameters based on paramCount
         for (int i = 0; i < paramCount; i++) {
             String paramName = "param" + (i + 1);
-            ValueType paramType = (i == 0) ? ValueType.TEXT : ValueType.TEXT; // First param is usually the string
+            ValueType paramType = ValueType.TEXT; // All params are text
             parameters.add(new FunctionDefinition.FunctionParameter(paramName, paramType, true, DataValue.of(""), "Parameter " + (i + 1)));
         }
         

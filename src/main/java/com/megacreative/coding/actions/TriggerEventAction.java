@@ -8,6 +8,7 @@ import com.megacreative.coding.events.CustomEventManager;
 import com.megacreative.coding.executors.ExecutionResult;
 import com.megacreative.coding.values.DataValue;
 import com.megacreative.coding.values.types.ListValue;
+import com.megacreative.coding.values.types.TextValue;
 import org.bukkit.entity.Player;
 
 import java.util.HashMap;

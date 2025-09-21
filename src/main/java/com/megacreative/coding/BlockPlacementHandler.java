@@ -823,7 +823,7 @@ public class BlockPlacementHandler implements Listener {
                     if (index == 0) {
                         player.playSound(location, org.bukkit.Sound.BLOCK_NOTE_BLOCK_PLING, 0.8f, 1.5f);
                     }
-                }, (step * (distance + 1) * 1L) + (index * 1L)); // 1 tick delay between particles
+                }, (step * (distance + 1)) + index); // 1 tick delay between particles
             }
         }
         
@@ -1384,44 +1384,43 @@ public class BlockPlacementHandler implements Listener {
                     entityEventGui.open();
                     plugin.getLogger().info("Opened EntityEventBlockGUI for player " + player.getName() + " at " + blockLocation);
                     player.sendMessage("§aОткрыта настройка события сущности!");
-                } else if (codeBlock.getMaterial() == Material.COBBLESTONE) {
-                    // Open EntityActionBlockGUI for cobblestone blocks (entity actions)
-                    com.megacreative.gui.coding.entity_action.EntityActionBlockGUI entityActionGui = 
-                        new com.megacreative.gui.coding.entity_action.EntityActionBlockGUI(plugin, player, blockLocation, codeBlock.getMaterial());
-                    entityActionGui.open();
-                    plugin.getLogger().info("Opened EntityActionBlockGUI for player " + player.getName() + " at " + blockLocation);
-                    player.sendMessage("§aОткрыта настройка действия над сущностью!");
-                } else if ("EVENT".equals(blockType)) {
+                }
+            } else {
+                // Open ActionSelectionGUI for action blocks (default behavior)
+                ActionSelectionGUI actionGui = new ActionSelectionGUI(plugin, player, blockLocation, codeBlock.getMaterial());
+                actionGui.open();
+                plugin.getLogger().info("Opened ActionSelectionGUI for player " + player.getName() + " at " + blockLocation);
+                player.sendMessage("§aОткрыта настройка действия!");
+            }
+        } catch (Exception e) {
+            plugin.getLogger().log(java.util.logging.Level.SEVERE, "Error handling block interaction", e);
+            player.sendMessage("§cОшибка при обработке блока: " + e.getMessage());
+        }
+    }
+    
+    /**
+     * Открывает GUI параметров для указанного блока кода
+     */
+    public static void openGUI(MegaCreative plugin, Player player, Location blockLocation) {
+        Block block = blockLocation.getBlock();
+        //String blockType = CodeBlock.get(block);
+    
+        //if ("EVENT".equals(blockType)) {
+            try {
+                //File configFile = CodeBlock.getFile(block);
+                //if (config != null) {
                     // Open EventSelectionGUI for event blocks
-                    EventSelectionGUI eventGui = new EventSelectionGUI(plugin, player, blockLocation, codeBlock.getMaterial());
+                    EventSelectionGUI eventGui = new EventSelectionGUI(plugin, player, blockLocation, block.getType());
                     eventGui.open();
                     plugin.getLogger().info("Opened EventSelectionGUI for player " + player.getName() + " at " + blockLocation);
                     player.sendMessage("§aОткрыта настройка события!");
-                } else if ("CONDITION".equals(blockType)) {
-                    // Open ConditionSelectionGUI for condition blocks
-                    ConditionSelectionGUI conditionGui = new ConditionSelectionGUI(plugin, player, blockLocation, codeBlock.getMaterial());
-                    conditionGui.open();
-                    plugin.getLogger().info("Opened ConditionSelectionGUI for player " + player.getName() + " at " + blockLocation);
-                    player.sendMessage("§aОткрыта настройка условия!");
-                } else {
-                    // Open ActionSelectionGUI for action blocks (default behavior)
-                    ActionSelectionGUI actionGui = new ActionSelectionGUI(plugin, player, blockLocation, codeBlock.getMaterial());
-                    actionGui.open();
-                    plugin.getLogger().info("Opened ActionSelectionGUI for player " + player.getName() + " at " + blockLocation);
-                    player.sendMessage("§aОткрыта настройка действия!");
-                }
-            } else {
-                // Fallback to ActionSelectionGUI if no config found
-                ActionSelectionGUI gui = new ActionSelectionGUI(plugin, player, blockLocation, codeBlock.getMaterial());
-                gui.open();
-                plugin.getLogger().info("Opened GUI for player " + player.getName() + " at " + blockLocation);
-                player.sendMessage("§aОткрыта настройка блока!");
+                //}
+            } catch (Exception e) {
+                String errorMsg = "Failed to open EventSelectionGUI for player " + player.getName() + ": " + e.getMessage();
+                plugin.getLogger().severe(errorMsg);
+                player.sendMessage("§cОшибка при открытии GUI: " + e.getMessage());
             }
-        } catch (Exception e) {
-            plugin.getLogger().severe("Failed to open selection GUI for player " + player.getName() + ": " + e.getMessage());
-            e.printStackTrace();
-            player.sendMessage("§cОшибка при открытии GUI: " + e.getMessage());
-        }
+        //}
     }
     
     /**
@@ -2155,7 +2154,7 @@ public class BlockPlacementHandler implements Listener {
                     if (distance < 3) {
                         // Calculate the new positions for brackets (3 blocks apart from the new block)
                         Location newOpenBracketLoc = newBlockLocation.clone().add(direction.getOppositeFace().getModX(), 0, direction.getOppositeFace().getModZ());
-                        Location newCloseBracketLoc = newBlockLocation.clone().add(direction.getModX() * 3, 0, direction.getModZ() * 3);
+                        Location newCloseBracketLoc = newBlockLocation.clone().add(direction.getModX() * 3L, 0, direction.getModZ() * 3L);
                         
                         plugin.getLogger().info("Moving brackets to new positions: " + newOpenBracketLoc + " and " + newCloseBracketLoc);
                         

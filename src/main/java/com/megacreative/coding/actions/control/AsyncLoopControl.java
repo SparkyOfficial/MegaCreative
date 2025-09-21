@@ -46,9 +46,11 @@ public class AsyncLoopControl implements BlockAction {
             int iterations = (int) resolveNumberParameter(resolver, context, block, "iterations", 1);
             long delayTicks = (long) resolveNumberParameter(resolver, context, block, "delay", 20);
             
-            // Safety validation
-            iterations = validateIterations(iterations);
-            delayTicks = Math.max(1, Math.min(1200, delayTicks)); // 1 tick to 1 minute max
+            // Safety validation with Math.clamp
+            if (iterations != -1) { // -1 means infinite loop
+                iterations = Math.max(1, Math.min(iterations, MAX_ITERATIONS));
+            }
+            delayTicks = Math.max(1, Math.min(delayTicks, 1200L)); // 1 tick to 1 minute max
             
             // Check concurrent loop limit
             UUID playerId = player.getUniqueId();
@@ -58,7 +60,7 @@ public class AsyncLoopControl implements BlockAction {
             }
             
             // Create the async loop
-            AsyncLoopTask loopTask = new AsyncLoopTask(context, block, iterations, delayTicks);
+AsyncLoopTask loopTask = new AsyncLoopTask(context, block, iterations);
             BukkitTask task = loopTask.runTaskTimer(context.getPlugin(), delayTicks, delayTicks);
             
             // Track the loop for cleanup
@@ -79,13 +81,6 @@ public class AsyncLoopControl implements BlockAction {
         }
     }
     
-    /**
-     * Validates iteration count with safety limits
-     */
-    private int validateIterations(int iterations) {
-        if (iterations == -1) return -1; // Infinite loop allowed
-        return Math.max(1, Math.min(MAX_ITERATIONS, iterations));
-    }
     
     /**
      * Counts active loops for a specific player
@@ -143,17 +138,19 @@ public class AsyncLoopControl implements BlockAction {
      * Inner class handling the actual async loop execution
      */
     private static class AsyncLoopTask extends BukkitRunnable {
+        private static final long MAX_EXECUTION_TIME_MS = 600000; // 10 minutes
+        private static final int ITERATION_LOG_INTERVAL = 100;
+        
         private final ExecutionContext context;
         private final CodeBlock loopBlock;
         private final int maxIterations;
         private final long startTime;
         private int currentIteration;
-        private UUID loopId;
         
-        public AsyncLoopTask(ExecutionContext context, CodeBlock loopBlock, int maxIterations, long delay) {
+        public AsyncLoopTask(ExecutionContext context, CodeBlock loopBlock, int maxIterations) {
             this.context = context;
             this.loopBlock = loopBlock;
-            this.maxIterations = maxIterations;
+            this.maxIterations = maxIterations == -1 ? -1 : Math.max(1, Math.min(maxIterations, MAX_ITERATIONS));
             this.startTime = System.currentTimeMillis();
             this.currentIteration = 0;
         }
@@ -161,52 +158,82 @@ public class AsyncLoopControl implements BlockAction {
         @Override
         public void run() {
             try {
-                // Check if player is still online
-                Player player = context.getPlayer();
-                if (player == null || !player.isOnline()) {
-                    cleanup();
+                if (!validateExecution()) {
                     return;
                 }
                 
-                // Check iteration limit
-                if (maxIterations != -1 && currentIteration >= maxIterations) {
-                    if (context.isDebugMode()) {
-                        player.sendMessage("§7[DEBUG] Async loop completed: " + currentIteration + " iterations");
-                    }
-                    cleanup();
-                    return;
-                }
-                
-                // Check execution time limit (10 minutes max)
-                if (System.currentTimeMillis() - startTime > 600000) {
-                    player.sendMessage("§cAsync loop timed out after 10 minutes");
-                    cleanup();
-                    return;
-                }
-                
-                // Execute child blocks
                 executeChildBlocks();
-                
                 currentIteration++;
+                logProgress();
                 
-                // Performance monitoring
-                if (currentIteration % 100 == 0 && context.isDebugMode()) {
+            } catch (Exception e) {
+                handleExecutionError(e);
+            }
+        }
+        
+        private boolean validateExecution() {
+            Player player = context.getPlayer();
+            if (!isPlayerValid(player)) {
+                cleanup();
+                return false;
+            }
+            
+            if (isMaxIterationsReached(player)) {
+                cleanup();
+                return false;
+            }
+            
+            if (isExecutionTimeExceeded(player)) {
+                cleanup();
+                return false;
+            }
+            
+            return true;
+        }
+        
+        private boolean isPlayerValid(Player player) {
+            return player != null && player.isOnline();
+        }
+        
+        private boolean isMaxIterationsReached(Player player) {
+            if (maxIterations != -1 && currentIteration >= maxIterations) {
+                if (context.isDebugMode()) {
+                    player.sendMessage("§7[DEBUG] Async loop completed: " + currentIteration + " iterations");
+                }
+                return true;
+            }
+            return false;
+        }
+        
+        private boolean isExecutionTimeExceeded(Player player) {
+            if (System.currentTimeMillis() - startTime > MAX_EXECUTION_TIME_MS) {
+                player.sendMessage("§cAsync loop timed out after 10 minutes");
+                return true;
+            }
+            return false;
+        }
+        
+        private void logProgress() {
+            if (context.isDebugMode() && currentIteration % ITERATION_LOG_INTERVAL == 0) {
+                Player player = context.getPlayer();
+                if (player != null) {
                     long elapsed = System.currentTimeMillis() - startTime;
                     player.sendMessage("§7[DEBUG] Loop progress: " + currentIteration + 
                                      " iterations in " + (elapsed / 1000.0) + "s");
                 }
-                
-            } catch (Exception e) {
-                // Handle errors gracefully
-                Player player = context.getPlayer();
-                if (player != null) {
-                    player.sendMessage("§cError in async loop iteration " + currentIteration + ": " + e.getMessage());
-                    if (context.isDebugMode()) {
-                        context.getPlugin().getLogger().severe("Stack trace: " + java.util.Arrays.toString(e.getStackTrace()));
-                    }
-                }
-                cleanup();
             }
+        }
+        
+        private void handleExecutionError(Exception e) {
+            Player player = context.getPlayer();
+            if (player != null) {
+                player.sendMessage("§cError in async loop iteration " + currentIteration + ": " + e.getMessage());
+                if (context.isDebugMode()) {
+                    context.getPlugin().getLogger().log(Level.SEVERE, 
+                        "Error in async loop iteration " + currentIteration, e);
+                }
+            }
+            cleanup();
         }
         
         /**

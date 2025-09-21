@@ -3,7 +3,6 @@ package com.megacreative.coding.containers;
 import com.megacreative.MegaCreative;
 import com.megacreative.coding.values.DataValue;
 import com.megacreative.coding.values.ValueType;
-import com.megacreative.coding.containers.ContainerType;
 import org.bukkit.Location;
 import org.bukkit.Material;
 import org.bukkit.block.Block;
@@ -16,6 +15,11 @@ import org.bukkit.inventory.meta.ItemMeta;
 
 import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
+
+import com.megacreative.coding.containers.ContainerType;
+import com.megacreative.coding.containers.ActionConfiguration;
+import com.megacreative.coding.containers.ActionParameter;
+import org.bukkit.Location;
 
 /**
  * Advanced container system for code blocks
@@ -433,89 +437,5 @@ public class BlockContainerManager {
     }
 }
 
-/**
- * Block container data
- */
-class BlockContainer {
-    private final Location blockLocation;
-    private final Location containerLocation;
-    private final ContainerType type;
-    private final String action;
-    private final long createdTime;
-    
-    public BlockContainer(Location blockLocation, Location containerLocation, ContainerType type, String action) {
-        this.blockLocation = blockLocation;
-        this.containerLocation = containerLocation;
-        this.type = type;
-        this.action = action;
-        this.createdTime = System.currentTimeMillis();
-    }
-    
-    public Location getBlockLocation() { return blockLocation; }
-    public Location getContainerLocation() { return containerLocation; }
-    public ContainerType getType() { return type; }
-    public String getAction() { return action; }
-    public long getCreatedTime() { return createdTime; }
-}
 
-/**
- * Action configuration
- */
-class ActionConfiguration {
-    private final String action;
-    private final List<ActionParameter> parameters;
-    
-    public ActionConfiguration(String action) {
-        this.action = action;
-        this.parameters = generateParameters(action);
-    }
-    
-    private List<ActionParameter> generateParameters(String action) {
-        List<ActionParameter> params = new ArrayList<>();
-        
-        switch (action) {
-            case "sendMessage":
-                params.add(new ActionParameter("message", ValueType.TEXT, "Message to send to player"));
-                break;
-            case "teleport":
-                params.add(new ActionParameter("location", ValueType.LOCATION, "Destination location"));
-                break;
-            case "giveItem":
-                params.add(new ActionParameter("item", ValueType.ITEM, "Item to give"));
-                params.add(new ActionParameter("amount", ValueType.NUMBER, "Number of items"));
-                break;
-            case "playSound":
-                params.add(new ActionParameter("sound", ValueType.SOUND, "Sound to play"));
-                params.add(new ActionParameter("volume", ValueType.NUMBER, "Sound volume"));
-                params.add(new ActionParameter("pitch", ValueType.NUMBER, "Sound pitch"));
-                break;
-            default:
-                params.add(new ActionParameter("value", ValueType.ANY, "Action parameter"));
-        }
-        
-        return params;
-    }
-    
-    public String getAction() { return action; }
-    public List<ActionParameter> getParameters() { return parameters; }
-    public int getParameterCount() { return parameters.size(); }
-}
 
-/**
- * Action parameter definition
- */
-class ActionParameter {
-    private final String name;
-    private final ValueType type;
-    private final String description;
-    
-    public ActionParameter(String name, ValueType type, String description) {
-        this.name = name;
-        this.type = type;
-        this.description = description;
-    }
-    
-    public String getName() { return name; }
-    public ValueType getType() { return type; }
-    public String getDescription() { return description; }
-}

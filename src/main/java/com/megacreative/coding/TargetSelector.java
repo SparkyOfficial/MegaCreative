@@ -233,10 +233,19 @@ public class TargetSelector {
     private void applyGameModeFilter(List<Player> targets, String gameModeValue) {
         try {
             int gameMode = Integer.parseInt(gameModeValue);
-            org.bukkit.GameMode mode = org.bukkit.GameMode.getByValue(gameMode);
-            if (mode != null) {
-                targets.removeIf(player -> 
-                    player.getGameMode() != mode);
+            switch (gameMode) {
+                case 0:
+                    targets.removeIf(player -> player.getGameMode() != org.bukkit.GameMode.SURVIVAL);
+                    break;
+                case 1:
+                    targets.removeIf(player -> player.getGameMode() != org.bukkit.GameMode.CREATIVE);
+                    break;
+                case 2:
+                    targets.removeIf(player -> player.getGameMode() != org.bukkit.GameMode.ADVENTURE);
+                    break;
+                case 3:
+                    targets.removeIf(player -> player.getGameMode() != org.bukkit.GameMode.SPECTATOR);
+                    break;
             }
         } catch (NumberFormatException e) {
             // Invalid game mode, ignore

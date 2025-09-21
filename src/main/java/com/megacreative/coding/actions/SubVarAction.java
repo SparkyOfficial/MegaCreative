@@ -19,6 +19,10 @@ import java.util.function.Function;
  * This action retrieves variable parameters from the container configuration and subtracts the value from the variable.
  */
 public class SubVarAction implements BlockAction {
+    
+    // Define the missing constants
+    private static final double MIN_VARIABLE_VALUE = -1000000.0;
+    private static final double MAX_VARIABLE_VALUE = 1000000.0;
 
     private VariableValue getVariableValue(VariableManager variableManager, String varName, String scriptId, Player player) {
         // Try to get the variable from different scopes

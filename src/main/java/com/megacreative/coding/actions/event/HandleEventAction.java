@@ -8,11 +8,20 @@ import com.megacreative.coding.events.CustomEventManager;
 import com.megacreative.coding.values.DataValue;
 import com.megacreative.coding.variables.VariableManager;
 import org.bukkit.entity.Player;
+import java.util.Optional;
 
 /**
  * Action that registers a code block as an event handler
  */
 public class HandleEventAction implements BlockAction {
+    private static final String PARAM_EVENT_NAME = "eventName";
+    private static final String PARAM_PRIORITY = "priority";
+    private static final String PARAM_WORLD = "worldName";
+    private static final String PARAM_GLOBAL = "global";
+    private static final String MSG_EVENT_REQUIRED = "§cEvent name is required";
+    private static final String MSG_INVALID_EVENT = "§cInvalid event name";
+    private static final String MSG_REGISTERED = "§a✓ Registered handler for event: %s %s (priority: %d)";
+    private static final String MSG_ERROR = "§c✗ Failed to register event handler: %s";
     
     private final CustomEventManager eventManager;
     
@@ -22,70 +31,118 @@ public class HandleEventAction implements BlockAction {
     
     @Override
     public void execute(ExecutionContext context) {
-        Player player = context.getPlayer();
+        try {
+            validateAndRegisterHandler(context);
+        } catch (Exception e) {
+            Player player = context.getPlayer();
+            if (player != null) {
+                player.sendMessage(String.format(MSG_ERROR, e.getMessage()));
+            }
+        }
+    }
+    
+    private void validateAndRegisterHandler(ExecutionContext context) {
+        Player player = validateContext(context);
         CodeBlock block = context.getCurrentBlock();
-        VariableManager variableManager = context.getPlugin().getVariableManager();
-        
-        if (player == null || block == null || variableManager == null) return;
-        
         ParameterResolver resolver = new ParameterResolver(context);
         
-        try {
-            // Get event name from parameters
-            DataValue rawEventName = block.getParameter("eventName");
-            if (rawEventName == null) {
-                player.sendMessage("§cEvent name is required");
-                return;
-            }
-            
-            String eventName = resolver.resolve(context, rawEventName).asString();
-            if (eventName == null || eventName.trim().isEmpty()) {
-                player.sendMessage("§cInvalid event name");
-                return;
-            }
-            
-            // Get priority (optional, default is 0)
-            DataValue rawPriority = block.getParameter("priority");
-            int priority = 0;
-            if (rawPriority != null) {
-                try {
-                    priority = resolver.resolve(context, rawPriority).asNumber().intValue();
-                } catch (NumberFormatException e) {
-                    // Use default priority
-                }
-            }
-            
-            // Get world restriction (optional)
-            DataValue rawWorld = block.getParameter("worldName");
-            String worldName = null;
-            if (rawWorld != null) {
-                worldName = resolver.resolve(context, rawWorld).asString();
-            }
-            
-            // Get global flag (optional, default is false)
-            DataValue rawGlobal = block.getParameter("global");
-            boolean isGlobal = false;
-            if (rawGlobal != null) {
-                String globalStr = resolver.resolve(context, rawGlobal).asString();
-                isGlobal = "true".equalsIgnoreCase(globalStr) || "yes".equalsIgnoreCase(globalStr);
-            }
-            
-            // Create and register event handler
-            CustomEventManager.EventHandler handler = eventManager.createEventHandler(
-                block, 
-                isGlobal ? null : player, 
-                isGlobal ? null : (worldName != null ? worldName : player.getWorld().getName()),
-                priority
-            );
-            
-            eventManager.registerEventHandler(eventName, handler);
-            
-            // Send confirmation to player
-            String scope = isGlobal ? "globally" : (worldName != null ? "in world " + worldName : "in current world");
-            player.sendMessage("§a✓ Registered handler for event: " + eventName + " " + scope + " (priority: " + priority + ")");
-            
-        } catch (Exception e) {
-            player.sendMessage("§c✗ Failed to register event handler: " + e.getMessage());
+        String eventName = resolveEventName(block, resolver, context);
+        int priority = resolvePriority(block, resolver, context);
+        String worldName = resolveWorldName(block, resolver, context);
+        boolean isGlobal = resolveIsGlobal(block, resolver, context);
+        
+        registerEventHandler(player, block, eventName, priority, worldName, isGlobal);
+    }
+    
+    private Player validateContext(ExecutionContext context) {
+        Player player = context.getPlayer();
+        if (player == null || context.getCurrentBlock() == null || context.getPlugin().getVariableManager() == null) {
+            throw new IllegalStateException("Invalid execution context");
         }
+        return player;
+    }
+    
+    private String resolveEventName(CodeBlock block, ParameterResolver resolver, ExecutionContext context) {
+        DataValue eventNameParam = block.getParameter(PARAM_EVENT_NAME);
+        if (eventNameParam == null) {
+            throw new IllegalArgumentException(MSG_EVENT_REQUIRED);
+        }
+        
+        String eventName = resolver.resolve(context, eventNameParam).asString();
+        if (eventName == null || eventName.trim().isEmpty()) {
+            throw new IllegalArgumentException(MSG_INVALID_EVENT);
+        }
+        
+        return eventName;
+    }
+    
+    private int resolvePriority(CodeBlock block, ParameterResolver resolver, ExecutionContext context) {
+        DataValue priorityParam = block.getParameter(PARAM_PRIORITY);
+        if (priorityParam == null) {
+            return 0; // Default priority
+        }
+        
+        try {
+            DataValue resolved = resolver.resolve(context, priorityParam);
+            return resolved != null ? resolved.asNumber().intValue() : 0;
+        } catch (NumberFormatException e) {
+            return 0; // Default priority on error
+        }
+    }
+    
+    private String resolveWorldName(CodeBlock block, ParameterResolver resolver, ExecutionContext context) {
+        DataValue worldParam = block.getParameter(PARAM_WORLD);
+        if (worldParam == null) {
+            return null;
+        }
+        
+        DataValue resolved = resolver.resolve(context, worldParam);
+        return resolved != null ? resolved.asString() : null;
+    }
+    
+    private boolean resolveIsGlobal(CodeBlock block, ParameterResolver resolver, ExecutionContext context) {
+        DataValue globalParam = block.getParameter(PARAM_GLOBAL);
+        if (globalParam == null) {
+            return false;
+        }
+        
+        DataValue resolved = resolver.resolve(context, globalParam);
+        if (resolved == null) {
+            return false;
+        }
+        
+        String value = resolved.asString();
+        return "true".equalsIgnoreCase(value) || "yes".equalsIgnoreCase(value);
+    }
+    
+    private void registerEventHandler(Player player, CodeBlock block, 
+                                    String eventName, int priority, String worldName, boolean isGlobal) {
+        String effectiveWorldName = getEffectiveWorldName(player, worldName, isGlobal);
+        
+        CustomEventManager.EventHandler handler = eventManager.createEventHandler(
+            block, 
+            isGlobal ? null : player, 
+            effectiveWorldName,
+            priority
+        );
+        
+        eventManager.registerEventHandler(eventName, handler);
+        
+        String scope = getScopeString(worldName, isGlobal);
+        player.sendMessage(String.format(MSG_REGISTERED, eventName, scope, priority));
+    }
+    
+    private String getEffectiveWorldName(Player player, String worldName, boolean isGlobal) {
+        if (isGlobal) {
+            return null;
+        }
+        return worldName != null ? worldName : player.getWorld().getName();
+    }
+    
+    private String getScopeString(String worldName, boolean isGlobal) {
+        if (isGlobal) {
+            return "globally";
+        }
+        return worldName != null ? "in world " + worldName : "in current world";
     }
 }

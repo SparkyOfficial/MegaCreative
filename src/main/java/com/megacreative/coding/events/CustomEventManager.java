@@ -196,8 +196,7 @@ public class CustomEventManager implements Listener {
                         }
                     }
                 } catch (Exception e) {
-                    log.severe("Error executing event handler: " + e.getMessage());
-                    e.printStackTrace();
+                    log.log(Level.SEVERE, "Error executing event handler: " + e.getMessage(), e);
                     // Log error but don't propagate to avoid breaking other handlers
                 }
             }

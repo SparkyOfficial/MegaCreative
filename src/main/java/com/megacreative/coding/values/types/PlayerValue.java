@@ -50,7 +50,17 @@ public class PlayerValue implements DataValue {
     public String getDescription() { return "Player: " + asString(); }
     
     @Override
-    public DataValue clone() { return new PlayerValue(value); }
+    public DataValue clone() {
+        try {
+            PlayerValue cloned = (PlayerValue) super.clone();
+            // The value field is not final, so we can directly assign it
+            cloned.value = value;
+            return cloned;
+        } catch (CloneNotSupportedException e) {
+            // This should never happen since we implement Cloneable
+            throw new RuntimeException("Clone not supported", e);
+        }
+    }
     
     @Override
     public Map<String, Object> serialize() {

@@ -21,6 +21,7 @@ import org.bukkit.event.block.BlockBreakEvent;
 import org.bukkit.inventory.ItemStack;
 
 import java.util.*;
+import java.util.logging.Level;
 
 /**
  * Enhanced AutoConnectionManager with CodeBlock structure integration
@@ -1002,8 +1003,8 @@ public class AutoConnectionManager implements Listener {
                 } catch (Exception e) {
                     errorCount++;
                     if (plugin != null) {
-                        plugin.getLogger().severe("Error compiling script from event block at " + entry.getKey() + ": " + e.getMessage());
-                        e.printStackTrace();
+                        String errorMsg = "Error compiling script from event block at " + entry.getKey() + ": " + e.getMessage();
+                        plugin.getLogger().log(Level.SEVERE, errorMsg, e);
                     }
                 }
             }

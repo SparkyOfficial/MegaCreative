@@ -15,58 +15,193 @@ import org.bukkit.entity.Player;
  * Maintains backward compatibility while providing advanced patterns and control
  */
 public class PlayParticleEffectAction implements BlockAction {
+    private static final int MAX_PARTICLES = 100;
+    private static final double MAX_SPREAD = 10.0;
+    private static final double MAX_SPEED = 5.0;
+    
     @Override
     public void execute(ExecutionContext context) {
+        try {
+            executeParticleEffect(context);
+        } catch (Exception e) {
+            handleParticleError(context, e);
+        }
+    }
+    
+    private void executeParticleEffect(ExecutionContext context) {
+        Player player = validateContext(context);
+        if (player == null) return;
+        
+        ParticleParameters params = resolveParticleParameters(context);
+        if (params == null) return;
+        
+        ParticleEffect effect = createParticleEffect(params);
+        if (effect == null) return;
+        
+        effect.play(player.getLocation());
+    }
+    
+    private void handleParticleError(ExecutionContext context, Exception e) {
+        if (context == null) return;
+        
+        Player player = context.getPlayer();
+        if (player != null) {
+            player.sendMessage("§cОшибка при воспроизведении частиц: " + e.getMessage());
+        }
+        
+        if (context.getPlugin() != null) {
+            context.getPlugin().getLogger().log(java.util.logging.Level.SEVERE, 
+                "Ошибка при воспроизведении частиц", e);
+        }
+    }
+    
+    private Player validateContext(ExecutionContext context) {
+        if (context == null || context.getPlayer() == null || 
+            context.getCurrentBlock() == null || 
+            context.getPlugin() == null ||
+            context.getPlugin().getVariableManager() == null) {
+            return null;
+        }
+        return context.getPlayer();
+    }
+    
+    /**
+     * Container class for particle effect parameters
+     */
+    private static class ParticleParameters {
+        final Particle particle;
+        final int count;
+        final double offset;
+        final double spread;
+        final double speed;
+        final String pattern;
+        
+        ParticleParameters(Particle particle, int count, double offset, 
+                          double spread, double speed, String pattern) {
+            this.particle = particle;
+            this.count = count;
+            this.offset = offset;
+            this.spread = spread;
+            this.speed = speed;
+            this.pattern = pattern;
+        }
+    }
+    
+    private ParticleParameters resolveParticleParameters(ExecutionContext context) {
         Player player = context.getPlayer();
         CodeBlock block = context.getCurrentBlock();
-        VariableManager variableManager = context.getPlugin().getVariableManager();
-
-        if (player == null || block == null || variableManager == null) return;
-
         ParameterResolver resolver = new ParameterResolver(context);
-
+        
+        String particleStr = resolveParameter(resolver, context, block, "particle", "VILLAGER_HAPPY");
+        if (particleStr == null) {
+            player.sendMessage("§cНе указан тип частиц");
+            return null;
+        }
+        
+        Particle particle = parseParticle(particleStr);
+        if (particle == null) {
+            player.sendMessage("§cНеизвестный тип частиц: " + particleStr);
+            return null;
+        }
+        
+        double offset = resolveNumberParameter(resolver, context, block, "offset", 0.5);
+        int count = (int) resolveNumberParameter(resolver, context, block, "count", 10);
+        double spread = resolveNumberParameter(resolver, context, block, "spread", offset);
+        double speed = resolveNumberParameter(resolver, context, block, "speed", 0.1);
+        String pattern = resolveParameter(resolver, context, block, "pattern", "basic");
+        
+        // Validate and constrain parameters
+        count = Math.max(1, Math.min(MAX_PARTICLES, count));
+        spread = Math.max(0.1, Math.min(MAX_SPREAD, spread));
+        speed = Math.max(0.0, Math.min(MAX_SPEED, speed));
+        
+        return new ParticleParameters(particle, count, offset, spread, speed, pattern);
+    }
+    
+    /**
+     * Spawns particles with advanced patterns
+     */
+    private ParticleEffect createParticleEffect(ParticleParameters params) {
+        // Implementation depends on your ParticleEffect class
+        // This is a simplified example
         try {
-            // Enhanced parameter resolution with defaults for backward compatibility
-            String particleStr = resolveParameter(resolver, context, block, "particle", "VILLAGER_HAPPY");
-            int count = (int) resolveNumberParameter(resolver, context, block, "count", 10);
-            double offset = resolveNumberParameter(resolver, context, block, "offset", 0.5);
-            double spread = resolveNumberParameter(resolver, context, block, "spread", offset); // Use offset as spread for compatibility
-            double speed = resolveNumberParameter(resolver, context, block, "speed", 0.1);
-            String pattern = resolveParameter(resolver, context, block, "pattern", "basic");
-
-            if (particleStr == null) return;
-
-            // Enhanced particle parsing
-            Particle particle = parseParticle(particleStr);
-            if (particle == null) {
-                player.sendMessage("§cНеизвестный тип частиц: " + particleStr);
-                return;
-            }
-            
-            // Validate parameters with performance limits
-            count = Math.max(1, Math.min(100, count));
-            spread = Math.max(0.1, Math.min(10.0, spread));
-            speed = Math.max(0.0, Math.min(5.0, speed));
-            
-            // Determine spawn location
-            Location location = context.getBlockLocation() != null ? 
-                context.getBlockLocation() : player.getLocation();
-            
-            // Choose pattern based on parameter or count
-            if (pattern.equals("basic") || count <= 10) {
-                // Basic behavior for backward compatibility
-                location.getWorld().spawnParticle(particle, location, count, offset, offset, offset);
-            } else {
-                // Advanced patterns
-                spawnAdvancedParticleEffect(player, location, particle, count, spread, speed, pattern);
-            }
-            
-            player.sendMessage("§a✨ Эффект частиц '" + particleStr + "' воспроизведен!");
-            
-        } catch (NumberFormatException e) {
-            player.sendMessage("§cОшибка в параметрах count/offset");
+            return new ParticleEffect(
+                params.particle, 
+                params.count, 
+                params.offset, 
+                params.spread, 
+                params.speed, 
+                params.pattern
+            );
+        } catch (IllegalArgumentException e) {
+            // Handle invalid particle parameters
+            throw new IllegalArgumentException("Некорректные параметры частиц: " + e.getMessage(), e);
+        }
+    }
+    
+    /**
+     * Resolves a text parameter with fallback default
+     */
+    private String resolveParameter(ParameterResolver resolver, ExecutionContext context,
+                                  CodeBlock block, String paramName, String defaultValue) {
+        DataValue rawValue = block.getParameter(paramName);
+        if (rawValue == null) return defaultValue;
+        
+        return resolver.resolve(context, rawValue).asString();
+    }
+    
+    /**
+     * Resolves a numeric parameter with fallback default
+     */
+    private double resolveNumberParameter(ParameterResolver resolver, ExecutionContext context,
+                                        CodeBlock block, String paramName, double defaultValue) {
+        DataValue rawValue = block.getParameter(paramName);
+        if (rawValue == null) return defaultValue;
+        
+        try {
+            return resolver.resolve(context, rawValue).asNumber().doubleValue();
         } catch (Exception e) {
-            player.sendMessage("§cОшибка создания частиц: " + e.getMessage());
+            return defaultValue;
+        }
+    }
+    
+    /**
+     * Enhanced particle parsing with support for multiple formats
+     */
+    private Particle parseParticle(String particleName) {
+        try {
+            // First try basic uppercase conversion for backward compatibility
+            try {
+                return Particle.valueOf(particleName.toUpperCase());
+            } catch (IllegalArgumentException e) {
+                // Enhanced parsing for advanced usage
+                String cleanName = particleName.toUpperCase()
+                                               .replace("MINECRAFT:", "")
+                                               .replace(".", "_")
+                                               .replace("-", "_");
+                
+                // Try direct enum lookup
+                try {
+                    return Particle.valueOf(cleanName);
+                } catch (IllegalArgumentException e2) {
+                    // Map common aliases
+                    switch (cleanName) {
+                        case "HAPPY":
+                        case "VILLAGER":
+                            return Particle.VILLAGER_HAPPY;
+                        case "HEARTS":
+                        case "LOVE":
+                            return Particle.HEART;
+                        case "MAGIC":
+                        case "ENCHANT":
+                            return Particle.ENCHANTMENT_TABLE;
+                        default:
+                            return null;
+                    }
+                }
+            }
+        } catch (Exception e) {
+            return null;
         }
     }
     
@@ -75,21 +210,66 @@ public class PlayParticleEffectAction implements BlockAction {
      */
     private void spawnAdvancedParticleEffect(Player player, Location center, Particle particle, 
                                            int count, double spread, double speed, String pattern) {
-        switch (pattern.toLowerCase()) {
+        if (player == null || center == null || particle == null) {
+            return;
+        }
+        
+        pattern = pattern != null ? pattern.toLowerCase() : "";
+        switch (pattern) {
             case "circle":
-            case "circular":
-                spawnCircularPattern(player, center, particle, count, spread, speed);
+                // Implement circle pattern
+                int points = Math.max(8, Math.min(64, count));
+                double radius = spread;
+                for (int i = 0; i < points; i++) {
+                    double angle = 2 * Math.PI * i / points;
+                    double x = center.getX() + radius * Math.cos(angle);
+                    double z = center.getZ() + radius * Math.sin(angle);
+                    Location loc = new Location(center.getWorld(), x, center.getY(), z);
+                    player.spawnParticle(particle, loc, 1, 0, 0, 0, speed);
+                }
                 break;
+                
             case "sphere":
-                spawnSpherePattern(player, center, particle, count, spread, speed);
+                // Implement sphere pattern
+                int pointsSphere = Math.max(8, Math.min(32, (int)Math.sqrt(count)));
+                double radiusSphere = spread;
+                for (int i = 0; i < pointsSphere; i++) {
+                    for (int j = 0; j < pointsSphere; j++) {
+                        double theta = Math.PI * i / (pointsSphere - 1);
+                        double phi = 2 * Math.PI * j / pointsSphere;
+                        double x = center.getX() + radiusSphere * Math.sin(theta) * Math.cos(phi);
+                        double y = center.getY() + radiusSphere * Math.cos(theta);
+                        double z = center.getZ() + radiusSphere * Math.sin(theta) * Math.sin(phi);
+                        Location loc = new Location(center.getWorld(), x, y, z);
+                        player.spawnParticle(particle, loc, 1, 0, 0, 0, speed);
+                    }
+                }
                 break;
-            case "burst":
-            case "explosion":
-                spawnBurstPattern(player, center, particle, count, spread, speed);
+                
+            case "line":
+                // Implement line pattern
+                int segments = Math.max(1, Math.min(32, count));
+                double dx = (Math.random() * 2 - 1) * spread;
+                double dy = (Math.random() * 2 - 1) * spread;
+                double dz = (Math.random() * 2 - 1) * spread;
+                
+                for (int i = 0; i < segments; i++) {
+                    double t = (double) i / (segments - 1);
+                    double x = center.getX() + dx * t;
+                    double y = center.getY() + dy * t;
+                    double z = center.getZ() + dz * t;
+                    Location loc = new Location(center.getWorld(), x, y, z);
+                    player.spawnParticle(particle, loc, 1, 0, 0, 0, speed);
+                }
                 break;
+                
+            case "basic":
             default:
-                // Auto-select pattern based on count
-                if (count <= 20) {
+                // Auto-select pattern based on count if no specific pattern is chosen
+                if (pattern.isEmpty() || "basic".equals(pattern)) {
+                    // Default basic pattern
+                    player.spawnParticle(particle, center, count, spread, spread, spread, speed);
+                } else if (count <= 20) {
                     spawnCircularPattern(player, center, particle, count, spread, speed);
                 } else if (count <= 50) {
                     spawnSpherePattern(player, center, particle, count, spread, speed);
@@ -171,70 +351,4 @@ public class PlayParticleEffectAction implements BlockAction {
             }
         }
     }
-    
-    /**
-     * Resolves a text parameter with fallback default
-     */
-    private String resolveParameter(ParameterResolver resolver, ExecutionContext context,
-                                  CodeBlock block, String paramName, String defaultValue) {
-        DataValue rawValue = block.getParameter(paramName);
-        if (rawValue == null) return defaultValue;
-        
-        return resolver.resolve(context, rawValue).asString();
-    }
-    
-    /**
-     * Resolves a numeric parameter with fallback default
-     */
-    private double resolveNumberParameter(ParameterResolver resolver, ExecutionContext context,
-                                        CodeBlock block, String paramName, double defaultValue) {
-        DataValue rawValue = block.getParameter(paramName);
-        if (rawValue == null) return defaultValue;
-        
-        try {
-            return resolver.resolve(context, rawValue).asNumber().doubleValue();
-        } catch (Exception e) {
-            return defaultValue;
-        }
-    }
-    
-    /**
-     * Enhanced particle parsing with support for multiple formats
-     */
-    private Particle parseParticle(String particleName) {
-        try {
-            // First try basic uppercase conversion for backward compatibility
-            try {
-                return Particle.valueOf(particleName.toUpperCase());
-            } catch (IllegalArgumentException e) {
-                // Enhanced parsing for advanced usage
-                String cleanName = particleName.toUpperCase()
-                                               .replace("MINECRAFT:", "")
-                                               .replace(".", "_")
-                                               .replace("-", "_");
-                
-                // Try direct enum lookup
-                try {
-                    return Particle.valueOf(cleanName);
-                } catch (IllegalArgumentException e2) {
-                    // Map common aliases
-                    switch (cleanName) {
-                        case "HAPPY":
-                        case "VILLAGER":
-                            return Particle.VILLAGER_HAPPY;
-                        case "HEARTS":
-                        case "LOVE":
-                            return Particle.HEART;
-                        case "MAGIC":
-                        case "ENCHANT":
-                            return Particle.ENCHANTMENT_TABLE;
-                        default:
-                            return null;
-                    }
-                }
-            }
-        } catch (Exception e) {
-            return null;
-        }
-    }
-} 
+}

@@ -367,10 +367,14 @@ class ScriptBlock implements Cloneable {
      * @return Geklonter Skriptblock
      */
     public ScriptBlock clone() {
-        ScriptBlock cloned = new ScriptBlock(action, category, material);
-        cloned.parameters = new HashMap<>(parameters);
-        cloned.hasNext = hasNext;
-        return cloned;
+        try {
+            ScriptBlock cloned = (ScriptBlock) super.clone();
+            cloned.parameters = new HashMap<>(parameters);
+            return cloned;
+        } catch (CloneNotSupportedException e) {
+            // This should never happen since we implement Cloneable
+            throw new RuntimeException("Clone not supported", e);
+        }
     }
     
     // Getters/Setters

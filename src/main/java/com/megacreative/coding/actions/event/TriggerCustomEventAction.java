@@ -15,6 +15,7 @@ import org.bukkit.entity.Player;
 
 import java.util.HashMap;
 import java.util.Map;
+import java.util.logging.Level;
 
 /**
  * Advanced Trigger Custom Event action with DataValue integration
@@ -32,92 +33,104 @@ import java.util.Map;
  */
 public class TriggerCustomEventAction implements BlockAction {
     
+    private static final String EVENT_NAME_PARAM = "event_name";
+    private static final String GLOBAL_PARAM = "global";
+    private static final String ASYNC_PARAM = "async";
+    
     @Override
     public void execute(ExecutionContext context) {
-        Player player = context.getPlayer();
-        CodeBlock block = context.getCurrentBlock();
+        try {
+            validateAndTriggerEvent(context);
+        } catch (Exception e) {
+            handleExecutionError(context, e);
+        }
+    }
+    
+    private void validateAndTriggerEvent(ExecutionContext context) {
+        Player player = validateContext(context);
+        if (player == null) return;
         
-        if (player == null || block == null) {
+        CodeBlock block = context.getCurrentBlock();
+        if (block == null) return;
+        
+        String eventName = resolveEventName(block, new ParameterResolver(context), context);
+        if (eventName == null) {
+            player.sendMessage("§cEvent name is required");
             return;
+        }
+        
+        CustomEventManager eventManager = getEventManager(context);
+        if (eventManager == null) {
+            player.sendMessage("§cCustom Event Manager is not available");
+            return;
+        }
+        
+        CustomEvent customEvent = eventManager.getEventByName(eventName);
+        if (customEvent == null) {
+            // Create a new event if it doesn't exist
+            customEvent = new CustomEvent(eventName, "Dynamically created event: " + eventName);
+            eventManager.registerEvent(customEvent);
         }
         
         ParameterResolver resolver = new ParameterResolver(context);
         
-        try {
-            // Get event name from parameter
-            String eventName = null;
-            DataValue eventNameValue = block.getParameter("event_name");
-            
-            if (eventNameValue != null && !eventNameValue.isEmpty()) {
-                DataValue resolvedName = resolver.resolve(context, eventNameValue);
-                eventName = resolvedName.asString();
-            } else {
-                // Fallback to GUI slot
-                // Get slot resolver from BlockConfigService
-                com.megacreative.services.BlockConfigService configService = 
-                    context.getPlugin().getServiceRegistry().getBlockConfigService();
-                java.util.function.Function<String, Integer> slotResolver = 
-                    configService != null ? configService.getSlotResolver("triggerCustomEvent") : null;
-                    
-                var nameItem = slotResolver != null ? 
-                    block.getItemFromSlot("event_name_slot", slotResolver) : null;
-                if (nameItem != null && nameItem.hasItemMeta()) {
-                    eventName = nameItem.getItemMeta().getDisplayName();
-                }
-            }
-            
-            if (eventName == null || eventName.trim().isEmpty()) {
-                player.sendMessage("§c[TriggerEvent] No event name specified!");
-                return;
-            }
-            
-            eventName = eventName.trim();
-            
-            // Get CustomEventManager
-            CustomEventManager eventManager = context.getPlugin().getServiceRegistry().getCustomEventManager();
-            if (eventManager == null) {
-                player.sendMessage("§c[TriggerEvent] Custom event system not available!");
-                return;
-            }
-            
-            // Check if event exists
-            Map<String, CustomEvent> events = eventManager.getEvents();
-            CustomEvent customEvent = events.get(eventName);
-            if (customEvent == null) {
-                player.sendMessage("§c[TriggerEvent] Custom event not found: " + eventName);
-                return;
-            }
-            
-            // Get event data
-            Map<String, DataValue> eventData = collectEventData(context, block, resolver, customEvent);
-            
-            // Get trigger options
-            boolean isGlobal = getBooleanParameter(block, resolver, context, "global", false);
-            boolean isAsync = getBooleanParameter(block, resolver, context, "async", false);
-            
-            // Validate event data against event definition
-            String validationError = validateEventData(customEvent, eventData);
-            if (validationError != null) {
-                player.sendMessage("§c[TriggerEvent] Invalid event data: " + validationError);
-                return;
-            }
-            
-            // Trigger the custom event
-            triggerCustomEvent(eventManager, customEvent, eventData, context, isGlobal, isAsync);
-            
-            player.sendMessage("§a[TriggerEvent] Triggered event: " + eventName + 
-                              (isGlobal ? " (global)" : " (world)") + 
-                              (isAsync ? " (async)" : ""));
-            
-        } catch (Exception e) {
-            player.sendMessage("§c[TriggerEvent] Error triggering event: " + e.getMessage());
-            context.getPlugin().getLogger().warning("TriggerEvent execution error: " + e.getMessage());
+        Map<String, DataValue> eventData = collectEventData(context, block, resolver, customEvent);
+        if (!validateEventData(customEvent, eventData)) {
+            player.sendMessage("§cInvalid event data for event: " + eventName);
+            return;
+        }
+        
+        boolean isGlobal = getBooleanParameter(block, resolver, context, GLOBAL_PARAM, false);
+        boolean isAsync = getBooleanParameter(block, resolver, context, ASYNC_PARAM, false);
+        
+        triggerCustomEvent(eventManager, customEvent, eventData, context, isGlobal, isAsync);
+    }
+    
+    private Player validateContext(ExecutionContext context) {
+        Player player = context.getPlayer();
+        if (player == null) {
+            return null;
+        }
+        
+        if (context.getCurrentBlock() == null) {
+            return null;
+        }
+        
+        return player;
+    }
+    
+    private String resolveEventName(CodeBlock block, ParameterResolver resolver, ExecutionContext context) {
+        DataValue eventNameValue = block.getParameter(EVENT_NAME_PARAM);
+        if (eventNameValue == null) {
+            return null;
+        }
+        
+        DataValue resolvedName = resolver.resolve(context, eventNameValue);
+        if (resolvedName == null) {
+            return null;
+        }
+        
+        String name = resolvedName.asString();
+        return (name == null || name.trim().isEmpty()) ? null : name.trim();
+    }
+    
+    private CustomEventManager getEventManager(ExecutionContext context) {
+        return context.getPlugin().getServiceRegistry().getCustomEventManager();
+    }
+    
+    private void handleExecutionError(ExecutionContext context, Exception e) {
+        Player player = context.getPlayer();
+        String errorMsg = "Error triggering custom event: " + e.getMessage();
+        
+        if (player != null) {
+            player.sendMessage("§c" + errorMsg);
+        }
+        
+        if (context.isDebugMode()) {
+            context.getPlugin().getLogger().log(Level.SEVERE, errorMsg, e);
         }
     }
     
-    /**
-     * Collects event data from block parameters and variables
-     */
     private Map<String, DataValue> collectEventData(ExecutionContext context, CodeBlock block, 
                                                    ParameterResolver resolver, CustomEvent customEvent) {
         Map<String, DataValue> eventData = new HashMap<>();
@@ -156,15 +169,12 @@ public class TriggerCustomEventAction implements BlockAction {
         return eventData;
     }
     
-    /**
-     * Validates event data against event definition
-     */
-    private String validateEventData(CustomEvent customEvent, Map<String, DataValue> eventData) {
+    private boolean validateEventData(CustomEvent customEvent, Map<String, DataValue> eventData) {
         for (CustomEvent.EventDataField field : customEvent.getDataFields().values()) {
             String fieldName = field.getName();
             
             if (field.isRequired() && (!eventData.containsKey(fieldName) || eventData.get(fieldName).isEmpty())) {
-                return "Required field missing: " + fieldName;
+                return false;
             }
             
             if (eventData.containsKey(fieldName)) {
@@ -173,48 +183,35 @@ public class TriggerCustomEventAction implements BlockAction {
                 
                 // Basic type validation - check if the value is compatible
                 if (expectedType != null && !field.isCompatible(value)) {
-                    return "Field " + fieldName + " expects " + expectedType.getSimpleName() + 
-                           " but got " + (value != null ? value.getClass().getSimpleName() : "null");
+                    return false;
                 }
             }
         }
         
-        return null; // No validation errors
+        return true; // No validation errors
     }
     
-    /**
-     * Triggers the custom event with the provided data
-     */
     private void triggerCustomEvent(CustomEventManager eventManager, CustomEvent customEvent, 
                                    Map<String, DataValue> eventData, ExecutionContext context, 
                                    boolean isGlobal, boolean isAsync) {
-        
         if (isAsync) {
-            // Trigger asynchronously
-            context.getPlugin().getServer().getScheduler().runTaskAsynchronously(
-                context.getPlugin(), 
-                () -> doTriggerEvent(eventManager, customEvent, eventData, context, isGlobal)
-            );
+            // Run in a separate thread if async is true
+            new Thread(() -> doTriggerEvent(eventManager, customEvent, eventData, context, isGlobal), 
+                     "EventTrigger-" + customEvent.getName()).start();
         } else {
-            // Trigger synchronously
             doTriggerEvent(eventManager, customEvent, eventData, context, isGlobal);
         }
     }
     
-    /**
-     * Actually triggers the event
-     */
     private void doTriggerEvent(CustomEventManager eventManager, CustomEvent customEvent, 
                                Map<String, DataValue> eventData, ExecutionContext context, boolean isGlobal) {
+        Player player = context.getPlayer();
+        if (player == null) return;
         
-        // Use the actual CustomEventManager.triggerEvent method
-        String worldName = context.getPlayer().getWorld().getName();
-        eventManager.triggerEvent(customEvent.getName(), eventData, context.getPlayer(), worldName);
+        String worldName = isGlobal ? null : player.getWorld().getName();
+        eventManager.triggerEvent(customEvent.getName(), eventData, isGlobal ? null : player, worldName);
     }
     
-    /**
-     * Helper method to get boolean parameter with default value
-     */
     private boolean getBooleanParameter(CodeBlock block, ParameterResolver resolver, 
                                       ExecutionContext context, String paramName, boolean defaultValue) {
         DataValue paramValue = block.getParameter(paramName);

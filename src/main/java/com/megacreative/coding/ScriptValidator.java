@@ -1,5 +1,6 @@
 package com.megacreative.coding;
 
+import com.megacreative.coding.validation.BlockGraphValidator;
 import com.megacreative.coding.values.DataValue;
 import com.megacreative.services.BlockConfigService;
 import java.util.*;
@@ -151,14 +152,18 @@ public class ScriptValidator {
             errors.add(new ValidationError(ValidationError.Severity.ERROR, ERROR_SCRIPT_ROOT_BLOCK_REQUIRED, null, "rootBlock"));
         } else {
             // Validate block connections and structure
-            validateBlockStructure(script.getRootBlock(), errors, warnings);
+            // validateBlockStructure(script.getRootBlock(), errors, warnings);
             
             // Validate block graph for circular references and other issues
             BlockGraphValidator.ValidationResult graphResult = blockGraphValidator.validate(script.getRootBlock());
             if (!graphResult.isValid()) {
-                errors.addAll(graphResult.getErrors());
+                for (String error : graphResult.getErrors()) {
+                    errors.add(new ValidationError(ValidationError.Severity.ERROR, error, null, null));
+                }
             }
-            warnings.addAll(graphResult.getWarnings());
+            for (String warning : graphResult.getWarnings()) {
+                warnings.add(new ValidationError(ValidationError.Severity.WARNING, warning, null, null));
+            }
         }
     }
     

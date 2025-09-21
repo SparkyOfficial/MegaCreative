@@ -6,6 +6,8 @@ import com.megacreative.coding.ExecutionContext;
 import com.megacreative.coding.ParameterResolver;
 import com.megacreative.coding.values.DataValue;
 import org.bukkit.entity.Player;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 
 /**
  * Condition that checks if a player is in a specific world.
@@ -72,8 +74,8 @@ public class IsInWorldCondition implements BlockCondition {
             logEvaluationFailure(String.format("Player '%s' is in world '%s', expected '%s'", 
                 player.getName(), playerWorldName, worldName), player.getName(), context);
         } else {
-            context.getPlugin().getLogger().fine(String.format("[IsInWorld] Player '%s' is in the correct world: %s", 
-                player.getName(), worldName));
+            LOGGER.log(Level.FINE, "[IsInWorld] Player '{0}' is in the correct world: {1}", 
+                new Object[]{player.getName(), worldName});
         }
         
         return result;
@@ -85,17 +87,17 @@ public class IsInWorldCondition implements BlockCondition {
      * @param playerName The name of the player involved, or null if not available
      * @param context The execution context, or null if not available
      */
+    private static final Logger LOGGER = Logger.getLogger(IsInWorldCondition.class.getName());
+    
     private void logEvaluationFailure(String message, String playerName, ExecutionContext context) {
-        StringBuilder logMessage = new StringBuilder("[IsInWorld] Condition failed: ").append(message);
-        
-        if (playerName != null) {
-            logMessage.append(" (Player: ").append(playerName).append(")");
-        }
+        String logMessage = String.format("[IsInWorld] Condition failed: %s%s", 
+            message,
+            playerName != null ? " (Player: " + playerName + ")" : "");
         
         if (context != null && context.getPlugin() != null) {
-            context.getPlugin().getLogger().warning(logMessage.toString());
+            LOGGER.log(Level.WARNING, logMessage);
         } else {
-            System.err.println(logMessage);
+            LOGGER.log(Level.WARNING, logMessage);
         }
     }
 }
