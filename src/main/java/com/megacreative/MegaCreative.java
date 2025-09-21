@@ -371,6 +371,11 @@ public class MegaCreative extends JavaPlugin {
         if (getCommand("execute") != null) {
             getCommand("execute").setExecutor(new ExecuteCommand(this));
         }
+        
+        // Test script command for verification
+        if (getCommand("testscript") != null) {
+            getCommand("testscript").setExecutor(new com.megacreative.commands.TestScriptCommand(this));
+        }
             }
     
     /**

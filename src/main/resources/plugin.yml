@@ -292,3 +292,9 @@ commands:
     usage: /execute
     permission: megacreative.user
     aliases: [exec]
+
+  testscript:
+    description: Test script execution functionality
+    usage: /testscript
+    permission: megacreative.user
+    aliases: [ts]
