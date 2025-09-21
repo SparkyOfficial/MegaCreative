@@ -196,59 +196,114 @@ public class MegaCreative extends JavaPlugin {
      * Registriert alle Plugin-Befehle
      */
     private void registerCommands() {
-        getCommand("megacreative").setExecutor(new MainCommand(this));
-        getCommand("myworlds").setExecutor(new MyWorldsCommand(this));
-        getCommand("worldbrowser").setExecutor(new WorldBrowserCommand(this));
+        // Add null checks for all commands before setting executor
+        if (getCommand("megacreative") != null) {
+            getCommand("megacreative").setExecutor(new MainCommand(this));
+        }
+        if (getCommand("myworlds") != null) {
+            getCommand("myworlds").setExecutor(new MyWorldsCommand(this));
+        }
+        if (getCommand("worldbrowser") != null) {
+            getCommand("worldbrowser").setExecutor(new WorldBrowserCommand(this));
+        }
         
         // Add null checks for serviceRegistry before using it
         if (serviceRegistry != null) {
-            getCommand("join").setExecutor(new JoinCommand(this, serviceRegistry.getWorldManager()));
-            getCommand("build").setExecutor(new BuildCommand(this, serviceRegistry.getWorldManager()));
-            getCommand("switch").setExecutor(new com.megacreative.commands.SwitchCommand(this, serviceRegistry.getWorldManager()));
-            getCommand("hub").setExecutor(new HubCommand(this, serviceRegistry.getPlayerManager()));
-            getCommand("create").setExecutor(new CreateWorldCommand(this, serviceRegistry.getWorldManager()));
-            getCommand("clipboard").setExecutor(new ClipboardCommand(this, serviceRegistry.getCodeBlockClipboard()));
-            getCommand("group").setExecutor(new GroupCommand(serviceRegistry));
+            if (getCommand("join") != null) {
+                getCommand("join").setExecutor(new JoinCommand(this, serviceRegistry.getWorldManager()));
+            }
+            if (getCommand("build") != null) {
+                getCommand("build").setExecutor(new BuildCommand(this, serviceRegistry.getWorldManager()));
+            }
+            if (getCommand("switch") != null) {
+                getCommand("switch").setExecutor(new com.megacreative.commands.SwitchCommand(this, serviceRegistry.getWorldManager()));
+            }
+            if (getCommand("hub") != null) {
+                getCommand("hub").setExecutor(new HubCommand(this, serviceRegistry.getPlayerManager()));
+            }
+            if (getCommand("create") != null) {
+                getCommand("create").setExecutor(new CreateWorldCommand(this, serviceRegistry.getWorldManager()));
+            }
+            if (getCommand("clipboard") != null) {
+                getCommand("clipboard").setExecutor(new ClipboardCommand(this, serviceRegistry.getCodeBlockClipboard()));
+            }
+            if (getCommand("group") != null) {
+                getCommand("group").setExecutor(new GroupCommand(serviceRegistry));
+            }
         }
         
-        getCommand("play").setExecutor(new PlayCommand(this));
-        getCommand("trusted").setExecutor(new TrustedPlayerCommand(this));
-        getCommand("dev").setExecutor(new DevCommand(this));
+        if (getCommand("play") != null) {
+            getCommand("play").setExecutor(new PlayCommand(this));
+        }
+        if (getCommand("trusted") != null) {
+            getCommand("trusted").setExecutor(new TrustedPlayerCommand(this));
+        }
+        if (getCommand("dev") != null) {
+            getCommand("dev").setExecutor(new DevCommand(this));
+        }
         
-        getCommand("templates").setExecutor(new TemplatesCommand(this));
-        getCommand("worldsettings").setExecutor(new WorldSettingsCommand(this));
-        getCommand("debug").setExecutor(new DebugCommand(this));
+        if (getCommand("templates") != null) {
+            getCommand("templates").setExecutor(new TemplatesCommand(this));
+        }
+        if (getCommand("worldsettings") != null) {
+            getCommand("worldsettings").setExecutor(new WorldSettingsCommand(this));
+        }
+        if (getCommand("debug") != null) {
+            getCommand("debug").setExecutor(new DebugCommand(this));
+        }
         
-        getCommand("status").setExecutor(new StatusCommand(this));
-        getCommand("addfloor").setExecutor(new AddFloorCommand(this));
-        getCommand("workspace").setExecutor(new WorkspaceCommand(this));
-        getCommand("delete").setExecutor(new DeleteCommand(this));
+        if (getCommand("status") != null) {
+            getCommand("status").setExecutor(new StatusCommand(this));
+        }
+        if (getCommand("addfloor") != null) {
+            getCommand("addfloor").setExecutor(new AddFloorCommand(this));
+        }
+        if (getCommand("workspace") != null) {
+            getCommand("workspace").setExecutor(new WorkspaceCommand(this));
+        }
+        if (getCommand("delete") != null) {
+            getCommand("delete").setExecutor(new DeleteCommand(this));
+        }
         
         // Register function management command
-        getCommand("function").setExecutor(new FunctionCommand(this));
-        getCommand("function").setTabCompleter(new FunctionCommand(this));
+        if (getCommand("function") != null) {
+            getCommand("function").setExecutor(new FunctionCommand(this));
+            getCommand("function").setTabCompleter(new FunctionCommand(this));
+        }
         
         // Register interactive GUI command
-        getCommand("interactive").setExecutor(new InteractiveCommand(this));
-        getCommand("interactive").setTabCompleter(new InteractiveCommand(this));
+        if (getCommand("interactive") != null) {
+            getCommand("interactive").setExecutor(new InteractiveCommand(this));
+            getCommand("interactive").setTabCompleter(new InteractiveCommand(this));
+        }
         
         // Advanced execution command
-        getCommand("execution").setExecutor(new ExecutionCommand(this));
+        if (getCommand("execution") != null) {
+            getCommand("execution").setExecutor(new ExecutionCommand(this));
+        }
         
         // Test compilation command
-        getCommand("testcompile").setExecutor(new TestCompileCommand(this));
+        if (getCommand("testcompile") != null) {
+            getCommand("testcompile").setExecutor(new TestCompileCommand(this));
+        }
         
         // Enemy player management command
-        getCommand("enemy").setExecutor(new EnemyPlayerCommand(this));
-        getCommand("enemy").setTabCompleter(new EnemyPlayerCommand(this));
+        if (getCommand("enemy") != null) {
+            getCommand("enemy").setExecutor(new EnemyPlayerCommand(this));
+            getCommand("enemy").setTabCompleter(new EnemyPlayerCommand(this));
+        }
         
         // Performance monitoring command
-        getCommand("performance").setExecutor(new PerformanceCommand(this));
-        getCommand("performance").setTabCompleter(new PerformanceCommand(this));
+        if (getCommand("performance") != null) {
+            getCommand("performance").setExecutor(new PerformanceCommand(this));
+            getCommand("performance").setTabCompleter(new PerformanceCommand(this));
+        }
         
         // Test command
-        getCommand("test").setExecutor(new TestCommand(this));
-        getCommand("test").setTabCompleter(new TestCommand(this));
+        if (getCommand("test") != null) {
+            getCommand("test").setExecutor(new TestCommand(this));
+            getCommand("test").setTabCompleter(new TestCommand(this));
+        }
     }
     
     /**

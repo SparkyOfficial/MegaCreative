@@ -332,15 +332,15 @@ public class ActionSelectionGUI implements GUIManager.ManagedGUIInterface {
             case "explosion":
                 return "💥 Разрушение";
             
-            case "createScoreboard":
-            case "setScore":
-            case "incrementScore":
-            case "createTeam":
-            case "addPlayerToTeam":
+            case "createscoreboard":
+            case "setscore":
+            case "incrementscore":
+            case "createteam":
+            case "addplayertoteam":
                 return "🏆 Скорборды и команды";
             
-            case "saveLocation":
-            case "getLocation":
+            case "savelocation":
+            case "getlocation":
                 return "📍 Локации";
             
             default:
@@ -535,13 +535,13 @@ public class ActionSelectionGUI implements GUIManager.ManagedGUIInterface {
             case "wait": return "Ожидание";
             case "randomnumber": return "Случайное число";
             case "asyncloop": return "Асинхронный цикл";
-            case "createScoreboard": return "Создать скорборд";
-            case "setScore": return "Установить счет";
-            case "incrementScore": return "Увеличить счет";
-            case "createTeam": return "Создать команду";
+            case "createscoreboard": return "Создать скорборд";
+            case "setscore": return "Установить счет";
+            case "incrementscore": return "Увеличить счет";
+            case "createteam": return "Создать команду";
             case "addPlayerToTeam": return "Добавить игрока в команду";
-            case "saveLocation": return "Сохранить локацию";
-            case "getLocation": return "Получить локацию";
+            case "savelocation": return "Сохранить локацию";
+            case "getlocation": return "Получить локацию";
             default: return actionId;
         }
     }
@@ -591,13 +591,13 @@ public class ActionSelectionGUI implements GUIManager.ManagedGUIInterface {
             case "wait": return "Задержка выполнения";
             case "randomnumber": return "Генерирует случайное число";
             case "asyncloop": return "Повторяет действие асинхронно";
-            case "createScoreboard": return "Создает скорборд";
-            case "setScore": return "Устанавливает счет в скорборде";
-            case "incrementScore": return "Увеличивает счет в скорборде";
-            case "createTeam": return "Создает команду";
-            case "addPlayerToTeam": return "Добавляет игрока в команду";
-            case "saveLocation": return "Сохраняет локацию";
-            case "getLocation": return "Получает сохраненную локацию";
+            case "createscoreboard": return "Создает скорборд";
+            case "setscore": return "Устанавливает счет в скорборде";
+            case "incrementscore": return "Увеличивает счет в скорборде";
+            case "createteam": return "Создает команду";
+            case "addplayertoteam": return "Добавляет игрока в команду";
+            case "savelocation": return "Сохраняет локацию";
+            case "getlocation": return "Получает сохраненную локацию";
             default: return "Действие " + actionId;
         }
     }
