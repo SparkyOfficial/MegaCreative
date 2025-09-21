@@ -15,8 +15,9 @@
     <properties>
         <java.version>21</java.version>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
-        <maven.compiler.source>21</maven.compiler.source>
-        <maven.compiler.target>21</maven.compiler.target>
+        <maven.compiler.source>${java.version}</maven.compiler.source>
+        <maven.compiler.target>${java.version}</maven.compiler.target>
+        <maven.compiler.release>21</maven.compiler.release>
         <paper.version>1.20.4</paper.version>
         <paper.api.version>1.20.4-R0.1-SNAPSHOT</paper.api.version>
         <checkstyle.config.location>checkstyle.xml</checkstyle.config.location>
@@ -136,15 +137,15 @@
                 <artifactId>maven-compiler-plugin</artifactId>
                 <version>3.11.0</version>
                 <configuration>
-                    <source>${java.version}</source>
-                    <target>${java.version}</target>
-                    <release>21</release>
+                    <source>${maven.compiler.source}</source>
+                    <target>${maven.compiler.target}</target>
+                    <release>${maven.compiler.release}</release>
                     <compilerArgs>
-                        <arg>--enable-preview</arg>
+                        <arg>-parameters</arg>
                         <arg>-Xlint:all</arg>
                         <arg>-Xdiags:verbose</arg>
-                        <arg>-parameters</arg>
                     </compilerArgs>
+                    <compilerArgument>--enable-preview</compilerArgument>
                     <showWarnings>true</showWarnings>
                     <showDeprecation>true</showDeprecation>
                     <!-- Exclude manual test files from compilation -->

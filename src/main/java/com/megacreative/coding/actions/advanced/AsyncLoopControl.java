@@ -148,7 +148,6 @@ public class AsyncLoopControl implements BlockAction {
         private final int maxIterations;
         private final long startTime;
         private int currentIteration;
-        private UUID loopId;
         
         public AsyncLoopTask(ExecutionContext context, CodeBlock loopBlock, int maxIterations, long delay) {
             this.context = context;
@@ -161,52 +160,103 @@ public class AsyncLoopControl implements BlockAction {
         @Override
         public void run() {
             try {
-                // Check if player is still online
-                Player player = context.getPlayer();
-                if (player == null || !player.isOnline()) {
-                    cleanup();
+                if (!isExecutionValid()) {
                     return;
                 }
                 
-                // Check iteration limit
-                if (maxIterations != -1 && currentIteration >= maxIterations) {
-                    if (context.isDebugMode()) {
-                        player.sendMessage("§7[DEBUG] Async loop completed: " + currentIteration + " iterations");
-                    }
-                    cleanup();
-                    return;
-                }
-                
-                // Check execution time limit (10 minutes max)
-                if (System.currentTimeMillis() - startTime > 600000) {
-                    player.sendMessage("§cAsync loop timed out after 10 minutes");
-                    cleanup();
-                    return;
-                }
-                
-                // Execute child blocks
                 executeChildBlocks();
-                
                 currentIteration++;
+                logProgress();
                 
-                // Performance monitoring
-                if (currentIteration % 100 == 0 && context.isDebugMode()) {
+            } catch (Exception e) {
+                handleExecutionError(e);
+            }
+        }
+        
+        /**
+         * Validates if the loop execution should continue
+         */
+        private boolean isExecutionValid() {
+            if (!isPlayerOnline()) {
+                cleanup();
+                return false;
+            }
+            
+            if (isIterationLimitReached()) {
+                logCompletion();
+                cleanup();
+                return false;
+            }
+            
+            if (isTimeLimitExceeded()) {
+                context.getPlayer().sendMessage("§cAsync loop timed out after 10 minutes");
+                cleanup();
+                return false;
+            }
+            
+            return true;
+        }
+        
+        /**
+         * Checks if the player is still online
+         */
+        private boolean isPlayerOnline() {
+            Player player = context.getPlayer();
+            return player != null && player.isOnline();
+        }
+        
+        /**
+         * Checks if the iteration limit has been reached
+         */
+        private boolean isIterationLimitReached() {
+            return maxIterations != -1 && currentIteration >= maxIterations;
+        }
+        
+        /**
+         * Checks if the execution time limit has been exceeded
+         */
+        private boolean isTimeLimitExceeded() {
+            return System.currentTimeMillis() - startTime > 600000; // 10 minutes
+        }
+        
+        /**
+         * Logs loop completion message in debug mode
+         */
+        private void logCompletion() {
+            if (context.isDebugMode()) {
+                Player player = context.getPlayer();
+                if (player != null) {
+                    player.sendMessage("§7[DEBUG] Async loop completed: " + currentIteration + " iterations");
+                }
+            }
+        }
+        
+        /**
+         * Logs progress every 100 iterations in debug mode
+         */
+        private void logProgress() {
+            if (currentIteration % 100 == 0 && context.isDebugMode()) {
+                Player player = context.getPlayer();
+                if (player != null) {
                     long elapsed = System.currentTimeMillis() - startTime;
                     player.sendMessage("§7[DEBUG] Loop progress: " + currentIteration + 
                                      " iterations in " + (elapsed / 1000.0) + "s");
                 }
-                
-            } catch (Exception e) {
-                // Handle errors gracefully
-                Player player = context.getPlayer();
-                if (player != null) {
-                    player.sendMessage("§cError in async loop iteration " + currentIteration + ": " + e.getMessage());
-                    if (context.isDebugMode()) {
-                        context.getPlugin().getLogger().severe("Stack trace: " + java.util.Arrays.toString(e.getStackTrace()));
-                    }
-                }
-                cleanup();
             }
+        }
+        
+        /**
+         * Handles errors during loop execution
+         */
+        private void handleExecutionError(Exception e) {
+            Player player = context.getPlayer();
+            if (player != null) {
+                player.sendMessage("§cError in async loop iteration " + currentIteration + ": " + e.getMessage());
+                if (context.isDebugMode()) {
+                    context.getPlugin().getLogger().severe("Stack trace: " + java.util.Arrays.toString(e.getStackTrace()));
+                }
+            }
+            cleanup();
         }
         
         /**

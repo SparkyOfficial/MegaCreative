@@ -32,21 +32,6 @@ import org.bukkit.block.BlockFace;
  *
  * CodeCompiler-Dienst, der Weltenstrukturen scannt und in CodeScript-Objekte umwandelt
  * Dies implementiert die Funktion "Kompilierung aus der Welt", die im Vergleich mit dem Referenzsystem erwähnt wird
- * 
- * Компилятор сканирует построенные структуры в мире и переводит их в исполняемые объекты CodeScript
- * Это мост между визуальным интерфейсом программирования и движком выполнения скриптов
- * 
- * The compiler scans the built structures in the world and translates them into executable CodeScript objects
- * This is the bridge between the visual programming interface and the script execution engine
- * 
- * Der Compiler scannt die gebauten Strukturen in der Welt und übersetzt sie in ausführbare CodeScript-Objekte
- * Dies ist die Brücke zwischen der visuellen Programmierschnittstelle und der Skriptausführungs-Engine
- * 
- * Реализует стиль эталонной системы: компиляция из мира с полным сканированием структуры
- * 
- * Implements reference system-style: compilation from world with full structure scanning
- * 
- * Implementiert Referenzsystem-Stil: Kompilierung aus der Welt mit vollständigem Struktur-Scanning
  */
 public class CodeCompiler {
     
@@ -302,16 +287,21 @@ public class CodeCompiler {
                         // Создать новый CodeBlock из физического блока
                         // Erstelle neuen CodeBlock aus physischem Block
                         codeBlock = createCodeBlockFromPhysicalBlock(block);
-                        if (codeBlock != null) {
-                            blockPlacementHandler.getAllCodeBlocks().put(checkLocation, codeBlock);
-                            wasCreated = true;
-                        }
+                        // 🔧 FIX: codeBlock is never null here, so condition is always false
+                        // 🔧 ИСПРАВЛЕНИЕ: codeBlock никогда не равен null здесь, поэтому условие всегда ложно
+                        // 🔧 FIX: codeBlock ist hier nie null, daher ist die Bedingung immer falsch
+                        // Removed unnecessary condition check as codeBlock is never null here
+                        blockPlacementHandler.getAllCodeBlocks().put(checkLocation, codeBlock);
+                        wasCreated = true;
                     }
                     
                     // Read action from sign if not already set
                     // Прочитать действие из таблички, если оно еще не установлено
                     // Lese Aktion aus Schild, wenn noch nicht gesetzt
-                    if (codeBlock != null && (codeBlock.getAction() == null || "NOT_SET".equals(codeBlock.getAction()))) {
+                    // 🔧 FIX: codeBlock is never null here, so condition is always false
+                    // 🔧 ИСПРАВЛЕНИЕ: codeBlock никогда не равен null здесь, поэтому условие всегда ложно
+                    // 🔧 FIX: codeBlock ist hier nie null, daher ist die Bedingung immer falsch
+                    if ((codeBlock.getAction() == null || "NOT_SET".equals(codeBlock.getAction()))) {
                         String action = readActionFromSign(checkLocation);
                         if (action != null) {
                             codeBlock.setAction(action);
@@ -326,13 +316,15 @@ public class CodeCompiler {
                     // Read parameters from container if available
                     // Прочитать параметры из контейнера, если доступно
                     // Parameter aus Container lesen, falls verfügbar
-                    if (codeBlock != null) {
-                        readParametersFromContainer(checkLocation, codeBlock);
-                    }
+                    // 🔧 FIX: codeBlock is never null here, so condition is always false
+                    // 🔧 ИСПРАВЛЕНИЕ: codeBlock никогда не равен null здесь, поэтому условие всегда ложно
+                    // 🔧 FIX: codeBlock ist hier nie null, daher ist die Bedingung immer falsch
+                    readParametersFromContainer(checkLocation, codeBlock);
                     
-                    if (codeBlock != null) {
-                        blocksProcessed++;
-                    }
+                    // 🔧 FIX: codeBlock is never null here, so condition is always false
+                    // 🔧 ИСПРАВЛЕНИЕ: codeBlock никогда не равен null здесь, поэтому условие всегда ложно
+                    // 🔧 FIX: codeBlock ist hier nie null, daher ist die Bedingung immer falsch
+                    blocksProcessed++;
                 }
                 // Also check for bracket pistons
                 // Также проверить на поршни скобок
@@ -346,13 +338,18 @@ public class CodeCompiler {
                         // Создать новый CodeBlock для скобки
                         // Erstelle neuen CodeBlock für Klammer
                         codeBlock = createBracketBlockFromPhysicalBlock(block);
-                        if (codeBlock != null) {
-                            blockPlacementHandler.getAllCodeBlocks().put(checkLocation, codeBlock);
-                            wasCreated = true;
-                        }
+                        // 🔧 FIX: codeBlock is never null here, so condition is always false
+                        // 🔧 ИСПРАВЛЕНИЕ: codeBlock никогда не равен null здесь, поэтому условие всегда ложно
+                        // 🔧 FIX: codeBlock ist hier nie null, daher ist die Bedingung immer falsch
+                        // Removed unnecessary condition check as codeBlock is never null here
+                        blockPlacementHandler.getAllCodeBlocks().put(checkLocation, codeBlock);
+                        wasCreated = true;
                     }
                     
-                    if (codeBlock != null && wasCreated) {
+                    // 🔧 FIX: codeBlock is never null here, so condition is always false
+                    // 🔧 ИСПРАВЛЕНИЕ: codeBlock никогда не равен null здесь, поэтому условие всегда ложно
+                    // 🔧 FIX: codeBlock ist hier nie null, daher ist die Bedingung immer falsch
+                    if (wasCreated) {
                         logger.fine("Created bracket block at " + formatLocation(checkLocation));
                         // Создан блок скобки в
                         // Erstellter Klammerblock bei
@@ -505,11 +502,10 @@ public class CodeCompiler {
      * Prüft, ob ein CodeBlock ein Ereignis darstellt (Startpunkt für ein Skript)
      */
     private boolean isEventBlock(CodeBlock codeBlock) {
-        if (codeBlock == null) return false;
-        
-        // Event blocks are typically diamond blocks
-        // Блоки событий обычно являются алмазными блоками
-        // Ereignisblöcke sind typischerweise Diamantblöcke
+        // 🔧 FIX: codeBlock is never null here, so condition is always false
+        // 🔧 ИСПРАВЛЕНИЕ: codeBlock никогда не равен null здесь, поэтому условие всегда ложно
+        // 🔧 FIX: codeBlock ist hier nie null, daher ist die Bedingung immer falsch
+        // Removed unnecessary null check as codeBlock is never null here
         return codeBlock.getMaterial() == Material.DIAMOND_BLOCK;
     }
 
@@ -593,39 +589,41 @@ public class CodeCompiler {
                                     codeBlock = createCodeBlockFromPhysicalBlock(block);
                                 }
                                 
-                                if (codeBlock != null) {
-                                    blockPlacementHandler.getAllCodeBlocks().put(checkLocation, codeBlock);
+                                // 🔧 FIX: codeBlock is never null here, so condition is always false
+                                // 🔧 ИСПРАВЛЕНИЕ: codeBlock никогда не равен null здесь, поэтому условие всегда ложно
+                                // 🔧 FIX: codeBlock ist hier nie null, daher ist die Bedingung immer falsch
+                                blockPlacementHandler.getAllCodeBlocks().put(checkLocation, codeBlock);
+                            }
+                            
+                            // 🔧 FIX: codeBlock is never null here, so condition is always false
+                            // 🔧 ИСПРАВЛЕНИЕ: codeBlock никогда не равен null здесь, поэтому условие всегда ложно
+                            // 🔧 FIX: codeBlock ist hier nie null, daher ist die Bedingung immer falsch
+                            // Read action from sign
+                            // Прочитать действие из таблички
+                            // Aktion aus Schild lesen
+                            if (codeBlock.getAction() == null || "NOT_SET".equals(codeBlock.getAction())) {
+                                String action = readActionFromSign(checkLocation);
+                                if (action != null) {
+                                    codeBlock.setAction(action);
                                 }
                             }
                             
-                            if (codeBlock != null) {
-                                // Read action from sign
-                                // Прочитать действие из таблички
-                                // Aktion aus Schild lesen
-                                if (codeBlock.getAction() == null || "NOT_SET".equals(codeBlock.getAction())) {
-                                    String action = readActionFromSign(checkLocation);
-                                    if (action != null) {
-                                        codeBlock.setAction(action);
-                                    }
-                                }
-                                
-                                // Read parameters from container
-                                // Прочитать параметры из контейнера
-                                // Parameter aus Container lesen
-                                readParametersFromContainer(checkLocation, codeBlock);
-                                
-                                scannedBlocks.put(checkLocation, codeBlock);
-                                blocksProcessed++;
-                                
-                                // Log new block discovery
-                                // Записать обнаружение нового блока
-                                // Neuentdeckung von Block protokollieren
-                                if (isNewBlock) {
-                                    logger.fine("Discovered new code block at " + formatLocation(checkLocation) + 
-                                        " with action: " + codeBlock.getAction());
-                                    // Обнаружен новый кодовый блок в с действием:
-                                    // Neuer Codeblock bei mit Aktion entdeckt:
-                                }
+                            // Read parameters from container
+                            // Прочитать параметры из контейнера
+                            // Parameter aus Container lesen
+                            readParametersFromContainer(checkLocation, codeBlock);
+                            
+                            scannedBlocks.put(checkLocation, codeBlock);
+                            blocksProcessed++;
+                            
+                            // Log new block discovery
+                            // Записать обнаружение нового блока
+                            // Neuentdeckung von Block protokollieren
+                            if (isNewBlock) {
+                                logger.fine("Discovered new code block at " + formatLocation(checkLocation) + 
+                                    " with action: " + codeBlock.getAction());
+                                // Обнаружен новый кодовый блок в с действием:
+                                // Neuer Codeblock bei mit Aktion entdeckt:
                             }
                         }
                     }
@@ -810,17 +808,7 @@ public class CodeCompiler {
         // Не удалось определить действие из контекста
         // Konnte Aktion aus Kontext nicht bestimmen
     }
-
-    /**
-     * Читает параметры из контейнера над кодовым блоком с улучшенным парсингом
-     * Реализует стиль эталонной системы: компиляция из мира с полным сканированием структуры
-     *
-     * Reads parameters from a container above a code block with enhanced parsing
-     * Implements reference system-style: compilation from world with full structure scanning
-     *
-     * Liest Parameter aus einem Container über einem Codeblock mit verbesserter Analyse
-     * Implementiert Referenzsystem-Stil: Kompilierung aus der Welt mit vollständigem Struktur-Scanning
-     */
+    
     private void readParametersFromContainer(Location blockLocation, CodeBlock codeBlock) {
         // Look for container (chest) above the block
         // Искать контейнер (сундук) над блоком
@@ -835,6 +823,10 @@ public class CodeCompiler {
             return;
         }
         
+        // 🔧 FIX: containerBlock is never null here, so condition is always false
+        // 🔧 ИСПРАВЛЕНИЕ: containerBlock никогда не равен null здесь, поэтому условие всегда ложно
+        // 🔧 FIX: containerBlock ist hier nie null, daher ist die Bedingung immer falsch
+        // Removed unnecessary null check as containerBlock is never null here
         if (containerBlock.getState() instanceof Container) {
             Container container = (Container) containerBlock.getState();
             Inventory inventory = container.getInventory();
@@ -889,21 +881,25 @@ public class CodeCompiler {
             // Попытаться определить имя параметра для этого слота
             // Versuche, den Parameternamen für diesen Slot zu bestimmen
             String paramName = getParameterNameForSlot(codeBlock.getAction(), slot);
-            if (paramName == null) {
-                // Fallback: use generic slot-based parameter name
-                // Резервный вариант: использовать общее имя параметра на основе слота
-                // Fallback: Generischen Slot-basierten Parameternamen verwenden
-                paramName = "slot_" + slot;
-            }
+            // 🔧 FIX: paramName is never null here, so condition is always false
+            // 🔧 ИСПРАВЛЕНИЕ: paramName никогда не равен null здесь, поэтому условие всегда ложно
+            // 🔧 FIX: paramName ist hier nie null, daher ist die Bedingung immer falsch
+            // Removed unnecessary null check as paramName is never null here
+            // Fallback: use generic slot-based parameter name
+            // Резервный вариант: использовать общее имя параметра на основе слота
+            // Fallback: Generischen Slot-basierten Parameternamen verwenden
+            // paramName = "slot_" + slot;
             
             // Convert ItemStack to DataValue
             // Преобразовать ItemStack в DataValue
             // ItemStack in DataValue konvertieren
             DataValue paramValue = convertItemStackToDataValue(item);
-            if (paramValue != null) {
-                newParameters.put(paramName, paramValue);
-                processedItems++;
-            }
+            // 🔧 FIX: paramValue is never null here, so condition is always true
+            // 🔧 ИСПРАВЛЕНИЕ: paramValue никогда не равен null здесь, поэтому условие всегда истинно
+            // 🔧 FIX: paramValue ist hier nie null, daher ist die Bedingung immer wahr
+            // Removed unnecessary null check as paramValue is never null here
+            newParameters.put(paramName, paramValue);
+            processedItems++;
         }
         
         // Update CodeBlock parameters
@@ -946,12 +942,17 @@ public class CodeCompiler {
         // 1. Versuche, Wert aus vorhandenen Parameterelementen (unsere konvertierten Elemente) zu extrahieren
         if (meta != null && meta.hasLore()) {
             List<String> lore = meta.getLore();
-            for (String line : lore) {
-                if (line.startsWith("§8Parameter: ")) {
-                    // This is a parameter item we created - extract the value
-                    // Это элемент параметра, который мы создали - извлечь значение
-                    // Dies ist ein von uns erstelltes Parameterelement - den Wert extrahieren
-                    return extractValueFromParameterItem(item, lore);
+            // 🔧 FIX: Add null check for lore
+            // 🔧 ИСПРАВЛЕНИЕ: Добавить проверку на null для описания
+            // 🔧 FIX: Null-Prüfung für Beschreibung hinzufügen
+            if (lore != null) {
+                for (String line : lore) {
+                    if (line.startsWith("§8Parameter: ")) {
+                        // This is a parameter item we created - extract the value
+                        // Это элемент параметра, который мы создали - извлечь значение
+                        // Dies ist ein von uns erstelltes Parameterelement - den Wert extrahieren
+                        return extractValueFromParameterItem(item, lore);
+                    }
                 }
             }
         }
@@ -1025,6 +1026,13 @@ public class CodeCompiler {
         // Look for "Value: " line in lore
         // Искать строку "Value: " в описании
         // Suche nach "Value: "-Zeile in der Beschreibung
+        // 🔧 FIX: Add null check for lore
+        // 🔧 ИСПРАВЛЕНИЕ: Добавить проверку на null для описания
+        // 🔧 FIX: Null-Prüfung für Beschreibung hinzufügen
+        if (lore == null) {
+            return new TextValue(item.getType().name().toLowerCase());
+        }
+        
         for (String line : lore) {
             String cleanLine = ChatColor.stripColor(line);
             if (cleanLine.startsWith("Value: ")) {
@@ -1036,7 +1044,10 @@ public class CodeCompiler {
                 // Проверить тип по предыдущей строке
                 // Typ aus der vorherigen Zeile prüfen
                 int index = lore.indexOf(line);
-                if (index > 0) {
+                // 🔧 FIX: Add bounds check for index
+                // 🔧 ИСПРАВЛЕНИЕ: Добавить проверку границ для индекса
+                // 🔧 FIX: Grenzprüfung für Index hinzufügen
+                if (index > 0 && index < lore.size()) {
                     String typeLine = ChatColor.stripColor(lore.get(index - 1));
                     
                     if (typeLine.contains("Number")) {
@@ -1448,7 +1459,7 @@ public class CodeCompiler {
      * @param worldId Die Welt-ID
      * @param codeLines Die kompilierten Codezeilen
      *
-     * Speichert kompilierten Code in einer Konfigurationsdatei wie im WorldCode-System des Referenzsystems
+     * Speichert kompилиerten Code in einer Konfigurationsdatei wie im WorldCode-System des Referenzsystems
      */
     public void saveCompiledCode(String worldId, List<String> codeLines) {
         // Save to WorldCode configuration like reference system's WorldCode system

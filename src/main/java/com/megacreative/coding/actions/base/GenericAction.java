@@ -2,6 +2,7 @@ package com.megacreative.coding.actions.base;
 
 import com.megacreative.coding.BlockAction;
 import com.megacreative.coding.CodeBlock;
+import com.megacreative.coding.Constants;
 import com.megacreative.coding.ExecutionContext;
 import com.megacreative.coding.executors.ExecutionResult;
 import com.megacreative.coding.values.DataValue;
@@ -106,8 +107,9 @@ public class GenericAction implements BlockAction {
                 handler.accept(context, params);
                 return ExecutionResult.success();
             } else {
-                context.getPlugin().getLogger().warning("Unknown generic action: " + actionId);
-                return ExecutionResult.error("Unknown action: " + actionId);
+                String errorMsg = Constants.UNKNOWN_ACTION_TYPE + actionId;
+                context.getPlugin().getLogger().warning(errorMsg);
+                return ExecutionResult.error(errorMsg);
             }
             
         } catch (Exception e) {
@@ -125,22 +127,22 @@ public class GenericAction implements BlockAction {
     private static void initializeActionHandlers() {
         // === PLAYER ACTIONS ===
         ACTION_HANDLERS.put("sendMessage", (context, params) -> {
-            String message = params.containsKey("message") ? params.get("message").asString() : "Hello World";
+            String message = params.containsKey("message") ? params.get("message").asString() : DEFAULT_MESSAGE;
             if (context.getPlayer() != null) {
                 context.getPlayer().sendMessage(message);
             }
         });
         
         ACTION_HANDLERS.put("sendTitle", (context, params) -> {
-            String title = params.containsKey("title") ? params.get("title").asString() : "";
-            String subtitle = params.containsKey("subtitle") ? params.get("subtitle").asString() : "";
+            String title = params.containsKey("title") ? params.get("title").asString() : Constants.EMPTY_STRING;
+            String subtitle = params.containsKey("subtitle") ? params.get("subtitle").asString() : Constants.EMPTY_STRING;
             if (context.getPlayer() != null) {
                 context.getPlayer().sendTitle(title, subtitle, 10, 70, 20);
             }
         });
         
         ACTION_HANDLERS.put("sendActionBar", (context, params) -> {
-            String message = params.containsKey("message") ? params.get("message").asString() : "";
+            String message = params.containsKey("message") ? params.get("message").asString() : Constants.DEFAULT_MESSAGE;
             if (context.getPlayer() != null) {
                 context.getPlayer().sendActionBar(message);
             }
@@ -166,9 +168,9 @@ public class GenericAction implements BlockAction {
                 context.getPlayer().playSound(location, 
                     org.bukkit.Sound.ENTITY_ENDERMAN_TELEPORT, 1.0f, 1.0f);
                 
-                context.getPlayer().sendMessage("§aTeleported to " + locString);
+                context.getPlayer().sendMessage(Constants.TELEPORT_EFFECTS + locString);
             } else {
-                context.getPlayer().sendMessage("§cInvalid location: " + locString);
+                context.getPlayer().sendMessage(Constants.INVALID_LOCATION_FORMAT + locString);
             }
         });
         
@@ -181,7 +183,7 @@ public class GenericAction implements BlockAction {
                 ItemStack item = new ItemStack(material, amount);
                 context.getPlayer().getInventory().addItem(item);
             } catch (Exception e) {
-                context.getPlayer().sendMessage("§cError giving item: " + e.getMessage());
+                context.getPlayer().sendMessage(Constants.ERROR_GIVING_ITEM + e.getMessage());
             }
         });
         
@@ -194,7 +196,7 @@ public class GenericAction implements BlockAction {
                 ItemStack item = new ItemStack(material, amount);
                 context.getPlayer().getInventory().removeItem(item);
             } catch (Exception e) {
-                context.getPlayer().sendMessage("§cError removing item: " + e.getMessage());
+                context.getPlayer().sendMessage(Constants.ERROR_REMOVING_ITEM + e.getMessage());
             }
         });
         
@@ -205,7 +207,7 @@ public class GenericAction implements BlockAction {
                 double health = params.get("health").asNumber().doubleValue();
                 context.getPlayer().setHealth(Math.max(0, Math.min(20, health)));
             } catch (Exception e) {
-                context.getPlayer().sendMessage("§cError setting health: " + e.getMessage());
+                context.getPlayer().sendMessage(Constants.ERROR_SETTING_HEALTH + e.getMessage());
             }
         });
         
@@ -216,7 +218,7 @@ public class GenericAction implements BlockAction {
                 int food = params.get("food").asNumber().intValue();
                 context.getPlayer().setFoodLevel(Math.max(0, Math.min(20, food)));
             } catch (Exception e) {
-                context.getPlayer().sendMessage("§cError setting food: " + e.getMessage());
+                context.getPlayer().sendMessage(Constants.ERROR_SETTING_FOOD + e.getMessage());
             }
         });
         
@@ -234,7 +236,7 @@ public class GenericAction implements BlockAction {
                     context.getPlayer().addPotionEffect(effect);
                 }
             } catch (Exception e) {
-                context.getPlayer().sendMessage("§cError adding potion effect: " + e.getMessage());
+                context.getPlayer().sendMessage(Constants.ERROR_ADDING_POTION + e.getMessage());
             }
         });
         
@@ -248,7 +250,7 @@ public class GenericAction implements BlockAction {
                     context.getPlayer().removePotionEffect(effectType);
                 }
             } catch (Exception e) {
-                context.getPlayer().sendMessage("§cError removing potion effect: " + e.getMessage());
+                context.getPlayer().sendMessage(Constants.ERROR_REMOVING_POTION + e.getMessage());
             }
         });
         
@@ -261,7 +263,7 @@ public class GenericAction implements BlockAction {
                 float pitch = params.get("pitch").asNumber().floatValue();
                 context.getPlayer().playSound(context.getPlayer().getLocation(), sound, volume, pitch);
             } catch (Exception e) {
-                context.getPlayer().sendMessage("§cError playing sound: " + e.getMessage());
+                context.getPlayer().sendMessage(Constants.ERROR_PLAYING_SOUND + e.getMessage());
             }
         });
         
@@ -334,12 +336,12 @@ public class GenericAction implements BlockAction {
                 Location location = parseLocationString(locString, context);
                 if (location != null) {
                     location.getBlock().setType(material);
-                    context.getPlayer().sendMessage("§aBlock set to: " + material);
+                    context.getPlayer().sendMessage(Constants.TELEPORT_EFFECTS + locString);
                 } else {
-                    context.getPlayer().sendMessage("§cInvalid location: " + locString);
+                    context.getPlayer().sendMessage(Constants.INVALID_LOCATION_FORMAT + locString);
                 }
             } catch (Exception e) {
-                context.getPlayer().sendMessage("§cError setting block: " + e.getMessage());
+                context.getPlayer().sendMessage(Constants.ERROR_SETTING_BLOCK + e.getMessage());
             }
         });
         
@@ -357,7 +359,7 @@ public class GenericAction implements BlockAction {
                     context.getPlayer().sendMessage("§cInvalid location: " + locString);
                 }
             } catch (Exception e) {
-                context.getPlayer().sendMessage("§cError breaking block: " + e.getMessage());
+                context.getPlayer().sendMessage(Constants.ERROR_BREAKING_BLOCK + e.getMessage());
             }
         });
         
@@ -368,7 +370,7 @@ public class GenericAction implements BlockAction {
                 long time = params.get("time").asNumber().longValue();
                 context.getPlayer().getWorld().setTime(time);
             } catch (Exception e) {
-                context.getPlayer().sendMessage("§cError setting time: " + e.getMessage());
+                context.getPlayer().sendMessage(Constants.ERROR_SETTING_TIME + e.getMessage());
             }
         });
         
@@ -379,7 +381,7 @@ public class GenericAction implements BlockAction {
                 boolean storm = params.get("storm").asBoolean();
                 context.getPlayer().getWorld().setStorm(storm);
             } catch (Exception e) {
-                context.getPlayer().sendMessage("§cError setting weather: " + e.getMessage());
+                context.getPlayer().sendMessage(Constants.ERROR_SETTING_WEATHER + e.getMessage());
             }
         });
         
@@ -556,7 +558,7 @@ public class GenericAction implements BlockAction {
                 
                 context.getPlayer().sendMessage("§aCreated list: " + listName);
             } catch (Exception e) {
-                context.getPlayer().sendMessage("§cError creating list: " + e.getMessage());
+                context.getPlayer().sendMessage(Constants.ERROR_GIVING_ITEM + e.getMessage());
             }
         });
         

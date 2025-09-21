@@ -75,8 +75,6 @@ public class AdvancedVisualDebugger {
         this.basicDebugger = basicDebugger;
     }
     
-    // ... (rest of the code remains the same)
-
     /**
      * Represents a visualization session
      */
@@ -201,17 +199,17 @@ public class AdvancedVisualDebugger {
         private final Map<String, Long> executionTimes = new HashMap<>();
         private final Map<String, Integer> executionCounts = new HashMap<>();
         private final Map<String, Map<CodeBlock, Integer>> blockExecutionCounts = new HashMap<>();
-        private long startTime = System.currentTimeMillis();
+        private long startTime;
         private long totalExecutionTime = 0;
         private int totalExecutions = 0;
-        private boolean isActive = true;
+        private boolean isActive;
 
         public PerformanceAnalyzer(Player player, CodeScript script) {
             this.analyzerId = UUID.randomUUID();
             this.player = player;
             this.script = script;
-            this.startTime = System.currentTimeMillis();
-            this.isActive = true;
+            this.startTime = 0; // Will be set properly when analysis starts
+            this.isActive = false; // Will be set to true when analysis starts
         }
         
         public UUID getAnalyzerId() { return analyzerId; }

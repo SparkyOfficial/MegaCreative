@@ -27,9 +27,11 @@ public class ScriptValidator {
     private static final String WARNING_WHILE_LOOP_PERFORMANCE = "While loops can cause performance issues if not properly bounded";
     
     private final BlockConfigService blockConfigService;
+    private final BlockGraphValidator blockGraphValidator;
     
     public ScriptValidator(BlockConfigService blockConfigService) {
         this.blockConfigService = blockConfigService;
+        this.blockGraphValidator = new BlockGraphValidator();
     }
     
     /**
@@ -148,8 +150,15 @@ public class ScriptValidator {
         if (script.getRootBlock() == null) {
             errors.add(new ValidationError(ValidationError.Severity.ERROR, ERROR_SCRIPT_ROOT_BLOCK_REQUIRED, null, "rootBlock"));
         } else {
-            // Validate all blocks in the script
-            validateBlockChain(script.getRootBlock(), errors, warnings);
+            // Validate block connections and structure
+            validateBlockStructure(script.getRootBlock(), errors, warnings);
+            
+            // Validate block graph for circular references and other issues
+            BlockGraphValidator.ValidationResult graphResult = blockGraphValidator.validate(script.getRootBlock());
+            if (!graphResult.isValid()) {
+                errors.addAll(graphResult.getErrors());
+            }
+            warnings.addAll(graphResult.getWarnings());
         }
     }
     

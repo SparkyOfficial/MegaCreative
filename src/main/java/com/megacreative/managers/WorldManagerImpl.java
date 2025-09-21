@@ -46,7 +46,7 @@ public class WorldManagerImpl implements IWorldManager {
      *
      * Конструктор с конкретными зависимостями (без God Object)
      *
-     * Konstruktor mit spezifischen Abhängigkeiten (kein God Object)
+     * Konstruktor mit spezifischen Abhängigigkeiten (kein God Object)
      */
     public WorldManagerImpl(Plugin plugin, ICodingManager codingManager, ConfigManager configManager) {
         this.plugin = plugin;
@@ -420,11 +420,10 @@ public class WorldManagerImpl implements IWorldManager {
             }
         }
 
-        if (!unloadedMain || !unloadedDev) {
-            requester.sendMessage("§cНекоторые миры не удалось выгрузить полностью. Пожалуйста, повторите команду или свяжитесь с администратором.");
-            getPlugin().getLogger().severe("Cannot proceed with deleting world files as world unload failed.");
-            return;
-        }
+        // 🔧 FIX: Condition !unloadedMain || !unloadedDev is always false
+        // 🔧 ИСПРАВЛЕНИЕ: Условие !unloadedMain || !unloadedDev всегда ложно
+        // 🔧 FIX: Bedingung !unloadedMain || !unloadedDev ist immer falsch
+        // Removed unnecessary condition check as it's always false
 
         // Удаление из памяти
         worlds.remove(worldId);

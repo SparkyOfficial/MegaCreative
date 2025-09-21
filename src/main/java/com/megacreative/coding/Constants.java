@@ -70,10 +70,25 @@ public class Constants {
     public static final String BLOCK_REMOVED_MESSAGE = "§cБлок кода удален и отсоединён от цепочки!";
     
     // Generic action messages
+    public static final String DEFAULT_MESSAGE = "Hello World";
+    public static final String EMPTY_STRING = "";
     public static final String TELEPORT_SUCCESS = "§aTeleported to: ";
     public static final String INVALID_LOCATION_FORMAT = "§cInvalid location format: ";
     public static final String SET_BLOCK_SUCCESS = "§aSet block at ";
     public static final String BROKE_BLOCK_SUCCESS = "§aBroke block at ";
+    public static final String TELEPORT_EFFECTS = "§aTeleported to ";
+    public static final String ERROR_GIVING_ITEM = "§cError giving item: ";
+    public static final String ERROR_REMOVING_ITEM = "§cError removing item: ";
+    public static final String ERROR_SETTING_BLOCK = "§cError setting block: ";
+    public static final String ERROR_BREAKING_BLOCK = "§cError breaking block: ";
+    public static final String ERROR_SPAWNING_ENTITY = "§cError spawning entity: ";
+    public static final String ERROR_SETTING_HEALTH = "§cError setting health: ";
+    public static final String ERROR_SETTING_FOOD = "§cError setting food: ";
+    public static final String ERROR_ADDING_POTION = "§cError adding potion effect: ";
+    public static final String ERROR_REMOVING_POTION = "§cError removing potion effect: ";
+    public static final String ERROR_PLAYING_SOUND = "§cError playing sound: ";
+    public static final String ERROR_SETTING_TIME = "§cError setting time: ";
+    public static final String ERROR_SETTING_WEATHER = "§cError setting weather: ";
     
     // Variable manager error messages
     public static final String CANNOT_SET_VARIABLE = "Cannot set variable: script ID is not available";
