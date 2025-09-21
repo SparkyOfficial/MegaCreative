@@ -85,7 +85,7 @@ public class ActionSelectionGUI implements GUIManager.ManagedGUIInterface {
      * Initialisiert die Aktionsauswahl-GUI
      * @param plugin Referenz zum Haupt-Plugin
      * @param player Spieler, der die Schnittstelle verwenden wird
-     * @param blockLocation Position des zu konfigurierenden Blocks
+     * @param blockLocation Position des zu konфигurierenden Blocks
      * @param blockMaterial Material des zu konфигurierenden Blocks
      */
     public ActionSelectionGUI(MegaCreative plugin, Player player, Location blockLocation, Material blockMaterial) {
