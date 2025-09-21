@@ -322,11 +322,8 @@ public class ConnectionDebugGUI implements GUIManager.ManagedGUIInterface {
             return -1; // Adjacent slots, no space for arrow
         }
         
-        if (toSlot > fromSlot) {
-            return (fromSlot + toSlot) / 2;
-        } else {
-            return (toSlot + fromSlot) / 2;
-        }
+        // Collapse the if statement - both branches return the same value
+        return (fromSlot + toSlot) / 2;
     }
     
     /**

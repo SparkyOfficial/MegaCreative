@@ -1434,13 +1434,6 @@ public class CodeCompiler {
         // Handle condition blocks (planks)
         // Обрабатывать блоки условий (доски)
         // Bedingungsblöcke behandeln (Bretter)
-        if (block.getMaterial() == Material.OAK_PLANKS) {
-            return action;
-        }
-        
-        // Handle other block types
-        // Обрабатывать другие типы блоков
-        // Andere Blocktypen behandeln
         return action;
     }
 

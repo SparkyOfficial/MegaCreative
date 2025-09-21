@@ -113,6 +113,7 @@ public class RepeatAction implements BlockAction {
             return false;
         }
         
+        // Collapse if statement with identical branches
         if (shouldContinue(context, player, currentIndex + 1)) {
             return true; // Continue to next iteration
         }
@@ -130,6 +131,7 @@ public class RepeatAction implements BlockAction {
             return false;
         }
         
+        // Collapse if statement with identical branches
         if (shouldContinue(context, player, currentIndex + 1)) {
             return true; // Continue to next iteration
         }

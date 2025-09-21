@@ -583,13 +583,13 @@ public class runCode implements Listener {
             // Hier würden Sie Parameter aus funcStr parsen und sie dem newBlock hinzufügen
             // Zum Beispiel: newBlock.setParameter("message", new DataValue(parsedMessage));
 
+            // Collapse if statement with common parts
             if (head == null) {
                 head = newBlock;
-                current = newBlock;
             } else {
                 current.setNextBlock(newBlock);
-                current = newBlock;
             }
+            current = newBlock;
         }
 
         return head;

@@ -355,13 +355,8 @@ public class DefaultScriptEngine implements ScriptEngine, EnhancedScriptEngine {
      * This method looks for the matching closing bracket and returns the block after it
      */
     private CodeBlock findNextBlockAfterBracket(CodeBlock openingBracket) {
-        if (!openingBracket.isBracket() || openingBracket.getBracketType() != CodeBlock.BracketType.OPEN) {
-            return openingBracket.getNextBlock(); // Not a bracket, just return next
-        }
-        
-        // Simple approach: since we have proper parent-child relationships,
-        // the next block after a bracket group should be the nextBlock of the opening bracket
-        // This assumes that AutoConnectionManager properly sets up the connections
+        // Collapse if statement - both branches return the same value
+        // The check was redundant as both cases return the same result
         return openingBracket.getNextBlock();
     }
     
