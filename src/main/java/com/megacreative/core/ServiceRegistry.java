@@ -871,6 +871,20 @@ public class ServiceRegistry {
     }
     
     /**
+     * Gets the script engine
+     * @return Script engine instance
+     *
+     * Получает движок скриптов
+     * @return Экземпляр движка скриптов
+     *
+     * Ruft die Skript-Engine ab
+     * @return Skript-Engine-Instanz
+     */
+    public ScriptEngine getScriptEngine() {
+        return this.scriptEngine;
+    }
+    
+    /**
      * Gets the player events listener
      * @return Player events listener instance
      *
@@ -882,7 +896,7 @@ public class ServiceRegistry {
      */
     public PlayerEventsListener getPlayerEventsListener() {
         if (playerEventsListener == null) {
-            playerEventsListener = new PlayerEventsListener((MegaCreative) plugin);
+            playerEventsListener = new PlayerEventsListener((MegaCreative) plugin, this.scriptEngine);
             registerService(PlayerEventsListener.class, playerEventsListener);
         }
         return playerEventsListener;
@@ -1197,7 +1211,7 @@ public class ServiceRegistry {
         // Инициализировать PlayerEventsListener
         // PlayerEventsListener initialisieren
         if (playerEventsListener == null) {
-            this.playerEventsListener = new PlayerEventsListener((MegaCreative) plugin);
+            this.playerEventsListener = new PlayerEventsListener((MegaCreative) plugin, this.scriptEngine);
             registerService(PlayerEventsListener.class, playerEventsListener);
         }
         

@@ -57,13 +57,16 @@ public class PlayerEventsListener implements Listener {
     private double tps = 20.0;
 
     public PlayerEventsListener(MegaCreative plugin) {
+        this(plugin, plugin != null && plugin.getServiceRegistry() != null ? plugin.getServiceRegistry().getService(ScriptEngine.class) : null);
+    }
+    
+    public PlayerEventsListener(MegaCreative plugin, ScriptEngine scriptEngine) {
         this.plugin = plugin;
+        this.scriptEngine = scriptEngine;
         // Add null checks for service registry
         if (plugin != null && plugin.getServiceRegistry() != null) {
-            this.scriptEngine = plugin.getServiceRegistry().getService(ScriptEngine.class);
             this.blockConfigService = plugin.getServiceRegistry().getBlockConfigService();
         } else {
-            this.scriptEngine = null;
             this.blockConfigService = null;
         }
         
