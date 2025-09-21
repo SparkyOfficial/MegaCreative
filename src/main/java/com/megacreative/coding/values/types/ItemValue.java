@@ -53,7 +53,7 @@ public class ItemValue implements DataValue {
     public String getDescription() { return "Item: " + asString(); }
     
     @Override
-    public DataValue clone() { 
+    public DataValue copy() { 
         return new ItemValue(value != null ? value.clone() : null); 
     }
     

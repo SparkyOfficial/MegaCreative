@@ -55,7 +55,11 @@ public class TextValue implements DataValue {
     public String getDescription() { return "Text: \"" + value + "\""; }
     
     @Override
-    public DataValue clone() { return new TextValue(value); }
+    /**
+     * Creates a copy of this TextValue
+     * @return A new TextValue with the same value
+     */
+    public DataValue copy() { return new TextValue(value); }
     
     @Override
     public Map<String, Object> serialize() {

@@ -1,5 +1,6 @@
 package com.megacreative.coding.conditions;
 
+import com.megacreative.MegaCreative;
 import com.megacreative.coding.BlockCondition;
 import com.megacreative.coding.CodeBlock;
 import com.megacreative.coding.ExecutionContext;
@@ -49,7 +50,7 @@ public class GenericCondition implements BlockCondition {
             }
             
             // Apply negation if needed
-            return isNegated ? !result : result;
+            return isNegated != result;
             
         } catch (Exception e) {
             context.getPlugin().getLogger().severe("Error evaluating generic condition " + block.getAction() + ": " + e.getMessage());
@@ -221,12 +222,34 @@ public class GenericCondition implements BlockCondition {
         
         // === LOCATION CONDITIONS ===
         CONDITION_HANDLERS.put("atLocation", (context, params) -> {
-            // Location targetLoc = params.get("location").asLocation(); // Simplified
-            String locString = params.get("location").asString();
-            double distance = params.containsKey("distance") ? params.get("distance").asNumber().doubleValue() : 2.0;
-            
-            // For now, just return true - proper location handling needed
-            return true;
+            try {
+                // Parse location string (format: "world,x,y,z")
+                String locString = params.get("location").asString();
+                String[] parts = locString.split(",");
+                
+                if (parts.length != 4) {
+                    context.getPlugin().getLogger().warning("Invalid location format: " + locString);
+                    return false;
+                }
+                
+                String worldName = parts[0].trim();
+                double x = Double.parseDouble(parts[1].trim());
+                double y = Double.parseDouble(parts[2].trim());
+                double z = Double.parseDouble(parts[3].trim());
+                
+                Location targetLoc = new Location(context.getPlayer().getWorld(), x, y, z);
+                
+                // Check if player is in the same world
+                if (!context.getPlayer().getWorld().getName().equals(worldName)) {
+                    return false;
+                }
+                
+                double distance = params.containsKey("distance") ? params.get("distance").asNumber().doubleValue() : 2.0;
+                return context.getPlayer().getLocation().distance(targetLoc) <= distance;
+            } catch (Exception e) {
+                context.getPlugin().getLogger().warning("Error parsing location in atLocation condition: " + e.getMessage());
+                return false;
+            }
         });
         
         CONDITION_HANDLERS.put("inBiome", (context, params) -> {
@@ -242,6 +265,40 @@ public class GenericCondition implements BlockCondition {
         CONDITION_HANDLERS.put("belowY", (context, params) -> {
             int y = params.get("y").asNumber().intValue();
             return context.getPlayer().getLocation().getBlockY() < y;
+        });
+        
+        CONDITION_HANDLERS.put("isNearBlock", (context, params) -> {
+            try {
+                String blockType = params.get("block").asString();
+                Material material = Material.matchMaterial(blockType);
+                if (material == null) {
+                    context.getPlugin().getLogger().warning("Unknown material: " + blockType);
+                    return false;
+                }
+                
+                double distance = params.containsKey("distance") ? params.get("distance").asNumber().doubleValue() : 2.0;
+                int searchRadius = (int) Math.ceil(distance);
+                
+                Location playerLoc = context.getPlayer().getLocation();
+                
+                // Check blocks in a cube around the player
+                for (int x = -searchRadius; x <= searchRadius; x++) {
+                    for (int y = -searchRadius; y <= searchRadius; y++) {
+                        for (int z = -searchRadius; z <= searchRadius; z++) {
+                            Location checkLoc = playerLoc.clone().add(x, y, z);
+                            if (checkLoc.distance(playerLoc) <= distance) {
+                                if (checkLoc.getBlock().getType() == material) {
+                                    return true;
+                                }
+                            }
+                        }
+                    }
+                }
+                return false;
+            } catch (Exception e) {
+                context.getPlugin().getLogger().warning("Error in isNearBlock condition: " + e.getMessage());
+                return false;
+            }
         });
         
         // === TIME/WEATHER CONDITIONS ===
@@ -272,10 +329,39 @@ public class GenericCondition implements BlockCondition {
         
         // === BLOCK CONDITIONS ===
         CONDITION_HANDLERS.put("blockAtLocation", (context, params) -> {
-            // Location loc = params.get("location").asLocation(); // Simplified
-            Material material = Material.valueOf(params.get("material").asString());
-            // For now return true - proper location handling needed
-            return true;
+            try {
+                // Parse location string (format: "world,x,y,z")
+                String locString = params.get("location").asString();
+                String[] parts = locString.split(",");
+                
+                if (parts.length != 4) {
+                    context.getPlugin().getLogger().warning("Invalid location format: " + locString);
+                    return false;
+                }
+                
+                String worldName = parts[0].trim();
+                double x = Double.parseDouble(parts[1].trim());
+                double y = Double.parseDouble(parts[2].trim());
+                double z = Double.parseDouble(parts[3].trim());
+                
+                Location targetLoc = new Location(context.getPlayer().getWorld(), x, y, z);
+                
+                // Check if player is in the same world
+                if (!context.getPlayer().getWorld().getName().equals(worldName)) {
+                    return false;
+                }
+                
+                Material material = Material.matchMaterial(params.get("material").asString());
+                if (material == null) {
+                    context.getPlugin().getLogger().warning("Unknown material: " + params.get("material").asString());
+                    return false;
+                }
+                
+                return targetLoc.getBlock().getType() == material;
+            } catch (Exception e) {
+                context.getPlugin().getLogger().warning("Error in blockAtLocation condition: " + e.getMessage());
+                return false;
+            }
         });
         
         CONDITION_HANDLERS.put("standingOnBlock", (context, params) -> {
@@ -309,10 +395,24 @@ public class GenericCondition implements BlockCondition {
         
         // === ECONOMY CONDITIONS (if Vault is available) ===
         CONDITION_HANDLERS.put("hasMoney", (context, params) -> {
-            double amount = params.get("amount").asNumber().doubleValue();
-            // Implementation would depend on economy plugin integration
-            // For now, always return true as placeholder
-            return true;
+            try {
+                double amount = params.get("amount").asNumber().doubleValue();
+                
+                // Check player's balance using a custom variable
+                Object balanceObj = context.getVariable("balance");
+                if (balanceObj instanceof Number) {
+                    return ((Number) balanceObj).doubleValue() >= amount;
+                }
+                
+                // Default fallback - return false if we can't determine balance
+                return false;
+            } catch (Exception e) {
+                // Log the error and return false
+                if (context.getPlugin() != null) {
+                    context.getPlugin().getLogger().warning("Error checking player balance: " + e.getMessage());
+                }
+                return false;
+            }
         });
     }
     

@@ -392,12 +392,116 @@ public class ScriptValidator {
     }
     
     /**
-     * Checks for unreachable blocks in a script
+     * Checks for unreachable blocks in the script
      */
     private void checkUnreachableBlocks(CodeScript script, List<ValidationError> warnings) {
-        // This is a complex check that would require full script analysis
-        // For now, we'll just note that it could be implemented
-        // In a full implementation, we would trace all possible execution paths
+        if (script == null || script.getRootBlock() == null) {
+            return;
+        }
+        
+        // Find all blocks in the script
+        Set<CodeBlock> allBlocks = new HashSet<>();
+        collectAllBlocks(script.getRootBlock(), allBlocks);
+        
+        // Find all reachable blocks starting from the root
+        Set<CodeBlock> reachableBlocks = new HashSet<>();
+        findReachableBlocks(script.getRootBlock(), reachableBlocks);
+        
+        // Identify unreachable blocks
+        Set<CodeBlock> unreachableBlocks = new HashSet<>(allBlocks);
+        unreachableBlocks.removeAll(reachableBlocks);
+        
+        // Add warnings for unreachable blocks
+        for (CodeBlock block : unreachableBlocks) {
+            warnings.add(new ValidationError(ValidationError.Severity.WARNING, 
+                "Unreachable block: " + (block.getAction() != null ? block.getAction() : "unnamed"), 
+                block, null));
+        }
+    }
+    
+    /**
+     * Collects all blocks in the script recursively
+     */
+    private void collectAllBlocks(CodeBlock block, Set<CodeBlock> allBlocks) {
+        if (block == null || allBlocks.contains(block)) {
+            return;
+        }
+        
+        allBlocks.add(block);
+        
+        // Collect next block in chain
+        if (block.getNextBlock() != null) {
+            collectAllBlocks(block.getNextBlock(), allBlocks);
+        }
+        
+        // Collect children blocks
+        for (CodeBlock child : block.getChildren()) {
+            collectAllBlocks(child, allBlocks);
+        }
+        
+        // For control blocks, collect special blocks
+        if ("conditionalBranch".equals(block.getAction())) {
+            // Collect else block if it exists
+            CodeBlock trueBlock = block.getNextBlock();
+            if (trueBlock != null) {
+                CodeBlock current = trueBlock;
+                while (current != null && current.getNextBlock() != null) {
+                    current = current.getNextBlock();
+                }
+                if (current != null && "ELSE".equals(current.getAction())) {
+                    collectAllBlocks(current.getNextBlock(), allBlocks);
+                }
+            }
+        }
+    }
+    
+    /**
+     * Finds all reachable blocks from the root block
+     */
+    private void findReachableBlocks(CodeBlock block, Set<CodeBlock> reachableBlocks) {
+        if (block == null || reachableBlocks.contains(block)) {
+            return;
+        }
+        
+        reachableBlocks.add(block);
+        
+        // Follow next block in chain
+        if (block.getNextBlock() != null) {
+            findReachableBlocks(block.getNextBlock(), reachableBlocks);
+        }
+        
+        // Follow children blocks
+        for (CodeBlock child : block.getChildren()) {
+            findReachableBlocks(child, reachableBlocks);
+        }
+        
+        // For control blocks, follow special execution paths
+        if ("conditionalBranch".equals(block.getAction())) {
+            // Both true and else branches are reachable
+            CodeBlock trueBlock = block.getNextBlock();
+            if (trueBlock != null) {
+                findReachableBlocks(trueBlock, reachableBlocks);
+                
+                // Find else block if it exists
+                CodeBlock current = trueBlock;
+                while (current != null && current.getNextBlock() != null) {
+                    current = current.getNextBlock();
+                }
+                if (current != null && "ELSE".equals(current.getAction())) {
+                    findReachableBlocks(current.getNextBlock(), reachableBlocks);
+                }
+            }
+        } else if ("whileLoop".equals(block.getAction())) {
+            // Loop body is reachable
+            if (block.getNextBlock() != null) {
+                findReachableBlocks(block.getNextBlock(), reachableBlocks);
+            }
+        } else if ("forEach".equals(block.getAction())) {
+            // Loop body is reachable
+            if (block.getNextBlock() != null) {
+                findReachableBlocks(block.getNextBlock(), reachableBlocks);
+            }
+        }
     }
     
     /**
@@ -439,9 +543,20 @@ public class ScriptValidator {
      * Checks if an action is deprecated
      */
     private boolean isDeprecatedAction(String action) {
-        // This would contain a list of deprecated actions
-        // For now, return false
-        return false;
+        // Maintain a list of deprecated actions and check against it
+        // This helps developers identify when they're using outdated functionality
+        if (action == null) return false;
+        
+        // List of deprecated actions
+        Set<String> deprecatedActions = Set.of(
+            "oldSendMessage", 
+            "deprecatedTeleport",
+            "outdatedGiveItem",
+            "legacySetBlock",
+            "removedPlaySound"
+        );
+        
+        return deprecatedActions.contains(action);
     }
     
     /**

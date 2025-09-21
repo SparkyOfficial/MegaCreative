@@ -2,26 +2,25 @@ package com.megacreative.managers;
 
 import com.megacreative.MegaCreative;
 import com.megacreative.coding.CodeBlock;
-import com.megacreative.coding.CodingActionGUI;
 import com.megacreative.coding.values.DataValue;
 import com.megacreative.coding.values.types.*;
 import com.megacreative.services.BlockConfigService;
+import com.megacreative.services.BlockConfigService.ParameterConfig;
+import com.megacreative.coding.CodingActionGUI;
 import org.bukkit.Bukkit;
 import org.bukkit.Location;
 import org.bukkit.Material;
 import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.Listener;
+import org.bukkit.event.inventory.InventoryClickEvent;
 import org.bukkit.event.inventory.InventoryCloseEvent;
 import org.bukkit.inventory.Inventory;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.inventory.meta.ItemMeta;
 
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-import java.util.UUID;
+import java.util.*;
+import java.util.concurrent.ConcurrentHashMap;
 
 /**
  * Advanced Block Configuration Manager with DataValue integration
@@ -39,7 +38,7 @@ public class BlockConfigManager implements Listener {
 
     private final MegaCreative plugin;
     // Отслеживаем, какой игрок какой блок сейчас настраивает
-    private final Map<UUID, Location> configuringBlocks = new HashMap<>();
+    private final Map<UUID, Location> configuringBlocks = new ConcurrentHashMap<>();
 
     public BlockConfigManager(MegaCreative plugin) {
         this.plugin = plugin;
@@ -153,10 +152,116 @@ public class BlockConfigManager implements Listener {
         // Get BlockConfigService instead of BlockConfiguration
         var blockConfigService = plugin.getServiceRegistry().getBlockConfigService();
         
-        // In the new system, we would implement placeholder logic based on the new configuration
-        // For now, we'll keep it simple and not add placeholders
+        // Implement proper placeholder system integration
+        // This involves adding placeholder items to the GUI based on the action configuration
+        try {
+            // Get the action configuration from the action configurations section
+            var actionConfigurations = blockConfigService.getActionConfigurations();
+            if (actionConfigurations != null) {
+                var actionConfig = actionConfigurations.getConfigurationSection(actionName);
+                if (actionConfig != null) {
+                    // Get slots configuration
+                    var slots = actionConfig.getConfigurationSection("slots");
+                    if (slots != null) {
+                        // Add placeholder items for each parameter slot
+                        for (String slotKey : slots.getKeys(false)) {
+                            var slotConfig = slots.getConfigurationSection(slotKey);
+                            if (slotConfig != null) {
+                                String paramName = slotConfig.getString("slot_name");
+                                if (paramName != null) {
+                                    // Get the slot index for this parameter
+                                    Integer slotIndex = blockConfigService.getSlotResolver(actionName).apply(paramName);
+                                    if (slotIndex != null && slotIndex >= 0) {
+                                        // Create a placeholder item for this parameter
+                                        // Create a parameter config map for the placeholder
+                                        Map<String, Object> paramConfig = new HashMap<>();
+                                        paramConfig.put("name", paramName);
+                                        paramConfig.put("type", slotConfig.getString("type", "string"));
+                                        paramConfig.put("description", slotConfig.getString("description", ""));
+                                        
+                                        ItemStack placeholderItem = createPlaceholderItem(paramConfig);
+                                        if (placeholderItem != null) {
+                                            // Add the placeholder item to the inventory
+                                            inventory.setItem(slotIndex, placeholderItem);
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        } catch (Exception e) {
+            plugin.getLogger().warning("Error adding placeholder items for action " + actionName + ": " + e.getMessage());
+        }
     }
-
+    
+    /**
+     * Creates a placeholder item for a parameter
+     */
+    private ItemStack createPlaceholderItem(Map<String, Object> paramConfig) {
+        try {
+            // Extract parameter information from the config map
+            String name = (String) paramConfig.getOrDefault("name", "Unknown Parameter");
+            String type = (String) paramConfig.getOrDefault("type", "string");
+            String description = (String) paramConfig.getOrDefault("description", "");
+            
+            // Create an item based on the parameter type
+            Material material = getMaterialForParameterType(type);
+            ItemStack item = new ItemStack(material);
+            ItemMeta meta = item.getItemMeta();
+            
+            if (meta != null) {
+                // Set display name
+                meta.setDisplayName("§7" + name);
+                
+                // Set lore with parameter information
+                List<String> lore = new ArrayList<>();
+                lore.add("§8Parameter: " + name);
+                lore.add("§8Type: " + type);
+                
+                if (description != null && !description.isEmpty()) {
+                    lore.add("§7" + description);
+                }
+                
+                lore.add("");
+                lore.add("§ePlace an item here to set this parameter");
+                
+                meta.setLore(lore);
+                item.setItemMeta(meta);
+            }
+            
+            return item;
+        } catch (Exception e) {
+            // Return null if we can't create the placeholder item
+            return null;
+        }
+    }
+    
+    /**
+     * Gets the appropriate material for a parameter type
+     */
+    private Material getMaterialForParameterType(String type) {
+        if (type == null) return Material.PAPER;
+        
+        switch (type.toLowerCase()) {
+            case "string":
+                return Material.WRITABLE_BOOK;
+            case "number":
+                return Material.SUNFLOWER;
+            case "boolean":
+                return Material.LEVER;
+            case "player":
+                return Material.PLAYER_HEAD;
+            case "location":
+                return Material.COMPASS;
+            case "item":
+                return Material.CHEST;
+            default:
+                return Material.PAPER;
+        }
+    }
+    
     /**
      * Сохраняет содержимое GUI, когда игрок его закрывает
      */

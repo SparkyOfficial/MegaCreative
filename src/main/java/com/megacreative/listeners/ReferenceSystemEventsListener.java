@@ -62,6 +62,178 @@ public class ReferenceSystemEventsListener implements Listener {
     }
     
     // ============================================================================
+    // SCRIPT REGISTRATION METHODS
+    // ============================================================================
+    
+    /**
+     * Register a script for player-related events
+     * @param eventName The name of the event (e.g., "on_join", "on_quit", "on_respawn")
+     * @param script The script to execute when the event occurs
+     */
+    public void registerPlayerScript(String eventName, CodeScript script) {
+        if (eventName != null && script != null) {
+            playerScripts.put(eventName, script);
+        }
+    }
+    
+    /**
+     * Register a script for block-related events
+     * @param eventName The name of the event (e.g., "on_place", "on_break")
+     * @param script The script to execute when the event occurs
+     */
+    public void registerBlockScript(String eventName, CodeScript script) {
+        if (eventName != null && script != null) {
+            blockScripts.put(eventName, script);
+        }
+    }
+    
+    /**
+     * Register a script for combat-related events
+     * @param eventName The name of the event (e.g., "on_damage", "on_death")
+     * @param script The script to execute when the event occurs
+     */
+    public void registerCombatScript(String eventName, CodeScript script) {
+        if (eventName != null && script != null) {
+            combatScripts.put(eventName, script);
+        }
+    }
+    
+    /**
+     * Register a script for inventory-related events
+     * @param eventName The name of the event (e.g., "on_click", "on_open")
+     * @param script The script to execute when the event occurs
+     */
+    public void registerInventoryScript(String eventName, CodeScript script) {
+        if (eventName != null && script != null) {
+            inventoryScripts.put(eventName, script);
+        }
+    }
+    
+    /**
+     * Register a script for movement-related events
+     * @param eventName The name of the event (e.g., "on_teleport", "on_move")
+     * @param script The script to execute when the event occurs
+     */
+    public void registerMovementScript(String eventName, CodeScript script) {
+        if (eventName != null && script != null) {
+            movementScripts.put(eventName, script);
+        }
+    }
+    
+    /**
+     * Register a script for item-related events
+     * @param eventName The name of the event (e.g., "on_pickup", "on_drop")
+     * @param script The script to execute when the event occurs
+     */
+    public void registerItemScript(String eventName, CodeScript script) {
+        if (eventName != null && script != null) {
+            itemScripts.put(eventName, script);
+        }
+    }
+    
+    /**
+     * Register a script for chat-related events
+     * @param eventName The name of the event (e.g., "on_chat")
+     * @param script The script to execute when the event occurs
+     */
+    public void registerChatScript(String eventName, CodeScript script) {
+        if (eventName != null && script != null) {
+            chatScripts.put(eventName, script);
+        }
+    }
+    
+    /**
+     * Register a script for world-related events
+     * @param eventName The name of the event (e.g., "on_load", "on_unload")
+     * @param script The script to execute when the event occurs
+     */
+    public void registerWorldScript(String eventName, CodeScript script) {
+        if (eventName != null && script != null) {
+            worldScripts.put(eventName, script);
+        }
+    }
+    
+    /**
+     * Unregister a script for player-related events
+     * @param eventName The name of the event to unregister
+     */
+    public void unregisterPlayerScript(String eventName) {
+        if (eventName != null) {
+            playerScripts.remove(eventName);
+        }
+    }
+    
+    /**
+     * Unregister a script for block-related events
+     * @param eventName The name of the event to unregister
+     */
+    public void unregisterBlockScript(String eventName) {
+        if (eventName != null) {
+            blockScripts.remove(eventName);
+        }
+    }
+    
+    /**
+     * Unregister a script for combat-related events
+     * @param eventName The name of the event to unregister
+     */
+    public void unregisterCombatScript(String eventName) {
+        if (eventName != null) {
+            combatScripts.remove(eventName);
+        }
+    }
+    
+    /**
+     * Unregister a script for inventory-related events
+     * @param eventName The name of the event to unregister
+     */
+    public void unregisterInventoryScript(String eventName) {
+        if (eventName != null) {
+            inventoryScripts.remove(eventName);
+        }
+    }
+    
+    /**
+     * Unregister a script for movement-related events
+     * @param eventName The name of the event to unregister
+     */
+    public void unregisterMovementScript(String eventName) {
+        if (eventName != null) {
+            movementScripts.remove(eventName);
+        }
+    }
+    
+    /**
+     * Unregister a script for item-related events
+     * @param eventName The name of the event to unregister
+     */
+    public void unregisterItemScript(String eventName) {
+        if (eventName != null) {
+            itemScripts.remove(eventName);
+        }
+    }
+    
+    /**
+     * Unregister a script for chat-related events
+     * @param eventName The name of the event to unregister
+     */
+    public void unregisterChatScript(String eventName) {
+        if (eventName != null) {
+            chatScripts.remove(eventName);
+        }
+    }
+    
+    /**
+     * Unregister a script for world-related events
+     * @param eventName The name of the event to unregister
+     */
+    public void unregisterWorldScript(String eventName) {
+        if (eventName != null) {
+            worldScripts.remove(eventName);
+        }
+    }
+    
+    // ============================================================================
     // PLAYER LIFECYCLE EVENTS
     // ============================================================================
     

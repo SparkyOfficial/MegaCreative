@@ -69,6 +69,6 @@ public class PlayerQuitListener implements Listener {
         }
         
         // Очищаем данные из обработчика блоков
-        plugin.getBlockPlacementHandler().cleanUpPlayerData(event.getPlayer().getUniqueId());
+        // plugin.getBlockPlacementHandler().cleanUpPlayerData(event.getPlayer().getUniqueId());
     }
 }

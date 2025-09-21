@@ -10,7 +10,7 @@ import java.util.*;
  * Specialized DataValue for storing and working with ItemStack objects.
  * This provides type safety and convenience methods for item operations.
  */
-public class ItemValue implements DataValue {
+public class ItemValue implements DataValue, Cloneable {
     
     private ItemStack itemStack;
     
@@ -107,7 +107,23 @@ public class ItemValue implements DataValue {
     
     @Override
     public DataValue clone() {
-        return new ItemValue(itemStack != null ? itemStack.clone() : null);
+        try {
+            // Call super.clone() first to create the new instance
+            ItemValue cloned = (ItemValue) super.clone();
+            // Clone the ItemStack if it exists
+            if (itemStack != null) {
+                cloned.itemStack = itemStack.clone();
+            }
+            return cloned;
+        } catch (CloneNotSupportedException e) {
+            // This should never happen since we implement Cloneable
+            throw new AssertionError("Clone not supported", e);
+        }
+    }
+    
+    @Override
+    public DataValue copy() {
+        return clone();
     }
     
     @Override

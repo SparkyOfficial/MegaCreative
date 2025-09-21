@@ -128,7 +128,7 @@ public class WorldLoadListener implements Listener {
             connectionManager.rebuildWorldConnections(world);
             
             // Synchronize with BlockPlacementHandler after rehydration
-            placementHandler.synchronizeWithAutoConnection();
+            // placementHandler.synchronizeWithAutoConnection();
             
             long duration = System.currentTimeMillis() - startTime;
             plugin.getLogger().info(String.format(
@@ -172,7 +172,7 @@ public class WorldLoadListener implements Listener {
             }
 
             // Recreate the CodeBlock object for this physical block
-            placementHandler.recreateCodeBlockFromExisting(codeBlock, sign);
+            // placementHandler.recreateCodeBlockFromExisting(codeBlock, sign);
             
             // Add to AutoConnectionManager tracking
             CodeBlock recreatedBlock = placementHandler.getCodeBlock(codeBlock.getLocation());

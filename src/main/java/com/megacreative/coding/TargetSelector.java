@@ -246,6 +246,9 @@ public class TargetSelector {
                 case 3:
                     targets.removeIf(player -> player.getGameMode() != org.bukkit.GameMode.SPECTATOR);
                     break;
+                default:
+                    // Invalid game mode, ignore
+                    break;
             }
         } catch (NumberFormatException e) {
             // Invalid game mode, ignore

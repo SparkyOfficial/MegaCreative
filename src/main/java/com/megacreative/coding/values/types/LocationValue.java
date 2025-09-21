@@ -55,7 +55,7 @@ public class LocationValue implements DataValue {
     public String getDescription() { return "Location: " + asString(); }
     
     @Override
-    public DataValue clone() { 
+    public DataValue copy() { 
         return new LocationValue(value != null ? value.clone() : null); 
     }
     

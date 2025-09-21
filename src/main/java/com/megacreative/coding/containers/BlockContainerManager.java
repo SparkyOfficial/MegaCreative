@@ -3,6 +3,7 @@ package com.megacreative.coding.containers;
 import com.megacreative.MegaCreative;
 import com.megacreative.coding.values.DataValue;
 import com.megacreative.coding.values.ValueType;
+import com.megacreative.services.BlockConfigService;
 import org.bukkit.Location;
 import org.bukkit.Material;
 import org.bukkit.block.Block;
@@ -29,6 +30,7 @@ import org.bukkit.Location;
 public class BlockContainerManager {
     
     private final MegaCreative plugin;
+    private final BlockConfigService blockConfigService;
     
     // Container mappings
     private final Map<Location, BlockContainer> containers = new ConcurrentHashMap<>();
@@ -36,6 +38,7 @@ public class BlockContainerManager {
     
     public BlockContainerManager(MegaCreative plugin) {
         this.plugin = plugin;
+        this.blockConfigService = plugin.getServiceRegistry().getBlockConfigService();
     }
     
     /**
@@ -426,9 +429,49 @@ public class BlockContainerManager {
     // === HELPER METHODS ===
     
     private ActionConfiguration getActionConfiguration(String action) {
-        // This would integrate with your action registry
-        // For now, return a simple configuration
+        // Integrate with BlockConfigService for proper action registry integration
+        if (blockConfigService != null) {
+            com.megacreative.services.BlockConfigService.BlockConfig blockConfig = blockConfigService.getBlockConfig(action);
+            if (blockConfig != null) {
+                return createActionConfigurationFromBlockConfig(action, blockConfig);
+            }
+        }
+        // Fallback to simple configuration if BlockConfigService is not available
         return new ActionConfiguration(action);
+    }
+    
+    /**
+     * Creates an ActionConfiguration from a BlockConfig
+     */
+    private ActionConfiguration createActionConfigurationFromBlockConfig(String action, com.megacreative.services.BlockConfigService.BlockConfig blockConfig) {
+        // Create parameters list from BlockConfig data
+        Map<String, com.megacreative.services.BlockConfigService.ParameterConfig> paramConfigs = blockConfig.getActionParameters();
+        List<ActionParameter> parameters = new ArrayList<>();
+        
+        if (paramConfigs != null) {
+            for (Map.Entry<String, com.megacreative.services.BlockConfigService.ParameterConfig> entry : paramConfigs.entrySet()) {
+                com.megacreative.services.BlockConfigService.ParameterConfig paramConfig = entry.getValue();
+                String paramName = paramConfig.getName() != null ? paramConfig.getName() : entry.getKey();
+                String description = paramConfig.getDescription() != null ? paramConfig.getDescription() : "Parameter for " + action;
+                ValueType type = ValueType.ANY; // Default type, could be enhanced with more specific type mapping
+                parameters.add(new ActionParameter(paramName, type, description));
+            }
+        }
+        
+        // Create a custom ActionConfiguration with the new parameters
+        return new ActionConfiguration(action) {
+            private final List<ActionParameter> customParameters = parameters;
+            
+            @Override
+            public List<ActionParameter> getParameters() {
+                return customParameters;
+            }
+            
+            @Override
+            public int getParameterCount() {
+                return customParameters.size();
+            }
+        };
     }
     
     private String getActionDescription(String action) {

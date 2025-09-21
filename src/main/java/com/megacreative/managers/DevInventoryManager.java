@@ -203,6 +203,9 @@ public class DevInventoryManager implements Listener {
                 case "data_creator" -> player.getInventory().addItem(CodingItems.getDataCreator());
                 case "code_mover" -> player.getInventory().addItem(CodingItems.getCodeMover());
                 case "game_value" -> player.getInventory().addItem(CodingItems.getGameValue()); // Add this case
+                default -> {
+                    // Unknown item type, ignore
+                }
             }
         }
     }

@@ -326,7 +326,7 @@ class ScriptSnapshot {
  *
  * Skriptblock-Darstellung
  */
-class ScriptBlock implements Cloneable {
+class ScriptBlock {
     private String action;
     private BlockCategory category;
     private org.bukkit.Material material;
@@ -355,26 +355,24 @@ class ScriptBlock implements Cloneable {
         this.material = material;
     }
     
-    @Override
     /**
-     * Клонирует блок скрипта
-     * @return Клонированный блок скрипта
-     *
-     * Clones script block
-     * @return Cloned script block
-     *
-     * Klont den Skriptblock
-     * @return Geklonter Skriptblock
+     * Copy constructor
+     * @param other The ScriptBlock to copy
      */
-    public ScriptBlock clone() {
-        try {
-            ScriptBlock cloned = (ScriptBlock) super.clone();
-            cloned.parameters = new HashMap<>(parameters);
-            return cloned;
-        } catch (CloneNotSupportedException e) {
-            // This should never happen since we implement Cloneable
-            throw new RuntimeException("Clone not supported", e);
-        }
+    public ScriptBlock(ScriptBlock other) {
+        this.action = other.action;
+        this.category = other.category;
+        this.material = other.material;
+        this.parameters = new HashMap<>(other.parameters);
+        this.hasNext = other.hasNext;
+    }
+    
+    /**
+     * Creates a copy of this ScriptBlock
+     * @return A new ScriptBlock with the same properties
+     */
+    public ScriptBlock copy() {
+        return new ScriptBlock(this);
     }
     
     // Getters/Setters

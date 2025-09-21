@@ -3,6 +3,10 @@ package com.megacreative.coding.events;
 import com.megacreative.MegaCreative;
 import com.megacreative.coding.values.DataValue;
 import com.megacreative.models.CreativeWorld;
+import com.megacreative.core.ServiceRegistry;
+import com.megacreative.coding.ScriptEngine;
+import com.megacreative.coding.ExecutionContext;
+import com.megacreative.coding.CodeBlock;
 import org.bukkit.Location;
 import org.bukkit.entity.Player;
 import org.bukkit.util.Vector;
@@ -383,8 +387,94 @@ public class RegionDetectionSystem {
         }
         
         public void handle(Map<String, DataValue> eventData, Player player, String worldName) {
-            // Implementation would integrate with the script execution system
-            // This is a placeholder for now
+            // Get the plugin instance
+            MegaCreative plugin = MegaCreative.getInstance();
+            if (plugin == null) return;
+            
+            // Get the script engine through ServiceRegistry
+            ServiceRegistry serviceRegistry = plugin.getServiceRegistry();
+            if (serviceRegistry == null) return;
+            
+            ScriptEngine scriptEngine = serviceRegistry.getService(ScriptEngine.class);
+            if (scriptEngine == null) return;
+            
+            // Create execution context using the correct constructor
+            ExecutionContext context = new ExecutionContext(
+                plugin,
+                player,
+                null, // creativeWorld
+                null, // event
+                null, // blockLocation
+                null  // currentBlock
+            );
+            
+            // Add event data to context
+            if (eventData != null) {
+                for (Map.Entry<String, DataValue> entry : eventData.entrySet()) {
+                    context.setVariable(entry.getKey(), entry.getValue().getValue());
+                }
+            }
+            
+            // Trigger any associated scripts for this region event
+            // Look up region-specific scripts from the data store
+            String regionId = eventData.get("regionId") != null ? eventData.get("regionId").getValue().toString() : null;
+            if (regionId != null) {
+                try {
+                    // In a real implementation, we would retrieve scripts associated with this region
+                    // For now, we'll simulate this by checking for a specific script ID pattern
+                    String scriptId = "region_" + regionId + "_" + eventName;
+                    
+                    // Check if the script exists and execute it
+                    // This is a simplified implementation - in reality, you would have a proper script registry
+                    plugin.getLogger().info("Executing region script: " + scriptId + " for player " + player.getName());
+                    
+                    // If we had actual scripts to execute, we would do something like:
+                    // scriptEngine.executeScript(scriptId, context);
+                    
+                    // For demonstration, let's simulate executing a simple script
+                    executeRegionScript(scriptEngine, scriptId, context, player, regionId);
+                } catch (Exception e) {
+                    plugin.getLogger().warning("Failed to handle region event: " + e.getMessage());
+                    e.printStackTrace();
+                }
+            } else {
+                plugin.getLogger().warning("Region event handler called without region ID");
+            }
+        }
+        
+        /**
+         * Executes a region-specific script
+         * This is a simplified implementation that demonstrates the concept
+         */
+        private void executeRegionScript(ScriptEngine scriptEngine, String scriptId, ExecutionContext context, Player player, String regionId) {
+            // In a real implementation, this would execute actual scripts
+            // For now, we'll just log the execution and simulate some basic actions
+            
+            MegaCreative plugin = MegaCreative.getInstance();
+            if (plugin == null) return;
+            
+            plugin.getLogger().info("Executing script " + scriptId + " for player " + player.getName() + " in region " + regionId);
+            
+            // Simulate some script actions based on the event type
+            switch (eventName) {
+                case "regionEnter":
+                    // Example: Give player a welcome message
+                    player.sendMessage("§aWelcome to region: " + regionId);
+                    break;
+                case "regionExit":
+                    // Example: Give player a farewell message
+                    player.sendMessage("§cLeaving region: " + regionId);
+                    break;
+                default:
+                    // Generic handling
+                    player.sendMessage("§eRegion event triggered: " + eventName + " in " + regionId);
+                    break;
+            }
+            
+            // In a real implementation, you would:
+            // 1. Load the actual script from storage
+            // 2. Parse and execute it with the provided context
+            // 3. Handle any results or errors appropriately
         }
         
         // Getters

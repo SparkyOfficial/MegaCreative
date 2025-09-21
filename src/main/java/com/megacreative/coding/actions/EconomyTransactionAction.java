@@ -81,6 +81,8 @@ public class EconomyTransactionAction implements BlockAction {
         } catch (EconomyException e) {
             return ExecutionResult.error("Ошибка экономики: " + e.getMessage() + 
                 (e.getCause() != null ? " (" + e.getCause().getMessage() + ")" : ""));
+        } catch (Exception e) {
+            return ExecutionResult.error("Ошибка при выполнении операции: " + e.getMessage());
         }
     }
 

@@ -10,7 +10,7 @@ import java.util.*;
  * Specialized DataValue for storing and working with Location objects.
  * This provides type safety and convenience methods for location operations.
  */
-public class LocationValue implements DataValue {
+public class LocationValue implements DataValue, Cloneable {
     
     private Location location;
     
@@ -127,7 +127,23 @@ public class LocationValue implements DataValue {
     
     @Override
     public DataValue clone() {
-        return new LocationValue(location != null ? location.clone() : null);
+        try {
+            // Call super.clone() first to create the new instance
+            LocationValue cloned = (LocationValue) super.clone();
+            // Clone the Location if it exists
+            if (location != null) {
+                cloned.location = location.clone();
+            }
+            return cloned;
+        } catch (CloneNotSupportedException e) {
+            // This should never happen since we implement Cloneable
+            throw new AssertionError("Clone not supported", e);
+        }
+    }
+    
+    @Override
+    public DataValue copy() {
+        return clone();
     }
     
     @Override

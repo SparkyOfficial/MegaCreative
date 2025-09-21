@@ -102,22 +102,12 @@ public class MapValue implements DataValue {
     }
 
     @Override
-    public DataValue clone() {
-        try {
-            MapValue cloned = (MapValue) super.clone();
-            Map<String, DataValue> clonedMap = new HashMap<>();
-            for (Map.Entry<String, DataValue> entry : map.entrySet()) {
-                clonedMap.put(entry.getKey(), entry.getValue().clone());
-            }
-            // Use reflection to set the map field since it's final
-            java.lang.reflect.Field mapField = MapValue.class.getDeclaredField("map");
-            mapField.setAccessible(true);
-            mapField.set(cloned, clonedMap);
-            return cloned;
-        } catch (CloneNotSupportedException | NoSuchFieldException | IllegalAccessException e) {
-            // This should never happen since we implement Cloneable
-            throw new RuntimeException("Clone not supported", e);
+    public DataValue copy() {
+        Map<String, DataValue> copiedMap = new HashMap<>();
+        for (Map.Entry<String, DataValue> entry : map.entrySet()) {
+            copiedMap.put(entry.getKey(), entry.getValue().copy());
         }
+        return new MapValue(copiedMap);
     }
 
     @Override

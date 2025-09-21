@@ -8,7 +8,6 @@ import com.megacreative.coding.ActionFactory;
 import com.megacreative.coding.ConditionFactory;
 import com.megacreative.coding.events.PlayerEventsListener;
 import com.megacreative.coding.containers.BlockContainerManager;
-import com.megacreative.coding.executors.ExecutorEngine;
 import com.megacreative.coding.variables.VariableManager;
 import com.megacreative.coding.events.CustomEventManager;
 import com.megacreative.coding.debug.VisualDebugger;
@@ -27,7 +26,6 @@ import com.megacreative.gui.interactive.ReferenceSystemStyleGUI;
 import com.megacreative.gui.coding.EnhancedActionParameterGUI;
 import com.megacreative.MegaCreative;
 import com.megacreative.tools.CodeBlockClipboard;
-import com.megacreative.testing.ScriptTestRunner;
 // 🎆 Reference system-style comprehensive events
 import com.megacreative.managers.ReferenceSystemEventManager;
 import org.bukkit.plugin.Plugin;
@@ -85,7 +83,6 @@ public class ServiceRegistry {
     private ITrustedPlayerManager trustedPlayerManagerInterface;
     private GUIManager guiManager;
     private BlockConfigManager blockConfigManager;
-    private ExecutorEngine executorEngine;
     
     /**
      * Coding system services
@@ -123,7 +120,6 @@ public class ServiceRegistry {
     private FunctionManager functionManager;
     private AdvancedFunctionManager advancedFunctionManager;
     private com.megacreative.services.CodeCompiler codeCompiler;
-    private ScriptTestRunner scriptTestRunner;
     
     /**
      * 🎆 Reference system: Interactive GUI System
@@ -194,21 +190,12 @@ public class ServiceRegistry {
             blockConfigService
         );
         
-        // Initialize ScriptTestRunner with its dependencies
-        this.scriptTestRunner = new ScriptTestRunner(
-            (MegaCreative) plugin,
-            scriptEngine,
-            variableManager,
-            visualDebugger
-        );
-        
         // IMPORTANT: Register key services BEFORE creating dependent services
         // ВАЖНО: Зарегистрировать ключевые сервисы ДО создания зависимых сервисов
         // WICHTIG: Schlüsselservices REGISTRIEREN, BEVOR abhängige Services erstellt werden
         registerService(BlockConfigService.class, blockConfigService);
         registerService(VariableManager.class, variableManager);
         registerService(VisualDebugger.class, visualDebugger);
-        registerService(ScriptTestRunner.class, scriptTestRunner);
         registerService(ActionFactory.class, actionFactory);
         registerService(ConditionFactory.class, conditionFactory);
         registerService(ScriptEngine.class, scriptEngine);
@@ -492,10 +479,6 @@ public class ServiceRegistry {
         
         if (visualDebugger != null) {
             visualDebugger.shutdown();
-        }
-        
-        if (executorEngine != null) {
-            executorEngine.shutdown();
         }
         
         if (autoConnectionManager != null) {
@@ -1081,9 +1064,6 @@ public class ServiceRegistry {
      * Ruft den Skript-Test-Runner ab
      * @return Skript-Test-Runner-Instanz
      */
-    public ScriptTestRunner getScriptTestRunner() {
-        return scriptTestRunner;
-    }
     
     /**
      * Initialize core services

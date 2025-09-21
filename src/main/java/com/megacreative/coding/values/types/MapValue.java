@@ -172,10 +172,10 @@ public class MapValue implements DataValue {
     }
     
     @Override
-    public DataValue clone() {
+    public DataValue copy() {
         Map<String, DataValue> copiedValues = new HashMap<>();
         for (Map.Entry<String, DataValue> entry : values.entrySet()) {
-            copiedValues.put(entry.getKey(), entry.getValue().clone());
+            copiedValues.put(entry.getKey(), entry.getValue().copy());
         }
         return new MapValue(copiedValues);
     }

@@ -295,24 +295,14 @@ public class CodeBlockClipboard {
                 // Add to placement handler's tracking
                 // Добавить в отслеживание обработчика размещения
                 // Zum Tracking des Platzierungshandlers hinzufügen
-                // This would require exposing a method in BlockPlacementHandler
-                // Это потребует открытия метода в BlockPlacementHandler
-                // Dies würde das Offenlegen einer Methode in BlockPlacementHandler erfordern
-                // For now, we'll simulate the registration
-                // Пока что мы симулируем регистрацию
-                // Für jetzt simulieren wir die Registrierung
+                placementHandler.addCodeBlock(absolutePos, newBlock);
             }
             
             // Register with connection manager
             // Зарегистрировать с менеджером соединений
             // Beim Verbindungsmanager registrieren
             if (connectionManager != null) {
-                // Add to connection manager and trigger auto-connect
-                // Добавить в менеджер соединений и запустить автоматическое соединение
-                // Zum Verbindungsmanager hinzufügen und Auto-Connect auslösen
-                // This integration ensures the pasted blocks are properly connected
-                // Эта интеграция гарантирует, что вставленные блоки будут правильно соединены
-                // Diese Integration stellt sicher, dass die eingefügten Blöcke ordnungsgemäß verbunden sind
+                connectionManager.addCodeBlock(absolutePos, newBlock);
             }
             
             pastedBlockMap.put(absolutePos, newBlock);
@@ -322,19 +312,7 @@ public class CodeBlockClipboard {
         // Second pass: Restore connections if we have connection manager
         // Второй проход: Восстановить соединения, если у нас есть менеджер соединений
         // Zweiter Durchgang: Verbindungen wiederherstellen, wenn wir einen Verbindungsmanager haben
-        if (connectionManager != null) {
-            for (Map.Entry<Location, CodeBlock> entry : pastedBlockMap.entrySet()) {
-                // Call the public method that will trigger auto-connection
-                // Вызвать публичный метод, который запустит автоматическое соединение
-                // Die öffentliche Methode aufrufen, die die automatische Verbindung auslöst
-                // Since autoConnectBlock is private, we'll rely on the placement handler
-                // Поскольку autoConnectBlock является приватным, мы полагаемся на обработчик размещения
-                // Da autoConnectBlock privat ist, verlassen wir uns auf den Platzierungshandler
-                // to trigger the connections through the event system
-                // чтобы запустить соединения через систему событий
-                // um die Verbindungen über das Ereignissystem auszulösen
-            }
-        }
+        // Skip connection restoration as the methods don't exist
         
         if (pastedBlocks > 0) {
             player.sendMessage("§a✓ Pasted " + pastedBlocks + " code blocks");

@@ -55,7 +55,7 @@ public class NumberValue implements DataValue {
     public String getDescription() { return "Number: " + value; }
     
     @Override
-    public DataValue clone() { return new NumberValue(value); }
+    public DataValue copy() { return new NumberValue(value); }
     
     @Override
     public Map<String, Object> serialize() {

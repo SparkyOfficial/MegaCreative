@@ -175,6 +175,32 @@ public class ConditionFactory {
     }
     
     /**
+     * Register a condition with a custom BlockCondition implementation
+     * 
+     * @param conditionId The condition ID
+     * @param condition The BlockCondition implementation
+     */
+    public void registerCondition(String conditionId, BlockCondition condition) {
+        // Register the condition if it's not already registered
+        if (!conditionMap.containsKey(conditionId)) {
+            register(conditionId, () -> condition);
+        }
+    }
+    
+    /**
+     * Register a condition with a supplier
+     * 
+     * @param conditionId The condition ID
+     * @param supplier The supplier for creating BlockCondition instances
+     */
+    public void registerCondition(String conditionId, Supplier<BlockCondition> supplier) {
+        // Register the condition if it's not already registered
+        if (!conditionMap.containsKey(conditionId)) {
+            register(conditionId, supplier);
+        }
+    }
+    
+    /**
      * Evaluate condition based on its type
      */
     private boolean evaluateConditionByType(DataValue conditionType, DataValue conditionValue, DataValue expectedValue) {

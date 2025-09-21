@@ -305,7 +305,7 @@ public class GUIManager implements Listener {
         }
         
         Object value = metadata.get(key);
-        if (value != null && type.isInstance(value)) {
+        if (type.isInstance(value)) {
             return (T) value;
         }
         

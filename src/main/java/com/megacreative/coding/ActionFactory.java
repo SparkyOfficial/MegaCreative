@@ -88,9 +88,13 @@ import com.megacreative.coding.values.DataValue;
 import com.megacreative.coding.values.types.ListValue;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.concurrent.ConcurrentHashMap;
 import java.util.function.Supplier;
 import java.util.List;
 import java.util.ArrayList;
+import net.kyori.adventure.text.Component;
+import net.kyori.adventure.text.serializer.legacy.LegacyComponentSerializer;
+import net.kyori.adventure.text.format.NamedTextColor;
 
 /**
  * Factory for creating block actions
@@ -108,6 +112,9 @@ public class ActionFactory {
     private InteractiveGUIManager interactiveGUIManager;
     private CustomEventManager eventManager;
 
+    // Map to store action display names
+    private final Map<String, String> actionDisplayNames = new ConcurrentHashMap<>();
+    
     /**
      * Creates an ActionFactory
      * @param dependencyContainer Dependency container for resolving dependencies
@@ -126,9 +133,9 @@ public class ActionFactory {
 
     /**
      * Initialize GUI and event managers
-     * 
+     *
      * Инициализировать менеджеры GUI и событий
-     * 
+     *
      * GUI- und Ereignismanager initialisieren
      */
     private void initializeManagers() {
@@ -136,7 +143,7 @@ public class ActionFactory {
             // Initialize GUI managers
             this.guiManager = dependencyContainer.resolve(GUIManager.class);
             this.interactiveGUIManager = dependencyContainer.resolve(InteractiveGUIManager.class);
-            
+
             // Initialize event manager
             this.eventManager = dependencyContainer.resolve(CustomEventManager.class);
         } catch (Exception e) {
@@ -298,7 +305,7 @@ public class ActionFactory {
         // Предполагая, что у него есть часть действия
         // Vorausgesetzt, dass es einen Aktionsteil hat
         register("timedExecution", TimedExecutionAction::new);
-        
+
         // Loop control actions
         register("break", () -> new BreakAction((com.megacreative.MegaCreative) dependencyContainer.resolve(com.megacreative.MegaCreative.class)));
         register("continue", () -> new ContinueAction((com.megacreative.MegaCreative) dependencyContainer.resolve(com.megacreative.MegaCreative.class)));
@@ -315,7 +322,7 @@ public class ActionFactory {
         // Чтобы определить функцию
         // Um eine Funktion zu definieren
         register("callFunction", CallFunctionAction::new);
-        
+
         // Advanced Function System
         // Расширенная система функций
         // Erweitertes Funktionssystem
@@ -335,7 +342,7 @@ public class ActionFactory {
         register("listOperation", ListOperationAction::new);
         register("createMap", CreateMapAction::new);
         register("mapOperation", MapOperationAction::new);
-        
+
         // --- GENERIC LIST OPERATIONS ---
         // --- ОБЩИЕ ОПЕРАЦИИ СО СПИСКАМИ ---
         // --- GENERISCHE LISTENOPERATIONEN ---
@@ -343,7 +350,7 @@ public class ActionFactory {
         registerGeneric("removeFromList");
         registerGeneric("getListSize");
         registerGeneric("clearList");
-        
+
         // --- DEDICATED LIST OPERATIONS ACTION ---
         // --- СПЕЦИАЛЬНОЕ ДЕЙСТВИЕ ДЛЯ ОПЕРАЦИЙ СО СПИСКАМИ ---
         // --- SPEZIALISIERTE LISTENOPERATIONS-AKTION ---
@@ -378,6 +385,66 @@ public class ActionFactory {
     }
 
     /**
+     * Gets the GUI title from a code block
+     * 
+     * @param block The code block containing the GUI title parameter
+     * @return The GUI title or a default title if not found
+     */
+    /* package */ String getGuiTitle(CodeBlock block) {
+        DataValue titleValue = block.getParameter("title");
+        if (titleValue != null) {
+            return titleValue.asString();
+        }
+        return "Interactive GUI"; // Default title
+    }
+    
+    /**
+     * Gets the GUI size from a code block
+     * 
+     * @param block The code block containing the GUI size parameter
+     * @return The GUI size or a default size if not found
+     */
+    /* package */ int getGuiSize(CodeBlock block) {
+        DataValue sizeValue = block.getParameter("size");
+        if (sizeValue != null) {
+            try {
+                return sizeValue.asNumber().intValue();
+            } catch (NumberFormatException e) {
+                // Return default size if parsing fails
+            }
+        }
+        return 27; // Default size (3 rows)
+    }
+    
+    /**
+     * Add configured items to the interactive GUI
+     * 
+     * @param block The code block containing item configuration
+     * @param interactiveGUI The interactive GUI to add items to
+     */
+    /* package */ void addConfiguredItems(CodeBlock block, com.megacreative.gui.interactive.InteractiveGUI interactiveGUI) {
+        // Get items from block parameters - using the correct API
+        // Since getParameterList doesn't exist, we'll get items individually
+        for (int i = 0; i < 54; i++) { // Standard inventory size
+            DataValue itemValue = block.getParameter("item_" + i);
+            if (itemValue != null && itemValue.getValue() instanceof Map) {
+                try {
+                    @SuppressWarnings("unchecked")
+                    Map<String, Object> itemConfig = (Map<String, Object>) itemValue.getValue();
+                    org.bukkit.inventory.ItemStack itemStack = createItemStackFromConfig(itemConfig);
+                    if (itemStack != null) {
+                        // Use the correct method to set items in the GUI
+                        interactiveGUI.getInventory().setItem(i, itemStack);
+                    }
+                } catch (Exception e) {
+                    LOGGER.log(java.util.logging.Level.WARNING, 
+                        "Failed to create item from config at index " + i + ": " + e.getMessage(), e);
+                }
+            }
+        }
+    }
+    
+    /**
      * Execute the create interactive GUI action
      * 
      * @param block The code block
@@ -389,7 +456,7 @@ public class ActionFactory {
         if (interactiveGUIManager == null) {
             return ExecutionResult.error("Interactive GUI manager not available");
         }
-            
+
         try {
             return tryCreateInteractiveGui(block, context);
         } catch (Exception e) {
@@ -408,76 +475,72 @@ public class ActionFactory {
         // Get parameters from the block
         String guiTitle = getGuiTitle(block);
         int guiSize = getGuiSize(block);
-        
+
         // Create the interactive GUI
         com.megacreative.gui.interactive.InteractiveGUI interactiveGUI = 
             interactiveGUIManager.createInteractiveGUI(context.getPlayer(), guiTitle, guiSize);
         
         // Add any configured items to the GUI
         addConfiguredItems(block, interactiveGUI);
-        
+
         // Open the GUI for the player
         return openGui(context, interactiveGUI);
     }
-
+    
     /**
-     * Add configured items to the interactive GUI
+     * Creates an ItemStack from configuration map
      * 
-     * @param block The code block
-     * @param interactiveGUI The interactive GUI
+     * @param config The item configuration map
+     * @return The created ItemStack or null if creation failed
      */
-    private void addConfiguredItems() {
-        // Implementation will be added when needed
-    }
-
-    /**
-     * Get the GUI title from the block parameters
-     * 
-     * @param block The code block
-     * @return The GUI title
-     */
-    private String getGuiTitle(CodeBlock block) {
-        return block.getParameter("title") != null ? 
-            block.getParameter("title").asString() : "Interactive GUI";
-    }
-
-    /**
-     * Get the GUI size from the block parameters
-     * 
-     * @param block The code block
-     * @return The GUI size
-     */
-    private int getGuiSize(CodeBlock block) {
-        return block.getParameter("size") != null ? 
-            block.getParameter("size").asNumber().intValue() : 27;
-    }
-
-    /**
-     * Processes a single item configuration
-     * @param itemObj The item configuration object to process
-     * @throws IllegalArgumentException if the item configuration is invalid
-     */
-    private void processSingleItem(Object itemObj) {
-        if (itemObj == null) {
-            return;
-        }
-        
+    private org.bukkit.inventory.ItemStack createItemStackFromConfig(Map<String, Object> config) {
         try {
-            // Parse the item configuration
-            if (itemObj instanceof Map) {
-                @SuppressWarnings("unchecked")
-                Map<String, Object> itemConfig = (Map<String, Object>) itemObj;
-                processItemConfiguration(itemConfig);
-            } else {
-                LOGGER.warning(() -> String.format("Invalid item configuration format. Expected Map, got: %s", 
-                    itemObj.getClass().getSimpleName()));
+            // Get material
+            String materialName = (String) config.get("material");
+            if (materialName == null) {
+                LOGGER.warning(() -> "Item configuration missing material");
+                return null;
             }
+            
+            org.bukkit.Material material = org.bukkit.Material.matchMaterial(materialName);
+            if (material == null) {
+                LOGGER.warning(() -> "Invalid material name: " + materialName);
+                return null;
+            }
+            
+            // Create item stack
+            org.bukkit.inventory.ItemStack itemStack = new org.bukkit.inventory.ItemStack(material);
+            org.bukkit.inventory.meta.ItemMeta meta = itemStack.getItemMeta();
+            
+            if (meta != null) {
+                // Set display name if provided
+                String displayName = (String) config.get("name");
+                if (displayName != null) {
+                    meta.displayName(LegacyComponentSerializer.legacySection().deserialize(displayName));
+                }
+                
+                // Set lore if provided
+                @SuppressWarnings("unchecked")
+                List<String> lore = (List<String>) config.get("lore");
+                if (lore != null && !lore.isEmpty()) {
+                    List<Component> componentLore = new ArrayList<>();
+                    for (String line : lore) {
+                        componentLore.add(LegacyComponentSerializer.legacySection().deserialize(line));
+                    }
+                    meta.lore(componentLore);
+                }
+                
+                itemStack.setItemMeta(meta);
+            }
+            
+            return itemStack;
         } catch (Exception e) {
-            LOGGER.log(java.util.logging.Level.SEVERE, e, 
-                () -> "Error processing GUI item: " + e.getMessage());
+            LOGGER.log(java.util.logging.Level.WARNING, 
+                "Failed to create item stack from config: " + e.getMessage(), e);
+            return null;
         }
     }
-
+    
     /**
      * Open the GUI for the player
      * 
@@ -644,29 +707,108 @@ public class ActionFactory {
     }
 
     /**
-     * Registers an action with display name
-     * @param actionId Action ID
-     * @param displayName Display name
-     *
-     * Регистрирует действие с отображаемым именем
-     * @param actionId ID действия
-     * @param displayName Отображаемое имя
-     *
-     * Registriert eine Aktion mit Anzeigenamen
-     * @param actionId Aktions-ID
-     * @param displayName Anzeigename
+     * Register an action with a custom display name
+     * 
+     * @param actionId The action ID
+     * @param displayName The display name for the action
      */
     public void registerAction(String actionId, String displayName) {
         // Register the action if it's not already registered
         // Зарегистрировать действие, если оно еще не зарегистрировано
-        // Die Aktion registrieren, wenn sie noch nicht registriert ist
+        // Die Aktion registrieren, wenn sie noch не registriert ist
         if (!actionMap.containsKey(actionId)) {
             // Register a generic action that can be configured later
             // This provides a more flexible approach than the previous placeholder implementation
+            // Allow custom action implementations to be registered with display names
+            // This involves creating a registry that maps action IDs to display names
+            // and allows for custom action implementations to be registered
             register(actionId, GenericAction::new);
         }
+        
+        // Store the display name mapping
+        actionDisplayNames.put(actionId, displayName);
+        
+        try {
+            com.megacreative.MegaCreative plugin = dependencyContainer.resolve(com.megacreative.MegaCreative.class);
+            if (plugin != null) {
+                plugin.getLogger().info("Registered action '" + actionId + "' with display name '" + displayName + "'");
+            }
+        } catch (Exception e) {
+            LOGGER.warning("Failed to log action registration: " + e.getMessage());
+        }
     }
-
+    
+    /**
+     * Register an action with a custom BlockAction implementation and display name
+     * 
+     * @param actionId The action ID
+     * @param displayName The display name for the action
+     * @param action The BlockAction implementation
+     */
+    public void registerAction(String actionId, String displayName, BlockAction action) {
+        // Register the action if it's not already registered
+        if (!actionMap.containsKey(actionId)) {
+            register(actionId, () -> action);
+        }
+        
+        // Store the display name mapping
+        actionDisplayNames.put(actionId, displayName);
+        
+        try {
+            com.megacreative.MegaCreative plugin = dependencyContainer.resolve(com.megacreative.MegaCreative.class);
+            if (plugin != null) {
+                plugin.getLogger().info("Registered custom action '" + actionId + "' with display name '" + displayName + "'");
+            }
+        } catch (Exception e) {
+            LOGGER.warning("Failed to log custom action registration: " + e.getMessage());
+        }
+    }
+    
+    /**
+     * Register an action with a supplier and display name
+     * 
+     * @param actionId The action ID
+     * @param displayName The display name for the action
+     * @param supplier The supplier for creating BlockAction instances
+     */
+    public void registerAction(String actionId, String displayName, Supplier<BlockAction> supplier) {
+        // Register the action if it's not already registered
+        if (!actionMap.containsKey(actionId)) {
+            register(actionId, supplier);
+        }
+        
+        // Store the display name mapping
+        actionDisplayNames.put(actionId, displayName);
+        
+        try {
+            com.megacreative.MegaCreative plugin = dependencyContainer.resolve(com.megacreative.MegaCreative.class);
+            if (plugin != null) {
+                plugin.getLogger().info("Registered supplier action '" + actionId + "' with display name '" + displayName + "'");
+            }
+        } catch (Exception e) {
+            LOGGER.warning("Failed to log supplier action registration: " + e.getMessage());
+        }
+    }
+    
+    /**
+     * Gets the display name for an action
+     * 
+     * @param actionId The action ID
+     * @return The display name, or the action ID if no display name is set
+     */
+    public String getActionDisplayName(String actionId) {
+        return actionDisplayNames.getOrDefault(actionId, actionId);
+    }
+    
+    /**
+     * Gets all registered action display names
+     * 
+     * @return A map of action IDs to display names
+     */
+    public Map<String, String> getActionDisplayNames() {
+        return new HashMap<>(actionDisplayNames);
+    }
+    
     /**
      * Gets the action count
      * @return Number of registered actions
@@ -700,12 +842,12 @@ public class ActionFactory {
         try {
             // Create and register the event handler
             CustomEventManager.EventHandler handler = eventManager.createEventHandler(
-                handlerBlock, 
+                handlerBlock,
                 null, // Player - null for global handlers
                 null, // World - null for global handlers
                 priority
             );
-            
+
             eventManager.registerEventHandler(eventName, handler);
             return true;
         } catch (Exception e) {

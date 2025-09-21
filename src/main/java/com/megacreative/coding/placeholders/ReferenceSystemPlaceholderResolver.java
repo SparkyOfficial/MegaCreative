@@ -339,34 +339,164 @@ public class ReferenceSystemPlaceholderResolver {
             expression = expression.replaceAll("[^0-9+\\-*/().\\s]", "");
             
             try {
-                // This is a simple implementation - for production, use a proper math parser
-                // For now, handle basic operations
-                if (expression.contains("+")) {
-                    String[] parts = expression.split("\\+", 2);
-                    double left = Double.parseDouble(parts[0].trim());
-                    double right = Double.parseDouble(parts[1].trim());
-                    return String.valueOf(left + right);
-                } else if (expression.contains("-")) {
-                    String[] parts = expression.split("-", 2);
-                    double left = Double.parseDouble(parts[0].trim());
-                    double right = Double.parseDouble(parts[1].trim());
-                    return String.valueOf(left - right);
-                } else if (expression.contains("*")) {
-                    String[] parts = expression.split("\\*", 2);
-                    double left = Double.parseDouble(parts[0].trim());
-                    double right = Double.parseDouble(parts[1].trim());
-                    return String.valueOf(left * right);
-                } else if (expression.contains("/")) {
-                    String[] parts = expression.split("/", 2);
-                    double left = Double.parseDouble(parts[0].trim());
-                    double right = Double.parseDouble(parts[1].trim());
-                    return String.valueOf(left / right);
-                } else {
-                    return String.valueOf(Double.parseDouble(expression.trim()));
-                }
+                // Implement a proper math expression parser with operator precedence
+                return String.valueOf(evaluateExpression(expression.trim()));
             } catch (Exception e) {
                 return "0";
             }
+        }
+        
+        /**
+         * Evaluates a mathematical expression with proper operator precedence
+         * Supports +, -, *, /, parentheses, and whitespace
+         */
+        private double evaluateExpression(String expression) {
+            // Handle empty expressions
+            if (expression == null || expression.isEmpty()) {
+                return 0.0;
+            }
+            
+            // Remove all whitespace
+            expression = expression.replaceAll("\\s+", "");
+            
+            // Handle parentheses first (highest precedence)
+            int lastOpenParen = expression.lastIndexOf('(');
+            if (lastOpenParen != -1) {
+                int closingParen = findMatchingParen(expression, lastOpenParen);
+                if (closingParen != -1) {
+                    String innerExpression = expression.substring(lastOpenParen + 1, closingParen);
+                    double innerResult = evaluateExpression(innerExpression);
+                    String newExpression = expression.substring(0, lastOpenParen) + 
+                                          innerResult + 
+                                          expression.substring(closingParen + 1);
+                    return evaluateExpression(newExpression);
+                }
+            }
+            
+            // Handle multiplication and division (left to right)
+            for (int i = 0; i < expression.length(); i++) {
+                char c = expression.charAt(i);
+                if (c == '*' || c == '/') {
+                    double left = parseLeftOperand(expression, i);
+                    double right = parseRightOperand(expression, i);
+                    double result = (c == '*') ? left * right : left / right;
+                    
+                    // Find the positions of the operands
+                    int leftStart = findLeftOperandStart(expression, i);
+                    int rightEnd = findRightOperandEnd(expression, i);
+                    
+                    String newExpression = expression.substring(0, leftStart) + 
+                                          result + 
+                                          expression.substring(rightEnd);
+                    return evaluateExpression(newExpression);
+                }
+            }
+            
+            // Handle addition and subtraction (left to right)
+            for (int i = 0; i < expression.length(); i++) {
+                char c = expression.charAt(i);
+                if (c == '+' || (c == '-' && i > 0)) { // Don't treat leading minus as operator
+                    double left = parseLeftOperand(expression, i);
+                    double right = parseRightOperand(expression, i);
+                    double result = (c == '+') ? left + right : left - right;
+                    
+                    // Find the positions of the operands
+                    int leftStart = findLeftOperandStart(expression, i);
+                    int rightEnd = findRightOperandEnd(expression, i);
+                    
+                    String newExpression = expression.substring(0, leftStart) + 
+                                          result + 
+                                          expression.substring(rightEnd);
+                    return evaluateExpression(newExpression);
+                }
+            }
+            
+            // If we get here, it's just a number
+            return Double.parseDouble(expression);
+        }
+        
+        /**
+         * Finds the matching closing parenthesis for an opening parenthesis
+         */
+        private int findMatchingParen(String expression, int openPos) {
+            int balance = 1;
+            for (int i = openPos + 1; i < expression.length(); i++) {
+                if (expression.charAt(i) == '(') {
+                    balance++;
+                } else if (expression.charAt(i) == ')') {
+                    balance--;
+                    if (balance == 0) {
+                        return i;
+                    }
+                }
+            }
+            return -1; // Not found
+        }
+        
+        /**
+         * Parses the left operand of an operator at the given position
+         */
+        private double parseLeftOperand(String expression, int operatorPos) {
+            int start = findLeftOperandStart(expression, operatorPos);
+            String operandStr = expression.substring(start, operatorPos);
+            return Double.parseDouble(operandStr);
+        }
+        
+        /**
+         * Parses the right operand of an operator at the given position
+         */
+        private double parseRightOperand(String expression, int operatorPos) {
+            int end = findRightOperandEnd(expression, operatorPos);
+            String operandStr = expression.substring(operatorPos + 1, end);
+            return Double.parseDouble(operandStr);
+        }
+        
+        /**
+         * Finds the start position of the left operand
+         */
+        private int findLeftOperandStart(String expression, int operatorPos) {
+            // Handle negative numbers
+            if (operatorPos > 0 && expression.charAt(operatorPos - 1) == '-') {
+                operatorPos--;
+                // Check if this minus is unary (part of a negative number)
+                if (operatorPos == 0 || "+-*/(".indexOf(expression.charAt(operatorPos - 1)) != -1) {
+                    // This is a unary minus, continue looking for the start
+                } else {
+                    // This is a binary minus, go back to the previous operator
+                    operatorPos++;
+                }
+            }
+            
+            for (int i = operatorPos - 1; i >= 0; i--) {
+                char c = expression.charAt(i);
+                if ("+-*/".indexOf(c) != -1) {
+                    // Special case for unary minus
+                    if (c == '-' && (i == 0 || "+-*/(".indexOf(expression.charAt(i - 1)) != -1)) {
+                        continue;
+                    }
+                    return i + 1;
+                }
+            }
+            return 0;
+        }
+        
+        /**
+         * Finds the end position of the right operand
+         */
+        private int findRightOperandEnd(String expression, int operatorPos) {
+            for (int i = operatorPos + 1; i < expression.length(); i++) {
+                char c = expression.charAt(i);
+                // Stop at operators or parentheses
+                if ("+-*/()".indexOf(c) != -1) {
+                    // Special case for unary minus
+                    if (c == '-' && (i == operatorPos + 1)) {
+                        // This is a unary minus, continue
+                        continue;
+                    }
+                    return i;
+                }
+            }
+            return expression.length();
         }
     }
     

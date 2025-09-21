@@ -13,7 +13,7 @@ import org.bukkit.inventory.meta.ItemMeta;
 import org.bukkit.scoreboard.Scoreboard;
 import org.bukkit.scoreboard.Team;
 
-import java.util.function.Function;
+import java.util.function.ToIntFunction;
 
 /**
  * Action for adding a player to a team.
@@ -81,12 +81,12 @@ public class AddPlayerToTeamAction implements BlockAction {
             BlockConfigService blockConfigService = context.getPlugin().getServiceRegistry().getBlockConfigService();
             
             // Get the slot resolver for this action
-            Function<String, Integer> slotResolver = blockConfigService.getSlotResolver(block.getAction());
+            java.util.function.Function<String, Integer> slotResolver = blockConfigService.getSlotResolver(block.getAction());
             
             if (slotResolver != null) {
                 // Get team name from the teamName slot
                 Integer teamNameSlot = slotResolver.apply("teamName");
-                if (teamNameSlot != null) {
+                if (teamNameSlot != null && teamNameSlot != -1) {
                     ItemStack teamNameItem = block.getConfigItem(teamNameSlot);
                     if (teamNameItem != null && teamNameItem.hasItemMeta()) {
                         // Extract team name from item
@@ -96,7 +96,7 @@ public class AddPlayerToTeamAction implements BlockAction {
                 
                 // Get target player from the targetPlayer slot
                 Integer targetPlayerSlot = slotResolver.apply("targetPlayer");
-                if (targetPlayerSlot != null) {
+                if (targetPlayerSlot != null && targetPlayerSlot != -1) {
                     ItemStack targetPlayerItem = block.getConfigItem(targetPlayerSlot);
                     if (targetPlayerItem != null && targetPlayerItem.hasItemMeta()) {
                         // Extract target player from item

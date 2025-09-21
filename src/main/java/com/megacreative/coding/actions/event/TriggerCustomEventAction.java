@@ -139,9 +139,27 @@ public class TriggerCustomEventAction implements BlockAction {
         DataValue dataValue = block.getParameter("data");
         if (dataValue != null && !dataValue.isEmpty()) {
             DataValue resolvedData = resolver.resolve(context, dataValue);
-            // If it's a string that looks like JSON or variable reference, try to parse it
-            // For now, we'll handle it as a simple string
-            eventData.put("data", resolvedData);
+            // Implement proper JSON parsing and variable reference resolution
+            // Detect if the data is a JSON string and parse it into structured data
+            // Also resolve variable references in the data
+            try {
+                String dataStr = resolvedData.asString();
+                if (dataStr != null && isJsonString(dataStr)) {
+                    // Parse JSON string into a map
+                    Map<String, Object> jsonData = parseJsonString(dataStr, context);
+                    // Convert to DataValue map
+                    for (Map.Entry<String, Object> entry : jsonData.entrySet()) {
+                        eventData.put(entry.getKey(), DataValue.fromObject(entry.getValue()));
+                    }
+                } else {
+                    // Handle as variable reference or simple string
+                    eventData.put("data", resolvedData);
+                }
+            } catch (Exception e) {
+                // If parsing fails, handle as simple string
+                eventData.put("data", resolvedData);
+                context.getPlugin().getLogger().warning("Failed to parse data parameter as JSON: " + e.getMessage());
+            }
         }
         
         // Collect data for each field defined in the custom event
@@ -223,5 +241,54 @@ public class TriggerCustomEventAction implements BlockAction {
         String valueStr = resolvedValue.asString().toLowerCase();
         
         return "true".equals(valueStr) || "yes".equals(valueStr) || "1".equals(valueStr);
+    }
+    
+    /**
+     * Checks if a string appears to be JSON
+     */
+    private boolean isJsonString(String str) {
+        if (str == null || str.isEmpty()) {
+            return false;
+        }
+        str = str.trim();
+        return (str.startsWith("{") && str.endsWith("}")) || (str.startsWith("[") && str.endsWith("]"));
+    }
+    
+    /**
+     * Parses a JSON string into a Map
+     */
+    private Map<String, Object> parseJsonString(String jsonStr, ExecutionContext context) {
+        Map<String, Object> result = new HashMap<>();
+        try {
+            // Simple JSON parsing implementation
+            // In a real implementation, you would use a proper JSON library like Gson or Jackson
+            if (jsonStr.startsWith("{") && jsonStr.endsWith("}")) {
+                // Parse object
+                String content = jsonStr.substring(1, jsonStr.length() - 1).trim();
+                if (!content.isEmpty()) {
+                    String[] pairs = content.split(",");
+                    for (String pair : pairs) {
+                        String[] keyValue = pair.split(":", 2);
+                        if (keyValue.length == 2) {
+                            String key = keyValue[0].trim().replaceAll("^\"|\"$", "");
+                            String value = keyValue[1].trim().replaceAll("^\"|\"$", "");
+                            // Try to parse as number
+                            try {
+                                result.put(key, Double.parseDouble(value));
+                            } catch (NumberFormatException e) {
+                                // Treat as string
+                                result.put(key, value);
+                            }
+                        }
+                    }
+                }
+            }
+        } catch (Exception e) {
+            // Return empty map if parsing fails
+            if (context.getPlugin() != null) {
+                context.getPlugin().getLogger().warning("Failed to parse JSON string: " + e.getMessage());
+            }
+        }
+        return result;
     }
 }

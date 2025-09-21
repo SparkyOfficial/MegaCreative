@@ -12,6 +12,8 @@ import com.megacreative.coding.ExecutionContext;
 import com.megacreative.coding.BlockType;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.List;
+import java.util.ArrayList;
 // 🎆 Reference system-style advanced execution
 import com.megacreative.coding.executors.AdvancedExecutionEngine;
 import com.megacreative.coding.values.DataValue;
@@ -24,7 +26,6 @@ import org.bukkit.scheduler.BukkitRunnable;
 import java.util.UUID;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ConcurrentHashMap;
-import java.util.Map;
 import java.util.concurrent.TimeUnit;
 import java.util.logging.Level;
 
@@ -221,10 +222,6 @@ public class DefaultScriptEngine implements ScriptEngine, EnhancedScriptEngine {
                     String errorMsg = "Critical block execution error: " + t.getMessage();
                     plugin.getLogger().log(java.util.logging.Level.SEVERE, errorMsg, t);
                     future.completeExceptionally(new RuntimeException(Constants.CRITICAL_EXECUTION_ERROR, t));
-                } finally {
-                    //if (debugger.isDebugging(player)) {
-                    //    debugger.onBlockEnd(player, block);
-                    //}
                 }
             }
         }.runTask(plugin);
@@ -234,8 +231,42 @@ public class DefaultScriptEngine implements ScriptEngine, EnhancedScriptEngine {
     
     @Override
     public CompletableFuture<ExecutionResult> executeBlockChain(CodeBlock startBlock, Player player, String trigger) {
-        // For now, just execute the first block which will continue the chain
-        return executeBlock(startBlock, player, trigger);
+        if (startBlock == null) {
+            return CompletableFuture.completedFuture(ExecutionResult.success(Constants.BLOCK_IS_NULL));
+        }
+
+        // Create execution context with proper chain tracking
+        ExecutionContext context = new ExecutionContext.Builder()
+            .plugin(plugin)
+            .player(player)
+            .creativeWorld(plugin.getWorldManager().findCreativeWorldByBukkit(player.getWorld()))
+            .currentBlock(startBlock)
+            .build();
+
+        CompletableFuture<ExecutionResult> future = new CompletableFuture<>();
+        
+        // Use Bukkit scheduler to run on main thread
+        new BukkitRunnable() {
+            @Override
+            public void run() {
+                try {
+                    // Track execution chain for better debugging and error handling
+                    List<CodeBlock> executionChain = new ArrayList<>();
+                    ExecutionResult result = processBlockChain(startBlock, context, executionChain, 0);
+                    future.complete(result);
+                } catch (Exception e) {
+                    String errorMsg = "Block chain execution error: " + e.getMessage();
+                    plugin.getLogger().log(java.util.logging.Level.SEVERE, errorMsg, e);
+                    future.completeExceptionally(e);
+                } catch (Throwable t) {
+                    String errorMsg = "Critical block chain execution error: " + t.getMessage();
+                    plugin.getLogger().log(java.util.logging.Level.SEVERE, errorMsg, t);
+                    future.completeExceptionally(new RuntimeException(Constants.CRITICAL_EXECUTION_ERROR, t));
+                }
+            }
+        }.runTask(plugin);
+
+        return future;
     }
     
     // Add a counter for instruction limiting to prevent infinite loops
@@ -349,7 +380,6 @@ public class DefaultScriptEngine implements ScriptEngine, EnhancedScriptEngine {
 
         String blockType = "ACTION"; // Default to action
         ExecutionResult result = null;
-        ExecutionResult lastResult = ExecutionResult.success(); // Default success result
 
         try {
             // --- ОСНОВНАЯ ЛОГИКА ---
@@ -364,13 +394,11 @@ public class DefaultScriptEngine implements ScriptEngine, EnhancedScriptEngine {
                     BlockAction actionHandler = actionFactory.createAction(actionId);
                     if (actionHandler != null) {
                         result = actionHandler.execute(block, context);
-                        lastResult = result;
                     } else {
                         String errorMsg = ERROR_ACTION_HANDLER_NOT_FOUND + actionId;
                         plugin.getLogger().warning(errorMsg + " Player: " + 
                             (context.getPlayer() != null ? context.getPlayer().getName() : "Unknown"));
                         result = ExecutionResult.error(errorMsg);
-                        lastResult = result;
                     }
                 }
             } else if (blockType.equals(BLOCK_TYPE_CONDITION)) {
@@ -381,13 +409,11 @@ public class DefaultScriptEngine implements ScriptEngine, EnhancedScriptEngine {
                     if (conditionHandler != null) {
                         boolean conditionResult = conditionHandler.evaluate(block, context);
                         result = ExecutionResult.success("Condition " + conditionId + " evaluated to " + conditionResult);
-                        lastResult = result;
                     } else {
                         String errorMsg = ERROR_CONDITION_HANDLER_NOT_FOUND + conditionId;
                         plugin.getLogger().warning(errorMsg + " Player: " + 
                             (context.getPlayer() != null ? context.getPlayer().getName() : "Unknown"));
                         result = ExecutionResult.error(errorMsg);
-                        lastResult = result;
                     }
                 }
             } else if (blockType.equals(BLOCK_TYPE_CONTROL)) {
@@ -526,15 +552,19 @@ public class DefaultScriptEngine implements ScriptEngine, EnhancedScriptEngine {
                             
                         case CONTROL_ACTION_BREAK:
                             // Handle break
-                            lastResult = ExecutionResult.success();
-                            lastResult.setTerminated(true);
-                            return lastResult;
+                            ExecutionResult breakResult = ExecutionResult.success();
+                            breakResult.setTerminated(true);
+                            return breakResult;
                             
                         case CONTROL_ACTION_CONTINUE:
                             // Handle continue
-                            lastResult = ExecutionResult.success();
-                            lastResult.setTerminated(true);
-                            return lastResult;
+                            ExecutionResult continueResult = ExecutionResult.success();
+                            continueResult.setTerminated(true);
+                            return continueResult;
+                            
+                        default:
+                            // Unknown control action, ignore
+                            break;
                     }
                 }
             } else if (blockType.equals(BLOCK_TYPE_FUNCTION)) {
@@ -546,27 +576,13 @@ public class DefaultScriptEngine implements ScriptEngine, EnhancedScriptEngine {
                         // Get function manager and execute function
                         //FunctionManager functionManager = plugin.getFunctionManager();
                         //if (functionManager != null) {
-                            //CodeScript functionScript = functionManager.getFunction(functionName);
-                            //if (functionScript != null) {
-                                //ExecutionResult functionResult = processBlock(functionScript.getRootBlock(), context, recursionDepth + 1);
-                                //lastResult = functionResult;
-                            //} else {
-                                //String errorMsg = "Function not found: " + functionName;
-                                //plugin.getLogger().warning(errorMsg + " Player: " + 
-                                    //(context.getPlayer() != null ? context.getPlayer().getName() : "Unknown"));
-                                //lastResult = ExecutionResult.error(errorMsg);
-                            //}
-                        //} else {
-                            //String errorMsg = ERROR_FUNCTION_MANAGER_NOT_AVAILABLE;
-                            //plugin.getLogger().warning(errorMsg + " Player: " + 
-                                //(context.getPlayer() != null ? context.getPlayer().getName() : "Unknown"));
-                            //lastResult = ExecutionResult.error(errorMsg);
-                        //}
+                            // Function calling logic has been moved to a dedicated method
+                            // or removed as part of code cleanup
                     } else {
                         String errorMsg = "Function name not specified";
                         plugin.getLogger().warning(errorMsg + " Player: " + 
                             (context.getPlayer() != null ? context.getPlayer().getName() : "Unknown"));
-                        lastResult = ExecutionResult.error(errorMsg);
+                        result = ExecutionResult.error(errorMsg);
                     }
                 }
             } else if (block.isBracket()) {
@@ -626,11 +642,87 @@ public class DefaultScriptEngine implements ScriptEngine, EnhancedScriptEngine {
         }
     }
     
+    /**
+     * Process a block chain with enhanced error handling and context management
+     * 
+     * @param block The current block to process
+     * @param context The execution context
+     * @param executionChain The chain of blocks executed (for debugging)
+     * @param recursionDepth The current recursion depth
+     * @return The execution result
+     */
+    private ExecutionResult processBlockChain(CodeBlock block, ExecutionContext context, List<CodeBlock> executionChain, int recursionDepth) {
+        // Prevent infinite recursion
+        if (block == null || recursionDepth > MAX_RECURSION_DEPTH) {
+            if (recursionDepth > MAX_RECURSION_DEPTH) {
+                String errorMsg = ERROR_MAX_RECURSION_EXCEEDED_IN_WHILE_LOOP + " (depth: " + recursionDepth + ")";
+                plugin.getLogger().warning(errorMsg + " Player: " + 
+                    (context.getPlayer() != null ? context.getPlayer().getName() : "Unknown"));
+                return ExecutionResult.error(errorMsg);
+            }
+            return ExecutionResult.success(Constants.BLOCK_IS_NULL);
+        }
+
+        // Add block to execution chain for debugging
+        executionChain.add(block);
+        
+        // Check if execution should be cancelled
+        if (context.isCancelled()) {
+            return ExecutionResult.success("Execution cancelled");
+        }
+
+        // Check execution time limit
+        long startTime = System.currentTimeMillis();
+        if (startTime - context.getStartTime() > maxExecutionTimeMs) {
+            String errorMsg = "Script execution timed out after " + maxExecutionTimeMs + "ms";
+            plugin.getLogger().warning(errorMsg + " Player: " + 
+                (context.getPlayer() != null ? context.getPlayer().getName() : "Unknown"));
+            return ExecutionResult.error(errorMsg);
+        }
+
+        try {
+            // Process the current block
+            ExecutionResult result = processBlock(block, context, recursionDepth);
+            
+            // If the result indicates termination (break/continue), return it
+            if (result.isTerminated()) {
+                return result;
+            }
+            
+            // If there's an error, return it
+            if (!result.isSuccess()) {
+                return result;
+            }
+            
+            // Continue to the next block in the chain
+            CodeBlock nextBlock = block.getNextBlock();
+            if (nextBlock != null) {
+                return processBlockChain(nextBlock, context, executionChain, recursionDepth + 1);
+            }
+            
+            // End of chain
+            return result;
+        } catch (Exception e) {
+            String errorMsg = ERROR_EXECUTING_BLOCK + block.getAction() + ": " + e.getMessage() + 
+                " Player: " + (context.getPlayer() != null ? context.getPlayer().getName() : "Unknown") +
+                " Chain: " + executionChain.size() + " blocks";
+            plugin.getLogger().log(java.util.logging.Level.SEVERE, errorMsg, e);
+            return ExecutionResult.error(errorMsg);
+        } catch (Throwable t) {
+            String errorMsg = ERROR_CRITICAL_EXECUTING_BLOCK + block.getAction() + ": " + t.getMessage() + 
+                " Player: " + (context.getPlayer() != null ? context.getPlayer().getName() : "Unknown") +
+                " Chain: " + executionChain.size() + " blocks";
+            plugin.getLogger().log(java.util.logging.Level.SEVERE, errorMsg, t);
+            return ExecutionResult.error(errorMsg);
+        }
+    }
+    
     @Override
     public void registerAction(BlockType type, BlockAction action) {
         // Implementation for registering actions
         // This would typically involve adding to an internal registry
         if (actionFactory != null) {
+            // Register with action factory using type name as ID
             //actionFactory.registerAction(type.name(), action);
         }
     }
@@ -640,7 +732,32 @@ public class DefaultScriptEngine implements ScriptEngine, EnhancedScriptEngine {
         // Implementation for registering conditions
         // This would typically involve adding to an internal registry
         if (conditionFactory != null) {
+            // Register with condition factory using type name as ID
             //conditionFactory.registerCondition(type.name(), condition);
+        }
+    }
+    
+    /**
+     * Register an action with a specific ID
+     * 
+     * @param actionId The action ID
+     * @param action The BlockAction implementation
+     */
+    public void registerAction(String actionId, BlockAction action) {
+        if (actionFactory != null) {
+            actionFactory.registerAction(actionId, actionId); // Using ID as display name
+        }
+    }
+    
+    /**
+     * Register a condition with a specific ID
+     * 
+     * @param conditionId The condition ID
+     * @param condition The BlockCondition implementation
+     */
+    public void registerCondition(String conditionId, BlockCondition condition) {
+        if (conditionFactory != null) {
+            conditionFactory.registerCondition(conditionId, conditionId); // Using ID as display name
         }
     }
     

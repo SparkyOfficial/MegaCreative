@@ -318,33 +318,48 @@ public class ActionSelectionGUI implements GUIManager.ManagedGUIInterface {
             
             case "wait":
             case "asyncloop":
-            case "randomnumber":
-                return "🔄 Логика и управление";
+                return "⏱️ Управление потоком";
             
             case "spawnentity":
             case "spawnmob":
-                return "🧟 Существа";
+                return "👾 Существа и мобы";
             
             case "healplayer":
+            case "damageplayer":
+                return "❤️ Здоровье и урон";
+            
             case "setgamemode":
-                return "🎮 Игрок";
+            case "setfly":
+                return "🎮 Игровые режимы";
             
-            case "explosion":
-                return "💥 Разрушение";
+            case "createfile":
+            case "readfile":
+            case "writefile":
+                return "💾 Файловая система";
             
-            case "createscoreboard":
-            case "setscore":
-            case "incrementscore":
-            case "createteam":
-            case "addplayertoteam":
-                return "🏆 Скорборды и команды";
+            case "httprequest":
+            case "httpget":
+            case "httppost":
+                return "🌐 Сеть и HTTP";
             
-            case "savelocation":
-            case "getlocation":
-                return "📍 Локации";
+            case "ifvarequals":
+            case "ifvargreater":
+            case "ifvarless":
+            case "comparevariable":
+                return "❓ Условия и логика";
+            
+            case "randomnumber":
+            case "randomitem":
+                return "🎲 Случайность";
+            
+            case "mathadd":
+            case "mathsubtract":
+            case "mathmultiply":
+            case "mathdivide":
+                return "🔢 Математика";
             
             default:
-                return "🔧 Основные";
+                return "🔧 Другое";
         }
     }
     

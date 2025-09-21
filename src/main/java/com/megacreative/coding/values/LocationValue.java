@@ -83,11 +83,11 @@ public class LocationValue implements DataValue {
     }
 
     @Override
-    public DataValue clone() {
-        if (location == null) {
-            return new LocationValue(null);
+    public DataValue copy() {
+        if (location != null) {
+            return new LocationValue(location.clone());
         }
-        return new LocationValue(location.clone());
+        return new LocationValue(null);
     }
 
     @Override

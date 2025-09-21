@@ -282,7 +282,7 @@ public class CustomEvent {
     @SuppressWarnings("unchecked")
     public <T> T getMetadata(String key, Class<T> type) {
         Object value = this.metadata.get(key);
-        if (value != null && type.isInstance(value)) {
+        if (type.isInstance(value)) {
             return (T) value;
         }
         return null;

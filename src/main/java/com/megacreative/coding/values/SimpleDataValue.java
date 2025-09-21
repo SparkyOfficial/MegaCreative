@@ -78,12 +78,8 @@ public class SimpleDataValue implements DataValue {
     }
 
     @Override
-    public DataValue clone() {
-        try {
-            return (DataValue) super.clone();
-        } catch (CloneNotSupportedException e) {
-            throw new AssertionError("Clone not supported", e);
-        }
+    public DataValue copy() {
+        return new SimpleDataValue(value, type);
     }
 
     @Override

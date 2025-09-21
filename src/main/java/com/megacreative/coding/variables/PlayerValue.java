@@ -9,7 +9,7 @@ import java.util.*;
  * Specialized DataValue for storing and working with Player objects.
  * This provides type safety and convenience methods for player operations.
  */
-public class PlayerValue implements DataValue {
+public class PlayerValue implements DataValue, Cloneable {
     
     private Player player;
     
@@ -89,7 +89,20 @@ public class PlayerValue implements DataValue {
     
     @Override
     public DataValue clone() {
-        return new PlayerValue(player);
+        try {
+            // Call super.clone() first to create the new instance
+            PlayerValue cloned = (PlayerValue) super.clone();
+            // Player objects are managed by the server and should not be cloned
+            return cloned;
+        } catch (CloneNotSupportedException e) {
+            // This should never happen since we implement Cloneable
+            throw new AssertionError("Clone not supported", e);
+        }
+    }
+    
+    @Override
+    public DataValue copy() {
+        return clone();
     }
     
     @Override

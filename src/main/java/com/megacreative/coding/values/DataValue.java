@@ -9,7 +9,7 @@ import java.util.Map;
  * Advanced data value interface with serialization and validation
  * Provides type safety and automatic conversion between types
  */
-public interface DataValue extends ConfigurationSerializable, Cloneable {
+public interface DataValue extends ConfigurationSerializable {
     
     /**
      * Gets the value type
@@ -87,7 +87,7 @@ public interface DataValue extends ConfigurationSerializable, Cloneable {
     /**
      * Creates a deep copy of this value
      */
-    DataValue clone();
+    DataValue copy();
     
     /**
      * Creates a DataValue from an object

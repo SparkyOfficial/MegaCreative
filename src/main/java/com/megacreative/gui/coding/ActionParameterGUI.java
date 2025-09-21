@@ -289,7 +289,7 @@ public class ActionParameterGUI implements GUIManager.ManagedGUIInterface {
      *
      * Sets up item groups based on configuration
      *
-     * Richtet Artikelgruppen basierend auf der Konфигuration ein
+     * Richtet Artikelgruppen basierend auf der Конфигuration ein
      */
     private void setupItemGroups(org.bukkit.configuration.ConfigurationSection itemGroupsConfig) {
         for (String groupKey : itemGroupsConfig.getKeys(false)) {
@@ -334,7 +334,7 @@ public class ActionParameterGUI implements GUIManager.ManagedGUIInterface {
      *
      * Sets up generic slots when no specific configuration is found
      *
-     * Richtet generische Slots ein, wenn keine spezifische Konфигuration gefunden wird
+     * Richtet generische Slots ein, wenn keine spezifische Конфигuration gefunden wird
      */
     private void setupGenericSlots() {
         // Create generic placeholder items for slots 9-17 (center row)
@@ -503,7 +503,7 @@ public class ActionParameterGUI implements GUIManager.ManagedGUIInterface {
      * Validates a specific slot configuration and provides user feedback
      *
      * 🎆 ERWEITERT: Echtzeit-Parameter-Validierung
-     * Validiert eine bestimmte Slot-Konfiguration und gibt dem Benutzer Feedback
+     * Validiert eine bestimmte Slot-Konфигuration und gibt dem Benutzer Feedback
      */
     private void validateSlot(int slot, ItemStack item) {
         String error = null;
@@ -563,17 +563,16 @@ public class ActionParameterGUI implements GUIManager.ManagedGUIInterface {
                 if (slot == changedSlot) continue; // Skip the slot that just changed
                 
                 var slotConfig = slotsConfig.getConfigurationSection(slotKey);
-                if (slotConfig == null) continue;
                 
-                // Check for dependencies
-                String dependsOn = slotConfig.getString("depends_on");
-                if (dependsOn != null && !dependsOn.isEmpty()) {
-                    // Parse dependency: "slotName=value" or "slotName!=value"
-                    String[] parts = dependsOn.split("(!?=)");
-                    if (parts.length >= 2) {
-                        String dependencySlotName = parts[0].trim();
-                        String expectedValue = parts[1].trim();
-                        boolean isNotEqual = dependsOn.contains("!=");
+                // Check for dependency conditions
+                String dependencyCondition = slotConfig.getString("dependency");
+                if (dependencyCondition != null) {
+                    String[] parts = dependencyCondition.split(" ");
+                    if (parts.length == 3) {
+                        String dependencySlotName = parts[0];
+                        String operator = parts[1];
+                        String expectedValue = parts[2];
+                        boolean isNotEqual = operator.equals("!=");
                         
                         // Find the dependency slot number
                         Integer dependencySlot = findSlotNumberByName(dependencySlotName);
@@ -754,6 +753,9 @@ public class ActionParameterGUI implements GUIManager.ManagedGUIInterface {
                     return "Время ожидания должно быть числом";
                 }
                 break;
+            default:
+                // No specific validation for this action
+                break;
         }
         
         return null; // No error
@@ -919,30 +921,7 @@ public class ActionParameterGUI implements GUIManager.ManagedGUIInterface {
     }
     
     /**
-     * 🎆 УЛУЧШЕННОЕ: Проверяет, представляет ли строка допустимое имя игрока
-     *
-     * 🎆 ENHANCED: Check if string represents a valid player name
-     */
-    private boolean isValidPlayerName(String playerName) {
-        if (playerName == null || playerName.trim().isEmpty()) return false;
-        
-        // Remove color codes
-        String cleaned = playerName.replaceAll("§[0-9a-fk-or]", "").trim();
-        
-        // Check for pattern like "player:Name" or just "Name"
-        if (cleaned.contains(":")) {
-            String[] parts = cleaned.split(":");
-            if (parts.length == 2) {
-                cleaned = parts[1].trim();
-            }
-        }
-        
-        // Player names should be 3-16 characters, alphanumeric and underscores
-        return cleaned.matches("[a-zA-Z0-9_]{3,16}");
-    }
-    
-    /**
-     * 🎆 УЛУЧШЕННОЕ: Проверяет, представляет ли строка допустимое имя мира
+     * 🎆 УЛУЧШЕННОЕ: Проверяет, является ли строка допустимым именем мира
      *
      * 🎆 ENHANCED: Check if string represents a valid world name
      */
@@ -950,7 +929,7 @@ public class ActionParameterGUI implements GUIManager.ManagedGUIInterface {
         if (worldName == null || worldName.trim().isEmpty()) return false;
         
         // Remove color codes
-        String cleaned = worldName.replaceAll("§[0-9a-fk-or]", "").trim();
+        String cleaned = worldName.replaceAll("§[0-9a-fk-r]", "").trim();
         
         // Check for pattern like "world:Name" or just "Name"
         if (cleaned.contains(":")) {
@@ -963,7 +942,65 @@ public class ActionParameterGUI implements GUIManager.ManagedGUIInterface {
         // World names can contain letters, numbers, underscores, hyphens, and dots
         return cleaned.matches("[a-zA-Z0-9_.\\-]+");
     }
+
+    /**
+     * 🎆 УЛУЧШЕННОЕ: Получает индекс слота по имени слота
+     *
+     * 🎆 ENHANCED: Get slot index by slot name
+     *
+     * 🎆 ERWEITERT: Ruft den Slot-Index nach Slot-Name ab
+     */
+    private Integer getSlotIndexByName(String slotName) {
+        org.bukkit.configuration.ConfigurationSection actionConfigurations = blockConfigService.getActionConfigurations();
+        if (actionConfigurations == null) return null;
+        
+        org.bukkit.configuration.ConfigurationSection actionConfig = actionConfigurations.getConfigurationSection(actionId);
+        if (actionConfig == null) return null;
+        
+        org.bukkit.configuration.ConfigurationSection slotsConfig = actionConfig.getConfigurationSection("slots");
+        if (slotsConfig == null) return null;
+        
+        // Find the slot configuration by slot_name
+        for (String slotKey : slotsConfig.getKeys(false)) {
+            try {
+                org.bukkit.configuration.ConfigurationSection slotConfig = slotsConfig.getConfigurationSection(slotKey);
+                if (slotConfig != null) {
+                    String configSlotName = slotConfig.getString("slot_name");
+                    if (slotName.equals(configSlotName)) {
+                        return Integer.parseInt(slotKey);
+                    }
+                }
+            } catch (NumberFormatException e) {
+                // Invalid slot index, skip
+            }
+        }
+        
+        return null;
+    }
     
+    /**
+     * 🎆 УЛУЧШЕННОЕ: Проверяет, представляет ли строка допустимое имя игрока
+     *
+     * 🎆 ENHANCED: Check if string represents a valid player name
+     */
+    private boolean isValidPlayerName(String playerName) {
+        if (playerName == null || playerName.trim().isEmpty()) return false;
+        
+        // Remove color codes (0-9, a-f, k-r) and common prefixes
+        String cleaned = playerName.replaceAll("§[0-9a-fk-r]", "").trim();
+        
+        // Check for pattern like "player:Name" or just "Name"
+        if (cleaned.contains(":")) {
+            String[] parts = cleaned.split(":");
+            if (parts.length == 2) {
+                cleaned = parts[1].trim();
+            }
+        }
+        
+        // Player names can contain letters, numbers, underscores, hyphens, and dots
+        return cleaned.matches("[a-zA-Z0-9_.\\-]+");
+    }
+
     /**
      * 🎆 УЛУЧШЕННОЕ: Проверяет, представляет ли строка допустимое имя материала
      *
@@ -973,283 +1010,9 @@ public class ActionParameterGUI implements GUIManager.ManagedGUIInterface {
         if (materialName == null || materialName.trim().isEmpty()) return false;
         
         // Remove color codes
-        String cleaned = materialName.replaceAll("§[0-9a-fk-or]", "").trim();
+        String cleaned = materialName.replaceAll("§[0-9a-fk-r]", "").trim();
         
         // Check for pattern like "material:Name" or just "Name"
-        if (cleaned.contains(":")) {
-            String[] parts = cleaned.split(":");
-            if (parts.length == 2) {
-                cleaned = parts[1].trim();
-            }
-        }
-        
-        // Check if material exists
-        return org.bukkit.Material.matchMaterial(cleaned) != null;
-    }
-    
-    /**
-     * 🎆 УЛУЧШЕННОЕ: Проверяет, представляет ли строка допустимый HEX цвет
-     *
-     * 🎆 ENHANCED: Check if string represents a valid hex color
-     */
-    private boolean isValidHexColor(String color) {
-        if (color == null || color.trim().isEmpty()) return false;
-        
-        // Remove color codes
-        String cleaned = color.replaceAll("§[0-9a-fk-or]", "").trim();
-        
-        // Check for pattern like "color:#RRGGBB" or just "#RRGGBB"
-        if (cleaned.contains(":")) {
-            String[] parts = cleaned.split(":");
-            if (parts.length == 2) {
-                cleaned = parts[1].trim();
-            }
-        }
-        
-        // HEX color should be in format #RRGGBB
-        return cleaned.matches("#[0-9a-fA-F]{6}");
-    }
-    
-    /**
-     * 🎆 УЛУЧШЕННОЕ: Проверяет, представляет ли строка допустимый email
-     *
-     * 🎆 ENHANCED: Check if string represents a valid email
-     */
-    private boolean isValidEmail(String email) {
-        if (email == null || email.trim().isEmpty()) return false;
-        
-        // Remove color codes
-        String cleaned = email.replaceAll("§[0-9a-fk-or]", "").trim();
-        
-        // Check for pattern like "email:address@domain.com" or just "address@domain.com"
-        if (cleaned.contains(":")) {
-            String[] parts = cleaned.split(":");
-            if (parts.length == 2) {
-                cleaned = parts[1].trim();
-            }
-        }
-        
-        // Basic email validation
-        return cleaned.matches("^[\\w.-]+@[\\w.-]+\\.[a-zA-Z]{2,}$");
-    }
-    
-    /**
-     * 🎆 УЛУЧШЕННОЕ: Проверяет, представляет ли строка допустимый URL
-     *
-     * 🎆 ENHANCED: Check if string represents a valid URL
-     */
-    private boolean isValidUrl(String url) {
-        if (url == null || url.trim().isEmpty()) return false;
-        
-        // Remove color codes
-        String cleaned = url.replaceAll("§[0-9a-fk-or]", "").trim();
-        
-        // Check for pattern like "url:https://example.com" or just "https://example.com"
-        if (cleaned.contains(":")) {
-            String[] parts = cleaned.split(":");
-            if (parts.length == 2) {
-                cleaned = parts[1].trim();
-            }
-        }
-        
-        // Basic URL validation - fixed regex with proper escaping
-        return cleaned.matches("https?://[\\w.-]+(?:\\.[\\w.-]+)+[/\\w\\-._~:/?#\\[\\]@!$&'()*+,;=]*");
-    }
-    
-    /**
-     * 🎆 УЛУЧШЕННОЕ: Проверяет, соответствует ли строка регулярному выражению
-     *
-     * 🎆 ENHANCED: Check if string matches a regex pattern
-     */
-    private boolean isValidRegex(String str, String regex) {
-        if (str == null || str.trim().isEmpty()) return false;
-        
-        // Remove color codes
-        String cleaned = str.replaceAll("§[0-9a-fk-or]", "").trim();
-        
-        // Check for pattern like "value:text" or just "text"
-        if (cleaned.contains(":")) {
-            String[] parts = cleaned.split(":");
-            if (parts.length == 2) {
-                cleaned = parts[1].trim();
-            }
-        }
-        
-        try {
-            return cleaned.matches(regex);
-        } catch (Exception e) {
-            return false; // Invalid regex pattern
-        }
-    }
-    
-    /**
-     * 🎆 УЛУЧШЕННОЕ: Проверяет, соответствует ли длина строки спецификации
-     *
-     * 🎆 ENHANCED: Check if string length matches specification
-     */
-    private boolean isValidLength(String str, String lengthSpec) {
-        if (str == null) return false;
-        
-        // Remove color codes
-        String cleaned = str.replaceAll("§[0-9a-fk-or]", "").trim();
-        
-        // Check for pattern like "value:text" or just "text"
-        if (cleaned.contains(":")) {
-            String[] parts = cleaned.split(":");
-            if (parts.length == 2) {
-                cleaned = parts[1].trim();
-            }
-        }
-        
-        String[] parts = lengthSpec.split("-");
-        if (parts.length == 1) {
-            try {
-                int exactLength = Integer.parseInt(parts[0]);
-                return cleaned.length() == exactLength;
-            } catch (NumberFormatException e) {
-                return false;
-            }
-        } else if (parts.length == 2) {
-            try {
-                int minLength = Integer.parseInt(parts[0]);
-                int maxLength = Integer.parseInt(parts[1]);
-                int length = cleaned.length();
-                return length >= minLength && length <= maxLength;
-            } catch (NumberFormatException e) {
-                return false;
-            }
-        }
-        
-        return false;
-    }
-    
-    /**
-     * 🎆 УЛУЧШЕННОЕ: Проверяет, является ли значение одним из перечисленных
-     *
-     * 🎆 ENHANCED: Check if value is one of the enumerated values
-     */
-    private boolean isValidEnum(String str, String enumValues) {
-        if (str == null || str.trim().isEmpty()) return false;
-        
-        // Remove color codes
-        String cleaned = str.replaceAll("§[0-9a-fk-or]", "").trim();
-        
-        // Check for pattern like "value:text" or just "text"
-        if (cleaned.contains(":")) {
-            String[] parts = cleaned.split(":");
-            if (parts.length == 2) {
-                cleaned = parts[1].trim();
-            }
-        }
-        
-        String[] values = enumValues.split(",");
-        for (String value : values) {
-            if (cleaned.equalsIgnoreCase(value.trim())) {
-                return true;
-            }
-        }
-        
-        return false;
-    }
-    
-    /**
-     * 🎆 УЛУЧШЕННОЕ: Проверяет, представляет ли строка допустимое имя звука
-     *
-     * 🎆 ENHANCED: Check if string represents a valid sound name
-     *
-     * 🎆 ERWEITERT: Prüft, ob die Zeichenfolge einen gültigen Klangnamen darstellt
-     */
-    private boolean isValidSoundName(String soundName) {
-        if (soundName == null || soundName.trim().isEmpty()) return false;
-        
-        // Remove color codes and common prefixes
-        String cleaned = soundName.replaceAll("§[0-9a-fk-or]", "").trim();
-        
-        // Check for common sound name patterns
-        return cleaned.contains(":") || 
-               cleaned.startsWith("minecraft:") || 
-               cleaned.contains("block.") || 
-               cleaned.contains("entity.") || 
-               cleaned.contains("item.") || 
-               cleaned.contains("music.") || 
-               cleaned.contains("ambient.");
-    }
-    
-    /**
-     * 🎆 УЛУЧШЕННОЕ: Проверяет, представляет ли строка допустимое имя эффекта
-     *
-     * 🎆 ENHANCED: Check if string represents a valid effect name
-     *
-     * 🎆 ERWEITERT: Prüft, ob die Zeichenfolge einen gültigen Effektnamen darstellt
-     */
-    private boolean isValidEffectName(String effectName) {
-        if (effectName == null || effectName.trim().isEmpty()) return false;
-        
-        // Remove color codes and common prefixes
-        String cleaned = effectName.replaceAll("§[0-9a-fk-or]", "").trim();
-        
-        // Check for common effect names
-        String[] validEffects = {
-            "SPEED", "SLOW", "FAST_DIGGING", "SLOW_DIGGING", "INCREASE_DAMAGE", 
-            "HEAL", "HARM", "JUMP", "CONFUSION", "REGENERATION", "DAMAGE_RESISTANCE",
-            "FIRE_RESISTANCE", "WATER_BREATHING", "INVISIBILITY", "BLINDNESS",
-            "NIGHT_VISION", "HUNGER", "WEAKNESS", "POISON", "WITHER", "HEALTH_BOOST",
-            "ABSORPTION", "SATURATION", "GLOWING", "LEVITATION", "LUCK", "UNLUCK",
-            "SLOW_FALLING", "CONDUIT_POWER", "DOLPHINS_GRACE", "BAD_OMEN", "HERO_OF_THE_VILLAGE"
-        };
-        
-        for (String effect : validEffects) {
-            if (effect.equalsIgnoreCase(cleaned)) {
-                return true;
-            }
-        }
-        
-        return false;
-    }
-    
-    /**
-     * 🎆 УЛУЧШЕННОЕ: Проверяет, представляет ли строка допустимое число в диапазоне
-     *
-     * 🎆 ENHANCED: Check if string represents a valid number in range
-     *
-     * 🎆 ERWEITERT: Prüft, ob die Zeichenfolge eine gültige Zahl im Bereich darstellt
-     */
-    private boolean isValidNumberInRange(String str, double min, double max) {
-        if (str == null || str.trim().isEmpty()) return false;
-        
-        // Remove color codes and common prefixes
-        String cleaned = str.replaceAll("§[0-9a-fk-or]", "").trim();
-        
-        // Check for pattern like "value:5" or "amount:20"
-        if (cleaned.contains(":")) {
-            String[] parts = cleaned.split(":");
-            if (parts.length == 2) {
-                cleaned = parts[1].trim();
-            }
-        }
-        
-        try {
-            double value = Double.parseDouble(cleaned);
-            return value >= min && value <= max;
-        } catch (NumberFormatException e) {
-            return false;
-        }
-    }
-    
-    /**
-     * 🎆 УЛУЧШЕННОЕ: Проверяет, представляет ли строка допустимое число
-     *
-     * 🎆 ENHANCED: Check if string represents a valid number
-     *
-     * 🎆 ERWEITERT: Prüft, ob die Zeichenfolge eine gültige Zahl darstellt
-     */
-    private boolean isValidNumber(String str) {
-        if (str == null || str.trim().isEmpty()) return false;
-        
-        // Remove color codes and common prefixes
-        String cleaned = str.replaceAll("§[0-9a-fk-or]", "").trim();
-        
-        // Check for pattern like "iterations:5" or "delay:20"
         if (cleaned.contains(":")) {
             String[] parts = cleaned.split(":");
             if (parts.length == 2) {
@@ -1529,5 +1292,184 @@ public class ActionParameterGUI implements GUIManager.ManagedGUIInterface {
     public void onCleanup() {
         // Called when GUI is being cleaned up by GUIManager
         // No special cleanup needed for this GUI
+    }
+    
+    /**
+     * 🎆 УЛУЧШЕННОЕ: Проверяет, является ли строка допустимым числом
+     *
+     * 🎆 ENHANCED: Check if string is a valid number
+     *
+     * 🎆 ERWEITERT: Prüft, ob die Zeichenfolge eine gültige Zahl ist
+     */
+    private boolean isValidNumber(String str) {
+        if (str == null || str.isEmpty()) return false;
+        try {
+            Double.parseDouble(str);
+            return true;
+        } catch (NumberFormatException e) {
+            return false;
+        }
+    }
+    
+    /**
+     * 🎆 УЛУЧШЕННОЕ: Проверяет, является ли строка допустимым числом в диапазоне
+     *
+     * 🎆 ENHANCED: Check if string is a valid number in range
+     *
+     * 🎆 ERWEITERT: Prüft, ob die Zeichenfolge eine gültige Zahl im Bereich ist
+     */
+    private boolean isValidNumberInRange(String str, double min, double max) {
+        if (!isValidNumber(str)) return false;
+        try {
+            double value = Double.parseDouble(str);
+            return value >= min && value <= max;
+        } catch (NumberFormatException e) {
+            return false;
+        }
+    }
+    
+    /**
+     * 🎆 УЛУЧШЕННОЕ: Проверяет, является ли строка допустимым числом в диапазоне
+     *
+     * 🎆 ENHANCED: Check if string is a valid number in range
+     *
+     * 🎆 ERWEITERT: Prüft, ob die Zeichenfolge eine gültige Zahl im Bereich ist
+     */
+    private boolean isValidNumberInRange(String str, int min, int max) {
+        if (!isValidNumber(str)) return false;
+        try {
+            int value = Integer.parseInt(str);
+            return value >= min && value <= max;
+        } catch (NumberFormatException e) {
+            return false;
+        }
+    }
+    
+    /**
+     * 🎆 УЛУЧШЕННОЕ: Проверяет, является ли строка допустимым именем звука
+     *
+     * 🎆 ENHANCED: Check if string is a valid sound name
+     *
+     * 🎆 ERWEITERT: Prüft, ob die Zeichenfolge ein gültiger Soundname ist
+     */
+    private boolean isValidSoundName(String soundName) {
+        if (soundName == null || soundName.isEmpty()) return false;
+        try {
+            org.bukkit.Sound.valueOf(soundName.toUpperCase());
+            return true;
+        } catch (IllegalArgumentException e) {
+            return false;
+        }
+    }
+    
+    /**
+     * 🎆 УЛУЧШЕННОЕ: Проверяет, является ли строка допустимым именем эффекта
+     *
+     * 🎆 ENHANCED: Check if string is a valid effect name
+     *
+     * 🎆 ERWEITERT: Prüft, ob die Zeichenfolge ein gültiger Effektname ist
+     */
+    private boolean isValidEffectName(String effectName) {
+        if (effectName == null || effectName.isEmpty()) return false;
+        try {
+            org.bukkit.potion.PotionEffectType.getByName(effectName);
+            return true;
+        } catch (Exception e) {
+            return false;
+        }
+    }
+    
+    /**
+     * 🎆 УЛУЧШЕННОЕ: Проверяет, является ли строка допустимым регулярным выражением
+     *
+     * 🎆 ENHANCED: Check if string is a valid regex
+     *
+     * 🎆 ERWEITERT: Prüft, ob die Zeichenfolge ein gültiger Regex ist
+     */
+    private boolean isValidRegex(String str, String regex) {
+        if (str == null || str.isEmpty() || regex == null || regex.isEmpty()) return false;
+        try {
+            java.util.regex.Pattern.compile(regex);
+            return str.matches(regex);
+        } catch (Exception e) {
+            return false;
+        }
+    }
+    
+    /**
+     * 🎆 УЛУЧШЕННОЕ: Проверяет, соответствует ли строка спецификации длины
+     *
+     * 🎆 ENHANCED: Check if string matches length specification
+     *
+     * 🎆 ERWEITERT: Prüft, ob die Zeichenfolge der Längenspezifikation entspricht
+     */
+    private boolean isValidLength(String str, String lengthSpec) {
+        if (str == null || lengthSpec == null) return false;
+        
+        try {
+            if (lengthSpec.contains("-")) {
+                String[] parts = lengthSpec.split("-");
+                int min = Integer.parseInt(parts[0].trim());
+                int max = Integer.parseInt(parts[1].trim());
+                return str.length() >= min && str.length() <= max;
+            } else {
+                int exact = Integer.parseInt(lengthSpec);
+                return str.length() == exact;
+            }
+        } catch (NumberFormatException e) {
+            return false;
+        }
+    }
+    
+    /**
+     * 🎆 УЛУЧШЕННОЕ: Проверяет, является ли строка допустимым hex цветом
+     *
+     * 🎆 ENHANCED: Check if string is a valid hex color
+     */
+    private boolean isValidHexColor(String color) {
+        if (color == null || color.isEmpty()) return false;
+        return color.matches("^#([A-Fa-f0-9]{6}|[A-Fa-f0-9]{3})$");
+    }
+    
+    /**
+     * 🎆 УЛУЧШЕННОЕ: Проверяет, является ли строка допустимым email
+     *
+     * 🎆 ENHANCED: Check if string is a valid email
+     */
+    private boolean isValidEmail(String email) {
+        if (email == null || email.isEmpty()) return false;
+        return email.matches("^[A-Za-z0-9+_.-]+@([A-Za-z0-9.-]+\\.[A-Za-z]{2,})$");
+    }
+    
+    /**
+     * 🎆 УЛУЧШЕННОЕ: Проверяет, является ли строка допустимым URL
+     *
+     * 🎆 ENHANCED: Check if string is a valid URL
+     */
+    private boolean isValidUrl(String url) {
+        if (url == null || url.isEmpty()) return false;
+        try {
+            new java.net.URL(url);
+            return true;
+        } catch (Exception e) {
+            return false;
+        }
+    }
+    
+    /**
+     * 🎆 УЛУЧШЕННОЕ: Проверяет, является ли строка допустимым значением enum
+     *
+     * 🎆 ENHANCED: Check if string is a valid enum value
+     */
+    private boolean isValidEnum(String value, String enumValues) {
+        if (value == null || value.isEmpty() || enumValues == null || enumValues.isEmpty()) return false;
+        
+        String[] values = enumValues.split(",");
+        for (String enumValue : values) {
+            if (value.equalsIgnoreCase(enumValue.trim())) {
+                return true;
+            }
+        }
+        return false;
     }
 }

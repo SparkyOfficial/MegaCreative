@@ -103,22 +103,12 @@ public class ListValue implements DataValue {
     }
 
     @Override
-    public DataValue clone() {
-        try {
-            ListValue cloned = (ListValue) super.clone();
-            List<DataValue> clonedList = new ArrayList<>();
-            for (DataValue value : list) {
-                clonedList.add(value.clone());
-            }
-            // Use reflection to set the list field since it's final
-            java.lang.reflect.Field listField = ListValue.class.getDeclaredField("list");
-            listField.setAccessible(true);
-            listField.set(cloned, clonedList);
-            return cloned;
-        } catch (CloneNotSupportedException | NoSuchFieldException | IllegalAccessException e) {
-            // This should never happen since we implement Cloneable
-            throw new RuntimeException("Clone not supported", e);
+    public DataValue copy() {
+        List<DataValue> copiedList = new ArrayList<>();
+        for (DataValue value : list) {
+            copiedList.add(value.copy());
         }
+        return new ListValue(copiedList);
     }
 
     @Override

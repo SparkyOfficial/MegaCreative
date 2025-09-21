@@ -1,12 +1,54 @@
 package com.megacreative;
 
-import java.util.Map;
-
-import org.bukkit.plugin.java.JavaPlugin; // Add this import
-import org.bukkit.scheduler.BukkitRunnable; // Add this import
-import org.bukkit.scheduler.BukkitTask;
-
+import com.megacreative.coding.BlockPlacementHandler;
+import com.megacreative.coding.AutoConnectionManager;
+import com.megacreative.coding.ScriptEngine;
+import com.megacreative.coding.DefaultScriptEngine;
+import com.megacreative.coding.ActionFactory;
+import com.megacreative.coding.ConditionFactory;
 import com.megacreative.coding.events.PlayerEventsListener;
+import com.megacreative.coding.containers.BlockContainerManager;
+import com.megacreative.coding.variables.VariableManager;
+import com.megacreative.coding.events.CustomEventManager;
+import com.megacreative.coding.debug.VisualDebugger;
+import com.megacreative.coding.errors.VisualErrorHandler;
+import com.megacreative.coding.groups.BlockGroupManager;
+import com.megacreative.coding.monitoring.ScriptPerformanceMonitor;
+import com.megacreative.coding.events.EventDataExtractorRegistry;
+import com.megacreative.interfaces.*;
+import com.megacreative.listeners.DevWorldProtectionListener;
+import com.megacreative.managers.*;
+import com.megacreative.services.BlockConfigService;
+import com.megacreative.services.FunctionManager;
+import com.megacreative.coding.functions.AdvancedFunctionManager;
+import com.megacreative.gui.interactive.InteractiveGUIManager;
+import com.megacreative.gui.interactive.ReferenceSystemStyleGUI;
+import com.megacreative.gui.coding.EnhancedActionParameterGUI;
+import com.megacreative.tools.CodeBlockClipboard;
+// 🎆 Reference system-style comprehensive events
+import com.megacreative.managers.ReferenceSystemEventManager;
+import com.megacreative.listeners.CompilationListener;
+import org.bukkit.plugin.java.JavaPlugin;
+import org.bukkit.plugin.PluginManager;
+import org.bukkit.event.Listener;
+import org.bukkit.Bukkit;
+import org.bukkit.World;
+import org.bukkit.command.CommandExecutor;
+import org.bukkit.command.PluginCommand;
+import org.bukkit.configuration.file.FileConfiguration;
+import org.bukkit.plugin.PluginDescriptionFile;
+import org.bukkit.scheduler.BukkitRunnable;
+import org.bukkit.scheduler.BukkitTask;
+import java.io.File;
+import java.util.List;
+import java.util.ArrayList;
+import java.util.Map;
+import java.util.HashMap;
+import java.util.UUID;
+import java.util.concurrent.ConcurrentHashMap;
+import java.util.logging.Logger;
+import java.util.logging.Level;
+
 import com.megacreative.commands.AddFloorCommand;
 import com.megacreative.commands.BuildCommand;
 import com.megacreative.commands.ClipboardCommand;
@@ -27,8 +69,6 @@ import com.megacreative.commands.PerformanceCommand;
 import com.megacreative.commands.PlayCommand;
 import com.megacreative.commands.StatusCommand;
 import com.megacreative.commands.TemplatesCommand;
-import com.megacreative.commands.TestCommand;
-import com.megacreative.commands.TestCompileCommand;
 import com.megacreative.commands.TrustedPlayerCommand;
 import com.megacreative.commands.WorkspaceCommand;
 import com.megacreative.commands.WorldBrowserCommand;
@@ -38,7 +78,6 @@ import com.megacreative.configs.WorldCode;
 import com.megacreative.core.DependencyContainer;
 import com.megacreative.core.ServiceRegistry;
 import com.megacreative.exceptions.ConfigurationException;
-import com.megacreative.execution.runCode;
 import com.megacreative.listeners.BlockBreakListener;
 import com.megacreative.listeners.BlockGroupListener;
 import com.megacreative.listeners.CommandListener;
@@ -315,11 +354,6 @@ public class MegaCreative extends JavaPlugin {
             getCommand("execution").setExecutor(new ExecutionCommand(this));
         }
         
-        // Test compilation command
-        if (getCommand("testcompile") != null) {
-            getCommand("testcompile").setExecutor(new TestCompileCommand(this));
-        }
-        
         // Enemy player management command
         if (getCommand("enemy") != null) {
             getCommand("enemy").setExecutor(new EnemyPlayerCommand(this));
@@ -332,12 +366,7 @@ public class MegaCreative extends JavaPlugin {
             getCommand("performance").setTabCompleter(new PerformanceCommand(this));
         }
         
-        // Test command
-        if (getCommand("test") != null) {
-            getCommand("test").setExecutor(new TestCommand(this));
-            getCommand("test").setTabCompleter(new TestCommand(this));
-        }
-    }
+            }
     
     /**
      * Registers all event listeners
@@ -387,7 +416,7 @@ public class MegaCreative extends JavaPlugin {
         getServer().getPluginManager().registerEvents(new CompilationListener(this), this);
         
         // Register runCode execution engine
-        getServer().getPluginManager().registerEvents(new runCode(this), this);
+        // getServer().getPluginManager().registerEvents(new runCode(this), this);
         
         // 🎆 ENHANCED: Register world load listener for code block hydration
         getServer().getPluginManager().registerEvents(new com.megacreative.listeners.WorldLoadListener(this), this);
@@ -541,16 +570,6 @@ public class MegaCreative extends JavaPlugin {
             return null;
         }
         return serviceRegistry.getScriptPerformanceMonitor();
-    }
-    
-    /**
-     * Gets the script test runner
-     */
-    public com.megacreative.testing.ScriptTestRunner getTestRunner() {
-        if (serviceRegistry == null) {
-            return null;
-        }
-        return serviceRegistry.getScriptTestRunner();
     }
     
     // Legacy methods for backward compatibility - these should be migrated to use GUIManager

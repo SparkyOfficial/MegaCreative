@@ -72,8 +72,9 @@ public class PlayerValue implements DataValue {
     }
 
     @Override
-    public DataValue clone() {
-        // Player objects can't be cloned, so we return the same instance
+    public DataValue copy() {
+        // Player objects can't be copied, so we return the same instance
+        // since Player is managed by the server and should not be cloned
         return new PlayerValue(player);
     }
 

@@ -318,7 +318,7 @@ public class GenericAction implements BlockAction {
             
             try {
                 float power = params.containsKey("power") ? params.get("power").asNumber().floatValue() : 2.0f;
-                boolean breakBlocks = params.containsKey("breakBlocks") ? params.get("breakBlocks").asBoolean() : false;
+                boolean breakBlocks = params.containsKey("breakBlocks") && params.get("breakBlocks").asBoolean();
                 context.getPlayer().getLocation().getWorld().createExplosion(context.getPlayer().getLocation(), power, false, breakBlocks);
             } catch (Exception e) {
                 context.getPlayer().sendMessage("§cError creating explosion: " + e.getMessage());

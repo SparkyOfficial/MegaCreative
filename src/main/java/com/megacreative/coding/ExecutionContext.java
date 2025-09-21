@@ -109,7 +109,7 @@ public class ExecutionContext {
         this.playerField = player;
         this.trigger = trigger;
         this.startTime = System.currentTimeMillis();
-        // For now, we'll get the plugin instance from the MegaCreative singleton
+        // Get the plugin instance explicitly instead of using singleton
         this.plugin = com.megacreative.MegaCreative.getInstance();
         this.player = player;
         this.creativeWorld = null;
@@ -117,7 +117,7 @@ public class ExecutionContext {
         this.blockLocation = null;
         this.currentBlock = null;
         this.currentBlockField = null;
-        this.variableManager = this.plugin.getVariableManager();
+        this.variableManager = this.plugin != null ? this.plugin.getVariableManager() : null;
         this.scriptId = Constants.GLOBAL_SCOPE_ID;
         this.worldId = Constants.GLOBAL_SCOPE_ID;
     }
