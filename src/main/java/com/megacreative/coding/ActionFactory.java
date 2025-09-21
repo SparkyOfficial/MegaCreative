@@ -141,11 +141,17 @@ public class ActionFactory {
     private void initializeManagers() {
         try {
             // Initialize GUI managers
-            this.guiManager = dependencyContainer.resolve(GUIManager.class);
-            this.interactiveGUIManager = dependencyContainer.resolve(InteractiveGUIManager.class);
+            if (dependencyContainer.isRegistered(GUIManager.class)) {
+                this.guiManager = dependencyContainer.resolve(GUIManager.class);
+            }
+            if (dependencyContainer.isRegistered(InteractiveGUIManager.class)) {
+                this.interactiveGUIManager = dependencyContainer.resolve(InteractiveGUIManager.class);
+            }
 
             // Initialize event manager
-            this.eventManager = dependencyContainer.resolve(CustomEventManager.class);
+            if (dependencyContainer.isRegistered(CustomEventManager.class)) {
+                this.eventManager = dependencyContainer.resolve(CustomEventManager.class);
+            }
         } catch (Exception e) {
             LOGGER.log(java.util.logging.Level.SEVERE, e, () -> "Failed to initialize managers: " + e.getMessage());
         }

@@ -43,7 +43,7 @@ permissions:
       megacreative.command.hub: true
       megacreative.command.function: true
       megacreative.command.interactive: true
-  megacreative.command.performance: true
+      megacreative.command.performance: true
 
   megacreative.admin:
     description: Admin permissions
@@ -82,6 +82,10 @@ permissions:
   megacreative.trusted:
     description: Manage trusted players
     default: op
+
+  megacreative.command.performance:
+    description: Performance monitoring and optimization
+    default: true
 
 commands:
   megacreative:

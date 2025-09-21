@@ -563,27 +563,38 @@ public class BlockConfigService {
          * This should be called after the service registry is fully initialized
          */
         public void loadActionParameters(MegaCreative plugin) {
-            // Load action parameters
-            ConfigurationSection actionConfigurations = plugin.getServiceRegistry().getBlockConfigService().getActionConfigurations();
-            if (actionConfigurations != null) {
-                for (String action : this.actions) {
-                    ConfigurationSection actionSection = actionConfigurations.getConfigurationSection(action);
-                    if (actionSection != null) {
-                        ConfigurationSection slots = actionSection.getConfigurationSection("slots");
-                        if (slots != null) {
-                            for (String slotKey : slots.getKeys(false)) {
-                                ConfigurationSection slotSection = slots.getConfigurationSection(slotKey);
-                                if (slotSection != null) {
-                                    String slotName = slotSection.getString("slot_name");
-                                    if (slotName != null) {
-                                        ParameterConfig paramConfig = new ParameterConfig(slotSection);
-                                        this.actionParameters.put(slotName, paramConfig);
+            try {
+                // Check if service registry is available
+                if (plugin.getServiceRegistry() == null) {
+                    // Service registry not yet initialized, defer loading
+                    return;
+                }
+                
+                // Load action parameters
+                ConfigurationSection actionConfigurations = plugin.getServiceRegistry().getBlockConfigService().getActionConfigurations();
+                if (actionConfigurations != null) {
+                    for (String action : this.actions) {
+                        ConfigurationSection actionSection = actionConfigurations.getConfigurationSection(action);
+                        if (actionSection != null) {
+                            ConfigurationSection slots = actionSection.getConfigurationSection("slots");
+                            if (slots != null) {
+                                for (String slotKey : slots.getKeys(false)) {
+                                    ConfigurationSection slotSection = slots.getConfigurationSection(slotKey);
+                                    if (slotSection != null) {
+                                        String slotName = slotSection.getString("slot_name");
+                                        if (slotName != null) {
+                                            ParameterConfig paramConfig = new ParameterConfig(slotSection);
+                                            this.actionParameters.put(slotName, paramConfig);
+                                        }
                                     }
                                 }
                             }
                         }
                     }
                 }
+            } catch (Exception e) {
+                // Log the error but don't crash the plugin
+                java.util.logging.Logger.getLogger(BlockConfig.class.getName()).warning("Failed to load action parameters: " + e.getMessage());
             }
         }
         

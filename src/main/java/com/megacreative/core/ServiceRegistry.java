@@ -257,8 +257,12 @@ public class ServiceRegistry {
         // Now that service registry is fully initialized, load action parameters for all block configs
         // This fixes the issue where BlockConfig tried to access service registry during construction
         if (blockConfigService != null) {
-            for (com.megacreative.services.BlockConfigService.BlockConfig config : blockConfigService.getAllBlockConfigs()) {
-                config.loadActionParameters((MegaCreative) plugin);
+            try {
+                for (com.megacreative.services.BlockConfigService.BlockConfig config : blockConfigService.getAllBlockConfigs()) {
+                    config.loadActionParameters((MegaCreative) plugin);
+                }
+            } catch (Exception e) {
+                log.log(Level.WARNING, "Failed to load action parameters for block configs", e);
             }
         }
         
@@ -1213,6 +1217,8 @@ public class ServiceRegistry {
         if (guiManager == null) {
             this.guiManager = new GUIManager(getPlayerManager(), getVariableManager());
             registerService(GUIManager.class, guiManager);
+            // Register in dependency container for auto-injection
+            dependencyContainer.registerSingleton(GUIManager.class, guiManager);
         }
         
         // Initialize PlayerEventsListener
