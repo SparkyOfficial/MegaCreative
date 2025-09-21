@@ -5,6 +5,9 @@ import org.bukkit.entity.Entity;
 import org.bukkit.Location;
 import java.util.List;
 import java.util.ArrayList;
+import java.util.Random;
+import java.util.HashMap;
+import java.util.Map;
 
 /**
  * Target selector system for actions, similar to Minecraft's @a, @p, @r, @s selectors
@@ -30,6 +33,9 @@ public class TargetSelector {
     private static final String COORD_X = "x";
     private static final String COORD_Y = "y";
     private static final String COORD_Z = "z";
+    
+    // Random instance for generating random numbers
+    private static final Random RANDOM = new Random();
     
     public enum TargetType {
         SELF,        // @s - the executing player
@@ -112,60 +118,137 @@ public class TargetSelector {
         String[] args = selectorArgument.split(",");
         List<Player> filteredTargets = new ArrayList<>(targets);
         
+        // Parse arguments into a map for easier access
+        Map<String, String> argumentMap = new HashMap<>();
         for (String arg : args) {
             String[] parts = arg.split("=");
             if (parts.length == 2) {
-                String key = parts[0].trim();
-                String value = parts[1].trim();
-                
-                switch (key) {
-                    case ARG_RADIUS: // Radius
-                        try {
-                            double radius = Double.parseDouble(value);
-                            Location playerLocation = context.getPlayer().getLocation();
-                            filteredTargets.removeIf(player -> 
-                                player.getLocation().distance(playerLocation) > radius);
-                        } catch (NumberFormatException e) {
-                            // Invalid radius, ignore
-                        }
-                        break;
-                        
-                    case ARG_GAMEMODE: // Game mode
-                        try {
-                            int gameMode = Integer.parseInt(value);
-                            org.bukkit.GameMode mode = org.bukkit.GameMode.getByValue(gameMode);
-                            if (mode != null) {
-                                filteredTargets.removeIf(player -> 
-                                    player.getGameMode() != mode);
-                            }
-                        } catch (NumberFormatException e) {
-                            // Invalid game mode, ignore
-                        }
-                        break;
-                        
-                    case ARG_NAME: // Player name
-                        filteredTargets.removeIf(player -> 
-                            !player.getName().equals(value));
-                        break;
-                        
-                    case ARG_TEAM: // Team name
-                        // This would require scoreboard integration
-                        break;
-                        
-                    case ARG_X:
-                    case ARG_Y:
-                    case ARG_Z: // Coordinates for distance calculation
-                        // These are handled with 'r' parameter
-                        break;
-                        
-                    default:
-                        // Default case - no action needed for unknown arguments
-                        break;
-                }
+                argumentMap.put(parts[0].trim(), parts[1].trim());
             }
         }
         
+        // Process each argument
+        for (Map.Entry<String, String> entry : argumentMap.entrySet()) {
+            processArgument(entry.getKey(), entry.getValue(), filteredTargets, context, argumentMap);
+        }
+        
         return filteredTargets;
+    }
+    
+    /**
+     * Process a single selector argument
+     * @param key The argument key (e.g., "r" or "name")
+     * @param value The argument value (e.g., "5" or "Steve")
+     * @param targets The list of targets to filter
+     * @param context The execution context
+     * @param allArguments All parsed arguments for coordinate-based calculations
+     */
+    private void processArgument(String key, String value, List<Player> targets, ExecutionContext context, Map<String, String> allArguments) {
+        switch (key) {
+            case ARG_RADIUS: // Radius
+                applyRadiusFilter(targets, context, value, allArguments);
+                break;
+                
+            case ARG_GAMEMODE: // Game mode
+                applyGameModeFilter(targets, value);
+                break;
+                
+            case ARG_NAME: // Player name
+                applyNameFilter(targets, value);
+                break;
+                
+            case ARG_TEAM: // Team name
+                // This would require scoreboard integration
+                break;
+                
+            case ARG_X: // X coordinate
+            case ARG_Y: // Y coordinate
+            case ARG_Z: // Z coordinate
+                // These are handled with 'r' parameter and stored in allArguments
+                break;
+                
+            default:
+                // Default case - no action needed for unknown arguments
+                break;
+        }
+    }
+    
+    /**
+     * Apply radius filter to targets using either player location or specified coordinates
+     */
+    private void applyRadiusFilter(List<Player> targets, ExecutionContext context, String radiusValue, Map<String, String> allArguments) {
+        try {
+            double radius = Double.parseDouble(radiusValue);
+            Location referenceLocation = getReferenceLocation(context, allArguments);
+            
+            targets.removeIf(player -> 
+                player.getLocation().distance(referenceLocation) > radius);
+        } catch (NumberFormatException e) {
+            // Invalid radius, ignore
+        }
+    }
+    
+    /**
+     * Get reference location for distance calculations.
+     * Uses specified coordinates if provided, otherwise uses player location.
+     */
+    private Location getReferenceLocation(ExecutionContext context, Map<String, String> arguments) {
+        Location playerLocation = context.getPlayer().getLocation();
+        double x = playerLocation.getX();
+        double y = playerLocation.getY();
+        double z = playerLocation.getZ();
+        
+        // Override coordinates if specified in arguments
+        if (arguments.containsKey(ARG_X)) {
+            try {
+                x = Double.parseDouble(arguments.get(ARG_X));
+            } catch (NumberFormatException e) {
+                // Keep player's X coordinate
+            }
+        }
+        
+        if (arguments.containsKey(ARG_Y)) {
+            try {
+                y = Double.parseDouble(arguments.get(ARG_Y));
+            } catch (NumberFormatException e) {
+                // Keep player's Y coordinate
+            }
+        }
+        
+        if (arguments.containsKey(ARG_Z)) {
+            try {
+                z = Double.parseDouble(arguments.get(ARG_Z));
+            } catch (NumberFormatException e) {
+                // Keep player's Z coordinate
+            }
+        }
+        
+        // Create new location with the determined coordinates
+        return new Location(playerLocation.getWorld(), x, y, z);
+    }
+    
+    /**
+     * Apply game mode filter to targets
+     */
+    private void applyGameModeFilter(List<Player> targets, String gameModeValue) {
+        try {
+            int gameMode = Integer.parseInt(gameModeValue);
+            org.bukkit.GameMode mode = org.bukkit.GameMode.getByValue(gameMode);
+            if (mode != null) {
+                targets.removeIf(player -> 
+                    player.getGameMode() != mode);
+            }
+        } catch (NumberFormatException e) {
+            // Invalid game mode, ignore
+        }
+    }
+    
+    /**
+     * Apply name filter to targets
+     */
+    private void applyNameFilter(List<Player> targets, String nameValue) {
+        targets.removeIf(player -> 
+            !player.getName().equals(nameValue));
     }
     
     /**
@@ -207,7 +290,8 @@ public class TargetSelector {
             return null;
         }
         
-        int randomIndex = (int) (Math.random() * players.size());
+        // Using java.util.Random.nextInt() instead of Math.random()
+        int randomIndex = RANDOM.nextInt(players.size());
         return players.get(randomIndex);
     }
     
