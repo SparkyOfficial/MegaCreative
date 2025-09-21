@@ -20,6 +20,7 @@ import java.util.Objects;
 /**
  * Represents the state of a block during visualization
  */
+// Make VisualizationState package-private instead of public to fix visibility issue
 enum VisualizationState {
     IDLE,          // Default state
     EXECUTING,     // Block is currently being executed
@@ -30,6 +31,7 @@ enum VisualizationState {
     HIGHLIGHTED,   // Block is highlighted for emphasis
     MODIFIED       // Block's state was modified during execution
 }
+
 public class AdvancedVisualDebugger {
     
     private final MegaCreative plugin;

@@ -33,12 +33,22 @@ import java.util.Map;
 public class TriggerCustomEventAction implements BlockAction {
     
     @Override
-    public void execute(ExecutionContext context) {
-        Player player = context.getPlayer();
-        CodeBlock block = context.getCurrentBlock();
+    public ExecutionResult execute(CodeBlock block, ExecutionContext context) {
+        if (block == null) {
+            return ExecutionResult.error("CodeBlock cannot be null");
+        }
+        if (context == null) {
+            return ExecutionResult.error("ExecutionContext cannot be null");
+        }
         
-        if (player == null || block == null) {
-            return;
+        Player player = context.getPlayer();
+        if (player == null) {
+            return ExecutionResult.error("No player available");
+        }
+        
+        CodeBlock currentBlock = context.getCurrentBlock();
+        if (currentBlock == null) {
+            return ExecutionResult.error("Current block is not available");
         }
         
         ParameterResolver resolver = new ParameterResolver(context);
@@ -68,7 +78,7 @@ public class TriggerCustomEventAction implements BlockAction {
             
             if (eventName == null || eventName.trim().isEmpty()) {
                 player.sendMessage("§c[TriggerEvent] No event name specified!");
-                return;
+                return ExecutionResult.error("No event name specified");
             }
             
             eventName = eventName.trim();
@@ -77,7 +87,7 @@ public class TriggerCustomEventAction implements BlockAction {
             CustomEventManager eventManager = context.getPlugin().getServiceRegistry().getCustomEventManager();
             if (eventManager == null) {
                 player.sendMessage("§c[TriggerEvent] Custom event system not available!");
-                return;
+                return ExecutionResult.error("Custom event system not available");
             }
             
             // Check if event exists
@@ -85,7 +95,7 @@ public class TriggerCustomEventAction implements BlockAction {
             CustomEvent customEvent = events.get(eventName);
             if (customEvent == null) {
                 player.sendMessage("§c[TriggerEvent] Custom event not found: " + eventName);
-                return;
+                return ExecutionResult.error("Custom event not found: " + eventName);
             }
             
             // Get event data
@@ -99,7 +109,7 @@ public class TriggerCustomEventAction implements BlockAction {
             String validationError = validateEventData(customEvent, eventData);
             if (validationError != null) {
                 player.sendMessage("§c[TriggerEvent] Invalid event data: " + validationError);
-                return;
+                return ExecutionResult.error("Invalid event data: " + validationError);
             }
             
             // Trigger the custom event
@@ -109,9 +119,11 @@ public class TriggerCustomEventAction implements BlockAction {
                               (isGlobal ? " (global)" : " (world)") + 
                               (isAsync ? " (async)" : ""));
             
+            return ExecutionResult.success();
         } catch (Exception e) {
             player.sendMessage("§c[TriggerEvent] Error triggering event: " + e.getMessage());
             context.getPlugin().getLogger().warning("TriggerEvent execution error: " + e.getMessage());
+            return ExecutionResult.error("Error triggering event: " + e.getMessage());
         }
     }
     
@@ -120,6 +132,10 @@ public class TriggerCustomEventAction implements BlockAction {
      */
     private Map<String, DataValue> collectEventData(ExecutionContext context, CodeBlock block, 
                                                    ParameterResolver resolver, CustomEvent customEvent) {
+        if (context == null || block == null || resolver == null || customEvent == null) {
+            throw new IllegalArgumentException("Parameters cannot be null");
+        }
+        
         Map<String, DataValue> eventData = new HashMap<>();
         
         // Try to get data from "data" parameter (could be a variable reference to a map)
@@ -133,7 +149,15 @@ public class TriggerCustomEventAction implements BlockAction {
         
         // Collect data for each field defined in the custom event
         for (CustomEvent.EventDataField field : customEvent.getDataFields().values()) {
+            if (field == null) {
+                continue; // Skip null fields
+            }
+            
             String fieldName = field.getName();
+            if (fieldName == null) {
+                continue; // Skip fields with null names
+            }
+            
             DataValue fieldValue = block.getParameter("data_" + fieldName);
             
             if (fieldValue != null && !fieldValue.isEmpty()) {
@@ -160,21 +184,39 @@ public class TriggerCustomEventAction implements BlockAction {
      * Validates event data against event definition
      */
     private String validateEventData(CustomEvent customEvent, Map<String, DataValue> eventData) {
+        if (customEvent == null || eventData == null) {
+            return "CustomEvent and eventData cannot be null";
+        }
+        
         for (CustomEvent.EventDataField field : customEvent.getDataFields().values()) {
-            String fieldName = field.getName();
+            if (field == null) {
+                continue; // Skip null fields
+            }
             
-            if (field.isRequired() && (!eventData.containsKey(fieldName) || eventData.get(fieldName).isEmpty())) {
+            String fieldName = field.getName();
+            if (fieldName == null) {
+                continue; // Skip fields with null names
+            }
+            
+            if (field.isRequired() && (!eventData.containsKey(fieldName) || eventData.get(fieldName) == null || eventData.get(fieldName).isEmpty())) {
                 return "Required field missing: " + fieldName;
             }
             
             if (eventData.containsKey(fieldName)) {
                 DataValue value = eventData.get(fieldName);
+                if (value == null) {
+                    continue; // Skip null values
+                }
+                
                 Class<?> expectedType = field.getExpectedType();
+                if (expectedType == null) {
+                    continue; // Skip validation if expected type is not specified
+                }
                 
                 // Basic type validation - check if the value is compatible
-                if (expectedType != null && !field.isCompatible(value)) {
+                if (!field.isCompatible(value)) {
                     return "Field " + fieldName + " expects " + expectedType.getSimpleName() + 
-                           " but got " + (value != null ? value.getClass().getSimpleName() : "null");
+                           " but got " + value.getClass().getSimpleName();
                 }
             }
         }

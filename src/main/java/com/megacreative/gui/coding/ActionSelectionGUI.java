@@ -475,15 +475,15 @@ public class ActionSelectionGUI implements GUIManager.ManagedGUIInterface {
                 return Material.SLIME_BALL;
             case "asyncloop":
                 return Material.REPEATER;
-            case "createScoreboard":
-            case "setScore":
-            case "incrementScore":
+            case "createscoreboard":
+            case "setscore":
+            case "incrementscore":
                 return Material.OAK_SIGN;
-            case "createTeam":
-            case "addPlayerToTeam":
+            case "createteam":
+            case "addplayertoteam":
                 return Material.WHITE_BANNER;
-            case "saveLocation":
-            case "getLocation":
+            case "savelocation":
+            case "getlocation":
                 return Material.COMPASS;
             default:
                 return Material.STONE;
@@ -539,7 +539,7 @@ public class ActionSelectionGUI implements GUIManager.ManagedGUIInterface {
             case "setscore": return "Установить счет";
             case "incrementscore": return "Увеличить счет";
             case "createteam": return "Создать команду";
-            case "addPlayerToTeam": return "Добавить игрока в команду";
+            case "addplayertoteam": return "Добавить игрока в команду";
             case "savelocation": return "Сохранить локацию";
             case "getlocation": return "Получить локацию";
             default: return actionId;

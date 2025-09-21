@@ -830,7 +830,7 @@ public class BlockPlacementHandler implements Listener {
         // Final sound effect after all particles are shown
         org.bukkit.Bukkit.getScheduler().runTaskLater(plugin, () -> {
             player.playSound(location, org.bukkit.Sound.BLOCK_ENCHANTMENT_TABLE_USE, 1.0f, 1.2f);
-        }, 3 * (distance + 1) + 10); // After all particles + 10 ticks
+        }, 3L * (distance + 1) + 10L); // After all particles + 10 ticks
     }
     
     /**
@@ -1747,17 +1747,11 @@ public class BlockPlacementHandler implements Listener {
             
             // Try to determine parameter name for this slot
             String paramName = getParameterNameForSlot(codeBlock.getAction(), slot);
-            if (paramName == null) {
-                // Fallback: use generic slot-based parameter name
-                paramName = "slot_" + slot;
-            }
             
             // Convert ItemStack to DataValue
             com.megacreative.coding.values.DataValue paramValue = convertItemStackToDataValue(item);
-            if (paramValue != null) {
-                newParameters.put(paramName, paramValue);
-                processedItems++;
-            }
+            newParameters.put(paramName, paramValue);
+            processedItems++;
         }
         
         // Update CodeBlock parameters
@@ -1854,7 +1848,9 @@ public class BlockPlacementHandler implements Listener {
                 // Check type from the previous line
                 int index = lore.indexOf(line);
                 if (index > 0) {
-                    String typeLine = lore.get(index - 1).replaceAll("§[0-9a-fk-or]", "");
+                    // Add null check for lore and bounds check for index - 1
+                    String typeLine = (lore != null && index - 1 < lore.size() && index - 1 >= 0) ? 
+                        lore.get(index - 1).replaceAll("§[0-9a-fk-or]", "") : "";
                     
                     if (typeLine.contains("Number")) {
                         try {
@@ -2158,7 +2154,7 @@ public class BlockPlacementHandler implements Listener {
                     // If distance is less than minimum (3), reposition brackets
                     if (distance < 3) {
                         // Calculate the new positions for brackets (3 blocks apart from the new block)
-                        Location newOpenBracketLoc = newBlockLocation.clone().add(direction.getOppositeFace().getModX() * 1, 0, direction.getOppositeFace().getModZ() * 1);
+                        Location newOpenBracketLoc = newBlockLocation.clone().add(direction.getOppositeFace().getModX(), 0, direction.getOppositeFace().getModZ());
                         Location newCloseBracketLoc = newBlockLocation.clone().add(direction.getModX() * 3, 0, direction.getModZ() * 3);
                         
                         plugin.getLogger().info("Moving brackets to new positions: " + newOpenBracketLoc + " and " + newCloseBracketLoc);

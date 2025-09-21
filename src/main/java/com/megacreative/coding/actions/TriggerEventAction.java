@@ -21,11 +21,21 @@ public class TriggerEventAction implements BlockAction {
     private final CustomEventManager eventManager;
     
     public TriggerEventAction(CustomEventManager eventManager) {
+        if (eventManager == null) {
+            throw new IllegalArgumentException("CustomEventManager cannot be null");
+        }
         this.eventManager = eventManager;
     }
     
     @Override
     public ExecutionResult execute(CodeBlock block, ExecutionContext context) {
+        if (block == null) {
+            return ExecutionResult.error("CodeBlock cannot be null");
+        }
+        if (context == null) {
+            return ExecutionResult.error("ExecutionContext cannot be null");
+        }
+        
         Player player = context.getPlayer();
         if (player == null) {
             return ExecutionResult.error("No player available");
@@ -38,6 +48,11 @@ public class TriggerEventAction implements BlockAction {
             DataValue rawEventName = block.getParameter("eventName");
             if (rawEventName == null) {
                 return ExecutionResult.error("Event name is required");
+            }
+            
+            // Validate parameter types
+            if (!(rawEventName instanceof TextValue)) {
+                return ExecutionResult.error("Event name must be a text value");
             }
             
             String eventName = resolver.resolve(context, rawEventName).asString();
@@ -65,7 +80,17 @@ public class TriggerEventAction implements BlockAction {
             String worldName = player.getWorld().getName();
             DataValue rawWorld = block.getParameter("worldName");
             if (rawWorld != null) {
-                worldName = resolver.resolve(context, rawWorld).asString();
+                DataValue resolvedWorld = resolver.resolve(context, rawWorld);
+                if (resolvedWorld != null) {
+                    String resolvedWorldName = resolvedWorld.asString();
+                    if (resolvedWorldName != null && !resolvedWorldName.trim().isEmpty()) {
+                        worldName = resolvedWorldName;
+                    }
+                }
+            }
+            
+            if (worldName == null || worldName.trim().isEmpty()) {
+                return ExecutionResult.error("Could not determine world name");
             }
             
             // Trigger the event

@@ -1,23 +1,56 @@
 package com.megacreative;
 
-import com.megacreative.commands.*;
-import com.megacreative.configs.WorldCode; // Add this import
-import com.megacreative.execution.runCode; // Add this import
-import com.megacreative.listeners.*;
-import com.megacreative.core.DependencyContainer;
-import com.megacreative.core.ServiceRegistry;
-import com.megacreative.config.ConfigurationValidator;
-import com.megacreative.exceptions.ConfigurationException;
-import com.megacreative.coding.events.PlayerEventsListener;
-import com.megacreative.coding.debug.VisualDebugger;
-import org.bukkit.entity.Player;
-import org.bukkit.plugin.java.JavaPlugin;
-import org.bukkit.scheduler.BukkitRunnable;
+import java.util.Map;
+
+import org.bukkit.plugin.java.JavaPlugin; // Add this import
+import org.bukkit.scheduler.BukkitRunnable; // Add this import
 import org.bukkit.scheduler.BukkitTask;
 
-import java.util.Map;
-import java.util.HashMap;
-import java.util.UUID;
+import com.megacreative.coding.events.PlayerEventsListener;
+import com.megacreative.commands.AddFloorCommand;
+import com.megacreative.commands.BuildCommand;
+import com.megacreative.commands.ClipboardCommand;
+import com.megacreative.commands.CreateWorldCommand;
+import com.megacreative.commands.DebugCommand;
+import com.megacreative.commands.DeleteCommand;
+import com.megacreative.commands.DevCommand;
+import com.megacreative.commands.EnemyPlayerCommand;
+import com.megacreative.commands.ExecutionCommand;
+import com.megacreative.commands.FunctionCommand;
+import com.megacreative.commands.GroupCommand;
+import com.megacreative.commands.HubCommand;
+import com.megacreative.commands.InteractiveCommand;
+import com.megacreative.commands.JoinCommand;
+import com.megacreative.commands.MainCommand;
+import com.megacreative.commands.MyWorldsCommand;
+import com.megacreative.commands.PerformanceCommand;
+import com.megacreative.commands.PlayCommand;
+import com.megacreative.commands.StatusCommand;
+import com.megacreative.commands.TemplatesCommand;
+import com.megacreative.commands.TestCommand;
+import com.megacreative.commands.TestCompileCommand;
+import com.megacreative.commands.TrustedPlayerCommand;
+import com.megacreative.commands.WorkspaceCommand;
+import com.megacreative.commands.WorldBrowserCommand;
+import com.megacreative.commands.WorldSettingsCommand;
+import com.megacreative.config.ConfigurationValidator;
+import com.megacreative.configs.WorldCode;
+import com.megacreative.core.DependencyContainer;
+import com.megacreative.core.ServiceRegistry;
+import com.megacreative.exceptions.ConfigurationException;
+import com.megacreative.execution.runCode;
+import com.megacreative.listeners.BlockBreakListener;
+import com.megacreative.listeners.BlockGroupListener;
+import com.megacreative.listeners.CommandListener;
+import com.megacreative.listeners.CompilationListener;
+import com.megacreative.listeners.DataItemListener;
+import com.megacreative.listeners.GuiListener;
+import com.megacreative.listeners.InventoryClickListener;
+import com.megacreative.listeners.PlayerDeathListener;
+import com.megacreative.listeners.PlayerJoinListener;
+import com.megacreative.listeners.PlayerQuitListener;
+import com.megacreative.listeners.PlayerWorldChangeListener;
+import com.megacreative.listeners.WorldInteractListener;
 
 /**
  * Основной класс плагина - теперь легковесный и ориентированный на жизненный цикл плагина
