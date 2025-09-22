@@ -260,7 +260,7 @@ commands:
       &6/execution benchmark &f- Run performance benchmark
       &6/execution cancel &f- Cancel all executions
     permission: megacreative.user
-    aliases: [exec, perf]
+    aliases: [exe, perf]
 
   delete:
     description: Удалить ваш мир
@@ -289,7 +289,7 @@ commands:
       &6/performance bottlenecks &f- Show detected performance bottlenecks
       &6/performance clear &f- Clear performance data (admin only)
     permission: megacreative.user
-    aliases: [perf, monitor]
+    aliases: [perfmon, monitor]
 
   execute:
     description: Execute a script manually for testing

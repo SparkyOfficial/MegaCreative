@@ -11,19 +11,13 @@ import com.megacreative.coding.containers.BlockContainerManager;
 import com.megacreative.coding.variables.VariableManager;
 import com.megacreative.coding.events.CustomEventManager;
 import com.megacreative.coding.debug.VisualDebugger;
-import com.megacreative.coding.errors.VisualErrorHandler;
-import com.megacreative.coding.groups.BlockGroupManager;
 import com.megacreative.coding.monitoring.ScriptPerformanceMonitor;
-import com.megacreative.coding.events.EventDataExtractorRegistry;
 import com.megacreative.interfaces.*;
 import com.megacreative.listeners.DevWorldProtectionListener;
 import com.megacreative.managers.*;
 import com.megacreative.services.BlockConfigService;
 import com.megacreative.services.FunctionManager;
-import com.megacreative.coding.functions.AdvancedFunctionManager;
 import com.megacreative.gui.interactive.InteractiveGUIManager;
-import com.megacreative.gui.interactive.ReferenceSystemStyleGUI;
-import com.megacreative.gui.coding.EnhancedActionParameterGUI;
 import com.megacreative.tools.CodeBlockClipboard;
 // 🎆 Reference system-style comprehensive events
 import com.megacreative.managers.ReferenceSystemEventManager;
@@ -457,17 +451,14 @@ public class MegaCreative extends JavaPlugin {
         // Register our new CompilationListener for automatic code compilation
         getServer().getPluginManager().registerEvents(new CompilationListener(this), this);
         
-        // Register runCode execution engine
-        // getServer().getPluginManager().registerEvents(new runCode(this), this);
-        
-        // 🎆 ENHANCED: Register world load listener for code block hydration
+        // Register world load listener for code block hydration
         getServer().getPluginManager().registerEvents(new com.megacreative.listeners.WorldLoadListener(this), this);
     }
     
     // Static access and service delegation
     
     public static MegaCreative getInstance() {
-        return instance;
+{{ ... }}
     }
     
     /**
