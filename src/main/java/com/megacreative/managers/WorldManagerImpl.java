@@ -661,37 +661,59 @@ public class WorldManagerImpl implements IWorldManager {
     public void switchToPlayWorld(Player player, String worldId) {
         CreativeWorld world = getWorld(worldId);
         if (world == null) {
-            player.sendMessage("§cМир не найден!");
+            player.sendMessage("§cWorld not found!");
             return;
         }
+        
+        // Set mode to PLAY
+        world.setMode(com.megacreative.models.WorldMode.PLAY);
         
         String playWorldName = world.isPlayWorld() ? world.getWorldName() : world.getPlayWorldName();
         World bukkitWorld = Bukkit.getWorld(playWorldName);
         
         if (bukkitWorld == null) {
-            player.sendMessage("§cМир для игры не существует!");
-            return;
+            player.sendMessage("§cPlay world does not exist!");
+            // Try to create it
+            WorldCreator creator = new WorldCreator(playWorldName);
+            creator.environment(world.getWorldType().getEnvironment());
+            // Copy from dev world if it exists
+            World devWorld = Bukkit.getWorld(world.getDevWorldName());
+            if (devWorld != null) {
+                creator.copy(devWorld);
+            }
+            bukkitWorld = Bukkit.createWorld(creator);
+            
+            if (bukkitWorld == null) {
+                player.sendMessage("§cFailed to create play world!");
+                return;
+            }
         }
         
+        // Teleport player to play world
         player.teleport(bukkitWorld.getSpawnLocation());
-        player.sendMessage("§a🎮 Переключение в игровой режим!");
+        player.setGameMode(org.bukkit.GameMode.SURVIVAL); // Play mode should be survival
+        player.sendMessage("§a🎮 Switched to play mode!");
         
         // 🎆 ENHANCED: Track world mode switch
         if (plugin instanceof MegaCreative) {
             ((MegaCreative) plugin).getPlayerManager().trackPlayerWorldEntry(player, worldId, "PLAY");
         }
+        
+        // Save world state
+        saveWorld(world);
     }
     
     // 🎆 ENHANCED: Add missing switchToBuildWorld method for proper build mode switching
     public void switchToBuildWorld(Player player, String worldId) {
         CreativeWorld world = getWorld(worldId);
         if (world == null) {
-            player.sendMessage("§cМир не найден!");
+            player.sendMessage("§cWorld not found!");
             return;
         }
         
+        // Check permissions
         if (!world.canEdit(player)) {
-            player.sendMessage("§cУ вас нет прав на изменение этого мира!");
+            player.sendMessage("§cYou don't have permission to edit this world!");
             return;
         }
         
@@ -710,9 +732,9 @@ public class WorldManagerImpl implements IWorldManager {
         if (bukkitWorld != null) {
             player.teleport(bukkitWorld.getSpawnLocation());
             player.setGameMode(org.bukkit.GameMode.CREATIVE);
-            player.sendMessage("§aРежим мира изменен на §f§лСТРОИТЕЛЬСТВО§a!");
-            player.sendMessage("§7❌ Код отключен, скрипты не будут выполняться");
-            player.sendMessage("§7Креатив для строителей");
+            player.sendMessage("§aWorld mode changed to §f§lBUILD§a!");
+            player.sendMessage("§7❌ Code disabled, scripts will not execute");
+            player.sendMessage("§7Creative mode for builders");
             
             // 🎆 ENHANCED: Track world mode switch
             if (plugin instanceof MegaCreative) {
@@ -720,6 +742,8 @@ public class WorldManagerImpl implements IWorldManager {
             }
             
             saveWorld(world);
+        } else {
+            player.sendMessage("§cFailed to switch to build world!");
         }
     }
     

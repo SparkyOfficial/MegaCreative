@@ -69,7 +69,16 @@ public class PlayCommand implements CommandExecutor {
         // Check if world manager is available
         if (plugin.getWorldManager() == null) {
             player.sendMessage("§cWorld manager not available!");
+            plugin.getLogger().severe("World manager is null in PlayCommand!");
             return true;
+        }
+        
+        // Log debug information
+        plugin.getLogger().info("PlayCommand executed by player: " + player.getName());
+        plugin.getLogger().info("Current world: " + player.getWorld().getName());
+        plugin.getLogger().info("ServiceRegistry available: " + (plugin.getServiceRegistry() != null));
+        if (plugin.getServiceRegistry() != null) {
+            plugin.getLogger().info("WorldManager in ServiceRegistry: " + (plugin.getServiceRegistry().getWorldManager() != null));
         }
         
         if (args.length > 0) {
@@ -99,8 +108,6 @@ public class PlayCommand implements CommandExecutor {
             
             // Try multiple pattern matching approaches
             String worldName = player.getWorld().getName();
-            // Reduced logging - only log when debugging
-            // plugin.getLogger().info("Attempting to find CreativeWorld for world name: " + worldName);
             
             if (worldName.startsWith("megacreative_")) {
                 // Extract ID using more precise method for complex naming
@@ -135,8 +142,6 @@ public class PlayCommand implements CommandExecutor {
                 }
                 
                 if (potentialId != null) {
-                    // Reduced logging - only log when debugging
-                    // plugin.getLogger().info("Trying to find world with extracted ID: " + potentialId);
                     CreativeWorld foundWorld = plugin.getWorldManager().getWorld(potentialId);
                     if (foundWorld != null) {
                         creativeWorld = foundWorld;
@@ -147,8 +152,6 @@ public class PlayCommand implements CommandExecutor {
             
             // If still not found, try all available worlds
             if (creativeWorld == null) {
-                // Reduced logging - only log when debugging
-                // plugin.getLogger().info("Trying partial name matching for all available worlds");
                 for (CreativeWorld world : plugin.getWorldManager().getCreativeWorlds()) {
                     if (worldName.contains(world.getId()) || worldName.contains(world.getName().toLowerCase().replace(" ", ""))) {
                         creativeWorld = world;
@@ -167,6 +170,7 @@ public class PlayCommand implements CommandExecutor {
         
         World currentWorld = player.getWorld();
         if (currentWorld.getName().contains("-code")) {
+            // Compile code before switching to play mode
             CodeCompiler codeCompiler = plugin.getServiceRegistry().getCodeCompiler();
             if (codeCompiler != null) {
                 try {
@@ -182,14 +186,18 @@ public class PlayCommand implements CommandExecutor {
             }
         }
         
+        // Save player inventory before switching
         if (plugin.getBlockPlacementHandler().isInDevWorld(player)) {
             plugin.getServiceRegistry().getDevInventoryManager().savePlayerInventory(player);
         }
         
+        // Restore player inventory for play mode
         plugin.getServiceRegistry().getDevInventoryManager().restorePlayerInventory(player);
         
+        // Switch to play world
         plugin.getWorldManager().switchToPlayWorld(player, creativeWorld.getId());
         
+        // Clear inventory to prevent item duplication
         player.getInventory().clear();
         
         return true;

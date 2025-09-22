@@ -74,7 +74,24 @@ public class BuildCommand implements CommandExecutor {
         // Check if worldManager is available
         if (worldManager == null) {
             player.sendMessage("§cWorld manager not available!");
+            if (plugin != null) {
+                plugin.getLogger().severe("World manager is null in BuildCommand!");
+                plugin.getLogger().severe("ServiceRegistry available: " + (plugin.getServiceRegistry() != null));
+                if (plugin.getServiceRegistry() != null) {
+                    plugin.getLogger().severe("WorldManager in ServiceRegistry: " + (plugin.getServiceRegistry().getWorldManager() != null));
+                }
+            }
             return true;
+        }
+        
+        // Log debug information
+        if (plugin != null) {
+            plugin.getLogger().info("BuildCommand executed by player: " + player.getName());
+            plugin.getLogger().info("Current world: " + player.getWorld().getName());
+            plugin.getLogger().info("ServiceRegistry available: " + (plugin.getServiceRegistry() != null));
+            if (plugin.getServiceRegistry() != null) {
+                plugin.getLogger().info("WorldManager in ServiceRegistry: " + (plugin.getServiceRegistry().getWorldManager() != null));
+            }
         }
         
         CreativeWorld creativeWorld = worldManager.findCreativeWorldByBukkit(player.getWorld());
@@ -87,8 +104,6 @@ public class BuildCommand implements CommandExecutor {
             
             // Try multiple pattern matching approaches
             String worldName = player.getWorld().getName();
-            // Reduced logging - only log when debugging
-            // plugin.getLogger().info("Attempting to find CreativeWorld for world name: " + worldName);
             
             if (worldName.startsWith("megacreative_")) {
                 // Extract ID using more precise method for complex naming
@@ -123,8 +138,6 @@ public class BuildCommand implements CommandExecutor {
                 }
                 
                 if (potentialId != null) {
-                    // Reduced logging - only log when debugging
-                    // plugin.getLogger().info("Trying to find world with extracted ID: " + potentialId);
                     CreativeWorld foundWorld = worldManager.getWorld(potentialId);
                     if (foundWorld != null) {
                         creativeWorld = foundWorld;
@@ -135,8 +148,6 @@ public class BuildCommand implements CommandExecutor {
             
             // If still not found, try all available worlds
             if (creativeWorld == null) {
-                // Reduced logging - only log when debugging
-                // plugin.getLogger().info("Trying partial name matching for all available worlds");
                 for (CreativeWorld world : worldManager.getCreativeWorlds()) {
                     if (worldName.contains(world.getId()) || worldName.contains(world.getName().toLowerCase().replace(" ", ""))) {
                         creativeWorld = world;
@@ -153,26 +164,33 @@ public class BuildCommand implements CommandExecutor {
             }
         }
         
+        // Check permissions
         if (!creativeWorld.canEdit(player)) {
             player.sendMessage("§cYou don't have permission to edit this world!");
             return true;
         }
         
-        if (plugin.getBlockPlacementHandler().isInDevWorld(player)) {
+        // Save player inventory before switching
+        if (plugin != null && plugin.getBlockPlacementHandler().isInDevWorld(player)) {
             plugin.getServiceRegistry().getDevInventoryManager().savePlayerInventory(player);
         }
         
-        plugin.getServiceRegistry().getDevInventoryManager().restorePlayerInventory(player);
+        // Restore player inventory for build mode
+        if (plugin != null) {
+            plugin.getServiceRegistry().getDevInventoryManager().restorePlayerInventory(player);
+        }
         
-        creativeWorld.setMode(com.megacreative.models.WorldMode.BUILD);
+        // Switch to build world
         worldManager.switchToBuildWorld(player, creativeWorld.getId());
         
         player.sendMessage("§aWorld mode changed to §f§lBUILD§a!");
         player.sendMessage("§7❌ Code disabled, scripts will not execute");
         player.sendMessage("§7Creative mode for builders");
         
+        // Clear inventory to prevent item duplication
         player.getInventory().clear();
         
+        // Save world state
         worldManager.saveWorld(creativeWorld);
         
         return true;
