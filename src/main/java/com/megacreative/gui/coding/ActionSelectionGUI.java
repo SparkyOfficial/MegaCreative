@@ -14,50 +14,24 @@ import org.bukkit.inventory.Inventory;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.inventory.meta.ItemMeta;
 import org.bukkit.Location;
-import org.bukkit.configuration.file.YamlConfiguration;
-import org.bukkit.configuration.ConfigurationSection;
 
-import java.io.File;
 import java.util.*;
 
 /**
- * Графический интерфейс для выбора действий для блоков кода.
- * 🎆 УЛУЧШЕННЫЕ ФУНКЦИИ:
- * - Категоризированное отображение действий с визуальной группировкой
- * - Умные возможности поиска и фильтрации
- * - Предварительный просмотр действий с подробными описаниями
- * - Визуальная обратная связь для процесса выбора
- * - Оптимизирован для быстрого поиска действий
+ * 🎆 УЛУЧШЕННЫЙ Графический интерфейс для выбора действий, событий и условий для блоков кода.
  * 
- * Графический интерфейс для выбора действий для блоков кода.
- * 🎆 УЛУЧШЕННЫЕ ФУНКЦИИ:
- * - Категоризированное отображение действий с визуальной группировкой
- * - Умные возможности поиска и фильтрации
- * - Предварительный просмотр действий с подробными описаниями
- * - Визуальная обратная связь для процесса выбора
- * - Оптимизирован для быстрого поиска действий
+ * Реализует стиль reference system: универсальные блоки с настройкой через GUI
+ * с категориями, красивым выбором и умными табличками на блоках с информацией.
  *
- * GUI for selecting actions for code blocks.
- * 🎆 ENHANCED FEATURES:
- * - Categorized action display with visual grouping
- * - Smart search and filtering capabilities
- * - Action preview with detailed descriptions
- * - Visual feedback for selection process
- * - Optimized for quick action discovery
- *
- * GUI zur Auswahl von Aktionen für Codeblöcke.
- * 🎆 ERWEITERT FUNKTIONEN:
- * - Kategorisierte Aktionsanzeige mit visueller Gruppierung
- * - Intelligente Such- und Filterfunktionen
- * - Aktionsvorschau mit detaillierten Beschreibungen
- * - Visuelle Rückmeldung für den Auswahlprozess
- * - Optimiert für schnelle Aktionsfindung
+ * 🎆 ENHANCED GUI for selecting actions, events, and conditions for code blocks.
  * 
- * Opens when a player clicks on a code block without an assigned action.
- * Реализует Creative+-стиль: универсальные блоки с настройкой через GUI
+ * Implements reference system-style: universal blocks with GUI configuration
+ * with categories, beautiful selection, and smart signs on blocks with information.
  *
- * Wird geöffnet, wenn ein Spieler auf einen Codeblock ohne zugewiesene Aktion klickt.
- * Implementiert Creative+-Stil: universelle Blöcke mit GUI-Konфигuration
+ * 🎆 ERWEITERT GUI zur Auswahl von Aktionen, Ereignissen und Bedingungen für Codeblöcke.
+ * 
+ * Implementiert Reference-System-Stil: universelle Blöcke mit GUI-Konfiguration
+ * mit Kategorien, schöner Auswahl und intelligenten Schildern an Blöcken mit Informationen.
  */
 public class ActionSelectionGUI implements GUIManager.ManagedGUIInterface {
     
@@ -69,24 +43,34 @@ public class ActionSelectionGUI implements GUIManager.ManagedGUIInterface {
     private final GUIManager guiManager;
     private final BlockConfigService blockConfigService;
     
+    // Categories for different types of actions
+    private static final Map<String, String> CATEGORY_NAMES = new LinkedHashMap<>();
+    private static final Map<String, Material> CATEGORY_MATERIALS = new HashMap<>();
+    
+    static {
+        // Define category names and their display names
+        CATEGORY_NAMES.put("EVENT", "🌟 События");
+        CATEGORY_NAMES.put("ACTION", "⚡ Действия");
+        CATEGORY_NAMES.put("CONDITION", "❓ Условия");
+        CATEGORY_NAMES.put("CONTROL", "⚙️ Управление");
+        CATEGORY_NAMES.put("FUNCTION", "📚 Функции");
+        CATEGORY_NAMES.put("VARIABLE", "📊 Переменные");
+        
+        // Define materials for category items
+        CATEGORY_MATERIALS.put("EVENT", Material.NETHER_STAR);
+        CATEGORY_MATERIALS.put("ACTION", Material.REDSTONE);
+        CATEGORY_MATERIALS.put("CONDITION", Material.COMPARATOR);
+        CATEGORY_MATERIALS.put("CONTROL", Material.REPEATER);
+        CATEGORY_MATERIALS.put("FUNCTION", Material.WRITABLE_BOOK);
+        CATEGORY_MATERIALS.put("VARIABLE", Material.NAME_TAG);
+    }
+    
     /**
      * Инициализирует графический интерфейс выбора действий
      * @param plugin Ссылка на основной плагин
      * @param player Игрок, который будет использовать интерфейс
      * @param blockLocation Расположение блока для настройки
      * @param blockMaterial Материал блока для настройки
-     *
-     * Initializes action selection GUI
-     * @param plugin Reference to main plugin
-     * @param player Player who will use the interface
-     * @param blockLocation Location of block to configure
-     * @param blockMaterial Material of block to configure
-     *
-     * Initialisiert die Aktionsauswahl-GUI
-     * @param plugin Referenz zum Haupt-Plugin
-     * @param player Spieler, der die Schnittstelle verwenden wird
-     * @param blockLocation Position des zu konфигurierenden Blocks
-     * @param blockMaterial Material des zu konфигurierenden Blocks
      */
     public ActionSelectionGUI(MegaCreative plugin, Player player, Location blockLocation, Material blockMaterial) {
         this.plugin = plugin;
@@ -111,10 +95,6 @@ public class ActionSelectionGUI implements GUIManager.ManagedGUIInterface {
     
     /**
      * Получает отображаемое имя блока
-     *
-     * Gets display name for block
-     *
-     * Ruft den Anzeigenamen des Blocks ab
      */
     private String getBlockDisplayName() {
         // Get display name from block config service
@@ -124,36 +104,32 @@ public class ActionSelectionGUI implements GUIManager.ManagedGUIInterface {
     
     /**
      * Настраивает инвентарь графического интерфейса
-     *
-     * Sets up the GUI inventory
-     *
-     * Richtet das GUI-Inventar ein
      */
     private void setupInventory() {
         inventory.clear();
         
-        // Add background glass panes
-        ItemStack glassPane = new ItemStack(Material.GRAY_STAINED_GLASS_PANE);
-        ItemMeta glassMeta = glassPane.getItemMeta();
-        glassMeta.setDisplayName(" ");
-        glassPane.setItemMeta(glassMeta);
+        // Add decorative border
+        ItemStack borderItem = new ItemStack(Material.BLACK_STAINED_GLASS_PANE);
+        ItemMeta borderMeta = borderItem.getItemMeta();
+        borderMeta.setDisplayName(" ");
+        borderItem.setItemMeta(borderMeta);
         
         // Fill border slots
         for (int i = 0; i < 54; i++) {
             if (i < 9 || i >= 45 || i % 9 == 0 || i % 9 == 8) {
-                inventory.setItem(i, glassPane);
+                inventory.setItem(i, borderItem);
             }
         }
         
-        // Add info item
+        // Add info item in the center
         ItemStack infoItem = new ItemStack(blockMaterial);
         ItemMeta infoMeta = infoItem.getItemMeta();
         infoMeta.setDisplayName("§e§l" + getBlockDisplayName());
         List<String> infoLore = new ArrayList<>();
-        infoLore.add("§7Выберите действие для этого блока");
+        infoLore.add("§7Выберите категорию действий");
         infoLore.add("");
-        infoLore.add("§aКликните на действие чтобы");
-        infoLore.add("§аназначить его блоку");
+        infoLore.add("§aКликните по категории чтобы");
+        infoLore.add("§aпросмотреть доступные действия");
         infoLore.add("");
         infoLore.add("§f✨ Reference system-стиль: универсальные блоки");
         infoLore.add("§fс настройкой через GUI");
@@ -161,270 +137,195 @@ public class ActionSelectionGUI implements GUIManager.ManagedGUIInterface {
         infoItem.setItemMeta(infoMeta);
         inventory.setItem(4, infoItem);
         
-        // Load available actions for this block type
-        loadAvailableActions();
+        // Add category items
+        int slot = 10;
+        for (Map.Entry<String, String> category : CATEGORY_NAMES.entrySet()) {
+            String categoryKey = category.getKey();
+            String categoryName = category.getValue();
+            
+            ItemStack categoryItem = new ItemStack(CATEGORY_MATERIALS.getOrDefault(categoryKey, Material.PAPER));
+            ItemMeta categoryMeta = categoryItem.getItemMeta();
+            categoryMeta.setDisplayName("§6" + categoryName);
+            
+            List<String> categoryLore = new ArrayList<>();
+            categoryLore.add("§7Категория: " + categoryKey);
+            categoryLore.add("");
+            categoryLore.add("§e⚡ Кликните чтобы выбрать");
+            categoryMeta.setLore(categoryLore);
+            
+            categoryItem.setItemMeta(categoryMeta);
+            inventory.setItem(slot, categoryItem);
+            
+            slot += 2; // Space out categories
+            if (slot >= 44) break; // Don't go into border area
+        }
     }
     
     /**
-     * Загружает доступные действия для этого типа блока
-     *
-     * Loads available actions for this block type
-     *
-     * Lädt verfügbare Aktionen für diesen Blocktyp
+     * Открывает графический интерфейс для игрока
      */
-    private void loadAvailableActions() {
-        // Reduced logging - only log when debugging
-        // player.sendMessage("§eDebug: Checking material " + blockMaterial.name());
+    public void open() {
+        guiManager.registerGUI(player, this, inventory);
+        player.openInventory(inventory);
         
-        // Check if blockConfigService is available
-        if (blockConfigService == null) {
-            // Reduced logging - only log when debugging
-            // player.sendMessage("§cError: BlockConfigService is null!");
-            return;
-        }
+        // Аудио обратная связь при открытии GUI
+        player.playSound(player.getLocation(), org.bukkit.Sound.UI_BUTTON_CLICK, 0.7f, 1.2f);
         
-        // Get available actions for this block material using BlockConfigService
-        List<String> availableActions = blockConfigService.getActionsForMaterial(blockMaterial);
+        // Add visual effects for reference system-style magic
+        player.spawnParticle(org.bukkit.Particle.ENCHANTMENT_TABLE, 
+            player.getLocation().add(0, 1, 0), 10, 0.5, 0.5, 0.5, 1);
+    }
+    
+    @Override
+    /**
+     * Получает заголовок графического интерфейса
+     * @return Заголовок интерфейса
+     */
+    public String getGUITitle() {
+        return "Action Selection GUI for " + blockMaterial.name();
+    }
+    
+    @Override
+    /**
+     * Обрабатывает события кликов в инвентаре
+     * @param event Событие клика в инвентаре
+     */
+    public void onInventoryClick(InventoryClickEvent event) {
+        if (!player.equals(event.getWhoClicked())) return;
+        if (!inventory.equals(event.getInventory())) return;
         
-        // Reduced logging - only log when debugging
-        // player.sendMessage("§eDebug: Available actions count: " + (availableActions != null ? availableActions.size() : "null"));
+        event.setCancelled(true); // Cancel all clicks by default
         
-        // Debug logging for block config
-        BlockConfigService.BlockConfig config = blockConfigService.getBlockConfigByMaterial(blockMaterial);
-        // Reduced logging - only log when debugging
-        // if (config != null) {
-        //     player.sendMessage("§eDebug: Block config found, type: " + config.getType() + ", actions: " + config.getActions().size());
-        // } else {
-        //     player.sendMessage("§cError: No block config found for material " + blockMaterial.name());
-        // }
+        ItemStack clicked = event.getCurrentItem();
+        if (clicked == null || !clicked.hasItemMeta()) return;
         
-        // Simple fallback to default actions if none found
-        if (availableActions == null || availableActions.isEmpty()) {
-            player.sendMessage("§cОшибка: Нет доступных действий для блока " + blockMaterial.name());
-            
-            // Use appropriate default actions based on block type
-            availableActions = new ArrayList<>();
-            
-            // Add appropriate default actions based on block material
-            if (blockMaterial == Material.IRON_BLOCK) {
-                // For variable blocks (IRON_BLOCK), add variable-related default actions
-                availableActions.add("setVar");
-                availableActions.add("getVar");
-                availableActions.add("addVar");
-                availableActions.add("subVar");
-                player.sendMessage("§6Using variable default actions as fallback");
-            } else if (blockMaterial == Material.NETHERITE_BLOCK) {
-                // For gaming action blocks (NETHERITE_BLOCK), add gaming default actions
-                availableActions.add("setTime");
-                availableActions.add("setWeather");
-                availableActions.add("setBlock");
-                player.sendMessage("§6Using gaming default actions as fallback");
-            } else {
-                // For other action blocks, use general defaults
-                availableActions.add("sendMessage");
-                availableActions.add("teleport");
-                availableActions.add("giveItem");
-                player.sendMessage("§6Using general default actions as fallback");
+        ItemMeta meta = clicked.getItemMeta();
+        String displayName = meta.getDisplayName();
+        
+        // Check if it's a category item
+        for (Map.Entry<String, String> category : CATEGORY_NAMES.entrySet()) {
+            String categoryName = category.getValue();
+            if (displayName.contains(categoryName)) {
+                // Open category selection GUI
+                openCategorySelectionGUI(category.getKey());
+                return;
             }
         }
         
-        // 🎆 ENHANCED: Group actions by category for better organization
-        Map<String, List<String>> categorizedActions = categorizeActions(availableActions);
-        
-        // Create action items with visual categorization
-        int slot = 10; // Start from first available slot
-        
-        for (Map.Entry<String, List<String>> category : categorizedActions.entrySet()) {
-            String categoryName = category.getKey();
-            List<String> actionsInCategory = category.getValue();
-            
-            // Add category separator if we have multiple categories
-            if (categorizedActions.size() > 1) {
-                ItemStack categoryItem = createCategoryItem(categoryName, actionsInCategory.size());
-                if (slot < 44) {
-                    inventory.setItem(slot, categoryItem);
-                    slot++;
-                    if (slot % 9 == 8) slot += 2; // Skip border
+        // Handle other clicks
+        List<String> lore = meta.getLore();
+        if (lore != null) {
+            // Find action ID in lore
+            String actionId = null;
+            for (String line : lore) {
+                if (line.startsWith("§8ID: ")) {
+                    actionId = line.substring(5).trim(); // Remove "§8ID: " prefix
+                    break;
                 }
             }
             
-            // Add actions in this category
-            for (String actionId : actionsInCategory) {
-                if (slot >= 44) break; // Don't go into border area
-                
-                ItemStack actionItem = createActionItem(actionId, categoryName);
-                inventory.setItem(slot, actionItem);
-                
-                // Move to next slot, skipping border slots
-                slot++;
-                if (slot % 9 == 8) slot += 2; // Skip right border and left border of next row
-            }
-            
-            // Add spacing between categories
-            if (slot < 44 && categorizedActions.size() > 1) {
-                slot++;
-                if (slot % 9 == 8) slot += 2;
+            if (actionId != null && !actionId.isEmpty()) {
+                selectAction(actionId);
+            } else {
+                player.sendMessage("§eℹ Это заголовок категории. Кликните по действию ниже.");
+                player.playSound(player.getLocation(), org.bukkit.Sound.BLOCK_NOTE_BLOCK_PLING, 0.5f, 0.8f);
             }
         }
     }
     
     /**
-     * 🎆 УЛУЧШЕННОЕ: Категоризирует действия для лучшей организации
-     * Реализует стиль reference system: универсальные блоки с настройкой через GUI
-     *
-     * 🎆 ENHANCED: Categorize actions for better organization
-     * Implements reference system-style: universal blocks with GUI configuration
-     *
-     * 🎆 ERWEITERT: Kategorisiert Aktionen für bessere Organisation
-     * Implementiert Reference-System-Stil: universelle Blöcke mit GUI-Konфигuration
+     * Открывает графический интерфейс выбора действий в категории
+     * @param category Категория для отображения
      */
-    private Map<String, List<String>> categorizeActions(List<String> actions) {
-        Map<String, List<String>> categories = new LinkedHashMap<>();
+    private void openCategorySelectionGUI(String category) {
+        // Create new inventory for category selection
+        Inventory categoryInventory = Bukkit.createInventory(null, 54, "§8" + CATEGORY_NAMES.getOrDefault(category, category));
         
-        for (String action : actions) {
-            String category = getActionCategory(action);
-            categories.computeIfAbsent(category, k -> new ArrayList<>()).add(action);
+        // Add decorative border
+        ItemStack borderItem = new ItemStack(Material.GRAY_STAINED_GLASS_PANE);
+        ItemMeta borderMeta = borderItem.getItemMeta();
+        borderMeta.setDisplayName(" ");
+        borderItem.setItemMeta(borderMeta);
+        
+        // Fill border slots
+        for (int i = 0; i < 54; i++) {
+            if (i < 9 || i >= 45 || i % 9 == 0 || i % 9 == 8) {
+                categoryInventory.setItem(i, borderItem);
+            }
         }
         
-        return categories;
+        // Add back button
+        ItemStack backButton = new ItemStack(Material.ARROW);
+        ItemMeta backMeta = backButton.getItemMeta();
+        backMeta.setDisplayName("§c⬅ Назад");
+        List<String> backLore = new ArrayList<>();
+        backLore.add("§7Вернуться к выбору категорий");
+        backMeta.setLore(backLore);
+        backButton.setItemMeta(backMeta);
+        categoryInventory.setItem(49, backButton);
+        
+        // Load actions for this category
+        loadActionsForCategory(categoryInventory, category);
+        
+        // Open the category inventory
+        player.openInventory(categoryInventory);
     }
     
     /**
-     * 🎆 УЛУЧШЕННОЕ: Получает категорию для действия
-     * Реализует стиль reference system: универсальные блоки с настройкой через GUI
-     *
-     * 🎆 ENHANCED: Get category for an action
-     * Implements reference system-style: universal blocks with GUI configuration
-     *
-     * 🎆 ERWEITERT: Ruft die Kategorie für eine Aktion ab
-     * Implementiert Reference-System-Stil: universelle Blöcke mit GUI-Kонфигuration
+     * Загружает действия для категории
+     * @param inventory Инвентарь для заполнения
+     * @param category Категория для загрузки
      */
-    private String getActionCategory(String actionId) {
-        switch (actionId.toLowerCase()) {
-            case "sendmessage":
-            case "broadcast":
-            case "sendtitle":
-            case "sendactionbar":
-                return "💬 Коммуникация";
+    private void loadActionsForCategory(Inventory inventory, String category) {
+        // Check if blockConfigService is available
+        if (blockConfigService == null) {
+            player.sendMessage("§cОшибка: Сервис конфигурации блоков недоступен!");
+            return;
+        }
+        
+        // Get available actions for this block material
+        List<String> availableActions = blockConfigService.getActionsForMaterial(blockMaterial);
+        
+        // Filter actions by category
+        List<String> categoryActions = new ArrayList<>();
+        for (String actionId : availableActions) {
+            BlockConfigService.BlockConfig actionConfig = blockConfigService.getBlockConfig(actionId);
+            if (actionConfig != null) {
+                // Special handling for variables
+                if ("VARIABLE".equals(category) && blockMaterial == Material.IRON_BLOCK) {
+                    categoryActions.add(actionId);
+                }
+                // Special handling for functions
+                else if ("FUNCTION".equals(category) && 
+                        (blockMaterial == Material.LAPIS_BLOCK || blockMaterial == Material.BOOKSHELF)) {
+                    categoryActions.add(actionId);
+                }
+                // Handle other categories based on block type
+                else if (actionConfig.getType().equals(category)) {
+                    categoryActions.add(actionId);
+                }
+            }
+        }
+        
+        // Create action items
+        int slot = 10;
+        for (String actionId : categoryActions) {
+            if (slot >= 44) break; // Don't go into border area
             
-            case "teleport":
-            case "settime":
-            case "setweather":
-            case "setblock":
-                return "🌍 Мир и перемещение";
+            ItemStack actionItem = createActionItem(actionId);
+            inventory.setItem(slot, actionItem);
             
-            case "giveitem":
-            case "giveitems":
-            case "removeitems":
-            case "setarmor":
-                return "🎁 Предметы и инвентарь";
-            
-            case "setvar":
-            case "getvar":
-            case "addvar":
-            case "subvar":
-            case "mulvar":
-            case "divvar":
-            case "setglobalvar":
-            case "getglobalvar":
-            case "setservervar":
-            case "getservervar":
-                return "📊 Переменные";
-            
-            case "playsound":
-            case "effect":
-            case "playparticle":
-                return "🎨 Эффекты и звук";
-            
-            case "command":
-            case "executeasynccommand":
-                return "⚙️ Команды системы";
-            
-            case "wait":
-            case "asyncloop":
-                return "⏱️ Управление потоком";
-            
-            case "spawnentity":
-            case "spawnmob":
-                return "👾 Существа и мобы";
-            
-            case "healplayer":
-            case "damageplayer":
-                return "❤️ Здоровье и урон";
-            
-            case "setgamemode":
-            case "setfly":
-                return "🎮 Игровые режимы";
-            
-            case "createfile":
-            case "readfile":
-            case "writefile":
-                return "💾 Файловая система";
-            
-            case "httprequest":
-            case "httpget":
-            case "httppost":
-                return "🌐 Сеть и HTTP";
-            
-            case "ifvarequals":
-            case "ifvargreater":
-            case "ifvarless":
-            case "comparevariable":
-                return "❓ Условия и логика";
-            
-            case "randomnumber":
-            case "randomitem":
-                return "🎲 Случайность";
-            
-            case "mathadd":
-            case "mathsubtract":
-            case "mathmultiply":
-            case "mathdivide":
-                return "🔢 Математика";
-            
-            default:
-                return "🔧 Другое";
+            slot++;
+            if (slot % 9 == 8) slot += 2; // Skip border slots
         }
     }
     
     /**
-     * 🎆 УЛУЧШЕННОЕ: Создает элемент заголовка категории
-     * Реализует стиль reference system: универсальные блоки с настройкой через GUI
-     *
-     * 🎆 ENHANCED: Create category header item
-     * Implements reference system-style: universal blocks with GUI configuration
-     *
-     * 🎆 ERWEITERT: Erstellt Kategorie-Header-Element
-     * Implementiert Reference-System-Stil: universelle Blöcke mit GUI-Kонфигuration
+     * Создает элемент действия
+     * @param actionId ID действия
+     * @return ItemStack элемент действия
      */
-    private ItemStack createCategoryItem(String categoryName, int actionCount) {
-        ItemStack item = new ItemStack(Material.ORANGE_STAINED_GLASS_PANE);
-        ItemMeta meta = item.getItemMeta();
-        
-        meta.setDisplayName("§e§l" + categoryName);
-        
-        List<String> lore = new ArrayList<>();
-        lore.add("§7Доступно действий: " + actionCount);
-        lore.add("§8Категория");
-        lore.add("");
-        lore.add("§f✨ Reference system-стиль: универсальные блоки");
-        meta.setLore(lore);
-        
-        item.setItemMeta(meta);
-        return item;
-    }
-    
-    /**
-     * 🎆 УЛУЧШЕННОЕ: Создает элемент действия
-     * Реализует стиль reference system: универсальные блоки с настройкой через GUI
-     *
-     * 🎆 ENHANCED: Create action item
-     * Implements reference system-style: universal blocks with GUI configuration
-     *
-     * 🎆 ERWEITERT: Erstellt Aktionsgegenstand
-     * Implementiert Reference-System-Stil: universelle Blöcke mit GUI-Kонфигuration
-     */
-    private ItemStack createActionItem(String actionId, String category) {
+    private ItemStack createActionItem(String actionId) {
         // Create appropriate material for action type
         Material material = getActionMaterial(actionId);
         ItemStack item = new ItemStack(material);
@@ -437,7 +338,7 @@ public class ActionSelectionGUI implements GUIManager.ManagedGUIInterface {
         List<String> lore = new ArrayList<>();
         lore.add("§7" + getActionDescription(actionId));
         lore.add("");
-        lore.add("§8⚙️ Категория: " + category);
+        lore.add("§8⚙️ Категория: " + getActionCategoryName(actionId));
         lore.add("");
         lore.add("§e⚡ Кликните чтобы выбрать");
         lore.add("§8ID: " + actionId);
@@ -450,11 +351,23 @@ public class ActionSelectionGUI implements GUIManager.ManagedGUIInterface {
     }
     
     /**
+     * Получает отображаемое имя категории для действия
+     * @param actionId ID действия
+     * @return Отображаемое имя категории
+     */
+    private String getActionCategoryName(String actionId) {
+        BlockConfigService.BlockConfig config = blockConfigService.getBlockConfig(actionId);
+        if (config != null) {
+            String type = config.getType();
+            return CATEGORY_NAMES.getOrDefault(type, type);
+        }
+        return "Другое";
+    }
+    
+    /**
      * Получает материал для действия
-     *
-     * Gets material for action
-     *
-     * Ruft das Material für die Aktion аб
+     * @param actionId ID действия
+     * @return Материал для действия
      */
     private Material getActionMaterial(String actionId) {
         // Return appropriate materials based on action type
@@ -524,6 +437,26 @@ public class ActionSelectionGUI implements GUIManager.ManagedGUIInterface {
             case "savelocation":
             case "getlocation":
                 return Material.COMPASS;
+            case "onjoin":
+            case "onleave":
+            case "onchat":
+                return Material.PLAYER_HEAD;
+            case "onblockbreak":
+            case "onblockplace":
+                return Material.WOODEN_PICKAXE;
+            case "onplayermove":
+                return Material.LEATHER_BOOTS;
+            case "onplayerdeath":
+                return Material.SKELETON_SKULL;
+            case "oncommand":
+                return Material.COMMAND_BLOCK;
+            case "ontick":
+                return Material.CLOCK;
+            case "ifvarequals":
+            case "ifvargreater":
+            case "ifvarless":
+            case "comparevariable":
+                return Material.COMPARATOR;
             default:
                 return Material.STONE;
         }
@@ -531,14 +464,24 @@ public class ActionSelectionGUI implements GUIManager.ManagedGUIInterface {
     
     /**
      * Получает отображаемое имя действия
-     *
-     * Gets display name for action
-     *
-     * Ruft den Anzeigenamen der Aktion аб
+     * @param actionId ID действия
+     * @return Отображаемое имя действия
      */
     private String getActionDisplayName(String actionId) {
         // Return user-friendly names for actions
         switch (actionId.toLowerCase()) {
+            // Events
+            case "onjoin": return "При входе";
+            case "onleave": return "При выходе";
+            case "onchat": return "При чате";
+            case "onblockbreak": return "При разрушении блока";
+            case "onblockplace": return "При установке блока";
+            case "onplayermove": return "При движении игрока";
+            case "onplayerdeath": return "При смерти игрока";
+            case "oncommand": return "При команде";
+            case "ontick": return "Каждый тик";
+            
+            // Actions
             case "sendmessage": return "Отправить сообщение";
             case "broadcast": return "Объявление";
             case "sendtitle": return "Отправить заголовок";
@@ -581,20 +524,68 @@ public class ActionSelectionGUI implements GUIManager.ManagedGUIInterface {
             case "addplayertoteam": return "Добавить игрока в команду";
             case "savelocation": return "Сохранить локацию";
             case "getlocation": return "Получить локацию";
+            
+            // Conditions
+            case "ifvarequals": return "Если переменная равна";
+            case "ifvargreater": return "Если переменная больше";
+            case "ifvarless": return "Если переменная меньше";
+            case "comparevariable": return "Сравнить переменные";
+            case "isop": return "Если оператор";
+            case "hasitem": return "Если есть предмет";
+            case "haspermission": return "Если есть право";
+            case "isinworld": return "Если в мире";
+            case "worldtime": return "Если время мира";
+            case "isnearblock": return "Если рядом блок";
+            case "mobnear": return "Если рядом моб";
+            case "playergamemode": return "Если режим игры";
+            case "playerhealth": return "Если здоровье";
+            case "isnight": return "Если ночь";
+            case "isriding": return "Если едет";
+            case "checkplayerinventory": return "Проверить инвентарь";
+            case "checkplayerstats": return "Проверить статистику";
+            case "checkserveronline": return "Проверить сервер";
+            case "checkworldweather": return "Проверить погоду";
+            case "worldguardregioncheck": return "Проверить регион";
+            case "isblocktype": return "Если тип блока";
+            case "isplayerholding": return "Если держит";
+            case "hasarmor": return "Если есть броня";
+            
+            // Control
+            case "repeat": return "Повторить";
+            case "repeattrigger": return "Повторить триггер";
+            case "whileloop": return "Пока цикл";
+            case "else": return "Иначе";
+            case "openBracket": return "Открыть скобку";
+            case "closeBracket": return "Закрыть скобку";
+            
+            // Functions
+            case "callfunction": return "Вызвать функцию";
+            case "savefunction": return "Сохранить функцию";
+            
             default: return actionId;
         }
     }
 
     /**
      * Получает описание действия
-     *
-     * Gets description for action
-     *
-     * Ruft die Beschreibung der Aktion аб
+     * @param actionId ID действия
+     * @return Описание действия
      */
     private String getActionDescription(String actionId) {
         // Return descriptions for actions
         switch (actionId.toLowerCase()) {
+            // Events
+            case "onjoin": return "Срабатывает когда игрок заходит на сервер";
+            case "onleave": return "Срабатывает когда игрок выходит с сервера";
+            case "onchat": return "Срабатывает когда игрок пишет в чат";
+            case "onblockbreak": return "Срабатывает когда игрок ломает блок";
+            case "onblockplace": return "Срабатывает когда игрок ставит блок";
+            case "onplayermove": return "Срабатывает когда игрок двигается";
+            case "onplayerdeath": return "Срабатывает когда игрок умирает";
+            case "oncommand": return "Срабатывает когда игрок использует команду";
+            case "ontick": return "Срабатывает каждый игровой тик";
+            
+            // Actions
             case "sendmessage": return "Отправляет сообщение игроку";
             case "broadcast": return "Отправляет сообщение всем игрокам";
             case "sendtitle": return "Показывает заголовок на экране";
@@ -637,106 +628,51 @@ public class ActionSelectionGUI implements GUIManager.ManagedGUIInterface {
             case "addplayertoteam": return "Добавляет игрока в команду";
             case "savelocation": return "Сохраняет локацию";
             case "getlocation": return "Получает сохраненную локацию";
+            
+            // Conditions
+            case "ifvarequals": return "Проверяет равенство переменной";
+            case "ifvargreater": return "Проверяет больше ли переменная";
+            case "ifvarless": return "Проверяет меньше ли переменная";
+            case "comparevariable": return "Сравнивает две переменные";
+            case "isop": return "Проверяет является ли игрок оператором";
+            case "hasitem": return "Проверяет есть ли предмет у игрока";
+            case "haspermission": return "Проверяет есть ли право у игрока";
+            case "isinworld": return "Проверяет находится ли игрок в мире";
+            case "worldtime": return "Проверяет время в мире";
+            case "isnearblock": return "Проверяет находится ли рядом блок";
+            case "mobnear": return "Проверяет находится ли рядом моб";
+            case "playergamemode": return "Проверяет режим игры игрока";
+            case "playerhealth": return "Проверяет здоровье игрока";
+            case "isnight": return "Проверяет ночь ли сейчас";
+            case "isriding": return "Проверяет едет ли игрок";
+            case "checkplayerinventory": return "Проверяет инвентарь игрока";
+            case "checkplayerstats": return "Проверяет статистику игрока";
+            case "checkserveronline": return "Проверяет статус сервера";
+            case "checkworldweather": return "Проверяет погоду в мире";
+            case "worldguardregioncheck": return "Проверяет находится ли игрок в регионе";
+            case "isblocktype": return "Проверяет тип блока";
+            case "isplayerholding": return "Проверяет что держит игрок";
+            case "hasarmor": return "Проверяет есть ли броня у игрока";
+            
+            // Control
+            case "repeat": return "Повторяет действие";
+            case "repeattrigger": return "Повторяет действие с триггером";
+            case "whileloop": return "Выполняет пока условие истинно";
+            case "else": return "Выполняет если предыдущее условие ложно";
+            case "openBracket": return "Открывает скобку для группировки";
+            case "closeBracket": return "Закрывает скобку для группировки";
+            
+            // Functions
+            case "callfunction": return "Вызывает сохраненную функцию";
+            case "savefunction": return "Сохраняет функцию для повторного использования";
+            
             default: return "Действие " + actionId;
         }
     }
     
     /**
-     * Открывает графический интерфейс для игрока
-     * Реализует стиль reference system: универсальные блоки с настройкой через GUI
-     *
-     * Opens the GUI for the player
-     * Implements reference system-style: universal blocks with GUI configuration
-     *
-     * Öffnet die GUI für den Spieler
-     * Implementiert Reference-System-Stil: universelle Blöcke mit GUI-Kонфигuration
-     */
-    public void open() {
-        guiManager.registerGUI(player, this, inventory);
-        player.openInventory(inventory);
-        
-        // Аудио обратная связь при открытии GUI
-        player.playSound(player.getLocation(), org.bukkit.Sound.UI_BUTTON_CLICK, 0.7f, 1.2f);
-        
-        // Add visual effects for reference system-style magic
-        player.spawnParticle(org.bukkit.Particle.ENCHANTMENT_TABLE, 
-            player.getLocation().add(0, 1, 0), 10, 0.5, 0.5, 0.5, 1);
-    }
-    
-    @Override
-    /**
-     * Получает заголовок графического интерфейса
-     * @return Заголовок интерфейса
-     *
-     * Gets the GUI title
-     * @return Interface title
-     *
-     * Ruft den GUI-Titel аб
-     * @return Schnittstellentitel
-     */
-    public String getGUITitle() {
-        return "Action Selection GUI for " + blockMaterial.name();
-    }
-    
-    @Override
-    /**
-     * Обрабатывает события кликов в инвентаре
-     * @param event Событие клика в инвентаре
-     *
-     * Handles inventory click events
-     * @param event Inventory click event
-     *
-     * Verarbeitet Inventarklick-Ereignisse
-     * @param event Inventarklick-Ereignis
-     */
-    public void onInventoryClick(InventoryClickEvent event) {
-        if (!player.equals(event.getWhoClicked())) return;
-        if (!inventory.equals(event.getInventory())) return;
-        
-        event.setCancelled(true); // Cancel all clicks by default
-        
-        ItemStack clicked = event.getCurrentItem();
-        if (clicked == null || !clicked.hasItemMeta()) return;
-        
-        ItemMeta meta = clicked.getItemMeta();
-        List<String> lore = meta.getLore();
-        if (lore == null) return;
-        
-        // Find action ID in lore
-        String actionId = null;
-        boolean isCategoryItem = false;
-        for (String line : lore) {
-            if (line.startsWith("§8ID: ")) {
-                actionId = line.substring(5); // Remove "§8ID: " prefix
-                break;
-            }
-            if (line.contains("Категория")) {
-                isCategoryItem = true;
-                break;
-            }
-        }
-        
-        if (isCategoryItem) {
-            // 🎆 ENHANCED: Handle category item click with helpful message
-            player.sendMessage("§eℹ Это заголовок категории. Кликните по действию ниже.");
-            player.playSound(player.getLocation(), org.bukkit.Sound.BLOCK_NOTE_BLOCK_PLING, 0.5f, 0.8f);
-            return;
-        }
-        
-        if (actionId != null) {
-            selectAction(actionId);
-        }
-    }
-    
-    /**
-     * 🎆 УЛУЧШЕННОЕ: Выбирает действие для блока
-     * Реализует стиль reference system: универсальные блоки с настройкой через GUI
-     *
-     * 🎆 ENHANCED: Select action for the block
-     * Implements reference system-style: universal blocks with GUI configuration
-     *
-     * 🎆 ERWEITERT: Wählt Aktion für den Block
-     * Implementiert Reference-System-Stil: universelle Blöcke mit GUI-Kонфигuration
+     * Выбирает действие для блока
+     * @param actionId ID действия
      */
     private void selectAction(String actionId) {
         // Get the code block
@@ -778,12 +714,6 @@ public class ActionSelectionGUI implements GUIManager.ManagedGUIInterface {
     /**
      * Обрабатывает события закрытия инвентаря
      * @param event Событие закрытия инвентаря
-     *
-     * Handles inventory close events
-     * @param event Inventory close event
-     *
-     * Verarbeitet Inventarschließ-Ereignisse
-     * @param event Inventarschließ-Ereignis
      */
     public void onInventoryClose(InventoryCloseEvent event) {
         // Optional cleanup when GUI is closed
@@ -793,10 +723,6 @@ public class ActionSelectionGUI implements GUIManager.ManagedGUIInterface {
     @Override
     /**
      * Выполняет очистку ресурсов при закрытии интерфейса
-     *
-     * Performs resource cleanup when interface is closed
-     *
-     * Führt eine Ressourcenbereinigung durch, wenn die Schnittstelle geschlossen wird
      */
     public void onCleanup() {
         // Called when GUI is being cleaned up by GUIManager
