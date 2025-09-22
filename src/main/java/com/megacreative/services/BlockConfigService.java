@@ -442,6 +442,35 @@ public class BlockConfigService {
         
         return slotMap::get;
     }
+
+    /**
+     * Resolves parameter name by slot index for a specific action based on configuration
+     * @param actionName Action name
+     * @param slotIndex Inventory slot index
+     * @return Parameter name or null if not configured
+     */
+    public String getParameterNameForSlot(String actionName, int slotIndex) {
+        if (actionConfigurations == null) return null;
+        ConfigurationSection actionConfig = actionConfigurations.getConfigurationSection(actionName);
+        if (actionConfig == null) return null;
+        ConfigurationSection slots = actionConfig.getConfigurationSection("slots");
+        if (slots == null) return null;
+        ConfigurationSection slotSection = slots.getConfigurationSection(String.valueOf(slotIndex));
+        if (slotSection == null) return null;
+        return slotSection.getString("slot_name");
+    }
+
+    /**
+     * Resolves slot index by parameter name for a specific action based on configuration
+     * @param actionName Action name
+     * @param paramName Parameter name
+     * @return Slot index or null if not configured
+     */
+    public Integer findSlotForParameter(String actionName, String paramName) {
+        Function<String, Integer> resolver = getSlotResolver(actionName);
+        if (resolver == null || paramName == null) return null;
+        return resolver.apply(paramName);
+    }
     
     /**
      * Получает функцию разрешения групп слотов для определенного действия

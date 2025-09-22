@@ -396,15 +396,16 @@ public class BlockConfigManager implements Listener {
         
         plugin.getLogger().info("Loading " + parameters.size() + " parameters for action: " + codeBlock.getAction());
         
-        // Convert each parameter to ItemStack representation
+        // Convert each parameter to ItemStack representation using BlockConfigService mapping
+        var blockConfigService = plugin.getServiceRegistry().getBlockConfigService();
         for (Map.Entry<String, DataValue> entry : parameters.entrySet()) {
             String paramName = entry.getKey();
             DataValue paramValue = entry.getValue();
             
             if (paramValue == null) continue;
             
-            // Find the appropriate slot for this parameter
-            Integer slot = findSlotForParameter(codeBlock.getAction(), paramName);
+            // Find the appropriate slot for this parameter from config
+            Integer slot = blockConfigService != null ? blockConfigService.findSlotForParameter(codeBlock.getAction(), paramName) : null;
             if (slot != null && slot >= 0 && slot < inventory.getSize()) {
                 ItemStack paramItem = convertDataValueToItemStack(paramName, paramValue);
                 if (paramItem != null) {
@@ -446,8 +447,9 @@ public class BlockConfigManager implements Listener {
             // Skip placeholder items
             if (isPlaceholderItem(item)) continue;
             
-            // Try to determine parameter name for this slot
-            String paramName = getParameterNameForSlot(codeBlock.getAction(), slot);
+            // Try to determine parameter name for this slot via BlockConfigService
+            var blockConfigService = plugin.getServiceRegistry().getBlockConfigService();
+            String paramName = blockConfigService != null ? blockConfigService.getParameterNameForSlot(codeBlock.getAction(), slot) : null;
             if (paramName == null) {
                 // Fallback: use generic slot-based parameter name
                 paramName = "slot_" + slot;
@@ -727,115 +729,14 @@ public class BlockConfigManager implements Listener {
      * Finds the appropriate slot for a parameter name (reverse mapping)
      */
     private Integer findSlotForParameter(String action, String paramName) {
-        // Use reverse mapping based on our getParameterNameForSlot logic
-        
-        // Action-specific parameter mapping
-        switch (action) {
-            case "sendMessage":
-                if ("message".equals(paramName)) return 0;
-                break;
-            case "teleport":
-                if ("coords".equals(paramName)) return 0;
-                break;
-            case "giveItem":
-                if ("item".equals(paramName)) return 0;
-                if ("amount".equals(paramName)) return 1;
-                break;
-            case "playSound":
-                if ("sound".equals(paramName)) return 0;
-                if ("volume".equals(paramName)) return 1;
-                if ("pitch".equals(paramName)) return 2;
-                break;
-            case "effect":
-                if ("effect".equals(paramName)) return 0;
-                if ("duration".equals(paramName)) return 1;
-                if ("amplifier".equals(paramName)) return 2;
-                break;
-            case "setVar":
-            case "addVar":
-            case "subVar":
-            case "mulVar":
-            case "divVar":
-                if ("var".equals(paramName)) return 0;
-                if ("value".equals(paramName)) return 1;
-                break;
-            case "spawnMob":
-                if ("mob".equals(paramName)) return 0;
-                if ("amount".equals(paramName)) return 1;
-                break;
-            case "wait":
-                if ("ticks".equals(paramName)) return 0;
-                break;
-            case "randomNumber":
-                if ("min".equals(paramName)) return 0;
-                if ("max".equals(paramName)) return 1;
-                if ("var".equals(paramName)) return 2;
-                break;
-            case "setTime":
-                if ("time".equals(paramName)) return 0;
-                break;
-            case "setWeather":
-                if ("weather".equals(paramName)) return 0;
-                break;
-            case "command":
-                if ("command".equals(paramName)) return 0;
-                break;
-            case "broadcast":
-                if ("message".equals(paramName)) return 0;
-                break;
-            case "healPlayer":
-                if ("amount".equals(paramName)) return 0;
-                break;
-            case "explosion":
-                if ("power".equals(paramName)) return 0;
-                if ("breakBlocks".equals(paramName)) return 1;
-                break;
-            case "setBlock":
-                if ("material".equals(paramName)) return 0;
-                if ("coords".equals(paramName)) return 1;
-                break;
-            // Variable conditions (unified handling)
-            case "compareVariable":
-                if ("var1".equals(paramName)) return 0;
-                if ("operator".equals(paramName)) return 1;
-                if ("var2".equals(paramName)) return 2;
-                break;
-            case "ifVarEquals":
-            case "ifVarGreater":
-            case "ifVarLess":
-                if ("variable".equals(paramName)) return 0; // Legacy parameter name
-                if ("value".equals(paramName)) return 1;
-                break;
-            case "hasItem":
-                if ("item".equals(paramName)) return 0;
-                break;
-            case "isNearBlock":
-                if ("block".equals(paramName)) return 0;
-                if ("radius".equals(paramName)) return 1;
-                break;
-            case "mobNear":
-                if ("mob".equals(paramName)) return 0;
-                if ("radius".equals(paramName)) return 1;
-                break;
+        var blockConfigService = plugin.getServiceRegistry().getBlockConfigService();
+        if (blockConfigService == null) return null;
+        Integer slot = blockConfigService.findSlotForParameter(action, paramName);
+        if (slot != null) return slot;
+        // Fallback: param_# naming
+        if (paramName != null && paramName.startsWith("param_")) {
+            try { return Integer.parseInt(paramName.substring(6)); } catch (NumberFormatException ignored) {}
         }
-        
-        // Generic fallback mapping
-        switch (paramName) {
-            case "message", "text" -> { return 0; }
-            case "amount", "value", "number" -> { return 1; }
-            case "target", "player" -> { return 2; }
-            case "item", "material" -> { return 3; }
-            case "location", "world", "coords" -> { return 4; }
-        }
-        
-        // Try to extract slot number from param_X format
-        if (paramName.startsWith("param_")) {
-            try {
-                return Integer.parseInt(paramName.substring(6));
-            } catch (NumberFormatException ignored) {}
-        }
-        
-        // No mapping found
         return null;
     }
     
@@ -843,124 +744,11 @@ public class BlockConfigManager implements Listener {
      * Gets parameter name for a specific slot based on action type
      */
     private String getParameterNameForSlot(String action, int slot) {
-        // Check named slots configuration from coding_blocks.yml
         var blockConfigService = plugin.getServiceRegistry().getBlockConfigService();
-        
-        // Action-specific parameter mapping based on coding_blocks.yml
-        switch (action) {
-            case "sendMessage":
-                return slot == 0 ? "message" : "param_" + slot;
-            case "teleport":
-                return slot == 0 ? "coords" : "param_" + slot;
-            case "giveItem":
-                return switch (slot) {
-                    case 0 -> "item";
-                    case 1 -> "amount";
-                    default -> "param_" + slot;
-                };
-            case "playSound":
-                return switch (slot) {
-                    case 0 -> "sound";
-                    case 1 -> "volume";
-                    case 2 -> "pitch";
-                    default -> "param_" + slot;
-                };
-            case "effect":
-                return switch (slot) {
-                    case 0 -> "effect";
-                    case 1 -> "duration";
-                    case 2 -> "amplifier";
-                    default -> "param_" + slot;
-                };
-            case "setVar":
-            case "addVar":
-            case "subVar":
-            case "mulVar":
-            case "divVar":
-                return switch (slot) {
-                    case 0 -> "var";
-                    case 1 -> "value";
-                    default -> "param_" + slot;
-                };
-            case "spawnMob":
-                return switch (slot) {
-                    case 0 -> "mob";
-                    case 1 -> "amount";
-                    default -> "param_" + slot;
-                };
-            case "wait":
-                return slot == 0 ? "ticks" : "param_" + slot;
-            case "randomNumber":
-                return switch (slot) {
-                    case 0 -> "min";
-                    case 1 -> "max";
-                    case 2 -> "var";
-                    default -> "param_" + slot;
-                };
-            case "setTime":
-                return slot == 0 ? "time" : "param_" + slot;
-            case "setWeather":
-                return slot == 0 ? "weather" : "param_" + slot;
-            case "command":
-                return slot == 0 ? "command" : "param_" + slot;
-            case "broadcast":
-                return slot == 0 ? "message" : "param_" + slot;
-            case "healPlayer":
-                return slot == 0 ? "amount" : "param_" + slot;
-            case "explosion":
-                return switch (slot) {
-                    case 0 -> "power";
-                    case 1 -> "breakBlocks";
-                    default -> "param_" + slot;
-                };
-            case "setBlock":
-                return switch (slot) {
-                    case 0 -> "material";
-                    case 1 -> "coords";
-                    default -> "param_" + slot;
-                };
-            // Variable conditions (unified handling)
-            case "compareVariable":
-                return switch (slot) {
-                    case 0 -> "var1";
-                    case 1 -> "operator";
-                    case 2 -> "var2";
-                    default -> "param_" + slot;
-                };
-            case "ifVarEquals":
-            case "ifVarGreater":
-            case "ifVarLess":
-                return switch (slot) {
-                    case 0 -> "variable"; // Legacy parameter name for backward compatibility
-                    case 1 -> "value";
-                    default -> "param_" + slot;
-                };
-            case "hasItem":
-                return slot == 0 ? "item" : "param_" + slot;
-            case "isNearBlock":
-                return switch (slot) {
-                    case 0 -> "block";
-                    case 1 -> "radius";
-                    default -> "param_" + slot;
-                };
-            case "mobNear":
-                return switch (slot) {
-                    case 0 -> "mob";
-                    case 1 -> "radius";
-                    default -> "param_" + slot;
-                };
-            
-            // Generic fallback
-            default:
-                return switch (slot) {
-                    case 0 -> "message";
-                    case 1 -> "amount";
-                    case 2 -> "target";
-                    case 3 -> "item";
-                    case 4 -> "location";
-                    default -> "param_" + slot;
-                };
-        }
+        if (blockConfigService == null) return null;
+        String name = blockConfigService.getParameterNameForSlot(action, slot);
+        if (name != null) return name;
+        return "param_" + slot; // fallback
     }
     
     /**

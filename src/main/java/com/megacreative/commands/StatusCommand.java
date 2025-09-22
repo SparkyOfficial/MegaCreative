@@ -91,6 +91,37 @@ public class StatusCommand implements CommandExecutor {
         } else {
             player.sendMessage("§cСкрипты не будут выполняться");
         }
+
+        // --- Diagnostics: runtime and services overview ---
+        try {
+            var registry = plugin.getServiceRegistry();
+            if (registry != null) {
+                int worlds = 0;
+                try {
+                    var wm = plugin.getWorldManager();
+                    if (wm != null && wm.getCreativeWorlds() != null) {
+                        worlds = wm.getCreativeWorlds().size();
+                    }
+                } catch (Exception ignored) {}
+
+                boolean hasBlockConfig = false;
+                boolean hasScriptEngine = false;
+                boolean hasPlayerEvents = false;
+                boolean hasGui = false;
+                try { hasBlockConfig = registry.hasService(com.megacreative.services.BlockConfigService.class); } catch (Exception ignored) {}
+                try { hasScriptEngine = registry.hasService(com.megacreative.coding.ScriptEngine.class); } catch (Exception ignored) {}
+                try { hasPlayerEvents = registry.hasService(com.megacreative.coding.events.PlayerEventsListener.class); } catch (Exception ignored) {}
+                try { hasGui = registry.hasService(com.megacreative.managers.GUIManager.class); } catch (Exception ignored) {}
+
+                player.sendMessage("§6=== Диагностика ===");
+                player.sendMessage("§7Миров загружено: §f" + worlds);
+                player.sendMessage("§7TPS: §f" + getServerTpsSafe());
+                player.sendMessage("§7Сервисы: §fBlockConfig=" + tick(hasBlockConfig)
+                        + " §fScriptEngine=" + tick(hasScriptEngine)
+                        + " §fPlayerEvents=" + tick(hasPlayerEvents)
+                        + " §fGUI=" + tick(hasGui));
+            }
+        } catch (Exception ignored) {}
         
         return true;
     }
@@ -120,5 +151,20 @@ public class StatusCommand implements CommandExecutor {
             return plugin.getWorldManager().getWorld(id);
         }
         return null;
+    }
+
+    private String getServerTpsSafe() {
+        try {
+            // Paper-only: org.bukkit.Server#getTPS
+            double[] tps = (double[]) org.bukkit.Bukkit.getServer().getClass().getMethod("getTPS").invoke(org.bukkit.Bukkit.getServer());
+            if (tps != null && tps.length > 0) {
+                return String.format(java.util.Locale.ROOT, "%.1f", Math.min(20.0, tps[0]));
+            }
+        } catch (Throwable ignored) {}
+        return "N/A";
+    }
+
+    private String tick(boolean ok) {
+        return ok ? "§a✔" : "§c✖";
     }
 }
