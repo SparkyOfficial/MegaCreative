@@ -458,7 +458,7 @@ public class MegaCreative extends JavaPlugin {
     // Static access and service delegation
     
     public static MegaCreative getInstance() {
-{{ ... }}
+        return instance;
     }
     
     /**
