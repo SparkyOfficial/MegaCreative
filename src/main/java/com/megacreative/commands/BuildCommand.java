@@ -71,6 +71,12 @@ public class BuildCommand implements CommandExecutor {
             return true;
         }
         
+        // Check if worldManager is available
+        if (worldManager == null) {
+            player.sendMessage("§cWorld manager not available!");
+            return true;
+        }
+        
         CreativeWorld creativeWorld = worldManager.findCreativeWorldByBukkit(player.getWorld());
         
         // 🔧 FIX: Enhanced world finding logic with better pattern matching

@@ -37,8 +37,8 @@ public class BlockPlacementHandler implements Listener {
     public BlockPlacementHandler(MegaCreative plugin) {
         this.plugin = plugin;
         ServiceRegistry registry = plugin.getServiceRegistry();
-        this.trustedPlayerManager = registry.getTrustedPlayerManager();
-        this.blockConfigService = registry.getBlockConfigService();
+        this.trustedPlayerManager = registry != null ? registry.getTrustedPlayerManager() : null;
+        this.blockConfigService = registry != null ? registry.getBlockConfigService() : null;
     }
     
     /**
@@ -71,6 +71,12 @@ public class BlockPlacementHandler implements Listener {
      * Handles code block placement logic
      */
     private boolean handleCodeBlockPlacement(BlockPlaceEvent event, Player player, Block block) {
+        // Check if blockConfigService is available
+        if (blockConfigService == null) {
+            player.sendMessage("§cBlock configuration service not available!");
+            return false;
+        }
+        
         // Check if this is a universal coding block
         if (!blockConfigService.isCodeBlock(block.getType())) {
             return handleNonCodeBlockPlacement(event, player, block);
@@ -99,6 +105,11 @@ public class BlockPlacementHandler implements Listener {
         player.spawnParticle(org.bukkit.Particle.VILLAGER_HAPPY, block.getLocation().add(0.5, 1.0, 0.5), 5, 0.2, 0.2, 0.2, 0.1);
         player.playSound(block.getLocation(), org.bukkit.Sound.BLOCK_NOTE_BLOCK_PLING, 0.8f, 1.5f);
         
+        // If this is a constructor block, automatically create brackets
+        if (config.isConstructor() && config.getStructure() != null) {
+            createBracketsForConstructor(player, block, config);
+        }
+        
         if (config.isConstructor()) {
             player.sendMessage("§a✓ Constructor block placed!");
             player.sendMessage("§7Right-click to configure parameters");
@@ -109,6 +120,43 @@ public class BlockPlacementHandler implements Listener {
         
         plugin.getLogger().info("Code block placed by " + player.getName() + " at " + block.getLocation() + " with action: " + actionId);
         return true;
+    }
+
+    /**
+     * Creates brackets for constructor blocks
+     */
+    private void createBracketsForConstructor(Player player, Block block, BlockConfigService.BlockConfig config) {
+        // Get structure configuration
+        BlockConfigService.StructureConfig structure = config.getStructure();
+        if (structure == null) {
+            return;
+        }
+        
+        Material bracketMaterial = structure.getBrackets();
+        int bracketDistance = structure.getBracketDistance();
+        
+        // Create opening bracket (to the left)
+        Location openBracketLoc = block.getLocation().clone().add(-bracketDistance, 0, 0);
+        block.getWorld().getBlockAt(openBracketLoc).setType(bracketMaterial);
+        
+        // Create closing bracket (to the right)
+        Location closeBracketLoc = block.getLocation().clone().add(bracketDistance, 0, 0);
+        block.getWorld().getBlockAt(closeBracketLoc).setType(bracketMaterial);
+        
+        // Register brackets as code blocks
+        CodeBlock openBracket = new CodeBlock(bracketMaterial, "BRACKET");
+        openBracket.setBracketType(CodeBlock.BracketType.OPEN);
+        blockCodeBlocks.put(openBracketLoc, openBracket);
+        
+        CodeBlock closeBracket = new CodeBlock(bracketMaterial, "BRACKET");
+        closeBracket.setBracketType(CodeBlock.BracketType.CLOSE);
+        blockCodeBlocks.put(closeBracketLoc, closeBracket);
+        
+        // Add visual effects
+        player.spawnParticle(org.bukkit.Particle.ENCHANTMENT_TABLE, openBracketLoc.add(0.5, 0.5, 0.5), 5, 0.3, 0.3, 0.3, 0);
+        player.spawnParticle(org.bukkit.Particle.ENCHANTMENT_TABLE, closeBracketLoc.add(0.5, 0.5, 0.5), 5, 0.3, 0.3, 0.3, 0);
+        
+        player.sendMessage("§a✓ Brackets created automatically for constructor block");
     }
 
     /**
@@ -223,8 +271,29 @@ public class BlockPlacementHandler implements Listener {
             }
             
             // For other blocks, open the appropriate GUI
-            // This would normally open a GUI but we're keeping it simple for now
-            player.sendMessage("§aBlock interaction registered!");
+            // Open ActionSelectionGUI for blocks without actions or Parameter GUI for blocks with actions
+            if (codeBlock.getAction() == null || "NOT_SET".equals(codeBlock.getAction())) {
+                // Check if plugin and service registry are available
+                if (plugin == null || plugin.getServiceRegistry() == null) {
+                    player.sendMessage("§cPlugin services not available!");
+                    return;
+                }
+                
+                // Open action selection GUI
+                com.megacreative.gui.coding.ActionSelectionGUI actionGUI = new com.megacreative.gui.coding.ActionSelectionGUI(
+                    plugin, player, location, codeBlock.getMaterial());
+                actionGUI.open();
+            } else {
+                // Check if plugin and service registry are available
+                if (plugin == null || plugin.getServiceRegistry() == null) {
+                    player.sendMessage("§cPlugin services not available!");
+                    return;
+                }
+                
+                // Open enhanced parameter configuration GUI
+                com.megacreative.gui.coding.EnhancedActionParameterGUI enhancedGUI = new com.megacreative.gui.coding.EnhancedActionParameterGUI(plugin);
+                enhancedGUI.openParameterEditor(player, location, codeBlock.getAction());
+            }
             return;
         }
     }

@@ -66,6 +66,12 @@ public class PlayCommand implements CommandExecutor {
             return true;
         }
         
+        // Check if world manager is available
+        if (plugin.getWorldManager() == null) {
+            player.sendMessage("§cWorld manager not available!");
+            return true;
+        }
+        
         if (args.length > 0) {
             switch (args[0].toLowerCase()) {
                 case "switch", "world" -> {

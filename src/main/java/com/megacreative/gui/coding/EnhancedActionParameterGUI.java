@@ -50,7 +50,13 @@ public class EnhancedActionParameterGUI {
     public EnhancedActionParameterGUI(MegaCreative plugin) {
         this.plugin = plugin;
         this.guiManager = new InteractiveGUIManager(plugin);
-        this.blockConfigService = plugin.getServiceRegistry().getBlockConfigService();
+        
+        // Add null check for service registry
+        if (plugin != null && plugin.getServiceRegistry() != null) {
+            this.blockConfigService = plugin.getServiceRegistry().getBlockConfigService();
+        } else {
+            this.blockConfigService = null;
+        }
     }
     
     /**
@@ -93,7 +99,7 @@ public class EnhancedActionParameterGUI {
      */
     private void setupParameterEditors(InteractiveGUI gui, String actionId, CodeBlock block, Player player) {
         // Get action configuration
-        var actionConfigurations = blockConfigService.getActionConfigurations();
+        var actionConfigurations = blockConfigService != null ? blockConfigService.getActionConfigurations() : null;
         if (actionConfigurations == null) {
             setupGenericParameterEditors(gui, block);
             return;

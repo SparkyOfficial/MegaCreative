@@ -405,6 +405,26 @@ public class ServiceRegistry {
     }
     
     /**
+     * Initialize dependent services that require all core services to be available
+     * This method should be called after the main initialization is complete
+     */
+    public void initializeAdditionalServices() {
+        plugin.getLogger().info(" YYS Initializing additional services...");
+        
+        try {
+            // Load action parameters for all block configs after all services are initialized
+            if (blockConfigService != null) {
+                blockConfigService.loadActionParametersForAllBlocks();
+            }
+            
+            plugin.getLogger().info(" YYS Additional services initialized successfully!");
+        } catch (Exception e) {
+            plugin.getLogger().severe(" YYS Failed to initialize additional services: " + e.getMessage());
+            e.printStackTrace();
+        }
+    }
+    
+    /**
      * Gets a service by type with proper type safety
      *
      * Получает сервис по типу с правильной безопасностью типов

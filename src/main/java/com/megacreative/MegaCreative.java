@@ -141,6 +141,31 @@ public class MegaCreative extends JavaPlugin {
             // Start auto-save system
             startAutoSaveSystem();
             
+            // Delay world loading until after Bukkit is fully initialized
+            getServer().getScheduler().runTaskLater(this, new Runnable() {
+                @Override
+                public void run() {
+                    getLogger().info("Запуск отложенной загрузки креативных миров...");
+                    if (serviceRegistry != null && serviceRegistry.getWorldManager() != null) {
+                        // Load worlds after Bukkit is ready
+                        // Cast to implementation class to access loadWorlds method
+                        if (serviceRegistry.getWorldManager() instanceof com.megacreative.managers.WorldManagerImpl worldManagerImpl) {
+                            worldManagerImpl.loadWorlds();
+                        }
+                        // Initialize additional services that depend on worlds being loaded
+                        serviceRegistry.initializeAdditionalServices();
+                        // Now that worlds are loaded, rebuild event handler maps
+                        if (serviceRegistry.getPlayerEventsListener() != null) {
+                            serviceRegistry.getPlayerEventsListener().rebuildEventHandlerMaps();
+                        }
+                        // Also initialize the PlayerEventsListener
+                        if (serviceRegistry.getPlayerEventsListener() != null) {
+                            serviceRegistry.getPlayerEventsListener().initialize();
+                        }
+                    }
+                }
+            }, 1L); // 1L means execute after 1 tick
+            
             getLogger().info("MegaCreative enabled successfully!");
             
         } catch (Exception e) {
@@ -285,9 +310,6 @@ public class MegaCreative extends JavaPlugin {
             if (getCommand("join") != null) {
                 getCommand("join").setExecutor(new JoinCommand(this, serviceRegistry.getWorldManager()));
             }
-            if (getCommand("build") != null) {
-                getCommand("build").setExecutor(new BuildCommand(this, serviceRegistry.getWorldManager()));
-            }
             if (getCommand("switch") != null) {
                 getCommand("switch").setExecutor(new com.megacreative.commands.SwitchCommand(this, serviceRegistry.getWorldManager()));
             }
@@ -302,6 +324,16 @@ public class MegaCreative extends JavaPlugin {
             }
             if (getCommand("group") != null) {
                 getCommand("group").setExecutor(new GroupCommand(serviceRegistry));
+            }
+        }
+        
+        // Commands that don't require serviceRegistry or have fallbacks
+        if (getCommand("build") != null) {
+            if (serviceRegistry != null) {
+                getCommand("build").setExecutor(new BuildCommand(this, serviceRegistry.getWorldManager()));
+            } else {
+                // Fallback if serviceRegistry is not available
+                getCommand("build").setExecutor(new BuildCommand(this, null));
             }
         }
         

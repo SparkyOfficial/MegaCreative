@@ -94,7 +94,14 @@ public class ActionSelectionGUI implements GUIManager.ManagedGUIInterface {
         this.blockLocation = blockLocation;
         this.blockMaterial = blockMaterial;
         this.guiManager = plugin.getGuiManager();
-        this.blockConfigService = plugin.getServiceRegistry().getBlockConfigService();
+        
+        // Add null check for service registry
+        if (plugin != null && plugin.getServiceRegistry() != null) {
+            this.blockConfigService = plugin.getServiceRegistry().getBlockConfigService();
+        } else {
+            this.blockConfigService = null;
+            player.sendMessage("§cBlock configuration service not available!");
+        }
         
         // Create inventory with appropriate size
         this.inventory = Bukkit.createInventory(null, 54, "§8Выбор действия: " + getBlockDisplayName());
@@ -170,7 +177,10 @@ public class ActionSelectionGUI implements GUIManager.ManagedGUIInterface {
         player.sendMessage("§eDebug: Checking material " + blockMaterial.name());
         
         // Get available actions for this block material using BlockConfigService
-        List<String> availableActions = blockConfigService.getActionsForMaterial(blockMaterial);
+        List<String> availableActions = null;
+        if (blockConfigService != null) {
+            availableActions = blockConfigService.getActionsForMaterial(blockMaterial);
+        }
         
         player.sendMessage("§eDebug: Available actions count: " + (availableActions != null ? availableActions.size() : "null"));
         

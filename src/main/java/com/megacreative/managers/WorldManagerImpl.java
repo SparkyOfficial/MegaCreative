@@ -94,7 +94,7 @@ public class WorldManagerImpl implements IWorldManager {
      * Konstruktor für ServiceRegistry (verwendet ConfigManager)
      */
     public WorldManagerImpl(ConfigManager configManager) {
-        this.plugin = null; // Will be set later through setPlugin method
+        this.plugin = MegaCreative.getInstance(); // Try to get plugin from singleton
         this.codingManager = null; // Will be injected by ServiceRegistry
         this.configManager = configManager;
         this.worlds = new HashMap<>();
@@ -108,6 +108,12 @@ public class WorldManagerImpl implements IWorldManager {
             this.maxWorldsPerPlayer = 5; // Default value
             this.worldBorderSize = 300; // Default value
         }
+        
+        // Do not load worlds immediately - wait for delayed initialization
+        Plugin plugin = getPlugin();
+        if (plugin != null) {
+            plugin.getLogger().info("WorldManagerImpl created, worlds will be loaded later");
+        }
     }
     
     /**
@@ -119,6 +125,9 @@ public class WorldManagerImpl implements IWorldManager {
      */
     public void setPlugin(Plugin plugin) {
         this.plugin = plugin;
+        if (plugin != null) {
+            plugin.getLogger().info("Plugin set in WorldManagerImpl");
+        }
     }
     
     /**
@@ -157,7 +166,53 @@ public class WorldManagerImpl implements IWorldManager {
      * Sollte NACH der Erstellung aller anderen Manager aufgerufen werden
      */
     public void initialize() {
-        loadWorlds();
+        // Check if plugin is available
+        Plugin plugin = getPlugin();
+        if (plugin != null) {
+            // Worlds will be loaded later in the delayed task to ensure Bukkit is ready
+            plugin.getLogger().info("WorldManager initialized, worlds will be loaded in delayed task");
+        }
+    }
+    
+    /**
+     * Actually loads all worlds from files
+     * This should be called after Bukkit is fully initialized
+     */
+    public void loadWorlds() {
+        // Check if plugin is available
+        Plugin plugin = getPlugin();
+        if (plugin == null) {
+            System.err.println("Plugin not available for WorldManagerImpl.loadWorlds()");
+            return;
+        }
+        
+        plugin.getLogger().info("Loading worlds from files...");
+        File dataFolder = new File(plugin.getDataFolder(), "worlds");
+        if (!dataFolder.exists()) {
+            plugin.getLogger().info("Worlds data folder does not exist, creating it...");
+            dataFolder.mkdirs();
+            return;
+        }
+        
+        File[] worldFiles = dataFolder.listFiles((dir, name) -> name.endsWith(".yml"));
+        if (worldFiles == null) {
+            plugin.getLogger().warning("Failed to list world files in directory: " + dataFolder.getAbsolutePath());
+            return;
+        }
+        
+        plugin.getLogger().info("Found " + worldFiles.length + " world files to load");
+        
+        for (File worldFile : worldFiles) {
+            try {
+                plugin.getLogger().info("Loading world from file: " + worldFile.getName());
+                loadWorld(worldFile);
+            } catch (Exception e) {
+                plugin.getLogger().severe("Ошибка загрузки мира " + worldFile.getName() + ": " + e.getMessage());
+                e.printStackTrace();
+            }
+        }
+        
+        plugin.getLogger().info("Finished loading all worlds. Total loaded: " + worlds.size());
     }
     
     /**
@@ -891,24 +946,6 @@ public class WorldManagerImpl implements IWorldManager {
         worlds.values().forEach(this::saveWorld);
     }
     
-    private void loadWorlds() {
-        File dataFolder = new File(getPlugin().getDataFolder(), "worlds");
-        if (!dataFolder.exists()) {
-            return;
-        }
-        
-        File[] worldFiles = dataFolder.listFiles((dir, name) -> name.endsWith(".yml"));
-        if (worldFiles == null) return;
-        
-        for (File worldFile : worldFiles) {
-            try {
-                loadWorld(worldFile);
-            } catch (Exception e) {
-                getPlugin().getLogger().severe("Ошибка загрузки мира " + worldFile.getName() + ": " + e.getMessage());
-            }
-        }
-    }
-    
     private void loadWorld(File worldFile) {
         YamlConfiguration config = YamlConfiguration.loadConfiguration(worldFile);
         
@@ -924,30 +961,49 @@ public class WorldManagerImpl implements IWorldManager {
             if (world != null) {
                 worlds.put(world.getId(), world);
                 playerWorlds.computeIfAbsent(world.getOwnerId(), k -> new ArrayList<>()).add(world.getId());
+                
+                getPlugin().getLogger().info("Successfully loaded creative world: " + world.getName() + " (ID: " + world.getId() + ")");
 
                 // Автоматическая загрузка мира и скриптов, если он уже существует
                 World bukkitWorld = Bukkit.getWorld(world.getWorldName());
                 if (bukkitWorld == null) {
+                    getPlugin().getLogger().info("Bukkit world " + world.getWorldName() + " not found, attempting to create it...");
                     WorldCreator creator = new WorldCreator(world.getWorldName());
                     switch (world.getWorldType()) {
-                        case FLAT -> creator.type(WorldType.FLAT);
-                        case VOID -> creator.generator("VoidWorld"); // если есть генератор пустоты
-                        case OCEAN -> creator.type(WorldType.NORMAL); // можно добавить генератор океана
+                        case FLAT -> {
+                            creator.type(WorldType.FLAT);
+                            creator.generatorSettings("{\"layers\":[{\"block\":\"bedrock\",\"height\":1},{\"block\":\"stone\",\"height\":2},{\"block\":\"grass_block\",\"height\":1}],\"biome\":\"plains\"}");
+                        }
+                        case VOID -> {
+                            creator.type(WorldType.FLAT);
+                            creator.generatorSettings("{\"layers\":[{\"block\":\"air\",\"height\":1}],\"biome\":\"plains\"}");
+                        }
+                        case OCEAN -> creator.type(WorldType.NORMAL);
                         case NETHER -> creator.environment(World.Environment.NETHER);
                         case END -> creator.environment(World.Environment.THE_END);
                         default -> creator.type(WorldType.NORMAL);
                     }
                     bukkitWorld = creator.createWorld();
                 }
+                
                 if (bukkitWorld != null) {
+                    getPlugin().getLogger().info("Successfully loaded/created Bukkit world: " + bukkitWorld.getName());
                     ICodingManager codingManager = ((MegaCreative) getPlugin()).getCodingManager();
                     if (codingManager != null) {
                         codingManager.loadScriptsForWorld(world);
+                        getPlugin().getLogger().info("Loaded scripts for world: " + world.getName());
+                    } else {
+                        getPlugin().getLogger().warning("CodingManager is null, could not load scripts for world: " + world.getName());
                     }
+                } else {
+                    getPlugin().getLogger().severe("Failed to load/create Bukkit world: " + world.getWorldName());
                 }
+            } else {
+                getPlugin().getLogger().warning("Failed to deserialize world from file: " + worldFile.getName());
             }
         } catch (Exception e) {
             getPlugin().getLogger().severe("Ошибка загрузки мира " + worldFile.getName() + ": " + e.getMessage());
+            e.printStackTrace();
         }
     }
     

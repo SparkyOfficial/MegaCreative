@@ -61,6 +61,29 @@ public class BlockConfigService {
      */
     public void reload() {
         load();
+        // After reloading, make sure action parameters are loaded for all blocks
+        loadActionParametersForAllBlocks();
+    }
+
+    /**
+     * Loads action parameters for all block configurations
+     * This should be called after the service registry is fully initialized
+     */
+    public void loadActionParametersForAllBlocks() {
+        if (plugin.getServiceRegistry() == null) {
+            plugin.getLogger().warning("ServiceRegistry not available, deferring action parameter loading");
+            return;
+        }
+        
+        plugin.getLogger().info("Loading action parameters for all block configurations...");
+        for (BlockConfig config : blockConfigs.values()) {
+            try {
+                config.loadActionParameters(plugin);
+            } catch (Exception e) {
+                plugin.getLogger().warning("Failed to load action parameters for block config " + config.getId() + ": " + e.getMessage());
+            }
+        }
+        plugin.getLogger().info("Finished loading action parameters for all block configurations");
     }
 
     /**
@@ -565,13 +588,18 @@ public class BlockConfigService {
         public void loadActionParameters(MegaCreative plugin) {
             try {
                 // Check if service registry is available
-                if (plugin.getServiceRegistry() == null) {
+                if (plugin == null || plugin.getServiceRegistry() == null) {
                     // Service registry not yet initialized, defer loading
                     return;
                 }
                 
                 // Load action parameters
-                ConfigurationSection actionConfigurations = plugin.getServiceRegistry().getBlockConfigService().getActionConfigurations();
+                BlockConfigService blockConfigService = plugin.getServiceRegistry().getBlockConfigService();
+                if (blockConfigService == null) {
+                    return;
+                }
+                
+                ConfigurationSection actionConfigurations = blockConfigService.getActionConfigurations();
                 if (actionConfigurations != null) {
                     for (String action : this.actions) {
                         ConfigurationSection actionSection = actionConfigurations.getConfigurationSection(action);
@@ -595,6 +623,7 @@ public class BlockConfigService {
             } catch (Exception e) {
                 // Log the error but don't crash the plugin
                 java.util.logging.Logger.getLogger(BlockConfig.class.getName()).warning("Failed to load action parameters: " + e.getMessage());
+                e.printStackTrace(); // Add stack trace for debugging
             }
         }
         

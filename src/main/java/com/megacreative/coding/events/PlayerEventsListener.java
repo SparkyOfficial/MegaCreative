@@ -71,12 +71,23 @@ public class PlayerEventsListener implements Listener {
         }
         
         // 🚀 PERFORMANCE: Построить карту обработчиков при инициализации
-        rebuildEventHandlerMaps();
+        // Only rebuild if service registry is available
+        if (plugin != null && plugin.getServiceRegistry() != null) {
+            rebuildEventHandlerMaps();
+        }
         
         // 🎆 FRAMELAND: Initialize comprehensive event system
         if (plugin != null) {
             plugin.getLogger().info("🎆 PlayerEventsListener initialized with reference system integration");
         }
+    }
+    
+    /**
+     * Initialize the listener after worlds are loaded
+     * This method should be called after world loading is complete
+     */
+    public void initialize() {
+        rebuildEventHandlerMaps();
     }
     
     /**
