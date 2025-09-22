@@ -112,7 +112,8 @@ public class WorldManagerImpl implements IWorldManager {
         // Do not load worlds immediately - wait for delayed initialization
         Plugin plugin = getPlugin();
         if (plugin != null) {
-            plugin.getLogger().info("WorldManagerImpl created, worlds will be loaded later");
+            // Reduced logging - only log when debugging
+            // plugin.getLogger().info("WorldManagerImpl created, worlds will be loaded later");
         }
     }
     
@@ -126,7 +127,8 @@ public class WorldManagerImpl implements IWorldManager {
     public void setPlugin(Plugin plugin) {
         this.plugin = plugin;
         if (plugin != null) {
-            plugin.getLogger().info("Plugin set in WorldManagerImpl");
+            // Reduced logging - only log when debugging
+            // plugin.getLogger().info("Plugin set in WorldManagerImpl");
         }
     }
     
@@ -170,7 +172,8 @@ public class WorldManagerImpl implements IWorldManager {
         Plugin plugin = getPlugin();
         if (plugin != null) {
             // Worlds will be loaded later in the delayed task to ensure Bukkit is ready
-            plugin.getLogger().info("WorldManager initialized, worlds will be loaded in delayed task");
+            // Reduced logging - only log when debugging
+            // plugin.getLogger().info("WorldManager initialized, worlds will be loaded in delayed task");
         }
     }
     
@@ -186,10 +189,12 @@ public class WorldManagerImpl implements IWorldManager {
             return;
         }
         
-        plugin.getLogger().info("Loading worlds from files...");
+        // Reduced logging - only log when debugging
+        // plugin.getLogger().info("Loading worlds from files...");
         File dataFolder = new File(plugin.getDataFolder(), "worlds");
         if (!dataFolder.exists()) {
-            plugin.getLogger().info("Worlds data folder does not exist, creating it...");
+            // Reduced logging - only log when debugging
+            // plugin.getLogger().info("Worlds data folder does not exist, creating it...");
             dataFolder.mkdirs();
             return;
         }
@@ -200,11 +205,13 @@ public class WorldManagerImpl implements IWorldManager {
             return;
         }
         
-        plugin.getLogger().info("Found " + worldFiles.length + " world files to load");
+        // Reduced logging - only log when debugging
+        // plugin.getLogger().info("Found " + worldFiles.length + " world files to load");
         
         for (File worldFile : worldFiles) {
             try {
-                plugin.getLogger().info("Loading world from file: " + worldFile.getName());
+                // Reduced logging - only log when debugging
+                // plugin.getLogger().info("Loading world from file: " + worldFile.getName());
                 loadWorld(worldFile);
             } catch (Exception e) {
                 plugin.getLogger().severe("Ошибка загрузки мира " + worldFile.getName() + ": " + e.getMessage());
@@ -212,7 +219,8 @@ public class WorldManagerImpl implements IWorldManager {
             }
         }
         
-        plugin.getLogger().info("Finished loading all worlds. Total loaded: " + worlds.size());
+        // Reduced logging - only log when debugging
+        // plugin.getLogger().info("Finished loading all worlds. Total loaded: " + worlds.size());
     }
     
     /**
@@ -359,7 +367,8 @@ public class WorldManagerImpl implements IWorldManager {
                     Bukkit.getScheduler().runTask(plugin, () -> { // Очистку делаем синхронно
                         World partiallyCreatedWorld = Bukkit.getWorld(creativeWorld.getWorldName());
                         if (partiallyCreatedWorld != null) {
-                            getPlugin().getLogger().info("Попытка очистки частично созданного мира: " + partiallyCreatedWorld.getName());
+                            // Reduced logging - only log when debugging
+                            // getPlugin().getLogger().info("Попытка очистки частично созданного мира: " + partiallyCreatedWorld.getName());
 
                             // Кикаем всех игроков (хотя их там быть не должно)
                             for (Player p : partiallyCreatedWorld.getPlayers()) {
@@ -378,7 +387,8 @@ public class WorldManagerImpl implements IWorldManager {
                             Bukkit.getScheduler().runTaskAsynchronously(plugin, () -> {
                                 try {
                                     deleteFolder(worldFolder);
-                                    getPlugin().getLogger().info("Файлы поврежденного мира удалены: " + worldFolder.getName());
+                                    // Reduced logging - only log when debugging
+                                    // getPlugin().getLogger().info("Файлы поврежденного мира удалены: " + worldFolder.getName());
                                 } catch (Exception deleteEx) {
                                     getPlugin().getLogger().severe("Не удалось удалить файлы поврежденного мира: " + deleteEx.getMessage());
                                 }
@@ -523,7 +533,8 @@ public class WorldManagerImpl implements IWorldManager {
             boolean successDataFile = dataFile.delete();
             
             if (successMain && successDev && successDataFile) {
-                getPlugin().getLogger().info("Successfully deleted world files for world ID " + world.getId());
+                // Reduced logging - only log when debugging
+                // getPlugin().getLogger().info("Successfully deleted world files for world ID " + world.getId());
                 requester.sendMessage("§a✓ Файлы мира '" + world.getName() + "' полностью удалены.");
             } else {
                 getPlugin().getLogger().warning("Failed to fully delete world files for world ID " + world.getId() + 
@@ -767,8 +778,9 @@ public class WorldManagerImpl implements IWorldManager {
         if (bukkitWorld == null) return null;
         
         String worldName = bukkitWorld.getName();
-        getPlugin().getLogger().info("Looking for CreativeWorld for Bukkit world: " + worldName);
-        getPlugin().getLogger().info("Available worlds in memory: " + worlds.size());
+        // Reduced logging - only log when debugging
+        // getPlugin().getLogger().info("Looking for CreativeWorld for Bukkit world: " + worldName);
+        // getPlugin().getLogger().info("Available worlds in memory: " + worlds.size());
         
         // Handle old-style megacreative_ naming
         if (worldName.startsWith("megacreative_")) {
@@ -791,20 +803,24 @@ public class WorldManagerImpl implements IWorldManager {
                 getPlugin().getLogger().info("Trying to find world with precise ID: " + preciseId);
                 CreativeWorld preciseResult = getWorld(preciseId);
                 if (preciseResult != null) {
-                    getPlugin().getLogger().info("Found world with precise ID: " + preciseResult.getName());
+                    getPlugin().getLogger().info("Found world when searching for precise ID " + preciseId + ": " + preciseResult.getName() + " (ID: " + preciseResult.getId() + ")");
                     return preciseResult;
                 }
             }
             
-            // Fallback to simple extraction
-            String id = worldName.replace("megacreative_", "")
-                                  .replace("-code", "")    // New dev world suffix
-                                  .replace("-world", "")   // New play world suffix  
-                                  .replace("_dev", "");    // Legacy compatibility
-            getPlugin().getLogger().info("Trying to find world with ID: " + id);
+            // Fallback to simple extraction - but be more careful about the order
+            String id = worldName;
+            // Remove prefix first
+            id = id.replace("megacreative_", "");
+            // Then remove suffixes in order from longest to shortest to avoid partial matches
+            id = id.replace("-code", "");
+            id = id.replace("-world", "");
+            id = id.replace("_dev", "");
+            
+            getPlugin().getLogger().info("Trying to find world with fallback ID: " + id);
             CreativeWorld result = getWorld(id);
             if (result != null) {
-                getPlugin().getLogger().info("Found world: " + result.getName());
+                getPlugin().getLogger().info("Found world when searching for fallback ID " + id + ": " + result.getName() + " (ID: " + result.getId() + ")");
                 return result;
             }
         }
@@ -812,17 +828,20 @@ public class WorldManagerImpl implements IWorldManager {
         // 🎆 ENHANCED: Handle new reference system-style dual world naming
         // Format: worldname-code or worldname-world
         for (CreativeWorld world : worlds.values()) {
-            getPlugin().getLogger().info("Checking world: " + world.getName() + " (ID: " + world.getId() + ")");
+            // Reduced logging - only log when debugging
+            // getPlugin().getLogger().info("Checking world: " + world.getName() + " (ID: " + world.getId() + ")");
             
             // Check if this is the main world
             if (worldName.equals(world.getWorldName())) {
-                getPlugin().getLogger().info("Matched main world name: " + world.getWorldName());
+                // Reduced logging - only log when debugging
+                // getPlugin().getLogger().info("Matched main world name: " + world.getWorldName());
                 return world;
             }
             
             // Check if this is a dev world (old style)
             if (worldName.equals(world.getDevWorldName())) {
-                getPlugin().getLogger().info("Matched dev world name: " + world.getDevWorldName());
+                // Reduced logging - only log when debugging
+                // getPlugin().getLogger().info("Matched dev world name: " + world.getDevWorldName());
                 return world;
             }
             
@@ -832,13 +851,15 @@ public class WorldManagerImpl implements IWorldManager {
                 
                 // Check -code suffix (dev world)
                 if (worldName.equals(baseName + "-code")) {
-                    getPlugin().getLogger().info("Matched -code pattern: " + baseName + "-code");
+                    // Reduced logging - only log when debugging
+                    // getPlugin().getLogger().info("Matched -code pattern: " + baseName + "-code");
                     return world;
                 }
                 
                 // Check -world suffix (play world)
                 if (worldName.equals(baseName + "-world")) {
-                    getPlugin().getLogger().info("Matched -world pattern: " + baseName + "-world");
+                    // Reduced logging - only log when debugging
+                    // getPlugin().getLogger().info("Matched -world pattern: " + baseName + "-world");
                     return world;
                 }
             }
@@ -846,7 +867,8 @@ public class WorldManagerImpl implements IWorldManager {
             // 🔧 FIX: Handle additional naming patterns for better compatibility
             // Check if worldName contains the world ID
             if (worldName.contains(world.getId())) {
-                getPlugin().getLogger().info("Matched ID pattern: " + world.getId());
+                // Reduced logging - only log when debugging
+                // getPlugin().getLogger().info("Matched ID pattern: " + world.getId());
                 return world;
             }
         }
@@ -858,13 +880,20 @@ public class WorldManagerImpl implements IWorldManager {
                 String potentialId = parts[0];
                 CreativeWorld result = getWorld(potentialId);
                 if (result != null) {
-                    getPlugin().getLogger().info("Found world by extracted ID: " + potentialId);
+                    // Reduced logging - only log when debugging
+                    // getPlugin().getLogger().info("Found world by extracted ID: " + potentialId);
+                    getPlugin().getLogger().info("Found world when searching for split ID " + potentialId + ": " + result.getName() + " (ID: " + result.getId() + ")");
                     return result;
                 }
             }
         }
         
-        getPlugin().getLogger().warning("No CreativeWorld found for Bukkit world: " + worldName);
+        // Reduced logging - only log when debugging
+        // getPlugin().getLogger().warning("No CreativeWorld found for Bukkit world: " + worldName);
+        getPlugin().getLogger().warning("No CreativeWorld found for Bukkit world: " + worldName + ". Available worlds: " + worlds.size());
+        for (CreativeWorld world : worlds.values()) {
+            getPlugin().getLogger().warning("  - World ID: " + world.getId() + ", Name: " + world.getName() + ", WorldName: " + world.getWorldName());
+        }
         return null;
     }
     
@@ -962,12 +991,14 @@ public class WorldManagerImpl implements IWorldManager {
                 worlds.put(world.getId(), world);
                 playerWorlds.computeIfAbsent(world.getOwnerId(), k -> new ArrayList<>()).add(world.getId());
                 
-                getPlugin().getLogger().info("Successfully loaded creative world: " + world.getName() + " (ID: " + world.getId() + ")");
+                // Reduced logging - only log when debugging
+                // getPlugin().getLogger().info("Successfully loaded creative world: " + world.getName() + " (ID: " + world.getId() + ")");
 
                 // Автоматическая загрузка мира и скриптов, если он уже существует
                 World bukkitWorld = Bukkit.getWorld(world.getWorldName());
                 if (bukkitWorld == null) {
-                    getPlugin().getLogger().info("Bukkit world " + world.getWorldName() + " not found, attempting to create it...");
+                    // Reduced logging - only log when debugging
+                    // getPlugin().getLogger().info("Bukkit world " + world.getWorldName() + " not found, attempting to create it...");
                     WorldCreator creator = new WorldCreator(world.getWorldName());
                     switch (world.getWorldType()) {
                         case FLAT -> {
@@ -987,11 +1018,13 @@ public class WorldManagerImpl implements IWorldManager {
                 }
                 
                 if (bukkitWorld != null) {
-                    getPlugin().getLogger().info("Successfully loaded/created Bukkit world: " + bukkitWorld.getName());
+                    // Reduced logging - only log when debugging
+                    // getPlugin().getLogger().info("Successfully loaded/created Bukkit world: " + bukkitWorld.getName());
                     ICodingManager codingManager = ((MegaCreative) getPlugin()).getCodingManager();
                     if (codingManager != null) {
                         codingManager.loadScriptsForWorld(world);
-                        getPlugin().getLogger().info("Loaded scripts for world: " + world.getName());
+                        // Reduced logging - only log when debugging
+                        // getPlugin().getLogger().info("Loaded scripts for world: " + world.getName());
                     } else {
                         getPlugin().getLogger().warning("CodingManager is null, could not load scripts for world: " + world.getName());
                     }

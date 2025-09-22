@@ -57,6 +57,14 @@ public class BlockPlacementHandler implements Listener {
             return;
         }
         
+        // Check if the block is being placed on the correct surface
+        if (!isCorrectPlacementSurface(block)) {
+            player.sendMessage("§cThis block can only be placed on the correct surface!");
+            player.playSound(block.getLocation(), org.bukkit.Sound.ENTITY_VILLAGER_NO, 1.0f, 0.8f);
+            event.setCancelled(true);
+            return;
+        }
+        
         // Handle code block placement
         if (handleCodeBlockPlacement(event, player, block)) {
             return;
@@ -65,6 +73,7 @@ public class BlockPlacementHandler implements Listener {
         // For regular blocks that aren't code blocks
         player.sendMessage("§cYou can only place special coding blocks!");
         player.playSound(block.getLocation(), org.bukkit.Sound.ENTITY_VILLAGER_NO, 1.0f, 0.8f);
+        event.setCancelled(true);
     }
 
     /**
@@ -118,7 +127,8 @@ public class BlockPlacementHandler implements Listener {
             player.sendMessage("§7Right-click to select action");
         }
         
-        plugin.getLogger().info("Code block placed by " + player.getName() + " at " + block.getLocation() + " with action: " + actionId);
+        // Reduced logging - only log when debugging
+        // plugin.getLogger().info("Code block placed by " + player.getName() + " at " + block.getLocation() + " with action: " + actionId);
         return true;
     }
 
@@ -135,13 +145,27 @@ public class BlockPlacementHandler implements Listener {
         Material bracketMaterial = structure.getBrackets();
         int bracketDistance = structure.getBracketDistance();
         
-        // Create opening bracket (to the left)
+        // Create opening bracket (to the left) - facing east (toward the center)
         Location openBracketLoc = block.getLocation().clone().add(-bracketDistance, 0, 0);
-        block.getWorld().getBlockAt(openBracketLoc).setType(bracketMaterial);
+        Block openBracketBlock = block.getWorld().getBlockAt(openBracketLoc);
+        openBracketBlock.setType(bracketMaterial);
+        // Set piston facing direction (east = toward positive X, which is toward the center block)
+        if (bracketMaterial == Material.PISTON || bracketMaterial == Material.STICKY_PISTON) {
+            org.bukkit.block.data.Directional pistonData = (org.bukkit.block.data.Directional) openBracketBlock.getBlockData();
+            pistonData.setFacing(org.bukkit.block.BlockFace.EAST);
+            openBracketBlock.setBlockData(pistonData);
+        }
         
-        // Create closing bracket (to the right)
+        // Create closing bracket (to the right) - facing west (toward the center)
         Location closeBracketLoc = block.getLocation().clone().add(bracketDistance, 0, 0);
-        block.getWorld().getBlockAt(closeBracketLoc).setType(bracketMaterial);
+        Block closeBracketBlock = block.getWorld().getBlockAt(closeBracketLoc);
+        closeBracketBlock.setType(bracketMaterial);
+        // Set piston facing direction (west = toward negative X, which is toward the center block)
+        if (bracketMaterial == Material.PISTON || bracketMaterial == Material.STICKY_PISTON) {
+            org.bukkit.block.data.Directional pistonData = (org.bukkit.block.data.Directional) closeBracketBlock.getBlockData();
+            pistonData.setFacing(org.bukkit.block.BlockFace.WEST);
+            closeBracketBlock.setBlockData(pistonData);
+        }
         
         // Register brackets as code blocks
         CodeBlock openBracket = new CodeBlock(bracketMaterial, "BRACKET");
@@ -178,7 +202,8 @@ public class BlockPlacementHandler implements Listener {
             player.spawnParticle(org.bukkit.Particle.ENCHANTMENT_TABLE, effectLoc, 10, 0.3, 0.3, 0.3, 0);
             player.playSound(block.getLocation(), org.bukkit.Sound.BLOCK_PISTON_EXTEND, 1.0f, 1.5f);
             
-            plugin.getLogger().info("Bracket placed by " + player.getName() + " at " + block.getLocation());
+            // Reduced logging - only log when debugging
+            // plugin.getLogger().info("Bracket placed by " + player.getName() + " at " + block.getLocation());
             return true;
         }
         return false;
@@ -206,7 +231,8 @@ public class BlockPlacementHandler implements Listener {
             Location effectLoc = loc.add(0.5, 0.5, 0.5);
             player.spawnParticle(org.bukkit.Particle.CLOUD, effectLoc, 8, 0.3, 0.3, 0.3, 0.1);
             
-            plugin.getLogger().info("CodeBlock removed from " + loc + " with action: " + (removedBlock != null ? removedBlock.getAction() : "unknown"));
+            // Reduced logging - only log when debugging
+            // plugin.getLogger().info("CodeBlock removed from " + loc + " with action: " + (removedBlock != null ? removedBlock.getAction() : "unknown"));
         }
         
         // Special handling for piston brackets
@@ -223,7 +249,8 @@ public class BlockPlacementHandler implements Listener {
             player.spawnParticle(org.bukkit.Particle.SMOKE_NORMAL, effectLoc, 8, 0.3, 0.3, 0.3, 0.1);
             player.spawnParticle(org.bukkit.Particle.FLAME, effectLoc, 3, 0.2, 0.2, 0.2, 0.05);
             
-            plugin.getLogger().info("Bracket piston removed from " + loc);
+            // Reduced logging - only log when debugging
+            // plugin.getLogger().info("Bracket piston removed from " + loc);
         }
     }
     
@@ -322,6 +349,53 @@ public class BlockPlacementHandler implements Listener {
     }
     
     /**
+     * Checks if the block is being placed on the correct surface
+     * Events (DIAMOND_BLOCK) should only be placed on blue glass
+     * Other blocks should only be placed on grey glass
+     */
+    private boolean isCorrectPlacementSurface(Block block) {
+        // Get the block below the placed block
+        Block below = block.getRelative(org.bukkit.block.BlockFace.DOWN);
+        
+        // If blockConfigService is not available, allow placement (fallback)
+        if (blockConfigService == null) {
+            // Reduced logging - only log when debugging
+            // plugin.getLogger().info("BlockConfigService is null, allowing placement");
+            return true;
+        }
+        
+        // Get block config
+        BlockConfigService.BlockConfig config = blockConfigService.getBlockConfigByMaterial(block.getType());
+        
+        // If no config found, allow placement (fallback)
+        if (config == null) {
+            // Reduced logging - only log when debugging
+            // plugin.getLogger().info("No config found for material " + block.getType() + ", allowing placement");
+            return true;
+        }
+        
+        // Reduced logging - only log when debugging
+        // plugin.getLogger().info("Checking placement for block type: " + block.getType() + ", config type: " + config.getType());
+        // plugin.getLogger().info("Block below type: " + below.getType());
+        
+        // Check if this is an EVENT block (DIAMOND_BLOCK)
+        if ("EVENT".equals(config.getType())) {
+            // EVENT blocks should only be placed on blue glass
+            boolean correct = below.getType() == org.bukkit.Material.BLUE_STAINED_GLASS;
+            // Reduced logging - only log when debugging
+            // plugin.getLogger().info("EVENT block placement check: " + correct + " (should be on blue glass)");
+            return correct;
+        } else {
+            // All other blocks should only be placed on grey glass
+            boolean correct = below.getType() == org.bukkit.Material.GRAY_STAINED_GLASS || 
+                   below.getType() == org.bukkit.Material.LIGHT_GRAY_STAINED_GLASS;
+            // Reduced logging - only log when debugging
+            // plugin.getLogger().info("Non-EVENT block placement check: " + correct + " (should be on grey glass)");
+            return correct;
+        }
+    }
+    
+    /**
      * Gets CodeBlock by location
      */
     public CodeBlock getCodeBlock(Location location) {
@@ -354,7 +428,8 @@ public class BlockPlacementHandler implements Listener {
      */
     public void clearAllCodeBlocksInWorld(World world) {
         blockCodeBlocks.entrySet().removeIf(entry -> entry.getKey().getWorld().equals(world));
-        plugin.getLogger().info("Cleared all code blocks from world: " + world.getName() + " in BlockPlacementHandler.");
+        // Reduced logging - only log when debugging
+        // plugin.getLogger().info("Cleared all code blocks from world: " + world.getName() + " in BlockPlacementHandler.");
     }
     
     /**

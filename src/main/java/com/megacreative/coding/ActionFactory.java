@@ -737,7 +737,8 @@ public class ActionFactory {
         try {
             com.megacreative.MegaCreative plugin = dependencyContainer.resolve(com.megacreative.MegaCreative.class);
             if (plugin != null) {
-                plugin.getLogger().info("Registered action '" + actionId + "' with display name '" + displayName + "'");
+                // Reduced logging - only log when debugging
+                // plugin.getLogger().info("Registered action '" + actionId + "' with display name '" + displayName + "'");
             }
         } catch (Exception e) {
             LOGGER.warning("Failed to log action registration: " + e.getMessage());
@@ -763,7 +764,8 @@ public class ActionFactory {
         try {
             com.megacreative.MegaCreative plugin = dependencyContainer.resolve(com.megacreative.MegaCreative.class);
             if (plugin != null) {
-                plugin.getLogger().info("Registered custom action '" + actionId + "' with display name '" + displayName + "'");
+                // Reduced logging - only log when debugging
+                // plugin.getLogger().info("Registered custom action '" + actionId + "' with display name '" + displayName + "'");
             }
         } catch (Exception e) {
             LOGGER.warning("Failed to log custom action registration: " + e.getMessage());
@@ -789,7 +791,8 @@ public class ActionFactory {
         try {
             com.megacreative.MegaCreative plugin = dependencyContainer.resolve(com.megacreative.MegaCreative.class);
             if (plugin != null) {
-                plugin.getLogger().info("Registered supplier action '" + actionId + "' with display name '" + displayName + "'");
+                // Reduced logging - only log when debugging
+                // plugin.getLogger().info("Registered supplier action '" + actionId + "' with display name '" + displayName + "'");
             }
         } catch (Exception e) {
             LOGGER.warning("Failed to log supplier action registration: " + e.getMessage());

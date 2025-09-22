@@ -155,7 +155,8 @@ public class AutoConnectionManager implements Listener {
      */
     private void handleNonDevWorld(Block block) {
         if (plugin != null) {
-            plugin.getLogger().info("AutoConnectionManager: Block placement not in dev world: " + block.getWorld().getName());
+            // Reduced logging - only log when debugging
+            // plugin.getLogger().info("AutoConnectionManager: Block placement not in dev world: " + block.getWorld().getName());
         }
     }
     
@@ -164,7 +165,8 @@ public class AutoConnectionManager implements Listener {
      */
     private void logBlockPlacement(Player player, Location location) {
         if (plugin != null) {
-            plugin.getLogger().info("AutoConnectionManager: Processing block placement by " + player.getName() + " at " + location);
+            // Reduced logging - only log when debugging
+            // plugin.getLogger().info("AutoConnectionManager: Processing block placement by " + player.getName() + " at " + location);
         }
     }
     
@@ -173,7 +175,8 @@ public class AutoConnectionManager implements Listener {
      */
     private void handleNonCodeBlock(Location location) {
         if (plugin != null) {
-            plugin.getLogger().info("AutoConnectionManager: Not a code block or not handled by BlockPlacementHandler at " + location);
+            // Reduced logging - only log when debugging
+            // plugin.getLogger().info("AutoConnectionManager: Not a code block or not handled by BlockPlacementHandler at " + location);
         }
     }
     
@@ -212,7 +215,8 @@ public class AutoConnectionManager implements Listener {
      */
     private void logSuccessfulPlacement(Player player, Location location, String blockName) {
         if (plugin != null) {
-            plugin.getLogger().info("Block '" + blockName + "' placed and auto-connected at " + location + " for player " + player.getName());
+            // Reduced logging - only log when debugging
+            // plugin.getLogger().info("Block '" + blockName + "' placed and auto-connected at " + location + " for player " + player.getName());
             plugin.getLogger().fine("Auto-connected CodeBlock at " + location + " for player " + player.getName());
         }
     }

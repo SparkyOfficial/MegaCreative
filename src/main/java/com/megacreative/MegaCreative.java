@@ -139,7 +139,8 @@ public class MegaCreative extends JavaPlugin {
             getServer().getScheduler().runTaskLater(this, new Runnable() {
                 @Override
                 public void run() {
-                    getLogger().info("Запуск отложенной загрузки креативных миров...");
+                    // Reduced logging - only log when debugging
+                    // getLogger().info("Запуск отложенной загрузки креативных миров...");
                     if (serviceRegistry != null && serviceRegistry.getWorldManager() != null) {
                         // Load worlds after Bukkit is ready
                         // Cast to implementation class to access loadWorlds method
@@ -241,7 +242,8 @@ public class MegaCreative extends JavaPlugin {
                     try {
                         // Save all worlds asynchronously
                         serviceRegistry.getWorldManager().saveAllWorlds();
-                        getLogger().info("Auto-saved all creative worlds");
+                        // Reduced logging - only log when debugging
+                        // getLogger().info("Auto-saved all creative worlds");
                     } catch (Exception e) {
                         getLogger().warning("Error during auto-save: " + e.getMessage());
                     }

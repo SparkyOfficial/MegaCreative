@@ -230,7 +230,8 @@ public class DevInventoryManager implements Listener {
     public void savePlayerInventory(Player player) {
         if (playersInDevWorld.contains(player.getUniqueId())) {
             savedInventories.put(player.getUniqueId(), player.getInventory().getContents());
-            plugin.getLogger().info("Saved dev inventory for " + player.getName());
+            // Reduced logging - only log when debugging
+            // plugin.getLogger().info("Saved dev inventory for " + player.getName());
         }
     }
     

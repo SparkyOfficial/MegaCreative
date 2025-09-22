@@ -173,16 +173,30 @@ public class ActionSelectionGUI implements GUIManager.ManagedGUIInterface {
      * Lädt verfügbare Aktionen für diesen Blocktyp
      */
     private void loadAvailableActions() {
-        // Debug logging
-        player.sendMessage("§eDebug: Checking material " + blockMaterial.name());
+        // Reduced logging - only log when debugging
+        // player.sendMessage("§eDebug: Checking material " + blockMaterial.name());
         
-        // Get available actions for this block material using BlockConfigService
-        List<String> availableActions = null;
-        if (blockConfigService != null) {
-            availableActions = blockConfigService.getActionsForMaterial(blockMaterial);
+        // Check if blockConfigService is available
+        if (blockConfigService == null) {
+            // Reduced logging - only log when debugging
+            // player.sendMessage("§cError: BlockConfigService is null!");
+            return;
         }
         
-        player.sendMessage("§eDebug: Available actions count: " + (availableActions != null ? availableActions.size() : "null"));
+        // Get available actions for this block material using BlockConfigService
+        List<String> availableActions = blockConfigService.getActionsForMaterial(blockMaterial);
+        
+        // Reduced logging - only log when debugging
+        // player.sendMessage("§eDebug: Available actions count: " + (availableActions != null ? availableActions.size() : "null"));
+        
+        // Debug logging for block config
+        BlockConfigService.BlockConfig config = blockConfigService.getBlockConfigByMaterial(blockMaterial);
+        // Reduced logging - only log when debugging
+        // if (config != null) {
+        //     player.sendMessage("§eDebug: Block config found, type: " + config.getType() + ", actions: " + config.getActions().size());
+        // } else {
+        //     player.sendMessage("§cError: No block config found for material " + blockMaterial.name());
+        // }
         
         // Simple fallback to default actions if none found
         if (availableActions == null || availableActions.isEmpty()) {

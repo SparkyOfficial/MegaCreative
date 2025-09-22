@@ -87,7 +87,8 @@ public class BuildCommand implements CommandExecutor {
             
             // Try multiple pattern matching approaches
             String worldName = player.getWorld().getName();
-            plugin.getLogger().info("Attempting to find CreativeWorld for world name: " + worldName);
+            // Reduced logging - only log when debugging
+            // plugin.getLogger().info("Attempting to find CreativeWorld for world name: " + worldName);
             
             if (worldName.startsWith("megacreative_")) {
                 // Extract ID using more precise method for complex naming
@@ -122,7 +123,8 @@ public class BuildCommand implements CommandExecutor {
                 }
                 
                 if (potentialId != null) {
-                    plugin.getLogger().info("Trying to find world with extracted ID: " + potentialId);
+                    // Reduced logging - only log when debugging
+                    // plugin.getLogger().info("Trying to find world with extracted ID: " + potentialId);
                     CreativeWorld foundWorld = worldManager.getWorld(potentialId);
                     if (foundWorld != null) {
                         creativeWorld = foundWorld;
@@ -133,7 +135,8 @@ public class BuildCommand implements CommandExecutor {
             
             // If still not found, try all available worlds
             if (creativeWorld == null) {
-                plugin.getLogger().info("Trying partial name matching for all available worlds");
+                // Reduced logging - only log when debugging
+                // plugin.getLogger().info("Trying partial name matching for all available worlds");
                 for (CreativeWorld world : worldManager.getCreativeWorlds()) {
                     if (worldName.contains(world.getId()) || worldName.contains(world.getName().toLowerCase().replace(" ", ""))) {
                         creativeWorld = world;
