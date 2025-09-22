@@ -18,29 +18,20 @@ import org.bukkit.Location;
 import java.util.*;
 
 /**
- * Графический интерфейс для выбора целей для действий (@p, @a, victim, attacker и т.д.)
- * 🎆 УЛУЧШЕННЫЕ ФУНКЦИИ:
- * - Интуитивная визуализация целей с головами игроков
- * - Валидация целей и предварительный просмотр в реальном времени
- * - Умные рекомендации целей на основе типа действия
- * - Визуальная обратная связь для процесса выбора
- * - Система выбора целей в стиле OpenCreative с современными улучшениями
+ * 🎆 Enhanced Target Selection GUI
+ * 
+ * Implements Reference System-style: universal blocks with GUI configuration
+ * with categories, beautiful selection, and smart signs on blocks with information.
  *
- * GUI for selecting targets for actions (@p, @a, victim, attacker, etc.)
- * 🎆 ENHANCED FEATURES:
- * - Intuitive target visualization with player heads
- * - Real-time target validation and preview
- * - Smart target recommendations based on action type
- * - Visual feedback for selection process
- * - OpenCreative-style target selection system with modern enhancements
+ * 🎆 Улучшенный графический интерфейс выбора целей
+ * 
+ * Реализует стиль reference system: универсальные блоки с настройкой через GUI
+ * с категориями, красивым выбором и умными табличками на блоках с информацией.
  *
- * GUI zur Auswahl von Zielen für Aktionen (@p, @a, Opfer, Angreifer usw.)
- * 🎆 ERWEITERT FUNKTIONEN:
- * - Intuitive Zielvisualisierung mit Spielerköpfen
- * - Echtzeit-Zielvalidierung und -vorschau
- * - Intelligente Ziel-Empfehlungen basierend auf dem Aktionstyp
- * - Visuelle Rückmeldung für den Auswahlprozess
- * - OpenCreative-Stil-Zielauswahlsystem mit modernen Verbesserungen
+ * 🎆 Erweiterte Zielauswahl-GUI
+ * 
+ * Implementiert Reference-System-Stil: universelle Blöcke mit GUI-Konfiguration
+ * mit Kategorien, schöner Auswahl und intelligenten Schildern an Blöcken mit Informationen.
  */
 public class TargetSelectionGUI implements GUIManager.ManagedGUIInterface {
     
@@ -51,54 +42,45 @@ public class TargetSelectionGUI implements GUIManager.ManagedGUIInterface {
     private final Inventory inventory;
     private final GUIManager guiManager;
     
-    // Target types available in the system
+    // Target types available in the system with enhanced categorization
     public enum TargetType {
-        PLAYER("@p", "§aТекущий игрок", Material.PLAYER_HEAD, "Игрок, который запустил скрипт"),
-        ALL_PLAYERS("@a", "§6Все игроки", Material.GOLDEN_HELMET, "Все игроки на сервере"),
-        RANDOM_PLAYER("@r", "§cСлучайный игрок", Material.COMPASS, "Случайно выбранный игрок"),
-        NEAREST_PLAYER("@n", "§eБлижайший игрок", Material.ENDER_EYE, "Ближайший к блоку игрок"),
-        VICTIM("VICTIM", "§4Жертва", Material.SKELETON_SKULL, "Игрок, который пострадал в событии"),
-        ATTACKER("ATTACKER", "§cАтакующий", Material.DIAMOND_SWORD, "Игрок, который атаковал"),
-        KILLER("KILLER", "§8Убийца", Material.NETHERITE_SWORD, "Игрок, который убил"),
-        DEFAULT("DEFAULT", "§7По умолчанию", Material.GRAY_STAINED_GLASS, "Стандартная цель для этого действия"),
-        CUSTOM("CUSTOM", "§eПользовательская", Material.NAME_TAG, "Ввести имя игрока вручную");
+        PLAYER("@p", "§aТекущий игрок", Material.PLAYER_HEAD, "Игрок, который запустил скрипт", "👤 Игроки"),
+        ALL_PLAYERS("@a", "§6Все игроки", Material.GOLDEN_HELMET, "Все игроки на сервере", "👥 Группы"),
+        RANDOM_PLAYER("@r", "§cСлучайный игрок", Material.COMPASS, "Случайно выбранный игрок", "🎲 Случайные"),
+        NEAREST_PLAYER("@n", "§eБлижайший игрок", Material.ENDER_EYE, "Ближайший к блоку игрок", "📍 Расположение"),
+        VICTIM("VICTIM", "§4Жертва", Material.SKELETON_SKULL, "Игрок, который пострадал в событии", "⚔️ Боевые"),
+        ATTACKER("ATTACKER", "§cАтакующий", Material.DIAMOND_SWORD, "Игрок, который атаковал", "⚔️ Боевые"),
+        KILLER("KILLER", "§8Убийца", Material.NETHERITE_SWORD, "Игрок, который убил", "⚔️ Боевые"),
+        DEFAULT("DEFAULT", "§7По умолчанию", Material.GRAY_STAINED_GLASS, "Стандартная цель для этого действия", "⚙️ Системные"),
+        CUSTOM("CUSTOM", "§eПользовательская", Material.NAME_TAG, "Ввести имя игрока вручную", "✍️ Пользовательские");
         
         private final String selector;
         private final String displayName;
         private final Material icon;
         private final String description;
+        private final String category;
         
-        TargetType(String selector, String displayName, Material icon, String description) {
+        TargetType(String selector, String displayName, Material icon, String description, String category) {
             this.selector = selector;
             this.displayName = displayName;
             this.icon = icon;
             this.description = description;
+            this.category = category;
         }
         
         public String getSelector() { return selector; }
         public String getDisplayName() { return displayName; }
         public Material getIcon() { return icon; }
         public String getDescription() { return description; }
+        public String getCategory() { return category; }
     }
     
     /**
-     * Инициализирует графический интерфейс выбора целей
-     * @param plugin Ссылка на основной плагин
-     * @param player Игрок, который будет использовать интерфейс
-     * @param blockLocation Расположение блока для настройки
-     * @param blockMaterial Материал блока для настройки
-     *
      * Initializes target selection GUI
      * @param plugin Reference to main plugin
      * @param player Player who will use the interface
      * @param blockLocation Location of block to configure
      * @param blockMaterial Material of block to configure
-     *
-     * Initialisiert die Zielauswahl-GUI
-     * @param plugin Referenz zum Haupt-Plugin
-     * @param player Spieler, der die Schnittstelle verwenden wird
-     * @param blockLocation Position des zu konfigurierenden Blocks
-     * @param blockMaterial Material des zu konfigurierenden Blocks
      */
     public TargetSelectionGUI(MegaCreative plugin, Player player, Location blockLocation, Material blockMaterial) {
         this.plugin = plugin;
@@ -107,18 +89,14 @@ public class TargetSelectionGUI implements GUIManager.ManagedGUIInterface {
         this.blockMaterial = blockMaterial;
         this.guiManager = plugin.getGuiManager();
         
-        // Create inventory with appropriate size
-        this.inventory = Bukkit.createInventory(null, 45, "§8Выбор цели: " + getBlockDisplayName());
+        // Create inventory with appropriate size (54 slots for double chest GUI)
+        this.inventory = Bukkit.createInventory(null, 54, "§8Выбор цели: " + getBlockDisplayName());
         
         setupInventory();
     }
     
     /**
-     * Получает отображаемое имя блока
-     *
      * Gets display name for block
-     *
-     * Ruft den Anzeigenamen des Blocks ab
      */
     private String getBlockDisplayName() {
         BlockConfigService blockConfigService = plugin.getServiceRegistry().getBlockConfigService();
@@ -127,29 +105,25 @@ public class TargetSelectionGUI implements GUIManager.ManagedGUIInterface {
     }
     
     /**
-     * Настраивает инвентарь графического интерфейса
-     *
-     * Sets up the GUI inventory
-     *
-     * Richtet das GUI-Inventar ein
+     * Sets up the GUI inventory with enhanced design
      */
     private void setupInventory() {
         inventory.clear();
         
-        // Add background glass panes
-        ItemStack glassPane = new ItemStack(Material.GRAY_STAINED_GLASS_PANE);
-        ItemMeta glassMeta = glassPane.getItemMeta();
-        glassMeta.setDisplayName(" ");
-        glassPane.setItemMeta(glassMeta);
+        // Add decorative border with category-specific materials
+        ItemStack borderItem = new ItemStack(Material.BLACK_STAINED_GLASS_PANE);
+        ItemMeta borderMeta = borderItem.getItemMeta();
+        borderMeta.setDisplayName(" ");
+        borderItem.setItemMeta(borderMeta);
         
         // Fill border slots
-        for (int i = 0; i < 45; i++) {
-            if (i < 9 || i >= 36 || i % 9 == 0 || i % 9 == 8) {
-                inventory.setItem(i, glassPane);
+        for (int i = 0; i < 54; i++) {
+            if (i < 9 || i >= 45 || i % 9 == 0 || i % 9 == 8) {
+                inventory.setItem(i, borderItem);
             }
         }
         
-        // Add title item
+        // Add title item with enhanced visual design
         ItemStack titleItem = new ItemStack(blockMaterial);
         ItemMeta titleMeta = titleItem.getItemMeta();
         titleMeta.setDisplayName("§e§l" + getBlockDisplayName());
@@ -158,41 +132,162 @@ public class TargetSelectionGUI implements GUIManager.ManagedGUIInterface {
         titleLore.add("");
         titleLore.add("§aВыбранная цель будет сохранена");
         titleLore.add("§aв блоке как параметр 'target'");
+        titleLore.add("");
+        titleLore.add("§f✨ Reference system-стиль: универсальные блоки");
+        titleLore.add("§fс настройкой через GUI");
         titleMeta.setLore(titleLore);
         titleItem.setItemMeta(titleMeta);
         inventory.setItem(4, titleItem);
         
-        // Add target options
-        loadTargetOptions();
+        // Add category selection first
+        loadCategoryOptions();
+        
+        // Add back button
+        ItemStack backButton = new ItemStack(Material.ARROW);
+        ItemMeta backMeta = backButton.getItemMeta();
+        backMeta.setDisplayName("§c⬅ Назад");
+        List<String> backLore = new ArrayList<>();
+        backLore.add("§7Вернуться к предыдущему меню");
+        backMeta.setLore(backLore);
+        backButton.setItemMeta(backMeta);
+        inventory.setItem(49, backButton);
     }
     
     /**
-     * Загружает опции целей
-     *
-     * Loads target options
-     *
-     * Lädt Zieloptionen
+     * Loads category options for target selection
      */
-    private void loadTargetOptions() {
-        // Place target options in a nice grid layout
+    private void loadCategoryOptions() {
+        // Get unique categories
+        Set<String> categories = new LinkedHashSet<>();
+        for (TargetType targetType : TargetType.values()) {
+            categories.add(targetType.getCategory());
+        }
+        
+        // Place category options in a nice grid layout
         int[] slots = {10, 11, 12, 13, 14, 15, 16, 19, 20, 21, 22, 23, 24, 25, 28, 29, 30, 31, 32, 33, 34};
         int slotIndex = 0;
         
-        for (TargetType targetType : TargetType.values()) {
+        for (String category : categories) {
             if (slotIndex >= slots.length) break;
             
-            ItemStack targetItem = createTargetItem(targetType);
-            inventory.setItem(slots[slotIndex], targetItem);
+            ItemStack categoryItem = createCategoryItem(category);
+            inventory.setItem(slots[slotIndex], categoryItem);
             slotIndex++;
         }
     }
     
     /**
-     * Создает элемент цели
-     *
-     * Creates target item
-     *
-     * Erstellt Zielelement
+     * Creates category item
+     */
+    private ItemStack createCategoryItem(String category) {
+        // Determine material based on category
+        Material material;
+        switch (category) {
+            case "👤 Игроки":
+                material = Material.PLAYER_HEAD;
+                break;
+            case "👥 Группы":
+                material = Material.GOLDEN_HELMET;
+                break;
+            case "🎲 Случайные":
+                material = Material.COMPASS;
+                break;
+            case "📍 Расположение":
+                material = Material.ENDER_EYE;
+                break;
+            case "⚔️ Боевые":
+                material = Material.DIAMOND_SWORD;
+                break;
+            case "⚙️ Системные":
+                material = Material.GRAY_STAINED_GLASS;
+                break;
+            case "✍️ Пользовательские":
+                material = Material.NAME_TAG;
+                break;
+            default:
+                material = Material.PAPER;
+                break;
+        }
+        
+        ItemStack item = new ItemStack(material);
+        ItemMeta meta = item.getItemMeta();
+        
+        if (meta != null) {
+            meta.setDisplayName("§6§l" + category);
+            
+            List<String> lore = new ArrayList<>();
+            lore.add("§7Категория целей");
+            lore.add("");
+            lore.add("§e⚡ Кликните для просмотра");
+            lore.add("§eцелей в этой категории");
+            lore.add("");
+            lore.add("§f✨ Reference system-стиль");
+            
+            meta.setLore(lore);
+            item.setItemMeta(meta);
+        }
+        
+        return item;
+    }
+    
+    /**
+     * Opens category-specific target selection
+     */
+    private void openCategoryTargets(String category) {
+        // Create new inventory for category targets
+        Inventory categoryInventory = Bukkit.createInventory(null, 54, "§8Цели: " + category);
+        
+        // Add decorative border
+        ItemStack borderItem = new ItemStack(Material.GRAY_STAINED_GLASS_PANE);
+        ItemMeta borderMeta = borderItem.getItemMeta();
+        borderMeta.setDisplayName(" ");
+        borderItem.setItemMeta(borderMeta);
+        
+        // Fill border slots
+        for (int i = 0; i < 54; i++) {
+            if (i < 9 || i >= 45 || i % 9 == 0 || i % 9 == 8) {
+                categoryInventory.setItem(i, borderItem);
+            }
+        }
+        
+        // Add back button
+        ItemStack backButton = new ItemStack(Material.ARROW);
+        ItemMeta backMeta = backButton.getItemMeta();
+        backMeta.setDisplayName("§c⬅ Назад");
+        List<String> backLore = new ArrayList<>();
+        backLore.add("§7Вернуться к выбору категорий");
+        backMeta.setLore(backLore);
+        backButton.setItemMeta(backMeta);
+        categoryInventory.setItem(49, backButton);
+        
+        // Load targets for this category
+        loadTargetsForCategory(categoryInventory, category);
+        
+        // Open the category inventory
+        player.openInventory(categoryInventory);
+    }
+    
+    /**
+     * Loads targets for category
+     */
+    private void loadTargetsForCategory(Inventory inventory, String category) {
+        // Place target options in a nice grid layout
+        int[] slots = {10, 11, 12, 13, 14, 15, 16, 19, 20, 21, 22, 23, 24, 25, 28, 29, 30, 31, 32, 33, 34};
+        int slotIndex = 0;
+        
+        for (TargetType targetType : TargetType.values()) {
+            if (targetType.getCategory().equals(category)) {
+                if (slotIndex >= slots.length) break;
+                
+                ItemStack targetItem = createTargetItem(targetType);
+                inventory.setItem(slots[slotIndex], targetItem);
+                slotIndex++;
+            }
+        }
+    }
+    
+    /**
+     * Creates target item with enhanced design
      */
     private ItemStack createTargetItem(TargetType targetType) {
         ItemStack item = new ItemStack(targetType.getIcon());
@@ -228,6 +323,11 @@ public class TargetSelectionGUI implements GUIManager.ManagedGUIInterface {
                     lore.add("§7  • Локальные взаимодействия");
                     lore.add("§7  • Проверки близости");
                     break;
+                case CUSTOM:
+                    lore.add("§a✓ Примеры использования:");
+                    lore.add("§7  • Конкретный игрок по имени");
+                    lore.add("§7  • Административные команды");
+                    break;
             }
             lore.add("");
             
@@ -236,8 +336,11 @@ public class TargetSelectionGUI implements GUIManager.ManagedGUIInterface {
             }
             
             lore.add("");
+            lore.add("§8Категория: " + targetType.getCategory());
             lore.add("§aКликните для выбора");
             lore.add("§8ID: " + targetType.name());
+            lore.add("");
+            lore.add("§f✨ Reference system-стиль: универсальные блоки");
             
             meta.setLore(lore);
             item.setItemMeta(meta);
@@ -247,30 +350,24 @@ public class TargetSelectionGUI implements GUIManager.ManagedGUIInterface {
     }
     
     /**
-     * Открывает графический интерфейс для игрока
-     *
      * Opens the GUI for the player
-     *
-     * Öffnet die GUI für den Spieler
      */
     public void open() {
         guiManager.registerGUI(player, this, inventory);
         player.openInventory(inventory);
         
-        // Аудио обратная связь при открытии GUI
+        // Audio feedback when opening GUI
         player.playSound(player.getLocation(), org.bukkit.Sound.UI_BUTTON_CLICK, 0.7f, 0.8f);
+        
+        // Add visual effects for reference system-style magic
+        player.spawnParticle(org.bukkit.Particle.ENCHANTMENT_TABLE, 
+            player.getLocation().add(0, 1, 0), 10, 0.5, 0.5, 0.5, 1);
     }
     
     @Override
     /**
-     * Получает заголовок графического интерфейса
-     * @return Заголовок интерфейса
-     *
      * Gets the GUI title
      * @return Interface title
-     *
-     * Ruft den GUI-Titel ab
-     * @return Schnittstellentitel
      */
     public String getGUITitle() {
         return "Target Selection GUI for " + blockMaterial.name();
@@ -278,14 +375,8 @@ public class TargetSelectionGUI implements GUIManager.ManagedGUIInterface {
     
     @Override
     /**
-     * Обрабатывает события кликов в инвентаре
-     * @param event Событие клика в инвентаре
-     *
      * Handles inventory click events
      * @param event Inventory click event
-     *
-     * Verarbeitet Inventarklick-Ereignisse
-     * @param event Inventarklick-Ereignis
      */
     public void onInventoryClick(InventoryClickEvent event) {
         if (!player.equals(event.getWhoClicked())) return;
@@ -293,14 +384,59 @@ public class TargetSelectionGUI implements GUIManager.ManagedGUIInterface {
         
         event.setCancelled(true); // Cancel all clicks by default
         
+        int slot = event.getSlot();
+        
+        // Handle back button
+        if (slot == 49) {
+            player.closeInventory();
+            return;
+        }
+        
         ItemStack clicked = event.getCurrentItem();
         if (clicked == null || !clicked.hasItemMeta()) return;
         
         ItemMeta meta = clicked.getItemMeta();
+        String displayName = meta.getDisplayName();
+        
+        // Check if it's a category item
+        if (displayName.startsWith("§6§l")) {
+            String category = displayName.substring(4); // Remove color codes
+            openCategoryTargets(category);
+            return;
+        }
+        
         List<String> lore = meta.getLore();
         if (lore == null) return;
         
-        // Find target ID in lore
+        // Handle category inventory clicks
+        if (inventory.getSize() == 54 && inventory.getItem(49) != null && 
+            inventory.getItem(49).hasItemMeta() && 
+            inventory.getItem(49).getItemMeta().getDisplayName().equals("§c⬅ Назад")) {
+            
+            // This is a category inventory, handle back button
+            if (slot == 49) {
+                // Reopen main inventory
+                player.closeInventory();
+                Bukkit.getScheduler().runTaskLater(plugin, this::open, 1L);
+                return;
+            }
+            
+            // Find target ID in lore
+            String targetId = null;
+            for (String line : lore) {
+                if (line.startsWith("§8ID: ")) {
+                    targetId = line.substring(6); // Remove "§8ID: " prefix
+                    break;
+                }
+            }
+            
+            if (targetId != null) {
+                selectTarget(targetId);
+            }
+            return;
+        }
+        
+        // Find target ID in lore for main inventory
         String targetId = null;
         for (String line : lore) {
             if (line.startsWith("§8ID: ")) {
@@ -315,11 +451,7 @@ public class TargetSelectionGUI implements GUIManager.ManagedGUIInterface {
     }
     
     /**
-     * Выбирает цель
-     *
      * Selects target
-     *
-     * Wählt Ziel
      */
     private void selectTarget(String targetId) {
         try {
@@ -367,11 +499,7 @@ public class TargetSelectionGUI implements GUIManager.ManagedGUIInterface {
     }
     
     /**
-     * Открывает графический интерфейс выбора действий
-     *
      * Opens ActionSelectionGUI after target selection
-     *
-     * Öffnet ActionSelectionGUI nach der Zielauswahl
      */
     private void openActionSelectionGUI() {
         // Open ActionSelectionGUI after target selection
@@ -383,14 +511,8 @@ public class TargetSelectionGUI implements GUIManager.ManagedGUIInterface {
     
     @Override
     /**
-     * Обрабатывает события закрытия инвентаря
-     * @param event Событие закрытия инвентаря
-     *
      * Handles inventory close events
      * @param event Inventory close event
-     *
-     * Verarbeitet Inventarschließ-Ereignisse
-     * @param event Inventarschließ-Ereignis
      */
     public void onInventoryClose(InventoryCloseEvent event) {
         // Optional cleanup when GUI is closed
@@ -399,11 +521,7 @@ public class TargetSelectionGUI implements GUIManager.ManagedGUIInterface {
     
     @Override
     /**
-     * Выполняет очистку ресурсов при закрытии интерфейса
-     *
      * Performs resource cleanup when interface is closed
-     *
-     * Führt eine Ressourcenbereinigung durch, wenn die Schnittstelle geschlossen wird
      */
     public void onCleanup() {
         // Called when GUI is being cleaned up by GUIManager

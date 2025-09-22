@@ -18,20 +18,20 @@ import org.bukkit.Location;
 import java.util.*;
 
 /**
- * 🎆 Enhanced Entity Action Block GUI
+ * 🎆 УЛУЧШЕННЫЙ Графический интерфейс действий над сущностями
  * 
- * Provides a specialized interface for selecting entity action actions.
- * Implements Reference System-style: universal blocks with GUI configuration.
+ * Реализует стиль reference system: универсальные блоки с настройкой через GUI
+ * с категориями, красивым выбором и умными табличками на блоках с информацией.
  *
- * 🎆 Улучшенный графический интерфейс действий над сущностями
+ * 🎆 ENHANCED Entity Action Block GUI
  * 
- * Предоставляет специализированный интерфейс для выбора действий, связанных с действиями над сущностями.
- * Реализует стиль Reference System: универсальные блоки с настройкой через GUI.
+ * Implements reference system-style: universal blocks with GUI configuration
+ * with categories, beautiful selection, and smart signs on blocks with information.
  *
- * 🎆 Erweiterte Entitätsaktions-Block-GUI
+ * 🎆 ERWEITERT Entitätsaktions-Block-GUI
  * 
- * Bietet eine spezialisierte Schnittstelle zur Auswahl von Entitätsaktions-Aktionen.
- * Implementiert Reference System-Stil: universelle Blöcke mit GUI-Konfiguration.
+ * Implementiert Reference-System-Stil: universelle Blöcke mit GUI-Konfiguration
+ * mit Kategorien, schöner Auswahl und intelligenten Schildern an Blöcken mit Informationen.
  */
 public class EntityActionBlockGUI implements GUIManager.ManagedGUIInterface {
     
@@ -43,12 +43,34 @@ public class EntityActionBlockGUI implements GUIManager.ManagedGUIInterface {
     private final GUIManager guiManager;
     private final BlockConfigService blockConfigService;
     
+    // Categories for different types of entity actions
+    private static final Map<String, String> CATEGORY_NAMES = new LinkedHashMap<>();
+    private static final Map<String, Material> CATEGORY_MATERIALS = new HashMap<>();
+    
+    static {
+        // Define category names and their display names
+        CATEGORY_NAMES.put("SPAWN", "🧟 Создание");
+        CATEGORY_NAMES.put("DAMAGE", "⚔️ Урон");
+        CATEGORY_NAMES.put("MOVEMENT", "🏃 Перемещение");
+        CATEGORY_NAMES.put("EFFECTS", "🧪 Эффекты");
+        CATEGORY_NAMES.put("AI", "🤖 ИИ");
+        CATEGORY_NAMES.put("MISC", "🔧 Другое");
+        
+        // Define materials for category items
+        CATEGORY_MATERIALS.put("SPAWN", Material.ZOMBIE_SPAWN_EGG);
+        CATEGORY_MATERIALS.put("DAMAGE", Material.DIAMOND_SWORD);
+        CATEGORY_MATERIALS.put("MOVEMENT", Material.LEATHER_BOOTS);
+        CATEGORY_MATERIALS.put("EFFECTS", Material.POTION);
+        CATEGORY_MATERIALS.put("AI", Material.REDSTONE);
+        CATEGORY_MATERIALS.put("MISC", Material.CHEST);
+    }
+    
     /**
-     * Initializes entity action block GUI
-     * @param plugin Reference to main plugin
-     * @param player Player who will use the interface
-     * @param blockLocation Location of block to configure
-     * @param blockMaterial Material of block to configure
+     * Инициализирует графический интерфейс действий над сущностями
+     * @param plugin Ссылка на основной плагин
+     * @param player Игрок, который будет использовать интерфейс
+     * @param blockLocation Расположение блока для настройки
+     * @param blockMaterial Материал блока для настройки
      */
     public EntityActionBlockGUI(MegaCreative plugin, Player player, Location blockLocation, Material blockMaterial) {
         this.plugin = plugin;
@@ -56,7 +78,14 @@ public class EntityActionBlockGUI implements GUIManager.ManagedGUIInterface {
         this.blockLocation = blockLocation;
         this.blockMaterial = blockMaterial;
         this.guiManager = plugin.getGuiManager();
-        this.blockConfigService = plugin.getServiceRegistry().getBlockConfigService();
+        
+        // Add null check for service registry
+        if (plugin != null && plugin.getServiceRegistry() != null) {
+            this.blockConfigService = plugin.getServiceRegistry().getBlockConfigService();
+        } else {
+            this.blockConfigService = null;
+            player.sendMessage("§cBlock configuration service not available!");
+        }
         
         // Create inventory with appropriate size
         this.inventory = Bukkit.createInventory(null, 54, "§8Действие над сущностью: " + getBlockDisplayName());
@@ -65,7 +94,7 @@ public class EntityActionBlockGUI implements GUIManager.ManagedGUIInterface {
     }
     
     /**
-     * Gets display name for block
+     * Получает отображаемое имя блока
      */
     private String getBlockDisplayName() {
         // Get display name from block config service
@@ -74,33 +103,33 @@ public class EntityActionBlockGUI implements GUIManager.ManagedGUIInterface {
     }
     
     /**
-     * Sets up the GUI inventory
+     * Настраивает инвентарь графического интерфейса
      */
     private void setupInventory() {
         inventory.clear();
         
-        // Add background glass panes
-        ItemStack glassPane = new ItemStack(Material.GRAY_STAINED_GLASS_PANE);
-        ItemMeta glassMeta = glassPane.getItemMeta();
-        glassMeta.setDisplayName(" ");
-        glassPane.setItemMeta(glassMeta);
+        // Add decorative border
+        ItemStack borderItem = new ItemStack(Material.BLACK_STAINED_GLASS_PANE);
+        ItemMeta borderMeta = borderItem.getItemMeta();
+        borderMeta.setDisplayName(" ");
+        borderItem.setItemMeta(borderMeta);
         
         // Fill border slots
         for (int i = 0; i < 54; i++) {
             if (i < 9 || i >= 45 || i % 9 == 0 || i % 9 == 8) {
-                inventory.setItem(i, glassPane);
+                inventory.setItem(i, borderItem);
             }
         }
         
-        // Add info item
+        // Add info item in the center
         ItemStack infoItem = new ItemStack(blockMaterial);
         ItemMeta infoMeta = infoItem.getItemMeta();
         infoMeta.setDisplayName("§e§l" + getBlockDisplayName());
         List<String> infoLore = new ArrayList<>();
-        infoLore.add("§7Выберите действие над сущностью");
+        infoLore.add("§7Выберите категорию действий над сущностями");
         infoLore.add("");
-        infoLore.add("§aКликните на действие чтобы");
-        infoLore.add("§аназначить его блоку");
+        infoLore.add("§aКликните по категории чтобы");
+        infoLore.add("§aпросмотреть доступные действия");
         infoLore.add("");
         infoLore.add("§f✨ Reference system-стиль: универсальные блоки");
         infoLore.add("§fс настройкой через GUI");
@@ -108,168 +137,196 @@ public class EntityActionBlockGUI implements GUIManager.ManagedGUIInterface {
         infoItem.setItemMeta(infoMeta);
         inventory.setItem(4, infoItem);
         
-        // Load available entity action actions for this block type
-        loadAvailableEntityActionActions();
+        // Add category items
+        int slot = 10;
+        for (Map.Entry<String, String> category : CATEGORY_NAMES.entrySet()) {
+            String categoryKey = category.getKey();
+            String categoryName = category.getValue();
+            
+            ItemStack categoryItem = new ItemStack(CATEGORY_MATERIALS.getOrDefault(categoryKey, Material.PAPER));
+            ItemMeta categoryMeta = categoryItem.getItemMeta();
+            categoryMeta.setDisplayName("§6" + categoryName);
+            
+            List<String> categoryLore = new ArrayList<>();
+            categoryLore.add("§7Категория: " + categoryKey);
+            categoryLore.add("");
+            categoryLore.add("§e⚡ Кликните чтобы выбрать");
+            categoryMeta.setLore(categoryLore);
+            
+            categoryItem.setItemMeta(categoryMeta);
+            inventory.setItem(slot, categoryItem);
+            
+            slot += 2; // Space out categories
+            if (slot >= 44) break; // Don't go into border area
+        }
     }
     
     /**
-     * Loads available entity action actions for this block type
+     * Открывает графический интерфейс для игрока
      */
-    private void loadAvailableEntityActionActions() {
-        // Debug logging
-        player.sendMessage("§eDebug: Checking material " + blockMaterial.name());
+    public void open() {
+        guiManager.registerGUI(player, this, inventory);
+        player.openInventory(inventory);
         
-        // Get available entity action actions for block material using BlockConfigService
-        List<String> availableActions = blockConfigService.getActionsForMaterial(blockMaterial);
+        // Аудио обратная связь при открытии GUI
+        player.playSound(player.getLocation(), org.bukkit.Sound.UI_BUTTON_CLICK, 0.7f, 1.2f);
         
-        player.sendMessage("§eDebug: Available entity action actions count: " + (availableActions != null ? availableActions.size() : "null"));
+        // Add visual effects for reference system-style magic
+        player.spawnParticle(org.bukkit.Particle.ENCHANTMENT_TABLE, 
+            player.getLocation().add(0, 1, 0), 10, 0.5, 0.5, 0.5, 1);
+    }
+    
+    @Override
+    /**
+     * Получает заголовок графического интерфейса
+     * @return Заголовок интерфейса
+     */
+    public String getGUITitle() {
+        return "Entity Action Block GUI for " + blockMaterial.name();
+    }
+    
+    @Override
+    /**
+     * Обрабатывает события кликов в инвентаре
+     * @param event Событие клика в инвентаре
+     */
+    public void onInventoryClick(InventoryClickEvent event) {
+        if (!player.equals(event.getWhoClicked())) return;
+        if (!inventory.equals(event.getInventory())) return;
         
-        // Simple fallback to default entity action actions if none found
-        if (availableActions == null || availableActions.isEmpty()) {
-            player.sendMessage("§cОшибка: Нет доступных действий для блока сущности " + blockMaterial.name());
-            
-            // Use default entity action actions as fallback
-            availableActions = new ArrayList<>();
-            availableActions.add("spawnEntity");
-            availableActions.add("killEntity");
-            availableActions.add("damageEntity");
-            availableActions.add("healEntity");
-            availableActions.add("teleportEntity");
-            availableActions.add("setEntityVelocity");
-            availableActions.add("setEntityAI");
-            availableActions.add("giveEntityPotionEffect");
-            player.sendMessage("§6Using entity action default actions as fallback");
+        event.setCancelled(true); // Cancel all clicks by default
+        
+        ItemStack clicked = event.getCurrentItem();
+        if (clicked == null || !clicked.hasItemMeta()) return;
+        
+        ItemMeta meta = clicked.getItemMeta();
+        String displayName = meta.getDisplayName();
+        
+        // Check if it's a category item
+        for (Map.Entry<String, String> category : CATEGORY_NAMES.entrySet()) {
+            String categoryName = category.getValue();
+            if (displayName.contains(categoryName)) {
+                // Open category selection GUI
+                openCategorySelectionGUI(category.getKey());
+                return;
+            }
         }
         
-        // 🎆 ENHANCED: Group entity action actions by category for better organization
-        Map<String, List<String>> categorizedActions = categorizeEntityActionActions(availableActions);
-        
-        // Create action items with visual categorization
-        int slot = 10; // Start from first available slot
-        
-        for (Map.Entry<String, List<String>> category : categorizedActions.entrySet()) {
-            String categoryName = category.getKey();
-            List<String> actionsInCategory = category.getValue();
-            
-            // Add category separator if we have multiple categories
-            if (categorizedActions.size() > 1) {
-                ItemStack categoryItem = createCategoryItem(categoryName, actionsInCategory.size());
-                if (slot < 44) {
-                    inventory.setItem(slot, categoryItem);
-                    slot++;
-                    if (slot % 9 == 8) slot += 2; // Skip border
+        // Handle other clicks
+        List<String> lore = meta.getLore();
+        if (lore != null) {
+            // Find action ID in lore
+            String actionId = null;
+            for (String line : lore) {
+                if (line.startsWith("§8ID: ")) {
+                    actionId = line.substring(5).trim(); // Remove "§8ID: " prefix
+                    break;
                 }
             }
             
-            // Add actions in this category
-            for (String actionId : actionsInCategory) {
-                if (slot >= 44) break; // Don't go into border area
-                
-                ItemStack actionItem = createActionItem(actionId, categoryName);
-                inventory.setItem(slot, actionItem);
-                
-                // Move to next slot, skipping border slots
-                slot++;
-                if (slot % 9 == 8) slot += 2; // Skip right border and left border of next row
-            }
-            
-            // Add spacing between categories
-            if (slot < 44 && categorizedActions.size() > 1) {
-                slot++;
-                if (slot % 9 == 8) slot += 2;
+            if (actionId != null && !actionId.isEmpty()) {
+                selectAction(actionId);
+            } else {
+                player.sendMessage("§eℹ Это заголовок категории. Кликните по действию ниже.");
+                player.playSound(player.getLocation(), org.bukkit.Sound.BLOCK_NOTE_BLOCK_PLING, 0.5f, 0.8f);
             }
         }
     }
     
     /**
-     * 🎆 ENHANCED: Categorizes entity action actions for better organization
-     * Implements reference system-style: universal blocks with GUI configuration
+     * Открывает графический интерфейс выбора действий в категории
+     * @param category Категория для отображения
      */
-    private Map<String, List<String>> categorizeEntityActionActions(List<String> actions) {
-        Map<String, List<String>> categories = new LinkedHashMap<>();
+    private void openCategorySelectionGUI(String category) {
+        // Create new inventory for category selection
+        Inventory categoryInventory = Bukkit.createInventory(null, 54, "§8" + CATEGORY_NAMES.getOrDefault(category, category));
         
-        for (String action : actions) {
-            String category = getEntityActionActionCategory(action);
-            categories.computeIfAbsent(category, k -> new ArrayList<>()).add(action);
+        // Add decorative border
+        ItemStack borderItem = new ItemStack(Material.GRAY_STAINED_GLASS_PANE);
+        ItemMeta borderMeta = borderItem.getItemMeta();
+        borderMeta.setDisplayName(" ");
+        borderItem.setItemMeta(borderMeta);
+        
+        // Fill border slots
+        for (int i = 0; i < 54; i++) {
+            if (i < 9 || i >= 45 || i % 9 == 0 || i % 9 == 8) {
+                categoryInventory.setItem(i, borderItem);
+            }
         }
         
-        return categories;
+        // Add back button
+        ItemStack backButton = new ItemStack(Material.ARROW);
+        ItemMeta backMeta = backButton.getItemMeta();
+        backMeta.setDisplayName("§c⬅ Назад");
+        List<String> backLore = new ArrayList<>();
+        backLore.add("§7Вернуться к выбору категорий");
+        backMeta.setLore(backLore);
+        backButton.setItemMeta(backMeta);
+        categoryInventory.setItem(49, backButton);
+        
+        // Load actions for this category
+        loadActionsForCategory(categoryInventory, category);
+        
+        // Open the category inventory
+        player.openInventory(categoryInventory);
     }
     
     /**
-     * 🎆 ENHANCED: Get category for a entity action action
-     * Implements reference system-style: universal blocks with GUI configuration
+     * Загружает действия для категории
+     * @param inventory Инвентарь для заполнения
+     * @param category Категория для загрузки
      */
-    private String getEntityActionActionCategory(String actionId) {
-        switch (actionId.toLowerCase()) {
-            case "spawnentity":
-            case "killentity":
-                return "🧬 Создание/Удаление";
+    private void loadActionsForCategory(Inventory inventory, String category) {
+        // Check if blockConfigService is available
+        if (blockConfigService == null) {
+            player.sendMessage("§cОшибка: Сервис конфигурации блоков недоступен!");
+            return;
+        }
+        
+        // Get available actions for this block material
+        List<String> availableActions = blockConfigService.getActionsForMaterial(blockMaterial);
+        
+        // Filter actions by category
+        List<String> categoryActions = new ArrayList<>();
+        for (String actionId : availableActions) {
+            String actionCategory = getEntityActionCategory(actionId);
+            if (category.equals(actionCategory)) {
+                categoryActions.add(actionId);
+            }
+        }
+        
+        // Create action items
+        int slot = 10;
+        for (String actionId : categoryActions) {
+            if (slot >= 44) break; // Don't go into border area
             
-            case "damageentity":
-            case "healentity":
-                return "❤️ Здоровье";
+            ItemStack actionItem = createActionItem(actionId);
+            inventory.setItem(slot, actionItem);
             
-            case "teleportentity":
-            case "setentityvelocity":
-                return "📍 Перемещение";
-            
-            case "setentityai":
-            case "setentitytarget":
-                return "🧠 Интеллект";
-            
-            case "giveentitypotioneffect":
-            case "removeentitypotioneffect":
-                return "🧪 Эффекты";
-            
-            case "setentityitem":
-            case "dropentityitem":
-                return "🎒 Инвентарь";
-            
-            default:
-                return "🔧 Основные";
+            slot++;
+            if (slot % 9 == 8) slot += 2; // Skip border slots
         }
     }
     
     /**
-     * 🎆 ENHANCED: Create category header item
-     * Implements reference system-style: universal blocks with GUI configuration
+     * Создает элемент действия
+     * @param actionId ID действия
+     * @return ItemStack элемент действия
      */
-    private ItemStack createCategoryItem(String categoryName, int actionCount) {
-        ItemStack item = new ItemStack(Material.ORANGE_STAINED_GLASS_PANE);
-        ItemMeta meta = item.getItemMeta();
-        
-        meta.setDisplayName("§e§l" + categoryName);
-        
-        List<String> lore = new ArrayList<>();
-        lore.add("§7Доступно действий: " + actionCount);
-        lore.add("§8Категория");
-        lore.add("");
-        lore.add("§f✨ Reference system-стиль: универсальные блоки");
-        meta.setLore(lore);
-        
-        item.setItemMeta(meta);
-        return item;
-    }
-    
-    /**
-     * 🎆 ENHANCED: Create entity action action item
-     * Implements reference system-style: universal blocks with GUI configuration
-     */
-    private ItemStack createActionItem(String actionId, String category) {
+    private ItemStack createActionItem(String actionId) {
         // Create appropriate material for action type
-        Material material = getEntityActionActionMaterial(actionId);
+        Material material = getActionMaterial(actionId);
         ItemStack item = new ItemStack(material);
         ItemMeta meta = item.getItemMeta();
         
         // Set display name
-        meta.setDisplayName("§a§l" + getEntityActionActionDisplayName(actionId));
+        meta.setDisplayName("§a§l" + getActionDisplayName(actionId));
         
         // Set lore with description and category
         List<String> lore = new ArrayList<>();
-        lore.add("§7" + getEntityActionActionDescription(actionId));
+        lore.add("§7" + getActionDescription(actionId));
         lore.add("");
-        lore.add("§8⚙️ Категория: " + category);
+        lore.add("§8⚙️ Категория: " + getActionCategoryName(actionId));
         lore.add("");
         lore.add("§e⚡ Кликните чтобы выбрать");
         lore.add("§8ID: " + actionId);
@@ -282,142 +339,112 @@ public class EntityActionBlockGUI implements GUIManager.ManagedGUIInterface {
     }
     
     /**
-     * Gets material for entity action action
+     * Получает отображаемое имя категории для действия
+     * @param actionId ID действия
+     * @return Отображаемое имя категории
      */
-    private Material getEntityActionActionMaterial(String actionId) {
-        // Return appropriate materials based on action type
+    private String getActionCategoryName(String actionId) {
+        String category = getEntityActionCategory(actionId);
+        return CATEGORY_NAMES.getOrDefault(category, category);
+    }
+    
+    /**
+     * Получает категорию для действия над сущностью
+     * @param actionId ID действия
+     * @return Категория действия
+     */
+    private String getEntityActionCategory(String actionId) {
         switch (actionId.toLowerCase()) {
             case "spawnentity":
-                return Material.EGG;
-            case "killentity":
-                return Material.SKELETON_SKULL;
+            case "spawnmob":
+                return "SPAWN";
             case "damageentity":
-                return Material.RED_DYE;
-            case "healentity":
-                return Material.GREEN_DYE;
+            case "killentity":
+                return "DAMAGE";
             case "teleportentity":
-                return Material.ENDER_PEARL;
             case "setentityvelocity":
-                return Material.FEATHER;
+                return "MOVEMENT";
+            case "giveentitypotioneffect":
+                return "EFFECTS";
+            case "setentityai":
+                return "AI";
             default:
-                return Material.PAPER;
+                return "MISC";
         }
     }
     
     /**
-     * Gets display name for entity action action
+     * Получает материал для действия
+     * @param actionId ID действия
+     * @return Материал для действия
      */
-    private String getEntityActionActionDisplayName(String actionId) {
-        // Return user-friendly names for entity action actions
+    private Material getActionMaterial(String actionId) {
+        // Return appropriate materials based on action type
         switch (actionId.toLowerCase()) {
-            case "spawnentity": return "Создать сущность";
-            case "killentity": return "Убить сущность";
-            case "damageentity": return "Нанести урон сущности";
-            case "healentity": return "Лечить сущность";
-            case "teleportentity": return "Телепортировать сущность";
-            case "setentityvelocity": return "Задать скорость сущности";
-            case "setentityai": return "Включить/выключить ИИ";
-            case "setentitytarget": return "Задать цель сущности";
-            case "giveentitypotioneffect": return "Дать эффект сущности";
-            case "removeentitypotioneffect": return "Убрать эффект сущности";
-            case "setentityitem": return "Задать предмет сущности";
-            case "dropentityitem": return "Выбросить предмет сущности";
+            case "spawnentity":
+                return Material.ZOMBIE_SPAWN_EGG;
+            case "spawnmob":
+                return Material.SKELETON_SPAWN_EGG;
+            case "damageentity":
+                return Material.DIAMOND_SWORD;
+            case "killentity":
+                return Material.BARRIER;
+            case "teleportentity":
+                return Material.ENDER_PEARL;
+            case "setentityvelocity":
+                return Material.FEATHER;
+            case "setentityai":
+                return Material.REDSTONE;
+            case "giveentitypotioneffect":
+                return Material.POTION;
+            default:
+                return Material.STONE;
+        }
+    }
+    
+    /**
+     * Получает отображаемое имя действия
+     * @param actionId ID действия
+     * @return Отображаемое имя действия
+     */
+    private String getActionDisplayName(String actionId) {
+        // Return user-friendly names for actions
+        switch (actionId.toLowerCase()) {
+            case "spawnentity": return "Создать существо";
+            case "spawnmob": return "Создать моба";
+            case "damageentity": return "Нанести урон";
+            case "killentity": return "Убить существо";
+            case "teleportentity": return "Телепортировать";
+            case "setentityvelocity": return "Установить скорость";
+            case "setentityai": return "Установить ИИ";
+            case "giveentitypotioneffect": return "Дать эффект";
             default: return actionId;
         }
     }
 
     /**
-     * Gets description for entity action action
+     * Получает описание действия
+     * @param actionId ID действия
+     * @return Описание действия
      */
-    private String getEntityActionActionDescription(String actionId) {
-        // Return descriptions for entity action actions
+    private String getActionDescription(String actionId) {
+        // Return descriptions for actions
         switch (actionId.toLowerCase()) {
-            case "spawnentity": return "Создает новую сущность в мире";
-            case "killentity": return "Убивает указанную сущность";
-            case "damageentity": return "Наносит урон указанной сущности";
-            case "healentity": return "Лечит указанную сущность";
-            case "teleportentity": return "Телепортирует сущность в указанное место";
-            case "setentityvelocity": return "Задает вектор скорости сущности";
-            case "setentityai": return "Включает или выключает искусственный интеллект сущности";
-            case "setentitytarget": return "Задает цель для сущности (например, для мобов)";
-            case "giveentitypotioneffect": return "Накладывает эффект зелья на сущность";
-            case "removeentitypotioneffect": return "Снимает эффект зелья с сущности";
-            case "setentityitem": return "Задает предмет, который держит сущность";
-            case "dropentityitem": return "Заставляет сущность выбросить предмет";
-            default: return "Действие над сущностью " + actionId;
+            case "spawnentity": return "Создает существо в мире";
+            case "spawnmob": return "Создает моба в мире";
+            case "damageentity": return "Наносит урон существу";
+            case "killentity": return "Убивает существо";
+            case "teleportentity": return "Телепортирует существо";
+            case "setentityvelocity": return "Устанавливает скорость движения существа";
+            case "setentityai": return "Включает или выключает ИИ существа";
+            case "giveentitypotioneffect": return "Накладывает эффект зелья на существо";
+            default: return "Действие " + actionId;
         }
     }
     
     /**
-     * Opens the GUI for the player
-     * Implements reference system-style: universal blocks with GUI configuration
-     */
-    public void open() {
-        guiManager.registerGUI(player, this, inventory);
-        player.openInventory(inventory);
-        
-        // Audio feedback when opening GUI
-        player.playSound(player.getLocation(), org.bukkit.Sound.UI_BUTTON_CLICK, 0.7f, 1.2f);
-        
-        // Add visual effects for reference system-style magic
-        player.spawnParticle(org.bukkit.Particle.ENCHANTMENT_TABLE, 
-            player.getLocation().add(0, 1, 0), 10, 0.5, 0.5, 0.5, 1);
-    }
-    
-    @Override
-    /**
-     * Gets the GUI title
-     */
-    public String getGUITitle() {
-        return "Entity Action Block GUI for " + blockMaterial.name();
-    }
-    
-    @Override
-    /**
-     * Handles inventory click events
-     */
-    public void onInventoryClick(InventoryClickEvent event) {
-        if (!player.equals(event.getWhoClicked())) return;
-        if (!inventory.equals(event.getInventory())) return;
-        
-        event.setCancelled(true); // Cancel all clicks by default
-        
-        ItemStack clicked = event.getCurrentItem();
-        if (clicked == null || !clicked.hasItemMeta()) return;
-        
-        ItemMeta meta = clicked.getItemMeta();
-        List<String> lore = meta.getLore();
-        if (lore == null) return;
-        
-        // Find action ID in lore
-        String actionId = null;
-        boolean isCategoryItem = false;
-        for (String line : lore) {
-            if (line.startsWith("§8ID: ")) {
-                actionId = line.substring(5); // Remove "§8ID: " prefix
-                break;
-            }
-            if (line.contains("Категория")) {
-                isCategoryItem = true;
-                break;
-            }
-        }
-        
-        if (isCategoryItem) {
-            // 🎆 ENHANCED: Handle category item click with helpful message
-            player.sendMessage("§eℹ Это заголовок категории. Кликните по действию ниже.");
-            player.playSound(player.getLocation(), org.bukkit.Sound.BLOCK_NOTE_BLOCK_PLING, 0.5f, 0.8f);
-            return;
-        }
-        
-        if (actionId != null) {
-            selectAction(actionId);
-        }
-    }
-    
-    /**
-     * 🎆 ENHANCED: Select action for the block
-     * Implements reference system-style: universal blocks with GUI configuration
+     * Выбирает действие для блока
+     * @param actionId ID действия
      */
     private void selectAction(String actionId) {
         // Get the code block
@@ -443,7 +470,7 @@ public class EntityActionBlockGUI implements GUIManager.ManagedGUIInterface {
         }
         
         // Notify player
-        player.sendMessage("§a✓ Действие '" + getEntityActionActionDisplayName(actionId) + "' установлено!");
+        player.sendMessage("§a✓ Действие '" + getActionDisplayName(actionId) + "' установлено!");
         player.sendMessage("§eКликните снова по блоку для настройки параметров.");
         
         // Add visual feedback for reference system-style magic
@@ -457,7 +484,8 @@ public class EntityActionBlockGUI implements GUIManager.ManagedGUIInterface {
     
     @Override
     /**
-     * Handles inventory close events
+     * Обрабатывает события закрытия инвентаря
+     * @param event Событие закрытия инвентаря
      */
     public void onInventoryClose(InventoryCloseEvent event) {
         // Optional cleanup when GUI is closed
@@ -466,7 +494,7 @@ public class EntityActionBlockGUI implements GUIManager.ManagedGUIInterface {
     
     @Override
     /**
-     * Performs resource cleanup when interface is closed
+     * Выполняет очистку ресурсов при закрытии интерфейса
      */
     public void onCleanup() {
         // Called when GUI is being cleaned up by GUIManager

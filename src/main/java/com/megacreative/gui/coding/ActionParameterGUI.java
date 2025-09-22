@@ -18,43 +18,20 @@ import org.bukkit.Location;
 import java.util.*;
 
 /**
- * Расширенный графический интерфейс перетаскивания для настройки параметров действий
- * 🎆 РАСШИРЕННЫЕ ФУНКЦИИ:
- * - Динамическая настройка слотов на основе YAML
- * - Валидация параметров в реальном времени
- * - Визуальная обратная связь по статусу конфигурации
- * - Умная генерация заполнителей
- * - Предотвращение ошибок и руководство пользователя
+ * 🎆 Enhanced Action Parameter GUI
  * 
- * Расширенный графический интерфейс перетаскивания для настройки параметров действий
- * 🎆 УЛУЧШЕННЫЕ ФУНКЦИИ:
- * - Динамическая конфигурация слотов на основе YAML
- * - Валидация параметров в реальном времени
- * - Визуальная обратная связь по статусу конфигурации
- * - Умная генерация заполнителей
- * - Предотвращение ошибок и руководство пользователя
+ * Implements Reference System-style: universal blocks with GUI configuration
+ * with categories, beautiful selection, and smart signs on blocks with information.
  *
- * Advanced drag-and-drop GUI for configuring action parameters
- * 🎆 ENHANCED FEATURES:
- * - Dynamic YAML-driven slot configuration
- * - Real-time parameter validation
- * - Visual feedback for configuration status
- * - Smart placeholder generation
- * - Error prevention and user guidance
- *
- * Erweiterte Drag-and-Drop-GUI zur Konfiguration von Aktionsparametern
- * 🎆 ERWEITERT FUNKTIONEN:
- * - Dynamische YAML-gesteuerte Slot-Konfiguration
- * - Echtzeit-Parameter-Validierung
- * - Visuelle Rückmeldung zum Konfigurationsstatus
- * - Intelligente Platzhaltergenerierung
- * - Fehlervermeidung und Benutzerführung
+ * 🎆 Улучшенный графический интерфейс параметров действий
  * 
- * Features intuitive interface for each action type with named slots and item groups
- * Based on the configuration from coding_blocks.yml
+ * Реализует стиль reference system: универсальные блоки с настройкой через GUI
+ * с категориями, красивым выбором и умными табличками на блоках с информацией.
  *
- * Bietet eine intuitive Schnittstelle für jeden Aktionstyp mit benannten Slots und Artikelgruppen
- * Basierend auf der Konfiguration aus coding_blocks.yml
+ * 🎆 Erweiterte Aktionsparameter-GUI
+ * 
+ * Implementiert Reference-System-Stil: universelle Blöcke mit GUI-Konfiguration
+ * mit Kategorien, schöner Auswahl und intelligenten Schildern an Blöcken mit Informationen.
  */
 public class ActionParameterGUI implements GUIManager.ManagedGUIInterface {
     
@@ -74,23 +51,11 @@ public class ActionParameterGUI implements GUIManager.ManagedGUIInterface {
     private final Map<Integer, String> slotCurrentValues = new HashMap<>();
     
     /**
-     * Инициализирует графический интерфейс параметров действий
-     * @param plugin Ссылка на основной плагин
-     * @param player Игрок, который будет использовать интерфейс
-     * @param blockLocation Расположение блока для настройки
-     * @param actionId Идентификатор действия для настройки
-     *
      * Initializes action parameters GUI
      * @param plugin Reference to main plugin
      * @param player Player who will use the interface
      * @param blockLocation Location of block to configure
      * @param actionId Action ID to configure
-     *
-     * Initialisiert die Aktionsparameter-GUI
-     * @param plugin Referenz zum Haupt-Plugin
-     * @param player Spieler, der die Schnittstelle verwenden wird
-     * @param blockLocation Position des zu konfigurierenden Blocks
-     * @param actionId Aktions-ID zum Konfigurieren
      */
     public ActionParameterGUI(MegaCreative plugin, Player player, Location blockLocation, String actionId) {
         this.plugin = plugin;
@@ -100,36 +65,32 @@ public class ActionParameterGUI implements GUIManager.ManagedGUIInterface {
         this.guiManager = plugin.getGuiManager();
         this.blockConfigService = plugin.getServiceRegistry().getBlockConfigService();
         
-        // Create inventory with appropriate size (27 slots for standard chest GUI)
-        this.inventory = Bukkit.createInventory(null, 27, "§8Настройка: " + actionId);
+        // Create inventory with appropriate size (54 slots for double chest GUI)
+        this.inventory = Bukkit.createInventory(null, 54, "§8Настройка: " + actionId);
         
         setupInventory();
     }
     
     /**
-     * Настраивает инвентарь графического интерфейса
-     *
      * Sets up the GUI inventory
-     *
-     * Richtet das GUI-Inventar ein
      */
     private void setupInventory() {
         inventory.clear();
         
-        // Add background glass panes for visual separation
-        ItemStack glassPane = new ItemStack(Material.GRAY_STAINED_GLASS_PANE);
-        ItemMeta glassMeta = glassPane.getItemMeta();
-        glassMeta.setDisplayName(" ");
-        glassPane.setItemMeta(glassMeta);
+        // Add decorative border with category-specific materials
+        ItemStack borderItem = new ItemStack(Material.BLACK_STAINED_GLASS_PANE);
+        ItemMeta borderMeta = borderItem.getItemMeta();
+        borderMeta.setDisplayName(" ");
+        borderItem.setItemMeta(borderMeta);
         
-        // Fill border slots with glass panes
-        for (int i = 0; i < 27; i++) {
-            if (i < 9 || i >= 18 || i % 9 == 0 || i % 9 == 8) {
-                inventory.setItem(i, glassPane);
+        // Fill border slots
+        for (int i = 0; i < 54; i++) {
+            if (i < 9 || i >= 45 || i % 9 == 0 || i % 9 == 8) {
+                inventory.setItem(i, borderItem);
             }
         }
         
-        // Add action information
+        // Add action information with enhanced visual design
         ItemStack infoItem = new ItemStack(Material.BOOK);
         ItemMeta infoMeta = infoItem.getItemMeta();
         infoMeta.setDisplayName("§e§l" + actionId);
@@ -142,6 +103,9 @@ public class ActionParameterGUI implements GUIManager.ManagedGUIInterface {
         infoLore.add("§f⚡ Оптимизировано для быстрой настройки");
         infoLore.add("§7• Валидация в реальном времени");
         infoLore.add("§7• Автоматическая подсказка");
+        infoLore.add("");
+        infoLore.add("§f✨ Reference system-стиль: универсальные блоки");
+        infoLore.add("§fс настройкой через GUI");
         infoMeta.setLore(infoLore);
         infoItem.setItemMeta(infoMeta);
         inventory.setItem(4, infoItem);
@@ -151,14 +115,20 @@ public class ActionParameterGUI implements GUIManager.ManagedGUIInterface {
         
         // Load existing parameters from the code block
         loadExistingParameters();
+        
+        // Add back button
+        ItemStack backButton = new ItemStack(Material.ARROW);
+        ItemMeta backMeta = backButton.getItemMeta();
+        backMeta.setDisplayName("§c⬅ Назад");
+        List<String> backLore = new ArrayList<>();
+        backLore.add("§7Вернуться к выбору действий");
+        backMeta.setLore(backLore);
+        backButton.setItemMeta(backMeta);
+        inventory.setItem(49, backButton);
     }
     
     /**
-     * Загружает конфигурацию действия из coding_blocks.yml и настраивает элементы-заполнители
-     *
      * Loads the action configuration from coding_blocks.yml and sets up placeholder items
-     *
-     * Lädt die Aktionskonfiguration aus coding_blocks.yml und richtet Platzhalterelemente ein
      */
     private void loadActionConfiguration() {
         // Get the action configurations directly from BlockConfigService
@@ -200,11 +170,7 @@ public class ActionParameterGUI implements GUIManager.ManagedGUIInterface {
     }
     
     /**
-     * Настраивает именованные слоты на основе конфигурации
-     *
      * Sets up named slots based on configuration
-     *
-     * Richtet benannte Slots basierend auf der Konфигuration ein
      */
     private void setupNamedSlots(org.bukkit.configuration.ConfigurationSection slotsConfig) {
         int configuredSlots = 0;
@@ -212,7 +178,9 @@ public class ActionParameterGUI implements GUIManager.ManagedGUIInterface {
         for (String slotKey : slotsConfig.getKeys(false)) {
             try {
                 int slotIndex = Integer.parseInt(slotKey);
-                if (slotIndex < 0 || slotIndex >= inventory.getSize()) {
+                // Adjust slot index for the larger inventory (54 slots)
+                int adjustedSlot = slotIndex + 9; // Start from row 2
+                if (adjustedSlot < 9 || adjustedSlot >= 45) {
                     plugin.getLogger().warning("Неверный индекс слота в конфигурации: " + slotKey + " для " + actionId);
                     continue;
                 }
@@ -271,7 +239,7 @@ public class ActionParameterGUI implements GUIManager.ManagedGUIInterface {
                     placeholder.setItemMeta(meta);
                 }
                 
-                inventory.setItem(slotIndex, placeholder);
+                inventory.setItem(adjustedSlot, placeholder);
                 configuredSlots++;
             } catch (NumberFormatException e) {
                 // Invalid slot index, skip
@@ -285,11 +253,7 @@ public class ActionParameterGUI implements GUIManager.ManagedGUIInterface {
     }
     
     /**
-     * Настраивает группы предметов на основе конфигурации
-     *
      * Sets up item groups based on configuration
-     *
-     * Richtet Artikelgruppen basierend auf der Конфигuration ein
      */
     private void setupItemGroups(org.bukkit.configuration.ConfigurationSection itemGroupsConfig) {
         for (String groupKey : itemGroupsConfig.getKeys(false)) {
@@ -320,24 +284,21 @@ public class ActionParameterGUI implements GUIManager.ManagedGUIInterface {
                 placeholder.setItemMeta(meta);
             }
             
-            // Place placeholder items in all slots of the group
+            // Place placeholder items in all slots of the group (adjusted for larger inventory)
             for (int slot : slots) {
-                if (slot >= 0 && slot < inventory.getSize()) {
-                    inventory.setItem(slot, placeholder);
+                int adjustedSlot = slot + 9; // Start from row 2
+                if (adjustedSlot >= 9 && adjustedSlot < 45) {
+                    inventory.setItem(adjustedSlot, placeholder);
                 }
             }
         }
     }
     
     /**
-     * Настраивает базовые слоты, когда конкретная конфигурация не найдена
-     *
      * Sets up generic slots when no specific configuration is found
-     *
-     * Richtet generische Slots ein, wenn keine spezifische Конфигuration gefunden wird
      */
     private void setupGenericSlots() {
-        // Create generic placeholder items for slots 9-17 (center row)
+        // Create generic placeholder items for slots 10-44 (main area)
         ItemStack placeholder = new ItemStack(Material.PAPER);
         ItemMeta meta = placeholder.getItemMeta();
         if (meta != null) {
@@ -349,17 +310,16 @@ public class ActionParameterGUI implements GUIManager.ManagedGUIInterface {
             placeholder.setItemMeta(meta);
         }
         
-        for (int i = 9; i < 18; i++) {
-            inventory.setItem(i, placeholder);
+        for (int i = 10; i < 44; i++) {
+            // Skip border slots
+            if (i % 9 != 0 && i % 9 != 8) {
+                inventory.setItem(i, placeholder);
+            }
         }
     }
     
     /**
-     * Загружает существующие параметры из блока кода в графический интерфейс
-     *
      * Loads existing parameters from the code block into the GUI
-     *
-     * Lädt vorhandene Parameter aus dem Codeblock in die GUI
      */
     private void loadExistingParameters() {
         BlockPlacementHandler placementHandler = plugin.getBlockPlacementHandler();
@@ -375,22 +335,18 @@ public class ActionParameterGUI implements GUIManager.ManagedGUIInterface {
                 int slot = entry.getKey();
                 ItemStack item = entry.getValue();
                 
-                if (slot >= 0 && slot < inventory.getSize() && item != null && !item.getType().isAir()) {
-                    inventory.setItem(slot, item);
+                // Adjust slot index for the larger inventory
+                int adjustedSlot = slot + 9; // Start from row 2
+                if (adjustedSlot >= 9 && adjustedSlot < 45 && item != null && !item.getType().isAir()) {
+                    inventory.setItem(adjustedSlot, item);
                 }
             }
         }
     }
     
     /**
-     * Сохраняет настроенные параметры обратно в блок кода
-     * 🎆 УЛУЧШЕННОЕ: С обратной связью по валидации
-     *
      * Saves the configured parameters back to the code block
      * 🎆 ENHANCED: With validation feedback
-     *
-     * Speichert die konfigurierten Parameter zurück in den Codeblock
-     * 🎆 ERWEITERT: Mit Validierungs-Rückmeldung
      */
     private void saveParameters() {
         BlockPlacementHandler placementHandler = plugin.getBlockPlacementHandler();
@@ -456,8 +412,10 @@ public class ActionParameterGUI implements GUIManager.ManagedGUIInterface {
         int validItems = 0;
         for (int i = 0; i < inventory.getSize(); i++) {
             ItemStack item = inventory.getItem(i);
-            if (item != null && !item.getType().isAir() && !isPlaceholderItem(item)) {
-                codeBlock.setConfigItem(i, item);
+            // Adjust slot index back to original when saving
+            int originalSlot = i - 9; // Adjust back from row 2
+            if (originalSlot >= 0 && item != null && !item.getType().isAir() && !isPlaceholderItem(item)) {
+                codeBlock.setConfigItem(originalSlot, item);
                 savedItems++;
                 
                 // Count valid items
@@ -496,14 +454,8 @@ public class ActionParameterGUI implements GUIManager.ManagedGUIInterface {
     }
     
     /**
-     * 🎆 УЛУЧШЕННОЕ: Валидация параметров в реальном времени
-     * Проверяет конфигурацию определенного слота и предоставляет пользователю обратную связь
-     *
      * 🎆 ENHANCED: Real-time parameter validation
      * Validates a specific slot configuration and provides user feedback
-     *
-     * 🎆 ERWEITERT: Echtzeit-Parameter-Validierung
-     * Validiert eine bestimmte Slot-Konфигuration und gibt dem Benutzer Feedback
      */
     private void validateSlot(int slot, ItemStack item) {
         String error = null;
@@ -542,8 +494,6 @@ public class ActionParameterGUI implements GUIManager.ManagedGUIInterface {
     }
     
     /**
-     * 🎆 УЛУЧШЕННОЕ: Проверяет зависимые слоты при изменении значения
-     *
      * 🎆 ENHANCED: Validate dependent slots when a value changes
      */
     private void validateDependentSlots(int changedSlot) {
@@ -560,7 +510,9 @@ public class ActionParameterGUI implements GUIManager.ManagedGUIInterface {
         for (String slotKey : slotsConfig.getKeys(false)) {
             try {
                 int slot = Integer.parseInt(slotKey);
-                if (slot == changedSlot) continue; // Skip the slot that just changed
+                // Adjust slot index for the larger inventory
+                int adjustedSlot = slot + 9; // Start from row 2
+                if (adjustedSlot == changedSlot) continue; // Skip the slot that just changed
                 
                 var slotConfig = slotsConfig.getConfigurationSection(slotKey);
                 
@@ -577,7 +529,9 @@ public class ActionParameterGUI implements GUIManager.ManagedGUIInterface {
                         // Find the dependency slot number
                         Integer dependencySlot = findSlotNumberByName(dependencySlotName);
                         if (dependencySlot != null) {
-                            String currentValue = slotCurrentValues.get(dependencySlot);
+                            // Adjust dependency slot for larger inventory
+                            int adjustedDependencySlot = dependencySlot + 9; // Start from row 2
+                            String currentValue = slotCurrentValues.get(adjustedDependencySlot);
                             
                             // Check if dependency condition is met
                             boolean conditionMet = false;
@@ -593,18 +547,18 @@ public class ActionParameterGUI implements GUIManager.ManagedGUIInterface {
                             if (!conditionMet) {
                                 String error = "Доступно только если " + dependencySlotName + 
                                     (isNotEqual ? " ≠ " : " = ") + expectedValue;
-                                slotValidationErrors.put(slot, error);
-                                slotValidationStatus.put(slot, false);
-                                updateSlotVisualFeedback(slot, false, error);
+                                slotValidationErrors.put(adjustedSlot, error);
+                                slotValidationStatus.put(adjustedSlot, false);
+                                updateSlotVisualFeedback(adjustedSlot, false, error);
                             } else {
                                 // Re-validate the slot since dependency condition is now met
-                                ItemStack item = inventory.getItem(slot);
+                                ItemStack item = inventory.getItem(adjustedSlot);
                                 if (item != null && !item.getType().isAir()) {
-                                    String newError = validateItemForSlot(slot, item);
+                                    String newError = validateItemForSlot(adjustedSlot, item);
                                     boolean newValid = (newError == null);
-                                    slotValidationErrors.put(slot, newError);
-                                    slotValidationStatus.put(slot, newValid);
-                                    updateSlotVisualFeedback(slot, newValid, newError);
+                                    slotValidationErrors.put(adjustedSlot, newError);
+                                    slotValidationStatus.put(adjustedSlot, newValid);
+                                    updateSlotVisualFeedback(adjustedSlot, newValid, newError);
                                 }
                             }
                         }
@@ -617,8 +571,6 @@ public class ActionParameterGUI implements GUIManager.ManagedGUIInterface {
     }
     
     /**
-     * 🎆 УЛУЧШЕННОЕ: Находит номер слота по имени
-     *
      * 🎆 ENHANCED: Find slot number by name
      */
     private Integer findSlotNumberByName(String slotName) {
@@ -650,11 +602,7 @@ public class ActionParameterGUI implements GUIManager.ManagedGUIInterface {
     }
     
     /**
-     * 🎆 УЛУЧШЕННОЕ: Проверяет, является ли слот обязательным для этого действия
-     *
      * 🎆 ENHANCED: Check if a slot is required for this action
-     *
-     * 🎆 ERWEITERT: Prüft, ob ein Slot für diese Aktion erforderlich ist
      */
     private boolean isSlotRequired(int slot) {
         var actionConfigurations = blockConfigService.getActionConfigurations();
@@ -666,18 +614,18 @@ public class ActionParameterGUI implements GUIManager.ManagedGUIInterface {
         var slotsConfig = actionConfig.getConfigurationSection("slots");
         if (slotsConfig == null) return false;
         
-        var slotConfig = slotsConfig.getConfigurationSection(String.valueOf(slot));
+        // Adjust slot index back to original
+        int originalSlot = slot - 9; // Adjust back from row 2
+        if (originalSlot < 0) return false;
+        
+        var slotConfig = slotsConfig.getConfigurationSection(String.valueOf(originalSlot));
         if (slotConfig == null) return false;
         
-        return slotConfig.getBoolean("required", slot == 0); // First slot usually required
+        return slotConfig.getBoolean("required", originalSlot == 0); // First slot usually required
     }
     
     /**
-     * 🎆 УЛУЧШЕННОЕ: Проверяет содержимое предмета для определенного слота
-     *
      * 🎆 ENHANCED: Validate item content for specific slot
-     *
-     * 🎆 ERWEITERT: Validiert den Artikelinhalt für einen bestimmten Slot
      */
     private String validateItemForSlot(int slot, ItemStack item) {
         if (!item.hasItemMeta() || !item.getItemMeta().hasDisplayName()) {
@@ -701,55 +649,55 @@ public class ActionParameterGUI implements GUIManager.ManagedGUIInterface {
         // Fallback to action-specific validation
         switch (actionId.toLowerCase()) {
             case "sendmessage":
-                if (slot == 0 && itemName.trim().isEmpty()) {
+                if (slot == 10 && itemName.trim().isEmpty()) { // Adjusted slot index
                     return "Сообщение не может быть пустым";
                 }
                 break;
             case "executeasynccommand":
-                if (slot == 0 && !itemName.startsWith("/") && !itemName.contains(":")) {
+                if (slot == 10 && !itemName.startsWith("/") && !itemName.contains(":")) { // Adjusted slot index
                     return "Команда должна начинаться с '/' или содержать ':'";
                 }
                 break;
             case "asyncloop":
-                if (slot == 0 && !isValidNumber(itemName)) {
+                if (slot == 10 && !isValidNumber(itemName)) { // Adjusted slot index
                     return "Количество итераций должно быть числом";
                 }
-                if (slot == 1 && !isValidNumber(itemName)) {
+                if (slot == 11 && !isValidNumber(itemName)) { // Adjusted slot index
                     return "Задержка должна быть числом";
                 }
                 break;
             case "giveitem":
-                if (slot == 0 && item.getType().isAir()) {
+                if (slot == 10 && item.getType().isAir()) { // Adjusted slot index
                     return "Предмет не может быть пустым";
                 }
-                if (slot == 1 && !isValidNumber(itemName)) {
+                if (slot == 11 && !isValidNumber(itemName)) { // Adjusted slot index
                     return "Количество должно быть числом";
                 }
                 break;
             case "playsound":
-                if (slot == 0 && !isValidSoundName(itemName)) {
+                if (slot == 10 && !isValidSoundName(itemName)) { // Adjusted slot index
                     return "Неверное имя звука";
                 }
-                if (slot == 1 && !isValidNumberInRange(itemName, 0.0, 1.0)) {
+                if (slot == 11 && !isValidNumberInRange(itemName, 0.0, 1.0)) { // Adjusted slot index
                     return "Громкость должна быть от 0.0 до 1.0";
                 }
-                if (slot == 2 && !isValidNumberInRange(itemName, 0.5, 2.0)) {
+                if (slot == 12 && !isValidNumberInRange(itemName, 0.5, 2.0)) { // Adjusted slot index
                     return "Тон должен быть от 0.5 до 2.0";
                 }
                 break;
             case "effect":
-                if (slot == 0 && !isValidEffectName(itemName)) {
+                if (slot == 10 && !isValidEffectName(itemName)) { // Adjusted slot index
                     return "Неверное имя эффекта";
                 }
-                if (slot == 1 && !isValidNumber(itemName)) {
+                if (slot == 11 && !isValidNumber(itemName)) { // Adjusted slot index
                     return "Длительность должна быть числом";
                 }
-                if (slot == 2 && !isValidNumberInRange(itemName, 1, 255)) {
+                if (slot == 12 && !isValidNumberInRange(itemName, 1, 255)) { // Adjusted slot index
                     return "Уровень должен быть от 1 до 255";
                 }
                 break;
             case "wait":
-                if (slot == 0 && !isValidNumber(itemName)) {
+                if (slot == 10 && !isValidNumber(itemName)) { // Adjusted slot index
                     return "Время ожидания должно быть числом";
                 }
                 break;
@@ -762,11 +710,7 @@ public class ActionParameterGUI implements GUIManager.ManagedGUIInterface {
     }
     
     /**
-     * 🎆 УЛУЧШЕННОЕ: Получает имя слота из конфигурации
-     *
      * 🎆 ENHANCED: Get slot name from configuration
-     *
-     * 🎆 ERWEITERT: Ruft den Slot-Namen aus der Konфигuration ab
      */
     private String getSlotName(int slot) {
         var actionConfigurations = blockConfigService.getActionConfigurations();
@@ -778,18 +722,18 @@ public class ActionParameterGUI implements GUIManager.ManagedGUIInterface {
         var slotsConfig = actionConfig.getConfigurationSection("slots");
         if (slotsConfig == null) return null;
         
-        var slotConfig = slotsConfig.getConfigurationSection(String.valueOf(slot));
+        // Adjust slot index back to original
+        int originalSlot = slot - 9; // Adjust back from row 2
+        if (originalSlot < 0) return null;
+        
+        var slotConfig = slotsConfig.getConfigurationSection(String.valueOf(originalSlot));
         if (slotConfig == null) return null;
         
         return slotConfig.getString("slot_name");
     }
     
     /**
-     * 🎆 УЛУЧШЕННОЕ: Проверяет предмет по имени слота и правилам валидации
-     *
      * 🎆 ENHANCED: Validate item by slot name and validation rules
-     *
-     * 🎆 ERWEITERT: Validiert den Artikel nach Slot-Name und Validierungsregeln
      */
     private String validateItemBySlotName(String slotName, ItemStack item) {
         var actionConfigurations = blockConfigService.getActionConfigurations();
@@ -821,11 +765,7 @@ public class ActionParameterGUI implements GUIManager.ManagedGUIInterface {
     }
     
     /**
-     * 🎆 УЛУЧШЕННОЕ: Проверяет предмет по правилу валидации
-     *
      * 🎆 ENHANCED: Validate item by validation rule
-     *
-     * 🎆 ERWEITERT: Validiert den Artikel nach Validierungsregel
      */
     private String validateItemByRule(ItemStack item, String validationRule) {
         String itemName = item.hasItemMeta() ? item.getItemMeta().getDisplayName() : "";
@@ -921,8 +861,6 @@ public class ActionParameterGUI implements GUIManager.ManagedGUIInterface {
     }
     
     /**
-     * 🎆 УЛУЧШЕННОЕ: Проверяет, является ли строка допустимым именем мира
-     *
      * 🎆 ENHANCED: Check if string represents a valid world name
      */
     private boolean isValidWorldName(String worldName) {
@@ -944,11 +882,7 @@ public class ActionParameterGUI implements GUIManager.ManagedGUIInterface {
     }
 
     /**
-     * 🎆 УЛУЧШЕННОЕ: Получает индекс слота по имени слота
-     *
      * 🎆 ENHANCED: Get slot index by slot name
-     *
-     * 🎆 ERWEITERT: Ruft den Slot-Index nach Slot-Name ab
      */
     private Integer getSlotIndexByName(String slotName) {
         org.bukkit.configuration.ConfigurationSection actionConfigurations = blockConfigService.getActionConfigurations();
@@ -979,8 +913,6 @@ public class ActionParameterGUI implements GUIManager.ManagedGUIInterface {
     }
     
     /**
-     * 🎆 УЛУЧШЕННОЕ: Проверяет, представляет ли строка допустимое имя игрока
-     *
      * 🎆 ENHANCED: Check if string represents a valid player name
      */
     private boolean isValidPlayerName(String playerName) {
@@ -1002,8 +934,6 @@ public class ActionParameterGUI implements GUIManager.ManagedGUIInterface {
     }
 
     /**
-     * 🎆 УЛУЧШЕННОЕ: Проверяет, представляет ли строка допустимое имя материала
-     *
      * 🎆 ENHANCED: Check if string represents a valid material name
      */
     private boolean isValidMaterialName(String materialName) {
@@ -1035,11 +965,7 @@ public class ActionParameterGUI implements GUIManager.ManagedGUIInterface {
     }
     
     /**
-     * 🎆 УЛУЧШЕННОЕ: Обновляет визуальную обратную связь для валидации слота
-     *
      * 🎆 ENHANCED: Update visual feedback for slot validation
-     *
-     * 🎆 ERWEITERT: Aktualisiert die visuelle Rückmeldung zur Slot-Validierung
      */
     private void updateSlotVisualFeedback(int slot, boolean isValid, String error) {
         ItemStack currentItem = inventory.getItem(slot);
@@ -1102,8 +1028,6 @@ public class ActionParameterGUI implements GUIManager.ManagedGUIInterface {
     }
     
     /**
-     * 🎆 УЛУЧШЕННОЕ: Получает подсказку по валидации для имени слота
-     *
      * 🎆 ENHANCED: Get validation hint for slot name
      */
     private String getValidationHint(String slotName) {
@@ -1132,8 +1056,6 @@ public class ActionParameterGUI implements GUIManager.ManagedGUIInterface {
     }
     
     /**
-     * 🎆 УЛУЧШЕННОЕ: Обновляет визуальную обратную связь для всех слотов
-     *
      * 🎆 ENHANCED: Update visual feedback for all slots
      */
     private void updateAllSlotsVisualFeedback() {
@@ -1148,11 +1070,7 @@ public class ActionParameterGUI implements GUIManager.ManagedGUIInterface {
     }
     
     /**
-     * Проверяет, является ли предмет элементом-заполнителем
-     *
      * Checks if an item is a placeholder item
-     *
-     * Prüft, ob ein Artikel ein Platzhalterartikel ist
      */
     private boolean isPlaceholderItem(ItemStack item) {
         if (item == null || !item.hasItemMeta()) return false;
@@ -1174,30 +1092,24 @@ public class ActionParameterGUI implements GUIManager.ManagedGUIInterface {
     }
     
     /**
-     * Открывает графический интерфейс для игрока
-     *
      * Opens the GUI for the player
-     *
-     * Öffnet die GUI für den Spieler
      */
     public void open() {
         guiManager.registerGUI(player, this, inventory);
         player.openInventory(inventory);
         
-        // Аудио обратная связь при открытии GUI
+        // Audio feedback when opening GUI
         player.playSound(player.getLocation(), org.bukkit.Sound.BLOCK_CHEST_OPEN, 0.6f, 1.1f);
+        
+        // Add visual effects for reference system-style magic
+        player.spawnParticle(org.bukkit.Particle.ENCHANTMENT_TABLE, 
+            player.getLocation().add(0, 1, 0), 10, 0.5, 0.5, 0.5, 1);
     }
     
     @Override
     /**
-     * Получает заголовок графического интерфейса
-     * @return Заголовок интерфейса
-     *
      * Gets the GUI title
      * @return Interface title
-     *
-     * Ruft den GUI-Titel ab
-     * @return Schnittstellentitel
      */
     public String getGUITitle() {
         return "Action Parameter GUI for " + actionId;
@@ -1205,23 +1117,30 @@ public class ActionParameterGUI implements GUIManager.ManagedGUIInterface {
     
     @Override
     /**
-     * Обрабатывает события кликов в инвентаре
-     * @param event Событие клика в инвентаре
-     *
      * Handles inventory click events
      * @param event Inventory click event
-     *
-     * Verarbeitet Inventarklick-Ereignisse
-     * @param event Inventarklick-Ereignis
      */
     public void onInventoryClick(InventoryClickEvent event) {
         if (!player.equals(event.getWhoClicked())) return;
         if (!inventory.equals(event.getInventory())) return;
         
+        event.setCancelled(true); // Cancel all clicks by default
+        
         int slot = event.getSlot();
         
-        // Allow interaction with center slots (9-17) for parameter configuration
-        if (slot >= 9 && slot <= 17) {
+        // Handle back button click
+        if (slot == 49) {
+            // Go back to action selection
+            player.closeInventory();
+            Bukkit.getScheduler().runTaskLater(plugin, () -> {
+                ActionSelectionGUI actionGUI = new ActionSelectionGUI(plugin, player, blockLocation, Material.STONE); // Default material
+                actionGUI.open();
+            }, 1L);
+            return;
+        }
+        
+        // Allow interaction with center slots for parameter configuration
+        if (slot >= 9 && slot < 45 && slot % 9 != 0 && slot % 9 != 8) {
             // 🎆 ENHANCED: Trigger real-time validation after item placement
             org.bukkit.Bukkit.getScheduler().runTaskLater(plugin, () -> {
                 ItemStack newItem = inventory.getItem(slot);
@@ -1247,9 +1166,6 @@ public class ActionParameterGUI implements GUIManager.ManagedGUIInterface {
             }
         }
         
-        // Cancel interaction with all other slots (placeholders, borders, etc.)
-        event.setCancelled(true);
-        
         // Handle clicks on special items
         ItemStack clicked = event.getCurrentItem();
         if (clicked == null || !clicked.hasItemMeta()) return;
@@ -1264,14 +1180,8 @@ public class ActionParameterGUI implements GUIManager.ManagedGUIInterface {
     
     @Override
     /**
-     * Обрабатывает события закрытия инвентаря
-     * @param event Событие закрытия инвентаря
-     *
      * Handles inventory close events
      * @param event Inventory close event
-     *
-     * Verarbeitet Inventarschließ-Ereignisse
-     * @param event Inventarschließ-Ereignis
      */
     public void onInventoryClose(InventoryCloseEvent event) {
         // Save parameters when GUI is closed
@@ -1283,11 +1193,7 @@ public class ActionParameterGUI implements GUIManager.ManagedGUIInterface {
     
     @Override
     /**
-     * Выполняет очистку ресурсов при закрытии интерфейса
-     *
      * Performs resource cleanup when interface is closed
-     *
-     * Führt eine Ressourcenbereinigung durch, wenn die Schnittstelle geschlossen wird
      */
     public void onCleanup() {
         // Called when GUI is being cleaned up by GUIManager
@@ -1295,11 +1201,7 @@ public class ActionParameterGUI implements GUIManager.ManagedGUIInterface {
     }
     
     /**
-     * 🎆 УЛУЧШЕННОЕ: Проверяет, является ли строка допустимым числом
-     *
      * 🎆 ENHANCED: Check if string is a valid number
-     *
-     * 🎆 ERWEITERT: Prüft, ob die Zeichenfolge eine gültige Zahl ist
      */
     private boolean isValidNumber(String str) {
         if (str == null || str.isEmpty()) return false;
@@ -1312,11 +1214,7 @@ public class ActionParameterGUI implements GUIManager.ManagedGUIInterface {
     }
     
     /**
-     * 🎆 УЛУЧШЕННОЕ: Проверяет, является ли строка допустимым числом в диапазоне
-     *
      * 🎆 ENHANCED: Check if string is a valid number in range
-     *
-     * 🎆 ERWEITERT: Prüft, ob die Zeichenfolge eine gültige Zahl im Bereich ist
      */
     private boolean isValidNumberInRange(String str, double min, double max) {
         if (!isValidNumber(str)) return false;
@@ -1329,11 +1227,7 @@ public class ActionParameterGUI implements GUIManager.ManagedGUIInterface {
     }
     
     /**
-     * 🎆 УЛУЧШЕННОЕ: Проверяет, является ли строка допустимым числом в диапазоне
-     *
      * 🎆 ENHANCED: Check if string is a valid number in range
-     *
-     * 🎆 ERWEITERT: Prüft, ob die Zeichenfolge eine gültige Zahl im Bereich ist
      */
     private boolean isValidNumberInRange(String str, int min, int max) {
         if (!isValidNumber(str)) return false;
@@ -1346,11 +1240,7 @@ public class ActionParameterGUI implements GUIManager.ManagedGUIInterface {
     }
     
     /**
-     * 🎆 УЛУЧШЕННОЕ: Проверяет, является ли строка допустимым именем звука
-     *
      * 🎆 ENHANCED: Check if string is a valid sound name
-     *
-     * 🎆 ERWEITERT: Prüft, ob die Zeichenfolge ein gültiger Soundname ist
      */
     private boolean isValidSoundName(String soundName) {
         if (soundName == null || soundName.isEmpty()) return false;
@@ -1363,11 +1253,7 @@ public class ActionParameterGUI implements GUIManager.ManagedGUIInterface {
     }
     
     /**
-     * 🎆 УЛУЧШЕННОЕ: Проверяет, является ли строка допустимым именем эффекта
-     *
      * 🎆 ENHANCED: Check if string is a valid effect name
-     *
-     * 🎆 ERWEITERT: Prüft, ob die Zeichenfolge ein gültiger Effektname ist
      */
     private boolean isValidEffectName(String effectName) {
         if (effectName == null || effectName.isEmpty()) return false;
@@ -1380,11 +1266,7 @@ public class ActionParameterGUI implements GUIManager.ManagedGUIInterface {
     }
     
     /**
-     * 🎆 УЛУЧШЕННОЕ: Проверяет, является ли строка допустимым регулярным выражением
-     *
      * 🎆 ENHANCED: Check if string is a valid regex
-     *
-     * 🎆 ERWEITERT: Prüft, ob die Zeichenfolge ein gültiger Regex ist
      */
     private boolean isValidRegex(String str, String regex) {
         if (str == null || str.isEmpty() || regex == null || regex.isEmpty()) return false;
@@ -1397,11 +1279,7 @@ public class ActionParameterGUI implements GUIManager.ManagedGUIInterface {
     }
     
     /**
-     * 🎆 УЛУЧШЕННОЕ: Проверяет, соответствует ли строка спецификации длины
-     *
      * 🎆 ENHANCED: Check if string matches length specification
-     *
-     * 🎆 ERWEITERT: Prüft, ob die Zeichenfolge der Längenspezifikation entspricht
      */
     private boolean isValidLength(String str, String lengthSpec) {
         if (str == null || lengthSpec == null) return false;
@@ -1422,8 +1300,6 @@ public class ActionParameterGUI implements GUIManager.ManagedGUIInterface {
     }
     
     /**
-     * 🎆 УЛУЧШЕННОЕ: Проверяет, является ли строка допустимым hex цветом
-     *
      * 🎆 ENHANCED: Check if string is a valid hex color
      */
     private boolean isValidHexColor(String color) {
@@ -1432,8 +1308,6 @@ public class ActionParameterGUI implements GUIManager.ManagedGUIInterface {
     }
     
     /**
-     * 🎆 УЛУЧШЕННОЕ: Проверяет, является ли строка допустимым email
-     *
      * 🎆 ENHANCED: Check if string is a valid email
      */
     private boolean isValidEmail(String email) {
@@ -1442,8 +1316,6 @@ public class ActionParameterGUI implements GUIManager.ManagedGUIInterface {
     }
     
     /**
-     * 🎆 УЛУЧШЕННОЕ: Проверяет, является ли строка допустимым URL
-     *
      * 🎆 ENHANCED: Check if string is a valid URL
      */
     private boolean isValidUrl(String url) {
@@ -1457,8 +1329,6 @@ public class ActionParameterGUI implements GUIManager.ManagedGUIInterface {
     }
     
     /**
-     * 🎆 УЛУЧШЕННОЕ: Проверяет, является ли строка допустимым значением enum
-     *
      * 🎆 ENHANCED: Check if string is a valid enum value
      */
     private boolean isValidEnum(String value, String enumValues) {

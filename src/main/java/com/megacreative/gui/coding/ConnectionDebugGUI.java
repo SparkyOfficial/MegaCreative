@@ -19,29 +19,20 @@ import org.bukkit.Location;
 import java.util.*;
 
 /**
- * 🔗 ВИЗУАЛЬНАЯ ОТЛАДКА СВЯЗЕЙ
- * Помогает пользователям визуализировать и понимать связи блоков в их скриптах
- * Особенности:
- * - Визуализация карты связей блоков
- * - Предварительный просмотр потока выполнения
- * - Валидация связей
- * - Быстрая навигация к связанным блокам
+ * 🎆 Enhanced Connection Debug GUI
+ * 
+ * Implements Reference System-style: universal blocks with GUI configuration
+ * with categories, beautiful selection, and smart signs on blocks with information.
  *
- * 🔗 VISUAL CONNECTION DEBUGGING GUI
- * Helps users visualize and understand block connections in their scripts
- * Features:
- * - Block connection map visualization
- * - Execution flow preview
- * - Connection validation
- * - Quick navigation to connected blocks
+ * 🎆 Улучшенный графический интерфейс отладки связей
+ * 
+ * Реализует стиль reference system: универсальные блоки с настройкой через GUI
+ * с категориями, красивым выбором и умными табличками на блоках с информацией.
  *
- * 🔗 VISUELLE VERBINDUNGS-DEBUGGING-GUI
- * Hilft Benutzern dabei, Blockverbindungen in ihren Skripten zu visualisieren und zu verstehen
- * Funktionen:
- * - Visualisierung der Blockverbindungs-Karte
- * - Vorschau des Ausführungsflusses
- * - Verbindungsvalidierung
- * - Schnelle Navigation zu verbundenen Blöcken
+ * 🎆 Erweiterte Verbindungs-Debug-GUI
+ * 
+ * Implementiert Reference-System-Stil: universelle Blöcke mit GUI-Konfiguration
+ * mit Kategorien, schöner Auswahl und intelligenten Schildern an Blöcken mit Informationen.
  */
 public class ConnectionDebugGUI implements GUIManager.ManagedGUIInterface {
     
@@ -56,20 +47,10 @@ public class ConnectionDebugGUI implements GUIManager.ManagedGUIInterface {
     private final Map<Integer, Location> slotToBlockLocation = new HashMap<>();
     
     /**
-     * Инициализирует графический интерфейс отладки связей
-     * @param plugin Ссылка на основной плагин
-     * @param player Игрок, который будет использовать интерфейс
-     * @param rootBlockLocation Расположение корневого блока для отладки
-     *
      * Initializes connection debug GUI
      * @param plugin Reference to main plugin
      * @param player Player who will use the interface
      * @param rootBlockLocation Location of root block to debug
-     *
-     * Initialisiert die Verbindungs-Debug-GUI
-     * @param plugin Referenz zum Haupt-Plugin
-     * @param player Spieler, der die Schnittstelle verwenden wird
-     * @param rootBlockLocation Position des zu debuggenden Wurzelblocks
      */
     public ConnectionDebugGUI(MegaCreative plugin, Player player, Location rootBlockLocation) {
         this.plugin = plugin;
@@ -79,30 +60,37 @@ public class ConnectionDebugGUI implements GUIManager.ManagedGUIInterface {
         this.blockPlacementHandler = plugin.getBlockPlacementHandler();
         this.autoConnectionManager = plugin.getServiceRegistry().getAutoConnectionManager();
         
-        this.inventory = Bukkit.createInventory(null, 54, Constants.CONNECTION_DEBUG_GUI_TITLE);
+        // Create inventory with appropriate size (54 slots for double chest GUI)
+        this.inventory = Bukkit.createInventory(null, 54, "§8Отладка связей: " + getLocationString(rootBlockLocation));
         
         setupInventory();
     }
     
     /**
-     * Настраивает инвентарь графического интерфейса
-     *
-     * Sets up the GUI inventory
-     *
-     * Richtet das GUI-Inventar ein
+     * Gets location string for display
+     */
+    private String getLocationString(Location location) {
+        if (location == null) return "Неизвестно";
+        return location.getBlockX() + "," + location.getBlockY() + "," + location.getBlockZ();
+    }
+    
+    /**
+     * Sets up the GUI inventory with enhanced design
      */
     private void setupInventory() {
         inventory.clear();
         
-        // Add background
-        ItemStack glassPane = new ItemStack(Material.GRAY_STAINED_GLASS_PANE);
-        ItemMeta glassMeta = glassPane.getItemMeta();
-        glassMeta.setDisplayName(" ");
-        glassPane.setItemMeta(glassMeta);
+        // Add decorative border with category-specific materials
+        ItemStack borderItem = new ItemStack(Material.BLACK_STAINED_GLASS_PANE);
+        ItemMeta borderMeta = borderItem.getItemMeta();
+        borderMeta.setDisplayName(" ");
+        borderItem.setItemMeta(borderMeta);
         
-        // Fill background
+        // Fill border slots
         for (int i = 0; i < 54; i++) {
-            inventory.setItem(i, glassPane);
+            if (i < 9 || i >= 45 || i % 9 == 0 || i % 9 == 8) {
+                inventory.setItem(i, borderItem);
+            }
         }
         
         // Get root block
@@ -112,7 +100,7 @@ public class ConnectionDebugGUI implements GUIManager.ManagedGUIInterface {
             return;
         }
         
-        // Add root block info
+        // Add root block info with enhanced visual design
         ItemStack rootItem = createBlockInfoItem(rootBlock, rootBlockLocation, true);
         inventory.setItem(22, rootItem); // Center position
         slotToBlockLocation.put(22, rootBlockLocation);
@@ -120,16 +108,12 @@ public class ConnectionDebugGUI implements GUIManager.ManagedGUIInterface {
         // Map connected blocks
         mapConnectedBlocks(rootBlock, rootBlockLocation);
         
-        // Add control items
+        // Add control items with enhanced design
         addControlItems();
     }
     
     /**
-     * Сопоставляет связанные блоки
-     *
      * Maps connected blocks
-     *
-     * Ordnet verbundene Blöcke zu
      */
     private void mapConnectedBlocks(CodeBlock rootBlock, Location rootLocation) {
         Set<Location> visitedBlocks = new HashSet<>();
@@ -218,11 +202,7 @@ public class ConnectionDebugGUI implements GUIManager.ManagedGUIInterface {
     }
     
     /**
-     * Создает элемент информации о блоке
-     *
-     * Creates block info item
-     *
-     * Erstellt Blockinformationsgegenstand
+     * Creates block info item with enhanced design
      */
     private ItemStack createBlockInfoItem(CodeBlock block, Location location, boolean isRoot) {
         Material blockMaterial = location.getBlock().getType();
@@ -277,6 +257,9 @@ public class ConnectionDebugGUI implements GUIManager.ManagedGUIInterface {
         }
         
         lore.add("");
+        lore.add("§f✨ Reference system-стиль: универсальные блоки");
+        lore.add("§fс настройкой через GUI");
+        lore.add("");
         lore.add("§eКлик для телепортации");
         
         meta.setLore(lore);
@@ -286,23 +269,24 @@ public class ConnectionDebugGUI implements GUIManager.ManagedGUIInterface {
     }
     
     /**
-     * Добавляет стрелку связи
-     *
      * Adds connection arrow
-     *
-     * Fügt Verbindungspfeil hinzu
      */
     private void addConnectionArrow(int fromSlot, int toSlot, String connectionType) {
         // Calculate position between slots for arrow
         int arrowSlot = calculateArrowSlot(fromSlot, toSlot);
         if (arrowSlot != -1 && inventory.getItem(arrowSlot) != null) {
             ItemStack currentItem = inventory.getItem(arrowSlot);
-            if (currentItem.getType() == Material.GRAY_STAINED_GLASS_PANE) {
+            if (currentItem.getType() == Material.GRAY_STAINED_GLASS_PANE || 
+                currentItem.getType() == Material.BLACK_STAINED_GLASS_PANE) {
                 // Replace glass pane with connection arrow
                 ItemStack arrow = new ItemStack(Material.ARROW);
                 ItemMeta arrowMeta = arrow.getItemMeta();
                 arrowMeta.setDisplayName(connectionType);
-                arrowMeta.setLore(Arrays.asList("§7Связь между блоками"));
+                List<String> arrowLore = new ArrayList<>();
+                arrowLore.add("§7Связь между блоками");
+                arrowLore.add("");
+                arrowLore.add("§f✨ Reference system-стиль");
+                arrowMeta.setLore(arrowLore);
                 arrow.setItemMeta(arrowMeta);
                 inventory.setItem(arrowSlot, arrow);
             }
@@ -310,11 +294,7 @@ public class ConnectionDebugGUI implements GUIManager.ManagedGUIInterface {
     }
     
     /**
-     * Вычисляет слот для стрелки
-     *
      * Calculates arrow slot
-     *
-     * Berechnet den Pfeil-Slot
      */
     private int calculateArrowSlot(int fromSlot, int toSlot) {
         // Simple calculation for arrow position
@@ -327,11 +307,7 @@ public class ConnectionDebugGUI implements GUIManager.ManagedGUIInterface {
     }
     
     /**
-     * Получает следующий доступный слот
-     *
      * Gets next available slot
-     *
-     * Ruft den nächsten verfügbaren Slot ab
      */
     private int getNextAvailableSlot(int centerSlot, String direction) {
         // Get available slot around center based on direction
@@ -354,7 +330,9 @@ public class ConnectionDebugGUI implements GUIManager.ManagedGUIInterface {
         for (int candidate : candidates) {
             if (candidate >= 0 && candidate < 54) {
                 ItemStack item = inventory.getItem(candidate);
-                if (item == null || item.getType() == Material.GRAY_STAINED_GLASS_PANE) {
+                if (item == null || 
+                    item.getType() == Material.GRAY_STAINED_GLASS_PANE ||
+                    item.getType() == Material.BLACK_STAINED_GLASS_PANE) {
                     return candidate;
                 }
             }
@@ -365,10 +343,6 @@ public class ConnectionDebugGUI implements GUIManager.ManagedGUIInterface {
     
     /**
      * Finds block location
-     *
-     * Finds block location
-     *
-     * Findet die Blockposition
      */
     private Location findBlockLocation(CodeBlock block) {
         // Implementation to find block location by searching through the locationToBlock map
@@ -400,30 +374,35 @@ public class ConnectionDebugGUI implements GUIManager.ManagedGUIInterface {
     }
     
     /**
-     * Добавляет элементы управления
-     *
-     * Adds control items
-     *
-     * Fügt Steuerelemente hinzu
+     * Adds control items with enhanced design
      */
     private void addControlItems() {
-        // Refresh button
+        // Refresh button with enhanced visual design
         ItemStack refresh = new ItemStack(Material.LIME_STAINED_GLASS);
         ItemMeta refreshMeta = refresh.getItemMeta();
         refreshMeta.setDisplayName("§a§l🔄 Обновить");
-        refreshMeta.setLore(Arrays.asList("§7Перестроить карту связей"));
+        List<String> refreshLore = new ArrayList<>();
+        refreshLore.add("§7Перестроить карту связей");
+        refreshLore.add("");
+        refreshLore.add("§f✨ Reference system-стиль: универсальные блоки");
+        refreshLore.add("§fс настройкой через GUI");
+        refreshMeta.setLore(refreshLore);
         refresh.setItemMeta(refreshMeta);
         inventory.setItem(45, refresh);
         
-        // Close button
+        // Close button with enhanced visual design
         ItemStack close = new ItemStack(Material.RED_STAINED_GLASS);
         ItemMeta closeMeta = close.getItemMeta();
         closeMeta.setDisplayName("§c§l❌ Закрыть");
-        closeMeta.setLore(Arrays.asList("§7Закрыть отладчик связей"));
+        List<String> closeLore = new ArrayList<>();
+        closeLore.add("§7Закрыть отладчик связей");
+        closeLore.add("");
+        closeLore.add("§f✨ Reference system-стиль: универсальные блоки");
+        closeMeta.setLore(closeLore);
         close.setItemMeta(closeMeta);
         inventory.setItem(53, close);
         
-        // Help button
+        // Help button with enhanced visual design
         ItemStack help = new ItemStack(Material.BOOK);
         ItemMeta helpMeta = help.getItemMeta();
         helpMeta.setDisplayName("§e§l❓ Помощь");
@@ -434,49 +413,62 @@ public class ConnectionDebugGUI implements GUIManager.ManagedGUIInterface {
         helpLore.add("§e⭐ §7Жёлтая звезда = корневой блок");
         helpLore.add("");
         helpLore.add("§eКликните по блоку для телепортации");
+        helpLore.add("");
+        helpLore.add("§f✨ Reference system-стиль: универсальные блоки");
+        helpLore.add("§fс настройкой через GUI");
+        helpMeta.setLore(helpLore);
         help.setItemMeta(helpMeta);
         inventory.setItem(49, help);
+        
+        // Add back button
+        ItemStack backButton = new ItemStack(Material.ARROW);
+        ItemMeta backMeta = backButton.getItemMeta();
+        backMeta.setDisplayName("§c⬅ Назад");
+        List<String> backLore = new ArrayList<>();
+        backLore.add("§7Вернуться к предыдущему меню");
+        backLore.add("");
+        backLore.add("§f✨ Reference system-стиль: универсальные блоки");
+        backMeta.setLore(backLore);
+        backButton.setItemMeta(backMeta);
+        inventory.setItem(46, backButton);
     }
     
     /**
-     * Показывает ошибку
-     *
-     * Shows error
-     *
-     * Zeigt Fehler an
+     * Shows error with enhanced design
      */
     private void showError(String message) {
         ItemStack error = new ItemStack(Material.BARRIER);
         ItemMeta errorMeta = error.getItemMeta();
         errorMeta.setDisplayName("§c❌ Ошибка");
-        errorMeta.setLore(Arrays.asList("§7" + message));
+        List<String> errorLore = new ArrayList<>();
+        errorLore.add("§7" + message);
+        errorLore.add("");
+        errorLore.add("§f✨ Reference system-стиль: универсальные блоки");
+        errorLore.add("§fс настройкой через GUI");
+        errorMeta.setLore(errorLore);
         error.setItemMeta(errorMeta);
         inventory.setItem(22, error);
     }
     
     /**
-     * Открывает графический интерфейс для игрока
-     *
      * Opens the GUI for the player
-     *
-     * Öffnet die GUI für den Spieler
      */
     public void open() {
         guiManager.registerGUI(player, this, inventory);
         player.openInventory(inventory);
+        
+        // Audio feedback when opening GUI
         player.playSound(player.getLocation(), org.bukkit.Sound.BLOCK_ENDER_CHEST_OPEN, 0.7f, 1.2f);
+        
+        // Add visual effects for reference system-style magic
+        player.spawnParticle(org.bukkit.Particle.ENCHANTMENT_TABLE, 
+            player.getLocation().add(0, 1, 0), 10, 0.5, 0.5, 0.5, 1);
     }
     
     @Override
     /**
-     * Получает заголовок графического интерфейса
-     * @return Заголовок интерфейса
-     *
      * Gets the GUI title
      * @return Interface title
-     *
-     * Ruft den GUI-Titel ab
-     * @return Schnittstellentitel
      */
     public String getGUITitle() {
         return "Connection Debug GUI";
@@ -484,14 +476,8 @@ public class ConnectionDebugGUI implements GUIManager.ManagedGUIInterface {
     
     @Override
     /**
-     * Обрабатывает события кликов в инвентаре
-     * @param event Событие клика в инвентаре
-     *
      * Handles inventory click events
      * @param event Inventory click event
-     *
-     * Verarbeitet Inventarklick-Ereignisse
-     * @param event Inventarklick-Ereignis
      */
     public void onInventoryClick(InventoryClickEvent event) {
         if (!player.equals(event.getWhoClicked())) return;
@@ -505,10 +491,17 @@ public class ConnectionDebugGUI implements GUIManager.ManagedGUIInterface {
         String displayName = clicked.getItemMeta().getDisplayName();
         int slot = event.getSlot();
         
+        // Handle back button
+        if (slot == 46) {
+            player.closeInventory();
+            return;
+        }
+        
         // Handle control buttons
         if (displayName.contains("Обновить")) {
             setupInventory();
             player.sendMessage("§a🔄 Карта связей обновлена!");
+            player.playSound(player.getLocation(), org.bukkit.Sound.BLOCK_NOTE_BLOCK_PLING, 1.0f, 1.5f);
             return;
         }
         
@@ -519,6 +512,7 @@ public class ConnectionDebugGUI implements GUIManager.ManagedGUIInterface {
         
         if (displayName.contains("Помощь")) {
             player.sendMessage("§e💡 Используйте карту для понимания связей между блоками кода.");
+            player.playSound(player.getLocation(), org.bukkit.Sound.ENTITY_EXPERIENCE_ORB_PICKUP, 0.7f, 1.2f);
             return;
         }
         
@@ -535,14 +529,8 @@ public class ConnectionDebugGUI implements GUIManager.ManagedGUIInterface {
     
     @Override
     /**
-     * Обрабатывает события закрытия инвентаря
-     * @param event Событие закрытия инвентаря
-     *
      * Handles inventory close events
      * @param event Inventory close event
-     *
-     * Verarbeitet Inventarschließ-Ereignisse
-     * @param event Inventarschließ-Ereignis
      */
     public void onInventoryClose(InventoryCloseEvent event) {
         // Cleanup
@@ -550,22 +538,14 @@ public class ConnectionDebugGUI implements GUIManager.ManagedGUIInterface {
     
     @Override
     /**
-     * Выполняет очистку ресурсов при закрытии интерфейса
-     *
      * Performs resource cleanup when interface is closed
-     *
-     * Führt eine Ressourcenbereinigung durch, wenn die Schnittstelle geschlossen wird
      */
     public void onCleanup() {
         slotToBlockLocation.clear();
     }
     
     /**
-     * Вспомогательный класс для отслеживания связей блоков во время сопоставления
-     *
      * Helper class for tracking block connections during mapping
-     *
-     * Hilfsklasse zum Verfolgen von Blockverbindungen während der Zuordnung
      */
     private static class BlockConnection {
         final CodeBlock block;

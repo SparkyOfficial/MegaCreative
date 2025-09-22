@@ -16,15 +16,15 @@ import org.bukkit.inventory.meta.ItemMeta;
 import java.util.*;
 
 /**
- * 🎆 Улучшенный графический интерфейс параметров действий в стиле Reference System
- * 
- * Объединяет мощность InteractiveGUI с настройкой параметров действий.
- * Обеспечивает динамическое редактирование параметров в реальном времени с визуальной обратной связью.
- *
  * 🎆 Enhanced Reference System-Style Action Parameter GUI
  * 
  * Combines the power of InteractiveGUI with action parameter configuration.
  * Provides dynamic, real-time parameter editing with visual feedback.
+ *
+ * 🎆 Улучшенный графический интерфейс параметров действий в стиле Reference System
+ * 
+ * Объединяет мощность InteractiveGUI с настройкой параметров действий.
+ * Обеспечивает динамическое редактирование параметров в реальном времени с визуальной обратной связью.
  *
  * 🎆 Erweiterte Reference System-Stil Aktionsparameter-GUI
  * 
@@ -38,14 +38,8 @@ public class EnhancedActionParameterGUI {
     private final BlockConfigService blockConfigService;
     
     /**
-     * Инициализирует улучшенный графический интерфейс параметров действий
-     * @param plugin Ссылка на основной плагин
-     *
      * Initializes enhanced action parameter GUI
      * @param plugin Reference to main plugin
-     *
-     * Initialisiert die erweiterte Aktionsparameter-GUI
-     * @param plugin Referenz zum Haupt-Plugin
      */
     public EnhancedActionParameterGUI(MegaCreative plugin) {
         this.plugin = plugin;
@@ -60,11 +54,7 @@ public class EnhancedActionParameterGUI {
     }
     
     /**
-     * Создает улучшенный редактор параметров для блока кода
-     *
      * Creates an enhanced parameter editor for a code block
-     *
-     * Erstellt einen erweiterten Parameter-Editor für einen Codeblock
      */
     public InteractiveGUI createParameterEditor(Player player, Location blockLocation, String actionId) {
         // Get the code block
@@ -74,28 +64,37 @@ public class EnhancedActionParameterGUI {
             return null;
         }
         
-        // Create interactive GUI
+        // Create interactive GUI with enhanced design
         InteractiveGUI gui = guiManager.createInteractiveGUI(player, 
-            "🎆 " + actionId + " Parameters", 54);
+            "§8🎆 " + actionId + " Parameters", 54);
         
-        // Add title display
+        // Add decorative border with category-specific materials
+        ItemStack borderItem = new ItemStack(Material.BLACK_STAINED_GLASS_PANE);
+        ItemMeta borderMeta = borderItem.getItemMeta();
+        borderMeta.setDisplayName(" ");
+        borderItem.setItemMeta(borderMeta);
+        
+        // Fill border slots
+        for (int i = 0; i < 54; i++) {
+            if (i < 9 || i >= 45 || i % 9 == 0 || i % 9 == 8) {
+                gui.getInventory().setItem(i, borderItem);
+            }
+        }
+        
+        // Add title display with enhanced visual design
         gui.getInventory().setItem(4, createTitleItem(actionId, block));
         
         // Setup parameter editors based on action type
         setupParameterEditors(gui, actionId, block, player);
         
-        // Add control buttons
+        // Add control buttons with enhanced design
         setupControlButtons(gui, block, player, blockLocation);
         
         return gui;
     }
     
     /**
-     * Настраивает редакторы параметров на основе конфигурации действия
-     *
      * Sets up parameter editors based on action configuration
-     *
-     * Richtet Parameter-Editoren basierend auf der Aktionskonfiguration ein
      */
     private void setupParameterEditors(InteractiveGUI gui, String actionId, CodeBlock block, Player player) {
         // Get action configuration
@@ -121,11 +120,7 @@ public class EnhancedActionParameterGUI {
     }
     
     /**
-     * Настраивает редакторы параметров из конфигурации
-     *
      * Sets up parameter editors from configuration
-     *
-     * Richtet Parameter-Editoren aus der Konfiguration ein
      */
     private void setupConfiguredParameterEditors(InteractiveGUI gui, 
                                                org.bukkit.configuration.ConfigurationSection parametersConfig, 
@@ -160,11 +155,7 @@ public class EnhancedActionParameterGUI {
     }
     
     /**
-     * Создает элемент параметра на основе типа
-     *
      * Creates parameter element based on type
-     *
-     * Erstellt Parameterelement basierend auf dem Typ
      */
     private InteractiveGUIManager.InteractiveElement createParameterElement(String paramName, 
                                                                           String paramType, 
@@ -206,11 +197,7 @@ public class EnhancedActionParameterGUI {
     }
     
     /**
-     * Создает элемент выбора материала
-     *
      * Creates material selector element
-     *
-     * Erstellt Materialauswahlelement
      */
     private InteractiveGUIManager.InteractiveElement createMaterialSelector(String paramName, Map<String, Object> properties) {
         // Setup available materials
@@ -244,11 +231,7 @@ public class EnhancedActionParameterGUI {
     }
     
     /**
-     * Создает элемент ползунка числа
-     *
      * Creates number slider element
-     *
-     * Erstellt Zahlenschieberelement
      */
     private InteractiveGUIManager.InteractiveElement createNumberSlider(String paramName, Map<String, Object> properties) {
         // Set defaults based on parameter name
@@ -281,11 +264,7 @@ public class EnhancedActionParameterGUI {
     }
     
     /**
-     * Создает элемент переключателя булевого значения
-     *
      * Creates boolean toggle element
-     *
-     * Erstellt Boolesches Umschaltelement
      */
     private InteractiveGUIManager.InteractiveElement createBooleanToggle(String paramName, Map<String, Object> properties) {
         properties.putIfAbsent("modes", Arrays.asList("TRUE", "FALSE"));
@@ -293,44 +272,28 @@ public class EnhancedActionParameterGUI {
     }
     
     /**
-     * Создает элемент выбора цвета
-     *
      * Creates color picker element
-     *
-     * Erstellt Farbauswahlelement
      */
     private InteractiveGUIManager.InteractiveElement createColorPicker(String paramName, Map<String, Object> properties) {
         return new InteractiveGUIManager.ColorPickerElement(paramName, properties);
     }
     
     /**
-     * Создает элемент редактора предмета
-     *
      * Creates item editor element
-     *
-     * Erstellt Artikel-Editorelement
      */
     private InteractiveGUIManager.InteractiveElement createItemEditor(String paramName, Map<String, Object> properties) {
         return new InteractiveGUIManager.ItemStackEditorElement(paramName, properties);
     }
     
     /**
-     * Создает элемент ввода текста
-     *
      * Creates text input element
-     *
-     * Erstellt Texteingabeelement
      */
     private InteractiveGUIManager.InteractiveElement createTextInput(String paramName, Map<String, Object> properties) {
         return new InteractiveGUIManager.TextInputElement(paramName, properties);
     }
     
     /**
-     * Настраивает общие редакторы параметров для неизвестных действий
-     *
      * Sets up generic parameter editors for unknown actions
-     *
-     * Richtet generische Parameter-Editoren für unbekannte Aktionen ein
      */
     private void setupGenericParameterEditors(InteractiveGUI gui, CodeBlock block) {
         // Common parameters for most actions
@@ -372,32 +335,27 @@ public class EnhancedActionParameterGUI {
     }
     
     /**
-     * Настраивает кнопки управления (сохранить, отменить и т.д.)
-     *
-     * Sets up control buttons (save, cancel, etc.)
-     *
-     * Richtet Steuerschaltflächen ein (speichern, abbrechen, etc.)
+     * Sets up control buttons with enhanced design
      */
     private void setupControlButtons(InteractiveGUI gui, CodeBlock block, Player player, Location blockLocation) {
-        // Save button
+        // Save button with enhanced visual design
         gui.getInventory().setItem(45, createSaveButton());
         
-        // Cancel button
+        // Cancel button with enhanced visual design
         gui.getInventory().setItem(53, createCancelButton());
         
-        // Reset button
+        // Reset button with enhanced visual design
         gui.getInventory().setItem(49, createResetButton());
         
-        // Help button
+        // Help button with enhanced visual design
         gui.getInventory().setItem(48, createHelpButton(block.getAction()));
+        
+        // Add back button
+        gui.getInventory().setItem(46, createBackButton());
     }
     
     /**
-     * Вспомогательные методы для создания кнопок управления
-     *
-     * Helper methods for creating control buttons
-     *
-     * Hilfsmethoden zum Erstellen von Steuerschaltflächen
+     * Helper methods for creating control buttons with enhanced design
      */
     
     private ItemStack createTitleItem(String actionId, CodeBlock block) {
@@ -406,15 +364,18 @@ public class EnhancedActionParameterGUI {
         
         if (meta != null) {
             meta.setDisplayName("§6🎆 Reference System Parameter Editor");
-            meta.setLore(Arrays.asList(
-                "§7Action: §e" + actionId,
-                "§7Block: §f" + block.getMaterial().name(),
-                "§7Parameters: §f" + block.getParameters().size(),
-                "",
-                "§a✨ Real-time parameter editing",
-                "§a🎆 Reference System-style interface",
-                "§7Use the interactive elements below"
-            ));
+            List<String> lore = new ArrayList<>();
+            lore.add("§7Action: §e" + actionId);
+            lore.add("§7Block: §f" + block.getMaterial().name());
+            lore.add("§7Parameters: §f" + block.getParameters().size());
+            lore.add("");
+            lore.add("§a✨ Real-time parameter editing");
+            lore.add("§a🎆 Reference System-style interface");
+            lore.add("§7Use the interactive elements below");
+            lore.add("");
+            lore.add("§f✨ Reference system-стиль: универсальные блоки");
+            lore.add("§fс настройкой через GUI");
+            meta.setLore(lore);
             item.setItemMeta(meta);
         }
         
@@ -427,12 +388,15 @@ public class EnhancedActionParameterGUI {
         
         if (meta != null) {
             meta.setDisplayName("§a🎆 Save & Apply");
-            meta.setLore(Arrays.asList(
-                "§7Save all parameter changes",
-                "§7and apply them to the block",
-                "",
-                "§eChanges are auto-saved on edit"
-            ));
+            List<String> lore = new ArrayList<>();
+            lore.add("§7Save all parameter changes");
+            lore.add("§7and apply them to the block");
+            lore.add("");
+            lore.add("§eChanges are auto-saved on edit");
+            lore.add("");
+            lore.add("§f✨ Reference system-стиль: универсальные блоки");
+            lore.add("§fс настройкой через GUI");
+            meta.setLore(lore);
             item.setItemMeta(meta);
         }
         
@@ -445,10 +409,13 @@ public class EnhancedActionParameterGUI {
         
         if (meta != null) {
             meta.setDisplayName("§c🎆 Close Editor");
-            meta.setLore(Arrays.asList(
-                "§7Close the parameter editor",
-                "§7Changes are already saved"
-            ));
+            List<String> lore = new ArrayList<>();
+            lore.add("§7Close the parameter editor");
+            lore.add("§7Changes are already saved");
+            lore.add("");
+            lore.add("§f✨ Reference system-стиль: универсальные блоки");
+            lore.add("§fс настройкой через GUI");
+            meta.setLore(lore);
             item.setItemMeta(meta);
         }
         
@@ -461,12 +428,15 @@ public class EnhancedActionParameterGUI {
         
         if (meta != null) {
             meta.setDisplayName("§6🎆 Reset Parameters");
-            meta.setLore(Arrays.asList(
-                "§7Reset all parameters",
-                "§7to their default values",
-                "",
-                "§cThis cannot be undone!"
-            ));
+            List<String> lore = new ArrayList<>();
+            lore.add("§7Reset all parameters");
+            lore.add("§7to their default values");
+            lore.add("");
+            lore.add("§cThis cannot be undone!");
+            lore.add("");
+            lore.add("§f✨ Reference system-стиль: универсальные блоки");
+            lore.add("§fс настройкой через GUI");
+            meta.setLore(lore);
             item.setItemMeta(meta);
         }
         
@@ -479,12 +449,33 @@ public class EnhancedActionParameterGUI {
         
         if (meta != null) {
             meta.setDisplayName("§b🎆 Help: " + actionId);
-            meta.setLore(Arrays.asList(
-                "§7Get help for this action type",
-                "§7and its parameters",
-                "",
-                "§eClick for detailed help"
-            ));
+            List<String> lore = new ArrayList<>();
+            lore.add("§7Get help for this action type");
+            lore.add("§7and its parameters");
+            lore.add("");
+            lore.add("§eClick for detailed help");
+            lore.add("");
+            lore.add("§f✨ Reference system-стиль: универсальные блоки");
+            lore.add("§fс настройкой через GUI");
+            meta.setLore(lore);
+            item.setItemMeta(meta);
+        }
+        
+        return item;
+    }
+    
+    private ItemStack createBackButton() {
+        ItemStack item = new ItemStack(Material.ARROW);
+        ItemMeta meta = item.getItemMeta();
+        
+        if (meta != null) {
+            meta.setDisplayName("§c⬅ Назад");
+            List<String> lore = new ArrayList<>();
+            lore.add("§7Вернуться к предыдущему меню");
+            lore.add("");
+            lore.add("§f✨ Reference system-стиль: универсальные блоки");
+            lore.add("§fс настройкой через GUI");
+            meta.setLore(lore);
             item.setItemMeta(meta);
         }
         
@@ -492,11 +483,7 @@ public class EnhancedActionParameterGUI {
     }
     
     /**
-     * Вспомогательные методы
-     *
      * Helper methods
-     *
-     * Hilfsmethoden
      */
     
     private CodeBlock getCodeBlock(Location location) {
@@ -514,11 +501,7 @@ public class EnhancedActionParameterGUI {
     }
     
     /**
-     * Открывает улучшенный редактор параметров
-     *
      * Opens the enhanced parameter editor
-     *
-     * Öffnet den erweiterten Parameter-Editor
      */
     public void openParameterEditor(Player player, Location blockLocation, String actionId) {
         InteractiveGUI gui = createParameterEditor(player, blockLocation, actionId);
@@ -528,11 +511,7 @@ public class EnhancedActionParameterGUI {
     }
     
     /**
-     * Получает менеджер интерактивного графического интерфейса
-     *
      * Gets the interactive GUI manager
-     *
-     * Ruft den interaktiven GUI-Manager ab
      */
     public InteractiveGUIManager getGUIManager() {
         return guiManager;

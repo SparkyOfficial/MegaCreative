@@ -18,20 +18,20 @@ import org.bukkit.Location;
 import java.util.*;
 
 /**
- * 🎆 Enhanced Entity Condition Block GUI
+ * 🎆 УЛУЧШЕННЫЙ Графический интерфейс условий сущностей
  * 
- * Provides a specialized interface for selecting entity condition actions.
- * Implements Reference System-style: universal blocks with GUI configuration.
+ * Реализует стиль reference system: универсальные блоки с настройкой через GUI
+ * с категориями, красивым выбором и умными табличками на блоках с информацией.
  *
- * 🎆 Улучшенный графический интерфейс условий сущностей
+ * 🎆 ENHANCED Entity Condition Block GUI
  * 
- * Предоставляет специализированный интерфейс для выбора действий, связанных с условиями сущностей.
- * Реализует стиль Reference System: универсальные блоки с настройкой через GUI.
+ * Implements reference system-style: universal blocks with GUI configuration
+ * with categories, beautiful selection, and smart signs on blocks with information.
  *
- * 🎆 Erweiterte Entitätsbedingungs-Block-GUI
+ * 🎆 ERWEITERT Entitätsbedingungs-Block-GUI
  * 
- * Bietet eine spezialisierte Schnittstelle zur Auswahl von Entitätsbedingungs-Aktionen.
- * Implementiert Reference System-Stil: universelle Blöcke mit GUI-Konfiguration.
+ * Implementiert Reference-System-Stil: universelle Blöcke mit GUI-Konfiguration
+ * mit Kategorien, schöner Auswahl und intelligenten Schildern an Blöcken mit Informationen.
  */
 public class EntityConditionBlockGUI implements GUIManager.ManagedGUIInterface {
     
@@ -43,12 +43,34 @@ public class EntityConditionBlockGUI implements GUIManager.ManagedGUIInterface {
     private final GUIManager guiManager;
     private final BlockConfigService blockConfigService;
     
+    // Categories for different types of entity conditions
+    private static final Map<String, String> CATEGORY_NAMES = new LinkedHashMap<>();
+    private static final Map<String, Material> CATEGORY_MATERIALS = new HashMap<>();
+    
+    static {
+        // Define category names and their display names
+        CATEGORY_NAMES.put("STATE", "🧬 Состояние");
+        CATEGORY_NAMES.put("ENVIRONMENT", "🌍 Окружение");
+        CATEGORY_NAMES.put("MOVEMENT", "🏃 Движение");
+        CATEGORY_NAMES.put("INTERACTION", "🧍 Взаимодействие");
+        CATEGORY_NAMES.put("AGE", "🐣 Возраст");
+        CATEGORY_NAMES.put("MISC", "🔧 Другое");
+        
+        // Define materials for category items
+        CATEGORY_MATERIALS.put("STATE", Material.REDSTONE);
+        CATEGORY_MATERIALS.put("ENVIRONMENT", Material.WATER_BUCKET);
+        CATEGORY_MATERIALS.put("MOVEMENT", Material.LEATHER_BOOTS);
+        CATEGORY_MATERIALS.put("INTERACTION", Material.SADDLE);
+        CATEGORY_MATERIALS.put("AGE", Material.EGG);
+        CATEGORY_MATERIALS.put("MISC", Material.ZOMBIE_SPAWN_EGG);
+    }
+    
     /**
-     * Initializes entity condition block GUI
-     * @param plugin Reference to main plugin
-     * @param player Player who will use the interface
-     * @param blockLocation Location of block to configure
-     * @param blockMaterial Material of block to configure
+     * Инициализирует графический интерфейс условий сущностей
+     * @param plugin Ссылка на основной плагин
+     * @param player Игрок, который будет использовать интерфейс
+     * @param blockLocation Расположение блока для настройки
+     * @param blockMaterial Материал блока для настройки
      */
     public EntityConditionBlockGUI(MegaCreative plugin, Player player, Location blockLocation, Material blockMaterial) {
         this.plugin = plugin;
@@ -56,7 +78,14 @@ public class EntityConditionBlockGUI implements GUIManager.ManagedGUIInterface {
         this.blockLocation = blockLocation;
         this.blockMaterial = blockMaterial;
         this.guiManager = plugin.getGuiManager();
-        this.blockConfigService = plugin.getServiceRegistry().getBlockConfigService();
+        
+        // Add null check for service registry
+        if (plugin != null && plugin.getServiceRegistry() != null) {
+            this.blockConfigService = plugin.getServiceRegistry().getBlockConfigService();
+        } else {
+            this.blockConfigService = null;
+            player.sendMessage("§cBlock configuration service not available!");
+        }
         
         // Create inventory with appropriate size
         this.inventory = Bukkit.createInventory(null, 54, "§8Условие сущности: " + getBlockDisplayName());
@@ -65,7 +94,7 @@ public class EntityConditionBlockGUI implements GUIManager.ManagedGUIInterface {
     }
     
     /**
-     * Gets display name for block
+     * Получает отображаемое имя блока
      */
     private String getBlockDisplayName() {
         // Get display name from block config service
@@ -74,33 +103,33 @@ public class EntityConditionBlockGUI implements GUIManager.ManagedGUIInterface {
     }
     
     /**
-     * Sets up the GUI inventory
+     * Настраивает инвентарь графического интерфейса
      */
     private void setupInventory() {
         inventory.clear();
         
-        // Add background glass panes
-        ItemStack glassPane = new ItemStack(Material.GRAY_STAINED_GLASS_PANE);
-        ItemMeta glassMeta = glassPane.getItemMeta();
-        glassMeta.setDisplayName(" ");
-        glassPane.setItemMeta(glassMeta);
+        // Add decorative border
+        ItemStack borderItem = new ItemStack(Material.BLACK_STAINED_GLASS_PANE);
+        ItemMeta borderMeta = borderItem.getItemMeta();
+        borderMeta.setDisplayName(" ");
+        borderItem.setItemMeta(borderMeta);
         
         // Fill border slots
         for (int i = 0; i < 54; i++) {
             if (i < 9 || i >= 45 || i % 9 == 0 || i % 9 == 8) {
-                inventory.setItem(i, glassPane);
+                inventory.setItem(i, borderItem);
             }
         }
         
-        // Add info item
+        // Add info item in the center
         ItemStack infoItem = new ItemStack(blockMaterial);
         ItemMeta infoMeta = infoItem.getItemMeta();
         infoMeta.setDisplayName("§e§l" + getBlockDisplayName());
         List<String> infoLore = new ArrayList<>();
-        infoLore.add("§7Выберите условие сущности");
+        infoLore.add("§7Выберите категорию условий сущностей");
         infoLore.add("");
-        infoLore.add("§aКликните на условие чтобы");
-        infoLore.add("§аназначить его блоку");
+        infoLore.add("§aКликните по категории чтобы");
+        infoLore.add("§aпросмотреть доступные условия");
         infoLore.add("");
         infoLore.add("§f✨ Reference system-стиль: универсальные блоки");
         infoLore.add("§fс настройкой через GUI");
@@ -108,169 +137,199 @@ public class EntityConditionBlockGUI implements GUIManager.ManagedGUIInterface {
         infoItem.setItemMeta(infoMeta);
         inventory.setItem(4, infoItem);
         
-        // Load available entity condition actions for this block type
-        loadAvailableEntityConditionActions();
+        // Add category items
+        int slot = 10;
+        for (Map.Entry<String, String> category : CATEGORY_NAMES.entrySet()) {
+            String categoryKey = category.getKey();
+            String categoryName = category.getValue();
+            
+            ItemStack categoryItem = new ItemStack(CATEGORY_MATERIALS.getOrDefault(categoryKey, Material.PAPER));
+            ItemMeta categoryMeta = categoryItem.getItemMeta();
+            categoryMeta.setDisplayName("§6" + categoryName);
+            
+            List<String> categoryLore = new ArrayList<>();
+            categoryLore.add("§7Категория: " + categoryKey);
+            categoryLore.add("");
+            categoryLore.add("§e⚡ Кликните чтобы выбрать");
+            categoryMeta.setLore(categoryLore);
+            
+            categoryItem.setItemMeta(categoryMeta);
+            inventory.setItem(slot, categoryItem);
+            
+            slot += 2; // Space out categories
+            if (slot >= 44) break; // Don't go into border area
+        }
     }
     
     /**
-     * Loads available entity condition actions for this block type
+     * Открывает графический интерфейс для игрока
      */
-    private void loadAvailableEntityConditionActions() {
-        // Debug logging
-        player.sendMessage("§eDebug: Checking material " + blockMaterial.name());
+    public void open() {
+        guiManager.registerGUI(player, this, inventory);
+        player.openInventory(inventory);
         
-        // Get available entity condition actions for block material using BlockConfigService
-        List<String> availableActions = blockConfigService.getActionsForMaterial(blockMaterial);
+        // Аудио обратная связь при открытии GUI
+        player.playSound(player.getLocation(), org.bukkit.Sound.UI_BUTTON_CLICK, 0.7f, 1.2f);
         
-        player.sendMessage("§eDebug: Available entity condition actions count: " + (availableActions != null ? availableActions.size() : "null"));
+        // Add visual effects for reference system-style magic
+        player.spawnParticle(org.bukkit.Particle.ENCHANTMENT_TABLE, 
+            player.getLocation().add(0, 1, 0), 10, 0.5, 0.5, 0.5, 1);
+    }
+    
+    @Override
+    /**
+     * Получает заголовок графического интерфейса
+     * @return Заголовок интерфейса
+     */
+    public String getGUITitle() {
+        return "Entity Condition Block GUI for " + blockMaterial.name();
+    }
+    
+    @Override
+    /**
+     * Обрабатывает события кликов в инвентаре
+     * @param event Событие клика в инвентаре
+     */
+    public void onInventoryClick(InventoryClickEvent event) {
+        if (!player.equals(event.getWhoClicked())) return;
+        if (!inventory.equals(event.getInventory())) return;
         
-        // Simple fallback to default entity condition actions if none found
-        if (availableActions == null || availableActions.isEmpty()) {
-            player.sendMessage("§cОшибка: Нет доступных условий для блока сущности " + blockMaterial.name());
-            
-            // Use default entity condition actions as fallback
-            availableActions = new ArrayList<>();
-            availableActions.add("isEntityAlive");
-            availableActions.add("isEntityOnFire");
-            availableActions.add("isEntityInWater");
-            availableActions.add("isEntityInLava");
-            availableActions.add("isEntitySneaking");
-            availableActions.add("isEntitySprinting");
-            availableActions.add("isEntityFlying");
-            availableActions.add("hasEntityPassenger");
-            player.sendMessage("§6Using entity condition default actions as fallback");
+        event.setCancelled(true); // Cancel all clicks by default
+        
+        ItemStack clicked = event.getCurrentItem();
+        if (clicked == null || !clicked.hasItemMeta()) return;
+        
+        ItemMeta meta = clicked.getItemMeta();
+        String displayName = meta.getDisplayName();
+        
+        // Check if it's a category item
+        for (Map.Entry<String, String> category : CATEGORY_NAMES.entrySet()) {
+            String categoryName = category.getValue();
+            if (displayName.contains(categoryName)) {
+                // Open category selection GUI
+                openCategorySelectionGUI(category.getKey());
+                return;
+            }
         }
         
-        // 🎆 ENHANCED: Group entity condition actions by category for better organization
-        Map<String, List<String>> categorizedActions = categorizeEntityConditionActions(availableActions);
-        
-        // Create action items with visual categorization
-        int slot = 10; // Start from first available slot
-        
-        for (Map.Entry<String, List<String>> category : categorizedActions.entrySet()) {
-            String categoryName = category.getKey();
-            List<String> actionsInCategory = category.getValue();
-            
-            // Add category separator if we have multiple categories
-            if (categorizedActions.size() > 1) {
-                ItemStack categoryItem = createCategoryItem(categoryName, actionsInCategory.size());
-                if (slot < 44) {
-                    inventory.setItem(slot, categoryItem);
-                    slot++;
-                    if (slot % 9 == 8) slot += 2; // Skip border
+        // Handle other clicks
+        List<String> lore = meta.getLore();
+        if (lore != null) {
+            // Find condition ID in lore
+            String conditionId = null;
+            for (String line : lore) {
+                if (line.startsWith("§8ID: ")) {
+                    conditionId = line.substring(5).trim(); // Remove "§8ID: " prefix
+                    break;
                 }
             }
             
-            // Add actions in this category
-            for (String actionId : actionsInCategory) {
-                if (slot >= 44) break; // Don't go into border area
-                
-                ItemStack actionItem = createActionItem(actionId, categoryName);
-                inventory.setItem(slot, actionItem);
-                
-                // Move to next slot, skipping border slots
-                slot++;
-                if (slot % 9 == 8) slot += 2; // Skip right border and left border of next row
-            }
-            
-            // Add spacing between categories
-            if (slot < 44 && categorizedActions.size() > 1) {
-                slot++;
-                if (slot % 9 == 8) slot += 2;
+            if (conditionId != null && !conditionId.isEmpty()) {
+                selectCondition(conditionId);
+            } else {
+                player.sendMessage("§eℹ Это заголовок категории. Кликните по условию ниже.");
+                player.playSound(player.getLocation(), org.bukkit.Sound.BLOCK_NOTE_BLOCK_PLING, 0.5f, 0.8f);
             }
         }
     }
     
     /**
-     * 🎆 ENHANCED: Categorizes entity condition actions for better organization
-     * Implements reference system-style: universal blocks with GUI configuration
+     * Открывает графический интерфейс выбора условий в категории
+     * @param category Категория для отображения
      */
-    private Map<String, List<String>> categorizeEntityConditionActions(List<String> actions) {
-        Map<String, List<String>> categories = new LinkedHashMap<>();
+    private void openCategorySelectionGUI(String category) {
+        // Create new inventory for category selection
+        Inventory categoryInventory = Bukkit.createInventory(null, 54, "§8" + CATEGORY_NAMES.getOrDefault(category, category));
         
-        for (String action : actions) {
-            String category = getEntityConditionActionCategory(action);
-            categories.computeIfAbsent(category, k -> new ArrayList<>()).add(action);
+        // Add decorative border
+        ItemStack borderItem = new ItemStack(Material.GRAY_STAINED_GLASS_PANE);
+        ItemMeta borderMeta = borderItem.getItemMeta();
+        borderMeta.setDisplayName(" ");
+        borderItem.setItemMeta(borderMeta);
+        
+        // Fill border slots
+        for (int i = 0; i < 54; i++) {
+            if (i < 9 || i >= 45 || i % 9 == 0 || i % 9 == 8) {
+                categoryInventory.setItem(i, borderItem);
+            }
         }
         
-        return categories;
+        // Add back button
+        ItemStack backButton = new ItemStack(Material.ARROW);
+        ItemMeta backMeta = backButton.getItemMeta();
+        backMeta.setDisplayName("§c⬅ Назад");
+        List<String> backLore = new ArrayList<>();
+        backLore.add("§7Вернуться к выбору категорий");
+        backMeta.setLore(backLore);
+        backButton.setItemMeta(backMeta);
+        categoryInventory.setItem(49, backButton);
+        
+        // Load conditions for this category
+        loadConditionsForCategory(categoryInventory, category);
+        
+        // Open the category inventory
+        player.openInventory(categoryInventory);
     }
     
     /**
-     * 🎆 ENHANCED: Get category for a entity condition action
-     * Implements reference system-style: universal blocks with GUI configuration
+     * Загружает условия для категории
+     * @param inventory Инвентарь для заполнения
+     * @param category Категория для загрузки
      */
-    private String getEntityConditionActionCategory(String actionId) {
-        switch (actionId.toLowerCase()) {
-            case "isentityalive":
-            case "isentitydead":
-                return "🧬 Состояние";
+    private void loadConditionsForCategory(Inventory inventory, String category) {
+        // Check if blockConfigService is available
+        if (blockConfigService == null) {
+            player.sendMessage("§cОшибка: Сервис конфигурации блоков недоступен!");
+            return;
+        }
+        
+        // Get available conditions for this block material
+        List<String> availableConditions = blockConfigService.getActionsForMaterial(blockMaterial);
+        
+        // Filter conditions by category
+        List<String> categoryConditions = new ArrayList<>();
+        for (String conditionId : availableConditions) {
+            String conditionCategory = getEntityConditionCategory(conditionId);
+            if (category.equals(conditionCategory)) {
+                categoryConditions.add(conditionId);
+            }
+        }
+        
+        // Create condition items
+        int slot = 10;
+        for (String conditionId : categoryConditions) {
+            if (slot >= 44) break; // Don't go into border area
             
-            case "isentityonfire":
-            case "isentityinwater":
-            case "isentityinlava":
-                return "🌍 Окружение";
+            ItemStack conditionItem = createConditionItem(conditionId);
+            inventory.setItem(slot, conditionItem);
             
-            case "isentitysneaking":
-            case "isentitysprinting":
-            case "isentityflying":
-                return "🏃 Движение";
-            
-            case "hasentitypassenger":
-            case "hasentityvehicle":
-                return "🧍 Взаимодействие";
-            
-            case "isentityageable":
-            case "isentityadult":
-                return "🐣 Возраст";
-            
-            default:
-                return "🔧 Основные";
+            slot++;
+            if (slot % 9 == 8) slot += 2; // Skip border slots
         }
     }
     
     /**
-     * 🎆 ENHANCED: Create category header item
-     * Implements reference system-style: universal blocks with GUI configuration
+     * Создает элемент условия
+     * @param conditionId ID условия
+     * @return ItemStack элемент условия
      */
-    private ItemStack createCategoryItem(String categoryName, int actionCount) {
-        ItemStack item = new ItemStack(Material.ORANGE_STAINED_GLASS_PANE);
-        ItemMeta meta = item.getItemMeta();
-        
-        meta.setDisplayName("§e§l" + categoryName);
-        
-        List<String> lore = new ArrayList<>();
-        lore.add("§7Доступно условий: " + actionCount);
-        lore.add("§8Категория");
-        lore.add("");
-        lore.add("§f✨ Reference system-стиль: универсальные блоки");
-        meta.setLore(lore);
-        
-        item.setItemMeta(meta);
-        return item;
-    }
-    
-    /**
-     * 🎆 ENHANCED: Create entity condition action item
-     * Implements reference system-style: universal blocks with GUI configuration
-     */
-    private ItemStack createActionItem(String actionId, String category) {
-        // Create appropriate material for action type
-        Material material = getEntityConditionActionMaterial(actionId);
+    private ItemStack createConditionItem(String conditionId) {
+        // Create appropriate material for condition type
+        Material material = getConditionMaterial(conditionId);
         ItemStack item = new ItemStack(material);
         ItemMeta meta = item.getItemMeta();
         
         // Set display name
-        meta.setDisplayName("§a§l" + getEntityConditionActionDisplayName(actionId));
+        meta.setDisplayName("§a§l" + getConditionDisplayName(conditionId));
         
         // Set lore with description and category
         List<String> lore = new ArrayList<>();
-        lore.add("§7" + getEntityConditionActionDescription(actionId));
+        lore.add("§7" + getConditionDescription(conditionId));
         lore.add("");
-        lore.add("§8⚙️ Категория: " + category);
+        lore.add("§8⚙️ Категория: " + getConditionCategoryName(conditionId));
         lore.add("");
         lore.add("§e⚡ Кликните чтобы выбрать");
-        lore.add("§8ID: " + actionId);
+        lore.add("§8ID: " + conditionId);
         lore.add("");
         lore.add("§f✨ Reference system-стиль: универсальные блоки");
         meta.setLore(lore);
@@ -280,11 +339,52 @@ public class EntityConditionBlockGUI implements GUIManager.ManagedGUIInterface {
     }
     
     /**
-     * Gets material for entity condition action
+     * Получает отображаемое имя категории для условия
+     * @param conditionId ID условия
+     * @return Отображаемое имя категории
      */
-    private Material getEntityConditionActionMaterial(String actionId) {
-        // Return appropriate materials based on action type
-        switch (actionId.toLowerCase()) {
+    private String getConditionCategoryName(String conditionId) {
+        String category = getEntityConditionCategory(conditionId);
+        return CATEGORY_NAMES.getOrDefault(category, category);
+    }
+    
+    /**
+     * Получает категорию для условия сущности
+     * @param conditionId ID условия
+     * @return Категория условия
+     */
+    private String getEntityConditionCategory(String conditionId) {
+        switch (conditionId.toLowerCase()) {
+            case "isentityalive":
+            case "isentitydead":
+                return "STATE";
+            case "isentityonfire":
+            case "isentityinwater":
+            case "isentityinlava":
+                return "ENVIRONMENT";
+            case "isentitysneaking":
+            case "isentitysprinting":
+            case "isentityflying":
+                return "MOVEMENT";
+            case "hasentitypassenger":
+            case "hasentityvehicle":
+                return "INTERACTION";
+            case "isentityageable":
+            case "isentityadult":
+                return "AGE";
+            default:
+                return "MISC";
+        }
+    }
+    
+    /**
+     * Получает материал для условия
+     * @param conditionId ID условия
+     * @return Материал для условия
+     */
+    private Material getConditionMaterial(String conditionId) {
+        // Return appropriate materials based on condition type
+        switch (conditionId.toLowerCase()) {
             case "isentityalive":
                 return Material.REDSTONE;
             case "isentityonfire":
@@ -297,17 +397,23 @@ public class EntityConditionBlockGUI implements GUIManager.ManagedGUIInterface {
                 return Material.LEATHER_BOOTS;
             case "hasentitypassenger":
                 return Material.SADDLE;
+            case "isentityageable":
+                return Material.EGG;
+            case "isentityadult":
+                return Material.CHICKEN_SPAWN_EGG;
             default:
-                return Material.PAPER;
+                return Material.STONE;
         }
     }
     
     /**
-     * Gets display name for entity condition action
+     * Получает отображаемое имя условия
+     * @param conditionId ID условия
+     * @return Отображаемое имя условия
      */
-    private String getEntityConditionActionDisplayName(String actionId) {
-        // Return user-friendly names for entity condition actions
-        switch (actionId.toLowerCase()) {
+    private String getConditionDisplayName(String conditionId) {
+        // Return user-friendly names for conditions
+        switch (conditionId.toLowerCase()) {
             case "isentityalive": return "Сущность жива";
             case "isentitydead": return "Сущность мертва";
             case "isentityonfire": return "Сущность горит";
@@ -320,16 +426,18 @@ public class EntityConditionBlockGUI implements GUIManager.ManagedGUIInterface {
             case "hasentityvehicle": return "Сущность в транспорте";
             case "isentityageable": return "Сущность может взрослеть";
             case "isentityadult": return "Сущность взрослая";
-            default: return actionId;
+            default: return conditionId;
         }
     }
 
     /**
-     * Gets description for entity condition action
+     * Получает описание условия
+     * @param conditionId ID условия
+     * @return Описание условия
      */
-    private String getEntityConditionActionDescription(String actionId) {
-        // Return descriptions for entity condition actions
-        switch (actionId.toLowerCase()) {
+    private String getConditionDescription(String conditionId) {
+        // Return descriptions for conditions
+        switch (conditionId.toLowerCase()) {
             case "isentityalive": return "Проверяет, жива ли сущность";
             case "isentitydead": return "Проверяет, мертва ли сущность";
             case "isentityonfire": return "Проверяет, горит ли сущность";
@@ -342,82 +450,15 @@ public class EntityConditionBlockGUI implements GUIManager.ManagedGUIInterface {
             case "hasentityvehicle": return "Проверяет, находится ли сущность в транспорте";
             case "isentityageable": return "Проверяет, может ли сущность взрослеть";
             case "isentityadult": return "Проверяет, является ли сущность взрослой";
-            default: return "Условие сущности " + actionId;
+            default: return "Условие сущности " + conditionId;
         }
     }
     
     /**
-     * Opens the GUI for the player
-     * Implements reference system-style: universal blocks with GUI configuration
+     * Выбирает условие для блока
+     * @param conditionId ID условия
      */
-    public void open() {
-        guiManager.registerGUI(player, this, inventory);
-        player.openInventory(inventory);
-        
-        // Audio feedback when opening GUI
-        player.playSound(player.getLocation(), org.bukkit.Sound.UI_BUTTON_CLICK, 0.7f, 1.2f);
-        
-        // Add visual effects for reference system-style magic
-        player.spawnParticle(org.bukkit.Particle.ENCHANTMENT_TABLE, 
-            player.getLocation().add(0, 1, 0), 10, 0.5, 0.5, 0.5, 1);
-    }
-    
-    @Override
-    /**
-     * Gets the GUI title
-     */
-    public String getGUITitle() {
-        return "Entity Condition Block GUI for " + blockMaterial.name();
-    }
-    
-    @Override
-    /**
-     * Handles inventory click events
-     */
-    public void onInventoryClick(InventoryClickEvent event) {
-        if (!player.equals(event.getWhoClicked())) return;
-        if (!inventory.equals(event.getInventory())) return;
-        
-        event.setCancelled(true); // Cancel all clicks by default
-        
-        ItemStack clicked = event.getCurrentItem();
-        if (clicked == null || !clicked.hasItemMeta()) return;
-        
-        ItemMeta meta = clicked.getItemMeta();
-        List<String> lore = meta.getLore();
-        if (lore == null) return;
-        
-        // Find action ID in lore
-        String actionId = null;
-        boolean isCategoryItem = false;
-        for (String line : lore) {
-            if (line.startsWith("§8ID: ")) {
-                actionId = line.substring(5); // Remove "§8ID: " prefix
-                break;
-            }
-            if (line.contains("Категория")) {
-                isCategoryItem = true;
-                break;
-            }
-        }
-        
-        if (isCategoryItem) {
-            // 🎆 ENHANCED: Handle category item click with helpful message
-            player.sendMessage("§eℹ Это заголовок категории. Кликните по условию ниже.");
-            player.playSound(player.getLocation(), org.bukkit.Sound.BLOCK_NOTE_BLOCK_PLING, 0.5f, 0.8f);
-            return;
-        }
-        
-        if (actionId != null) {
-            selectAction(actionId);
-        }
-    }
-    
-    /**
-     * 🎆 ENHANCED: Select action for the block
-     * Implements reference system-style: universal blocks with GUI configuration
-     */
-    private void selectAction(String actionId) {
+    private void selectCondition(String conditionId) {
         // Get the code block
         BlockPlacementHandler placementHandler = plugin.getBlockPlacementHandler();
         if (placementHandler == null) {
@@ -431,8 +472,8 @@ public class EntityConditionBlockGUI implements GUIManager.ManagedGUIInterface {
             return;
         }
         
-        // Set the action
-        codeBlock.setAction(actionId);
+        // Set the condition
+        codeBlock.setAction(conditionId);
         
         // Save the world
         var creativeWorld = plugin.getWorldManager().findCreativeWorldByBukkit(player.getWorld());
@@ -441,7 +482,7 @@ public class EntityConditionBlockGUI implements GUIManager.ManagedGUIInterface {
         }
         
         // Notify player
-        player.sendMessage("§a✓ Условие '" + getEntityConditionActionDisplayName(actionId) + "' установлено!");
+        player.sendMessage("§a✓ Условие '" + getConditionDisplayName(conditionId) + "' установлено!");
         player.sendMessage("§eКликните снова по блоку для настройки параметров.");
         
         // Add visual feedback for reference system-style magic
@@ -455,7 +496,8 @@ public class EntityConditionBlockGUI implements GUIManager.ManagedGUIInterface {
     
     @Override
     /**
-     * Handles inventory close events
+     * Обрабатывает события закрытия инвентаря
+     * @param event Событие закрытия инвентаря
      */
     public void onInventoryClose(InventoryCloseEvent event) {
         // Optional cleanup when GUI is closed
@@ -464,7 +506,7 @@ public class EntityConditionBlockGUI implements GUIManager.ManagedGUIInterface {
     
     @Override
     /**
-     * Performs resource cleanup when interface is closed
+     * Выполняет очистку ресурсов при закрытии интерфейса
      */
     public void onCleanup() {
         // Called when GUI is being cleaned up by GUIManager

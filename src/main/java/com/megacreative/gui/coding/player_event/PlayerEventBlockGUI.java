@@ -20,18 +20,18 @@ import java.util.*;
 /**
  * 🎆 Enhanced Player Event Block GUI
  * 
- * Provides a specialized interface for selecting player event actions.
- * Implements Reference System-style: universal blocks with GUI configuration.
+ * Implements Reference System-style: universal blocks with GUI configuration
+ * with categories, beautiful selection, and smart signs on blocks with information.
  *
  * 🎆 Улучшенный графический интерфейс событий игрока
  * 
- * Предоставляет специализированный интерфейс для выбора действий, связанных с событиями игрока.
- * Реализует стиль Reference System: универсальные блоки с настройкой через GUI.
+ * Реализует стиль reference system: универсальные блоки с настройкой через GUI
+ * с категориями, красивым выбором и умными табличками на блоках с информацией.
  *
  * 🎆 Erweiterte Spielerereignis-Block-GUI
  * 
- * Bietet eine spezialisierte Schnittstelle zur Auswahl von Spielerereignis-Aktionen.
- * Implementiert Reference System-Stil: universelle Blöcke mit GUI-Konfiguration.
+ * Implementiert Reference-System-Stil: universelle Blöcke mit GUI-Konfiguration
+ * mit Kategorien, schöner Auswahl und intelligenten Schildern an Blöcken mit Informationen.
  */
 public class PlayerEventBlockGUI implements GUIManager.ManagedGUIInterface {
     
@@ -58,7 +58,7 @@ public class PlayerEventBlockGUI implements GUIManager.ManagedGUIInterface {
         this.guiManager = plugin.getGuiManager();
         this.blockConfigService = plugin.getServiceRegistry().getBlockConfigService();
         
-        // Create inventory with appropriate size
+        // Create inventory with appropriate size (54 slots for double chest GUI)
         this.inventory = Bukkit.createInventory(null, 54, "§8Событие игрока: " + getBlockDisplayName());
         
         setupInventory();
@@ -74,25 +74,25 @@ public class PlayerEventBlockGUI implements GUIManager.ManagedGUIInterface {
     }
     
     /**
-     * Sets up the GUI inventory
+     * Sets up the GUI inventory with enhanced design
      */
     private void setupInventory() {
         inventory.clear();
         
-        // Add background glass panes
-        ItemStack glassPane = new ItemStack(Material.GRAY_STAINED_GLASS_PANE);
-        ItemMeta glassMeta = glassPane.getItemMeta();
-        glassMeta.setDisplayName(" ");
-        glassPane.setItemMeta(glassMeta);
+        // Add decorative border with category-specific materials
+        ItemStack borderItem = new ItemStack(Material.BLACK_STAINED_GLASS_PANE);
+        ItemMeta borderMeta = borderItem.getItemMeta();
+        borderMeta.setDisplayName(" ");
+        borderItem.setItemMeta(borderMeta);
         
         // Fill border slots
         for (int i = 0; i < 54; i++) {
             if (i < 9 || i >= 45 || i % 9 == 0 || i % 9 == 8) {
-                inventory.setItem(i, glassPane);
+                inventory.setItem(i, borderItem);
             }
         }
         
-        // Add info item
+        // Add info item with enhanced visual design
         ItemStack infoItem = new ItemStack(blockMaterial);
         ItemMeta infoMeta = infoItem.getItemMeta();
         infoMeta.setDisplayName("§e§l" + getBlockDisplayName());
@@ -110,6 +110,19 @@ public class PlayerEventBlockGUI implements GUIManager.ManagedGUIInterface {
         
         // Load available player event actions for this block type
         loadAvailablePlayerEventActions();
+        
+        // Add back button
+        ItemStack backButton = new ItemStack(Material.ARROW);
+        ItemMeta backMeta = backButton.getItemMeta();
+        backMeta.setDisplayName("§c⬅ Назад");
+        List<String> backLore = new ArrayList<>();
+        backLore.add("§7Вернуться к предыдущему меню");
+        backLore.add("");
+        backLore.add("§f✨ Reference system-стиль: универсальные блоки");
+        backLore.add("§fс настройкой через GUI");
+        backMeta.setLore(backLore);
+        backButton.setItemMeta(backMeta);
+        inventory.setItem(49, backButton);
     }
     
     /**
@@ -399,6 +412,14 @@ public class PlayerEventBlockGUI implements GUIManager.ManagedGUIInterface {
         if (!inventory.equals(event.getInventory())) return;
         
         event.setCancelled(true); // Cancel all clicks by default
+        
+        int slot = event.getSlot();
+        
+        // Handle back button
+        if (slot == 49) {
+            player.closeInventory();
+            return;
+        }
         
         ItemStack clicked = event.getCurrentItem();
         if (clicked == null || !clicked.hasItemMeta()) return;
