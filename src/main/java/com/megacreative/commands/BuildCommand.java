@@ -85,14 +85,14 @@ public class BuildCommand implements CommandExecutor {
         }
         
         // Log debug information
-        if (plugin != null) {
-            plugin.getLogger().info("BuildCommand executed by player: " + player.getName());
-            plugin.getLogger().info("Current world: " + player.getWorld().getName());
-            plugin.getLogger().info("ServiceRegistry available: " + (plugin.getServiceRegistry() != null));
-            if (plugin.getServiceRegistry() != null) {
-                plugin.getLogger().info("WorldManager in ServiceRegistry: " + (plugin.getServiceRegistry().getWorldManager() != null));
-            }
-        }
+        // if (plugin != null) {
+        //     plugin.getLogger().info("BuildCommand executed by player: " + player.getName());
+        //     plugin.getLogger().info("Current world: " + player.getWorld().getName());
+        //     plugin.getLogger().info("ServiceRegistry available: " + (plugin.getServiceRegistry() != null));
+        //     if (plugin.getServiceRegistry() != null) {
+        //         plugin.getLogger().info("WorldManager in ServiceRegistry: " + (plugin.getServiceRegistry().getWorldManager() != null));
+        //     }
+        // }
         
         CreativeWorld creativeWorld = worldManager.findCreativeWorldByBukkit(player.getWorld());
         
@@ -141,7 +141,7 @@ public class BuildCommand implements CommandExecutor {
                     CreativeWorld foundWorld = worldManager.getWorld(potentialId);
                     if (foundWorld != null) {
                         creativeWorld = foundWorld;
-                        player.sendMessage("§aFound world by extracted ID: " + potentialId);
+                        // player.sendMessage("§aFound world by extracted ID: " + potentialId);
                     }
                 }
             }
@@ -151,7 +151,7 @@ public class BuildCommand implements CommandExecutor {
                 for (CreativeWorld world : worldManager.getCreativeWorlds()) {
                     if (worldName.contains(world.getId()) || worldName.contains(world.getName().toLowerCase().replace(" ", ""))) {
                         creativeWorld = world;
-                        player.sendMessage("§aFound world by partial name matching: " + world.getName());
+                        // player.sendMessage("§aFound world by partial name matching: " + world.getName());
                         break;
                     }
                 }
@@ -168,6 +168,11 @@ public class BuildCommand implements CommandExecutor {
         if (!creativeWorld.canEdit(player)) {
             player.sendMessage("§cYou don't have permission to edit this world!");
             return true;
+        }
+        
+        // Save current world's code blocks before switching
+        if (plugin != null && plugin.getBlockPlacementHandler() != null) {
+            plugin.getBlockPlacementHandler().saveAllCodeBlocksInWorld(player.getWorld());
         }
         
         // Save player inventory before switching

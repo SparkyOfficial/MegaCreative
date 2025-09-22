@@ -668,18 +668,62 @@ public class WorldManagerImpl implements IWorldManager {
         // Set mode to PLAY
         world.setMode(com.megacreative.models.WorldMode.PLAY);
         
-        String playWorldName = world.isPlayWorld() ? world.getWorldName() : world.getPlayWorldName();
+        // Get the correct play world name based on dual mode
+        String playWorldName;
+        if (world.getDualMode() == CreativeWorld.WorldDualMode.STANDALONE) {
+            // For standalone worlds, use the main world name
+            playWorldName = world.getWorldName();
+        } else if (world.getDualMode() == CreativeWorld.WorldDualMode.DEV) {
+            // If this is a dev world, get the paired play world
+            if (world.getPairedWorldId() != null) {
+                CreativeWorld pairedWorld = getWorld(world.getPairedWorldId());
+                if (pairedWorld != null) {
+                    playWorldName = pairedWorld.getWorldName();
+                } else {
+                    // Fallback to generated play world name
+                    playWorldName = world.getPlayWorldName();
+                }
+            } else {
+                // Fallback to generated play world name
+                playWorldName = world.getPlayWorldName();
+            }
+        } else if (world.getDualMode() == CreativeWorld.WorldDualMode.PLAY) {
+            // This is already a play world
+            playWorldName = world.getWorldName();
+        } else {
+            // Fallback to generated play world name
+            playWorldName = world.getPlayWorldName();
+        }
+        
         World bukkitWorld = Bukkit.getWorld(playWorldName);
         
         if (bukkitWorld == null) {
-            player.sendMessage("§cPlay world does not exist!");
+            player.sendMessage("§cPlay world does not exist! Creating it...");
             // Try to create it
             WorldCreator creator = new WorldCreator(playWorldName);
             creator.environment(world.getWorldType().getEnvironment());
+            
             // Copy from dev world if it exists
-            World devWorld = Bukkit.getWorld(world.getDevWorldName());
+            String devWorldName = world.getDevWorldName();
+            World devWorld = Bukkit.getWorld(devWorldName);
             if (devWorld != null) {
                 creator.copy(devWorld);
+            } else {
+                // Set appropriate world type
+                switch (world.getWorldType()) {
+                    case FLAT -> {
+                        creator.type(WorldType.FLAT);
+                        creator.generatorSettings("{\"layers\":[{\"block\":\"bedrock\",\"height\":1},{\"block\":\"stone\",\"height\":2},{\"block\":\"grass_block\",\"height\":1}],\"biome\":\"plains\"}");
+                    }
+                    case VOID -> {
+                        creator.type(WorldType.FLAT);
+                        creator.generatorSettings("{\"layers\":[{\"block\":\"air\",\"height\":1}],\"biome\":\"plains\"}");
+                    }
+                    case OCEAN -> creator.type(WorldType.NORMAL);
+                    case NETHER -> creator.environment(World.Environment.NETHER);
+                    case END -> creator.environment(World.Environment.THE_END);
+                    default -> creator.type(WorldType.NORMAL);
+                }
             }
             bukkitWorld = Bukkit.createWorld(creator);
             
@@ -824,10 +868,10 @@ public class WorldManagerImpl implements IWorldManager {
             
             if (startIndex < endIndex) {
                 String preciseId = worldName.substring(startIndex, endIndex);
-                getPlugin().getLogger().info("Trying to find world with precise ID: " + preciseId);
+                // getPlugin().getLogger().info("Trying to find world with precise ID: " + preciseId);
                 CreativeWorld preciseResult = getWorld(preciseId);
                 if (preciseResult != null) {
-                    getPlugin().getLogger().info("Found world when searching for precise ID " + preciseId + ": " + preciseResult.getName() + " (ID: " + preciseResult.getId() + ")");
+                    // getPlugin().getLogger().info("Found world when searching for precise ID " + preciseId + ": " + preciseResult.getName() + " (ID: " + preciseResult.getId() + ")");
                     return preciseResult;
                 }
             }
@@ -841,10 +885,10 @@ public class WorldManagerImpl implements IWorldManager {
             id = id.replace("-world", "");
             id = id.replace("_dev", "");
             
-            getPlugin().getLogger().info("Trying to find world with fallback ID: " + id);
+            // getPlugin().getLogger().info("Trying to find world with fallback ID: " + id);
             CreativeWorld result = getWorld(id);
             if (result != null) {
-                getPlugin().getLogger().info("Found world when searching for fallback ID " + id + ": " + result.getName() + " (ID: " + result.getId() + ")");
+                // getPlugin().getLogger().info("Found world when searching for fallback ID " + id + ": " + result.getName() + " (ID: " + result.getId() + ")");
                 return result;
             }
         }
@@ -906,7 +950,7 @@ public class WorldManagerImpl implements IWorldManager {
                 if (result != null) {
                     // Reduced logging - only log when debugging
                     // getPlugin().getLogger().info("Found world by extracted ID: " + potentialId);
-                    getPlugin().getLogger().info("Found world when searching for split ID " + potentialId + ": " + result.getName() + " (ID: " + result.getId() + ")");
+                    // getPlugin().getLogger().info("Found world when searching for split ID " + potentialId + ": " + result.getName() + " (ID: " + result.getId() + ")");
                     return result;
                 }
             }
@@ -914,10 +958,10 @@ public class WorldManagerImpl implements IWorldManager {
         
         // Reduced logging - only log when debugging
         // getPlugin().getLogger().warning("No CreativeWorld found for Bukkit world: " + worldName);
-        getPlugin().getLogger().warning("No CreativeWorld found for Bukkit world: " + worldName + ". Available worlds: " + worlds.size());
-        for (CreativeWorld world : worlds.values()) {
-            getPlugin().getLogger().warning("  - World ID: " + world.getId() + ", Name: " + world.getName() + ", WorldName: " + world.getWorldName());
-        }
+        // getPlugin().getLogger().warning("No CreativeWorld found for Bukkit world: " + worldName + ". Available worlds: " + worlds.size());
+        // for (CreativeWorld world : worlds.values()) {
+        //     getPlugin().getLogger().warning("  - World ID: " + world.getId() + ", Name: " + world.getName() + ", WorldName: " + world.getWorldName());
+        // }
         return null;
     }
     

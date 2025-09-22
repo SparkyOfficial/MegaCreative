@@ -3,6 +3,7 @@ package com.megacreative.coding;
 import com.megacreative.MegaCreative;
 import com.megacreative.core.ServiceRegistry;
 import com.megacreative.interfaces.ITrustedPlayerManager;
+import com.megacreative.models.CreativeWorld;
 import com.megacreative.services.BlockConfigService;
 import com.megacreative.coding.CodeBlock;
 import org.bukkit.Material;
@@ -441,5 +442,27 @@ public class BlockPlacementHandler implements Listener {
             blockCodeBlocks.put(location, codeBlock);
             plugin.getLogger().fine("Added CodeBlock to tracking at " + location);
         }
+    }
+    
+    /**
+     * Saves all code blocks in a world to persistent storage
+     * This method should be called when switching between worlds or shutting down
+     */
+    public void saveAllCodeBlocksInWorld(World world) {
+        if (world == null) {
+            plugin.getLogger().warning("Attempted to save code blocks in null world!");
+            return;
+        }
+        
+        // Get the creative world associated with this Bukkit world
+        CreativeWorld creativeWorld = plugin.getWorldManager().findCreativeWorldByBukkit(world);
+        if (creativeWorld == null) {
+            plugin.getLogger().warning("No CreativeWorld found for Bukkit world: " + world.getName());
+            return;
+        }
+        
+        // Save the world to persist any changes to code blocks
+        plugin.getWorldManager().saveWorld(creativeWorld);
+        plugin.getLogger().fine("Saved all code blocks in world: " + world.getName());
     }
 }

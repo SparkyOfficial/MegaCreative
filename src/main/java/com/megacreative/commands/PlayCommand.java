@@ -74,18 +74,23 @@ public class PlayCommand implements CommandExecutor {
         }
         
         // Log debug information
-        plugin.getLogger().info("PlayCommand executed by player: " + player.getName());
-        plugin.getLogger().info("Current world: " + player.getWorld().getName());
-        plugin.getLogger().info("ServiceRegistry available: " + (plugin.getServiceRegistry() != null));
-        if (plugin.getServiceRegistry() != null) {
-            plugin.getLogger().info("WorldManager in ServiceRegistry: " + (plugin.getServiceRegistry().getWorldManager() != null));
-        }
+        // plugin.getLogger().info("PlayCommand executed by player: " + player.getName());
+        // plugin.getLogger().info("Current world: " + player.getWorld().getName());
+        // plugin.getLogger().info("ServiceRegistry available: " + (plugin.getServiceRegistry() != null));
+        // if (plugin.getServiceRegistry() != null) {
+        //     plugin.getLogger().info("WorldManager in ServiceRegistry: " + (plugin.getServiceRegistry().getWorldManager() != null));
+        // }
         
         if (args.length > 0) {
             switch (args[0].toLowerCase()) {
                 case "switch", "world" -> {
                     CreativeWorld currentWorld = plugin.getWorldManager().findCreativeWorldByBukkit(player.getWorld());
                     if (currentWorld != null && currentWorld.getPairedWorldId() != null) {
+                        // Save current world's code blocks before switching
+                        if (plugin.getBlockPlacementHandler() != null) {
+                            plugin.getBlockPlacementHandler().saveAllCodeBlocksInWorld(player.getWorld());
+                        }
+                        
                         if (plugin.getBlockPlacementHandler().isInDevWorld(player)) {
                             plugin.getServiceRegistry().getDevInventoryManager().savePlayerInventory(player);
                         }
@@ -145,7 +150,7 @@ public class PlayCommand implements CommandExecutor {
                     CreativeWorld foundWorld = plugin.getWorldManager().getWorld(potentialId);
                     if (foundWorld != null) {
                         creativeWorld = foundWorld;
-                        player.sendMessage("§aFound world by extracted ID: " + potentialId);
+                        // player.sendMessage("§aFound world by extracted ID: " + potentialId);
                     }
                 }
             }
@@ -155,7 +160,7 @@ public class PlayCommand implements CommandExecutor {
                 for (CreativeWorld world : plugin.getWorldManager().getCreativeWorlds()) {
                     if (worldName.contains(world.getId()) || worldName.contains(world.getName().toLowerCase().replace(" ", ""))) {
                         creativeWorld = world;
-                        player.sendMessage("§aFound world by partial name matching: " + world.getName());
+                        // player.sendMessage("§aFound world by partial name matching: " + world.getName());
                         break;
                     }
                 }
@@ -166,6 +171,11 @@ public class PlayCommand implements CommandExecutor {
                 player.sendMessage("§cUnable to find associated MegaCreative world. Please contact an administrator.");
                 return true;
             }
+        }
+        
+        // Save current world's code blocks before switching
+        if (plugin.getBlockPlacementHandler() != null) {
+            plugin.getBlockPlacementHandler().saveAllCodeBlocksInWorld(player.getWorld());
         }
         
         World currentWorld = player.getWorld();
