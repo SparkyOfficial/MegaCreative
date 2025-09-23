@@ -172,7 +172,37 @@ public class DebugCommand implements CommandExecutor, TabCompleter {
                 Location location = player.getLocation();
                 String condition = null;
                 
-                if (args.length >= 3) {
+                // Check if coordinates are provided
+                if (args.length >= 5) {
+                    try {
+                        double x = Double.parseDouble(args[2]);
+                        double y = Double.parseDouble(args[3]);
+                        double z = Double.parseDouble(args[4]);
+                        location = new Location(player.getWorld(), x, y, z);
+                        
+                        // Check if condition is provided after coordinates
+                        if (args.length > 5) {
+                            StringBuilder conditionBuilder = new StringBuilder();
+                            for (int i = 5; i < args.length; i++) {
+                                if (conditionBuilder.length() > 0) {
+                                    conditionBuilder.append(" ");
+                                }
+                                conditionBuilder.append(args[i]);
+                            }
+                            condition = conditionBuilder.toString();
+                        }
+                    } catch (NumberFormatException e) {
+                        // If coordinates are invalid, use player location and treat args as condition
+                        StringBuilder conditionBuilder = new StringBuilder();
+                        for (int i = 2; i < args.length; i++) {
+                            if (conditionBuilder.length() > 0) {
+                                conditionBuilder.append(" ");
+                            }
+                            conditionBuilder.append(args[i]);
+                        }
+                        condition = conditionBuilder.toString();
+                    }
+                } else if (args.length >= 3) {
                     // Try to parse condition
                     StringBuilder conditionBuilder = new StringBuilder();
                     for (int i = 2; i < args.length; i++) {
@@ -188,7 +218,21 @@ public class DebugCommand implements CommandExecutor, TabCompleter {
                 break;
                 
             case "remove":
-                debugger.removeBreakpoint(player, player.getLocation());
+                // Check if coordinates are provided
+                if (args.length >= 5) {
+                    try {
+                        double x = Double.parseDouble(args[2]);
+                        double y = Double.parseDouble(args[3]);
+                        double z = Double.parseDouble(args[4]);
+                        Location removeLocation = new Location(player.getWorld(), x, y, z);
+                        debugger.removeBreakpoint(player, removeLocation);
+                    } catch (NumberFormatException e) {
+                        // If coordinates are invalid, use player location
+                        debugger.removeBreakpoint(player, player.getLocation());
+                    }
+                } else {
+                    debugger.removeBreakpoint(player, player.getLocation());
+                }
                 break;
                 
             case "list":

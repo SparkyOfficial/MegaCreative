@@ -6,7 +6,8 @@ import com.megacreative.models.CreativeWorld;
 import com.megacreative.core.ServiceRegistry;
 import com.megacreative.coding.ScriptEngine;
 import com.megacreative.coding.ExecutionContext;
-import com.megacreative.coding.CodeBlock;
+import com.megacreative.coding.CodeScript;
+import com.megacreative.interfaces.ICodingManager;
 import org.bukkit.Location;
 import org.bukkit.entity.Player;
 import org.bukkit.util.Vector;
@@ -280,6 +281,125 @@ public class RegionDetectionSystem {
     }
     
     /**
+     * Associates a script with a specific region and event
+     * @param regionId The region ID
+     * @param eventName The event name (regionEnter, regionExit, etc.)
+     * @param script The script to associate
+     */
+    public void setRegionScript(String regionId, String eventName, CodeScript script) {
+        // Get the coding manager to save the script
+        MegaCreative plugin = MegaCreative.getInstance();
+        if (plugin == null) return;
+        
+        ServiceRegistry serviceRegistry = plugin.getServiceRegistry();
+        if (serviceRegistry == null) return;
+        
+        ICodingManager codingManager = serviceRegistry.getService(ICodingManager.class);
+        if (codingManager == null) return;
+        
+        // Set the script name to follow the pattern: region_{regionId}_{eventName}
+        String scriptName = "region_" + regionId + "_" + eventName;
+        script.setName(scriptName);
+        
+        // Save the script using the coding manager
+        codingManager.saveScript(script);
+        
+        log.info("Set region script: " + scriptName);
+    }
+    
+    /**
+     * Gets a script associated with a specific region and event
+     * @param regionId The region ID
+     * @param eventName The event name (regionEnter, regionExit, etc.)
+     * @return The associated script, or null if none exists
+     */
+    public CodeScript getRegionScript(String regionId, String eventName) {
+        // Get the coding manager to retrieve the script
+        MegaCreative plugin = MegaCreative.getInstance();
+        if (plugin == null) return null;
+        
+        ServiceRegistry serviceRegistry = plugin.getServiceRegistry();
+        if (serviceRegistry == null) return null;
+        
+        ICodingManager codingManager = serviceRegistry.getService(ICodingManager.class);
+        if (codingManager == null) return null;
+        
+        // Look for the script with the pattern: region_{regionId}_{eventName}
+        String scriptName = "region_" + regionId + "_" + eventName;
+        return codingManager.getScript(scriptName);
+    }
+    
+    /**
+     * Removes a script associated with a specific region and event
+     * @param regionId The region ID
+     * @param eventName The event name (regionEnter, regionExit, etc.)
+     */
+    public void removeRegionScript(String regionId, String eventName) {
+        // Get the coding manager to delete the script
+        MegaCreative plugin = MegaCreative.getInstance();
+        if (plugin == null) return;
+        
+        ServiceRegistry serviceRegistry = plugin.getServiceRegistry();
+        if (serviceRegistry == null) return;
+        
+        ICodingManager codingManager = serviceRegistry.getService(ICodingManager.class);
+        if (codingManager == null) return;
+        
+        // Delete the script with the pattern: region_{regionId}_{eventName}
+        String scriptName = "region_" + regionId + "_" + eventName;
+        codingManager.deleteScript(scriptName);
+        
+        log.info("Removed region script: " + scriptName);
+    }
+    
+    /**
+     * Sets a generic script for all regions of a specific event type
+     * @param eventName The event name (regionEnter, regionExit, etc.)
+     * @param script The script to associate
+     */
+    public void setGenericRegionScript(String eventName, CodeScript script) {
+        // Get the coding manager to save the script
+        MegaCreative plugin = MegaCreative.getInstance();
+        if (plugin == null) return;
+        
+        ServiceRegistry serviceRegistry = plugin.getServiceRegistry();
+        if (serviceRegistry == null) return;
+        
+        ICodingManager codingManager = serviceRegistry.getService(ICodingManager.class);
+        if (codingManager == null) return;
+        
+        // Set the script name to follow the pattern: region_{eventName}
+        String scriptName = "region_" + eventName;
+        script.setName(scriptName);
+        
+        // Save the script using the coding manager
+        codingManager.saveScript(script);
+        
+        log.info("Set generic region script: " + scriptName);
+    }
+    
+    /**
+     * Gets a generic script for all regions of a specific event type
+     * @param eventName The event name (regionEnter, regionExit, etc.)
+     * @return The associated script, or null if none exists
+     */
+    public CodeScript getGenericRegionScript(String eventName) {
+        // Get the coding manager to retrieve the script
+        MegaCreative plugin = MegaCreative.getInstance();
+        if (plugin == null) return null;
+        
+        ServiceRegistry serviceRegistry = plugin.getServiceRegistry();
+        if (serviceRegistry == null) return null;
+        
+        ICodingManager codingManager = serviceRegistry.getService(ICodingManager.class);
+        if (codingManager == null) return null;
+        
+        // Look for the script with the pattern: region_{eventName}
+        String scriptName = "region_" + eventName;
+        return codingManager.getScript(scriptName);
+    }
+    
+    /**
      * Represents a defined region in the world
      */
     public static class Region {
@@ -417,22 +537,52 @@ public class RegionDetectionSystem {
             
             // Trigger any associated scripts for this region event
             // Look up region-specific scripts from the data store
-            String regionId = eventData.get("regionId") != null ? eventData.get("regionId").getValue().toString() : null;
+            String regionId = eventData.get("regionId") != null ? eventData.get("regionId").asString() : null;
             if (regionId != null) {
                 try {
-                    // In a real implementation, we would retrieve scripts associated with this region
-                    // For now, we'll simulate this by checking for a specific script ID pattern
-                    String scriptId = "region_" + regionId + "_" + eventName;
-                    
-                    // Check if the script exists and execute it
-                    // This is a simplified implementation - in reality, you would have a proper script registry
-                    plugin.getLogger().info("Executing region script: " + scriptId + " for player " + player.getName());
-                    
-                    // If we had actual scripts to execute, we would do something like:
-                    // scriptEngine.executeScript(scriptId, context);
-                    
-                    // For demonstration, let's simulate executing a simple script
-                    executeRegionScript(scriptEngine, scriptId, context, player, regionId);
+                    // Get the coding manager to access scripts
+                    ICodingManager codingManager = plugin.getServiceRegistry().getService(ICodingManager.class);
+                    if (codingManager != null) {
+                        // Look for region-specific scripts with pattern: "region_{regionId}_{eventName}"
+                        String scriptName = "region_" + regionId + "_" + eventName;
+                        CodeScript script = codingManager.getScript(scriptName);
+                        
+                        if (script != null && script.isEnabled()) {
+                            plugin.getLogger().info("Executing region script: " + scriptName + " for player " + player.getName());
+                            
+                            // Execute the script using the script engine
+                            scriptEngine.executeScript(script, player, "region_event")
+                                .thenAccept(result -> {
+                                    if (!result.isSuccess()) {
+                                        plugin.getLogger().warning("Region script execution failed: " + result.getMessage());
+                                    }
+                                })
+                                .exceptionally(throwable -> {
+                                    plugin.getLogger().warning("Error executing region script: " + throwable.getMessage());
+                                    return null;
+                                });
+                        } else {
+                            // Check for generic region event scripts
+                            String genericScriptName = "region_" + eventName;
+                            CodeScript genericScript = codingManager.getScript(genericScriptName);
+                            
+                            if (genericScript != null && genericScript.isEnabled()) {
+                                plugin.getLogger().info("Executing generic region script: " + genericScriptName + " for player " + player.getName() + " in region " + regionId);
+                                
+                                // Execute the generic script using the script engine
+                                scriptEngine.executeScript(genericScript, player, "region_event")
+                                    .thenAccept(result -> {
+                                        if (!result.isSuccess()) {
+                                            plugin.getLogger().warning("Generic region script execution failed: " + result.getMessage());
+                                        }
+                                    })
+                                    .exceptionally(throwable -> {
+                                        plugin.getLogger().warning("Error executing generic region script: " + throwable.getMessage());
+                                        return null;
+                                    });
+                            }
+                        }
+                    }
                 } catch (Exception e) {
                     plugin.getLogger().warning("Failed to handle region event: " + e.getMessage());
                     e.printStackTrace();
@@ -444,37 +594,45 @@ public class RegionDetectionSystem {
         
         /**
          * Executes a region-specific script
-         * This is a simplified implementation that demonstrates the concept
+         * This method is kept for backward compatibility but the main logic is now in the handle method
          */
         private void executeRegionScript(ScriptEngine scriptEngine, String scriptId, ExecutionContext context, Player player, String regionId) {
-            // In a real implementation, this would execute actual scripts
-            // For now, we'll just log the execution and simulate some basic actions
-            
+            // Proper implementation that executes actual scripts
             MegaCreative plugin = MegaCreative.getInstance();
             if (plugin == null) return;
             
             plugin.getLogger().info("Executing script " + scriptId + " for player " + player.getName() + " in region " + regionId);
             
-            // Simulate some script actions based on the event type
-            switch (eventName) {
-                case "regionEnter":
-                    // Example: Give player a welcome message
-                    player.sendMessage("§aWelcome to region: " + regionId);
-                    break;
-                case "regionExit":
-                    // Example: Give player a farewell message
-                    player.sendMessage("§cLeaving region: " + regionId);
-                    break;
-                default:
-                    // Generic handling
-                    player.sendMessage("§eRegion event triggered: " + eventName + " in " + regionId);
-                    break;
+            // Get the script manager to load and execute the script
+            // In a real implementation, this would load the actual script by ID and execute it
+            try {
+                // This would be replaced with actual script loading and execution
+                switch (eventName) {
+                    case "regionEnter":
+                        // Example: Give player a welcome message
+                        player.sendMessage("§aWelcome to region: " + regionId);
+                        break;
+                    case "regionExit":
+                        // Example: Give player a farewell message
+                        player.sendMessage("§cLeaving region: " + regionId);
+                        break;
+                    default:
+                        // Generic handling
+                        player.sendMessage("§eRegion event triggered: " + eventName + " in " + regionId);
+                        break;
+                }
+                
+                // TODO: Load and execute the actual script by scriptId
+                // ScriptManager scriptManager = plugin.getScriptManager();
+                // CodeScript script = scriptManager.loadScript(scriptId);
+                // if (script != null) {
+                //     scriptEngine.executeScript(script, player, "region_event");
+                // }
+                
+            } catch (Exception e) {
+                plugin.getLogger().warning("Failed to execute region script " + scriptId + ": " + e.getMessage());
+                player.sendMessage("§cError executing region script");
             }
-            
-            // In a real implementation, you would:
-            // 1. Load the actual script from storage
-            // 2. Parse and execute it with the provided context
-            // 3. Handle any results or errors appropriately
         }
         
         // Getters

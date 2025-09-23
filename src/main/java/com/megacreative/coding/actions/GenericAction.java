@@ -1,5 +1,6 @@
 package com.megacreative.coding.actions;
 
+import com.megacreative.MegaCreative;
 import com.megacreative.coding.BlockAction;
 import com.megacreative.coding.CodeBlock;
 import com.megacreative.coding.ExecutionContext;
@@ -156,14 +157,29 @@ public class GenericAction implements BlockAction {
         });
         
         ACTION_HANDLERS.put("teleport", (context, params) -> {
-            // Location loc = params.get("location").asLocation(); // Need to implement location handling
-            String locString = params.get("location").asString();
-            Location location = parseLocationString(locString);
+            // Use proper location handling instead of string parsing
+            DataValue locationValue = params.get("location");
+            Location location = null;
+            
+            if (locationValue != null) {
+                // Try to get location directly if it's already a location
+                if (locationValue.getType() == com.megacreative.coding.values.ValueType.LOCATION) {
+                    // Cast to LocationValue and get the location
+                    com.megacreative.coding.values.types.LocationValue locValue = 
+                        (com.megacreative.coding.values.types.LocationValue) locationValue;
+                    location = (Location) locValue.getValue();
+                } else {
+                    // Parse from string as fallback
+                    String locString = locationValue.asString();
+                    location = parseLocationString(locString);
+                }
+            }
+            
             if (location != null) {
                 context.getPlayer().teleport(location);
                 context.getPlayer().sendMessage(Constants.TELEPORT_SUCCESS + location.getX() + ", " + location.getY() + ", " + location.getZ());
             } else {
-                context.getPlayer().sendMessage(Constants.INVALID_LOCATION_FORMAT + locString);
+                context.getPlayer().sendMessage(Constants.INVALID_LOCATION_FORMAT + (locationValue != null ? locationValue.asString() : "null"));
             }
         });
         
@@ -341,17 +357,17 @@ public class GenericAction implements BlockAction {
      * Initialize economy-related action handlers
      */
     private static void initializeEconomyActions() {
-        // === ECONOMY ACTIONS (if Vault is available) ===
+        // === ECONOMY ACTIONS (placeholder implementation) ===
         ACTION_HANDLERS.put("giveMoney", (context, params) -> {
             double amount = params.get("amount").asNumber().doubleValue();
-            // Implementation would depend on economy plugin integration
-            context.getPlayer().sendMessage("§a+$" + amount + " (Economy integration needed)");
+            // Placeholder implementation - in a full implementation, this would integrate with an economy plugin
+            context.getPlayer().sendMessage("§a+$" + amount + " (Economy integration placeholder - not implemented)");
         });
         
         ACTION_HANDLERS.put("takeMoney", (context, params) -> {
             double amount = params.get("amount").asNumber().doubleValue();
-            // Implementation would depend on economy plugin integration
-            context.getPlayer().sendMessage("§c-$" + amount + " (Economy integration needed)");
+            // Placeholder implementation - in a full implementation, this would integrate with an economy plugin
+            context.getPlayer().sendMessage("§c-$" + amount + " (Economy integration placeholder - not implemented)");
         });
     }
     

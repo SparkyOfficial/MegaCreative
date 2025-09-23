@@ -260,28 +260,15 @@ public class TriggerCustomEventAction implements BlockAction {
     private Map<String, Object> parseJsonString(String jsonStr, ExecutionContext context) {
         Map<String, Object> result = new HashMap<>();
         try {
-            // Simple JSON parsing implementation
-            // In a real implementation, you would use a proper JSON library like Gson or Jackson
-            if (jsonStr.startsWith("{") && jsonStr.endsWith("}")) {
-                // Parse object
-                String content = jsonStr.substring(1, jsonStr.length() - 1).trim();
-                if (!content.isEmpty()) {
-                    String[] pairs = content.split(",");
-                    for (String pair : pairs) {
-                        String[] keyValue = pair.split(":", 2);
-                        if (keyValue.length == 2) {
-                            String key = keyValue[0].trim().replaceAll("^\"|\"$", "");
-                            String value = keyValue[1].trim().replaceAll("^\"|\"$", "");
-                            // Try to parse as number
-                            try {
-                                result.put(key, Double.parseDouble(value));
-                            } catch (NumberFormatException e) {
-                                // Treat as string
-                                result.put(key, value);
-                            }
-                        }
-                    }
-                }
+            // Use Gson for proper JSON parsing instead of the simple implementation
+            com.google.gson.Gson gson = new com.google.gson.Gson();
+            // Parse as a generic map
+            java.lang.reflect.Type type = new com.google.gson.reflect.TypeToken<Map<String, Object>>(){}.getType();
+            result = gson.fromJson(jsonStr, type);
+            
+            // Handle null result
+            if (result == null) {
+                result = new HashMap<>();
             }
         } catch (Exception e) {
             // Return empty map if parsing fails

@@ -378,7 +378,31 @@ public class DefaultScriptEngine implements ScriptEngine, EnhancedScriptEngine {
             return timeoutResult;
         }
 
-        String blockType = "ACTION"; // Default to action
+        // Determine the block type properly instead of hardcoding to "ACTION"
+        String blockType = BLOCK_TYPE_ACTION; // Default to action
+        if (block != null && block.getAction() != null) {
+            BlockType type = getBlockType(block.getMaterial(), block.getAction());
+            if (type != null) {
+                switch (type) {
+                    case EVENT:
+                        blockType = BLOCK_TYPE_EVENT;
+                        break;
+                    case ACTION:
+                        blockType = BLOCK_TYPE_ACTION;
+                        break;
+                    case CONDITION:
+                        blockType = BLOCK_TYPE_CONDITION;
+                        break;
+                    case CONTROL:
+                        blockType = BLOCK_TYPE_CONTROL;
+                        break;
+                    case FUNCTION:
+                        blockType = BLOCK_TYPE_FUNCTION;
+                        break;
+                }
+            }
+        }
+
         ExecutionResult result = null;
 
         try {
@@ -438,12 +462,19 @@ public class DefaultScriptEngine implements ScriptEngine, EnhancedScriptEngine {
                                 }
                             }
                             
-                            // Evaluate condition
+                            // Evaluate condition properly instead of using placeholder
                             boolean conditionResult = false;
                             if (conditionBlock != null) {
                                 ExecutionResult conditionResultObj = processBlock(conditionBlock, context, recursionDepth + 1);
                                 if (conditionResultObj.isSuccess()) {
-                                    conditionResult = true; // Simplified for now
+                                    // Get the actual condition result from the condition block
+                                    String conditionId = conditionBlock.getAction();
+                                    if (conditionId != null) {
+                                        BlockCondition conditionHandler = conditionFactory.createCondition(conditionId);
+                                        if (conditionHandler != null) {
+                                            conditionResult = conditionHandler.evaluate(conditionBlock, context);
+                                        }
+                                    }
                                 }
                             }
                             
@@ -466,19 +497,26 @@ public class DefaultScriptEngine implements ScriptEngine, EnhancedScriptEngine {
                             
                             int loopCount = 0;
                             while (loopCount < 1000) { // Safety limit
-                                // Evaluate condition
+                                // Evaluate condition properly instead of using placeholder
                                 boolean loopConditionResult = false;
                                 if (loopConditionBlock != null) {
                                     ExecutionResult loopConditionResultObj = processBlock(loopConditionBlock, context, recursionDepth + 1);
                                     if (loopConditionResultObj.isSuccess()) {
-                                        loopConditionResult = true; // Simplified for now
+                                        // Get the actual condition result from the condition block
+                                        String conditionId = loopConditionBlock.getAction();
+                                        if (conditionId != null) {
+                                            BlockCondition conditionHandler = conditionFactory.createCondition(conditionId);
+                                            if (conditionHandler != null) {
+                                                loopConditionResult = conditionHandler.evaluate(loopConditionBlock, context);
+                                            }
+                                        }
                                     }
                                 }
-                                
+                            
                                 if (!loopConditionResult) {
                                     break; // Exit loop
                                 }
-                                
+                            
                                 // Execute loop body
                                 if (loopBodyBlock != null) {
                                     ExecutionResult loopResult = processBlock(loopBodyBlock, context, recursionDepth + 1);
@@ -490,7 +528,7 @@ public class DefaultScriptEngine implements ScriptEngine, EnhancedScriptEngine {
                                         return loopResult; // Exit on error
                                     }
                                 }
-                                
+                            
                                 loopCount++;
                             }
                             break;
@@ -612,12 +650,12 @@ public class DefaultScriptEngine implements ScriptEngine, EnhancedScriptEngine {
                 }
                 return processBlock(block.getNextBlock(), context, recursionDepth + 1);
             }
-            
+        
             // Cache the result before returning
             if (result != null && result.isSuccess() && isCacheable(block)) {
                 executionCache.put(block, cacheContext, result);
             }
-            
+        
             return processBlock(block.getNextBlock(), context, recursionDepth + 1);
         } catch (Exception e) {
             String errorMsg = ERROR_EXECUTING_BLOCK + block.getAction() + ": " + e.getMessage() + 

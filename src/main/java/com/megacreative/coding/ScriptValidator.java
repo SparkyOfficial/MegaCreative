@@ -536,7 +536,30 @@ public class ScriptValidator {
     private boolean isValidBlockType(CodeBlock block, String expectedType) {
         // This would contain logic to validate that the block's material and action
         // are consistent with the expected block type from configuration
-        return true; // Simplified for now
+        if (block == null || expectedType == null) {
+            return false;
+        }
+        
+        // Check if the block config service is available
+        if (blockConfigService == null) {
+            return false;
+        }
+        
+        // Get the block configuration for the material
+        List<BlockConfigService.BlockConfig> configs = blockConfigService.getBlockConfigsForMaterial(block.getMaterial());
+        if (configs == null || configs.isEmpty()) {
+            return false;
+        }
+        
+        // Check if any of the configs supports this action
+        for (BlockConfigService.BlockConfig config : configs) {
+            List<String> actions = config.getActions();
+            if (actions != null && actions.contains(block.getAction())) {
+                return true;
+            }
+        }
+        
+        return false;
     }
     
     /**
