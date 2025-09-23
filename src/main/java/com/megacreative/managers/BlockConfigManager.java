@@ -6,7 +6,7 @@ import com.megacreative.coding.values.DataValue;
 import com.megacreative.coding.values.types.*;
 import com.megacreative.services.BlockConfigService;
 import com.megacreative.services.BlockConfigService.ParameterConfig;
-import com.megacreative.coding.CodingActionGUI;
+import com.megacreative.gui.coding.ActionSelectionGUI;
 import org.bukkit.Bukkit;
 import org.bukkit.Location;
 import org.bukkit.Material;
@@ -93,21 +93,12 @@ public class BlockConfigManager implements Listener {
         
         player.sendMessage("§eВыберите действие для блока...");
         
-        // Create and open CodingActionGUI
-        CodingActionGUI actionGUI = new CodingActionGUI(
+        // Create and open ActionSelectionGUI
+        ActionSelectionGUI actionGUI = new ActionSelectionGUI(
+            plugin, 
             player, 
-            codeBlock.getMaterial(), 
             blockLocation, 
-            availableActions,
-            (selectedAction) -> {
-                // Callback when action is selected
-                codeBlock.setAction(selectedAction);
-                player.sendMessage("§aВыбрано действие: §e" + selectedAction);
-                
-                // Now open parameter configuration
-                showParameterConfigGUI(player, codeBlock, blockLocation);
-            },
-            plugin.getServiceRegistry().getGuiManager()
+            codeBlock.getMaterial()
         );
         actionGUI.open();
     }
