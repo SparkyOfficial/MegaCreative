@@ -146,25 +146,25 @@ public class BlockPlacementHandler implements Listener {
         Material bracketMaterial = structure.getBrackets();
         int bracketDistance = structure.getBracketDistance();
         
-        // Create opening bracket (to the left) - facing east (toward the center)
-        Location openBracketLoc = block.getLocation().clone().add(-bracketDistance, 0, 0);
+        // Create opening bracket ~ ~ 1 from the block, rotated away from the block
+        Location openBracketLoc = block.getLocation().clone().add(0, 0, 1);
         Block openBracketBlock = block.getWorld().getBlockAt(openBracketLoc);
         openBracketBlock.setType(bracketMaterial);
-        // Set piston facing direction (east = toward positive X, which is toward the center block)
+        // Set piston facing direction (away from the center block)
         if (bracketMaterial == Material.PISTON || bracketMaterial == Material.STICKY_PISTON) {
             org.bukkit.block.data.Directional pistonData = (org.bukkit.block.data.Directional) openBracketBlock.getBlockData();
-            pistonData.setFacing(org.bukkit.block.BlockFace.EAST);
+            pistonData.setFacing(org.bukkit.block.BlockFace.SOUTH); // Away from the block (toward positive Z)
             openBracketBlock.setBlockData(pistonData);
         }
         
-        // Create closing bracket (to the right) - facing west (toward the center)
-        Location closeBracketLoc = block.getLocation().clone().add(bracketDistance, 0, 0);
+        // Create closing bracket ~ ~ 3 from the block, rotated toward the block
+        Location closeBracketLoc = block.getLocation().clone().add(0, 0, 3);
         Block closeBracketBlock = block.getWorld().getBlockAt(closeBracketLoc);
         closeBracketBlock.setType(bracketMaterial);
-        // Set piston facing direction (west = toward negative X, which is toward the center block)
+        // Set piston facing direction (toward the center block)
         if (bracketMaterial == Material.PISTON || bracketMaterial == Material.STICKY_PISTON) {
             org.bukkit.block.data.Directional pistonData = (org.bukkit.block.data.Directional) closeBracketBlock.getBlockData();
-            pistonData.setFacing(org.bukkit.block.BlockFace.WEST);
+            pistonData.setFacing(org.bukkit.block.BlockFace.NORTH); // Toward the block (toward negative Z)
             closeBracketBlock.setBlockData(pistonData);
         }
         
