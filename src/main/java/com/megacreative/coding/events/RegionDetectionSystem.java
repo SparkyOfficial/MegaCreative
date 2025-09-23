@@ -537,7 +537,10 @@ public class RegionDetectionSystem {
             
             // Trigger any associated scripts for this region event
             // Look up region-specific scripts from the data store
-            String regionId = eventData.get("regionId") != null ? eventData.get("regionId").asString() : null;
+            String regionId = null;
+            if (eventData != null && eventData.get("regionId") != null) {
+                regionId = eventData.get("regionId").asString();
+            }
             if (regionId != null) {
                 try {
                     // Get the coding manager to access scripts

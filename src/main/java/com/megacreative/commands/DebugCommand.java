@@ -285,7 +285,12 @@ public class DebugCommand implements CommandExecutor, TabCompleter {
                         expression = expressionBuilder.toString();
                     }
                     
-                    plugin.getScriptDebugger().watchVariable(player, variableName, expression);
+                    // Add null check for plugin and scriptDebugger
+                    if (plugin != null && plugin.getScriptDebugger() != null) {
+                        plugin.getScriptDebugger().watchVariable(player, variableName, expression);
+                    } else {
+                        player.sendMessage("§cDebug system not available");
+                    }
                 } else {
                     player.sendMessage("§cИспользование: /debug watch add <variable> [expression]");
                 }
