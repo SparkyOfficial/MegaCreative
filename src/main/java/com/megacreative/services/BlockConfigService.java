@@ -70,11 +70,8 @@ public class BlockConfigService {
      * This should be called after the service registry is fully initialized
      */
     public void loadActionParametersForAllBlocks() {
-        if (plugin.getServiceRegistry() == null) {
-            plugin.getLogger().warning("ServiceRegistry not available, deferring action parameter loading");
-            return;
-        }
-        
+        // Always attempt to load action parameters, even if service registry is not fully initialized
+        // This is needed because the method might be called during initialization
         plugin.getLogger().info("Loading action parameters for all block configurations...");
         for (BlockConfig config : blockConfigs.values()) {
             try {
@@ -100,6 +97,28 @@ public class BlockConfigService {
                     // Update the material mapping
                     materialToBlockIds.computeIfAbsent(material, k -> new ArrayList<>()).add(config.getId());
                     plugin.getLogger().info("Set material " + material.name() + " for block config " + config.getId());
+                } else {
+                    // Try to determine material from the block type
+                    String type = config.getType();
+                    if ("EVENT".equals(type)) {
+                        material = Material.DIAMOND_BLOCK;
+                    } else if ("ACTION".equals(type)) {
+                        material = Material.COBBLESTONE;
+                    } else if ("CONDITION".equals(type)) {
+                        material = Material.OAK_PLANKS;
+                    } else if ("CONTROL".equals(type)) {
+                        material = Material.PISTON;
+                    } else if ("FUNCTION".equals(type)) {
+                        material = Material.LAPIS_BLOCK;
+                    } else if ("VARIABLE".equals(type)) {
+                        material = Material.IRON_BLOCK;
+                    }
+                    
+                    if (material != null) {
+                        config.setMaterial(material);
+                        materialToBlockIds.computeIfAbsent(material, k -> new ArrayList<>()).add(config.getId());
+                        plugin.getLogger().info("Set fallback material " + material.name() + " for block config " + config.getId() + " (type: " + type + ")");
+                    }
                 }
             }
         }
@@ -161,6 +180,16 @@ public class BlockConfigService {
                             // For blocks that don't have a direct material match, we still want to register them
                             // This is for cases where the block ID doesn't match the material name
                             // For example, OBSIDIAN is a condition block, but we still want to register it
+                            // Try to find a material by looking at the actions list
+                            if (!blockConfig.getActions().isEmpty()) {
+                                // Use the first action as a fallback to determine material
+                                material = Material.matchMaterial(id);
+                                if (material != null) {
+                                    blockConfig.setMaterial(material);
+                                    materialToBlockIds.computeIfAbsent(material, k -> new ArrayList<>()).add(id);
+                                    plugin.getLogger().info("Fallback material set for block config: " + id + " with material " + material);
+                                }
+                            }
                         }
                     } catch (Exception e) {
                         plugin.getLogger().warning("Failed to load block config for ID '" + id + "': " + e.getMessage());
@@ -607,29 +636,15 @@ public class BlockConfigService {
             // Store actions list
             this.actions = section.getStringList("actions");
             
-            // Load action parameters - defer this until after service registry is fully initialized
+            // Load action parameters immediately if possible
             this.actionParameters = new HashMap<>();
-            // ConfigurationSection actionConfigurations = plugin.getServiceRegistry().getBlockConfigService().getActionConfigurations();
-            // if (actionConfigurations != null) {
-            //     for (String action : this.actions) {
-            //         ConfigurationSection actionSection = actionConfigurations.getConfigurationSection(action);
-            //         if (actionSection != null) {
-            //             ConfigurationSection slots = actionSection.getConfigurationSection("slots");
-            //             if (slots != null) {
-            //                 for (String slotKey : slots.getKeys(false)) {
-            //                     ConfigurationSection slotSection = slots.getConfigurationSection(slotKey);
-            //                     if (slotSection != null) {
-            //                         String slotName = slotSection.getString("slot_name");
-            //                         if (slotName != null) {
-            //                             ParameterConfig paramConfig = new ParameterConfig(slotSection);
-            //                             this.actionParameters.put(slotName, paramConfig);
-            //                         }
-            //                     }
-            //                 }
-            //             }
-            //         }
-            //     }
-            // }
+            try {
+                // Try to load action parameters immediately
+                loadActionParameters(plugin);
+            } catch (Exception e) {
+                // If it fails, it will be loaded later when service registry is fully initialized
+                java.util.logging.Logger.getLogger(BlockConfig.class.getName()).fine("Deferred action parameter loading for block config " + id + ": " + e.getMessage());
+            }
         }
         
         /**
