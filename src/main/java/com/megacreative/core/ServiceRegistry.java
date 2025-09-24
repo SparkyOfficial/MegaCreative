@@ -257,6 +257,9 @@ public class ServiceRegistry {
         // Now that service registry is fully initialized, load action parameters for all block configs
         // This fixes the issue where BlockConfig tried to access service registry during construction
         if (blockConfigService != null) {
+            // Ensure all materials are properly set first
+            blockConfigService.ensureMaterialsAreSet();
+            
             try {
                 for (com.megacreative.services.BlockConfigService.BlockConfig config : blockConfigService.getAllBlockConfigs()) {
                     config.loadActionParameters((MegaCreative) plugin);
@@ -414,6 +417,8 @@ public class ServiceRegistry {
         try {
             // Load action parameters for all block configs after all services are initialized
             if (blockConfigService != null) {
+                // Ensure all materials are properly set first
+                blockConfigService.ensureMaterialsAreSet();
                 blockConfigService.loadActionParametersForAllBlocks();
             }
             

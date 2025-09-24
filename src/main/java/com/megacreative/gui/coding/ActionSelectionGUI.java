@@ -99,7 +99,18 @@ public class ActionSelectionGUI implements GUIManager.ManagedGUIInterface {
     private String getBlockDisplayName() {
         // Get display name from block config service
         BlockConfigService.BlockConfig config = blockConfigService.getBlockConfigByMaterial(blockMaterial);
-        return config != null ? config.getDisplayName() : blockMaterial.name();
+        if (config != null) {
+            return config.getDisplayName();
+        }
+        
+        // Fallback: try to find any config with this material
+        for (BlockConfigService.BlockConfig blockConfig : blockConfigService.getAllBlockConfigs()) {
+            if (blockConfig.getMaterial() == blockMaterial) {
+                return blockConfig.getDisplayName();
+            }
+        }
+        
+        return blockMaterial.name();
     }
     
     /**
@@ -303,6 +314,16 @@ public class ActionSelectionGUI implements GUIManager.ManagedGUIInterface {
                 // Handle other categories based on block type
                 else if (actionConfig.getType().equals(category)) {
                     categoryActions.add(actionId);
+                }
+            }
+        }
+        
+        // If no actions found for material, get all actions for this category
+        if (categoryActions.isEmpty()) {
+            // Get all block configs and filter by category
+            for (BlockConfigService.BlockConfig config : blockConfigService.getAllBlockConfigs()) {
+                if (config.getType().equals(category)) {
+                    categoryActions.add(config.getId());
                 }
             }
         }

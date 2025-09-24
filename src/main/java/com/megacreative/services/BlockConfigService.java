@@ -85,6 +85,25 @@ public class BlockConfigService {
         }
         plugin.getLogger().info("Finished loading action parameters for all block configurations");
     }
+    
+    /**
+     * Ensures all block configurations have their materials properly set
+     * This fixes an issue where materials might not be set correctly during initial loading
+     */
+    public void ensureMaterialsAreSet() {
+        for (BlockConfig config : blockConfigs.values()) {
+            if (config.getMaterial() == null) {
+                // Try to set material based on the config ID
+                Material material = Material.matchMaterial(config.getId());
+                if (material != null) {
+                    config.setMaterial(material);
+                    // Update the material mapping
+                    materialToBlockIds.computeIfAbsent(material, k -> new ArrayList<>()).add(config.getId());
+                    plugin.getLogger().info("Set material " + material.name() + " for block config " + config.getId());
+                }
+            }
+        }
+    }
 
     /**
      * Загружает конфигурацию блоков из файла
@@ -157,6 +176,9 @@ public class BlockConfigService {
         plugin.getLogger().info("Loaded " + blockConfigs.size() + " block definitions from coding_blocks.yml.");
         // Загружено определений блоков из coding_blocks.yml
         // Blockdefinitionen aus coding_blocks.yml geladen
+        
+        // Ensure all materials are properly set
+        ensureMaterialsAreSet();
         
         // Log loaded materials for debugging
         plugin.getLogger().info("Loaded materials: " + materialToBlockIds.keySet().size());
@@ -643,6 +665,19 @@ public class BlockConfigService {
                                             ParameterConfig paramConfig = new ParameterConfig(slotSection);
                                             this.actionParameters.put(slotName, paramConfig);
                                         }
+                                    }
+                                }
+                            }
+                            
+                            // Also load item groups
+                            ConfigurationSection itemGroups = actionSection.getConfigurationSection("item_groups");
+                            if (itemGroups != null) {
+                                for (String groupKey : itemGroups.getKeys(false)) {
+                                    ConfigurationSection groupSection = itemGroups.getConfigurationSection(groupKey);
+                                    if (groupSection != null) {
+                                        // For item groups, we'll create a special parameter config
+                                        ParameterConfig paramConfig = new ParameterConfig(groupSection);
+                                        this.actionParameters.put(groupKey, paramConfig);
                                     }
                                 }
                             }
