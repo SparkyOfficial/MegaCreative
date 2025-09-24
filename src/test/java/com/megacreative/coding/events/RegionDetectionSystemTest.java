@@ -62,7 +62,7 @@ class RegionDetectionSystemTest {
         regionDetectionSystem.defineRegion(regionId, worldName, minPoint, maxPoint, description, metadata);
         
         // Assert
-        Region region = regionDetectionSystem.getRegion(regionId);
+        RegionDetectionSystem.Region region = regionDetectionSystem.getRegion(regionId);
         assertNotNull(region);
         assertEquals(regionId, region.getId());
         assertEquals(worldName, region.getWorldName());
@@ -86,7 +86,7 @@ class RegionDetectionSystemTest {
         regionDetectionSystem.defineCircularRegion(regionId, worldName, center, radius, description, metadata);
         
         // Assert
-        Region region = regionDetectionSystem.getRegion(regionId);
+        RegionDetectionSystem.Region region = regionDetectionSystem.getRegion(regionId);
         assertNotNull(region);
         assertEquals(regionId, region.getId());
         assertEquals(worldName, region.getWorldName());
