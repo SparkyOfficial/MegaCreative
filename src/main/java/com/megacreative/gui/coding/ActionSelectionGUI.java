@@ -223,6 +223,14 @@ public class ActionSelectionGUI implements GUIManager.ManagedGUIInterface {
             }
         }
         
+        // Handle back button
+        if (displayName.contains("Назад")) {
+            // Reopen the main category selection GUI
+            setupInventory();
+            player.openInventory(inventory);
+            return;
+        }
+        
         // Handle other clicks
         List<String> lore = meta.getLore();
         if (lore != null) {
@@ -315,6 +323,10 @@ public class ActionSelectionGUI implements GUIManager.ManagedGUIInterface {
                 else if (actionConfig.getType().equals(category)) {
                     categoryActions.add(actionId);
                 }
+                // If category is "ACTION", include all non-event actions
+                else if ("ACTION".equals(category) && !"EVENT".equals(actionConfig.getType())) {
+                    categoryActions.add(actionId);
+                }
             }
         }
         
@@ -325,6 +337,14 @@ public class ActionSelectionGUI implements GUIManager.ManagedGUIInterface {
                 if (config.getType().equals(category)) {
                     categoryActions.add(config.getId());
                 }
+            }
+        }
+        
+        // If still no actions, get all actions regardless of category (fallback)
+        if (categoryActions.isEmpty()) {
+            for (BlockConfigService.BlockConfig config : blockConfigService.getAllBlockConfigs()) {
+                // Add all actions for better user experience
+                categoryActions.add(config.getId());
             }
         }
         

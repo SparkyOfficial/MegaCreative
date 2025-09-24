@@ -279,11 +279,19 @@ public class AutoConnectionManager implements Listener {
             plugin.getLogger().fine("Auto-connecting block at " + location + " (line " + line + ")");
         }
         
+        // Skip connection logic for bracket blocks
+        if (codeBlock.isBracket()) {
+            if (plugin != null) {
+                plugin.getLogger().fine("Skipping connection for bracket block at " + location);
+            }
+            return;
+        }
+        
         // Step 1: Connect with previous block in the same line (horizontal connection)
         Location prevLocation = getPreviousLocationInLine(location);
         if (prevLocation != null) {
             CodeBlock prevBlock = locationToBlock.get(prevLocation);
-            if (prevBlock != null) {
+            if (prevBlock != null && !prevBlock.isBracket()) { // Skip brackets
                 prevBlock.setNextBlock(codeBlock);
                 if (plugin != null) {
                     plugin.getLogger().fine("Connected horizontal: " + prevLocation + " -> " + location);
@@ -298,7 +306,7 @@ public class AutoConnectionManager implements Listener {
         Location nextLocation = getNextLocationInLine(location);
         if (nextLocation != null) {
             CodeBlock nextBlock = locationToBlock.get(nextLocation);
-            if (nextBlock != null) {
+            if (nextBlock != null && !nextBlock.isBracket()) { // Skip brackets
                 codeBlock.setNextBlock(nextBlock);
                 if (plugin != null) {
                     plugin.getLogger().fine("Connected horizontal: " + location + " -> " + nextLocation);
@@ -384,6 +392,13 @@ public class AutoConnectionManager implements Listener {
                         }
                         bracketBalance--; // Match this opening bracket with previous closing bracket
                     }
+                }
+                
+                // If we've found a non-bracket block that could be a parent, check if it's appropriate
+                else if (checkBlock != null && bracketBalance == 0 && isControlBlock(checkBlock)) {
+                    // This could be a parent block (like an IF statement) that doesn't use brackets
+                    logBracketParentFound(childLocation, x, line);
+                    return checkBlock;
                 }
             }
         }

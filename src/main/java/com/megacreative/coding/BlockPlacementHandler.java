@@ -120,6 +120,9 @@ public class BlockPlacementHandler implements Listener {
             createBracketsForConstructor(player, block, config);
         }
         
+        // Check if we're placing a block near existing brackets and handle accordingly
+        handleNearbyBrackets(player, block, config);
+        
         if (config.isConstructor()) {
             player.sendMessage("§a✓ Constructor block placed!");
             player.sendMessage("§7Right-click to configure parameters");
@@ -134,6 +137,42 @@ public class BlockPlacementHandler implements Listener {
     }
 
     /**
+     * Handles nearby brackets when placing a block
+     * @param player The player placing the block
+     * @param block The block being placed
+     * @param config The block configuration
+     */
+    private void handleNearbyBrackets(Player player, Block block, BlockConfigService.BlockConfig config) {
+        // Check if there are existing brackets nearby that should be connected
+        Location openBracketLoc = block.getLocation().clone().add(1, 0, 0);
+        Location closeBracketLoc = block.getLocation().clone().add(3, 0, 0);
+        
+        // If there are existing brackets, make sure they're properly connected
+        if (hasExistingBracket(openBracketLoc)) {
+            // Update the bracket if needed
+            updateBracketIfNecessary(openBracketLoc, CodeBlock.BracketType.OPEN);
+        }
+        
+        if (hasExistingBracket(closeBracketLoc)) {
+            // Update the bracket if needed
+            updateBracketIfNecessary(closeBracketLoc, CodeBlock.BracketType.CLOSE);
+        }
+    }
+    
+    /**
+     * Updates a bracket if necessary
+     * @param location The location of the bracket
+     * @param bracketType The type of bracket
+     */
+    private void updateBracketIfNecessary(Location location, CodeBlock.BracketType bracketType) {
+        CodeBlock bracketBlock = blockCodeBlocks.get(location);
+        if (bracketBlock != null && bracketBlock.isBracket()) {
+            // Ensure the bracket type is correct
+            bracketBlock.setBracketType(bracketType);
+        }
+    }
+    
+    /**
      * Creates brackets for constructor blocks
      */
     private void createBracketsForConstructor(Player player, Block block, BlockConfigService.BlockConfig config) {
@@ -146,40 +185,48 @@ public class BlockPlacementHandler implements Listener {
         Material bracketMaterial = structure.getBrackets();
         int bracketDistance = structure.getBracketDistance();
         
-        // Create opening bracket ~ ~ 1 from the block, rotated away from the block (to the right)
+        // Check if brackets already exist at these positions
         Location openBracketLoc = block.getLocation().clone().add(1, 0, 0);
-        Block openBracketBlock = block.getWorld().getBlockAt(openBracketLoc);
-        openBracketBlock.setType(bracketMaterial);
-        // Set piston facing direction (away from the center block)
-        if (bracketMaterial == Material.PISTON || bracketMaterial == Material.STICKY_PISTON) {
-            org.bukkit.block.data.Directional pistonData = (org.bukkit.block.data.Directional) openBracketBlock.getBlockData();
-            pistonData.setFacing(org.bukkit.block.BlockFace.EAST); // Away from the block (toward positive X)
-            openBracketBlock.setBlockData(pistonData);
-        }
-        
-        // Create closing bracket ~ ~ 3 from the block, rotated toward the block (to the right)
         Location closeBracketLoc = block.getLocation().clone().add(3, 0, 0);
-        Block closeBracketBlock = block.getWorld().getBlockAt(closeBracketLoc);
-        closeBracketBlock.setType(bracketMaterial);
-        // Set piston facing direction (toward the center block)
-        if (bracketMaterial == Material.PISTON || bracketMaterial == Material.STICKY_PISTON) {
-            org.bukkit.block.data.Directional pistonData = (org.bukkit.block.data.Directional) closeBracketBlock.getBlockData();
-            pistonData.setFacing(org.bukkit.block.BlockFace.WEST); // Toward the block (toward negative X)
-            closeBracketBlock.setBlockData(pistonData);
+        
+        // Only create opening bracket if position is empty or not a protected bracket
+        if (!isProtectedBracket(openBracketLoc) && !hasExistingBracket(openBracketLoc)) {
+            Block openBracketBlock = block.getWorld().getBlockAt(openBracketLoc);
+            openBracketBlock.setType(bracketMaterial);
+            // Set piston facing direction (away from the center block)
+            if (bracketMaterial == Material.PISTON || bracketMaterial == Material.STICKY_PISTON) {
+                org.bukkit.block.data.Directional pistonData = (org.bukkit.block.data.Directional) openBracketBlock.getBlockData();
+                pistonData.setFacing(org.bukkit.block.BlockFace.EAST); // Away from the block (toward positive X)
+                openBracketBlock.setBlockData(pistonData);
+            }
+            
+            // Register brackets as code blocks
+            CodeBlock openBracket = new CodeBlock(bracketMaterial, "BRACKET");
+            openBracket.setBracketType(CodeBlock.BracketType.OPEN);
+            blockCodeBlocks.put(openBracketLoc, openBracket);
+            
+            // Add visual effects
+            player.spawnParticle(org.bukkit.Particle.ENCHANTMENT_TABLE, openBracketLoc.clone().add(0.5, 0.5, 0.5), 5, 0.3, 0.3, 0.3, 0);
         }
         
-        // Register brackets as code blocks
-        CodeBlock openBracket = new CodeBlock(bracketMaterial, "BRACKET");
-        openBracket.setBracketType(CodeBlock.BracketType.OPEN);
-        blockCodeBlocks.put(openBracketLoc, openBracket);
-        
-        CodeBlock closeBracket = new CodeBlock(bracketMaterial, "BRACKET");
-        closeBracket.setBracketType(CodeBlock.BracketType.CLOSE);
-        blockCodeBlocks.put(closeBracketLoc, closeBracket);
-        
-        // Add visual effects
-        player.spawnParticle(org.bukkit.Particle.ENCHANTMENT_TABLE, openBracketLoc.add(0.5, 0.5, 0.5), 5, 0.3, 0.3, 0.3, 0);
-        player.spawnParticle(org.bukkit.Particle.ENCHANTMENT_TABLE, closeBracketLoc.add(0.5, 0.5, 0.5), 5, 0.3, 0.3, 0.3, 0);
+        // Only create closing bracket if position is empty or not a protected bracket
+        if (!isProtectedBracket(closeBracketLoc) && !hasExistingBracket(closeBracketLoc)) {
+            Block closeBracketBlock = block.getWorld().getBlockAt(closeBracketLoc);
+            closeBracketBlock.setType(bracketMaterial);
+            // Set piston facing direction (toward the center block)
+            if (bracketMaterial == Material.PISTON || bracketMaterial == Material.STICKY_PISTON) {
+                org.bukkit.block.data.Directional pistonData = (org.bukkit.block.data.Directional) closeBracketBlock.getBlockData();
+                pistonData.setFacing(org.bukkit.block.BlockFace.WEST); // Toward the block (toward negative X)
+                closeBracketBlock.setBlockData(pistonData);
+            }
+            
+            CodeBlock closeBracket = new CodeBlock(bracketMaterial, "BRACKET");
+            closeBracket.setBracketType(CodeBlock.BracketType.CLOSE);
+            blockCodeBlocks.put(closeBracketLoc, closeBracket);
+            
+            // Add visual effects
+            player.spawnParticle(org.bukkit.Particle.ENCHANTMENT_TABLE, closeBracketLoc.clone().add(0.5, 0.5, 0.5), 5, 0.3, 0.3, 0.3, 0);
+        }
         
         player.sendMessage("§a✓ Brackets created automatically for constructor block");
     }
@@ -220,6 +267,15 @@ public class BlockPlacementHandler implements Listener {
         Location loc = event.getBlock().getLocation();
         Player player = event.getPlayer();
         
+        // Check if this is a bracket block that should be protected
+        if (isProtectedBracket(loc)) {
+            // Cancel the event to prevent breaking brackets
+            event.setCancelled(true);
+            player.sendMessage("§cBrackets cannot be broken directly!");
+            player.playSound(loc, org.bukkit.Sound.BLOCK_NOTE_BLOCK_BASS, 1.0f, 0.5f);
+            return;
+        }
+        
         // Remove block from our map
         if (blockCodeBlocks.containsKey(loc)) {
             CodeBlock removedBlock = blockCodeBlocks.remove(loc);
@@ -238,6 +294,15 @@ public class BlockPlacementHandler implements Listener {
         
         // Special handling for piston brackets
         else if (event.getBlock().getType() == Material.PISTON || event.getBlock().getType() == Material.STICKY_PISTON) {
+            // Check if this bracket is protected
+            if (isProtectedBracket(loc)) {
+                // Cancel the event to prevent breaking brackets
+                event.setCancelled(true);
+                player.sendMessage("§cBrackets cannot be broken directly!");
+                player.playSound(loc, org.bukkit.Sound.BLOCK_NOTE_BLOCK_BASS, 1.0f, 0.5f);
+                return;
+            }
+            
             // This is a piston bracket, remove it from our map
             blockCodeBlocks.remove(loc);
             
@@ -347,6 +412,62 @@ public class BlockPlacementHandler implements Listener {
                worldName.contains("-code") || worldName.endsWith("-code") || 
                worldName.contains("_code") || worldName.endsWith("_dev") ||
                worldName.contains("megacreative_");
+    }
+    
+    /**
+     * Checks if a bracket is protected and should not be broken
+     * @param location The location to check
+     * @return true if the bracket is protected, false otherwise
+     */
+    private boolean isProtectedBracket(Location location) {
+        // Get the code block at this location
+        CodeBlock codeBlock = blockCodeBlocks.get(location);
+        
+        // If this is a bracket block, check if it's part of a constructor structure
+        if (codeBlock != null && codeBlock.isBracket()) {
+            // Find nearby constructor blocks
+            Location constructorLoc = findNearbyConstructor(location);
+            if (constructorLoc != null) {
+                return true; // Bracket is protected as part of constructor structure
+            }
+        }
+        
+        return false;
+    }
+    
+    /**
+     * Checks if there's already a bracket at the specified location
+     * @param location The location to check
+     * @return true if there's already a bracket at this location, false otherwise
+     */
+    private boolean hasExistingBracket(Location location) {
+        CodeBlock existingBlock = blockCodeBlocks.get(location);
+        return existingBlock != null && existingBlock.isBracket();
+    }
+    
+    /**
+     * Finds a nearby constructor block that might be associated with a bracket
+     * @param bracketLocation The location of the bracket
+     * @return Location of the constructor block, or null if none found
+     */
+    private Location findNearbyConstructor(Location bracketLocation) {
+        // Check adjacent locations for constructor blocks
+        for (int x = -3; x <= 3; x++) {
+            for (int z = -3; z <= 3; z++) {
+                Location checkLoc = bracketLocation.clone().add(x, 0, z);
+                CodeBlock checkBlock = blockCodeBlocks.get(checkLoc);
+                
+                if (checkBlock != null) {
+                    // Get block configuration
+                    BlockConfigService.BlockConfig config = blockConfigService.getBlockConfig(checkBlock.getAction());
+                    if (config != null && config.isConstructor()) {
+                        return checkLoc; // Found a constructor block
+                    }
+                }
+            }
+        }
+        
+        return null;
     }
     
     /**
