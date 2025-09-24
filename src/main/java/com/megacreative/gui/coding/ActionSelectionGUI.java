@@ -302,51 +302,40 @@ public class ActionSelectionGUI implements GUIManager.ManagedGUIInterface {
             return;
         }
         
-        // Get available actions for this block material
-        List<String> availableActions = blockConfigService.getActionsForMaterial(blockMaterial);
-        
-        // Filter actions by category
+        // Get all block configs and filter by category
         List<String> categoryActions = new ArrayList<>();
-        for (String actionId : availableActions) {
-            BlockConfigService.BlockConfig actionConfig = blockConfigService.getBlockConfig(actionId);
-            if (actionConfig != null) {
-                // Special handling for variables
-                if ("VARIABLE".equals(category) && blockMaterial == Material.IRON_BLOCK) {
-                    categoryActions.add(actionId);
-                }
-                // Special handling for functions
-                else if ("FUNCTION".equals(category) && 
-                        (blockMaterial == Material.LAPIS_BLOCK || blockMaterial == Material.BOOKSHELF)) {
-                    categoryActions.add(actionId);
-                }
-                // Handle other categories based on block type
-                else if (actionConfig.getType().equals(category)) {
-                    categoryActions.add(actionId);
-                }
-                // If category is "ACTION", include all non-event actions
-                else if ("ACTION".equals(category) && !"EVENT".equals(actionConfig.getType())) {
-                    categoryActions.add(actionId);
-                }
+        
+        // Get all block configs and filter by category
+        for (BlockConfigService.BlockConfig config : blockConfigService.getAllBlockConfigs()) {
+            // Special handling for variables
+            if ("VARIABLE".equals(category) && blockMaterial == Material.IRON_BLOCK) {
+                categoryActions.add(config.getId());
+            }
+            // Special handling for functions
+            else if ("FUNCTION".equals(category) && 
+                    (blockMaterial == Material.LAPIS_BLOCK || blockMaterial == Material.BOOKSHELF)) {
+                categoryActions.add(config.getId());
+            }
+            // Handle other categories based on block type
+            else if (config.getType().equals(category)) {
+                categoryActions.add(config.getId());
+            }
+            // If category is "ACTION", include all non-event actions
+            else if ("ACTION".equals(category) && !"EVENT".equals(config.getType())) {
+                categoryActions.add(config.getId());
             }
         }
         
-        // If no actions found for material, get all actions for this category
-        if (categoryActions.isEmpty()) {
-            // Get all block configs and filter by category
-            for (BlockConfigService.BlockConfig config : blockConfigService.getAllBlockConfigs()) {
-                if (config.getType().equals(category)) {
-                    categoryActions.add(config.getId());
-                }
-            }
-        }
-        
-        // If still no actions, get all actions regardless of category (fallback)
+        // If no actions found, get all actions regardless of category (fallback)
         if (categoryActions.isEmpty()) {
             for (BlockConfigService.BlockConfig config : blockConfigService.getAllBlockConfigs()) {
                 // Add all actions for better user experience
                 categoryActions.add(config.getId());
             }
         }
+        
+        // Sort actions alphabetically for better user experience
+        Collections.sort(categoryActions);
         
         // Create action items
         int slot = 10;
@@ -717,13 +706,12 @@ public class ActionSelectionGUI implements GUIManager.ManagedGUIInterface {
      */
     private void selectAction(String actionId) {
         // Get the code block
-        BlockPlacementHandler placementHandler = plugin.getBlockPlacementHandler();
-        if (placementHandler == null) {
+        if (plugin.getBlockPlacementHandler() == null) {
             player.sendMessage("§cОшибка: Не удалось получить обработчик блоков");
             return;
         }
         
-        CodeBlock codeBlock = placementHandler.getCodeBlock(blockLocation);
+        CodeBlock codeBlock = plugin.getBlockPlacementHandler().getCodeBlock(blockLocation);
         if (codeBlock == null) {
             player.sendMessage("§cОшибка: Блок кода не найден");
             return;
@@ -731,6 +719,9 @@ public class ActionSelectionGUI implements GUIManager.ManagedGUIInterface {
         
         // Set the action
         codeBlock.setAction(actionId);
+        
+        // Update the sign to reflect the new action
+        plugin.getBlockPlacementHandler().createSignForBlock(blockLocation, codeBlock);
         
         // Save the world
         var creativeWorld = plugin.getWorldManager().findCreativeWorldByBukkit(player.getWorld());

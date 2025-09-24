@@ -172,10 +172,9 @@ public class WorldLoadListener implements Listener {
             }
 
             // Recreate the CodeBlock object for this physical block
-            // placementHandler.recreateCodeBlockFromExisting(codeBlock, sign);
+            CodeBlock recreatedBlock = placementHandler.recreateCodeBlockFromExisting(codeBlock, sign);
             
             // Add to AutoConnectionManager tracking
-            CodeBlock recreatedBlock = placementHandler.getCodeBlock(codeBlock.getLocation());
             if (recreatedBlock != null) {
                 connectionManager.addCodeBlock(codeBlock.getLocation(), recreatedBlock);
             }
@@ -217,7 +216,9 @@ public class WorldLoadListener implements Listener {
         for (BlockFace face : faces) {
             Block potentialBlock = signBlock.getRelative(face.getOppositeFace());
             // Check if this is a configured code block material
-            if (plugin.getServiceRegistry().getBlockConfigService().isCodeBlock(potentialBlock.getType())) {
+            if (plugin.getServiceRegistry() != null && 
+                plugin.getServiceRegistry().getBlockConfigService() != null &&
+                plugin.getServiceRegistry().getBlockConfigService().isCodeBlock(potentialBlock.getType())) {
                 return potentialBlock;
             }
         }
