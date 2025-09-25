@@ -14,10 +14,11 @@ public class IsOpEditor extends AbstractParameterEditor {
         super(plugin, player, codeBlock, 9, "Is Op Editor");
         
         // Set up the inventory with default items
-        setupInventory();
+        populateItems();
     }
     
-    private void setupInventory() {
+    @Override
+    public void populateItems() {
         inventory.clear();
         
         // Info slot

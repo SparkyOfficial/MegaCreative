@@ -1,49 +1,46 @@
-package com.megacreative.gui.editors.conditions;
+package com.megacreative.gui.editors.actions;
 
 import com.megacreative.MegaCreative;
 import com.megacreative.coding.CodeBlock;
 import com.megacreative.gui.editors.AbstractParameterEditor;
 import com.megacreative.gui.AnvilInputGUI;
-import com.megacreative.coding.values.DataValue;
 import org.bukkit.Material;
 import org.bukkit.entity.Player;
 import org.bukkit.event.inventory.InventoryClickEvent;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.inventory.meta.ItemMeta;
 
-public class IsNearBlockEditor extends AbstractParameterEditor {
+public class GetVarEditor extends AbstractParameterEditor {
     
-    public IsNearBlockEditor(MegaCreative plugin, Player player, CodeBlock codeBlock) {
-        super(plugin, player, codeBlock, 9, "Is Near Block Editor");
+    public GetVarEditor(MegaCreative plugin, Player player, CodeBlock codeBlock) {
+        super(plugin, player, codeBlock, 9, "Get Variable Editor");
     }
     
     @Override
     public void populateItems() {
         inventory.clear();
         
-        // Block type slot
-        ItemStack blockItem = new ItemStack(Material.GLASS);
-        ItemMeta blockMeta = blockItem.getItemMeta();
-        blockMeta.setDisplayName("§eТип блока");
-        DataValue blockType = codeBlock.getParameter("block", DataValue.of("STONE"));
-        blockMeta.setLore(java.util.Arrays.asList(
-            "§7Введите тип блока для проверки",
-            "§aТекущее значение: §f" + (blockType != null ? blockType.asString() : "STONE")
+        // Variable name slot
+        ItemStack varItem = new ItemStack(Material.IRON_INGOT);
+        ItemMeta varMeta = varItem.getItemMeta();
+        varMeta.setDisplayName("§eИмя переменной");
+        varMeta.setLore(java.util.Arrays.asList(
+            "§7Введите имя переменной для получения",
+            "§aТекущее значение: §f" + codeBlock.getParameter("var", com.megacreative.coding.values.DataValue.of("myVar")).asString()
         ));
-        blockItem.setItemMeta(blockMeta);
-        inventory.setItem(0, blockItem);
+        varItem.setItemMeta(varMeta);
+        inventory.setItem(0, varItem);
         
-        // Radius slot
-        ItemStack radiusItem = new ItemStack(Material.COMPASS);
-        ItemMeta radiusMeta = radiusItem.getItemMeta();
-        radiusMeta.setDisplayName("§eРадиус");
-        DataValue radius = codeBlock.getParameter("radius", DataValue.of("5"));
-        radiusMeta.setLore(java.util.Arrays.asList(
-            "§7Введите радиус проверки",
-            "§aТекущее значение: §f" + (radius != null ? radius.asString() : "5")
+        // Target variable slot
+        ItemStack targetItem = new ItemStack(Material.GOLD_INGOT);
+        ItemMeta targetMeta = targetItem.getItemMeta();
+        targetMeta.setDisplayName("§eЦелевая переменная");
+        targetMeta.setLore(java.util.Arrays.asList(
+            "§7Введите имя целевой переменной",
+            "§aТекущее значение: §f" + codeBlock.getParameter("target", com.megacreative.coding.values.DataValue.of("result")).asString()
         ));
-        radiusItem.setItemMeta(radiusMeta);
-        inventory.setItem(1, radiusItem);
+        targetItem.setItemMeta(targetMeta);
+        inventory.setItem(1, targetItem);
         
         // Help item
         ItemStack helpItem = new ItemStack(Material.BOOK);
@@ -51,11 +48,11 @@ public class IsNearBlockEditor extends AbstractParameterEditor {
         helpMeta.setDisplayName("§6Помощь");
         helpMeta.setLore(java.util.Arrays.asList(
             "§7Этот редактор позволяет настроить",
-            "§7условие проверки нахождения рядом с блоком",
+            "§7действие получения значения переменной",
             "",
             "§eКак использовать:",
-            "§71. Укажите тип блока для проверки",
-            "§72. Установите радиус проверки"
+            "§71. Укажите имя переменной для получения",
+            "§72. Установите целевую переменную"
         ));
         helpItem.setItemMeta(helpMeta);
         inventory.setItem(8, helpItem);
@@ -69,16 +66,15 @@ public class IsNearBlockEditor extends AbstractParameterEditor {
         Player player = (Player) event.getWhoClicked();
         
         switch (slot) {
-            case 0: // Block type slot
-                // Open anvil GUI for block type input
-                DataValue currentBlock = codeBlock.getParameter("block", DataValue.of("STONE"));
+            case 0: // Variable name slot
+                // Open anvil GUI for variable name input
                 new AnvilInputGUI(
                     plugin, 
                     player, 
-                    "Введите тип блока", 
+                    "Введите имя переменной", 
                     newValue -> {
-                        codeBlock.setParameter("block", DataValue.of(newValue));
-                        player.sendMessage("§aТип блока установлен на: §f" + newValue);
+                        codeBlock.setParameter("var", newValue);
+                        player.sendMessage("§aИмя переменной установлено на: §f" + newValue);
                         populateItems(); // Refresh the inventory
                     },
                     () -> {} // Empty cancel callback
@@ -86,16 +82,15 @@ public class IsNearBlockEditor extends AbstractParameterEditor {
                 player.closeInventory();
                 break;
                 
-            case 1: // Radius slot
-                // Open anvil GUI for radius input
-                DataValue currentRadius = codeBlock.getParameter("radius", DataValue.of("5"));
+            case 1: // Target variable slot
+                // Open anvil GUI for target variable input
                 new AnvilInputGUI(
                     plugin, 
                     player, 
-                    "Введите радиус", 
+                    "Введите имя целевой переменной", 
                     newValue -> {
-                        codeBlock.setParameter("radius", DataValue.of(newValue));
-                        player.sendMessage("§aРадиус установлен на: §f" + newValue);
+                        codeBlock.setParameter("target", newValue);
+                        player.sendMessage("§aЦелевая переменная установлена на: §f" + newValue);
                         populateItems(); // Refresh the inventory
                     },
                     () -> {} // Empty cancel callback
@@ -104,7 +99,7 @@ public class IsNearBlockEditor extends AbstractParameterEditor {
                 break;
                 
             case 8: // Help item
-                player.sendMessage("§eПодсказка: Используйте этот редактор для настройки условия проверки нахождения рядом с блоком.");
+                player.sendMessage("§eПодсказка: Используйте этот редактор для настройки действия получения значения переменной.");
                 break;
         }
     }

@@ -4,10 +4,13 @@ import com.megacreative.MegaCreative;
 import com.megacreative.coding.CodeBlock;
 import com.megacreative.gui.editors.AbstractParameterEditor;
 import com.megacreative.gui.AnvilInputGUI;
+import com.megacreative.coding.values.DataValue;
 import org.bukkit.Material;
 import org.bukkit.entity.Player;
 import org.bukkit.event.inventory.InventoryClickEvent;
 import org.bukkit.inventory.ItemStack;
+import org.bukkit.inventory.meta.ItemMeta;
+import java.util.function.Consumer;
 
 public class PlayerHealthEditor extends AbstractParameterEditor {
     
@@ -15,23 +18,50 @@ public class PlayerHealthEditor extends AbstractParameterEditor {
         super(plugin, player, codeBlock, 9, "Player Health Editor");
         
         // Set up the inventory with default items
-        setupInventory();
+        populateItems();
     }
     
-    private void setupInventory() {
+    @Override
+    public void populateItems() {
         inventory.clear();
         
-        // Health slot
-        ItemStack healthStack = new ItemStack(Material.GOLDEN_APPLE);
-        inventory.setItem(0, healthStack);
+        // Health value slot
+        ItemStack healthItem = new ItemStack(Material.GOLDEN_APPLE);
+        ItemMeta healthMeta = healthItem.getItemMeta();
+        healthMeta.setDisplayName("§eHealth Value");
+        DataValue health = codeBlock.getParameter("health", DataValue.of("10.0"));
+        healthMeta.setLore(java.util.Arrays.asList(
+            "§7Enter the health value to compare",
+            "§aCurrent value: §f" + (health != null ? health.asString() : "10.0")
+        ));
+        healthItem.setItemMeta(healthMeta);
+        inventory.setItem(0, healthItem);
         
         // Operator slot
-        ItemStack operatorStack = new ItemStack(Material.COMPARATOR);
-        inventory.setItem(1, operatorStack);
+        ItemStack operatorItem = new ItemStack(Material.COMPARATOR);
+        ItemMeta operatorMeta = operatorItem.getItemMeta();
+        operatorMeta.setDisplayName("§eOperator");
+        DataValue operator = codeBlock.getParameter("operator", DataValue.of(">"));
+        operatorMeta.setLore(java.util.Arrays.asList(
+            "§7Enter the comparison operator",
+            "§aCurrent value: §f" + (operator != null ? operator.asString() : ">")
+        ));
+        operatorItem.setItemMeta(operatorMeta);
+        inventory.setItem(1, operatorItem);
         
-        // Done button
-        ItemStack doneStack = new ItemStack(Material.EMERALD);
-        inventory.setItem(8, doneStack);
+        // Help item
+        ItemStack helpItem = new ItemStack(Material.BOOK);
+        ItemMeta helpMeta = helpItem.getItemMeta();
+        helpMeta.setDisplayName("§6Help");
+        helpMeta.setLore(java.util.Arrays.asList(
+            "§7This editor configures the Player Health condition",
+            "",
+            "§eHow to use:",
+            "§71. Set the health value to compare",
+            "§72. Set the comparison operator"
+        ));
+        helpItem.setItemMeta(helpMeta);
+        inventory.setItem(8, helpItem);
     }
     
     @Override
@@ -39,27 +69,47 @@ public class PlayerHealthEditor extends AbstractParameterEditor {
         event.setCancelled(true);
         
         int slot = event.getSlot();
+        Player player = (Player) event.getWhoClicked();
         
         switch (slot) {
-            case 0: // Health slot
-                openAnvilInputGUI("Enter health value", codeBlock.getParameter("health", "10.0").toString(), 
-                    newValue -> codeBlock.setParameter("health", newValue));
+            case 0: // Health value slot
+                // Open anvil GUI for health value input
+                DataValue currentHealth = codeBlock.getParameter("health", DataValue.of("10.0"));
+                new AnvilInputGUI(
+                    plugin, 
+                    player, 
+                    "Enter health value", 
+                    newValue -> {
+                        codeBlock.setParameter("health", DataValue.of(newValue));
+                        player.sendMessage("§aHealth value set to: §f" + newValue);
+                        populateItems(); // Refresh the inventory
+                    },
+                    () -> {} // Empty cancel callback
+                );
+                player.closeInventory();
                 break;
                 
             case 1: // Operator slot
-                openAnvilInputGUI("Enter operator", codeBlock.getParameter("operator", ">").toString(), 
-                    newValue -> codeBlock.setParameter("operator", newValue));
+                // Open anvil GUI for operator input
+                DataValue currentOperator = codeBlock.getParameter("operator", DataValue.of(">"));
+                new AnvilInputGUI(
+                    plugin, 
+                    player, 
+                    "Enter operator", 
+                    newValue -> {
+                        codeBlock.setParameter("operator", DataValue.of(newValue));
+                        player.sendMessage("§aOperator set to: §f" + newValue);
+                        populateItems(); // Refresh the inventory
+                    },
+                    () -> {} // Empty cancel callback
+                );
+                player.closeInventory();
                 break;
                 
-            case 8: // Done button
-                player.closeInventory();
-                player.sendMessage("§aPlayer Health parameters saved!");
+            case 8: // Help item
+                player.sendMessage("§eTip: Use this editor to configure the Player Health condition.");
                 break;
         }
-    }
-    
-    private void openAnvilInputGUI(String title, String currentValue, AnvilInputGUI.ValueConsumer onComplete) {
-        new AnvilInputGUI(plugin, player, title, onComplete).open();
     }
     
     @Override

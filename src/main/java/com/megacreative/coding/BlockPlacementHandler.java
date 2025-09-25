@@ -10,6 +10,7 @@ import com.megacreative.coding.CodeBlock;
 import com.megacreative.gui.editors.player.*;
 import com.megacreative.gui.editors.conditions.*;
 import com.megacreative.gui.editors.events.*;
+import com.megacreative.gui.editors.actions.SetVarEditor;
 import org.bukkit.Material;
 import org.bukkit.block.Block;
 import org.bukkit.block.Sign;

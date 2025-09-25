@@ -14,10 +14,11 @@ public class PlayerLeaveEventEditor extends AbstractParameterEditor {
         super(plugin, player, codeBlock, 9, "Player Leave Event Editor");
         
         // Set up the inventory with default items
-        setupInventory();
+        populateItems();
     }
     
-    private void setupInventory() {
+    @Override
+    public void populateItems() {
         inventory.clear();
         
         // Event info

@@ -14,10 +14,11 @@ public class PlayerDeathEventEditor extends AbstractParameterEditor {
         super(plugin, player, codeBlock, 9, "Player Death Event Editor");
         
         // Set up the inventory with default items
-        setupInventory();
+        populateItems();
     }
     
-    private void setupInventory() {
+    @Override
+    public void populateItems() {
         inventory.clear();
         
         // Event info
