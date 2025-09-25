@@ -75,6 +75,8 @@ import com.megacreative.coding.actions.TriggerCustomEventAction;
 import com.megacreative.coding.actions.TriggerEventAction;
 import com.megacreative.coding.actions.VariableInspectorAction;
 import com.megacreative.coding.actions.WaitAction;
+import com.megacreative.coding.actions.RepeatAction;
+import com.megacreative.coding.actions.WhileAction;
 import com.megacreative.coding.actions.condition.HasItemCondition;
 import com.megacreative.coding.actions.condition.HasPermissionCondition;
 import com.megacreative.coding.actions.condition.IsInWorldCondition;
@@ -315,6 +317,13 @@ public class ActionFactory {
         // Loop control actions
         register("break", () -> new BreakAction((com.megacreative.MegaCreative) dependencyContainer.resolve(com.megacreative.MegaCreative.class)));
         register("continue", () -> new ContinueAction((com.megacreative.MegaCreative) dependencyContainer.resolve(com.megacreative.MegaCreative.class)));
+        
+        // Additional control flow actions
+        register("wait", WaitAction::new);
+        register("repeat", RepeatAction::new);
+        register("forEach", ForEachAction::new);
+        register("while", WhileAction::new);
+        register("else", ElseAction::new);
     }
 
     /**
@@ -721,7 +730,7 @@ public class ActionFactory {
     public void registerAction(String actionId, String displayName) {
         // Register the action if it's not already registered
         // Зарегистрировать действие, если оно еще не зарегистрировано
-        // Die Aktion registrieren, wenn sie noch не registriert ist
+        // Die Aktion registrieren, wenn sie noch nicht registriert ist
         if (!actionMap.containsKey(actionId)) {
             // Register a generic action that can be configured later
             // This provides a more flexible approach than the previous placeholder implementation

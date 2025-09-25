@@ -1,47 +1,47 @@
 # MegaCreative
-**MegaCreative** — это революционная платформа для визуального программирования в Minecraft. Забудьте о старых, медленных плагинах, которые сканируют мир в поисках блоков. Мы представляем архитектуру нового поколения, где ваш код — это живой граф объектов, исполняемый с молниеносной скоростью.
-**Просто и элегантно.** Создавайте сложные мини-игры, интерактивные квесты и живые миры, просто расставляя блоки.
+**MegaCreative** is a revolutionary visual programming platform for Minecraft. Forget about old, slow plugins that scan the world for blocks. We present a next-generation architecture where your code is a live graph of objects executed at lightning speed.
+**Simple and elegant.** Create complex mini-games, interactive quests, and living worlds by simply placing blocks.
 
-### Ключевые особенности
+### Key Features
 
-*   🚀 **Непревзойденная производительность:** Никакого сканирования мира. Вся логика — это легковесные объекты в памяти, которые исполняются мгновенно благодаря современному `ScriptEngine`.
-*   **⚙️ Фантастически гибко:** Все блоки, их материалы, поведение и параметры настраиваются через YAML-файлы. Добавляйте новые действия, не написав ни строчки Java-кода.
-*   **🧩 Современная Архитектура:** Плагин построен на `Service Registry` и `Dependency Injection`, что обеспечивает стабильность, модульность и легкую расширяемость.
-*   **🛠️ Инструменты Про-уровня:** Встроенный **Visual Debugger** для отладки, **Code Block Clipboard** для копирования цепочек кода и **Performance Monitor** для анализа производительности ваших творений.
-*   **🌐 Платформа для Творцов:** Создавайте миры, делитесь ими с помощью встроенного **Браузера Миров**, играйте и оценивайте проекты других игроков.
+*   🚀 **Unmatched Performance:** No world scanning. All logic consists of lightweight in-memory objects executed instantly thanks to a modern `ScriptEngine`.
+*   **⚙️ Fantastically Flexible:** All blocks, their materials, behavior, and parameters are configurable through YAML files. Add new actions without writing a single line of Java code.
+*   **🧩 Modern Architecture:** The plugin is built on `Service Registry` and `Dependency Injection`, ensuring stability, modularity, and easy extensibility.
+*   **🛠️ Pro-Level Tools:** Built-in **Visual Debugger** for debugging, **Code Block Clipboard** for copying code chains, and **Performance Monitor** for analyzing the performance of your creations.
+*   **🌐 Creator Platform:** Create worlds, share them via the built-in **World Browser**, play, and rate other players' projects.
 
-### 🆚 MegaCreative против Других Платформ
+### 🆚 MegaCreative vs Other Platforms
 
-Многие знают OpenCreative или играли на Mineland и DiamondFire. В чем ключевое отличие?
+Many know OpenCreative or have played on Mineland and DiamondFire. What's the key difference?
 
-| Аспект | MegaCreative | Другие платформы (OpenCreative, серверные реализации) |
+| Aspect | MegaCreative | Other Platforms (OpenCreative, server implementations) |
 | :--- | :--- | :--- |
-| **Производительность** | **Объектно-ориентированное исполнение.** Код компилируется один раз в удобную структуру и исполняется мгновенно. Нет сканирования мира в реальном времени. | **Сканирование или устаревшие методы.** Старые плагины (OpenCreative) физически сканируют блоки при каждом событии, вызывая лаги. Серверные аналоги могут быть быстрыми, но их технологии закрыты. |
-| **Гибкость** | **100% настраиваемость через YAML.** Вы можете создавать свои собственные блоки кода, определять их логику и внешний вид через `coding_blocks.yml`, не трогая ядро. | **Жестко закодировано.** В большинстве систем новые блоки добавляются только разработчиками плагина/сервера. Вы ограничены тем, что вам дали. |
-| **Формат** | **Полноценный плагин.** Вы можете установить MegaCreative на **свой** сервер Paper/Spigot и полностью его контролировать. | **Закрытая серверная система.** Платформы вроде Mineland, YottaCraft, JustMC или DiamondFIRE — это фича конкретного сервера. Вы не можете взять их систему и перенести к себе. |
-| **Архитектура** | **Современный стек:** Dependency Injection, Service Registry, асинхронность. Код чистый, модульный и легко расширяемый сообществом. | **Устаревшие подходы:** Часто используется "God Object" (один класс, делающий всё), что затрудняет поддержку и добавление нового функционала. |
+| **Performance** | **Object-oriented execution.** Code is compiled once into a convenient structure and executed instantly. No real-time world scanning. | **Scanning or outdated methods.** Old plugins (OpenCreative) physically scan blocks at every event, causing lag. Server counterparts may be fast, but their technologies are closed. |
+| **Flexibility** | **100% customizable via YAML.** You can create your own code blocks, define their logic and appearance through `coding_blocks.yml` without touching the core. | **Hardcoded.** In most systems, new blocks are added only by plugin/server developers. You're limited to what they provide. |
+| **Format** | **Full plugin.** You can install MegaCreative on **your** Paper/Spigot server and have complete control. | **Closed server system.** Platforms like Mineland, YottaCraft, JustMC, or DiamondFIRE are features of specific servers. You can't take their system and move it to yours. |
+| **Architecture** | **Modern stack:** Dependency Injection, Service Registry, asynchronicity. Code is clean, modular, and easily extensible by the community. | **Outdated approaches:** Often uses "God Object" (one class doing everything), making maintenance and adding new functionality difficult. |
 
 ---
 
-### 🚀 Быстрый старт
+### 🚀 Quick Start
 
-1.  **/create <тип>** — Создайте свой мир.
-2.  **/dev** — Перейдите в мир разработки.
-3.  **Творите!** Расставляйте блоки из инвентаря.
-4.  **/play** — Вернитесь в игровой режим и протестируйте свой код.
-5.  **/worldsettings** — Настройте свой мир и сделайте его публичным!
+1.  **/create <type>** — Create your world.
+2.  **/dev** — Enter development mode.
+3.  **Create!** Place blocks from your inventory.
+4.  **/play** — Return to play mode and test your code.
+5.  **/worldsettings** — Configure your world and make it public!
 
 ---
 
-### 💬 Сообщество
+### 💬 Community
 
-Присоединяйтесь к нашему Discord, чтобы делиться идеями, получать помощь и участвовать в развитии лучшей платформы для креативного кодинга!
+Join our Discord to share ideas, get help, and participate in developing the best creative coding platform!
 
 https://discord.gg/gz8KUkWWMj
 
 
 ---
 
-### ❤️ Вклад
+### ❤️ Contribution
 
-Хотите сделать MegaCreative еще лучше? Ознакомьтесь с нашим [CONTRIBUTING.md](CONTRIBUTING.md).
+Want to make MegaCreative even better? Check out our [CONTRIBUTING.md](CONTRIBUTING.md).
