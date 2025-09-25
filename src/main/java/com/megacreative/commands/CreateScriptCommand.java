@@ -132,15 +132,15 @@ public class CreateScriptCommand implements CommandExecutor {
      * @return erstelltes Begrüßungsskript
      */
     private CodeScript createWelcomeScript() {
-        CodeBlock eventBlock = new CodeBlock(Material.DIAMOND_BLOCK, "onJoin");
+        CodeBlock eventBlock = new CodeBlock(Material.DIAMOND_BLOCK.name(), "onJoin");
         
-        CodeBlock messageBlock = new CodeBlock(Material.COBBLESTONE, "sendMessage");
+        CodeBlock messageBlock = new CodeBlock(Material.COBBLESTONE.name(), "sendMessage");
         messageBlock.setParameter("message", "§aДобро пожаловать, %player%!");
         
-        CodeBlock broadcastBlock = new CodeBlock(Material.COBBLESTONE, "broadcast");
+        CodeBlock broadcastBlock = new CodeBlock(Material.COBBLESTONE.name(), "broadcast");
         broadcastBlock.setParameter("message", "§eИгрок %player% присоединился к серверу!");
         
-        CodeBlock soundBlock = new CodeBlock(Material.COBBLESTONE, "playSound");
+        CodeBlock soundBlock = new CodeBlock(Material.COBBLESTONE.name(), "playSound");
         soundBlock.setParameter("sound", "ENTITY_PLAYER_LEVELUP");
         soundBlock.setParameter("volume", "1.0");
         soundBlock.setParameter("pitch", "1.0");
@@ -163,15 +163,15 @@ public class CreateScriptCommand implements CommandExecutor {
      * @return erstelltes Teleportationsskript
      */
     private CodeScript createTeleportScript() {
-        CodeBlock eventBlock = new CodeBlock(Material.DIAMOND_BLOCK, "onJoin");
+        CodeBlock eventBlock = new CodeBlock(Material.DIAMOND_BLOCK.name(), "onJoin");
         
-        CodeBlock messageBlock = new CodeBlock(Material.COBBLESTONE, "sendMessage");
+        CodeBlock messageBlock = new CodeBlock(Material.COBBLESTONE.name(), "sendMessage");
         messageBlock.setParameter("message", "§aТелепортируем вас на спавн!");
         
-        CodeBlock teleportBlock = new CodeBlock(Material.COBBLESTONE, "teleport");
+        CodeBlock teleportBlock = new CodeBlock(Material.COBBLESTONE.name(), "teleport");
         teleportBlock.setParameter("coords", "0 70 0");
         
-        CodeBlock effectBlock = new CodeBlock(Material.COBBLESTONE, "effect");
+        CodeBlock effectBlock = new CodeBlock(Material.COBBLESTONE.name(), "effect");
         effectBlock.setParameter("effect", "SPEED");
         effectBlock.setParameter("duration", "200");
         effectBlock.setParameter("amplifier", "1");
@@ -194,20 +194,20 @@ public class CreateScriptCommand implements CommandExecutor {
      * @return erstelltes VIP-Skript
      */
     private CodeScript createVipScript() {
-        CodeBlock eventBlock = new CodeBlock(Material.DIAMOND_BLOCK, "onJoin");
+        CodeBlock eventBlock = new CodeBlock(Material.DIAMOND_BLOCK.name(), "onJoin");
         
-        CodeBlock conditionBlock = new CodeBlock(Material.OAK_PLANKS, "isOp");
+        CodeBlock conditionBlock = new CodeBlock(Material.OAK_PLANKS.name(), "isOp");
         
-        CodeBlock vipMessageBlock = new CodeBlock(Material.COBBLESTONE, "sendMessage");
+        CodeBlock vipMessageBlock = new CodeBlock(Material.COBBLESTONE.name(), "sendMessage");
         vipMessageBlock.setParameter("message", "§6§lVIP §aДобро пожаловать, %player%!");
         conditionBlock.addChild(vipMessageBlock);
         
-        CodeBlock vipGiveBlock = new CodeBlock(Material.COBBLESTONE, "giveItem");
+        CodeBlock vipGiveBlock = new CodeBlock(Material.COBBLESTONE.name(), "giveItem");
         vipGiveBlock.setParameter("item", "DIAMOND");
         vipGiveBlock.setParameter("amount", "10");
         conditionBlock.addChild(vipGiveBlock);
         
-        CodeBlock vipBroadcastBlock = new CodeBlock(Material.COBBLESTONE, "broadcast");
+        CodeBlock vipBroadcastBlock = new CodeBlock(Material.COBBLESTONE.name(), "broadcast");
         vipBroadcastBlock.setParameter("message", "§6§lVIP §e%player% зашел на сервер!");
         conditionBlock.addChild(vipBroadcastBlock);
         
@@ -227,15 +227,15 @@ public class CreateScriptCommand implements CommandExecutor {
      * @return erstelltes Spielmodus-Skript
      */
     private CodeScript createGamemodeScript() {
-        CodeBlock eventBlock = new CodeBlock(Material.DIAMOND_BLOCK, "onJoin");
+        CodeBlock eventBlock = new CodeBlock(Material.DIAMOND_BLOCK.name(), "onJoin");
         
-        CodeBlock conditionBlock = new CodeBlock(Material.OAK_PLANKS, "isOp");
+        CodeBlock conditionBlock = new CodeBlock(Material.OAK_PLANKS.name(), "isOp");
         
-        CodeBlock gamemodeBlock = new CodeBlock(Material.COBBLESTONE, "command");
+        CodeBlock gamemodeBlock = new CodeBlock(Material.COBBLESTONE.name(), "command");
         gamemodeBlock.setParameter("command", "gamemode creative %player%");
         conditionBlock.addChild(gamemodeBlock);
         
-        CodeBlock messageBlock = new CodeBlock(Material.COBBLESTONE, "sendMessage");
+        CodeBlock messageBlock = new CodeBlock(Material.COBBLESTONE.name(), "sendMessage");
         messageBlock.setParameter("message", "§aРежим игры изменен на Creative!");
         conditionBlock.addChild(messageBlock);
         
@@ -255,15 +255,15 @@ public class CreateScriptCommand implements CommandExecutor {
      * @return erstelltes Wetter-Skript
      */
     private CodeScript createWeatherScript() {
-        CodeBlock eventBlock = new CodeBlock(Material.DIAMOND_BLOCK, "onJoin");
+        CodeBlock eventBlock = new CodeBlock(Material.DIAMOND_BLOCK.name(), "onJoin");
         
-        CodeBlock weatherBlock = new CodeBlock(Material.NETHERITE_BLOCK, "setWeather");
+        CodeBlock weatherBlock = new CodeBlock(Material.NETHERITE_BLOCK.name(), "setWeather");
         weatherBlock.setParameter("weather", "clear");
         
-        CodeBlock timeBlock = new CodeBlock(Material.NETHERITE_BLOCK, "setTime");
+        CodeBlock timeBlock = new CodeBlock(Material.NETHERITE_BLOCK.name(), "setTime");
         timeBlock.setParameter("time", "0");
         
-        CodeBlock messageBlock = new CodeBlock(Material.COBBLESTONE, "sendMessage");
+        CodeBlock messageBlock = new CodeBlock(Material.COBBLESTONE.name(), "sendMessage");
         messageBlock.setParameter("message", "§aПогода установлена на ясную!");
         
         eventBlock.setNext(weatherBlock);

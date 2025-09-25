@@ -224,7 +224,7 @@ public class InteractiveCommand implements CommandExecutor, TabCompleter {
         
         // Create a dummy code block for demonstration
         Location location = player.getLocation();
-        CodeBlock dummyBlock = new CodeBlock(Material.STONE, actionId);
+        CodeBlock dummyBlock = new CodeBlock(Material.STONE.name(), actionId);
         // Note: CodeBlock doesn't have setLocation method in current implementation
         // Location will be handled by the block placement system
         

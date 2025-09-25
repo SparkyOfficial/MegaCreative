@@ -30,20 +30,21 @@ public class HandleEventAction implements BlockAction {
     }
     
     @Override
-    public void execute(ExecutionContext context) {
+    public com.megacreative.coding.executors.ExecutionResult execute(CodeBlock block, ExecutionContext context) {
         try {
-            validateAndRegisterHandler(context);
+            validateAndRegisterHandler(block, context);
+            return com.megacreative.coding.executors.ExecutionResult.success("Event handler registered");
         } catch (Exception e) {
             Player player = context.getPlayer();
             if (player != null) {
                 player.sendMessage(String.format(MSG_ERROR, e.getMessage()));
             }
+            return com.megacreative.coding.executors.ExecutionResult.error("Failed to register event handler: " + e.getMessage());
         }
     }
     
-    private void validateAndRegisterHandler(ExecutionContext context) {
+    private void validateAndRegisterHandler(CodeBlock block, ExecutionContext context) {
         Player player = validateContext(context);
-        CodeBlock block = context.getCurrentBlock();
         ParameterResolver resolver = new ParameterResolver(context);
         
         String eventName = resolveEventName(block, resolver, context);

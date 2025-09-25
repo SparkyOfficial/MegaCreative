@@ -5,6 +5,7 @@ import com.megacreative.coding.CodeBlock;
 import com.megacreative.coding.ExecutionContext;
 import com.megacreative.coding.ParameterResolver;
 import com.megacreative.coding.events.CustomEventManager;
+import com.megacreative.coding.executors.ExecutionResult;
 import com.megacreative.coding.values.DataValue;
 import com.megacreative.coding.variables.VariableManager;
 import org.bukkit.entity.Player;
@@ -21,12 +22,13 @@ public class HandleEventAction implements BlockAction {
     }
     
     @Override
-    public void execute(ExecutionContext context) {
+    public ExecutionResult execute(CodeBlock block, ExecutionContext context) {
         Player player = context.getPlayer();
-        CodeBlock block = context.getCurrentBlock();
         VariableManager variableManager = context.getPlugin().getVariableManager();
         
-        if (player == null || block == null || variableManager == null) return;
+        if (player == null || block == null || variableManager == null) {
+            return ExecutionResult.error("Player, block, or variable manager is null");
+        }
         
         ParameterResolver resolver = new ParameterResolver(context);
         
@@ -35,13 +37,13 @@ public class HandleEventAction implements BlockAction {
             DataValue rawEventName = block.getParameter("eventName");
             if (rawEventName == null) {
                 player.sendMessage("§cEvent name is required");
-                return;
+                return ExecutionResult.error("Event name is required");
             }
             
             String eventName = resolver.resolve(context, rawEventName).asString();
             if (eventName == null || eventName.trim().isEmpty()) {
                 player.sendMessage("§cInvalid event name");
-                return;
+                return ExecutionResult.error("Invalid event name");
             }
             
             // Get priority (optional, default is 0)
@@ -84,8 +86,10 @@ public class HandleEventAction implements BlockAction {
             String scope = isGlobal ? "globally" : (worldName != null ? "in world " + worldName : "in current world");
             player.sendMessage("§a✓ Registered handler for event: " + eventName + " " + scope + " (priority: " + priority + ")");
             
+            return ExecutionResult.success("Event handler registered");
         } catch (Exception e) {
             player.sendMessage("§c✗ Failed to register event handler: " + e.getMessage());
+            return ExecutionResult.error("Failed to register event handler: " + e.getMessage());
         }
     }
 }

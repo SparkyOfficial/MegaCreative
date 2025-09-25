@@ -32,7 +32,7 @@ public class PredefinedTemplateManager {
         
         try {
             // Load simple shop template
-            CodeScript shopTemplate = SimpleShopTemplate.createShopTemplate();
+            CodeScript shopTemplate = SimpleShopTemplate.createSimpleShopTemplate();
             predefinedTemplates.add(shopTemplate);
             logger.info("Loaded template: " + shopTemplate.getName());
             

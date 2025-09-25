@@ -10,9 +10,8 @@ import org.bukkit.entity.Player;
 
 public class PlayerHealthCondition implements BlockCondition {
     @Override
-    public boolean evaluate(ExecutionContext context) {
+    public boolean evaluate(CodeBlock block, ExecutionContext context) {
         Player player = context.getPlayer();
-        CodeBlock block = context.getCurrentBlock();
         
         if (player == null || block == null) return false;
         

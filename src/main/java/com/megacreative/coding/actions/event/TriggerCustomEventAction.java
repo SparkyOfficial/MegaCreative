@@ -38,19 +38,20 @@ public class TriggerCustomEventAction implements BlockAction {
     private static final String ASYNC_PARAM = "async";
     
     @Override
-    public void execute(ExecutionContext context) {
+    public com.megacreative.coding.executors.ExecutionResult execute(CodeBlock block, ExecutionContext context) {
         try {
-            validateAndTriggerEvent(context);
+            validateAndTriggerEvent(block, context);
+            return com.megacreative.coding.executors.ExecutionResult.success("Custom event triggered");
         } catch (Exception e) {
             handleExecutionError(context, e);
+            return com.megacreative.coding.executors.ExecutionResult.error("Failed to trigger custom event: " + e.getMessage());
         }
     }
     
-    private void validateAndTriggerEvent(ExecutionContext context) {
+    private void validateAndTriggerEvent(CodeBlock block, ExecutionContext context) {
         Player player = validateContext(context);
         if (player == null) return;
         
-        CodeBlock block = context.getCurrentBlock();
         if (block == null) return;
         
         String eventName = resolveEventName(block, new ParameterResolver(context), context);

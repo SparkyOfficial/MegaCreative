@@ -28,14 +28,13 @@ public class IsInWorldCondition implements BlockCondition {
         return input.replaceAll("§[0-9a-fk-or]", "").replaceAll("&[0-9a-fk-or]", "");
     }
     @Override
-    public boolean evaluate(ExecutionContext context) {
+    public boolean evaluate(CodeBlock block, ExecutionContext context) {
         if (context == null) {
             logEvaluationFailure("Context is null", null, null);
             return false;
         }
         
         Player player = context.getPlayer();
-        CodeBlock block = context.getCurrentBlock();
         
         if (player == null) {
             logEvaluationFailure("Player is null", null, context);

@@ -10,6 +10,7 @@ import com.megacreative.coding.events.CustomEventManager;
 import com.megacreative.coding.executors.ExecutionResult;
 import com.megacreative.coding.values.DataValue;
 import com.megacreative.coding.values.types.ListValue;
+import com.megacreative.coding.actions.GenericAction;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
@@ -596,10 +597,47 @@ public class ActionFactory {
         // --- EVENT HANDLING BLOCKS ---
         // --- БЛОКИ ОБРАБОТКИ СОБЫТИЙ ---
         // --- EREIGNISBEHANDLUNGSBLÖCKE ---
-        register("triggerEvent", com.megacreative.coding.actions.TriggerEventAction::new);
+        if (eventManager != null) {
+            register("triggerEvent", () -> {
+                if (eventManager != null) {
+                    return new com.megacreative.coding.actions.TriggerEventAction(eventManager);
+                } else {
+                    return new BlockAction() {
+                        @Override
+                        public ExecutionResult execute(CodeBlock block, ExecutionContext context) {
+                            return ExecutionResult.error("Event manager not available");
+                        }
+                    };
+                }
+            });
+            register("handleEvent", () -> {
+                if (eventManager != null) {
+                    return new com.megacreative.coding.actions.HandleEventAction(eventManager);
+                } else {
+                    return new BlockAction() {
+                        @Override
+                        public ExecutionResult execute(CodeBlock block, ExecutionContext context) {
+                            return ExecutionResult.error("Event manager not available");
+                        }
+                    };
+                }
+            });
+        } else {
+            // Register placeholder actions if event manager is not available
+            register("triggerEvent", () -> new BlockAction() {
+                @Override
+                public ExecutionResult execute(CodeBlock block, ExecutionContext context) {
+                    return ExecutionResult.error("Event manager not available");
+                }
+            });
+            register("handleEvent", () -> new BlockAction() {
+                @Override
+                public ExecutionResult execute(CodeBlock block, ExecutionContext context) {
+                    return ExecutionResult.error("Event manager not available");
+                }
+            });
+        }
         register("triggerCustomEvent", com.megacreative.coding.actions.TriggerCustomEventAction::new);
-        register("handleEvent", () -> new com.megacreative.coding.actions.HandleEventAction(
-            (com.megacreative.MegaCreative) dependencyContainer.resolve(com.megacreative.MegaCreative.class)));
     }
 
     /**
@@ -703,7 +741,7 @@ public class ActionFactory {
      * Hilfsmethode zum Registrieren einer generischen Aktion
      */
     private void registerGeneric(String actionId) {
-        register(actionId, GenericAction::new);
+        register(actionId, com.megacreative.coding.actions.GenericAction::new);
     }
 
     /**
@@ -743,7 +781,7 @@ public class ActionFactory {
             // Allow custom action implementations to be registered with display names
             // This involves creating a registry that maps action IDs to display names
             // and allows for custom action implementations to be registered
-            register(actionId, GenericAction::new);
+            register(actionId, com.megacreative.coding.actions.GenericAction::new);
         }
         
         // Store the display name mapping

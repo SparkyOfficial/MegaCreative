@@ -4,6 +4,7 @@ import com.megacreative.coding.BlockAction;
 import com.megacreative.coding.CodeBlock;
 import com.megacreative.coding.ExecutionContext;
 import com.megacreative.coding.ParameterResolver;
+import com.megacreative.coding.executors.ExecutionResult;
 import com.megacreative.coding.values.DataValue;
 import com.megacreative.coding.variables.VariableManager;
 import org.bukkit.Location;
@@ -20,11 +21,13 @@ public class PlayParticleEffectAction implements BlockAction {
     private static final double MAX_SPEED = 5.0;
     
     @Override
-    public void execute(ExecutionContext context) {
+    public ExecutionResult execute(CodeBlock block, ExecutionContext context) {
         try {
             executeParticleEffect(context);
+            return ExecutionResult.success("Particle effect played");
         } catch (Exception e) {
             handleParticleError(context, e);
+            return ExecutionResult.error("Failed to play particle effect: " + e.getMessage());
         }
     }
     

@@ -24,10 +24,9 @@ public class TriggerEventAction implements BlockAction {
     }
     
     @Override
-    public void execute(ExecutionContext context) {
+    public com.megacreative.coding.executors.ExecutionResult execute(CodeBlock block, ExecutionContext context) {
         Player player = context.getPlayer();
-        CodeBlock block = context.getCurrentBlock();
-        if (player == null || block == null) return;
+        if (player == null || block == null) return com.megacreative.coding.executors.ExecutionResult.error("Player or block is null");
         
         ParameterResolver resolver = new ParameterResolver(context);
         
@@ -36,13 +35,13 @@ public class TriggerEventAction implements BlockAction {
             DataValue rawEventName = block.getParameter("eventName");
             if (rawEventName == null) {
                 player.sendMessage("§cEvent name is required");
-                return;
+                return com.megacreative.coding.executors.ExecutionResult.error("Event name is required");
             }
             
             String eventName = resolver.resolve(context, rawEventName).asString();
             if (eventName == null || eventName.trim().isEmpty()) {
                 player.sendMessage("§cInvalid event name");
-                return;
+                return com.megacreative.coding.executors.ExecutionResult.error("Invalid event name");
             }
             
             // Collect event data from parameters that start with "data_"
@@ -70,8 +69,10 @@ public class TriggerEventAction implements BlockAction {
             // Send confirmation to player
             player.sendMessage("§a✓ Triggered event: " + eventName);
             
+            return com.megacreative.coding.executors.ExecutionResult.success("Event triggered: " + eventName);
         } catch (Exception e) {
             player.sendMessage("§c✗ Failed to trigger event: " + e.getMessage());
+            return com.megacreative.coding.executors.ExecutionResult.error("Failed to trigger event: " + e.getMessage());
         }
     }
 }

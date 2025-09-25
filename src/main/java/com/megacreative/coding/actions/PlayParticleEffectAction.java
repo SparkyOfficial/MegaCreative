@@ -4,6 +4,7 @@ import com.megacreative.coding.BlockAction;
 import com.megacreative.coding.CodeBlock;
 import com.megacreative.coding.ExecutionContext;
 import com.megacreative.coding.ParameterResolver;
+import com.megacreative.coding.executors.ExecutionResult;
 import com.megacreative.coding.values.DataValue;
 import com.megacreative.coding.variables.VariableManager;
 import org.bukkit.Location;
@@ -16,12 +17,13 @@ import org.bukkit.entity.Player;
  */
 public class PlayParticleEffectAction implements BlockAction {
     @Override
-    public void execute(ExecutionContext context) {
+    public ExecutionResult execute(CodeBlock block, ExecutionContext context) {
         Player player = context.getPlayer();
-        CodeBlock block = context.getCurrentBlock();
         VariableManager variableManager = context.getPlugin().getVariableManager();
 
-        if (player == null || block == null || variableManager == null) return;
+        if (player == null || block == null || variableManager == null) {
+            return ExecutionResult.error("Player, block, or variable manager is null");
+        }
 
         ParameterResolver resolver = new ParameterResolver(context);
 
@@ -34,13 +36,15 @@ public class PlayParticleEffectAction implements BlockAction {
             double speed = resolveNumberParameter(resolver, context, block, "speed", 0.1);
             String pattern = resolveParameter(resolver, context, block, "pattern", "basic");
 
-            if (particleStr == null) return;
+            if (particleStr == null) {
+                return ExecutionResult.error("Particle type is null");
+            }
 
             // Enhanced particle parsing
             Particle particle = parseParticle(particleStr);
             if (particle == null) {
                 player.sendMessage("§cНеизвестный тип частиц: " + particleStr);
-                return;
+                return ExecutionResult.error("Unknown particle type: " + particleStr);
             }
             
             // Validate parameters with performance limits
@@ -62,11 +66,14 @@ public class PlayParticleEffectAction implements BlockAction {
             }
             
             player.sendMessage("§a✨ Эффект частиц '" + particleStr + "' воспроизведен!");
+            return ExecutionResult.success("Particle effect played");
             
         } catch (NumberFormatException e) {
             player.sendMessage("§cОшибка в параметрах count/offset");
+            return ExecutionResult.error("Number format error in count/offset parameters");
         } catch (Exception e) {
             player.sendMessage("§cОшибка создания частиц: " + e.getMessage());
+            return ExecutionResult.error("Failed to create particles: " + e.getMessage());
         }
     }
     

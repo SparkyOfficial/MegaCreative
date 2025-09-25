@@ -39,10 +39,10 @@ public class CreateTemplateCommand implements CommandExecutor {
         String description = args.length > 1 ? String.join(" ", java.util.Arrays.copyOfRange(args, 1, args.length)) : "No description";
         
         // Create a simple template as an example
-        CodeBlock rootBlock = new CodeBlock(Material.DIAMOND_BLOCK, "onJoin");
+        CodeBlock rootBlock = new CodeBlock(Material.DIAMOND_BLOCK.name(), "onJoin");
         rootBlock.setParameter("message", com.megacreative.coding.values.DataValue.of("Welcome to the server!"));
         
-        CodeBlock sendMessageBlock = new CodeBlock(Material.COBBLESTONE, "sendMessage");
+        CodeBlock sendMessageBlock = new CodeBlock(Material.COBBLESTONE.name(), "sendMessage");
         sendMessageBlock.setParameter("message", com.megacreative.coding.values.DataValue.of("Hello, %player%!"));
         rootBlock.setNextBlock(sendMessageBlock);
         

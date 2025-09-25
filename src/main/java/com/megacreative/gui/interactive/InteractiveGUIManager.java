@@ -782,14 +782,14 @@ public class InteractiveGUIManager implements Listener {
             plugin.getLogger().info("Opening item editor GUI for item editor element: " + element.getId());
             
             // Create a proper item editor GUI instead of the simulation
-            createItemEditorInterface(plugin, element);
+            createItemEditorInterface(plugin, element, null);
         }
         
         /**
          * Creates a proper item editor interface
          * This is a more proper implementation than the previous simulation
          */
-        private void createItemEditorInterface(MegaCreative plugin, ItemStackEditorElement element) {
+        private void createItemEditorInterface(MegaCreative plugin, final ItemStackEditorElement element, final InteractiveGUIManager outerInstance) {
             // Get the player from the element ID
             Player player = null;
             try {
@@ -881,8 +881,8 @@ public class InteractiveGUIManager implements Listener {
                 }
             }
             
-            // Keep a reference to the outer class instance
-            InteractiveGUIManager outerInstance = InteractiveGUIManager.this;
+            // Store element ID for use in anonymous inner class
+            final String elementId = element.getId();
             
             // Create a managed GUI implementation for the item editor
             GUIManager.ManagedGUIInterface managedGUI = new GUIManager.ManagedGUIInterface() {
@@ -936,7 +936,9 @@ public class InteractiveGUIManager implements Listener {
                             player.sendMessage("§aChanges saved!");
                             player.closeInventory();
                             // Refresh the main GUI using the outer instance reference
-                            outerInstance.refreshGUI(player);
+                            if (outerInstance != null) {
+                                outerInstance.refreshGUI(player);
+                            }
                             break;
                         case 18: // Cancel button
                             player.sendMessage("§cCancelled");
@@ -952,7 +954,7 @@ public class InteractiveGUIManager implements Listener {
                 
                 @Override
                 public String getGUITitle() {
-                    return "Item Editor for " + element.getId();
+                    return " YYS Item Editor for " + elementId;
                 }
                 
                 @Override

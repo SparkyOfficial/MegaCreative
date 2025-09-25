@@ -261,7 +261,7 @@ public class JsonSerializer {
         if (data == null) return null;
 
         Material material = data.materialName != null ? Material.getMaterial(data.materialName) : Material.STONE;
-        com.megacreative.coding.CodeBlock block = new com.megacreative.coding.CodeBlock(material, data.action);
+        com.megacreative.coding.CodeBlock block = new com.megacreative.coding.CodeBlock(material.name(), data.action);
         block.setId(data.id);
 
         // Восстанавливаем параметры

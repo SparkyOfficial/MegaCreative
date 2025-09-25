@@ -30,14 +30,17 @@ public class AsyncLoopControl implements BlockAction {
     private static final int MAX_ITERATIONS = 1000; // Safety limit
     
     @Override
-    public void execute(ExecutionContext context) {
+    public com.megacreative.coding.executors.ExecutionResult execute(CodeBlock block, ExecutionContext context) {
         Player player = context.getPlayer();
-        CodeBlock block = context.getCurrentBlock();
 
-        if (player == null || block == null) return;
+        if (player == null || block == null) {
+            return com.megacreative.coding.executors.ExecutionResult.error("Player or block is null");
+        }
 
         VariableManager variableManager = context.getPlugin().getVariableManager();
-        if (variableManager == null) return;
+        if (variableManager == null) {
+            return com.megacreative.coding.executors.ExecutionResult.error("Variable manager not available");
+        }
         
         ParameterResolver resolver = new ParameterResolver(context);
 
@@ -56,11 +59,11 @@ public class AsyncLoopControl implements BlockAction {
             UUID playerId = player.getUniqueId();
             if (countActiveLoops(playerId) >= MAX_CONCURRENT_LOOPS) {
                 player.sendMessage("§cToo many active loops! Maximum: " + MAX_CONCURRENT_LOOPS);
-                return;
+                return com.megacreative.coding.executors.ExecutionResult.error("Too many active loops");
             }
             
             // Create the async loop
-AsyncLoopTask loopTask = new AsyncLoopTask(context, block, iterations);
+            AsyncLoopTask loopTask = new AsyncLoopTask(context, block, iterations);
             BukkitTask task = loopTask.runTaskTimer(context.getPlugin(), delayTicks, delayTicks);
             
             // Track the loop for cleanup
@@ -73,11 +76,13 @@ AsyncLoopTask loopTask = new AsyncLoopTask(context, block, iterations);
                                  " iterations, " + delayTicks + " tick delay");
             }
             
+            return com.megacreative.coding.executors.ExecutionResult.success("Async loop started");
         } catch (Exception e) {
             player.sendMessage("§cError starting async loop: " + e.getMessage());
             if (context.isDebugMode()) {
                 context.getPlugin().getLogger().severe("Stack trace: " + java.util.Arrays.toString(e.getStackTrace()));
             }
+            return com.megacreative.coding.executors.ExecutionResult.error("Error starting async loop: " + e.getMessage());
         }
     }
     

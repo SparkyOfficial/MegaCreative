@@ -4,6 +4,7 @@ import com.megacreative.coding.BlockAction;
 import com.megacreative.coding.CodeBlock;
 import com.megacreative.coding.ExecutionContext;
 import com.megacreative.coding.ParameterResolver;
+import com.megacreative.coding.executors.ExecutionResult;
 import com.megacreative.coding.values.DataValue;
 import com.megacreative.coding.variables.VariableManager;
 import com.megacreative.coding.containers.BlockContainerManager;
@@ -39,19 +40,18 @@ public class PlayerEntryAction implements BlockAction {
     private static final Logger logger = Logger.getLogger(PlayerEntryAction.class.getName());
     
     @Override
-    public void execute(ExecutionContext context) {
+    public ExecutionResult execute(CodeBlock block, ExecutionContext context) {
         Player player = context.getPlayer();
-        CodeBlock block = context.getCurrentBlock();
         
         if (player == null || block == null) {
             logger.warning("Player or block is null in PlayerEntryAction");
-            return;
+            return ExecutionResult.error("Player or block is null");
         }
         
         VariableManager variableManager = context.getPlugin().getVariableManager();
         if (variableManager == null) {
             logger.warning("VariableManager is null in PlayerEntryAction");
-            return;
+            return ExecutionResult.error("VariableManager is null");
         }
         
         ParameterResolver resolver = new ParameterResolver(context);
@@ -62,7 +62,7 @@ public class PlayerEntryAction implements BlockAction {
             // Try to get items from container first (the chest above the block)
             if (tryGiveItemsFromContainer(context, player)) {
                 player.sendMessage("§a✓ Добро пожаловать! Вы получили предметы из конфигурации.");
-                return;
+                return ExecutionResult.success("Items given from container");
             }
             
             // Fallback to parameter-based item giving
@@ -79,19 +79,23 @@ public class PlayerEntryAction implements BlockAction {
                     
                     player.getInventory().addItem(new ItemStack(material, amount));
                     player.sendMessage("§a✓ Добро пожаловать! Вы получили " + amount + "x " + material.name());
+                    return ExecutionResult.success("Items given from parameters");
                 } catch (Exception e) {
                     player.sendMessage("§cОшибка при выдаче предмета: неверный материал или количество.");
                     logger.warning("Error giving item in PlayerEntryAction: " + e.getMessage());
+                    return ExecutionResult.error("Error giving item: " + e.getMessage());
                 }
             } else {
                 // Standard entry message when auto-give is enabled but no items configured
                 player.sendMessage("§a✓ Добро пожаловать в мир творчества!");
                 player.sendMessage("§eПодсказка: Настройте предметы в сундуке над этим блоком!");
                 player.sendMessage("§eКликните по сундуку над блоком для открытия интуитивного интерфейса перетаскивания.");
+                return ExecutionResult.success("Welcome message sent");
             }
         } else {
             // Standard entry message
             player.sendMessage("§a✓ Добро пожаловать в мир творчества!");
+            return ExecutionResult.success("Welcome message sent");
         }
     }
     

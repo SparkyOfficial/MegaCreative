@@ -38,7 +38,7 @@ public class ImportPredefinedTemplateCommand implements CommandExecutor {
         
         // Match template by name
         if (templateName.equalsIgnoreCase("Simple Shop") || templateName.equalsIgnoreCase("simpleshop")) {
-            template = SimpleShopTemplate.createShopTemplate();
+            template = SimpleShopTemplate.createSimpleShopTemplate();
         } else if (templateName.equalsIgnoreCase("Kit Starter") || templateName.equalsIgnoreCase("kitstarter")) {
             template = SimpleShopTemplate.createKitStarterTemplate();
         }
