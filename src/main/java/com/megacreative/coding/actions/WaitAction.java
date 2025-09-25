@@ -7,6 +7,7 @@ import com.megacreative.coding.ParameterResolver;
 import com.megacreative.coding.executors.ExecutionResult;
 import com.megacreative.coding.values.DataValue;
 import com.megacreative.services.BlockConfigService;
+import com.megacreative.coding.ScriptEngine;
 import org.bukkit.entity.Player;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.inventory.meta.ItemMeta;
@@ -38,20 +39,21 @@ public class WaitAction implements BlockAction {
             // Validate and constrain delay (max 20 minutes = 24000 ticks)
             delayTicks = Math.max(1, Math.min(24000, delayTicks));
             
-            // Get the next block to execute after the delay
-            CodeBlock nextBlock = block.getNextBlock();
+            // Create final variables for use in lambda expressions
+            final double seconds = delayTicks / 20.0;
+            final CodeBlock nextBlock = block.getNextBlock();
+            final Player finalPlayer = player;
             
             if (nextBlock == null) {
                 // If there's no next block, just wait and finish
                 context.getPlugin().getServer().getScheduler().runTaskLater(
                     context.getPlugin(), 
                     () -> {
-                        player.sendMessage("§a⏰ Wait completed (" + (delayTicks / 20.0) + " seconds)");
+                        finalPlayer.sendMessage("§a⏰ Wait completed (" + seconds + " seconds)");
                     }, 
                     delayTicks
                 );
                 
-                double seconds = delayTicks / 20.0;
                 return ExecutionResult.success("Waiting " + seconds + " seconds...").withPause();
             } else {
                 // Schedule the continuation of script execution after delay
@@ -62,8 +64,10 @@ public class WaitAction implements BlockAction {
                         public void run() {
                             try {
                                 // Continue execution with the next block
-                                if (context.getScriptEngine() != null) {
-                                    context.getScriptEngine().executeBlockChain(nextBlock, player, "wait_completed")
+                                // Get ScriptEngine from plugin's service registry
+                                ScriptEngine scriptEngine = context.getPlugin().getServiceRegistry().getService(ScriptEngine.class);
+                                if (scriptEngine != null) {
+                                    scriptEngine.executeBlockChain(nextBlock, finalPlayer, "wait_completed")
                                         .whenComplete((result, throwable) -> {
                                             if (throwable != null) {
                                                 context.getPlugin().getLogger().warning("Error continuing script after wait: " + throwable.getMessage());
@@ -71,8 +75,10 @@ public class WaitAction implements BlockAction {
                                                 context.getPlugin().getLogger().warning("Script execution failed after wait: " + result.getMessage());
                                             }
                                         });
+                                } else {
+                                    context.getPlugin().getLogger().warning("ScriptEngine not available to continue execution after wait");
                                 }
-                                player.sendMessage("§a⏰ Wait completed (" + (delayTicks / 20.0) + " seconds)");
+                                finalPlayer.sendMessage("§a⏰ Wait completed (" + seconds + " seconds)");
                             } catch (Exception e) {
                                 context.getPlugin().getLogger().warning("Error in wait action continuation: " + e.getMessage());
                             }
@@ -81,7 +87,6 @@ public class WaitAction implements BlockAction {
                     delayTicks
                 );
                 
-                double seconds = delayTicks / 20.0;
                 // Return a result that indicates the current chain should stop
                 return ExecutionResult.success("Waiting " + seconds + " seconds...").withPause();
             }
