@@ -2,16 +2,17 @@ package com.megacreative.commands;
 
 import com.megacreative.MegaCreative;
 import com.megacreative.coding.ScriptEngine;
-import com.megacreative.coding.CodeScript;
 import com.megacreative.coding.CodeBlock;
 import com.megacreative.coding.executors.ExecutionResult;
-import com.megacreative.models.CreativeWorld;
+import com.megacreative.coding.BlockPlacementHandler;
+import com.megacreative.managers.PlayerModeManager;
 import org.bukkit.command.Command;
 import org.bukkit.command.CommandExecutor;
 import org.bukkit.command.CommandSender;
 import org.bukkit.command.TabCompleter;
 import org.bukkit.entity.Player;
-import org.bukkit.Material;
+import org.bukkit.block.Block;
+import org.bukkit.util.BlockIterator;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -49,48 +50,69 @@ public class ExecuteCommand implements CommandExecutor, TabCompleter {
 
         Player player = (Player) sender;
         
+        // Check if player is in DEV mode
+        if (plugin.getServiceRegistry() != null) {
+            PlayerModeManager modeManager = plugin.getServiceRegistry().getPlayerModeManager();
+            if (!modeManager.isInDevMode(player)) {
+                player.sendMessage("§cYou can only execute scripts in DEV mode!");
+                return true;
+            }
+        }
+        
         try {
+            // Log command execution start
+            plugin.getLogger().info("Player " + player.getName() + " is executing /execute command");
+            
             // Get the ScriptEngine
             ScriptEngine scriptEngine = plugin.getServiceRegistry().getService(ScriptEngine.class);
             if (scriptEngine == null) {
                 player.sendMessage("§cScriptEngine is not available!");
+                plugin.getLogger().severe("ScriptEngine is not available when executing /execute command for player " + player.getName());
                 return true;
             }
             
-            // Find the creative world
-            CreativeWorld creativeWorld = plugin.getWorldManager().findCreativeWorldByBukkit(player.getWorld());
-            if (creativeWorld == null) {
-                player.sendMessage("§cThis command can only be used in creative worlds!");
+            // Get the BlockPlacementHandler
+            BlockPlacementHandler blockPlacementHandler = plugin.getServiceRegistry().getBlockPlacementHandler();
+            if (blockPlacementHandler == null) {
+                player.sendMessage("§cBlockPlacementHandler is not available!");
+                plugin.getLogger().severe("BlockPlacementHandler is not available when executing /execute command for player " + player.getName());
                 return true;
             }
             
-            // For testing purposes, let's create a simple test script
-            player.sendMessage("§eExecuting test script...");
+            // Find the block the player is looking at
+            Block targetBlock = getTargetBlock(player);
+            if (targetBlock == null) {
+                player.sendMessage("§cYou must be looking at a code block to execute it!");
+                plugin.getLogger().warning("Player " + player.getName() + " is not looking at a block when executing /execute command");
+                return true;
+            }
             
-            // Create a simple test script that sends a message to the player
-            // Event block (DIAMOND_BLOCK with onJoin action)
-            CodeBlock eventBlock = new CodeBlock(Material.DIAMOND_BLOCK, "onJoin");
+            plugin.getLogger().info("Player " + player.getName() + " is looking at block at " + targetBlock.getLocation());
             
-            // Action block (COBBLESTONE with sendMessage action)
-            CodeBlock actionBlock = new CodeBlock(Material.COBBLESTONE, "sendMessage");
-            actionBlock.setParameter("message", "Hello from test script!");
+            // Get the CodeBlock from the BlockPlacementHandler
+            CodeBlock codeBlock = blockPlacementHandler.getCodeBlock(targetBlock.getLocation());
+            if (codeBlock == null) {
+                player.sendMessage("§cThe block you're looking at is not a code block!");
+                plugin.getLogger().warning("Block at " + targetBlock.getLocation() + " is not a code block when executing /execute command for player " + player.getName());
+                return true;
+            }
             
-            // Connect the event block to the action block
-            eventBlock.setNextBlock(actionBlock);
+            plugin.getLogger().info("Player " + player.getName() + " is executing code block with action: " + codeBlock.getAction());
+            player.sendMessage("§eExecuting code block: " + codeBlock.getAction());
             
-            // Create the script with the event block as root
-            CodeScript testScript = new CodeScript("Test Script", true, eventBlock);
-            
-            // Execute the script
-            CompletableFuture<ExecutionResult> future = scriptEngine.executeScript(testScript, player, "manual_execute");
+            // Execute the code block chain
+            CompletableFuture<ExecutionResult> future = scriptEngine.executeBlockChain(codeBlock, player, "manual_execute");
             future.thenAccept(result -> {
                 if (result.isSuccess()) {
                     player.sendMessage("§a✓ Script executed successfully: " + result.getMessage());
+                    plugin.getLogger().info("Script executed successfully for player " + player.getName() + ": " + result.getMessage());
                 } else {
                     player.sendMessage("§cScript execution failed: " + result.getMessage());
+                    plugin.getLogger().severe("Script execution failed for player " + player.getName() + ": " + result.getMessage());
                 }
             }).exceptionally(throwable -> {
                 player.sendMessage("§cScript execution error: " + throwable.getMessage());
+                plugin.getLogger().severe("Script execution error for player " + player.getName() + ": " + throwable.getMessage());
                 return null;
             });
             
@@ -101,6 +123,27 @@ public class ExecuteCommand implements CommandExecutor, TabCompleter {
         }
 
         return true;
+    }
+
+    /**
+     * Gets the block the player is looking at
+     * @param player the player
+     * @return the block the player is looking at, or null if not found
+     */
+    private Block getTargetBlock(Player player) {
+        try {
+            // Use BlockIterator to find the block the player is looking at
+            BlockIterator iterator = new BlockIterator(player, 100); // 100 block range
+            while (iterator.hasNext()) {
+                Block block = iterator.next();
+                if (block.getType().isSolid()) {
+                    return block;
+                }
+            }
+        } catch (Exception e) {
+            plugin.getLogger().warning("Error getting target block for player " + player.getName() + ": " + e.getMessage());
+        }
+        return null;
     }
 
     /**

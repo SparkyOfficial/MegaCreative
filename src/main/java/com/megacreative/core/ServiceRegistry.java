@@ -41,7 +41,7 @@ import java.util.logging.Logger;
  * Заменяет паттерн Бога Объекта на правильное внедрение зависимостей
  *
  * Zentraler Serviceregister, der alle Plugin-Services und Abhängigkeiten verwaltet
- * Ersetzt das God Object-Muster durch ordnungsgemäße Dependency Injection
+ * Ersetzt das God Object-Muster durch ordnungsgemäß Dependency Injection
  */
 public class ServiceRegistry {
     private static final Logger log = Logger.getLogger(ServiceRegistry.class.getName());
@@ -149,6 +149,9 @@ public class ServiceRegistry {
      * Feindliches Spielerbeschränkungssystem
      */
     private EnemyPlayerRestrictionManager enemyPlayerRestrictionManager;
+
+    // Player mode manager for DEV/PLAY mode system
+    private PlayerModeManager playerModeManager;
 
     /**
      * Creates a new service registry
@@ -1091,11 +1094,14 @@ public class ServiceRegistry {
     }
     
     /**
-     * Get EnemyPlayerRestrictionManager service
+     * Gets the enemy player restriction manager
+     * @return Enemy player restriction manager instance
      *
-     * Получить сервис EnemyPlayerRestrictionManager
+     * Получает менеджер ограничения враждебных игроков
+     * @return Экземпляр менеджера ограничения враждебных игроков
      *
-     * EnemyPlayerRestrictionManager-Service abrufen
+     * Ruft den Feindspieler-Beschränkungsmanager ab
+     * @return Feindspieler-Beschränkungsmanager-Instanz
      */
     public EnemyPlayerRestrictionManager getEnemyPlayerRestrictionManager() {
         if (enemyPlayerRestrictionManager == null) {
@@ -1103,6 +1109,25 @@ public class ServiceRegistry {
             registerService(EnemyPlayerRestrictionManager.class, enemyPlayerRestrictionManager);
         }
         return enemyPlayerRestrictionManager;
+    }
+    
+    /**
+     * Gets the player mode manager
+     * @return Player mode manager instance
+     */
+    public PlayerModeManager getPlayerModeManager() {
+        if (playerModeManager == null) {
+            // Get the player mode manager from PlayerManagerImpl
+            IPlayerManager playerManager = getPlayerManager();
+            if (playerManager instanceof PlayerManagerImpl) {
+                this.playerModeManager = ((PlayerManagerImpl) playerManager).getPlayerModeManager();
+            } else {
+                // Fallback to creating a new instance
+                this.playerModeManager = new PlayerModeManager();
+            }
+            registerService(PlayerModeManager.class, playerModeManager);
+        }
+        return playerModeManager;
     }
     
     /**

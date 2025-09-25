@@ -15,6 +15,9 @@ public class PlayerManagerImpl implements IPlayerManager {
     private final MegaCreative plugin;
     private final Map<UUID, Set<String>> playerFavorites;
     
+    // Player mode manager for DEV/PLAY mode system
+    private final PlayerModeManager playerModeManager = new PlayerModeManager();
+    
     // 🎆 ENHANCED: World tracking for dual world architecture
     private final Map<UUID, PlayerWorldSession> playerSessions; // Current sessions
     private final Map<String, Map<UUID, String>> worldPlayerModes; // World -> Player -> Mode
@@ -80,12 +83,14 @@ public class PlayerManagerImpl implements IPlayerManager {
     
     @Override
     public void registerPlayer(Player player) {
-        // Регистрация игрока в системе
+        // Register player in system
     }
     
     @Override
     public void unregisterPlayer(Player player) {
-        // Удаление игрока из системы
+        // Remove player from system
+        // Clear player mode when they leave
+        playerModeManager.clearMode(player);
     }
     
     @Override
@@ -288,5 +293,13 @@ public class PlayerManagerImpl implements IPlayerManager {
         
         plugin.getLogger().info("📈 Session recorded: Player " + playerId + " spent " + 
                               (duration / 1000) + "s in world " + worldId + " (" + mode + " mode)");
+    }
+    
+    /**
+     * Gets the player mode manager
+     * @return Player mode manager instance
+     */
+    public PlayerModeManager getPlayerModeManager() {
+        return playerModeManager;
     }
 }

@@ -5,6 +5,7 @@ import com.megacreative.coding.CodingItems;
 import com.megacreative.models.CreativeWorld;
 import com.megacreative.services.BlockConfigService;
 import com.megacreative.managers.TrustedPlayerManager;
+import com.megacreative.managers.PlayerModeManager;
 import com.megacreative.worlds.DevWorldGenerator;
 import org.bukkit.Material;
 import org.bukkit.entity.Player;
@@ -199,6 +200,16 @@ public class DevWorldProtectionListener implements Listener {
     public void onPlayerInteract(PlayerInteractEvent event) {
         Player player = event.getPlayer();
         if (!isInDevWorld(player)) return;
+
+        // Check if player is in DEV mode
+        if (plugin != null && plugin.getServiceRegistry() != null) {
+            PlayerModeManager modeManager = plugin.getServiceRegistry().getPlayerModeManager();
+            if (modeManager.isInPlayMode(player)) {
+                // If player is in PLAY mode, don't allow interactions with coding blocks
+                // This interaction may be part of their game, not development
+                return;
+            }
+        }
 
         // Не отменяем событие, если это AIR
         if (event.getClickedBlock() == null) return; 

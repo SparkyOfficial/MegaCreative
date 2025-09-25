@@ -1,5 +1,7 @@
 package com.megacreative.interfaces;
 
+import com.megacreative.managers.PlayerModeManager;
+
 import org.bukkit.entity.Player;
 
 import java.util.Map;
@@ -297,4 +299,10 @@ public interface IPlayerManager {
      * @return Sitzungszeit in Millisekunden, oder 0 wenn nicht in einer Welt
      */
     long getPlayerSessionTime(UUID playerId);
+
+    /**
+     * Gets the player mode manager
+     * @return Player mode manager instance
+     */
+    PlayerModeManager getPlayerModeManager();
 }

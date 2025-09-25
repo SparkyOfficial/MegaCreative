@@ -2,6 +2,7 @@ package com.megacreative.commands;
 
 import com.megacreative.MegaCreative;
 import com.megacreative.interfaces.IWorldManager;
+import com.megacreative.managers.PlayerModeManager;
 import com.megacreative.models.CreativeWorld;
 import com.megacreative.models.WorldMode;
 import org.bukkit.Bukkit;
@@ -69,6 +70,12 @@ public class BuildCommand implements CommandExecutor {
         if (!(sender instanceof Player player)) {
             sender.sendMessage("§cThis command is only available to players!");
             return true;
+        }
+        
+        // Set player mode to DEV (build mode is a form of DEV mode)
+        if (plugin != null && plugin.getServiceRegistry() != null) {
+            PlayerModeManager modeManager = plugin.getServiceRegistry().getPlayerModeManager();
+            modeManager.setMode(player, PlayerModeManager.PlayerMode.DEV);
         }
         
         // Check if worldManager is available

@@ -3,6 +3,7 @@ package com.megacreative.coding;
 import com.megacreative.MegaCreative;
 import com.megacreative.core.ServiceRegistry;
 import com.megacreative.interfaces.ITrustedPlayerManager;
+import com.megacreative.managers.PlayerModeManager;
 import com.megacreative.models.CreativeWorld;
 import com.megacreative.services.BlockConfigService;
 import com.megacreative.coding.CodeBlock;
@@ -361,6 +362,17 @@ public class BlockPlacementHandler implements Listener {
         // Only process in dev worlds
         if (!isInDevWorld(player)) {
             return;
+        }
+        
+        // Check player mode - only open GUI in DEV mode
+        if (plugin != null && plugin.getServiceRegistry() != null) {
+            PlayerModeManager modeManager = plugin.getServiceRegistry().getPlayerModeManager();
+            // Open GUI for configuration only in DEV mode
+            if (modeManager.isInPlayMode(player)) {
+                // If player is in PLAY mode, this click may be part of their game
+                // We don't open GUI in PLAY mode
+                return;
+            }
         }
         
         // Handle code block interactions

@@ -1,6 +1,7 @@
 package com.megacreative.commands;
 import com.megacreative.MegaCreative;
 import com.megacreative.coding.CodingItems;
+import com.megacreative.managers.PlayerModeManager;
 import com.megacreative.models.CreativeWorld;
 import com.megacreative.models.WorldMode;
 import org.bukkit.*;
@@ -63,6 +64,27 @@ public class DevCommand implements CommandExecutor {
             sender.sendMessage("§cЭта команда доступна только игрокам!");
             return true;
         }
+        
+        // Get the PlayerModeManager
+        PlayerModeManager modeManager = plugin.getServiceRegistry().getPlayerModeManager();
+        
+        // Check if player is already in DEV mode
+        if (modeManager.isInDevMode(player)) {
+            player.sendMessage("§cYou are already in DEV mode!");
+            return true;
+        }
+        
+        // Switch player to DEV mode
+        modeManager.setMode(player, PlayerModeManager.PlayerMode.DEV);
+        
+        // Change game mode to CREATIVE
+        player.setGameMode(GameMode.CREATIVE);
+        
+        // Clear inventory
+        player.getInventory().clear();
+        
+        // Give coding items
+        CodingItems.giveCodingItems(player, plugin);
         
         // Проверяем подкоманды
         if (args.length > 0) {

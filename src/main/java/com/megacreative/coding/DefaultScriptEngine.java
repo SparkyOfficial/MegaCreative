@@ -164,6 +164,7 @@ public class DefaultScriptEngine implements ScriptEngine, EnhancedScriptEngine {
             @Override
             public void run() {
                 try {
+                    plugin.getLogger().info("Starting script execution for player: " + (player != null ? player.getName() : "null"));
                     if (debugger.isDebugging(player)) {
                         debugger.onScriptStart(player, script);
                     }
@@ -209,6 +210,8 @@ public class DefaultScriptEngine implements ScriptEngine, EnhancedScriptEngine {
             @Override
             public void run() {
                 try {
+                    plugin.getLogger().info("Starting block execution for player: " + (player != null ? player.getName() : "null") + 
+                                          " with action: " + (block != null ? block.getAction() : "null"));
                     //if (debugger.isDebugging(player)) {
                     //    debugger.onBlockStart(player, block);
                     //}
@@ -250,6 +253,8 @@ public class DefaultScriptEngine implements ScriptEngine, EnhancedScriptEngine {
             @Override
             public void run() {
                 try {
+                    plugin.getLogger().info("Starting block chain execution for player: " + (player != null ? player.getName() : "null") + 
+                                          " with start block action: " + (startBlock != null ? startBlock.getAction() : "null"));
                     // Track execution chain for better debugging and error handling
                     List<CodeBlock> executionChain = new ArrayList<>();
                     ExecutionResult result = processBlockChain(startBlock, context, executionChain, 0);
@@ -305,10 +310,15 @@ public class DefaultScriptEngine implements ScriptEngine, EnhancedScriptEngine {
     }
     
     private ExecutionResult processBlock(CodeBlock block, ExecutionContext context, int recursionDepth) {
+        // Log block processing start
+        plugin.getLogger().info("Processing block at recursion depth " + recursionDepth + 
+                              " with action: " + (block != null ? block.getAction() : "null"));
+        
         // Check cache first
         Map<String, Object> cacheContext = createCacheContext(context);
         ExecutionResult cachedResult = executionCache.get(block, cacheContext);
         if (cachedResult != null) {
+            plugin.getLogger().info("Returning cached result for block with action: " + (block != null ? block.getAction() : "null"));
             return cachedResult;
         }
         
@@ -410,14 +420,19 @@ public class DefaultScriptEngine implements ScriptEngine, EnhancedScriptEngine {
             // --- MAIN LOGIC ---
             // --- HAUPTLOGIK ---
             
+            plugin.getLogger().info("Processing block of type: " + blockType + " with action: " + (block != null ? block.getAction() : "null"));
+            
             // Execute the appropriate handler based on block type
             if (blockType.equals(BLOCK_TYPE_ACTION)) {
                 // Handle action blocks
                 String actionId = block.getAction();
                 if (actionId != null) {
+                    plugin.getLogger().info("Creating action handler for action: " + actionId);
                     BlockAction actionHandler = actionFactory.createAction(actionId);
                     if (actionHandler != null) {
+                        plugin.getLogger().info("Executing action handler for action: " + actionId);
                         result = actionHandler.execute(block, context);
+                        plugin.getLogger().info("Action handler execution result for " + actionId + ": " + (result != null ? result.getMessage() : "null"));
                     } else {
                         String errorMsg = ERROR_ACTION_HANDLER_NOT_FOUND + actionId;
                         plugin.getLogger().warning(errorMsg + " Player: " + 
@@ -429,9 +444,12 @@ public class DefaultScriptEngine implements ScriptEngine, EnhancedScriptEngine {
                 // Handle condition blocks
                 String conditionId = block.getAction();
                 if (conditionId != null) {
+                    plugin.getLogger().info("Creating condition handler for condition: " + conditionId);
                     BlockCondition conditionHandler = conditionFactory.createCondition(conditionId);
                     if (conditionHandler != null) {
+                        plugin.getLogger().info("Evaluating condition handler for condition: " + conditionId);
                         boolean conditionResult = conditionHandler.evaluate(block, context);
+                        plugin.getLogger().info("Condition handler evaluation result for " + conditionId + ": " + conditionResult);
                         result = ExecutionResult.success("Condition " + conditionId + " evaluated to " + conditionResult);
                     } else {
                         String errorMsg = ERROR_CONDITION_HANDLER_NOT_FOUND + conditionId;
@@ -444,6 +462,7 @@ public class DefaultScriptEngine implements ScriptEngine, EnhancedScriptEngine {
                 // Handle control blocks
                 String controlAction = block.getAction();
                 if (controlAction != null) {
+                    plugin.getLogger().info("Processing control block with action: " + controlAction);
                     switch (controlAction) {
                         case CONTROL_ACTION_CONDITIONAL_BRANCH:
                             // Handle conditional branch
@@ -480,18 +499,22 @@ public class DefaultScriptEngine implements ScriptEngine, EnhancedScriptEngine {
                             
                             // Execute appropriate branch
                             if (conditionResult && trueBlock != null) {
+                                plugin.getLogger().info("Condition is true, executing true branch");
                                 return processBlock(trueBlock, context, recursionDepth + 1);
                             } else if (!conditionResult && elseBlock != null) {
+                                plugin.getLogger().info("Condition is false, executing else branch");
                                 return processBlock(elseBlock, context, recursionDepth + 1);
                             }
                             break;
                             
                         case CONTROL_ACTION_ELSE:
                             // ELSE block - just continue to next block
+                            plugin.getLogger().info("Processing ELSE block");
                             break;
                             
                         case CONTROL_ACTION_WHILE_LOOP:
                             // Handle while loop
+                            plugin.getLogger().info("Processing WHILE loop");
                             CodeBlock loopConditionBlock = block.getChildren().isEmpty() ? null : block.getChildren().get(0);
                             CodeBlock loopBodyBlock = block.getNextBlock();
                             
@@ -514,11 +537,13 @@ public class DefaultScriptEngine implements ScriptEngine, EnhancedScriptEngine {
                                 }
                             
                                 if (!loopConditionResult) {
+                                    plugin.getLogger().info("While loop condition is false, exiting loop after " + loopCount + " iterations");
                                     break; // Exit loop
                                 }
                             
                                 // Execute loop body
                                 if (loopBodyBlock != null) {
+                                    plugin.getLogger().info("Executing while loop body iteration " + loopCount);
                                     ExecutionResult loopResult = processBlock(loopBodyBlock, context, recursionDepth + 1);
                                     if (!loopResult.isSuccess()) {
                                         // Cache the result before returning
@@ -535,6 +560,7 @@ public class DefaultScriptEngine implements ScriptEngine, EnhancedScriptEngine {
                             
                         case CONTROL_ACTION_FOR_EACH:
                             // Handle for-each loop
+                            plugin.getLogger().info("Processing FOR EACH loop");
                             String listVariableName = block.getParameterValue("listVariable", String.class);
                             if (listVariableName != null && context.getPlayer() != null) {
                                 // Get list from variable manager
@@ -590,27 +616,32 @@ public class DefaultScriptEngine implements ScriptEngine, EnhancedScriptEngine {
                             
                         case CONTROL_ACTION_BREAK:
                             // Handle break
+                            plugin.getLogger().info("Processing BREAK control action");
                             ExecutionResult breakResult = ExecutionResult.success();
                             breakResult.setTerminated(true);
                             return breakResult;
                             
                         case CONTROL_ACTION_CONTINUE:
                             // Handle continue
+                            plugin.getLogger().info("Processing CONTINUE control action");
                             ExecutionResult continueResult = ExecutionResult.success();
                             continueResult.setTerminated(true);
                             return continueResult;
                             
                         default:
                             // Unknown control action, ignore
+                            plugin.getLogger().warning("Unknown control action: " + controlAction);
                             break;
                     }
                 }
             } else if (blockType.equals(BLOCK_TYPE_FUNCTION)) {
                 // Handle function blocks
+                plugin.getLogger().info("Processing function block");
                 String functionAction = block.getAction();
                 if (FUNCTION_ACTION_CALL_FUNCTION.equals(functionAction)) {
                     String functionName = block.getParameterValue("functionName", String.class);
                     if (functionName != null) {
+                        plugin.getLogger().info("Calling function: " + functionName);
                         // Get function manager and execute function
                         //FunctionManager functionManager = plugin.getFunctionManager();
                         //if (functionManager != null) {
@@ -625,8 +656,10 @@ public class DefaultScriptEngine implements ScriptEngine, EnhancedScriptEngine {
                 }
             } else if (block.isBracket()) {
                 // Handle bracket blocks
+                plugin.getLogger().info("Processing bracket block: " + (block.getBracketType() != null ? block.getBracketType().getDisplayName() : "null"));
                 if (block.getBracketType() == CodeBlock.BracketType.OPEN) {
                     // Process children of opening bracket
+                    plugin.getLogger().info("Processing children of opening bracket");
                     for (CodeBlock child : block.getChildren()) {
                         ExecutionResult childResult = processBlock(child, context, recursionDepth + 1);
                         if (!childResult.isSuccess() || childResult.isTerminated()) {
@@ -656,6 +689,7 @@ public class DefaultScriptEngine implements ScriptEngine, EnhancedScriptEngine {
                 executionCache.put(block, cacheContext, result);
             }
         
+            plugin.getLogger().info("Continuing to next block in chain");
             return processBlock(block.getNextBlock(), context, recursionDepth + 1);
         } catch (Exception e) {
             String errorMsg = ERROR_EXECUTING_BLOCK + block.getAction() + ": " + e.getMessage() + 
@@ -690,6 +724,10 @@ public class DefaultScriptEngine implements ScriptEngine, EnhancedScriptEngine {
      * @return The execution result
      */
     private ExecutionResult processBlockChain(CodeBlock block, ExecutionContext context, List<CodeBlock> executionChain, int recursionDepth) {
+        // Log block chain processing start
+        plugin.getLogger().info("Processing block chain at recursion depth " + recursionDepth + 
+                              " with block action: " + (block != null ? block.getAction() : "null"));
+        
         // Prevent infinite recursion
         if (block == null || recursionDepth > MAX_RECURSION_DEPTH) {
             if (recursionDepth > MAX_RECURSION_DEPTH) {
@@ -724,21 +762,25 @@ public class DefaultScriptEngine implements ScriptEngine, EnhancedScriptEngine {
             
             // If the result indicates termination (break/continue), return it
             if (result.isTerminated()) {
+                plugin.getLogger().info("Block execution terminated");
                 return result;
             }
             
             // If there's an error, return it
             if (!result.isSuccess()) {
+                plugin.getLogger().warning("Block execution failed: " + (result != null ? result.getMessage() : "null"));
                 return result;
             }
             
             // Continue to the next block in the chain
             CodeBlock nextBlock = block.getNextBlock();
             if (nextBlock != null) {
+                plugin.getLogger().info("Continuing to next block in chain with action: " + nextBlock.getAction());
                 return processBlockChain(nextBlock, context, executionChain, recursionDepth + 1);
             }
             
             // End of chain
+            plugin.getLogger().info("End of block chain reached");
             return result;
         } catch (Exception e) {
             String errorMsg = ERROR_EXECUTING_BLOCK + block.getAction() + ": " + e.getMessage() + 
@@ -1001,26 +1043,5 @@ public class DefaultScriptEngine implements ScriptEngine, EnhancedScriptEngine {
      */
     public ScriptValidator.ValidationResult validateScript(CodeScript script) {
         return scriptValidator.validateScript(script);
-    }
-    
-    /**
-     * Gets the script validator
-     * @return The ScriptValidator instance
-     */
-    public ScriptValidator getScriptValidator() {
-        return scriptValidator;
-    }
-    
-    /**
-     * Shutdown the enhanced execution engine
-     */
-    public void shutdown() {
-        if (advancedExecutionEngine != null) {
-            advancedExecutionEngine.shutdown();
-        }
-        
-        // Cancel all active executions
-        activeExecutions.values().forEach(context -> context.setCancelled(true));
-        activeExecutions.clear();
     }
 }

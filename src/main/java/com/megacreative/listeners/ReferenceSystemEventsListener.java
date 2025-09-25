@@ -62,7 +62,7 @@ public class ReferenceSystemEventsListener implements Listener {
     }
     
     // ============================================================================
-    // SCRIPT REGISTRATION METHODS
+    // МЕТОДЫ РЕГИСТРАЦИИ СКРИПТОВ / SCRIPT REGISTRATION METHODS / SKRIPTREGISTRIERUNGSMETHODEN
     // ============================================================================
     
     /**
@@ -234,7 +234,7 @@ public class ReferenceSystemEventsListener implements Listener {
     }
     
     // ============================================================================
-    // PLAYER LIFECYCLE EVENTS
+    // СОБЫТИЯ ЖИЗНЕННОГО ЦИКЛА ИГРОКА / PLAYER LIFECYCLE EVENTS / SPIELERLEBENSZYKLUS-EREIGNISSE
     // ============================================================================
     
     /**
@@ -243,9 +243,9 @@ public class ReferenceSystemEventsListener implements Listener {
     @EventHandler
     public void onPlayerJoin(PlayerJoinEvent event) {
         Player player = event.getPlayer();
-        plugin.getLogger().fine("🎆 Player joined: " + player.getName());
-        
-        // Execute join script if exists
+        // Выполнить скрипт при входе, если он существует
+        // Execute join script if it exists
+        // Skript beim Beitritt ausführen, falls vorhanden
         CodeScript script = playerScripts.get("on_join");
         if (script != null) {
             executeScript(script, player, "player_join", player.getName());
@@ -258,9 +258,9 @@ public class ReferenceSystemEventsListener implements Listener {
     @EventHandler
     public void onPlayerQuit(PlayerQuitEvent event) {
         Player player = event.getPlayer();
-        plugin.getLogger().fine("🎆 Player quit: " + player.getName());
-        
-        // Execute quit script if exists
+        // Выполнить скрипт при выходе, если он существует
+        // Execute quit script if it exists
+        // Skript beim Verlassen ausführen, falls vorhanden
         CodeScript script = playerScripts.get("on_quit");
         if (script != null) {
             executeScript(script, player, "player_quit", player.getName());
@@ -274,9 +274,9 @@ public class ReferenceSystemEventsListener implements Listener {
     public void onPlayerRespawn(PlayerRespawnEvent event) {
         Player player = event.getPlayer();
         Location respawnLocation = event.getRespawnLocation();
-        plugin.getLogger().fine(".EVT Player respawned: " + player.getName());
-        
-        // Execute respawn script if exists
+        // Выполнить скрипт при возрождении, если он существует
+        // Execute respawn script if it exists
+        // Skript bei Wiederbelebung ausführen, falls vorhanden
         CodeScript script = playerScripts.get("on_respawn");
         if (script != null) {
             executeScript(script, player, "player_respawn", player.getName());
@@ -284,7 +284,7 @@ public class ReferenceSystemEventsListener implements Listener {
     }
     
     // ============================================================================
-    // BLOCK INTERACTION EVENTS
+    // СОБЫТИЯ ВЗАИМОДЕЙСТВИЯ С БЛОКАМИ / BLOCK INTERACTION EVENTS / BLOCKINTERAKTIONS-EREIGNISSE
     // ============================================================================
     
     /**
@@ -293,9 +293,9 @@ public class ReferenceSystemEventsListener implements Listener {
     @EventHandler
     public void onBlockPlace(BlockPlaceEvent event) {
         Player player = event.getPlayer();
-        plugin.getLogger().fine(".EVT Block placed by " + player.getName());
-        
-        // Execute block place script if exists
+        // Выполнить скрипт при установке блока, если он существует
+        // Execute block place script if it exists
+        // Skript beim Platzieren eines Blocks ausführen, falls vorhanden
         CodeScript script = blockScripts.get("on_place");
         if (script != null) {
             executeScript(script, player, "block_place", event.getBlock().getType().name());
@@ -308,9 +308,9 @@ public class ReferenceSystemEventsListener implements Listener {
     @EventHandler
     public void onBlockBreak(BlockBreakEvent event) {
         Player player = event.getPlayer();
-        plugin.getLogger().fine(".EVT Block broken by " + player.getName());
-        
-        // Execute block break script if exists
+        // Выполнить скрипт при разрушении блока, если он существует
+        // Execute block break script if it exists
+        // Skript beim Zerstören eines Blocks ausführen, falls vorhanden
         CodeScript script = blockScripts.get("on_break");
         if (script != null) {
             executeScript(script, player, "block_break", event.getBlock().getType().name());
@@ -318,7 +318,7 @@ public class ReferenceSystemEventsListener implements Listener {
     }
     
     // ============================================================================
-    // COMBAT EVENTS
+    // БОЕВЫЕ СОБЫТИЯ / COMBAT EVENTS / KAMPFEREIGNISSE
     // ============================================================================
     
     /**
@@ -329,9 +329,9 @@ public class ReferenceSystemEventsListener implements Listener {
         if (!(event.getEntity() instanceof Player)) return;
         
         Player player = (Player) event.getEntity();
-        plugin.getLogger().fine(".EVT Player damaged: " + player.getName());
-        
-        // Execute damage script if exists
+        // Выполнить скрипт при получении урона, если он существует
+        // Execute damage script if it exists
+        // Schadensskript ausführen, falls vorhanden
         CodeScript script = combatScripts.get("on_damage");
         if (script != null) {
             Map<String, Object> data = new HashMap<>();
@@ -347,9 +347,9 @@ public class ReferenceSystemEventsListener implements Listener {
     @EventHandler
     public void onPlayerDeath(PlayerDeathEvent event) {
         Player player = event.getEntity();
-        plugin.getLogger().fine(".EVT Player died: " + player.getName());
-        
-        // Execute death script if exists
+        // Выполнить скрипт при смерти, если он существует
+        // Execute death script if it exists
+        // Todesskript ausführen, falls vorhanden
         CodeScript script = combatScripts.get("on_death");
         if (script != null) {
             executeScript(script, player, "player_death", player.getName());
@@ -357,7 +357,7 @@ public class ReferenceSystemEventsListener implements Listener {
     }
     
     // ============================================================================
-    // INVENTORY EVENTS
+    // СОБЫТИЯ ИНВЕНТАРЯ / INVENTORY EVENTS / INVENTAR-EREIGNISSE
     // ============================================================================
     
     /**
@@ -368,9 +368,9 @@ public class ReferenceSystemEventsListener implements Listener {
         if (!(event.getWhoClicked() instanceof Player)) return;
         
         Player player = (Player) event.getWhoClicked();
-        plugin.getLogger().fine(".EVT Inventory clicked by " + player.getName());
-        
-        // Execute inventory click script if exists
+        // Выполнить скрипт при клике в инвентаре, если он существует
+        // Execute inventory click script if it exists
+        // Inventarklick-Skript ausführen, falls vorhanden
         CodeScript script = inventoryScripts.get("on_click");
         if (script != null) {
             Map<String, Object> data = new HashMap<>();
@@ -389,9 +389,9 @@ public class ReferenceSystemEventsListener implements Listener {
         if (!(event.getPlayer() instanceof Player)) return;
         
         Player player = (Player) event.getPlayer();
-        plugin.getLogger().fine(".EVT Inventory opened by " + player.getName());
-        
-        // Execute inventory open script if exists
+        // Выполнить скрипт при открытии инвентаря, если он существует
+        // Execute inventory open script if it exists
+        // Inventaröffnungs-Skript ausführen, falls vorhanden
         CodeScript script = inventoryScripts.get("on_open");
         if (script != null) {
             executeScript(script, player, "inventory_open", event.getInventory().getType().name());
@@ -399,7 +399,7 @@ public class ReferenceSystemEventsListener implements Listener {
     }
     
     // ============================================================================
-    // MOVEMENT EVENTS
+    // СОБЫТИЯ ПЕРЕМЕЩЕНИЯ / MOVEMENT EVENTS / BEWEGUNGSEREIGNISSE
     // ============================================================================
     
     /**
@@ -408,9 +408,9 @@ public class ReferenceSystemEventsListener implements Listener {
     @EventHandler
     public void onPlayerTeleport(PlayerTeleportEvent event) {
         Player player = event.getPlayer();
-        plugin.getLogger().fine(".EVT Player teleported: " + player.getName());
-        
-        // Execute teleport script if exists
+        // Выполнить скрипт при телепортации, если он существует
+        // Execute teleport script if it exists
+        // Teleportationsskript ausführen, falls vorhanden
         CodeScript script = movementScripts.get("on_teleport");
         if (script != null) {
             Map<String, Object> data = new HashMap<>();

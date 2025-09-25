@@ -7,6 +7,7 @@ import com.megacreative.coding.executors.ExecutionResult;
 import com.megacreative.models.CreativeWorld;
 import com.megacreative.services.BlockConfigService;
 import com.megacreative.interfaces.IWorldManager;
+import com.megacreative.managers.PlayerModeManager;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.Listener;
 import org.bukkit.event.player.PlayerMoveEvent;
@@ -157,6 +158,12 @@ public class PlayerEventsListener implements Listener {
             return;
         }
 
+        // Check player mode - only execute scripts in PLAY mode
+        PlayerModeManager modeManager = plugin.getServiceRegistry().getPlayerModeManager();
+        if (!modeManager.isInPlayMode(event.getPlayer())) {
+            return; // If player is in DEV mode, don't execute scripts
+        }
+
         // Find the creative world
         IWorldManager worldManager = getWorldManager();
         if (worldManager == null) return;
@@ -191,6 +198,12 @@ public class PlayerEventsListener implements Listener {
     
     @EventHandler
     public void onPlayerJoin(PlayerJoinEvent event) {
+        // Check player mode - only execute scripts in PLAY mode
+        PlayerModeManager modeManager = plugin.getServiceRegistry().getPlayerModeManager();
+        if (!modeManager.isInPlayMode(event.getPlayer())) {
+            return; // If player is in DEV mode, don't execute scripts
+        }
+
         // Find the creative world
         IWorldManager worldManager = getWorldManager();
         if (worldManager == null) return;
@@ -231,6 +244,12 @@ public class PlayerEventsListener implements Listener {
     
     @EventHandler
     public void onPlayerQuit(PlayerQuitEvent event) {
+        // Check player mode - only execute scripts in PLAY mode
+        PlayerModeManager modeManager = plugin.getServiceRegistry().getPlayerModeManager();
+        if (!modeManager.isInPlayMode(event.getPlayer())) {
+            return; // If player is in DEV mode, don't execute scripts
+        }
+
         // Find the creative world
         IWorldManager worldManager = getWorldManager();
         if (worldManager == null) return;
@@ -270,6 +289,12 @@ public class PlayerEventsListener implements Listener {
     
     @EventHandler
     public void onPlayerChat(AsyncPlayerChatEvent event) {
+        // Check player mode - only execute scripts in PLAY mode
+        PlayerModeManager modeManager = plugin.getServiceRegistry().getPlayerModeManager();
+        if (!modeManager.isInPlayMode(event.getPlayer())) {
+            return; // If player is in DEV mode, don't execute scripts
+        }
+
         // Find the creative world
         IWorldManager worldManager = getWorldManager();
         if (worldManager == null) return;
@@ -304,6 +329,12 @@ public class PlayerEventsListener implements Listener {
     
     @EventHandler
     public void onPlayerCommandPreprocess(PlayerCommandPreprocessEvent event) {
+        // Check player mode - only execute scripts in PLAY mode
+        PlayerModeManager modeManager = plugin.getServiceRegistry().getPlayerModeManager();
+        if (!modeManager.isInPlayMode(event.getPlayer())) {
+            return; // If player is in DEV mode, don't execute scripts
+        }
+
         // Find the creative world
         IWorldManager worldManager = getWorldManager();
         if (worldManager == null) return;
@@ -338,6 +369,12 @@ public class PlayerEventsListener implements Listener {
     
     @EventHandler
     public void onPlayerDeath(PlayerDeathEvent event) {
+        // Check player mode - only execute scripts in PLAY mode
+        PlayerModeManager modeManager = plugin.getServiceRegistry().getPlayerModeManager();
+        if (!modeManager.isInPlayMode(event.getEntity())) {
+            return; // If player is in DEV mode, don't execute scripts
+        }
+
         // Find the creative world
         IWorldManager worldManager = getWorldManager();
         if (worldManager == null) return;
@@ -372,6 +409,12 @@ public class PlayerEventsListener implements Listener {
     
     @EventHandler
     public void onBlockPlace(BlockPlaceEvent event) {
+        // Check player mode - only execute scripts in PLAY mode
+        PlayerModeManager modeManager = plugin.getServiceRegistry().getPlayerModeManager();
+        if (!modeManager.isInPlayMode(event.getPlayer())) {
+            return; // If player is in DEV mode, don't execute scripts
+        }
+
         // Find the creative world
         IWorldManager worldManager = getWorldManager();
         if (worldManager == null) return;
@@ -406,6 +449,12 @@ public class PlayerEventsListener implements Listener {
     
     @EventHandler
     public void onBlockBreak(BlockBreakEvent event) {
+        // Check player mode - only execute scripts in PLAY mode
+        PlayerModeManager modeManager = plugin.getServiceRegistry().getPlayerModeManager();
+        if (!modeManager.isInPlayMode(event.getPlayer())) {
+            return; // If player is in DEV mode, don't execute scripts
+        }
+
         // Find the creative world
         IWorldManager worldManager = getWorldManager();
         if (worldManager == null) return;
@@ -440,6 +489,12 @@ public class PlayerEventsListener implements Listener {
     
     @EventHandler
     public void onPlayerLevelChange(PlayerLevelChangeEvent event) {
+        // Check player mode - only execute scripts in PLAY mode
+        PlayerModeManager modeManager = plugin.getServiceRegistry().getPlayerModeManager();
+        if (!modeManager.isInPlayMode(event.getPlayer())) {
+            return; // If player is in DEV mode, don't execute scripts
+        }
+
         // Find the creative world
         IWorldManager worldManager = getWorldManager();
         if (worldManager == null) return;

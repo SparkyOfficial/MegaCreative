@@ -629,6 +629,12 @@ public class WorldManagerImpl implements IWorldManager {
         // Set mode to DEV
         world.setMode(com.megacreative.models.WorldMode.DEV);
         
+        // Set player mode to DEV
+        if (plugin instanceof MegaCreative) {
+            PlayerModeManager modeManager = ((MegaCreative) plugin).getServiceRegistry().getPlayerModeManager();
+            modeManager.setMode(player, PlayerModeManager.PlayerMode.DEV);
+        }
+        
         String devWorldName = world.isDevWorld() ? world.getWorldName() : world.getDevWorldName();
         World bukkitWorld = Bukkit.getWorld(devWorldName);
         
@@ -667,6 +673,12 @@ public class WorldManagerImpl implements IWorldManager {
         
         // Set mode to PLAY
         world.setMode(com.megacreative.models.WorldMode.PLAY);
+        
+        // Set player mode to PLAY
+        if (plugin instanceof MegaCreative) {
+            PlayerModeManager modeManager = ((MegaCreative) plugin).getServiceRegistry().getPlayerModeManager();
+            modeManager.setMode(player, PlayerModeManager.PlayerMode.PLAY);
+        }
         
         // Get the correct play world name based on dual mode
         String playWorldName;
@@ -735,7 +747,9 @@ public class WorldManagerImpl implements IWorldManager {
         
         // Teleport player to play world
         player.teleport(bukkitWorld.getSpawnLocation());
-        player.setGameMode(org.bukkit.GameMode.SURVIVAL); // Play mode should be survival
+        player.setGameMode(org.bukkit.GameMode.ADVENTURE); // Play mode should be adventure
+        player.getInventory().clear(); // Clear inventory for play mode
+        
         player.sendMessage("§a🎮 Switched to play mode!");
         
         // 🎆 ENHANCED: Track world mode switch

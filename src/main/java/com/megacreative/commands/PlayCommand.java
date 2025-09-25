@@ -1,16 +1,19 @@
 package com.megacreative.commands;
 
-import com.megacreative.MegaCreative;
-import com.megacreative.models.CreativeWorld;
-import com.megacreative.services.CodeCompiler;
-import org.bukkit.Bukkit;
+import java.util.List;
+
 import org.bukkit.GameMode;
 import org.bukkit.World;
 import org.bukkit.command.Command;
 import org.bukkit.command.CommandExecutor;
 import org.bukkit.command.CommandSender;
 import org.bukkit.entity.Player;
-import java.util.List;
+
+import com.megacreative.MegaCreative;
+import com.megacreative.coding.CodeScript;
+import com.megacreative.managers.PlayerModeManager;
+import com.megacreative.models.CreativeWorld;
+import com.megacreative.services.CodeCompiler;
 
 /**
  * Команда для переключения мира в режим игры
@@ -66,6 +69,24 @@ public class PlayCommand implements CommandExecutor {
             return true;
         }
         
+        // Get the PlayerModeManager
+        PlayerModeManager modeManager = plugin.getServiceRegistry().getPlayerModeManager();
+        
+        // Check if player is already in PLAY mode
+        if (modeManager.isInPlayMode(player)) {
+            player.sendMessage("§cYou are already in PLAY mode!");
+            return true;
+        }
+        
+        // Switch player to PLAY mode
+        modeManager.setMode(player, PlayerModeManager.PlayerMode.PLAY);
+        
+        // Change game mode to ADVENTURE
+        player.setGameMode(GameMode.ADVENTURE);
+        
+        // Clear inventory
+        player.getInventory().clear();
+        
         // Check if world manager is available
         if (plugin.getWorldManager() == null) {
             player.sendMessage("§cWorld manager not available!");
@@ -73,36 +94,7 @@ public class PlayCommand implements CommandExecutor {
             return true;
         }
         
-        // Log debug information
-        // plugin.getLogger().info("PlayCommand executed by player: " + player.getName());
-        // plugin.getLogger().info("Current world: " + player.getWorld().getName());
-        // plugin.getLogger().info("ServiceRegistry available: " + (plugin.getServiceRegistry() != null));
-        // if (plugin.getServiceRegistry() != null) {
-        //     plugin.getLogger().info("WorldManager in ServiceRegistry: " + (plugin.getServiceRegistry().getWorldManager() != null));
-        // }
-        
-        if (args.length > 0) {
-            switch (args[0].toLowerCase()) {
-                case "switch", "world" -> {
-                    CreativeWorld currentWorld = plugin.getWorldManager().findCreativeWorldByBukkit(player.getWorld());
-                    if (currentWorld != null && currentWorld.getPairedWorldId() != null) {
-                        // Save current world's code blocks before switching
-                        if (plugin.getBlockPlacementHandler() != null) {
-                            plugin.getBlockPlacementHandler().saveAllCodeBlocksInWorld(player.getWorld());
-                        }
-                        
-                        if (plugin.getBlockPlacementHandler().isInDevWorld(player)) {
-                            plugin.getServiceRegistry().getDevInventoryManager().savePlayerInventory(player);
-                        }
-                        plugin.getServiceRegistry().getDevInventoryManager().restorePlayerInventory(player);
-                        plugin.getWorldManager().switchToPlayWorld(player, currentWorld.getId());
-                        player.getInventory().clear();
-                        return true;
-                    }
-                }
-            }
-        }
-        
+        // Find the creative world
         CreativeWorld creativeWorld = plugin.getWorldManager().findCreativeWorldByBukkit(player.getWorld());
         
         // 🔧 FIX: Enhanced world finding logic with better pattern matching
@@ -204,12 +196,44 @@ public class PlayCommand implements CommandExecutor {
         // Restore player inventory for play mode
         plugin.getServiceRegistry().getDevInventoryManager().restorePlayerInventory(player);
         
-        // Switch to play world
-        plugin.getWorldManager().switchToPlayWorld(player, creativeWorld.getId());
+        // Find and execute the onJoin script
+        executeOnJoinScript(player, creativeWorld);
         
-        // Clear inventory to prevent item duplication
-        player.getInventory().clear();
-        
+        player.sendMessage("§aSwitched to PLAY mode! Your game is now running.");
         return true;
+    }
+    
+    /**
+     * Finds and executes the onJoin script for the player
+     * @param player The player to execute the script for
+     * @param creativeWorld The creative world to search for scripts
+     */
+    private void executeOnJoinScript(Player player, CreativeWorld creativeWorld) {
+        // Find the onJoin script using AutoConnectionManager
+        if (creativeWorld.getScripts() != null) {
+            for (CodeScript script : creativeWorld.getScripts()) {
+                // Check if the script's root block is an onJoin event
+                if (script.getRootBlock() != null && 
+                    "onJoin".equals(script.getRootBlock().getAction())) {
+                    
+                    // Execute script using ScriptEngine
+                    if (plugin.getServiceRegistry().getScriptEngine() != null) {
+                        plugin.getServiceRegistry().getScriptEngine().executeScript(script, player, "play_mode_start")
+                            .whenComplete((result, throwable) -> {
+                                if (throwable != null) {
+                                    player.sendMessage("§cError executing onJoin script: " + throwable.getMessage());
+                                    plugin.getLogger().warning("onJoin script execution failed with exception: " + throwable.getMessage());
+                                } else if (result != null && !result.isSuccess()) {
+                                    player.sendMessage("§conJoin script execution failed: " + result.getMessage());
+                                    plugin.getLogger().warning("onJoin script execution failed: " + result.getMessage());
+                                } else {
+                                    plugin.getLogger().info("Successfully executed onJoin script for player: " + player.getName());
+                                }
+                            });
+                    }
+                    break;
+                }
+            }
+        }
     }
 }

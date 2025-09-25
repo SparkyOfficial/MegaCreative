@@ -1,6 +1,7 @@
 package com.megacreative.listeners;
 
 import com.megacreative.MegaCreative;
+import com.megacreative.managers.PlayerModeManager;
 import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.Listener;
@@ -44,6 +45,12 @@ public class PlayerQuitListener implements Listener {
     @EventHandler
     public void onPlayerQuit(PlayerQuitEvent event) {
         Player player = event.getPlayer();
+        
+        // Clear player mode when they leave
+        if (plugin.getServiceRegistry() != null) {
+            PlayerModeManager modeManager = plugin.getServiceRegistry().getPlayerModeManager();
+            modeManager.clearMode(player);
+        }
         
         // Убираем игрока из менеджера скорбордов
         plugin.getScoreboardManager().removeScoreboard(event.getPlayer());

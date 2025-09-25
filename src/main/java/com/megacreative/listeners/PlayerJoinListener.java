@@ -1,6 +1,7 @@
 package com.megacreative.listeners;
 
 import com.megacreative.MegaCreative;
+import com.megacreative.managers.PlayerModeManager;
 import org.bukkit.Bukkit;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.Listener;
@@ -43,6 +44,12 @@ public class PlayerJoinListener implements Listener {
      */
     @EventHandler
     public void onPlayerJoin(PlayerJoinEvent event) {
+        // Set default player mode to DEV
+        if (plugin.getServiceRegistry() != null) {
+            PlayerModeManager modeManager = plugin.getServiceRegistry().getPlayerModeManager();
+            modeManager.setMode(event.getPlayer(), PlayerModeManager.PlayerMode.DEV);
+        }
+        
         // Загружаем данные игрока
         plugin.getVariableManager().loadPersistentData();
         

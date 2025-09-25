@@ -2,6 +2,7 @@ package com.megacreative.listeners;
 
 import com.megacreative.MegaCreative;
 import com.megacreative.interfaces.IWorldManager;
+import com.megacreative.managers.PlayerModeManager;
 import com.megacreative.models.CreativeWorld;
 import com.megacreative.models.WorldPermissions;
 import org.bukkit.entity.Player;
@@ -91,9 +92,21 @@ public class WorldProtectionListener implements Listener {
     
     @EventHandler(priority = EventPriority.HIGH)
     public void onPlayerInteract(PlayerInteractEvent event) {
+        Player player = event.getPlayer();
+        
+        // Check if player is in DEV mode
+        if (plugin != null && plugin.getServiceRegistry() != null) {
+            PlayerModeManager modeManager = plugin.getServiceRegistry().getPlayerModeManager();
+            if (modeManager.isInPlayMode(player)) {
+                // If player is in PLAY mode, don't allow interactions that might interfere with gameplay
+                // This interaction may be part of their game, not development
+                return;
+            }
+        }
+        
         if (event.getClickedBlock() != null && 
-            !checkWorldPermission(event.getPlayer(), "interact", event)) {
-            event.getPlayer().sendMessage("§c🚫 У вас нет прав на взаимодействие в этом мире!");
+            !checkWorldPermission(player, "interact", event)) {
+            player.sendMessage("§c🚫 У вас нет прав на взаимодействие в этом мире!");
         }
     }
     
