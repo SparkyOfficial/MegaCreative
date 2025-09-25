@@ -5,6 +5,8 @@ import com.megacreative.coding.CodeBlock;
 import com.megacreative.coding.ExecutionContext;
 import com.megacreative.coding.executors.ExecutionResult;
 import com.megacreative.services.BlockConfigService;
+import com.megacreative.coding.annotations.BlockMeta; // Added import
+import com.megacreative.coding.BlockType; // Added import
 import org.bukkit.entity.Player;
 import org.bukkit.inventory.ItemStack;
 
@@ -14,6 +16,7 @@ import java.util.function.Function;
  * Action for giving an item to a player.
  * This action retrieves an item from the container configuration and gives it to the player.
  */
+@BlockMeta(id = "giveItem", displayName = "§aGive Item", type = BlockType.ACTION) // Added annotation
 public class GiveItemAction implements BlockAction {
 
     @Override

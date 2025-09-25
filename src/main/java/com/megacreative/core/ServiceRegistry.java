@@ -397,6 +397,20 @@ public class ServiceRegistry {
             this.codeCompiler = new com.megacreative.services.CodeCompiler((MegaCreative) plugin);
             registerService(com.megacreative.services.CodeCompiler.class, codeCompiler);
             
+            // Initialize factories with dependency container
+            // Инициализировать фабрики с контейнером зависимостей
+            // Fabriken mit Abhängigkeitscontainer initialisieren
+            this.actionFactory = new ActionFactory(dependencyContainer);
+            this.conditionFactory = new ConditionFactory();
+            
+            // Register factories in the service registry
+            registerService(ActionFactory.class, actionFactory);
+            registerService(ConditionFactory.class, conditionFactory);
+            
+            // Initialize the factories to scan and register actions/conditions
+            this.actionFactory.registerAllActions();
+            this.conditionFactory.registerAllConditions();
+            
             plugin.getLogger().info(" YYS Service Registry initialized successfully!");
             // YYS Реестр сервисов успешно инициализирован!
             // YYS Serviceregister erfolgreich initialisiert!
@@ -420,7 +434,20 @@ public class ServiceRegistry {
         plugin.getLogger().info(" YYS Initializing additional services...");
         
         try {
-            // Load action parameters for all block configs after all services are initialized
+            // Initialize ScriptEngine with its dependencies
+            // Инициализировать ScriptEngine с его зависимостями
+            // ScriptEngine mit seinen Abhängigkeiten initialisieren
+            ScriptEngine scriptEngine = new DefaultScriptEngine(
+                (MegaCreative) plugin, 
+                variableManager, 
+                visualDebugger,
+                blockConfigService
+            );
+            
+            registerService(ScriptEngine.class, scriptEngine);
+            registerService(DefaultScriptEngine.class, (DefaultScriptEngine) scriptEngine);
+            
+            // Now that service registry is fully initialized, load action parameters for all block configs
             if (blockConfigService != null) {
                 // Ensure all materials are properly set first
                 blockConfigService.ensureMaterialsAreSet();
@@ -739,10 +766,10 @@ public class ServiceRegistry {
         // Register GUI editors for different actions
         // This would be expanded with actual editor implementations
         /*
-        guiRegistry.register("sendMessage", context -> 
-            new SendMessageEditor(context.getPlugin(), context.getPlayer(), context.getCodeBlock()));
-        guiRegistry.register("command", context -> 
-            new CommandEditor(context.getPlugin(), context.getPlayer(), context.getCodeBlock()));
+        guiRegistry.register("sendMessage", (plugin, player, codeBlock) -> 
+            new com.megacreative.gui.editors.player.SendMessageEditor(plugin, player, codeBlock));
+        guiRegistry.register("command", (plugin, player, codeBlock) -> 
+            new com.megacreative.gui.editors.actions.CommandEditor(plugin, player, codeBlock));
         // ... and so on for all editors
         */
     }

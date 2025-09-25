@@ -3,12 +3,15 @@ package com.megacreative.coding.conditions;
 import com.megacreative.coding.BlockCondition;
 import com.megacreative.coding.CodeBlock;
 import com.megacreative.coding.ExecutionContext;
+import com.megacreative.coding.annotations.BlockMeta; // Added import
+import com.megacreative.coding.BlockType; // Added import
 import org.bukkit.entity.Player;
 
 /**
  * Condition for checking if a player is an operator.
  * This condition returns true if the player is an operator, false otherwise.
  */
+@BlockMeta(id = "isOp", displayName = "§aIs OP", type = BlockType.CONDITION) // Added annotation
 public class IsOpCondition implements BlockCondition {
 
     @Override

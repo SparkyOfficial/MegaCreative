@@ -3,19 +3,15 @@ package com.megacreative.coding.conditions;
 import com.megacreative.coding.BlockCondition;
 import com.megacreative.coding.CodeBlock;
 import com.megacreative.coding.ExecutionContext;
-import com.megacreative.coding.ParameterResolver;
-import com.megacreative.coding.values.DataValue;
-import com.megacreative.services.BlockConfigService;
+import com.megacreative.coding.annotations.BlockMeta;
+import com.megacreative.coding.BlockType;
 import org.bukkit.entity.Player;
-import org.bukkit.inventory.ItemStack;
-import org.bukkit.inventory.meta.ItemMeta;
-
-import java.util.function.Function;
 
 /**
- * Condition for checking if a player has a specific permission from container configuration.
- * This condition retrieves a permission string from the container configuration and checks if the player has it.
+ * Condition for checking if a player has a specific permission.
+ * This condition returns true if the player has the specified permission, false otherwise.
  */
+@BlockMeta(id = "hasPermission", displayName = "§aHas Permission", type = BlockType.CONDITION)
 public class HasPermissionCondition implements BlockCondition {
 
     @Override
@@ -26,71 +22,19 @@ public class HasPermissionCondition implements BlockCondition {
         }
 
         try {
-            // Get the permission from the container configuration
-            String permission = getPermissionFromContainer(block, context);
-            if (permission == null || permission.isEmpty()) {
+            // Get permission parameter
+            com.megacreative.coding.values.DataValue permissionValue = block.getParameter("permission");
+            if (permissionValue == null || permissionValue.isEmpty()) {
                 return false;
             }
-
-            // Resolve any placeholders in the permission
-            ParameterResolver resolver = new ParameterResolver(context);
-            DataValue permissionValue = DataValue.of(permission);
-            DataValue resolvedPermission = resolver.resolve(context, permissionValue);
+            
+            String permission = permissionValue.asString();
             
             // Check if the player has the permission
-            String perm = resolvedPermission.asString();
-            if (perm != null && !perm.isEmpty()) {
-                return player.hasPermission(perm);
-            }
-            
-            return false;
+            return player.hasPermission(permission);
         } catch (Exception e) {
             // If there's an error, return false
             return false;
         }
-    }
-    
-    /**
-     * Gets permission from the container configuration
-     */
-    private String getPermissionFromContainer(CodeBlock block, ExecutionContext context) {
-        try {
-            // Get the BlockConfigService to resolve slot names
-            BlockConfigService blockConfigService = context.getPlugin().getServiceRegistry().getBlockConfigService();
-            
-            // Get the slot resolver for this condition
-            Function<String, Integer> slotResolver = blockConfigService.getSlotResolver(block.getCondition());
-            
-            if (slotResolver != null) {
-                // Get permission from the permission_slot
-                Integer permissionSlot = slotResolver.apply("permission_slot");
-                if (permissionSlot != null) {
-                    ItemStack permissionItem = block.getConfigItem(permissionSlot);
-                    if (permissionItem != null && permissionItem.hasItemMeta()) {
-                        // Extract permission from item
-                        return getPermissionFromItem(permissionItem);
-                    }
-                }
-            }
-        } catch (Exception e) {
-            context.getPlugin().getLogger().warning("Error getting permission from container in HasPermissionCondition: " + e.getMessage());
-        }
-        
-        return null;
-    }
-    
-    /**
-     * Extracts permission from an item
-     */
-    private String getPermissionFromItem(ItemStack item) {
-        ItemMeta meta = item.getItemMeta();
-        if (meta != null) {
-            String displayName = meta.getDisplayName();
-            if (displayName != null && !displayName.isEmpty()) {
-                // Remove color codes and return the permission
-                return displayName.replaceAll("[§0-9]", "").trim();
-            }
-        }
-        return null;
     }
 }

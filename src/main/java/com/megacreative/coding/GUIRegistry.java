@@ -1,26 +1,31 @@
 package com.megacreative.coding;
 
 import com.megacreative.MegaCreative;
-import com.megacreative.coding.CodeBlock;
 import com.megacreative.managers.GUIManager;
 import org.bukkit.entity.Player;
 
 import java.util.HashMap;
 import java.util.Map;
+import java.util.function.Function;
+
+@FunctionalInterface
+interface TriFunction<T, U, V, R> {
+    R apply(T t, U u, V v);
+}
 
 /**
  * Registry for GUI editors.
  * This class manages the registration and opening of GUI editors for different block actions.
  */
 public class GUIRegistry {
-    private final Map<String, Object> editors = new HashMap<>();
+    private final Map<String, TriFunction<MegaCreative, Player, CodeBlock, Object>> editors = new HashMap<>();
     
     /**
      * Registers a GUI editor for a specific action ID
      * @param actionId the action ID
      * @param factory the factory function that creates the GUI editor
      */
-    public void register(String actionId, Object factory) {
+    public void register(String actionId, TriFunction<MegaCreative, Player, CodeBlock, Object> factory) {
         editors.put(actionId, factory);
     }
     
@@ -33,9 +38,14 @@ public class GUIRegistry {
      */
     public void open(String actionId, MegaCreative plugin, Player player, CodeBlock codeBlock) {
         if (editors.containsKey(actionId)) {
-            EditorContext context = new EditorContext(plugin, player, codeBlock);
-            // For now, we'll just send a message since we're simplifying the implementation
-            player.sendMessage("GUI editor would open for action: " + codeBlock.getAction());
+            Object editor = editors.get(actionId).apply(plugin, player, codeBlock);
+            // Try to call open() method on the editor if it has one
+            try {
+                editor.getClass().getMethod("open").invoke(editor);
+            } catch (Exception e) {
+                // Fallback to default editor
+                openDefaultEditor(plugin, player, codeBlock);
+            }
         } else {
             // Open default parameter editor
             openDefaultEditor(plugin, player, codeBlock);
@@ -50,34 +60,18 @@ public class GUIRegistry {
      */
     private void openDefaultEditor(MegaCreative plugin, Player player, CodeBlock codeBlock) {
         // Implementation would depend on existing default editor classes
-        // This is a placeholder for the default editor
-        player.sendMessage("Default editor not implemented yet for action: " + codeBlock.getAction());
-    }
-    
-    /**
-     * Context class for passing parameters to GUI editor factories
-     */
-    public static class EditorContext {
-        private final MegaCreative plugin;
-        private final Player player;
-        private final CodeBlock codeBlock;
-        
-        public EditorContext(MegaCreative plugin, Player player, CodeBlock codeBlock) {
-            this.plugin = plugin;
-            this.player = player;
-            this.codeBlock = codeBlock;
-        }
-        
-        public MegaCreative getPlugin() {
-            return plugin;
-        }
-        
-        public Player getPlayer() {
-            return player;
-        }
-        
-        public CodeBlock getCodeBlock() {
-            return codeBlock;
-        }
+        new com.megacreative.coding.CodingParameterGUI(
+            player, 
+            codeBlock.getAction(), 
+            codeBlock.getLocation(), 
+            parameters -> {
+                // Apply parameters to the code block
+                for (Map.Entry<String, Object> entry : parameters.entrySet()) {
+                    codeBlock.setParameter(entry.getKey(), com.megacreative.coding.values.DataValue.fromObject(entry.getValue()));
+                }
+                player.sendMessage("§aПараметры сохранены!");
+            },
+            plugin.getServiceRegistry().getGuiManager()
+        ).open();
     }
 }

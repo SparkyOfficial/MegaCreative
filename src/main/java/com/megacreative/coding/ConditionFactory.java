@@ -1,194 +1,68 @@
 package com.megacreative.coding;
 
-import com.megacreative.coding.conditions.*;
+import com.megacreative.coding.annotations.BlockMeta;
 import com.megacreative.coding.executors.ExecutionResult;
 import com.megacreative.coding.values.DataValue;
-import com.megacreative.coding.annotations.BlockMeta; // Added import
-import com.megacreative.coding.scanner.BlockScanner; // Added import
+import com.megacreative.util.ClassScanner;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.function.Supplier;
-import java.util.logging.Logger; // Added import
+import java.util.logging.Logger;
 
 public class ConditionFactory {
 
-    private static final Logger LOGGER = Logger.getLogger(ConditionFactory.class.getName()); // Added logger
+    private static final Logger LOGGER = Logger.getLogger(ConditionFactory.class.getName());
     
-    // Constants for condition types
-    private static final String CONDITION_TYPE_EQUALS = "equals";
-    private static final String CONDITION_TYPE_EQUAL = "equal";
-    private static final String CONDITION_TYPE_GREATER = "greater";
-    private static final String CONDITION_TYPE_GREATER_THAN = "greater_than";
-    private static final String CONDITION_TYPE_LESS = "less";
-    private static final String CONDITION_TYPE_LESS_THAN = "less_than";
-    private static final String CONDITION_TYPE_CONTAINS = "contains";
-    private static final String CONDITION_TYPE_NOT_EMPTY = "not_empty";
-    private static final String CONDITION_TYPE_IS_TRUE = "is_true";
-    private static final String CONDITION_TYPE_TRUE = "true";
-    private static final String CONDITION_TYPE_IS_FALSE = "is_false";
-    private static final String CONDITION_TYPE_FALSE = "false";
-
     private final Map<String, Supplier<BlockCondition>> conditionMap = new HashMap<>();
-    
-    // Scanner for discovering annotated conditions
-    private final BlockScanner blockScanner; // Added scanner
+    private final Map<String, String> conditionDisplayNames = new HashMap<>();
 
     public ConditionFactory() {
-        this.blockScanner = new BlockScanner(); // Initialize scanner
-        scanAndRegisterConditions(); // Scan and register conditions
-        registerAllConditions();
+        // Constructor is now empty as registration happens later
     }
     
     /**
      * Scans for annotated conditions and registers them
      */
-    private void scanAndRegisterConditions() {
+    public void registerAllConditions() {
         // Scan packages for annotated conditions
-        blockScanner.scanPackages(
-            "com.megacreative.coding.actions.condition",
-            "com.megacreative.coding.conditions"
-        );
+        String basePackage = "com.megacreative.coding.conditions";
         
-        // Register discovered conditions
-        Map<String, Class<? extends BlockCondition>> conditionClasses = blockScanner.getConditionClasses();
-        for (Map.Entry<String, Class<? extends BlockCondition>> entry : conditionClasses.entrySet()) {
-            String conditionId = entry.getKey();
-            Class<? extends BlockCondition> conditionClass = entry.getValue();
-            
-            // Register the condition
-            registerAnnotatedCondition(conditionId, conditionClass);
+        com.megacreative.MegaCreative plugin = com.megacreative.MegaCreative.getInstance();
+        if (plugin == null) {
+            LOGGER.severe("Plugin instance not available for condition scanning");
+            return;
         }
-    }
-    
-    /**
-     * Registers a condition discovered through annotations
-     */
-    private void registerAnnotatedCondition(String conditionId, Class<? extends BlockCondition> conditionClass) {
-        try {
-            // Try no-argument constructor
-            java.lang.reflect.Constructor<? extends BlockCondition> constructor = conditionClass.getConstructor();
-            Supplier<BlockCondition> supplier = () -> {
-                try {
-                    return constructor.newInstance();
-                } catch (Exception e) {
-                    LOGGER.warning("Failed to create condition instance: " + e.getMessage());
-                    return null;
+        
+        for (Class<?> clazz : ClassScanner.findClasses(plugin, basePackage)) {
+            if (BlockCondition.class.isAssignableFrom(clazz) && !clazz.isInterface() && clazz.isAnnotationPresent(BlockMeta.class)) {
+                BlockMeta meta = clazz.getAnnotation(BlockMeta.class);
+                if (meta.type() == BlockType.CONDITION) {
+                    try {
+                        // Try no-argument constructor
+                        java.lang.reflect.Constructor<? extends BlockCondition> constructor = clazz.asSubclass(BlockCondition.class).getConstructor();
+                        register(meta.id(), meta.displayName(), () -> {
+                            try {
+                                return constructor.newInstance();
+                            } catch (Exception e) {
+                                LOGGER.warning("Failed to create condition instance: " + e.getMessage());
+                                return null;
+                            }
+                        });
+                    } catch (NoSuchMethodException e) {
+                        LOGGER.warning("No suitable constructor found for condition class: " + clazz.getName());
+                    } catch (Exception e) {
+                        LOGGER.warning("Error registering condition class " + clazz.getName() + ": " + e.getMessage());
+                    }
                 }
-            };
-            
-            conditionMap.put(conditionId, supplier);
-            LOGGER.info("Registered annotated condition: " + conditionId + " -> " + conditionClass.getName());
-        } catch (NoSuchMethodException e) {
-            LOGGER.warning("No suitable constructor found for condition class: " + conditionClass.getName());
-        } catch (Exception e) {
-            LOGGER.warning("Error creating supplier for condition class " + conditionClass.getName() + ": " + e.getMessage());
+            }
         }
+        
+        LOGGER.info("Загружено " + conditionMap.size() + " условий блоков.");
     }
     
-    private void register(String conditionId, Supplier<BlockCondition> supplier) {
+    private void register(String conditionId, String displayName, Supplier<BlockCondition> supplier) {
         conditionMap.put(conditionId, supplier);
-    }
-    
-    private void registerAllConditions() {
-        // --- BASIC PLAYER CONDITIONS ---
-        register("isOp", IsOpCondition::new);
-        register("hasPermission", HasPermissionCondition::new);
-        register("isNearBlock", IsNearBlockCondition::new);
-        register("mobNear", MobNearCondition::new);
-        register("playerGameMode", PlayerGameModeCondition::new);
-        register("playerHealth", PlayerHealthCondition::new);
-        register("isInWorld", IsInWorldCondition::new);
-        register("hasItem", HasItemCondition::new);
-        register("ifVarEquals", IfVarEqualsCondition::new);
-        
-        // --- NEW BASIC PLAYER CONDITIONS ---
-        register("compareVariable", CompareVariableCondition::new);
-        register("worldTime", WorldTimeCondition::new);
-        register("ifVarGreater", IfVarGreaterCondition::new);
-        register("ifVarLess", IfVarLessCondition::new);
-        register("isBlockType", IsBlockTypeCondition::new);
-        register("isPlayerHolding", IsPlayerHoldingCondition::new);
-        register("isNearEntity", IsNearEntityCondition::new);
-        register("hasArmor", HasArmorCondition::new);
-        register("isNight", IsNightCondition::new);
-        register("isRiding", IsRidingCondition::new);
-        
-        // --- ADVANCED CONDITION BLOCKS ---
-        register("checkPlayerStats", CheckPlayerStatsCondition::new);
-        register("checkWorldWeather", CheckWorldWeatherCondition::new);
-        register("checkPlayerInventory", CheckPlayerInventoryCondition::new);
-        register("checkServerOnline", CheckServerOnlineCondition::new);
-        
-        // --- INTEGRATION BLOCKS (Conditions) ---
-        register("worldGuardRegionCheck", WorldGuardRegionCheckCondition::new);
-        
-        // === GENERIC CONDITIONS - Mass Production System ===
-        // Register all simple conditions that can be handled by GenericCondition
-        registerGenericConditions();
-    }
-    
-    /**
-     * Register all simple conditions that can be handled by GenericCondition
-     * This enables rapid addition of new functionality without creating new classes
-     */
-    private void registerGenericConditions() {
-        // Player state conditions
-        registerGeneric("isSneaking");
-        registerGeneric("isSprinting");
-        registerGeneric("isFlying");
-        registerGeneric("isOnGround");
-        registerGeneric("isInWater");
-        registerGeneric("isBlocking");
-        
-        // Gamemode conditions
-        registerGeneric("isGameMode");
-        
-        // Health/food conditions
-        registerGeneric("healthEquals");
-        registerGeneric("healthGreaterThan");
-        registerGeneric("healthLessThan");
-        registerGeneric("foodEquals");
-        registerGeneric("foodGreaterThan");
-        registerGeneric("foodLessThan");
-        
-        // Inventory conditions
-        registerGeneric("hasItem");
-        registerGeneric("hasItemInHand");
-        registerGeneric("inventoryFull");
-        registerGeneric("inventoryEmpty");
-        
-        // Location conditions
-        registerGeneric("atLocation");
-        registerGeneric("inBiome");
-        registerGeneric("aboveY");
-        registerGeneric("belowY");
-        
-        // Time/weather conditions
-        registerGeneric("isDay");
-        registerGeneric("isNight");
-        registerGeneric("isRaining");
-        registerGeneric("isThundering");
-        
-        // Potion effect conditions
-        registerGeneric("hasPotionEffect");
-        
-        // Block conditions
-        registerGeneric("blockAtLocation");
-        registerGeneric("standingOnBlock");
-        
-        // Comparison conditions
-        registerGeneric("randomChance");
-        registerGeneric("playerCount");
-        
-        // Economy conditions
-        registerGeneric("hasMoney");
-    }
-    
-    /**
-     * Helper method to register a generic condition
-     */
-    private void registerGeneric(String conditionId) {
-        register(conditionId, GenericCondition::new);
+        conditionDisplayNames.put(conditionId, displayName);
     }
 
     public BlockCondition createCondition(String conditionId) {
@@ -199,180 +73,23 @@ public class ConditionFactory {
         return null;
     }
     
-    // Add missing methods with proper implementation
-    public void registerCondition(String conditionId, String displayName) {
-        // Register the condition if it's not already registered
-        if (!conditionMap.containsKey(conditionId)) {
-            // Register a generic condition that evaluates based on parameters
-            register(conditionId, () -> new BlockCondition() {
-                @Override
-                public boolean evaluate(CodeBlock block, ExecutionContext context) {
-                    try {
-                        // Get condition parameters
-                        DataValue conditionType = block.getParameter("type");
-                        DataValue conditionValue = block.getParameter("value");
-                        DataValue expectedValue = block.getParameter("expected");
-                        
-                        // If we have a specific evaluation type, use it
-                        if (conditionType != null) {
-                            return evaluateConditionByType(conditionType, conditionValue, expectedValue);
-                        }
-                        
-                        // Default evaluation - check if condition value is truthy
-                        return evaluateDefaultCondition(conditionValue);
-                    } catch (Exception e) {
-                        context.getPlugin().getLogger().warning("Error evaluating condition " + conditionId + ": " + e.getMessage());
-                        // Default to false on error for safety
-                        return false;
-                    }
-                }
-            });
-        }
-    }
-    
     /**
-     * Register a condition with a custom BlockCondition implementation
+     * Gets the display name for a condition
      * 
      * @param conditionId The condition ID
-     * @param condition The BlockCondition implementation
+     * @return The display name, or the condition ID if no display name is set
      */
-    public void registerCondition(String conditionId, BlockCondition condition) {
-        // Register the condition if it's not already registered
-        if (!conditionMap.containsKey(conditionId)) {
-            register(conditionId, () -> condition);
-        }
+    public String getConditionDisplayName(String conditionId) {
+        return conditionDisplayNames.getOrDefault(conditionId, conditionId);
     }
     
     /**
-     * Register a condition with a supplier
+     * Gets all registered condition display names
      * 
-     * @param conditionId The condition ID
-     * @param supplier The supplier for creating BlockCondition instances
+     * @return A map of condition IDs to display names
      */
-    public void registerCondition(String conditionId, Supplier<BlockCondition> supplier) {
-        // Register the condition if it's not already registered
-        if (!conditionMap.containsKey(conditionId)) {
-            register(conditionId, supplier);
-        }
-    }
-    
-    /**
-     * Evaluate condition based on its type
-     */
-    private boolean evaluateConditionByType(DataValue conditionType, DataValue conditionValue, DataValue expectedValue) {
-        switch (conditionType.asString().toLowerCase()) {
-            case CONDITION_TYPE_EQUALS:
-            case CONDITION_TYPE_EQUAL:
-                return evaluateEqualsCondition(conditionValue, expectedValue);
-            case CONDITION_TYPE_GREATER:
-            case CONDITION_TYPE_GREATER_THAN:
-                return evaluateGreaterCondition(conditionValue, expectedValue);
-            case CONDITION_TYPE_LESS:
-            case CONDITION_TYPE_LESS_THAN:
-                return evaluateLessCondition(conditionValue, expectedValue);
-            case CONDITION_TYPE_CONTAINS:
-                return evaluateContainsCondition(conditionValue, expectedValue);
-            case CONDITION_TYPE_NOT_EMPTY:
-                return evaluateNotEmptyCondition(conditionValue);
-            case CONDITION_TYPE_IS_TRUE:
-            case CONDITION_TYPE_TRUE:
-                return evaluateTrueCondition(conditionValue);
-            case CONDITION_TYPE_IS_FALSE:
-            case CONDITION_TYPE_FALSE:
-                return evaluateFalseCondition(conditionValue);
-            default:
-                // Default evaluation - check if condition value is truthy
-                return evaluateDefaultCondition(conditionValue);
-        }
-    }
-    
-    /**
-     * Evaluate equals condition
-     */
-    private boolean evaluateEqualsCondition(DataValue conditionValue, DataValue expectedValue) {
-        return conditionValue != null && expectedValue != null && 
-               conditionValue.asString().equals(expectedValue.asString());
-    }
-    
-    /**
-     * Evaluate greater than condition
-     */
-    private boolean evaluateGreaterCondition(DataValue conditionValue, DataValue expectedValue) {
-        if (conditionValue != null && expectedValue != null) {
-            try {
-                double val1 = Double.parseDouble(conditionValue.asString());
-                double val2 = Double.parseDouble(expectedValue.asString());
-                return val1 > val2;
-            } catch (NumberFormatException e) {
-                return false;
-            }
-        }
-        return false;
-    }
-    
-    /**
-     * Evaluate less than condition
-     */
-    private boolean evaluateLessCondition(DataValue conditionValue, DataValue expectedValue) {
-        if (conditionValue != null && expectedValue != null) {
-            try {
-                double val1 = Double.parseDouble(conditionValue.asString());
-                double val2 = Double.parseDouble(expectedValue.asString());
-                return val1 < val2;
-            } catch (NumberFormatException e) {
-                return false;
-            }
-        }
-        return false;
-    }
-    
-    /**
-     * Evaluate contains condition
-     */
-    private boolean evaluateContainsCondition(DataValue conditionValue, DataValue expectedValue) {
-        if (conditionValue != null && expectedValue != null) {
-            return conditionValue.asString().contains(expectedValue.asString());
-        }
-        return false;
-    }
-    
-    /**
-     * Evaluate not empty condition
-     */
-    private boolean evaluateNotEmptyCondition(DataValue conditionValue) {
-        return conditionValue != null && !conditionValue.asString().isEmpty();
-    }
-    
-    /**
-     * Evaluate true condition
-     */
-    private boolean evaluateTrueCondition(DataValue conditionValue) {
-        if (conditionValue != null) {
-            return Boolean.parseBoolean(conditionValue.asString());
-        }
-        return false;
-    }
-    
-    /**
-     * Evaluate false condition
-     */
-    private boolean evaluateFalseCondition(DataValue conditionValue) {
-        if (conditionValue != null) {
-            return !Boolean.parseBoolean(conditionValue.asString());
-        }
-        return false;
-    }
-    
-    /**
-     * Default condition evaluation
-     */
-    private boolean evaluateDefaultCondition(DataValue conditionValue) {
-        if (conditionValue != null) {
-            String value = conditionValue.asString();
-            return !value.isEmpty() && !"false".equalsIgnoreCase(value) && !"0".equals(value);
-        }
-        // If no parameters, default to true to allow execution
-        return true;
+    public Map<String, String> getConditionDisplayNames() {
+        return new HashMap<>(conditionDisplayNames);
     }
     
     public int getConditionCount() {
