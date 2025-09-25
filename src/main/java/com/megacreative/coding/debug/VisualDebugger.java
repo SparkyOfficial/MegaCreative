@@ -201,6 +201,79 @@ public class VisualDebugger {
     }
     
     /**
+     * Lists all breakpoints for a player (enhanced version)
+     */
+    public void listBreakpointsEnhanced(Player player) {
+        if (advancedDebugger != null) {
+            advancedDebugger.listBreakpoints(player);
+        } else {
+            listBreakpoints(player);
+        }
+    }
+    
+    /**
+     * Sets a breakpoint using the advanced debugger
+     */
+    public void setBreakpoint(Player player, Location location, String condition) {
+        if (advancedDebugger != null) {
+            advancedDebugger.setBreakpoint(player, location, condition);
+        } else {
+            addBreakpoint(player, location, condition);
+        }
+    }
+    
+    /**
+     * Removes a breakpoint using the advanced debugger
+     */
+    public void removeBreakpointAdvanced(Player player, Location location) {
+        if (advancedDebugger != null) {
+            advancedDebugger.removeBreakpoint(player, location);
+        } else {
+            removeBreakpoint(player, location);
+        }
+    }
+    
+    /**
+     * Toggles a breakpoint using the advanced debugger
+     */
+    public void toggleBreakpoint(Player player, Location location) {
+        if (advancedDebugger != null) {
+            advancedDebugger.toggleBreakpoint(player, location);
+        }
+    }
+    
+    /**
+     * Sets a hit limit for a breakpoint using the advanced debugger
+     */
+    public void setBreakpointHitLimit(Player player, Location location, int limit) {
+        if (advancedDebugger != null) {
+            advancedDebugger.setBreakpointHitLimit(player, location, limit);
+        }
+    }
+    
+    /**
+     * Steps to the next block in step-by-step execution mode
+     */
+    public void stepToNextBlock(Player player) {
+        if (advancedDebugger != null) {
+            advancedDebugger.stepToNextBlock(player);
+        } else {
+            player.sendMessage("§cAdvanced debugger not available");
+        }
+    }
+    
+    /**
+     * Continues execution until the next breakpoint
+     */
+    public void continueExecution(Player player) {
+        if (advancedDebugger != null) {
+            advancedDebugger.continueExecution(player);
+        } else {
+            player.sendMessage("§cAdvanced debugger not available");
+        }
+    }
+    
+    /**
      * Starts execution tracing for a player
      */
     public void startTracing(Player player, int maxSteps) {
@@ -395,26 +468,32 @@ public class VisualDebugger {
         
         session.executionStep++;
         
-        // Check for breakpoints
-        BreakpointManager bpManager = breakpointManagers.get(player.getUniqueId());
-        if (bpManager != null && bpManager.hasBreakpointAt(blockLocation)) {
-            Breakpoint bp = bpManager.getBreakpointAt(blockLocation);
-            player.sendMessage("§6⚠ Execution paused at breakpoint: " + block.getAction());
-            player.sendMessage("§7Location: " + formatLocation(blockLocation));
+        // Check for breakpoints using advanced debugger if available
+        if (advancedDebugger != null) {
+            // The advanced debugger handles breakpoint checking internally
+            advancedDebugger.visualizeBlockExecution(player, block, blockLocation);
+        } else {
+            // Fallback to basic breakpoint checking
+            BreakpointManager bpManager = breakpointManagers.get(player.getUniqueId());
+            if (bpManager != null && bpManager.hasBreakpointAt(blockLocation)) {
+                Breakpoint bp = bpManager.getBreakpointAt(blockLocation);
+                player.sendMessage("§6⚠ Execution paused at breakpoint: " + block.getAction());
+                player.sendMessage("§7Location: " + formatLocation(blockLocation));
+            }
+            
+            // Add to execution trace
+            ExecutionTracer tracer = executionTracers.get(player.getUniqueId());
+            if (tracer != null) {
+                tracer.addStep(new ExecutionStep(block.getAction(), blockLocation, System.currentTimeMillis()));
+            }
+            
+            // Visualize execution
+            visualizeBlockExecution(player, block, blockLocation);
+            
+            // Show execution message
+            player.sendMessage("§e▶ Executing: " + block.getAction() + 
+                              " §7(" + formatLocation(blockLocation) + ")");
         }
-        
-        // Add to execution trace
-        ExecutionTracer tracer = executionTracers.get(player.getUniqueId());
-        if (tracer != null) {
-            tracer.addStep(new ExecutionStep(block.getAction(), blockLocation, System.currentTimeMillis()));
-        }
-        
-        // Visualize execution
-        visualizeBlockExecution(player, block, blockLocation);
-        
-        // Show execution message
-        player.sendMessage("§e▶ Executing: " + block.getAction() + 
-                          " §7(" + formatLocation(blockLocation) + ")");
     }
     
     /**

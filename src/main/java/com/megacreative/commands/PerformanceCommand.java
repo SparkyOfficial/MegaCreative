@@ -182,26 +182,26 @@ public class PerformanceCommand implements CommandExecutor, TabCompleter {
         com.megacreative.coding.monitoring.AdvancedScriptOptimizer optimizer = 
             new com.megacreative.coding.monitoring.AdvancedScriptOptimizer(plugin, plugin.getScriptPerformanceMonitor());
         
-        com.megacreative.coding.monitoring.AdvancedScriptOptimizer.ScriptOptimizationReport report = 
+        ScriptOptimizationReport report = 
             optimizer.analyzeScript(script);
         
         player.sendMessage("§8§m                    §r §b§lOptimization Suggestions: " + scriptName + " §8§m                    ");
         player.sendMessage("§7" + report.getSummary());
         
-        List<com.megacreative.coding.monitoring.AdvancedScriptOptimizer.OptimizationSuggestion> suggestions = 
+        List<OptimizationSuggestion> suggestions = 
             report.getSuggestions();
         
         if (suggestions.isEmpty()) {
             player.sendMessage("§aNo optimization suggestions found! Script is well optimized.");
         } else {
-            for (com.megacreative.coding.monitoring.AdvancedScriptOptimizer.OptimizationSuggestion suggestion : suggestions) {
+            for (OptimizationSuggestion suggestion : suggestions) {
                 String color = "§7"; // Default to LOW
-                com.megacreative.coding.monitoring.OptimizationPriority priority = suggestion.getPriority();
-                if (priority == com.megacreative.coding.monitoring.OptimizationPriority.CRITICAL) {
+                OptimizationPriority priority = suggestion.getPriority();
+                if (priority == OptimizationPriority.CRITICAL) {
                     color = "§4";
-                } else if (priority == com.megacreative.coding.monitoring.OptimizationPriority.HIGH) {
+                } else if (priority == OptimizationPriority.HIGH) {
                     color = "§c";
-                } else if (priority == com.megacreative.coding.monitoring.OptimizationPriority.MEDIUM) {
+                } else if (priority == OptimizationPriority.MEDIUM) {
                     color = "§e";
                 }
                 

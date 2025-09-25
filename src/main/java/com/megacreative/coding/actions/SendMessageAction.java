@@ -7,6 +7,8 @@ import com.megacreative.coding.ParameterResolver;
 import com.megacreative.coding.executors.ExecutionResult;
 import com.megacreative.coding.values.DataValue;
 import com.megacreative.services.BlockConfigService;
+import com.megacreative.coding.annotations.BlockMeta;
+import com.megacreative.coding.BlockType;
 import org.bukkit.entity.Player;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.inventory.meta.ItemMeta;
@@ -17,6 +19,7 @@ import java.util.function.Function;
  * Action for sending a message to a player.
  * This action retrieves a message from the container configuration and sends it to the player.
  */
+@BlockMeta(id = "sendMessage", displayName = "§aSend Message", type = BlockType.ACTION) // Added annotation
 public class SendMessageAction implements BlockAction {
 
     @Override

@@ -6,6 +6,8 @@ import com.megacreative.coding.ExecutionContext;
 import com.megacreative.coding.executors.ExecutionResult;
 import com.megacreative.coding.values.DataValue;
 import com.megacreative.services.BlockConfigService;
+import com.megacreative.coding.annotations.BlockMeta; // Added import
+import com.megacreative.coding.BlockType; // Added import
 import org.bukkit.Location;
 import org.bukkit.World;
 import org.bukkit.entity.Player;
@@ -18,6 +20,7 @@ import java.util.function.Function;
  * Action for teleporting a player to a location.
  * This action retrieves location coordinates from the container configuration and teleports the player.
  */
+@BlockMeta(id = "teleport", displayName = "§aTeleport", type = BlockType.ACTION) // Added annotation
 public class TeleportAction implements BlockAction {
 
     @Override

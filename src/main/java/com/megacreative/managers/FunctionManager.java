@@ -4,6 +4,11 @@ import com.megacreative.MegaCreative;
 import com.megacreative.coding.CodeScript;
 import com.megacreative.coding.CodeBlock;
 import com.megacreative.models.CreativeWorld;
+import com.megacreative.coding.functions.FunctionDefinition;
+import com.megacreative.coding.functions.AdvancedFunctionManager;
+import com.megacreative.coding.values.DataValue;
+import com.megacreative.coding.values.ValueType;
+import com.megacreative.coding.executors.ExecutionResult;
 import org.bukkit.entity.Player;
 
 import java.util.HashMap;
@@ -11,17 +16,28 @@ import java.util.Map;
 import java.util.List;
 import java.util.ArrayList;
 import java.util.UUID;
+import java.util.concurrent.CompletableFuture;
 
 /**
  * Менеджер для работы с пользовательскими функциями.
  * Позволяет сохранять, загружать и выполнять функции.
+ * Enhanced with call stack management and integration with AdvancedFunctionManager.
  */
 public class FunctionManager {
     private final MegaCreative plugin;
+    private final AdvancedFunctionManager advancedFunctionManager;
     private final Map<String, CodeScript> globalFunctions = new HashMap<>();
     
     public FunctionManager(MegaCreative plugin) {
         this.plugin = plugin;
+        this.advancedFunctionManager = new AdvancedFunctionManager(plugin);
+    }
+    
+    /**
+     * Gets the advanced function manager
+     */
+    public AdvancedFunctionManager getAdvancedFunctionManager() {
+        return advancedFunctionManager;
     }
     
     /**
@@ -54,7 +70,63 @@ public class FunctionManager {
         // Добавляем функцию в мир
         world.getScripts().add(function);
         
+        // Register with AdvancedFunctionManager
+        registerWithAdvancedManager(function, world);
+        
         return true;
+    }
+    
+    /**
+     * Registers a function with the AdvancedFunctionManager
+     */
+    private void registerWithAdvancedManager(CodeScript functionScript, CreativeWorld world) {
+        try {
+            // Create function parameters based on the script
+            List<FunctionDefinition.FunctionParameter> parameters = new ArrayList<>();
+            
+            // Extract parameters from the function root block
+            CodeBlock rootBlock = functionScript.getRootBlock();
+            if (rootBlock != null) {
+                // Add parameters from block configuration
+                Map<String, DataValue> params = rootBlock.getParameters();
+                int paramIndex = 0;
+                for (Map.Entry<String, DataValue> entry : params.entrySet()) {
+                    String paramName = entry.getKey();
+                    DataValue paramValue = entry.getValue();
+                    
+                    // Skip non-parameter entries
+                    if (paramName.startsWith("param_")) {
+                        String cleanName = paramName.substring(6); // Remove "param_" prefix
+                        ValueType paramType = paramValue != null ? paramValue.getType() : ValueType.TEXT;
+                        parameters.add(new FunctionDefinition.FunctionParameter(
+                            cleanName, 
+                            paramType, 
+                            true, 
+                            paramValue, 
+                            "Parameter " + cleanName
+                        ));
+                        paramIndex++;
+                    }
+                }
+            }
+            
+            // Create function definition
+            FunctionDefinition functionDef = new FunctionDefinition(
+                functionScript.getName(),
+                functionScript.getDescription(),
+                null, // owner will be set by scope
+                parameters,
+                functionScript.getBlocks(), // function blocks
+                ValueType.ANY, // return type - can be anything
+                FunctionDefinition.FunctionScope.WORLD // scope within the world
+            );
+            
+            // Register the function
+            advancedFunctionManager.registerFunction(functionDef);
+            
+        } catch (Exception e) {
+            plugin.getLogger().warning("Failed to register function with AdvancedFunctionManager: " + e.getMessage());
+        }
     }
     
     /**
@@ -116,7 +188,13 @@ public class FunctionManager {
         }
         
         if (functionToRemove != null) {
-            return world.getScripts().remove(functionToRemove);
+            boolean removed = world.getScripts().remove(functionToRemove);
+            if (removed) {
+                // Also remove from AdvancedFunctionManager
+                // Note: AdvancedFunctionManager doesn't have a direct remove method in the current implementation
+                plugin.getLogger().info("Removed function: " + functionName);
+            }
+            return removed;
         }
         
         return false;
@@ -150,5 +228,51 @@ public class FunctionManager {
         }
         
         return false;
+    }
+    
+    /**
+     * Executes a function with the given arguments
+     * @param functionName The name of the function to execute
+     * @param caller The player calling the function
+     * @param arguments The arguments to pass to the function
+     * @return A CompletableFuture with the execution result
+     */
+    public CompletableFuture<ExecutionResult> executeFunction(String functionName, Player caller, DataValue[] arguments) {
+        if (functionName == null || caller == null) {
+            return CompletableFuture.completedFuture(
+                ExecutionResult.error("Invalid function call parameters"));
+        }
+        
+        // Delegate to AdvancedFunctionManager
+        return advancedFunctionManager.executeFunction(functionName, caller, arguments);
+    }
+    
+    /**
+     * Gets function statistics and performance data
+     * @return A map containing function system statistics
+     */
+    public Map<String, Object> getFunctionStatistics() {
+        return advancedFunctionManager.getFunctionStatistics();
+    }
+    
+    /**
+     * Gets all functions available to a specific player
+     * @param player The player to get functions for
+     * @return A list of available functions
+     */
+    public List<FunctionDefinition> getAvailableFunctions(Player player) {
+        if (player == null) {
+            return new ArrayList<>();
+        }
+        return advancedFunctionManager.getAvailableFunctions(player);
+    }
+    
+    /**
+     * Shutdown the function manager and clean up resources
+     */
+    public void shutdown() {
+        if (advancedFunctionManager != null) {
+            advancedFunctionManager.shutdown();
+        }
     }
 }

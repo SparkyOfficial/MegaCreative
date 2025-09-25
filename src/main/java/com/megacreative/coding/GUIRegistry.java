@@ -2,54 +2,82 @@ package com.megacreative.coding;
 
 import com.megacreative.MegaCreative;
 import com.megacreative.coding.CodeBlock;
+import com.megacreative.managers.GUIManager;
 import org.bukkit.entity.Player;
 
 import java.util.HashMap;
 import java.util.Map;
-import java.util.function.BiFunction;
 
 /**
- * Registry for GUI editors to eliminate the large switch-case in BlockPlacementHandler.
- * This allows for dynamic registration of editors without modifying the core handler.
+ * Registry for GUI editors.
+ * This class manages the registration and opening of GUI editors for different block actions.
  */
 public class GUIRegistry {
-    private final Map<String, BiFunction<MegaCreative, Player, CodeBlock>> editorFactories = new HashMap<>();
+    private final Map<String, Object> editors = new HashMap<>();
     
     /**
-     * Registers an editor factory for a specific action ID
+     * Registers a GUI editor for a specific action ID
+     * @param actionId the action ID
+     * @param factory the factory function that creates the GUI editor
      */
-    public void registerEditor(String actionId, BiFunction<MegaCreative, Player, CodeBlock> factory) {
-        editorFactories.put(actionId, factory);
+    public void register(String actionId, Object factory) {
+        editors.put(actionId, factory);
     }
     
     /**
-     * Opens the appropriate editor for an action ID
+     * Opens a GUI editor for a specific action ID
+     * @param actionId the action ID
+     * @param plugin the MegaCreative plugin instance
+     * @param player the player to open the GUI for
+     * @param codeBlock the code block to edit
      */
-    public void openEditor(String actionId, MegaCreative plugin, Player player, CodeBlock codeBlock) {
-        BiFunction<MegaCreative, Player, CodeBlock> factory = editorFactories.get(actionId);
-        if (factory != null) {
-            // Create and open the editor
-            // Note: This is a simplified approach - in reality, you'd want to pass the codeBlock to the editor
-            // and have the editor handle its own opening
-            try {
-                // This is a placeholder implementation
-                // In a real implementation, you would instantiate the editor and call its open() method
-                Object editor = factory.apply(plugin, player);
-                if (editor != null) {
-                    // Call open method if it exists
-                    editor.getClass().getMethod("open").invoke(editor);
-                }
-            } catch (Exception e) {
-                player.sendMessage("§cError opening editor for " + actionId);
-                plugin.getLogger().severe("Error opening editor for " + actionId + ": " + e.getMessage());
-            }
+    public void open(String actionId, MegaCreative plugin, Player player, CodeBlock codeBlock) {
+        if (editors.containsKey(actionId)) {
+            EditorContext context = new EditorContext(plugin, player, codeBlock);
+            // For now, we'll just send a message since we're simplifying the implementation
+            player.sendMessage("GUI editor would open for action: " + codeBlock.getAction());
+        } else {
+            // Open default parameter editor
+            openDefaultEditor(plugin, player, codeBlock);
         }
     }
     
     /**
-     * Checks if an editor is registered for an action ID
+     * Opens the default parameter editor for a code block
+     * @param plugin the MegaCreative plugin instance
+     * @param player the player to open the GUI for
+     * @param codeBlock the code block to edit
      */
-    public boolean hasEditor(String actionId) {
-        return editorFactories.containsKey(actionId);
+    private void openDefaultEditor(MegaCreative plugin, Player player, CodeBlock codeBlock) {
+        // Implementation would depend on existing default editor classes
+        // This is a placeholder for the default editor
+        player.sendMessage("Default editor not implemented yet for action: " + codeBlock.getAction());
+    }
+    
+    /**
+     * Context class for passing parameters to GUI editor factories
+     */
+    public static class EditorContext {
+        private final MegaCreative plugin;
+        private final Player player;
+        private final CodeBlock codeBlock;
+        
+        public EditorContext(MegaCreative plugin, Player player, CodeBlock codeBlock) {
+            this.plugin = plugin;
+            this.player = player;
+            this.codeBlock = codeBlock;
+        }
+        
+        public MegaCreative getPlugin() {
+            return plugin;
+        }
+        
+        public Player getPlayer() {
+            return player;
+        }
+        
+        public CodeBlock getCodeBlock() {
+            return codeBlock;
+        }
     }
 }

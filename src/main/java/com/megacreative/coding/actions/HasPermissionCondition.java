@@ -5,13 +5,15 @@ import com.megacreative.coding.CodeBlock;
 import com.megacreative.coding.ExecutionContext;
 import com.megacreative.coding.ParameterResolver;
 import com.megacreative.coding.values.DataValue;
+import com.megacreative.coding.annotations.BlockMeta; // Added import
+import com.megacreative.coding.BlockType; // Added import
 import org.bukkit.entity.Player;
 
+@BlockMeta(id = "hasPermission", displayName = "§aHas Permission", type = BlockType.CONDITION) // Added annotation
 public class HasPermissionCondition implements BlockCondition {
     @Override
-    public boolean evaluate(ExecutionContext context) {
+    public boolean evaluate(CodeBlock block, ExecutionContext context) { // Fixed method signature
         Player player = context.getPlayer();
-        CodeBlock block = context.getCurrentBlock();
         
         if (player == null || block == null) return false;
         

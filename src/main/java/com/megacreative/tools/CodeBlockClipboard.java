@@ -489,7 +489,7 @@ public class CodeBlockClipboard {
      * @return Tiefe Kopie des CodeBlocks
      */
     private CodeBlock createDeepCopy(CodeBlock original) {
-        CodeBlock copy = new CodeBlock(original.getMaterial(), original.getAction());
+        CodeBlock copy = new CodeBlock(original.getMaterialName(), original.getAction());
         
         // Copy all parameters
         // Копировать все параметры

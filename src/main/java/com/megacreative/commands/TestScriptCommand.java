@@ -47,7 +47,7 @@ public class TestScriptCommand implements CommandExecutor {
             }
             
             // Create a simple test script
-            CodeBlock rootBlock = new CodeBlock(Material.DIAMOND_BLOCK, "sendMessage");
+            CodeBlock rootBlock = new CodeBlock(Material.DIAMOND_BLOCK.name(), "sendMessage");
             
             Map<String, DataValue> parameters = new HashMap<>();
             parameters.put("message", DataValue.fromObject("Hello from test script!"));

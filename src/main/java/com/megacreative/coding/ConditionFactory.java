@@ -3,12 +3,17 @@ package com.megacreative.coding;
 import com.megacreative.coding.conditions.*;
 import com.megacreative.coding.executors.ExecutionResult;
 import com.megacreative.coding.values.DataValue;
+import com.megacreative.coding.annotations.BlockMeta; // Added import
+import com.megacreative.coding.scanner.BlockScanner; // Added import
 import java.util.HashMap;
 import java.util.Map;
 import java.util.function.Supplier;
+import java.util.logging.Logger; // Added import
 
 public class ConditionFactory {
 
+    private static final Logger LOGGER = Logger.getLogger(ConditionFactory.class.getName()); // Added logger
+    
     // Constants for condition types
     private static final String CONDITION_TYPE_EQUALS = "equals";
     private static final String CONDITION_TYPE_EQUAL = "equal";
@@ -24,9 +29,60 @@ public class ConditionFactory {
     private static final String CONDITION_TYPE_FALSE = "false";
 
     private final Map<String, Supplier<BlockCondition>> conditionMap = new HashMap<>();
+    
+    // Scanner for discovering annotated conditions
+    private final BlockScanner blockScanner; // Added scanner
 
     public ConditionFactory() {
+        this.blockScanner = new BlockScanner(); // Initialize scanner
+        scanAndRegisterConditions(); // Scan and register conditions
         registerAllConditions();
+    }
+    
+    /**
+     * Scans for annotated conditions and registers them
+     */
+    private void scanAndRegisterConditions() {
+        // Scan packages for annotated conditions
+        blockScanner.scanPackages(
+            "com.megacreative.coding.actions.condition",
+            "com.megacreative.coding.conditions"
+        );
+        
+        // Register discovered conditions
+        Map<String, Class<? extends BlockCondition>> conditionClasses = blockScanner.getConditionClasses();
+        for (Map.Entry<String, Class<? extends BlockCondition>> entry : conditionClasses.entrySet()) {
+            String conditionId = entry.getKey();
+            Class<? extends BlockCondition> conditionClass = entry.getValue();
+            
+            // Register the condition
+            registerAnnotatedCondition(conditionId, conditionClass);
+        }
+    }
+    
+    /**
+     * Registers a condition discovered through annotations
+     */
+    private void registerAnnotatedCondition(String conditionId, Class<? extends BlockCondition> conditionClass) {
+        try {
+            // Try no-argument constructor
+            java.lang.reflect.Constructor<? extends BlockCondition> constructor = conditionClass.getConstructor();
+            Supplier<BlockCondition> supplier = () -> {
+                try {
+                    return constructor.newInstance();
+                } catch (Exception e) {
+                    LOGGER.warning("Failed to create condition instance: " + e.getMessage());
+                    return null;
+                }
+            };
+            
+            conditionMap.put(conditionId, supplier);
+            LOGGER.info("Registered annotated condition: " + conditionId + " -> " + conditionClass.getName());
+        } catch (NoSuchMethodException e) {
+            LOGGER.warning("No suitable constructor found for condition class: " + conditionClass.getName());
+        } catch (Exception e) {
+            LOGGER.warning("Error creating supplier for condition class " + conditionClass.getName() + ": " + e.getMessage());
+        }
     }
     
     private void register(String conditionId, Supplier<BlockCondition> supplier) {

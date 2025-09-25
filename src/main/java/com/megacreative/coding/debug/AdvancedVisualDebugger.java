@@ -15,6 +15,7 @@ import org.bukkit.util.Vector;
 import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.Objects;
+import java.util.concurrent.CompletableFuture;
 
 /**
  * Advanced visual debugger with enhanced visualization and analysis capabilities
@@ -41,6 +42,13 @@ public class AdvancedVisualDebugger {
     private final VisualDebugger basicDebugger;
     private final Map<UUID, VisualizationSession> visualizationSessions = new ConcurrentHashMap<>();
     private final Map<UUID, PerformanceAnalyzer> performanceAnalyzers = new ConcurrentHashMap<>();
+    private final Map<UUID, BreakpointManager> breakpointManagers = new ConcurrentHashMap<>();
+    private final Map<Location, Breakpoint> globalBreakpoints = new ConcurrentHashMap<>();
+    
+    public AdvancedVisualDebugger(MegaCreative plugin, VisualDebugger basicDebugger) {
+        this.plugin = plugin;
+        this.basicDebugger = basicDebugger;
+    }
     
     /**
      * Starts performance analysis for a player's script execution
@@ -73,11 +81,6 @@ public class AdvancedVisualDebugger {
         }
     }
     
-    public AdvancedVisualDebugger(MegaCreative plugin, VisualDebugger basicDebugger) {
-        this.plugin = plugin;
-        this.basicDebugger = basicDebugger;
-    }
-    
     /**
      * Represents a visualization session
      */
@@ -97,12 +100,15 @@ public class AdvancedVisualDebugger {
         private int executionSpeed = 1; // 1x speed by default
         private final Map<String, DataValue> watchExpressions = new HashMap<>();
         private final Map<String, Object> metadata = new HashMap<>();
+        private CodeBlock currentBlock; // Current block being executed
+        private Location currentLocation; // Location of current block
+        private CompletableFuture<Void> executionFuture; // Future for async execution
 
         public VisualizationSession(Player player, CodeScript script) {
             this.sessionId = UUID.randomUUID();
             this.player = player;
             this.script = script;
-            this.mode = VisualizationMode.STANDARD;
+            this.mode = VisualizationMode.STEP_BY_STEP;
             this.startTime = System.currentTimeMillis();
             this.lastUpdate = startTime;
         }
@@ -148,6 +154,12 @@ public class AdvancedVisualDebugger {
         public void setExecutionSpeed(int executionSpeed) { this.executionSpeed = executionSpeed; }
         public Map<String, DataValue> getWatchExpressions() { return new HashMap<>(watchExpressions); }
         public Map<String, Object> getMetadata() { return new HashMap<>(metadata); }
+        public CodeBlock getCurrentBlock() { return currentBlock; }
+        public void setCurrentBlock(CodeBlock currentBlock) { this.currentBlock = currentBlock; }
+        public Location getCurrentLocation() { return currentLocation; }
+        public void setCurrentLocation(Location currentLocation) { this.currentLocation = currentLocation; }
+        public CompletableFuture<Void> getExecutionFuture() { return executionFuture; }
+        public void setExecutionFuture(CompletableFuture<Void> executionFuture) { this.executionFuture = executionFuture; }
 
         @Override
         public boolean equals(Object o) {
@@ -362,17 +374,107 @@ public class AdvancedVisualDebugger {
         VARIABLES       // Variable tracking visualization
     }
     
+    /**
+     * Represents a breakpoint in the code
+     */
+    public static class Breakpoint {
+        private final Location location;
+        private final String condition;
+        private final long createdTime;
+        private boolean enabled = true;
+        private int hitCount = 0;
+        private int hitLimit = -1; // -1 means no limit
+        
+        public Breakpoint(Location location, String condition) {
+            this.location = location.clone();
+            this.condition = condition;
+            this.createdTime = System.currentTimeMillis();
+        }
+        
+        // Getters and setters
+        public Location getLocation() { return location; }
+        public String getCondition() { return condition; }
+        public long getCreatedTime() { return createdTime; }
+        public boolean isEnabled() { return enabled; }
+        public void setEnabled(boolean enabled) { this.enabled = enabled; }
+        public int getHitCount() { return hitCount; }
+        public void incrementHitCount() { this.hitCount++; }
+        public int getHitLimit() { return hitLimit; }
+        public void setHitLimit(int hitLimit) { this.hitLimit = hitLimit; }
+        
+        public boolean shouldBreak() {
+            if (!enabled) return false;
+            if (hitLimit > 0 && hitCount >= hitLimit) return false;
+            return true;
+        }
+        
+        @Override
+        public boolean equals(Object o) {
+            if (this == o) return true;
+            if (o == null || getClass() != o.getClass()) return false;
+            Breakpoint that = (Breakpoint) o;
+            return Objects.equals(location, that.location);
+        }
+        
+        @Override
+        public int hashCode() {
+            return Objects.hash(location);
+        }
+    }
+    
+    /**
+     * Manages breakpoints for players
+     */
+    public static class BreakpointManager {
+        private final Map<Location, Breakpoint> breakpoints = new ConcurrentHashMap<>();
+        private final Map<String, Object> breakpointData = new ConcurrentHashMap<>();
+        
+        public void addBreakpoint(Breakpoint breakpoint) {
+            breakpoints.put(breakpoint.getLocation(), breakpoint);
+        }
+        
+        public boolean removeBreakpoint(Location location) {
+            return breakpoints.remove(location) != null;
+        }
+        
+        public Breakpoint getBreakpoint(Location location) {
+            return breakpoints.get(location);
+        }
+        
+        public Collection<Breakpoint> getAllBreakpoints() {
+            return new ArrayList<>(breakpoints.values());
+        }
+        
+        public boolean hasBreakpoint(Location location) {
+            return breakpoints.containsKey(location);
+        }
+        
+        public void setBreakpointData(String key, Object data) {
+            breakpointData.put(key, data);
+        }
+        
+        public Object getBreakpointData(String key) {
+            return breakpointData.get(key);
+        }
+        
+        public void removeBreakpointData(String key) {
+            breakpointData.remove(key);
+        }
+    }
+    
     // Visualization session management
     public void startVisualizationSession(Player player, VisualizationMode mode) {
         if (player == null || mode == null) {
             throw new IllegalArgumentException("Player and mode cannot be null");
         }
         visualizationSessions.put(player.getUniqueId(), new VisualizationSession(player, mode));
+        breakpointManagers.computeIfAbsent(player.getUniqueId(), k -> new BreakpointManager());
     }
     
     public void stopVisualizationSession(Player player) {
         if (player != null) {
             visualizationSessions.remove(player.getUniqueId());
+            breakpointManagers.remove(player.getUniqueId());
         }
     }
     
@@ -386,11 +488,123 @@ public class AdvancedVisualDebugger {
         return session != null ? session.mode : null;
     }
     
+    /**
+     * Sets a breakpoint at the specified location
+     */
+    public void setBreakpoint(Player player, Location location, String condition) {
+        if (player == null || location == null) return;
+        
+        BreakpointManager manager = breakpointManagers.computeIfAbsent(
+            player.getUniqueId(), 
+            k -> new BreakpointManager()
+        );
+        
+        Breakpoint breakpoint = new Breakpoint(location, condition);
+        manager.addBreakpoint(breakpoint);
+        globalBreakpoints.put(location, breakpoint);
+        
+        player.sendMessage("§a✓ Breakpoint set at " + formatLocation(location));
+        if (condition != null && !condition.isEmpty()) {
+            player.sendMessage("§7Condition: " + condition);
+        }
+    }
+    
+    /**
+     * Removes a breakpoint at the specified location
+     */
+    public void removeBreakpoint(Player player, Location location) {
+        if (player == null || location == null) return;
+        
+        BreakpointManager manager = breakpointManagers.get(player.getUniqueId());
+        if (manager != null) {
+            if (manager.removeBreakpoint(location)) {
+                globalBreakpoints.remove(location);
+                player.sendMessage("§a✓ Breakpoint removed at " + formatLocation(location));
+            } else {
+                player.sendMessage("§cNo breakpoint found at " + formatLocation(location));
+            }
+        }
+    }
+    
+    /**
+     * Lists all breakpoints for a player
+     */
+    public void listBreakpoints(Player player) {
+        if (player == null) return;
+        
+        BreakpointManager manager = breakpointManagers.get(player.getUniqueId());
+        if (manager == null || manager.getAllBreakpoints().isEmpty()) {
+            player.sendMessage("§eNo breakpoints set");
+            return;
+        }
+        
+        player.sendMessage("§a§lActive Breakpoints:");
+        for (Breakpoint bp : manager.getAllBreakpoints()) {
+            String status = bp.isEnabled() ? "§aEnabled" : "§cDisabled";
+            String conditionInfo = bp.getCondition() != null ? " §7[" + bp.getCondition() + "]" : "";
+            player.sendMessage("§7- " + status + " §f" + formatLocation(bp.getLocation()) + conditionInfo);
+        }
+    }
+    
+    /**
+     * Enables or disables a breakpoint
+     */
+    public void toggleBreakpoint(Player player, Location location) {
+        if (player == null || location == null) return;
+        
+        BreakpointManager manager = breakpointManagers.get(player.getUniqueId());
+        if (manager != null) {
+            Breakpoint bp = manager.getBreakpoint(location);
+            if (bp != null) {
+                bp.setEnabled(!bp.isEnabled());
+                String status = bp.isEnabled() ? "enabled" : "disabled";
+                player.sendMessage("§a✓ Breakpoint " + status + " at " + formatLocation(location));
+            } else {
+                player.sendMessage("§cNo breakpoint found at " + formatLocation(location));
+            }
+        }
+    }
+    
+    /**
+     * Sets a hit limit for a breakpoint
+     */
+    public void setBreakpointHitLimit(Player player, Location location, int limit) {
+        if (player == null || location == null) return;
+        
+        BreakpointManager manager = breakpointManagers.get(player.getUniqueId());
+        if (manager != null) {
+            Breakpoint bp = manager.getBreakpoint(location);
+            if (bp != null) {
+                bp.setHitLimit(limit);
+                player.sendMessage("§a✓ Set breakpoint hit limit to " + limit + " at " + formatLocation(location));
+            } else {
+                player.sendMessage("§cNo breakpoint found at " + formatLocation(location));
+            }
+        }
+    }
+    
     public void visualizeBlockExecution(Player player, CodeBlock block, Location blockLocation) {
         if (player == null || block == null) return;
         
         VisualizationSession session = visualizationSessions.get(player.getUniqueId());
         if (session == null) return;
+        
+        // Update session state
+        session.setCurrentBlock(block);
+        session.setCurrentLocation(blockLocation);
+        session.setCurrentStep(session.getCurrentStep() + 1);
+        
+        // Check for breakpoints
+        BreakpointManager bpManager = breakpointManagers.get(player.getUniqueId());
+        if (bpManager != null) {
+            Breakpoint bp = bpManager.getBreakpoint(blockLocation);
+            if (bp != null && bp.shouldBreak()) {
+                bp.incrementHitCount();
+                session.setPaused(true);
+                showBreakpointInfo(player, bp, block, blockLocation);
+                return; // Pause execution
+            }
+        }
         
         // Update the visualization based on the mode
         switch (session.mode) {
@@ -417,6 +631,38 @@ public class AdvancedVisualDebugger {
         }
     }
     
+    /**
+     * Steps to the next block in step-by-step execution mode
+     */
+    public void stepToNextBlock(Player player) {
+        if (player == null) return;
+        
+        VisualizationSession session = visualizationSessions.get(player.getUniqueId());
+        if (session == null || !session.isPaused()) {
+            player.sendMessage("§cNot in a paused debugging session");
+            return;
+        }
+        
+        session.setPaused(false);
+        player.sendMessage("§aResumed execution");
+    }
+    
+    /**
+     * Continues execution until the next breakpoint
+     */
+    public void continueExecution(Player player) {
+        if (player == null) return;
+        
+        VisualizationSession session = visualizationSessions.get(player.getUniqueId());
+        if (session == null) {
+            player.sendMessage("§cNot in a debugging session");
+            return;
+        }
+        
+        session.setPaused(false);
+        player.sendMessage("§aContinuing execution");
+    }
+    
     public void showPerformanceReport(Player player) {
         if (player == null) return;
         PerformanceAnalyzer analyzer = performanceAnalyzers.get(player.getUniqueId());
@@ -429,6 +675,8 @@ public class AdvancedVisualDebugger {
     public void shutdown() {
         visualizationSessions.clear();
         performanceAnalyzers.clear();
+        breakpointManagers.clear();
+        globalBreakpoints.clear();
     }
     
     // Private helper methods
@@ -477,6 +725,18 @@ public class AdvancedVisualDebugger {
                 new Particle.DustOptions(Color.fromRGB(255, 0, 255), 1.2f));
         }
         player.sendMessage("§dVariables in scope at " + block.getAction());
+    }
+    
+    private void showBreakpointInfo(Player player, Breakpoint bp, CodeBlock block, Location location) {
+        player.sendMessage("§6⚠ Execution paused at breakpoint");
+        player.sendMessage("§7Block: §f" + block.getAction());
+        player.sendMessage("§7Location: §f" + formatLocation(location));
+        player.sendMessage("§7Hit count: §f" + bp.getHitCount());
+        if (bp.getCondition() != null && !bp.getCondition().isEmpty()) {
+            player.sendMessage("§7Condition: §f" + bp.getCondition());
+        }
+        player.sendMessage("§eUse §6/visualdebug step §eto continue to next block");
+        player.sendMessage("§eUse §6/visualdebug continue §eto continue execution");
     }
     
     private void sendPerformanceReport(Player player, PerformanceAnalyzer analyzer) {

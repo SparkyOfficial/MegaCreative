@@ -4,7 +4,7 @@ import com.megacreative.coding.values.DataValue;
 import org.bukkit.Material;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.inventory.meta.ItemMeta;
-import org.bukkit.Location;
+// Removed unused Bukkit imports
 
 import java.util.*;
 
@@ -19,7 +19,7 @@ public class CodeBlock implements Cloneable {
     /** Unique block identifier */
     private UUID id;
     
-    /** Block type (DIAMOND_BLOCK etc.) */
+    /** Block type (DIAMOND_BLOCK etc.) - DEPRECATED: Use materialName instead */
     private Material material;
     
     /** Selected action (e.g. onJoin, sendMessage) */
@@ -100,24 +100,24 @@ public class CodeBlock implements Cloneable {
     
     /**
      * Constructor with basic parameters
-     * @param material Block material
+     * @param materialName Block material name
      * @param action Block action
      */
-    public CodeBlock(Material material, String action) {
+    public CodeBlock(String materialName, String action) {
         this();
-        this.material = material;
+        this.materialName = materialName;
         this.action = action;
     }
     
     /**
      * Constructor with action and event parameters
-     * @param material Block material
+     * @param materialName Block material name
      * @param action Block action
      * @param event Block event
      */
-    public CodeBlock(Material material, String action, String event) {
+    public CodeBlock(String materialName, String action, String event) {
         this();
-        this.material = material;
+        this.materialName = materialName;
         this.action = action;
         this.event = event;
     }
@@ -132,12 +132,34 @@ public class CodeBlock implements Cloneable {
         this.id = id; 
     }
     
+    /**
+     * DEPRECATED: Use getMaterialName() instead
+     * Gets the material of this block
+     * @return Block material
+     */
+    @Deprecated
     public Material getMaterial() { 
+        if (materialName != null) {
+            try {
+                return Material.valueOf(materialName);
+            } catch (IllegalArgumentException e) {
+                return Material.STONE; // Default fallback
+            }
+        }
         return material; 
     }
     
+    /**
+     * DEPRECATED: Use setMaterialName() instead
+     * Sets the material of this block
+     * @param material Block material
+     */
+    @Deprecated
     public void setMaterial(Material material) { 
-        this.material = material; 
+        this.material = material;
+        if (material != null) {
+            this.materialName = material.name();
+        }
     }
     
     public String getAction() { 
@@ -208,6 +230,10 @@ public class CodeBlock implements Cloneable {
         return bracketType != null;
     }
     
+    /**
+     * Gets the location of this block (helper method that creates Bukkit Location on demand)
+     * @return Block location or null if world not found
+     */
     public org.bukkit.Location getLocation() {
         if (worldId != null) {
             org.bukkit.World world = org.bukkit.Bukkit.getWorld(worldId);
@@ -218,6 +244,10 @@ public class CodeBlock implements Cloneable {
         return null;
     }
     
+    /**
+     * Sets the location of this block
+     * @param location Block location
+     */
     public void setLocation(org.bukkit.Location location) {
         if (location != null) {
             this.worldId = location.getWorld().getName();
@@ -265,24 +295,6 @@ public class CodeBlock implements Cloneable {
     
     public void setMaterialName(String materialName) {
         this.materialName = materialName;
-    }
-    
-    public Material getMaterial() {
-        if (materialName != null) {
-            try {
-                return Material.valueOf(materialName);
-            } catch (IllegalArgumentException e) {
-                return Material.STONE; // Default fallback
-            }
-        }
-        return material;
-    }
-    
-    public void setMaterial(Material material) {
-        this.material = material;
-        if (material != null) {
-            this.materialName = material.name();
-        }
     }
     
     public CodeBlock getElseBlock() {
@@ -510,9 +522,6 @@ public class CodeBlock implements Cloneable {
         itemGroups.clear();
     }
     
-    // ===== METHODS FOR WORKING WITH NAMED SLOTS AND GROUPS =====
-    // These methods now require external services to provide configuration data
-    
     /**
      * Gets an item from a named slot
      * @param slotName Slot name (e.g. "entity_slot", "radius_slot")
@@ -684,18 +693,22 @@ public class CodeBlock implements Cloneable {
         if (o == null || getClass() != o.getClass()) return false;
         CodeBlock codeBlock = (CodeBlock) o;
         return Objects.equals(id, codeBlock.id) &&
-               material == codeBlock.material &&
+               Objects.equals(materialName, codeBlock.materialName) &&
                Objects.equals(action, codeBlock.action) &&
                Objects.equals(parameters, codeBlock.parameters) &&
                Objects.equals(children, codeBlock.children) &&
                Objects.equals(nextBlock, codeBlock.nextBlock) &&
                Objects.equals(configItems, codeBlock.configItems) &&
-               Objects.equals(itemGroups, codeBlock.itemGroups);
+               Objects.equals(itemGroups, codeBlock.itemGroups) &&
+               Objects.equals(worldId, codeBlock.worldId) &&
+               x == codeBlock.x &&
+               y == codeBlock.y &&
+               z == codeBlock.z;
     }
     
     @Override
     public int hashCode() {
-        return Objects.hash(id, material, action, parameters, children, nextBlock, configItems, itemGroups);
+        return Objects.hash(id, materialName, action, parameters, children, nextBlock, configItems, itemGroups, worldId, x, y, z);
     }
     
     @Override
@@ -736,12 +749,16 @@ public class CodeBlock implements Cloneable {
     public String toString() {
         return "CodeBlock{" +
                "id=" + id +
-               ", material=" + material +
+               ", materialName='" + materialName + '\'' +
                ", action='" + action + '\'' +
                ", parameters=" + parameters.size() +
                ", children=" + children.size() +
                ", configItems=" + configItems.size() +
                ", itemGroups=" + itemGroups.size() +
+               ", worldId='" + worldId + '\'' +
+               ", x=" + x +
+               ", y=" + y +
+               ", z=" + z +
                '}';
     }
     

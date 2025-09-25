@@ -6,6 +6,7 @@ import com.megacreative.coding.ScriptEngine;
 import com.megacreative.coding.DefaultScriptEngine;
 import com.megacreative.coding.ActionFactory;
 import com.megacreative.coding.ConditionFactory;
+import com.megacreative.coding.GUIRegistry;
 import com.megacreative.coding.events.PlayerEventsListener;
 import com.megacreative.coding.containers.BlockContainerManager;
 import com.megacreative.coding.variables.VariableManager;
@@ -82,6 +83,7 @@ public class ServiceRegistry {
     private TrustedPlayerManager trustedPlayerManager;
     private ITrustedPlayerManager trustedPlayerManagerInterface;
     private GUIManager guiManager;
+    private GUIRegistry guiRegistry;
     private BlockConfigManager blockConfigManager;
     
     /**
@@ -700,17 +702,49 @@ public class ServiceRegistry {
     
     /**
      * Gets the GUI manager
-     * @return GUI manager instance
      *
      * Получает менеджер GUI
-     * @return Экземпляр менеджера GUI
      *
      * Ruft den GUI-Manager ab
-     * @return GUI-Manager-Instanz
      */
     public GUIManager getGuiManager() {
         return guiManager != null ? guiManager :
             (guiManager = dependencyContainer.resolve(GUIManager.class));
+    }
+    
+    /**
+     * Gets the GUI registry
+     *
+     * Получает реестр GUI
+     *
+     * Ruft den GUI-Register ab
+     */
+    public GUIRegistry getGuiRegistry() {
+        if (guiRegistry == null) {
+            this.guiRegistry = new GUIRegistry();
+            registerService(GUIRegistry.class, guiRegistry);
+            registerGUIEditors();
+        }
+        return guiRegistry;
+    }
+    
+    /**
+     * Register GUI editors in the registry
+     *
+     * Регистрирует редакторы GUI в реестре
+     *
+     * Registriert GUI-Editoren im Register
+     */
+    private void registerGUIEditors() {
+        // Register GUI editors for different actions
+        // This would be expanded with actual editor implementations
+        /*
+        guiRegistry.register("sendMessage", context -> 
+            new SendMessageEditor(context.getPlugin(), context.getPlayer(), context.getCodeBlock()));
+        guiRegistry.register("command", context -> 
+            new CommandEditor(context.getPlugin(), context.getPlayer(), context.getCodeBlock()));
+        // ... and so on for all editors
+        */
     }
     
     /**

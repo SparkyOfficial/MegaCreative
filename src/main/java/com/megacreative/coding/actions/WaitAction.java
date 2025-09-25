@@ -8,6 +8,8 @@ import com.megacreative.coding.executors.ExecutionResult;
 import com.megacreative.coding.values.DataValue;
 import com.megacreative.services.BlockConfigService;
 import com.megacreative.coding.ScriptEngine;
+import com.megacreative.coding.annotations.BlockMeta; // Added import
+import com.megacreative.coding.BlockType; // Added import
 import org.bukkit.entity.Player;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.inventory.meta.ItemMeta;
@@ -19,6 +21,7 @@ import java.util.function.Function;
  * 🎆 ENHANCED: Action for adding delays in script execution
  * Supports both container-based configuration and parameter-based configuration
  */
+@BlockMeta(id = "wait", displayName = "§aWait", type = BlockType.ACTION) // Added annotation
 public class WaitAction implements BlockAction {
 
     @Override

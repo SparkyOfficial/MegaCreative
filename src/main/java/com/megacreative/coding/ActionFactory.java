@@ -1,85 +1,7 @@
 package com.megacreative.coding;
 
-import com.megacreative.coding.actions.AddPlayerToTeamAction;
-import com.megacreative.coding.actions.AddVarAction;
-import com.megacreative.coding.actions.AsyncLoopAction;
-import com.megacreative.coding.actions.BroadcastAction;
-import com.megacreative.coding.actions.CallFunctionAction;
-import com.megacreative.coding.actions.control.BreakAction;
-import com.megacreative.coding.actions.control.ContinueAction;
-import com.megacreative.coding.actions.CommandAction;
-import com.megacreative.coding.actions.ConditionalBranchAction;
-import com.megacreative.coding.actions.CreateGuiAction;
-import com.megacreative.coding.actions.CreateListAction;
-import com.megacreative.coding.actions.CreateMapAction;
-import com.megacreative.coding.actions.CreateScoreboardAction;
-import com.megacreative.coding.actions.CreateTeamAction;
-import com.megacreative.coding.actions.CustomFunctionAction;
-import com.megacreative.coding.actions.DebugLogAction;
-import com.megacreative.coding.actions.DefineFunctionAction;
-import com.megacreative.coding.actions.DiscordWebhookAction;
-import com.megacreative.coding.actions.DivVarAction;
-import com.megacreative.coding.actions.EconomyTransactionAction;
-import com.megacreative.coding.actions.EffectAction;
-import com.megacreative.coding.actions.ElseAction;
-import com.megacreative.coding.actions.ExecuteAsyncCommandAction;
-import com.megacreative.coding.actions.ExplosionAction;
-import com.megacreative.coding.actions.ForEachAction;
-import com.megacreative.coding.actions.FunctionCallAction;
-import com.megacreative.coding.actions.base.GenericAction;
-import com.megacreative.coding.actions.GetGlobalVarAction;
-import com.megacreative.coding.actions.world.GetLocationAction;
-import com.megacreative.coding.actions.GetPlayerNameAction;
-import com.megacreative.coding.actions.GetServerVarAction;
-import com.megacreative.coding.actions.GetVarAction;
-import com.megacreative.coding.actions.GiveItemAction;
-import com.megacreative.coding.actions.GiveItemsAction;
-import com.megacreative.coding.actions.HandleEventAction;
-import com.megacreative.coding.actions.HealPlayerAction;
-import com.megacreative.coding.actions.IncrementScoreAction;
-import com.megacreative.coding.actions.ListOperationAction;
-import com.megacreative.coding.actions.ListOperationsAction;
-import com.megacreative.coding.actions.MapOperationAction;
-import com.megacreative.coding.actions.MulVarAction;
-import com.megacreative.coding.actions.PlayCustomSoundAction;
-import com.megacreative.coding.actions.PlayParticleAction;
-import com.megacreative.coding.actions.PlayParticleEffectAction;
-import com.megacreative.coding.actions.PlaySoundAction;
-import com.megacreative.coding.actions.RandomNumberAction;
-import com.megacreative.coding.actions.RemoveItemsAction;
-import com.megacreative.coding.actions.ReturnAction;
-import com.megacreative.coding.actions.SaveFunctionAction;
-import com.megacreative.coding.actions.SaveLocationAction;
-import com.megacreative.coding.actions.SendActionBarAction;
-import com.megacreative.coding.actions.SendMessageAction;
-import com.megacreative.coding.actions.SendTitleAction;
-import com.megacreative.coding.actions.SetArmorAction;
-import com.megacreative.coding.actions.SetBlockAction;
-import com.megacreative.coding.actions.SetGameModeAction;
-import com.megacreative.coding.actions.SetGlobalVarAction;
-import com.megacreative.coding.actions.SetScoreAction;
-import com.megacreative.coding.actions.SetServerVarAction;
-import com.megacreative.coding.actions.SetTimeAction;
-import com.megacreative.coding.actions.SetVarAction;
-import com.megacreative.coding.actions.SetWeatherAction;
-import com.megacreative.coding.actions.SpawnEntityAction;
-import com.megacreative.coding.actions.SpawnMobAction;
-import com.megacreative.coding.actions.SpawnParticleEffectAction;
-import com.megacreative.coding.actions.SubVarAction;
-import com.megacreative.coding.actions.TeleportAction;
-import com.megacreative.coding.actions.SendCustomTitleAction;
-import com.megacreative.coding.actions.SetPlayerExperienceAction;
-import com.megacreative.coding.actions.TeleportToLocationAction;
-import com.megacreative.coding.actions.TimedExecutionAction;
-import com.megacreative.coding.actions.TriggerCustomEventAction;
-import com.megacreative.coding.actions.TriggerEventAction;
-import com.megacreative.coding.actions.VariableInspectorAction;
-import com.megacreative.coding.actions.WaitAction;
-import com.megacreative.coding.actions.RepeatAction;
-import com.megacreative.coding.actions.WhileAction;
-import com.megacreative.coding.actions.condition.HasItemCondition;
-import com.megacreative.coding.actions.condition.HasPermissionCondition;
-import com.megacreative.coding.actions.condition.IsInWorldCondition;
+import com.megacreative.coding.annotations.BlockMeta;
+import com.megacreative.coding.scanner.BlockScanner;
 import com.megacreative.core.DependencyContainer;
 import com.megacreative.managers.GUIManager;
 import com.megacreative.gui.interactive.InteractiveGUIManager;
@@ -94,16 +16,17 @@ import java.util.concurrent.ConcurrentHashMap;
 import java.util.function.Supplier;
 import java.util.List;
 import java.util.ArrayList;
+import java.util.Set;
 import net.kyori.adventure.text.Component;
 import net.kyori.adventure.text.serializer.legacy.LegacyComponentSerializer;
 import net.kyori.adventure.text.format.NamedTextColor;
 
 /**
- * Factory for creating block actions
+ * Factory for creating block actions using annotation-based discovery
  *
- * Фабрика для создания действий блоков
+ * Фабрика для создания действий блоков с использованием обнаружения аннотаций
  *
- * Fabrik zum Erstellen von Blockaktionen
+ * Fabrik zum Erstellen von Blockaktionen mit anmerkungsbasierter Erkennung
  */
 public class ActionFactory {
     private static final java.util.logging.Logger LOGGER = java.util.logging.Logger.getLogger(ActionFactory.class.getName());
@@ -117,6 +40,9 @@ public class ActionFactory {
     // Map to store action display names
     private final Map<String, String> actionDisplayNames = new ConcurrentHashMap<>();
     
+    // Scanner for discovering annotated actions
+    private final BlockScanner blockScanner;
+    
     /**
      * Creates an ActionFactory
      * @param dependencyContainer Dependency container for resolving dependencies
@@ -129,8 +55,9 @@ public class ActionFactory {
      */
     public ActionFactory(DependencyContainer dependencyContainer) {
         this.dependencyContainer = dependencyContainer;
+        this.blockScanner = new BlockScanner();
         initializeManagers();
-        registerAllActions();
+        scanAndRegisterActions();
     }
 
     /**
@@ -172,18 +99,97 @@ public class ActionFactory {
      * @param actionId Aktions-ID
      * @param supplier Aktionslieferant
      */
-    private void register(String actionId, Supplier<BlockAction> supplier) {
+    public void register(String actionId, Supplier<BlockAction> supplier) {
         actionMap.put(actionId, supplier);
     }
 
     /**
-     * Registers all actions
-     *
-     * Регистрирует все действия
-     *
-     * Registriert alle Aktionen
+     * Scans for annotated actions and registers them
      */
-    private void registerAllActions() {
+    private void scanAndRegisterActions() {
+        // Scan packages for annotated actions
+        blockScanner.scanPackages(
+            "com.megacreative.coding.actions",
+            "com.megacreative.coding.conditions"
+        );
+        
+        // Register discovered actions
+        Map<String, Class<? extends BlockAction>> actionClasses = blockScanner.getActionClasses();
+        for (Map.Entry<String, Class<? extends BlockAction>> entry : actionClasses.entrySet()) {
+            String actionId = entry.getKey();
+            Class<? extends BlockAction> actionClass = entry.getValue();
+            
+            // Register the action
+            registerAnnotatedAction(actionId, actionClass);
+            
+            // Register display name if available
+            BlockMeta annotation = actionClass.getAnnotation(BlockMeta.class);
+            if (annotation != null) {
+                actionDisplayNames.put(actionId, annotation.displayName());
+            }
+        }
+        
+        // Register legacy actions that might not be annotated yet
+        registerLegacyActions();
+    }
+
+    /**
+     * Registers an action discovered through annotations
+     */
+    private void registerAnnotatedAction(String actionId, Class<? extends BlockAction> actionClass) {
+        // Try to create a supplier that can instantiate the action
+        Supplier<BlockAction> supplier = createActionSupplier(actionClass);
+        if (supplier != null) {
+            actionMap.put(actionId, supplier);
+            LOGGER.info("Registered annotated action: " + actionId + " -> " + actionClass.getName());
+        }
+    }
+
+    /**
+     * Creates a supplier for instantiating an action class
+     */
+    private Supplier<BlockAction> createActionSupplier(Class<? extends BlockAction> actionClass) {
+        try {
+            // Try constructor with MegaCreative parameter
+            try {
+                java.lang.reflect.Constructor<? extends BlockAction> constructor = 
+                    actionClass.getConstructor(com.megacreative.MegaCreative.class);
+                return () -> {
+                    try {
+                        com.megacreative.MegaCreative plugin = dependencyContainer.resolve(com.megacreative.MegaCreative.class);
+                        return constructor.newInstance(plugin);
+                    } catch (Exception e) {
+                        LOGGER.warning("Failed to create action instance with plugin parameter: " + e.getMessage());
+                        return null;
+                    }
+                };
+            } catch (NoSuchMethodException e) {
+                // Try no-argument constructor
+                try {
+                    java.lang.reflect.Constructor<? extends BlockAction> constructor = actionClass.getConstructor();
+                    return () -> {
+                        try {
+                            return constructor.newInstance();
+                        } catch (Exception ex) {
+                            LOGGER.warning("Failed to create action instance: " + ex.getMessage());
+                            return null;
+                        }
+                    };
+                } catch (NoSuchMethodException ex) {
+                    LOGGER.warning("No suitable constructor found for action class: " + actionClass.getName());
+                    return null;
+                }
+            }
+        } catch (Exception e) {
+            LOGGER.warning("Error creating supplier for action class " + actionClass.getName() + ": " + e.getMessage());
+            return null;
+        }
+    }
+
+    /**
+     * Register legacy actions that might not be annotated yet
+     */
+    private void registerLegacyActions() {
         registerBasicPlayerActions();
         registerNewBasicPlayerActions();
         registerVariableManipulationActions();
@@ -207,21 +213,21 @@ public class ActionFactory {
         // --- BASIC PLAYER ACTIONS ---
         // --- ОСНОВНЫЕ ДЕЙСТВИЯ ИГРОКА ---
         // --- GRUNDLEGENDE SPIELERAKTIONEN ---
-        register("sendMessage", SendMessageAction::new);
-        register("teleport", TeleportAction::new);
-        register("teleportToLocation", TeleportToLocationAction::new);
-        register("giveItem", GiveItemAction::new);
-        register("playSound", PlaySoundAction::new);
-        register("effect", EffectAction::new);
-        register("broadcast", BroadcastAction::new);
-        register("spawnMob", SpawnMobAction::new);
-        register("healPlayer", HealPlayerAction::new);
-        register("setGameMode", SetGameModeAction::new);
-        register("setTime", SetTimeAction::new);
-        register("setWeather", SetWeatherAction::new);
-        register("command", CommandAction::new);
-        register("setVar", SetVarAction::new);
-        register("getVar", GetVarAction::new);
+        register("sendMessage", com.megacreative.coding.actions.SendMessageAction::new);
+        register("teleport", com.megacreative.coding.actions.TeleportAction::new);
+        register("teleportToLocation", com.megacreative.coding.actions.TeleportToLocationAction::new);
+        register("giveItem", com.megacreative.coding.actions.GiveItemAction::new);
+        register("playSound", com.megacreative.coding.actions.PlaySoundAction::new);
+        register("effect", com.megacreative.coding.actions.EffectAction::new);
+        register("broadcast", com.megacreative.coding.actions.BroadcastAction::new);
+        register("spawnMob", com.megacreative.coding.actions.SpawnMobAction::new);
+        register("healPlayer", com.megacreative.coding.actions.HealPlayerAction::new);
+        register("setGameMode", com.megacreative.coding.actions.SetGameModeAction::new);
+        register("setTime", com.megacreative.coding.actions.SetTimeAction::new);
+        register("setWeather", com.megacreative.coding.actions.SetWeatherAction::new);
+        register("command", com.megacreative.coding.actions.CommandAction::new);
+        register("setVar", com.megacreative.coding.actions.SetVarAction::new);
+        register("getVar", com.megacreative.coding.actions.GetVarAction::new);
     }
 
     /**
@@ -231,23 +237,23 @@ public class ActionFactory {
         // --- NEW BASIC PLAYER ACTIONS ---
         // --- НОВЫЕ ОСНОВНЫЕ ДЕЙСТВИЯ ИГРОКА ---
         // --- NEUE GRUNDLEGENDE SPIELERAKTIONEN ---
-        register("giveItems", GiveItemsAction::new);
-        register("spawnEntity", SpawnEntityAction::new);
-        register("removeItems", RemoveItemsAction::new);
-        register("setArmor", SetArmorAction::new);
-        register("setExperience", SetPlayerExperienceAction::new);
-        register("sendCustomTitle", SendCustomTitleAction::new);
-        register("setGlobalVar", SetGlobalVarAction::new);
-        register("getGlobalVar", GetGlobalVarAction::new);
-        register("setServerVar", SetServerVarAction::new);
-        register("getServerVar", GetServerVarAction::new);
-        register("wait", WaitAction::new);
-        register("randomNumber", RandomNumberAction::new);
-        register("playParticle", PlayParticleAction::new);
-        register("sendTitle", SendTitleAction::new);
-        register("explosion", ExplosionAction::new);
-        register("setBlock", SetBlockAction::new);
-        register("getPlayerName", GetPlayerNameAction::new);
+        register("giveItems", com.megacreative.coding.actions.GiveItemsAction::new);
+        register("spawnEntity", com.megacreative.coding.actions.SpawnEntityAction::new);
+        register("removeItems", com.megacreative.coding.actions.RemoveItemsAction::new);
+        register("setArmor", com.megacreative.coding.actions.SetArmorAction::new);
+        register("setExperience", com.megacreative.coding.actions.SetPlayerExperienceAction::new);
+        register("sendCustomTitle", com.megacreative.coding.actions.SendCustomTitleAction::new);
+        register("setGlobalVar", com.megacreative.coding.actions.SetGlobalVarAction::new);
+        register("getGlobalVar", com.megacreative.coding.actions.GetGlobalVarAction::new);
+        register("setServerVar", com.megacreative.coding.actions.SetServerVarAction::new);
+        register("getServerVar", com.megacreative.coding.actions.GetServerVarAction::new);
+        register("wait", com.megacreative.coding.actions.WaitAction::new);
+        register("randomNumber", com.megacreative.coding.actions.RandomNumberAction::new);
+        register("playParticle", com.megacreative.coding.actions.PlayParticleAction::new);
+        register("sendTitle", com.megacreative.coding.actions.SendTitleAction::new);
+        register("explosion", com.megacreative.coding.actions.ExplosionAction::new);
+        register("setBlock", com.megacreative.coding.actions.SetBlockAction::new);
+        register("getPlayerName", com.megacreative.coding.actions.GetPlayerNameAction::new);
     }
 
     /**
@@ -257,10 +263,10 @@ public class ActionFactory {
         // --- VARIABLE MANIPULATION ACTIONS ---
         // --- ДЕЙСТВИЯ МАНИПУЛЯЦИИ ПЕРЕМЕННЫМИ ---
         // --- VARIABLENMANIPULATIONSAKTIONEN ---
-        register("addVar", AddVarAction::new);
-        register("subVar", SubVarAction::new);
-        register("mulVar", MulVarAction::new);
-        register("divVar", DivVarAction::new);
+        register("addVar", com.megacreative.coding.actions.AddVarAction::new);
+        register("subVar", com.megacreative.coding.actions.SubVarAction::new);
+        register("mulVar", com.megacreative.coding.actions.MulVarAction::new);
+        register("divVar", com.megacreative.coding.actions.DivVarAction::new);
     }
 
     /**
@@ -270,11 +276,11 @@ public class ActionFactory {
         // --- SCOREBOARD ACTIONS ---
         // --- ДЕЙСТВИЯ СКОРБОРДА ---
         // --- SCOREBOARD-AKTIONEN ---
-        register("createScoreboard", CreateScoreboardAction::new);
-        register("setScore", SetScoreAction::new);
-        register("incrementScore", IncrementScoreAction::new);
-        register("createTeam", CreateTeamAction::new);
-        register("addPlayerToTeam", AddPlayerToTeamAction::new);
+        register("createScoreboard", com.megacreative.coding.actions.CreateScoreboardAction::new);
+        register("setScore", com.megacreative.coding.actions.SetScoreAction::new);
+        register("incrementScore", com.megacreative.coding.actions.IncrementScoreAction::new);
+        register("createTeam", com.megacreative.coding.actions.CreateTeamAction::new);
+        register("addPlayerToTeam", com.megacreative.coding.actions.AddPlayerToTeamAction::new);
     }
 
     /**
@@ -284,8 +290,8 @@ public class ActionFactory {
         // --- LOCATION ACTIONS ---
         // --- ДЕЙСТВИЯ ЛОКАЦИИ ---
         // --- ORTSAKTIONEN ---
-        register("saveLocation", SaveLocationAction::new);
-        register("getLocation", GetLocationAction::new);
+        register("saveLocation", com.megacreative.coding.actions.SaveLocationAction::new);
+        register("getLocation", com.megacreative.coding.actions.world.GetLocationAction::new);
     }
 
     /**
@@ -295,10 +301,10 @@ public class ActionFactory {
         // --- ADVANCED ACTION BLOCKS ---
         // --- РАСШИРЕННЫЕ БЛОКИ ДЕЙСТВИЙ ---
         // --- ERWEITERTHE AKTIONSBLÖCKE ---
-        register("playCustomSound", PlayCustomSoundAction::new);
-        register("spawnParticleEffect", SpawnParticleEffectAction::new);
-        register("sendActionBar", SendActionBarAction::new);
-        register("executeAsyncCommand", ExecuteAsyncCommandAction::new);
+        register("playCustomSound", com.megacreative.coding.actions.PlayCustomSoundAction::new);
+        register("spawnParticleEffect", com.megacreative.coding.actions.SpawnParticleEffectAction::new);
+        register("sendActionBar", com.megacreative.coding.actions.SendActionBarAction::new);
+        register("executeAsyncCommand", com.megacreative.coding.actions.ExecuteAsyncCommandAction::new);
     }
 
     /**
@@ -308,22 +314,22 @@ public class ActionFactory {
         // --- CONTROL FLOW BLOCKS (they can have actions) ---
         // --- БЛОКИ УПРАВЛЕНИЯ ПОТОКОМ (они могут иметь действия) ---
         // --- KONTROLLFLUSSBLÖCKE (sie können Aktionen haben) ---
-        register("asyncLoop", AsyncLoopAction::new);
-        register("conditionalBranch", ConditionalBranchAction::new); // Assuming it has an action part
+        register("asyncLoop", com.megacreative.coding.actions.AsyncLoopAction::new);
+        register("conditionalBranch", com.megacreative.coding.actions.ConditionalBranchAction::new); // Assuming it has an action part
         // Предполагая, что у него есть часть действия
         // Vorausgesetzt, dass es einen Aktionsteil hat
-        register("timedExecution", TimedExecutionAction::new);
+        register("timedExecution", com.megacreative.coding.actions.TimedExecutionAction::new);
 
         // Loop control actions
-        register("break", () -> new BreakAction((com.megacreative.MegaCreative) dependencyContainer.resolve(com.megacreative.MegaCreative.class)));
-        register("continue", () -> new ContinueAction((com.megacreative.MegaCreative) dependencyContainer.resolve(com.megacreative.MegaCreative.class)));
+        register("break", () -> new com.megacreative.coding.actions.control.BreakAction((com.megacreative.MegaCreative) dependencyContainer.resolve(com.megacreative.MegaCreative.class)));
+        register("continue", () -> new com.megacreative.coding.actions.control.ContinueAction((com.megacreative.MegaCreative) dependencyContainer.resolve(com.megacreative.MegaCreative.class)));
         
         // Additional control flow actions
-        register("wait", WaitAction::new);
-        register("repeat", RepeatAction::new);
-        register("forEach", ForEachAction::new);
-        register("while", WhileAction::new);
-        register("else", ElseAction::new);
+        register("wait", com.megacreative.coding.actions.WaitAction::new);
+        register("repeat", com.megacreative.coding.actions.RepeatAction::new);
+        register("forEach", com.megacreative.coding.actions.ForEachAction::new);
+        register("while", com.megacreative.coding.actions.WhileAction::new);
+        register("else", com.megacreative.coding.actions.ElseAction::new);
     }
 
     /**
@@ -333,17 +339,17 @@ public class ActionFactory {
         // --- FUNCTION BLOCKS ---
         // --- БЛОКИ ФУНКЦИЙ ---
         // --- FUNKTIONSBLÖCKE ---
-        register("customFunction", CustomFunctionAction::new); // To define a function
+        register("customFunction", com.megacreative.coding.actions.CustomFunctionAction::new); // To define a function
         // Чтобы определить функцию
         // Um eine Funktion zu definieren
-        register("callFunction", CallFunctionAction::new);
+        register("callFunction", com.megacreative.coding.actions.CallFunctionAction::new);
 
         // Advanced Function System
         // Расширенная система функций
         // Erweitertes Funktionssystem
-        register("define_function", () -> new DefineFunctionAction((com.megacreative.MegaCreative) dependencyContainer.resolve(com.megacreative.MegaCreative.class)));
-        register("call_function", () -> new FunctionCallAction((com.megacreative.MegaCreative) dependencyContainer.resolve(com.megacreative.MegaCreative.class)));
-        register("return", () -> new ReturnAction((com.megacreative.MegaCreative) dependencyContainer.resolve(com.megacreative.MegaCreative.class)));
+        register("define_function", () -> new com.megacreative.coding.actions.control.DefineFunctionAction((com.megacreative.MegaCreative) dependencyContainer.resolve(com.megacreative.MegaCreative.class)));
+        register("call_function", () -> new com.megacreative.coding.actions.control.FunctionCallAction((com.megacreative.MegaCreative) dependencyContainer.resolve(com.megacreative.MegaCreative.class)));
+        register("return", () -> new com.megacreative.coding.actions.control.ReturnAction((com.megacreative.MegaCreative) dependencyContainer.resolve(com.megacreative.MegaCreative.class)));
     }
 
     /**
@@ -353,10 +359,10 @@ public class ActionFactory {
         // --- DATA MANIPULATION BLOCKS ---
         // --- БЛОКИ МАНИПУЛЯЦИИ ДАННЫМИ ---
         // --- DATENMANIPULATIONSBLÖCKE ---
-        register("createList", CreateListAction::new);
-        register("listOperation", ListOperationAction::new);
-        register("createMap", CreateMapAction::new);
-        register("mapOperation", MapOperationAction::new);
+        register("createList", com.megacreative.coding.actions.CreateListAction::new);
+        register("listOperation", com.megacreative.coding.actions.ListOperationAction::new);
+        register("createMap", com.megacreative.coding.actions.CreateMapAction::new);
+        register("mapOperation", com.megacreative.coding.actions.MapOperationAction::new);
 
         // --- GENERIC LIST OPERATIONS ---
         // --- ОБЩИЕ ОПЕРАЦИИ СО СПИСКАМИ ---
@@ -369,7 +375,7 @@ public class ActionFactory {
         // --- DEDICATED LIST OPERATIONS ACTION ---
         // --- СПЕЦИАЛЬНОЕ ДЕЙСТВИЕ ДЛЯ ОПЕРАЦИЙ СО СПИСКАМИ ---
         // --- SPEZIALISIERTE LISTENOPERATIONS-AKTION ---
-        register("listOperations", ListOperationsAction::new);
+        register("listOperations", com.megacreative.coding.actions.ListOperationsAction::new);
     }
 
     /**
@@ -379,8 +385,8 @@ public class ActionFactory {
         // --- INTEGRATION BLOCKS ---
         // --- БЛОКИ ИНТЕГРАЦИИ ---
         // --- INTEGRATIONSBLÖCKE ---
-        register("economyTransaction", EconomyTransactionAction::new);
-        register("discordWebhook", DiscordWebhookAction::new);
+        register("economyTransaction", com.megacreative.coding.actions.EconomyTransactionAction::new);
+        register("discordWebhook", com.megacreative.coding.actions.DiscordWebhookAction::new);
     }
 
     /**
@@ -390,7 +396,7 @@ public class ActionFactory {
         // --- GUI BLOCKS ---
         // --- БЛОКИ GUI ---
         // --- GUI-BLÖCKE ---
-        register("createGui", CreateGuiAction::new);
+        register("createGui", com.megacreative.coding.actions.CreateGuiAction::new);
         register("createInteractiveGui", () -> new BlockAction() {
             @Override
             public ExecutionResult execute(CodeBlock block, ExecutionContext context) {
@@ -579,8 +585,8 @@ public class ActionFactory {
         // --- DEBUGGING BLOCKS ---
         // --- БЛОКИ ОТЛАДКИ ---
         // --- DEBUGGING-BLÖCKE ---
-        register("debugLog", DebugLogAction::new);
-        register("variableInspector", VariableInspectorAction::new);
+        register("debugLog", com.megacreative.coding.actions.DebugLogAction::new);
+        register("variableInspector", com.megacreative.coding.actions.VariableInspectorAction::new);
     }
 
     /**
@@ -590,10 +596,10 @@ public class ActionFactory {
         // --- EVENT HANDLING BLOCKS ---
         // --- БЛОКИ ОБРАБОТКИ СОБЫТИЙ ---
         // --- EREIGNISBEHANDLUNGSBLÖCKE ---
-        register("handleEvent", () -> new HandleEventAction(
-            dependencyContainer.resolve(CustomEventManager.class)));
-        register("triggerEvent", () -> new TriggerEventAction(
-            dependencyContainer.resolve(CustomEventManager.class)));
+        register("triggerEvent", com.megacreative.coding.actions.TriggerEventAction::new);
+        register("triggerCustomEvent", com.megacreative.coding.actions.TriggerCustomEventAction::new);
+        register("handleEvent", () -> new com.megacreative.coding.actions.HandleEventAction(
+            (com.megacreative.MegaCreative) dependencyContainer.resolve(com.megacreative.MegaCreative.class)));
     }
 
     /**

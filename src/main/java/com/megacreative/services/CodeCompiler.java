@@ -403,7 +403,7 @@ public class CodeCompiler {
         // Create the CodeBlock
         // Создать CodeBlock
         // Erstelle den CodeBlock
-        CodeBlock codeBlock = new CodeBlock(material, action);
+        CodeBlock codeBlock = new CodeBlock(material.name(), action);
         
         return codeBlock;
     }
@@ -428,7 +428,7 @@ public class CodeCompiler {
         // Create the CodeBlock for bracket
         // Создать CodeBlock для скобки
         // Erstelle den CodeBlock für die Klammer
-        CodeBlock codeBlock = new CodeBlock(material, "BRACKET");
+        CodeBlock codeBlock = new CodeBlock(material.name(), "BRACKET");
         
         // Try to determine bracket type from block data and sign
         // Попытаться определить тип скобки из данных блока и таблички

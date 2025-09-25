@@ -8,6 +8,8 @@ import com.megacreative.coding.ParameterResolver;
 import com.megacreative.coding.ScriptEngine;
 import com.megacreative.coding.executors.ExecutionResult;
 import com.megacreative.services.BlockConfigService;
+import com.megacreative.coding.annotations.BlockMeta; // Added import
+import com.megacreative.coding.BlockType; // Added import
 import org.bukkit.entity.Player;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.inventory.meta.ItemMeta;
@@ -16,6 +18,7 @@ import java.util.concurrent.CompletableFuture;
 import java.util.function.Function;
 import java.util.logging.Level;
 
+@BlockMeta(id = "repeat", displayName = "§aRepeat", type = BlockType.ACTION) // Added annotation
 public class RepeatAction implements BlockAction {
     
     // Constants for magic numbers

@@ -8,6 +8,7 @@ import com.megacreative.models.CreativeWorld;
 import com.megacreative.services.BlockConfigService;
 import com.megacreative.interfaces.IWorldManager;
 import com.megacreative.managers.PlayerModeManager;
+import com.megacreative.coding.values.DataValue; // Added import
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.Listener;
 import org.bukkit.event.player.PlayerMoveEvent;
@@ -48,6 +49,7 @@ public class PlayerEventsListener implements Listener {
     private final MegaCreative plugin;
     private final ScriptEngine scriptEngine;
     private final BlockConfigService blockConfigService;
+    private CustomEventManager customEventManager; // Added CustomEventManager field
     
     // 🚀 PERFORMANCE OPTIMIZATION: Event Handler Maps
     // Карта обработчиков событий для быстрого поиска скриптов по событию
@@ -67,8 +69,11 @@ public class PlayerEventsListener implements Listener {
         // Add null checks for service registry
         if (plugin != null && plugin.getServiceRegistry() != null) {
             this.blockConfigService = plugin.getServiceRegistry().getBlockConfigService();
+            // Initialize CustomEventManager
+            this.customEventManager = plugin.getServiceRegistry().getCustomEventManager();
         } else {
             this.blockConfigService = null;
+            this.customEventManager = null;
         }
         
         // 🚀 PERFORMANCE: Построить карту обработчиков при инициализации
@@ -148,6 +153,70 @@ public class PlayerEventsListener implements Listener {
         List<CodeScript> scripts = worldMap.get(worldId);
         return scripts != null ? scripts : new ArrayList<>();
     }
+    
+    /**
+     * Trigger a custom event with event data
+     * @param eventName the name of the custom event
+     * @param eventData the event data
+     * @param player the player associated with the event
+     */
+    private void triggerCustomEvent(String eventName, Map<String, DataValue> eventData, org.bukkit.entity.Player player) {
+        if (customEventManager != null && plugin != null) {
+            try {
+                String worldName = player.getWorld().getName();
+                customEventManager.triggerEvent(eventName, eventData, player, worldName);
+            } catch (Exception e) {
+                plugin.getLogger().warning("Failed to trigger custom event " + eventName + ": " + e.getMessage());
+            }
+        } else {
+            // Fallback to direct script execution if CustomEventManager is not available
+            executeScriptsForEvent(eventName, player);
+        }
+    }
+    
+    /**
+     * Execute scripts directly for an event (fallback method)
+     * @param eventName the name of the event
+     * @param player the player associated with the event
+     */
+    private void executeScriptsForEvent(String eventName, org.bukkit.entity.Player player) {
+        // Check player mode - only execute scripts in PLAY mode
+        PlayerModeManager modeManager = plugin.getServiceRegistry().getPlayerModeManager();
+        if (!modeManager.isInPlayMode(player)) {
+            return; // If player is in DEV mode, don't execute scripts
+        }
+
+        // Find the creative world
+        IWorldManager worldManager = getWorldManager();
+        if (worldManager == null) return;
+        CreativeWorld creativeWorld = worldManager.findCreativeWorldByBukkit(player.getWorld());
+        if (creativeWorld == null) return;
+        
+        // Check if player can code in this world
+        if (!creativeWorld.canCode(player)) return;
+        
+        // 🚀 PERFORMANCE: Оптимизированный поиск
+        List<CodeScript> scripts = getScriptsForEvent(eventName, creativeWorld.getWorldId());
+        
+        for (CodeScript script : scripts) {
+            // Execute script
+            if (scriptEngine != null) {
+                scriptEngine.executeScript(script, player, eventName)
+                    .whenComplete((result, throwable) -> {
+                        if (throwable != null) {
+                            if (plugin != null) {
+                                plugin.getLogger().warning(eventName + " script execution failed with exception: " + throwable.getMessage());
+                            }
+                        } else if (result != null && !result.isSuccess()) {
+                            if (plugin != null) {
+                                plugin.getLogger().warning(eventName + " script execution failed: " + result.getMessage());
+                            }
+                        }
+                    });
+            }
+            break;
+        }
+    }
 
     @EventHandler
     public void onPlayerMove(PlayerMoveEvent event) {
@@ -158,368 +227,123 @@ public class PlayerEventsListener implements Listener {
             return;
         }
 
-        // Check player mode - only execute scripts in PLAY mode
-        PlayerModeManager modeManager = plugin.getServiceRegistry().getPlayerModeManager();
-        if (!modeManager.isInPlayMode(event.getPlayer())) {
-            return; // If player is in DEV mode, don't execute scripts
-        }
-
-        // Find the creative world
-        IWorldManager worldManager = getWorldManager();
-        if (worldManager == null) return;
-        CreativeWorld creativeWorld = worldManager.findCreativeWorldByBukkit(event.getPlayer().getWorld());
-        if (creativeWorld == null) return;
+        // Create event data for the custom event
+        Map<String, DataValue> eventData = new HashMap<>();
+        eventData.put("player", DataValue.fromObject(event.getPlayer()));
+        eventData.put("from_x", DataValue.fromObject(event.getFrom().getBlockX()));
+        eventData.put("from_y", DataValue.fromObject(event.getFrom().getBlockY()));
+        eventData.put("from_z", DataValue.fromObject(event.getFrom().getBlockZ()));
+        eventData.put("to_x", DataValue.fromObject(event.getTo().getBlockX()));
+        eventData.put("to_y", DataValue.fromObject(event.getTo().getBlockY()));
+        eventData.put("to_z", DataValue.fromObject(event.getTo().getBlockZ()));
+        eventData.put("world", DataValue.fromObject(event.getPlayer().getWorld().getName()));
         
-        // Check if player can code in this world
-        if (!creativeWorld.canCode(event.getPlayer())) return;
-        
-        // 🚀 PERFORMANCE: Оптимизированный поиск
-        List<CodeScript> scripts = getScriptsForEvent("onPlayerMove", creativeWorld.getWorldId());
-        
-        for (CodeScript script : scripts) {
-            // Execute script
-            if (scriptEngine != null) {
-                scriptEngine.executeScript(script, event.getPlayer(), "player_move")
-                    .whenComplete((result, throwable) -> {
-                        if (throwable != null) {
-                            if (plugin != null) {
-                                plugin.getLogger().warning("Move script execution failed with exception: " + throwable.getMessage());
-                            }
-                        } else if (result != null && !result.isSuccess()) {
-                            if (plugin != null) {
-                                plugin.getLogger().warning("Move script execution failed: " + result.getMessage());
-                            }
-                        }
-                    });
-            }
-            break;
-        }
+        // Trigger custom event instead of executing scripts directly
+        triggerCustomEvent("onPlayerMove", eventData, event.getPlayer());
     }
     
     @EventHandler
     public void onPlayerJoin(PlayerJoinEvent event) {
-        // Check player mode - only execute scripts in PLAY mode
-        PlayerModeManager modeManager = plugin.getServiceRegistry().getPlayerModeManager();
-        if (!modeManager.isInPlayMode(event.getPlayer())) {
-            return; // If player is in DEV mode, don't execute scripts
-        }
-
-        // Find the creative world
-        IWorldManager worldManager = getWorldManager();
-        if (worldManager == null) return;
-        CreativeWorld creativeWorld = worldManager.findCreativeWorldByBukkit(event.getPlayer().getWorld());
-        if (creativeWorld == null) return;
+        // Create event data for the custom event
+        Map<String, DataValue> eventData = new HashMap<>();
+        eventData.put("player", DataValue.fromObject(event.getPlayer()));
+        eventData.put("first_time", DataValue.fromObject(!event.getPlayer().hasPlayedBefore()));
+        eventData.put("join_message", DataValue.fromObject(event.getJoinMessage()));
+        eventData.put("world", DataValue.fromObject(event.getPlayer().getWorld().getName()));
         
-        // Only execute in PLAY mode, allow coding in DEV mode but don't execute scripts
-        if (creativeWorld.getMode() == com.megacreative.models.WorldMode.DEV) {
-            return; // Don't execute scripts in dev mode
-        }
-        
-        // 🚀 PERFORMANCE: Используем оптимизированный поиск вместо цикла по всем скриптам
-        List<CodeScript> scripts = getScriptsForEvent("onJoin", creativeWorld.getWorldId());
-        
-        for (CodeScript script : scripts) {
-            // Execute script
-            if (scriptEngine != null) {
-                scriptEngine.executeScript(script, event.getPlayer(), "player_join")
-                    .whenComplete((result, throwable) -> {
-                        if (throwable != null) {
-                            if (plugin != null) {
-                                plugin.getLogger().warning("Join script execution failed with exception: " + throwable.getMessage());
-                            }
-                        } else if (result != null && !result.isSuccess()) {
-                            if (plugin != null) {
-                                plugin.getLogger().warning("Join script execution failed: " + result.getMessage());
-                            }
-                        } else {
-                            if (plugin != null) {
-                                plugin.getLogger().info("Successfully executed onJoin script for player: " + event.getPlayer().getName());
-                            }
-                        }
-                    });
-            }
-            break; // Only execute the first matching script
-        }
+        // Trigger custom event instead of executing scripts directly
+        triggerCustomEvent("onJoin", eventData, event.getPlayer());
     }
     
     @EventHandler
     public void onPlayerQuit(PlayerQuitEvent event) {
-        // Check player mode - only execute scripts in PLAY mode
-        PlayerModeManager modeManager = plugin.getServiceRegistry().getPlayerModeManager();
-        if (!modeManager.isInPlayMode(event.getPlayer())) {
-            return; // If player is in DEV mode, don't execute scripts
-        }
-
-        // Find the creative world
-        IWorldManager worldManager = getWorldManager();
-        if (worldManager == null) return;
-        CreativeWorld creativeWorld = worldManager.findCreativeWorldByBukkit(event.getPlayer().getWorld());
-        if (creativeWorld == null) return;
+        // Create event data for the custom event
+        Map<String, DataValue> eventData = new HashMap<>();
+        eventData.put("player", DataValue.fromObject(event.getPlayer()));
+        eventData.put("quit_message", DataValue.fromObject(event.getQuitMessage()));
+        eventData.put("world", DataValue.fromObject(event.getPlayer().getWorld().getName()));
         
-        // Check if player can code in this world
-        if (!creativeWorld.canCode(event.getPlayer())) return;
-        
-        // 🚀 PERFORMANCE: Используем оптимизированный поиск вместо цикла по всем скриптам
-        List<CodeScript> scripts = getScriptsForEvent("onLeave", creativeWorld.getWorldId());
-        
-        for (CodeScript script : scripts) {
-            // Execute script
-            if (scriptEngine != null) {
-                scriptEngine.executeScript(script, event.getPlayer(), "player_leave")
-                    .whenComplete((result, throwable) -> {
-                        if (throwable != null) {
-                            if (plugin != null) {
-                                plugin.getLogger().warning("Leave script execution failed with exception: " + throwable.getMessage());
-                            }
-                        } else if (result != null && !result.isSuccess()) {
-                            if (plugin != null) {
-                                plugin.getLogger().warning("Leave script execution failed: " + result.getMessage());
-                            }
-                        }
-                    });
-            }
-            break;
-        }
+        // Trigger custom event instead of executing scripts directly
+        triggerCustomEvent("onLeave", eventData, event.getPlayer());
     }
     
     @EventHandler
     public void onPlayerChat(AsyncPlayerChatEvent event) {
-        // Check player mode - only execute scripts in PLAY mode
-        PlayerModeManager modeManager = plugin.getServiceRegistry().getPlayerModeManager();
-        if (!modeManager.isInPlayMode(event.getPlayer())) {
-            return; // If player is in DEV mode, don't execute scripts
-        }
-
-        // Find the creative world
-        IWorldManager worldManager = getWorldManager();
-        if (worldManager == null) return;
-        CreativeWorld creativeWorld = worldManager.findCreativeWorldByBukkit(event.getPlayer().getWorld());
-        if (creativeWorld == null) return;
+        // Create event data for the custom event
+        Map<String, DataValue> eventData = new HashMap<>();
+        eventData.put("player", DataValue.fromObject(event.getPlayer()));
+        eventData.put("message", DataValue.fromObject(event.getMessage()));
+        eventData.put("world", DataValue.fromObject(event.getPlayer().getWorld().getName()));
         
-        // Check if player can code in this world
-        if (!creativeWorld.canCode(event.getPlayer())) return;
-        
-        // 🚀 PERFORMANCE: Оптимизированный поиск
-        List<CodeScript> scripts = getScriptsForEvent("onChat", creativeWorld.getWorldId());
-        
-        for (CodeScript script : scripts) {
-            // Execute script
-            if (scriptEngine != null) {
-                scriptEngine.executeScript(script, event.getPlayer(), "player_chat")
-                    .whenComplete((result, throwable) -> {
-                        if (throwable != null) {
-                            if (plugin != null) {
-                                plugin.getLogger().warning("Chat script execution failed with exception: " + throwable.getMessage());
-                            }
-                        } else if (result != null && !result.isSuccess()) {
-                            if (plugin != null) {
-                                plugin.getLogger().warning("Chat script execution failed: " + result.getMessage());
-                            }
-                        }
-                    });
-            }
-            break;
-        }
+        // Trigger custom event instead of executing scripts directly
+        triggerCustomEvent("onChat", eventData, event.getPlayer());
     }
     
     @EventHandler
     public void onPlayerCommandPreprocess(PlayerCommandPreprocessEvent event) {
-        // Check player mode - only execute scripts in PLAY mode
-        PlayerModeManager modeManager = plugin.getServiceRegistry().getPlayerModeManager();
-        if (!modeManager.isInPlayMode(event.getPlayer())) {
-            return; // If player is in DEV mode, don't execute scripts
-        }
-
-        // Find the creative world
-        IWorldManager worldManager = getWorldManager();
-        if (worldManager == null) return;
-        CreativeWorld creativeWorld = worldManager.findCreativeWorldByBukkit(event.getPlayer().getWorld());
-        if (creativeWorld == null) return;
+        // Create event data for the custom event
+        Map<String, DataValue> eventData = new HashMap<>();
+        eventData.put("player", DataValue.fromObject(event.getPlayer()));
+        eventData.put("command", DataValue.fromObject(event.getMessage().substring(1))); // Remove the '/' prefix
+        eventData.put("world", DataValue.fromObject(event.getPlayer().getWorld().getName()));
         
-        // Check if player can code in this world
-        if (!creativeWorld.canCode(event.getPlayer())) return;
-        
-        // 🚀 PERFORMANCE: Оптимизированный поиск
-        List<CodeScript> scripts = getScriptsForEvent("onCommand", creativeWorld.getWorldId());
-        
-        for (CodeScript script : scripts) {
-            // Execute script
-            if (scriptEngine != null) {
-                scriptEngine.executeScript(script, event.getPlayer(), "player_command")
-                            .whenComplete((result, throwable) -> {
-                                if (throwable != null) {
-                                    if (plugin != null) {
-                                        plugin.getLogger().warning("Command script execution failed with exception: " + throwable.getMessage());
-                                    }
-                                } else if (result != null && !result.isSuccess()) {
-                                    if (plugin != null) {
-                                        plugin.getLogger().warning("Command script execution failed: " + result.getMessage());
-                                    }
-                                }
-                            });
-            }
-            break;
-        }
+        // Trigger custom event instead of executing scripts directly
+        triggerCustomEvent("onCommand", eventData, event.getPlayer());
     }
     
     @EventHandler
     public void onPlayerDeath(PlayerDeathEvent event) {
-        // Check player mode - only execute scripts in PLAY mode
-        PlayerModeManager modeManager = plugin.getServiceRegistry().getPlayerModeManager();
-        if (!modeManager.isInPlayMode(event.getEntity())) {
-            return; // If player is in DEV mode, don't execute scripts
-        }
-
-        // Find the creative world
-        IWorldManager worldManager = getWorldManager();
-        if (worldManager == null) return;
-        CreativeWorld creativeWorld = worldManager.findCreativeWorldByBukkit(event.getEntity().getWorld());
-        if (creativeWorld == null) return;
+        // Create event data for the custom event
+        Map<String, DataValue> eventData = new HashMap<>();
+        eventData.put("player", DataValue.fromObject(event.getEntity()));
+        eventData.put("death_message", DataValue.fromObject(event.getDeathMessage()));
+        eventData.put("world", DataValue.fromObject(event.getEntity().getWorld().getName()));
         
-        // Check if player can code in this world
-        if (!creativeWorld.canCode(event.getEntity())) return;
-        
-        // 🚀 PERFORMANCE: Оптимизированный поиск
-        List<CodeScript> scripts = getScriptsForEvent("onPlayerDeath", creativeWorld.getWorldId());
-        
-        for (CodeScript script : scripts) {
-            // Execute script
-            if (scriptEngine != null) {
-                scriptEngine.executeScript(script, event.getEntity(), "player_death")
-                            .whenComplete((result, throwable) -> {
-                                if (throwable != null) {
-                                    if (plugin != null) {
-                                        plugin.getLogger().warning("Death script execution failed with exception: " + throwable.getMessage());
-                                    }
-                                } else if (result != null && !result.isSuccess()) {
-                                    if (plugin != null) {
-                                        plugin.getLogger().warning("Death script execution failed: " + result.getMessage());
-                                    }
-                                }
-                            });
-            }
-            break;
-        }
+        // Trigger custom event instead of executing scripts directly
+        triggerCustomEvent("onPlayerDeath", eventData, event.getEntity());
     }
     
     @EventHandler
     public void onBlockPlace(BlockPlaceEvent event) {
-        // Check player mode - only execute scripts in PLAY mode
-        PlayerModeManager modeManager = plugin.getServiceRegistry().getPlayerModeManager();
-        if (!modeManager.isInPlayMode(event.getPlayer())) {
-            return; // If player is in DEV mode, don't execute scripts
-        }
-
-        // Find the creative world
-        IWorldManager worldManager = getWorldManager();
-        if (worldManager == null) return;
-        CreativeWorld creativeWorld = worldManager.findCreativeWorldByBukkit(event.getPlayer().getWorld());
-        if (creativeWorld == null) return;
+        // Create event data for the custom event
+        Map<String, DataValue> eventData = new HashMap<>();
+        eventData.put("player", DataValue.fromObject(event.getPlayer()));
+        eventData.put("block_type", DataValue.fromObject(event.getBlock().getType().name()));
+        eventData.put("block_x", DataValue.fromObject(event.getBlock().getX()));
+        eventData.put("block_y", DataValue.fromObject(event.getBlock().getY()));
+        eventData.put("block_z", DataValue.fromObject(event.getBlock().getZ()));
+        eventData.put("world", DataValue.fromObject(event.getPlayer().getWorld().getName()));
         
-        // Check if player can code in this world
-        if (!creativeWorld.canCode(event.getPlayer())) return;
-        
-        // 🚀 PERFORMANCE: Оптимизированный поиск
-        List<CodeScript> scripts = getScriptsForEvent("onBlockPlace", creativeWorld.getWorldId());
-        
-        for (CodeScript script : scripts) {
-            // Execute script
-            if (scriptEngine != null) {
-                scriptEngine.executeScript(script, event.getPlayer(), "block_place")
-                            .whenComplete((result, throwable) -> {
-                                if (throwable != null) {
-                                    if (plugin != null) {
-                                        plugin.getLogger().warning("Block place script execution failed with exception: " + throwable.getMessage());
-                                    }
-                                } else if (result != null && !result.isSuccess()) {
-                                    if (plugin != null) {
-                                        plugin.getLogger().warning("Block place script execution failed: " + result.getMessage());
-                                    }
-                                }
-                            });
-            }
-            break;
-        }
+        // Trigger custom event instead of executing scripts directly
+        triggerCustomEvent("onBlockPlace", eventData, event.getPlayer());
     }
     
     @EventHandler
     public void onBlockBreak(BlockBreakEvent event) {
-        // Check player mode - only execute scripts in PLAY mode
-        PlayerModeManager modeManager = plugin.getServiceRegistry().getPlayerModeManager();
-        if (!modeManager.isInPlayMode(event.getPlayer())) {
-            return; // If player is in DEV mode, don't execute scripts
-        }
-
-        // Find the creative world
-        IWorldManager worldManager = getWorldManager();
-        if (worldManager == null) return;
-        CreativeWorld creativeWorld = worldManager.findCreativeWorldByBukkit(event.getPlayer().getWorld());
-        if (creativeWorld == null) return;
+        // Create event data for the custom event
+        Map<String, DataValue> eventData = new HashMap<>();
+        eventData.put("player", DataValue.fromObject(event.getPlayer()));
+        eventData.put("block_type", DataValue.fromObject(event.getBlock().getType().name()));
+        eventData.put("block_x", DataValue.fromObject(event.getBlock().getX()));
+        eventData.put("block_y", DataValue.fromObject(event.getBlock().getY()));
+        eventData.put("block_z", DataValue.fromObject(event.getBlock().getZ()));
+        eventData.put("world", DataValue.fromObject(event.getPlayer().getWorld().getName()));
         
-        // Check if player can code in this world
-        if (!creativeWorld.canCode(event.getPlayer())) return;
-        
-        // 🚀 PERFORMANCE: Оптимизированный поиск
-        List<CodeScript> scripts = getScriptsForEvent("onBlockBreak", creativeWorld.getWorldId());
-        
-        for (CodeScript script : scripts) {
-            // Execute script
-            if (scriptEngine != null) {
-                scriptEngine.executeScript(script, event.getPlayer(), "block_break")
-                            .whenComplete((result, throwable) -> {
-                                if (throwable != null) {
-                                    if (plugin != null) {
-                                        plugin.getLogger().warning("Block break script execution failed with exception: " + throwable.getMessage());
-                                    }
-                                } else if (result != null && !result.isSuccess()) {
-                                    if (plugin != null) {
-                                        plugin.getLogger().warning("Block break script execution failed: " + result.getMessage());
-                                    }
-                                }
-                            });
-            }
-            break;
-        }
+        // Trigger custom event instead of executing scripts directly
+        triggerCustomEvent("onBlockBreak", eventData, event.getPlayer());
     }
     
     @EventHandler
     public void onPlayerLevelChange(PlayerLevelChangeEvent event) {
-        // Check player mode - only execute scripts in PLAY mode
-        PlayerModeManager modeManager = plugin.getServiceRegistry().getPlayerModeManager();
-        if (!modeManager.isInPlayMode(event.getPlayer())) {
-            return; // If player is in DEV mode, don't execute scripts
-        }
-
-        // Find the creative world
-        IWorldManager worldManager = getWorldManager();
-        if (worldManager == null) return;
-        CreativeWorld creativeWorld = worldManager.findCreativeWorldByBukkit(event.getPlayer().getWorld());
-        if (creativeWorld == null) return;
+        // Create event data for the custom event
+        Map<String, DataValue> eventData = new HashMap<>();
+        eventData.put("player", DataValue.fromObject(event.getPlayer()));
+        eventData.put("old_level", DataValue.fromObject(event.getOldLevel()));
+        eventData.put("new_level", DataValue.fromObject(event.getNewLevel()));
+        eventData.put("world", DataValue.fromObject(event.getPlayer().getWorld().getName()));
         
-        // Check if player can code in this world
-        if (!creativeWorld.canCode(event.getPlayer())) return;
-        
-        // 🚀 PERFORMANCE: Оптимизированный поиск
-        List<CodeScript> scripts = getScriptsForEvent("onPlayerLevelUp", creativeWorld.getWorldId());
-        
-        for (CodeScript script : scripts) {
-            // Execute script
-            if (scriptEngine != null) {
-                scriptEngine.executeScript(script, event.getPlayer(), "player_level_up")
-                            .whenComplete((result, throwable) -> {
-                                if (throwable != null) {
-                                    if (plugin != null) {
-                                        plugin.getLogger().warning("Level up script execution failed with exception: " + throwable.getMessage());
-                                    }
-                                } else if (result != null && !result.isSuccess()) {
-                                    if (plugin != null) {
-                                        plugin.getLogger().warning("Level up script execution failed: " + result.getMessage());
-                                    }
-                                }
-                            });
-            }
-            break;
-        }
+        // Trigger custom event instead of executing scripts directly
+        triggerCustomEvent("onPlayerLevelUp", eventData, event.getPlayer());
     }
     
     /**
@@ -537,29 +361,17 @@ public class PlayerEventsListener implements Listener {
         
         // Iterate through each creative world
         for (CreativeWorld creativeWorld : creativeWorlds) {
-            // 🚀 PERFORMANCE: Оптимизированный поиск
-            List<CodeScript> scripts = getScriptsForEvent("onTick", creativeWorld.getWorldId());
+            // Create event data for the custom event
+            Map<String, DataValue> eventData = new HashMap<>();
+            eventData.put("world", DataValue.fromObject(creativeWorld.getName()));
+            eventData.put("player_count", DataValue.fromObject(creativeWorld.getPlayers().size()));
+            eventData.put("tps", DataValue.fromObject(tps));
             
-            for (CodeScript script : scripts) {
-                // Execute script for each player in the world
-                creativeWorld.getPlayers().forEach(player -> {
-                    if (scriptEngine != null) {
-                        scriptEngine.executeScript(script, player, "tick")
-                            .whenComplete((result, throwable) -> {
-                                if (throwable != null) {
-                                    if (plugin != null) {
-                                        plugin.getLogger().warning("Tick script execution failed with exception: " + throwable.getMessage());
-                                    }
-                                } else if (result != null && !result.isSuccess()) {
-                                    if (plugin != null) {
-                                        plugin.getLogger().warning("Tick script execution failed: " + result.getMessage());
-                                    }
-                                }
-                            });
-                    }
-                });
-                break;
-            }
+            // Trigger custom event for each player in the world
+            creativeWorld.getPlayers().forEach(player -> {
+                eventData.put("player", DataValue.fromObject(player));
+                triggerCustomEvent("onTick", eventData, player);
+            });
         }
     }
     

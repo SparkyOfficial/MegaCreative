@@ -38,7 +38,7 @@ public class RegionScriptExample {
             regionSystem.defineRegion("spawn", world.getName(), spawnMin, spawnMax, "Spawn Region", metadata);
             
             // Create an enter script for the spawn region
-            CodeBlock enterRoot = new CodeBlock(Material.DIAMOND_BLOCK, "regionEnter");
+            CodeBlock enterRoot = new CodeBlock("DIAMOND_BLOCK", "regionEnter");
             // Add actions to the script (this would be more complex in a real implementation)
             
             CodeScript enterScript = new CodeScript("region_spawn_regionEnter", true, enterRoot);
@@ -46,7 +46,7 @@ public class RegionScriptExample {
             regionSystem.setRegionScript("spawn", "regionEnter", enterScript);
             
             // Create an exit script for the spawn region
-            CodeBlock exitRoot = new CodeBlock(Material.DIAMOND_BLOCK, "regionExit");
+            CodeBlock exitRoot = new CodeBlock("DIAMOND_BLOCK", "regionExit");
             // Add actions to the script (this would be more complex in a real implementation)
             
             CodeScript exitScript = new CodeScript("region_spawn_regionExit", true, exitRoot);
@@ -54,7 +54,7 @@ public class RegionScriptExample {
             regionSystem.setRegionScript("spawn", "regionExit", exitScript);
             
             // Create a generic region enter script for all other regions
-            CodeBlock genericEnterRoot = new CodeBlock(Material.DIAMOND_BLOCK, "regionEnter");
+            CodeBlock genericEnterRoot = new CodeBlock("DIAMOND_BLOCK", "regionEnter");
             // Add generic actions (this would be more complex in a real implementation)
             
             CodeScript genericEnterScript = new CodeScript("region_regionEnter", true, genericEnterRoot);
@@ -85,7 +85,7 @@ public class RegionScriptExample {
             regionSystem.defineCircularRegion("safezone", world.getName(), center, radius, "Safezone", metadata);
             
             // Create an enter script for the safezone
-            CodeBlock enterRoot = new CodeBlock(Material.DIAMOND_BLOCK, "regionEnter");
+            CodeBlock enterRoot = new CodeBlock("DIAMOND_BLOCK", "regionEnter");
             // Add actions like: disable PvP, start healing effect, etc.
             
             CodeScript enterScript = new CodeScript("region_safezone_regionEnter", true, enterRoot);
@@ -93,7 +93,7 @@ public class RegionScriptExample {
             regionSystem.setRegionScript("safezone", "regionEnter", enterScript);
             
             // Create an exit script for the safezone
-            CodeBlock exitRoot = new CodeBlock(Material.DIAMOND_BLOCK, "regionExit");
+            CodeBlock exitRoot = new CodeBlock("DIAMOND_BLOCK", "regionExit");
             // Add actions like: enable PvP, stop healing effect, etc.
             
             CodeScript exitScript = new CodeScript("region_safezone_regionExit", true, exitRoot);

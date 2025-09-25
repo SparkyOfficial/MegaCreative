@@ -111,7 +111,7 @@ public class BlockPlacementHandler implements Listener {
         // Handle regular code blocks - create "empty" block to be configured via GUI
         String actionId = "NOT_SET"; // Empty block without action
         
-        CodeBlock newCodeBlock = new CodeBlock(block.getType(), actionId);
+        CodeBlock newCodeBlock = new CodeBlock(block.getType().name(), actionId);
         
         // Special handling for piston blocks (brackets)
         if (block.getType() == Material.PISTON || block.getType() == Material.STICKY_PISTON) {
@@ -217,7 +217,7 @@ public class BlockPlacementHandler implements Listener {
             }
             
             // Register brackets as code blocks
-            CodeBlock openBracket = new CodeBlock(bracketMaterial, "BRACKET");
+            CodeBlock openBracket = new CodeBlock(bracketMaterial.name(), "BRACKET");
             openBracket.setBracketType(CodeBlock.BracketType.OPEN);
             blockCodeBlocks.put(openBracketLoc, openBracket);
             
@@ -239,7 +239,7 @@ public class BlockPlacementHandler implements Listener {
                 closeBracketBlock.setBlockData(pistonData);
             }
             
-            CodeBlock closeBracket = new CodeBlock(bracketMaterial, "BRACKET");
+            CodeBlock closeBracket = new CodeBlock(bracketMaterial.name(), "BRACKET");
             closeBracket.setBracketType(CodeBlock.BracketType.CLOSE);
             blockCodeBlocks.put(closeBracketLoc, closeBracket);
             
@@ -259,7 +259,7 @@ public class BlockPlacementHandler implements Listener {
     private boolean handleNonCodeBlockPlacement(BlockPlaceEvent event, Player player, Block block) {
         // Special handling for pistons (brackets)
         if (block.getType() == Material.PISTON || block.getType() == Material.STICKY_PISTON) {
-            CodeBlock newCodeBlock = new CodeBlock(block.getType(), "BRACKET");
+            CodeBlock newCodeBlock = new CodeBlock(block.getType().name(), "BRACKET");
             newCodeBlock.setBracketType(CodeBlock.BracketType.OPEN);
             blockCodeBlocks.put(block.getLocation(), newCodeBlock);
             
@@ -454,229 +454,20 @@ public class BlockPlacementHandler implements Listener {
             return;
         }
         
-        // Open the appropriate editor based on action ID
-        switch (actionId) {
-            case "sendMessage":
-                new SendMessageEditor(plugin, player, codeBlock).open();
-                break;
-                
-            case "command":
-                new CommandEditor(plugin, player, codeBlock).open();
-                break;
-                
-            case "teleport":
-                new TeleportEditor(plugin, player, codeBlock).open();
-                break;
-                
-            case "giveItem":
-                new GiveItemEditor(plugin, player, codeBlock).open();
-                break;
-                
-            case "playSound":
-                new PlaySoundEditor(plugin, player, codeBlock).open();
-                break;
-                
-            case "effect":
-                new EffectEditor(plugin, player, codeBlock).open();
-                break;
-                
-            case "broadcast":
-                new BroadcastEditor(plugin, player, codeBlock).open();
-                break;
-                
-            case "healPlayer":
-                new HealPlayerEditor(plugin, player, codeBlock).open();
-                break;
-                
-            case "setGameMode":
-                new SetGameModeEditor(plugin, player, codeBlock).open();
-                break;
-                
-            case "explosion":
-                new ExplosionEditor(plugin, player, codeBlock).open();
-                break;
-                
-            case "setBlock":
-                new SetBlockEditor(plugin, player, codeBlock).open();
-                break;
-                
-            case "setVar":
-                new SetVarEditor(plugin, player, codeBlock).open();
-                break;
-                
-            case "addVar":
-                new AddVarEditor(plugin, player, codeBlock).open();
-                break;
-                
-            case "subVar":
-                new SubVarEditor(plugin, player, codeBlock).open();
-                break;
-                
-            case "mulVar":
-                new MulVarEditor(plugin, player, codeBlock).open();
-                break;
-                
-            case "divVar":
-                new DivVarEditor(plugin, player, codeBlock).open();
-                break;
-                
-            case "setTime":
-                new SetTimeEditor(plugin, player, codeBlock).open();
-                break;
-                
-            case "setWeather":
-                new SetWeatherEditor(plugin, player, codeBlock).open();
-                break;
-                
-            case "spawnMob":
-                new SpawnMobEditor(plugin, player, codeBlock).open();
-                break;
-                
-            case "giveItems":
-                new GiveItemsEditor(plugin, player, codeBlock).open();
-                break;
-                
-            case "spawnEntity":
-                new SpawnEntityEditor(plugin, player, codeBlock).open();
-                break;
-                
-            case "removeItems":
-                new RemoveItemsEditor(plugin, player, codeBlock).open();
-                break;
-                
-            case "setArmor":
-                new SetArmorEditor(plugin, player, codeBlock).open();
-                break;
-                
-            case "getPlayerName":
-                new GetPlayerNameEditor(plugin, player, codeBlock).open();
-                break;
-                
-            case "wait":
-                new WaitEditor(plugin, player, codeBlock).open();
-                break;
-                
-            case "randomNumber":
-                new RandomNumberEditor(plugin, player, codeBlock).open();
-                break;
-                
-            case "playParticle":
-                new PlayParticleEditor(plugin, player, codeBlock).open();
-                break;
-                
-            case "sendTitle":
-                new SendTitleEditor(plugin, player, codeBlock).open();
-                break;
-                
-            case "sendActionBar":
-                new SendActionBarEditor(plugin, player, codeBlock).open();
-                break;
-                
-            case "executeAsyncCommand":
-                new ExecuteAsyncCommandEditor(plugin, player, codeBlock).open();
-                break;
-                
-            case "teleportToLocation":
-                new TeleportToLocationEditor(plugin, player, codeBlock).open();
-                break;
-                
-            case "setExperience":
-                new SetExperienceEditor(plugin, player, codeBlock).open();
-                break;
-                
-            case "sendCustomTitle":
-                new SendCustomTitleEditor(plugin, player, codeBlock).open();
-                break;
-                
-            // Variable actions
-            case "getVar":
-                new GetVarEditor(plugin, player, codeBlock).open();
-                break;
-                
-            case "setGlobalVar":
-                new SetGlobalVarEditor(plugin, player, codeBlock).open();
-                break;
-                
-            case "getGlobalVar":
-                new GetGlobalVarEditor(plugin, player, codeBlock).open();
-                break;
-                
-            case "setServerVar":
-                new SetServerVarEditor(plugin, player, codeBlock).open();
-                break;
-                
-            case "getServerVar":
-                new GetServerVarEditor(plugin, player, codeBlock).open();
-                break;
-                
-            // Control actions
-            case "repeat":
-                new RepeatEditor(plugin, player, codeBlock).open();
-                break;
-                
-            case "repeatTrigger":
-                new RepeatTriggerEditor(plugin, player, codeBlock).open();
-                break;
-                
-            case "asyncLoop":
-                new AsyncLoopEditor(plugin, player, codeBlock).open();
-                break;
-                
-            case "whileLoop":
-                new WhileLoopEditor(plugin, player, codeBlock).open();
-                break;
-                
-            case "else":
-                new ElseEditor(plugin, player, codeBlock).open();
-                break;
-                
-            // Function actions
-            case "callFunction":
-                new CallFunctionEditor(plugin, player, codeBlock).open();
-                break;
-                
-            case "saveFunction":
-                new SaveFunctionEditor(plugin, player, codeBlock).open();
-                break;
-                
-            // NETHERITE_BLOCK actions
-            case "createScoreboard":
-                new CreateScoreboardEditor(plugin, player, codeBlock).open();
-                break;
-                
-            case "setScore":
-                new SetScoreEditor(plugin, player, codeBlock).open();
-                break;
-                
-            case "incrementScore":
-                new IncrementScoreEditor(plugin, player, codeBlock).open();
-                break;
-                
-            case "createTeam":
-                new CreateTeamEditor(plugin, player, codeBlock).open();
-                break;
-                
-            case "addPlayerToTeam":
-                new AddPlayerToTeamEditor(plugin, player, codeBlock).open();
-                break;
-                
-            case "saveLocation":
-                new SaveLocationEditor(plugin, player, codeBlock).open();
-                break;
-                
-            case "getLocation":
-                new GetLocationEditor(plugin, player, codeBlock).open();
-                break;
-                
-            // Add more cases for other actions as needed
-            default:
-                // For actions without specialized editors, use the enhanced parameter GUI
-                if (plugin.getServiceRegistry() != null) {
-                    com.megacreative.gui.coding.EnhancedActionParameterGUI enhancedGUI = 
-                        new com.megacreative.gui.coding.EnhancedActionParameterGUI(plugin);
-                    enhancedGUI.openParameterEditor(player, codeBlock.getLocation(), actionId);
-                }
-                break;
+        // Use GUIRegistry to open the appropriate editor
+        if (plugin.getServiceRegistry() != null) {
+            GUIRegistry guiRegistry = plugin.getServiceRegistry().getGuiRegistry();
+            if (guiRegistry != null) {
+                guiRegistry.open(actionId, plugin, player, codeBlock);
+                return;
+            }
+        }
+        
+        // Fallback to enhanced parameter GUI if GUIRegistry is not available
+        if (plugin.getServiceRegistry() != null) {
+            com.megacreative.gui.coding.EnhancedActionParameterGUI enhancedGUI = 
+                new com.megacreative.gui.coding.EnhancedActionParameterGUI(plugin);
+            enhancedGUI.openParameterEditor(player, codeBlock.getLocation(), actionId);
         }
     }
     
@@ -1024,7 +815,7 @@ public class BlockPlacementHandler implements Listener {
         if (blockConfigService == null || !blockConfigService.isCodeBlock(material)) {
             // Handle brackets specially
             if (material == Material.PISTON || material == Material.STICKY_PISTON) {
-                CodeBlock bracketBlock = new CodeBlock(material, "BRACKET");
+                CodeBlock bracketBlock = new CodeBlock(material.name(), "BRACKET");
                 // Determine bracket type from sign text or default to OPEN
                 String[] lines = sign.getLines();
                 if (lines.length > 1) {
@@ -1048,7 +839,7 @@ public class BlockPlacementHandler implements Listener {
         }
         
         // Create a new code block
-        CodeBlock codeBlock = new CodeBlock(material, "NOT_SET");
+        CodeBlock codeBlock = new CodeBlock(material.name(), "NOT_SET");
         codeBlock.setLocation(location);
         
         // Try to extract action/event from sign
