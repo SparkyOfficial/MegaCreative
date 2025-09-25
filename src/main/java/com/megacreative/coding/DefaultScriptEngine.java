@@ -164,7 +164,7 @@ public class DefaultScriptEngine implements ScriptEngine, EnhancedScriptEngine {
             @Override
             public void run() {
                 try {
-                    plugin.getLogger().info("Starting script execution for player: " + (player != null ? player.getName() : "null"));
+                    plugin.getLogger().info("Starting script execution for player: " + getPlayerName(player));
                     if (debugger.isDebugging(player)) {
                         debugger.onScriptStart(player, script);
                     }
@@ -210,7 +210,7 @@ public class DefaultScriptEngine implements ScriptEngine, EnhancedScriptEngine {
             @Override
             public void run() {
                 try {
-                    plugin.getLogger().info("Starting block execution for player: " + (player != null ? player.getName() : "null") + 
+                    plugin.getLogger().info("Starting block execution for player: " + getPlayerName(player) + 
                                           " with action: " + (block != null ? block.getAction() : "null"));
                     //if (debugger.isDebugging(player)) {
                     //    debugger.onBlockStart(player, block);
@@ -253,7 +253,7 @@ public class DefaultScriptEngine implements ScriptEngine, EnhancedScriptEngine {
             @Override
             public void run() {
                 try {
-                    plugin.getLogger().info("Starting block chain execution for player: " + (player != null ? player.getName() : "null") + 
+                    plugin.getLogger().info("Starting block chain execution for player: " + getPlayerName(player) + 
                                           " with start block action: " + (startBlock != null ? startBlock.getAction() : "null"));
                     // Track execution chain for better debugging and error handling
                     List<CodeBlock> executionChain = new ArrayList<>();
@@ -276,6 +276,13 @@ public class DefaultScriptEngine implements ScriptEngine, EnhancedScriptEngine {
     
     // Add a counter for instruction limiting to prevent infinite loops
     private static final int MAX_INSTRUCTIONS_PER_TICK = 1000;
+    
+    /**
+     * Safely gets player name, handling null cases
+     */
+    private String getPlayerName(Player player) {
+        return player != null ? player.getName() : "Unknown";
+    }
     
     /**
      * Creates a context map for caching purposes
@@ -756,8 +763,8 @@ public class DefaultScriptEngine implements ScriptEngine, EnhancedScriptEngine {
             }
             
             // If there's an error, return it
-            if (!result.isSuccess()) {
-                plugin.getLogger().warning("Block execution failed: " + (result != null ? result.getMessage() : "null"));
+            if (result != null && !result.isSuccess()) {
+                plugin.getLogger().warning("Block execution failed: " + result.getMessage());
                 return result;
             }
             

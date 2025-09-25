@@ -298,7 +298,7 @@ public class AsyncLoopControl implements BlockAction {
                 
                 if (context.isDebugMode()) {
                     Player player = context.getPlayer();
-                    if (player != null) {
+                    if (player != null && action != null) {
                         player.sendMessage("§7[LOOP] Executing: " + action + " (iteration " + currentIteration + ")");
                     }
                 }
