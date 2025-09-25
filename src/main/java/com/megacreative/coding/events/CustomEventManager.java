@@ -18,11 +18,13 @@ import java.util.logging.Level;
 
 /**
  * Manages custom events - registration, triggering, and handling
+ * Now integrated with the new event-driven architecture
  */
-public class CustomEventManager implements Listener {
+public class CustomEventManager implements Listener, EventPublisher, EventSubscriber {
     private static final java.util.logging.Logger log = java.util.logging.Logger.getLogger(CustomEventManager.class.getName());
     
     private final MegaCreative plugin;
+    private final EventDispatcher eventDispatcher;
     
     // Event definitions
     private final Map<String, CustomEvent> eventDefinitions = new ConcurrentHashMap<>();
@@ -53,6 +55,7 @@ public class CustomEventManager implements Listener {
     
     public CustomEventManager(MegaCreative plugin) {
         this.plugin = plugin;
+        this.eventDispatcher = new EventDispatcher(plugin);
         this.correlationEngine = new EventCorrelationEngine(this);
         this.regionDetectionSystem = new RegionDetectionSystem(plugin, this);
         initializeBuiltInEvents();
@@ -801,5 +804,68 @@ public class CustomEventManager implements Listener {
             }
         }
         return result;
+    }
+    
+    /**
+     * Publishes an event to the event system.
+     * 
+     * @param event The event to publish
+     */
+    @Override
+    public void publishEvent(CustomEvent event) {
+        // Convert CustomEvent to the new event system format
+        Map<String, DataValue> eventData = new HashMap<>();
+        // Add event metadata to the data
+        eventData.put("event_name", DataValue.fromObject(event.getName()));
+        eventData.put("event_category", DataValue.fromObject(event.getCategory()));
+        
+        eventDispatcher.dispatchEvent(event.getName(), eventData, null, null);
+    }
+    
+    /**
+     * Publishes an event with associated data to the event system.
+     * 
+     * @param eventName The name of the event
+     * @param eventData The data associated with the event
+     */
+    @Override
+    public void publishEvent(String eventName, Map<String, DataValue> eventData) {
+        eventDispatcher.dispatchEvent(eventName, eventData, null, null);
+    }
+    
+    /**
+     * Handles an event that has been published.
+     * 
+     * @param eventName The name of the event
+     * @param eventData The data associated with the event
+     * @param source The player that triggered the event (can be null)
+     * @param worldName The world where the event occurred
+     */
+    @Override
+    public void handleEvent(String eventName, Map<String, DataValue> eventData, Player source, String worldName) {
+        // Handle events from other components in the system
+        triggerEvent(eventName, eventData, source, worldName);
+    }
+    
+    /**
+     * Gets the event names this subscriber is interested in.
+     * 
+     * @return An array of event names to subscribe to
+     */
+    @Override
+    public String[] getSubscribedEvents() {
+        // Subscribe to all custom events that this manager handles
+        return eventDefinitions.keySet().toArray(new String[0]);
+    }
+    
+    /**
+     * Gets the priority of this subscriber for event handling.
+     * Higher priority subscribers are called first.
+     * 
+     * @return The priority level (higher numbers = higher priority)
+     */
+    @Override
+    public int getPriority() {
+        return 100; // High priority for the event manager
     }
 }

@@ -5,6 +5,7 @@ import com.megacreative.coding.CodeBlock;
 import com.megacreative.coding.ExecutionContext;
 import com.megacreative.coding.annotations.BlockMeta;
 import com.megacreative.coding.BlockType;
+import com.megacreative.coding.values.DataValue;
 
 /**
  * Condition for checking if a variable equals a specific value.
@@ -17,8 +18,8 @@ public class IfVarEqualsCondition implements BlockCondition {
     public boolean evaluate(CodeBlock block, ExecutionContext context) {
         try {
             // Get variable name and expected value parameters
-            com.megacreative.coding.values.DataValue nameValue = block.getParameter("name");
-            com.megacreative.coding.values.DataValue expectedValue = block.getParameter("value");
+            DataValue nameValue = block.getParameter("name");
+            DataValue expectedValue = block.getParameter("value");
             
             if (nameValue == null || nameValue.isEmpty()) {
                 return false;
@@ -26,8 +27,8 @@ public class IfVarEqualsCondition implements BlockCondition {
             
             String varName = nameValue.asString();
             
-            // Get the variable from the context
-            com.megacreative.coding.values.DataValue varValue = context.getVariable(varName);
+            // Get the variable from the context as DataValue
+            DataValue varValue = context.getVariableAsDataValue(varName);
             
             if (varValue == null || expectedValue == null) {
                 return false;

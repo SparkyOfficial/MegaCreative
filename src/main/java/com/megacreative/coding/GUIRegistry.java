@@ -2,6 +2,13 @@ package com.megacreative.coding;
 
 import com.megacreative.MegaCreative;
 import com.megacreative.managers.GUIManager;
+import com.megacreative.gui.editors.actions.SetVarEditor;
+import com.megacreative.gui.editors.actions.GetVarEditor;
+import com.megacreative.gui.editors.conditions.HasPermissionEditor;
+import com.megacreative.gui.editors.conditions.IfVarEqualsEditor;
+import com.megacreative.gui.editors.conditions.IfVarGreaterEditor;
+import com.megacreative.gui.editors.events.PlayerJoinEventEditor;
+import com.megacreative.gui.editors.events.BlockPlaceEventEditor;
 import org.bukkit.entity.Player;
 
 import java.util.HashMap;
@@ -19,6 +26,21 @@ interface TriFunction<T, U, V, R> {
  */
 public class GUIRegistry {
     private final Map<String, TriFunction<MegaCreative, Player, CodeBlock, Object>> editors = new HashMap<>();
+    
+    public GUIRegistry() {
+        // Register action editors
+        register("setVar", SetVarEditor::new);
+        register("getVar", GetVarEditor::new);
+        
+        // Register condition editors
+        register("hasPermission", HasPermissionEditor::new);
+        register("ifVarEquals", IfVarEqualsEditor::new);
+        register("ifVarGreater", IfVarGreaterEditor::new);
+        
+        // Register event editors
+        register("playerJoin", PlayerJoinEventEditor::new);
+        register("blockPlace", BlockPlaceEventEditor::new);
+    }
     
     /**
      * Registers a GUI editor for a specific action ID

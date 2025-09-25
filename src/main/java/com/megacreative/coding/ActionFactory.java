@@ -4,6 +4,9 @@ import com.megacreative.coding.annotations.BlockMeta;
 import com.megacreative.core.DependencyContainer;
 import com.megacreative.coding.executors.ExecutionResult;
 import com.megacreative.util.ClassScanner;
+import com.megacreative.coding.events.EventPublisher;
+import com.megacreative.coding.events.CustomEvent;
+import com.megacreative.coding.values.DataValue;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.function.Supplier;
@@ -16,7 +19,7 @@ import java.util.logging.Logger;
  *
  * Fabrik zum Erstellen von Blockaktionen mit anmerkungsbasierter Erkennung
  */
-public class ActionFactory {
+public class ActionFactory implements EventPublisher {
     private static final Logger LOGGER = java.util.logging.Logger.getLogger(ActionFactory.class.getName());
 
     private final Map<String, Supplier<BlockAction>> actionMap = new HashMap<>();
@@ -24,6 +27,10 @@ public class ActionFactory {
     
     // Map to store action display names
     private final Map<String, String> actionDisplayNames = new HashMap<>();
+    
+    // Constants for action registration events
+    private static final String EVENT_ACTION_REGISTERED = "action_registered";
+    private static final String EVENT_ACTION_REGISTRATION_FAILED = "action_registration_failed";
     
     /**
      * Creates an ActionFactory
@@ -61,6 +68,12 @@ public class ActionFactory {
                                     return constructor.newInstance(plugin);
                                 } catch (Exception e) {
                                     LOGGER.warning("Failed to create action instance with plugin parameter: " + e.getMessage());
+                                    // Publish registration failure event
+                                    Map<String, DataValue> eventData = new HashMap<>();
+                                    eventData.put("action_id", DataValue.fromObject(meta.id()));
+                                    eventData.put("class_name", DataValue.fromObject(clazz.getName()));
+                                    eventData.put("error", DataValue.fromObject(e.getMessage()));
+                                    publishEvent(EVENT_ACTION_REGISTRATION_FAILED, eventData);
                                     return null;
                                 }
                             });
@@ -73,15 +86,39 @@ public class ActionFactory {
                                         return constructor.newInstance();
                                     } catch (Exception ex) {
                                         LOGGER.warning("Failed to create action instance: " + ex.getMessage());
+                                        // Publish registration failure event
+                                        Map<String, DataValue> eventData = new HashMap<>();
+                                        eventData.put("action_id", DataValue.fromObject(meta.id()));
+                                        eventData.put("class_name", DataValue.fromObject(clazz.getName()));
+                                        eventData.put("error", DataValue.fromObject(ex.getMessage()));
+                                        publishEvent(EVENT_ACTION_REGISTRATION_FAILED, eventData);
                                         return null;
                                     }
                                 });
                             } catch (NoSuchMethodException ex) {
                                 LOGGER.warning("No suitable constructor found for action class: " + clazz.getName());
+                                // Publish registration failure event
+                                Map<String, DataValue> eventData = new HashMap<>();
+                                eventData.put("action_id", DataValue.fromObject(meta.id()));
+                                eventData.put("class_name", DataValue.fromObject(clazz.getName()));
+                                eventData.put("error", DataValue.fromObject("No suitable constructor found"));
+                                publishEvent(EVENT_ACTION_REGISTRATION_FAILED, eventData);
                             }
                         }
+                        
+                        // Publish successful registration event
+                        Map<String, DataValue> eventData = new HashMap<>();
+                        eventData.put("action_id", DataValue.fromObject(meta.id()));
+                        eventData.put("display_name", DataValue.fromObject(meta.displayName()));
+                        eventData.put("class_name", DataValue.fromObject(clazz.getName()));
+                        publishEvent(EVENT_ACTION_REGISTERED, eventData);
                     } catch (Exception e) {
                         LOGGER.warning("Error registering action class " + clazz.getName() + ": " + e.getMessage());
+                        // Publish registration failure event
+                        Map<String, DataValue> eventData = new HashMap<>();
+                        eventData.put("action_id", DataValue.fromObject(clazz.getName()));
+                        eventData.put("error", DataValue.fromObject(e.getMessage()));
+                        publishEvent(EVENT_ACTION_REGISTRATION_FAILED, eventData);
                     }
                 }
             }
@@ -150,5 +187,30 @@ public class ActionFactory {
      */
     public int getActionCount() {
         return actionMap.size();
+    }
+    
+    /**
+     * Publishes an event to the event system.
+     * 
+     * @param event The event to publish
+     */
+    @Override
+    public void publishEvent(CustomEvent event) {
+        // In a real implementation, this would send the event to the EventDispatcher
+        // For now, we'll just log it
+        LOGGER.info("Published event: " + event.getName());
+    }
+    
+    /**
+     * Publishes an event with associated data to the event system.
+     * 
+     * @param eventName The name of the event
+     * @param eventData The data associated with the event
+     */
+    @Override
+    public void publishEvent(String eventName, Map<String, DataValue> eventData) {
+        // In a real implementation, this would send the event to the EventDispatcher
+        // For now, we'll just log it
+        LOGGER.info("Published event: " + eventName + " with data: " + eventData.size() + " fields");
     }
 }

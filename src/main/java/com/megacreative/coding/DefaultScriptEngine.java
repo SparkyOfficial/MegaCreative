@@ -10,13 +10,15 @@ import com.megacreative.coding.CodeBlock;
 import com.megacreative.coding.CodeScript;
 import com.megacreative.coding.ExecutionContext;
 import com.megacreative.coding.BlockType;
+import com.megacreative.coding.events.EventPublisher;
+import com.megacreative.coding.events.CustomEvent;
+import com.megacreative.coding.values.DataValue;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.List;
 import java.util.ArrayList;
 // 🎆 Reference system-style advanced execution
 import com.megacreative.coding.executors.AdvancedExecutionEngine;
-import com.megacreative.coding.values.DataValue;
 import com.megacreative.coding.values.types.ListValue;
 import com.megacreative.coding.Constants;
 import org.bukkit.Material;
@@ -29,7 +31,7 @@ import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.TimeUnit;
 import java.util.logging.Level;
 
-public class DefaultScriptEngine implements ScriptEngine, EnhancedScriptEngine {
+public class DefaultScriptEngine implements ScriptEngine, EnhancedScriptEngine, EventPublisher {
     
     // Constants for block types
     private static final String BLOCK_TYPE_EVENT = "EVENT";
@@ -37,6 +39,13 @@ public class DefaultScriptEngine implements ScriptEngine, EnhancedScriptEngine {
     private static final String BLOCK_TYPE_CONDITION = "CONDITION";
     private static final String BLOCK_TYPE_CONTROL = "CONTROL";
     private static final String BLOCK_TYPE_FUNCTION = "FUNCTION";
+    
+    // Constants for execution events
+    private static final String EVENT_SCRIPT_START = "script_execution_start";
+    private static final String EVENT_SCRIPT_END = "script_execution_end";
+    private static final String EVENT_BLOCK_EXECUTE = "block_execute";
+    private static final String EVENT_BLOCK_SUCCESS = "block_execute_success";
+    private static final String EVENT_BLOCK_ERROR = "block_execute_error";
     
     // Constants for control block actions
     private static final String CONTROL_ACTION_CONDITIONAL_BRANCH = "conditionalBranch";
@@ -112,14 +121,9 @@ public class DefaultScriptEngine implements ScriptEngine, EnhancedScriptEngine {
     public void initialize() {
         // Initialize the script engine with any required setup
         // This method can be used to register built-in actions and conditions
-        // Register all actions from BlockConfigService
-        for (BlockConfigService.BlockConfig config : blockConfigService.getAllBlockConfigs()) {
-            if (BLOCK_TYPE_ACTION.equals(config.getType())) {
-                actionFactory.registerAction(config.getId(), config.getDisplayName());
-            } else if (BLOCK_TYPE_CONDITION.equals(config.getType())) {
-                conditionFactory.registerCondition(config.getId(), config.getDisplayName());
-            }
-        }
+        // With the new annotation-based system, registration happens automatically
+        // We just need to ensure the factories have scanned for annotations
+        plugin.getLogger().info("Initializing ScriptEngine with annotation-based action/condition registration");
     }
     
     public int getActionCount() {
@@ -130,6 +134,31 @@ public class DefaultScriptEngine implements ScriptEngine, EnhancedScriptEngine {
     public int getConditionCount() {
         // Return the number of registered conditions
         return conditionFactory != null ? conditionFactory.getConditionCount() : 0;
+    }
+    
+    /**
+     * Publishes an event to the event system.
+     * 
+     * @param event The event to publish
+     */
+    @Override
+    public void publishEvent(CustomEvent event) {
+        // In a real implementation, this would send the event to the EventDispatcher
+        // For now, we'll just log it
+        plugin.getLogger().info("Published event: " + event.getName());
+    }
+    
+    /**
+     * Publishes an event with associated data to the event system.
+     * 
+     * @param eventName The name of the event
+     * @param eventData The data associated with the event
+     */
+    @Override
+    public void publishEvent(String eventName, Map<String, DataValue> eventData) {
+        // In a real implementation, this would send the event to the EventDispatcher
+        // For now, we'll just log it
+        plugin.getLogger().info("Published event: " + eventName + " with data: " + eventData.size() + " fields");
     }
     
     @Override
@@ -156,6 +185,13 @@ public class DefaultScriptEngine implements ScriptEngine, EnhancedScriptEngine {
             .build();
         
         activeExecutions.put(executionId, context);
+        
+        // Publish script start event
+        Map<String, DataValue> startEventData = new HashMap<>();
+        startEventData.put("script_id", DataValue.fromObject(script.getId()));
+        startEventData.put("player_name", DataValue.fromObject(getPlayerName(player)));
+        startEventData.put("trigger", DataValue.fromObject(trigger));
+        publishEvent(EVENT_SCRIPT_START, startEventData);
 
         CompletableFuture<ExecutionResult> future = new CompletableFuture<>();
         
@@ -170,14 +206,40 @@ public class DefaultScriptEngine implements ScriptEngine, EnhancedScriptEngine {
                     }
                     ExecutionResult result = processBlock(script.getRootBlock(), context, 0);
                     future.complete(result);
+                    
+                    // Publish script end event
+                    Map<String, DataValue> endEventData = new HashMap<>();
+                    endEventData.put("script_id", DataValue.fromObject(script.getId()));
+                    endEventData.put("player_name", DataValue.fromObject(getPlayerName(player)));
+                    endEventData.put("trigger", DataValue.fromObject(trigger));
+                    endEventData.put("success", DataValue.fromObject(result.isSuccess()));
+                    endEventData.put("message", DataValue.fromObject(result.getMessage()));
+                    publishEvent(EVENT_SCRIPT_END, endEventData);
                 } catch (Exception e) {
                     String errorMsg = "Script execution error: " + e.getMessage();
                     plugin.getLogger().log(java.util.logging.Level.SEVERE, errorMsg, e);
                     future.completeExceptionally(e);
+                    
+                    // Publish script error event
+                    Map<String, DataValue> errorEventData = new HashMap<>();
+                    errorEventData.put("script_id", DataValue.fromObject(script.getId()));
+                    errorEventData.put("player_name", DataValue.fromObject(getPlayerName(player)));
+                    errorEventData.put("trigger", DataValue.fromObject(trigger));
+                    errorEventData.put("error", DataValue.fromObject(e.getMessage()));
+                    publishEvent(EVENT_BLOCK_ERROR, errorEventData);
                 } catch (Throwable t) {
                     String errorMsg = "Critical script execution error: " + t.getMessage();
                     plugin.getLogger().log(java.util.logging.Level.SEVERE, errorMsg, t);
                     future.completeExceptionally(new RuntimeException(Constants.CRITICAL_EXECUTION_ERROR, t));
+                    
+                    // Publish critical error event
+                    Map<String, DataValue> errorEventData = new HashMap<>();
+                    errorEventData.put("script_id", DataValue.fromObject(script.getId()));
+                    errorEventData.put("player_name", DataValue.fromObject(getPlayerName(player)));
+                    errorEventData.put("trigger", DataValue.fromObject(trigger));
+                    errorEventData.put("error", DataValue.fromObject(t.getMessage()));
+                    errorEventData.put("critical", DataValue.fromObject(true));
+                    publishEvent(EVENT_BLOCK_ERROR, errorEventData);
                 } finally {
                     if (debugger.isDebugging(player)) {
                         debugger.onScriptEnd(player, script);
@@ -796,21 +858,15 @@ public class DefaultScriptEngine implements ScriptEngine, EnhancedScriptEngine {
     @Override
     public void registerAction(BlockType type, BlockAction action) {
         // Implementation for registering actions
-        // This would typically involve adding to an internal registry
-        if (actionFactory != null) {
-            // Register with action factory using type name as ID
-            //actionFactory.registerAction(type.name(), action);
-        }
+        // With the new annotation-based system, manual registration is not needed
+        plugin.getLogger().info("Action registration via ScriptEngine is deprecated. Use @BlockMeta annotation instead.");
     }
 
     @Override
     public void registerCondition(BlockType type, BlockCondition condition) {
         // Implementation for registering conditions
-        // This would typically involve adding to an internal registry
-        if (conditionFactory != null) {
-            // Register with condition factory using type name as ID
-            //conditionFactory.registerCondition(type.name(), condition);
-        }
+        // With the new annotation-based system, manual registration is not needed
+        plugin.getLogger().info("Condition registration via ScriptEngine is deprecated. Use @BlockMeta annotation instead.");
     }
     
     /**
@@ -820,9 +876,8 @@ public class DefaultScriptEngine implements ScriptEngine, EnhancedScriptEngine {
      * @param action The BlockAction implementation
      */
     public void registerAction(String actionId, BlockAction action) {
-        if (actionFactory != null) {
-            actionFactory.registerAction(actionId, actionId); // Using ID as display name
-        }
+        // With the new annotation-based system, manual registration is not needed
+        plugin.getLogger().info("Action registration via ScriptEngine is deprecated. Use @BlockMeta annotation instead.");
     }
     
     /**
@@ -832,9 +887,8 @@ public class DefaultScriptEngine implements ScriptEngine, EnhancedScriptEngine {
      * @param condition The BlockCondition implementation
      */
     public void registerCondition(String conditionId, BlockCondition condition) {
-        if (conditionFactory != null) {
-            conditionFactory.registerCondition(conditionId, conditionId); // Using ID as display name
-        }
+        // With the new annotation-based system, manual registration is not needed
+        plugin.getLogger().info("Condition registration via ScriptEngine is deprecated. Use @BlockMeta annotation instead.");
     }
     
     @Override

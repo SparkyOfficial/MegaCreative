@@ -6,6 +6,7 @@ import com.megacreative.coding.ExecutionContext;
 import com.megacreative.coding.executors.ExecutionResult;
 import com.megacreative.coding.annotations.BlockMeta;
 import com.megacreative.coding.BlockType;
+import com.megacreative.coding.values.DataValue;
 
 /**
  * Action for getting a variable value.
@@ -18,7 +19,7 @@ public class GetVarAction implements BlockAction {
     public ExecutionResult execute(CodeBlock block, ExecutionContext context) {
         try {
             // Get variable name parameter
-            com.megacreative.coding.values.DataValue nameValue = block.getParameter("name");
+            DataValue nameValue = block.getParameter("name");
             
             if (nameValue == null || nameValue.isEmpty()) {
                 return ExecutionResult.error("Variable name is not configured");
@@ -26,8 +27,8 @@ public class GetVarAction implements BlockAction {
             
             String varName = nameValue.asString();
             
-            // Get the variable from the context
-            com.megacreative.coding.values.DataValue varValue = context.getVariable(varName);
+            // Get the variable from the context as DataValue
+            DataValue varValue = context.getVariableAsDataValue(varName);
             
             if (varValue == null) {
                 return ExecutionResult.error("Variable not found: " + varName);

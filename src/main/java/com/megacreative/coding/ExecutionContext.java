@@ -689,6 +689,36 @@ public class ExecutionContext {
         return instructionCount > maxInstructions;
     }
     
+    /**
+     * Gets a variable value by name, returning the raw DataValue.
+     * @param name The name of the variable
+     * @return The variable value as a DataValue, or null if not found
+     */
+    public DataValue getVariableAsDataValue(String name) {
+        if (name == null || name.isEmpty()) {
+            return null;
+        }
+        
+        // Use enhanced variable resolution with fallback mechanism
+        String context = getPlayerContext();
+        return variableManager.resolveVariable(name, context);
+    }
+    
+    /**
+     * Gets a variable with explicit scope, returning the raw DataValue.
+     * @param name The name of the variable
+     * @param scope The scope to look in
+     * @return The variable value as a DataValue, or null if not found
+     */
+    public DataValue getVariableAsDataValue(String name, VariableScope scope) {
+        if (name == null || name.isEmpty() || scope == null) {
+            return null;
+        }
+        
+        String context = getPlayerContext();
+        return variableManager.getVariable(name, scope, context);
+    }
+
     // Builder pattern
     public static Builder builder() {
         return new Builder();

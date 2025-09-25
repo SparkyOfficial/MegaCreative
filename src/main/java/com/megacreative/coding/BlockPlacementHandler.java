@@ -9,6 +9,8 @@ import com.megacreative.services.BlockConfigService;
 import com.megacreative.coding.CodeBlock;
 import com.megacreative.coding.events.CodeBlockPlacedEvent;
 import com.megacreative.coding.events.CodeBlockBrokenEvent;
+import com.megacreative.coding.events.EventSubscriber;
+import com.megacreative.coding.values.DataValue;
 import com.megacreative.gui.editors.player.*;
 import com.megacreative.gui.editors.conditions.*;
 import com.megacreative.gui.editors.events.*;
@@ -36,13 +38,19 @@ import java.util.logging.Logger;
  * Handles placement and interaction with coding blocks
  * Simplified to only handle block placement - the "Builder"
  */
-public class BlockPlacementHandler implements Listener {
+public class BlockPlacementHandler implements Listener, EventSubscriber {
     private static final Logger log = Logger.getLogger(BlockPlacementHandler.class.getName());
     
     private final MegaCreative plugin;
     private final ITrustedPlayerManager trustedPlayerManager;
     private final BlockConfigService blockConfigService;
     private final Map<Location, CodeBlock> blockCodeBlocks = new HashMap<>();
+    
+    // Constants for subscribed events
+    private static final String[] SUBSCRIBED_EVENTS = {
+        "block_place_requested",
+        "block_placement_confirmed"
+    };
 
     public BlockPlacementHandler(MegaCreative plugin) {
         this.plugin = plugin;
@@ -1063,5 +1071,65 @@ public class BlockPlacementHandler implements Listener {
         // Save the world to persist any changes to code blocks
         plugin.getWorldManager().saveWorld(creativeWorld);
         plugin.getLogger().fine("Saved all code blocks in world: " + world.getName());
+    }
+    
+    /**
+     * Gets the event names this subscriber is interested in.
+     * 
+     * @return An array of event names to subscribe to
+     */
+    @Override
+    public String[] getSubscribedEvents() {
+        return SUBSCRIBED_EVENTS;
+    }
+    
+    /**
+     * Handles an event that has been published.
+     * 
+     * @param eventName The name of the event
+     * @param eventData The data associated with the event
+     * @param source The player that triggered the event (can be null)
+     * @param worldName The world where the event occurred
+     */
+    @Override
+    public void handleEvent(String eventName, Map<String, DataValue> eventData, Player source, String worldName) {
+        switch (eventName) {
+            case "block_place_requested":
+                handleBlockPlaceRequest(eventData, source, worldName);
+                break;
+            case "block_placement_confirmed":
+                handleBlockPlacementConfirmation(eventData, source, worldName);
+                break;
+            default:
+                log.fine("BlockPlacementHandler received unhandled event: " + eventName);
+                break;
+        }
+    }
+    
+    /**
+     * Handles a block place request event
+     */
+    private void handleBlockPlaceRequest(Map<String, DataValue> eventData, Player source, String worldName) {
+        // This could be used to validate or preprocess block placement requests
+        log.info("Received block place request for player: " + (source != null ? source.getName() : "unknown"));
+    }
+    
+    /**
+     * Handles a block placement confirmation event
+     */
+    private void handleBlockPlacementConfirmation(Map<String, DataValue> eventData, Player source, String worldName) {
+        // This could be used to perform additional actions after block placement is confirmed
+        log.info("Received block placement confirmation for player: " + (source != null ? source.getName() : "unknown"));
+    }
+    
+    /**
+     * Gets the priority of this subscriber for event handling.
+     * Higher priority subscribers are called first.
+     * 
+     * @return The priority level (higher numbers = higher priority)
+     */
+    @Override
+    public int getPriority() {
+        return 50; // Medium priority
     }
 }

@@ -8,6 +8,8 @@ import com.megacreative.coding.executors.ExecutionResult;
 import com.megacreative.coding.values.DataValue;
 import com.megacreative.coding.variables.VariableManager;
 import com.megacreative.services.BlockConfigService;
+import com.megacreative.coding.annotations.BlockMeta;
+import com.megacreative.coding.BlockType;
 import org.bukkit.entity.Player;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.inventory.meta.ItemMeta;
@@ -19,6 +21,7 @@ import java.util.function.Function;
  * Action for adding a value to a variable.
  * This action retrieves variable parameters from the container configuration and adds the value to the variable.
  */
+@BlockMeta(id = "addVar", displayName = "§aAdd to Variable", type = BlockType.ACTION)
 public class AddVarAction implements BlockAction {
 
     @Override

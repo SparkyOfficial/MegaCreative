@@ -4,6 +4,8 @@ import com.megacreative.coding.BlockCondition;
 import com.megacreative.coding.CodeBlock;
 import com.megacreative.coding.ExecutionContext;
 import com.megacreative.services.BlockConfigService;
+import com.megacreative.coding.annotations.BlockMeta;
+import com.megacreative.coding.BlockType;
 import org.bukkit.Material;
 import org.bukkit.entity.Player;
 import org.bukkit.inventory.ItemStack;
@@ -11,6 +13,7 @@ import org.bukkit.inventory.meta.ItemMeta;
 
 import java.util.function.Function;
 
+@BlockMeta(id = "checkPlayerInventory", displayName = "§aCheck Player Inventory", type = BlockType.CONDITION)
 public class CheckPlayerInventoryCondition implements BlockCondition {
 
     @Override
