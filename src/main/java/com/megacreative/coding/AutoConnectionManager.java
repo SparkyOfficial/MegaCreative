@@ -459,17 +459,43 @@ public class AutoConnectionManager implements Listener {
     
     /**
      * Finds the corresponding IF block for an ELSE block by traversing backwards
+     * Enhanced with proper nesting level consideration
      */
     private CodeBlock findCorrespondingIfBlock(Location elseLocation) {
-        // This is a simplified implementation
-        // In a real implementation, you would need to consider nesting levels
+        // Track the nesting level to ensure we match the correct IF block
+        int nestingLevel = 0;
         Location currentLocation = elseLocation.clone().add(-1, 0, 0); // Move one block back
         
         while (currentLocation.getBlockX() >= 0) {
             CodeBlock block = locationToBlock.get(currentLocation);
-            if (block != null && block.getAction() != null && 
-                (block.getAction().startsWith("if") || "conditionalBranch".equals(block.getAction()))) {
-                return block;
+            if (block != null) {
+                // Check if this is an ELSE block that increases nesting
+                if (block.getAction() != null && "else".equals(block.getAction())) {
+                    nestingLevel++;
+                }
+                // Check if this is an IF block
+                else if (block.getAction() != null && 
+                    (block.getAction().startsWith("if") || "conditionalBranch".equals(block.getAction()))) {
+                    if (nestingLevel == 0) {
+                        // Found the matching IF block at the same nesting level
+                        return block;
+                    } else {
+                        // This IF block belongs to a nested ELSE, decrement nesting level
+                        nestingLevel--;
+                    }
+                }
+                // Check if this is a closing bracket that might affect nesting
+                else if (block.isBracket() && block.getBracketType() == CodeBlock.BracketType.CLOSE) {
+                    nestingLevel++;
+                }
+                // Check if this is an opening bracket that might affect nesting
+                else if (block.isBracket() && block.getBracketType() == CodeBlock.BracketType.OPEN) {
+                    nestingLevel--;
+                    // Ensure nesting level doesn't go negative
+                    if (nestingLevel < 0) {
+                        nestingLevel = 0;
+                    }
+                }
             }
             currentLocation.add(-1, 0, 0); // Move one more block back
         }

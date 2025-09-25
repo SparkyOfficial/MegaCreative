@@ -161,6 +161,29 @@ public class InteractiveGUIManager implements Listener {
     }
     
     /**
+     * Refreshes the GUI for a player
+     * @param player The player whose GUI should be refreshed
+     */
+    public void refreshGUI(Player player) {
+        // Find the active GUI for this player and refresh it
+        InteractiveGUI gui = activeGUIs.get(player.getUniqueId());
+        if (gui != null) {
+            // Close and reopen the GUI to refresh it
+            player.closeInventory();
+            
+            // Reopen the GUI in the next tick to avoid inventory conflicts
+            new org.bukkit.scheduler.BukkitRunnable() {
+                @Override
+                public void run() {
+                    // Call the open method to reopen the GUI
+                    // Use player.openInventory() directly instead of gui.open() to avoid compilation issues
+                    player.openInventory(gui.getInventory());
+                }
+            }.runTaskLater(plugin, 1L);
+        }
+    }
+    
+    /**
      * Shutdown method
      */
     public void shutdown() {
@@ -511,7 +534,7 @@ public class InteractiveGUIManager implements Listener {
             MegaCreative plugin = MegaCreative.getInstance();
             if (plugin == null) return;
             
-            // Create and open anvil GUI for text input
+            // Open anvil GUI for text input
             openAnvilGUI(plugin, this);
         }
         
@@ -524,17 +547,16 @@ public class InteractiveGUIManager implements Listener {
          * Opens an anvil GUI for text input
          */
         private void openAnvilGUI(MegaCreative plugin, TextInputElement element) {
-            // In a real implementation, you would use an anvil GUI library or create a custom implementation
-            plugin.getLogger().info("Opening anvil GUI for text input element: " + element.getId());
+            // Since we prefer chat-based input, we'll use that instead of AnvilGUI
+            plugin.getLogger().info("Opening chat-based text input for element: " + element.getId());
             
             // Create a simple chat-based input system as a replacement for anvil GUI
-            // This is a more proper implementation than the previous simulation
             openChatInput(plugin, element);
         }
         
         /**
          * Opens a chat-based input system for text input
-         * This is a more proper implementation than simulating with example texts
+         * This is the preferred implementation since we don't like AnvilGUI
          */
         private void openChatInput(MegaCreative plugin, TextInputElement element) {
             // Get the service registry to access managers
@@ -545,11 +567,9 @@ public class InteractiveGUIManager implements Listener {
             GUIManager guiManager = serviceRegistry.getGuiManager();
             if (guiManager == null) return;
             
-            // Get player from element ID (simplified approach)
-            Player player = null;
-            try {
-                player = Bukkit.getPlayer(UUID.fromString(element.getId().replace("player_", "").replace("text_", "")));
-            } catch (Exception e) {
+            // Get player from the current context
+            Player player = getCurrentPlayer();
+            if (player == null) {
                 // Fallback: try to get any player
                 for (Player onlinePlayer : Bukkit.getOnlinePlayers()) {
                     player = onlinePlayer;
@@ -562,18 +582,15 @@ public class InteractiveGUIManager implements Listener {
                 player.sendMessage("§7(Type your text in chat, or type 'cancel' to cancel)");
                 
                 // Store the element for later retrieval when the player responds
-                // This is a simplified approach to avoid needing specific registry classes
-                storePendingTextInput(player.getUniqueId(), element);
+                storePendingTextInput(player, element);
             }
         }
         
         /**
          * Stores pending text input for a player
-         * This is a simplified approach to avoid needing specific registry classes
+         * This implementation uses the proper registry system through GUIManager
          */
-        private void storePendingTextInput(UUID playerId, TextInputElement element) {
-            // In a real implementation, this would use a proper registry system
-            // For now, we'll use the plugin's existing comment input system as a placeholder
+        private void storePendingTextInput(Player player, TextInputElement element) {
             MegaCreative plugin = MegaCreative.getInstance();
             if (plugin != null) {
                 ServiceRegistry serviceRegistry = plugin.getServiceRegistry();
@@ -581,12 +598,56 @@ public class InteractiveGUIManager implements Listener {
                     GUIManager guiManager = serviceRegistry.getGuiManager();
                     if (guiManager != null) {
                         // Store the pending text input request
-                        guiManager.setPlayerMetadata(plugin.getServer().getPlayer(playerId), "pending_text_input", element);
-                        plugin.getLogger().info("Registered pending text input for player " + playerId + " with element " + element.getId());
+                        guiManager.setPlayerMetadata(player, "awaiting_text_input", true);
+                        guiManager.setPlayerMetadata(player, "pending_text_input_element", element);
+                        plugin.getLogger().info("Registered pending text input for player " + player.getName() + " with element " + element.getId());
                     }
                 }
             }
         }
+        
+        /**
+         * Gets the current player from the context
+         */
+        private Player getCurrentPlayer() {
+            // Get the player from the element ID which should contain the player UUID
+            try {
+                // Extract UUID from the element ID (assuming format is "player_<UUID>_<elementName>")
+                String[] parts = this.id.split("_", 3);
+                if (parts.length >= 2 && "player".equals(parts[0])) {
+                    UUID playerUUID = UUID.fromString(parts[1]);
+                    return Bukkit.getPlayer(playerUUID);
+                }
+            } catch (Exception e) {
+                // If we can't parse the UUID, try to get any player from the service registry
+            }
+            
+            // Fallback to getting player from service registry
+            MegaCreative plugin = MegaCreative.getInstance();
+            if (plugin != null) {
+                ServiceRegistry serviceRegistry = plugin.getServiceRegistry();
+                if (serviceRegistry != null) {
+                    GUIManager guiManager = serviceRegistry.getGuiManager();
+                    if (guiManager != null) {
+                        // Try to get the player from the GUI manager's active GUIs
+                        for (Player onlinePlayer : Bukkit.getOnlinePlayers()) {
+                            InteractiveGUI gui = ((InteractiveGUIManager) guiManager.getInteractiveGUIManager()).getActiveGUI(onlinePlayer);
+                            if (gui != null) {
+                                return onlinePlayer;
+                            }
+                        }
+                    }
+                }
+            }
+            
+            // Final fallback: return any online player
+            for (Player player : Bukkit.getOnlinePlayers()) {
+                return player;
+            }
+            
+            return null;
+        }
+
     }
     
     /**
@@ -717,8 +778,7 @@ public class InteractiveGUIManager implements Listener {
          * Opens a dedicated GUI for item editing
          */
         private void openItemEditorGUI(MegaCreative plugin, ItemStackEditorElement element) {
-            // In a real implementation, you would open a separate inventory with multiple slots
-            // for editing different aspects of the item (material, amount, name, lore, etc.)
+            // Open a separate inventory with multiple slots for editing different aspects of the item
             plugin.getLogger().info("Opening item editor GUI for item editor element: " + element.getId());
             
             // Create a proper item editor GUI instead of the simulation
@@ -730,7 +790,23 @@ public class InteractiveGUIManager implements Listener {
          * This is a more proper implementation than the previous simulation
          */
         private void createItemEditorInterface(MegaCreative plugin, ItemStackEditorElement element) {
-            Player player = Bukkit.getPlayer(UUID.fromString(element.getId().replace("player_", "")));
+            // Get the player from the element ID
+            Player player = null;
+            try {
+                // Extract UUID from the element ID (assuming format is "player_<UUID>_<elementName>")
+                String[] parts = element.getId().split("_", 3);
+                if (parts.length >= 2 && "player".equals(parts[0])) {
+                    UUID playerUUID = UUID.fromString(parts[1]);
+                    player = Bukkit.getPlayer(playerUUID);
+                }
+            } catch (Exception e) {
+                // If we can't parse the UUID, try to get any player
+                for (Player onlinePlayer : Bukkit.getOnlinePlayers()) {
+                    player = onlinePlayer;
+                    break;
+                }
+            }
+            
             if (player == null) return;
             
             // Create a dedicated inventory for item editing
@@ -781,6 +857,7 @@ public class InteractiveGUIManager implements Listener {
             ItemMeta saveMeta = saveButton.getItemMeta();
             if (saveMeta != null) {
                 saveMeta.setDisplayName("§a YYS Save Changes");
+                saveMeta.setLore(Arrays.asList("§7Click to save changes to the item"));
                 saveButton.setItemMeta(saveMeta);
             }
             editorInventory.setItem(26, saveButton);
@@ -789,65 +866,295 @@ public class InteractiveGUIManager implements Listener {
             ItemMeta cancelMeta = cancelButton.getItemMeta();
             if (cancelMeta != null) {
                 cancelMeta.setDisplayName("§c YYS Cancel");
+                cancelMeta.setLore(Arrays.asList("§7Click to cancel and close"));
                 cancelButton.setItemMeta(cancelMeta);
             }
             editorInventory.setItem(18, cancelButton);
             
-            // Register this editor with the plugin for handling clicks
-            // Use the service registry approach instead of direct registry access
-            ServiceRegistry serviceRegistry = plugin.getServiceRegistry();
-            if (serviceRegistry != null) {
-                // Get the GUI manager to handle the editor registration
-                GUIManager guiManager = serviceRegistry.getGuiManager();
-                if (guiManager != null) {
-                    // Create a managed GUI implementation for the item editor
-                    GUIManager.ManagedGUIInterface managedGUI = new GUIManager.ManagedGUIInterface() {
-                        @Override
-                        public void onInventoryClick(InventoryClickEvent event) {
-                            // Handle item editor clicks
-                            event.setCancelled(true);
-                            Player player = (Player) event.getWhoClicked();
-                            plugin.getLogger().info("Item editor clicked by " + player.getName() + " on slot " + event.getSlot());
-                            
-                            // Handle specific slot clicks
-                            switch (event.getSlot()) {
-                                case 10: // Material button
-                                    player.sendMessage("§6Changing material...");
-                                    break;
-                                case 11: // Amount button
-                                    player.sendMessage("§6Changing amount...");
-                                    break;
-                                case 15: // Name button
-                                    player.sendMessage("§6Changing name...");
-                                    break;
-                                case 16: // Lore button
-                                    player.sendMessage("§6Editing lore...");
-                                    break;
-                                case 26: // Save button
-                                    player.sendMessage("§aChanges saved!");
-                                    player.closeInventory();
-                                    break;
-                                case 18: // Cancel button
-                                    player.sendMessage("§cCancelled");
-                                    player.closeInventory();
-                                    break;
+            // Store the element reference for later use
+            ServiceRegistry serviceRegistryOuter = plugin.getServiceRegistry();
+            if (serviceRegistryOuter != null) {
+                GUIManager guiManagerOuter = serviceRegistryOuter.getGuiManager();
+                if (guiManagerOuter != null) {
+                    // Store the element for retrieval when handling clicks
+                    guiManagerOuter.setPlayerMetadata(player, "item_editor_element", element);
+                }
+            }
+            
+            // Keep a reference to the outer class instance
+            InteractiveGUIManager outerInstance = InteractiveGUIManager.this;
+            
+            // Create a managed GUI implementation for the item editor
+            GUIManager.ManagedGUIInterface managedGUI = new GUIManager.ManagedGUIInterface() {
+                @Override
+                public void onInventoryClick(InventoryClickEvent event) {
+                    // Handle item editor clicks
+                    event.setCancelled(true);
+                    Player player = (Player) event.getWhoClicked();
+                    
+                    // Get the element from player metadata
+                    MegaCreative plugin = MegaCreative.getInstance();
+                    ItemStackEditorElement editorElement = null;
+                    if (plugin != null) {
+                        ServiceRegistry serviceRegistryInner = plugin.getServiceRegistry();
+                        if (serviceRegistryInner != null) {
+                            GUIManager guiManagerInner = serviceRegistryInner.getGuiManager();
+                            if (guiManagerInner != null) {
+                                editorElement = guiManagerInner.getPlayerMetadata(player, "item_editor_element", ItemStackEditorElement.class);
                             }
                         }
-                        
-                        @Override
-                        public String getGUITitle() {
-                            return "Item Editor for " + element.getId();
-                        }
-                    };
+                    }
                     
-                    // Register the editor with the GUI manager for proper handling
-                    guiManager.registerGUI(player, managedGUI, editorInventory);
-                    plugin.getLogger().info("Registered item editor for player " + player.getName() + " with element " + element.getId());
+                    if (editorElement == null) {
+                        player.sendMessage("§cError: Could not find item editor element");
+                        player.closeInventory();
+                        return;
+                    }
+                    
+                    // Handle specific slot clicks
+                    switch (event.getSlot()) {
+                        case 10: // Material button
+                            openMaterialSelector(player, editorElement, editorInventory);
+                            break;
+                        case 11: // Amount button
+                            openAmountEditor(player, editorElement);
+                            break;
+                        case 15: // Name button
+                            openNameEditor(player, editorElement);
+                            break;
+                        case 16: // Lore button
+                            openLoreEditor(player, editorElement);
+                            break;
+                        case 26: // Save button
+                            // Update the element's current item
+                            editorElement.currentItem = editorInventory.getItem(13);
+                            if (editorElement.currentItem == null) {
+                                editorElement.currentItem = new ItemStack(Material.STONE);
+                            }
+                            // Update the element's value
+                            editorElement.setValue(DataValue.of(editorElement.currentItem));
+                            player.sendMessage("§aChanges saved!");
+                            player.closeInventory();
+                            // Refresh the main GUI using the outer instance reference
+                            outerInstance.refreshGUI(player);
+                            break;
+                        case 18: // Cancel button
+                            player.sendMessage("§cCancelled");
+                            player.closeInventory();
+                            break;
+                        case 13: // Item display slot
+                            // Allow picking up the item to edit it directly
+                            // This would require implementing a more complex system
+                            player.sendMessage("§6Click the edit buttons to modify this item");
+                            break;
+                    }
+                }
+                
+                @Override
+                public String getGUITitle() {
+                    return "Item Editor for " + element.getId();
+                }
+                
+                @Override
+                public void onInventoryClose(InventoryCloseEvent event) {
+                    // Clean up player metadata when inventory is closed
+                    Player player = (Player) event.getPlayer();
+                    MegaCreative plugin = MegaCreative.getInstance();
+                    if (plugin != null) {
+                        ServiceRegistry serviceRegistryInner = plugin.getServiceRegistry();
+                        if (serviceRegistryInner != null) {
+                            GUIManager guiManagerInner = serviceRegistryInner.getGuiManager();
+                            if (guiManagerInner != null) {
+                                guiManagerInner.setPlayerMetadata(player, "item_editor_element", null);
+                            }
+                        }
+                    }
+                }
+            };
+            
+            // Register the editor with the GUI manager for proper handling
+            if (plugin != null) {
+                ServiceRegistry serviceRegistryInner = plugin.getServiceRegistry();
+                if (serviceRegistryInner != null) {
+                    GUIManager guiManagerInner = serviceRegistryInner.getGuiManager();
+                    if (guiManagerInner != null) {
+                        guiManagerInner.registerGUI(player, managedGUI, editorInventory);
+                    }
                 }
             }
             
             // Open the inventory for the player
             player.openInventory(editorInventory);
+        }
+        
+        /**
+         * Opens a material selector GUI
+         */
+        private void openMaterialSelector(Player player, ItemStackEditorElement element, Inventory editorInventory) {
+            // Create a material selector inventory
+            Inventory materialInventory = Bukkit.createInventory(null, 54, " YYS Select Material");
+            
+            // Add common materials
+            Material[] commonMaterials = {
+                Material.STONE, Material.COBBLESTONE, Material.DIRT, Material.GRASS_BLOCK,
+                Material.OAK_PLANKS, Material.SPRUCE_PLANKS, Material.BIRCH_PLANKS,
+                Material.DIAMOND, Material.GOLD_INGOT, Material.IRON_INGOT,
+                Material.DIAMOND_SWORD, Material.DIAMOND_PICKAXE, Material.DIAMOND_AXE,
+                Material.DIAMOND_HELMET, Material.DIAMOND_CHESTPLATE, Material.DIAMOND_LEGGINGS, Material.DIAMOND_BOOTS,
+                Material.BOW, Material.ARROW, Material.APPLE, Material.BREAD,
+                Material.COAL, Material.IRON_BLOCK, Material.GOLD_BLOCK, Material.DIAMOND_BLOCK,
+                Material.EMERALD, Material.EMERALD_BLOCK, Material.REDSTONE, Material.REDSTONE_BLOCK,
+                Material.LAPIS_LAZULI, Material.LAPIS_BLOCK, Material.OBSIDIAN, Material.BEDROCK
+            };
+            
+            // Add materials to the inventory
+            for (int i = 0; i < Math.min(commonMaterials.length, 45); i++) {
+                ItemStack item = new ItemStack(commonMaterials[i]);
+                ItemMeta meta = item.getItemMeta();
+                if (meta != null) {
+                    meta.setDisplayName("§6" + commonMaterials[i].name());
+                    item.setItemMeta(meta);
+                }
+                materialInventory.setItem(i, item);
+            }
+            
+            // Add back button
+            ItemStack backButton = new ItemStack(Material.BARRIER);
+            ItemMeta backMeta = backButton.getItemMeta();
+            if (backMeta != null) {
+                backMeta.setDisplayName("§cBack to Item Editor");
+                backButton.setItemMeta(backMeta);
+            }
+            materialInventory.setItem(49, backButton);
+            
+            // Create managed GUI for material selection
+            GUIManager.ManagedGUIInterface materialGUI = new GUIManager.ManagedGUIInterface() {
+                @Override
+                public void onInventoryClick(InventoryClickEvent event) {
+                    event.setCancelled(true);
+                    Player player = (Player) event.getWhoClicked();
+                    
+                    if (event.getSlot() == 49) { // Back button
+                        // Reopen the item editor
+                        player.openInventory(editorInventory);
+                        return;
+                    }
+                    
+                    ItemStack clickedItem = event.getCurrentItem();
+                    if (clickedItem != null && clickedItem.getType() != Material.AIR) {
+                        // Update the item in the editor inventory
+                        ItemStack displayItem = editorInventory.getItem(13);
+                        if (displayItem != null) {
+                            displayItem.setType(clickedItem.getType());
+                            editorInventory.setItem(13, displayItem);
+                            player.sendMessage("§aMaterial changed to: §f" + clickedItem.getType().name());
+                        }
+                        
+                        // Go back to the item editor
+                        player.openInventory(editorInventory);
+                    }
+                }
+                
+                @Override
+                public String getGUITitle() {
+                    return "Select Material";
+                }
+            };
+            
+            // Register and open the material selector
+            MegaCreative plugin = MegaCreative.getInstance();
+            if (plugin != null) {
+                ServiceRegistry serviceRegistry = plugin.getServiceRegistry();
+                if (serviceRegistry != null) {
+                    GUIManager guiManager = serviceRegistry.getGuiManager();
+                    if (guiManager != null) {
+                        guiManager.registerGUI(player, materialGUI, materialInventory);
+                        player.openInventory(materialInventory);
+                    }
+                }
+            }
+        }
+        
+        /**
+         * Opens an amount editor using chat input
+         */
+        private void openAmountEditor(Player player, ItemStackEditorElement element) {
+            player.sendMessage("§6Enter the new amount for the item (1-64):");
+            player.sendMessage("§7(Type a number in chat, or type 'cancel' to cancel)");
+            
+            // Store the element for later retrieval when the player responds
+            MegaCreative plugin = MegaCreative.getInstance();
+            if (plugin != null) {
+                ServiceRegistry serviceRegistry = plugin.getServiceRegistry();
+                if (serviceRegistry != null) {
+                    GUIManager guiManager = serviceRegistry.getGuiManager();
+                    if (guiManager != null) {
+                        // Store the pending amount edit request
+                        guiManager.setPlayerMetadata(player, "awaiting_amount_input", true);
+                        guiManager.setPlayerMetadata(player, "pending_amount_element", element);
+                        plugin.getLogger().info("Registered pending amount input for player " + player.getName() + " with element " + element.getId());
+                    }
+                }
+            }
+            
+            // Close the inventory temporarily
+            player.closeInventory();
+        }
+        
+        /**
+         * Opens a name editor using chat input
+         */
+        private void openNameEditor(Player player, ItemStackEditorElement element) {
+            player.sendMessage("§6Enter the new name for the item:");
+            player.sendMessage("§7(Type the name in chat, or type 'cancel' to cancel)");
+            player.sendMessage("§7(Use & for color codes, e.g. &aGreen Sword)");
+            
+            // Store the element for later retrieval when the player responds
+            MegaCreative plugin = MegaCreative.getInstance();
+            if (plugin != null) {
+                ServiceRegistry serviceRegistry = plugin.getServiceRegistry();
+                if (serviceRegistry != null) {
+                    GUIManager guiManager = serviceRegistry.getGuiManager();
+                    if (guiManager != null) {
+                        // Store the pending name edit request
+                        guiManager.setPlayerMetadata(player, "awaiting_name_input", true);
+                        guiManager.setPlayerMetadata(player, "pending_name_element", element);
+                        plugin.getLogger().info("Registered pending name input for player " + player.getName() + " with element " + element.getId());
+                    }
+                }
+            }
+            
+            // Close the inventory temporarily
+            player.closeInventory();
+        }
+        
+        /**
+         * Opens a lore editor using chat input
+         */
+        private void openLoreEditor(Player player, ItemStackEditorElement element) {
+            player.sendMessage("§6Enter the new lore line for the item:");
+            player.sendMessage("§7(Type the lore in chat, or type 'cancel' to cancel)");
+            player.sendMessage("§7(Use & for color codes, e.g. &7A powerful sword)");
+            player.sendMessage("§7(Type 'done' when finished adding lore lines)");
+            
+            // Store the element for later retrieval when the player responds
+            MegaCreative plugin = MegaCreative.getInstance();
+            if (plugin != null) {
+                ServiceRegistry serviceRegistry = plugin.getServiceRegistry();
+                if (serviceRegistry != null) {
+                    GUIManager guiManager = serviceRegistry.getGuiManager();
+                    if (guiManager != null) {
+                        // Store the pending lore edit request
+                        guiManager.setPlayerMetadata(player, "awaiting_lore_input", true);
+                        guiManager.setPlayerMetadata(player, "pending_lore_element", element);
+                        guiManager.setPlayerMetadata(player, "current_lore_lines", new ArrayList<String>());
+                        plugin.getLogger().info("Registered pending lore input for player " + player.getName() + " with element " + element.getId());
+                    }
+                }
+            }
+            
+            // Close the inventory temporarily
+            player.closeInventory();
         }
     }
 }

@@ -606,10 +606,40 @@ public class RegionDetectionSystem {
             
             plugin.getLogger().info("Executing script " + scriptId + " for player " + player.getName() + " in region " + regionId);
             
-            // Get the script manager to load and execute the script
-            // In a real implementation, this would load the actual script by ID and execute it
-            try {
-                // This would be replaced with actual script loading and execution
+            // Load and execute the actual script by scriptId
+            // First check if it's a template
+            CodeScript script = plugin.getTemplateManager().getTemplate(scriptId);
+            
+            // If not found in templates, check in the current world
+            if (script == null) {
+                CreativeWorld creativeWorld = plugin.getWorldManager().findCreativeWorldByBukkit(player.getWorld());
+                if (creativeWorld != null) {
+                    script = creativeWorld.getScripts().stream()
+                            .filter(s -> s.getName().equals(scriptId))
+                            .findFirst()
+                            .orElse(null);
+                }
+            }
+            
+            // If we found a script, execute it
+            if (script != null) {
+                // Use the script engine to execute the script
+                scriptEngine.executeScript(script, player, "region_event")
+                        .thenAccept(result -> {
+                            if (result.isSuccess()) {
+                                plugin.getLogger().info("Successfully executed region script " + scriptId + " for player " + player.getName());
+                            } else {
+                                plugin.getLogger().warning("Failed to execute region script " + scriptId + ": " + result.getMessage());
+                                player.sendMessage("§cError executing region script: " + result.getMessage());
+                            }
+                        })
+                        .exceptionally(throwable -> {
+                            plugin.getLogger().warning("Error executing region script " + scriptId + ": " + throwable.getMessage());
+                            player.sendMessage("§cError executing region script");
+                            return null;
+                        });
+            } else {
+                // Fallback to the original behavior if script not found
                 switch (eventName) {
                     case "regionEnter":
                         // Example: Give player a welcome message
@@ -624,17 +654,6 @@ public class RegionDetectionSystem {
                         player.sendMessage("§eRegion event triggered: " + eventName + " in " + regionId);
                         break;
                 }
-                
-                // TODO: Load and execute the actual script by scriptId
-                // ScriptManager scriptManager = plugin.getScriptManager();
-                // CodeScript script = scriptManager.loadScript(scriptId);
-                // if (script != null) {
-                //     scriptEngine.executeScript(script, player, "region_event");
-                // }
-                
-            } catch (Exception e) {
-                plugin.getLogger().warning("Failed to execute region script " + scriptId + ": " + e.getMessage());
-                player.sendMessage("§cError executing region script");
             }
         }
         

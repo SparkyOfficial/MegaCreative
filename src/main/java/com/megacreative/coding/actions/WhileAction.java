@@ -1,222 +1,71 @@
 package com.megacreative.coding.actions;
 
+import com.megacreative.MegaCreative;
 import com.megacreative.coding.BlockAction;
 import com.megacreative.coding.CodeBlock;
-import com.megacreative.coding.Constants;
 import com.megacreative.coding.ExecutionContext;
-import com.megacreative.coding.ParameterResolver;
-import com.megacreative.coding.ScriptEngine;
 import com.megacreative.coding.executors.ExecutionResult;
+import com.megacreative.coding.conditions.CompareVariableCondition;
+import com.megacreative.coding.conditions.IfVarEqualsCondition;
+import com.megacreative.coding.values.DataValue;
+import com.megacreative.coding.variables.VariableManager;
+import com.megacreative.coding.ParameterResolver;
+import com.megacreative.coding.placeholders.ReferenceSystemPlaceholderResolver;
 import com.megacreative.services.BlockConfigService;
-import com.megacreative.coding.annotations.BlockMeta; // Added import
-import com.megacreative.coding.BlockType; // Added import
 import org.bukkit.entity.Player;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.inventory.meta.ItemMeta;
 
-import java.util.concurrent.CompletableFuture;
 import java.util.function.Function;
-import java.util.logging.Level;
 
-@BlockMeta(id = "while", displayName = "§aWhile", type = BlockType.ACTION) // Added annotation
 public class WhileAction implements BlockAction {
     
     // Constants for magic numbers
-    private static final int DEFAULT_MAX_ITERATIONS = 100;
+    private static final int DEFAULT_MAX_ITERATIONS = 1000;
     private static final int MIN_MAX_ITERATIONS = 1;
-    private static final int MAX_MAX_ITERATIONS = 10000;
     private static final String WHILE_LOOP_CONTEXT = "while_loop";
     
+    private final MegaCreative plugin;
+    
+    public WhileAction(MegaCreative plugin) {
+        this.plugin = plugin;
+    }
+    
+    public WhileAction() {
+        this.plugin = MegaCreative.getInstance();
+    }
+    
+    @Override
     public ExecutionResult execute(CodeBlock block, ExecutionContext context) {
-        // Validate inputs
-        if (!validateInputs(block, context)) {
-            return ExecutionResult.error("Player or block is null");
-        }
-        
         Player player = context.getPlayer();
-
-        // Get parameters from the container configuration
-        WhileParams params = getWhileParamsFromContainer(block, context);
-        
-        // Validate max iterations
-        ExecutionResult validationResult = validateMaxIterations(params.maxIterations);
-        if (validationResult != null) {
-            return validationResult;
+        if (player != null) {
+            player.sendMessage("§eExecuting while loop action");
         }
         
-        // Validate next block
-        CodeBlock nextBlock = block.getNextBlock();
-        if (nextBlock == null) {
-            return ExecutionResult.error("No block to execute in while loop");
-        }
+        // Get the condition from the container configuration
+        String condition = getConditionFromContainer(block, context);
         
-        // Get ScriptEngine from ServiceRegistry
-        ScriptEngine scriptEngine = context.getPlugin().getServiceRegistry().getService(ScriptEngine.class);
-        if (scriptEngine == null) {
-            return ExecutionResult.error("Failed to get ScriptEngine from service registry");
-        }
-        
-        // Execute the while loop asynchronously
-        executeWhileLoop(params, nextBlock, context, scriptEngine, player);
-        
-        return ExecutionResult.success("While loop started");
-    }
-    
-    /**
-     * Validates the inputs for the while action
-     */
-    private boolean validateInputs(CodeBlock block, ExecutionContext context) {
-        return context.getPlayer() != null && block != null;
-    }
-    
-    /**
-     * Validates the max iterations parameter
-     */
-    private ExecutionResult validateMaxIterations(int maxIterations) {
-        if (maxIterations < MIN_MAX_ITERATIONS) {
-            return ExecutionResult.error("Max iterations must be greater than 0");
-        }
-        
-        if (maxIterations > MAX_MAX_ITERATIONS) {
-            return ExecutionResult.error("Maximum iterations is 10000");
-        }
-        
-        return null; // Valid count
-    }
-    
-    /**
-     * Executes the while loop asynchronously
-     */
-    private void executeWhileLoop(WhileParams params, CodeBlock nextBlock, ExecutionContext context, 
-                                 ScriptEngine scriptEngine, Player player) {
-        CompletableFuture.runAsync(() -> {
-            try {
-                int iterations = 0;
-                while (iterations < params.maxIterations && evaluateCondition(params.condition, context)) {
-                    if (!executeIterationWithControl(params, nextBlock, context, scriptEngine, player, iterations)) {
-                        break;
-                    }
-                    iterations++;
-                }
-                
-                player.sendMessage("While loop executed " + iterations + " iterations");
-            } catch (Exception e) {
-                logError(context, "Error executing while loop: " + e.getMessage(), e);
-                player.sendMessage("Error executing while loop: " + e.getMessage());
-            }
-        });
-    }
-    
-    /**
-     * Evaluates the condition for the while loop
-     */
-    private boolean evaluateCondition(String condition, ExecutionContext context) {
-        // This is a simplified condition evaluation
-        // In a real implementation, you would parse and evaluate the condition properly
         if (condition == null || condition.isEmpty()) {
-            return false;
+            if (player != null) {
+                player.sendMessage("§cWhile loop condition not configured");
+            }
+            return ExecutionResult.error("While loop condition not configured");
         }
         
-        // For now, we'll just check if it's "true" or "false"
-        // A real implementation would parse expressions like "variable > 5"
-        return "true".equalsIgnoreCase(condition.trim());
+        // Evaluate the condition
+        boolean conditionResult = evaluateCondition(condition, context);
+        
+        if (player != null) {
+            player.sendMessage("§aWhile loop condition evaluated to: " + conditionResult);
+        }
+        
+        return ExecutionResult.success("While loop executed with condition result: " + conditionResult);
     }
     
     /**
-     * Executes a single iteration with break/continue control
+     * Gets condition from the container configuration
      */
-    private boolean executeIterationWithControl(WhileParams params, CodeBlock nextBlock, ExecutionContext context, 
-                                              ScriptEngine scriptEngine, Player player, int currentIndex) {
-        // Check if we should break or continue before executing iteration
-        if (shouldBreak(context, player, currentIndex + 1)) {
-            return false;
-        }
-        
-        if (shouldContinue(context, player, currentIndex + 1)) {
-            return true; // Continue to next iteration
-        }
-        
-        // Create a new context for each iteration
-        ExecutionContext loopContext = createLoopContext(context, nextBlock, currentIndex, params.maxIterations);
-        
-        // Execute the block chain for this iteration
-        if (!executeIteration(scriptEngine, nextBlock, player, loopContext, currentIndex)) {
-            return false;
-        }
-        
-        // Check if we should break or continue after executing iteration
-        if (shouldBreak(context, player, currentIndex + 1)) {
-            return false;
-        }
-        
-        if (shouldContinue(context, player, currentIndex + 1)) {
-            return true; // Continue to next iteration
-        }
-        
-        return true; // Continue normally
-    }
-    
-    /**
-     * Checks if the loop should break
-     */
-    private boolean shouldBreak(ExecutionContext context, Player player, int iteration) {
-        if (context.hasBreakFlag()) {
-            context.clearBreakFlag();
-            player.sendMessage("While loop terminated by break at iteration " + iteration);
-            return true;
-        }
-        return false;
-    }
-    
-    /**
-     * Checks if the loop should continue
-     */
-    private boolean shouldContinue(ExecutionContext context, Player player, int iteration) {
-        if (context.hasContinueFlag()) {
-            context.clearContinueFlag();
-            player.sendMessage("Skipping iteration " + iteration + " due to continue");
-            return true;
-        }
-        return false;
-    }
-    
-    /**
-     * Creates a new execution context for a loop iteration
-     */
-    private ExecutionContext createLoopContext(ExecutionContext context, CodeBlock nextBlock, 
-                                             int currentIndex, int maxIterations) {
-        ExecutionContext loopContext = context.withCurrentBlock(nextBlock, context.getBlockLocation());
-        loopContext.setVariable("loopIndex", currentIndex + 1);
-        loopContext.setVariable("maxIterations", maxIterations);
-        return loopContext;
-    }
-    
-    /**
-     * Executes a single iteration of the loop
-     */
-    private boolean executeIteration(ScriptEngine scriptEngine, CodeBlock nextBlock, 
-                                   Player player, ExecutionContext loopContext, int currentIndex) {
-        try {
-            ExecutionResult result = scriptEngine.executeBlockChain(nextBlock, player, WHILE_LOOP_CONTEXT)
-                .exceptionally(throwable -> {
-                    logError(loopContext, "Error in iteration " + (currentIndex + 1) + ": " + throwable.getMessage(), throwable);
-                    player.sendMessage("Error in iteration " + (currentIndex + 1) + ": " + throwable.getMessage());
-                    return null;
-                })
-                .join(); // Wait for iteration to complete
-            return true;
-        } catch (Exception e) {
-            logError(loopContext, "Error in iteration " + (currentIndex + 1) + ": " + e.getMessage(), e);
-            player.sendMessage("Error in iteration " + (currentIndex + 1) + ": " + e.getMessage());
-            return false;
-        }
-    }
-    
-    /**
-     * Gets parameters from the container configuration
-     */
-    private WhileParams getWhileParamsFromContainer(CodeBlock block, ExecutionContext context) {
-        WhileParams params = new WhileParams();
+    private String getConditionFromContainer(CodeBlock block, ExecutionContext context) {
         try {
             // Get the BlockConfigService to resolve slot names
             BlockConfigService blockConfigService = context.getPlugin().getServiceRegistry().getBlockConfigService();
@@ -226,96 +75,120 @@ public class WhileAction implements BlockAction {
             
             if (slotResolver != null) {
                 // Get condition from the condition slot
-                Integer conditionSlot = slotResolver.apply("condition_slot");
+                Integer conditionSlot = slotResolver.apply("condition");
                 if (conditionSlot != null) {
                     ItemStack conditionItem = block.getConfigItem(conditionSlot);
                     if (conditionItem != null && conditionItem.hasItemMeta()) {
                         // Extract condition from item
-                        params.condition = getConditionFromItem(conditionItem);
-                    }
-                }
-                
-                // Get max iterations from the max iterations slot
-                Integer maxIterationsSlot = slotResolver.apply("max_iterations_slot");
-                if (maxIterationsSlot != null) {
-                    ItemStack maxIterationsItem = block.getConfigItem(maxIterationsSlot);
-                    if (maxIterationsItem != null && maxIterationsItem.hasItemMeta()) {
-                        // Extract max iterations from item
-                        params.maxIterations = getMaxIterationsFromItem(maxIterationsItem);
+                        return getConditionFromItem(conditionItem);
                     }
                 }
             }
+            
+            // Fallback to parameter-based configuration
+            DataValue conditionParam = block.getParameter("condition");
+            if (conditionParam != null && !conditionParam.isEmpty()) {
+                return conditionParam.asString();
+            }
+            
         } catch (Exception e) {
-            logError(context, "Error getting parameters from container in WhileAction: " + e.getMessage(), e);
+            context.getPlugin().getLogger().warning("Error getting condition from container in WhileAction: " + e.getMessage());
         }
         
-        // Set defaults if not found
-        if (params.condition == null) {
-            params.condition = "true"; // Default condition
-        }
-        
-        if (params.maxIterations <= 0) {
-            params.maxIterations = DEFAULT_MAX_ITERATIONS; // Default max iterations
-        }
-        
-        return params;
+        return null;
     }
     
     /**
      * Extracts condition from an item
      */
     private String getConditionFromItem(ItemStack item) {
-        try {
-            ItemMeta meta = item.getItemMeta();
-            if (meta != null) {
-                String displayName = meta.getDisplayName();
-                if (displayName != null && !displayName.isEmpty()) {
-                    // Return the display name as the condition
-                    return displayName;
+        ItemMeta meta = item.getItemMeta();
+        if (meta != null) {
+            String displayName = meta.getDisplayName();
+            if (displayName != null && !displayName.isEmpty()) {
+                // Remove color codes and return the condition
+                return displayName.replaceAll("[§0-9]", "").trim();
+            }
+        }
+        return null;
+    }
+    
+    /**
+     * Evaluates a condition string
+     * Supports expressions like:
+     * - "variable > 5"
+     * - "counter < max"
+     * - "flag == true"
+     * - "apple[counter]~ < 10"
+     */
+    private boolean evaluateCondition(String condition, ExecutionContext context) {
+        if (condition == null || condition.isEmpty()) {
+            return false;
+        }
+        
+        // Resolve any placeholders in the condition
+        ParameterResolver resolver = new ParameterResolver(context);
+        String resolvedCondition = resolver.resolveString(context, condition);
+        
+        // Handle simple boolean values
+        if ("true".equalsIgnoreCase(resolvedCondition.trim())) {
+            return true;
+        }
+        if ("false".equalsIgnoreCase(resolvedCondition.trim())) {
+            return false;
+        }
+        
+        // Handle complex expressions with operators
+        // Supported operators: ==, !=, <, >, <=, >=
+        String[] operators = {"==", "!=", "<=", ">=", "<", ">"};
+        
+        for (String operator : operators) {
+            int operatorIndex = resolvedCondition.indexOf(operator);
+            if (operatorIndex != -1) {
+                String leftSide = resolvedCondition.substring(0, operatorIndex).trim();
+                String rightSide = resolvedCondition.substring(operatorIndex + operator.length()).trim();
+                
+                // Try to evaluate as a numeric comparison first
+                try {
+                    double leftNum = Double.parseDouble(leftSide);
+                    double rightNum = Double.parseDouble(rightSide);
+                    
+                    switch (operator) {
+                        case "==": return leftNum == rightNum;
+                        case "!=": return leftNum != rightNum;
+                        case "<": return leftNum < rightNum;
+                        case ">": return leftNum > rightNum;
+                        case "<=": return leftNum <= rightNum;
+                        case ">=": return leftNum >= rightNum;
+                    }
+                } catch (NumberFormatException e) {
+                    // Not numeric, continue to string comparison
+                }
+                
+                // String comparison
+                switch (operator) {
+                    case "==": return leftSide.equals(rightSide);
+                    case "!=": return !leftSide.equals(rightSide);
+                    case "<": return leftSide.compareTo(rightSide) < 0;
+                    case ">": return leftSide.compareTo(rightSide) > 0;
+                    case "<=": return leftSide.compareTo(rightSide) <= 0;
+                    case ">=": return leftSide.compareTo(rightSide) >= 0;
                 }
             }
-            return "true"; // Default condition
-        } catch (Exception e) {
-            return "true"; // Default condition
         }
-    }
-    
-    /**
-     * Extracts max iterations from an item
-     */
-    private int getMaxIterationsFromItem(ItemStack item) {
-        try {
-            ItemMeta meta = item.getItemMeta();
-            if (meta != null) {
-                String displayName = meta.getDisplayName();
-                if (displayName != null && !displayName.isEmpty()) {
-                    // Try to parse max iterations from display name
-                    String cleanName = displayName.replaceAll("[§0-9]", "").trim();
-                    return Math.max(MIN_MAX_ITERATIONS, Integer.parseInt(cleanName));
-                }
+        
+        // If we can't parse it as an expression, treat it as a variable name
+        // and check if it's truthy (non-empty and not "false")
+        VariableManager variableManager = context.getPlugin().getServiceRegistry().getVariableManager();
+        if (variableManager != null && context.getPlayer() != null) {
+            DataValue variableValue = variableManager.resolveVariable(resolvedCondition, context.getPlayer().getUniqueId().toString());
+            if (variableValue != null) {
+                String valueStr = variableValue.asString();
+                return valueStr != null && !valueStr.isEmpty() && !"false".equalsIgnoreCase(valueStr);
             }
-            
-            // Fallback to item amount
-            return Math.max(MIN_MAX_ITERATIONS, item.getAmount());
-        } catch (Exception e) {
-            return DEFAULT_MAX_ITERATIONS; // Default max iterations
         }
-    }
-    
-    /**
-     * Logs an error with the plugin's logger
-     */
-    private void logError(ExecutionContext context, String message, Throwable throwable) {
-        if (context != null && context.getPlugin() != null) {
-            context.getPlugin().getLogger().log(Level.WARNING, message, throwable);
-        }
-    }
-    
-    /**
-     * Helper class to hold while loop parameters
-     */
-    private static class WhileParams {
-        String condition = "true";
-        int maxIterations = DEFAULT_MAX_ITERATIONS;
+        
+        // Default fallback - if we can't evaluate it, return false for safety
+        return false;
     }
 }

@@ -1,28 +1,30 @@
 package com.megacreative.coding;
 
 import com.megacreative.MegaCreative;
-import com.megacreative.services.BlockConfigService;
+import com.megacreative.coding.annotations.BlockMeta;
 import com.megacreative.coding.executors.ExecutionResult;
+import org.bukkit.configuration.file.YamlConfiguration;
+import org.bukkit.plugin.java.JavaPlugin;
 
+import java.io.File;
+import java.io.IOException;
+import java.io.InputStream;
+import java.io.InputStreamReader;
 import java.lang.reflect.Constructor;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.Set;
 import java.util.logging.Logger;
 
-/**
- * Action factory that loads actions from configuration instead of manual registration.
- * This eliminates the need for a large switch-case in ActionFactory.
- */
 public class ConfigBasedActionFactory {
-    private static final Logger log = Logger.getLogger(ConfigBasedActionFactory.class.getName());
-    
     private final MegaCreative plugin;
-    private final BlockConfigService blockConfigService;
-    private final Map<String, Class<? extends BlockAction>> actionClasses = new HashMap<>();
+    private final Logger log;
+    private final Map<String, Class<? extends BlockAction>> actionClasses;
     
     public ConfigBasedActionFactory(MegaCreative plugin) {
         this.plugin = plugin;
-        this.blockConfigService = plugin.getServiceRegistry().getBlockConfigService();
+        this.log = plugin.getLogger();
+        this.actionClasses = new HashMap<>();
         loadActionClasses();
     }
     
@@ -30,21 +32,119 @@ public class ConfigBasedActionFactory {
      * Loads action classes from configuration
      */
     private void loadActionClasses() {
-        // In a real implementation, you would load this from a config file
-        // For now, we'll register some common actions
+        // Load action classes from coding_blocks.yml
         try {
-            // Load action classes dynamically
-            registerActionClass("sendMessage", "com.megacreative.coding.actions.SendMessageAction");
-            registerActionClass("command", "com.megacreative.coding.actions.CommandAction");
-            registerActionClass("teleport", "com.megacreative.coding.actions.TeleportAction");
-            registerActionClass("wait", "com.megacreative.coding.actions.WaitAction");
-            registerActionClass("repeat", "com.megacreative.coding.actions.RepeatAction");
-            registerActionClass("whileLoop", "com.megacreative.coding.actions.WhileAction");
-            registerActionClass("else", "com.megacreative.coding.actions.ElseAction");
-            // Add more as needed
+            YamlConfiguration config = loadConfig("coding_blocks.yml");
+            
+            // Load action classes dynamically from the config
+            if (config.contains("action_configurations")) {
+                Set<String> actionIds = config.getConfigurationSection("action_configurations").getKeys(false);
+                for (String actionId : actionIds) {
+                    // Try to find the class for this action
+                    String className = findActionClass(actionId);
+                    if (className != null) {
+                        registerActionClass(actionId, className);
+                    }
+                }
+            }
+            
+            // Also load from the blocks section for backward compatibility
+            if (config.contains("blocks")) {
+                Set<String> blockTypes = config.getConfigurationSection("blocks").getKeys(false);
+                for (String blockType : blockTypes) {
+                    if (config.contains("blocks." + blockType + ".actions")) {
+                        // Get list of actions for this block type
+                        for (String actionId : config.getStringList("blocks." + blockType + ".actions")) {
+                            // Try to find the class for this action
+                            String className = findActionClass(actionId);
+                            if (className != null) {
+                                registerActionClass(actionId, className);
+                            }
+                        }
+                    }
+                }
+            }
         } catch (Exception e) {
-            log.severe("Error loading action classes: " + e.getMessage());
+            log.severe("Error loading action classes from config: " + e.getMessage());
+            e.printStackTrace();
         }
+    }
+    
+    /**
+     * Loads a configuration file from resources or data folder
+     */
+    private YamlConfiguration loadConfig(String fileName) {
+        // First try to load from data folder (user-modified version)
+        File dataFolderFile = new File(plugin.getDataFolder(), fileName);
+        if (dataFolderFile.exists()) {
+            return YamlConfiguration.loadConfiguration(dataFolderFile);
+        }
+        
+        // Fallback to resource file
+        InputStream resourceStream = plugin.getResource(fileName);
+        if (resourceStream != null) {
+            return YamlConfiguration.loadConfiguration(new InputStreamReader(resourceStream));
+        }
+        
+        // Create empty config if neither exists
+        return new YamlConfiguration();
+    }
+    
+    /**
+     * Finds the class name for an action ID by scanning available classes
+     */
+    private String findActionClass(String actionId) {
+        // Common package prefixes to search
+        String[] packagePrefixes = {
+            "com.megacreative.coding.actions.",
+            "com.megacreative.coding.conditions.",
+            "com.megacreative.coding."
+        };
+        
+        // Common class name suffixes to try
+        String[] classSuffixes = {
+            "",
+            "Action",
+            "Condition"
+        };
+        
+        // Try different combinations
+        for (String prefix : packagePrefixes) {
+            for (String suffix : classSuffixes) {
+                String className = prefix + capitalize(actionId) + suffix;
+                try {
+                    Class<?> clazz = Class.forName(className);
+                    if (BlockAction.class.isAssignableFrom(clazz)) {
+                        return className;
+                    }
+                } catch (ClassNotFoundException e) {
+                    // Try next combination
+                }
+            }
+        }
+        
+        // Try exact match
+        try {
+            Class<?> clazz = Class.forName(actionId);
+            if (BlockAction.class.isAssignableFrom(clazz)) {
+                return actionId;
+            }
+        } catch (ClassNotFoundException e) {
+            // Not found
+        }
+        
+        log.warning("Could not find class for action ID: " + actionId);
+        return null;
+    }
+    
+    /**
+     * Capitalizes the first letter of a string
+     */
+    private String capitalize(String str) {
+        if (str == null || str.isEmpty()) {
+            return str;
+        }
+        return str.substring(0, 1).toUpperCase() + str.substring(1);
     }
     
     /**

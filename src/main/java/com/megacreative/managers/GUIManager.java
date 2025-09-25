@@ -1,6 +1,7 @@
 package com.megacreative.managers;
 
 import com.megacreative.MegaCreative;
+import com.megacreative.gui.interactive.InteractiveGUIManager;
 import java.util.ArrayList;
 import com.megacreative.core.ServiceRegistry;
 import com.megacreative.interfaces.IPlayerManager;
@@ -337,6 +338,26 @@ public class GUIManager implements Listener {
     public void clearPlayerMetadata(Player player) {
         UUID playerId = player.getUniqueId();
         playerMetadata.remove(playerId);
+    }
+    
+    /**
+     * Gets the InteractiveGUIManager instance
+     * @return InteractiveGUIManager instance or null if not available
+     *
+     * Получает экземпляр InteractiveGUIManager
+     * @return Экземпляр InteractiveGUIManager или null, если недоступен
+     *
+     * Gibt die InteractiveGUIManager-Instanz zurück
+     * @return InteractiveGUIManager-Instanz oder null, wenn nicht verfügbar
+     */
+    public InteractiveGUIManager getInteractiveGUIManager() {
+        if (plugin != null) {
+            ServiceRegistry serviceRegistry = plugin.getServiceRegistry();
+            if (serviceRegistry != null) {
+                return serviceRegistry.getInteractiveGUIManager();
+            }
+        }
+        return null;
     }
     
     // === Методы для работы с подтверждением удаления мира ===
