@@ -7,6 +7,11 @@ import com.megacreative.managers.PlayerModeManager;
 import com.megacreative.models.CreativeWorld;
 import com.megacreative.services.BlockConfigService;
 import com.megacreative.coding.CodeBlock;
+import com.megacreative.gui.editors.player.SendMessageEditor;
+import com.megacreative.gui.editors.player.CommandEditor;
+import com.megacreative.gui.editors.player.TeleportEditor;
+import com.megacreative.gui.editors.conditions.CompareVariableEditor;
+import com.megacreative.gui.editors.conditions.HasItemEditor;
 import org.bukkit.Material;
 import org.bukkit.block.Block;
 import org.bukkit.block.Sign;
@@ -389,9 +394,12 @@ public class BlockPlacementHandler implements Listener {
                 return;
             }
             
-            // For other blocks, open the appropriate GUI
-            // Open ActionSelectionGUI for blocks without actions or Parameter GUI for blocks with actions
-            if (codeBlock.getAction() == null || "NOT_SET".equals(codeBlock.getAction())) {
+            // For other blocks, open the appropriate GUI based on action or condition
+            String actionId = codeBlock.getAction();
+            String conditionId = codeBlock.getCondition();
+            
+            if ((actionId == null || "NOT_SET".equals(actionId)) && 
+                (conditionId == null || "NOT_SET".equals(conditionId))) {
                 // Check if plugin and service registry are available
                 if (plugin == null || plugin.getServiceRegistry() == null) {
                     player.sendMessage("§cPlugin services not available!");
@@ -402,21 +410,99 @@ public class BlockPlacementHandler implements Listener {
                 com.megacreative.gui.coding.ActionSelectionGUI actionGUI = new com.megacreative.gui.coding.ActionSelectionGUI(
                     plugin, player, location, codeBlock.getMaterial());
                 actionGUI.open();
-            } else {
-                // Check if plugin and service registry are available
-                if (plugin == null || plugin.getServiceRegistry() == null) {
-                    player.sendMessage("§cPlugin services not available!");
-                    return;
-                }
-                
-                // Open enhanced parameter configuration GUI
-                com.megacreative.gui.coding.EnhancedActionParameterGUI enhancedGUI = new com.megacreative.gui.coding.EnhancedActionParameterGUI(plugin);
-                enhancedGUI.openParameterEditor(player, location, codeBlock.getAction());
+            } else if (actionId != null && !actionId.equals("NOT_SET")) {
+                // Open specialized parameter editor based on action ID
+                openParameterEditor(player, codeBlock, actionId);
+            } else if (conditionId != null && !conditionId.equals("NOT_SET")) {
+                // Open specialized parameter editor based on condition ID
+                openConditionEditor(player, codeBlock, conditionId);
             }
             return;
         }
     }
-
+    
+    /**
+     * Opens the appropriate parameter editor based on the action ID
+     * @param player The player using the editor
+     * @param codeBlock The code block being edited
+     * @param actionId The action ID
+     */
+    private void openParameterEditor(Player player, CodeBlock codeBlock, String actionId) {
+        // Check if plugin is available
+        if (plugin == null) {
+            player.sendMessage("§cPlugin not available!");
+            return;
+        }
+        
+        // Open the appropriate editor based on action ID
+        switch (actionId) {
+            case "sendMessage":
+                new SendMessageEditor(plugin, player, codeBlock).open();
+                break;
+                
+            case "command":
+                new CommandEditor(plugin, player, codeBlock).open();
+                break;
+                
+            case "teleport":
+                new TeleportEditor(plugin, player, codeBlock).open();
+                break;
+                
+            // Add more cases for other actions as needed
+            default:
+                // For actions without specialized editors, use the enhanced parameter GUI
+                if (plugin.getServiceRegistry() != null) {
+                    com.megacreative.gui.coding.EnhancedActionParameterGUI enhancedGUI = 
+                        new com.megacreative.gui.coding.EnhancedActionParameterGUI(plugin);
+                    enhancedGUI.openParameterEditor(player, codeBlock.getLocation(), actionId);
+                }
+                break;
+        }
+    }
+    
+    /**
+     * Opens the appropriate parameter editor based on the condition ID
+     * @param player The player using the editor
+     * @param codeBlock The code block being edited
+     * @param conditionId The condition ID
+     */
+    private void openConditionEditor(Player player, CodeBlock codeBlock, String conditionId) {
+        // Check if plugin is available
+        if (plugin == null) {
+            player.sendMessage("§cPlugin not available!");
+            return;
+        }
+        
+        // Open the appropriate editor based on condition ID
+        switch (conditionId) {
+            case "compareVariable":
+                new CompareVariableEditor(plugin, player, codeBlock).open();
+                break;
+                
+            case "hasItem":
+                new HasItemEditor(plugin, player, codeBlock).open();
+                break;
+                
+            // Add more cases for other conditions as needed
+            default:
+                // For conditions without specialized editors, use the generic parameter GUI
+                new com.megacreative.coding.CodingParameterGUI(
+                    player, 
+                    conditionId, 
+                    codeBlock.getLocation(), 
+                    parameters -> {
+                        // Apply parameters to the code block
+                        for (Map.Entry<String, Object> entry : parameters.entrySet()) {
+                            codeBlock.setParameter(entry.getKey(), com.megacreative.coding.values.DataValue.fromObject(entry.getValue()));
+                        }
+                        player.sendMessage("§aПараметры условия сохранены!");
+                    },
+                    plugin.getGuiManager()
+                ).open();
+                break;
+        }
+    }
+    
     /**
      * Toggles bracket type (open/closed) for a code block
      */
