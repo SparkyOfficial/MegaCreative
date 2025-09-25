@@ -9,16 +9,10 @@ import org.bukkit.entity.Player;
 import org.bukkit.event.inventory.InventoryClickEvent;
 import org.bukkit.inventory.ItemStack;
 
-public class HasItemEditor extends AbstractParameterEditor {
-
-    /**
-     * Constructor for HasItemEditor
-     * @param plugin The main plugin instance
-     * @param player The player using the editor
-     * @param codeBlock The code block being edited
-     */
-    public HasItemEditor(MegaCreative plugin, Player player, CodeBlock codeBlock) {
-        super(plugin, player, codeBlock, 9, "Has Item Editor");
+public class IfVarLessEditor extends AbstractParameterEditor {
+    
+    public IfVarLessEditor(MegaCreative plugin, Player player, CodeBlock codeBlock) {
+        super(plugin, player, codeBlock, 9, "If Variable Less Editor");
         
         // Set up the inventory with default items
         setupInventory();
@@ -27,19 +21,19 @@ public class HasItemEditor extends AbstractParameterEditor {
     private void setupInventory() {
         inventory.clear();
         
-        // Item slot
-        ItemStack itemStack = new ItemStack(Material.STICK);
-        inventory.setItem(0, itemStack);
+        // Variable slot
+        ItemStack varStack = new ItemStack(Material.OBSIDIAN);
+        inventory.setItem(0, varStack);
+        
+        // Value slot
+        ItemStack valueStack = new ItemStack(Material.GOLD_INGOT);
+        inventory.setItem(1, valueStack);
         
         // Done button
         ItemStack doneStack = new ItemStack(Material.EMERALD);
         inventory.setItem(8, doneStack);
     }
     
-    /**
-     * Handles clicks in the inventory
-     * @param event The inventory click event
-     */
     @Override
     public void onInventoryClick(InventoryClickEvent event) {
         event.setCancelled(true);
@@ -47,14 +41,19 @@ public class HasItemEditor extends AbstractParameterEditor {
         int slot = event.getSlot();
         
         switch (slot) {
-            case 0: // Item slot
-                openAnvilInputGUI("Enter item type", codeBlock.getParameter("item", "DIAMOND").toString(), 
-                    newValue -> codeBlock.setParameter("item", newValue));
+            case 0: // Variable slot
+                openAnvilInputGUI("Enter variable name", codeBlock.getParameter("variable", "myVar").toString(), 
+                    newValue -> codeBlock.setParameter("variable", newValue));
+                break;
+                
+            case 1: // Value slot
+                openAnvilInputGUI("Enter value", codeBlock.getParameter("value", "0").toString(), 
+                    newValue -> codeBlock.setParameter("value", newValue));
                 break;
                 
             case 8: // Done button
                 player.closeInventory();
-                player.sendMessage("§aHas Item parameters saved!");
+                player.sendMessage("§aIf Variable Less parameters saved!");
                 break;
         }
     }

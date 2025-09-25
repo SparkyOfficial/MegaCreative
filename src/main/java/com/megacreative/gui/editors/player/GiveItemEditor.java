@@ -1,4 +1,4 @@
-package com.megacreative.gui.editors.conditions;
+package com.megacreative.gui.editors.player;
 
 import com.megacreative.MegaCreative;
 import com.megacreative.coding.CodeBlock;
@@ -9,16 +9,10 @@ import org.bukkit.entity.Player;
 import org.bukkit.event.inventory.InventoryClickEvent;
 import org.bukkit.inventory.ItemStack;
 
-public class HasItemEditor extends AbstractParameterEditor {
-
-    /**
-     * Constructor for HasItemEditor
-     * @param plugin The main plugin instance
-     * @param player The player using the editor
-     * @param codeBlock The code block being edited
-     */
-    public HasItemEditor(MegaCreative plugin, Player player, CodeBlock codeBlock) {
-        super(plugin, player, codeBlock, 9, "Has Item Editor");
+public class GiveItemEditor extends AbstractParameterEditor {
+    
+    public GiveItemEditor(MegaCreative plugin, Player player, CodeBlock codeBlock) {
+        super(plugin, player, codeBlock, 9, "Give Item Editor");
         
         // Set up the inventory with default items
         setupInventory();
@@ -28,18 +22,18 @@ public class HasItemEditor extends AbstractParameterEditor {
         inventory.clear();
         
         // Item slot
-        ItemStack itemStack = new ItemStack(Material.STICK);
+        ItemStack itemStack = new ItemStack(Material.CHEST);
         inventory.setItem(0, itemStack);
+        
+        // Amount slot
+        ItemStack amountStack = new ItemStack(Material.HOPPER);
+        inventory.setItem(1, amountStack);
         
         // Done button
         ItemStack doneStack = new ItemStack(Material.EMERALD);
         inventory.setItem(8, doneStack);
     }
     
-    /**
-     * Handles clicks in the inventory
-     * @param event The inventory click event
-     */
     @Override
     public void onInventoryClick(InventoryClickEvent event) {
         event.setCancelled(true);
@@ -52,9 +46,14 @@ public class HasItemEditor extends AbstractParameterEditor {
                     newValue -> codeBlock.setParameter("item", newValue));
                 break;
                 
+            case 1: // Amount slot
+                openAnvilInputGUI("Enter amount", codeBlock.getParameter("amount", "1").toString(), 
+                    newValue -> codeBlock.setParameter("amount", newValue));
+                break;
+                
             case 8: // Done button
                 player.closeInventory();
-                player.sendMessage("§aHas Item parameters saved!");
+                player.sendMessage("§aGive Item parameters saved!");
                 break;
         }
     }

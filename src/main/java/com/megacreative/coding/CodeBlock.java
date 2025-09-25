@@ -25,6 +25,9 @@ public class CodeBlock implements Cloneable {
     /** Selected action (e.g. onJoin, sendMessage) */
     private String action;
     
+    /** Selected event (e.g. onJoin, onLeave) */
+    private String event;
+    
     /** Block parameters */
     private Map<String, DataValue> parameters;
     
@@ -91,6 +94,19 @@ public class CodeBlock implements Cloneable {
         this.action = action;
     }
     
+    /**
+     * Constructor with action and event parameters
+     * @param material Block material
+     * @param action Block action
+     * @param event Block event
+     */
+    public CodeBlock(Material material, String action, String event) {
+        this();
+        this.material = material;
+        this.action = action;
+        this.event = event;
+    }
+    
     // ===== GETTERS AND SETTERS =====
     
     public UUID getId() { 
@@ -115,6 +131,14 @@ public class CodeBlock implements Cloneable {
     
     public void setAction(String action) { 
         this.action = action; 
+    }
+    
+    public String getEvent() { 
+        return event; 
+    }
+    
+    public void setEvent(String event) { 
+        this.event = event; 
     }
     
     public Map<String, DataValue> getParameters() { 

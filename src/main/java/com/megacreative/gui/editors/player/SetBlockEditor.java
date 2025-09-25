@@ -1,4 +1,4 @@
-package com.megacreative.gui.editors.conditions;
+package com.megacreative.gui.editors.player;
 
 import com.megacreative.MegaCreative;
 import com.megacreative.coding.CodeBlock;
@@ -9,16 +9,10 @@ import org.bukkit.entity.Player;
 import org.bukkit.event.inventory.InventoryClickEvent;
 import org.bukkit.inventory.ItemStack;
 
-public class HasItemEditor extends AbstractParameterEditor {
-
-    /**
-     * Constructor for HasItemEditor
-     * @param plugin The main plugin instance
-     * @param player The player using the editor
-     * @param codeBlock The code block being edited
-     */
-    public HasItemEditor(MegaCreative plugin, Player player, CodeBlock codeBlock) {
-        super(plugin, player, codeBlock, 9, "Has Item Editor");
+public class SetBlockEditor extends AbstractParameterEditor {
+    
+    public SetBlockEditor(MegaCreative plugin, Player player, CodeBlock codeBlock) {
+        super(plugin, player, codeBlock, 9, "Set Block Editor");
         
         // Set up the inventory with default items
         setupInventory();
@@ -27,19 +21,19 @@ public class HasItemEditor extends AbstractParameterEditor {
     private void setupInventory() {
         inventory.clear();
         
-        // Item slot
-        ItemStack itemStack = new ItemStack(Material.STICK);
-        inventory.setItem(0, itemStack);
+        // Material slot
+        ItemStack materialStack = new ItemStack(Material.STONE);
+        inventory.setItem(0, materialStack);
+        
+        // Coordinates slot
+        ItemStack coordsStack = new ItemStack(Material.COMPASS);
+        inventory.setItem(1, coordsStack);
         
         // Done button
         ItemStack doneStack = new ItemStack(Material.EMERALD);
         inventory.setItem(8, doneStack);
     }
     
-    /**
-     * Handles clicks in the inventory
-     * @param event The inventory click event
-     */
     @Override
     public void onInventoryClick(InventoryClickEvent event) {
         event.setCancelled(true);
@@ -47,14 +41,19 @@ public class HasItemEditor extends AbstractParameterEditor {
         int slot = event.getSlot();
         
         switch (slot) {
-            case 0: // Item slot
-                openAnvilInputGUI("Enter item type", codeBlock.getParameter("item", "DIAMOND").toString(), 
-                    newValue -> codeBlock.setParameter("item", newValue));
+            case 0: // Material slot
+                openAnvilInputGUI("Enter block material", codeBlock.getParameter("material", "STONE").toString(), 
+                    newValue -> codeBlock.setParameter("material", newValue));
+                break;
+                
+            case 1: // Coordinates slot
+                openAnvilInputGUI("Enter coordinates (x y z)", codeBlock.getParameter("coords", "100 70 200").toString(), 
+                    newValue -> codeBlock.setParameter("coords", newValue));
                 break;
                 
             case 8: // Done button
                 player.closeInventory();
-                player.sendMessage("§aHas Item parameters saved!");
+                player.sendMessage("§aSet Block parameters saved!");
                 break;
         }
     }

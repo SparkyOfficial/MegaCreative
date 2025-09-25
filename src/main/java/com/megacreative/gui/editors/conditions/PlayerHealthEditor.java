@@ -9,16 +9,10 @@ import org.bukkit.entity.Player;
 import org.bukkit.event.inventory.InventoryClickEvent;
 import org.bukkit.inventory.ItemStack;
 
-public class HasItemEditor extends AbstractParameterEditor {
-
-    /**
-     * Constructor for HasItemEditor
-     * @param plugin The main plugin instance
-     * @param player The player using the editor
-     * @param codeBlock The code block being edited
-     */
-    public HasItemEditor(MegaCreative plugin, Player player, CodeBlock codeBlock) {
-        super(plugin, player, codeBlock, 9, "Has Item Editor");
+public class PlayerHealthEditor extends AbstractParameterEditor {
+    
+    public PlayerHealthEditor(MegaCreative plugin, Player player, CodeBlock codeBlock) {
+        super(plugin, player, codeBlock, 9, "Player Health Editor");
         
         // Set up the inventory with default items
         setupInventory();
@@ -27,19 +21,19 @@ public class HasItemEditor extends AbstractParameterEditor {
     private void setupInventory() {
         inventory.clear();
         
-        // Item slot
-        ItemStack itemStack = new ItemStack(Material.STICK);
-        inventory.setItem(0, itemStack);
+        // Health slot
+        ItemStack healthStack = new ItemStack(Material.GOLDEN_APPLE);
+        inventory.setItem(0, healthStack);
+        
+        // Operator slot
+        ItemStack operatorStack = new ItemStack(Material.COMPARATOR);
+        inventory.setItem(1, operatorStack);
         
         // Done button
         ItemStack doneStack = new ItemStack(Material.EMERALD);
         inventory.setItem(8, doneStack);
     }
     
-    /**
-     * Handles clicks in the inventory
-     * @param event The inventory click event
-     */
     @Override
     public void onInventoryClick(InventoryClickEvent event) {
         event.setCancelled(true);
@@ -47,14 +41,19 @@ public class HasItemEditor extends AbstractParameterEditor {
         int slot = event.getSlot();
         
         switch (slot) {
-            case 0: // Item slot
-                openAnvilInputGUI("Enter item type", codeBlock.getParameter("item", "DIAMOND").toString(), 
-                    newValue -> codeBlock.setParameter("item", newValue));
+            case 0: // Health slot
+                openAnvilInputGUI("Enter health value", codeBlock.getParameter("health", "10.0").toString(), 
+                    newValue -> codeBlock.setParameter("health", newValue));
+                break;
+                
+            case 1: // Operator slot
+                openAnvilInputGUI("Enter operator", codeBlock.getParameter("operator", ">").toString(), 
+                    newValue -> codeBlock.setParameter("operator", newValue));
                 break;
                 
             case 8: // Done button
                 player.closeInventory();
-                player.sendMessage("§aHas Item parameters saved!");
+                player.sendMessage("§aPlayer Health parameters saved!");
                 break;
         }
     }

@@ -462,7 +462,8 @@ public class EventSelectionGUI implements GUIManager.ManagedGUIInterface {
         }
         
         // Set the event
-        codeBlock.setAction(eventId);
+        codeBlock.setEvent(eventId);
+        codeBlock.setAction("NOT_SET");
         
         // Save the world
         var creativeWorld = plugin.getWorldManager().findCreativeWorldByBukkit(player.getWorld());

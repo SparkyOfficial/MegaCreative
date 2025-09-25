@@ -7,11 +7,9 @@ import com.megacreative.managers.PlayerModeManager;
 import com.megacreative.models.CreativeWorld;
 import com.megacreative.services.BlockConfigService;
 import com.megacreative.coding.CodeBlock;
-import com.megacreative.gui.editors.player.SendMessageEditor;
-import com.megacreative.gui.editors.player.CommandEditor;
-import com.megacreative.gui.editors.player.TeleportEditor;
-import com.megacreative.gui.editors.conditions.CompareVariableEditor;
-import com.megacreative.gui.editors.conditions.HasItemEditor;
+import com.megacreative.gui.editors.player.*;
+import com.megacreative.gui.editors.conditions.*;
+import com.megacreative.gui.editors.events.*;
 import org.bukkit.Material;
 import org.bukkit.block.Block;
 import org.bukkit.block.Sign;
@@ -394,12 +392,14 @@ public class BlockPlacementHandler implements Listener {
                 return;
             }
             
-            // For other blocks, open the appropriate GUI based on action or condition
+            // For other blocks, open the appropriate GUI based on action, condition or event
             String actionId = codeBlock.getAction();
             String conditionId = codeBlock.getCondition();
+            String eventId = codeBlock.getEvent();
             
             if ((actionId == null || "NOT_SET".equals(actionId)) && 
-                (conditionId == null || "NOT_SET".equals(conditionId))) {
+                (conditionId == null || "NOT_SET".equals(conditionId)) &&
+                (eventId == null || "NOT_SET".equals(eventId))) {
                 // Check if plugin and service registry are available
                 if (plugin == null || plugin.getServiceRegistry() == null) {
                     player.sendMessage("§cPlugin services not available!");
@@ -416,6 +416,9 @@ public class BlockPlacementHandler implements Listener {
             } else if (conditionId != null && !conditionId.equals("NOT_SET")) {
                 // Open specialized parameter editor based on condition ID
                 openConditionEditor(player, codeBlock, conditionId);
+            } else if (eventId != null && !eventId.equals("NOT_SET")) {
+                // Open specialized parameter editor based on event ID
+                openEventEditor(player, codeBlock, eventId);
             }
             return;
         }
@@ -448,6 +451,206 @@ public class BlockPlacementHandler implements Listener {
                 new TeleportEditor(plugin, player, codeBlock).open();
                 break;
                 
+            case "giveItem":
+                new GiveItemEditor(plugin, player, codeBlock).open();
+                break;
+                
+            case "playSound":
+                new PlaySoundEditor(plugin, player, codeBlock).open();
+                break;
+                
+            case "effect":
+                new EffectEditor(plugin, player, codeBlock).open();
+                break;
+                
+            case "broadcast":
+                new BroadcastEditor(plugin, player, codeBlock).open();
+                break;
+                
+            case "healPlayer":
+                new HealPlayerEditor(plugin, player, codeBlock).open();
+                break;
+                
+            case "setGameMode":
+                new SetGameModeEditor(plugin, player, codeBlock).open();
+                break;
+                
+            case "explosion":
+                new ExplosionEditor(plugin, player, codeBlock).open();
+                break;
+                
+            case "setBlock":
+                new SetBlockEditor(plugin, player, codeBlock).open();
+                break;
+                
+            case "setVar":
+                new SetVarEditor(plugin, player, codeBlock).open();
+                break;
+                
+            case "addVar":
+                new AddVarEditor(plugin, player, codeBlock).open();
+                break;
+                
+            case "subVar":
+                new SubVarEditor(plugin, player, codeBlock).open();
+                break;
+                
+            case "mulVar":
+                new MulVarEditor(plugin, player, codeBlock).open();
+                break;
+                
+            case "divVar":
+                new DivVarEditor(plugin, player, codeBlock).open();
+                break;
+                
+            case "setTime":
+                new SetTimeEditor(plugin, player, codeBlock).open();
+                break;
+                
+            case "setWeather":
+                new SetWeatherEditor(plugin, player, codeBlock).open();
+                break;
+                
+            case "spawnMob":
+                new SpawnMobEditor(plugin, player, codeBlock).open();
+                break;
+                
+            case "giveItems":
+                new GiveItemsEditor(plugin, player, codeBlock).open();
+                break;
+                
+            case "spawnEntity":
+                new SpawnEntityEditor(plugin, player, codeBlock).open();
+                break;
+                
+            case "removeItems":
+                new RemoveItemsEditor(plugin, player, codeBlock).open();
+                break;
+                
+            case "setArmor":
+                new SetArmorEditor(plugin, player, codeBlock).open();
+                break;
+                
+            case "getPlayerName":
+                new GetPlayerNameEditor(plugin, player, codeBlock).open();
+                break;
+                
+            case "wait":
+                new WaitEditor(plugin, player, codeBlock).open();
+                break;
+                
+            case "randomNumber":
+                new RandomNumberEditor(plugin, player, codeBlock).open();
+                break;
+                
+            case "playParticle":
+                new PlayParticleEditor(plugin, player, codeBlock).open();
+                break;
+                
+            case "sendTitle":
+                new SendTitleEditor(plugin, player, codeBlock).open();
+                break;
+                
+            case "sendActionBar":
+                new SendActionBarEditor(plugin, player, codeBlock).open();
+                break;
+                
+            case "executeAsyncCommand":
+                new ExecuteAsyncCommandEditor(plugin, player, codeBlock).open();
+                break;
+                
+            case "teleportToLocation":
+                new TeleportToLocationEditor(plugin, player, codeBlock).open();
+                break;
+                
+            case "setExperience":
+                new SetExperienceEditor(plugin, player, codeBlock).open();
+                break;
+                
+            case "sendCustomTitle":
+                new SendCustomTitleEditor(plugin, player, codeBlock).open();
+                break;
+                
+            // Variable actions
+            case "getVar":
+                new GetVarEditor(plugin, player, codeBlock).open();
+                break;
+                
+            case "setGlobalVar":
+                new SetGlobalVarEditor(plugin, player, codeBlock).open();
+                break;
+                
+            case "getGlobalVar":
+                new GetGlobalVarEditor(plugin, player, codeBlock).open();
+                break;
+                
+            case "setServerVar":
+                new SetServerVarEditor(plugin, player, codeBlock).open();
+                break;
+                
+            case "getServerVar":
+                new GetServerVarEditor(plugin, player, codeBlock).open();
+                break;
+                
+            // Control actions
+            case "repeat":
+                new RepeatEditor(plugin, player, codeBlock).open();
+                break;
+                
+            case "repeatTrigger":
+                new RepeatTriggerEditor(plugin, player, codeBlock).open();
+                break;
+                
+            case "asyncLoop":
+                new AsyncLoopEditor(plugin, player, codeBlock).open();
+                break;
+                
+            case "whileLoop":
+                new WhileLoopEditor(plugin, player, codeBlock).open();
+                break;
+                
+            case "else":
+                new ElseEditor(plugin, player, codeBlock).open();
+                break;
+                
+            // Function actions
+            case "callFunction":
+                new CallFunctionEditor(plugin, player, codeBlock).open();
+                break;
+                
+            case "saveFunction":
+                new SaveFunctionEditor(plugin, player, codeBlock).open();
+                break;
+                
+            // NETHERITE_BLOCK actions
+            case "createScoreboard":
+                new CreateScoreboardEditor(plugin, player, codeBlock).open();
+                break;
+                
+            case "setScore":
+                new SetScoreEditor(plugin, player, codeBlock).open();
+                break;
+                
+            case "incrementScore":
+                new IncrementScoreEditor(plugin, player, codeBlock).open();
+                break;
+                
+            case "createTeam":
+                new CreateTeamEditor(plugin, player, codeBlock).open();
+                break;
+                
+            case "addPlayerToTeam":
+                new AddPlayerToTeamEditor(plugin, player, codeBlock).open();
+                break;
+                
+            case "saveLocation":
+                new SaveLocationEditor(plugin, player, codeBlock).open();
+                break;
+                
+            case "getLocation":
+                new GetLocationEditor(plugin, player, codeBlock).open();
+                break;
+                
             // Add more cases for other actions as needed
             default:
                 // For actions without specialized editors, use the enhanced parameter GUI
@@ -456,6 +659,66 @@ public class BlockPlacementHandler implements Listener {
                         new com.megacreative.gui.coding.EnhancedActionParameterGUI(plugin);
                     enhancedGUI.openParameterEditor(player, codeBlock.getLocation(), actionId);
                 }
+                break;
+        }
+    }
+    
+    /**
+     * Opens the appropriate parameter editor based on the event ID
+     * @param player The player using the editor
+     * @param codeBlock The code block being edited
+     * @param eventId The event ID
+     */
+    private void openEventEditor(Player player, CodeBlock codeBlock, String eventId) {
+        // Check if plugin is available
+        if (plugin == null) {
+            player.sendMessage("§cPlugin not available!");
+            return;
+        }
+        
+        // Open the appropriate editor based on event ID
+        switch (eventId) {
+            case "onJoin":
+                new PlayerJoinEventEditor(plugin, player, codeBlock).open();
+                break;
+                
+            case "onLeave":
+                new PlayerLeaveEventEditor(plugin, player, codeBlock).open();
+                break;
+                
+            case "onChat":
+                new PlayerChatEventEditor(plugin, player, codeBlock).open();
+                break;
+                
+            case "onBlockBreak":
+                new BlockBreakEventEditor(plugin, player, codeBlock).open();
+                break;
+                
+            case "onBlockPlace":
+                new BlockPlaceEventEditor(plugin, player, codeBlock).open();
+                break;
+                
+            case "onPlayerMove":
+                new PlayerMoveEventEditor(plugin, player, codeBlock).open();
+                break;
+                
+            case "onPlayerDeath":
+                new PlayerDeathEventEditor(plugin, player, codeBlock).open();
+                break;
+                
+            case "onCommand":
+                new CommandEventEditor(plugin, player, codeBlock).open();
+                break;
+                
+            case "onTick":
+                new TickEventEditor(plugin, player, codeBlock).open();
+                break;
+                
+            // Add more cases for other events as needed
+            default:
+                // For events without specialized editors, show a simple message
+                player.sendMessage("§aEvent configured: " + eventId);
+                player.closeInventory();
                 break;
         }
     }
@@ -481,6 +744,94 @@ public class BlockPlacementHandler implements Listener {
                 
             case "hasItem":
                 new HasItemEditor(plugin, player, codeBlock).open();
+                break;
+                
+            case "isInWorld":
+                new IsInWorldEditor(plugin, player, codeBlock).open();
+                break;
+                
+            case "isNearBlock":
+                new IsNearBlockEditor(plugin, player, codeBlock).open();
+                break;
+                
+            case "playerHealth":
+                new PlayerHealthEditor(plugin, player, codeBlock).open();
+                break;
+                
+            case "ifVarEquals":
+                new IfVarEqualsEditor(plugin, player, codeBlock).open();
+                break;
+                
+            case "ifVarGreater":
+                new IfVarGreaterEditor(plugin, player, codeBlock).open();
+                break;
+                
+            case "ifVarLess":
+                new IfVarLessEditor(plugin, player, codeBlock).open();
+                break;
+                
+            case "isOp":
+                new IsOpEditor(plugin, player, codeBlock).open();
+                break;
+                
+            case "worldTime":
+                new WorldTimeEditor(plugin, player, codeBlock).open();
+                break;
+                
+            case "mobNear":
+                new MobNearEditor(plugin, player, codeBlock).open();
+                break;
+                
+            case "playerGameMode":
+                new PlayerGameModeEditor(plugin, player, codeBlock).open();
+                break;
+                
+            case "hasPermission":
+                new HasPermissionEditor(plugin, player, codeBlock).open();
+                break;
+                
+            case "isBlockType":
+                new IsBlockTypeEditor(plugin, player, codeBlock).open();
+                break;
+                
+            case "isPlayerHolding":
+                new IsPlayerHoldingEditor(plugin, player, codeBlock).open();
+                break;
+                
+            case "isNearEntity":
+                new IsNearEntityEditor(plugin, player, codeBlock).open();
+                break;
+                
+            case "hasArmor":
+                new HasArmorEditor(plugin, player, codeBlock).open();
+                break;
+                
+            case "isNight":
+                new IsNightEditor(plugin, player, codeBlock).open();
+                break;
+                
+            case "isRiding":
+                new IsRidingEditor(plugin, player, codeBlock).open();
+                break;
+                
+            case "checkPlayerInventory":
+                new CheckPlayerInventoryEditor(plugin, player, codeBlock).open();
+                break;
+                
+            case "checkPlayerStats":
+                new CheckPlayerStatsEditor(plugin, player, codeBlock).open();
+                break;
+                
+            case "checkServerOnline":
+                new CheckServerOnlineEditor(plugin, player, codeBlock).open();
+                break;
+                
+            case "checkWorldWeather":
+                new CheckWorldWeatherEditor(plugin, player, codeBlock).open();
+                break;
+                
+            case "worldGuardRegionCheck":
+                new WorldGuardRegionCheckEditor(plugin, player, codeBlock).open();
                 break;
                 
             // Add more cases for other conditions as needed
@@ -683,7 +1034,7 @@ public class BlockPlacementHandler implements Listener {
         CodeBlock codeBlock = new CodeBlock(material, "NOT_SET");
         codeBlock.setLocation(location);
         
-        // Try to extract action from sign
+        // Try to extract action/event from sign
         String[] lines = sign.getLines();
         if (lines.length > 1) {
             String line1 = lines[1];
@@ -695,6 +1046,14 @@ public class BlockPlacementHandler implements Listener {
                 if (start > 0 && end > start) {
                     String action = line1.substring(start, end).trim();
                     codeBlock.setAction(action);
+                }
+            } else if (line1.contains("Event:")) {
+                // Try to extract event from the sign text
+                int start = line1.indexOf("Event:") + 6;
+                int end = line1.indexOf("]", start);
+                if (start > 0 && end > start) {
+                    String event = line1.substring(start, end).trim();
+                    codeBlock.setEvent(event);
                 }
             } else if (line1.contains("§")) {
                 // Try to extract action from colored text
@@ -731,11 +1090,23 @@ public class BlockPlacementHandler implements Listener {
         
         String displayName = "NOT_SET";
         if (blockConfigService != null) {
-            BlockConfigService.BlockConfig config = blockConfigService.getBlockConfig(codeBlock.getAction());
-            if (config != null) {
-                displayName = config.getDisplayName();
-            } else if (!"NOT_SET".equals(codeBlock.getAction()) && codeBlock.getAction() != null) {
-                displayName = codeBlock.getAction();
+            // First try to get display name from action
+            if (codeBlock.getAction() != null && !"NOT_SET".equals(codeBlock.getAction())) {
+                BlockConfigService.BlockConfig config = blockConfigService.getBlockConfig(codeBlock.getAction());
+                if (config != null) {
+                    displayName = config.getDisplayName();
+                } else {
+                    displayName = codeBlock.getAction();
+                }
+            } 
+            // If no action, try to get display name from event
+            else if (codeBlock.getEvent() != null && !"NOT_SET".equals(codeBlock.getEvent())) {
+                BlockConfigService.BlockConfig config = blockConfigService.getBlockConfig(codeBlock.getEvent());
+                if (config != null) {
+                    displayName = config.getDisplayName();
+                } else {
+                    displayName = codeBlock.getEvent();
+                }
             }
         }
         
@@ -744,10 +1115,23 @@ public class BlockPlacementHandler implements Listener {
         if (codeBlock.isBracket()) {
             colorCode = "§6"; // Brackets
             displayName = codeBlock.getBracketType() != null ? codeBlock.getBracketType().getDisplayName() : "Bracket";
-        } else if (codeBlock.getAction() != null) {
+        } else {
             // Get the block config to determine the type
             if (blockConfigService != null) {
-                BlockConfigService.BlockConfig config = blockConfigService.getBlockConfig(codeBlock.getAction());
+                BlockConfigService.BlockConfig config = null;
+                String actionOrEvent = null;
+                
+                // Try to get config for action first
+                if (codeBlock.getAction() != null && !"NOT_SET".equals(codeBlock.getAction())) {
+                    config = blockConfigService.getBlockConfig(codeBlock.getAction());
+                    actionOrEvent = codeBlock.getAction();
+                }
+                // If no action config, try event
+                else if (codeBlock.getEvent() != null && !"NOT_SET".equals(codeBlock.getEvent())) {
+                    config = blockConfigService.getBlockConfig(codeBlock.getEvent());
+                    actionOrEvent = codeBlock.getEvent();
+                }
+                
                 if (config != null) {
                     String type = config.getType();
                     if ("EVENT".equals(type)) {
@@ -763,6 +1147,9 @@ public class BlockPlacementHandler implements Listener {
                     } else if ("VARIABLE".equals(type)) {
                         colorCode = "§b"; // Variables
                     }
+                } else if (actionOrEvent != null && !"NOT_SET".equals(actionOrEvent)) {
+                    // Default color for unknown actions/events
+                    colorCode = "§f";
                 }
             }
         }
