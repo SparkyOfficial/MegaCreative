@@ -12,21 +12,5 @@ public interface BlockCondition {
      * @param context Контекст выполнения скрипта
      * @return true если условие выполнено, false в противном случае
      */
-    default boolean evaluate(CodeBlock block, ExecutionContext context) {
-        // Default implementation for backward compatibility
-        try {
-            return evaluate(context);
-        } catch (Exception e) {
-            context.getPlugin().getLogger().severe("Error evaluating condition: " + e.getMessage());
-            return false;
-        }
-    }
-    
-    /**
-     * @deprecated Use {@link #evaluate(CodeBlock, ExecutionContext)} instead
-     */
-    @Deprecated
-    default boolean evaluate(ExecutionContext context) {
-        throw new UnsupportedOperationException("This method is deprecated. Implement evaluate(CodeBlock, ExecutionContext) instead.");
-    }
+    boolean evaluate(CodeBlock block, ExecutionContext context);
 }

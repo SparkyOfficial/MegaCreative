@@ -8,6 +8,9 @@ import com.megacreative.interfaces.IWorldManager;
 import com.megacreative.coding.CodeBlock;
 import com.megacreative.coding.CodeScript;
 import com.megacreative.coding.BlockPlacementHandler;
+import com.megacreative.coding.events.CodeBlockPlacedEvent;
+import com.megacreative.coding.events.CodeBlockBrokenEvent;
+import com.megacreative.coding.events.ScriptStructureChangedEvent;
 import org.bukkit.Location;
 import org.bukkit.Material;
 import org.bukkit.World;
@@ -151,6 +154,47 @@ public class AutoConnectionManager implements Listener {
     }
     
     /**
+     * Handles block placement events from BlockPlacementHandler
+     */
+    @EventHandler
+    public void onCodeBlockPlaced(CodeBlockPlacedEvent event) {
+        Player player = event.getPlayer();
+        CodeBlock codeBlock = event.getCodeBlock();
+        Location location = event.getLocation();
+        
+        // Add to our tracking map
+        locationToBlock.put(location, codeBlock);
+        
+        // Track block owner
+        blockOwners.put(location, player);
+        
+        // Add to player's script blocks
+        addBlockToPlayerScript(player, codeBlock);
+        
+        // Auto-connect with neighboring blocks
+        autoConnectBlock(codeBlock, location);
+        
+        // Fire structure changed event
+        IWorldManager worldManager = getWorldManager();
+        if (worldManager != null) {
+            CreativeWorld creativeWorld = worldManager.findCreativeWorldByBukkit(location.getWorld());
+            if (creativeWorld != null) {
+                ScriptStructureChangedEvent structureEvent = new ScriptStructureChangedEvent(
+                    creativeWorld, codeBlock, ScriptStructureChangedEvent.ChangeType.BLOCK_ADDED);
+                plugin.getServer().getPluginManager().callEvent(structureEvent);
+            }
+        }
+        
+        // If this is an event block, create a script and add it to the world
+        if (isEventBlock(codeBlock)) {
+            createAndAddScript(codeBlock, player, location);
+        }
+        
+        // Log successful placement
+        logSuccessfulPlacement(player, location, "Code Block");
+    }
+    
+    /**
      * Handles the case when a block is placed in a non-dev world
      */
     private void handleNonDevWorld(Block block) {
@@ -227,6 +271,51 @@ public class AutoConnectionManager implements Listener {
     private void logNullCodeBlock(Location location) {
         if (plugin != null) {
             plugin.getLogger().warning("AutoConnectionManager: CodeBlock is null at " + location);
+        }
+    }
+    
+    @EventHandler
+    public void onCodeBlockBroken(CodeBlockBrokenEvent event) {
+        Location location = event.getLocation();
+        CodeBlock codeBlock = event.getCodeBlock();
+        
+        if (codeBlock != null) {
+            // Disconnect from neighboring blocks
+            disconnectBlock(codeBlock, location);
+            
+            // Remove from our tracking
+            locationToBlock.remove(location);
+            
+            // Remove block owner tracking
+            blockOwners.remove(location);
+            
+            // Remove from player script
+            removeBlockFromPlayerScript(event.getPlayer(), codeBlock);
+            
+            // Fire structure changed event
+            IWorldManager worldManager = getWorldManager();
+            if (worldManager != null) {
+                CreativeWorld creativeWorld = worldManager.findCreativeWorldByBukkit(location.getWorld());
+                if (creativeWorld != null) {
+                    ScriptStructureChangedEvent structureEvent = new ScriptStructureChangedEvent(
+                        creativeWorld, codeBlock, ScriptStructureChangedEvent.ChangeType.BLOCK_REMOVED);
+                    plugin.getServer().getPluginManager().callEvent(structureEvent);
+                }
+            }
+            
+            // If this is an event block, remove the corresponding script from the world
+            if (isEventBlock(codeBlock)) {
+                removeScript(codeBlock, location);
+            }
+            
+            // Also ensure BlockPlacementHandler is synchronized
+            BlockPlacementHandler placementHandler = getBlockPlacementHandler();
+            if (placementHandler != null && plugin != null) {
+                    plugin.getLogger().fine("CodeBlock disconnected at " + location);
+                }
+            
+            
+            event.getPlayer().sendMessage("§cБлок кода удален и отсоединён от цепочки!");
         }
     }
     
@@ -320,7 +409,10 @@ public class AutoConnectionManager implements Listener {
         // Step 3: Handle parent-child relationships (vertical connections)
         handleParentChildConnections(codeBlock, location, line);
         
-        // Step 4: Update player script blocks
+        // Step 4: Handle else block relationships
+        handleElseBlockConnections(codeBlock, location);
+        
+        // Step 5: Update player script blocks
         updatePlayerScriptBlocks(codeBlock, location);
     }
     
@@ -345,6 +437,44 @@ public class AutoConnectionManager implements Listener {
         if (location.getBlockX() == 0 && isControlBlock(codeBlock)) {
             connectChildBlocks(codeBlock, location);
         }
+    }
+    
+    /**
+     * Handles else block connections by finding the corresponding IF block
+     * and setting the elseBlock reference
+     */
+    private void handleElseBlockConnections(CodeBlock codeBlock, Location location) {
+        // Check if this is an ELSE block
+        if (codeBlock.getAction() != null && "else".equals(codeBlock.getAction())) {
+            // Find the corresponding IF block by looking backwards
+            CodeBlock ifBlock = findCorrespondingIfBlock(location);
+            if (ifBlock != null) {
+                ifBlock.setElseBlock(codeBlock);
+                if (plugin != null) {
+                    plugin.getLogger().fine("Connected ELSE block at " + location + " to IF block");
+                }
+            }
+        }
+    }
+    
+    /**
+     * Finds the corresponding IF block for an ELSE block by traversing backwards
+     */
+    private CodeBlock findCorrespondingIfBlock(Location elseLocation) {
+        // This is a simplified implementation
+        // In a real implementation, you would need to consider nesting levels
+        Location currentLocation = elseLocation.clone().add(-1, 0, 0); // Move one block back
+        
+        while (currentLocation.getBlockX() >= 0) {
+            CodeBlock block = locationToBlock.get(currentLocation);
+            if (block != null && block.getAction() != null && 
+                (block.getAction().startsWith("if") || "conditionalBranch".equals(block.getAction()))) {
+                return block;
+            }
+            currentLocation.add(-1, 0, 0); // Move one more block back
+        }
+        
+        return null;
     }
     
     /**

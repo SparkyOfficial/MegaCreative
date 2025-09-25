@@ -468,18 +468,7 @@ public class DefaultScriptEngine implements ScriptEngine, EnhancedScriptEngine {
                             // Handle conditional branch
                             CodeBlock conditionBlock = block.getChildren().isEmpty() ? null : block.getChildren().get(0);
                             CodeBlock trueBlock = block.getNextBlock();
-                            CodeBlock elseBlock = null;
-                            
-                            // Look for ELSE block
-                            if (trueBlock != null) {
-                                CodeBlock current = trueBlock;
-                                while (current != null && current.getNextBlock() != null) {
-                                    current = current.getNextBlock();
-                                }
-                                if (current != null && "ELSE".equals(current.getAction())) {
-                                    elseBlock = current.getNextBlock();
-                                }
-                            }
+                            CodeBlock elseBlock = block.getElseBlock(); // Use the pre-connected else block
                             
                             // Evaluate condition properly instead of using placeholder
                             boolean conditionResult = false;

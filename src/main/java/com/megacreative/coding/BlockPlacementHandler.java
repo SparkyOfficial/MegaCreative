@@ -7,6 +7,8 @@ import com.megacreative.managers.PlayerModeManager;
 import com.megacreative.models.CreativeWorld;
 import com.megacreative.services.BlockConfigService;
 import com.megacreative.coding.CodeBlock;
+import com.megacreative.coding.events.CodeBlockPlacedEvent;
+import com.megacreative.coding.events.CodeBlockBrokenEvent;
 import com.megacreative.gui.editors.player.*;
 import com.megacreative.gui.editors.conditions.*;
 import com.megacreative.gui.editors.events.*;
@@ -124,6 +126,10 @@ public class BlockPlacementHandler implements Listener {
         // Visual and audio feedback
         player.spawnParticle(org.bukkit.Particle.VILLAGER_HAPPY, block.getLocation().add(0.5, 1.0, 0.5), 5, 0.2, 0.2, 0.2, 0.1);
         player.playSound(block.getLocation(), org.bukkit.Sound.BLOCK_NOTE_BLOCK_PLING, 0.8f, 1.5f);
+        
+        // Fire custom event for other systems to react to
+        CodeBlockPlacedEvent placedEvent = new CodeBlockPlacedEvent(player, newCodeBlock, block.getLocation());
+        plugin.getServer().getPluginManager().callEvent(placedEvent);
         
         // If this is a constructor block, automatically create brackets
         if (config.isConstructor() && config.getStructure() != null) {
@@ -299,6 +305,10 @@ public class BlockPlacementHandler implements Listener {
         if (blockCodeBlocks.containsKey(loc)) {
             CodeBlock removedBlock = blockCodeBlocks.remove(loc);
             
+            // Fire custom event for other systems to react to
+            CodeBlockBrokenEvent brokenEvent = new CodeBlockBrokenEvent(player, removedBlock, loc);
+            plugin.getServer().getPluginManager().callEvent(brokenEvent);
+            
             // Enhanced feedback for block removal
             player.sendMessage("§cCode block removed!");
             player.playSound(loc, org.bukkit.Sound.BLOCK_NOTE_BLOCK_BASEDRUM, 0.8f, 0.8f);
@@ -323,7 +333,13 @@ public class BlockPlacementHandler implements Listener {
             }
             
             // This is a piston bracket, remove it from our map
-            blockCodeBlocks.remove(loc);
+            CodeBlock removedBlock = blockCodeBlocks.remove(loc);
+            
+            // Fire custom event for other systems to react to
+            if (removedBlock != null) {
+                CodeBlockBrokenEvent brokenEvent = new CodeBlockBrokenEvent(player, removedBlock, loc);
+                plugin.getServer().getPluginManager().callEvent(brokenEvent);
+            }
             
             // Enhanced feedback for bracket removal
             player.sendMessage("§cBracket removed!");

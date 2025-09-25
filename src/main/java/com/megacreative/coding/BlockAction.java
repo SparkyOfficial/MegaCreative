@@ -14,16 +14,5 @@ public interface BlockAction {
      * @param context Контекст выполнения скрипта
      * @return Результат выполнения действия
      */
-    default ExecutionResult execute(CodeBlock block, ExecutionContext context) {
-        // Default implementation that returns an error for backward compatibility
-        return ExecutionResult.error("Action not implemented. Please implement execute(CodeBlock, ExecutionContext) method.");
-    }
-    
-    /**
-     * @deprecated Use {@link #execute(CodeBlock, ExecutionContext)} instead
-     */
-    @Deprecated
-    default void execute(ExecutionContext context) {
-        throw new UnsupportedOperationException("This method is deprecated. Implement execute(CodeBlock, ExecutionContext) instead.");
-    }
+    ExecutionResult execute(CodeBlock block, ExecutionContext context);
 }

@@ -46,8 +46,23 @@ public class CodeBlock implements Cloneable {
     /** Bracket type for grouping blocks */
     private BracketType bracketType = null;
     
-    /** Location of the block in the world */
-    private org.bukkit.Location location;
+    /** World ID where the block is located */
+    private String worldId;
+    
+    /** X coordinate of the block */
+    private int x;
+    
+    /** Y coordinate of the block */
+    private int y;
+    
+    /** Z coordinate of the block */
+    private int z;
+    
+    /** Material name instead of Material object */
+    private String materialName;
+    
+    /** Else block for conditional statements */
+    private CodeBlock elseBlock;
     
     // ===== ENUMS =====
     
@@ -194,14 +209,91 @@ public class CodeBlock implements Cloneable {
     }
     
     public org.bukkit.Location getLocation() {
-        return location;
+        if (worldId != null) {
+            org.bukkit.World world = org.bukkit.Bukkit.getWorld(worldId);
+            if (world != null) {
+                return new org.bukkit.Location(world, x, y, z);
+            }
+        }
+        return null;
     }
     
     public void setLocation(org.bukkit.Location location) {
-        this.location = location;
+        if (location != null) {
+            this.worldId = location.getWorld().getName();
+            this.x = location.getBlockX();
+            this.y = location.getBlockY();
+            this.z = location.getBlockZ();
+        }
     }
     
-    // ===== MAIN METHODS =====
+    public String getWorldId() {
+        return worldId;
+    }
+    
+    public void setWorldId(String worldId) {
+        this.worldId = worldId;
+    }
+    
+    public int getX() {
+        return x;
+    }
+    
+    public void setX(int x) {
+        this.x = x;
+    }
+    
+    public int getY() {
+        return y;
+    }
+    
+    public void setY(int y) {
+        this.y = y;
+    }
+    
+    public int getZ() {
+        return z;
+    }
+    
+    public void setZ(int z) {
+        this.z = z;
+    }
+    
+    public String getMaterialName() {
+        return materialName;
+    }
+    
+    public void setMaterialName(String materialName) {
+        this.materialName = materialName;
+    }
+    
+    public Material getMaterial() {
+        if (materialName != null) {
+            try {
+                return Material.valueOf(materialName);
+            } catch (IllegalArgumentException e) {
+                return Material.STONE; // Default fallback
+            }
+        }
+        return material;
+    }
+    
+    public void setMaterial(Material material) {
+        this.material = material;
+        if (material != null) {
+            this.materialName = material.name();
+        }
+    }
+    
+    public CodeBlock getElseBlock() {
+        return elseBlock;
+    }
+    
+    public void setElseBlock(CodeBlock elseBlock) {
+        this.elseBlock = elseBlock;
+    }
+    
+    // ===== UTILITY METHODS =====
     
     /**
      * Sets a parameter for the block.
