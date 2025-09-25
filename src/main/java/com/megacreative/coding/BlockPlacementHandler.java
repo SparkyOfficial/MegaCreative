@@ -44,6 +44,8 @@ public class BlockPlacementHandler implements Listener, EventSubscriber {
     private final MegaCreative plugin;
     private final ITrustedPlayerManager trustedPlayerManager;
     private final BlockConfigService blockConfigService;
+    private final ActionFactory actionFactory;
+    private final ConditionFactory conditionFactory;
     private final Map<Location, CodeBlock> blockCodeBlocks = new HashMap<>();
     
     // Constants for subscribed events
@@ -57,6 +59,48 @@ public class BlockPlacementHandler implements Listener, EventSubscriber {
         ServiceRegistry registry = plugin.getServiceRegistry();
         this.trustedPlayerManager = registry != null ? registry.getTrustedPlayerManager() : null;
         this.blockConfigService = registry != null ? registry.getBlockConfigService() : null;
+        this.actionFactory = registry != null ? registry.getActionFactory() : null;
+        this.conditionFactory = registry != null ? registry.getConditionFactory() : null;
+    }
+    
+    /**
+     * Checks if an action ID is registered in the action factory
+     * @param actionId The action ID to check
+     * @return true if the action is registered, false otherwise
+     */
+    private boolean isRegisteredAction(String actionId) {
+        if (actionFactory == null || actionId == null) {
+            return false;
+        }
+        // Try to create the action to see if it's registered
+        return actionFactory.createAction(actionId) != null;
+    }
+    
+    /**
+     * Checks if an event ID is registered in the block config service
+     * @param eventId The event ID to check
+     * @return true if the event is registered, false otherwise
+     */
+    private boolean isRegisteredEvent(String eventId) {
+        if (blockConfigService == null || eventId == null) {
+            return false;
+        }
+        // Try to get the block config to see if it's registered
+        BlockConfigService.BlockConfig config = blockConfigService.getBlockConfig(eventId);
+        return config != null;
+    }
+    
+    /**
+     * Checks if a condition ID is registered in the condition factory
+     * @param conditionId The condition ID to check
+     * @return true if the condition is registered, false otherwise
+     */
+    private boolean isRegisteredCondition(String conditionId) {
+        if (conditionFactory == null || conditionId == null) {
+            return false;
+        }
+        // Try to create the condition to see if it's registered
+        return conditionFactory.createCondition(conditionId) != null;
     }
     
     /**
@@ -856,20 +900,29 @@ public class BlockPlacementHandler implements Listener, EventSubscriber {
             String line1 = lines[1];
             // Try to extract action from the sign text
             // Look for patterns like "[Action: sendMessage]" or "sendMessage"
-            if (line1.contains("Action:")) {
-                int start = line1.indexOf("Action:") + 7;
+            if (line1.contains("[Action:")) {
+                int start = line1.indexOf("[Action:") + 8;
                 int end = line1.indexOf("]", start);
                 if (start > 0 && end > start) {
                     String action = line1.substring(start, end).trim();
                     codeBlock.setAction(action);
                 }
-            } else if (line1.contains("Event:")) {
+            } else if (line1.contains("[Event:")) {
                 // Try to extract event from the sign text
-                int start = line1.indexOf("Event:") + 6;
+                int start = line1.indexOf("[Event:") + 7;
                 int end = line1.indexOf("]", start);
                 if (start > 0 && end > start) {
                     String event = line1.substring(start, end).trim();
                     codeBlock.setEvent(event);
+                }
+            } else if (line1.contains("[Condition:")) {
+                // Try to extract condition from the sign text
+                int start = line1.indexOf("[Condition:") + 11;
+                int end = line1.indexOf("]", start);
+                if (start > 0 && end > start) {
+                    String condition = line1.substring(start, end).trim();
+                    // Store condition in parameters since CodeBlock doesn't have a setCondition method
+                    codeBlock.setParameter("condition", condition);
                 }
             } else if (line1.contains("§")) {
                 // Try to extract action from colored text
@@ -877,7 +930,18 @@ public class BlockPlacementHandler implements Listener, EventSubscriber {
                 // you might want to store action data in the sign's persistent data
                 String cleanLine = org.bukkit.ChatColor.stripColor(line1).trim();
                 if (!cleanLine.isEmpty() && !"NOT_SET".equals(cleanLine)) {
-                    codeBlock.setAction(cleanLine);
+                    // Try to determine if this is an action, event, or condition based on registered items
+                    if (isRegisteredAction(cleanLine)) {
+                        codeBlock.setAction(cleanLine);
+                    } else if (isRegisteredEvent(cleanLine)) {
+                        codeBlock.setEvent(cleanLine);
+                    } else if (isRegisteredCondition(cleanLine)) {
+                        // Store condition in parameters since CodeBlock doesn't have a setCondition method
+                        codeBlock.setParameter("condition", cleanLine);
+                    } else {
+                        // Default to action if not found
+                        codeBlock.setAction(cleanLine);
+                    }
                 }
             }
         }

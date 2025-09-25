@@ -53,6 +53,10 @@ public class ActionFactory implements EventPublisher {
         // Scan packages for annotated actions
         String basePackage = "com.megacreative.coding.actions";
         
+        // Track registration statistics
+        int registeredCount = 0;
+        int failedCount = 0;
+        
         for (Class<?> clazz : ClassScanner.findClasses(dependencyContainer.resolve(com.megacreative.MegaCreative.class), basePackage)) {
             if (BlockAction.class.isAssignableFrom(clazz) && !clazz.isInterface() && clazz.isAnnotationPresent(BlockMeta.class)) {
                 BlockMeta meta = clazz.getAnnotation(BlockMeta.class);
@@ -74,9 +78,12 @@ public class ActionFactory implements EventPublisher {
                                     eventData.put("class_name", DataValue.fromObject(clazz.getName()));
                                     eventData.put("error", DataValue.fromObject(e.getMessage()));
                                     publishEvent(EVENT_ACTION_REGISTRATION_FAILED, eventData);
+                                    failedCount++;
                                     return null;
                                 }
                             });
+                            registeredCount++;
+                            LOGGER.fine("Successfully registered action with plugin constructor: " + meta.id() + " (" + clazz.getName() + ")");
                         } catch (NoSuchMethodException e) {
                             // Try no-argument constructor
                             try {
@@ -92,9 +99,12 @@ public class ActionFactory implements EventPublisher {
                                         eventData.put("class_name", DataValue.fromObject(clazz.getName()));
                                         eventData.put("error", DataValue.fromObject(ex.getMessage()));
                                         publishEvent(EVENT_ACTION_REGISTRATION_FAILED, eventData);
+                                        failedCount++;
                                         return null;
                                     }
                                 });
+                                registeredCount++;
+                                LOGGER.fine("Successfully registered action with no-arg constructor: " + meta.id() + " (" + clazz.getName() + ")");
                             } catch (NoSuchMethodException ex) {
                                 LOGGER.warning("No suitable constructor found for action class: " + clazz.getName());
                                 // Publish registration failure event
@@ -103,6 +113,7 @@ public class ActionFactory implements EventPublisher {
                                 eventData.put("class_name", DataValue.fromObject(clazz.getName()));
                                 eventData.put("error", DataValue.fromObject("No suitable constructor found"));
                                 publishEvent(EVENT_ACTION_REGISTRATION_FAILED, eventData);
+                                failedCount++;
                             }
                         }
                         
@@ -119,12 +130,13 @@ public class ActionFactory implements EventPublisher {
                         eventData.put("action_id", DataValue.fromObject(clazz.getName()));
                         eventData.put("error", DataValue.fromObject(e.getMessage()));
                         publishEvent(EVENT_ACTION_REGISTRATION_FAILED, eventData);
+                        failedCount++;
                     }
                 }
             }
         }
         
-        LOGGER.info("Загружено " + actionMap.size() + " действий блоков.");
+        LOGGER.info("Action registration complete. Registered: " + registeredCount + ", Failed: " + failedCount);
     }
 
     /**

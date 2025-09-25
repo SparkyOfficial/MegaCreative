@@ -39,6 +39,10 @@ public class ConditionFactory implements EventPublisher {
             return;
         }
         
+        // Track registration statistics
+        int registeredCount = 0;
+        int failedCount = 0;
+        
         for (Class<?> clazz : ClassScanner.findClasses(plugin, basePackage)) {
             if (BlockCondition.class.isAssignableFrom(clazz) && !clazz.isInterface() && clazz.isAnnotationPresent(BlockMeta.class)) {
                 BlockMeta meta = clazz.getAnnotation(BlockMeta.class);
@@ -57,6 +61,7 @@ public class ConditionFactory implements EventPublisher {
                                 eventData.put("class_name", DataValue.fromObject(clazz.getName()));
                                 eventData.put("error", DataValue.fromObject(e.getMessage()));
                                 publishEvent(EVENT_CONDITION_REGISTRATION_FAILED, eventData);
+                                failedCount++;
                                 return null;
                             }
                         });
@@ -67,6 +72,9 @@ public class ConditionFactory implements EventPublisher {
                         eventData.put("display_name", DataValue.fromObject(meta.displayName()));
                         eventData.put("class_name", DataValue.fromObject(clazz.getName()));
                         publishEvent(EVENT_CONDITION_REGISTERED, eventData);
+                        registeredCount++;
+                        
+                        LOGGER.fine("Successfully registered condition: " + meta.id() + " (" + clazz.getName() + ")");
                     } catch (NoSuchMethodException e) {
                         LOGGER.warning("No suitable constructor found for condition class: " + clazz.getName());
                         // Publish registration failure event
@@ -75,6 +83,7 @@ public class ConditionFactory implements EventPublisher {
                         eventData.put("class_name", DataValue.fromObject(clazz.getName()));
                         eventData.put("error", DataValue.fromObject("No suitable constructor found"));
                         publishEvent(EVENT_CONDITION_REGISTRATION_FAILED, eventData);
+                        failedCount++;
                     } catch (Exception e) {
                         LOGGER.warning("Error registering condition class " + clazz.getName() + ": " + e.getMessage());
                         // Publish registration failure event
@@ -82,12 +91,13 @@ public class ConditionFactory implements EventPublisher {
                         eventData.put("condition_id", DataValue.fromObject(clazz.getName()));
                         eventData.put("error", DataValue.fromObject(e.getMessage()));
                         publishEvent(EVENT_CONDITION_REGISTRATION_FAILED, eventData);
+                        failedCount++;
                     }
                 }
             }
         }
         
-        LOGGER.info("Загружено " + conditionMap.size() + " условий блоков.");
+        LOGGER.info("Condition registration complete. Registered: " + registeredCount + ", Failed: " + failedCount);
     }
     
     private void register(String conditionId, String displayName, Supplier<BlockCondition> supplier) {
