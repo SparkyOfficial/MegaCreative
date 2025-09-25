@@ -259,31 +259,26 @@ public class PlayerEventsListener implements Listener {
         // Check if player can code in this world
         if (!creativeWorld.canCode(event.getPlayer())) return;
         
-        // Find scripts triggered by player quit
-        if (creativeWorld.getScripts() != null) {
-            for (CodeScript script : creativeWorld.getScripts()) {
-                // Check if the script's root block is an onLeave event
-                if (script.getRootBlock() != null && 
-                    "onLeave".equals(script.getRootBlock().getAction())) {
-                    
-                    // Execute script
-                    if (scriptEngine != null) {
-                        scriptEngine.executeScript(script, event.getPlayer(), "player_leave")
-                            .whenComplete((result, throwable) -> {
-                                if (throwable != null) {
-                                    if (plugin != null) {
-                                        plugin.getLogger().warning("Leave script execution failed with exception: " + throwable.getMessage());
-                                    }
-                                } else if (result != null && !result.isSuccess()) {
-                                    if (plugin != null) {
-                                        plugin.getLogger().warning("Leave script execution failed: " + result.getMessage());
-                                    }
-                                }
-                            });
-                    }
-                    break;
-                }
+        // 🚀 PERFORMANCE: Используем оптимизированный поиск вместо цикла по всем скриптам
+        List<CodeScript> scripts = getScriptsForEvent("onLeave", creativeWorld.getWorldId());
+        
+        for (CodeScript script : scripts) {
+            // Execute script
+            if (scriptEngine != null) {
+                scriptEngine.executeScript(script, event.getPlayer(), "player_leave")
+                    .whenComplete((result, throwable) -> {
+                        if (throwable != null) {
+                            if (plugin != null) {
+                                plugin.getLogger().warning("Leave script execution failed with exception: " + throwable.getMessage());
+                            }
+                        } else if (result != null && !result.isSuccess()) {
+                            if (plugin != null) {
+                                plugin.getLogger().warning("Leave script execution failed: " + result.getMessage());
+                            }
+                        }
+                    });
             }
+            break;
         }
     }
     

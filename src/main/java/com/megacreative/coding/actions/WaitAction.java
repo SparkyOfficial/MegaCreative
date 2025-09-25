@@ -10,6 +10,7 @@ import com.megacreative.services.BlockConfigService;
 import org.bukkit.entity.Player;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.inventory.meta.ItemMeta;
+import org.bukkit.scheduler.BukkitRunnable;
 
 import java.util.function.Function;
 
@@ -37,26 +38,53 @@ public class WaitAction implements BlockAction {
             // Validate and constrain delay (max 20 minutes = 24000 ticks)
             delayTicks = Math.max(1, Math.min(24000, delayTicks));
             
-            // Schedule the continuation of script execution after delay
-            // Integrate with the script execution engine to properly pause and resume execution
-            final int finalDelayTicks = delayTicks;
-            final Player finalPlayer = player;
+            // Get the next block to execute after the delay
+            CodeBlock nextBlock = block.getNextBlock();
             
-            // Set the execution context to paused state
-            context.setPaused(true);
-            
-            context.getPlugin().getServer().getScheduler().runTaskLater(
-                context.getPlugin(), 
-                () -> {
-                    // Resume script execution
-                    context.setPaused(false);
-                    finalPlayer.sendMessage("§a⏰ Wait completed (" + (finalDelayTicks / 20.0) + " seconds)");
-                }, 
-                delayTicks
-            );
-            
-            double seconds = delayTicks / 20.0;
-            return ExecutionResult.success("Waiting " + seconds + " seconds...").withPause();
+            if (nextBlock == null) {
+                // If there's no next block, just wait and finish
+                context.getPlugin().getServer().getScheduler().runTaskLater(
+                    context.getPlugin(), 
+                    () -> {
+                        player.sendMessage("§a⏰ Wait completed (" + (delayTicks / 20.0) + " seconds)");
+                    }, 
+                    delayTicks
+                );
+                
+                double seconds = delayTicks / 20.0;
+                return ExecutionResult.success("Waiting " + seconds + " seconds...").withPause();
+            } else {
+                // Schedule the continuation of script execution after delay
+                context.getPlugin().getServer().getScheduler().runTaskLater(
+                    context.getPlugin(), 
+                    new BukkitRunnable() {
+                        @Override
+                        public void run() {
+                            try {
+                                // Continue execution with the next block
+                                if (context.getScriptEngine() != null) {
+                                    context.getScriptEngine().executeBlockChain(nextBlock, player, "wait_completed")
+                                        .whenComplete((result, throwable) -> {
+                                            if (throwable != null) {
+                                                context.getPlugin().getLogger().warning("Error continuing script after wait: " + throwable.getMessage());
+                                            } else if (result != null && !result.isSuccess()) {
+                                                context.getPlugin().getLogger().warning("Script execution failed after wait: " + result.getMessage());
+                                            }
+                                        });
+                                }
+                                player.sendMessage("§a⏰ Wait completed (" + (delayTicks / 20.0) + " seconds)");
+                            } catch (Exception e) {
+                                context.getPlugin().getLogger().warning("Error in wait action continuation: " + e.getMessage());
+                            }
+                        }
+                    }, 
+                    delayTicks
+                );
+                
+                double seconds = delayTicks / 20.0;
+                // Return a result that indicates the current chain should stop
+                return ExecutionResult.success("Waiting " + seconds + " seconds...").withPause();
+            }
         } catch (Exception e) {
             return ExecutionResult.error("Failed to execute wait: " + e.getMessage());
         }

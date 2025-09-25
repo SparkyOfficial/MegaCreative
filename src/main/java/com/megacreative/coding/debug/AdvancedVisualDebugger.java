@@ -8,6 +8,9 @@ import com.megacreative.coding.values.DataValue;
 import com.megacreative.coding.variables.VariableScope;
 import org.bukkit.Location;
 import org.bukkit.entity.Player;
+import org.bukkit.Particle;
+import org.bukkit.Color;
+import org.bukkit.util.Vector;
 
 import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
@@ -430,17 +433,29 @@ public class AdvancedVisualDebugger {
     
     // Private helper methods
     private void highlightBlock(Player player, Location location) {
-        // Implementation for highlighting a block
-        player.sendMessage("§eHighlighting block at " + formatLocation(location));
+        // Implementation for highlighting a block with particles
+        if (location != null) {
+            player.spawnParticle(Particle.REDSTONE, location.clone().add(0.5, 1.5, 0.5), 20, 0.3, 0.3, 0.3, 
+                new Particle.DustOptions(Color.fromRGB(0, 255, 0), 1.0f));
+        }
     }
     
     private void stepThroughExecution(Player player, CodeBlock block, Location location) {
-        // Implementation for step-through execution
+        // Implementation for step-through execution with visual feedback
+        if (location != null) {
+            player.spawnParticle(Particle.REDSTONE, location.clone().add(0.5, 1.5, 0.5), 30, 0.4, 0.4, 0.4, 
+                new Particle.DustOptions(Color.fromRGB(0, 100, 255), 1.5f));
+        }
         player.sendMessage("§bStep: " + block.getAction() + " at " + formatLocation(location));
     }
     
     private void visualizePerformance(Player player, CodeBlock block, Location location) {
-        // Implementation for performance visualization
+        // Implementation for performance visualization with color-coded particles
+        if (location != null) {
+            // Green for fast execution, red for slow execution
+            player.spawnParticle(Particle.REDSTONE, location.clone().add(0.5, 1.5, 0.5), 15, 0.2, 0.2, 0.2, 
+                new Particle.DustOptions(Color.fromRGB(0, 255, 100), 1.0f));
+        }
         player.sendMessage("§aPerformance: " + block.getAction() + " at " + formatLocation(location));
     }
     
@@ -448,11 +463,19 @@ public class AdvancedVisualDebugger {
         // Implementation for memory usage visualization
         Runtime runtime = Runtime.getRuntime();
         long usedMemory = (runtime.totalMemory() - runtime.freeMemory()) / (1024 * 1024);
+        if (location != null) {
+            player.spawnParticle(Particle.REDSTONE, location.clone().add(0.5, 1.5, 0.5), 10, 0.1, 0.1, 0.1, 
+                new Particle.DustOptions(Color.fromRGB(255, 165, 0), 1.0f));
+        }
         player.sendMessage("§6Memory: " + usedMemory + "MB used for " + block.getAction());
     }
     
     private void visualizeVariables(Player player, CodeBlock block, Location location) {
         // Implementation for variable tracking visualization
+        if (location != null) {
+            player.spawnParticle(Particle.REDSTONE, location.clone().add(0.5, 1.5, 0.5), 25, 0.3, 0.3, 0.3, 
+                new Particle.DustOptions(Color.fromRGB(255, 0, 255), 1.2f));
+        }
         player.sendMessage("§dVariables in scope at " + block.getAction());
     }
     
@@ -462,6 +485,8 @@ public class AdvancedVisualDebugger {
         player.sendMessage("§7Total Executions: §f" + analyzer.getTotalExecutions());
         player.sendMessage("§7Total Execution Time: §f" + analyzer.getTotalExecutionTime() + "ms");
         player.sendMessage("§7Average Execution Time: §f" + analyzer.getAverageExecutionTime() + "ms");
+        player.sendMessage("§7Slowest Block: §f" + analyzer.getSlowestBlockTime() + "ms");
+        player.sendMessage("§7Fastest Block: §f" + analyzer.getFastestBlockTime() + "ms");
     }
     
     private String formatLocation(Location location) {
