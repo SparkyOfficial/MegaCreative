@@ -14,10 +14,14 @@ import org.bukkit.inventory.meta.ItemMeta;
 
 import java.util.function.Function;
 
+import com.megacreative.coding.annotations.BlockMeta;
+import com.megacreative.coding.BlockType;
+
 /**
  * Action for executing a command asynchronously.
  * This action retrieves a command from the container configuration and executes it asynchronously.
  */
+@BlockMeta(id = "executeAsyncCommand", displayName = "§aExecute Async Command", type = BlockType.ACTION)
 public class ExecuteAsyncCommandAction implements BlockAction {
 
     @Override

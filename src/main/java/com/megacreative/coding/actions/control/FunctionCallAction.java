@@ -16,12 +16,16 @@ import java.util.List;
 import java.util.Map;
 import java.util.HashMap;
 
+import com.megacreative.coding.annotations.BlockMeta;
+import com.megacreative.coding.BlockType;
+
 /**
  * 🎆 Reference System-Style Function Call Action
  * 
  * Handles execution of user-defined functions within the coding system.
  * Supports function discovery, parameter passing, and result handling.
  */
+@BlockMeta(id = "functionCall", displayName = "§aFunction Call", type = BlockType.ACTION)
 public class FunctionCallAction implements BlockAction {
     
     private final MegaCreative plugin;
