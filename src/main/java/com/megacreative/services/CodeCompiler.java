@@ -208,15 +208,15 @@ public class CodeCompiler {
         // Scanne physische Blöcke in der Welt, um die vollständige Struktur zu erstellen
         scanPhysicalBlocks(startLocation, startBlock);
         
-        // Use AutoConnectionManager to establish proper connections
-        // Использовать AutoConnectionManager для установления правильных соединений
-        // Verwende AutoConnectionManager, um richtige Verbindungen herzustellen
-        com.megacreative.coding.AutoConnectionManager autoConnection = plugin.getServiceRegistry().getAutoConnectionManager();
-        if (autoConnection != null) {
-            logger.fine("Recompiling world scripts with AutoConnectionManager");
-            // Перекомпиляция скриптов мира с AutoConnectionManager
-            // Neukompilierung von Weltenskripten mit AutoConnectionManager
-            autoConnection.recompileWorldScripts(startLocation.getWorld());
+        // Use ScriptCompiler to recompile world scripts
+        // Использовать ScriptCompiler для перекомпиляции скриптов мира
+        // Verwende ScriptCompiler, um Weltenskripte neu zu kompilieren
+        com.megacreative.coding.ScriptCompiler scriptCompiler = plugin.getServiceRegistry().getScriptCompiler();
+        if (scriptCompiler != null) {
+            logger.fine("Recompiling world scripts with ScriptCompiler");
+            // Перекомпиляция скриптов мира с ScriptCompiler
+            // Neukompilierung von Weltenskripten mit ScriptCompiler
+            scriptCompiler.recompileWorldScripts(startLocation.getWorld());
         }
         
         logger.fine("Script structure building completed for script: " + script.getName());
@@ -943,7 +943,7 @@ public class CodeCompiler {
         if (meta != null && meta.hasLore()) {
             List<String> lore = meta.getLore();
             // 🔧 FIX: Add null check for lore
-            // 🔧 ИСПРАВЛЕНИЕ: Добавить проверку на null для описания
+            // 🔧 ИСПРАВЛЕНИЕ: Добавить проверку на null für описания
             // 🔧 FIX: Null-Prüfung für Beschreibung hinzufügen
             if (lore != null) {
                 for (String line : lore) {
@@ -1027,7 +1027,7 @@ public class CodeCompiler {
         // Искать строку "Value: " в описании
         // Suche nach "Value: "-Zeile in der Beschreibung
         // 🔧 FIX: Add null check for lore
-        // 🔧 ИСПРАВЛЕНИЕ: Добавить проверку на null для описания
+        // 🔧 ИСПРАВЛЕНИЕ: Добавить проверку на null für описания
         // 🔧 FIX: Null-Prüfung für Beschreibung hinzufügen
         if (lore == null) {
             return new TextValue(item.getType().name().toLowerCase());

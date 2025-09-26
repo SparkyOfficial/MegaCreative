@@ -13,6 +13,7 @@ import org.bukkit.event.Listener;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
 import java.util.logging.Logger;
 
 /**
@@ -116,5 +117,61 @@ public class ScriptCompiler implements Listener {
         scripts.removeIf(existingScript -> existingScript.getRootBlock().getId().equals(eventBlock.getId()));
         scripts.add(script);
         worldManager.saveWorld(creativeWorld);
+    }
+    
+    /**
+     * Recompiles all scripts in a world
+     * This should be called when the world is loaded or when significant changes are made
+     * @param world the world to recompile scripts for
+     */
+    public void recompileWorldScripts(org.bukkit.World world) {
+        LOGGER.fine("Recompiling all scripts for world: " + world.getName());
+        
+        try {
+            IWorldManager worldManager = plugin.getServiceRegistry().getWorldManager();
+            if (worldManager == null) {
+                LOGGER.warning("World manager not available");
+                return;
+            }
+            
+            CreativeWorld creativeWorld = worldManager.findCreativeWorldByBukkit(world);
+            if (creativeWorld == null) return;
+            
+            // Clear existing scripts
+            List<CodeScript> newScripts = new ArrayList<>();
+            
+            // Find all event blocks in the world and compile scripts from them
+            int scriptCount = 0;
+            int errorCount = 0;
+            
+            for (Map.Entry<Location, CodeBlock> entry : connectionManager.getWorldBlocks(world).entrySet()) {
+                CodeBlock block = entry.getValue();
+                if (isEventBlock(block)) {
+                    try {
+                        CodeScript compiledScript = compileScriptFromEventBlock(block);
+                        if (compiledScript != null) {
+                            newScripts.add(compiledScript);
+                            scriptCount++;
+                            LOGGER.fine("Successfully compiled script: " + compiledScript.getName());
+                        } else {
+                            errorCount++;
+                            LOGGER.warning("Failed to compile script from event block at " + entry.getKey());
+                        }
+                    } catch (Exception e) {
+                        errorCount++;
+                        LOGGER.log(java.util.logging.Level.SEVERE, "Error compiling script from event block at " + entry.getKey() + ": " + e.getMessage(), e);
+                    }
+                }
+            }
+            
+            // Update the creative world with new scripts
+            creativeWorld.setScripts(newScripts);
+            worldManager.saveWorld(creativeWorld);
+            
+            LOGGER.fine("Recompiled " + scriptCount + " scripts for world: " + world.getName() + " with " + errorCount + " errors");
+        } catch (Exception e) {
+            LOGGER.severe("Failed to recompile world scripts: " + e.getMessage());
+            e.printStackTrace();
+        }
     }
 }

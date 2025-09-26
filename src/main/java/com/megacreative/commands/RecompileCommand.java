@@ -2,6 +2,7 @@ package com.megacreative.commands;
 
 import com.megacreative.MegaCreative;
 import com.megacreative.coding.AutoConnectionManager;
+import com.megacreative.coding.ScriptCompiler;
 import com.megacreative.models.CreativeWorld;
 import org.bukkit.command.Command;
 import org.bukkit.command.CommandExecutor;
@@ -53,15 +54,15 @@ public class RecompileCommand implements CommandExecutor, TabCompleter {
         }
         
         try {
-            // Get the AutoConnectionManager
-            AutoConnectionManager connectionManager = plugin.getServiceRegistry().getAutoConnectionManager();
-            if (connectionManager == null) {
-                player.sendMessage("§cAutoConnectionManager is not available!");
+            // Get the ScriptCompiler instead of AutoConnectionManager
+            ScriptCompiler scriptCompiler = plugin.getServiceRegistry().getScriptCompiler();
+            if (scriptCompiler == null) {
+                player.sendMessage("§cScriptCompiler is not available!");
                 return true;
             }
             
             // Recompile all scripts in the world
-            connectionManager.recompileWorldScripts(world);
+            scriptCompiler.recompileWorldScripts(world);
             
             player.sendMessage("§a✓ Scripts recompiled successfully in world: " + world.getName());
             plugin.getLogger().info("Scripts recompiled by " + player.getName() + " in world: " + world.getName());
