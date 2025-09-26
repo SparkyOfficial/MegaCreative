@@ -10,6 +10,7 @@ import com.megacreative.coding.CodeScript;
 import com.megacreative.coding.BlockPlacementHandler;
 import com.megacreative.coding.events.CodeBlockPlacedEvent;
 import com.megacreative.coding.events.CodeBlockBrokenEvent;
+import com.megacreative.coding.events.CodeBlocksConnectedEvent;
 import com.megacreative.coding.events.ScriptStructureChangedEvent;
 import org.bukkit.Location;
 import org.bukkit.Material;
@@ -211,8 +212,8 @@ public class AutoConnectionManager implements Listener {
                     plugin.getLogger().fine("Connected horizontal: " + prevLocation + " -> " + location);
                 }
                 
-                // Add visual feedback for connection
-                addConnectionEffect(prevLocation, location);
+                // Fire event for connection visualization
+                plugin.getServer().getPluginManager().callEvent(new CodeBlocksConnectedEvent(prevLocation, location));
             }
         }
         
@@ -226,8 +227,8 @@ public class AutoConnectionManager implements Listener {
                     plugin.getLogger().fine("Connected horizontal: " + location + " -> " + nextLocation);
                 }
                 
-                // Add visual feedback for connection
-                addConnectionEffect(location, nextLocation);
+                // Fire event for connection visualization
+                plugin.getServer().getPluginManager().callEvent(new CodeBlocksConnectedEvent(location, nextLocation));
             }
         }
         
@@ -584,7 +585,6 @@ public class AutoConnectionManager implements Listener {
         if (plugin != null) {
             plugin.getLogger().fine("Connected child: parent line " + parentLine + " -> child at (" + childX + ", " + childLine + ")");
         }
-        buildBlockChain(childBlock, childLocation); // Recursively build child chain
     }
     
     /**
@@ -624,141 +624,9 @@ public class AutoConnectionManager implements Listener {
         
     }
     
-    /**
-     * Checks if a block is an event block
-     */
-    public boolean isEventBlock(CodeBlock block) {
-        if (block == null || block.getAction() == null) return false;
-        
-        // Get the block configuration
-        BlockConfigService.BlockConfig config = blockConfigService.getBlockConfig(block.getAction());
-        if (config == null) return false;
-        
-        // Check if it's an event block
-        return "EVENT".equals(config.getType());
-    }
+
     
-    /**
-     * Creates a script from an event block and adds it to the world
-     * Enhanced with improved script creation and error handling.
-     */
-    public void createAndAddScript(CodeBlock eventBlock, Player player, Location location) {
-        try {
-            // Use the new compilation method to create a complete script
-            CodeScript script = compileScriptFromEventBlock(eventBlock, location);
-            if (script == null) {
-                player.sendMessage("§cОшибка при создании скрипта!");
-                return;
-            }
-            
-            // Find the creative world using service registry
-            com.megacreative.interfaces.IWorldManager worldManager = getWorldManager();
-            if (worldManager == null) {
-                plugin.getLogger().warning(ERROR_WORLD_MANAGER_NOT_AVAILABLE);
-                return;
-            }
-            
-            handleScriptCreation(eventBlock, location, script, worldManager, player);
-        } catch (Exception e) {
-            plugin.getLogger().severe(ERROR_FAILED_TO_CREATE_SCRIPT + e.getMessage());
-            plugin.getLogger().severe(ERROR_STACK_TRACE + java.util.Arrays.toString(e.getStackTrace()));
-        }
-    }
-    
-    /**
-     * Handles the script creation and addition to the world
-     */
-    private void handleScriptCreation(CodeBlock eventBlock, Location location, CodeScript script, 
-                                  com.megacreative.interfaces.IWorldManager worldManager, Player player) {
-        com.megacreative.models.CreativeWorld creativeWorld = worldManager.findCreativeWorldByBukkit(location.getWorld());
-        if (creativeWorld != null) {
-            // Add the script to the world
-            addScriptToWorld(eventBlock, script, creativeWorld, worldManager);
-            
-            player.sendMessage("§a✓ Скрипт скомпилирован и создан для события: §f" + eventBlock.getAction());
-            plugin.getLogger().fine("Compiled and added script for event block: " + eventBlock.getAction() + " in world: " + creativeWorld.getName());
-        } else {
-            plugin.getLogger().warning(ERROR_COULD_NOT_FIND_CREATIVE_WORLD + location);
-        }
-    }
-    
-    /**
-     * Adds a script to the world and handles duplicates
-     */
-    private void addScriptToWorld(CodeBlock eventBlock, CodeScript script, 
-                              com.megacreative.models.CreativeWorld creativeWorld, 
-                              com.megacreative.interfaces.IWorldManager worldManager) {
-        List<CodeScript> scripts = creativeWorld.getScripts();
-        if (scripts == null) {
-            scripts = new ArrayList<>();
-            creativeWorld.setScripts(scripts);
-        }
-        
-        // Remove any existing script with the same root block action to avoid duplicates
-        scripts.removeIf(existingScript -> 
-            existingScript.getRootBlock() != null && 
-            eventBlock.getAction().equals(existingScript.getRootBlock().getAction()));
-        
-        scripts.add(script);
-        
-        // Save the creative world to persist the script
-        worldManager.saveWorld(creativeWorld);
-    }
-    
-    /**
-     * Removes a script corresponding to an event block from the world
-     */
-    public void removeScript(CodeBlock eventBlock, Location location) {
-        try {
-            // Find the creative world using service registry
-            com.megacreative.interfaces.IWorldManager worldManager = getWorldManager();
-            if (worldManager == null) {
-                plugin.getLogger().warning(ERROR_WORLD_MANAGER_NOT_AVAILABLE);
-                return;
-            }
-            
-            handleScriptRemoval(eventBlock, location, worldManager);
-        } catch (Exception e) {
-            plugin.getLogger().severe(ERROR_FAILED_TO_REMOVE_SCRIPT + e.getMessage());
-            plugin.getLogger().severe(ERROR_STACK_TRACE + java.util.Arrays.toString(e.getStackTrace()));
-        }
-    }
-    
-    /**
-     * Handles the script removal from the world
-     */
-    private void handleScriptRemoval(CodeBlock eventBlock, Location location, 
-                                com.megacreative.interfaces.IWorldManager worldManager) {
-        com.megacreative.models.CreativeWorld creativeWorld = worldManager.findCreativeWorldByBukkit(location.getWorld());
-        if (creativeWorld != null) {
-            // Remove the script from the world
-            removeScriptFromWorld(eventBlock, creativeWorld, worldManager);
-        } else {
-            plugin.getLogger().warning(ERROR_COULD_NOT_FIND_CREATIVE_WORLD + location);
-        }
-    }
-    
-    /**
-     * Removes a script from the world
-     */
-    private void removeScriptFromWorld(CodeBlock eventBlock, 
-                                  com.megacreative.models.CreativeWorld creativeWorld, 
-                                  com.megacreative.interfaces.IWorldManager worldManager) {
-        List<CodeScript> scripts = creativeWorld.getScripts();
-        if (scripts != null) {
-            // Find and remove the script that corresponds to this event block
-            boolean removed = scripts.removeIf(script -> 
-                script.getRootBlock() != null && 
-                eventBlock.getAction().equals(script.getRootBlock().getAction())
-            );
-            
-            if (removed) {
-                // Save the creative world to persist the change
-                worldManager.saveWorld(creativeWorld);
-                plugin.getLogger().fine("Removed script for event block: " + eventBlock.getAction() + " from world: " + creativeWorld.getName());
-            }
-        }
-    }
+
     
     /**
      * Cleans up all player blocks for a specific player
@@ -872,152 +740,13 @@ public class AutoConnectionManager implements Listener {
         plugin.getLogger().fine("Block configuration reloaded");
     }
     
-    /**
-     * Compiles a complete script from an event block by following all connections
-     * This implements the "compilation" process mentioned in the roadmap
-     * Enhanced with improved script compilation logic.
-     */
-    public CodeScript compileScriptFromEventBlock(CodeBlock eventBlock, Location eventLocation) {
-        try {
-            // Create the root script
-            CodeScript script = new CodeScript(eventBlock);
-            script.setName("Compiled Script for " + eventBlock.getAction() + " at " + formatLocation(eventLocation));
-            script.setEnabled(true);
-            script.setType(CodeScript.ScriptType.EVENT);
-            
-            plugin.getLogger().fine("Starting compilation of script from event block: " + eventBlock.getAction() + " at " + formatLocation(eventLocation));
-            
-            // Build the complete block chain by following connections
-            buildBlockChain(eventBlock, eventLocation);
-            
-            plugin.getLogger().fine("Successfully compiled script from event block: " + eventBlock.getAction() + " with connected blocks");
-            return script;
-            
-        } catch (Exception e) {
-            plugin.getLogger().severe("Failed to compile script from event block: " + e.getMessage());
-            plugin.getLogger().severe(ERROR_STACK_TRACE + java.util.Arrays.toString(e.getStackTrace()));
-            return null;
-        }
-    }
+
     
-    /**
-     * Builds the complete block chain by following nextBlock and children connections
-     * Enhanced with improved chain building logic.
-     */
-    private void buildBlockChain(CodeBlock currentBlock, Location currentLocation) {
-        if (currentBlock == null || currentLocation == null) return;
-        
-        // Follow the next block in the chain
-        Location nextLocation = getNextLocationInLine(currentLocation);
-        if (nextLocation != null) {
-            CodeBlock nextBlock = locationToBlock.get(nextLocation);
-            if (nextBlock != null) {
-                currentBlock.setNextBlock(nextBlock);
-                buildBlockChain(nextBlock, nextLocation); // Recursively build chain
-            }
-        }
-        
-        // Build child blocks (for conditionals, loops)
-        if (isControlBlock(currentBlock)) {
-            buildChildBlocks(currentBlock, currentLocation);
-        }
-    }
+
     
-    /**
-     * Builds child blocks for control structures
-     * Enhanced with improved child building logic.
-     */
-    private void buildChildBlocks(CodeBlock parentBlock, Location parentLocation) {
-        int parentLine = DevWorldGenerator.getCodeLineFromZ(parentLocation.getBlockZ());
-        
-        // Look for indented blocks in subsequent lines (children)
-        for (int childLine = parentLine + 1; childLine < parentLine + MAX_CHILD_SEARCH_LINES && childLine < DevWorldGenerator.getLinesCount(); childLine++) {
-            int childZ = DevWorldGenerator.getZForCodeLine(childLine);
-            
-            // Check different indentation levels (X > 0 means indented)
-            for (int childX = 1; childX <= MAX_INDENTATION_LEVEL; childX++) {
-                Location childLocation = new Location(parentLocation.getWorld(), childX, parentLocation.getBlockY(), childZ);
-                CodeBlock childBlock = locationToBlock.get(childLocation);
-                
-                if (childBlock != null) {
-                    parentBlock.addChild(childBlock);
-                    buildBlockChain(childBlock, childLocation); // Recursively build child chain
-                }
-            }
-            
-            // If we find a non-indented block, stop looking for children
-            Location endLocation = new Location(parentLocation.getWorld(), 0, parentLocation.getBlockY(), childZ);
-            if (locationToBlock.containsKey(endLocation)) {
-                break;
-            }
-        }
-    }
+
     
-    /**
-     * Recompiles all scripts in a world
-     * This should be called when the world is loaded or when significant changes are made
-     */
-    public void recompileWorldScripts(org.bukkit.World world) {
-        if (plugin != null) {
-            plugin.getLogger().fine("Recompiling all scripts for world: " + world.getName());
-        }
-        
-        // Use service registry to get world manager
-        IWorldManager worldManager = getWorldManager();
-        if (worldManager == null) {
-            if (plugin != null) {
-                plugin.getLogger().warning(ERROR_WORLD_MANAGER_NOT_AVAILABLE);
-            }
-            return;
-        }
-        
-        com.megacreative.models.CreativeWorld creativeWorld = worldManager.findCreativeWorldByBukkit(world);
-        if (creativeWorld == null) return;
-        
-        // Clear existing scripts
-        List<CodeScript> newScripts = new ArrayList<>();
-        
-        // Find all event blocks in the world and compile scripts from them
-        int scriptCount = 0;
-        int errorCount = 0;
-        
-        for (Map.Entry<Location, CodeBlock> entry : locationToBlock.entrySet()) {
-            if (!entry.getKey().getWorld().equals(world)) continue;
-            
-            CodeBlock block = entry.getValue();
-            if (isEventBlock(block)) {
-                try {
-                    CodeScript compiledScript = compileScriptFromEventBlock(block, entry.getKey());
-                    if (compiledScript != null) {
-                        newScripts.add(compiledScript);
-                        scriptCount++;
-                        if (plugin != null) {
-                            plugin.getLogger().fine("Successfully compiled script: " + compiledScript.getName());
-                        }
-                    } else {
-                        errorCount++;
-                        if (plugin != null) {
-                            plugin.getLogger().warning("Failed to compile script from event block at " + entry.getKey());
-                        }
-                    }
-                } catch (Exception e) {
-                    errorCount++;
-                    if (plugin != null) {
-                        String errorMsg = "Error compiling script from event block at " + entry.getKey() + ": " + e.getMessage();
-                        plugin.getLogger().log(Level.SEVERE, errorMsg, e);
-                    }
-                }
-            }
-        }
-        
-        // Update the creative world with new scripts
-        creativeWorld.setScripts(newScripts);
-        worldManager.saveWorld(creativeWorld);
-        
-        if (plugin != null) {
-            plugin.getLogger().fine("Recompiled " + scriptCount + " scripts for world: " + world.getName() + " with " + errorCount + " errors");
-        }
-    }
+
     
     /**
      * Adds a code block to the location tracking map
@@ -1034,45 +763,6 @@ public class AutoConnectionManager implements Listener {
      * 🎆 ENHANCED: Adds visual effects for block connections
      * Implements reference system-style: visual code construction with feedback
      */
-    private void addConnectionEffect(Location from, Location to) {
-        // Get the ConnectionVisualizer service from the service registry
-        if (plugin != null && plugin.getServiceRegistry() != null) {
-            ConnectionVisualizer visualizer = plugin.getServiceRegistry().getConnectionVisualizer();
-            if (visualizer != null) {
-                visualizer.addConnectionEffect(from, to);
-                return;
-            }
-        }
-        
-        // Fallback to direct implementation if service is not available
-        org.bukkit.World world = from.getWorld();
-        
-        // Calculate direction and distance
-        double dx = to.getX() - from.getX();
-        double dy = to.getY() - from.getY();
-        double dz = to.getZ() - from.getZ();
-        double distance = Math.sqrt(dx*dx + dy*dy + dz*dz);
-        
-        if (distance > 0) {
-            // Normalize direction
-            dx /= distance;
-            dy /= distance;
-            dz /= distance;
-            
-            // Create particle beam
-            for (int i = 0; i < distance * 2; i++) {
-                Location particleLoc = from.clone().add(
-                    dx * i * 0.5, 
-                    dy * i * 0.5, 
-                    dz * i * 0.5
-                );
-                
-                world.spawnParticle(org.bukkit.Particle.REDSTONE, particleLoc, 1, 0, 0, 0, 0,
-                    new org.bukkit.Particle.DustOptions(org.bukkit.Color.fromRGB(0, 255, 255), 1.0f));
-            }
-        }
-    }
-    
     /**
      * Formats a location for logging/display purposes
      * 

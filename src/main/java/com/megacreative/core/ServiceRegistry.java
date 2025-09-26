@@ -3,6 +3,7 @@ package com.megacreative.core;
 import com.megacreative.coding.AutoConnectionManager;
 import com.megacreative.coding.BlockPlacementHandler;
 import com.megacreative.coding.ConnectionVisualizer;
+import com.megacreative.coding.ScriptCompiler;
 import com.megacreative.coding.ScriptEngine;
 import com.megacreative.coding.DefaultScriptEngine;
 import com.megacreative.coding.ActionFactory;
@@ -124,11 +125,8 @@ public class ServiceRegistry {
     private FunctionManager functionManager;
     private AdvancedFunctionManager advancedFunctionManager;
     private com.megacreative.services.CodeCompiler codeCompiler;
-    
-    /**
-     * Visualization services
-     */
-    private com.megacreative.coding.ConnectionVisualizer connectionVisualizer;
+    private ScriptCompiler scriptCompiler;
+    private ConnectionVisualizer connectionVisualizer;
     
     /**
      * 🎆 Reference system: Interactive GUI System
@@ -394,6 +392,10 @@ public class ServiceRegistry {
             
             this.autoConnectionManager = new AutoConnectionManager((MegaCreative) plugin, blockConfigService);
             registerService(AutoConnectionManager.class, autoConnectionManager);
+            
+            // IMPORTANT: AutoConnectionManager must be initialized BEFORE ScriptCompiler
+            this.scriptCompiler = new ScriptCompiler((MegaCreative) plugin, blockConfigService, this.autoConnectionManager);
+            registerService(ScriptCompiler.class, scriptCompiler);
             
             this.connectionVisualizer = new ConnectionVisualizer((MegaCreative) plugin);
             registerService(ConnectionVisualizer.class, connectionVisualizer);
@@ -1475,6 +1477,15 @@ public class ServiceRegistry {
         if (worldManager instanceof com.megacreative.managers.WorldManagerImpl) {
             ((com.megacreative.managers.WorldManagerImpl) worldManager).initialize();
         }
+    }
+    
+    /**
+     * Gets the script compiler
+     * @return Script compiler instance
+     */
+    public ScriptCompiler getScriptCompiler() { 
+        return scriptCompiler != null ? scriptCompiler : 
+            (scriptCompiler = dependencyContainer.resolve(ScriptCompiler.class));
     }
     
     /**

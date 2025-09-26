@@ -1,12 +1,12 @@
 package com.megacreative.coding;
 
 import com.megacreative.MegaCreative;
-import com.megacreative.coding.events.CodeBlockPlacedEvent;
 import com.megacreative.coding.events.CodeBlockBrokenEvent;
+import com.megacreative.coding.events.CodeBlockPlacedEvent;
+import com.megacreative.interfaces.IWorldManager;
 import com.megacreative.models.CreativeWorld;
 import com.megacreative.services.BlockConfigService;
 import org.bukkit.Location;
-import org.bukkit.World;
 import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.Listener;
@@ -16,216 +16,105 @@ import java.util.List;
 import java.util.logging.Logger;
 
 /**
- * ScriptCompiler handles script compilation logic
- * Listens to CodeBlockPlacedEvent and CodeBlockBrokenEvent to manage script compilation
+ * Отвечает ИСКЛЮЧИТЕЛЬНО за компиляцию и управление CodeScript'ами.
+ * Слушает события добавления/удаления блоков и пересобирает скрипты в мире.
  */
 public class ScriptCompiler implements Listener {
     
-    private static final Logger log = Logger.getLogger(ScriptCompiler.class.getName());
-    
+    private static final Logger LOGGER = Logger.getLogger(ScriptCompiler.class.getName());
+
     private final MegaCreative plugin;
     private final BlockConfigService blockConfigService;
-    
-    public ScriptCompiler(MegaCreative plugin, BlockConfigService blockConfigService) {
+    private final AutoConnectionManager connectionManager; // Нужен для сборки цепочки блоков
+
+    public ScriptCompiler(MegaCreative plugin, BlockConfigService blockConfigService, AutoConnectionManager connectionManager) {
         this.plugin = plugin;
         this.blockConfigService = blockConfigService;
+        this.connectionManager = connectionManager;
     }
     
-    /**
-     * Handles code block placement events
-     */
     @EventHandler
     public void onCodeBlockPlaced(CodeBlockPlacedEvent event) {
-        Player player = event.getPlayer();
-        CodeBlock codeBlock = event.getCodeBlock();
-        Location location = event.getLocation();
-        
-        // If this is an event block, create a script and add it to the world
-        if (isEventBlock(codeBlock)) {
-            createAndAddScript(codeBlock, player, location);
+        if (isEventBlock(event.getCodeBlock())) {
+            createAndAddScript(event.getCodeBlock(), event.getPlayer(), event.getLocation());
         }
     }
-    
-    /**
-     * Handles code block broken events
-     */
+
     @EventHandler
     public void onCodeBlockBroken(CodeBlockBrokenEvent event) {
-        Location location = event.getLocation();
-        CodeBlock codeBlock = event.getCodeBlock();
-        
-        // If this is an event block, remove the corresponding script from the world
-        if (isEventBlock(codeBlock)) {
-            removeScript(codeBlock, location);
+        if (isEventBlock(event.getCodeBlock())) {
+            removeScript(event.getCodeBlock(), event.getLocation());
         }
     }
-    
-    /**
-     * Checks if a block is an event block
-     */
-    public boolean isEventBlock(CodeBlock block) {
+
+    private boolean isEventBlock(CodeBlock block) {
         if (block == null || block.getAction() == null) return false;
-        
-        // Get the block configuration
         BlockConfigService.BlockConfig config = blockConfigService.getBlockConfig(block.getAction());
         if (config == null) return false;
-        
-        // Check if it's an event block
         return "EVENT".equals(config.getType());
     }
     
-    /**
-     * Creates a script from an event block and adds it to the world
-     */
-    public void createAndAddScript(CodeBlock eventBlock, Player player, Location location) {
+    private void createAndAddScript(CodeBlock eventBlock, Player player, Location location) {
         try {
-            // Use the new compilation method to create a complete script
-            CodeScript script = compileScriptFromEventBlock(eventBlock, location);
+            CodeScript script = compileScriptFromEventBlock(eventBlock);
             if (script == null) {
-                player.sendMessage("§cОшибка при создании скрипта!");
+                player.sendMessage("§cОшибка компиляции скрипта!");
                 return;
             }
-            
-            // Find the creative world using service registry
-            com.megacreative.interfaces.IWorldManager worldManager = getWorldManager();
-            if (worldManager == null) {
-                plugin.getLogger().warning("World manager not available");
-                return;
-            }
-            
-            com.megacreative.models.CreativeWorld creativeWorld = worldManager.findCreativeWorldByBukkit(location.getWorld());
+
+            IWorldManager worldManager = plugin.getServiceRegistry().getWorldManager();
+            CreativeWorld creativeWorld = worldManager.findCreativeWorldByBukkit(location.getWorld());
+
             if (creativeWorld != null) {
-                // Add the script to the world
                 addScriptToWorld(eventBlock, script, creativeWorld, worldManager);
-                
-                player.sendMessage("§a✓ Скрипт скомпилирован и создан для события: §f" + eventBlock.getAction());
-                plugin.getLogger().fine("Compiled and added script for event block: " + eventBlock.getAction() + " in world: " + creativeWorld.getName());
-            } else {
-                plugin.getLogger().warning("Could not find creative world for location: " + location);
+                player.sendMessage("§a✓ Скрипт скомпилирован для события: §f" + eventBlock.getAction());
+                LOGGER.fine("Compiled and added script for event block: " + eventBlock.getAction());
             }
         } catch (Exception e) {
-            plugin.getLogger().severe("Failed to create script for event block: " + e.getMessage());
-            plugin.getLogger().severe("Stack trace: " + java.util.Arrays.toString(e.getStackTrace()));
+            LOGGER.severe("Failed to create script: " + e.getMessage());
+            e.printStackTrace();
         }
     }
     
-    /**
-     * Removes a script corresponding to an event block from the world
-     */
-    public void removeScript(CodeBlock eventBlock, Location location) {
-        try {
-            // Find the creative world using service registry
-            com.megacreative.interfaces.IWorldManager worldManager = getWorldManager();
-            if (worldManager == null) {
-                plugin.getLogger().warning("World manager not available");
-                return;
-            }
-            
-            com.megacreative.models.CreativeWorld creativeWorld = worldManager.findCreativeWorldByBukkit(location.getWorld());
+    private void removeScript(CodeBlock eventBlock, Location location) {
+         try {
+            IWorldManager worldManager = plugin.getServiceRegistry().getWorldManager();
+            CreativeWorld creativeWorld = worldManager.findCreativeWorldByBukkit(location.getWorld());
             if (creativeWorld != null) {
-                // Remove the script from the world
-                removeScriptFromWorld(eventBlock, creativeWorld, worldManager);
-            } else {
-                plugin.getLogger().warning("Could not find creative world for location: " + location);
+                List<CodeScript> scripts = creativeWorld.getScripts();
+                if (scripts != null) {
+                    boolean removed = scripts.removeIf(script -> script.getRootBlock().getId().equals(eventBlock.getId()));
+                    if (removed) {
+                        worldManager.saveWorld(creativeWorld);
+                        LOGGER.fine("Removed script for event block: " + eventBlock.getAction());
+                    }
+                }
             }
         } catch (Exception e) {
-            plugin.getLogger().severe("Failed to remove script for event block: " + e.getMessage());
-            plugin.getLogger().severe("Stack trace: " + java.util.Arrays.toString(e.getStackTrace()));
+            LOGGER.severe("Failed to remove script: " + e.getMessage());
+            e.printStackTrace();
         }
     }
     
-    /**
-     * Compiles a complete script from an event block by following all connections
-     */
-    public CodeScript compileScriptFromEventBlock(CodeBlock eventBlock, Location eventLocation) {
-        try {
-            // Create the root script
-            CodeScript script = new CodeScript(eventBlock);
-            script.setName("Compiled Script for " + eventBlock.getAction() + " at " + formatLocation(eventLocation));
-            script.setEnabled(true);
-            script.setType(CodeScript.ScriptType.EVENT);
-            
-            plugin.getLogger().fine("Starting compilation of script from event block: " + eventBlock.getAction() + " at " + formatLocation(eventLocation));
-            
-            plugin.getLogger().fine("Successfully compiled script from event block: " + eventBlock.getAction() + " with connected blocks");
-            return script;
-            
-        } catch (Exception e) {
-            plugin.getLogger().severe("Failed to compile script from event block: " + e.getMessage());
-            plugin.getLogger().severe("Stack trace: " + java.util.Arrays.toString(e.getStackTrace()));
-            return null;
-        }
+    private CodeScript compileScriptFromEventBlock(CodeBlock eventBlock) {
+        // Логика компиляции здесь. Она просто следует по `nextBlock` и `children` связям,
+        // которые уже установил AutoConnectionManager.
+        
+        // ВАЖНО: Мы не перестраиваем связи здесь. Мы им доверяем.
+        // AutoConnectionManager отвечает за структуру, а компилятор - за ее чтение.
+        
+        return new CodeScript(eventBlock); // Для простоты пока создаем скрипт только с корневым блоком
     }
-    
-    /**
-     * Adds a script to the world and handles duplicates
-     */
-    private void addScriptToWorld(CodeBlock eventBlock, CodeScript script, 
-                              com.megacreative.models.CreativeWorld creativeWorld, 
-                              com.megacreative.interfaces.IWorldManager worldManager) {
+
+    private void addScriptToWorld(CodeBlock eventBlock, CodeScript script, CreativeWorld creativeWorld, IWorldManager worldManager) {
         List<CodeScript> scripts = creativeWorld.getScripts();
         if (scripts == null) {
             scripts = new ArrayList<>();
             creativeWorld.setScripts(scripts);
         }
-        
-        // Remove any existing script with the same root block action to avoid duplicates
-        scripts.removeIf(existingScript -> 
-            existingScript.getRootBlock() != null && 
-            eventBlock.getAction().equals(existingScript.getRootBlock().getAction()));
-        
+        // Избегаем дубликатов, удаляя старый скрипт, если он был привязан к этому же блоку
+        scripts.removeIf(existingScript -> existingScript.getRootBlock().getId().equals(eventBlock.getId()));
         scripts.add(script);
-        
-        // Save the creative world to persist the script
         worldManager.saveWorld(creativeWorld);
-    }
-    
-    /**
-     * Removes a script from the world
-     */
-    private void removeScriptFromWorld(CodeBlock eventBlock, 
-                                  com.megacreative.models.CreativeWorld creativeWorld, 
-                                  com.megacreative.interfaces.IWorldManager worldManager) {
-        List<CodeScript> scripts = creativeWorld.getScripts();
-        if (scripts != null) {
-            // Find and remove the script that corresponds to this event block
-            boolean removed = scripts.removeIf(script -> 
-                script.getRootBlock() != null && 
-                eventBlock.getAction().equals(script.getRootBlock().getAction())
-            );
-            
-            if (removed) {
-                // Save the creative world to persist the change
-                worldManager.saveWorld(creativeWorld);
-                plugin.getLogger().fine("Removed script for event block: " + eventBlock.getAction() + " from world: " + creativeWorld.getName());
-            }
-        }
-    }
-    
-    /**
-     * Helper method to get world manager safely
-     */
-    private com.megacreative.interfaces.IWorldManager getWorldManager() {
-        if (plugin == null || plugin.getServiceRegistry() == null) {
-            return null;
-        }
-        return plugin.getServiceRegistry().getWorldManager();
-    }
-    
-    /**
-     * Formats a location for logging/display purposes
-     */
-    private String formatLocation(Location location) {
-        if (location == null) return "null";
-        return String.format("(%d, %d, %d)", location.getBlockX(), location.getBlockY(), location.getBlockZ());
-    }
-    
-    /**
-     * Recompiles all scripts in a world
-     */
-    public void recompileWorldScripts(org.bukkit.World world) {
-        if (plugin != null) {
-            plugin.getLogger().fine("Recompiling all scripts for world: " + world.getName());
-        }
     }
 }

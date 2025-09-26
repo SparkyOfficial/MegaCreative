@@ -462,6 +462,10 @@ public class MegaCreative extends JavaPlugin {
             
             // Register enemy player restriction manager
             getServer().getPluginManager().registerEvents(serviceRegistry.getEnemyPlayerRestrictionManager(), this);
+            
+            // Register new Stage 2 services
+            getServer().getPluginManager().registerEvents(serviceRegistry.getScriptCompiler(), this);
+            getServer().getPluginManager().registerEvents(serviceRegistry.getConnectionVisualizer(), this);
         }
         
         // Register CodeMoverListener for advanced code manipulation
