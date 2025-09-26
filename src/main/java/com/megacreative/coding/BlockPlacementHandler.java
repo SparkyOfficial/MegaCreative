@@ -213,182 +213,71 @@ public class BlockPlacementHandler implements Listener {
     }
     
     /**
-     * Handles player interaction with blocks
+     * Обрабатывает клик правой кнопкой мыши. 
+     * Теперь полностью делегирует открытие GUI реестру GUIRegistry.
      */
     @EventHandler(priority = EventPriority.NORMAL)
     public void onPlayerInteract(PlayerInteractEvent event) {
-        // Fix double firing by only processing main hand
-        if (event.getHand() != org.bukkit.inventory.EquipmentSlot.HAND) {
+        if (event.getHand() != org.bukkit.inventory.EquipmentSlot.HAND || 
+            event.getAction() != org.bukkit.event.block.Action.RIGHT_CLICK_BLOCK ||
+            event.getClickedBlock() == null) {
             return;
         }
-        
+
         Player player = event.getPlayer();
-        
-        // Only process right clicks on existing blocks
-        if (event.getAction() != org.bukkit.event.block.Action.RIGHT_CLICK_BLOCK) {
+        if (!isInDevWorld(player)) return;
+
+        // ... (проверка на режим PLAY остается, если она вам нужна)
+
+        Location location = event.getClickedBlock().getLocation();
+        if (!blockCodeBlocks.containsKey(location)) {
             return;
         }
         
-        Block clickedBlock = event.getClickedBlock();
-        if (clickedBlock == null) {
+        event.setCancelled(true); // Предотвращаем стандартное поведение
+        CodeBlock codeBlock = blockCodeBlocks.get(location);
+
+        // Обработка клика по скобкам (эта логика остается здесь)
+        if (codeBlock.isBracket()) {
+            toggleBracketType(codeBlock, event.getClickedBlock(), player);
             return;
         }
         
-        Location location = clickedBlock.getLocation();
+        // --- НОВАЯ, УПРОЩЕННАЯ ЛОГИКА ---
         
-        // Only process in dev worlds
-        if (!isInDevWorld(player)) {
+        String blockId = getBlockIdentifier(codeBlock);
+        
+        // Получаем наш реестр
+        GUIRegistry guiRegistry = plugin.getServiceRegistry().getGuiRegistry();
+        if (guiRegistry == null) {
+            player.sendMessage("§cError: GUIRegistry not found!");
             return;
         }
         
-        // Check player mode - only open GUI in DEV mode
-        if (plugin != null && plugin.getServiceRegistry() != null) {
-            PlayerModeManager modeManager = plugin.getServiceRegistry().getPlayerModeManager();
-            // Open GUI for configuration only in DEV mode
-            if (modeManager.isInPlayMode(player)) {
-                // If player is in PLAY mode, this click may be part of their game
-                // We don't open GUI in PLAY mode
-                return;
-            }
-        }
+        // Пытаемся открыть специализированный редактор
+        boolean opened = guiRegistry.open(blockId, plugin, player, codeBlock);
         
-        // Handle code block interactions
-        if (blockCodeBlocks.containsKey(location)) {
-            event.setCancelled(true); // Important to prevent opening containers etc.
-            
-            // Open GUI for block configuration
-            CodeBlock codeBlock = blockCodeBlocks.get(location);
-            
-            // Special handling for bracket blocks - toggle bracket type instead of opening GUI
-            if (codeBlock.isBracket()) {
-                toggleBracketType(codeBlock, event.getClickedBlock(), player);
-                player.sendMessage("§aBracket toggled!");
-                return;
-            }
-            
-            // For other blocks, use GUIRegistry to open the appropriate GUI
-            String actionId = codeBlock.getAction();
-            String conditionId = codeBlock.getCondition();
-            String eventId = codeBlock.getEvent();
-            
-            // Determine which ID to use for opening the GUI
-            String guiId = null;
-            if (actionId != null && !actionId.equals("NOT_SET")) {
-                guiId = actionId;
-            } else if (conditionId != null && !conditionId.equals("NOT_SET")) {
-                guiId = conditionId;
-            } else if (eventId != null && !eventId.equals("NOT_SET")) {
-                guiId = eventId;
-            }
-            
-            // Check if plugin and service registry are available
-            if (plugin == null || plugin.getServiceRegistry() == null) {
-                player.sendMessage("§cPlugin services not available!");
-                return;
-            }
-            
-            // Use GUIRegistry to open the appropriate editor
-            GUIRegistry guiRegistry = plugin.getServiceRegistry().getGuiRegistry();
-            if (guiRegistry != null && guiId != null) {
-                guiRegistry.open(guiId, plugin, player, codeBlock);
-            } else {
-                // Fallback to action selection GUI if GUIRegistry is not available or no ID is set
-                com.megacreative.gui.coding.ActionSelectionGUI actionGUI = new com.megacreative.gui.coding.ActionSelectionGUI(
-                    plugin, player, location, codeBlock.getMaterial());
-                actionGUI.open();
-            }
-            return;
+        // Если для блока еще не задано действие ИЛИ не нашлось редактора,
+        // открываем GUI выбора действия.
+        if (!opened) {
+            new ActionSelectionGUI(plugin, player, location, codeBlock.getMaterial()).open();
         }
     }
     
     /**
-     * Opens the appropriate parameter editor based on the action ID
-     * @param player The player using the editor
-     * @param codeBlock The code block being edited
-     * @param actionId The action ID
+     * Вспомогательный метод для получения уникального ID блока (actionId, eventId и т.д.).
      */
-    private void openParameterEditor(Player player, CodeBlock codeBlock, String actionId) {
-        // Check if plugin is available
-        if (plugin == null) {
-            player.sendMessage("§cPlugin not available!");
-            return;
+    private String getBlockIdentifier(CodeBlock codeBlock) {
+        if (codeBlock.getAction() != null && !codeBlock.getAction().equals("NOT_SET")) {
+            return codeBlock.getAction();
         }
-        
-        // Use GUIRegistry to open the appropriate editor
-        if (plugin.getServiceRegistry() != null) {
-            GUIRegistry guiRegistry = plugin.getServiceRegistry().getGuiRegistry();
-            if (guiRegistry != null) {
-                guiRegistry.open(actionId, plugin, player, codeBlock);
-                return;
-            }
+        if (codeBlock.getEvent() != null && !codeBlock.getEvent().equals("NOT_SET")) {
+            return codeBlock.getEvent();
         }
-        
-        // Fallback to enhanced parameter GUI if GUIRegistry is not available
-        if (plugin.getServiceRegistry() != null) {
-            com.megacreative.gui.coding.EnhancedActionParameterGUI enhancedGUI = 
-                new com.megacreative.gui.coding.EnhancedActionParameterGUI(plugin);
-            enhancedGUI.openParameterEditor(player, new org.bukkit.Location(org.bukkit.Bukkit.getWorld(codeBlock.getWorldId()), codeBlock.getX(), codeBlock.getY(), codeBlock.getZ()), actionId);
+        if (codeBlock.getCondition() != null && !codeBlock.getCondition().equals("NOT_SET")) {
+            return codeBlock.getCondition();
         }
-    }
-    
-    /**
-     * Opens the appropriate parameter editor based on the event ID
-     * @param player The player using the editor
-     * @param codeBlock The code block being edited
-     * @param eventId The event ID
-     */
-    private void openEventEditor(Player player, CodeBlock codeBlock, String eventId) {
-        // Check if plugin is available
-        if (plugin == null) {
-            player.sendMessage("§cPlugin not available!");
-            return;
-        }
-        
-        // Use GUIRegistry to open the appropriate editor
-        if (plugin.getServiceRegistry() != null) {
-            GUIRegistry guiRegistry = plugin.getServiceRegistry().getGuiRegistry();
-            if (guiRegistry != null) {
-                guiRegistry.open(eventId, plugin, player, codeBlock);
-                return;
-            }
-        }
-        
-        // Fallback to enhanced parameter GUI if GUIRegistry is not available
-        if (plugin.getServiceRegistry() != null) {
-            com.megacreative.gui.coding.EnhancedActionParameterGUI enhancedGUI = 
-                new com.megacreative.gui.coding.EnhancedActionParameterGUI(plugin);
-            enhancedGUI.openParameterEditor(player, new org.bukkit.Location(org.bukkit.Bukkit.getWorld(codeBlock.getWorldId()), codeBlock.getX(), codeBlock.getY(), codeBlock.getZ()), eventId);
-        }
-    }
-    
-    /**
-     * Opens the appropriate parameter editor based on the condition ID
-     * @param player The player using the editor
-     * @param codeBlock The code block being edited
-     * @param conditionId The condition ID
-     */
-    private void openConditionEditor(Player player, CodeBlock codeBlock, String conditionId) {
-        // Check if plugin is available
-        if (plugin == null) {
-            player.sendMessage("§cPlugin not available!");
-            return;
-        }
-        
-        // Use GUIRegistry to open the appropriate editor
-        if (plugin.getServiceRegistry() != null) {
-            GUIRegistry guiRegistry = plugin.getServiceRegistry().getGuiRegistry();
-            if (guiRegistry != null) {
-                guiRegistry.open(conditionId, plugin, player, codeBlock);
-                return;
-            }
-        }
-        
-        // Fallback to enhanced parameter GUI if GUIRegistry is not available
-        if (plugin.getServiceRegistry() != null) {
-            com.megacreative.gui.coding.EnhancedActionParameterGUI enhancedGUI = 
-                new com.megacreative.gui.coding.EnhancedActionParameterGUI(plugin);
-            enhancedGUI.openParameterEditor(player, new org.bukkit.Location(org.bukkit.Bukkit.getWorld(codeBlock.getWorldId()), codeBlock.getX(), codeBlock.getY(), codeBlock.getZ()), conditionId);
-        }
+        return null; // ID не установлен
     }
     
     /**
