@@ -1,5 +1,6 @@
 package com.megacreative.commands;
 
+import com.megacreative.MegaCreative;
 import com.megacreative.interfaces.IWorldManager;
 import com.megacreative.managers.PlayerModeManager;
 import com.megacreative.models.CreativeWorld;
@@ -21,27 +22,25 @@ import org.bukkit.entity.Player;
  */
 public class BuildCommand implements CommandExecutor {
     
+    private final MegaCreative plugin;
     private final IWorldManager worldManager;
-    private final PlayerModeManager playerModeManager;
-    private final com.megacreative.managers.DevInventoryManager devInventoryManager;
-    private final com.megacreative.coding.BlockPlacementHandler blockPlacementHandler;
     
     /**
      * Конструктор команды BuildCommand
+     * @param plugin основной плагин
      * @param worldManager менеджер миров
-     * @param playerModeManager менеджер режимов игроков
-     * @param devInventoryManager менеджер инвентаря разработки
-     * @param blockPlacementHandler обработчик размещения блоков
+     *
+     * Constructor for BuildCommand
+     * @param plugin main plugin
+     * @param worldManager world manager
+     *
+     * Konstruktor für BuildCommand
+     * @param plugin Haupt-Plugin
+     * @param worldManager Welt-Manager
      */
-    public BuildCommand(
-            IWorldManager worldManager,
-            PlayerModeManager playerModeManager,
-            com.megacreative.managers.DevInventoryManager devInventoryManager,
-            com.megacreative.coding.BlockPlacementHandler blockPlacementHandler) {
+    public BuildCommand(MegaCreative plugin, IWorldManager worldManager) {
+        this.plugin = plugin;
         this.worldManager = worldManager;
-        this.playerModeManager = playerModeManager;
-        this.devInventoryManager = devInventoryManager;
-        this.blockPlacementHandler = blockPlacementHandler;
     }
     
     /**
@@ -74,13 +73,33 @@ public class BuildCommand implements CommandExecutor {
         }
         
         // Set player mode to DEV (build mode is a form of DEV mode)
-        playerModeManager.setMode(player, PlayerModeManager.PlayerMode.DEV);
+        if (plugin != null && plugin.getServiceRegistry() != null) {
+            PlayerModeManager modeManager = plugin.getServiceRegistry().getPlayerModeManager();
+            modeManager.setMode(player, PlayerModeManager.PlayerMode.DEV);
+        }
         
         // Check if worldManager is available
         if (worldManager == null) {
             player.sendMessage("§cWorld manager not available!");
+            if (plugin != null) {
+                plugin.getLogger().severe("World manager is null in BuildCommand!");
+                plugin.getLogger().severe("ServiceRegistry available: " + (plugin.getServiceRegistry() != null));
+                if (plugin.getServiceRegistry() != null) {
+                    plugin.getLogger().severe("WorldManager in ServiceRegistry: " + (plugin.getServiceRegistry().getWorldManager() != null));
+                }
+            }
             return true;
         }
+        
+        // Log debug information
+        // if (plugin != null) {
+        //     plugin.getLogger().info("BuildCommand executed by player: " + player.getName());
+        //     plugin.getLogger().info("Current world: " + player.getWorld().getName());
+        //     plugin.getLogger().info("ServiceRegistry available: " + (plugin.getServiceRegistry() != null));
+        //     if (plugin.getServiceRegistry() != null) {
+        //         plugin.getLogger().info("WorldManager in ServiceRegistry: " + (plugin.getServiceRegistry().getWorldManager() != null));
+        //     }
+        // }
         
         CreativeWorld creativeWorld = worldManager.findCreativeWorldByBukkit(player.getWorld());
         
@@ -129,6 +148,7 @@ public class BuildCommand implements CommandExecutor {
                     CreativeWorld foundWorld = worldManager.getWorld(potentialId);
                     if (foundWorld != null) {
                         creativeWorld = foundWorld;
+                        // player.sendMessage("§aFound world by extracted ID: " + potentialId);
                     }
                 }
             }
@@ -138,6 +158,7 @@ public class BuildCommand implements CommandExecutor {
                 for (CreativeWorld world : worldManager.getCreativeWorlds()) {
                     if (worldName.contains(world.getId()) || worldName.contains(world.getName().toLowerCase().replace(" ", ""))) {
                         creativeWorld = world;
+                        // player.sendMessage("§aFound world by partial name matching: " + world.getName());
                         break;
                     }
                 }
@@ -157,18 +178,18 @@ public class BuildCommand implements CommandExecutor {
         }
         
         // Save current world's code blocks before switching
-        if (blockPlacementHandler != null) {
-            blockPlacementHandler.saveAllCodeBlocksInWorld(player.getWorld());
+        if (plugin != null && plugin.getBlockPlacementHandler() != null) {
+            plugin.getBlockPlacementHandler().saveAllCodeBlocksInWorld(player.getWorld());
         }
         
         // Save player inventory before switching
-        if (devInventoryManager != null) {
-            devInventoryManager.savePlayerInventory(player);
+        if (plugin != null && plugin.getBlockPlacementHandler().isInDevWorld(player)) {
+            plugin.getServiceRegistry().getDevInventoryManager().savePlayerInventory(player);
         }
         
         // Restore player inventory for build mode
-        if (devInventoryManager != null) {
-            devInventoryManager.restorePlayerInventory(player);
+        if (plugin != null) {
+            plugin.getServiceRegistry().getDevInventoryManager().restorePlayerInventory(player);
         }
         
         // Switch to build world

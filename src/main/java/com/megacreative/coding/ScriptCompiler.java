@@ -1,6 +1,7 @@
 package com.megacreative.coding;
 
 import com.megacreative.MegaCreative;
+import com.megacreative.coding.BlockLinker;
 import com.megacreative.coding.events.CodeBlockBrokenEvent;
 import com.megacreative.coding.events.CodeBlockPlacedEvent;
 import com.megacreative.interfaces.IWorldManager;
@@ -26,12 +27,12 @@ public class ScriptCompiler implements Listener {
 
     private final MegaCreative plugin;
     private final BlockConfigService blockConfigService;
-    private final AutoConnectionManager connectionManager; // Нужен для сборки цепочки блоков
+    private final BlockLinker blockLinker; // Нужен для сборки цепочки блоков
 
-    public ScriptCompiler(MegaCreative plugin, BlockConfigService blockConfigService, AutoConnectionManager connectionManager) {
+    public ScriptCompiler(MegaCreative plugin, BlockConfigService blockConfigService, BlockLinker blockLinker) {
         this.plugin = plugin;
         this.blockConfigService = blockConfigService;
-        this.connectionManager = connectionManager;
+        this.blockLinker = blockLinker;
     }
     
     @EventHandler
@@ -99,10 +100,10 @@ public class ScriptCompiler implements Listener {
     
     private CodeScript compileScriptFromEventBlock(CodeBlock eventBlock) {
         // Логика компиляции здесь. Она просто следует по `nextBlock` и `children` связям,
-        // которые уже установил AutoConnectionManager.
+        // которые уже установил BlockLinker.
         
         // ВАЖНО: Мы не перестраиваем связи здесь. Мы им доверяем.
-        // AutoConnectionManager отвечает за структуру, а компилятор - за ее чтение.
+        // BlockLinker отвечает за структуру, а компилятор - за ее чтение.
         
         return new CodeScript(eventBlock); // Для простоты пока создаем скрипт только с корневым блоком
     }
@@ -144,7 +145,7 @@ public class ScriptCompiler implements Listener {
             int scriptCount = 0;
             int errorCount = 0;
             
-            for (Map.Entry<Location, CodeBlock> entry : connectionManager.getWorldBlocks(world).entrySet()) {
+            for (Map.Entry<Location, CodeBlock> entry : blockLinker.getWorldBlocks(world).entrySet()) {
                 CodeBlock block = entry.getValue();
                 if (isEventBlock(block)) {
                     try {
