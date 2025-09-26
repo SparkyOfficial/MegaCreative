@@ -131,7 +131,7 @@ public class ParameterSelectorGUI implements Listener {
      */
     public void open() {
         // Регистрируем GUI в централизованной системе
-        plugin.getGuiManager().registerGUI(player, new GUIManager.ManagedGUIInterface() {
+        plugin.getServiceRegistry().getGuiManager().registerGUI(player, new GUIManager.ManagedGUIInterface() {
             @Override
             public void onInventoryClick(InventoryClickEvent event) {
                 handleInventoryClick(event);

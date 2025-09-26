@@ -62,7 +62,7 @@ public class ActionParameterGUI implements GUIManager.ManagedGUIInterface {
         this.player = player;
         this.blockLocation = blockLocation;
         this.actionId = actionId;
-        this.guiManager = plugin.getGuiManager();
+        this.guiManager = plugin.getServiceRegistry().getGuiManager();
         this.blockConfigService = plugin.getServiceRegistry().getBlockConfigService();
         
         // Create inventory with appropriate size (54 slots for double chest GUI)
@@ -322,7 +322,7 @@ public class ActionParameterGUI implements GUIManager.ManagedGUIInterface {
      * Loads existing parameters from the code block into the GUI
      */
     private void loadExistingParameters() {
-        BlockPlacementHandler placementHandler = plugin.getBlockPlacementHandler();
+        BlockPlacementHandler placementHandler = plugin.getServiceRegistry().getBlockPlacementHandler();
         if (placementHandler == null) return;
         
         CodeBlock codeBlock = placementHandler.getCodeBlock(blockLocation);
@@ -349,7 +349,7 @@ public class ActionParameterGUI implements GUIManager.ManagedGUIInterface {
      * 🎆 ENHANCED: With validation feedback
      */
     private void saveParameters() {
-        BlockPlacementHandler placementHandler = plugin.getBlockPlacementHandler();
+        BlockPlacementHandler placementHandler = plugin.getServiceRegistry().getBlockPlacementHandler();
         if (placementHandler == null) return;
         
         CodeBlock codeBlock = placementHandler.getCodeBlock(blockLocation);
@@ -447,9 +447,9 @@ public class ActionParameterGUI implements GUIManager.ManagedGUIInterface {
         hasUnsavedChanges = false;
         
         // Save the world to persist changes
-        var creativeWorld = plugin.getWorldManager().findCreativeWorldByBukkit(player.getWorld());
+        var creativeWorld = plugin.getServiceRegistry().getWorldManager().findCreativeWorldByBukkit(player.getWorld());
         if (creativeWorld != null) {
-            plugin.getWorldManager().saveWorld(creativeWorld);
+            plugin.getServiceRegistry().getWorldManager().saveWorld(creativeWorld);
         }
     }
     

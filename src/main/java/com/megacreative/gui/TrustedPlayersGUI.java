@@ -52,7 +52,7 @@ public class TrustedPlayersGUI implements GUIManager.ManagedGUIInterface {
     public TrustedPlayersGUI(MegaCreative plugin, Player player) {
         this.plugin = plugin;
         this.player = player;
-        this.guiManager = plugin.getGuiManager();
+        this.guiManager = plugin.getServiceRegistry().getGuiManager();
         this.inventory = Bukkit.createInventory(null, 54, "§8Управление доверенными игроками");
         setupGUI();
     }
@@ -101,7 +101,7 @@ public class TrustedPlayersGUI implements GUIManager.ManagedGUIInterface {
      * Zeigt die Liste der vertrauenswürdigen Spieler an
      */
     private void displayTrustedPlayers() {
-        List<TrustedPlayer> allTrusted = plugin.getTrustedPlayerManager().getAllTrustedPlayers();
+        List<TrustedPlayer> allTrusted = plugin.getServiceRegistry().getTrustedPlayerManager().getAllTrustedPlayers();
         
         if (allTrusted.isEmpty()) {
             inventory.setItem(31, createItem(Material.BARRIER, "§cНет доверенных игроков", 

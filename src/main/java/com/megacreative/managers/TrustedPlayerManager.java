@@ -308,7 +308,7 @@ public class TrustedPlayerManager implements ITrustedPlayerManager {
         for (Map.Entry<UUID, Map<UUID, TrustedPlayer>> entry : worldTrustedPlayers.entrySet()) {
             if (entry.getValue() != null && entry.getValue().containsKey(playerId)) {
                 // Convert UUID to string for getWorld method
-                CreativeWorld world = plugin.getWorldManager().getWorld(entry.getKey().toString());
+                CreativeWorld world = plugin.getServiceRegistry().getWorldManager().getWorld(entry.getKey().toString());
                 if (world != null) {
                     trustedWorlds.add(world);
                 }

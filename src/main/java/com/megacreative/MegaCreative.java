@@ -6,7 +6,12 @@ import com.megacreative.core.CommandRegistry;
 import com.megacreative.exceptions.ConfigurationException;
 import com.megacreative.config.ConfigurationValidator;
 import com.megacreative.interfaces.IWorldManager;
-import com.megacreative.coding.events.PlayerEventsListener;
+import com.megacreative.coding.ScriptTriggerManager;
+import com.megacreative.listeners.BukkitPlayerJoinListener;
+import com.megacreative.listeners.BukkitPlayerMoveListener;
+import com.megacreative.listeners.BukkitPlayerChatListener;
+import com.megacreative.listeners.BukkitBlockPlaceListener;
+import com.megacreative.listeners.BukkitBlockBreakListener;
 import org.bukkit.plugin.java.JavaPlugin;
 import org.bukkit.scheduler.BukkitRunnable;
 import org.bukkit.scheduler.BukkitTask;
@@ -138,11 +143,7 @@ public class MegaCreative extends JavaPlugin {
             serviceRegistry.initializeAdditionalServices();
             
             // Now that worlds are loaded, rebuild event handler maps
-            PlayerEventsListener playerEventsListener = serviceRegistry.getPlayerEventsListener();
-            if (playerEventsListener != null) {
-                playerEventsListener.rebuildEventHandlerMaps();
-                playerEventsListener.initialize();
-            }
+            // PlayerEventsListener is deprecated, we're using ScriptTriggerManager instead
         } catch (Exception e) {
             getLogger().log(Level.SEVERE, "Error loading worlds", e);
         }
@@ -158,6 +159,16 @@ public class MegaCreative extends JavaPlugin {
             getServer().getPluginManager().registerEvents(serviceRegistry.getBlockHierarchyManager(), this);
             getServer().getPluginManager().registerEvents(serviceRegistry.getWorldCodeRestorer(), this);
             getServer().getPluginManager().registerEvents(serviceRegistry.getCodeBlockSignManager(), this);
+            
+            // Register new Bukkit listeners for clean event bus
+            getServer().getPluginManager().registerEvents(new BukkitPlayerJoinListener(this), this);
+            getServer().getPluginManager().registerEvents(new BukkitPlayerMoveListener(this), this);
+            getServer().getPluginManager().registerEvents(new BukkitPlayerChatListener(this), this);
+            getServer().getPluginManager().registerEvents(new BukkitBlockPlaceListener(this), this);
+            getServer().getPluginManager().registerEvents(new BukkitBlockBreakListener(this), this);
+            
+            // Register ScriptTriggerManager to listen to our custom events
+            getServer().getPluginManager().registerEvents(serviceRegistry.getScriptTriggerManager(), this);
         }
     }
     
@@ -176,16 +187,11 @@ public class MegaCreative extends JavaPlugin {
             @Override
             public void run() {
                 // Trigger onTick event for all creative worlds
-                PlayerEventsListener listener = serviceRegistry.getPlayerEventsListener();
-                if (listener != null) {
-                    listener.onTick();
-                    
+                // We're not using PlayerEventsListener anymore, we'll implement tick handling differently
+                tpsCheckCounter++;
+                if (tpsCheckCounter >= 20) {
                     // Check TPS every 20 ticks (1 second)
-                    tpsCheckCounter++;
-                    if (tpsCheckCounter >= 20) {
-                        listener.onServerTPS();
-                        tpsCheckCounter = 0;
-                    }
+                    tpsCheckCounter = 0;
                 }
             }
         }.runTaskTimer(this, 1L, 1L); // Run every tick

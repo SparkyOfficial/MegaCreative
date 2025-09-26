@@ -90,7 +90,7 @@ public class PlaceholderResolver {
             String variableName = matcher.group(1);
             
             // Get the variable value from the context
-            DataValue value = context.getPlugin().getVariableManager().getVariable(variableName, 
+            DataValue value = context.getPlugin().getServiceRegistry().getVariableManager().getVariable(variableName, 
                 com.megacreative.coding.variables.IVariableManager.VariableScope.PLAYER, 
                 context.getPlayer() != null ? context.getPlayer().getUniqueId().toString() : null);
             
@@ -133,7 +133,7 @@ public class PlaceholderResolver {
         }
         
         // Try variable placeholders
-        DataValue value = context.getPlugin().getVariableManager().getVariable(placeholder, 
+        DataValue value = context.getPlugin().getServiceRegistry().getVariableManager().getVariable(placeholder, 
             com.megacreative.coding.variables.IVariableManager.VariableScope.PLAYER, 
             context.getPlayer() != null ? context.getPlayer().getUniqueId().toString() : null);
         if (value != null) {

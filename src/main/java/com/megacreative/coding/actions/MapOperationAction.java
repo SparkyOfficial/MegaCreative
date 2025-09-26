@@ -33,7 +33,7 @@ public class MapOperationAction implements BlockAction {
             String operation = block.getParameter("operation").asString();
             
             // Получаем менеджер переменных
-            var variableManager = context.getPlugin().getVariableManager();
+            var variableManager = context.getPlugin().getServiceRegistry().getVariableManager();
             
             // Получаем или создаем карту
             DataValue mapValue = variableManager.getVariable(mapName, IVariableManager.VariableScope.PLAYER, player.getUniqueId().toString());

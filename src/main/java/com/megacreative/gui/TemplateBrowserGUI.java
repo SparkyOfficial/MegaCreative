@@ -51,7 +51,7 @@ public class TemplateBrowserGUI implements GUIManager.ManagedGUIInterface {
     public TemplateBrowserGUI(MegaCreative plugin, Player player) {
         this.plugin = plugin;
         this.player = player;
-        this.guiManager = plugin.getGuiManager();
+        this.guiManager = plugin.getServiceRegistry().getGuiManager();
         this.inventory = Bukkit.createInventory(null, 54, "§8§lБиблиотека шаблонов");
         
         setupInventory();
@@ -78,7 +78,7 @@ public class TemplateBrowserGUI implements GUIManager.ManagedGUIInterface {
         }
         
         // Получение шаблонов
-        List<CodeScript> templates = plugin.getTemplateManager().getTemplates();
+        List<CodeScript> templates = plugin.getServiceRegistry().getTemplateManager().getTemplates();
         int startIndex = page * 28;
         int endIndex = Math.min(startIndex + 28, templates.size());
         
@@ -110,7 +110,7 @@ public class TemplateBrowserGUI implements GUIManager.ManagedGUIInterface {
         if (page > 0) {
             ItemStack prevButton = new ItemStack(Material.ARROW);
             ItemMeta prevMeta = prevButton.getItemMeta();
-            prevMeta.setDisplayName("§a§lПредыдущая страница");
+            prevMeta.setDisplayName("§a§лПредыдущая страница");
             prevButton.setItemMeta(prevMeta);
             inventory.setItem(45, prevButton);
         }
@@ -118,7 +118,7 @@ public class TemplateBrowserGUI implements GUIManager.ManagedGUIInterface {
         if (endIndex < templates.size()) {
             ItemStack nextButton = new ItemStack(Material.ARROW);
             ItemMeta nextMeta = nextButton.getItemMeta();
-            nextMeta.setDisplayName("§a§lСледующая страница");
+            nextMeta.setDisplayName("§a§лСледующая страница");
             nextButton.setItemMeta(nextMeta);
             inventory.setItem(53, nextButton);
         }
@@ -126,7 +126,7 @@ public class TemplateBrowserGUI implements GUIManager.ManagedGUIInterface {
         // Кнопка назад
         ItemStack backButton = new ItemStack(Material.BARRIER);
         ItemMeta backMeta = backButton.getItemMeta();
-        backMeta.setDisplayName("§c§lНазад");
+        backMeta.setDisplayName("§c§лНазад");
         backButton.setItemMeta(backMeta);
         inventory.setItem(46, backButton);
     }
@@ -229,7 +229,7 @@ public class TemplateBrowserGUI implements GUIManager.ManagedGUIInterface {
         }
         
         // Клик по шаблону
-        List<CodeScript> templates = plugin.getTemplateManager().getTemplates();
+        List<CodeScript> templates = plugin.getServiceRegistry().getTemplateManager().getTemplates();
         int slot = event.getSlot();
         int templateIndex = getTemplateIndexFromSlot(slot);
         

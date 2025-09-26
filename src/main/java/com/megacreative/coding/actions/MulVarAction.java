@@ -55,7 +55,7 @@ public class MulVarAction implements BlockAction {
             }
 
             // Get the actual variable value from the VariableManager
-            VariableManager variableManager = context.getPlugin().getVariableManager();
+            VariableManager variableManager = context.getPlugin().getServiceRegistry().getVariableManager();
             Player player = context.getPlayer();
             
             // Try to get the variable from different scopes

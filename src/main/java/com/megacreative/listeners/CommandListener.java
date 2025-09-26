@@ -55,7 +55,7 @@ public class CommandListener implements Listener {
         String command = message.substring(1); // Remove the leading '/'
         
         // Find the creative world
-        CreativeWorld creativeWorld = plugin.getWorldManager().findCreativeWorldByBukkit(player.getWorld());
+        CreativeWorld creativeWorld = plugin.getServiceRegistry().getWorldManager().findCreativeWorldByBukkit(player.getWorld());
         if (creativeWorld == null) return;
         
         // Check if player can code in this world

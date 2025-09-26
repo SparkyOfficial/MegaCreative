@@ -74,9 +74,9 @@ public class PredefinedTemplateManager {
     public void registerTemplates() {
         for (CodeScript template : predefinedTemplates) {
             // Check if template already exists to avoid duplicates
-            CodeScript existing = plugin.getTemplateManager().getTemplate(template.getName());
+            CodeScript existing = plugin.getServiceRegistry().getTemplateManager().getTemplate(template.getName());
             if (existing == null) {
-                plugin.getTemplateManager().saveTemplate(template);
+                plugin.getServiceRegistry().getTemplateManager().saveTemplate(template);
                 logger.info("Registered predefined template: " + template.getName());
             }
         }

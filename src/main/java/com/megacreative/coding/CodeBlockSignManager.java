@@ -1,7 +1,7 @@
 package com.megacreative.coding;
 
-import com.megacreative.coding.events.CodeBlockPlacedEvent;
-import com.megacreative.coding.events.CodeBlockBrokenEvent;
+import com.megacreative.events.CodeBlockPlacedEvent;
+import com.megacreative.events.CodeBlockBrokenEvent;
 import com.megacreative.services.BlockConfigService;
 import org.bukkit.Location;
 import org.bukkit.Material;

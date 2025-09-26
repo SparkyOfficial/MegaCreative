@@ -83,7 +83,7 @@ public class SubVarAction implements BlockAction {
      * Updates the variable value in the appropriate scope
      */
     private ExecutionResult updateVariableValue(ExecutionContext context, String varName, double valueToSubtract) {
-        VariableManager variableManager = context.getPlugin().getVariableManager();
+        VariableManager variableManager = context.getPlugin().getServiceRegistry().getVariableManager();
         Player player = context.getPlayer();
 
         // Find the variable in different scopes

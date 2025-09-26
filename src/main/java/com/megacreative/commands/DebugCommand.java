@@ -75,7 +75,7 @@ public class DebugCommand implements CommandExecutor, TabCompleter {
 
         if (args.length == 0) {
             // Toggle debug session
-            VisualDebugger debugger = plugin.getScriptDebugger();
+            VisualDebugger debugger = plugin.getServiceRegistry().getScriptDebugger();
             if (debugger.isDebugging(player)) {
                 debugger.stopDebugSession(player);
                 player.sendMessage("§c✖ Отладка остановлена");
@@ -87,7 +87,7 @@ public class DebugCommand implements CommandExecutor, TabCompleter {
         }
 
         String subCommand = args[0].toLowerCase();
-        VisualDebugger debugger = plugin.getScriptDebugger();
+        VisualDebugger debugger = plugin.getServiceRegistry().getScriptDebugger();
 
         switch (subCommand) {
             case "on":
@@ -165,7 +165,7 @@ public class DebugCommand implements CommandExecutor, TabCompleter {
         }
 
         String action = args[1].toLowerCase();
-        VisualDebugger debugger = plugin.getScriptDebugger();
+        VisualDebugger debugger = plugin.getServiceRegistry().getScriptDebugger();
         
         switch (action) {
             case "set":
@@ -286,8 +286,8 @@ public class DebugCommand implements CommandExecutor, TabCompleter {
                     }
                     
                     // Add null check for plugin and scriptDebugger
-                    if (plugin != null && plugin.getScriptDebugger() != null) {
-                        plugin.getScriptDebugger().watchVariable(player, variableName, expression);
+                    if (plugin != null && plugin.getServiceRegistry().getScriptDebugger() != null) {
+                        plugin.getServiceRegistry().getScriptDebugger().watchVariable(player, variableName, expression);
                     } else {
                         player.sendMessage("§cDebug system not available");
                     }
@@ -299,14 +299,14 @@ public class DebugCommand implements CommandExecutor, TabCompleter {
             case "remove":
                 if (args.length >= 3) {
                     String variableName = args[2];
-                    plugin.getScriptDebugger().unwatchVariable(player, variableName);
+                    plugin.getServiceRegistry().getScriptDebugger().unwatchVariable(player, variableName);
                 } else {
                     player.sendMessage("§cИспользование: /debug watch remove <variable>");
                 }
                 break;
                 
             case "list":
-                plugin.getScriptDebugger().showWatchedVariables(player);
+                plugin.getServiceRegistry().getScriptDebugger().showWatchedVariables(player);
                 break;
                 
             default:
@@ -348,15 +348,15 @@ public class DebugCommand implements CommandExecutor, TabCompleter {
                         return;
                     }
                 }
-                plugin.getScriptDebugger().startTracing(player, maxSteps);
+                plugin.getServiceRegistry().getScriptDebugger().startTracing(player, maxSteps);
                 break;
                 
             case "stop":
-                plugin.getScriptDebugger().stopTracing(player);
+                plugin.getServiceRegistry().getScriptDebugger().stopTracing(player);
                 break;
                 
             case "show":
-                plugin.getScriptDebugger().showTrace(player);
+                plugin.getServiceRegistry().getScriptDebugger().showTrace(player);
                 break;
                 
             default:
@@ -382,7 +382,7 @@ public class DebugCommand implements CommandExecutor, TabCompleter {
         }
 
         String action = args[1].toLowerCase();
-        VisualDebugger debugger = plugin.getScriptDebugger();
+        VisualDebugger debugger = plugin.getServiceRegistry().getScriptDebugger();
         
         switch (action) {
             case "start":
@@ -432,11 +432,11 @@ public class DebugCommand implements CommandExecutor, TabCompleter {
                 break;
                 
             case "stop":
-                plugin.getScriptDebugger().stopTracing(player);
+                plugin.getServiceRegistry().getScriptDebugger().stopTracing(player);
                 break;
                 
             case "report":
-                plugin.getScriptDebugger().showPerformanceReport(player);
+                plugin.getServiceRegistry().getScriptDebugger().showPerformanceReport(player);
                 break;
                 
             default:
@@ -511,10 +511,10 @@ public class DebugCommand implements CommandExecutor, TabCompleter {
         }
         
         if (enable) {
-            plugin.getScriptDebugger().startVisualization(player, vizMode);
+            plugin.getServiceRegistry().getScriptDebugger().startVisualization(player, vizMode);
             player.sendMessage("§aВизуализация " + mode + " включена");
         } else {
-            plugin.getScriptDebugger().stopVisualization(player);
+            plugin.getServiceRegistry().getScriptDebugger().stopVisualization(player);
             player.sendMessage("§cВизуализация отключена");
         }
     }

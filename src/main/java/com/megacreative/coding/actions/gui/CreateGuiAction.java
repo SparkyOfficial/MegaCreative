@@ -49,7 +49,7 @@ public class CreateGuiAction implements BlockAction {
     @Override
     public ExecutionResult execute(CodeBlock block, ExecutionContext context) {
         Player player = context.getPlayer();
-        VariableManager variableManager = context.getPlugin().getVariableManager();
+        VariableManager variableManager = context.getPlugin().getServiceRegistry().getVariableManager();
         
         if (player == null || variableManager == null) {
             return ExecutionResult.error("No player or variable manager found in execution context");

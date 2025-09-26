@@ -43,7 +43,7 @@ public class InteractiveGUIManager implements Listener {
     
     public InteractiveGUIManager(MegaCreative plugin) {
         this.plugin = plugin;
-        this.guiManager = plugin.getGuiManager();
+        this.guiManager = plugin.getServiceRegistry().getGuiManager();
         
         // Register default interactive elements
         registerDefaultElements();

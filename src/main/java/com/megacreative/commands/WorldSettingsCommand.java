@@ -108,7 +108,7 @@ public class WorldSettingsCommand implements CommandExecutor {
                                   .replace("-code", "")    // New dev world suffix
                                   .replace("-world", "")   // New play world suffix  
                                   .replace("_dev", "");    // Legacy compatibility
-            return plugin.getWorldManager().getWorld(id);
+            return plugin.getServiceRegistry().getWorldManager().getWorld(id);
         }
         return null;
     }

@@ -53,18 +53,18 @@ public class PlayerQuitListener implements Listener {
         }
         
         // Убираем игрока из менеджера скорбордов
-        plugin.getScoreboardManager().removeScoreboard(event.getPlayer());
+        plugin.getServiceRegistry().getScoreboardManager().removeScoreboard(event.getPlayer());
         
         // Сохраняем данные игрока
-        plugin.getVariableManager().savePersistentData();
+        plugin.getServiceRegistry().getVariableManager().savePersistentData();
         
         // Удаление игрока из онлайна всех миров
-        plugin.getWorldManager().getAllPublicWorlds().forEach(world -> 
+        plugin.getServiceRegistry().getWorldManager().getAllPublicWorlds().forEach(world -> 
             world.removeOnlinePlayer(event.getPlayer().getUniqueId())
         );
         
         // Также проверяем приватные миры игрока
-        plugin.getWorldManager().getPlayerWorlds(event.getPlayer()).forEach(world -> 
+        plugin.getServiceRegistry().getWorldManager().getPlayerWorlds(event.getPlayer()).forEach(world -> 
             world.removeOnlinePlayer(event.getPlayer().getUniqueId())
         );
         
@@ -76,6 +76,6 @@ public class PlayerQuitListener implements Listener {
         }
         
         // Очищаем данные из обработчика блоков
-        // plugin.getBlockPlacementHandler().cleanUpPlayerData(event.getPlayer().getUniqueId());
+        // plugin.getServiceRegistry().getBlockPlacementHandler().cleanUpPlayerData(event.getPlayer().getUniqueId());
     }
 }

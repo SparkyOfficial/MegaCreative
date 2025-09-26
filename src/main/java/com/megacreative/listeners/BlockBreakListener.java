@@ -52,7 +52,7 @@ public class BlockBreakListener implements Listener {
         if (player == null) return;
         
         // Find the creative world
-        CreativeWorld creativeWorld = plugin.getWorldManager().findCreativeWorldByBukkit(event.getBlock().getWorld());
+        CreativeWorld creativeWorld = plugin.getServiceRegistry().getWorldManager().findCreativeWorldByBukkit(event.getBlock().getWorld());
         if (creativeWorld == null) return;
         
         // Check if player can code in this world

@@ -68,8 +68,8 @@ public abstract class AbstractParameterEditor implements GUIManager.ManagedGUIIn
         player.openInventory(inventory);
         
         // Register the GUI in GUIManager to track clicks
-        if (plugin.getGuiManager() != null) {
-            plugin.getGuiManager().registerGUI(player, this, inventory);
+        if (plugin.getServiceRegistry().getGuiManager() != null) {
+            plugin.getServiceRegistry().getGuiManager().registerGUI(player, this, inventory);
         }
     }
     

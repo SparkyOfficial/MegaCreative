@@ -88,20 +88,20 @@ public class PlayCommand implements CommandExecutor {
         player.getInventory().clear();
         
         // Check if world manager is available
-        if (plugin.getWorldManager() == null) {
+        if (plugin.getServiceRegistry().getWorldManager() == null) {
             player.sendMessage("§cWorld manager not available!");
             plugin.getLogger().severe("World manager is null in PlayCommand!");
             return true;
         }
         
         // Find the creative world
-        CreativeWorld creativeWorld = plugin.getWorldManager().findCreativeWorldByBukkit(player.getWorld());
+        CreativeWorld creativeWorld = plugin.getServiceRegistry().getWorldManager().findCreativeWorldByBukkit(player.getWorld());
         
         // 🔧 FIX: Enhanced world finding logic with better pattern matching
         if (creativeWorld == null) {
             player.sendMessage("§cYou are not in a MegaCreative world!");
             player.sendMessage("§7Current world: " + player.getWorld().getName());
-            player.sendMessage("§7Available worlds: " + plugin.getWorldManager().getCreativeWorlds().size());
+            player.sendMessage("§7Available worlds: " + plugin.getServiceRegistry().getWorldManager().getCreativeWorlds().size());
             
             // Try multiple pattern matching approaches
             String worldName = player.getWorld().getName();
@@ -139,7 +139,7 @@ public class PlayCommand implements CommandExecutor {
                 }
                 
                 if (potentialId != null) {
-                    CreativeWorld foundWorld = plugin.getWorldManager().getWorld(potentialId);
+                    CreativeWorld foundWorld = plugin.getServiceRegistry().getWorldManager().getWorld(potentialId);
                     if (foundWorld != null) {
                         creativeWorld = foundWorld;
                         // player.sendMessage("§aFound world by extracted ID: " + potentialId);
@@ -149,7 +149,7 @@ public class PlayCommand implements CommandExecutor {
             
             // If still not found, try all available worlds
             if (creativeWorld == null) {
-                for (CreativeWorld world : plugin.getWorldManager().getCreativeWorlds()) {
+                for (CreativeWorld world : plugin.getServiceRegistry().getWorldManager().getCreativeWorlds()) {
                     if (worldName.contains(world.getId()) || worldName.contains(world.getName().toLowerCase().replace(" ", ""))) {
                         creativeWorld = world;
                         // player.sendMessage("§aFound world by partial name matching: " + world.getName());
@@ -166,8 +166,8 @@ public class PlayCommand implements CommandExecutor {
         }
         
         // Save current world's code blocks before switching
-        if (plugin.getBlockPlacementHandler() != null) {
-            plugin.getBlockPlacementHandler().saveAllCodeBlocksInWorld(player.getWorld());
+        if (plugin.getServiceRegistry().getBlockPlacementHandler() != null) {
+            plugin.getServiceRegistry().getBlockPlacementHandler().saveAllCodeBlocksInWorld(player.getWorld());
         }
         
         World currentWorld = player.getWorld();
@@ -189,7 +189,7 @@ public class PlayCommand implements CommandExecutor {
         }
         
         // Save player inventory before switching
-        if (plugin.getBlockPlacementHandler().isInDevWorld(player)) {
+        if (plugin.getServiceRegistry().getBlockPlacementHandler().isInDevWorld(player)) {
             plugin.getServiceRegistry().getDevInventoryManager().savePlayerInventory(player);
         }
         

@@ -50,7 +50,7 @@ public class ImportPredefinedTemplateCommand implements CommandExecutor {
         }
         
         // Save the template to user's library
-        plugin.getTemplateManager().saveTemplate(template);
+        plugin.getServiceRegistry().getTemplateManager().saveTemplate(template);
         
         player.sendMessage("§aSuccessfully imported template: " + template.getName());
         player.sendMessage("§7You can now use this template in your scripts!");

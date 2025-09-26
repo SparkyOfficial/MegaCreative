@@ -60,7 +60,7 @@ public class HandleEventAction implements BlockAction {
     
     private Player validateContext(ExecutionContext context) {
         Player player = context.getPlayer();
-        if (player == null || context.getCurrentBlock() == null || context.getPlugin().getVariableManager() == null) {
+        if (player == null || context.getCurrentBlock() == null || context.getPlugin().getServiceRegistry().getVariableManager() == null) {
             throw new IllegalStateException("Invalid execution context");
         }
         return player;

@@ -77,7 +77,7 @@ public class EntityEventBlockGUI implements GUIManager.ManagedGUIInterface {
         this.player = player;
         this.blockLocation = blockLocation;
         this.blockMaterial = blockMaterial;
-        this.guiManager = plugin.getGuiManager();
+        this.guiManager = plugin.getServiceRegistry().getGuiManager();
         
         // Add null check for service registry
         if (plugin != null && plugin.getServiceRegistry() != null) {
@@ -450,7 +450,7 @@ public class EntityEventBlockGUI implements GUIManager.ManagedGUIInterface {
      */
     private void selectEvent(String eventId) {
         // Get the code block
-        BlockPlacementHandler placementHandler = plugin.getBlockPlacementHandler();
+        BlockPlacementHandler placementHandler = plugin.getServiceRegistry().getBlockPlacementHandler();
         if (placementHandler == null) {
             player.sendMessage("§cОшибка: Не удалось получить обработчик блоков");
             return;
@@ -466,9 +466,9 @@ public class EntityEventBlockGUI implements GUIManager.ManagedGUIInterface {
         codeBlock.setAction(eventId);
         
         // Save the world
-        var creativeWorld = plugin.getWorldManager().findCreativeWorldByBukkit(player.getWorld());
+        var creativeWorld = plugin.getServiceRegistry().getWorldManager().findCreativeWorldByBukkit(player.getWorld());
         if (creativeWorld != null) {
-            plugin.getWorldManager().saveWorld(creativeWorld);
+            plugin.getServiceRegistry().getWorldManager().saveWorld(creativeWorld);
         }
         
         // Notify player

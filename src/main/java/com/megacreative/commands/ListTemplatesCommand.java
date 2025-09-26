@@ -28,7 +28,7 @@ public class ListTemplatesCommand implements CommandExecutor {
             return true;
         }
         
-        List<CodeScript> templates = plugin.getTemplateManager().getTemplates();
+        List<CodeScript> templates = plugin.getServiceRegistry().getTemplateManager().getTemplates();
         
         if (templates.isEmpty()) {
             player.sendMessage("§eNo templates available.");

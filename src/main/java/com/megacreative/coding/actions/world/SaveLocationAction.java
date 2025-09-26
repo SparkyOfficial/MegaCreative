@@ -49,7 +49,7 @@ public class SaveLocationAction implements BlockAction {
 
             // Save the location using the VariableManager
             Location location = player.getLocation();
-            VariableManager variableManager = context.getPlugin().getVariableManager();
+            VariableManager variableManager = context.getPlugin().getServiceRegistry().getVariableManager();
             variableManager.setPlayerVariable(player.getUniqueId(), locName, DataValue.of(location));
 
             return ExecutionResult.success("Location saved successfully");

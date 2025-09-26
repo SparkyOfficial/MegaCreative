@@ -52,7 +52,7 @@ public class CreateListAction implements BlockAction {
             ListValue listValue = new ListValue(initialValues);
             
             // Store the list in the variable manager
-            VariableManager variableManager = context.getPlugin().getVariableManager();
+            VariableManager variableManager = context.getPlugin().getServiceRegistry().getVariableManager();
             if (variableManager != null) {
                 variableManager.setVariable(listName, listValue, VariableScope.LOCAL, context.getScriptId());
             }

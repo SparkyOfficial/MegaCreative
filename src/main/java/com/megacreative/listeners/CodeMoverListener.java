@@ -75,7 +75,7 @@ public class CodeMoverListener implements Listener {
             return;
         }
         
-        BlockPlacementHandler placementHandler = plugin.getBlockPlacementHandler();
+        BlockPlacementHandler placementHandler = plugin.getServiceRegistry().getBlockPlacementHandler();
         if (placementHandler == null) {
             player.sendMessage("§cОшибка: Система размещения блоков недоступна!");
             return;
@@ -126,7 +126,7 @@ public class CodeMoverListener implements Listener {
             return;
         }
         
-        BlockPlacementHandler placementHandler = plugin.getBlockPlacementHandler();
+        BlockPlacementHandler placementHandler = plugin.getServiceRegistry().getBlockPlacementHandler();
         if (placementHandler == null) {
             player.sendMessage("§cОшибка: Система размещения блоков недоступна!");
             return;

@@ -42,38 +42,38 @@ public class VisualizeCommand implements CommandExecutor {
                 break;
                 
             case "standard":
-                plugin.getScriptDebugger().startVisualization(player, AdvancedVisualDebugger.VisualizationMode.STANDARD);
+                plugin.getServiceRegistry().getScriptDebugger().startVisualization(player, AdvancedVisualDebugger.VisualizationMode.STANDARD);
                 player.sendMessage("§aStandard visualization enabled!");
                 player.sendMessage("§7Blocks will be highlighted with green particles during execution.");
                 break;
                 
             case "step":
-                plugin.getScriptDebugger().startVisualization(player, AdvancedVisualDebugger.VisualizationMode.STEP_BY_STEP);
+                plugin.getServiceRegistry().getScriptDebugger().startVisualization(player, AdvancedVisualDebugger.VisualizationMode.STEP_BY_STEP);
                 player.sendMessage("§aStep-by-step visualization enabled!");
                 player.sendMessage("§7Blocks will be highlighted with blue particles during execution.");
                 break;
                 
             case "performance":
-                plugin.getScriptDebugger().startVisualization(player, AdvancedVisualDebugger.VisualizationMode.PERFORMANCE);
+                plugin.getServiceRegistry().getScriptDebugger().startVisualization(player, AdvancedVisualDebugger.VisualizationMode.PERFORMANCE);
                 player.sendMessage("§aPerformance visualization enabled!");
                 player.sendMessage("§7Blocks will be highlighted with color-coded particles based on execution time.");
                 break;
                 
             case "memory":
-                plugin.getScriptDebugger().startVisualization(player, AdvancedVisualDebugger.VisualizationMode.MEMORY);
+                plugin.getServiceRegistry().getScriptDebugger().startVisualization(player, AdvancedVisualDebugger.VisualizationMode.MEMORY);
                 player.sendMessage("§aMemory visualization enabled!");
                 player.sendMessage("§7Blocks will be highlighted with orange particles during execution.");
                 break;
                 
             case "variables":
-                plugin.getScriptDebugger().startVisualization(player, AdvancedVisualDebugger.VisualizationMode.VARIABLES);
+                plugin.getServiceRegistry().getScriptDebugger().startVisualization(player, AdvancedVisualDebugger.VisualizationMode.VARIABLES);
                 player.sendMessage("§aVariables visualization enabled!");
                 player.sendMessage("§7Blocks will be highlighted with purple particles during execution.");
                 break;
                 
             case "off":
             case "disable":
-                plugin.getScriptDebugger().stopVisualization(player);
+                plugin.getServiceRegistry().getScriptDebugger().stopVisualization(player);
                 player.sendMessage("§cVisualization disabled!");
                 break;
                 

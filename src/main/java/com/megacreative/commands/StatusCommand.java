@@ -98,7 +98,7 @@ public class StatusCommand implements CommandExecutor {
             if (registry != null) {
                 int worlds = 0;
                 try {
-                    var wm = plugin.getWorldManager();
+                    var wm = plugin.getServiceRegistry().getWorldManager();
                     if (wm != null && wm.getCreativeWorlds() != null) {
                         worlds = wm.getCreativeWorlds().size();
                     }
@@ -148,7 +148,7 @@ public class StatusCommand implements CommandExecutor {
                                   .replace("-code", "")    // New dev world suffix
                                   .replace("-world", "")   // New play world suffix  
                                   .replace("_dev", "");    // Legacy compatibility
-            return plugin.getWorldManager().getWorld(id);
+            return plugin.getServiceRegistry().getWorldManager().getWorld(id);
         }
         return null;
     }

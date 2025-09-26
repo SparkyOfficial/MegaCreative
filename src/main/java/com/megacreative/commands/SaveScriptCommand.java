@@ -84,14 +84,14 @@ public class SaveScriptCommand implements CommandExecutor {
         boolean isTemplate = args.length > 1 && args[1].equalsIgnoreCase("template");
         
         // Проверяем, что игрок находится в мире разработки
-        CreativeWorld creativeWorld = plugin.getWorldManager().findCreativeWorldByBukkit(player.getWorld());
+        CreativeWorld creativeWorld = plugin.getServiceRegistry().getWorldManager().findCreativeWorldByBukkit(player.getWorld());
         if (creativeWorld == null) {
             player.sendMessage("§cВы должны находиться в мире разработки!");
             return true;
         }
         
         // Получаем все блоки кода из мира
-        Map<Location, CodeBlock> blockCodeBlocks = plugin.getBlockPlacementHandler().getBlockCodeBlocks();
+        Map<Location, CodeBlock> blockCodeBlocks = plugin.getServiceRegistry().getBlockPlacementHandler().getBlockCodeBlocks();
         if (blockCodeBlocks.isEmpty()) {
             player.sendMessage("§cВ мире нет блоков кода для сохранения!");
             return true;
@@ -118,13 +118,13 @@ public class SaveScriptCommand implements CommandExecutor {
             // Сохраняем как публичный шаблон
             script.setTemplate(true);
             script.setAuthor(player.getName());
-            plugin.getTemplateManager().saveTemplate(script);
+            plugin.getServiceRegistry().getTemplateManager().saveTemplate(script);
             player.sendMessage("§a✓ Шаблон '" + scriptName + "' успешно сохранен как публичный!");
             player.sendMessage("§7Другие игроки смогут импортировать его через /templates");
         } else {
             // Сохраняем как обычный скрипт для мира
             creativeWorld.getScripts().add(script);
-            plugin.getWorldManager().saveWorld(creativeWorld);
+            plugin.getServiceRegistry().getWorldManager().saveWorld(creativeWorld);
             player.sendMessage("§a✓ Скрипт '" + scriptName + "' успешно сохранен!");
         }
         

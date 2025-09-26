@@ -67,7 +67,7 @@ public class WorkspaceCommand implements CommandExecutor {
         Player player = (Player) sender;
         
         // Check if player is in a creative world
-        CreativeWorld world = plugin.getWorldManager().findCreativeWorldByBukkit(player.getWorld());
+        CreativeWorld world = plugin.getServiceRegistry().getWorldManager().findCreativeWorldByBukkit(player.getWorld());
         if (world == null) {
             player.sendMessage("§cYou must be in a creative world to use the coding workspace!");
             return true;

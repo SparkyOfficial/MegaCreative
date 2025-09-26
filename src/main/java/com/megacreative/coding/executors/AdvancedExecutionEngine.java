@@ -259,7 +259,7 @@ public class AdvancedExecutionEngine {
             ExecutionContext context = new ExecutionContext.Builder()
                 .plugin(plugin)
                 .player(session.getPlayer())
-                .creativeWorld(plugin.getWorldManager().findCreativeWorldByBukkit(session.getPlayer().getWorld()))
+                .creativeWorld(plugin.getServiceRegistry().getWorldManager().findCreativeWorldByBukkit(session.getPlayer().getWorld()))
                 .currentBlock(session.getScript().getRootBlock())
                 .executionMode(session.getMode())
                 .priority(session.getPriority())

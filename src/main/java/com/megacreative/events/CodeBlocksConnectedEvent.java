@@ -1,4 +1,4 @@
-package com.megacreative.coding.events;
+package com.megacreative.events;
 
 import org.bukkit.Location;
 import org.bukkit.event.Event;

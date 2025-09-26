@@ -106,7 +106,7 @@ public class DevCommand implements CommandExecutor {
                     // Find current world and switch to its dev version
                     CreativeWorld currentWorld = findCreativeWorld(player.getWorld());
                     if (currentWorld != null && currentWorld.isPaired()) {
-                        plugin.getWorldManager().switchToDevWorld(player, currentWorld.getId());
+                        plugin.getServiceRegistry().getWorldManager().switchToDevWorld(player, currentWorld.getId());
                         return true;
                     }
                     // Fall through to normal dev mode creation
@@ -151,7 +151,7 @@ public class DevCommand implements CommandExecutor {
                             // Сохраняем мир асинхронно
                             Bukkit.getScheduler().runTaskAsynchronously(plugin, () -> {
                                 try {
-                                    plugin.getWorldManager().saveWorld(creativeWorld);
+                                    plugin.getServiceRegistry().getWorldManager().saveWorld(creativeWorld);
                                 } catch (Exception e) {
                                     plugin.getLogger().warning("Не удалось сохранить данные мира: " + e.getMessage());
                                     Bukkit.getScheduler().runTask(plugin, () -> 
@@ -366,7 +366,7 @@ public class DevCommand implements CommandExecutor {
                                       .replace("-code", "")    // New dev world suffix
                                       .replace("-world", "")   // New play world suffix  
                                       .replace("_dev", "");    // Legacy compatibility
-                return plugin.getWorldManager().getWorld(id);
+                return plugin.getServiceRegistry().getWorldManager().getWorld(id);
             }
         } catch (Exception e) {
             plugin.getLogger().warning("Ошибка поиска мира: " + e.getMessage());

@@ -51,15 +51,15 @@ public class PlayerJoinListener implements Listener {
         }
         
         // Загружаем данные игрока
-        plugin.getVariableManager().loadPersistentData();
+        plugin.getServiceRegistry().getVariableManager().loadPersistentData();
         
         // Устанавливаем скорборд и таб-лист
-        plugin.getScoreboardManager().setScoreboard(event.getPlayer());
+        plugin.getServiceRegistry().getScoreboardManager().setScoreboard(event.getPlayer());
         com.megacreative.utils.TabListManager.setTabList(event.getPlayer());
         
         // Выдача стартовых предметов через тик, чтобы инвентарь успел загрузиться
         Bukkit.getScheduler().runTaskLater(plugin, () -> {
-            plugin.getPlayerManager().giveStarterItems(event.getPlayer());
+            plugin.getServiceRegistry().getPlayerManager().giveStarterItems(event.getPlayer());
         }, 1L);
     }
 }

@@ -68,7 +68,7 @@ public class DeleteCommand implements CommandExecutor {
         }
         
         String worldId = args[0];
-        CreativeWorld world = plugin.getWorldManager().getWorld(worldId);
+        CreativeWorld world = plugin.getServiceRegistry().getWorldManager().getWorld(worldId);
         
         if (world == null) {
             player.sendMessage("§cМир с ID " + worldId + " не найден.");
@@ -89,7 +89,7 @@ public class DeleteCommand implements CommandExecutor {
             return true;
         }
         
-        plugin.getWorldManager().deleteWorld(worldId, player);
+        plugin.getServiceRegistry().getWorldManager().deleteWorld(worldId, player);
         // WorldManager сам отправит сообщение об успехе.
         return true;
     }

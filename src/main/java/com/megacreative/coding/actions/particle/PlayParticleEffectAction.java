@@ -65,7 +65,7 @@ public class PlayParticleEffectAction implements BlockAction {
         if (context == null || context.getPlayer() == null || 
             context.getCurrentBlock() == null || 
             context.getPlugin() == null ||
-            context.getPlugin().getVariableManager() == null) {
+            context.getPlugin().getServiceRegistry().getVariableManager() == null) {
             return null;
         }
         return context.getPlayer();

@@ -39,7 +39,7 @@ public class AsyncLoopControl implements BlockAction {
 
         if (player == null || block == null) return ExecutionResult.error("Player or block is null");
 
-        VariableManager variableManager = context.getPlugin().getVariableManager();
+        VariableManager variableManager = context.getPlugin().getServiceRegistry().getVariableManager();
         if (variableManager == null) return ExecutionResult.error("Variable manager not available");
         
         ParameterResolver resolver = new ParameterResolver(context);

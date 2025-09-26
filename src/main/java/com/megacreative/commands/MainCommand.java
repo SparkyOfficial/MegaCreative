@@ -78,7 +78,7 @@ public class MainCommand implements CommandExecutor {
                     player.sendMessage("§cУ вас нет прав на это действие!");
                     return true;
                 }
-                plugin.getConfigManager().loadConfig();
+                plugin.getServiceRegistry().getConfigManager().loadConfig();
                 player.sendMessage("§aКонфигурация перезагружена!");
             }
             case "info" -> sendInfo(player);
@@ -124,7 +124,7 @@ public class MainCommand implements CommandExecutor {
         player.sendMessage("§8§m                    §r §b§lMegaCreative §8§m                    ");
         player.sendMessage("§7Версия: §f1.0.0");
         player.sendMessage("§7Автор: §fMegaCreative Team");
-        player.sendMessage("§7Ваших миров: §f" + plugin.getWorldManager().getPlayerWorldCount(player) + "/5");
+        player.sendMessage("§7Ваших миров: §f" + plugin.getServiceRegistry().getWorldManager().getPlayerWorldCount(player) + "/5");
         player.sendMessage("§8§m                                                        ");
     }
 }

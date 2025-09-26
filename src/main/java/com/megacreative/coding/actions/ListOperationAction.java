@@ -29,7 +29,7 @@ public class ListOperationAction implements BlockAction {
             String operation = block.getParameter("operation").asString();
             
             // Получаем менеджер переменных
-            var variableManager = context.getPlugin().getVariableManager();
+            var variableManager = context.getPlugin().getServiceRegistry().getVariableManager();
             
             // Получаем или создаем список
             DataValue listValue = variableManager.getVariable(listName, IVariableManager.VariableScope.PLAYER, player.getUniqueId().toString());

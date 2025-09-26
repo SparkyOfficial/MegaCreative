@@ -65,7 +65,7 @@ public class AnvilInputGUI implements GUIManager.ManagedGUIInterface {
         this.title = title;
         this.onComplete = onComplete;
         this.onCancel = onCancel;
-        this.guiManager = plugin.getGuiManager();
+        this.guiManager = plugin.getServiceRegistry().getGuiManager();
         
         openAnvil();
     }

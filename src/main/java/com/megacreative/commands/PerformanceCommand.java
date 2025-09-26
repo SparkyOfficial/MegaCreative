@@ -83,7 +83,7 @@ public class PerformanceCommand implements CommandExecutor, TabCompleter {
      * Shows system-wide performance report
      */
     private void showSystemReport(Player player) {
-        SystemPerformanceReport report = plugin.getScriptPerformanceMonitor().getSystemPerformanceReport();
+        SystemPerformanceReport report = plugin.getServiceRegistry().getScriptPerformanceMonitor().getSystemPerformanceReport();
         
         player.sendMessage("§8§m                    §r §b§lSystem Performance Report §8§m                    ");
         player.sendMessage("§7Total Executions: §f" + report.getTotalExecutions());
@@ -131,7 +131,7 @@ public class PerformanceCommand implements CommandExecutor, TabCompleter {
      * Shows performance details for a specific script
      */
     private void showScriptReport(Player player, String scriptName) {
-        ScriptPerformanceProfile profile = plugin.getScriptPerformanceMonitor().getScriptProfile(scriptName);
+        ScriptPerformanceProfile profile = plugin.getServiceRegistry().getScriptPerformanceMonitor().getScriptProfile(scriptName);
         
         if (profile == null) {
             player.sendMessage("§cScript '" + scriptName + "' not found!");
@@ -165,7 +165,7 @@ public class PerformanceCommand implements CommandExecutor, TabCompleter {
      * Shows optimization suggestions for a specific script
      */
     private void showOptimizationSuggestions(Player player, String scriptName) {
-        ScriptPerformanceProfile profile = plugin.getScriptPerformanceMonitor().getScriptProfile(scriptName);
+        ScriptPerformanceProfile profile = plugin.getServiceRegistry().getScriptPerformanceMonitor().getScriptProfile(scriptName);
         
         if (profile == null) {
             player.sendMessage("§cScript '" + scriptName + "' not found!");
@@ -173,14 +173,14 @@ public class PerformanceCommand implements CommandExecutor, TabCompleter {
         }
         
         // Get the script from the actual script system
-        com.megacreative.coding.CodeScript script = plugin.getCodingManager().getScript(scriptName);
+        com.megacreative.coding.CodeScript script = plugin.getServiceRegistry().getCodingManager().getScript(scriptName);
         if (script == null) {
             player.sendMessage("§cScript '" + scriptName + "' not found!");
             return;
         }
         
         com.megacreative.coding.monitoring.AdvancedScriptOptimizer optimizer = 
-            new com.megacreative.coding.monitoring.AdvancedScriptOptimizer(plugin, plugin.getScriptPerformanceMonitor());
+            new com.megacreative.coding.monitoring.AdvancedScriptOptimizer(plugin, plugin.getServiceRegistry().getScriptPerformanceMonitor());
         
         ScriptOptimizationReport report = 
             optimizer.analyzeScript(script);
@@ -217,7 +217,7 @@ public class PerformanceCommand implements CommandExecutor, TabCompleter {
      * Shows detected performance bottlenecks
      */
     private void showBottlenecks(Player player) {
-        SystemPerformanceReport report = plugin.getScriptPerformanceMonitor().getSystemPerformanceReport();
+        SystemPerformanceReport report = plugin.getServiceRegistry().getScriptPerformanceMonitor().getSystemPerformanceReport();
         Collection<Bottleneck> bottlenecks = report.getBottlenecks();
         
         player.sendMessage("§8§m                    §r §b§lPerformance Bottlenecks §8§m                    ");
@@ -267,7 +267,7 @@ public class PerformanceCommand implements CommandExecutor, TabCompleter {
      * Clears all performance data
      */
     private void clearPerformanceData(Player player) {
-        plugin.getScriptPerformanceMonitor().clearData();
+        plugin.getServiceRegistry().getScriptPerformanceMonitor().clearData();
         player.sendMessage("§aPerformance data cleared successfully!");
     }
     
@@ -307,7 +307,7 @@ public class PerformanceCommand implements CommandExecutor, TabCompleter {
             completions.addAll(Arrays.asList("report", "script", "optimize", "bottlenecks", "clear"));
         } else if (args.length == 2 && (args[0].equalsIgnoreCase("script") || args[0].equalsIgnoreCase("optimize"))) {
             // Return actual script names from all worlds
-            for (com.megacreative.models.CreativeWorld world : plugin.getWorldManager().getCreativeWorlds()) {
+            for (com.megacreative.models.CreativeWorld world : plugin.getServiceRegistry().getWorldManager().getCreativeWorlds()) {
                 if (world.getScripts() != null) {
                     for (com.megacreative.coding.CodeScript script : world.getScripts()) {
                         completions.add(script.getName());

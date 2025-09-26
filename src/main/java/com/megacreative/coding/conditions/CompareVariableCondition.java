@@ -62,7 +62,7 @@ public class CompareVariableCondition implements BlockCondition {
             }
 
             // Get the actual variable values from the VariableManager
-            VariableManager variableManager = context.getPlugin().getVariableManager();
+            VariableManager variableManager = context.getPlugin().getServiceRegistry().getVariableManager();
             Object var1ValueObj = null;
             Object var2ValueObj = null;
             

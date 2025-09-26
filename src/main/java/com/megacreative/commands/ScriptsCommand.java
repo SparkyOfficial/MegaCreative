@@ -69,7 +69,7 @@ public class ScriptsCommand implements CommandExecutor {
         }
         
         // Проверяем, что игрок находится в мире MegaCreative
-        CreativeWorld creativeWorld = plugin.getWorldManager().findCreativeWorldByBukkit(player.getWorld());
+        CreativeWorld creativeWorld = plugin.getServiceRegistry().getWorldManager().findCreativeWorldByBukkit(player.getWorld());
         if (creativeWorld == null) {
             player.sendMessage("§cВы должны находиться в мире MegaCreative!");
             return true;

@@ -16,7 +16,7 @@ public class SetVariableAction implements BlockAction {
     @Override
     public ExecutionResult execute(CodeBlock block, ExecutionContext context) {
         Player player = context.getPlayer();
-        VariableManager variableManager = context.getPlugin().getVariableManager();
+        VariableManager variableManager = context.getPlugin().getServiceRegistry().getVariableManager();
 
         if (player == null) {
             return ExecutionResult.error("Player not available");

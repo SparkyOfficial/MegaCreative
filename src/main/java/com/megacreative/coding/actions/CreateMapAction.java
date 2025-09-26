@@ -44,7 +44,7 @@ public class CreateMapAction implements BlockAction {
             MapValue mapValue = new MapValue(initialMap);
             
             // Store the map in the variable manager
-            VariableManager variableManager = context.getPlugin().getVariableManager();
+            VariableManager variableManager = context.getPlugin().getServiceRegistry().getVariableManager();
             if (variableManager != null) {
                 variableManager.setVariable(mapName, mapValue, VariableScope.LOCAL, context.getScriptId());
             }

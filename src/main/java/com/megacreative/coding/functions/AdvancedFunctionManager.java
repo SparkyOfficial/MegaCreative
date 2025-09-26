@@ -264,7 +264,7 @@ public class AdvancedFunctionManager {
             ExecutionContext scriptContext = new ExecutionContext.Builder()
                 .plugin(plugin)
                 .player(context.getCaller())
-                .creativeWorld(plugin.getWorldManager().findCreativeWorldByBukkit(context.getCaller().getWorld()))
+                .creativeWorld(plugin.getServiceRegistry().getWorldManager().findCreativeWorldByBukkit(context.getCaller().getWorld()))
                 .currentBlock(function.getFunctionBlocks().get(0))
                 .build();
             
@@ -720,7 +720,7 @@ public class AdvancedFunctionManager {
     }
     
     private String getPlayerWorldId(Player player) {
-        CreativeWorld world = plugin.getWorldManager().findCreativeWorldByBukkit(player.getWorld());
+        CreativeWorld world = plugin.getServiceRegistry().getWorldManager().findCreativeWorldByBukkit(player.getWorld());
         return world != null ? world.getId() : null;
     }
     

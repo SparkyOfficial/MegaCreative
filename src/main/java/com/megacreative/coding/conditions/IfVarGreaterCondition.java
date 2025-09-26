@@ -62,7 +62,7 @@ public class IfVarGreaterCondition implements BlockCondition {
             }
 
             // Get the variable manager to retrieve the variable value
-            VariableManager variableManager = context.getPlugin().getVariableManager();
+            VariableManager variableManager = context.getPlugin().getServiceRegistry().getVariableManager();
             
             // Try to get the variable value from different scopes
             DataValue varValueData = null;

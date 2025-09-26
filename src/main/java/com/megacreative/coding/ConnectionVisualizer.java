@@ -1,7 +1,7 @@
 package com.megacreative.coding;
 
 import com.megacreative.MegaCreative;
-import com.megacreative.coding.events.CodeBlocksConnectedEvent;
+import com.megacreative.events.CodeBlocksConnectedEvent;
 import org.bukkit.Color;
 import org.bukkit.Location;
 import org.bukkit.Particle;

@@ -91,7 +91,7 @@ public class ErrorDisplayGUI implements GUIManager.ManagedGUIInterface {
         this.player = player;
         this.errorTitle = errorTitle;
         this.errors = errors;
-        this.guiManager = plugin.getGuiManager();
+        this.guiManager = plugin.getServiceRegistry().getGuiManager();
         
         // Calculate inventory size based on number of errors (54 slots max for double chest)
         int size = Math.min(54, Math.max(27, ((errors.size() + 2) / 7 + 1) * 9));

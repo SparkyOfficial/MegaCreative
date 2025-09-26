@@ -62,7 +62,7 @@ public class WorldCommentsGUI implements GUIManager.ManagedGUIInterface {
         this.player = player;
         this.world = world;
         this.page = page;
-        this.guiManager = plugin.getGuiManager();
+        this.guiManager = plugin.getServiceRegistry().getGuiManager();
         this.inventory = Bukkit.createInventory(null, 54, "§6§lКомментарии: " + world.getName());
         
         setupInventory();
@@ -134,7 +134,7 @@ public class WorldCommentsGUI implements GUIManager.ManagedGUIInterface {
         if (page > 0) {
             ItemStack prevButton = new ItemStack(Material.ARROW);
             ItemMeta prevMeta = prevButton.getItemMeta();
-            prevMeta.setDisplayName("§a§lПредыдущая страница");
+            prevMeta.setDisplayName("§a§лПредыдущая страница");
             prevButton.setItemMeta(prevMeta);
             inventory.setItem(45, prevButton);
         }
@@ -142,7 +142,7 @@ public class WorldCommentsGUI implements GUIManager.ManagedGUIInterface {
         if (endIndex < comments.size()) {
             ItemStack nextButton = new ItemStack(Material.ARROW);
             ItemMeta nextMeta = nextButton.getItemMeta();
-            nextMeta.setDisplayName("§a§lСледующая страница");
+            nextMeta.setDisplayName("§a§лСледующая страница");
             nextButton.setItemMeta(nextMeta);
             inventory.setItem(53, nextButton);
         }
@@ -150,7 +150,7 @@ public class WorldCommentsGUI implements GUIManager.ManagedGUIInterface {
         // Кнопка назад
         ItemStack backButton = new ItemStack(Material.BARRIER);
         ItemMeta backMeta = backButton.getItemMeta();
-        backMeta.setDisplayName("§c§lНазад");
+        backMeta.setDisplayName("§c§лНазад");
         backButton.setItemMeta(backMeta);
         inventory.setItem(46, backButton);
     }
@@ -220,8 +220,9 @@ public class WorldCommentsGUI implements GUIManager.ManagedGUIInterface {
         if (displayName.contains("Добавить комментарий")) {
             player.closeInventory();
             // GUIManager will handle automatic cleanup
+            plugin.getServiceRegistry().getGuiManager().setPlayerMetadata(player, "comment_input_world_id", world.getId());
+            plugin.getServiceRegistry().getGuiManager().setPlayerMetadata(player, "awaiting_comment_input", true);
             player.sendMessage("§aНапишите ваш комментарий в чат или §eотмена§a для отмены:");
-            plugin.getCommentInputs().put(player.getUniqueId(), world.getId());
             return;
         }
         

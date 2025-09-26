@@ -54,7 +54,7 @@ public class GuiListener implements Listener {
     @EventHandler
     public void onPlayerQuit(PlayerQuitEvent event) {
         Player player = event.getPlayer();
-        plugin.getGuiManager().unregisterGUI(player);
+        plugin.getServiceRegistry().getGuiManager().unregisterGUI(player);
     }
     
     /**
@@ -73,7 +73,7 @@ public class GuiListener implements Listener {
         String message = event.getMessage().trim();
         
         // Handle text input for InteractiveGUIManager
-        GUIManager guiManager = plugin.getGuiManager();
+        GUIManager guiManager = plugin.getServiceRegistry().getGuiManager();
         if (guiManager != null) {
             // Check if player is waiting for text input
             Boolean awaitingTextInput = guiManager.getPlayerMetadata(player, "awaiting_text_input", Boolean.class);
@@ -294,9 +294,9 @@ public class GuiListener implements Listener {
                     @Override
                     public void run() {
                         String worldId = guiManager.getDeleteConfirmationWorldId(player);
-                        var world = plugin.getWorldManager().getWorld(worldId);
+                        var world = plugin.getServiceRegistry().getWorldManager().getWorld(worldId);
                         if (world != null) {
-                            plugin.getWorldManager().deleteWorld(world.getId(), player);
+                            plugin.getServiceRegistry().getWorldManager().deleteWorld(world.getId(), player);
                             player.sendMessage("§aWorld deleted successfully!");
                         } else {
                             player.sendMessage("§cWorld not found!");
@@ -305,37 +305,22 @@ public class GuiListener implements Listener {
                     }
                 }.runTask(plugin);
             } else {
-                // Check legacy delete confirmation system
-                java.util.Map<java.util.UUID, String> deleteConfirmations = plugin.getDeleteConfirmations();
-                if (deleteConfirmations.containsKey(player.getUniqueId())) {
+                // Use the GUIManager metadata system for delete confirmations
+                if (guiManager.isAwaitingDeleteConfirmation(player)) {
                     new org.bukkit.scheduler.BukkitRunnable() {
                         @Override
                         public void run() {
-                            String worldId = deleteConfirmations.get(player.getUniqueId());
-                            var world = plugin.getWorldManager().getWorld(worldId);
+                            String worldId = guiManager.getDeleteConfirmationWorldId(player);
+                            var world = plugin.getServiceRegistry().getWorldManager().getWorld(worldId);
                             if (world != null) {
-                                plugin.getWorldManager().deleteWorld(world.getId(), player);
+                                plugin.getServiceRegistry().getWorldManager().deleteWorld(world.getId(), player);
                                 player.sendMessage("§aWorld deleted successfully!");
                             } else {
                                 player.sendMessage("§cWorld not found!");
                             }
-                            deleteConfirmations.remove(player.getUniqueId());
+                            guiManager.clearDeleteConfirmation(player);
                         }
                     }.runTask(plugin);
-                } else {
-                    // Try to find world from current player location as fallback
-                    CreativeWorld currentWorld = plugin.getWorldManager().findCreativeWorldByBukkit(player.getWorld());
-                    if (currentWorld != null) {
-                        new org.bukkit.scheduler.BukkitRunnable() {
-                            @Override
-                            public void run() {
-                                plugin.getWorldManager().deleteWorld(currentWorld.getId(), player);
-                                player.sendMessage("§aWorld deleted successfully!");
-                            }
-                        }.runTask(plugin);
-                    } else {
-                        player.sendMessage("§cNo deletion confirmation pending.");
-                    }
                 }
             }
         }

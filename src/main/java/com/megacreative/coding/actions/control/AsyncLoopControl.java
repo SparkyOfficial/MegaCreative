@@ -41,7 +41,7 @@ public class AsyncLoopControl implements BlockAction {
             return com.megacreative.coding.executors.ExecutionResult.error("Player or block is null");
         }
 
-        VariableManager variableManager = context.getPlugin().getVariableManager();
+        VariableManager variableManager = context.getPlugin().getServiceRegistry().getVariableManager();
         if (variableManager == null) {
             return com.megacreative.coding.executors.ExecutionResult.error("Variable manager not available");
         }

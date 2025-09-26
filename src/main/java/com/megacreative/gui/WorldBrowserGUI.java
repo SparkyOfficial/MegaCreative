@@ -74,7 +74,7 @@ public class WorldBrowserGUI implements GUIManager.ManagedGUIInterface {
         }
         
         // Получение публичных миров
-        List<CreativeWorld> publicWorlds = plugin.getWorldManager().getAllPublicWorlds();
+        List<CreativeWorld> publicWorlds = plugin.getServiceRegistry().getWorldManager().getAllPublicWorlds();
         int startIndex = page * 28;
         int endIndex = Math.min(startIndex + 28, publicWorlds.size());
         
@@ -88,7 +88,7 @@ public class WorldBrowserGUI implements GUIManager.ManagedGUIInterface {
             ItemMeta worldMeta = worldItem.getItemMeta();
             worldMeta.setDisplayName("§f§l" + world.getName());
             
-            boolean isFavorite = plugin.getPlayerManager().isFavorite(player.getUniqueId(), world.getId());
+            boolean isFavorite = plugin.getServiceRegistry().getPlayerManager().isFavorite(player.getUniqueId(), world.getId());
             
             worldMeta.setLore(Arrays.asList(
                 "§7ID: §f" + world.getId(),
@@ -112,7 +112,7 @@ public class WorldBrowserGUI implements GUIManager.ManagedGUIInterface {
         if (page > 0) {
             ItemStack prevButton = new ItemStack(Material.ARROW);
             ItemMeta prevMeta = prevButton.getItemMeta();
-            prevMeta.setDisplayName("§a§lПредыдущая страница");
+            prevMeta.setDisplayName("§a§лПредыдущая страница");
             prevButton.setItemMeta(prevMeta);
             inventory.setItem(45, prevButton);
         }
@@ -120,7 +120,7 @@ public class WorldBrowserGUI implements GUIManager.ManagedGUIInterface {
         if (endIndex < publicWorlds.size()) {
             ItemStack nextButton = new ItemStack(Material.ARROW);
             ItemMeta nextMeta = nextButton.getItemMeta();
-            nextMeta.setDisplayName("§a§lСледующая страница");
+            nextMeta.setDisplayName("§a§лСледующая страница");
             nextButton.setItemMeta(nextMeta);
             inventory.setItem(53, nextButton);
         }
@@ -128,7 +128,7 @@ public class WorldBrowserGUI implements GUIManager.ManagedGUIInterface {
         // Информация
         ItemStack infoItem = new ItemStack(Material.BOOK);
         ItemMeta infoMeta = infoItem.getItemMeta();
-        infoMeta.setDisplayName("§e§lИнформация");
+        infoMeta.setDisplayName("§e§лИнформация");
         infoMeta.setLore(Arrays.asList(
             "§7Всего миров: §f" + publicWorlds.size(),
             "§7Страница: §f" + (page + 1) + "/" + ((publicWorlds.size() - 1) / 28 + 1),
@@ -164,7 +164,7 @@ public class WorldBrowserGUI implements GUIManager.ManagedGUIInterface {
      */
     public void open() {
         // Use the new GUIManager system instead of old GuiListener
-        plugin.getGuiManager().registerGUI(player, this, inventory);
+        plugin.getServiceRegistry().getGuiManager().registerGUI(player, this, inventory);
         player.openInventory(inventory);
     }
     
@@ -207,7 +207,7 @@ public class WorldBrowserGUI implements GUIManager.ManagedGUIInterface {
         }
         
         // Клик по миру
-        List<CreativeWorld> publicWorlds = plugin.getWorldManager().getAllPublicWorlds();
+        List<CreativeWorld> publicWorlds = plugin.getServiceRegistry().getWorldManager().getAllPublicWorlds();
         int slot = event.getSlot();
         int worldIndex = getWorldIndexFromSlot(slot);
         

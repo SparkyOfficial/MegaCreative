@@ -140,7 +140,7 @@ public class WorldActionsGUI implements GUIManager.ManagedGUIInterface {
      */
     public void open() {
         // Use the new GUIManager system
-        plugin.getGuiManager().registerGUI(player, this, inventory);
+        plugin.getServiceRegistry().getGuiManager().registerGUI(player, this, inventory);
         player.openInventory(inventory);
     }
     

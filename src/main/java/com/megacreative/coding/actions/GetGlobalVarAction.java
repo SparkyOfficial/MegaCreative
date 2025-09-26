@@ -50,7 +50,7 @@ public class GetGlobalVarAction implements BlockAction {
             }
 
             // Get the actual variable value from the VariableManager
-            VariableManager variableManager = context.getPlugin().getVariableManager();
+            VariableManager variableManager = context.getPlugin().getServiceRegistry().getVariableManager();
             DataValue globalVar = variableManager.getGlobalVariable(varName);
             Object varValue = globalVar != null ? globalVar.getValue() : "";
             

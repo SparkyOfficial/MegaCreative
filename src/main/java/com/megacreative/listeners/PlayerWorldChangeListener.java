@@ -58,7 +58,7 @@ public class PlayerWorldChangeListener implements Listener {
         trackWorldChange(player, fromWorld, toWorld);
         
         // Когда игрок меняет мир, заново устанавливаем ему скорборд
-        plugin.getScoreboardManager().setScoreboard(player);
+        plugin.getServiceRegistry().getScoreboardManager().setScoreboard(player);
         
         // Проверяем инвентарь при входе в dev-мир
         if (toWorld.getName().endsWith("_dev") || toWorld.getName().endsWith("-code")) {
@@ -87,10 +87,10 @@ public class PlayerWorldChangeListener implements Listener {
         // 🎆 ENHANCED: Track join to current world
         // 🎆 УСОВЕРШЕНСТВОВАННАЯ: Отслеживание входа в текущий мир
         // 🎆 VERBESSERTE: Verfolgung des Beitritts zur aktuellen Welt
-        CreativeWorld creativeWorld = plugin.getWorldManager().findCreativeWorldByBukkit(world);
+        CreativeWorld creativeWorld = plugin.getServiceRegistry().getWorldManager().findCreativeWorldByBukkit(world);
         if (creativeWorld != null) {
             String mode = determineWorldMode(world, creativeWorld);
-            plugin.getPlayerManager().trackPlayerWorldEntry(player, creativeWorld.getId(), mode);
+            plugin.getServiceRegistry().getPlayerManager().trackPlayerWorldEntry(player, creativeWorld.getId(), mode);
         }
     }
     
@@ -112,9 +112,9 @@ public class PlayerWorldChangeListener implements Listener {
         // 🎆 ENHANCED: Track exit from current world
         // 🎆 УСОВЕРШЕНСТВОВАННАЯ: Отслеживание выхода из текущего мира
         // 🎆 VERBESSERTE: Verfolgung des Verlassens der aktuellen Welt
-        CreativeWorld creativeWorld = plugin.getWorldManager().findCreativeWorldByBukkit(world);
+        CreativeWorld creativeWorld = plugin.getServiceRegistry().getWorldManager().findCreativeWorldByBukkit(world);
         if (creativeWorld != null) {
-            plugin.getPlayerManager().trackPlayerWorldExit(player, creativeWorld.getId());
+            plugin.getServiceRegistry().getPlayerManager().trackPlayerWorldExit(player, creativeWorld.getId());
         }
     }
     
@@ -127,16 +127,16 @@ public class PlayerWorldChangeListener implements Listener {
      */
     private void trackWorldChange(Player player, World fromWorld, World toWorld) {
         // Track exit from previous world
-        CreativeWorld fromCreativeWorld = plugin.getWorldManager().findCreativeWorldByBukkit(fromWorld);
+        CreativeWorld fromCreativeWorld = plugin.getServiceRegistry().getWorldManager().findCreativeWorldByBukkit(fromWorld);
         if (fromCreativeWorld != null) {
-            plugin.getPlayerManager().trackPlayerWorldExit(player, fromCreativeWorld.getId());
+            plugin.getServiceRegistry().getPlayerManager().trackPlayerWorldExit(player, fromCreativeWorld.getId());
         }
         
         // Track entry to new world
-        CreativeWorld toCreativeWorld = plugin.getWorldManager().findCreativeWorldByBukkit(toWorld);
+        CreativeWorld toCreativeWorld = plugin.getServiceRegistry().getWorldManager().findCreativeWorldByBukkit(toWorld);
         if (toCreativeWorld != null) {
             String mode = determineWorldMode(toWorld, toCreativeWorld);
-            plugin.getPlayerManager().trackPlayerWorldEntry(player, toCreativeWorld.getId(), mode);
+            plugin.getServiceRegistry().getPlayerManager().trackPlayerWorldEntry(player, toCreativeWorld.getId(), mode);
         }
     }
     

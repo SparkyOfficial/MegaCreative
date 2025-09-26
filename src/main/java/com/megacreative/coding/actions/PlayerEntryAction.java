@@ -48,7 +48,7 @@ public class PlayerEntryAction implements BlockAction {
             return ExecutionResult.error("Player or block is null");
         }
         
-        VariableManager variableManager = context.getPlugin().getVariableManager();
+        VariableManager variableManager = context.getPlugin().getServiceRegistry().getVariableManager();
         if (variableManager == null) {
             logger.warning("VariableManager is null in PlayerEntryAction");
             return ExecutionResult.error("VariableManager is null");

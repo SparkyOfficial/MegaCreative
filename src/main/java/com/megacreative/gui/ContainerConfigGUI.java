@@ -60,7 +60,7 @@ public class ContainerConfigGUI implements GUIManager.ManagedGUIInterface {
         this.plugin = plugin;
         this.player = player;
         this.blockLocation = blockLocation;
-        this.guiManager = plugin.getGuiManager();
+        this.guiManager = plugin.getServiceRegistry().getGuiManager();
         
         // Handle null service registry in test environment
         ServiceRegistry serviceRegistry = plugin.getServiceRegistry();

@@ -18,7 +18,7 @@ public class PlayerHealthCondition implements BlockCondition {
         
         if (player == null || block == null) return false;
         
-        VariableManager variableManager = context.getPlugin().getVariableManager();
+        VariableManager variableManager = context.getPlugin().getServiceRegistry().getVariableManager();
         if (variableManager == null) return false;
         
         ParameterResolver resolver = new ParameterResolver(context);

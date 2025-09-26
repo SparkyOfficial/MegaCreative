@@ -45,7 +45,7 @@ public class DevInventoryManager implements Listener {
     }
     
     private void handleDevWorldEntry(Player player) {
-        CreativeWorld creativeWorld = plugin.getWorldManager().findCreativeWorldByBukkit(player.getWorld());
+        CreativeWorld creativeWorld = plugin.getServiceRegistry().getWorldManager().findCreativeWorldByBukkit(player.getWorld());
         if (creativeWorld == null || !creativeWorld.canCode(player)) {
             player.sendMessage("§cУ вас нет прав на кодирование в этом мире!");
             return;

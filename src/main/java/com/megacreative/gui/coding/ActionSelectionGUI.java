@@ -77,7 +77,7 @@ public class ActionSelectionGUI implements GUIManager.ManagedGUIInterface {
         this.player = player;
         this.blockLocation = blockLocation;
         this.blockMaterial = blockMaterial;
-        this.guiManager = plugin.getGuiManager();
+        this.guiManager = plugin.getServiceRegistry().getGuiManager();
         
         // Add null check for service registry
         if (plugin != null && plugin.getServiceRegistry() != null) {
@@ -706,12 +706,12 @@ public class ActionSelectionGUI implements GUIManager.ManagedGUIInterface {
      */
     private void selectAction(String actionId) {
         // Get the code block
-        if (plugin.getBlockPlacementHandler() == null) {
+        if (plugin.getServiceRegistry().getBlockPlacementHandler() == null) {
             player.sendMessage("§cОшибка: Не удалось получить обработчик блоков");
             return;
         }
         
-        CodeBlock codeBlock = plugin.getBlockPlacementHandler().getCodeBlock(blockLocation);
+        CodeBlock codeBlock = plugin.getServiceRegistry().getBlockPlacementHandler().getCodeBlock(blockLocation);
         if (codeBlock == null) {
             player.sendMessage("§cОшибка: Блок кода не найден");
             return;
@@ -721,12 +721,12 @@ public class ActionSelectionGUI implements GUIManager.ManagedGUIInterface {
         codeBlock.setAction(actionId);
         
         // Update the sign to reflect the new action
-        plugin.getBlockPlacementHandler().createSignForBlock(blockLocation, codeBlock);
+        plugin.getServiceRegistry().getBlockPlacementHandler().createSignForBlock(blockLocation, codeBlock);
         
         // Save the world
-        var creativeWorld = plugin.getWorldManager().findCreativeWorldByBukkit(player.getWorld());
+        var creativeWorld = plugin.getServiceRegistry().getWorldManager().findCreativeWorldByBukkit(player.getWorld());
         if (creativeWorld != null) {
-            plugin.getWorldManager().saveWorld(creativeWorld);
+            plugin.getServiceRegistry().getWorldManager().saveWorld(creativeWorld);
         }
         
         // Notify player

@@ -54,7 +54,7 @@ public class CodeCompiler {
         this.plugin = plugin;
         this.logger = plugin.getLogger();
         this.blockConfigService = plugin.getServiceRegistry().getBlockConfigService();
-        this.blockPlacementHandler = plugin.getBlockPlacementHandler();
+        this.blockPlacementHandler = plugin.getServiceRegistry().getBlockPlacementHandler();
     }
     
     /**

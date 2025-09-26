@@ -1,8 +1,8 @@
 package com.megacreative.coding;
 
 import com.megacreative.MegaCreative;
-import com.megacreative.coding.events.CodeBlockPlacedEvent;
-import com.megacreative.coding.events.CodeBlocksConnectedEvent;
+import com.megacreative.events.CodeBlockPlacedEvent;
+import com.megacreative.events.CodeBlocksConnectedEvent;
 import com.megacreative.worlds.DevWorldGenerator;
 import org.bukkit.Location;
 import org.bukkit.World;

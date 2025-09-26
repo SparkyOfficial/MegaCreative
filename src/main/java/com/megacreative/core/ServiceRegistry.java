@@ -13,7 +13,8 @@ import com.megacreative.coding.BlockLinker;
 import com.megacreative.coding.BlockHierarchyManager;
 import com.megacreative.coding.WorldCodeRestorer;
 import com.megacreative.coding.CodeBlockSignManager;
-import com.megacreative.coding.events.PlayerEventsListener;
+import com.megacreative.coding.ScriptTriggerManager;
+import com.megacreative.listeners.*;
 import com.megacreative.coding.containers.BlockContainerManager;
 import com.megacreative.coding.variables.VariableManager;
 import com.megacreative.coding.events.CustomEventManager;
@@ -23,7 +24,6 @@ import com.megacreative.coding.groups.BlockGroupManager;
 import com.megacreative.coding.monitoring.ScriptPerformanceMonitor;
 import com.megacreative.coding.events.EventDataExtractorRegistry;
 import com.megacreative.interfaces.*;
-import com.megacreative.listeners.DevWorldProtectionListener;
 import com.megacreative.managers.*;
 import com.megacreative.services.BlockConfigService;
 import com.megacreative.services.FunctionManager;
@@ -147,6 +147,7 @@ public class ServiceRegistry implements DependencyContainer.Disposable {
         dependencyContainer.registerType(BlockHierarchyManager.class, BlockHierarchyManager.class);
         dependencyContainer.registerType(WorldCodeRestorer.class, WorldCodeRestorer.class);
         dependencyContainer.registerType(CodeBlockSignManager.class, CodeBlockSignManager.class);
+        dependencyContainer.registerType(ScriptTriggerManager.class, ScriptTriggerManager.class);
         
         // Register ScriptCompiler as a factory since it needs BlockLinker as a dependency
         dependencyContainer.registerFactory(ScriptCompiler.class, (DependencyContainer.Supplier<ScriptCompiler>) () -> {
@@ -154,13 +155,19 @@ public class ServiceRegistry implements DependencyContainer.Disposable {
             BlockLinker blockLinker = dependencyContainer.resolve(BlockLinker.class);
             return new ScriptCompiler((MegaCreative) plugin, blockConfigService, blockLinker);
         });
+        
+        // Register ScriptEngine as a factory
+        dependencyContainer.registerFactory(ScriptEngine.class, (DependencyContainer.Supplier<ScriptEngine>) () -> {
+            VariableManager variableManager = dependencyContainer.resolve(VariableManager.class);
+            VisualDebugger visualDebugger = dependencyContainer.resolve(VisualDebugger.class);
+            BlockConfigService blockConfigService = dependencyContainer.resolve(BlockConfigService.class);
+            return new DefaultScriptEngine((MegaCreative) plugin, variableManager, visualDebugger, blockConfigService);
+        });
     }
     
     private void initializeNewArchitectureServices() {
         // Register new architecture service mappings
         dependencyContainer.registerType(CustomEventManager.class, CustomEventManager.class);
-        dependencyContainer.registerType(PlayerEventsListener.class, PlayerEventsListener.class);
-        dependencyContainer.registerType(DevWorldProtectionListener.class, DevWorldProtectionListener.class);
         dependencyContainer.registerType(CodeBlockClipboard.class, CodeBlockClipboard.class);
         dependencyContainer.registerType(EventDataExtractorRegistry.class, EventDataExtractorRegistry.class);
         dependencyContainer.registerType(ReferenceSystemEventManager.class, ReferenceSystemEventManager.class);
@@ -315,14 +322,6 @@ public class ServiceRegistry implements DependencyContainer.Disposable {
         return dependencyContainer.resolve(CustomEventManager.class);
     }
     
-    public DevWorldProtectionListener getDevWorldProtectionListener() {
-        return dependencyContainer.resolve(DevWorldProtectionListener.class);
-    }
-    
-    public PlayerEventsListener getPlayerEventsListener() {
-        return dependencyContainer.resolve(PlayerEventsListener.class);
-    }
-    
     public CodeBlockClipboard getCodeBlockClipboard() {
         return dependencyContainer.resolve(CodeBlockClipboard.class);
     }
@@ -397,5 +396,9 @@ public class ServiceRegistry implements DependencyContainer.Disposable {
     
     public CodeBlockSignManager getCodeBlockSignManager() {
         return dependencyContainer.resolve(CodeBlockSignManager.class);
+    }
+    
+    public ScriptTriggerManager getScriptTriggerManager() {
+        return dependencyContainer.resolve(ScriptTriggerManager.class);
     }
 }

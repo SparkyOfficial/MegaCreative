@@ -56,8 +56,8 @@ public class ConnectionDebugGUI implements GUIManager.ManagedGUIInterface {
         this.plugin = plugin;
         this.player = player;
         this.rootBlockLocation = rootBlockLocation;
-        this.guiManager = plugin.getGuiManager();
-        this.blockPlacementHandler = plugin.getBlockPlacementHandler();
+        this.guiManager = plugin.getServiceRegistry().getGuiManager();
+        this.blockPlacementHandler = plugin.getServiceRegistry().getBlockPlacementHandler();
         this.autoConnectionManager = plugin.getServiceRegistry().getAutoConnectionManager();
         
         // Create inventory with appropriate size (54 slots for double chest GUI)

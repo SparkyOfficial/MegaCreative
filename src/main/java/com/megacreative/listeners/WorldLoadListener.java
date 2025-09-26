@@ -66,7 +66,7 @@ public class WorldLoadListener implements Listener {
 
         plugin.getLogger().info("Starting rehydration for world: " + world.getName());
         
-        BlockPlacementHandler placementHandler = plugin.getBlockPlacementHandler();
+        BlockPlacementHandler placementHandler = plugin.getServiceRegistry().getBlockPlacementHandler();
         if (placementHandler == null) {
             plugin.getLogger().severe("BlockPlacementHandler is not initialized!");
             return;

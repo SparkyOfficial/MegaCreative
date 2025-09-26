@@ -7,8 +7,8 @@ import com.megacreative.managers.PlayerModeManager;
 import com.megacreative.models.CreativeWorld;
 import com.megacreative.services.BlockConfigService;
 import com.megacreative.coding.CodeBlock;
-import com.megacreative.coding.events.CodeBlockPlacedEvent;
-import com.megacreative.coding.events.CodeBlockBrokenEvent;
+import com.megacreative.events.CodeBlockPlacedEvent;
+import com.megacreative.events.CodeBlockBrokenEvent;
 import com.megacreative.coding.values.DataValue;
 import com.megacreative.gui.coding.ActionSelectionGUI;
 import org.bukkit.Material;
@@ -692,14 +692,14 @@ public class BlockPlacementHandler implements Listener {
         }
         
         // Get the creative world associated with this Bukkit world
-        CreativeWorld creativeWorld = plugin.getWorldManager().findCreativeWorldByBukkit(world);
+        CreativeWorld creativeWorld = plugin.getServiceRegistry().getWorldManager().findCreativeWorldByBukkit(world);
         if (creativeWorld == null) {
             plugin.getLogger().warning("No CreativeWorld found for Bukkit world: " + world.getName());
             return;
         }
         
         // Save the world to persist any changes to code blocks
-        plugin.getWorldManager().saveWorld(creativeWorld);
+        plugin.getServiceRegistry().getWorldManager().saveWorld(creativeWorld);
         plugin.getLogger().fine("Saved all code blocks in world: " + world.getName());
     }
 }

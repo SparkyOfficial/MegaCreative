@@ -71,7 +71,7 @@ public class MyWorldsGUI implements GUIManager.ManagedGUIInterface {
         }
         
         // Кнопка создания мира
-        if (plugin.getWorldManager().getPlayerWorldCount(player) < 5) {
+        if (plugin.getServiceRegistry().getWorldManager().getPlayerWorldCount(player) < 5) {
             ItemStack createButton = new ItemStack(Material.EMERALD);
             ItemMeta createMeta = createButton.getItemMeta();
             createMeta.setDisplayName("§a§lСоздать новый мир");
@@ -85,7 +85,7 @@ public class MyWorldsGUI implements GUIManager.ManagedGUIInterface {
         }
         
         // Отображение миров игрока
-        List<CreativeWorld> playerWorlds = plugin.getWorldManager().getPlayerWorlds(player);
+        List<CreativeWorld> playerWorlds = plugin.getServiceRegistry().getWorldManager().getPlayerWorlds(player);
         int slot = 10;
         
         for (CreativeWorld world : playerWorlds) {
@@ -120,7 +120,7 @@ public class MyWorldsGUI implements GUIManager.ManagedGUIInterface {
      */
     public void open() {
         // Use the new GUIManager system instead of old GuiListener
-        plugin.getGuiManager().registerGUI(player, this, inventory);
+        plugin.getServiceRegistry().getGuiManager().registerGUI(player, this, inventory);
         player.openInventory(inventory);
     }
     
@@ -172,7 +172,7 @@ public class MyWorldsGUI implements GUIManager.ManagedGUIInterface {
         }
         
         // Клик по миру
-        List<CreativeWorld> playerWorlds = plugin.getWorldManager().getPlayerWorlds(player);
+        List<CreativeWorld> playerWorlds = plugin.getServiceRegistry().getWorldManager().getPlayerWorlds(player);
         int slot = event.getSlot();
         int worldIndex = getWorldIndexFromSlot(slot);
         

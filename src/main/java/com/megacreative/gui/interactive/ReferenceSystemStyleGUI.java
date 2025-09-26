@@ -138,7 +138,7 @@ public class ReferenceSystemStyleGUI {
         modeToggle.addChangeListener(value -> {
             try {
                 world.setMode(com.megacreative.models.WorldMode.valueOf((String) value.getValue()));
-                plugin.getWorldManager().saveWorld(world);
+                plugin.getServiceRegistry().getWorldManager().saveWorld(world);
             } catch (Exception e) {
                 player.sendMessage("§cFailed to change world mode: " + e.getMessage());
             }
@@ -311,9 +311,9 @@ public class ReferenceSystemStyleGUI {
     
     private void saveBlockToWorld(Player player, CodeBlock block) {
         // Find the creative world and save
-        CreativeWorld world = plugin.getWorldManager().findCreativeWorldByBukkit(player.getWorld());
+        CreativeWorld world = plugin.getServiceRegistry().getWorldManager().findCreativeWorldByBukkit(player.getWorld());
         if (world != null) {
-            plugin.getWorldManager().saveWorld(world);
+            plugin.getServiceRegistry().getWorldManager().saveWorld(world);
         }
     }
     

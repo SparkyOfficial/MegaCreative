@@ -55,7 +55,7 @@ public class PlayerConditionBlockGUI implements GUIManager.ManagedGUIInterface {
         this.player = player;
         this.blockLocation = blockLocation;
         this.blockMaterial = blockMaterial;
-        this.guiManager = plugin.getGuiManager();
+        this.guiManager = plugin.getServiceRegistry().getGuiManager();
         this.blockConfigService = plugin.getServiceRegistry().getBlockConfigService();
         
         // Create inventory with appropriate size (54 slots for double chest GUI)
@@ -442,7 +442,7 @@ public class PlayerConditionBlockGUI implements GUIManager.ManagedGUIInterface {
      */
     private void selectAction(String actionId) {
         // Get the code block
-        BlockPlacementHandler placementHandler = plugin.getBlockPlacementHandler();
+        BlockPlacementHandler placementHandler = plugin.getServiceRegistry().getBlockPlacementHandler();
         if (placementHandler == null) {
             player.sendMessage("§cОшибка: Не удалось получить обработчик блоков");
             return;
@@ -458,9 +458,9 @@ public class PlayerConditionBlockGUI implements GUIManager.ManagedGUIInterface {
         codeBlock.setAction(actionId);
         
         // Save the world
-        var creativeWorld = plugin.getWorldManager().findCreativeWorldByBukkit(player.getWorld());
+        var creativeWorld = plugin.getServiceRegistry().getWorldManager().findCreativeWorldByBukkit(player.getWorld());
         if (creativeWorld != null) {
-            plugin.getWorldManager().saveWorld(creativeWorld);
+            plugin.getServiceRegistry().getWorldManager().saveWorld(creativeWorld);
         }
         
         // Notify player

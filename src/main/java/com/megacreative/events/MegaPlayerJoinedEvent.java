@@ -1,35 +1,30 @@
-package com.megacreative.coding.events;
+package com.megacreative.events;
 
 import org.bukkit.entity.Player;
 import org.bukkit.event.Event;
 import org.bukkit.event.HandlerList;
 
 /**
- * Event triggered when a custom timer expires
+ * Custom event for when a player joins the server
+ * This event is fired when a player joins, after being processed by our Bukkit listener
  */
-public class CustomTimerExpireEvent extends Event {
+public class MegaPlayerJoinedEvent extends Event {
     private static final HandlerList handlers = new HandlerList();
     
     private final Player player;
-    private final String timerName;
-    private final long duration;
+    private final boolean isFirstJoin;
     
-    public CustomTimerExpireEvent(Player player, String timerName, long duration) {
+    public MegaPlayerJoinedEvent(Player player, boolean isFirstJoin) {
         this.player = player;
-        this.timerName = timerName;
-        this.duration = duration;
+        this.isFirstJoin = isFirstJoin;
     }
     
     public Player getPlayer() {
         return player;
     }
     
-    public String getTimerName() {
-        return timerName;
-    }
-    
-    public long getDuration() {
-        return duration;
+    public boolean isFirstJoin() {
+        return isFirstJoin;
     }
     
     @Override

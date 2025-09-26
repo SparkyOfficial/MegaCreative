@@ -50,7 +50,7 @@ public class GetServerVarAction implements BlockAction {
             }
 
             // Get the actual variable value from the VariableManager
-            VariableManager variableManager = context.getPlugin().getVariableManager();
+            VariableManager variableManager = context.getPlugin().getServiceRegistry().getVariableManager();
             DataValue serverVar = variableManager.getServerVariable(varName);
             Object varValue = serverVar != null ? serverVar.getValue() : "";
             

@@ -83,7 +83,7 @@ public class ScoreboardManager {
      */
     private void updateScoreboard(Player player) {
         // Ищем CreativeWorld, в котором находится игрок
-        CreativeWorld creativeWorld = plugin.getWorldManager().findCreativeWorldByBukkit(player.getWorld());
+        CreativeWorld creativeWorld = plugin.getServiceRegistry().getWorldManager().findCreativeWorldByBukkit(player.getWorld());
 
         // Получаем менеджер скорбордов
         org.bukkit.scoreboard.ScoreboardManager manager = Bukkit.getScoreboardManager();

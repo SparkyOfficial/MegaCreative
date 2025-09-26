@@ -52,7 +52,7 @@ public class CreateTemplateCommand implements CommandExecutor {
         template.setId(UUID.randomUUID());
         
         // Save the template
-        plugin.getTemplateManager().saveTemplate(template);
+        plugin.getServiceRegistry().getTemplateManager().saveTemplate(template);
         
         player.sendMessage("§aTemplate '" + templateName + "' created successfully!");
         player.sendMessage("§7Description: " + description);

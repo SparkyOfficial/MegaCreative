@@ -147,7 +147,7 @@ public class EnemyPlayerRestrictionManager implements Listener {
         for (Player player : plugin.getServer().getOnlinePlayers()) {
             if (player.getName().equals(playerName)) {
                 UUID playerId = player.getUniqueId();
-                for (CreativeWorld world : plugin.getWorldManager().getCreativeWorlds()) {
+                for (CreativeWorld world : plugin.getServiceRegistry().getWorldManager().getCreativeWorlds()) {
                     WorldPermissions permissions = world.getPermissions();
                     if (permissions != null) {
                         permissions.addToBlacklist(playerId);
@@ -173,7 +173,7 @@ public class EnemyPlayerRestrictionManager implements Listener {
         for (Player player : plugin.getServer().getOnlinePlayers()) {
             if (player.getName().equals(playerName)) {
                 UUID playerId = player.getUniqueId();
-                for (CreativeWorld world : plugin.getWorldManager().getCreativeWorlds()) {
+                for (CreativeWorld world : plugin.getServiceRegistry().getWorldManager().getCreativeWorlds()) {
                     WorldPermissions permissions = world.getPermissions();
                     if (permissions != null) {
                         permissions.removeFromBlacklist(playerId);
@@ -197,7 +197,7 @@ public class EnemyPlayerRestrictionManager implements Listener {
      */
     private void applyRestrictions(Player player) {
         if (isRestrictedPlayer(player.getName())) {
-            for (CreativeWorld world : plugin.getWorldManager().getCreativeWorlds()) {
+            for (CreativeWorld world : plugin.getServiceRegistry().getWorldManager().getCreativeWorlds()) {
                 WorldPermissions permissions = world.getPermissions();
                 if (permissions != null) {
                     permissions.setPlayerPermission(player.getUniqueId(), WorldPermissions.PermissionLevel.VISITOR);
@@ -223,7 +223,7 @@ public class EnemyPlayerRestrictionManager implements Listener {
         
         if (isEnemyPlayer(player.getName())) {
             UUID playerId = player.getUniqueId();
-            for (CreativeWorld world : plugin.getWorldManager().getCreativeWorlds()) {
+            for (CreativeWorld world : plugin.getServiceRegistry().getWorldManager().getCreativeWorlds()) {
                 WorldPermissions permissions = world.getPermissions();
                 if (permissions != null) {
                     permissions.addToBlacklist(playerId);

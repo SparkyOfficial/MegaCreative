@@ -48,7 +48,7 @@ public class DataGUI implements GUIManager.ManagedGUIInterface {
     public DataGUI(MegaCreative plugin, Player player) {
         this.plugin = plugin;
         this.player = player;
-        this.guiManager = plugin.getGuiManager();
+        this.guiManager = plugin.getServiceRegistry().getGuiManager();
         this.inventory = Bukkit.createInventory(null, 27, "§8§lТипы данных");
         
         setupInventory();

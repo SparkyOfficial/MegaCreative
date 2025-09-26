@@ -46,7 +46,7 @@ public class SetServerVarAction implements BlockAction {
             }
 
             // Get the variable manager to set the actual variable
-            VariableManager variableManager = context.getPlugin().getVariableManager();
+            VariableManager variableManager = context.getPlugin().getServiceRegistry().getVariableManager();
             variableManager.setServerVariable(varName, DataValue.of(valueStr));
             
             context.getPlugin().getLogger().info("Setting server variable " + varName + " to " + valueStr);

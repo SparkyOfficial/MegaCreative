@@ -1,4 +1,4 @@
-package com.megacreative.coding.events;
+package com.megacreative.events;
 
 import com.megacreative.coding.CodeBlock;
 import com.megacreative.models.CreativeWorld;

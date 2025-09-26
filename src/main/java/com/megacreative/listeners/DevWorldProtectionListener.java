@@ -142,7 +142,7 @@ public class DevWorldProtectionListener implements Listener {
 
         // 2. Проверяем права доступа к кодированию
         if (isMaterialAConfiguredCodeBlock(placedMaterial)) {
-            CreativeWorld creativeWorld = plugin.getWorldManager().findCreativeWorldByBukkit(player.getWorld());
+            CreativeWorld creativeWorld = plugin.getServiceRegistry().getWorldManager().findCreativeWorldByBukkit(player.getWorld());
             if (creativeWorld != null && !creativeWorld.canCode(player)) {
                 event.setCancelled(true);
                 player.sendMessage("§cУ вас нет прав на размещение блоков кода в этом мире!");
@@ -182,7 +182,7 @@ public class DevWorldProtectionListener implements Listener {
         // 2. Проверяем, можно ли ломать этот блок вообще
         // Разрешаем ломать И настоящие блоки кодинга, И утилиты/контейнеры.
         if (isMaterialAConfiguredCodeBlock(brokenBlockType) || ALLOWED_TOOLS_AND_UTILITIES_HARDCODED.contains(brokenBlockType)) {
-             CreativeWorld creativeWorld = plugin.getWorldManager().findCreativeWorldByBukkit(player.getWorld());
+             CreativeWorld creativeWorld = plugin.getServiceRegistry().getWorldManager().findCreativeWorldByBukkit(player.getWorld());
             if (creativeWorld != null && !creativeWorld.canCode(player)) {
                 event.setCancelled(true);
                 player.sendMessage("§cУ вас нет прав на удаление блоков в этом мире!");

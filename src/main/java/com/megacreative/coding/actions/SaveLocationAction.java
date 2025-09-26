@@ -43,7 +43,7 @@ public class SaveLocationAction implements BlockAction {
             }
 
             // Save the location using the VariableManager
-            com.megacreative.coding.variables.VariableManager variableManager = context.getPlugin().getVariableManager();
+            com.megacreative.coding.variables.VariableManager variableManager = context.getPlugin().getServiceRegistry().getVariableManager();
             org.bukkit.Location location = player.getLocation();
             
             // Convert location to a string format "x,y,z,world"

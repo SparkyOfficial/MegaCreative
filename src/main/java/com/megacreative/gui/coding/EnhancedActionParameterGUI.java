@@ -493,11 +493,10 @@ public class EnhancedActionParameterGUI {
     
     private void saveBlockToWorld(CodeBlock block) {
         // Save the world to persist changes
-        var worldManager = plugin.getWorldManager();
         Location blockLocation = new org.bukkit.Location(org.bukkit.Bukkit.getWorld(block.getWorldId()), block.getX(), block.getY(), block.getZ());
-        com.megacreative.models.CreativeWorld world = worldManager.findCreativeWorldByBukkit(blockLocation.getWorld());
+        com.megacreative.models.CreativeWorld world = plugin.getServiceRegistry().getWorldManager().findCreativeWorldByBukkit(blockLocation.getWorld());
         if (world != null) {
-            worldManager.saveWorld(world);
+            plugin.getServiceRegistry().getWorldManager().saveWorld(world);
         }
     }
     

@@ -61,7 +61,7 @@ public class BlockConfigManager implements Listener {
      * @param blockLocation Локация блока для настройки
      */
     public void openConfigGUI(Player player, Location blockLocation) {
-        CodeBlock codeBlock = plugin.getBlockPlacementHandler().getBlockCodeBlocks().get(blockLocation);
+        CodeBlock codeBlock = plugin.getServiceRegistry().getBlockPlacementHandler().getBlockCodeBlocks().get(blockLocation);
         if (codeBlock == null) {
             player.sendMessage("§cОшибка: блок кода не найден.");
             return;
@@ -276,7 +276,7 @@ public class BlockConfigManager implements Listener {
         }
 
         Location blockLocation = configuringBlocks.get(playerId);
-        CodeBlock codeBlock = plugin.getBlockPlacementHandler().getBlockCodeBlocks().get(blockLocation);
+        CodeBlock codeBlock = plugin.getServiceRegistry().getBlockPlacementHandler().getBlockCodeBlocks().get(blockLocation);
         
         if (codeBlock != null) {
             // Convert ItemStacks to DataValue parameters
@@ -312,9 +312,9 @@ public class BlockConfigManager implements Listener {
             }
             
             // Сохраняем весь мир, чтобы изменения не потерялись после перезагрузки
-            var creativeWorld = plugin.getWorldManager().findCreativeWorldByBukkit(player.getWorld());
+            var creativeWorld = plugin.getServiceRegistry().getWorldManager().findCreativeWorldByBukkit(player.getWorld());
             if (creativeWorld != null) {
-                plugin.getWorldManager().saveWorld(creativeWorld);
+                plugin.getServiceRegistry().getWorldManager().saveWorld(creativeWorld);
             }
         }
         

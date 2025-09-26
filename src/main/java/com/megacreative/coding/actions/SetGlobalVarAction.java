@@ -46,7 +46,7 @@ public class SetGlobalVarAction implements BlockAction {
             }
 
             // Get the variable manager to set the actual variable
-            VariableManager variableManager = context.getPlugin().getVariableManager();
+            VariableManager variableManager = context.getPlugin().getServiceRegistry().getVariableManager();
             variableManager.setGlobalVariable(varName, DataValue.of(valueStr));
             
             context.getPlugin().getLogger().info("Setting global variable " + varName + " to " + valueStr);

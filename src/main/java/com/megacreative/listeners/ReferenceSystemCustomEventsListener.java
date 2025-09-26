@@ -116,7 +116,7 @@ public class ReferenceSystemCustomEventsListener implements Listener {
      * Handle player variable change event
      */
     @EventHandler
-    public void onPlayerVariableChange(com.megacreative.coding.events.CustomVariableChangeEvent event) {
+    public void onPlayerVariableChange(com.megacreative.events.CustomVariableChangeEvent event) {
         // Вызывается при изменении переменных игрока / Triggered when player variables change / Wird ausgelöst, wenn sich Spielervariablen ändern
         Player player = event.getPlayer();
         
@@ -141,7 +141,7 @@ public class ReferenceSystemCustomEventsListener implements Listener {
      * Handle timer expire event
      */
     @EventHandler
-    public void onTimerExpire(com.megacreative.coding.events.CustomTimerExpireEvent event) {
+    public void onTimerExpire(com.megacreative.events.CustomTimerExpireEvent event) {
         // Вызывается при истечении таймеров / Triggered when timers expire / Wird ausgelöst, wenn Timer ablaufen
         Player player = event.getPlayer();
         
@@ -165,7 +165,7 @@ public class ReferenceSystemCustomEventsListener implements Listener {
      * Handle player custom action event
      */
     @EventHandler
-    public void onPlayerCustomAction(com.megacreative.coding.events.CustomActionEvent event) {
+    public void onPlayerCustomAction(com.megacreative.events.CustomActionEvent event) {
         // Вызывается при выполнении пользовательских действий / Triggered when players perform custom actions / Wird ausgelöst, wenn Spieler benutzerdefinierte Aktionen ausführen
         Player player = event.getPlayer();
         
@@ -189,7 +189,7 @@ public class ReferenceSystemCustomEventsListener implements Listener {
      * Handle player score change event
      */
     @EventHandler
-    public void onPlayerScoreChange(com.megacreative.coding.events.PlayerScoreChangeEvent event) {
+    public void onPlayerScoreChange(com.megacreative.events.PlayerScoreChangeEvent event) {
         // Вызывается при изменении очков игрока / Triggered when player scores change / Wird ausgelöst, wenn sich die Punktzahl eines Spielers ändert
         Player player = event.getPlayer();
         
@@ -214,7 +214,7 @@ public class ReferenceSystemCustomEventsListener implements Listener {
      * Handle function call event
      */
     @EventHandler
-    public void onFunctionCall(com.megacreative.coding.events.FunctionCallEvent event) {
+    public void onFunctionCall(com.megacreative.events.FunctionCallEvent event) {
         // Вызывается при вызове функций / Triggered when functions are called / Wird ausgelöst, wenn Funktionen aufgerufen werden
         Player player = event.getPlayer();
         
@@ -238,7 +238,7 @@ public class ReferenceSystemCustomEventsListener implements Listener {
      * Handle world mode change event
      */
     @EventHandler
-    public void onWorldModeChange(com.megacreative.coding.events.WorldModeChangeEvent event) {
+    public void onWorldModeChange(com.megacreative.events.WorldModeChangeEvent event) {
         // Вызывается при смене режима мира / Triggered when world modes change / Wird ausgelöst, wenn sich der Weltenmodus ändert
         Player player = event.getPlayer();
         

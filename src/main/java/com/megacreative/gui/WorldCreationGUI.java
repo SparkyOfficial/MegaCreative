@@ -85,7 +85,7 @@ public class WorldCreationGUI implements GUIManager.ManagedGUIInterface {
         
         ItemStack flatWorld = new ItemStack(Material.STONE);
         ItemMeta flatMeta = flatWorld.getItemMeta();
-        flatMeta.setDisplayName("§e§lПлоский мир");
+        flatMeta.setDisplayName("§e§лПлоский мир");
         flatMeta.setLore(Arrays.asList(
             "§7Мир с плоской поверхностью,",
             "§7идеален для строительства",
@@ -96,7 +96,7 @@ public class WorldCreationGUI implements GUIManager.ManagedGUIInterface {
         
         ItemStack voidWorld = new ItemStack(Material.BARRIER);
         ItemMeta voidMeta = voidWorld.getItemMeta();
-        voidMeta.setDisplayName("§c§lПустой мир");
+        voidMeta.setDisplayName("§c§лПустой мир");
         voidMeta.setLore(Arrays.asList(
             "§7Полностью пустой мир,",
             "§7только спавн платформа",
@@ -107,7 +107,7 @@ public class WorldCreationGUI implements GUIManager.ManagedGUIInterface {
         
         ItemStack oceanWorld = new ItemStack(Material.WATER_BUCKET);
         ItemMeta oceanMeta = oceanWorld.getItemMeta();
-        oceanMeta.setDisplayName("§b§lОкеанский мир");
+        oceanMeta.setDisplayName("§b§лОкеанский мир");
         oceanMeta.setLore(Arrays.asList(
             "§7Мир, покрытый океанами,",
             "§7с островами",
@@ -118,7 +118,7 @@ public class WorldCreationGUI implements GUIManager.ManagedGUIInterface {
         
         ItemStack netherWorld = new ItemStack(Material.NETHERRACK);
         ItemMeta netherMeta = netherWorld.getItemMeta();
-        netherMeta.setDisplayName("§6§lАдский мир");
+        netherMeta.setDisplayName("§6§лАдский мир");
         netherMeta.setLore(Arrays.asList(
             "§7Мир в стиле Нижнего мира,",
             "§7с лавой и адским камнем",
@@ -129,7 +129,7 @@ public class WorldCreationGUI implements GUIManager.ManagedGUIInterface {
         
         ItemStack endWorld = new ItemStack(Material.END_STONE);
         ItemMeta endMeta = endWorld.getItemMeta();
-        endMeta.setDisplayName("§d§lКраевой мир");
+        endMeta.setDisplayName("§d§лКраевой мир");
         endMeta.setLore(Arrays.asList(
             "§7Мир в стиле Края,",
             "§7с краевым камнем",
@@ -141,7 +141,7 @@ public class WorldCreationGUI implements GUIManager.ManagedGUIInterface {
         // Кнопка отмены
         ItemStack cancelButton = new ItemStack(Material.RED_STAINED_GLASS);
         ItemMeta cancelMeta = cancelButton.getItemMeta();
-        cancelMeta.setDisplayName("§c§lОтмена");
+        cancelMeta.setDisplayName("§c§лОтмена");
         cancelButton.setItemMeta(cancelMeta);
         inventory.setItem(22, cancelButton);
     }
@@ -169,7 +169,7 @@ public class WorldCreationGUI implements GUIManager.ManagedGUIInterface {
      * Öffnet die GUI für den Spieler
      */
     public void open() {
-        plugin.getGuiManager().registerGUI(player, this, inventory);
+        plugin.getServiceRegistry().getGuiManager().registerGUI(player, this, inventory);
         player.openInventory(inventory);
     }
     
@@ -230,8 +230,8 @@ public class WorldCreationGUI implements GUIManager.ManagedGUIInterface {
             player.sendMessage("§7Примеры: §f" + player.getName() + "'s World, My Awesome Build, Creative Paradise");
             
             // Store the selected world type in metadata for later use
-            plugin.getGuiManager().setPlayerMetadata(player, "pending_world_type", worldType);
-            plugin.getGuiManager().setPlayerMetadata(player, "awaiting_world_name", true);
+            plugin.getServiceRegistry().getGuiManager().setPlayerMetadata(player, "pending_world_type", worldType);
+            plugin.getServiceRegistry().getGuiManager().setPlayerMetadata(player, "awaiting_world_name", true);
         }
     }
     

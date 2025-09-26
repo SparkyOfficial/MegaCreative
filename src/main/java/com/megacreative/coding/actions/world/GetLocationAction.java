@@ -55,7 +55,7 @@ public class GetLocationAction implements BlockAction {
             }
 
             // Get the location using the VariableManager
-            VariableManager variableManager = context.getPlugin().getVariableManager();
+            VariableManager variableManager = context.getPlugin().getServiceRegistry().getVariableManager();
             DataValue locationValue = variableManager.getPlayerVariable(player.getUniqueId(), locationName);
             
             if (locationValue == null) {

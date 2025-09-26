@@ -78,8 +78,8 @@ public class WorldManagerImpl implements IWorldManager {
     @Deprecated
     public WorldManagerImpl(com.megacreative.MegaCreative plugin) {
         this.plugin = plugin;
-        this.codingManager = plugin.getCodingManager();
-        this.configManager = plugin.getConfigManager();
+        this.codingManager = plugin.getServiceRegistry().getCodingManager();
+        this.configManager = plugin.getServiceRegistry().getConfigManager();
         this.worlds = new HashMap<>();
         this.playerWorlds = new HashMap<>();
         this.maxWorldsPerPlayer = 5; // Default value
@@ -657,7 +657,7 @@ public class WorldManagerImpl implements IWorldManager {
             
             // 🎆 ENHANCED: Track world mode switch
             if (plugin instanceof MegaCreative) {
-                ((MegaCreative) plugin).getPlayerManager().trackPlayerWorldEntry(player, worldId, "DEV");
+                ((MegaCreative) plugin).getServiceRegistry().getPlayerManager().trackPlayerWorldEntry(player, worldId, "DEV");
             }
             
             saveWorld(world);
@@ -754,7 +754,7 @@ public class WorldManagerImpl implements IWorldManager {
         
         // 🎆 ENHANCED: Track world mode switch
         if (plugin instanceof MegaCreative) {
-            ((MegaCreative) plugin).getPlayerManager().trackPlayerWorldEntry(player, worldId, "PLAY");
+            ((MegaCreative) plugin).getServiceRegistry().getPlayerManager().trackPlayerWorldEntry(player, worldId, "PLAY");
         }
         
         // Save world state
@@ -796,7 +796,7 @@ public class WorldManagerImpl implements IWorldManager {
             
             // 🎆 ENHANCED: Track world mode switch
             if (plugin instanceof MegaCreative) {
-                ((MegaCreative) plugin).getPlayerManager().trackPlayerWorldEntry(player, worldId, "BUILD");
+                ((MegaCreative) plugin).getServiceRegistry().getPlayerManager().trackPlayerWorldEntry(player, worldId, "BUILD");
             }
             
             saveWorld(world);
@@ -1102,7 +1102,7 @@ public class WorldManagerImpl implements IWorldManager {
                 if (bukkitWorld != null) {
                     // Reduced logging - only log when debugging
                     // getPlugin().getLogger().info("Successfully loaded/created Bukkit world: " + bukkitWorld.getName());
-                    ICodingManager codingManager = ((MegaCreative) getPlugin()).getCodingManager();
+                    ICodingManager codingManager = ((MegaCreative) getPlugin()).getServiceRegistry().getCodingManager();
                     if (codingManager != null) {
                         codingManager.loadScriptsForWorld(world);
                         // Reduced logging - only log when debugging

@@ -184,7 +184,7 @@ public class InteractiveCommand implements CommandExecutor, TabCompleter {
             new InteractiveGUIManager.ColorPickerElement("demo_color", java.util.Map.of());
         
         colorPicker.addChangeListener(value -> 
-            player.sendMessage("§a🎆 Color changed to: §e" + value.getValue()));
+            player.sendMessage("§a.EVT Color changed to: §e" + value.getValue()));
         
         gui.setElement(16, colorPicker);
         
@@ -193,12 +193,12 @@ public class InteractiveCommand implements CommandExecutor, TabCompleter {
             new InteractiveGUIManager.ItemStackEditorElement("demo_item", java.util.Map.of());
         
         itemEditor.addChangeListener(value -> 
-            player.sendMessage("§a🎆 Item changed to: §e" + value.getValue()));
+            player.sendMessage("§a.EVT Item changed to: §e" + value.getValue()));
         
         gui.setElement(28, itemEditor);
         
         gui.open();
-        player.sendMessage("§a🎆 Opened Reference System Interactive Demo!");
+        player.sendMessage("§a.EVT Opened Reference System Interactive Demo!");
     }
     
     /**
@@ -236,7 +236,7 @@ public class InteractiveCommand implements CommandExecutor, TabCompleter {
         InteractiveGUI gui = frameGUI.createBlockParameterEditor(player, dummyBlock);
         gui.open();
         
-        player.sendMessage("§a🎆 Opened block editor for: §e" + actionId);
+        player.sendMessage("§a.EVT Opened block editor for: §e" + actionId);
     }
     
     /**
@@ -251,7 +251,7 @@ public class InteractiveCommand implements CommandExecutor, TabCompleter {
      */
     private void openWorldSettings(Player player) {
         // Find current creative world
-        CreativeWorld world = plugin.getWorldManager().findCreativeWorldByBukkit(player.getWorld());
+        CreativeWorld world = plugin.getServiceRegistry().getWorldManager().findCreativeWorldByBukkit(player.getWorld());
         if (world == null) {
             player.sendMessage("§cYou must be in a creative world to use world settings!");
             return;
@@ -260,7 +260,7 @@ public class InteractiveCommand implements CommandExecutor, TabCompleter {
         InteractiveGUI gui = frameGUI.createWorldSettingsGUI(player, world);
         gui.open();
         
-        player.sendMessage("§a🎆 Opened world settings for: §e" + world.getName());
+        player.sendMessage("§a.EVT Opened world settings for: §e" + world.getName());
     }
     
     /**
@@ -286,7 +286,7 @@ public class InteractiveCommand implements CommandExecutor, TabCompleter {
         String elementType = args[1].toLowerCase();
         
         InteractiveGUI gui = guiManager.createInteractiveGUI(player, 
-            "🎆 Test: " + elementType.toUpperCase(), 27);
+            ".EVT Test: " + elementType.toUpperCase(), 27);
         
         InteractiveGUIManager.InteractiveElement element = null;
         
@@ -321,12 +321,12 @@ public class InteractiveCommand implements CommandExecutor, TabCompleter {
         
         if (element != null) {
             element.addChangeListener(value -> 
-                player.sendMessage("§a🎆 " + elementType + " value: §e" + value.getValue()));
+                player.sendMessage("§a.EVT " + elementType + " value: §e" + value.getValue()));
             
             gui.setElement(13, element);
             gui.open();
             
-            player.sendMessage("§a🎆 Opened test GUI for: §e" + elementType);
+            player.sendMessage("§a.EVT Opened test GUI for: §e" + elementType);
         }
     }
 

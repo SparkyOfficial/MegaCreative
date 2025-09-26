@@ -51,7 +51,7 @@ public class ScriptsGUI implements GUIManager.ManagedGUIInterface {
     public ScriptsGUI(MegaCreative plugin, Player player) {
         this.plugin = plugin;
         this.player = player;
-        this.guiManager = plugin.getGuiManager();
+        this.guiManager = plugin.getServiceRegistry().getGuiManager();
         this.inventory = Bukkit.createInventory(null, 54, "§8§lМои скрипты");
         
         setupInventory();
@@ -78,7 +78,7 @@ public class ScriptsGUI implements GUIManager.ManagedGUIInterface {
         }
         
         // Получение скриптов текущего мира
-        CreativeWorld currentWorld = plugin.getWorldManager().findCreativeWorldByBukkit(player.getWorld());
+        CreativeWorld currentWorld = plugin.getServiceRegistry().getWorldManager().findCreativeWorldByBukkit(player.getWorld());
         List<CodeScript> worldScripts = currentWorld != null ? currentWorld.getScripts() : new ArrayList<>();
         int startIndex = page * 28;
         int endIndex = Math.min(startIndex + 28, worldScripts.size());
@@ -252,7 +252,7 @@ public class ScriptsGUI implements GUIManager.ManagedGUIInterface {
         }
         
         // Клик по скрипту
-        CreativeWorld currentWorld = plugin.getWorldManager().findCreativeWorldByBukkit(player.getWorld());
+        CreativeWorld currentWorld = plugin.getServiceRegistry().getWorldManager().findCreativeWorldByBukkit(player.getWorld());
         List<CodeScript> worldScripts = currentWorld != null ? currentWorld.getScripts() : new ArrayList<>();
         int slot = event.getSlot();
         int scriptIndex = getScriptIndexFromSlot(slot);

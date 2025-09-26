@@ -81,7 +81,7 @@ public class WorldSettingsGUI implements GUIManager.ManagedGUIInterface {
         // Настройки флагов
         ItemStack mobSpawning = new ItemStack(flags.isMobSpawning() ? Material.ZOMBIE_HEAD : Material.BARRIER);
         ItemMeta mobMeta = mobSpawning.getItemMeta();
-        mobMeta.setDisplayName("§e§lСпавн мобов");
+        mobMeta.setDisplayName("§e§лСпавн мобов");
         mobMeta.setLore(Arrays.asList(
             "§7Текущее состояние: " + (flags.isMobSpawning() ? "§aВключено" : "§cВыключено"),
             "§e▶ Нажмите для изменения"
@@ -91,7 +91,7 @@ public class WorldSettingsGUI implements GUIManager.ManagedGUIInterface {
         
         ItemStack pvp = new ItemStack(flags.isPvp() ? Material.DIAMOND_SWORD : Material.SHIELD);
         ItemMeta pvpMeta = pvp.getItemMeta();
-        pvpMeta.setDisplayName("§c§lPvP");
+        pvpMeta.setDisplayName("§c§лPvP");
         pvpMeta.setLore(Arrays.asList(
             "§7Текущее состояние: " + (flags.isPvp() ? "§aВключено" : "§cВыключено"),
             "§e▶ Нажмите для изменения"
@@ -101,7 +101,7 @@ public class WorldSettingsGUI implements GUIManager.ManagedGUIInterface {
         
         ItemStack explosions = new ItemStack(flags.isExplosions() ? Material.TNT : Material.BARRIER);
         ItemMeta expMeta = explosions.getItemMeta();
-        expMeta.setDisplayName("§6§lВзрывы");
+        expMeta.setDisplayName("§6§лВзрывы");
         expMeta.setLore(Arrays.asList(
             "§7Текущее состояние: " + (flags.isExplosions() ? "§aВключено" : "§cВыключено"),
             "§e▶ Нажмите для изменения"
@@ -112,7 +112,7 @@ public class WorldSettingsGUI implements GUIManager.ManagedGUIInterface {
         // Кнопка удаления мира
         ItemStack deleteButton = new ItemStack(Material.RED_STAINED_GLASS);
         ItemMeta deleteMeta = deleteButton.getItemMeta();
-        deleteMeta.setDisplayName("§c§lУдалить мир");
+        deleteMeta.setDisplayName("§c§лУдалить мир");
         deleteMeta.setLore(Arrays.asList(
             "§7⚠ ВНИМАНИЕ! Это действие",
             "§7нельзя отменить!",
@@ -124,7 +124,7 @@ public class WorldSettingsGUI implements GUIManager.ManagedGUIInterface {
         // Кнопка назад
         ItemStack backButton = new ItemStack(Material.ARROW);
         ItemMeta backMeta = backButton.getItemMeta();
-        backMeta.setDisplayName("§e§lНазад");
+        backMeta.setDisplayName("§e§лНазад");
         backButton.setItemMeta(backMeta);
         inventory.setItem(22, backButton);
     }
@@ -153,7 +153,7 @@ public class WorldSettingsGUI implements GUIManager.ManagedGUIInterface {
      */
     public void open() {
         // Use the new GUIManager system
-        plugin.getGuiManager().registerGUI(player, this, inventory);
+        plugin.getServiceRegistry().getGuiManager().registerGUI(player, this, inventory);
         player.openInventory(inventory);
     }
     
@@ -194,7 +194,7 @@ public class WorldSettingsGUI implements GUIManager.ManagedGUIInterface {
             player.closeInventory();
             // GUIManager will handle cleanup automatically
             player.sendMessage("§cДля удаления мира напишите в чат: §eУДАЛИТЬ");
-            plugin.getDeleteConfirmations().put(player.getUniqueId(), world.getId());
+            plugin.getServiceRegistry().getGuiManager().setAwaitingDeleteConfirmation(player, world.getId());
             return;
         }
         
@@ -203,15 +203,15 @@ public class WorldSettingsGUI implements GUIManager.ManagedGUIInterface {
         
         if (displayName.contains("Спавн мобов")) {
             flags.setMobSpawning(!flags.isMobSpawning());
-            plugin.getWorldManager().saveWorld(world);
+            plugin.getServiceRegistry().getWorldManager().saveWorld(world);
             setupInventory();
         } else if (displayName.contains("PvP")) {
             flags.setPvp(!flags.isPvp());
-            plugin.getWorldManager().saveWorld(world);
+            plugin.getServiceRegistry().getWorldManager().saveWorld(world);
             setupInventory();
         } else if (displayName.contains("Взрывы")) {
             flags.setExplosions(!flags.isExplosions());
-            plugin.getWorldManager().saveWorld(world);
+            plugin.getServiceRegistry().getWorldManager().saveWorld(world);
             setupInventory();
         }
     }

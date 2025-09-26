@@ -38,7 +38,7 @@ public class VariableInspectorAction implements BlockAction {
             String filter = resolvedFilter.asString();
             
             // Get the variable manager
-            VariableManager variableManager = context.getPlugin().getVariableManager();
+            VariableManager variableManager = context.getPlugin().getServiceRegistry().getVariableManager();
             if (variableManager == null) {
                 return ExecutionResult.error("Variable manager not available.");
             }

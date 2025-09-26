@@ -75,9 +75,7 @@ public class CommandRegistry {
      * Register simple commands that don't require many dependencies
      */
     private void registerSimpleCommands() {
-        // Register commands that don't need complex dependencies
-        // As we refactor more commands, we'll add them here
-        
+        // Register commands with proper dependency injection
         if (plugin.getCommand("megacreative") != null) {
             plugin.getCommand("megacreative").setExecutor(new MainCommand(plugin));
         }

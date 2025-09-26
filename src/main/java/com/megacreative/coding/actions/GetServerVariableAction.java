@@ -19,7 +19,7 @@ public class GetServerVariableAction implements BlockAction {
         }
 
         ParameterResolver resolver = new ParameterResolver(context);
-        VariableManager variableManager = context.getPlugin().getVariableManager();
+        VariableManager variableManager = context.getPlugin().getServiceRegistry().getVariableManager();
 
         // Получаем и разрешаем параметры
         DataValue rawVarName = block.getParameter("var");

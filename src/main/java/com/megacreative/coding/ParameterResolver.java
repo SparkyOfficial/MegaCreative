@@ -108,7 +108,7 @@ public class ParameterResolver {
         }
 
         // Handle variable placeholders with enhanced scope resolution
-        VariableManager variableManager = context.getPlugin().getVariableManager();
+        VariableManager variableManager = context.getPlugin().getServiceRegistry().getVariableManager();
         if (variableManager != null) {
             // Use enhanced variable resolution with fallback mechanism
             String playerContext = getPlayerContext(context);

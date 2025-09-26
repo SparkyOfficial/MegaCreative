@@ -2,8 +2,8 @@ package com.megacreative.coding;
 
 import com.megacreative.MegaCreative;
 import com.megacreative.coding.BlockLinker;
-import com.megacreative.coding.events.CodeBlockBrokenEvent;
-import com.megacreative.coding.events.CodeBlockPlacedEvent;
+import com.megacreative.events.CodeBlockBrokenEvent;
+import com.megacreative.events.CodeBlockPlacedEvent;
 import com.megacreative.interfaces.IWorldManager;
 import com.megacreative.models.CreativeWorld;
 import com.megacreative.services.BlockConfigService;

@@ -95,7 +95,7 @@ public class ExecutionContext {
         this.event = event;
         this.blockLocation = blockLocation != null ? blockLocation.clone() : null;
         this.currentBlock = currentBlock;
-        this.variableManager = plugin.getVariableManager();
+        this.variableManager = plugin.getServiceRegistry().getVariableManager();
         this.scriptId = currentBlock != null ? currentBlock.getId().toString() : Constants.GLOBAL_SCOPE_ID;
         this.worldId = creativeWorld != null ? creativeWorld.getId() : Constants.GLOBAL_SCOPE_ID;
     }
@@ -117,7 +117,7 @@ public class ExecutionContext {
         this.blockLocation = null;
         this.currentBlock = null;
         this.currentBlockField = null;
-        this.variableManager = this.plugin != null ? this.plugin.getVariableManager() : null;
+        this.variableManager = this.plugin != null ? this.plugin.getServiceRegistry().getVariableManager() : null;
         this.scriptId = Constants.GLOBAL_SCOPE_ID;
         this.worldId = Constants.GLOBAL_SCOPE_ID;
     }

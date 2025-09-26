@@ -570,7 +570,7 @@ public class ReferenceSystemEventsListener implements Listener {
             ExecutionContext context = new ExecutionContext.Builder()
                 .plugin(plugin)
                 .player(player)
-                .creativeWorld(plugin.getWorldManager().findCreativeWorldByBukkit(player != null ? player.getWorld() : null))
+                .creativeWorld(plugin.getServiceRegistry().getWorldManager().findCreativeWorldByBukkit(player != null ? player.getWorld() : null))
                 .build();
             
             // Execute the script
