@@ -9,10 +9,13 @@ import com.megacreative.coding.values.DataValue;
 import com.megacreative.coding.values.MapValue;
 import com.megacreative.coding.variables.VariableManager;
 import com.megacreative.coding.variables.IVariableManager.VariableScope;
+import com.megacreative.coding.annotations.BlockMeta;
+import com.megacreative.coding.BlockType;
 import org.bukkit.entity.Player;
 import java.util.HashMap;
 import java.util.Map;
 
+@BlockMeta(id = "createMap", displayName = "§aCreate Map", type = BlockType.ACTION)
 public class CreateMapAction implements BlockAction {
 
     @Override

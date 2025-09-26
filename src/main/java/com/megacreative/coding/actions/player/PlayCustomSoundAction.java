@@ -5,9 +5,12 @@ import com.megacreative.coding.CodeBlock;
 import com.megacreative.coding.ExecutionContext;
 import com.megacreative.coding.executors.ExecutionResult;
 import com.megacreative.coding.values.DataValue;
+import com.megacreative.coding.annotations.BlockMeta;
+import com.megacreative.coding.BlockType;
 import org.bukkit.Sound;
 import org.bukkit.entity.Player;
 
+@BlockMeta(id = "playCustomSound", displayName = "§aPlay Custom Sound", type = BlockType.ACTION)
 public class PlayCustomSoundAction implements BlockAction {
 
     @Override

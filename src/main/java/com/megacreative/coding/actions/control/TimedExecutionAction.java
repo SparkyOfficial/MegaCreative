@@ -10,6 +10,10 @@ import com.megacreative.coding.values.DataValue;
 import org.bukkit.Bukkit;
 import org.bukkit.entity.Player;
 
+import com.megacreative.coding.annotations.BlockMeta;
+import com.megacreative.coding.BlockType;
+
+@BlockMeta(id = "timedExecution", displayName = "§aTimed Execution", type = BlockType.ACTION)
 public class TimedExecutionAction implements BlockAction {
 
     @Override

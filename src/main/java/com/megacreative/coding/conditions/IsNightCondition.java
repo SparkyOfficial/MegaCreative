@@ -10,10 +10,14 @@ import org.bukkit.inventory.meta.ItemMeta;
 
 import java.util.function.Function;
 
+import com.megacreative.coding.annotations.BlockMeta;
+import com.megacreative.coding.BlockType;
+
 /**
  * Condition for checking if it's night time in the player's world from container configuration.
  * This condition returns true if it's night time in the player's world.
  */
+@BlockMeta(id = "isNight", displayName = "§aIs Night", type = BlockType.CONDITION)
 public class IsNightCondition implements BlockCondition {
 
     @Override

@@ -4,11 +4,14 @@ import com.megacreative.coding.config.BlockConfig;
 import com.megacreative.coding.CodeBlock;
 import com.megacreative.coding.ExecutionContext;
 import com.megacreative.coding.BlockCondition;
+import com.megacreative.coding.annotations.BlockMeta;
+import com.megacreative.coding.BlockType;
 
 /**
  * A generic block condition that can be dynamically created from configuration.
  * This allows for runtime-defined conditions without requiring code changes.
  */
+@BlockMeta(id = "genericCondition", displayName = "§aGeneric Condition", type = BlockType.CONDITION)
 public class GenericBlockCondition implements BlockCondition {
     private final BlockConfig config;
     

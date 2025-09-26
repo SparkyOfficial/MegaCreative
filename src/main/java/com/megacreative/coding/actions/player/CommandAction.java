@@ -7,6 +7,8 @@ import com.megacreative.coding.ParameterResolver;
 import com.megacreative.coding.executors.ExecutionResult;
 import com.megacreative.coding.values.DataValue;
 import com.megacreative.services.BlockConfigService;
+import com.megacreative.coding.annotations.BlockMeta;
+import com.megacreative.coding.BlockType;
 import org.bukkit.Bukkit;
 import org.bukkit.entity.Player;
 import org.bukkit.inventory.ItemStack;
@@ -18,6 +20,7 @@ import java.util.function.Function;
  * Action for executing a command.
  * This action retrieves a command from the container configuration and executes it.
  */
+@BlockMeta(id = "command", displayName = "§aExecute Command", type = BlockType.ACTION)
 public class CommandAction implements BlockAction {
 
     @Override

@@ -16,10 +16,14 @@ import org.bukkit.inventory.meta.ItemMeta;
 import java.util.Collection;
 import java.util.function.Function;
 
+import com.megacreative.coding.annotations.BlockMeta;
+import com.megacreative.coding.BlockType;
+
 /**
  * Condition for checking if a specific entity is near the player from container configuration.
  * This condition returns true if the specified entity type is within a specified distance of the player.
  */
+@BlockMeta(id = "isNearEntity", displayName = "§aIs Near Entity", type = BlockType.CONDITION)
 public class IsNearEntityCondition implements BlockCondition {
 
     @Override

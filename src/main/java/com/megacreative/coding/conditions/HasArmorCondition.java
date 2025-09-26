@@ -4,6 +4,8 @@ import com.megacreative.coding.BlockCondition;
 import com.megacreative.coding.CodeBlock;
 import com.megacreative.coding.ExecutionContext;
 import com.megacreative.coding.ParameterResolver;
+import com.megacreative.coding.annotations.BlockMeta;
+import com.megacreative.coding.BlockType;
 import com.megacreative.coding.values.DataValue;
 import com.megacreative.services.BlockConfigService;
 import org.bukkit.Material;
@@ -17,6 +19,7 @@ import java.util.function.Function;
  * Condition for checking if a player is wearing specific armor from container configuration.
  * This condition returns true if the player is wearing the specified armor piece.
  */
+@BlockMeta(id = "hasArmor", displayName = "§aHas Armor", type = BlockType.CONDITION)
 public class HasArmorCondition implements BlockCondition {
 
     @Override

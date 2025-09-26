@@ -3,6 +3,8 @@ package com.megacreative.coding.conditions;
 import com.megacreative.coding.BlockCondition;
 import com.megacreative.coding.CodeBlock;
 import com.megacreative.coding.ExecutionContext;
+import com.megacreative.coding.annotations.BlockMeta;
+import com.megacreative.coding.BlockType;
 import com.megacreative.services.BlockConfigService;
 import org.bukkit.World;
 import org.bukkit.entity.Player;
@@ -11,6 +13,7 @@ import org.bukkit.inventory.meta.ItemMeta;
 
 import java.util.function.Function;
 
+@BlockMeta(id = "checkWorldWeather", displayName = "§aCheck World Weather", type = BlockType.CONDITION)
 public class CheckWorldWeatherCondition implements BlockCondition {
 
     @Override

@@ -6,6 +6,8 @@ import com.megacreative.coding.CodeBlock;
 import com.megacreative.coding.ExecutionContext;
 import com.megacreative.coding.values.DataValue;
 import com.megacreative.coding.executors.ExecutionResult;
+import com.megacreative.coding.annotations.BlockMeta;
+import com.megacreative.coding.BlockType;
 import org.bukkit.entity.Player;
 
 import java.util.concurrent.CompletableFuture;
@@ -16,6 +18,7 @@ import java.util.concurrent.CompletableFuture;
  * Handles function return statements with optional return values.
  * Terminates function execution and returns control to the caller.
  */
+@BlockMeta(id = "return", displayName = "§aReturn", type = BlockType.ACTION)
 public class ReturnAction implements BlockAction {
     
     private final MegaCreative plugin;

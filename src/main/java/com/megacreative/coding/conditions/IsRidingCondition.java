@@ -11,10 +11,14 @@ import org.bukkit.inventory.meta.ItemMeta;
 
 import java.util.function.Function;
 
+import com.megacreative.coding.annotations.BlockMeta;
+import com.megacreative.coding.BlockType;
+
 /**
  * Condition for checking if a player is riding a specific entity from container configuration.
  * This condition returns true if the player is riding the specified entity type.
  */
+@BlockMeta(id = "isRiding", displayName = "§aIs Riding", type = BlockType.CONDITION)
 public class IsRidingCondition implements BlockCondition {
 
     @Override

@@ -4,6 +4,8 @@ import com.megacreative.coding.BlockAction;
 import com.megacreative.coding.CodeBlock;
 import com.megacreative.coding.ExecutionContext;
 import com.megacreative.coding.ParameterResolver;
+import com.megacreative.coding.annotations.BlockMeta;
+import com.megacreative.coding.BlockType;
 import com.megacreative.coding.executors.ExecutionResult;
 import com.megacreative.coding.values.DataValue;
 import com.megacreative.coding.values.types.ListValue;
@@ -28,6 +30,7 @@ import java.util.function.Function;
  * - For Each item in ${player_list}: Sets "item" variable for each iteration
  * - For Each element in [1,2,3] as index: Sets "element" and "index" variables
  */
+@BlockMeta(id = "forEach", displayName = "§aFor Each", type = BlockType.ACTION)
 public class ForEachAction implements BlockAction {
     
     @Override

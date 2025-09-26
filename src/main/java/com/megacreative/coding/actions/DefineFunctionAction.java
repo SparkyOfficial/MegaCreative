@@ -8,6 +8,8 @@ import com.megacreative.coding.functions.AdvancedFunctionManager;
 import com.megacreative.coding.functions.FunctionDefinition;
 import com.megacreative.coding.values.DataValue;
 import com.megacreative.coding.values.ValueType;
+import com.megacreative.coding.annotations.BlockMeta;
+import com.megacreative.coding.BlockType;
 import com.megacreative.coding.executors.ExecutionResult;
 import org.bukkit.entity.Player;
 
@@ -21,6 +23,7 @@ import java.util.ArrayList;
  * Handles creation and registration of user-defined functions.
  * Allows players to define reusable code blocks with parameters.
  */
+@BlockMeta(id = "defineFunction", displayName = "§aDefine Function", type = BlockType.ACTION)
 public class DefineFunctionAction implements BlockAction {
     
     private final MegaCreative plugin;

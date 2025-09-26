@@ -3,6 +3,8 @@ package com.megacreative.coding.actions;
 import com.megacreative.coding.BlockAction;
 import com.megacreative.coding.CodeBlock;
 import com.megacreative.coding.ExecutionContext;
+import com.megacreative.coding.annotations.BlockMeta;
+import com.megacreative.coding.BlockType;
 import com.megacreative.coding.executors.ExecutionResult;
 import com.megacreative.services.FunctionManager;
 import org.bukkit.entity.Player;
@@ -11,6 +13,7 @@ import org.bukkit.entity.Player;
  * Action for defining custom functions.
  * When executed, it registers the function in the FunctionManager.
  */
+@BlockMeta(id = "customFunction", displayName = "§aCustom Function", type = BlockType.ACTION)
 public class CustomFunctionAction implements BlockAction {
 
     @Override

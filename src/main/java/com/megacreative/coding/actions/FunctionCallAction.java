@@ -8,6 +8,8 @@ import com.megacreative.coding.functions.AdvancedFunctionManager;
 import com.megacreative.coding.functions.FunctionDefinition;
 import com.megacreative.coding.values.DataValue;
 import com.megacreative.coding.values.ValueType;
+import com.megacreative.coding.annotations.BlockMeta;
+import com.megacreative.coding.BlockType;
 import com.megacreative.coding.executors.ExecutionResult;
 import org.bukkit.entity.Player;
 
@@ -22,6 +24,7 @@ import java.util.HashMap;
  * Handles execution of user-defined functions within the coding system.
  * Supports function discovery, parameter passing, and result handling.
  */
+@BlockMeta(id = "functionCall", displayName = "§aCall Function", type = BlockType.ACTION)
 public class FunctionCallAction implements BlockAction {
     
     private final MegaCreative plugin;

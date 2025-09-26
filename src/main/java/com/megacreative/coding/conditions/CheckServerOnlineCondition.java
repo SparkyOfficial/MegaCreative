@@ -3,6 +3,8 @@ package com.megacreative.coding.conditions;
 import com.megacreative.coding.BlockCondition;
 import com.megacreative.coding.CodeBlock;
 import com.megacreative.coding.ExecutionContext;
+import com.megacreative.coding.annotations.BlockMeta;
+import com.megacreative.coding.BlockType;
 import com.megacreative.services.BlockConfigService;
 import org.bukkit.Bukkit;
 import org.bukkit.inventory.ItemStack;
@@ -10,6 +12,7 @@ import org.bukkit.inventory.meta.ItemMeta;
 
 import java.util.function.Function;
 
+@BlockMeta(id = "checkServerOnline", displayName = "§aCheck Server Online", type = BlockType.CONDITION)
 public class CheckServerOnlineCondition implements BlockCondition {
 
     @Override

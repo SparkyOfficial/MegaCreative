@@ -8,11 +8,14 @@ import com.megacreative.coding.events.CustomEventManager;
 import com.megacreative.coding.executors.ExecutionResult;
 import com.megacreative.coding.values.DataValue;
 import com.megacreative.coding.variables.VariableManager;
+import com.megacreative.coding.annotations.BlockMeta;
+import com.megacreative.coding.BlockType;
 import org.bukkit.entity.Player;
 
 /**
  * Action that registers a code block as an event handler
  */
+@BlockMeta(id = "handleEvent", displayName = "§aHandle Event", type = BlockType.ACTION)
 public class HandleEventAction implements BlockAction {
     
     private final CustomEventManager eventManager;

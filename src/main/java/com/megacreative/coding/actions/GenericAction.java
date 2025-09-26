@@ -4,6 +4,8 @@ import com.megacreative.MegaCreative;
 import com.megacreative.coding.BlockAction;
 import com.megacreative.coding.CodeBlock;
 import com.megacreative.coding.ExecutionContext;
+import com.megacreative.coding.annotations.BlockMeta;
+import com.megacreative.coding.BlockType;
 import com.megacreative.coding.executors.ExecutionResult;
 import com.megacreative.coding.values.DataValue;
 import com.megacreative.coding.values.types.ListValue;
@@ -24,6 +26,7 @@ import java.util.function.BiConsumer;
  * Universal action handler that can process 90% of all simple actions
  * Instead of creating separate classes for each action, we use a parameterized approach
  */
+@BlockMeta(id = "genericAction", displayName = "§aGeneric Action", type = BlockType.ACTION)
 public class GenericAction implements BlockAction {
     
     // Action handlers map for easy extension

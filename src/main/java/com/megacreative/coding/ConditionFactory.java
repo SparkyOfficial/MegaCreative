@@ -15,12 +15,8 @@ public class ConditionFactory implements EventPublisher {
 
     private static final Logger LOGGER = Logger.getLogger(ConditionFactory.class.getName());
     
-    private final Map<String, Supplier<BlockCondition>> conditionMap = new HashMap<>();
+    private final Map<String, Supplier<BlockCondition>> conditionRegistry = new HashMap<>();
     private final Map<String, String> conditionDisplayNames = new HashMap<>();
-    
-    // Constants for condition registration events
-    private static final String EVENT_CONDITION_REGISTERED = "condition_registered";
-    private static final String EVENT_CONDITION_REGISTRATION_FAILED = "condition_registration_failed";
 
     public ConditionFactory() {
         // Constructor is now empty as registration happens later
@@ -30,7 +26,8 @@ public class ConditionFactory implements EventPublisher {
      * Scans for annotated conditions and registers them
      */
     public void registerAllConditions() {
-        // Scan packages for annotated conditions
+        conditionRegistry.clear();
+        conditionDisplayNames.clear();
         String basePackage = "com.megacreative.coding.conditions";
         
         com.megacreative.MegaCreative plugin = com.megacreative.MegaCreative.getInstance();
@@ -38,79 +35,51 @@ public class ConditionFactory implements EventPublisher {
             LOGGER.severe("Plugin instance not available for condition scanning");
             return;
         }
-        
-        // Track registration statistics
-        int registeredCount = 0;
-        int failedCount = 0;
-        
+
         for (Class<?> clazz : ClassScanner.findClasses(plugin, basePackage)) {
             if (BlockCondition.class.isAssignableFrom(clazz) && !clazz.isInterface() && clazz.isAnnotationPresent(BlockMeta.class)) {
                 BlockMeta meta = clazz.getAnnotation(BlockMeta.class);
                 if (meta.type() == BlockType.CONDITION) {
                     try {
-                        // Try no-argument constructor
-                        java.lang.reflect.Constructor<? extends BlockCondition> constructor = clazz.asSubclass(BlockCondition.class).getConstructor();
-                        register(meta.id(), meta.displayName(), () -> {
+                        // Capture values in effectively final variables
+                        String conditionId = meta.id();
+                        String displayName = meta.displayName();
+                        String className = clazz.getName();
+                        
+                        Supplier<BlockCondition> supplier = () -> {
                             try {
+                                // Create new instance with no-argument constructor
+                                java.lang.reflect.Constructor<? extends BlockCondition> constructor = 
+                                    clazz.asSubclass(BlockCondition.class).getConstructor();
                                 return constructor.newInstance();
                             } catch (Exception e) {
-                                LOGGER.warning("Failed to create condition instance: " + e.getMessage());
-                                // Publish registration failure event
-                                Map<String, DataValue> eventData = new HashMap<>();
-                                eventData.put("condition_id", DataValue.fromObject(meta.id()));
-                                eventData.put("class_name", DataValue.fromObject(clazz.getName()));
-                                eventData.put("error", DataValue.fromObject(e.getMessage()));
-                                publishEvent(EVENT_CONDITION_REGISTRATION_FAILED, eventData);
-                                failedCount++;
+                                LOGGER.severe("Не удалось создать экземпляр условия: " + className);
+                                e.printStackTrace();
                                 return null;
                             }
-                        });
-                        
-                        // Publish successful registration event
-                        Map<String, DataValue> eventData = new HashMap<>();
-                        eventData.put("condition_id", DataValue.fromObject(meta.id()));
-                        eventData.put("display_name", DataValue.fromObject(meta.displayName()));
-                        eventData.put("class_name", DataValue.fromObject(clazz.getName()));
-                        publishEvent(EVENT_CONDITION_REGISTERED, eventData);
-                        registeredCount++;
-                        
-                        LOGGER.fine("Successfully registered condition: " + meta.id() + " (" + clazz.getName() + ")");
-                    } catch (NoSuchMethodException e) {
-                        LOGGER.warning("No suitable constructor found for condition class: " + clazz.getName());
-                        // Publish registration failure event
-                        Map<String, DataValue> eventData = new HashMap<>();
-                        eventData.put("condition_id", DataValue.fromObject(meta.id()));
-                        eventData.put("class_name", DataValue.fromObject(clazz.getName()));
-                        eventData.put("error", DataValue.fromObject("No suitable constructor found"));
-                        publishEvent(EVENT_CONDITION_REGISTRATION_FAILED, eventData);
-                        failedCount++;
+                        };
+                        register(conditionId, displayName, supplier);
                     } catch (Exception e) {
-                        LOGGER.warning("Error registering condition class " + clazz.getName() + ": " + e.getMessage());
-                        // Publish registration failure event
-                        Map<String, DataValue> eventData = new HashMap<>();
-                        eventData.put("condition_id", DataValue.fromObject(clazz.getName()));
-                        eventData.put("error", DataValue.fromObject(e.getMessage()));
-                        publishEvent(EVENT_CONDITION_REGISTRATION_FAILED, eventData);
-                        failedCount++;
+                        LOGGER.severe("Не удалось зарегистрировать условие из класса (нужен пустой конструктор): " + clazz.getName());
                     }
                 }
             }
         }
         
-        LOGGER.info("Condition registration complete. Registered: " + registeredCount + ", Failed: " + failedCount);
+        LOGGER.info("Загружено " + conditionRegistry.size() + " условий блоков.");
     }
     
     private void register(String conditionId, String displayName, Supplier<BlockCondition> supplier) {
-        conditionMap.put(conditionId, supplier);
+        conditionRegistry.put(conditionId, supplier);
         conditionDisplayNames.put(conditionId, displayName);
     }
 
     public BlockCondition createCondition(String conditionId) {
-        Supplier<BlockCondition> supplier = conditionMap.get(conditionId);
+        Supplier<BlockCondition> supplier = conditionRegistry.get(conditionId);
         if (supplier != null) {
             return supplier.get();
         }
-        return null;
+        return null; // Не логируем ошибку здесь, чтобы не спамить
     }
     
     /**
@@ -133,7 +102,7 @@ public class ConditionFactory implements EventPublisher {
     }
     
     public int getConditionCount() {
-        return conditionMap.size();
+        return conditionRegistry.size();
     }
     
     /**

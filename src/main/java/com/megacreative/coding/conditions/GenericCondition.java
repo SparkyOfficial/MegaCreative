@@ -4,6 +4,8 @@ import com.megacreative.MegaCreative;
 import com.megacreative.coding.BlockCondition;
 import com.megacreative.coding.CodeBlock;
 import com.megacreative.coding.ExecutionContext;
+import com.megacreative.coding.annotations.BlockMeta;
+import com.megacreative.coding.BlockType;
 import com.megacreative.coding.values.DataValue;
 import org.bukkit.GameMode;
 import org.bukkit.Location;
@@ -20,6 +22,7 @@ import java.util.HashMap;
  * Universal condition handler that can process 90% of all simple conditions
  * Instead of creating separate classes for each condition, we use a parameterized approach
  */
+@BlockMeta(id = "genericCondition", displayName = "§aGeneric Condition", type = BlockType.CONDITION)
 public class GenericCondition implements BlockCondition {
     
     // Condition handlers map for easy extension

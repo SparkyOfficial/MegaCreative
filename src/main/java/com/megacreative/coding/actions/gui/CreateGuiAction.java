@@ -10,6 +10,8 @@ import com.megacreative.coding.values.types.ListValue;
 import com.megacreative.coding.values.types.NumberValue;
 import com.megacreative.coding.values.types.TextValue;
 import com.megacreative.coding.variables.VariableManager;
+import com.megacreative.coding.annotations.BlockMeta;
+import com.megacreative.coding.BlockType;
 import org.bukkit.Bukkit;
 import org.bukkit.Material;
 import org.bukkit.entity.Player;
@@ -38,6 +40,7 @@ import java.util.WeakHashMap;
  * - Create GUI "Shop" size 27 with items from ${shop_items}
  * - Create GUI "${player} Stats" with dynamic content
  */
+@BlockMeta(id = "createGui", displayName = "§aCreate GUI", type = BlockType.ACTION)
 public class CreateGuiAction implements BlockAction {
     
     // Improved storage for GUI click handlers using WeakHashMap to prevent memory leaks

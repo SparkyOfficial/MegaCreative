@@ -4,6 +4,8 @@ import com.megacreative.coding.BlockAction;
 import com.megacreative.coding.CodeBlock;
 import com.megacreative.coding.ExecutionContext;
 import com.megacreative.coding.ParameterResolver;
+import com.megacreative.coding.annotations.BlockMeta;
+import com.megacreative.coding.BlockType;
 import com.megacreative.coding.executors.ExecutionResult;
 import com.megacreative.coding.values.DataValue;
 import com.megacreative.coding.variables.VariableManager;
@@ -18,6 +20,7 @@ import java.util.function.Function;
  * Action for dividing a variable by a value.
  * This action retrieves variable parameters from the container configuration and divides the variable by the value.
  */
+@BlockMeta(id = "divVar", displayName = "§aDivide Variable", type = BlockType.ACTION)
 public class DivVarAction implements BlockAction {
 
     @Override

@@ -12,10 +12,14 @@ import org.bukkit.inventory.meta.ItemMeta;
 
 import java.util.function.Function;
 
+import com.megacreative.coding.annotations.BlockMeta;
+import com.megacreative.coding.BlockType;
+
 /**
  * Condition for checking world time from container configuration.
  * This condition returns true if the world time matches the specified criteria.
  */
+@BlockMeta(id = "worldTime", displayName = "§aWorld Time", type = BlockType.CONDITION)
 public class WorldTimeCondition implements BlockCondition {
 
     @Override

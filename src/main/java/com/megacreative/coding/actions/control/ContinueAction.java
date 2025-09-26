@@ -5,6 +5,8 @@ import com.megacreative.coding.BlockAction;
 import com.megacreative.coding.CodeBlock;
 import com.megacreative.coding.ExecutionContext;
 import com.megacreative.coding.executors.ExecutionResult;
+import com.megacreative.coding.annotations.BlockMeta;
+import com.megacreative.coding.BlockType;
 import org.bukkit.entity.Player;
 
 /**
@@ -13,6 +15,7 @@ import org.bukkit.entity.Player;
  * Handles continue statements in loops.
  * Sets a continue flag in the execution context to signal loop continuation.
  */
+@BlockMeta(id = "continue", displayName = "§aContinue", type = BlockType.ACTION)
 public class ContinueAction implements BlockAction {
     
     private final MegaCreative plugin;

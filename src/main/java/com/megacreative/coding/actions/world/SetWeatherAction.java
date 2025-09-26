@@ -6,6 +6,8 @@ import com.megacreative.coding.ExecutionContext;
 import com.megacreative.coding.ParameterResolver;
 import com.megacreative.coding.executors.ExecutionResult;
 import com.megacreative.services.BlockConfigService;
+import com.megacreative.coding.annotations.BlockMeta;
+import com.megacreative.coding.BlockType;
 import org.bukkit.World;
 import org.bukkit.entity.Player;
 import org.bukkit.inventory.ItemStack;
@@ -17,6 +19,7 @@ import java.util.function.Function;
  * Action for setting the weather in a world.
  * This action changes the world weather based on the container configuration.
  */
+@BlockMeta(id = "setWeather", displayName = "§aSet Weather", type = BlockType.ACTION)
 public class SetWeatherAction implements BlockAction {
 
     @Override

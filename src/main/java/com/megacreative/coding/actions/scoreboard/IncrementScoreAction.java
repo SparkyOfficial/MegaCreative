@@ -7,6 +7,8 @@ import com.megacreative.coding.ParameterResolver;
 import com.megacreative.coding.executors.ExecutionResult;
 import com.megacreative.coding.values.DataValue;
 import com.megacreative.services.BlockConfigService;
+import com.megacreative.coding.annotations.BlockMeta;
+import com.megacreative.coding.BlockType;
 import org.bukkit.entity.Player;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.inventory.meta.ItemMeta;
@@ -20,6 +22,7 @@ import java.util.function.Function;
  * Action for incrementing a score on a scoreboard.
  * This action retrieves parameters from the container configuration and increments a score.
  */
+@BlockMeta(id = "incrementScore", displayName = "§aIncrement Score", type = BlockType.ACTION)
 public class IncrementScoreAction implements BlockAction {
 
     @Override

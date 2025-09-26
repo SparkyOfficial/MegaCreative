@@ -12,6 +12,10 @@ import org.bukkit.Bukkit;
 import org.bukkit.World;
 import org.bukkit.entity.Player;
 
+import com.megacreative.coding.annotations.BlockMeta;
+import com.megacreative.coding.BlockType;
+
+@BlockMeta(id = "saveFunction", displayName = "§aSave Function", type = BlockType.ACTION)
 public class SaveFunctionAction implements BlockAction {
     
     @Override

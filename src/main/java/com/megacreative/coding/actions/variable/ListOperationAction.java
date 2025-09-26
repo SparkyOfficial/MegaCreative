@@ -7,6 +7,8 @@ import com.megacreative.coding.executors.ExecutionResult;
 import com.megacreative.coding.values.DataValue;
 import com.megacreative.coding.values.ValueType;
 import com.megacreative.coding.values.types.ListValue;
+import com.megacreative.coding.annotations.BlockMeta;
+import com.megacreative.coding.BlockType;
 import java.util.List;
 import com.megacreative.coding.variables.IVariableManager;
 import org.bukkit.entity.Player;
@@ -14,6 +16,7 @@ import org.bukkit.entity.Player;
 import java.util.List;
 import java.util.ArrayList;
 
+@BlockMeta(id = "listOperation", displayName = "§aList Operation", type = BlockType.ACTION)
 public class ListOperationAction implements BlockAction {
 
     @Override

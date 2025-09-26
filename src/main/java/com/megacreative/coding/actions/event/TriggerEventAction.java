@@ -7,6 +7,8 @@ import com.megacreative.coding.ParameterResolver;
 import com.megacreative.coding.events.CustomEventManager;
 import com.megacreative.coding.values.DataValue;
 import com.megacreative.coding.variables.VariableManager;
+import com.megacreative.coding.annotations.BlockMeta;
+import com.megacreative.coding.BlockType;
 import org.bukkit.entity.Player;
 
 import java.util.HashMap;
@@ -15,6 +17,7 @@ import java.util.Map;
 /**
  * Action that triggers a custom event with data
  */
+@BlockMeta(id = "triggerEvent", displayName = "§aTrigger Event", type = BlockType.ACTION)
 public class TriggerEventAction implements BlockAction {
     
     private final CustomEventManager eventManager;

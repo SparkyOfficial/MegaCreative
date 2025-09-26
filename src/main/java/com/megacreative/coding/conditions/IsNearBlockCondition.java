@@ -3,6 +3,8 @@ package com.megacreative.coding.conditions;
 import com.megacreative.coding.BlockCondition;
 import com.megacreative.coding.CodeBlock;
 import com.megacreative.coding.ExecutionContext;
+import com.megacreative.coding.annotations.BlockMeta;
+import com.megacreative.coding.BlockType;
 import com.megacreative.services.BlockConfigService;
 import org.bukkit.Material;
 import org.bukkit.entity.Player;
@@ -15,6 +17,7 @@ import java.util.function.Function;
  * Condition for checking if a specific block type is near the player from container configuration.
  * This condition returns true if the specified block type is within a specified distance of the player.
  */
+@BlockMeta(id = "isNearBlock", displayName = "§aIs Near Block", type = BlockType.CONDITION)
 public class IsNearBlockCondition implements BlockCondition {
 
     @Override

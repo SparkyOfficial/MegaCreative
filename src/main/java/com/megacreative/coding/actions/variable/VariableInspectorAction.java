@@ -8,10 +8,13 @@ import com.megacreative.coding.executors.ExecutionResult;
 import com.megacreative.coding.values.DataValue;
 import com.megacreative.coding.variables.VariableManager;
 import com.megacreative.coding.variables.IVariableManager.VariableScope;
+import com.megacreative.coding.annotations.BlockMeta;
+import com.megacreative.coding.BlockType;
 import org.bukkit.entity.Player;
 import java.util.Map;
 import java.util.UUID;
 
+@BlockMeta(id = "variableInspector", displayName = "§aVariable Inspector", type = BlockType.ACTION)
 public class VariableInspectorAction implements BlockAction {
 
     @Override

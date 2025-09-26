@@ -13,10 +13,14 @@ import org.bukkit.inventory.meta.ItemMeta;
 
 import java.util.function.Function;
 
+import com.megacreative.coding.annotations.BlockMeta;
+import com.megacreative.coding.BlockType;
+
 /**
  * Condition for checking if a mob is near the player from container configuration.
  * This condition returns true if a mob is within a specified distance of the player.
  */
+@BlockMeta(id = "mobNear", displayName = "§aMob Near", type = BlockType.CONDITION)
 public class MobNearCondition implements BlockCondition {
 
     @Override

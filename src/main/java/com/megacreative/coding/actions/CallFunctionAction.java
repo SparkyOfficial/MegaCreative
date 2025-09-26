@@ -7,6 +7,8 @@ import com.megacreative.coding.executors.ExecutionResult;
 import com.megacreative.coding.ScriptEngine;
 import com.megacreative.coding.functions.AdvancedFunctionManager;
 import com.megacreative.coding.values.DataValue;
+import com.megacreative.coding.annotations.BlockMeta;
+import com.megacreative.coding.BlockType;
 import org.bukkit.entity.Player;
 
 import java.util.concurrent.CompletableFuture;
@@ -15,6 +17,7 @@ import java.util.concurrent.CompletableFuture;
  * Action for calling custom functions.
  * When executed, it finds and executes the registered function with proper parameter and return value handling.
  */
+@BlockMeta(id = "callFunction", displayName = "§aCall Function", type = BlockType.ACTION)
 public class CallFunctionAction implements BlockAction {
     private static final String FUNCTION_NAME_PARAM = "function_name";
     private static final String RETURN_VAR_PARAM = "return_variable";

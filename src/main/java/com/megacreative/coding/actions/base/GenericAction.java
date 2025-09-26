@@ -8,6 +8,8 @@ import com.megacreative.coding.executors.ExecutionResult;
 import com.megacreative.coding.values.DataValue;
 import com.megacreative.coding.variables.VariableManager;
 import com.megacreative.coding.variables.IVariableManager.VariableScope;
+import com.megacreative.coding.annotations.BlockMeta;
+import com.megacreative.coding.BlockType;
 import org.bukkit.Location;
 import org.bukkit.Material;
 import org.bukkit.entity.Player;
@@ -29,6 +31,7 @@ import java.util.concurrent.TimeUnit;
  * Instead of creating separate classes for each action, we use a parameterized approach
  * Enhanced with support for complex operations, async execution, and advanced variable handling.
  */
+@BlockMeta(id = "generic", displayName = "§aGeneric Action", type = BlockType.ACTION)
 public class GenericAction implements BlockAction {
     
     // Action handlers map for easy extension

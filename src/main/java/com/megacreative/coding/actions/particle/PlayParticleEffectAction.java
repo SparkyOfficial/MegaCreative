@@ -7,6 +7,8 @@ import com.megacreative.coding.ParameterResolver;
 import com.megacreative.coding.executors.ExecutionResult;
 import com.megacreative.coding.values.DataValue;
 import com.megacreative.coding.variables.VariableManager;
+import com.megacreative.coding.annotations.BlockMeta;
+import com.megacreative.coding.BlockType;
 import org.bukkit.Location;
 import org.bukkit.Particle;
 import org.bukkit.entity.Player;
@@ -15,6 +17,7 @@ import org.bukkit.entity.Player;
  * Unified particle action that supports both basic and advanced particle effects
  * Maintains backward compatibility while providing advanced patterns and control
  */
+@BlockMeta(id = "playParticleEffect", displayName = "§aPlay Particle Effect", type = BlockType.ACTION)
 public class PlayParticleEffectAction implements BlockAction {
     private static final int MAX_PARTICLES = 100;
     private static final double MAX_SPREAD = 10.0;

@@ -4,6 +4,8 @@ import com.megacreative.coding.BlockCondition;
 import com.megacreative.coding.CodeBlock;
 import com.megacreative.coding.ExecutionContext;
 import com.megacreative.coding.ParameterResolver;
+import com.megacreative.coding.annotations.BlockMeta;
+import com.megacreative.coding.BlockType;
 import com.megacreative.coding.values.DataValue;
 import com.megacreative.services.BlockConfigService;
 import org.bukkit.Material;
@@ -19,6 +21,7 @@ import java.util.function.Function;
  * Condition for checking if a block at a relative position is of a specific type from container configuration.
  * This condition returns true if the block at the specified relative position is of the specified type.
  */
+@BlockMeta(id = "isBlockType", displayName = "§aIs Block Type", type = BlockType.CONDITION)
 public class IsBlockTypeCondition implements BlockCondition {
 
     @Override

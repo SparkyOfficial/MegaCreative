@@ -4,6 +4,8 @@ import com.megacreative.coding.BlockAction;
 import com.megacreative.coding.CodeBlock;
 import com.megacreative.coding.ExecutionContext;
 import com.megacreative.coding.ParameterResolver;
+import com.megacreative.coding.annotations.BlockMeta;
+import com.megacreative.coding.BlockType;
 import com.megacreative.coding.executors.ExecutionResult;
 import com.megacreative.coding.values.DataValue;
 import org.bukkit.Bukkit;
@@ -22,6 +24,7 @@ class EconomyException extends Exception {
     }
 }
 
+@BlockMeta(id = "economyTransaction", displayName = "§aEconomy Transaction", type = BlockType.ACTION)
 public class EconomyTransactionAction implements BlockAction {
     // Константы для сообщений
     private static final String PLAYER_NOT_FOUND = "Игрок не найден.";

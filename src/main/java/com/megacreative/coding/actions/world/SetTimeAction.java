@@ -5,6 +5,8 @@ import com.megacreative.coding.CodeBlock;
 import com.megacreative.coding.ExecutionContext;
 import com.megacreative.coding.executors.ExecutionResult;
 import com.megacreative.services.BlockConfigService;
+import com.megacreative.coding.annotations.BlockMeta;
+import com.megacreative.coding.BlockType;
 import org.bukkit.World;
 import org.bukkit.entity.Player;
 import org.bukkit.inventory.ItemStack;
@@ -16,6 +18,7 @@ import java.util.function.Function;
  * Action for setting the time in a world.
  * This action changes the world time based on the container configuration.
  */
+@BlockMeta(id = "setTime", displayName = "§aSet Time", type = BlockType.ACTION)
 public class SetTimeAction implements BlockAction {
 
     @Override

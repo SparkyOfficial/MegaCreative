@@ -4,6 +4,8 @@ import com.megacreative.coding.BlockAction;
 import com.megacreative.coding.CodeBlock;
 import com.megacreative.coding.ExecutionContext;
 import com.megacreative.coding.ParameterResolver;
+import com.megacreative.coding.annotations.BlockMeta;
+import com.megacreative.coding.BlockType;
 import com.megacreative.coding.executors.ExecutionResult;
 import com.megacreative.coding.values.DataValue;
 import com.megacreative.services.BlockConfigService;
@@ -19,6 +21,7 @@ import java.util.function.ToIntFunction;
  * Action for adding a player to a team.
  * This action retrieves parameters from the container configuration and adds a player to a team.
  */
+@BlockMeta(id = "addPlayerToTeam", displayName = "§aAdd Player To Team", type = BlockType.ACTION)
 public class AddPlayerToTeamAction implements BlockAction {
 
     @Override

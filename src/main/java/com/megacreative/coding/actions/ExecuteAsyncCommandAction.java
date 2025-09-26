@@ -4,6 +4,8 @@ import com.megacreative.coding.BlockAction;
 import com.megacreative.coding.CodeBlock;
 import com.megacreative.coding.ExecutionContext;
 import com.megacreative.coding.ParameterResolver;
+import com.megacreative.coding.annotations.BlockMeta;
+import com.megacreative.coding.BlockType;
 import com.megacreative.coding.executors.ExecutionResult;
 import com.megacreative.coding.values.DataValue;
 import com.megacreative.services.BlockConfigService;
@@ -18,6 +20,7 @@ import java.util.function.Function;
  * Action for executing a command asynchronously.
  * This action retrieves a command from the container configuration and executes it asynchronously.
  */
+@BlockMeta(id = "executeAsyncCommand", displayName = "§aExecute Async Command", type = BlockType.ACTION)
 public class ExecuteAsyncCommandAction implements BlockAction {
 
     @Override

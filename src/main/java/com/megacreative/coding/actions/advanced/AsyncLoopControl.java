@@ -8,6 +8,8 @@ import com.megacreative.coding.executors.ExecutionResult;
 import com.megacreative.coding.values.DataValue;
 import com.megacreative.coding.variables.VariableManager;
 import com.megacreative.models.CreativeWorld;
+import com.megacreative.coding.annotations.BlockMeta;
+import com.megacreative.coding.BlockType;
 import org.bukkit.Bukkit;
 import org.bukkit.entity.Player;
 import org.bukkit.plugin.Plugin;
@@ -23,6 +25,7 @@ import java.util.logging.Level;
  * Advanced async loop control that executes child blocks repeatedly without blocking the main thread
  * Includes performance monitoring, loop limits, and proper cleanup to prevent memory leaks
  */
+@BlockMeta(id = "asyncLoop", displayName = "§aAsync Loop", type = BlockType.ACTION)
 public class AsyncLoopControl implements BlockAction {
     
     // Static tracking of active loops to prevent runaway executions

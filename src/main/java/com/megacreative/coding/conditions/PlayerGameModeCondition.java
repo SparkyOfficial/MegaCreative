@@ -11,10 +11,14 @@ import org.bukkit.inventory.meta.ItemMeta;
 
 import java.util.function.Function;
 
+import com.megacreative.coding.annotations.BlockMeta;
+import com.megacreative.coding.BlockType;
+
 /**
  * Condition for checking if a player is in a specific game mode from container configuration.
  * This condition returns true if the player is in the specified game mode.
  */
+@BlockMeta(id = "playerGameMode", displayName = "§aPlayer Game Mode", type = BlockType.CONDITION)
 public class PlayerGameModeCondition implements BlockCondition {
 
     @Override

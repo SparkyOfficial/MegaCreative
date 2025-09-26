@@ -7,6 +7,8 @@ import com.megacreative.coding.ParameterResolver;
 import com.megacreative.coding.executors.ExecutionResult;
 import com.megacreative.coding.values.DataValue;
 import com.megacreative.services.BlockConfigService;
+import com.megacreative.coding.annotations.BlockMeta;
+import com.megacreative.coding.BlockType;
 import org.bukkit.Sound;
 import org.bukkit.entity.Player;
 import org.bukkit.inventory.ItemStack;
@@ -18,6 +20,7 @@ import java.util.function.Function;
  * 🎆 ENHANCED: Action for playing sounds to players
  * Supports both container-based configuration and parameter-based configuration
  */
+@BlockMeta(id = "playSound", displayName = "§aPlay Sound", type = BlockType.ACTION)
 public class PlaySoundAction implements BlockAction {
 
     @Override

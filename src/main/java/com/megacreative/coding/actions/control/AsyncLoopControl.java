@@ -18,10 +18,14 @@ import java.util.UUID;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.logging.Level;
 
+import com.megacreative.coding.annotations.BlockMeta;
+import com.megacreative.coding.BlockType;
+
 /**
  * Advanced async loop control that executes child blocks repeatedly without blocking the main thread
  * Includes performance monitoring, loop limits, and proper cleanup to prevent memory leaks
  */
+@BlockMeta(id = "asyncLoopControl", displayName = "§aAsync Loop Control", type = BlockType.ACTION)
 public class AsyncLoopControl implements BlockAction {
     
     // Static tracking of active loops to prevent runaway executions

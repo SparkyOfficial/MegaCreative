@@ -4,11 +4,14 @@ import com.megacreative.coding.BlockAction;
 import com.megacreative.coding.CodeBlock;
 import com.megacreative.coding.ExecutionContext;
 import com.megacreative.coding.ParameterResolver;
+import com.megacreative.coding.annotations.BlockMeta;
+import com.megacreative.coding.BlockType;
 import com.megacreative.coding.executors.ExecutionResult;
 import com.megacreative.coding.values.DataValue;
 import org.bukkit.entity.Player;
 import java.util.logging.Level;
 
+@BlockMeta(id = "debugLog", displayName = "§aDebug Log", type = BlockType.ACTION)
 public class DebugLogAction implements BlockAction {
 
     @Override

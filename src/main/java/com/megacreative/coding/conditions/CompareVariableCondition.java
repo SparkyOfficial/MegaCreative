@@ -4,6 +4,8 @@ import com.megacreative.coding.BlockCondition;
 import com.megacreative.coding.CodeBlock;
 import com.megacreative.coding.ExecutionContext;
 import com.megacreative.coding.ParameterResolver;
+import com.megacreative.coding.annotations.BlockMeta;
+import com.megacreative.coding.BlockType;
 import com.megacreative.coding.values.DataValue;
 import com.megacreative.coding.variables.VariableManager;
 import com.megacreative.services.BlockConfigService;
@@ -17,6 +19,7 @@ import java.util.function.Function;
  * Condition for comparing two variables from container configuration.
  * This condition returns true if the comparison between the two variables is true.
  */
+@BlockMeta(id = "compareVariable", displayName = "§aCompare Variables", type = BlockType.CONDITION)
 public class CompareVariableCondition implements BlockCondition {
 
     @Override

@@ -7,6 +7,8 @@ import com.megacreative.coding.ParameterResolver;
 import com.megacreative.coding.executors.ExecutionResult;
 import com.megacreative.coding.values.DataValue;
 import com.megacreative.services.BlockConfigService;
+import com.megacreative.coding.annotations.BlockMeta;
+import com.megacreative.coding.BlockType;
 import org.bukkit.Particle;
 import org.bukkit.entity.Player;
 import org.bukkit.inventory.ItemStack;
@@ -18,6 +20,7 @@ import java.util.function.Function;
  * Action for playing a particle effect to a player.
  * This action retrieves particle parameters from the container configuration and plays the particle effect.
  */
+@BlockMeta(id = "playParticle", displayName = "§aPlay Particle", type = BlockType.ACTION)
 public class PlayParticleAction implements BlockAction {
 
     @Override

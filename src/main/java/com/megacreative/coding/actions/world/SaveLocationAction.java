@@ -8,6 +8,8 @@ import com.megacreative.coding.executors.ExecutionResult;
 import com.megacreative.coding.values.DataValue;
 import com.megacreative.coding.variables.VariableManager;
 import com.megacreative.services.BlockConfigService;
+import com.megacreative.coding.annotations.BlockMeta;
+import com.megacreative.coding.BlockType;
 import org.bukkit.Location;
 import org.bukkit.entity.Player;
 import org.bukkit.inventory.ItemStack;
@@ -19,6 +21,7 @@ import java.util.function.Function;
  * Action for saving a player's location.
  * This action retrieves parameters from the container configuration and saves a player's location.
  */
+@BlockMeta(id = "saveLocation", displayName = "§aSave Location", type = BlockType.ACTION)
 public class SaveLocationAction implements BlockAction {
 
     @Override

@@ -5,6 +5,8 @@ import com.megacreative.coding.CodeBlock;
 import com.megacreative.coding.ExecutionContext;
 import com.megacreative.coding.ParameterResolver;
 import com.megacreative.coding.values.DataValue;
+import com.megacreative.coding.annotations.BlockMeta;
+import com.megacreative.coding.BlockType;
 import org.bukkit.entity.Player;
 import java.util.logging.Level;
 import java.util.logging.Logger;
@@ -13,6 +15,7 @@ import java.util.logging.Logger;
  * Condition that checks if a player is in a specific world.
  * Handles color codes in world names and provides detailed logging.
  */
+@BlockMeta(id = "isInWorld", displayName = "§aIs In World", type = BlockType.CONDITION)
 public class IsInWorldCondition implements BlockCondition {
     
     /**

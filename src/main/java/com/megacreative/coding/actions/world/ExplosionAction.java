@@ -5,6 +5,8 @@ import com.megacreative.coding.CodeBlock;
 import com.megacreative.coding.ExecutionContext;
 import com.megacreative.coding.executors.ExecutionResult;
 import com.megacreative.services.BlockConfigService;
+import com.megacreative.coding.annotations.BlockMeta;
+import com.megacreative.coding.BlockType;
 import org.bukkit.Location;
 import org.bukkit.entity.Player;
 import org.bukkit.inventory.ItemStack;
@@ -16,6 +18,7 @@ import java.util.function.Function;
  * Action for creating an explosion.
  * This action creates an explosion at the player's location from container configuration.
  */
+@BlockMeta(id = "explosion", displayName = "§aCreate Explosion", type = BlockType.ACTION)
 public class ExplosionAction implements BlockAction {
 
     @Override

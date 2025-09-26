@@ -12,6 +12,10 @@ import org.bukkit.inventory.meta.ItemMeta;
 
 import java.util.function.Function;
 
+import com.megacreative.coding.annotations.BlockMeta;
+import com.megacreative.coding.BlockType;
+
+@BlockMeta(id = "worldGuardRegionCheck", displayName = "§aWorldGuard Region Check", type = BlockType.CONDITION)
 public class WorldGuardRegionCheckCondition implements BlockCondition {
 
     @Override

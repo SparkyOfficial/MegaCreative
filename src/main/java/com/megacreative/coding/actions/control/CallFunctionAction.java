@@ -10,10 +10,14 @@ import org.bukkit.entity.Player;
 
 import java.util.concurrent.CompletableFuture;
 
+import com.megacreative.coding.annotations.BlockMeta;
+import com.megacreative.coding.BlockType;
+
 /**
  * Action for calling custom functions.
  * When executed, it finds and executes the registered function.
  */
+@BlockMeta(id = "callFunction", displayName = "§aCall Function", type = BlockType.ACTION)
 public class CallFunctionAction implements BlockAction {
 
     @Override

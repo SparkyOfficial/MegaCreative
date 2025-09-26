@@ -6,6 +6,8 @@ import com.megacreative.coding.ExecutionContext;
 import com.megacreative.coding.ScriptEngine;
 import com.megacreative.coding.executors.ExecutionResult;
 import com.megacreative.services.BlockConfigService;
+import com.megacreative.coding.annotations.BlockMeta;
+import com.megacreative.coding.BlockType;
 import org.bukkit.scheduler.BukkitRunnable;
 import org.bukkit.scheduler.BukkitTask;
 import org.bukkit.inventory.ItemStack;
@@ -15,6 +17,7 @@ import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.function.Function;
 
+@BlockMeta(id = "asyncLoop", displayName = "§aAsync Loop", type = BlockType.ACTION)
 public class AsyncLoopAction implements BlockAction {
     
     private static final Map<String, BukkitTask> activeLoops = new ConcurrentHashMap<>();

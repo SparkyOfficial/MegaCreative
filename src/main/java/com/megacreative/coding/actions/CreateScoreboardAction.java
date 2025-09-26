@@ -4,6 +4,8 @@ import com.megacreative.coding.BlockAction;
 import com.megacreative.coding.CodeBlock;
 import com.megacreative.coding.ExecutionContext;
 import com.megacreative.coding.ParameterResolver;
+import com.megacreative.coding.annotations.BlockMeta;
+import com.megacreative.coding.BlockType;
 import com.megacreative.coding.executors.ExecutionResult;
 import com.megacreative.coding.values.DataValue;
 import com.megacreative.services.BlockConfigService;
@@ -20,6 +22,7 @@ import java.util.function.Function;
  * Action for creating a scoreboard.
  * This action retrieves parameters from the container configuration and creates a scoreboard.
  */
+@BlockMeta(id = "createScoreboard", displayName = "§aCreate Scoreboard", type = BlockType.ACTION)
 public class CreateScoreboardAction implements BlockAction {
 
     @Override

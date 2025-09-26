@@ -4,6 +4,8 @@ import com.megacreative.coding.BlockCondition;
 import com.megacreative.coding.CodeBlock;
 import com.megacreative.coding.ExecutionContext;
 import com.megacreative.coding.ParameterResolver;
+import com.megacreative.coding.annotations.BlockMeta;
+import com.megacreative.coding.BlockType;
 import com.megacreative.coding.values.DataValue;
 import com.megacreative.coding.variables.VariableManager;
 import com.megacreative.services.BlockConfigService;
@@ -17,6 +19,7 @@ import java.util.function.Function;
  * Condition for checking if a variable is greater than a specific value from container configuration.
  * This condition returns true if the specified variable is greater than the specified value.
  */
+@BlockMeta(id = "ifVarGreater", displayName = "§aIf Variable Greater", type = BlockType.CONDITION)
 public class IfVarGreaterCondition implements BlockCondition {
 
     @Override

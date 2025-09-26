@@ -14,10 +14,14 @@ import org.bukkit.inventory.meta.ItemMeta;
 
 import java.util.function.Function;
 
+import com.megacreative.coding.annotations.BlockMeta;
+import com.megacreative.coding.BlockType;
+
 /**
  * Condition for checking if a player is holding a specific item from container configuration.
  * This condition returns true if the player is holding the specified item in their main hand.
  */
+@BlockMeta(id = "isPlayerHolding", displayName = "§aIs Player Holding", type = BlockType.CONDITION)
 public class IsPlayerHoldingCondition implements BlockCondition {
 
     @Override

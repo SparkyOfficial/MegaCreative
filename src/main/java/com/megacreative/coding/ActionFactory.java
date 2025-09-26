@@ -1,8 +1,7 @@
 package com.megacreative.coding;
 
+import com.megacreative.MegaCreative;
 import com.megacreative.coding.annotations.BlockMeta;
-import com.megacreative.core.DependencyContainer;
-import com.megacreative.coding.executors.ExecutionResult;
 import com.megacreative.util.ClassScanner;
 import com.megacreative.coding.events.EventPublisher;
 import com.megacreative.coding.events.CustomEvent;
@@ -22,128 +21,61 @@ import java.util.logging.Logger;
 public class ActionFactory implements EventPublisher {
     private static final Logger LOGGER = java.util.logging.Logger.getLogger(ActionFactory.class.getName());
 
-    private final Map<String, Supplier<BlockAction>> actionMap = new HashMap<>();
-    private final DependencyContainer dependencyContainer;
-    
-    // Map to store action display names
+    private final Map<String, Supplier<BlockAction>> actionRegistry = new HashMap<>();
     private final Map<String, String> actionDisplayNames = new HashMap<>();
-    
-    // Constants for action registration events
-    private static final String EVENT_ACTION_REGISTERED = "action_registered";
-    private static final String EVENT_ACTION_REGISTRATION_FAILED = "action_registration_failed";
-    
-    /**
-     * Creates an ActionFactory
-     * @param dependencyContainer Dependency container for resolving dependencies
-     *
-     * Создает ActionFactory
-     * @param dependencyContainer Контейнер зависимостей для разрешения зависимостей
-     *
-     * Erstellt eine ActionFactory
-     * @param dependencyContainer Abhängigkeitscontainer zum Auflösen von Abhängigkeiten
-     */
-    public ActionFactory(DependencyContainer dependencyContainer) {
-        this.dependencyContainer = dependencyContainer;
+    private final MegaCreative plugin;
+
+    public ActionFactory(MegaCreative plugin) {
+        this.plugin = plugin;
     }
 
     /**
      * Scans for annotated actions and registers them
      */
     public void registerAllActions() {
-        // Scan packages for annotated actions
+        actionRegistry.clear();
+        actionDisplayNames.clear();
         String basePackage = "com.megacreative.coding.actions";
-        
-        // Track registration statistics
-        int registeredCount = 0;
-        int failedCount = 0;
-        
-        for (Class<?> clazz : ClassScanner.findClasses(dependencyContainer.resolve(com.megacreative.MegaCreative.class), basePackage)) {
+
+        for (Class<?> clazz : ClassScanner.findClasses(plugin, basePackage)) {
             if (BlockAction.class.isAssignableFrom(clazz) && !clazz.isInterface() && clazz.isAnnotationPresent(BlockMeta.class)) {
                 BlockMeta meta = clazz.getAnnotation(BlockMeta.class);
                 if (meta.type() == BlockType.ACTION) {
                     try {
-                        // Try constructor with MegaCreative parameter
-                        try {
-                            java.lang.reflect.Constructor<? extends BlockAction> constructor = 
-                                clazz.asSubclass(BlockAction.class).getConstructor(com.megacreative.MegaCreative.class);
-                            register(meta.id(), meta.displayName(), () -> {
-                                try {
-                                    com.megacreative.MegaCreative plugin = dependencyContainer.resolve(com.megacreative.MegaCreative.class);
-                                    return constructor.newInstance(plugin);
-                                } catch (Exception e) {
-                                    LOGGER.warning("Failed to create action instance with plugin parameter: " + e.getMessage());
-                                    // Publish registration failure event
-                                    Map<String, DataValue> eventData = new HashMap<>();
-                                    eventData.put("action_id", DataValue.fromObject(meta.id()));
-                                    eventData.put("class_name", DataValue.fromObject(clazz.getName()));
-                                    eventData.put("error", DataValue.fromObject(e.getMessage()));
-                                    publishEvent(EVENT_ACTION_REGISTRATION_FAILED, eventData);
-                                    failedCount++;
-                                    return null;
-                                }
-                            });
-                            registeredCount++;
-                            LOGGER.fine("Successfully registered action with plugin constructor: " + meta.id() + " (" + clazz.getName() + ")");
-                        } catch (NoSuchMethodException e) {
-                            // Try no-argument constructor
+                        Supplier<BlockAction> supplier = () -> {
                             try {
-                                java.lang.reflect.Constructor<? extends BlockAction> constructor = clazz.asSubclass(BlockAction.class).getConstructor();
-                                register(meta.id(), meta.displayName(), () -> {
-                                    try {
-                                        return constructor.newInstance();
-                                    } catch (Exception ex) {
-                                        LOGGER.warning("Failed to create action instance: " + ex.getMessage());
-                                        // Publish registration failure event
-                                        Map<String, DataValue> eventData = new HashMap<>();
-                                        eventData.put("action_id", DataValue.fromObject(meta.id()));
-                                        eventData.put("class_name", DataValue.fromObject(clazz.getName()));
-                                        eventData.put("error", DataValue.fromObject(ex.getMessage()));
-                                        publishEvent(EVENT_ACTION_REGISTRATION_FAILED, eventData);
-                                        failedCount++;
-                                        return null;
-                                    }
-                                });
-                                registeredCount++;
-                                LOGGER.fine("Successfully registered action with no-arg constructor: " + meta.id() + " (" + clazz.getName() + ")");
-                            } catch (NoSuchMethodException ex) {
-                                LOGGER.warning("No suitable constructor found for action class: " + clazz.getName());
-                                // Publish registration failure event
-                                Map<String, DataValue> eventData = new HashMap<>();
-                                eventData.put("action_id", DataValue.fromObject(meta.id()));
-                                eventData.put("class_name", DataValue.fromObject(clazz.getName()));
-                                eventData.put("error", DataValue.fromObject("No suitable constructor found"));
-                                publishEvent(EVENT_ACTION_REGISTRATION_FAILED, eventData);
-                                failedCount++;
+                                // Try constructor with MegaCreative parameter first
+                                try {
+                                    java.lang.reflect.Constructor<? extends BlockAction> constructor = 
+                                        clazz.asSubclass(BlockAction.class).getConstructor(MegaCreative.class);
+                                    return constructor.newInstance(plugin);
+                                } catch (NoSuchMethodException e) {
+                                    // Fallback to no-argument constructor
+                                    java.lang.reflect.Constructor<? extends BlockAction> constructor = 
+                                        clazz.asSubclass(BlockAction.class).getConstructor();
+                                    return constructor.newInstance();
+                                }
+                            } catch (Exception e) {
+                                LOGGER.severe("Не удалось создать экземпляр действия: " + clazz.getName());
+                                e.printStackTrace();
+                                return null;
                             }
-                        }
-                        
-                        // Publish successful registration event
-                        Map<String, DataValue> eventData = new HashMap<>();
-                        eventData.put("action_id", DataValue.fromObject(meta.id()));
-                        eventData.put("display_name", DataValue.fromObject(meta.displayName()));
-                        eventData.put("class_name", DataValue.fromObject(clazz.getName()));
-                        publishEvent(EVENT_ACTION_REGISTERED, eventData);
+                        };
+                        register(meta.id(), meta.displayName(), supplier);
                     } catch (Exception e) {
-                        LOGGER.warning("Error registering action class " + clazz.getName() + ": " + e.getMessage());
-                        // Publish registration failure event
-                        Map<String, DataValue> eventData = new HashMap<>();
-                        eventData.put("action_id", DataValue.fromObject(clazz.getName()));
-                        eventData.put("error", DataValue.fromObject(e.getMessage()));
-                        publishEvent(EVENT_ACTION_REGISTRATION_FAILED, eventData);
-                        failedCount++;
+                        LOGGER.severe("Не удалось зарегистрировать действие из класса (нужен пустой конструктор): " + clazz.getName());
                     }
                 }
             }
         }
-        
-        LOGGER.info("Action registration complete. Registered: " + registeredCount + ", Failed: " + failedCount);
+        LOGGER.info("Загружено " + actionRegistry.size() + " действий блоков.");
     }
 
     /**
      * Register an action with display name
      */
     private void register(String actionId, String displayName, Supplier<BlockAction> supplier) {
-        actionMap.put(actionId, supplier);
+        actionRegistry.put(actionId, supplier);
         actionDisplayNames.put(actionId, displayName);
     }
 
@@ -161,11 +93,11 @@ public class ActionFactory implements EventPublisher {
      * @return BlockAction oder null, wenn nicht gefunden
      */
     public BlockAction createAction(String actionId) {
-        Supplier<BlockAction> supplier = actionMap.get(actionId);
+        Supplier<BlockAction> supplier = actionRegistry.get(actionId);
         if (supplier != null) {
             return supplier.get();
         }
-        return null;
+        return null; // Не логируем ошибку здесь, чтобы не спамить
     }
 
     /**
@@ -198,7 +130,7 @@ public class ActionFactory implements EventPublisher {
      * @return Anzahl der registrierten Aktionen
      */
     public int getActionCount() {
-        return actionMap.size();
+        return actionRegistry.size();
     }
     
     /**

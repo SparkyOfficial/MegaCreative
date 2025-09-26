@@ -5,11 +5,14 @@ import com.megacreative.coding.CodeBlock;
 import com.megacreative.coding.ExecutionContext;
 import com.megacreative.coding.BlockAction;
 import com.megacreative.coding.executors.ExecutionResult;
+import com.megacreative.coding.annotations.BlockMeta;
+import com.megacreative.coding.BlockType;
 
 /**
  * A generic block action that can be dynamically created from configuration.
  * This allows for runtime-defined actions without requiring code changes.
  */
+@BlockMeta(id = "genericBlock", displayName = "§aGeneric Block", type = BlockType.ACTION)
 public class GenericBlockAction implements BlockAction {
     private final BlockConfig config;
     

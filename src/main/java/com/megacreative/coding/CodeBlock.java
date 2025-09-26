@@ -19,8 +19,7 @@ public class CodeBlock implements Cloneable {
     /** Unique block identifier */
     private UUID id;
     
-    /** Block type (DIAMOND_BLOCK etc.) - DEPRECATED: Use materialName instead */
-    private Material material;
+    // Removed deprecated Material field - use materialName instead
     
     /** Selected action (e.g. onJoin, sendMessage) */
     private String action;
@@ -133,11 +132,9 @@ public class CodeBlock implements Cloneable {
     }
     
     /**
-     * DEPRECATED: Use getMaterialName() instead
      * Gets the material of this block
-     * @return Block material
+     * @return Block material or STONE in case of error
      */
-    @Deprecated
     public Material getMaterial() { 
         if (materialName != null) {
             try {
@@ -146,17 +143,14 @@ public class CodeBlock implements Cloneable {
                 return Material.STONE; // Default fallback
             }
         }
-        return material; 
+        return Material.STONE; // Default fallback
     }
     
     /**
-     * DEPRECATED: Use setMaterialName() instead
      * Sets the material of this block
      * @param material Block material
      */
-    @Deprecated
     public void setMaterial(Material material) { 
-        this.material = material;
         if (material != null) {
             this.materialName = material.name();
         }
@@ -231,30 +225,49 @@ public class CodeBlock implements Cloneable {
     }
     
     /**
-     * Gets the location of this block (helper method that creates Bukkit Location on demand)
-     * @return Block location or null if world not found
+     * Gets the location of this block (removed Bukkit dependency)
+     * @return Block location data as separate components
      */
-    public org.bukkit.Location getLocation() {
-        if (worldId != null) {
-            org.bukkit.World world = org.bukkit.Bukkit.getWorld(worldId);
-            if (world != null) {
-                return new org.bukkit.Location(world, x, y, z);
-            }
-        }
-        return null;
+    public String getLocationWorldId() {
+        return worldId;
     }
     
     /**
-     * Sets the location of this block
-     * @param location Block location
+     * Gets X coordinate
+     * @return X coordinate
      */
-    public void setLocation(org.bukkit.Location location) {
-        if (location != null) {
-            this.worldId = location.getWorld().getName();
-            this.x = location.getBlockX();
-            this.y = location.getBlockY();
-            this.z = location.getBlockZ();
-        }
+    public int getLocationX() {
+        return x;
+    }
+    
+    /**
+     * Gets Y coordinate
+     * @return Y coordinate
+     */
+    public int getLocationY() {
+        return y;
+    }
+    
+    /**
+     * Gets Z coordinate
+     * @return Z coordinate
+     */
+    public int getLocationZ() {
+        return z;
+    }
+    
+    /**
+     * Sets the location of this block (removed Bukkit dependency)
+     * @param worldId World ID
+     * @param x X coordinate
+     * @param y Y coordinate
+     * @param z Z coordinate
+     */
+    public void setLocation(String worldId, int x, int y, int z) {
+        this.worldId = worldId;
+        this.x = x;
+        this.y = y;
+        this.z = z;
     }
     
     public String getWorldId() {

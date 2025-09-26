@@ -7,6 +7,8 @@ import com.megacreative.coding.ParameterResolver;
 import com.megacreative.coding.executors.ExecutionResult;
 import com.megacreative.coding.values.DataValue;
 import com.megacreative.services.BlockConfigService;
+import com.megacreative.coding.annotations.BlockMeta;
+import com.megacreative.coding.BlockType;
 import org.bukkit.Location;
 import org.bukkit.Material;
 import org.bukkit.entity.Player;
@@ -19,6 +21,7 @@ import java.util.function.Function;
  * Action for setting a block at a location.
  * This action retrieves block parameters from the container configuration and sets the block.
  */
+@BlockMeta(id = "setBlock", displayName = "§aSet Block", type = BlockType.ACTION)
 public class SetBlockAction implements BlockAction {
 
     @Override

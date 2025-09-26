@@ -11,6 +11,8 @@ import com.megacreative.coding.values.ValueType;
 import com.megacreative.coding.values.types.ListValue;
 import com.megacreative.coding.values.types.TextValue;
 import com.megacreative.coding.variables.VariableManager;
+import com.megacreative.coding.annotations.BlockMeta;
+import com.megacreative.coding.BlockType;
 import org.bukkit.entity.Player;
 
 import java.util.HashMap;
@@ -31,6 +33,7 @@ import java.util.logging.Level;
  * - Trigger event "player_achievement" with data {"player": "${player}", "achievement": "first_login"}
  * - Trigger global event "server_message" with data {"message": "Welcome to the server!"}
  */
+@BlockMeta(id = "triggerCustomEvent", displayName = "§aTrigger Custom Event", type = BlockType.ACTION)
 public class TriggerCustomEventAction implements BlockAction {
     
     private static final String EVENT_NAME_PARAM = "event_name";

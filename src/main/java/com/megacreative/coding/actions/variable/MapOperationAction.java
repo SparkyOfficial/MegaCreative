@@ -9,6 +9,8 @@ import com.megacreative.coding.values.ValueType;
 import com.megacreative.coding.values.types.MapValue;
 import com.megacreative.coding.values.types.ListValue;
 import com.megacreative.coding.values.types.TextValue;
+import com.megacreative.coding.annotations.BlockMeta;
+import com.megacreative.coding.BlockType;
 import java.util.Map;
 import com.megacreative.coding.variables.IVariableManager;
 import org.bukkit.entity.Player;
@@ -18,6 +20,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.ArrayList;
 
+@BlockMeta(id = "mapOperation", displayName = "§aMap Operation", type = BlockType.ACTION)
 public class MapOperationAction implements BlockAction {
 
     @Override
