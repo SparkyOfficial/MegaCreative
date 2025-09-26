@@ -25,6 +25,7 @@ import com.megacreative.coding.functions.AdvancedFunctionManager;
 import com.megacreative.gui.interactive.InteractiveGUIManager;
 import com.megacreative.gui.interactive.ReferenceSystemStyleGUI;
 import com.megacreative.gui.coding.EnhancedActionParameterGUI;
+import com.megacreative.services.MessagingService;
 import com.megacreative.MegaCreative;
 import com.megacreative.tools.CodeBlockClipboard;
 // 🎆 Reference system-style comprehensive events
@@ -154,6 +155,9 @@ public class ServiceRegistry {
 
     // Player mode manager for DEV/PLAY mode system
     private PlayerModeManager playerModeManager;
+    
+    // Messaging service for Adventure API
+    private MessagingService messagingService;
 
     /**
      * Creates a new service registry
@@ -182,7 +186,7 @@ public class ServiceRegistry {
         // Initialize factories with dependency container
         // Инициализировать фабрики с контейнером зависимостей
         // Fabriken mit Abhängigkeitscontainer initialisieren
-        this.actionFactory = new ActionFactory(dependencyContainer);
+        this.actionFactory = new ActionFactory((MegaCreative) plugin);
         this.conditionFactory = new ConditionFactory();
         
         // Initialize ScriptEngine with its dependencies
@@ -400,7 +404,7 @@ public class ServiceRegistry {
             // Initialize factories with dependency container
             // Инициализировать фабрики с контейнером зависимостей
             // Fabriken mit Abhängigkeitscontainer initialisieren
-            this.actionFactory = new ActionFactory(dependencyContainer);
+            this.actionFactory = new ActionFactory((MegaCreative) plugin);
             this.conditionFactory = new ConditionFactory();
             
             // Register factories in the service registry
@@ -1155,6 +1159,20 @@ public class ServiceRegistry {
     }
     
     /**
+     * Gets the messaging service for Adventure API
+     * @return Messaging service instance
+     *
+     * Получает сервис сообщений для Adventure API
+     * @return Экземпляр сервиса сообщений
+     *
+     * Ruft den Messaging-Service für Adventure API ab
+     * @return Messaging-Service-Instanz
+     */
+    public MessagingService getMessagingService() {
+        return messagingService;
+    }
+    
+    /**
      * Gets the enemy player restriction manager
      * @return Enemy player restriction manager instance
      *
@@ -1390,6 +1408,14 @@ public class ServiceRegistry {
         if (enemyPlayerRestrictionManager == null) {
             this.enemyPlayerRestrictionManager = new EnemyPlayerRestrictionManager((MegaCreative) plugin);
             registerService(EnemyPlayerRestrictionManager.class, enemyPlayerRestrictionManager);
+        }
+        
+        // Initialize Messaging Service for Adventure API
+        // Инициализировать сервис сообщений для Adventure API
+        // Messaging-Service für Adventure API initialisieren
+        if (messagingService == null) {
+            this.messagingService = new MessagingService((MegaCreative) plugin);
+            registerService(MessagingService.class, messagingService);
         }
         
         log.info("BlockConfigService initialized with " + blockConfigService.getAllBlockConfigs().size() + " block configurations");

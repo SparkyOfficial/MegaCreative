@@ -22,6 +22,7 @@ import com.megacreative.tools.CodeBlockClipboard;
 // 🎆 Reference system-style comprehensive events
 import com.megacreative.managers.ReferenceSystemEventManager;
 import com.megacreative.listeners.CompilationListener;
+import com.megacreative.commands.GlobalChatCommand; // Add this import
 import org.bukkit.plugin.java.JavaPlugin;
 import org.bukkit.plugin.PluginManager;
 import org.bukkit.event.Listener;
@@ -414,6 +415,11 @@ public class MegaCreative extends JavaPlugin {
         // Test script command for verification
         if (getCommand("testscript") != null) {
             getCommand("testscript").setExecutor(new com.megacreative.commands.TestScriptCommand(this));
+        }
+        
+        // Global chat command
+        if (getCommand("cc") != null) {
+            getCommand("cc").setExecutor(new GlobalChatCommand(this));
         }
     }
     

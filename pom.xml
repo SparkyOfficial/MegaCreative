@@ -138,9 +138,6 @@
                         <arg>-parameters</arg>
                         <arg>-Xlint:all</arg>
                         <arg>-Xdiags:verbose</arg>
-                        <arg>--enable-preview</arg>
-                        <arg>--release</arg>
-                        <arg>21</arg>
                     </compilerArgs>
                     <showWarnings>true</showWarnings>
                     <showDeprecation>true</showDeprecation>
@@ -160,8 +157,6 @@
                 <configuration>
                     <skipTests>true</skipTests>
                     <argLine>
-                        --enable-preview
-                        --release 21
                         -Dfile.encoding=UTF-8
                     </argLine>
                     <trimStackTrace>false</trimStackTrace>
@@ -263,6 +258,27 @@
             <artifactId>paper-api</artifactId>
             <version>${paper.api.version}</version>
             <scope>provided</scope>
+        </dependency>
+        
+        <!-- Adventure API for modern messaging -->
+        <dependency>
+            <groupId>net.kyori</groupId>
+            <artifactId>adventure-api</artifactId>
+            <version>4.17.0</version>
+        </dependency>
+        
+        <!-- Adventure Platform for Bukkit -->
+        <dependency>
+            <groupId>net.kyori</groupId>
+            <artifactId>adventure-platform-bukkit</artifactId>
+            <version>4.3.4</version>
+        </dependency>
+        
+        <!-- Adventure Text Serializer for JSON -->
+        <dependency>
+            <groupId>net.kyori</groupId>
+            <artifactId>adventure-text-serializer-gson</artifactId>
+            <version>4.17.0</version>
         </dependency>
         
         <!-- CommandAPI for better command handling -->

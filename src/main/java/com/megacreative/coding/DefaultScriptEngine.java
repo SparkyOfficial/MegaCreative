@@ -102,7 +102,7 @@ public class DefaultScriptEngine implements ScriptEngine, EnhancedScriptEngine, 
         this.debugger = debugger;
         this.blockConfigService = blockConfigService;
         // Передаем DependencyContainer, если он у вас есть, или создаем новые
-        this.actionFactory = new ActionFactory(plugin.getDependencyContainer());
+        this.actionFactory = new ActionFactory(plugin);
         this.conditionFactory = new ConditionFactory();
         
         // 🎆 Reference system: Initialize advanced execution engine

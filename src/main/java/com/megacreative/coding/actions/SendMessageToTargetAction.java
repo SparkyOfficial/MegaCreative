@@ -7,12 +7,16 @@ import com.megacreative.coding.ParameterResolver;
 import com.megacreative.coding.TargetSelector;
 import com.megacreative.coding.executors.ExecutionResult;
 import com.megacreative.coding.values.DataValue;
+import com.megacreative.services.MessagingService;
+import com.megacreative.coding.annotations.BlockMeta;
+import com.megacreative.coding.BlockType;
 import org.bukkit.entity.Player;
 
 /**
  * Action that sends a message to a target player or players
  * Demonstrates the use of target selectors
  */
+@BlockMeta(id = "sendMessageToTarget", displayName = "§aSend Message to Target", type = BlockType.ACTION)
 public class SendMessageToTargetAction implements BlockAction {
     
     @Override
@@ -42,6 +46,9 @@ public class SendMessageToTargetAction implements BlockAction {
                 return ExecutionResult.error("No targets found for selector: " + targetSelectorStr);
             }
             
+            // Get messaging service
+            MessagingService messagingService = context.getPlugin().getServiceRegistry().getMessagingService();
+            
             // Send message to all targets
             for (Player target : targets) {
                 // Replace placeholders
@@ -49,7 +56,12 @@ public class SendMessageToTargetAction implements BlockAction {
                     .replace("%player%", target.getName())
                     .replace("%sender%", context.getPlayer() != null ? context.getPlayer().getName() : "System");
                 
-                target.sendMessage(finalMessage);
+                // Send message using Adventure API if available, otherwise fallback to regular sendMessage
+                if (messagingService != null) {
+                    messagingService.sendMessage(target, finalMessage);
+                } else {
+                    target.sendMessage(finalMessage);
+                }
             }
             
             return ExecutionResult.success("Message sent to " + targets.size() + " player(s)");

@@ -39,7 +39,7 @@ public abstract class AbstractParameterEditor implements GUIManager.ManagedGUIIn
         this.player = player;
         this.codeBlock = codeBlock;
         this.title = title;
-        this.blockLocation = codeBlock.getLocation();
+        this.blockLocation = new org.bukkit.Location(org.bukkit.Bukkit.getWorld(codeBlock.getWorldId()), codeBlock.getX(), codeBlock.getY(), codeBlock.getZ());
         this.inventory = plugin.getServer().createInventory(null, size, title);
         
         // Get container manager from service registry

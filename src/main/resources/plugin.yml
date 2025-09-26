@@ -302,3 +302,9 @@ commands:
     usage: /testscript
     permission: megacreative.user
     aliases: [ts]
+
+  cc:
+    description: Send message to global chat
+    usage: /cc <message>
+    permission: megacreative.user
+    aliases: [globalchat, gchat]

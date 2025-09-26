@@ -408,7 +408,7 @@ public class EnhancedActionParameterGUI {
         ItemMeta meta = item.getItemMeta();
         
         if (meta != null) {
-            meta.setDisplayName("§c🎆 Close Editor");
+            meta.setDisplayName("§c erotik Close Editor");
             List<String> lore = new ArrayList<>();
             lore.add("§7Close the parameter editor");
             lore.add("§7Changes are already saved");
@@ -427,7 +427,7 @@ public class EnhancedActionParameterGUI {
         ItemMeta meta = item.getItemMeta();
         
         if (meta != null) {
-            meta.setDisplayName("§6🎆 Reset Parameters");
+            meta.setDisplayName("§6 erotik Reset Parameters");
             List<String> lore = new ArrayList<>();
             lore.add("§7Reset all parameters");
             lore.add("§7to their default values");
@@ -448,7 +448,7 @@ public class EnhancedActionParameterGUI {
         ItemMeta meta = item.getItemMeta();
         
         if (meta != null) {
-            meta.setDisplayName("§b🎆 Help: " + actionId);
+            meta.setDisplayName("§b erotik Help: " + actionId);
             List<String> lore = new ArrayList<>();
             lore.add("§7Get help for this action type");
             lore.add("§7and its parameters");
@@ -494,7 +494,8 @@ public class EnhancedActionParameterGUI {
     private void saveBlockToWorld(CodeBlock block) {
         // Save the world to persist changes
         var worldManager = plugin.getWorldManager();
-        var world = worldManager.findCreativeWorldByBukkit(block.getLocation().getWorld());
+        Location blockLocation = new org.bukkit.Location(org.bukkit.Bukkit.getWorld(block.getWorldId()), block.getX(), block.getY(), block.getZ());
+        com.megacreative.models.CreativeWorld world = worldManager.findCreativeWorldByBukkit(blockLocation.getWorld());
         if (world != null) {
             worldManager.saveWorld(world);
         }

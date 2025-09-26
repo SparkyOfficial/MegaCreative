@@ -519,7 +519,7 @@ public class BlockPlacementHandler implements Listener, EventSubscriber {
         if (plugin.getServiceRegistry() != null) {
             com.megacreative.gui.coding.EnhancedActionParameterGUI enhancedGUI = 
                 new com.megacreative.gui.coding.EnhancedActionParameterGUI(plugin);
-            enhancedGUI.openParameterEditor(player, codeBlock.getLocation(), actionId);
+            enhancedGUI.openParameterEditor(player, new org.bukkit.Location(org.bukkit.Bukkit.getWorld(codeBlock.getWorldId()), codeBlock.getX(), codeBlock.getY(), codeBlock.getZ()), actionId);
         }
     }
     
@@ -700,7 +700,7 @@ public class BlockPlacementHandler implements Listener, EventSubscriber {
                 new com.megacreative.coding.CodingParameterGUI(
                     player, 
                     conditionId, 
-                    codeBlock.getLocation(), 
+                    new org.bukkit.Location(org.bukkit.Bukkit.getWorld(codeBlock.getWorldId()), codeBlock.getX(), codeBlock.getY(), codeBlock.getZ()), 
                     parameters -> {
                         // Apply parameters to the code block
                         for (Map.Entry<String, Object> entry : parameters.entrySet()) {
@@ -883,7 +883,7 @@ public class BlockPlacementHandler implements Listener, EventSubscriber {
                     bracketBlock.setBracketType(CodeBlock.BracketType.OPEN); // Default
                 }
                 
-                bracketBlock.setLocation(location);
+                bracketBlock.setLocation(location.getWorld().getName(), location.getBlockX(), location.getBlockY(), location.getBlockZ());
                 blockCodeBlocks.put(location, bracketBlock);
                 return bracketBlock;
             }
@@ -892,7 +892,7 @@ public class BlockPlacementHandler implements Listener, EventSubscriber {
         
         // Create a new code block
         CodeBlock codeBlock = new CodeBlock(material.name(), "NOT_SET");
-        codeBlock.setLocation(location);
+        codeBlock.setLocation(location.getWorld().getName(), location.getBlockX(), location.getBlockY(), location.getBlockZ());
         
         // Try to extract action/event from sign
         String[] lines = sign.getLines();

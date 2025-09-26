@@ -126,7 +126,7 @@ public class AdvancedScriptOptimizer {
                     "Consider flattening nested loops or using more efficient data structures",
                     OptimizationPriority.HIGH,
                     true,
-                    block.getLocation()
+                    new org.bukkit.Location(org.bukkit.Bukkit.getWorld(block.getWorldId()), block.getX(), block.getY(), block.getZ())
                 ));
             }
         }
@@ -145,7 +145,7 @@ public class AdvancedScriptOptimizer {
                         "Consider moving expensive operations outside the loop or caching results",
                         OptimizationPriority.MEDIUM,
                         false,
-                        block.getLocation()
+                        new org.bukkit.Location(org.bukkit.Bukkit.getWorld(block.getWorldId()), block.getX(), block.getY(), block.getZ())
                     ));
                 }
             }
@@ -164,7 +164,7 @@ public class AdvancedScriptOptimizer {
                     "Add proper exit conditions or maximum iteration limits",
                     OptimizationPriority.CRITICAL,
                     false,
-                    block.getLocation()
+                    new org.bukkit.Location(org.bukkit.Bukkit.getWorld(block.getWorldId()), block.getX(), block.getY(), block.getZ())
                 ));
             }
         }
@@ -213,7 +213,7 @@ public class AdvancedScriptOptimizer {
                     "Consider using switch statements or lookup tables for better performance",
                     OptimizationPriority.MEDIUM,
                     false,
-                    block.getLocation()
+                    new org.bukkit.Location(org.bukkit.Bukkit.getWorld(block.getWorldId()), block.getX(), block.getY(), block.getZ())
                 ));
             }
         }
@@ -231,7 +231,7 @@ public class AdvancedScriptOptimizer {
                     "Remove duplicate condition checks to improve performance",
                     OptimizationPriority.LOW,
                     true,
-                    block.getLocation()
+                    new org.bukkit.Location(org.bukkit.Bukkit.getWorld(block.getWorldId()), block.getX(), block.getY(), block.getZ())
                 ));
             }
         }
@@ -250,7 +250,7 @@ public class AdvancedScriptOptimizer {
                         "Consider caching condition results or simplifying the condition",
                         OptimizationPriority.MEDIUM,
                         false,
-                        block.getLocation()
+                        new org.bukkit.Location(org.bukkit.Bukkit.getWorld(block.getWorldId()), block.getX(), block.getY(), block.getZ())
                     ));
                 }
             }
@@ -615,7 +615,7 @@ public class AdvancedScriptOptimizer {
                             "Use StringBuilder or similar for efficient string building in loops",
                             OptimizationPriority.MEDIUM,
                             false,
-                            innerBlock.getLocation()
+                            new org.bukkit.Location(org.bukkit.Bukkit.getWorld(innerBlock.getWorldId()), innerBlock.getX(), innerBlock.getY(), innerBlock.getZ())
                         ));
                     }
                 }
@@ -637,7 +637,7 @@ public class AdvancedScriptOptimizer {
                         "Consider flattening nested conditionals or using early returns",
                         OptimizationPriority.MEDIUM,
                         false,
-                        block.getLocation()
+                        new org.bukkit.Location(org.bukkit.Bukkit.getWorld(block.getWorldId()), block.getX(), block.getY(), block.getZ())
                     ));
                 }
             }

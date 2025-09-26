@@ -22,2200 +22,290 @@ import java.util.function.Function;
  */
 @BlockMeta(id = "subVar", displayName = "§aSubtract from Variable", type = BlockType.ACTION)
 public class SubVarAction implements BlockAction {
-    
-    // Define the missing constants
-    private static final double MIN_VARIABLE_VALUE = -1000000.0;
-    private static final double MAX_VARIABLE_VALUE = 1000000.0;
 
-    private VariableValue getVariableValue(VariableManager variableManager, String varName, String scriptId, Player player) {
-        // Try to get the variable from different scopes
-        
-        // First try player variables
-        if (player != null) {
-            DataValue var = variableManager.getPlayerVariable(player.getUniqueId(), varName);
-            if (var != null) {
-                return new VariableValue(var, VariableManager.VariableScope.PLAYER, player.getUniqueId().toString());
-            }
-        }
-        
-        // If not found, try local variables
-        DataValue localVar = variableManager.getLocalVariable(scriptId, varName);
-        if (localVar != null) {
-            return new VariableValue(localVar, VariableManager.VariableScope.LOCAL, scriptId);
-        }
-        
-        // If not found, try global variables
-        DataValue globalVar = variableManager.getGlobalVariable(varName);
-        if (globalVar != null) {
-            return new VariableValue(globalVar, VariableManager.VariableScope.GLOBAL, "global");
-        }
-        
-        // If not found, try server variables
-        DataValue serverVar = variableManager.getServerVariable(varName);
-        if (serverVar != null) {
-            return new VariableValue(serverVar, VariableManager.VariableScope.SERVER, "server");
-        }
-        
-        return null;
-    }
-    
-    private void setVariableValue(VariableManager variableManager, String varName, DataValue value, 
-                                 VariableManager.VariableScope scope, String context) {
-        switch (scope) {
-            case PLAYER:
-                variableManager.setPlayerVariable(java.util.UUID.fromString(context), varName, value);
-                break;
-            case LOCAL:
-                variableManager.setLocalVariable(context, varName, value);
-                break;
-            case GLOBAL:
-                variableManager.setGlobalVariable(varName, value);
-                break;
-            case SERVER:
-                variableManager.setServerVariable(varName, value);
-                break;
-            default:
-                // Default to local scope if scope is not specified
-                variableManager.setLocalVariable(context, varName, value);
-                break;
-        }
-    }
-    
     @Override
     public ExecutionResult execute(CodeBlock block, ExecutionContext context) {
-        if (block == null || context == null) {
-            return ExecutionResult.error("CodeBlock and ExecutionContext cannot be null");
-        }
-        
         try {
-            // Get variable parameters from the container configuration
-            SubVarParams params = getVarParamsFromContainer(block, context);
-            
-            if (params.nameStr == null || params.nameStr.isEmpty()) {
-                return ExecutionResult.error("Variable name is not configured");
+            // Get and validate parameters
+            SubVarParams params = getAndValidateParams(block, context);
+            if (params == null) {
+                return ExecutionResult.error("Invalid variable configuration");
             }
 
-            // Resolve any placeholders in the parameters
-            ParameterResolver resolver = new ParameterResolver(context);
-            DataValue nameValue = DataValue.of(params.nameStr);
-            DataValue resolvedName = resolver.resolve(context, nameValue);
-            
-            DataValue valueValue = DataValue.of(params.valueStr);
-            DataValue resolvedValue = resolver.resolve(context, valueValue);
-            
-            // Parse parameters
-            String varName = resolvedName.asString();
-            String valueStr = resolvedValue.asString();
-            
-            if (varName == null || varName.trim().isEmpty()) {
-                return ExecutionResult.error("Invalid variable name");
-            }
-            
-            varName = varName.trim();
-
-            // Parse the value as a number with validation
-            double value;
-            try {
-                value = Double.parseDouble(valueStr);
-                // Validate value range
-                if (value < MIN_VARIABLE_VALUE || value > MAX_VARIABLE_VALUE) {
-                    return ExecutionResult.error(String.format("Value must be between %f and %f", 
-                        MIN_VARIABLE_VALUE, MAX_VARIABLE_VALUE));
-                }
-            } catch (NumberFormatException e) {
-                return ExecutionResult.error("Invalid numeric value: " + valueStr);
+            // Parse the numeric value to subtract
+            double valueToSubtract = parseValue(params.valueStr);
+            if (Double.isNaN(valueToSubtract)) {
+                return ExecutionResult.error("Invalid value: " + params.valueStr);
             }
 
-            // Get the actual variable value from the VariableManager
-            VariableManager variableManager = context.getPlugin().getVariableManager();
-            if (variableManager == null) {
-                return ExecutionResult.error("Variable manager is not available");
-            }
-            
-            // Get the variable value using the refactored method
-            VariableValue variable = getVariableValue(variableManager, varName, context.getScriptId(), context.getPlayer());
-            
-            // Get current value or default to 0
-            double currentValue = 0.0;
-            VariableManager.VariableScope scope = VariableManager.VariableScope.LOCAL;
-            String scopeContext = context.getScriptId();
-            
-            if (variable != null && variable.value != null) {
-                try {
-                    currentValue = variable.value.asNumber().doubleValue();
-                    scope = variable.scope;
-                    scopeContext = variable.context;
-                } catch (NumberFormatException e) {
-                    // If current value is not a number, treat as 0 and log a warning
-                    context.getPlugin().getLogger().warning("Variable " + varName + " is not a number, treating as 0");
-                }
-            }
-            
-            // Calculate new value with bounds checking
-            double newValue;
-            try {
-                newValue = Math.subtractExact((long)currentValue, (long)value);
-                
-                // Additional check for double overflow
-                if (newValue > MAX_VARIABLE_VALUE || newValue < MIN_VARIABLE_VALUE) {
-                    throw new ArithmeticException("Variable value out of range");
-                }
-            } catch (ArithmeticException e) {
-                return ExecutionResult.error("Arithmetic error: " + e.getMessage());
-            }
-            
-            // Set the updated value using the refactored method
-            DataValue newValueData = DataValue.of(newValue);
-            setVariableValue(variableManager, varName, newValueData, scope, scopeContext);
-            
-            context.getPlugin().getLogger().info("Subtracting " + value + " from variable " + varName + " (new value: " + newValue + ")");
-            
-            return ExecutionResult.success("Variable updated successfully");
+            // Process the variable update
+            return updateVariableValue(context, params.nameStr, valueToSubtract);
         } catch (Exception e) {
             return ExecutionResult.error("Failed to update variable: " + e.getMessage());
         }
     }
-    
+
+    /**
+     * Gets and validates parameters from the block and context
+     */
+    private SubVarParams getAndValidateParams(CodeBlock block, ExecutionContext context) {
+        SubVarParams params = getVarParamsFromContainer(block, context);
+        if (params.nameStr == null || params.nameStr.isEmpty()) {
+            return null;
+        }
+
+        // Resolve any placeholders in the parameters
+        ParameterResolver resolver = new ParameterResolver(context);
+        String varName = resolver.resolve(context, DataValue.of(params.nameStr)).asString();
+        String valueStr = resolver.resolve(context, DataValue.of(params.valueStr)).asString();
+
+        if (varName == null || varName.isEmpty()) {
+            return null;
+        }
+
+        params.nameStr = varName;
+        params.valueStr = valueStr;
+        return params;
+    }
+
+    /**
+     * Parses a string value to double, returns Double.NaN if parsing fails
+     */
+    private double parseValue(String valueStr) {
+        try {
+            return Double.parseDouble(valueStr);
+        } catch (NumberFormatException e) {
+            return Double.NaN;
+        }
+    }
+
+    /**
+     * Updates the variable value in the appropriate scope
+     */
+    private ExecutionResult updateVariableValue(ExecutionContext context, String varName, double valueToSubtract) {
+        VariableManager variableManager = context.getPlugin().getVariableManager();
+        Player player = context.getPlayer();
+
+        // Find the variable in different scopes
+        VariableScopeInfo scopeInfo = findVariableScope(variableManager, player, context.getScriptId(), varName);
+
+        // Get current value or default to 0
+        double currentValue = getCurrentVariableValue(scopeInfo.getCurrentVar());
+
+        // Calculate and set new value (subtract instead of add)
+        double newValue = currentValue - valueToSubtract;
+        setVariableValue(variableManager, scopeInfo, varName, newValue, context.getScriptId(), player);
+
+        // Log the operation
+        context.getPlugin().getLogger().info(
+                String.format("Subtracting %s from variable %s (new value: %s)",
+                        valueToSubtract, varName, newValue)
+        );
+
+        return ExecutionResult.success("Variable updated successfully");
+    }
+
+    /**
+     * Finds the scope of an existing variable
+     */
+    private VariableScopeInfo findVariableScope(VariableManager variableManager, Player player, String scriptId, String varName) {
+        // Try player variables first if player is not null
+        if (player != null) {
+            DataValue playerVar = variableManager.getPlayerVariable(player.getUniqueId(), varName);
+            if (playerVar != null) {
+                return new VariableScopeInfo(
+                        playerVar,
+                        VariableManager.VariableScope.PLAYER,
+                        player.getUniqueId().toString()
+                );
+            }
+        }
+
+        // Try local variables
+        DataValue localVar = variableManager.getLocalVariable(scriptId, varName);
+        if (localVar != null) {
+            return new VariableScopeInfo(
+                    localVar,
+                    VariableManager.VariableScope.LOCAL,
+                    scriptId
+            );
+        }
+
+        // Try global variables
+        DataValue globalVar = variableManager.getGlobalVariable(varName);
+        if (globalVar != null) {
+            return new VariableScopeInfo(
+                    globalVar,
+                    VariableManager.VariableScope.GLOBAL,
+                    "global"
+            );
+        }
+
+        // Try server variables
+        DataValue serverVar = variableManager.getServerVariable(varName);
+        if (serverVar != null) {
+            return new VariableScopeInfo(
+                    serverVar,
+                    VariableManager.VariableScope.SERVER,
+                    "server"
+            );
+        }
+
+        // Variable doesn't exist yet, will be created as local
+        return new VariableScopeInfo(null, null, null);
+    }
+
+    /**
+     * Gets the current numeric value of a variable, defaults to 0 if not a number
+     */
+    private double getCurrentVariableValue(DataValue variable) {
+        if (variable == null) {
+            return 0.0;
+        }
+        try {
+            return variable.asNumber().doubleValue();
+        } catch (NumberFormatException e) {
+            return 0.0;
+        }
+    }
+
+    /**
+     * Sets the variable value in the appropriate scope
+     */
+    private void setVariableValue(VariableManager variableManager, VariableScopeInfo scopeInfo,
+                                   String varName, double newValue, String scriptId, Player player) {
+        DataValue newValueData = DataValue.of(newValue);
+
+        if (scopeInfo.getScope() == null) {
+            // Variable doesn't exist, create as local
+            variableManager.setLocalVariable(scriptId, varName, newValueData);
+            return;
+        }
+
+        switch (scopeInfo.getScope()) {
+            case PLAYER:
+                variableManager.setPlayerVariable(player.getUniqueId(), varName, newValueData);
+                break;
+            case LOCAL:
+                variableManager.setLocalVariable(scriptId, varName, newValueData);
+                break;
+            case GLOBAL:
+                variableManager.setGlobalVariable(varName, newValueData);
+                break;
+            case SERVER:
+                variableManager.setServerVariable(varName, newValueData);
+                break;
+            default:
+                // Fallback to local variable
+                variableManager.setLocalVariable(scriptId, varName, newValueData);
+        }
+    }
+
     /**
      * Gets variable parameters from the container configuration
      */
     private SubVarParams getVarParamsFromContainer(CodeBlock block, ExecutionContext context) {
-        if (block == null || context == null) {
-            throw new IllegalArgumentException("CodeBlock and ExecutionContext cannot be null");
-        }
-        
         SubVarParams params = new SubVarParams();
-        
+
         try {
             // Get the BlockConfigService to resolve slot names
             BlockConfigService blockConfigService = context.getPlugin().getServiceRegistry().getBlockConfigService();
-            if (blockConfigService == null) {
-                context.getPlugin().getLogger().warning("BlockConfigService is not available");
-                return params;
-            }
-            
+
             // Get the slot resolver for this action
             Function<String, Integer> slotResolver = blockConfigService.getSlotResolver(block.getAction());
-            
+
             if (slotResolver != null) {
                 // Get variable name from the name slot
                 Integer nameSlot = slotResolver.apply("name");
                 if (nameSlot != null) {
-</original_code>```
-
-```
-package com.megacreative.coding.actions;
-
-import com.megacreative.coding.BlockAction;
-import com.megacreative.coding.CodeBlock;
-import com.megacreative.coding.ExecutionContext;
-import com.megacreative.coding.ParameterResolver;
-import com.megacreative.coding.executors.ExecutionResult;
-import com.megacreative.coding.values.DataValue;
-import com.megacreative.coding.variables.VariableManager;
-import com.megacreative.services.BlockConfigService;
-import com.megacreative.coding.annotations.BlockMeta;
-import com.megacreative.coding.BlockType;
-import org.bukkit.entity.Player;
-import org.bukkit.inventory.ItemStack;
-import org.bukkit.inventory.meta.ItemMeta;
-
-import java.util.function.Function;
-
-/**
- * Action for subtracting a value from a variable.
- * This action retrieves variable parameters from the container configuration and subtracts the value from the variable.
- */
-@BlockMeta(id = "subVar", displayName = "§aSubtract from Variable", type = BlockType.ACTION)
-public class SubVarAction implements BlockAction {
-    
-    // Define the missing constants
-    private static final double MIN_VARIABLE_VALUE = -1000000.0;
-    private static final double MAX_VARIABLE_VALUE = 1000000.0;
-
-    private VariableValue getVariableValue(VariableManager variableManager, String varName, String scriptId, Player player) {
-        // Try to get the variable from different scopes
-        
-        // First try player variables
-        if (player != null) {
-            DataValue var = variableManager.getPlayerVariable(player.getUniqueId(), varName);
-            if (var != null) {
-                return new VariableValue(var, VariableManager.VariableScope.PLAYER, player.getUniqueId().toString());
-            }
-        }
-        
-        // If not found, try local variables
-        DataValue localVar = variableManager.getLocalVariable(scriptId, varName);
-        if (localVar != null) {
-            return new VariableValue(localVar, VariableManager.VariableScope.LOCAL, scriptId);
-        }
-        
-        // If not found, try global variables
-        DataValue globalVar = variableManager.getGlobalVariable(varName);
-        if (globalVar != null) {
-            return new VariableValue(globalVar, VariableManager.VariableScope.GLOBAL, "global");
-        }
-        
-        // If not found, try server variables
-        DataValue serverVar = variableManager.getServerVariable(varName);
-        if (serverVar != null) {
-            return new VariableValue(serverVar, VariableManager.VariableScope.SERVER, "server");
-        }
-        
-        return null;
-    }
-    
-    private void setVariableValue(VariableManager variableManager, String varName, DataValue value, 
-                                 VariableManager.VariableScope scope, String context) {
-        switch (scope) {
-            case PLAYER:
-                variableManager.setPlayerVariable(java.util.UUID.fromString(context), varName, value);
-                break;
-            case LOCAL:
-                variableManager.setLocalVariable(context, varName, value);
-                break;
-            case GLOBAL:
-                variableManager.setGlobalVariable(varName, value);
-                break;
-            case SERVER:
-                variableManager.setServerVariable(varName, value);
-                break;
-            default:
-                // Default to local scope if scope is not specified
-                variableManager.setLocalVariable(context, varName, value);
-                break;
-        }
-    }
-    
-    @Override
-    public ExecutionResult execute(CodeBlock block, ExecutionContext context) {
-        if (block == null || context == null) {
-            return ExecutionResult.error("CodeBlock and ExecutionContext cannot be null");
-        }
-        
-        try {
-            // Get variable parameters from the container configuration
-            SubVarParams params = getVarParamsFromContainer(block, context);
-            
-            if (params.nameStr == null || params.nameStr.isEmpty()) {
-                return ExecutionResult.error("Variable name is not configured");
-            }
-
-            // Resolve any placeholders in the parameters
-            ParameterResolver resolver = new ParameterResolver(context);
-            DataValue nameValue = DataValue.of(params.nameStr);
-            DataValue resolvedName = resolver.resolve(context, nameValue);
-            
-            DataValue valueValue = DataValue.of(params.valueStr);
-            DataValue resolvedValue = resolver.resolve(context, valueValue);
-            
-            // Parse parameters
-            String varName = resolvedName.asString();
-            String valueStr = resolvedValue.asString();
-            
-            if (varName == null || varName.trim().isEmpty()) {
-                return ExecutionResult.error("Invalid variable name");
-            }
-            
-            varName = varName.trim();
-
-            // Parse the value as a number with validation
-            double value;
-            try {
-                value = Double.parseDouble(valueStr);
-                // Validate value range
-                if (value < MIN_VARIABLE_VALUE || value > MAX_VARIABLE_VALUE) {
-                    return ExecutionResult.error(String.format("Value must be between %f and %f", 
-                        MIN_VARIABLE_VALUE, MAX_VARIABLE_VALUE));
+                    ItemStack nameItem = block.getConfigItem(nameSlot);
+                    if (nameItem != null && nameItem.hasItemMeta()) {
+                        // Extract variable name from item
+                        params.nameStr = getVariableNameFromItem(nameItem);
+                    }
                 }
-            } catch (NumberFormatException e) {
-                return ExecutionResult.error("Invalid numeric value: " + valueStr);
-            }
 
-            // Get the actual variable value from the VariableManager
-            VariableManager variableManager = context.getPlugin().getVariableManager();
-            if (variableManager == null) {
-                return ExecutionResult.error("Variable manager is not available");
-            }
-            
-            // Get the variable value using the refactored method
-            VariableValue variable = getVariableValue(variableManager, varName, context.getScriptId(), context.getPlayer());
-            
-            // Get current value or default to 0
-            double currentValue = 0.0;
-            VariableManager.VariableScope scope = VariableManager.VariableScope.LOCAL;
-            String scopeContext = context.getScriptId();
-            
-            if (variable != null && variable.value != null) {
-                try {
-                    currentValue = variable.value.asNumber().doubleValue();
-                    scope = variable.scope;
-                    scopeContext = variable.context;
-                } catch (NumberFormatException e) {
-                    // If current value is not a number, treat as 0 and log a warning
-                    context.getPlugin().getLogger().warning("Variable " + varName + " is not a number, treating as 0");
+                // Get value from the value slot
+                Integer valueSlot = slotResolver.apply("value");
+                if (valueSlot != null) {
+                    ItemStack valueItem = block.getConfigItem(valueSlot);
+                    if (valueItem != null) {
+                        // Extract value from item
+                        params.valueStr = getValueFromItem(valueItem);
+                    }
                 }
             }
-            
-            // Calculate new value with bounds checking
-            double newValue;
-            try {
-                newValue = Math.subtractExact((long)currentValue, (long)value);
-                
-                // Additional check for double overflow
-                if (newValue > MAX_VARIABLE_VALUE || newValue < MIN_VARIABLE_VALUE) {
-                    throw new ArithmeticException("Variable value out of range");
-                }
-            } catch (ArithmeticException e) {
-                return ExecutionResult.error("Arithmetic error: " + e.getMessage());
-            }
-            
-            // Set the updated value using the refactored method
-            DataValue newValueData = DataValue.of(newValue);
-            setVariableValue(variableManager, varName, newValueData, scope, scopeContext);
-            
-            context.getPlugin().getLogger().info("Subtracting " + value + " from variable " + varName + " (new value: " + newValue + ")");
-            
-            return ExecutionResult.success("Variable updated successfully");
         } catch (Exception e) {
-            return ExecutionResult.error("Failed to update variable: " + e.getMessage());
+            context.getPlugin().getLogger().warning("Error getting variable parameters from container in SubVarAction: " + e.getMessage());
         }
+
+        return params;
     }
-    
+
     /**
-     * Gets variable parameters from the container configuration
+     * Extracts variable name from an item
      */
-    private SubVarParams getVarParamsFromContainer(CodeBlock block, ExecutionContext context) {
-        if (block == null || context == null) {
-            throw new IllegalArgumentException("CodeBlock and ExecutionContext cannot be null");
-        }
-        
-        SubVarParams params = new SubVarParams();
-        
-        try {
-            // Get the BlockConfigService to resolve slot names
-            BlockConfigService blockConfigService = context.getPlugin().getServiceRegistry().getBlockConfigService();
-            if (blockConfigService == null) {
-                context.getPlugin().getLogger().warning("BlockConfigService is not available");
-                return params;
-            }
-            
-            // Get the slot resolver for this action
-            Function<String, Integer> slotResolver = blockConfigService.getSlotResolver(block.getAction());
-            
-            if (slotResolver != null) {
-                // Get variable name from the name slot
-                Integer nameSlot = slotResolver.apply("name");
-                if (nameSlot != null) {
-```
-
-```
-package com.megacreative.coding.actions;
-
-import com.megacreative.coding.BlockAction;
-import com.megacreative.coding.CodeBlock;
-import com.megacreative.coding.ExecutionContext;
-import com.megacreative.coding.ParameterResolver;
-import com.megacreative.coding.executors.ExecutionResult;
-import com.megacreative.coding.values.DataValue;
-import com.megacreative.coding.variables.VariableManager;
-import com.megacreative.services.BlockConfigService;
-import com.megacreative.coding.annotations.BlockMeta;
-import com.megacreative.coding.BlockType;
-import org.bukkit.entity.Player;
-import org.bukkit.inventory.ItemStack;
-import org.bukkit.inventory.meta.ItemMeta;
-
-import java.util.function.Function;
-
-/**
- * Action for subtracting a value from a variable.
- * This action retrieves variable parameters from the container configuration and subtracts the value from the variable.
- */
-@BlockMeta(id = "subVar", displayName = "§aSubtract from Variable", type = BlockType.ACTION)
-public class SubVarAction implements BlockAction {
-    
-    // Define the missing constants
-    private static final double MIN_VARIABLE_VALUE = -1000000.0;
-    private static final double MAX_VARIABLE_VALUE = 1000000.0;
-
-    private VariableValue getVariableValue(VariableManager variableManager, String varName, String scriptId, Player player) {
-        // Try to get the variable from different scopes
-        
-        // First try player variables
-        if (player != null) {
-            DataValue var = variableManager.getPlayerVariable(player.getUniqueId(), varName);
-            if (var != null) {
-                return new VariableValue(var, VariableManager.VariableScope.PLAYER, player.getUniqueId().toString());
+    private String getVariableNameFromItem(ItemStack item) {
+        ItemMeta meta = item.getItemMeta();
+        if (meta != null) {
+            String displayName = meta.getDisplayName();
+            if (displayName != null && !displayName.isEmpty()) {
+                // Remove color codes and return the variable name
+                return displayName.replaceAll("[§0-9]", "").trim();
             }
         }
-        
-        // If not found, try local variables
-        DataValue localVar = variableManager.getLocalVariable(scriptId, varName);
-        if (localVar != null) {
-            return new VariableValue(localVar, VariableManager.VariableScope.LOCAL, scriptId);
-        }
-        
-        // If not found, try global variables
-        DataValue globalVar = variableManager.getGlobalVariable(varName);
-        if (globalVar != null) {
-            return new VariableValue(globalVar, VariableManager.VariableScope.GLOBAL, "global");
-        }
-        
-        // If not found, try server variables
-        DataValue serverVar = variableManager.getServerVariable(varName);
-        if (serverVar != null) {
-            return new VariableValue(serverVar, VariableManager.VariableScope.SERVER, "server");
-        }
-        
         return null;
     }
-    
-    private void setVariableValue(VariableManager variableManager, String varName, DataValue value, 
-                                 VariableManager.VariableScope scope, String context) {
-        switch (scope) {
-            case PLAYER:
-                variableManager.setPlayerVariable(java.util.UUID.fromString(context), varName, value);
-                break;
-            case LOCAL:
-                variableManager.setLocalVariable(context, varName, value);
-                break;
-            case GLOBAL:
-                variableManager.setGlobalVariable(varName, value);
-                break;
-            case SERVER:
-                variableManager.setServerVariable(varName, value);
-                break;
-            default:
-                // Default to local scope if scope is not specified
-                variableManager.setLocalVariable(context, varName, value);
-                break;
-        }
-    }
-    
-    @Override
-    public ExecutionResult execute(CodeBlock block, ExecutionContext context) {
-        if (block == null || context == null) {
-            return ExecutionResult.error("CodeBlock and ExecutionContext cannot be null");
-        }
-        
-        try {
-            // Get variable parameters from the container configuration
-            SubVarParams params = getVarParamsFromContainer(block, context);
-            
-            if (params.nameStr == null || params.nameStr.isEmpty()) {
-                return ExecutionResult.error("Variable name is not configured");
-            }
 
-            // Resolve any placeholders in the parameters
-            ParameterResolver resolver = new ParameterResolver(context);
-            DataValue nameValue = DataValue.of(params.nameStr);
-            DataValue resolvedName = resolver.resolve(context, nameValue);
-            
-            DataValue valueValue = DataValue.of(params.valueStr);
-            DataValue resolvedValue = resolver.resolve(context, valueValue);
-            
-            // Parse parameters
-            String varName = resolvedName.asString();
-            String valueStr = resolvedValue.asString();
-            
-            if (varName == null || varName.trim().isEmpty()) {
-                return ExecutionResult.error("Invalid variable name");
-            }
-            
-            varName = varName.trim();
-
-            // Parse the value as a number with validation
-            double value;
-            try {
-                value = Double.parseDouble(valueStr);
-                // Validate value range
-                if (value < MIN_VARIABLE_VALUE || value > MAX_VARIABLE_VALUE) {
-                    return ExecutionResult.error(String.format("Value must be between %f and %f", 
-                        MIN_VARIABLE_VALUE, MAX_VARIABLE_VALUE));
-                }
-            } catch (NumberFormatException e) {
-                return ExecutionResult.error("Invalid numeric value: " + valueStr);
-            }
-
-            // Get the actual variable value from the VariableManager
-            VariableManager variableManager = context.getPlugin().getVariableManager();
-            if (variableManager == null) {
-                return ExecutionResult.error("Variable manager is not available");
-            }
-            
-            // Get the variable value using the refactored method
-            VariableValue variable = getVariableValue(variableManager, varName, context.getScriptId(), context.getPlayer());
-            
-            // Get current value or default to 0
-            double currentValue = 0.0;
-            VariableManager.VariableScope scope = VariableManager.VariableScope.LOCAL;
-            String scopeContext = context.getScriptId();
-            
-            if (variable != null && variable.value != null) {
-                try {
-                    currentValue = variable.value.asNumber().doubleValue();
-                    scope = variable.scope;
-                    scopeContext = variable.context;
-                } catch (NumberFormatException e) {
-                    // If current value is not a number, treat as 0 and log a warning
-                    context.getPlugin().getLogger().warning("Variable " + varName + " is not a number, treating as 0");
-                }
-            }
-            
-            // Calculate new value with bounds checking
-            double newValue;
-            try {
-                newValue = Math.subtractExact((long)currentValue, (long)value);
-                
-                // Additional check for double overflow
-                if (newValue > MAX_VARIABLE_VALUE || newValue < MIN_VARIABLE_VALUE) {
-                    throw new ArithmeticException("Variable value out of range");
-                }
-            } catch (ArithmeticException e) {
-                return ExecutionResult.error("Arithmetic error: " + e.getMessage());
-            }
-            
-            // Set the updated value using the refactored method
-            DataValue newValueData = DataValue.of(newValue);
-            setVariableValue(variableManager, varName, newValueData, scope, scopeContext);
-            
-            context.getPlugin().getLogger().info("Subtracting " + value + " from variable " + varName + " (new value: " + newValue + ")");
-            
-            return ExecutionResult.success("Variable updated successfully");
-        } catch (Exception e) {
-            return ExecutionResult.error("Failed to update variable: " + e.getMessage());
-        }
-    }
-    
     /**
-     * Gets variable parameters from the container configuration
+     * Extracts value from an item
      */
-    private SubVarParams getVarParamsFromContainer(CodeBlock block, ExecutionContext context) {
-        if (block == null || context == null) {
-            throw new IllegalArgumentException("CodeBlock and ExecutionContext cannot be null");
-        }
-        
-        SubVarParams params = new SubVarParams();
-        
-        try {
-            // Get the BlockConfigService to resolve slot names
-            BlockConfigService blockConfigService = context.getPlugin().getServiceRegistry().getBlockConfigService();
-            if (blockConfigService == null) {
-                context.getPlugin().getLogger().warning("BlockConfigService is not available");
-                return params;
-            }
-            
-            // Get the slot resolver for this action
-            Function<String, Integer> slotResolver = blockConfigService.getSlotResolver(block.getAction());
-            
-            if (slotResolver != null) {
-                // Get variable name from the name slot
-                Integer nameSlot = slotResolver.apply("name");
-                if (nameSlot != null) {
-```
-
-```
-package com.megacreative.coding.actions;
-
-import com.megacreative.coding.BlockAction;
-import com.megacreative.coding.CodeBlock;
-import com.megacreative.coding.ExecutionContext;
-import com.megacreative.coding.ParameterResolver;
-import com.megacreative.coding.executors.ExecutionResult;
-import com.megacreative.coding.values.DataValue;
-import com.megacreative.coding.variables.VariableManager;
-import com.megacreative.services.BlockConfigService;
-import com.megacreative.coding.annotations.BlockMeta;
-import com.megacreative.coding.BlockType;
-import org.bukkit.entity.Player;
-import org.bukkit.inventory.ItemStack;
-import org.bukkit.inventory.meta.ItemMeta;
-
-import java.util.function.Function;
-
-/**
- * Action for subtracting a value from a variable.
- * This action retrieves variable parameters from the container configuration and subtracts the value from the variable.
- */
-@BlockMeta(id = "subVar", displayName = "§aSubtract from Variable", type = BlockType.ACTION)
-public class SubVarAction implements BlockAction {
-    
-    // Define the missing constants
-    private static final double MIN_VARIABLE_VALUE = -1000000.0;
-    private static final double MAX_VARIABLE_VALUE = 1000000.0;
-
-    private VariableValue getVariableValue(VariableManager variableManager, String varName, String scriptId, Player player) {
-        // Try to get the variable from different scopes
-        
-        // First try player variables
-        if (player != null) {
-            DataValue var = variableManager.getPlayerVariable(player.getUniqueId(), varName);
-            if (var != null) {
-                return new VariableValue(var, VariableManager.VariableScope.PLAYER, player.getUniqueId().toString());
+    private String getValueFromItem(ItemStack item) {
+        ItemMeta meta = item.getItemMeta();
+        if (meta != null) {
+            String displayName = meta.getDisplayName();
+            if (displayName != null && !displayName.isEmpty()) {
+                // Remove color codes and return the value
+                return displayName.replaceAll("[§0-9]", "").trim();
             }
         }
-        
-        // If not found, try local variables
-        DataValue localVar = variableManager.getLocalVariable(scriptId, varName);
-        if (localVar != null) {
-            return new VariableValue(localVar, VariableManager.VariableScope.LOCAL, scriptId);
-        }
-        
-        // If not found, try global variables
-        DataValue globalVar = variableManager.getGlobalVariable(varName);
-        if (globalVar != null) {
-            return new VariableValue(globalVar, VariableManager.VariableScope.GLOBAL, "global");
-        }
-        
-        // If not found, try server variables
-        DataValue serverVar = variableManager.getServerVariable(varName);
-        if (serverVar != null) {
-            return new VariableValue(serverVar, VariableManager.VariableScope.SERVER, "server");
-        }
-        
-        return null;
+
+        // If no display name, use the item amount as a number
+        return String.valueOf(item.getAmount());
     }
-    
-    private void setVariableValue(VariableManager variableManager, String varName, DataValue value, 
-                                 VariableManager.VariableScope scope, String context) {
-        switch (scope) {
-            case PLAYER:
-                variableManager.setPlayerVariable(java.util.UUID.fromString(context), varName, value);
-                break;
-            case LOCAL:
-                variableManager.setLocalVariable(context, varName, value);
-                break;
-            case GLOBAL:
-                variableManager.setGlobalVariable(varName, value);
-                break;
-            case SERVER:
-                variableManager.setServerVariable(varName, value);
-                break;
-            default:
-                // Default to local scope if scope is not specified
-                variableManager.setLocalVariable(context, varName, value);
-                break;
-        }
-    }
-    
-    @Override
-    public ExecutionResult execute(CodeBlock block, ExecutionContext context) {
-        if (block == null || context == null) {
-            return ExecutionResult.error("CodeBlock and ExecutionContext cannot be null");
-        }
-        
-        try {
-            // Get variable parameters from the container configuration
-            SubVarParams params = getVarParamsFromContainer(block, context);
-            
-            if (params.nameStr == null || params.nameStr.isEmpty()) {
-                return ExecutionResult.error("Variable name is not configured");
-            }
 
-            // Resolve any placeholders in the parameters
-            ParameterResolver resolver = new ParameterResolver(context);
-            DataValue nameValue = DataValue.of(params.nameStr);
-            DataValue resolvedName = resolver.resolve(context, nameValue);
-            
-            DataValue valueValue = DataValue.of(params.valueStr);
-            DataValue resolvedValue = resolver.resolve(context, valueValue);
-            
-            // Parse parameters
-            String varName = resolvedName.asString();
-            String valueStr = resolvedValue.asString();
-            
-            if (varName == null || varName.trim().isEmpty()) {
-                return ExecutionResult.error("Invalid variable name");
-            }
-            
-            varName = varName.trim();
-
-            // Parse the value as a number with validation
-            double value;
-            try {
-                value = Double.parseDouble(valueStr);
-                // Validate value range
-                if (value < MIN_VARIABLE_VALUE || value > MAX_VARIABLE_VALUE) {
-                    return ExecutionResult.error(String.format("Value must be between %f and %f", 
-                        MIN_VARIABLE_VALUE, MAX_VARIABLE_VALUE));
-                }
-            } catch (NumberFormatException e) {
-                return ExecutionResult.error("Invalid numeric value: " + valueStr);
-            }
-
-            // Get the actual variable value from the VariableManager
-            VariableManager variableManager = context.getPlugin().getVariableManager();
-            if (variableManager == null) {
-                return ExecutionResult.error("Variable manager is not available");
-            }
-            
-            // Get the variable value using the refactored method
-            VariableValue variable = getVariableValue(variableManager, varName, context.getScriptId(), context.getPlayer());
-            
-            // Get current value or default to 0
-            double currentValue = 0.0;
-            VariableManager.VariableScope scope = VariableManager.VariableScope.LOCAL;
-            String scopeContext = context.getScriptId();
-            
-            if (variable != null && variable.value != null) {
-                try {
-                    currentValue = variable.value.asNumber().doubleValue();
-                    scope = variable.scope;
-                    scopeContext = variable.context;
-                } catch (NumberFormatException e) {
-                    // If current value is not a number, treat as 0 and log a warning
-                    context.getPlugin().getLogger().warning("Variable " + varName + " is not a number, treating as 0");
-                }
-            }
-            
-            // Calculate new value with bounds checking
-            double newValue;
-            try {
-                newValue = Math.subtractExact((long)currentValue, (long)value);
-                
-                // Additional check for double overflow
-                if (newValue > MAX_VARIABLE_VALUE || newValue < MIN_VARIABLE_VALUE) {
-                    throw new ArithmeticException("Variable value out of range");
-                }
-            } catch (ArithmeticException e) {
-                return ExecutionResult.error("Arithmetic error: " + e.getMessage());
-            }
-            
-            // Set the updated value using the refactored method
-            DataValue newValueData = DataValue.of(newValue);
-            setVariableValue(variableManager, varName, newValueData, scope, scopeContext);
-            
-            context.getPlugin().getLogger().info("Subtracting " + value + " from variable " + varName + " (new value: " + newValue + ")");
-            
-            return ExecutionResult.success("Variable updated successfully");
-        } catch (Exception e) {
-            return ExecutionResult.error("Failed to update variable: " + e.getMessage());
-        }
-    }
-    
     /**
-     * Gets variable parameters from the container configuration
+     * Helper class to hold variable parameters
      */
-    private SubVarParams getVarParamsFromContainer(CodeBlock block, ExecutionContext context) {
-        if (block == null || context == null) {
-            throw new IllegalArgumentException("CodeBlock and ExecutionContext cannot be null");
-        }
-        
-        SubVarParams params = new SubVarParams();
-        
-        try {
-            // Get the BlockConfigService to resolve slot names
-            BlockConfigService blockConfigService = context.getPlugin().getServiceRegistry().getBlockConfigService();
-            if (blockConfigService == null) {
-                context.getPlugin().getLogger().warning("BlockConfigService is not available");
-                return params;
-            }
-            
-            // Get the slot resolver for this action
-            Function<String, Integer> slotResolver = blockConfigService.getSlotResolver(block.getAction());
-            
-            if (slotResolver != null) {
-                // Get variable name from the name slot
-                Integer nameSlot = slotResolver.apply("name");
-                if (nameSlot != null) {
-```
-
-```
-package com.megacreative.coding.actions;
-
-import com.megacreative.coding.BlockAction;
-import com.megacreative.coding.CodeBlock;
-import com.megacreative.coding.ExecutionContext;
-import com.megacreative.coding.ParameterResolver;
-import com.megacreative.coding.executors.ExecutionResult;
-import com.megacreative.coding.values.DataValue;
-import com.megacreative.coding.variables.VariableManager;
-import com.megacreative.services.BlockConfigService;
-import com.megacreative.coding.annotations.BlockMeta;
-import com.megacreative.coding.BlockType;
-import org.bukkit.entity.Player;
-import org.bukkit.inventory.ItemStack;
-import org.bukkit.inventory.meta.ItemMeta;
-
-import java.util.function.Function;
-
-/**
- * Action for subtracting a value from a variable.
- * This action retrieves variable parameters from the container configuration and subtracts the value from the variable.
- */
-@BlockMeta(id = "subVar", displayName = "§aSubtract from Variable", type = BlockType.ACTION)
-public class SubVarAction implements BlockAction {
-    
-    // Define the missing constants
-    private static final double MIN_VARIABLE_VALUE = -1000000.0;
-    private static final double MAX_VARIABLE_VALUE = 1000000.0;
-
-    private VariableValue getVariableValue(VariableManager variableManager, String varName, String scriptId, Player player) {
-        // Try to get the variable from different scopes
-        
-        // First try player variables
-        if (player != null) {
-            DataValue var = variableManager.getPlayerVariable(player.getUniqueId(), varName);
-            if (var != null) {
-                return new VariableValue(var, VariableManager.VariableScope.PLAYER, player.getUniqueId().toString());
-            }
-        }
-        
-        // If not found, try local variables
-        DataValue localVar = variableManager.getLocalVariable(scriptId, varName);
-        if (localVar != null) {
-            return new VariableValue(localVar, VariableManager.VariableScope.LOCAL, scriptId);
-        }
-        
-        // If not found, try global variables
-        DataValue globalVar = variableManager.getGlobalVariable(varName);
-        if (globalVar != null) {
-            return new VariableValue(globalVar, VariableManager.VariableScope.GLOBAL, "global");
-        }
-        
-        // If not found, try server variables
-        DataValue serverVar = variableManager.getServerVariable(varName);
-        if (serverVar != null) {
-            return new VariableValue(serverVar, VariableManager.VariableScope.SERVER, "server");
-        }
-        
-        return null;
+    private static class SubVarParams {
+        String nameStr = "";
+        String valueStr = "";
     }
-    
-    private void setVariableValue(VariableManager variableManager, String varName, DataValue value, 
-                                 VariableManager.VariableScope scope, String context) {
-        switch (scope) {
-            case PLAYER:
-                variableManager.setPlayerVariable(java.util.UUID.fromString(context), varName, value);
-                break;
-            case LOCAL:
-                variableManager.setLocalVariable(context, varName, value);
-                break;
-            case GLOBAL:
-                variableManager.setGlobalVariable(varName, value);
-                break;
-            case SERVER:
-                variableManager.setServerVariable(varName, value);
-                break;
-            default:
-                // Default to local scope if scope is not specified
-                variableManager.setLocalVariable(context, varName, value);
-                break;
-        }
-    }
-    
-    @Override
-    public ExecutionResult execute(CodeBlock block, ExecutionContext context) {
-        if (block == null || context == null) {
-            return ExecutionResult.error("CodeBlock and ExecutionContext cannot be null");
-        }
-        
-        try {
-            // Get variable parameters from the container configuration
-            SubVarParams params = getVarParamsFromContainer(block, context);
-            
-            if (params.nameStr == null || params.nameStr.isEmpty()) {
-                return ExecutionResult.error("Variable name is not configured");
-            }
 
-            // Resolve any placeholders in the parameters
-            ParameterResolver resolver = new ParameterResolver(context);
-            DataValue nameValue = DataValue.of(params.nameStr);
-            DataValue resolvedName = resolver.resolve(context, nameValue);
-            
-            DataValue valueValue = DataValue.of(params.valueStr);
-            DataValue resolvedValue = resolver.resolve(context, valueValue);
-            
-            // Parse parameters
-            String varName = resolvedName.asString();
-            String valueStr = resolvedValue.asString();
-            
-            if (varName == null || varName.trim().isEmpty()) {
-                return ExecutionResult.error("Invalid variable name");
-            }
-            
-            varName = varName.trim();
-
-            // Parse the value as a number with validation
-            double value;
-            try {
-                value = Double.parseDouble(valueStr);
-                // Validate value range
-                if (value < MIN_VARIABLE_VALUE || value > MAX_VARIABLE_VALUE) {
-                    return ExecutionResult.error(String.format("Value must be between %f and %f", 
-                        MIN_VARIABLE_VALUE, MAX_VARIABLE_VALUE));
-                }
-            } catch (NumberFormatException e) {
-                return ExecutionResult.error("Invalid numeric value: " + valueStr);
-            }
-
-            // Get the actual variable value from the VariableManager
-            VariableManager variableManager = context.getPlugin().getVariableManager();
-            if (variableManager == null) {
-                return ExecutionResult.error("Variable manager is not available");
-            }
-            
-            // Get the variable value using the refactored method
-            VariableValue variable = getVariableValue(variableManager, varName, context.getScriptId(), context.getPlayer());
-            
-            // Get current value or default to 0
-            double currentValue = 0.0;
-            VariableManager.VariableScope scope = VariableManager.VariableScope.LOCAL;
-            String scopeContext = context.getScriptId();
-            
-            if (variable != null && variable.value != null) {
-                try {
-                    currentValue = variable.value.asNumber().doubleValue();
-                    scope = variable.scope;
-                    scopeContext = variable.context;
-                } catch (NumberFormatException e) {
-                    // If current value is not a number, treat as 0 and log a warning
-                    context.getPlugin().getLogger().warning("Variable " + varName + " is not a number, treating as 0");
-                }
-            }
-            
-            // Calculate new value with bounds checking
-            double newValue;
-            try {
-                newValue = Math.subtractExact((long)currentValue, (long)value);
-                
-                // Additional check for double overflow
-                if (newValue > MAX_VARIABLE_VALUE || newValue < MIN_VARIABLE_VALUE) {
-                    throw new ArithmeticException("Variable value out of range");
-                }
-            } catch (ArithmeticException e) {
-                return ExecutionResult.error("Arithmetic error: " + e.getMessage());
-            }
-            
-            // Set the updated value using the refactored method
-            DataValue newValueData = DataValue.of(newValue);
-            setVariableValue(variableManager, varName, newValueData, scope, scopeContext);
-            
-            context.getPlugin().getLogger().info("Subtracting " + value + " from variable " + varName + " (new value: " + newValue + ")");
-            
-            return ExecutionResult.success("Variable updated successfully");
-        } catch (Exception e) {
-            return ExecutionResult.error("Failed to update variable: " + e.getMessage());
-        }
-    }
-    
     /**
-     * Gets variable parameters from the container configuration
+     * Helper class to hold variable scope information
      */
-    private SubVarParams getVarParamsFromContainer(CodeBlock block, ExecutionContext context) {
-        if (block == null || context == null) {
-            throw new IllegalArgumentException("CodeBlock and ExecutionContext cannot be null");
-        }
-        
-        SubVarParams params = new SubVarParams();
-        
-        try {
-            // Get the BlockConfigService to resolve slot names
-            BlockConfigService blockConfigService = context.getPlugin().getServiceRegistry().getBlockConfigService();
-            if (blockConfigService == null) {
-                context.getPlugin().getLogger().warning("BlockConfigService is not available");
-                return params;
-            }
-            
-            // Get the slot resolver for this action
-            Function<String, Integer> slotResolver = blockConfigService.getSlotResolver(block.getAction());
-            
-            if (slotResolver != null) {
-                // Get variable name from the name slot
-                Integer nameSlot = slotResolver.apply("name");
-                if (nameSlot != null) {
-```
+    private static class VariableScopeInfo {
+        private final DataValue currentVar;
+        private final VariableManager.VariableScope scope;
+        private final String scopeContext;
 
-```
-package com.megacreative.coding.actions;
-
-import com.megacreative.coding.BlockAction;
-import com.megacreative.coding.CodeBlock;
-import com.megacreative.coding.ExecutionContext;
-import com.megacreative.coding.ParameterResolver;
-import com.megacreative.coding.executors.ExecutionResult;
-import com.megacreative.coding.values.DataValue;
-import com.megacreative.coding.variables.VariableManager;
-import com.megacreative.services.BlockConfigService;
-import com.megacreative.coding.annotations.BlockMeta;
-import com.megacreative.coding.BlockType;
-import org.bukkit.entity.Player;
-import org.bukkit.inventory.ItemStack;
-import org.bukkit.inventory.meta.ItemMeta;
-
-import java.util.function.Function;
-
-/**
- * Action for subtracting a value from a variable.
- * This action retrieves variable parameters from the container configuration and subtracts the value from the variable.
- */
-@BlockMeta(id = "subVar", displayName = "§aSubtract from Variable", type = BlockType.ACTION)
-public class SubVarAction implements BlockAction {
-    
-    // Define the missing constants
-    private static final double MIN_VARIABLE_VALUE = -1000000.0;
-    private static final double MAX_VARIABLE_VALUE = 1000000.0;
-
-    private VariableValue getVariableValue(VariableManager variableManager, String varName, String scriptId, Player player) {
-        // Try to get the variable from different scopes
-        
-        // First try player variables
-        if (player != null) {
-            DataValue var = variableManager.getPlayerVariable(player.getUniqueId(), varName);
-            if (var != null) {
-                return new VariableValue(var, VariableManager.VariableScope.PLAYER, player.getUniqueId().toString());
-            }
+        public VariableScopeInfo(DataValue currentVar, VariableManager.VariableScope scope, String scopeContext) {
+            this.currentVar = currentVar;
+            this.scope = scope;
+            this.scopeContext = scopeContext;
         }
-        
-        // If not found, try local variables
-        DataValue localVar = variableManager.getLocalVariable(scriptId, varName);
-        if (localVar != null) {
-            return new VariableValue(localVar, VariableManager.VariableScope.LOCAL, scriptId);
+
+        public DataValue getCurrentVar() {
+            return currentVar;
         }
-        
-        // If not found, try global variables
-        DataValue globalVar = variableManager.getGlobalVariable(varName);
-        if (globalVar != null) {
-            return new VariableValue(globalVar, VariableManager.VariableScope.GLOBAL, "global");
+
+        public VariableManager.VariableScope getScope() {
+            return scope;
         }
-        
-        // If not found, try server variables
-        DataValue serverVar = variableManager.getServerVariable(varName);
-        if (serverVar != null) {
-            return new VariableValue(serverVar, VariableManager.VariableScope.SERVER, "server");
-        }
-        
-        return null;
-    }
-    
-    private void setVariableValue(VariableManager variableManager, String varName, DataValue value, 
-                                 VariableManager.VariableScope scope, String context) {
-        switch (scope) {
-            case PLAYER:
-                variableManager.setPlayerVariable(java.util.UUID.fromString(context), varName, value);
-                break;
-            case LOCAL:
-                variableManager.setLocalVariable(context, varName, value);
-                break;
-            case GLOBAL:
-                variableManager.setGlobalVariable(varName, value);
-                break;
-            case SERVER:
-                variableManager.setServerVariable(varName, value);
-                break;
-            default:
-                // Default to local scope if scope is not specified
-                variableManager.setLocalVariable(context, varName, value);
-                break;
+
+        public String getScopeContext() {
+            return scopeContext;
         }
     }
-    
-    @Override
-    public ExecutionResult execute(CodeBlock block, ExecutionContext context) {
-        if (block == null || context == null) {
-            return ExecutionResult.error("CodeBlock and ExecutionContext cannot be null");
-        }
-        
-        try {
-            // Get variable parameters from the container configuration
-            SubVarParams params = getVarParamsFromContainer(block, context);
-            
-            if (params.nameStr == null || params.nameStr.isEmpty()) {
-                return ExecutionResult.error("Variable name is not configured");
-            }
-
-            // Resolve any placeholders in the parameters
-            ParameterResolver resolver = new ParameterResolver(context);
-            DataValue nameValue = DataValue.of(params.nameStr);
-            DataValue resolvedName = resolver.resolve(context, nameValue);
-            
-            DataValue valueValue = DataValue.of(params.valueStr);
-            DataValue resolvedValue = resolver.resolve(context, valueValue);
-            
-            // Parse parameters
-            String varName = resolvedName.asString();
-            String valueStr = resolvedValue.asString();
-            
-            if (varName == null || varName.trim().isEmpty()) {
-                return ExecutionResult.error("Invalid variable name");
-            }
-            
-            varName = varName.trim();
-
-            // Parse the value as a number with validation
-            double value;
-            try {
-                value = Double.parseDouble(valueStr);
-                // Validate value range
-                if (value < MIN_VARIABLE_VALUE || value > MAX_VARIABLE_VALUE) {
-                    return ExecutionResult.error(String.format("Value must be between %f and %f", 
-                        MIN_VARIABLE_VALUE, MAX_VARIABLE_VALUE));
-                }
-            } catch (NumberFormatException e) {
-                return ExecutionResult.error("Invalid numeric value: " + valueStr);
-            }
-
-            // Get the actual variable value from the VariableManager
-            VariableManager variableManager = context.getPlugin().getVariableManager();
-            if (variableManager == null) {
-                return ExecutionResult.error("Variable manager is not available");
-            }
-            
-            // Get the variable value using the refactored method
-            VariableValue variable = getVariableValue(variableManager, varName, context.getScriptId(), context.getPlayer());
-            
-            // Get current value or default to 0
-            double currentValue = 0.0;
-            VariableManager.VariableScope scope = VariableManager.VariableScope.LOCAL;
-            String scopeContext = context.getScriptId();
-            
-            if (variable != null && variable.value != null) {
-                try {
-                    currentValue = variable.value.asNumber().doubleValue();
-                    scope = variable.scope;
-                    scopeContext = variable.context;
-                } catch (NumberFormatException e) {
-                    // If current value is not a number, treat as 0 and log a warning
-                    context.getPlugin().getLogger().warning("Variable " + varName + " is not a number, treating as 0");
-                }
-            }
-            
-            // Calculate new value with bounds checking
-            double newValue;
-            try {
-                newValue = Math.subtractExact((long)currentValue, (long)value);
-                
-                // Additional check for double overflow
-                if (newValue > MAX_VARIABLE_VALUE || newValue < MIN_VARIABLE_VALUE) {
-                    throw new ArithmeticException("Variable value out of range");
-                }
-            } catch (ArithmeticException e) {
-                return ExecutionResult.error("Arithmetic error: " + e.getMessage());
-            }
-            
-            // Set the updated value using the refactored method
-            DataValue newValueData = DataValue.of(newValue);
-            setVariableValue(variableManager, varName, newValueData, scope, scopeContext);
-            
-            context.getPlugin().getLogger().info("Subtracting " + value + " from variable " + varName + " (new value: " + newValue + ")");
-            
-            return ExecutionResult.success("Variable updated successfully");
-        } catch (Exception e) {
-            return ExecutionResult.error("Failed to update variable: " + e.getMessage());
-        }
-    }
-    
-    /**
-     * Gets variable parameters from the container configuration
-     */
-    private SubVarParams getVarParamsFromContainer(CodeBlock block, ExecutionContext context) {
-        if (block == null || context == null) {
-            throw new IllegalArgumentException("CodeBlock and ExecutionContext cannot be null");
-        }
-        
-        SubVarParams params = new SubVarParams();
-        
-        try {
-            // Get the BlockConfigService to resolve slot names
-            BlockConfigService blockConfigService = context.getPlugin().getServiceRegistry().getBlockConfigService();
-            if (blockConfigService == null) {
-                context.getPlugin().getLogger().warning("BlockConfigService is not available");
-                return params;
-            }
-            
-            // Get the slot resolver for this action
-            Function<String, Integer> slotResolver = blockConfigService.getSlotResolver(block.getAction());
-            
-            if (slotResolver != null) {
-                // Get variable name from the name slot
-                Integer nameSlot = slotResolver.apply("name");
-                if (nameSlot != null) {
-```
-
-```
-package com.megacreative.coding.actions;
-
-import com.megacreative.coding.BlockAction;
-import com.megacreative.coding.CodeBlock;
-import com.megacreative.coding.ExecutionContext;
-import com.megacreative.coding.ParameterResolver;
-import com.megacreative.coding.executors.ExecutionResult;
-import com.megacreative.coding.values.DataValue;
-import com.megacreative.coding.variables.VariableManager;
-import com.megacreative.services.BlockConfigService;
-import com.megacreative.coding.annotations.BlockMeta;
-import com.megacreative.coding.BlockType;
-import org.bukkit.entity.Player;
-import org.bukkit.inventory.ItemStack;
-import org.bukkit.inventory.meta.ItemMeta;
-
-import java.util.function.Function;
-
-/**
- * Action for subtracting a value from a variable.
- * This action retrieves variable parameters from the container configuration and subtracts the value from the variable.
- */
-@BlockMeta(id = "subVar", displayName = "§aSubtract from Variable", type = BlockType.ACTION)
-public class SubVarAction implements BlockAction {
-    
-    // Define the missing constants
-    private static final double MIN_VARIABLE_VALUE = -1000000.0;
-    private static final double MAX_VARIABLE_VALUE = 1000000.0;
-
-    private VariableValue getVariableValue(VariableManager variableManager, String varName, String scriptId, Player player) {
-        // Try to get the variable from different scopes
-        
-        // First try player variables
-        if (player != null) {
-            DataValue var = variableManager.getPlayerVariable(player.getUniqueId(), varName);
-            if (var != null) {
-                return new VariableValue(var, VariableManager.VariableScope.PLAYER, player.getUniqueId().toString());
-            }
-        }
-        
-        // If not found, try local variables
-        DataValue localVar = variableManager.getLocalVariable(scriptId, varName);
-        if (localVar != null) {
-            return new VariableValue(localVar, VariableManager.VariableScope.LOCAL, scriptId);
-        }
-        
-        // If not found, try global variables
-        DataValue globalVar = variableManager.getGlobalVariable(varName);
-        if (globalVar != null) {
-            return new VariableValue(globalVar, VariableManager.VariableScope.GLOBAL, "global");
-        }
-        
-        // If not found, try server variables
-        DataValue serverVar = variableManager.getServerVariable(varName);
-        if (serverVar != null) {
-            return new VariableValue(serverVar, VariableManager.VariableScope.SERVER, "server");
-        }
-        
-        return null;
-    }
-    
-    private void setVariableValue(VariableManager variableManager, String varName, DataValue value, 
-                                 VariableManager.VariableScope scope, String context) {
-        switch (scope) {
-            case PLAYER:
-                variableManager.setPlayerVariable(java.util.UUID.fromString(context), varName, value);
-                break;
-            case LOCAL:
-                variableManager.setLocalVariable(context, varName, value);
-                break;
-            case GLOBAL:
-                variableManager.setGlobalVariable(varName, value);
-                break;
-            case SERVER:
-                variableManager.setServerVariable(varName, value);
-                break;
-            default:
-                // Default to local scope if scope is not specified
-                variableManager.setLocalVariable(context, varName, value);
-                break;
-        }
-    }
-    
-    @Override
-    public ExecutionResult execute(CodeBlock block, ExecutionContext context) {
-        if (block == null || context == null) {
-            return ExecutionResult.error("CodeBlock and ExecutionContext cannot be null");
-        }
-        
-        try {
-            // Get variable parameters from the container configuration
-            SubVarParams params = getVarParamsFromContainer(block, context);
-            
-            if (params.nameStr == null || params.nameStr.isEmpty()) {
-                return ExecutionResult.error("Variable name is not configured");
-            }
-
-            // Resolve any placeholders in the parameters
-            ParameterResolver resolver = new ParameterResolver(context);
-            DataValue nameValue = DataValue.of(params.nameStr);
-            DataValue resolvedName = resolver.resolve(context, nameValue);
-            
-            DataValue valueValue = DataValue.of(params.valueStr);
-            DataValue resolvedValue = resolver.resolve(context, valueValue);
-            
-            // Parse parameters
-            String varName = resolvedName.asString();
-            String valueStr = resolvedValue.asString();
-            
-            if (varName == null || varName.trim().isEmpty()) {
-                return ExecutionResult.error("Invalid variable name");
-            }
-            
-            varName = varName.trim();
-
-            // Parse the value as a number with validation
-            double value;
-            try {
-                value = Double.parseDouble(valueStr);
-                // Validate value range
-                if (value < MIN_VARIABLE_VALUE || value > MAX_VARIABLE_VALUE) {
-                    return ExecutionResult.error(String.format("Value must be between %f and %f", 
-                        MIN_VARIABLE_VALUE, MAX_VARIABLE_VALUE));
-                }
-            } catch (NumberFormatException e) {
-                return ExecutionResult.error("Invalid numeric value: " + valueStr);
-            }
-
-            // Get the actual variable value from the VariableManager
-            VariableManager variableManager = context.getPlugin().getVariableManager();
-            if (variableManager == null) {
-                return ExecutionResult.error("Variable manager is not available");
-            }
-            
-            // Get the variable value using the refactored method
-            VariableValue variable = getVariableValue(variableManager, varName, context.getScriptId(), context.getPlayer());
-            
-            // Get current value or default to 0
-            double currentValue = 0.0;
-            VariableManager.VariableScope scope = VariableManager.VariableScope.LOCAL;
-            String scopeContext = context.getScriptId();
-            
-            if (variable != null && variable.value != null) {
-                try {
-                    currentValue = variable.value.asNumber().doubleValue();
-                    scope = variable.scope;
-                    scopeContext = variable.context;
-                } catch (NumberFormatException e) {
-                    // If current value is not a number, treat as 0 and log a warning
-                    context.getPlugin().getLogger().warning("Variable " + varName + " is not a number, treating as 0");
-                }
-            }
-            
-            // Calculate new value with bounds checking
-            double newValue;
-            try {
-                newValue = Math.subtractExact((long)currentValue, (long)value);
-                
-                // Additional check for double overflow
-                if (newValue > MAX_VARIABLE_VALUE || newValue < MIN_VARIABLE_VALUE) {
-                    throw new ArithmeticException("Variable value out of range");
-                }
-            } catch (ArithmeticException e) {
-                return ExecutionResult.error("Arithmetic error: " + e.getMessage());
-            }
-            
-            // Set the updated value using the refactored method
-            DataValue newValueData = DataValue.of(newValue);
-            setVariableValue(variableManager, varName, newValueData, scope, scopeContext);
-            
-            context.getPlugin().getLogger().info("Subtracting " + value + " from variable " + varName + " (new value: " + newValue + ")");
-            
-            return ExecutionResult.success("Variable updated successfully");
-        } catch (Exception e) {
-            return ExecutionResult.error("Failed to update variable: " + e.getMessage());
-        }
-    }
-    
-    /**
-     * Gets variable parameters from the container configuration
-     */
-    private SubVarParams getVarParamsFromContainer(CodeBlock block, ExecutionContext context) {
-        if (block == null || context == null) {
-            throw new IllegalArgumentException("CodeBlock and ExecutionContext cannot be null");
-        }
-        
-        SubVarParams params = new SubVarParams();
-        
-        try {
-            // Get the BlockConfigService to resolve slot names
-            BlockConfigService blockConfigService = context.getPlugin().getServiceRegistry().getBlockConfigService();
-            if (blockConfigService == null) {
-                context.getPlugin().getLogger().warning("BlockConfigService is not available");
-                return params;
-            }
-            
-            // Get the slot resolver for this action
-            Function<String, Integer> slotResolver = blockConfigService.getSlotResolver(block.getAction());
-            
-            if (slotResolver != null) {
-                // Get variable name from the name slot
-                Integer nameSlot = slotResolver.apply("name");
-                if (nameSlot != null) {
-```
-
-```
-package com.megacreative.coding.actions;
-
-import com.megacreative.coding.BlockAction;
-import com.megacreative.coding.CodeBlock;
-import com.megacreative.coding.ExecutionContext;
-import com.megacreative.coding.ParameterResolver;
-import com.megacreative.coding.executors.ExecutionResult;
-import com.megacreative.coding.values.DataValue;
-import com.megacreative.coding.variables.VariableManager;
-import com.megacreative.services.BlockConfigService;
-import com.megacreative.coding.annotations.BlockMeta;
-import com.megacreative.coding.BlockType;
-import org.bukkit.entity.Player;
-import org.bukkit.inventory.ItemStack;
-import org.bukkit.inventory.meta.ItemMeta;
-
-import java.util.function.Function;
-
-/**
- * Action for subtracting a value from a variable.
- * This action retrieves variable parameters from the container configuration and subtracts the value from the variable.
- */
-@BlockMeta(id = "subVar", displayName = "§aSubtract from Variable", type = BlockType.ACTION)
-public class SubVarAction implements BlockAction {
-    
-    // Define the missing constants
-    private static final double MIN_VARIABLE_VALUE = -1000000.0;
-    private static final double MAX_VARIABLE_VALUE = 1000000.0;
-
-    private VariableValue getVariableValue(VariableManager variableManager, String varName, String scriptId, Player player) {
-        // Try to get the variable from different scopes
-        
-        // First try player variables
-        if (player != null) {
-            DataValue var = variableManager.getPlayerVariable(player.getUniqueId(), varName);
-            if (var != null) {
-                return new VariableValue(var, VariableManager.VariableScope.PLAYER, player.getUniqueId().toString());
-            }
-        }
-        
-        // If not found, try local variables
-        DataValue localVar = variableManager.getLocalVariable(scriptId, varName);
-        if (localVar != null) {
-            return new VariableValue(localVar, VariableManager.VariableScope.LOCAL, scriptId);
-        }
-        
-        // If not found, try global variables
-        DataValue globalVar = variableManager.getGlobalVariable(varName);
-        if (globalVar != null) {
-            return new VariableValue(globalVar, VariableManager.VariableScope.GLOBAL, "global");
-        }
-        
-        // If not found, try server variables
-        DataValue serverVar = variableManager.getServerVariable(varName);
-        if (serverVar != null) {
-            return new VariableValue(serverVar, VariableManager.VariableScope.SERVER, "server");
-        }
-        
-        return null;
-    }
-    
-    private void setVariableValue(VariableManager variableManager, String varName, DataValue value, 
-                                 VariableManager.VariableScope scope, String context) {
-        switch (scope) {
-            case PLAYER:
-                variableManager.setPlayerVariable(java.util.UUID.fromString(context), varName, value);
-                break;
-            case LOCAL:
-                variableManager.setLocalVariable(context, varName, value);
-                break;
-            case GLOBAL:
-                variableManager.setGlobalVariable(varName, value);
-                break;
-            case SERVER:
-                variableManager.setServerVariable(varName, value);
-                break;
-            default:
-                // Default to local scope if scope is not specified
-                variableManager.setLocalVariable(context, varName, value);
-                break;
-        }
-    }
-    
-    @Override
-    public ExecutionResult execute(CodeBlock block, ExecutionContext context) {
-        if (block == null || context == null) {
-            return ExecutionResult.error("CodeBlock and ExecutionContext cannot be null");
-        }
-        
-        try {
-            // Get variable parameters from the container configuration
-            SubVarParams params = getVarParamsFromContainer(block, context);
-            
-            if (params.nameStr == null || params.nameStr.isEmpty()) {
-                return ExecutionResult.error("Variable name is not configured");
-            }
-
-            // Resolve any placeholders in the parameters
-            ParameterResolver resolver = new ParameterResolver(context);
-            DataValue nameValue = DataValue.of(params.nameStr);
-            DataValue resolvedName = resolver.resolve(context, nameValue);
-            
-            DataValue valueValue = DataValue.of(params.valueStr);
-            DataValue resolvedValue = resolver.resolve(context, valueValue);
-            
-            // Parse parameters
-            String varName = resolvedName.asString();
-            String valueStr = resolvedValue.asString();
-            
-            if (varName == null || varName.trim().isEmpty()) {
-                return ExecutionResult.error("Invalid variable name");
-            }
-            
-            varName = varName.trim();
-
-            // Parse the value as a number with validation
-            double value;
-            try {
-                value = Double.parseDouble(valueStr);
-                // Validate value range
-                if (value < MIN_VARIABLE_VALUE || value > MAX_VARIABLE_VALUE) {
-                    return ExecutionResult.error(String.format("Value must be between %f and %f", 
-                        MIN_VARIABLE_VALUE, MAX_VARIABLE_VALUE));
-                }
-            } catch (NumberFormatException e) {
-                return ExecutionResult.error("Invalid numeric value: " + valueStr);
-            }
-
-            // Get the actual variable value from the VariableManager
-            VariableManager variableManager = context.getPlugin().getVariableManager();
-            if (variableManager == null) {
-                return ExecutionResult.error("Variable manager is not available");
-            }
-            
-            // Get the variable value using the refactored method
-            VariableValue variable = getVariableValue(variableManager, varName, context.getScriptId(), context.getPlayer());
-            
-            // Get current value or default to 0
-            double currentValue = 0.0;
-            VariableManager.VariableScope scope = VariableManager.VariableScope.LOCAL;
-            String scopeContext = context.getScriptId();
-            
-            if (variable != null && variable.value != null) {
-                try {
-                    currentValue = variable.value.asNumber().doubleValue();
-                    scope = variable.scope;
-                    scopeContext = variable.context;
-                } catch (NumberFormatException e) {
-                    // If current value is not a number, treat as 0 and log a warning
-                    context.getPlugin().getLogger().warning("Variable " + varName + " is not a number, treating as 0");
-                }
-            }
-            
-            // Calculate new value with bounds checking
-            double newValue;
-            try {
-                newValue = Math.subtractExact((long)currentValue, (long)value);
-                
-                // Additional check for double overflow
-                if (newValue > MAX_VARIABLE_VALUE || newValue < MIN_VARIABLE_VALUE) {
-                    throw new ArithmeticException("Variable value out of range");
-                }
-            } catch (ArithmeticException e) {
-                return ExecutionResult.error("Arithmetic error: " + e.getMessage());
-            }
-            
-            // Set the updated value using the refactored method
-            DataValue newValueData = DataValue.of(newValue);
-            setVariableValue(variableManager, varName, newValueData, scope, scopeContext);
-            
-            context.getPlugin().getLogger().info("Subtracting " + value + " from variable " + varName + " (new value: " + newValue + ")");
-            
-            return ExecutionResult.success("Variable updated successfully");
-        } catch (Exception e) {
-            return ExecutionResult.error("Failed to update variable: " + e.getMessage());
-        }
-    }
-    
-    /**
-     * Gets variable parameters from the container configuration
-     */
-    private SubVarParams getVarParamsFromContainer(CodeBlock block, ExecutionContext context) {
-        if (block == null || context == null) {
-            throw new IllegalArgumentException("CodeBlock and ExecutionContext cannot be null");
-        }
-        
-        SubVarParams params = new SubVarParams();
-        
-        try {
-            // Get the BlockConfigService to resolve slot names
-            BlockConfigService blockConfigService = context.getPlugin().getServiceRegistry().getBlockConfigService();
-            if (blockConfigService == null) {
-                context.getPlugin().getLogger().warning("BlockConfigService is not available");
-                return params;
-            }
-            
-            // Get the slot resolver for this action
-            Function<String, Integer> slotResolver = blockConfigService.getSlotResolver(block.getAction());
-            
-            if (slotResolver != null) {
-                // Get variable name from the name slot
-                Integer nameSlot = slotResolver.apply("name");
-                if (nameSlot != null) {
-```
-
-```
-package com.megacreative.coding.actions;
-
-import com.megacreative.coding.BlockAction;
-import com.megacreative.coding.CodeBlock;
-import com.megacreative.coding.ExecutionContext;
-import com.megacreative.coding.ParameterResolver;
-import com.megacreative.coding.executors.ExecutionResult;
-import com.megacreative.coding.values.DataValue;
-import com.megacreative.coding.variables.VariableManager;
-import com.megacreative.services.BlockConfigService;
-import com.megacreative.coding.annotations.BlockMeta;
-import com.megacreative.coding.BlockType;
-import org.bukkit.entity.Player;
-import org.bukkit.inventory.ItemStack;
-import org.bukkit.inventory.meta.ItemMeta;
-
-import java.util.function.Function;
-
-/**
- * Action for subtracting a value from a variable.
- * This action retrieves variable parameters from the container configuration and subtracts the value from the variable.
- */
-@BlockMeta(id = "subVar", displayName = "§aSubtract from Variable", type = BlockType.ACTION)
-public class SubVarAction implements BlockAction {
-    
-    // Define the missing constants
-    private static final double MIN_VARIABLE_VALUE = -1000000.0;
-    private static final double MAX_VARIABLE_VALUE = 1000000.0;
-
-    private VariableValue getVariableValue(VariableManager variableManager, String varName, String scriptId, Player player) {
-        // Try to get the variable from different scopes
-        
-        // First try player variables
-        if (player != null) {
-            DataValue var = variableManager.getPlayerVariable(player.getUniqueId(), varName);
-            if (var != null) {
-                return new VariableValue(var, VariableManager.VariableScope.PLAYER, player.getUniqueId().toString());
-            }
-        }
-        
-        // If not found, try local variables
-        DataValue localVar = variableManager.getLocalVariable(scriptId, varName);
-        if (localVar != null) {
-            return new VariableValue(localVar, VariableManager.VariableScope.LOCAL, scriptId);
-        }
-        
-        // If not found, try global variables
-        DataValue globalVar = variableManager.getGlobalVariable(varName);
-        if (globalVar != null) {
-            return new VariableValue(globalVar, VariableManager.VariableScope.GLOBAL, "global");
-        }
-        
-        // If not found, try server variables
-        DataValue serverVar = variableManager.getServerVariable(varName);
-        if (serverVar != null) {
-            return new VariableValue(serverVar, VariableManager.VariableScope.SERVER, "server");
-        }
-        
-        return null;
-    }
-    
-    private void setVariableValue(VariableManager variableManager, String varName, DataValue value, 
-                                 VariableManager.VariableScope scope, String context) {
-        switch (scope) {
-            case PLAYER:
-                variableManager.setPlayerVariable(java.util.UUID.fromString(context), varName, value);
-                break;
-            case LOCAL:
-                variableManager.setLocalVariable(context, varName, value);
-                break;
-            case GLOBAL:
-                variableManager.setGlobalVariable(varName, value);
-                break;
-            case SERVER:
-                variableManager.setServerVariable(varName, value);
-                break;
-            default:
-                // Default to local scope if scope is not specified
-                variableManager.setLocalVariable(context, varName, value);
-                break;
-        }
-    }
-    
-    @Override
-    public ExecutionResult execute(CodeBlock block, ExecutionContext context) {
-        if (block == null || context == null) {
-            return ExecutionResult.error("CodeBlock and ExecutionContext cannot be null");
-        }
-        
-        try {
-            // Get variable parameters from the container configuration
-            SubVarParams params = getVarParamsFromContainer(block, context);
-            
-            if (params.nameStr == null || params.nameStr.isEmpty()) {
-                return ExecutionResult.error("Variable name is not configured");
-            }
-
-            // Resolve any placeholders in the parameters
-            ParameterResolver resolver = new ParameterResolver(context);
-            DataValue nameValue = DataValue.of(params.nameStr);
-            DataValue resolvedName = resolver.resolve(context, nameValue);
-            
-            DataValue valueValue = DataValue.of(params.valueStr);
-            DataValue resolvedValue = resolver.resolve(context, valueValue);
-            
-            // Parse parameters
-            String varName = resolvedName.asString();
-            String valueStr = resolvedValue.asString();
-            
-            if (varName == null || varName.trim().isEmpty()) {
-                return ExecutionResult.error("Invalid variable name");
-            }
-            
-            varName = varName.trim();
-
-            // Parse the value as a number with validation
-            double value;
-            try {
-                value = Double.parseDouble(valueStr);
-                // Validate value range
-                if (value < MIN_VARIABLE_VALUE || value > MAX_VARIABLE_VALUE) {
-                    return ExecutionResult.error(String.format("Value must be between %f and %f", 
-                        MIN_VARIABLE_VALUE, MAX_VARIABLE_VALUE));
-                }
-            } catch (NumberFormatException e) {
-                return ExecutionResult.error("Invalid numeric value: " + valueStr);
-            }
-
-            // Get the actual variable value from the VariableManager
-            VariableManager variableManager = context.getPlugin().getVariableManager();
-            if (variableManager == null) {
-                return ExecutionResult.error("Variable manager is not available");
-            }
-            
-            // Get the variable value using the refactored method
-            VariableValue variable = getVariableValue(variableManager, varName, context.getScriptId(), context.getPlayer());
-            
-            // Get current value or default to 0
-            double currentValue = 0.0;
-            VariableManager.VariableScope scope = VariableManager.VariableScope.LOCAL;
-            String scopeContext = context.getScriptId();
-            
-            if (variable != null && variable.value != null) {
-                try {
-                    currentValue = variable.value.asNumber().doubleValue();
-                    scope = variable.scope;
-                    scopeContext = variable.context;
-                } catch (NumberFormatException e) {
-                    // If current value is not a number, treat as 0 and log a warning
-                    context.getPlugin().getLogger().warning("Variable " + varName + " is not a number, treating as 0");
-                }
-            }
-            
-            // Calculate new value with bounds checking
-            double newValue;
-            try {
-                newValue = Math.subtractExact((long)currentValue, (long)value);
-                
-                // Additional check for double overflow
-                if (newValue > MAX_VARIABLE_VALUE || newValue < MIN_VARIABLE_VALUE) {
-                    throw new ArithmeticException("Variable value out of range");
-                }
-            } catch (ArithmeticException e) {
-                return ExecutionResult.error("Arithmetic error: " + e.getMessage());
-            }
-            
-            // Set the updated value using the refactored method
-            DataValue newValueData = DataValue.of(newValue);
-            setVariableValue(variableManager, varName, newValueData, scope, scopeContext);
-            
-            context.getPlugin().getLogger().info("Subtracting " + value + " from variable " + varName + " (new value: " + newValue + ")");
-            
-            return ExecutionResult.success("Variable updated successfully");
-        } catch (Exception e) {
-            return ExecutionResult.error("Failed to update variable: " + e.getMessage());
-        }
-    }
-    
-    /**
-     * Gets variable parameters from the container configuration
-     */
-    private SubVarParams getVarParamsFromContainer(CodeBlock block, ExecutionContext context) {
-        if (block == null || context == null) {
-            throw new IllegalArgumentException("CodeBlock and ExecutionContext cannot be null");
-        }
-        
-        SubVarParams params = new SubVarParams();
-        
-        try {
-            // Get the BlockConfigService to resolve slot names
-            BlockConfigService blockConfigService = context.getPlugin().getServiceRegistry().getBlockConfigService();
-            if (blockConfigService == null) {
-                context.getPlugin().getLogger().warning("BlockConfigService is not available");
-                return params;
-            }
-            
-            // Get the slot resolver for this action
-            Function<String, Integer> slotResolver = blockConfigService.getSlotResolver(block.getAction());
-            
-            if (slotResolver != null) {
-                // Get variable name from the name slot
-                Integer nameSlot = slotResolver.apply("name");
-                if (nameSlot != null) {
-```
-
-```
-package com.megacreative.coding.actions;
-
-import com.megacreative.coding.BlockAction;
-import com.megacreative.coding.CodeBlock;
-import com.megacreative.coding.ExecutionContext;
-import com.megacreative.coding.ParameterResolver;
-import com.megacreative.coding.executors.ExecutionResult;
-import com.megacreative.coding.values.DataValue;
-import com.megacreative.coding.variables.VariableManager;
-import com.megacreative.services.BlockConfigService;
-import com.megacreative.coding.annotations.BlockMeta;
-import com.megacreative.coding.BlockType;
-import org.bukkit.entity.Player;
-import org.bukkit.inventory.ItemStack;
-import org.bukkit.inventory.meta.ItemMeta;
-
-import java.util.function.Function;
-
-/**
- * Action for subtracting a value from a variable.
- * This action retrieves variable parameters from the container configuration and subtracts the value from the variable.
- */
-@BlockMeta(id = "subVar", displayName = "§aSubtract from Variable", type = BlockType.ACTION)
-public class SubVarAction implements BlockAction {
-    
-    // Define the missing constants
-    private static final double MIN_VARIABLE_VALUE = -1000000.0;
-    private static final double MAX_VARIABLE_VALUE = 1000000.0;
-
-    private VariableValue getVariableValue(VariableManager variableManager, String varName, String scriptId, Player player) {
-        // Try to get the variable from different scopes
-        
-        // First try player variables
-        if (player != null) {
-            DataValue var = variableManager.getPlayerVariable(player.getUniqueId(), varName);
-            if (var != null) {
-                return new VariableValue(var, VariableManager.VariableScope.PLAYER, player.getUniqueId().toString());
-            }
-        }
-        
-        // If not found, try local variables
-        DataValue localVar = variableManager.getLocalVariable(scriptId, varName);
-        if (localVar != null) {
-            return new VariableValue(localVar, VariableManager.VariableScope.LOCAL, scriptId);
-        }
-        
-        // If not found, try global variables
-        DataValue globalVar = variableManager.getGlobalVariable(varName);
-        if (globalVar != null) {
-            return new VariableValue(globalVar, VariableManager.VariableScope.GLOBAL, "global");
-        }
-        
-        // If not found, try server variables
-        DataValue serverVar = variableManager.getServerVariable(varName);
-        if (serverVar != null) {
-            return new VariableValue(serverVar, VariableManager.VariableScope.SERVER, "server");
-        }
-        
-        return null;
-    }
-    
-    private void setVariableValue(VariableManager variableManager, String varName, DataValue value, 
-                                 VariableManager.VariableScope scope, String context) {
-        switch (scope) {
-            case PLAYER:
-                variableManager.setPlayerVariable(java.util.UUID.fromString(context), varName, value);
-                break;
-            case LOCAL:
-                variableManager.setLocalVariable(context, varName, value);
-                break;
-            case GLOBAL:
-                variableManager.setGlobalVariable(varName, value);
-                break;
-            case SERVER:
-                variableManager.setServerVariable(varName, value);
-                break;
-            default:
-                // Default to local scope if scope is not specified
-                variableManager.setLocalVariable(context, varName, value);
-                break;
-        }
-    }
-    
-    @Override
-    public ExecutionResult execute(CodeBlock block, ExecutionContext context) {
-        if (block == null || context == null) {
-            return ExecutionResult.error("CodeBlock and ExecutionContext cannot be null");
-        }
-        
-        try {
-            // Get variable parameters from the container configuration
-            SubVarParams params = getVarParamsFromContainer(block, context);
-            
-            if (params.nameStr == null || params.nameStr.isEmpty()) {
-                return ExecutionResult.error("Variable name is not configured");
-            }
-
-            // Resolve any placeholders in the parameters
-            ParameterResolver resolver = new ParameterResolver(context);
-            DataValue nameValue = DataValue.of(params.nameStr);
-            DataValue resolvedName = resolver.resolve(context, nameValue);
-            
-            DataValue valueValue = DataValue.of(params.valueStr);
-            DataValue resolvedValue = resolver.resolve(context, valueValue);
-            
-            // Parse parameters
-            String varName = resolvedName.asString();
-            String valueStr = resolvedValue.asString();
-            
-            if (varName == null || varName.trim().isEmpty()) {
-                return ExecutionResult.error("Invalid variable name");
-            }
-            
-            varName = varName.trim();
-
-            // Parse the value as a number with validation
-            double value;
-            try {
-                value = Double.parseDouble(valueStr);
-                // Validate value range
-                if (value < MIN_VARIABLE_VALUE || value > MAX_VARIABLE_VALUE) {
-                    return ExecutionResult.error(String.format("Value must be between %f and %f", 
-                        MIN_VARIABLE_VALUE, MAX_VARIABLE_VALUE));
-                }
-            } catch (NumberFormatException e) {
-                return ExecutionResult.error("Invalid numeric value: " + valueStr);
-            }
-
-            // Get the actual variable value from the VariableManager
-            VariableManager variableManager = context.getPlugin().getVariableManager();
-            if (variableManager == null) {
-                return ExecutionResult.error("Variable manager is not available");
-            }
-            
-            // Get the variable value using the refactored method
-            VariableValue variable = getVariableValue(variableManager, varName, context.getScriptId(), context.getPlayer());
-            
-            // Get current value or default to 0
-            double currentValue = 0.0;
-            VariableManager.VariableScope scope = VariableManager.VariableScope.LOCAL;
-            String scopeContext = context.getScriptId();
-            
-            if (variable != null && variable.value != null) {
-                try {
-                    currentValue = variable.value.asNumber().doubleValue();
-                    scope = variable.scope;
-                    scopeContext = variable.context;
-                } catch (NumberFormatException e) {
-                    // If current value is not a number, treat as 0 and log a warning
-                    context.getPlugin().getLogger().warning("Variable " + varName + " is not a number, treating as 0");
-                }
-            }
-            
-            // Calculate new value with bounds checking
-            double newValue;
-            try {
-                newValue = Math.subtractExact((long)currentValue, (long)value);
-                
-                // Additional check for double overflow
-                if (newValue > MAX_VARIABLE_VALUE || newValue < MIN_VARIABLE_VALUE) {
-                    throw new ArithmeticException("Variable value out of range");
-                }
-            } catch (ArithmeticException e) {
-                return ExecutionResult.error("Arithmetic error: " + e.getMessage());
-            }
-            
-            // Set the updated value using the refactored method
-            DataValue newValueData = DataValue.of(newValue);
-            setVariableValue(variableManager, varName, newValueData, scope, scopeContext);
-            
-            context.getPlugin().getLogger().info("Subtracting " + value + " from variable " + varName + " (new value: " + newValue + ")");
-            
-            return ExecutionResult.success("Variable updated successfully");
-        } catch (Exception e) {
-            return ExecutionResult.error("Failed to update variable: " + e.getMessage());
-        }
-    }
-    
-    /**
-     * Gets variable parameters from the container configuration
-     */
-    private SubVarParams getVarParamsFromContainer(CodeBlock block, ExecutionContext context) {
-        if (block == null || context == null) {
-            throw new IllegalArgumentException("CodeBlock and ExecutionContext cannot be null");
-        }
-        
-        SubVarParams params = new SubVarParams();
-        
-        try {
-            // Get the BlockConfigService to resolve slot names
-            BlockConfigService blockConfigService = context.getPlugin().getServiceRegistry().getBlockConfigService();
-            if (blockConfigService == null) {
-                context.getPlugin().getLogger().warning("BlockConfigService is not available");
-                return params;
-            }
-            
-            // Get the slot resolver for this action
-            Function<String, Integer> slotResolver = blockConfigService.getSlotResolver(block.getAction());
-            
-            if (slotResolver != null) {
-                // Get variable name from the name slot
-                Integer nameSlot = slotResolver.apply("name");
-                if (nameSlot != null) {
-```
-
-```
-package com.megacreative.coding.actions;
-
-import com.megacreative.coding.BlockAction;
-import com.megacreative.coding.CodeBlock;
-import com.megacreative.coding.ExecutionContext;
-import com.megacreative.coding.ParameterResolver;
-import com.megacreative.coding.executors.ExecutionResult;
-import com.megacreative.coding.values.DataValue;
-import com.megacreative.coding.variables.VariableManager;
-import com.megacreative.services.BlockConfigService;
-import com.megacreative.coding.annotations.BlockMeta;
-import com.megacreative.coding.BlockType;
-import org.bukkit.entity.Player;
-import org.bukkit.inventory.ItemStack;
-import org.bukkit.inventory.meta.ItemMeta;
-
-import java.util.function.Function;
-
-/**
- * Action for subtracting a value from a variable.
- * This action retrieves variable parameters from the container configuration and subtracts the value from the variable.
- */
-@BlockMeta(id = "subVar", displayName = "§aSubtract from Variable", type = BlockType.ACTION)
-public class SubVarAction implements BlockAction {
-    
-    // Define the missing constants
-    private static final double MIN_VARIABLE_VALUE = -1000000.0;
-    private static final double MAX_VARIABLE_VALUE = 1000000.0;
-
-    private VariableValue getVariableValue(VariableManager variableManager, String varName, String scriptId, Player player) {
-        // Try to get the variable from different scopes
-        
-        // First try player variables
-        if (player != null) {
-            DataValue var = variableManager.getPlayerVariable(player.getUniqueId(), varName);
-            if (var != null) {
-                return new VariableValue(var, VariableManager.VariableScope.PLAYER, player.getUniqueId().toString());
-            }
-        }
-        
-        // If not found, try local variables
-        DataValue localVar = variableManager.getLocalVariable(scriptId, varName);
-        if (localVar != null) {
-            return new VariableValue(localVar, VariableManager.VariableScope.LOCAL, scriptId);
-        }
-        
-        // If not found, try global variables
-        DataValue globalVar = variableManager.getGlobalVariable(varName);
-        if (globalVar != null) {
-            return new VariableValue(globalVar, VariableManager.VariableScope.GLOBAL, "global");
-        }
-        
-        // If not found, try server variables
-        DataValue serverVar = variableManager.getServerVariable(varName);
-        if (serverVar != null) {
-            return new VariableValue(serverVar, VariableManager.VariableScope.SERVER, "server");
-        }
-        
-        return null;
-    }
-    
-    private void setVariableValue(VariableManager variableManager, String varName, DataValue value, 
-                                 VariableManager.VariableScope scope, String context) {
-        switch (scope) {
-            case PLAYER:
-                variableManager.setPlayerVariable(java.util.UUID.fromString(context), varName, value);
-                break;
-            case LOCAL:
-                variableManager.setLocalVariable(context, varName, value);
-                break;
-            case GLOBAL:
-                variableManager.setGlobalVariable(varName, value);
-                break;
-            case SERVER:
-                variableManager.setServerVariable(varName, value);
-                break;
-            default:
-                // Default to local scope if scope is not specified
-                variableManager.setLocalVariable(context, varName, value);
-                break;
-        }
-    }
-    
-    @Override
-    public ExecutionResult execute(CodeBlock block, ExecutionContext context) {
-        if (block == null || context == null) {
-            return ExecutionResult.error("CodeBlock and ExecutionContext cannot be null");
-        }
-        
-        try {
-            // Get variable parameters from the container configuration
-            SubVarParams params = getVarParamsFromContainer(block, context);
-            
-            if (params.nameStr == null || params.nameStr.isEmpty()) {
-                return ExecutionResult.error("Variable name is not configured");
-            }
-
-            // Resolve any placeholders in the parameters
-            ParameterResolver resolver = new ParameterResolver(context);
-            DataValue nameValue = DataValue.of(params.nameStr);
-            DataValue resolvedName = resolver.resolve(context, nameValue);
-            
-            DataValue valueValue = DataValue.of(params.valueStr);
-            DataValue resolvedValue = resolver.resolve(context, valueValue);
-            
-            // Parse parameters
-            String varName = resolvedName.asString();
-            String valueStr = resolvedValue.asString();
-            
-            if (varName == null || varName.trim().isEmpty()) {
-                return ExecutionResult.error("Invalid variable name");
-            }
-            
-            varName = varName.trim();
-
-            // Parse the value as a number with validation
-            double value;
-            try {
-                value = Double.parseDouble(valueStr);
-                // Validate value range
-                if (value < MIN_VARIABLE_VALUE || value > MAX_VARIABLE_VALUE) {
-                    return ExecutionResult.error(String.format("Value must be between %f and %f", 
-                        MIN_VARIABLE_VALUE, MAX_VARIABLE_VALUE));
-                }
-            } catch (NumberFormatException e) {
-                return ExecutionResult.error("Invalid numeric value: " + valueStr);
-            }
-
-            // Get the actual variable value from the VariableManager
-            VariableManager variableManager = context.getPlugin().getVariableManager();
-            if (variableManager == null) {
-                return ExecutionResult.error("Variable manager is not available");
-            }
-            
-            // Get the variable value using the refactored method
-            VariableValue variable = getVariableValue(variableManager, varName, context.getScriptId(), context.getPlayer());
-            
-            // Get current value or default to 0
-            double currentValue = 0.0;
-            VariableManager.VariableScope scope = VariableManager.VariableScope.LOCAL;
-            String scopeContext = context.getScriptId();
-            
-            if (variable != null && variable.value != null) {
-                try {
-                    currentValue = variable.value.asNumber().doubleValue();
-                    scope = variable.scope;
-                    scopeContext = variable.context;
-                } catch (NumberFormatException e) {
-                    // If current value is not a number, treat as 0 and log a warning
-                    context.getPlugin().getLogger().warning("Variable " + varName + " is not a number, treating as 0");
-                }
-            }
-            
-            // Calculate new value with bounds checking
-            double newValue;
-            try {
-                newValue = Math.subtractExact((long)currentValue, (long)value);
-                
-                // Additional check for double overflow
-                if (newValue > MAX_VARIABLE_VALUE || newValue < MIN_VARIABLE_VALUE) {
-                    throw new ArithmeticException("Variable value out
+}

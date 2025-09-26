@@ -176,7 +176,7 @@ public class WorldLoadListener implements Listener {
             
             // Add to AutoConnectionManager tracking
             if (recreatedBlock != null) {
-                connectionManager.addCodeBlock(codeBlock.getLocation(), recreatedBlock);
+                connectionManager.addCodeBlock(new org.bukkit.Location(org.bukkit.Bukkit.getWorld(codeBlock.getWorld().getName()), codeBlock.getX(), codeBlock.getY(), codeBlock.getZ()), recreatedBlock);
             }
         } catch (Exception e) {
             Location loc = sign.getLocation();

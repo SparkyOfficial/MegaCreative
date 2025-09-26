@@ -365,8 +365,9 @@ public class ConnectionDebugGUI implements GUIManager.ManagedGUIInterface {
             }
         } catch (Exception e) {
             // Fallback approach - try to get location from block directly
-            if (block.getLocation() != null) {
-                return block.getLocation();
+            Location blockLocation = new org.bukkit.Location(org.bukkit.Bukkit.getWorld(block.getWorldId()), block.getX(), block.getY(), block.getZ());
+            if (blockLocation != null) {
+                return blockLocation;
             }
         }
         

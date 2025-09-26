@@ -7,6 +7,7 @@ import com.megacreative.coding.ParameterResolver;
 import com.megacreative.coding.executors.ExecutionResult;
 import com.megacreative.coding.values.DataValue;
 import com.megacreative.services.BlockConfigService;
+import com.megacreative.services.MessagingService;
 import com.megacreative.coding.annotations.BlockMeta;
 import com.megacreative.coding.BlockType;
 import org.bukkit.entity.Player;
@@ -47,8 +48,15 @@ public class SendMessageAction implements BlockAction {
             String resolvedMessage = resolver.resolveString(context, message);
             context.getPlugin().getLogger().info("Resolved message: " + resolvedMessage);
             
-            // Send the message to the player
-            player.sendMessage(resolvedMessage);
+            // Send the message to the player using Adventure API if available
+            MessagingService messagingService = context.getPlugin().getServiceRegistry().getMessagingService();
+            if (messagingService != null) {
+                messagingService.sendMessage(player, resolvedMessage);
+            } else {
+                // Fallback to regular sendMessage if Adventure API is not available
+                player.sendMessage(resolvedMessage);
+            }
+            
             context.getPlugin().getLogger().info("Successfully sent message to player: " + player.getName());
             return ExecutionResult.success("Message sent successfully");
         } catch (Exception e) {

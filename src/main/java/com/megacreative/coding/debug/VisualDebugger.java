@@ -5,6 +5,7 @@ import com.megacreative.coding.CodeBlock;
 import com.megacreative.coding.values.DataValue;
 import com.megacreative.coding.variables.VariableScope;
 import com.megacreative.coding.debug.AdvancedVisualDebugger;
+import com.megacreative.services.MessagingService;
 import org.bukkit.Location;
 import org.bukkit.entity.Player;
 import org.bukkit.Material;
@@ -258,7 +259,13 @@ public class VisualDebugger {
         if (advancedDebugger != null) {
             advancedDebugger.stepToNextBlock(player);
         } else {
-            player.sendMessage("§cAdvanced debugger not available");
+            // Use Adventure API if available, otherwise fallback to regular sendMessage
+            MessagingService messagingService = plugin.getServiceRegistry().getMessagingService();
+            if (messagingService != null) {
+                messagingService.sendErrorMessage(player, "Advanced debugger not available");
+            } else {
+                player.sendMessage("§cAdvanced debugger not available");
+            }
         }
     }
     
@@ -269,7 +276,13 @@ public class VisualDebugger {
         if (advancedDebugger != null) {
             advancedDebugger.continueExecution(player);
         } else {
-            player.sendMessage("§cAdvanced debugger not available");
+            // Use Adventure API if available, otherwise fallback to regular sendMessage
+            MessagingService messagingService = plugin.getServiceRegistry().getMessagingService();
+            if (messagingService != null) {
+                messagingService.sendErrorMessage(player, "Advanced debugger not available");
+            } else {
+                player.sendMessage("§cAdvanced debugger not available");
+            }
         }
     }
     
@@ -282,7 +295,13 @@ public class VisualDebugger {
         
         DebugSession session = activeSessions.get(player.getUniqueId());
         if (session != null) {
-            player.sendMessage("§a✓ Execution tracing started (max " + maxSteps + " steps)");
+            // Use Adventure API if available, otherwise fallback to regular sendMessage
+            MessagingService messagingService = plugin.getServiceRegistry().getMessagingService();
+            if (messagingService != null) {
+                messagingService.sendSuccessMessage(player, "Execution tracing started (max " + maxSteps + " steps)");
+            } else {
+                player.sendMessage("§a✓ Execution tracing started (max " + maxSteps + " steps)");
+            }
         }
     }
     
@@ -292,8 +311,15 @@ public class VisualDebugger {
     public void stopTracing(Player player) {
         ExecutionTracer tracer = executionTracers.remove(player.getUniqueId());
         if (tracer != null) {
-            player.sendMessage("§c✖ Execution tracing stopped");
-            player.sendMessage("§7Traced " + tracer.getTracedSteps() + " execution steps");
+            // Use Adventure API if available, otherwise fallback to regular sendMessage
+            MessagingService messagingService = plugin.getServiceRegistry().getMessagingService();
+            if (messagingService != null) {
+                messagingService.sendErrorMessage(player, "Execution tracing stopped");
+                messagingService.sendMessage(player, "Traced " + tracer.getTracedSteps() + " execution steps");
+            } else {
+                player.sendMessage("§c✖ Execution tracing stopped");
+                player.sendMessage("§7Traced " + tracer.getTracedSteps() + " execution steps");
+            }
         }
     }
     
@@ -303,28 +329,56 @@ public class VisualDebugger {
     public void showTrace(Player player) {
         ExecutionTracer tracer = executionTracers.get(player.getUniqueId());
         if (tracer == null) {
-            player.sendMessage("§cNo execution trace available");
+            // Use Adventure API if available, otherwise fallback to regular sendMessage
+            MessagingService messagingService = plugin.getServiceRegistry().getMessagingService();
+            if (messagingService != null) {
+                messagingService.sendErrorMessage(player, "No execution trace available");
+            } else {
+                player.sendMessage("§cNo execution trace available");
+            }
             return;
         }
         
         List<ExecutionStep> steps = tracer.getTrace();
         if (steps.isEmpty()) {
-            player.sendMessage("§eExecution trace is empty");
+            // Use Adventure API if available, otherwise fallback to regular sendMessage
+            MessagingService messagingService = plugin.getServiceRegistry().getMessagingService();
+            if (messagingService != null) {
+                messagingService.sendWarningMessage(player, "Execution trace is empty");
+            } else {
+                player.sendMessage("§eExecution trace is empty");
+            }
             return;
         }
         
-        player.sendMessage("§a§lExecution Trace (" + steps.size() + " steps):");
+        // Use Adventure API if available, otherwise fallback to regular sendMessage
+        MessagingService messagingService = plugin.getServiceRegistry().getMessagingService();
+        if (messagingService != null) {
+            messagingService.sendMessage(player, "Execution Trace (" + steps.size() + " steps):");
+        } else {
+            player.sendMessage("§a§lExecution Trace (" + steps.size() + " steps):");
+        }
+        
         int maxSteps = Math.min(steps.size(), 10); // Show only last 10 steps
         int start = Math.max(0, steps.size() - maxSteps);
         
         for (int i = start; i < steps.size(); i++) {
             ExecutionStep step = steps.get(i);
-            player.sendMessage("§7" + (i + 1) + ". §e" + step.getAction() + 
-                             " §7at " + formatLocation(step.getLocation()));
+            if (messagingService != null) {
+                messagingService.sendMessage(player, (i + 1) + ". " + step.getAction() + 
+                                 " at " + formatLocation(step.getLocation()));
+            } else {
+                player.sendMessage("§7" + (i + 1) + ". §e" + step.getAction() + 
+                                 " §7at " + formatLocation(step.getLocation()));
+            }
         }
         
         if (steps.size() > maxSteps) {
-            player.sendMessage("§8... and " + (steps.size() - maxSteps) + " more steps");
+            if (messagingService != null) {
+                messagingService.sendMessage(player, "... and " + (steps.size() - maxSteps) + " more steps");
+            } else {
+                player.sendMessage("§8... and " + (steps.size() - maxSteps) + " more steps");
+            }
         }
     }
     
@@ -338,7 +392,13 @@ public class VisualDebugger {
         );
         
         watcher.addWatch(variableName, expression);
-        player.sendMessage("§a✓ Watching variable: " + variableName);
+        // Use Adventure API if available, otherwise fallback to regular sendMessage
+        MessagingService messagingService = plugin.getServiceRegistry().getMessagingService();
+        if (messagingService != null) {
+            messagingService.sendSuccessMessage(player, "Watching variable: " + variableName);
+        } else {
+            player.sendMessage("§a✓ Watching variable: " + variableName);
+        }
     }
     
     /**
@@ -347,7 +407,13 @@ public class VisualDebugger {
     public void unwatchVariable(Player player, String variableName) {
         VariableWatcher watcher = variableWatchers.get(player.getUniqueId());
         if (watcher != null && watcher.removeWatch(variableName)) {
-            player.sendMessage("§a✓ Stopped watching variable: " + variableName);
+            // Use Adventure API if available, otherwise fallback to regular sendMessage
+            MessagingService messagingService = plugin.getServiceRegistry().getMessagingService();
+            if (messagingService != null) {
+                messagingService.sendSuccessMessage(player, "Stopped watching variable: " + variableName);
+            } else {
+                player.sendMessage("§a✓ Stopped watching variable: " + variableName);
+            }
         }
     }
     
@@ -357,15 +423,32 @@ public class VisualDebugger {
     public void showWatchedVariables(Player player) {
         VariableWatcher watcher = variableWatchers.get(player.getUniqueId());
         if (watcher == null || watcher.getWatches().isEmpty()) {
-            player.sendMessage("§eNo variables being watched");
+            // Use Adventure API if available, otherwise fallback to regular sendMessage
+            MessagingService messagingService = plugin.getServiceRegistry().getMessagingService();
+            if (messagingService != null) {
+                messagingService.sendWarningMessage(player, "No variables being watched");
+            } else {
+                player.sendMessage("§eNo variables being watched");
+            }
             return;
         }
         
-        player.sendMessage("§a§lWatched Variables:");
+        // Use Adventure API if available, otherwise fallback to regular sendMessage
+        MessagingService messagingService = plugin.getServiceRegistry().getMessagingService();
+        if (messagingService != null) {
+            messagingService.sendMessage(player, "Watched Variables:");
+        } else {
+            player.sendMessage("§a§lWatched Variables:");
+        }
+        
         for (Map.Entry<String, String> entry : watcher.getWatches().entrySet()) {
             String varName = entry.getKey();
             String expression = entry.getValue();
-            player.sendMessage("§7- §f" + varName + " §7= §b" + expression);
+            if (messagingService != null) {
+                messagingService.sendMessage(player, "- " + varName + " = " + expression);
+            } else {
+                player.sendMessage("§7- §f" + varName + " §7= §b" + expression);
+            }
         }
     }
     
@@ -379,7 +462,13 @@ public class VisualDebugger {
         );
         
         profiler.startProfiling();
-        player.sendMessage("§a✓ Performance profiling started");
+        // Use Adventure API if available, otherwise fallback to regular sendMessage
+        MessagingService messagingService = plugin.getServiceRegistry().getMessagingService();
+        if (messagingService != null) {
+            messagingService.sendSuccessMessage(player, "Performance profiling started");
+        } else {
+            player.sendMessage("§a✓ Performance profiling started");
+        }
     }
     
     /**
@@ -389,7 +478,13 @@ public class VisualDebugger {
         PerformanceProfiler profiler = performanceProfilers.get(player.getUniqueId());
         if (profiler != null) {
             profiler.stopProfiling();
-            player.sendMessage("§c✖ Performance profiling stopped");
+            // Use Adventure API if available, otherwise fallback to regular sendMessage
+            MessagingService messagingService = plugin.getServiceRegistry().getMessagingService();
+            if (messagingService != null) {
+                messagingService.sendErrorMessage(player, "Performance profiling stopped");
+            } else {
+                player.sendMessage("§c✖ Performance profiling stopped");
+            }
         }
     }
     

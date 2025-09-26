@@ -85,7 +85,7 @@ public class GUIRegistry {
         new com.megacreative.coding.CodingParameterGUI(
             player, 
             codeBlock.getAction(), 
-            codeBlock.getLocation(), 
+            new org.bukkit.Location(org.bukkit.Bukkit.getWorld(codeBlock.getWorldId()), codeBlock.getX(), codeBlock.getY(), codeBlock.getZ()), 
             parameters -> {
                 // Apply parameters to the code block
                 for (Map.Entry<String, Object> entry : parameters.entrySet()) {

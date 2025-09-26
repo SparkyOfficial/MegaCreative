@@ -120,10 +120,11 @@ public class PlayerEntryAction implements BlockAction {
             }
             
             // Get items from the container inventory directly using the container manager's methods
-            List<ItemStack> itemsToGive = getItemsFromContainer(containerManager, context.getCurrentBlock().getLocation());
+            CodeBlock currentBlock = context.getCurrentBlock();
+            Location blockLocation = new org.bukkit.Location(org.bukkit.Bukkit.getWorld(currentBlock.getWorldId()), currentBlock.getX(), currentBlock.getY(), currentBlock.getZ());
+            List<ItemStack> itemsToGive = getItemsFromContainer(containerManager, blockLocation);
             if (itemsToGive.isEmpty()) {
                 // Check if container exists but is empty
-                Location blockLocation = context.getCurrentBlock().getLocation();
                 if (blockLocation != null) {
                     Location containerLocation = blockLocation.clone().add(0, 1, 0);
                     Block containerBlock = containerLocation.getBlock();
