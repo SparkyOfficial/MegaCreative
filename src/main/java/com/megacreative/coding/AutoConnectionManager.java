@@ -117,241 +117,66 @@ public class AutoConnectionManager implements Listener {
     }
     
     /**
-     * Enhanced block placement handler with BlockPlacementHandler integration
-     * Processes auto-connection AFTER BlockPlacementHandler has created the CodeBlock
+     * Теперь слушает НАШЕ событие, а не Bukkit. 
+     * Выполняется ПОСЛЕ того, как BlockPlacementHandler создал CodeBlock.
      */
-    @EventHandler(priority = EventPriority.MONITOR) // Use MONITOR to run after BlockPlacementHandler
-    public void onBlockPlace(BlockPlaceEvent event) {
-        if (event.isCancelled()) return;
-
-        Player player = event.getPlayer();
-        Block block = event.getBlock();
-        Location location = block.getLocation();
-        ItemStack itemInHand = event.getItemInHand();
-
-        // Check if this is a dev world
-        if (!isDevWorld(block.getWorld())) {
-            handleNonDevWorld(block);
-            return;
-        }
-        
-        logBlockPlacement(player, location);
-        
-        // Check if this is a code block by checking if BlockPlacementHandler created a CodeBlock
-        BlockPlacementHandler placementHandler = getBlockPlacementHandler();
-        if (placementHandler == null || !placementHandler.hasCodeBlock(location)) {
-            handleNonCodeBlock(location);
-            return; // Not a code block or not handled by BlockPlacementHandler
-        }
-
-        // Get the CodeBlock that was created by BlockPlacementHandler
-        CodeBlock codeBlock = placementHandler.getCodeBlock(location);
-        if (codeBlock != null) {
-            processCodeBlockPlacement(player, location, itemInHand, codeBlock);
-        } else {
-            logNullCodeBlock(location);
-        }
-    }
-    
-    /**
-     * Handles block placement events from BlockPlacementHandler
-     */
-    @EventHandler
+    @EventHandler(priority = EventPriority.NORMAL) // Приоритет уже не так важен, но пусть будет
     public void onCodeBlockPlaced(CodeBlockPlacedEvent event) {
         Player player = event.getPlayer();
         CodeBlock codeBlock = event.getCodeBlock();
         Location location = event.getLocation();
+
+        // Если это не dev-мир, ничего не делаем
+        if (!isDevWorld(location.getWorld())) {
+            return;
+        }
         
-        // Add to our tracking map
+        // --- Сюда переезжает вся логика из старого onBlockPlace ---
         locationToBlock.put(location, codeBlock);
-        
-        // Track block owner
         blockOwners.put(location, player);
-        
-        // Add to player's script blocks
         addBlockToPlayerScript(player, codeBlock);
         
-        // Auto-connect with neighboring blocks
+        // Авто-соединение
         autoConnectBlock(codeBlock, location);
         
-        // Fire structure changed event
+        // Генерация события об изменении структуры (для будущего компилятора)
         IWorldManager worldManager = getWorldManager();
         if (worldManager != null) {
             CreativeWorld creativeWorld = worldManager.findCreativeWorldByBukkit(location.getWorld());
             if (creativeWorld != null) {
-                ScriptStructureChangedEvent structureEvent = new ScriptStructureChangedEvent(
-                    creativeWorld, codeBlock, ScriptStructureChangedEvent.ChangeType.BLOCK_ADDED);
-                plugin.getServer().getPluginManager().callEvent(structureEvent);
+                plugin.getServer().getPluginManager().callEvent(
+                    new ScriptStructureChangedEvent(creativeWorld, codeBlock, ScriptStructureChangedEvent.ChangeType.BLOCK_ADDED)
+                );
             }
         }
-        
-        // If this is an event block, create a script and add it to the world
-        if (isEventBlock(codeBlock)) {
-            createAndAddScript(codeBlock, player, location);
-        }
-        
-        // Log successful placement
-        logSuccessfulPlacement(player, location, "Code Block");
     }
     
     /**
-     * Handles the case when a block is placed in a non-dev world
+     * Теперь слушает НАШЕ событие об уничтожении блока.
      */
-    private void handleNonDevWorld(Block block) {
-        if (plugin != null) {
-            // Reduced logging - only log when debugging
-            // plugin.getLogger().info("AutoConnectionManager: Block placement not in dev world: " + block.getWorld().getName());
-        }
-    }
-    
-    /**
-     * Logs block placement information
-     */
-    private void logBlockPlacement(Player player, Location location) {
-        if (plugin != null) {
-            // Reduced logging - only log when debugging
-            // plugin.getLogger().info("AutoConnectionManager: Processing block placement by " + player.getName() + " at " + location);
-        }
-    }
-    
-    /**
-     * Handles the case when a block is not a code block
-     */
-    private void handleNonCodeBlock(Location location) {
-        if (plugin != null) {
-            // Reduced logging - only log when debugging
-            // plugin.getLogger().info("AutoConnectionManager: Not a code block or not handled by BlockPlacementHandler at " + location);
-        }
-    }
-    
-    /**
-     * Processes the placement of a code block
-     */
-    private void processCodeBlockPlacement(Player player, Location location, ItemStack itemInHand, CodeBlock codeBlock) {
-        // Add to our tracking map
-        locationToBlock.put(location, codeBlock);
-        
-        // Track block owner
-        blockOwners.put(location, player);
-        
-        // Add to player's script blocks
-        addBlockToPlayerScript(player, codeBlock);
-        
-        // Auto-connect with neighboring blocks
-        autoConnectBlock(codeBlock, location);
-        
-        // If this is an event block, create a script and add it to the world
-        if (isEventBlock(codeBlock)) {
-            createAndAddScript(codeBlock, player, location);
-        }
-        
-        // Get configuration for display name
-        String displayName = itemInHand.hasItemMeta() ? org.bukkit.ChatColor.stripColor(itemInHand.getItemMeta().getDisplayName()) : "";
-        BlockConfigService.BlockConfig config = blockConfigService.getBlockConfigByDisplayName(displayName);
-        String blockName = config != null ? config.getDisplayName() : "Unknown Block";
-        
-        // Уменьшен спам - сообщение только важных событий
-        logSuccessfulPlacement(player, location, blockName);
-    }
-    
-    /**
-     * Logs successful block placement
-     */
-    private void logSuccessfulPlacement(Player player, Location location, String blockName) {
-        if (plugin != null) {
-            // Reduced logging - only log when debugging
-            // plugin.getLogger().info("Block '" + blockName + "' placed and auto-connected at " + location + " for player " + player.getName());
-            plugin.getLogger().fine("Auto-connected CodeBlock at " + location + " for player " + player.getName());
-        }
-    }
-    
-    /**
-     * Logs when a CodeBlock is null
-     */
-    private void logNullCodeBlock(Location location) {
-        if (plugin != null) {
-            plugin.getLogger().warning("AutoConnectionManager: CodeBlock is null at " + location);
-        }
-    }
-    
-    @EventHandler
+    @EventHandler(priority = EventPriority.NORMAL)
     public void onCodeBlockBroken(CodeBlockBrokenEvent event) {
-        Location location = event.getLocation();
+        Player player = event.getPlayer();
         CodeBlock codeBlock = event.getCodeBlock();
+        Location location = event.getLocation();
         
+        // --- Сюда переезжает вся логика из старого onBlockBreak ---
         if (codeBlock != null) {
-            // Disconnect from neighboring blocks
             disconnectBlock(codeBlock, location);
-            
-            // Remove from our tracking
             locationToBlock.remove(location);
-            
-            // Remove block owner tracking
             blockOwners.remove(location);
-            
-            // Remove from player script
-            removeBlockFromPlayerScript(event.getPlayer(), codeBlock);
-            
-            // Fire structure changed event
+            removeBlockFromPlayerScript(player, codeBlock);
+
+            // Генерация события об изменении структуры
             IWorldManager worldManager = getWorldManager();
             if (worldManager != null) {
-                CreativeWorld creativeWorld = worldManager.findCreativeWorldByBukkit(location.getWorld());
-                if (creativeWorld != null) {
-                    ScriptStructureChangedEvent structureEvent = new ScriptStructureChangedEvent(
-                        creativeWorld, codeBlock, ScriptStructureChangedEvent.ChangeType.BLOCK_REMOVED);
-                    plugin.getServer().getPluginManager().callEvent(structureEvent);
-                }
+                 CreativeWorld creativeWorld = worldManager.findCreativeWorldByBukkit(location.getWorld());
+                 if (creativeWorld != null) {
+                    plugin.getServer().getPluginManager().callEvent(
+                        new ScriptStructureChangedEvent(creativeWorld, codeBlock, ScriptStructureChangedEvent.ChangeType.BLOCK_REMOVED)
+                    );
+                 }
             }
-            
-            // If this is an event block, remove the corresponding script from the world
-            if (isEventBlock(codeBlock)) {
-                removeScript(codeBlock, location);
-            }
-            
-            // Also ensure BlockPlacementHandler is synchronized
-            BlockPlacementHandler placementHandler = getBlockPlacementHandler();
-            if (placementHandler != null && plugin != null) {
-                    plugin.getLogger().fine("CodeBlock disconnected at " + location);
-                }
-            
-            
-            event.getPlayer().sendMessage("§cБлок кода удален и отсоединён от цепочки!");
-        }
-    }
-    
-    @EventHandler(priority = EventPriority.MONITOR)
-    public void onBlockBreak(BlockBreakEvent event) {
-        if (event.isCancelled()) return;
-        
-        Location location = event.getBlock().getLocation();
-        CodeBlock codeBlock = locationToBlock.get(location);
-        
-        if (codeBlock != null) {
-            // Disconnect from neighboring blocks
-            disconnectBlock(codeBlock, location);
-            
-            // Remove from our tracking
-            locationToBlock.remove(location);
-            
-            // Remove block owner tracking
-            blockOwners.remove(location);
-            
-            // Remove from player script
-            removeBlockFromPlayerScript(event.getPlayer(), codeBlock);
-            
-            // If this is an event block, remove the corresponding script from the world
-            if (isEventBlock(codeBlock)) {
-                removeScript(codeBlock, location);
-            }
-            
-            // Also ensure BlockPlacementHandler is synchronized
-            BlockPlacementHandler placementHandler = getBlockPlacementHandler();
-            if (placementHandler != null && plugin != null) {
-                    plugin.getLogger().fine("CodeBlock disconnected at " + location);
-                }
-            
-            
-            event.getPlayer().sendMessage("§cБлок кода удален и отсоединён от цепочки!");
         }
     }
     

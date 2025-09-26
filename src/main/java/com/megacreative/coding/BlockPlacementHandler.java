@@ -9,16 +9,11 @@ import com.megacreative.services.BlockConfigService;
 import com.megacreative.coding.CodeBlock;
 import com.megacreative.coding.events.CodeBlockPlacedEvent;
 import com.megacreative.coding.events.CodeBlockBrokenEvent;
-import com.megacreative.coding.events.EventSubscriber;
 import com.megacreative.coding.values.DataValue;
-import com.megacreative.gui.editors.player.*;
-import com.megacreative.gui.editors.conditions.*;
-import com.megacreative.gui.editors.events.*;
-import com.megacreative.gui.editors.actions.SetVarEditor;
+import com.megacreative.gui.coding.ActionSelectionGUI;
 import org.bukkit.Material;
 import org.bukkit.block.Block;
 import org.bukkit.block.Sign;
-import org.bukkit.ChatColor;
 import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.EventPriority;
@@ -36,31 +31,21 @@ import java.util.logging.Logger;
 
 /**
  * Handles placement and interaction with coding blocks
- * Simplified to only handle block placement - the "Builder"
+ * Его роль - "Строитель". Он создает CodeBlock и сообщает об этом через кастомные события.
  */
-public class BlockPlacementHandler implements Listener, EventSubscriber {
+public class BlockPlacementHandler implements Listener {
     private static final Logger log = Logger.getLogger(BlockPlacementHandler.class.getName());
     
     private final MegaCreative plugin;
     private final ITrustedPlayerManager trustedPlayerManager;
     private final BlockConfigService blockConfigService;
-    private final ActionFactory actionFactory;
-    private final ConditionFactory conditionFactory;
     private final Map<Location, CodeBlock> blockCodeBlocks = new HashMap<>();
     
-    // Constants for subscribed events
-    private static final String[] SUBSCRIBED_EVENTS = {
-        "block_place_requested",
-        "block_placement_confirmed"
-    };
-
     public BlockPlacementHandler(MegaCreative plugin) {
         this.plugin = plugin;
         ServiceRegistry registry = plugin.getServiceRegistry();
         this.trustedPlayerManager = registry != null ? registry.getTrustedPlayerManager() : null;
         this.blockConfigService = registry != null ? registry.getBlockConfigService() : null;
-        this.actionFactory = registry != null ? registry.getActionFactory() : null;
-        this.conditionFactory = registry != null ? registry.getConditionFactory() : null;
     }
     
     /**
@@ -69,11 +54,11 @@ public class BlockPlacementHandler implements Listener, EventSubscriber {
      * @return true if the action is registered, false otherwise
      */
     private boolean isRegisteredAction(String actionId) {
-        if (actionFactory == null || actionId == null) {
+        if (plugin == null || plugin.getServiceRegistry() == null || actionId == null) {
             return false;
         }
         // Try to create the action to see if it's registered
-        return actionFactory.createAction(actionId) != null;
+        return plugin.getServiceRegistry().getActionFactory().createAction(actionId) != null;
     }
     
     /**
@@ -96,281 +81,88 @@ public class BlockPlacementHandler implements Listener, EventSubscriber {
      * @return true if the condition is registered, false otherwise
      */
     private boolean isRegisteredCondition(String conditionId) {
-        if (conditionFactory == null || conditionId == null) {
+        if (plugin == null || plugin.getServiceRegistry() == null || conditionId == null) {
             return false;
         }
         // Try to create the condition to see if it's registered
-        return conditionFactory.createCondition(conditionId) != null;
+        return plugin.getServiceRegistry().getConditionFactory().createCondition(conditionId) != null;
     }
-    
+
     /**
-     * Handles placement of coding blocks
-     * Only creates CodeBlock objects and stores them - no connection logic
+     * Создает CodeBlock и генерирует событие CodeBlockPlacedEvent.
+     * Не занимается логикой соединений или компиляции.
      */
     @EventHandler(priority = EventPriority.HIGH)
     public void onBlockPlace(BlockPlaceEvent event) {
-        if (event.isCancelled()) return;
-        
-        Player player = event.getPlayer();
-        Block block = event.getBlockPlaced();
-        
-        // Only process in dev worlds
-        if (!isInDevWorld(player)) {
+        if (event.isCancelled() || !isInDevWorld(event.getPlayer())) {
             return;
         }
-        
-        // Check if the block is being placed on the correct surface
+
+        Player player = event.getPlayer();
+        Block block = event.getBlockPlaced();
+
+        // Проверка на поверхность установки
         if (!isCorrectPlacementSurface(block)) {
             player.sendMessage("§cThis block can only be placed on the correct surface!");
             player.playSound(block.getLocation(), org.bukkit.Sound.ENTITY_VILLAGER_NO, 1.0f, 0.8f);
             event.setCancelled(true);
             return;
         }
+
+        CodeBlock newCodeBlock = createCodeBlockFor(block);
         
-        // Handle code block placement
-        if (handleCodeBlockPlacement(event, player, block)) {
+        if (newCodeBlock == null) {
+            // Если это не наш специальный блок, отменяем установку.
+            player.sendMessage("§cYou can only place special coding blocks!");
+            player.playSound(block.getLocation(), org.bukkit.Sound.ENTITY_VILLAGER_NO, 1.0f, 0.8f);
+            event.setCancelled(true);
             return;
         }
-        
-        // For regular blocks that aren't code blocks
-        player.sendMessage("§cYou can only place special coding blocks!");
-        player.playSound(block.getLocation(), org.bukkit.Sound.ENTITY_VILLAGER_NO, 1.0f, 0.8f);
-        event.setCancelled(true);
-    }
 
-    /**
-     * Handles code block placement logic
-     */
-    private boolean handleCodeBlockPlacement(BlockPlaceEvent event, Player player, Block block) {
-        // Check if blockConfigService is available
-        if (blockConfigService == null) {
-            player.sendMessage("§cBlock configuration service not available!");
-            return false;
-        }
-        
-        // Check if this is a universal coding block
-        if (!blockConfigService.isCodeBlock(block.getType())) {
-            return handleNonCodeBlockPlacement(event, player, block);
-        }
-        
-        // Get block config from material
-        BlockConfigService.BlockConfig config = blockConfigService.getBlockConfigByMaterial(block.getType());
-        
-        if (config == null) {
-            return false;
-        }
-        
-        // Handle regular code blocks - create "empty" block to be configured via GUI
-        String actionId = "NOT_SET"; // Empty block without action
-        
-        CodeBlock newCodeBlock = new CodeBlock(block.getType().name(), actionId);
-        
-        // Special handling for piston blocks (brackets)
-        if (block.getType() == Material.PISTON || block.getType() == Material.STICKY_PISTON) {
-            newCodeBlock.setBracketType(CodeBlock.BracketType.OPEN); // Default to opening bracket
-        }
-        
+        // 1. Сохраняем созданный блок
         blockCodeBlocks.put(block.getLocation(), newCodeBlock);
         
-        // Create sign for the block
+        // 2. Создаем табличку для визуализации
         createSignForBlock(block.getLocation(), newCodeBlock);
         
-        // Visual and audio feedback
-        player.spawnParticle(org.bukkit.Particle.VILLAGER_HAPPY, block.getLocation().add(0.5, 1.0, 0.5), 5, 0.2, 0.2, 0.2, 0.1);
-        player.playSound(block.getLocation(), org.bukkit.Sound.BLOCK_NOTE_BLOCK_PLING, 0.8f, 1.5f);
-        
-        // Fire custom event for other systems to react to
+        // 3. Отправляем наше собственное событие в систему!
         CodeBlockPlacedEvent placedEvent = new CodeBlockPlacedEvent(player, newCodeBlock, block.getLocation());
         plugin.getServer().getPluginManager().callEvent(placedEvent);
-        
-        // If this is a constructor block, automatically create brackets
-        if (config.isConstructor() && config.getStructure() != null) {
-            createBracketsForConstructor(player, block, config);
-        }
-        
-        // Check if we're placing a block near existing brackets and handle accordingly
-        handleNearbyBrackets(player, block, config);
-        
-        if (config.isConstructor()) {
-            player.sendMessage("§a✓ Constructor block placed!");
-            player.sendMessage("§7Right-click to configure parameters");
-        } else {
-            player.sendMessage("§a✓ Code block placed: " + config.getDisplayName());
-            player.sendMessage("§7Right-click to select action");
-        }
-        
-        // Reduced logging - only log when debugging
-        // plugin.getLogger().info("Code block placed by " + player.getName() + + " at " + block.getLocation() + " with action: " + actionId);
-        return true;
+
+        player.sendMessage("§a✓ Code block placed!");
     }
 
     /**
-     * Handles nearby brackets when placing a block
-     * @param player The player placing the block
-     * @param block The block being placed
-     * @param config The block configuration
-     */
-    private void handleNearbyBrackets(Player player, Block block, BlockConfigService.BlockConfig config) {
-        // Check if there are existing brackets nearby that should be connected
-        Location openBracketLoc = block.getLocation().clone().add(1, 0, 0);
-        Location closeBracketLoc = block.getLocation().clone().add(3, 0, 0);
-        
-        // If there are existing brackets, make sure they're properly connected
-        if (hasExistingBracket(openBracketLoc)) {
-            // Update the bracket if needed
-            updateBracketIfNecessary(openBracketLoc, CodeBlock.BracketType.OPEN);
-        }
-        
-        if (hasExistingBracket(closeBracketLoc)) {
-            // Update the bracket if needed
-            updateBracketIfNecessary(closeBracketLoc, CodeBlock.BracketType.CLOSE);
-        }
-    }
-    
-    /**
-     * Updates a bracket if necessary
-     * @param location The location of the bracket
-     * @param bracketType The type of bracket
-     */
-    private void updateBracketIfNecessary(Location location, CodeBlock.BracketType bracketType) {
-        CodeBlock bracketBlock = blockCodeBlocks.get(location);
-        if (bracketBlock != null && bracketBlock.isBracket()) {
-            // Ensure the bracket type is correct
-            bracketBlock.setBracketType(bracketType);
-        }
-    }
-    
-    /**
-     * Creates brackets for constructor blocks
-     */
-    private void createBracketsForConstructor(Player player, Block block, BlockConfigService.BlockConfig config) {
-        // Get structure configuration
-        BlockConfigService.StructureConfig structure = config.getStructure();
-        if (structure == null) {
-            return;
-        }
-        
-        Material bracketMaterial = structure.getBrackets();
-        int bracketDistance = structure.getBracketDistance();
-        
-        // Check if brackets already exist at these positions
-        Location openBracketLoc = block.getLocation().clone().add(1, 0, 0);
-        Location closeBracketLoc = block.getLocation().clone().add(3, 0, 0);
-        
-        // Only create opening bracket if position is empty or not a protected bracket
-        if (!isProtectedBracket(openBracketLoc) && !hasExistingBracket(openBracketLoc)) {
-            Block openBracketBlock = block.getWorld().getBlockAt(openBracketLoc);
-            openBracketBlock.setType(bracketMaterial);
-            // Set piston facing direction (away from the center block)
-            if (bracketMaterial == Material.PISTON || bracketMaterial == Material.STICKY_PISTON) {
-                org.bukkit.block.data.Directional pistonData = (org.bukkit.block.data.Directional) openBracketBlock.getBlockData();
-                pistonData.setFacing(org.bukkit.block.BlockFace.EAST); // Away from the block (toward positive X)
-                openBracketBlock.setBlockData(pistonData);
-            }
-            
-            // Register brackets as code blocks
-            CodeBlock openBracket = new CodeBlock(bracketMaterial.name(), "BRACKET");
-            openBracket.setBracketType(CodeBlock.BracketType.OPEN);
-            blockCodeBlocks.put(openBracketLoc, openBracket);
-            
-            // Create sign for the bracket
-            createSignForBlock(openBracketLoc, openBracket);
-            
-            // Add visual effects
-            player.spawnParticle(org.bukkit.Particle.ENCHANTMENT_TABLE, openBracketLoc.clone().add(0.5, 0.5, 0.5), 5, 0.3, 0.3, 0.3, 0);
-        }
-        
-        // Only create closing bracket if position is empty or not a protected bracket
-        if (!isProtectedBracket(closeBracketLoc) && !hasExistingBracket(closeBracketLoc)) {
-            Block closeBracketBlock = block.getWorld().getBlockAt(closeBracketLoc);
-            closeBracketBlock.setType(bracketMaterial);
-            // Set piston facing direction (toward the center block)
-            if (bracketMaterial == Material.PISTON || bracketMaterial == Material.STICKY_PISTON) {
-                org.bukkit.block.data.Directional pistonData = (org.bukkit.block.data.Directional) closeBracketBlock.getBlockData();
-                pistonData.setFacing(org.bukkit.block.BlockFace.WEST); // Toward the block (toward negative X)
-                closeBracketBlock.setBlockData(pistonData);
-            }
-            
-            CodeBlock closeBracket = new CodeBlock(bracketMaterial.name(), "BRACKET");
-            closeBracket.setBracketType(CodeBlock.BracketType.CLOSE);
-            blockCodeBlocks.put(closeBracketLoc, closeBracket);
-            
-            // Create sign for the bracket
-            createSignForBlock(closeBracketLoc, closeBracket);
-            
-            // Add visual effects
-            player.spawnParticle(org.bukkit.Particle.ENCHANTMENT_TABLE, closeBracketLoc.clone().add(0.5, 0.5, 0.5), 5, 0.3, 0.3, 0.3, 0);
-        }
-        
-        player.sendMessage("§a✓ Brackets created automatically for constructor block");
-    }
-
-    /**
-     * Handles non-code block placement (like pistons for brackets)
-     */
-    private boolean handleNonCodeBlockPlacement(BlockPlaceEvent event, Player player, Block block) {
-        // Special handling for pistons (brackets)
-        if (block.getType() == Material.PISTON || block.getType() == Material.STICKY_PISTON) {
-            CodeBlock newCodeBlock = new CodeBlock(block.getType().name(), "BRACKET");
-            newCodeBlock.setBracketType(CodeBlock.BracketType.OPEN);
-            blockCodeBlocks.put(block.getLocation(), newCodeBlock);
-            
-            // Create sign for the bracket
-            createSignForBlock(block.getLocation(), newCodeBlock);
-            
-            // Enhanced feedback for bracket placement
-            player.sendMessage("§a✓ Bracket placed: " + CodeBlock.BracketType.OPEN.getDisplayName());
-            player.sendMessage("§7Right-click to toggle bracket type");
-            
-            // Add visual effects
-            Location effectLoc = block.getLocation().add(0.5, 0.5, 0.5);
-            player.spawnParticle(org.bukkit.Particle.ENCHANTMENT_TABLE, effectLoc, 10, 0.3, 0.3, 0.3, 0);
-            player.playSound(block.getLocation(), org.bukkit.Sound.BLOCK_PISTON_EXTEND, 1.0f, 1.5f);
-            
-            // Reduced logging - only log when debugging
-            // plugin.getLogger().info("Bracket placed by " + player.getName() + " at " + block.getLocation());
-            return true;
-        }
-        return false;
-    }
-
-    /**
-     * Handles breaking of coding blocks
+     * Ловит уничтожение блока, удаляет CodeBlock и генерирует CodeBlockBrokenEvent.
      */
     @EventHandler(priority = EventPriority.HIGH)
     public void onBlockBreak(BlockBreakEvent event) {
-        if (event.isCancelled()) return;
+        if (event.isCancelled() || !isInDevWorld(event.getPlayer())) {
+            return;
+        }
         
         Location loc = event.getBlock().getLocation();
         Player player = event.getPlayer();
         
-        // Check if this is a bracket block that should be protected
         if (isProtectedBracket(loc)) {
-            // Cancel the event to prevent breaking brackets
             event.setCancelled(true);
             player.sendMessage("§cBrackets cannot be broken directly!");
             player.playSound(loc, org.bukkit.Sound.BLOCK_NOTE_BLOCK_BASS, 1.0f, 0.5f);
             return;
         }
-        
-        // Remove block from our map
+
+        // Если по этому адресу был наш CodeBlock...
         if (blockCodeBlocks.containsKey(loc)) {
             CodeBlock removedBlock = blockCodeBlocks.remove(loc);
             
-            // Fire custom event for other systems to react to
+            // 1. Удаляем табличку
+            removeSignFromBlock(loc);
+            
+            // 2. Отправляем наше событие об уничтожении!
             CodeBlockBrokenEvent brokenEvent = new CodeBlockBrokenEvent(player, removedBlock, loc);
             plugin.getServer().getPluginManager().callEvent(brokenEvent);
             
-            // Enhanced feedback for block removal
             player.sendMessage("§cCode block removed!");
-            player.playSound(loc, org.bukkit.Sound.BLOCK_NOTE_BLOCK_BASEDRUM, 0.8f, 0.8f);
-            
-            // Add visual effect for block removal
-            Location effectLoc = loc.add(0.5, 0.5, 0.5);
-            player.spawnParticle(org.bukkit.Particle.CLOUD, effectLoc, 8, 0.3, 0.3, 0.3, 0.1);
-            
-            // Reduced logging - only log when debugging
-            // plugin.getLogger().info("CodeBlock removed from " + loc + " with action: " + (removedBlock != null ? removedBlock.getAction() : "unknown"));
         }
         
         // Special handling for piston brackets
@@ -396,15 +188,28 @@ public class BlockPlacementHandler implements Listener, EventSubscriber {
             // Enhanced feedback for bracket removal
             player.sendMessage("§cBracket removed!");
             player.playSound(loc, org.bukkit.Sound.BLOCK_PISTON_CONTRACT, 0.8f, 1.2f);
-            
-            // Add visual effect for bracket removal
-            Location effectLoc = loc.add(0.5, 0.5, 0.5);
-            player.spawnParticle(org.bukkit.Particle.SMOKE_NORMAL, effectLoc, 8, 0.3, 0.3, 0.3, 0.1);
-            player.spawnParticle(org.bukkit.Particle.FLAME, effectLoc, 3, 0.2, 0.2, 0.2, 0.05);
-            
-            // Reduced logging - only log when debugging
-            // plugin.getLogger().info("Bracket piston removed from " + loc);
         }
+    }
+    
+    // Вспомогательный метод для создания CodeBlock
+    private CodeBlock createCodeBlockFor(Block block) {
+        if (blockConfigService == null) {
+            return null;
+        }
+
+        // Это блок-скобка?
+        if (block.getType() == Material.PISTON || block.getType() == Material.STICKY_PISTON) {
+            CodeBlock bracket = new CodeBlock(block.getType().name(), "BRACKET");
+            bracket.setBracketType(CodeBlock.BracketType.OPEN); // По умолчанию
+            return bracket;
+        }
+        
+        // Это наш кодовый блок?
+        if (blockConfigService.isCodeBlock(block.getType())) {
+            return new CodeBlock(block.getType().name(), "NOT_SET");
+        }
+
+        return null;
     }
     
     /**
@@ -1007,65 +812,5 @@ public class BlockPlacementHandler implements Listener, EventSubscriber {
         // Save the world to persist any changes to code blocks
         plugin.getWorldManager().saveWorld(creativeWorld);
         plugin.getLogger().fine("Saved all code blocks in world: " + world.getName());
-    }
-    
-    /**
-     * Gets the event names this subscriber is interested in.
-     * 
-     * @return An array of event names to subscribe to
-     */
-    @Override
-    public String[] getSubscribedEvents() {
-        return SUBSCRIBED_EVENTS;
-    }
-    
-    /**
-     * Handles an event that has been published.
-     * 
-     * @param eventName The name of the event
-     * @param eventData The data associated with the event
-     * @param source The player that triggered the event (can be null)
-     * @param worldName The world where the event occurred
-     */
-    @Override
-    public void handleEvent(String eventName, Map<String, DataValue> eventData, Player source, String worldName) {
-        switch (eventName) {
-            case "block_place_requested":
-                handleBlockPlaceRequest(eventData, source, worldName);
-                break;
-            case "block_placement_confirmed":
-                handleBlockPlacementConfirmation(eventData, source, worldName);
-                break;
-            default:
-                log.fine("BlockPlacementHandler received unhandled event: " + eventName);
-                break;
-        }
-    }
-    
-    /**
-     * Handles a block place request event
-     */
-    private void handleBlockPlaceRequest(Map<String, DataValue> eventData, Player source, String worldName) {
-        // This could be used to validate or preprocess block placement requests
-        log.info("Received block place request for player: " + (source != null ? source.getName() : "unknown"));
-    }
-    
-    /**
-     * Handles a block placement confirmation event
-     */
-    private void handleBlockPlacementConfirmation(Map<String, DataValue> eventData, Player source, String worldName) {
-        // This could be used to perform additional actions after block placement is confirmed
-        log.info("Received block placement confirmation for player: " + (source != null ? source.getName() : "unknown"));
-    }
-    
-    /**
-     * Gets the priority of this subscriber for event handling.
-     * Higher priority subscribers are called first.
-     * 
-     * @return The priority level (higher numbers = higher priority)
-     */
-    @Override
-    public int getPriority() {
-        return 50; // Medium priority
     }
 }
