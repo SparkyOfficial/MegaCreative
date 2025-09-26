@@ -1210,7 +1210,16 @@ public class AutoConnectionManager implements Listener {
      * Implements reference system-style: visual code construction with feedback
      */
     private void addConnectionEffect(Location from, Location to) {
-        // Create a beam of particles between connected blocks
+        // Get the ConnectionVisualizer service from the service registry
+        if (plugin != null && plugin.getServiceRegistry() != null) {
+            ConnectionVisualizer visualizer = plugin.getServiceRegistry().getConnectionVisualizer();
+            if (visualizer != null) {
+                visualizer.addConnectionEffect(from, to);
+                return;
+            }
+        }
+        
+        // Fallback to direct implementation if service is not available
         org.bukkit.World world = from.getWorld();
         
         // Calculate direction and distance

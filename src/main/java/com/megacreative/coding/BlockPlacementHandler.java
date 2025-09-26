@@ -200,7 +200,7 @@ public class BlockPlacementHandler implements Listener, EventSubscriber {
         }
         
         // Reduced logging - only log when debugging
-        // plugin.getLogger().info("Code block placed by " + player.getName() + " at " + block.getLocation() + " with action: " + actionId);
+        // plugin.getLogger().info("Code block placed by " + player.getName() + + " at " + block.getLocation() + " with action: " + actionId);
         return true;
     }
 
@@ -461,33 +461,36 @@ public class BlockPlacementHandler implements Listener, EventSubscriber {
                 return;
             }
             
-            // For other blocks, open the appropriate GUI based on action, condition or event
+            // For other blocks, use GUIRegistry to open the appropriate GUI
             String actionId = codeBlock.getAction();
             String conditionId = codeBlock.getCondition();
             String eventId = codeBlock.getEvent();
             
-            if ((actionId == null || "NOT_SET".equals(actionId)) && 
-                (conditionId == null || "NOT_SET".equals(conditionId)) &&
-                (eventId == null || "NOT_SET".equals(eventId))) {
-                // Check if plugin and service registry are available
-                if (plugin == null || plugin.getServiceRegistry() == null) {
-                    player.sendMessage("§cPlugin services not available!");
-                    return;
-                }
-                
-                // Open action selection GUI
+            // Determine which ID to use for opening the GUI
+            String guiId = null;
+            if (actionId != null && !actionId.equals("NOT_SET")) {
+                guiId = actionId;
+            } else if (conditionId != null && !conditionId.equals("NOT_SET")) {
+                guiId = conditionId;
+            } else if (eventId != null && !eventId.equals("NOT_SET")) {
+                guiId = eventId;
+            }
+            
+            // Check if plugin and service registry are available
+            if (plugin == null || plugin.getServiceRegistry() == null) {
+                player.sendMessage("§cPlugin services not available!");
+                return;
+            }
+            
+            // Use GUIRegistry to open the appropriate editor
+            GUIRegistry guiRegistry = plugin.getServiceRegistry().getGuiRegistry();
+            if (guiRegistry != null && guiId != null) {
+                guiRegistry.open(guiId, plugin, player, codeBlock);
+            } else {
+                // Fallback to action selection GUI if GUIRegistry is not available or no ID is set
                 com.megacreative.gui.coding.ActionSelectionGUI actionGUI = new com.megacreative.gui.coding.ActionSelectionGUI(
                     plugin, player, location, codeBlock.getMaterial());
                 actionGUI.open();
-            } else if (actionId != null && !actionId.equals("NOT_SET")) {
-                // Open specialized parameter editor based on action ID
-                openParameterEditor(player, codeBlock, actionId);
-            } else if (conditionId != null && !conditionId.equals("NOT_SET")) {
-                // Open specialized parameter editor based on condition ID
-                openConditionEditor(player, codeBlock, conditionId);
-            } else if (eventId != null && !eventId.equals("NOT_SET")) {
-                // Open specialized parameter editor based on event ID
-                openEventEditor(player, codeBlock, eventId);
             }
             return;
         }
@@ -536,50 +539,20 @@ public class BlockPlacementHandler implements Listener, EventSubscriber {
             return;
         }
         
-        // Open the appropriate editor based on event ID
-        switch (eventId) {
-            case "onJoin":
-                new PlayerJoinEventEditor(plugin, player, codeBlock).open();
-                break;
-                
-            case "onLeave":
-                new PlayerLeaveEventEditor(plugin, player, codeBlock).open();
-                break;
-                
-            case "onChat":
-                new PlayerChatEventEditor(plugin, player, codeBlock).open();
-                break;
-                
-            case "onBlockBreak":
-                new BlockBreakEventEditor(plugin, player, codeBlock).open();
-                break;
-                
-            case "onBlockPlace":
-                new BlockPlaceEventEditor(plugin, player, codeBlock).open();
-                break;
-                
-            case "onPlayerMove":
-                new PlayerMoveEventEditor(plugin, player, codeBlock).open();
-                break;
-                
-            case "onPlayerDeath":
-                new PlayerDeathEventEditor(plugin, player, codeBlock).open();
-                break;
-                
-            case "onCommand":
-                new CommandEventEditor(plugin, player, codeBlock).open();
-                break;
-                
-            case "onTick":
-                new TickEventEditor(plugin, player, codeBlock).open();
-                break;
-                
-            // Add more cases for other events as needed
-            default:
-                // For events without specialized editors, show a simple message
-                player.sendMessage("§aEvent configured: " + eventId);
-                player.closeInventory();
-                break;
+        // Use GUIRegistry to open the appropriate editor
+        if (plugin.getServiceRegistry() != null) {
+            GUIRegistry guiRegistry = plugin.getServiceRegistry().getGuiRegistry();
+            if (guiRegistry != null) {
+                guiRegistry.open(eventId, plugin, player, codeBlock);
+                return;
+            }
+        }
+        
+        // Fallback to enhanced parameter GUI if GUIRegistry is not available
+        if (plugin.getServiceRegistry() != null) {
+            com.megacreative.gui.coding.EnhancedActionParameterGUI enhancedGUI = 
+                new com.megacreative.gui.coding.EnhancedActionParameterGUI(plugin);
+            enhancedGUI.openParameterEditor(player, new org.bukkit.Location(org.bukkit.Bukkit.getWorld(codeBlock.getWorldId()), codeBlock.getX(), codeBlock.getY(), codeBlock.getZ()), eventId);
         }
     }
     
@@ -596,121 +569,20 @@ public class BlockPlacementHandler implements Listener, EventSubscriber {
             return;
         }
         
-        // Open the appropriate editor based on condition ID
-        switch (conditionId) {
-            case "compareVariable":
-                new CompareVariableEditor(plugin, player, codeBlock).open();
-                break;
-                
-            case "hasItem":
-                new HasItemEditor(plugin, player, codeBlock).open();
-                break;
-                
-            case "isInWorld":
-                new IsInWorldEditor(plugin, player, codeBlock).open();
-                break;
-                
-            case "isNearBlock":
-                new IsNearBlockEditor(plugin, player, codeBlock).open();
-                break;
-                
-            case "playerHealth":
-                new PlayerHealthEditor(plugin, player, codeBlock).open();
-                break;
-                
-            case "ifVarEquals":
-                new IfVarEqualsEditor(plugin, player, codeBlock).open();
-                break;
-                
-            case "ifVarGreater":
-                new IfVarGreaterEditor(plugin, player, codeBlock).open();
-                break;
-                
-            case "ifVarLess":
-                new IfVarLessEditor(plugin, player, codeBlock).open();
-                break;
-                
-            case "isOp":
-                new IsOpEditor(plugin, player, codeBlock).open();
-                break;
-                
-            case "worldTime":
-                new WorldTimeEditor(plugin, player, codeBlock).open();
-                break;
-                
-            case "mobNear":
-                new MobNearEditor(plugin, player, codeBlock).open();
-                break;
-                
-            case "playerGameMode":
-                new PlayerGameModeEditor(plugin, player, codeBlock).open();
-                break;
-                
-            case "hasPermission":
-                new HasPermissionEditor(plugin, player, codeBlock).open();
-                break;
-                
-            case "isBlockType":
-                new IsBlockTypeEditor(plugin, player, codeBlock).open();
-                break;
-                
-            case "isPlayerHolding":
-                new IsPlayerHoldingEditor(plugin, player, codeBlock).open();
-                break;
-                
-            case "isNearEntity":
-                new IsNearEntityEditor(plugin, player, codeBlock).open();
-                break;
-                
-            case "hasArmor":
-                new HasArmorEditor(plugin, player, codeBlock).open();
-                break;
-                
-            case "isNight":
-                new IsNightEditor(plugin, player, codeBlock).open();
-                break;
-                
-            case "isRiding":
-                new IsRidingEditor(plugin, player, codeBlock).open();
-                break;
-                
-            case "checkPlayerInventory":
-                new CheckPlayerInventoryEditor(plugin, player, codeBlock).open();
-                break;
-                
-            case "checkPlayerStats":
-                new CheckPlayerStatsEditor(plugin, player, codeBlock).open();
-                break;
-                
-            case "checkServerOnline":
-                new CheckServerOnlineEditor(plugin, player, codeBlock).open();
-                break;
-                
-            case "checkWorldWeather":
-                new CheckWorldWeatherEditor(plugin, player, codeBlock).open();
-                break;
-                
-            case "worldGuardRegionCheck":
-                new WorldGuardRegionCheckEditor(plugin, player, codeBlock).open();
-                break;
-                
-            // Add more cases for other conditions as needed
-            default:
-                // For conditions without specialized editors, use the generic parameter GUI
-                new com.megacreative.coding.CodingParameterGUI(
-                    player, 
-                    conditionId, 
-                    new org.bukkit.Location(org.bukkit.Bukkit.getWorld(codeBlock.getWorldId()), codeBlock.getX(), codeBlock.getY(), codeBlock.getZ()), 
-                    parameters -> {
-                        // Apply parameters to the code block
-                        for (Map.Entry<String, Object> entry : parameters.entrySet()) {
-                            codeBlock.setParameter(entry.getKey(), com.megacreative.coding.values.DataValue.fromObject(entry.getValue()));
-                        }
-                        player.sendMessage("§aПараметры условия сохранены!");
-                    },
-                    plugin.getGuiManager()
-                ).open();
-                break;
+        // Use GUIRegistry to open the appropriate editor
+        if (plugin.getServiceRegistry() != null) {
+            GUIRegistry guiRegistry = plugin.getServiceRegistry().getGuiRegistry();
+            if (guiRegistry != null) {
+                guiRegistry.open(conditionId, plugin, player, codeBlock);
+                return;
+            }
+        }
+        
+        // Fallback to enhanced parameter GUI if GUIRegistry is not available
+        if (plugin.getServiceRegistry() != null) {
+            com.megacreative.gui.coding.EnhancedActionParameterGUI enhancedGUI = 
+                new com.megacreative.gui.coding.EnhancedActionParameterGUI(plugin);
+            enhancedGUI.openParameterEditor(player, new org.bukkit.Location(org.bukkit.Bukkit.getWorld(codeBlock.getWorldId()), codeBlock.getX(), codeBlock.getY(), codeBlock.getZ()), conditionId);
         }
     }
     

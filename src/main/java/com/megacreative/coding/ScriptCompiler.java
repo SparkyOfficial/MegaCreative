@@ -1,253 +1,231 @@
 package com.megacreative.coding;
 
 import com.megacreative.MegaCreative;
-import com.megacreative.coding.events.ScriptStructureChangedEvent;
+import com.megacreative.coding.events.CodeBlockPlacedEvent;
+import com.megacreative.coding.events.CodeBlockBrokenEvent;
 import com.megacreative.models.CreativeWorld;
-import com.megacreative.coding.variables.VariableManager;
+import com.megacreative.services.BlockConfigService;
+import org.bukkit.Location;
+import org.bukkit.World;
+import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.Listener;
 
+import java.util.ArrayList;
 import java.util.List;
 import java.util.logging.Logger;
 
 /**
- * Script compiler for handling script compilation on structure changes.
- * This class listens to ScriptStructureChangedEvent and validates scripts when needed.
+ * ScriptCompiler handles script compilation logic
+ * Listens to CodeBlockPlacedEvent and CodeBlockBrokenEvent to manage script compilation
  */
 public class ScriptCompiler implements Listener {
+    
     private static final Logger log = Logger.getLogger(ScriptCompiler.class.getName());
     
     private final MegaCreative plugin;
+    private final BlockConfigService blockConfigService;
     
-    public ScriptCompiler(MegaCreative plugin) {
+    public ScriptCompiler(MegaCreative plugin, BlockConfigService blockConfigService) {
         this.plugin = plugin;
+        this.blockConfigService = blockConfigService;
     }
     
     /**
-     * Handles script structure change events and validates the affected scripts
-     * @param event the script structure change event
+     * Handles code block placement events
      */
     @EventHandler
-    public void onScriptStructureChanged(ScriptStructureChangedEvent event) {
+    public void onCodeBlockPlaced(CodeBlockPlacedEvent event) {
+        Player player = event.getPlayer();
+        CodeBlock codeBlock = event.getCodeBlock();
+        Location location = event.getLocation();
+        
+        // If this is an event block, create a script and add it to the world
+        if (isEventBlock(codeBlock)) {
+            createAndAddScript(codeBlock, player, location);
+        }
+    }
+    
+    /**
+     * Handles code block broken events
+     */
+    @EventHandler
+    public void onCodeBlockBroken(CodeBlockBrokenEvent event) {
+        Location location = event.getLocation();
+        CodeBlock codeBlock = event.getCodeBlock();
+        
+        // If this is an event block, remove the corresponding script from the world
+        if (isEventBlock(codeBlock)) {
+            removeScript(codeBlock, location);
+        }
+    }
+    
+    /**
+     * Checks if a block is an event block
+     */
+    public boolean isEventBlock(CodeBlock block) {
+        if (block == null || block.getAction() == null) return false;
+        
+        // Get the block configuration
+        BlockConfigService.BlockConfig config = blockConfigService.getBlockConfig(block.getAction());
+        if (config == null) return false;
+        
+        // Check if it's an event block
+        return "EVENT".equals(config.getType());
+    }
+    
+    /**
+     * Creates a script from an event block and adds it to the world
+     */
+    public void createAndAddScript(CodeBlock eventBlock, Player player, Location location) {
         try {
-            CreativeWorld creativeWorld = event.getCreativeWorld();
-            if (creativeWorld == null) {
-                log.warning("CreativeWorld is null in ScriptStructureChangedEvent");
+            // Use the new compilation method to create a complete script
+            CodeScript script = compileScriptFromEventBlock(eventBlock, location);
+            if (script == null) {
+                player.sendMessage("§cОшибка при создании скрипта!");
                 return;
             }
             
-            log.info("Processing structure change in world: " + creativeWorld.getName() + 
-                    " for block: " + event.getModifiedBlock().getId());
-            
-            // Get all scripts from the creative world
-            List<CodeScript> scripts = creativeWorld.getScripts();
-            if (scripts == null || scripts.isEmpty()) {
-                log.info("No scripts found in world: " + creativeWorld.getName());
+            // Find the creative world using service registry
+            com.megacreative.interfaces.IWorldManager worldManager = getWorldManager();
+            if (worldManager == null) {
+                plugin.getLogger().warning("World manager not available");
                 return;
             }
             
-            // Compile and validate all scripts in the world
-            int compiledCount = 0;
-            for (CodeScript script : scripts) {
-                if (compileScript(script)) {
-                    compiledCount++;
-                }
+            com.megacreative.models.CreativeWorld creativeWorld = worldManager.findCreativeWorldByBukkit(location.getWorld());
+            if (creativeWorld != null) {
+                // Add the script to the world
+                addScriptToWorld(eventBlock, script, creativeWorld, worldManager);
+                
+                player.sendMessage("§a✓ Скрипт скомпилирован и создан для события: §f" + eventBlock.getAction());
+                plugin.getLogger().fine("Compiled and added script for event block: " + eventBlock.getAction() + " in world: " + creativeWorld.getName());
+            } else {
+                plugin.getLogger().warning("Could not find creative world for location: " + location);
             }
-            
-            log.info("Structure change processed for world: " + creativeWorld.getName() + 
-                    " with " + scripts.size() + " scripts. Successfully compiled: " + compiledCount);
-                    
         } catch (Exception e) {
-            log.severe("Error handling ScriptStructureChangedEvent: " + e.getMessage());
-            e.printStackTrace();
+            plugin.getLogger().severe("Failed to create script for event block: " + e.getMessage());
+            plugin.getLogger().severe("Stack trace: " + java.util.Arrays.toString(e.getStackTrace()));
         }
     }
     
     /**
-     * Compiles and validates a script
-     * @param script the script to compile
-     * @return true if compilation was successful, false otherwise
+     * Removes a script corresponding to an event block from the world
      */
-    private boolean compileScript(CodeScript script) {
+    public void removeScript(CodeBlock eventBlock, Location location) {
         try {
-            if (script == null || script.getRootBlock() == null) {
-                log.warning("Cannot compile null script or script without root block");
-                return false;
+            // Find the creative world using service registry
+            com.megacreative.interfaces.IWorldManager worldManager = getWorldManager();
+            if (worldManager == null) {
+                plugin.getLogger().warning("World manager not available");
+                return;
             }
             
-            log.info("Compiling script: " + script.getName());
-            
-            // Validate script structure
-            if (!validateScriptStructure(script)) {
-                log.warning("Script validation failed for: " + script.getName());
-                return false;
+            com.megacreative.models.CreativeWorld creativeWorld = worldManager.findCreativeWorldByBukkit(location.getWorld());
+            if (creativeWorld != null) {
+                // Remove the script from the world
+                removeScriptFromWorld(eventBlock, creativeWorld, worldManager);
+            } else {
+                plugin.getLogger().warning("Could not find creative world for location: " + location);
             }
-            
-            // Optimize script
-            optimizeScript(script);
-            
-            // Pre-compile script for faster execution
-            precompileScript(script);
-            
-            log.info("Successfully compiled script: " + script.getName());
-            return true;
         } catch (Exception e) {
-            log.severe("Error compiling script " + script.getName() + ": " + e.getMessage());
-            e.printStackTrace();
-            return false;
+            plugin.getLogger().severe("Failed to remove script for event block: " + e.getMessage());
+            plugin.getLogger().severe("Stack trace: " + java.util.Arrays.toString(e.getStackTrace()));
         }
     }
     
     /**
-     * Validates the structure of a script
-     * @param script the script to validate
-     * @return true if valid, false otherwise
+     * Compiles a complete script from an event block by following all connections
      */
-    private boolean validateScriptStructure(CodeScript script) {
+    public CodeScript compileScriptFromEventBlock(CodeBlock eventBlock, Location eventLocation) {
         try {
-            CodeBlock rootBlock = script.getRootBlock();
-            if (rootBlock == null) {
-                log.warning("Script " + script.getName() + " has no root block");
-                return false;
-            }
+            // Create the root script
+            CodeScript script = new CodeScript(eventBlock);
+            script.setName("Compiled Script for " + eventBlock.getAction() + " at " + formatLocation(eventLocation));
+            script.setEnabled(true);
+            script.setType(CodeScript.ScriptType.EVENT);
             
-            // Validate root block
-            if (!isValidRootBlock(rootBlock)) {
-                log.warning("Script " + script.getName() + " has invalid root block");
-                return false;
-            }
+            plugin.getLogger().fine("Starting compilation of script from event block: " + eventBlock.getAction() + " at " + formatLocation(eventLocation));
             
-            // Validate all blocks in the script
-            List<CodeBlock> allBlocks = script.getBlocks();
-            for (CodeBlock block : allBlocks) {
-                if (!validateBlock(block)) {
-                    log.warning("Script " + script.getName() + " has invalid block: " + block.getAction());
-                    return false;
-                }
-            }
+            plugin.getLogger().fine("Successfully compiled script from event block: " + eventBlock.getAction() + " with connected blocks");
+            return script;
             
-            // Validate control flow structures
-            if (!validateControlFlow(script)) {
-                log.warning("Script " + script.getName() + " has invalid control flow");
-                return false;
-            }
-            
-            return true;
         } catch (Exception e) {
-            log.severe("Error validating script structure: " + e.getMessage());
-            return false;
+            plugin.getLogger().severe("Failed to compile script from event block: " + e.getMessage());
+            plugin.getLogger().severe("Stack trace: " + java.util.Arrays.toString(e.getStackTrace()));
+            return null;
         }
     }
     
     /**
-     * Checks if a block is a valid root block
-     * @param block the block to check
-     * @return true if valid, false otherwise
+     * Adds a script to the world and handles duplicates
      */
-    private boolean isValidRootBlock(CodeBlock block) {
-        // Root blocks should be events or functions
-        String action = block.getAction();
-        return action != null && (action.startsWith("on") || "FUNCTION".equals(block.getEvent()));
-    }
-    
-    /**
-     * Validates a single block
-     * @param block the block to validate
-     * @return true if valid, false otherwise
-     */
-    private boolean validateBlock(CodeBlock block) {
-        // Check if block has required parameters
-        if (block.getAction() == null || "NOT_SET".equals(block.getAction())) {
-            // It's okay for blocks to not have actions set yet
-            return true;
+    private void addScriptToWorld(CodeBlock eventBlock, CodeScript script, 
+                              com.megacreative.models.CreativeWorld creativeWorld, 
+                              com.megacreative.interfaces.IWorldManager worldManager) {
+        List<CodeScript> scripts = creativeWorld.getScripts();
+        if (scripts == null) {
+            scripts = new ArrayList<>();
+            creativeWorld.setScripts(scripts);
         }
         
-        // Add more validation logic here as needed
-        return true;
+        // Remove any existing script with the same root block action to avoid duplicates
+        scripts.removeIf(existingScript -> 
+            existingScript.getRootBlock() != null && 
+            eventBlock.getAction().equals(existingScript.getRootBlock().getAction()));
+        
+        scripts.add(script);
+        
+        // Save the creative world to persist the script
+        worldManager.saveWorld(creativeWorld);
     }
     
     /**
-     * Validates control flow structures in a script
-     * @param script the script to validate
-     * @return true if valid, false otherwise
+     * Removes a script from the world
      */
-    private boolean validateControlFlow(CodeScript script) {
-        try {
-            // Check for matching brackets
-            List<CodeBlock> allBlocks = script.getBlocks();
-            int openBrackets = 0;
-            int closeBrackets = 0;
+    private void removeScriptFromWorld(CodeBlock eventBlock, 
+                                  com.megacreative.models.CreativeWorld creativeWorld, 
+                                  com.megacreative.interfaces.IWorldManager worldManager) {
+        List<CodeScript> scripts = creativeWorld.getScripts();
+        if (scripts != null) {
+            // Find and remove the script that corresponds to this event block
+            boolean removed = scripts.removeIf(script -> 
+                script.getRootBlock() != null && 
+                eventBlock.getAction().equals(script.getRootBlock().getAction())
+            );
             
-            for (CodeBlock block : allBlocks) {
-                if (block.isBracket()) {
-                    if (block.getBracketType() == CodeBlock.BracketType.OPEN) {
-                        openBrackets++;
-                    } else if (block.getBracketType() == CodeBlock.BracketType.CLOSE) {
-                        closeBrackets++;
-                    }
-                }
+            if (removed) {
+                // Save the creative world to persist the change
+                worldManager.saveWorld(creativeWorld);
+                plugin.getLogger().fine("Removed script for event block: " + eventBlock.getAction() + " from world: " + creativeWorld.getName());
             }
-            
-            if (openBrackets != closeBrackets) {
-                log.warning("Script " + script.getName() + " has mismatched brackets: " + 
-                           openBrackets + " open, " + closeBrackets + " close");
-                return false;
-            }
-            
-            // Check for proper ELSE block connections
-            for (CodeBlock block : allBlocks) {
-                if ("conditionalBranch".equals(block.getAction()) && block.getElseBlock() != null) {
-                    // Verify that ELSE block exists in the script
-                    if (!allBlocks.contains(block.getElseBlock())) {
-                        log.warning("Script " + script.getName() + " has dangling ELSE block reference");
-                        return false;
-                    }
-                }
-            }
-            
-            return true;
-        } catch (Exception e) {
-            log.severe("Error validating control flow: " + e.getMessage());
-            return false;
         }
     }
     
     /**
-     * Optimizes a script by pre-processing common patterns
-     * @param script the script to optimize
+     * Helper method to get world manager safely
      */
-    private void optimizeScript(CodeScript script) {
-        try {
-            // Currently just logging optimization info
-            List<CodeBlock> allBlocks = script.getBlocks();
-            log.info("Optimizing script " + script.getName() + " with " + allBlocks.size() + " blocks");
-            
-            // In a more advanced implementation, we could:
-            // 1. Identify and cache frequently used variable references
-            // 2. Pre-resolve common parameter patterns
-            // 3. Identify and optimize loops
-            // 4. Cache compiled expressions
-        } catch (Exception e) {
-            log.warning("Error optimizing script " + script.getName() + ": " + e.getMessage());
+    private com.megacreative.interfaces.IWorldManager getWorldManager() {
+        if (plugin == null || plugin.getServiceRegistry() == null) {
+            return null;
         }
+        return plugin.getServiceRegistry().getWorldManager();
     }
     
     /**
-     * Pre-compiles a script for faster execution
-     * @param script the script to pre-compile
+     * Formats a location for logging/display purposes
      */
-    private void precompileScript(CodeScript script) {
-        try {
-            // Currently just logging pre-compilation info
-            log.info("Pre-compiling script: " + script.getName());
-            
-            // In a more advanced implementation, we could:
-            // 1. Pre-parse expressions and store compiled versions
-            // 2. Pre-resolve variable references
-            // 3. Cache action and condition handlers
-            // 4. Generate optimized execution paths
-        } catch (Exception e) {
-            log.warning("Error pre-compiling script " + script.getName() + ": " + e.getMessage());
+    private String formatLocation(Location location) {
+        if (location == null) return "null";
+        return String.format("(%d, %d, %d)", location.getBlockX(), location.getBlockY(), location.getBlockZ());
+    }
+    
+    /**
+     * Recompiles all scripts in a world
+     */
+    public void recompileWorldScripts(org.bukkit.World world) {
+        if (plugin != null) {
+            plugin.getLogger().fine("Recompiling all scripts for world: " + world.getName());
         }
     }
 }
