@@ -209,7 +209,7 @@ public class PlayCommand implements CommandExecutor {
      * @param creativeWorld The creative world to search for scripts
      */
     private void executeOnJoinScript(Player player, CreativeWorld creativeWorld) {
-        // Find the onJoin script using AutoConnectionManager
+        // Find the onJoin script using ScriptCompiler instead of AutoConnectionManager
         if (creativeWorld.getScripts() != null) {
             for (CodeScript script : creativeWorld.getScripts()) {
                 // Check if the script's root block is an onJoin event

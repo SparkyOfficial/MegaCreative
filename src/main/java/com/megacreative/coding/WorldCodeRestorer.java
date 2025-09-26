@@ -2,7 +2,6 @@ package com.megacreative.coding;
 
 import com.megacreative.MegaCreative;
 import com.megacreative.core.ServiceRegistry;
-import com.megacreative.coding.AutoConnectionManager;
 import org.bukkit.World;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.Listener;
@@ -43,16 +42,9 @@ public class WorldCodeRestorer implements Listener {
             LOGGER.info("Restoring code connections for world: " + world.getName());
             
             try {
-                // Rebuild all connections for blocks in this world
-                // In the new architecture, this would involve coordinating with BlockLinker and BlockHierarchyManager
-                // For now, we'll use the existing AutoConnectionManager for compatibility
-                if (serviceRegistry != null) {
-                    AutoConnectionManager autoConnectionManager = serviceRegistry.getAutoConnectionManager();
-                    if (autoConnectionManager != null) {
-                        autoConnectionManager.rebuildWorldConnections(world);
-                    }
-                }
-                LOGGER.info("Successfully restored code connections for world: " + world.getName());
+                // In the new architecture, connection restoration is handled by BlockLinker and BlockHierarchyManager
+                // These services listen to events and manage connections automatically
+                LOGGER.info("Code connections are managed automatically by BlockLinker and BlockHierarchyManager");
             } catch (Exception e) {
                 LOGGER.severe("Failed to restore code connections for world " + world.getName() + ": " + e.getMessage());
                 e.printStackTrace();

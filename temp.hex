@@ -1,0 +1,1423 @@
+0000	70 61 63 6b 61 67 65 20  63 6f 6d 2e 6d 65 67 61   package com.mega
+0010	63 72 65 61 74 69 76 65  2e 67 75 69 2e 63 6f 64   creative.gui.cod
+0020	69 6e 67 3b 0d 0a 0d 0a  69 6d 70 6f 72 74 20 63   ing;....import c
+0030	6f 6d 2e 6d 65 67 61 63  72 65 61 74 69 76 65 2e   om.megacreative.
+0040	4d 65 67 61 43 72 65 61  74 69 76 65 3b 0d 0a 69   MegaCreative;..i
+0050	6d 70 6f 72 74 20 63 6f  6d 2e 6d 65 67 61 63 72   mport com.megacr
+0060	65 61 74 69 76 65 2e 6d  61 6e 61 67 65 72 73 2e   eative.managers.
+0070	47 55 49 4d 61 6e 61 67  65 72 3b 0d 0a 69 6d 70   GUIManager;..imp
+0080	6f 72 74 20 63 6f 6d 2e  6d 65 67 61 63 72 65 61   ort com.megacrea
+0090	74 69 76 65 2e 63 6f 64  69 6e 67 2e 43 6f 64 65   tive.coding.Code
+00a0	42 6c 6f 63 6b 3b 0d 0a  69 6d 70 6f 72 74 20 63   Block;..import c
+00b0	6f 6d 2e 6d 65 67 61 63  72 65 61 74 69 76 65 2e   om.megacreative.
+00c0	63 6f 64 69 6e 67 2e 42  6c 6f 63 6b 50 6c 61 63   coding.BlockPlac
+00d0	65 6d 65 6e 74 48 61 6e  64 6c 65 72 3b 0d 0a 69   ementHandler;..i
+00e0	6d 70 6f 72 74 20 63 6f  6d 2e 6d 65 67 61 63 72   mport com.megacr
+00f0	65 61 74 69 76 65 2e 63  6f 64 69 6e 67 2e 76 61   eative.coding.va
+0100	6c 75 65 73 2e 44 61 74  61 56 61 6c 75 65 3b 0d   lues.DataValue;.
+0110	0a 69 6d 70 6f 72 74 20  63 6f 6d 2e 6d 65 67 61   .import com.mega
+0120	63 72 65 61 74 69 76 65  2e 63 6f 64 69 6e 67 2e   creative.coding.
+0130	43 6f 6e 73 74 61 6e 74  73 3b 0d 0a 69 6d 70 6f   Constants;..impo
+0140	72 74 20 6f 72 67 2e 62  75 6b 6b 69 74 2e 42 75   rt org.bukkit.Bu
+0150	6b 6b 69 74 3b 0d 0a 69  6d 70 6f 72 74 20 6f 72   kkit;..import or
+0160	67 2e 62 75 6b 6b 69 74  2e 4d 61 74 65 72 69 61   g.bukkit.Materia
+0170	6c 3b 0d 0a 69 6d 70 6f  72 74 20 6f 72 67 2e 62   l;..import org.b
+0180	75 6b 6b 69 74 2e 65 6e  74 69 74 79 2e 50 6c 61   ukkit.entity.Pla
+0190	79 65 72 3b 0d 0a 69 6d  70 6f 72 74 20 6f 72 67   yer;..import org
+01a0	2e 62 75 6b 6b 69 74 2e  65 76 65 6e 74 2e 69 6e   .bukkit.event.in
+01b0	76 65 6e 74 6f 72 79 2e  49 6e 76 65 6e 74 6f 72   ventory.Inventor
+01c0	79 43 6c 69 63 6b 45 76  65 6e 74 3b 0d 0a 69 6d   yClickEvent;..im
+01d0	70 6f 72 74 20 6f 72 67  2e 62 75 6b 6b 69 74 2e   port org.bukkit.
+01e0	65 76 65 6e 74 2e 69 6e  76 65 6e 74 6f 72 79 2e   event.inventory.
+01f0	49 6e 76 65 6e 74 6f 72  79 43 6c 6f 73 65 45 76   InventoryCloseEv
+0200	65 6e 74 3b 0d 0a 69 6d  70 6f 72 74 20 6f 72 67   ent;..import org
+0210	2e 62 75 6b 6b 69 74 2e  69 6e 76 65 6e 74 6f 72   .bukkit.inventor
+0220	79 2e 49 6e 76 65 6e 74  6f 72 79 3b 0d 0a 69 6d   y.Inventory;..im
+0230	70 6f 72 74 20 6f 72 67  2e 62 75 6b 6b 69 74 2e   port org.bukkit.
+0240	69 6e 76 65 6e 74 6f 72  79 2e 49 74 65 6d 53 74   inventory.ItemSt
+0250	61 63 6b 3b 0d 0a 69 6d  70 6f 72 74 20 6f 72 67   ack;..import org
+0260	2e 62 75 6b 6b 69 74 2e  69 6e 76 65 6e 74 6f 72   .bukkit.inventor
+0270	79 2e 6d 65 74 61 2e 49  74 65 6d 4d 65 74 61 3b   y.meta.ItemMeta;
+0280	0d 0a 69 6d 70 6f 72 74  20 6f 72 67 2e 62 75 6b   ..import org.buk
+0290	6b 69 74 2e 4c 6f 63 61  74 69 6f 6e 3b 0d 0a 0d   kit.Location;...
+02a0	0a 69 6d 70 6f 72 74 20  6a 61 76 61 2e 75 74 69   .import java.uti
+02b0	6c 2e 2a 3b 0d 0a 0d 0a  2f 2a 2a 0d 0a 20 2a 20   l.*;..../**.. * 
+02c0	f0 9f 8e 86 20 45 6e 68  61 6e 63 65 64 20 43 6f   .... Enhanced Co
+02d0	6e 6e 65 63 74 69 6f 6e  20 44 65 62 75 67 20 47   nnection Debug G
+02e0	55 49 0d 0a 20 2a 20 0d  0a 20 2a 20 49 6d 70 6c   UI.. * .. * Impl
+02f0	65 6d 65 6e 74 73 20 52  65 66 65 72 65 6e 63 65   ements Reference
+0300	20 53 79 73 74 65 6d 2d  73 74 79 6c 65 3a 20 75    System-style: u
+0310	6e 69 76 65 72 73 61 6c  20 62 6c 6f 63 6b 73 20   niversal blocks 
+0320	77 69 74 68 20 47 55 49  20 63 6f 6e 66 69 67 75   with GUI configu
+0330	72 61 74 69 6f 6e 0d 0a  20 2a 20 77 69 74 68 20   ration.. * with 
+0340	63 61 74 65 67 6f 72 69  65 73 2c 20 62 65 61 75   categories, beau
+0350	74 69 66 75 6c 20 73 65  6c 65 63 74 69 6f 6e 2c   tiful selection,
+0360	20 61 6e 64 20 73 6d 61  72 74 20 73 69 67 6e 73    and smart signs
+0370	20 6f 6e 20 62 6c 6f 63  6b 73 20 77 69 74 68 20    on blocks with 
+0380	69 6e 66 6f 72 6d 61 74  69 6f 6e 2e 0d 0a 20 2a   information... *
+0390	0d 0a 20 2a 20 f0 9f 8e  86 20 d0 a3 d0 bb d1 83   .. * .... ......
+03a0	d1 87 d1 88 d0 b5 d0 bd  d0 bd d1 8b d0 b9 20 d0   .............. .
+03b0	b3 d1 80 d0 b0 d1 84 d0  b8 d1 87 d0 b5 d1 81 d0   ................
+03c0	ba d0 b8 d0 b9 20 d0 b8  d0 bd d1 82 d0 b5 d1 80   ..... ..........
+03d0	d1 84 d0 b5 d0 b9 d1 81  20 d0 be d1 82 d0 bb d0   ........ .......
+03e0	b0 d0 b4 d0 ba d0 b8 20  d1 81 d0 b2 d1 8f d0 b7   ....... ........
+03f0	d0 b5 d0 b9 0d 0a 20 2a  20 0d 0a 20 2a 20 d0 a0   ...... * .. * ..
+0400	d0 b5 d0 b0 d0 bb d0 b8  d0 b7 d1 83 d0 b5 d1 82   ................
+0410	20 d1 81 d1 82 d0 b8 d0  bb d1 8c 20 72 65 66 65    .......... refe
+0420	72 65 6e 63 65 20 73 79  73 74 65 6d 3a 20 d1 83   rence system: ..
+0430	d0 bd d0 b8 d0 b2 d0 b5  d1 80 d1 81 d0 b0 d0 bb   ................
+0440	d1 8c d0 bd d1 8b d0 b5  20 d0 b1 d0 bb d0 be d0   ........ .......
+0450	ba d0 b8 20 d1 81 20 d0  bd d0 b0 d1 81 d1 82 d1   ... .. .........
+0460	80 d0 be d0 b9 d0 ba d0  be d0 b9 20 d1 87 d0 b5   ........... ....
+0470	d1 80 d0 b5 d0 b7 20 47  55 49 0d 0a 20 2a 20 d1   ...... GUI.. * .
+0480	81 20 d0 ba d0 b0 d1 82  d0 b5 d0 b3 d0 be d1 80   . ..............
+0490	d0 b8 d1 8f d0 bc d0 b8  2c 20 d0 ba d1 80 d0 b0   ........, ......
+04a0	d1 81 d0 b8 d0 b2 d1 8b  d0 bc 20 d0 b2 d1 8b d0   .......... .....
+04b0	b1 d0 be d1 80 d0 be d0  bc 20 d0 b8 20 d1 83 d0   ......... .. ...
+04c0	bc d0 bd d1 8b d0 bc d0  b8 20 d1 82 d0 b0 d0 b1   ......... ......
+04d0	d0 bb d0 b8 d1 87 d0 ba  d0 b0 d0 bc d0 b8 20 d0   .............. .
+04e0	bd d0 b0 20 d0 b1 d0 bb  d0 be d0 ba d0 b0 d1 85   ... ............
+04f0	20 d1 81 20 d0 b8 d0 bd  d1 84 d0 be d1 80 d0 bc    .. ............
+0500	d0 b0 d1 86 d0 b8 d0 b5  d0 b9 2e 0d 0a 20 2a 0d   ............. *.
+0510	0a 20 2a 20 f0 9f 8e 86  20 45 72 77 65 69 74 65   . * .... Erweite
+0520	72 74 65 20 56 65 72 62  69 6e 64 75 6e 67 73 2d   rte Verbindungs-
+0530	44 65 62 75 67 2d 47 55  49 0d 0a 20 2a 20 0d 0a   Debug-GUI.. * ..
+0540	20 2a 20 49 6d 70 6c 65  6d 65 6e 74 69 65 72 74    * Implementiert
+0550	20 52 65 66 65 72 65 6e  63 65 2d 53 79 73 74 65    Reference-Syste
+0560	6d 2d 53 74 69 6c 3a 20  75 6e 69 76 65 72 73 65   m-Stil: universe
+0570	6c 6c 65 20 42 6c c3 b6  63 6b 65 20 6d 69 74 20   lle Bl..cke mit 
+0580	47 55 49 2d 4b 6f 6e 66  69 67 75 72 61 74 69 6f   GUI-Konfiguratio
+0590	6e 0d 0a 20 2a 20 6d 69  74 20 4b 61 74 65 67 6f   n.. * mit Katego
+05a0	72 69 65 6e 2c 20 73 63  68 c3 b6 6e 65 72 20 41   rien, sch..ner A
+05b0	75 73 77 61 68 6c 20 75  6e 64 20 69 6e 74 65 6c   uswahl und intel
+05c0	6c 69 67 65 6e 74 65 6e  20 53 63 68 69 6c 64 65   ligenten Schilde
+05d0	72 6e 20 61 6e 20 42 6c  c3 b6 63 6b 65 6e 20 6d   rn an Bl..cken m
+05e0	69 74 20 49 6e 66 6f 72  6d 61 74 69 6f 6e 65 6e   it Informationen
+05f0	2e 0d 0a 20 2a 2f 0d 0a  70 75 62 6c 69 63 20 63   ... */..public c
+0600	6c 61 73 73 20 43 6f 6e  6e 65 63 74 69 6f 6e 44   lass ConnectionD
+0610	65 62 75 67 47 55 49 20  69 6d 70 6c 65 6d 65 6e   ebugGUI implemen
+0620	74 73 20 47 55 49 4d 61  6e 61 67 65 72 2e 4d 61   ts GUIManager.Ma
+0630	6e 61 67 65 64 47 55 49  49 6e 74 65 72 66 61 63   nagedGUIInterfac
+0640	65 20 7b 0d 0a 20 20 20  20 0d 0a 20 20 20 20 70   e {..    ..    p
+0650	72 69 76 61 74 65 20 66  69 6e 61 6c 20 4d 65 67   rivate final Meg
+0660	61 43 72 65 61 74 69 76  65 20 70 6c 75 67 69 6e   aCreative plugin
+0670	3b 0d 0a 20 20 20 20 70  72 69 76 61 74 65 20 66   ;..    private f
+0680	69 6e 61 6c 20 50 6c 61  79 65 72 20 70 6c 61 79   inal Player play
+0690	65 72 3b 0d 0a 20 20 20  20 70 72 69 76 61 74 65   er;..    private
+06a0	20 66 69 6e 61 6c 20 4c  6f 63 61 74 69 6f 6e 20    final Location 
+06b0	72 6f 6f 74 42 6c 6f 63  6b 4c 6f 63 61 74 69 6f   rootBlockLocatio
+06c0	6e 3b 0d 0a 20 20 20 20  70 72 69 76 61 74 65 20   n;..    private 
+06d0	66 69 6e 61 6c 20 49 6e  76 65 6e 74 6f 72 79 20   final Inventory 
+06e0	69 6e 76 65 6e 74 6f 72  79 3b 0d 0a 20 20 20 20   inventory;..    
+06f0	70 72 69 76 61 74 65 20  66 69 6e 61 6c 20 47 55   private final GU
+0700	49 4d 61 6e 61 67 65 72  20 67 75 69 4d 61 6e 61   IManager guiMana
+0710	67 65 72 3b 0d 0a 20 20  20 20 70 72 69 76 61 74   ger;..    privat
+0720	65 20 66 69 6e 61 6c 20  42 6c 6f 63 6b 50 6c 61   e final BlockPla
+0730	63 65 6d 65 6e 74 48 61  6e 64 6c 65 72 20 62 6c   cementHandler bl
+0740	6f 63 6b 50 6c 61 63 65  6d 65 6e 74 48 61 6e 64   ockPlacementHand
+0750	6c 65 72 3b 0d 0a 20 20  20 20 0d 0a 20 20 20 20   ler;..    ..    
+0760	70 72 69 76 61 74 65 20  66 69 6e 61 6c 20 4d 61   private final Ma
+0770	70 3c 49 6e 74 65 67 65  72 2c 20 4c 6f 63 61 74   p<Integer, Locat
+0780	69 6f 6e 3e 20 73 6c 6f  74 54 6f 42 6c 6f 63 6b   ion> slotToBlock
+0790	4c 6f 63 61 74 69 6f 6e  20 3d 20 6e 65 77 20 48   Location = new H
+07a0	61 73 68 4d 61 70 3c 3e  28 29 3b 0d 0a 20 20 20   ashMap<>();..   
+07b0	20 0d 0a 20 20 20 20 2f  2a 2a 0d 0a 20 20 20 20    ..    /**..    
+07c0	20 2a 20 49 6e 69 74 69  61 6c 69 7a 65 73 20 63    * Initializes c
+07d0	6f 6e 6e 65 63 74 69 6f  6e 20 64 65 62 75 67 20   onnection debug 
+07e0	47 55 49 0d 0a 20 20 20  20 20 2a 20 40 70 61 72   GUI..     * @par
+07f0	61 6d 20 70 6c 75 67 69  6e 20 52 65 66 65 72 65   am plugin Refere
+0800	6e 63 65 20 74 6f 20 6d  61 69 6e 20 70 6c 75 67   nce to main plug
+0810	69 6e 0d 0a 20 20 20 20  20 2a 20 40 70 61 72 61   in..     * @para
+0820	6d 20 70 6c 61 79 65 72  20 50 6c 61 79 65 72 20   m player Player 
+0830	77 68 6f 20 77 69 6c 6c  20 75 73 65 20 74 68 65   who will use the
+0840	20 69 6e 74 65 72 66 61  63 65 0d 0a 20 20 20 20    interface..    
+0850	20 2a 20 40 70 61 72 61  6d 20 72 6f 6f 74 42 6c    * @param rootBl
+0860	6f 63 6b 4c 6f 63 61 74  69 6f 6e 20 4c 6f 63 61   ockLocation Loca
+0870	74 69 6f 6e 20 6f 66 20  72 6f 6f 74 20 62 6c 6f   tion of root blo
+0880	63 6b 20 74 6f 20 64 65  62 75 67 0d 0a 20 20 20   ck to debug..   
+0890	20 20 2a 2f 0d 0a 20 20  20 20 70 75 62 6c 69 63     */..    public
+08a0	20 43 6f 6e 6e 65 63 74  69 6f 6e 44 65 62 75 67    ConnectionDebug
+08b0	47 55 49 28 4d 65 67 61  43 72 65 61 74 69 76 65   GUI(MegaCreative
+08c0	20 70 6c 75 67 69 6e 2c  20 50 6c 61 79 65 72 20    plugin, Player 
+08d0	70 6c 61 79 65 72 2c 20  4c 6f 63 61 74 69 6f 6e   player, Location
+08e0	20 72 6f 6f 74 42 6c 6f  63 6b 4c 6f 63 61 74 69    rootBlockLocati
+08f0	6f 6e 29 20 7b 0d 0a 20  20 20 20 20 20 20 20 74   on) {..        t
+0900	68 69 73 2e 70 6c 75 67  69 6e 20 3d 20 70 6c 75   his.plugin = plu
+0910	67 69 6e 3b 0d 0a 20 20  20 20 20 20 20 20 74 68   gin;..        th
+0920	69 73 2e 70 6c 61 79 65  72 20 3d 20 70 6c 61 79   is.player = play
+0930	65 72 3b 0d 0a 20 20 20  20 20 20 20 20 74 68 69   er;..        thi
+0940	73 2e 72 6f 6f 74 42 6c  6f 63 6b 4c 6f 63 61 74   s.rootBlockLocat
+0950	69 6f 6e 20 3d 20 72 6f  6f 74 42 6c 6f 63 6b 4c   ion = rootBlockL
+0960	6f 63 61 74 69 6f 6e 3b  0d 0a 20 20 20 20 20 20   ocation;..      
+0970	20 20 74 68 69 73 2e 67  75 69 4d 61 6e 61 67 65     this.guiManage
+0980	72 20 3d 20 70 6c 75 67  69 6e 2e 67 65 74 53 65   r = plugin.getSe
+0990	72 76 69 63 65 52 65 67  69 73 74 72 79 28 29 2e   rviceRegistry().
+09a0	67 65 74 47 75 69 4d 61  6e 61 67 65 72 28 29 3b   getGuiManager();
+09b0	0d 0a 20 20 20 20 20 20  20 20 74 68 69 73 2e 62   ..        this.b
+09c0	6c 6f 63 6b 50 6c 61 63  65 6d 65 6e 74 48 61 6e   lockPlacementHan
+09d0	64 6c 65 72 20 3d 20 70  6c 75 67 69 6e 2e 67 65   dler = plugin.ge
+09e0	74 53 65 72 76 69 63 65  52 65 67 69 73 74 72 79   tServiceRegistry
+09f0	28 29 2e 67 65 74 42 6c  6f 63 6b 50 6c 61 63 65   ().getBlockPlace
+0a00	6d 65 6e 74 48 61 6e 64  6c 65 72 28 29 3b 0d 0a   mentHandler();..
+0a10	20 20 20 20 20 20 20 20  0d 0a 20 20 20 20 20 20           ..      
+0a20	20 20 2f 2f 20 43 72 65  61 74 65 20 69 6e 76 65     // Create inve
+0a30	6e 74 6f 72 79 20 77 69  74 68 20 61 70 70 72 6f   ntory with appro
+0a40	70 72 69 61 74 65 20 73  69 7a 65 20 28 35 34 20   priate size (54 
+0a50	73 6c 6f 74 73 20 66 6f  72 20 64 6f 75 62 6c 65   slots for double
+0a60	20 63 68 65 73 74 20 47  55 49 29 0d 0a 20 20 20    chest GUI)..   
+0a70	20 20 20 20 20 74 68 69  73 2e 69 6e 76 65 6e 74        this.invent
+0a80	6f 72 79 20 3d 20 42 75  6b 6b 69 74 2e 63 72 65   ory = Bukkit.cre
+0a90	61 74 65 49 6e 76 65 6e  74 6f 72 79 28 6e 75 6c   ateInventory(nul
+0aa0	6c 2c 20 35 34 2c 20 22  c2 a7 38 d0 9e d1 82 d0   l, 54, "..8.....
+0ab0	bb d0 b0 d0 b4 d0 ba d0  b0 20 d1 81 d0 b2 d1 8f   ......... ......
+0ac0	d0 b7 d0 b5 d0 b9 3a 20  22 20 2b 20 67 65 74 4c   ......: " + getL
+0ad0	6f 63 61 74 69 6f 6e 53  74 72 69 6e 67 28 72 6f   ocationString(ro
+0ae0	6f 74 42 6c 6f 63 6b 4c  6f 63 61 74 69 6f 6e 29   otBlockLocation)
+0af0	29 3b 0d 0a 20 20 20 20  20 20 20 20 0d 0a 20 20   );..        ..  
+0b00	20 20 20 20 20 20 73 65  74 75 70 49 6e 76 65 6e         setupInven
+0b10	74 6f 72 79 28 29 3b 0d  0a 20 20 20 20 7d 0d 0a   tory();..    }..
+0b20	20 20 20 20 0d 0a 20 20  20 20 2f 2a 2a 0d 0a 20       ..    /**.. 
+0b30	20 20 20 20 2a 20 47 65  74 73 20 6c 6f 63 61 74       * Gets locat
+0b40	69 6f 6e 20 73 74 72 69  6e 67 20 66 6f 72 20 64   ion string for d
+0b50	69 73 70 6c 61 79 0d 0a  20 20 20 20 20 2a 2f 0d   isplay..     */.
+0b60	0a 20 20 20 20 70 72 69  76 61 74 65 20 53 74 72   .    private Str
+0b70	69 6e 67 20 67 65 74 4c  6f 63 61 74 69 6f 6e 53   ing getLocationS
+0b80	74 72 69 6e 67 28 4c 6f  63 61 74 69 6f 6e 20 6c   tring(Location l
+0b90	6f 63 61 74 69 6f 6e 29  20 7b 0d 0a 20 20 20 20   ocation) {..    
+0ba0	20 20 20 20 69 66 20 28  6c 6f 63 61 74 69 6f 6e       if (location
+0bb0	20 3d 3d 20 6e 75 6c 6c  29 20 72 65 74 75 72 6e    == null) return
+0bc0	20 22 d0 9d d0 b5 d0 b8  d0 b7 d0 b2 d0 b5 d1 81    "..............
+0bd0	d1 82 d0 bd d0 be 22 3b  0d 0a 20 20 20 20 20 20   ......";..      
+0be0	20 20 72 65 74 75 72 6e  20 6c 6f 63 61 74 69 6f     return locatio
+0bf0	6e 2e 67 65 74 42 6c 6f  63 6b 58 28 29 20 2b 20   n.getBlockX() + 
+0c00	22 2c 22 20 2b 20 6c 6f  63 61 74 69 6f 6e 2e 67   "," + location.g
+0c10	65 74 42 6c 6f 63 6b 59  28 29 20 2b 20 22 2c 22   etBlockY() + ","
+0c20	20 2b 20 6c 6f 63 61 74  69 6f 6e 2e 67 65 74 42    + location.getB
+0c30	6c 6f 63 6b 5a 28 29 3b  0d 0a 20 20 20 20 7d 0d   lockZ();..    }.
+0c40	0a 20 20 20 20 0d 0a 20  20 20 20 2f 2a 2a 0d 0a   .    ..    /**..
+0c50	20 20 20 20 20 2a 20 53  65 74 73 20 75 70 20 74        * Sets up t
+0c60	68 65 20 47 55 49 20 69  6e 76 65 6e 74 6f 72 79   he GUI inventory
+0c70	20 77 69 74 68 20 65 6e  68 61 6e 63 65 64 20 64    with enhanced d
+0c80	65 73 69 67 6e 0d 0a 20  20 20 20 20 2a 2f 0d 0a   esign..     */..
+0c90	20 20 20 20 70 72 69 76  61 74 65 20 76 6f 69 64       private void
+0ca0	20 73 65 74 75 70 49 6e  76 65 6e 74 6f 72 79 28    setupInventory(
+0cb0	29 20 7b 0d 0a 20 20 20  20 20 20 20 20 69 6e 76   ) {..        inv
+0cc0	65 6e 74 6f 72 79 2e 63  6c 65 61 72 28 29 3b 0d   entory.clear();.
+0cd0	0a 20 20 20 20 20 20 20  20 0d 0a 20 20 20 20 20   .        ..     
+0ce0	20 20 20 2f 2f 20 41 64  64 20 64 65 63 6f 72 61      // Add decora
+0cf0	74 69 76 65 20 62 6f 72  64 65 72 20 77 69 74 68   tive border with
+0d00	20 63 61 74 65 67 6f 72  79 2d 73 70 65 63 69 66    category-specif
+0d10	69 63 20 6d 61 74 65 72  69 61 6c 73 0d 0a 20 20   ic materials..  
+0d20	20 20 20 20 20 20 49 74  65 6d 53 74 61 63 6b 20         ItemStack 
+0d30	62 6f 72 64 65 72 49 74  65 6d 20 3d 20 6e 65 77   borderItem = new
+0d40	20 49 74 65 6d 53 74 61  63 6b 28 4d 61 74 65 72    ItemStack(Mater
+0d50	69 61 6c 2e 42 4c 41 43  4b 5f 53 54 41 49 4e 45   ial.BLACK_STAINE
+0d60	44 5f 47 4c 41 53 53 5f  50 41 4e 45 29 3b 0d 0a   D_GLASS_PANE);..
+0d70	20 20 20 20 20 20 20 20  49 74 65 6d 4d 65 74 61           ItemMeta
+0d80	20 62 6f 72 64 65 72 4d  65 74 61 20 3d 20 62 6f    borderMeta = bo
+0d90	72 64 65 72 49 74 65 6d  2e 67 65 74 49 74 65 6d   rderItem.getItem
+0da0	4d 65 74 61 28 29 3b 0d  0a 20 20 20 20 20 20 20   Meta();..       
+0db0	20 62 6f 72 64 65 72 4d  65 74 61 2e 73 65 74 44    borderMeta.setD
+0dc0	69 73 70 6c 61 79 4e 61  6d 65 28 22 20 22 29 3b   isplayName(" ");
+0dd0	0d 0a 20 20 20 20 20 20  20 20 62 6f 72 64 65 72   ..        border
+0de0	49 74 65 6d 2e 73 65 74  49 74 65 6d 4d 65 74 61   Item.setItemMeta
+0df0	28 62 6f 72 64 65 72 4d  65 74 61 29 3b 0d 0a 20   (borderMeta);.. 
+0e00	20 20 20 20 20 20 20 0d  0a 20 20 20 20 20 20 20          ..       
+0e10	20 2f 2f 20 46 69 6c 6c  20 62 6f 72 64 65 72 20    // Fill border 
+0e20	73 6c 6f 74 73 0d 0a 20  20 20 20 20 20 20 20 66   slots..        f
+0e30	6f 72 20 28 69 6e 74 20  69 20 3d 20 30 3b 20 69   or (int i = 0; i
+0e40	20 3c 20 35 34 3b 20 69  2b 2b 29 20 7b 0d 0a 20    < 54; i++) {.. 
+0e50	20 20 20 20 20 20 20 20  20 20 20 69 66 20 28 69              if (i
+0e60	20 3c 20 39 20 7c 7c 20  69 20 3e 3d 20 34 35 20    < 9 || i >= 45 
+0e70	7c 7c 20 69 20 25 20 39  20 3d 3d 20 30 20 7c 7c   || i % 9 == 0 ||
+0e80	20 69 20 25 20 39 20 3d  3d 20 38 29 20 7b 0d 0a    i % 9 == 8) {..
+0e90	20 20 20 20 20 20 20 20  20 20 20 20 20 20 20 20                   
+0ea0	69 6e 76 65 6e 74 6f 72  79 2e 73 65 74 49 74 65   inventory.setIte
+0eb0	6d 28 69 2c 20 62 6f 72  64 65 72 49 74 65 6d 29   m(i, borderItem)
+0ec0	3b 0d 0a 20 20 20 20 20  20 20 20 20 20 20 20 7d   ;..            }
+0ed0	0d 0a 20 20 20 20 20 20  20 20 7d 0d 0a 20 20 20   ..        }..   
+0ee0	20 20 20 20 20 0d 0a 20  20 20 20 20 20 20 20 2f        ..        /
+0ef0	2f 20 47 65 74 20 72 6f  6f 74 20 62 6c 6f 63 6b   / Get root block
+0f00	0d 0a 20 20 20 20 20 20  20 20 43 6f 64 65 42 6c   ..        CodeBl
+0f10	6f 63 6b 20 72 6f 6f 74  42 6c 6f 63 6b 20 3d 20   ock rootBlock = 
+0f20	62 6c 6f 63 6b 50 6c 61  63 65 6d 65 6e 74 48 61   blockPlacementHa
+0f30	6e 64 6c 65 72 2e 67 65  74 43 6f 64 65 42 6c 6f   ndler.getCodeBlo
+0f40	63 6b 28 72 6f 6f 74 42  6c 6f 63 6b 4c 6f 63 61   ck(rootBlockLoca
+0f50	74 69 6f 6e 29 3b 0d 0a  20 20 20 20 20 20 20 20   tion);..        
+0f60	69 66 20 28 72 6f 6f 74  42 6c 6f 63 6b 20 3d 3d   if (rootBlock ==
+0f70	20 6e 75 6c 6c 29 20 7b  0d 0a 20 20 20 20 20 20    null) {..      
+0f80	20 20 20 20 20 20 73 68  6f 77 45 72 72 6f 72 28         showError(
+0f90	43 6f 6e 73 74 61 6e 74  73 2e 42 4c 4f 43 4b 5f   Constants.BLOCK_
+0fa0	4e 4f 54 5f 46 4f 55 4e  44 29 3b 0d 0a 20 20 20   NOT_FOUND);..   
+0fb0	20 20 20 20 20 20 20 20  20 72 65 74 75 72 6e 3b            return;
+0fc0	0d 0a 20 20 20 20 20 20  20 20 7d 0d 0a 20 20 20   ..        }..   
+0fd0	20 20 20 20 20 0d 0a 20  20 20 20 20 20 20 20 2f        ..        /
+0fe0	2f 20 41 64 64 20 72 6f  6f 74 20 62 6c 6f 63 6b   / Add root block
+0ff0	20 69 6e 66 6f 20 77 69  74 68 20 65 6e 68 61 6e    info with enhan
+1000	63 65 64 20 76 69 73 75  61 6c 20 64 65 73 69 67   ced visual desig
+1010	6e 0d 0a 20 20 20 20 20  20 20 20 49 74 65 6d 53   n..        ItemS
+1020	74 61 63 6b 20 72 6f 6f  74 49 74 65 6d 20 3d 20   tack rootItem = 
+1030	63 72 65 61 74 65 42 6c  6f 63 6b 49 6e 66 6f 49   createBlockInfoI
+1040	74 65 6d 28 72 6f 6f 74  42 6c 6f 63 6b 2c 20 72   tem(rootBlock, r
+1050	6f 6f 74 42 6c 6f 63 6b  4c 6f 63 61 74 69 6f 6e   ootBlockLocation
+1060	2c 20 74 72 75 65 29 3b  0d 0a 20 20 20 20 20 20   , true);..      
+1070	20 20 69 6e 76 65 6e 74  6f 72 79 2e 73 65 74 49     inventory.setI
+1080	74 65 6d 28 32 32 2c 20  72 6f 6f 74 49 74 65 6d   tem(22, rootItem
+1090	29 3b 20 2f 2f 20 43 65  6e 74 65 72 20 70 6f 73   ); // Center pos
+10a0	69 74 69 6f 6e 0d 0a 20  20 20 20 20 20 20 20 73   ition..        s
+10b0	6c 6f 74 54 6f 42 6c 6f  63 6b 4c 6f 63 61 74 69   lotToBlockLocati
+10c0	6f 6e 2e 70 75 74 28 32  32 2c 20 72 6f 6f 74 42   on.put(22, rootB
+10d0	6c 6f 63 6b 4c 6f 63 61  74 69 6f 6e 29 3b 0d 0a   lockLocation);..
+10e0	20 20 20 20 20 20 20 20  0d 0a 20 20 20 20 20 20           ..      
+10f0	20 20 2f 2f 20 4d 61 70  20 63 6f 6e 6e 65 63 74     // Map connect
+1100	65 64 20 62 6c 6f 63 6b  73 0d 0a 20 20 20 20 20   ed blocks..     
+1110	20 20 20 6d 61 70 43 6f  6e 6e 65 63 74 65 64 42      mapConnectedB
+1120	6c 6f 63 6b 73 28 72 6f  6f 74 42 6c 6f 63 6b 2c   locks(rootBlock,
+1130	20 72 6f 6f 74 42 6c 6f  63 6b 4c 6f 63 61 74 69    rootBlockLocati
+1140	6f 6e 29 3b 0d 0a 20 20  20 20 20 20 20 20 0d 0a   on);..        ..
+1150	20 20 20 20 20 20 20 20  2f 2f 20 41 64 64 20 63           // Add c
+1160	6f 6e 74 72 6f 6c 20 69  74 65 6d 73 20 77 69 74   ontrol items wit
+1170	68 20 65 6e 68 61 6e 63  65 64 20 64 65 73 69 67   h enhanced desig
+1180	6e 0d 0a 20 20 20 20 20  20 20 20 61 64 64 43 6f   n..        addCo
+1190	6e 74 72 6f 6c 49 74 65  6d 73 28 29 3b 0d 0a 20   ntrolItems();.. 
+11a0	20 20 20 7d 0d 0a 20 20  20 20 0d 0a 20 20 20 20      }..    ..    
+11b0	2f 2a 2a 0d 0a 20 20 20  20 20 2a 20 4d 61 70 73   /**..     * Maps
+11c0	20 63 6f 6e 6e 65 63 74  65 64 20 62 6c 6f 63 6b    connected block
+11d0	73 0d 0a 20 20 20 20 20  2a 2f 0d 0a 20 20 20 20   s..     */..    
+11e0	70 72 69 76 61 74 65 20  76 6f 69 64 20 6d 61 70   private void map
+11f0	43 6f 6e 6e 65 63 74 65  64 42 6c 6f 63 6b 73 28   ConnectedBlocks(
+1200	43 6f 64 65 42 6c 6f 63  6b 20 72 6f 6f 74 42 6c   CodeBlock rootBl
+1210	6f 63 6b 2c 20 4c 6f 63  61 74 69 6f 6e 20 72 6f   ock, Location ro
+1220	6f 74 4c 6f 63 61 74 69  6f 6e 29 20 7b 0d 0a 20   otLocation) {.. 
+1230	20 20 20 20 20 20 20 53  65 74 3c 4c 6f 63 61 74          Set<Locat
+1240	69 6f 6e 3e 20 76 69 73  69 74 65 64 42 6c 6f 63   ion> visitedBloc
+1250	6b 73 20 3d 20 6e 65 77  20 48 61 73 68 53 65 74   ks = new HashSet
+1260	3c 3e 28 29 3b 0d 0a 20  20 20 20 20 20 20 20 51   <>();..        Q
+1270	75 65 75 65 3c 42 6c 6f  63 6b 43 6f 6e 6e 65 63   ueue<BlockConnec
+1280	74 69 6f 6e 3e 20 74 6f  50 72 6f 63 65 73 73 20   tion> toProcess 
+1290	3d 20 6e 65 77 20 4c 69  6e 6b 65 64 4c 69 73 74   = new LinkedList
+12a0	3c 3e 28 29 3b 0d 0a 20  20 20 20 20 20 20 20 0d   <>();..        .
+12b0	0a 20 20 20 20 20 20 20  20 2f 2f 20 53 74 61 72   .        // Star
+12c0	74 20 77 69 74 68 20 72  6f 6f 74 20 62 6c 6f 63   t with root bloc
+12d0	6b 0d 0a 20 20 20 20 20  20 20 20 74 6f 50 72 6f   k..        toPro
+12e0	63 65 73 73 2e 6f 66 66  65 72 28 6e 65 77 20 42   cess.offer(new B
+12f0	6c 6f 63 6b 43 6f 6e 6e  65 63 74 69 6f 6e 28 72   lockConnection(r
+1300	6f 6f 74 42 6c 6f 63 6b  2c 20 72 6f 6f 74 4c 6f   ootBlock, rootLo
+1310	63 61 74 69 6f 6e 2c 20  32 32 2c 20 30 29 29 3b   cation, 22, 0));
+1320	0d 0a 20 20 20 20 20 20  20 20 76 69 73 69 74 65   ..        visite
+1330	64 42 6c 6f 63 6b 73 2e  61 64 64 28 72 6f 6f 74   dBlocks.add(root
+1340	4c 6f 63 61 74 69 6f 6e  29 3b 0d 0a 20 20 20 20   Location);..    
+1350	20 20 20 20 0d 0a 20 20  20 20 20 20 20 20 77 68       ..        wh
+1360	69 6c 65 20 28 21 74 6f  50 72 6f 63 65 73 73 2e   ile (!toProcess.
+1370	69 73 45 6d 70 74 79 28  29 29 20 7b 0d 0a 20 20   isEmpty()) {..  
+1380	20 20 20 20 20 20 20 20  20 20 42 6c 6f 63 6b 43             BlockC
+1390	6f 6e 6e 65 63 74 69 6f  6e 20 63 75 72 72 65 6e   onnection curren
+13a0	74 20 3d 20 74 6f 50 72  6f 63 65 73 73 2e 70 6f   t = toProcess.po
+13b0	6c 6c 28 29 3b 0d 0a 20  20 20 20 20 20 20 20 20   ll();..         
+13c0	20 20 20 0d 0a 20 20 20  20 20 20 20 20 20 20 20      ..           
+13d0	20 2f 2f 20 53 6b 69 70  20 69 66 20 74 6f 6f 20    // Skip if too 
+13e0	64 65 65 70 20 74 6f 20  61 76 6f 69 64 20 69 6e   deep to avoid in
+13f0	66 69 6e 69 74 65 20 6c  6f 6f 70 73 0d 0a 20 20   finite loops..  
+1400	20 20 20 20 20 20 20 20  20 20 69 66 20 28 63 75             if (cu
+1410	72 72 65 6e 74 2e 64 65  70 74 68 20 3e 20 33 29   rrent.depth > 3)
+1420	20 63 6f 6e 74 69 6e 75  65 3b 0d 0a 20 20 20 20    continue;..    
+1430	20 20 20 20 20 20 20 20  0d 0a 20 20 20 20 20 20           ..      
+1440	20 20 20 20 20 20 2f 2f  20 50 72 6f 63 65 73 73         // Process
+1450	20 6e 65 78 74 20 62 6c  6f 63 6b 0d 0a 20 20 20    next block..   
+1460	20 20 20 20 20 20 20 20  20 69 66 20 28 63 75 72            if (cur
+1470	72 65 6e 74 2e 62 6c 6f  63 6b 2e 67 65 74 4e 65   rent.block.getNe
+1480	78 74 42 6c 6f 63 6b 28  29 20 21 3d 20 6e 75 6c   xtBlock() != nul
+1490	6c 29 20 7b 0d 0a 20 20  20 20 20 20 20 20 20 20   l) {..          
+14a0	20 20 20 20 20 20 4c 6f  63 61 74 69 6f 6e 20 6e         Location n
+14b0	65 78 74 4c 6f 63 61 74  69 6f 6e 20 3d 20 66 69   extLocation = fi
+14c0	6e 64 42 6c 6f 63 6b 4c  6f 63 61 74 69 6f 6e 28   ndBlockLocation(
+14d0	63 75 72 72 65 6e 74 2e  62 6c 6f 63 6b 2e 67 65   current.block.ge
+14e0	74 4e 65 78 74 42 6c 6f  63 6b 28 29 29 3b 0d 0a   tNextBlock());..
+14f0	20 20 20 20 20 20 20 20  20 20 20 20 20 20 20 20                   
+1500	69 66 20 28 6e 65 78 74  4c 6f 63 61 74 69 6f 6e   if (nextLocation
+1510	20 21 3d 20 6e 75 6c 6c  20 26 26 20 21 76 69 73    != null && !vis
+1520	69 74 65 64 42 6c 6f 63  6b 73 2e 63 6f 6e 74 61   itedBlocks.conta
+1530	69 6e 73 28 6e 65 78 74  4c 6f 63 61 74 69 6f 6e   ins(nextLocation
+1540	29 29 20 7b 0d 0a 20 20  20 20 20 20 20 20 20 20   )) {..          
+1550	20 20 20 20 20 20 20 20  20 20 69 6e 74 20 6e 65             int ne
+1560	78 74 53 6c 6f 74 20 3d  20 67 65 74 4e 65 78 74   xtSlot = getNext
+1570	41 76 61 69 6c 61 62 6c  65 53 6c 6f 74 28 63 75   AvailableSlot(cu
+1580	72 72 65 6e 74 2e 73 6c  6f 74 2c 20 43 6f 6e 73   rrent.slot, Cons
+1590	74 61 6e 74 73 2e 4e 45  58 54 5f 53 4c 4f 54 29   tants.NEXT_SLOT)
+15a0	3b 0d 0a 20 20 20 20 20  20 20 20 20 20 20 20 20   ;..             
+15b0	20 20 20 20 20 20 20 69  66 20 28 6e 65 78 74 53          if (nextS
+15c0	6c 6f 74 20 21 3d 20 2d  31 29 20 7b 0d 0a 20 20   lot != -1) {..  
+15d0	20 20 20 20 20 20 20 20  20 20 20 20 20 20 20 20                   
+15e0	20 20 20 20 20 20 49 74  65 6d 53 74 61 63 6b 20         ItemStack 
+15f0	6e 65 78 74 49 74 65 6d  20 3d 20 63 72 65 61 74   nextItem = creat
+1600	65 42 6c 6f 63 6b 49 6e  66 6f 49 74 65 6d 28 63   eBlockInfoItem(c
+1610	75 72 72 65 6e 74 2e 62  6c 6f 63 6b 2e 67 65 74   urrent.block.get
+1620	4e 65 78 74 42 6c 6f 63  6b 28 29 2c 20 6e 65 78   NextBlock(), nex
+1630	74 4c 6f 63 61 74 69 6f  6e 2c 20 66 61 6c 73 65   tLocation, false
+1640	29 3b 0d 0a 20 20 20 20  20 20 20 20 20 20 20 20   );..            
+1650	20 20 20 20 20 20 20 20  20 20 20 20 69 6e 76 65               inve
+1660	6e 74 6f 72 79 2e 73 65  74 49 74 65 6d 28 6e 65   ntory.setItem(ne
+1670	78 74 53 6c 6f 74 2c 20  6e 65 78 74 49 74 65 6d   xtSlot, nextItem
+1680	29 3b 0d 0a 20 20 20 20  20 20 20 20 20 20 20 20   );..            
+1690	20 20 20 20 20 20 20 20  20 20 20 20 73 6c 6f 74               slot
+16a0	54 6f 42 6c 6f 63 6b 4c  6f 63 61 74 69 6f 6e 2e   ToBlockLocation.
+16b0	70 75 74 28 6e 65 78 74  53 6c 6f 74 2c 20 6e 65   put(nextSlot, ne
+16c0	78 74 4c 6f 63 61 74 69  6f 6e 29 3b 0d 0a 20 20   xtLocation);..  
+16d0	20 20 20 20 20 20 20 20  20 20 20 20 20 20 20 20                   
+16e0	20 20 20 20 20 20 0d 0a  20 20 20 20 20 20 20 20         ..        
+16f0	20 20 20 20 20 20 20 20  20 20 20 20 20 20 20 20                   
+1700	2f 2f 20 41 64 64 20 63  6f 6e 6e 65 63 74 69 6f   // Add connectio
+1710	6e 20 61 72 72 6f 77 0d  0a 20 20 20 20 20 20 20   n arrow..       
+1720	20 20 20 20 20 20 20 20  20 20 20 20 20 20 20 20                   
+1730	20 61 64 64 43 6f 6e 6e  65 63 74 69 6f 6e 41 72    addConnectionAr
+1740	72 6f 77 28 63 75 72 72  65 6e 74 2e 73 6c 6f 74   row(current.slot
+1750	2c 20 6e 65 78 74 53 6c  6f 74 2c 20 43 6f 6e 73   , nextSlot, Cons
+1760	74 61 6e 74 73 2e 4e 45  58 54 5f 42 4c 4f 43 4b   tants.NEXT_BLOCK
+1770	5f 41 52 52 4f 57 29 3b  0d 0a 20 20 20 20 20 20   _ARROW);..      
+1780	20 20 20 20 20 20 20 20  20 20 20 20 20 20 20 20                   
+1790	20 20 0d 0a 20 20 20 20  20 20 20 20 20 20 20 20     ..            
+17a0	20 20 20 20 20 20 20 20  20 20 20 20 74 6f 50 72               toPr
+17b0	6f 63 65 73 73 2e 6f 66  66 65 72 28 6e 65 77 20   ocess.offer(new 
+17c0	42 6c 6f 63 6b 43 6f 6e  6e 65 63 74 69 6f 6e 28   BlockConnection(
+17d0	63 75 72 72 65 6e 74 2e  62 6c 6f 63 6b 2e 67 65   current.block.ge
+17e0	74 4e 65 78 74 42 6c 6f  63 6b 28 29 2c 20 6e 65   tNextBlock(), ne
+17f0	78 74 4c 6f 63 61 74 69  6f 6e 2c 20 6e 65 78 74   xtLocation, next
+1800	53 6c 6f 74 2c 20 63 75  72 72 65 6e 74 2e 64 65   Slot, current.de
+1810	70 74 68 20 2b 20 31 29  29 3b 0d 0a 20 20 20 20   pth + 1));..    
+1820	20 20 20 20 20 20 20 20  20 20 20 20 20 20 20 20                   
+1830	20 20 20 20 76 69 73 69  74 65 64 42 6c 6f 63 6b       visitedBlock
+1840	73 2e 61 64 64 28 6e 65  78 74 4c 6f 63 61 74 69   s.add(nextLocati
+1850	6f 6e 29 3b 0d 0a 20 20  20 20 20 20 20 20 20 20   on);..          
+1860	20 20 20 20 20 20 20 20  20 20 7d 0d 0a 20 20 20             }..   
+1870	20 20 20 20 20 20 20 20  20 20 20 20 20 7d 0d 0a                }..
+1880	20 20 20 20 20 20 20 20  20 20 20 20 7d 0d 0a 20               }.. 
+1890	20 20 20 20 20 20 20 20  20 20 20 0d 0a 20 20 20              ..   
+18a0	20 20 20 20 20 20 20 20  20 2f 2f 20 50 72 6f 63            // Proc
+18b0	65 73 73 20 63 68 69 6c  64 20 62 6c 6f 63 6b 73   ess child blocks
+18c0	0d 0a 20 20 20 20 20 20  20 20 20 20 20 20 69 66   ..            if
+18d0	20 28 21 63 75 72 72 65  6e 74 2e 62 6c 6f 63 6b    (!current.block
+18e0	2e 67 65 74 43 68 69 6c  64 72 65 6e 28 29 2e 69   .getChildren().i
+18f0	73 45 6d 70 74 79 28 29  29 20 7b 0d 0a 20 20 20   sEmpty()) {..   
+1900	20 20 20 20 20 20 20 20  20 20 20 20 20 66 6f 72                for
+1910	20 28 69 6e 74 20 69 20  3d 20 30 3b 20 69 20 3c    (int i = 0; i <
+1920	20 63 75 72 72 65 6e 74  2e 62 6c 6f 63 6b 2e 67    current.block.g
+1930	65 74 43 68 69 6c 64 72  65 6e 28 29 2e 73 69 7a   etChildren().siz
+1940	65 28 29 20 26 26 20 69  20 3c 20 32 3b 20 69 2b   e() && i < 2; i+
+1950	2b 29 20 7b 0d 0a 20 20  20 20 20 20 20 20 20 20   +) {..          
+1960	20 20 20 20 20 20 20 20  20 20 43 6f 64 65 42 6c             CodeBl
+1970	6f 63 6b 20 63 68 69 6c  64 20 3d 20 63 75 72 72   ock child = curr
+1980	65 6e 74 2e 62 6c 6f 63  6b 2e 67 65 74 43 68 69   ent.block.getChi
+1990	6c 64 72 65 6e 28 29 2e  67 65 74 28 69 29 3b 0d   ldren().get(i);.
+19a0	0a 20 20 20 20 20 20 20  20 20 20 20 20 20 20 20   .               
+19b0	20 20 20 20 20 4c 6f 63  61 74 69 6f 6e 20 63 68        Location ch
+19c0	69 6c 64 4c 6f 63 61 74  69 6f 6e 20 3d 20 66 69   ildLocation = fi
+19d0	6e 64 42 6c 6f 63 6b 4c  6f 63 61 74 69 6f 6e 28   ndBlockLocation(
+19e0	63 68 69 6c 64 29 3b 0d  0a 20 20 20 20 20 20 20   child);..       
+19f0	20 20 20 20 20 20 20 20  20 20 20 20 20 69 66 20                if 
+1a00	28 63 68 69 6c 64 4c 6f  63 61 74 69 6f 6e 20 21   (childLocation !
+1a10	3d 20 6e 75 6c 6c 20 26  26 20 21 76 69 73 69 74   = null && !visit
+1a20	65 64 42 6c 6f 63 6b 73  2e 63 6f 6e 74 61 69 6e   edBlocks.contain
+1a30	73 28 63 68 69 6c 64 4c  6f 63 61 74 69 6f 6e 29   s(childLocation)
+1a40	29 20 7b 0d 0a 20 20 20  20 20 20 20 20 20 20 20   ) {..           
+1a50	20 20 20 20 20 20 20 20  20 20 20 20 20 69 6e 74                int
+1a60	20 63 68 69 6c 64 53 6c  6f 74 20 3d 20 67 65 74    childSlot = get
+1a70	4e 65 78 74 41 76 61 69  6c 61 62 6c 65 53 6c 6f   NextAvailableSlo
+1a80	74 28 63 75 72 72 65 6e  74 2e 73 6c 6f 74 2c 20   t(current.slot, 
+1a90	43 6f 6e 73 74 61 6e 74  73 2e 43 48 49 4c 44 5f   Constants.CHILD_
+1aa0	53 4c 4f 54 5f 50 52 45  46 49 58 20 2b 20 69 29   SLOT_PREFIX + i)
+1ab0	3b 0d 0a 20 20 20 20 20  20 20 20 20 20 20 20 20   ;..             
+1ac0	20 20 20 20 20 20 20 20  20 20 20 69 66 20 28 63              if (c
+1ad0	68 69 6c 64 53 6c 6f 74  20 21 3d 20 2d 31 29 20   hildSlot != -1) 
+1ae0	7b 0d 0a 20 20 20 20 20  20 20 20 20 20 20 20 20   {..             
+1af0	20 20 20 20 20 20 20 20  20 20 20 20 20 20 20 49                  I
+1b00	74 65 6d 53 74 61 63 6b  20 63 68 69 6c 64 49 74   temStack childIt
+1b10	65 6d 20 3d 20 63 72 65  61 74 65 42 6c 6f 63 6b   em = createBlock
+1b20	49 6e 66 6f 49 74 65 6d  28 63 68 69 6c 64 2c 20   InfoItem(child, 
+1b30	63 68 69 6c 64 4c 6f 63  61 74 69 6f 6e 2c 20 66   childLocation, f
+1b40	61 6c 73 65 29 3b 0d 0a  20 20 20 20 20 20 20 20   alse);..        
+1b50	20 20 20 20 20 20 20 20  20 20 20 20 20 20 20 20                   
+1b60	20 20 20 20 69 6e 76 65  6e 74 6f 72 79 2e 73 65       inventory.se
+1b70	74 49 74 65 6d 28 63 68  69 6c 64 53 6c 6f 74 2c   tItem(childSlot,
+1b80	20 63 68 69 6c 64 49 74  65 6d 29 3b 0d 0a 20 20    childItem);..  
+1b90	20 20 20 20 20 20 20 20  20 20 20 20 20 20 20 20                   
+1ba0	20 20 20 20 20 20 20 20  20 20 73 6c 6f 74 54 6f             slotTo
+1bb0	42 6c 6f 63 6b 4c 6f 63  61 74 69 6f 6e 2e 70 75   BlockLocation.pu
+1bc0	74 28 63 68 69 6c 64 53  6c 6f 74 2c 20 63 68 69   t(childSlot, chi
+1bd0	6c 64 4c 6f 63 61 74 69  6f 6e 29 3b 0d 0a 20 20   ldLocation);..  
+1be0	20 20 20 20 20 20 20 20  20 20 20 20 20 20 20 20                   
+1bf0	20 20 20 20 20 20 20 20  20 20 0d 0a 20 20 20 20             ..    
+1c00	20 20 20 20 20 20 20 20  20 20 20 20 20 20 20 20                   
+1c10	20 20 20 20 20 20 20 20  2f 2f 20 41 64 64 20 63           // Add c
+1c20	6f 6e 6e 65 63 74 69 6f  6e 20 61 72 72 6f 77 0d   onnection arrow.
+1c30	0a 20 20 20 20 20 20 20  20 20 20 20 20 20 20 20   .               
+1c40	20 20 20 20 20 20 20 20  20 20 20 20 20 61 64 64                add
+1c50	43 6f 6e 6e 65 63 74 69  6f 6e 41 72 72 6f 77 28   ConnectionArrow(
+1c60	63 75 72 72 65 6e 74 2e  73 6c 6f 74 2c 20 63 68   current.slot, ch
+1c70	69 6c 64 53 6c 6f 74 2c  20 43 6f 6e 73 74 61 6e   ildSlot, Constan
+1c80	74 73 2e 43 48 49 4c 44  5f 42 4c 4f 43 4b 5f 41   ts.CHILD_BLOCK_A
+1c90	52 52 4f 57 29 3b 0d 0a  20 20 20 20 20 20 20 20   RROW);..        
+1ca0	20 20 20 20 20 20 20 20  20 20 20 20 20 20 20 20                   
+1cb0	20 20 20 20 0d 0a 20 20  20 20 20 20 20 20 20 20       ..          
+1cc0	20 20 20 20 20 20 20 20  20 20 20 20 20 20 20 20                   
+1cd0	20 20 74 6f 50 72 6f 63  65 73 73 2e 6f 66 66 65     toProcess.offe
+1ce0	72 28 6e 65 77 20 42 6c  6f 63 6b 43 6f 6e 6e 65   r(new BlockConne
+1cf0	63 74 69 6f 6e 28 63 68  69 6c 64 2c 20 63 68 69   ction(child, chi
+1d00	6c 64 4c 6f 63 61 74 69  6f 6e 2c 20 63 68 69 6c   ldLocation, chil
+1d10	64 53 6c 6f 74 2c 20 63  75 72 72 65 6e 74 2e 64   dSlot, current.d
+1d20	65 70 74 68 20 2b 20 31  29 29 3b 0d 0a 20 20 20   epth + 1));..   
+1d30	20 20 20 20 20 20 20 20  20 20 20 20 20 20 20 20                   
+1d40	20 20 20 20 20 20 20 20  20 76 69 73 69 74 65 64            visited
+1d50	42 6c 6f 63 6b 73 2e 61  64 64 28 63 68 69 6c 64   Blocks.add(child
+1d60	4c 6f 63 61 74 69 6f 6e  29 3b 0d 0a 20 20 20 20   Location);..    
+1d70	20 20 20 20 20 20 20 20  20 20 20 20 20 20 20 20                   
+1d80	20 20 20 20 7d 0d 0a 20  20 20 20 20 20 20 20 20       }..         
+1d90	20 20 20 20 20 20 20 20  20 20 20 7d 0d 0a 20 20              }..  
+1da0	20 20 20 20 20 20 20 20  20 20 20 20 20 20 7d 0d                 }.
+1db0	0a 20 20 20 20 20 20 20  20 20 20 20 20 7d 0d 0a   .            }..
+1dc0	20 20 20 20 20 20 20 20  7d 0d 0a 20 20 20 20 7d           }..    }
+1dd0	0d 0a 20 20 20 20 0d 0a  20 20 20 20 2f 2a 2a 0d   ..    ..    /**.
+1de0	0a 20 20 20 20 20 2a 20  43 68 65 63 6b 73 20 69   .     * Checks i
+1df0	66 20 61 20 62 6c 6f 63  6b 20 68 61 73 20 61 20   f a block has a 
+1e00	70 61 72 65 6e 74 20 62  6c 6f 63 6b 0d 0a 20 20   parent block..  
+1e10	20 20 20 2a 2f 0d 0a 20  20 20 20 70 72 69 76 61      */..    priva
+1e20	74 65 20 62 6f 6f 6c 65  61 6e 20 68 61 73 50 61   te boolean hasPa
+1e30	72 65 6e 74 42 6c 6f 63  6b 28 43 6f 64 65 42 6c   rentBlock(CodeBl
+1e40	6f 63 6b 20 62 6c 6f 63  6b 29 20 7b 0d 0a 20 20   ock block) {..  
+1e50	20 20 20 20 20 20 69 66  20 28 62 6c 6f 63 6b 20         if (block 
+1e60	3d 3d 20 6e 75 6c 6c 29  20 7b 0d 0a 20 20 20 20   == null) {..    
+1e70	20 20 20 20 20 20 20 20  72 65 74 75 72 6e 20 66           return f
+1e80	61 6c 73 65 3b 0d 0a 20  20 20 20 20 20 20 20 7d   alse;..        }
+1e90	0d 0a 20 20 20 20 20 20  20 20 0d 0a 20 20 20 20   ..        ..    
+1ea0	20 20 20 20 2f 2f 20 49  6e 20 74 68 65 20 6e 65       // In the ne
+1eb0	77 20 61 72 63 68 69 74  65 63 74 75 72 65 2c 20   w architecture, 
+1ec0	77 65 20 63 61 6e 20 63  68 65 63 6b 20 66 6f 72   we can check for
+1ed0	20 70 61 72 65 6e 74 20  62 6c 6f 63 6b 73 20 74    parent blocks t
+1ee0	68 72 6f 75 67 68 20 74  68 65 20 42 6c 6f 63 6b   hrough the Block
+1ef0	48 69 65 72 61 72 63 68  79 4d 61 6e 61 67 65 72   HierarchyManager
+1f00	0d 0a 20 20 20 20 20 20  20 20 2f 2f 20 46 6f 72   ..        // For
+1f10	20 6e 6f 77 2c 20 77 65  27 6c 6c 20 72 65 74 75    now, we'll retu
+1f20	72 6e 20 66 61 6c 73 65  20 61 73 20 74 68 69 73   rn false as this
+1f30	20 69 73 20 61 20 73 69  6d 70 6c 69 66 69 65 64    is a simplified
+1f40	20 69 6d 70 6c 65 6d 65  6e 74 61 74 69 6f 6e 0d    implementation.
+1f50	0a 20 20 20 20 20 20 20  20 72 65 74 75 72 6e 20   .        return 
+1f60	66 61 6c 73 65 3b 0d 0a  20 20 20 20 7d 0d 0a 20   false;..    }.. 
+1f70	20 20 20 0d 0a 20 20 20  20 2f 2a 2a 0d 0a 20 20      ..    /**..  
+1f80	20 20 20 2a 20 43 72 65  61 74 65 73 20 62 6c 6f      * Creates blo
+1f90	63 6b 20 69 6e 66 6f 20  69 74 65 6d 20 77 69 74   ck info item wit
+1fa0	68 20 65 6e 68 61 6e 63  65 64 20 64 65 73 69 67   h enhanced desig
+1fb0	6e 0d 0a 20 20 20 20 20  2a 2f 0d 0a 20 20 20 20   n..     */..    
+1fc0	70 72 69 76 61 74 65 20  49 74 65 6d 53 74 61 63   private ItemStac
+1fd0	6b 20 63 72 65 61 74 65  42 6c 6f 63 6b 49 6e 66   k createBlockInf
+1fe0	6f 49 74 65 6d 28 43 6f  64 65 42 6c 6f 63 6b 20   oItem(CodeBlock 
+1ff0	62 6c 6f 63 6b 2c 20 4c  6f 63 61 74 69 6f 6e 20   block, Location 
+2000	6c 6f 63 61 74 69 6f 6e  2c 20 62 6f 6f 6c 65 61   location, boolea
+2010	6e 20 69 73 52 6f 6f 74  29 20 7b 0d 0a 20 20 20   n isRoot) {..   
+2020	20 20 20 20 20 4d 61 74  65 72 69 61 6c 20 62 6c        Material bl
+2030	6f 63 6b 4d 61 74 65 72  69 61 6c 20 3d 20 6c 6f   ockMaterial = lo
+2040	63 61 74 69 6f 6e 2e 67  65 74 42 6c 6f 63 6b 28   cation.getBlock(
+2050	29 2e 67 65 74 54 79 70  65 28 29 3b 0d 0a 20 20   ).getType();..  
+2060	20 20 20 20 20 20 49 74  65 6d 53 74 61 63 6b 20         ItemStack 
+2070	69 74 65 6d 20 3d 20 6e  65 77 20 49 74 65 6d 53   item = new ItemS
+2080	74 61 63 6b 28 62 6c 6f  63 6b 4d 61 74 65 72 69   tack(blockMateri
+2090	61 6c 29 3b 0d 0a 20 20  20 20 20 20 20 20 49 74   al);..        It
+20a0	65 6d 4d 65 74 61 20 6d  65 74 61 20 3d 20 69 74   emMeta meta = it
+20b0	65 6d 2e 67 65 74 49 74  65 6d 4d 65 74 61 28 29   em.getItemMeta()
+20c0	3b 0d 0a 20 20 20 20 20  20 20 20 0d 0a 20 20 20   ;..        ..   
+20d0	20 20 20 20 20 53 74 72  69 6e 67 20 70 72 65 66        String pref
+20e0	69 78 20 3d 20 69 73 52  6f 6f 74 20 3f 20 22 c2   ix = isRoot ? ".
+20f0	a7 65 e2 98 85 20 22 20  3a 20 22 c2 a7 37 e2 80   .e... " : "..7..
+2100	a2 20 22 3b 0d 0a 20 20  20 20 20 20 20 20 6d 65   . ";..        me
+2110	74 61 2e 73 65 74 44 69  73 70 6c 61 79 4e 61 6d   ta.setDisplayNam
+2120	65 28 70 72 65 66 69 78  20 2b 20 22 c2 a7 66 22   e(prefix + "..f"
+2130	20 2b 20 28 62 6c 6f 63  6b 2e 67 65 74 41 63 74    + (block.getAct
+2140	69 6f 6e 28 29 20 21 3d  20 6e 75 6c 6c 20 3f 20   ion() != null ? 
+2150	62 6c 6f 63 6b 2e 67 65  74 41 63 74 69 6f 6e 28   block.getAction(
+2160	29 20 3a 20 43 6f 6e 73  74 61 6e 74 73 2e 42 4c   ) : Constants.BL
+2170	4f 43 4b 5f 55 4e 41 53  53 49 47 4e 45 44 29 29   OCK_UNASSIGNED))
+2180	3b 0d 0a 20 20 20 20 20  20 20 20 0d 0a 20 20 20   ;..        ..   
+2190	20 20 20 20 20 4c 69 73  74 3c 53 74 72 69 6e 67        List<String
+21a0	3e 20 6c 6f 72 65 20 3d  20 6e 65 77 20 41 72 72   > lore = new Arr
+21b0	61 79 4c 69 73 74 3c 3e  28 29 3b 0d 0a 20 20 20   ayList<>();..   
+21c0	20 20 20 20 20 6c 6f 72  65 2e 61 64 64 28 22 c2        lore.add(".
+21d0	a7 37 d0 9a d0 be d0 be  d1 80 d0 b4 d0 b8 d0 bd   .7..............
+21e0	d0 b0 d1 82 d1 8b 3a 20  c2 a7 66 22 20 2b 20 6c   ......: ..f" + l
+21f0	6f 63 61 74 69 6f 6e 2e  67 65 74 42 6c 6f 63 6b   ocation.getBlock
+2200	58 28 29 20 2b 20 22 2c  20 22 20 2b 20 6c 6f 63   X() + ", " + loc
+2210	61 74 69 6f 6e 2e 67 65  74 42 6c 6f 63 6b 59 28   ation.getBlockY(
+2220	29 20 2b 20 22 2c 20 22  20 2b 20 6c 6f 63 61 74   ) + ", " + locat
+2230	69 6f 6e 2e 67 65 74 42  6c 6f 63 6b 5a 28 29 29   ion.getBlockZ())
+2240	3b 0d 0a 20 20 20 20 20  20 20 20 6c 6f 72 65 2e   ;..        lore.
+2250	61 64 64 28 22 c2 a7 37  d0 9c d0 b0 d1 82 d0 b5   add("..7........
+2260	d1 80 d0 b8 d0 b0 d0 bb  3a 20 c2 a7 66 22 20 2b   ........: ..f" +
+2270	20 62 6c 6f 63 6b 4d 61  74 65 72 69 61 6c 2e 6e    blockMaterial.n
+2280	61 6d 65 28 29 29 3b 0d  0a 20 20 20 20 20 20 20   ame());..       
+2290	20 0d 0a 20 20 20 20 20  20 20 20 69 66 20 28 62    ..        if (b
+22a0	6c 6f 63 6b 2e 67 65 74  41 63 74 69 6f 6e 28 29   lock.getAction()
+22b0	20 21 3d 20 6e 75 6c 6c  29 20 7b 0d 0a 20 20 20    != null) {..   
+22c0	20 20 20 20 20 20 20 20  20 6c 6f 72 65 2e 61 64            lore.ad
+22d0	64 28 22 c2 a7 37 d0 94  d0 b5 d0 b9 d1 81 d1 82   d("..7..........
+22e0	d0 b2 d0 b8 d0 b5 3a 20  c2 a7 61 22 20 2b 20 62   ......: ..a" + b
+22f0	6c 6f 63 6b 2e 67 65 74  41 63 74 69 6f 6e 28 29   lock.getAction()
+2300	29 3b 0d 0a 20 20 20 20  20 20 20 20 7d 20 65 6c   );..        } el
+2310	73 65 20 7b 0d 0a 20 20  20 20 20 20 20 20 20 20   se {..          
+2320	20 20 6c 6f 72 65 2e 61  64 64 28 22 c2 a7 37 d0     lore.add("..7.
+2330	94 d0 b5 d0 b9 d1 81 d1  82 d0 b2 d0 b8 d0 b5 3a   ...............:
+2340	20 c2 a7 63 3c d0 bd d0  b5 20 d1 83 d1 81 d1 82    ..c<.... ......
+2350	d0 b0 d0 bd d0 be d0 b2  d0 bb d0 b5 d0 bd d0 be   ................
+2360	3e 22 29 3b 0d 0a 20 20  20 20 20 20 20 20 7d 0d   >");..        }.
+2370	0a 20 20 20 20 20 20 20  20 0d 0a 20 20 20 20 20   .        ..     
+2380	20 20 20 2f 2f 20 41 64  64 20 70 61 72 61 6d 65      // Add parame
+2390	74 65 72 20 69 6e 66 6f  0d 0a 20 20 20 20 20 20   ter info..      
+23a0	20 20 69 66 20 28 21 62  6c 6f 63 6b 2e 67 65 74     if (!block.get
+23b0	50 61 72 61 6d 65 74 65  72 73 28 29 2e 69 73 45   Parameters().isE
+23c0	6d 70 74 79 28 29 29 20  7b 0d 0a 20 20 20 20 20   mpty()) {..     
+23d0	20 20 20 20 20 20 20 6c  6f 72 65 2e 61 64 64 28          lore.add(
+23e0	22 22 29 3b 0d 0a 20 20  20 20 20 20 20 20 20 20   "");..          
+23f0	20 20 6c 6f 72 65 2e 61  64 64 28 22 c2 a7 65 d0     lore.add("..e.
+2400	9f d0 b0 d1 80 d0 b0 d0  bc d0 b5 d1 82 d1 80 d1   ................
+2410	8b 3a 22 29 3b 0d 0a 20  20 20 20 20 20 20 20 20   .:");..         
+2420	20 20 20 69 6e 74 20 63  6f 75 6e 74 20 3d 20 30      int count = 0
+2430	3b 0d 0a 20 20 20 20 20  20 20 20 20 20 20 20 66   ;..            f
+2440	6f 72 20 28 4d 61 70 2e  45 6e 74 72 79 3c 53 74   or (Map.Entry<St
+2450	72 69 6e 67 2c 20 44 61  74 61 56 61 6c 75 65 3e   ring, DataValue>
+2460	20 70 61 72 61 6d 20 3a  20 62 6c 6f 63 6b 2e 67    param : block.g
+2470	65 74 50 61 72 61 6d 65  74 65 72 73 28 29 2e 65   etParameters().e
+2480	6e 74 72 79 53 65 74 28  29 29 20 7b 0d 0a 20 20   ntrySet()) {..  
+2490	20 20 20 20 20 20 20 20  20 20 20 20 20 20 69 66                 if
+24a0	20 28 63 6f 75 6e 74 20  3e 3d 20 33 29 20 7b 0d    (count >= 3) {.
+24b0	0a 20 20 20 20 20 20 20  20 20 20 20 20 20 20 20   .               
+24c0	20 20 20 20 20 6c 6f 72  65 2e 61 64 64 28 22 c2        lore.add(".
+24d0	a7 37 20 20 2e 2e 2e 20  d0 b8 20 d0 b5 d1 89 d1   .7  ... .. .....
+24e0	91 20 22 20 2b 20 28 62  6c 6f 63 6b 2e 67 65 74   . " + (block.get
+24f0	50 61 72 61 6d 65 74 65  72 73 28 29 2e 73 69 7a   Parameters().siz
+2500	65 28 29 20 2d 20 33 29  29 3b 0d 0a 20 20 20 20   e() - 3));..    
+2510	20 20 20 20 20 20 20 20  20 20 20 20 20 20 20 20                   
+2520	62 72 65 61 6b 3b 0d 0a  20 20 20 20 20 20 20 20   break;..        
+2530	20 20 20 20 20 20 20 20  7d 0d 0a 20 20 20 20 20           }..     
+2540	20 20 20 20 20 20 20 20  20 20 20 6c 6f 72 65 2e              lore.
+2550	61 64 64 28 22 c2 a7 37  20 20 e2 80 a2 20 22 20   add("..7  ... " 
+2560	2b 20 70 61 72 61 6d 2e  67 65 74 4b 65 79 28 29   + param.getKey()
+2570	20 2b 20 22 3a 20 c2 a7  66 22 20 2b 20 70 61 72    + ": ..f" + par
+2580	61 6d 2e 67 65 74 56 61  6c 75 65 28 29 29 3b 0d   am.getValue());.
+2590	0a 20 20 20 20 20 20 20  20 20 20 20 20 20 20 20   .               
+25a0	20 63 6f 75 6e 74 2b 2b  3b 0d 0a 20 20 20 20 20    count++;..     
+25b0	20 20 20 20 20 20 20 7d  0d 0a 20 20 20 20 20 20          }..      
+25c0	20 20 7d 0d 0a 20 20 20  20 20 20 20 20 0d 0a 20     }..        .. 
+25d0	20 20 20 20 20 20 20 2f  2f 20 41 64 64 20 63 6f          // Add co
+25e0	6e 6e 65 63 74 69 6f 6e  20 69 6e 66 6f 0d 0a 20   nnection info.. 
+25f0	20 20 20 20 20 20 20 6c  6f 72 65 2e 61 64 64 28          lore.add(
+2600	22 22 29 3b 0d 0a 20 20  20 20 20 20 20 20 69 66   "");..        if
+2610	20 28 62 6c 6f 63 6b 2e  67 65 74 4e 65 78 74 42    (block.getNextB
+2620	6c 6f 63 6b 28 29 20 21  3d 20 6e 75 6c 6c 29 20   lock() != null) 
+2630	7b 0d 0a 20 20 20 20 20  20 20 20 20 20 20 20 6c   {..            l
+2640	6f 72 65 2e 61 64 64 28  22 c2 a7 61 e2 86 92 20   ore.add("..a... 
+2650	d0 98 d0 bc d0 b5 d0 b5  d1 82 20 d1 81 d0 bb d0   .......... .....
+2660	b5 d0 b4 d1 83 d1 8e d1  89 d0 b8 d0 b9 20 d0 b1   ............. ..
+2670	d0 bb d0 be d0 ba 22 29  3b 0d 0a 20 20 20 20 20   ......");..     
+2680	20 20 20 7d 0d 0a 20 20  20 20 20 20 20 20 69 66      }..        if
+2690	20 28 21 62 6c 6f 63 6b  2e 67 65 74 43 68 69 6c    (!block.getChil
+26a0	64 72 65 6e 28 29 2e 69  73 45 6d 70 74 79 28 29   dren().isEmpty()
+26b0	29 20 7b 0d 0a 20 20 20  20 20 20 20 20 20 20 20   ) {..           
+26c0	20 6c 6f 72 65 2e 61 64  64 28 22 c2 a7 62 e2 86    lore.add("..b..
+26d0	93 20 d0 94 d0 be d1 87  d0 b5 d1 80 d0 bd d0 b8   . ..............
+26e0	d1 85 20 d0 b1 d0 bb d0  be d0 ba d0 be d0 b2 3a   .. ............:
+26f0	20 22 20 2b 20 62 6c 6f  63 6b 2e 67 65 74 43 68    " + block.getCh
+2700	69 6c 64 72 65 6e 28 29  2e 73 69 7a 65 28 29 29   ildren().size())
+2710	3b 0d 0a 20 20 20 20 20  20 20 20 7d 0d 0a 20 20   ;..        }..  
+2720	20 20 20 20 20 20 0d 0a  20 20 20 20 20 20 20 20         ..        
+2730	2f 2f 20 43 68 65 63 6b  20 66 6f 72 20 70 61 72   // Check for par
+2740	65 6e 74 20 72 65 6c 61  74 69 6f 6e 73 68 69 70   ent relationship
+2750	0d 0a 20 20 20 20 20 20  20 20 69 66 20 28 68 61   ..        if (ha
+2760	73 50 61 72 65 6e 74 42  6c 6f 63 6b 28 62 6c 6f   sParentBlock(blo
+2770	63 6b 29 29 20 7b 0d 0a  20 20 20 20 20 20 20 20   ck)) {..        
+2780	20 20 20 20 6c 6f 72 65  2e 61 64 64 28 22 c2 a7       lore.add("..
+2790	63 e2 86 91 20 d0 98 d0  bc d0 b5 d0 b5 d1 82 20   c... .......... 
+27a0	d1 80 d0 be d0 b4 d0 b8  d1 82 d0 b5 d0 bb d1 8c   ................
+27b0	d1 81 d0 ba d0 b8 d0 b9  20 d0 b1 d0 bb d0 be d0   ........ .......
+27c0	ba 22 29 3b 0d 0a 20 20  20 20 20 20 20 20 7d 0d   .");..        }.
+27d0	0a 20 20 20 20 20 20 20  20 0d 0a 20 20 20 20 20   .        ..     
+27e0	20 20 20 69 66 20 28 69  73 52 6f 6f 74 29 20 7b      if (isRoot) {
+27f0	0d 0a 20 20 20 20 20 20  20 20 20 20 20 20 6c 6f   ..            lo
+2800	72 65 2e 61 64 64 28 22  22 29 3b 0d 0a 20 20 20   re.add("");..   
+2810	20 20 20 20 20 20 20 20  20 6c 6f 72 65 2e 61 64            lore.ad
+2820	64 28 22 c2 a7 65 e2 ad  90 20 d0 9a d0 be d1 80   d("..e... ......
+2830	d0 bd d0 b5 d0 b2 d0 be  d0 b9 20 d0 b1 d0 bb d0   .......... .....
+2840	be d0 ba 22 29 3b 0d 0a  20 20 20 20 20 20 20 20   ...");..        
+2850	7d 0d 0a 20 20 20 20 20  20 20 20 0d 0a 20 20 20   }..        ..   
+2860	20 20 20 20 20 6c 6f 72  65 2e 61 64 64 28 22 22        lore.add(""
+2870	29 3b 0d 0a 20 20 20 20  20 20 20 20 6c 6f 72 65   );..        lore
+2880	2e 61 64 64 28 22 c2 a7  66 e2 9c a8 20 52 65 66   .add("..f... Ref
+2890	65 72 65 6e 63 65 20 73  79 73 74 65 6d 2d d1 81   erence system-..
+28a0	d1 82 d0 b8 d0 bb d1 8c  3a 20 d1 83 d0 bd d0 b8   ........: ......
+28b0	d0 b2 d0 b5 d1 80 d1 81  d0 b0 d0 bb d1 8c d0 bd   ................
+28c0	d1 8b d0 b5 20 d0 b1 d0  bb d0 be d0 ba d0 b8 22   .... .........."
+28d0	29 3b 0d 0a 20 20 20 20  20 20 20 20 6c 6f 72 65   );..        lore
+28e0	2e 61 64 64 28 22 c2 a7  66 d1 81 20 d0 bd d0 b0   .add("..f.. ....
+28f0	d1 81 d1 82 d1 80 d0 be  d0 b9 d0 ba d0 be d0 b9   ................
+2900	20 d1 87 d0 b5 d1 80 d0  b5 d0 b7 20 47 55 49 22    .......... GUI"
+2910	29 3b 0d 0a 20 20 20 20  20 20 20 20 6c 6f 72 65   );..        lore
+2920	2e 61 64 64 28 22 22 29  3b 0d 0a 20 20 20 20 20   .add("");..     
+2930	20 20 20 6c 6f 72 65 2e  61 64 64 28 22 c2 a7 65      lore.add("..e
+2940	d0 9a d0 bb d0 b8 d0 ba  20 d0 b4 d0 bb d1 8f 20   ........ ...... 
+2950	d1 82 d0 b5 d0 bb d0 b5  d0 bf d0 be d1 80 d1 82   ................
+2960	d0 b0 d1 86 d0 b8 d0 b8  22 29 3b 0d 0a 20 20 20   ........");..   
+2970	20 20 20 20 20 0d 0a 20  20 20 20 20 20 20 20 6d        ..        m
+2980	65 74 61 2e 73 65 74 4c  6f 72 65 28 6c 6f 72 65   eta.setLore(lore
+2990	29 3b 0d 0a 20 20 20 20  20 20 20 20 69 74 65 6d   );..        item
+29a0	2e 73 65 74 49 74 65 6d  4d 65 74 61 28 6d 65 74   .setItemMeta(met
+29b0	61 29 3b 0d 0a 20 20 20  20 20 20 20 20 0d 0a 20   a);..        .. 
+29c0	20 20 20 20 20 20 20 72  65 74 75 72 6e 20 69 74          return it
+29d0	65 6d 3b 0d 0a 20 20 20  20 7d 0d 0a 20 20 20 20   em;..    }..    
+29e0	0d 0a 20 20 20 20 2f 2a  2a 0d 0a 20 20 20 20 20   ..    /**..     
+29f0	2a 20 41 64 64 73 20 63  6f 6e 6e 65 63 74 69 6f   * Adds connectio
+2a00	6e 20 61 72 72 6f 77 0d  0a 20 20 20 20 20 2a 2f   n arrow..     */
+2a10	0d 0a 20 20 20 20 70 72  69 76 61 74 65 20 76 6f   ..    private vo
+2a20	69 64 20 61 64 64 43 6f  6e 6e 65 63 74 69 6f 6e   id addConnection
+2a30	41 72 72 6f 77 28 69 6e  74 20 66 72 6f 6d 53 6c   Arrow(int fromSl
+2a40	6f 74 2c 20 69 6e 74 20  74 6f 53 6c 6f 74 2c 20   ot, int toSlot, 
+2a50	53 74 72 69 6e 67 20 63  6f 6e 6e 65 63 74 69 6f   String connectio
+2a60	6e 54 79 70 65 29 20 7b  0d 0a 20 20 20 20 20 20   nType) {..      
+2a70	20 20 2f 2f 20 43 61 6c  63 75 6c 61 74 65 20 70     // Calculate p
+2a80	6f 73 69 74 69 6f 6e 20  62 65 74 77 65 65 6e 20   osition between 
+2a90	73 6c 6f 74 73 20 66 6f  72 20 61 72 72 6f 77 0d   slots for arrow.
+2aa0	0a 20 20 20 20 20 20 20  20 69 6e 74 20 61 72 72   .        int arr
+2ab0	6f 77 53 6c 6f 74 20 3d  20 63 61 6c 63 75 6c 61   owSlot = calcula
+2ac0	74 65 41 72 72 6f 77 53  6c 6f 74 28 66 72 6f 6d   teArrowSlot(from
+2ad0	53 6c 6f 74 2c 20 74 6f  53 6c 6f 74 29 3b 0d 0a   Slot, toSlot);..
+2ae0	20 20 20 20 20 20 20 20  69 66 20 28 61 72 72 6f           if (arro
+2af0	77 53 6c 6f 74 20 21 3d  20 2d 31 20 26 26 20 69   wSlot != -1 && i
+2b00	6e 76 65 6e 74 6f 72 79  2e 67 65 74 49 74 65 6d   nventory.getItem
+2b10	28 61 72 72 6f 77 53 6c  6f 74 29 20 21 3d 20 6e   (arrowSlot) != n
+2b20	75 6c 6c 29 20 7b 0d 0a  20 20 20 20 20 20 20 20   ull) {..        
+2b30	20 20 20 20 49 74 65 6d  53 74 61 63 6b 20 63 75       ItemStack cu
+2b40	72 72 65 6e 74 49 74 65  6d 20 3d 20 69 6e 76 65   rrentItem = inve
+2b50	6e 74 6f 72 79 2e 67 65  74 49 74 65 6d 28 61 72   ntory.getItem(ar
+2b60	72 6f 77 53 6c 6f 74 29  3b 0d 0a 20 20 20 20 20   rowSlot);..     
+2b70	20 20 20 20 20 20 20 69  66 20 28 63 75 72 72 65          if (curre
+2b80	6e 74 49 74 65 6d 2e 67  65 74 54 79 70 65 28 29   ntItem.getType()
+2b90	20 3d 3d 20 4d 61 74 65  72 69 61 6c 2e 47 52 41    == Material.GRA
+2ba0	59 5f 53 54 41 49 4e 45  44 5f 47 4c 41 53 53 5f   Y_STAINED_GLASS_
+2bb0	50 41 4e 45 20 7c 7c 20  0d 0a 20 20 20 20 20 20   PANE || ..      
+2bc0	20 20 20 20 20 20 20 20  20 20 63 75 72 72 65 6e             curren
+2bd0	74 49 74 65 6d 2e 67 65  74 54 79 70 65 28 29 20   tItem.getType() 
+2be0	3d 3d 20 4d 61 74 65 72  69 61 6c 2e 42 4c 41 43   == Material.BLAC
+2bf0	4b 5f 53 54 41 49 4e 45  44 5f 47 4c 41 53 53 5f   K_STAINED_GLASS_
+2c00	50 41 4e 45 29 20 7b 0d  0a 20 20 20 20 20 20 20   PANE) {..       
+2c10	20 20 20 20 20 20 20 20  20 2f 2f 20 52 65 70 6c            // Repl
+2c20	61 63 65 20 67 6c 61 73  73 20 70 61 6e 65 20 77   ace glass pane w
+2c30	69 74 68 20 63 6f 6e 6e  65 63 74 69 6f 6e 20 61   ith connection a
+2c40	72 72 6f 77 0d 0a 20 20  20 20 20 20 20 20 20 20   rrow..          
+2c50	20 20 20 20 20 20 49 74  65 6d 53 74 61 63 6b 20         ItemStack 
+2c60	61 72 72 6f 77 20 3d 20  6e 65 77 20 49 74 65 6d   arrow = new Item
+2c70	53 74 61 63 6b 28 4d 61  74 65 72 69 61 6c 2e 41   Stack(Material.A
+2c80	52 52 4f 57 29 3b 0d 0a  20 20 20 20 20 20 20 20   RROW);..        
+2c90	20 20 20 20 20 20 20 20  49 74 65 6d 4d 65 74 61           ItemMeta
+2ca0	20 61 72 72 6f 77 4d 65  74 61 20 3d 20 61 72 72    arrowMeta = arr
+2cb0	6f 77 2e 67 65 74 49 74  65 6d 4d 65 74 61 28 29   ow.getItemMeta()
+2cc0	3b 0d 0a 20 20 20 20 20  20 20 20 20 20 20 20 20   ;..             
+2cd0	20 20 20 61 72 72 6f 77  4d 65 74 61 2e 73 65 74      arrowMeta.set
+2ce0	44 69 73 70 6c 61 79 4e  61 6d 65 28 63 6f 6e 6e   DisplayName(conn
+2cf0	65 63 74 69 6f 6e 54 79  70 65 29 3b 0d 0a 20 20   ectionType);..  
+2d00	20 20 20 20 20 20 20 20  20 20 20 20 20 20 4c 69                 Li
+2d10	73 74 3c 53 74 72 69 6e  67 3e 20 61 72 72 6f 77   st<String> arrow
+2d20	4c 6f 72 65 20 3d 20 6e  65 77 20 41 72 72 61 79   Lore = new Array
+2d30	4c 69 73 74 3c 3e 28 29  3b 0d 0a 20 20 20 20 20   List<>();..     
+2d40	20 20 20 20 20 20 20 20  20 20 20 61 72 72 6f 77              arrow
+2d50	4c 6f 72 65 2e 61 64 64  28 22 c2 a7 37 d0 a1 d0   Lore.add("..7...
+2d60	b2 d1 8f d0 b7 d1 8c 20  d0 bc d0 b5 d0 b6 d0 b4   ....... ........
+2d70	d1 83 20 d0 b1 d0 bb d0  be d0 ba d0 b0 d0 bc d0   .. .............
+2d80	b8 22 29 3b 0d 0a 20 20  20 20 20 20 20 20 20 20   .");..          
+2d90	20 20 20 20 20 20 61 72  72 6f 77 4c 6f 72 65 2e         arrowLore.
+2da0	61 64 64 28 22 22 29 3b  0d 0a 20 20 20 20 20 20   add("");..      
+2db0	20 20 20 20 20 20 20 20  20 20 61 72 72 6f 77 4c             arrowL
+2dc0	6f 72 65 2e 61 64 64 28  22 c2 a7 66 e2 9c a8 20   ore.add("..f... 
+2dd0	52 65 66 65 72 65 6e 63  65 20 73 79 73 74 65 6d   Reference system
+2de0	2d d1 81 d1 82 d0 b8 d0  bb d1 8c 22 29 3b 0d 0a   -..........");..
+2df0	20 20 20 20 20 20 20 20  20 20 20 20 20 20 20 20                   
+2e00	61 72 72 6f 77 4d 65 74  61 2e 73 65 74 4c 6f 72   arrowMeta.setLor
+2e10	65 28 61 72 72 6f 77 4c  6f 72 65 29 3b 0d 0a 20   e(arrowLore);.. 
+2e20	20 20 20 20 20 20 20 20  20 20 20 20 20 20 20 61                  a
+2e30	72 72 6f 77 2e 73 65 74  49 74 65 6d 4d 65 74 61   rrow.setItemMeta
+2e40	28 61 72 72 6f 77 4d 65  74 61 29 3b 0d 0a 20 20   (arrowMeta);..  
+2e50	20 20 20 20 20 20 20 20  20 20 20 20 20 20 69 6e                 in
+2e60	76 65 6e 74 6f 72 79 2e  73 65 74 49 74 65 6d 28   ventory.setItem(
+2e70	61 72 72 6f 77 53 6c 6f  74 2c 20 61 72 72 6f 77   arrowSlot, arrow
+2e80	29 3b 0d 0a 20 20 20 20  20 20 20 20 20 20 20 20   );..            
+2e90	7d 0d 0a 20 20 20 20 20  20 20 20 7d 0d 0a 20 20   }..        }..  
+2ea0	20 20 7d 0d 0a 20 20 20  20 0d 0a 20 20 20 20 2f     }..    ..    /
+2eb0	2a 2a 0d 0a 20 20 20 20  20 2a 20 43 61 6c 63 75   **..     * Calcu
+2ec0	6c 61 74 65 73 20 61 72  72 6f 77 20 73 6c 6f 74   lates arrow slot
+2ed0	0d 0a 20 20 20 20 20 2a  2f 0d 0a 20 20 20 20 70   ..     */..    p
+2ee0	72 69 76 61 74 65 20 69  6e 74 20 63 61 6c 63 75   rivate int calcu
+2ef0	6c 61 74 65 41 72 72 6f  77 53 6c 6f 74 28 69 6e   lateArrowSlot(in
+2f00	74 20 66 72 6f 6d 53 6c  6f 74 2c 20 69 6e 74 20   t fromSlot, int 
+2f10	74 6f 53 6c 6f 74 29 20  7b 0d 0a 20 20 20 20 20   toSlot) {..     
+2f20	20 20 20 2f 2f 20 53 69  6d 70 6c 65 20 63 61 6c      // Simple cal
+2f30	63 75 6c 61 74 69 6f 6e  20 66 6f 72 20 61 72 72   culation for arr
+2f40	6f 77 20 70 6f 73 69 74  69 6f 6e 0d 0a 20 20 20   ow position..   
+2f50	20 20 20 20 20 69 66 20  28 4d 61 74 68 2e 61 62        if (Math.ab
+2f60	73 28 66 72 6f 6d 53 6c  6f 74 20 2d 20 74 6f 53   s(fromSlot - toS
+2f70	6c 6f 74 29 20 3d 3d 20  31 29 20 7b 0d 0a 20 20   lot) == 1) {..  
+2f80	20 20 20 20 20 20 20 20  20 20 72 65 74 75 72 6e             return
+2f90	20 2d 31 3b 20 2f 2f 20  41 64 6a 61 63 65 6e 74    -1; // Adjacent
+2fa0	20 73 6c 6f 74 73 2c 20  6e 6f 20 73 70 61 63 65    slots, no space
+2fb0	20 66 6f 72 20 61 72 72  6f 77 0d 0a 20 20 20 20    for arrow..    
+2fc0	20 20 20 20 7d 0d 0a 20  20 20 20 20 20 20 20 0d       }..        .
+2fd0	0a 20 20 20 20 20 20 20  20 2f 2f 20 43 6f 6c 6c   .        // Coll
+2fe0	61 70 73 65 20 74 68 65  20 69 66 20 73 74 61 74   apse the if stat
+2ff0	65 6d 65 6e 74 20 2d 20  62 6f 74 68 20 62 72 61   ement - both bra
+3000	6e 63 68 65 73 20 72 65  74 75 72 6e 20 74 68 65   nches return the
+3010	20 73 61 6d 65 20 76 61  6c 75 65 0d 0a 20 20 20    same value..   
+3020	20 20 20 20 20 72 65 74  75 72 6e 20 28 66 72 6f        return (fro
+3030	6d 53 6c 6f 74 20 2b 20  74 6f 53 6c 6f 74 29 20   mSlot + toSlot) 
+3040	2f 20 32 3b 0d 0a 20 20  20 20 7d 0d 0a 20 20 20   / 2;..    }..   
+3050	20 0d 0a 20 20 20 20 2f  2a 2a 0d 0a 20 20 20 20    ..    /**..    
+3060	20 2a 20 47 65 74 73 20  6e 65 78 74 20 61 76 61    * Gets next ava
+3070	69 6c 61 62 6c 65 20 73  6c 6f 74 0d 0a 20 20 20   ilable slot..   
+3080	20 20 2a 2f 0d 0a 20 20  20 20 70 72 69 76 61 74     */..    privat
+3090	65 20 69 6e 74 20 67 65  74 4e 65 78 74 41 76 61   e int getNextAva
+30a0	69 6c 61 62 6c 65 53 6c  6f 74 28 69 6e 74 20 63   ilableSlot(int c
+30b0	65 6e 74 65 72 53 6c 6f  74 2c 20 53 74 72 69 6e   enterSlot, Strin
+30c0	67 20 64 69 72 65 63 74  69 6f 6e 29 20 7b 0d 0a   g direction) {..
+30d0	20 20 20 20 20 20 20 20  2f 2f 20 47 65 74 20 61           // Get a
+30e0	76 61 69 6c 61 62 6c 65  20 73 6c 6f 74 20 61 72   vailable slot ar
+30f0	6f 75 6e 64 20 63 65 6e  74 65 72 20 62 61 73 65   ound center base
+3100	64 20 6f 6e 20 64 69 72  65 63 74 69 6f 6e 0d 0a   d on direction..
+3110	20 20 20 20 20 20 20 20  69 6e 74 5b 5d 20 63 61           int[] ca
+3120	6e 64 69 64 61 74 65 73  3b 0d 0a 20 20 20 20 20   ndidates;..     
+3130	20 20 20 0d 0a 20 20 20  20 20 20 20 20 73 77 69      ..        swi
+3140	74 63 68 20 28 64 69 72  65 63 74 69 6f 6e 29 20   tch (direction) 
+3150	7b 0d 0a 20 20 20 20 20  20 20 20 20 20 20 20 63   {..            c
+3160	61 73 65 20 22 6e 65 78  74 22 3a 0d 0a 20 20 20   ase "next":..   
+3170	20 20 20 20 20 20 20 20  20 20 20 20 20 63 61 6e                can
+3180	64 69 64 61 74 65 73 20  3d 20 6e 65 77 20 69 6e   didates = new in
+3190	74 5b 5d 7b 63 65 6e 74  65 72 53 6c 6f 74 20 2b   t[]{centerSlot +
+31a0	20 31 2c 20 63 65 6e 74  65 72 53 6c 6f 74 20 2b    1, centerSlot +
+31b0	20 39 2c 20 63 65 6e 74  65 72 53 6c 6f 74 20 2b    9, centerSlot +
+31c0	20 32 7d 3b 0d 0a 20 20  20 20 20 20 20 20 20 20    2};..          
+31d0	20 20 20 20 20 20 62 72  65 61 6b 3b 0d 0a 20 20         break;..  
+31e0	20 20 20 20 20 20 20 20  20 20 63 61 73 65 20 22             case "
+31f0	63 68 69 6c 64 30 22 3a  0d 0a 20 20 20 20 20 20   child0":..      
+3200	20 20 20 20 20 20 20 20  20 20 63 61 6e 64 69 64             candid
+3210	61 74 65 73 20 3d 20 6e  65 77 20 69 6e 74 5b 5d   ates = new int[]
+3220	7b 63 65 6e 74 65 72 53  6c 6f 74 20 2d 20 39 2c   {centerSlot - 9,
+3230	20 63 65 6e 74 65 72 53  6c 6f 74 20 2d 20 38 2c    centerSlot - 8,
+3240	20 63 65 6e 74 65 72 53  6c 6f 74 20 2d 20 31 30    centerSlot - 10
+3250	7d 3b 0d 0a 20 20 20 20  20 20 20 20 20 20 20 20   };..            
+3260	20 20 20 20 62 72 65 61  6b 3b 0d 0a 20 20 20 20       break;..    
+3270	20 20 20 20 20 20 20 20  63 61 73 65 20 22 63 68           case "ch
+3280	69 6c 64 31 22 3a 0d 0a  20 20 20 20 20 20 20 20   ild1":..        
+3290	20 20 20 20 20 20 20 20  63 61 6e 64 69 64 61 74           candidat
+32a0	65 73 20 3d 20 6e 65 77  20 69 6e 74 5b 5d 7b 63   es = new int[]{c
+32b0	65 6e 74 65 72 53 6c 6f  74 20 2b 20 39 2c 20 63   enterSlot + 9, c
+32c0	65 6e 74 65 72 53 6c 6f  74 20 2b 20 38 2c 20 63   enterSlot + 8, c
+32d0	65 6e 74 65 72 53 6c 6f  74 20 2b 20 31 30 7d 3b   enterSlot + 10};
+32e0	0d 0a 20 20 20 20 20 20  20 20 20 20 20 20 20 20   ..              
+32f0	20 20 62 72 65 61 6b 3b  0d 0a 20 20 20 20 20 20     break;..      
+3300	20 20 20 20 20 20 64 65  66 61 75 6c 74 3a 0d 0a         default:..
+3310	20 20 20 20 20 20 20 20  20 20 20 20 20 20 20 20                   
+3320	63 61 6e 64 69 64 61 74  65 73 20 3d 20 6e 65 77   candidates = new
+3330	20 69 6e 74 5b 5d 7b 63  65 6e 74 65 72 53 6c 6f    int[]{centerSlo
+3340	74 20 2b 20 31 2c 20 63  65 6e 74 65 72 53 6c 6f   t + 1, centerSlo
+3350	74 20 2d 20 31 2c 20 63  65 6e 74 65 72 53 6c 6f   t - 1, centerSlo
+3360	74 20 2b 20 39 2c 20 63  65 6e 74 65 72 53 6c 6f   t + 9, centerSlo
+3370	74 20 2d 20 39 7d 3b 0d  0a 20 20 20 20 20 20 20   t - 9};..       
+3380	20 7d 0d 0a 20 20 20 20  20 20 20 20 0d 0a 20 20    }..        ..  
+3390	20 20 20 20 20 20 66 6f  72 20 28 69 6e 74 20 63         for (int c
+33a0	61 6e 64 69 64 61 74 65  20 3a 20 63 61 6e 64 69   andidate : candi
+33b0	64 61 74 65 73 29 20 7b  0d 0a 20 20 20 20 20 20   dates) {..      
+33c0	20 20 20 20 20 20 69 66  20 28 63 61 6e 64 69 64         if (candid
+33d0	61 74 65 20 3e 3d 20 30  20 26 26 20 63 61 6e 64   ate >= 0 && cand
+33e0	69 64 61 74 65 20 3c 20  35 34 29 20 7b 0d 0a 20   idate < 54) {.. 
+33f0	20 20 20 20 20 20 20 20  20 20 20 20 20 20 20 49                  I
+3400	74 65 6d 53 74 61 63 6b  20 69 74 65 6d 20 3d 20   temStack item = 
+3410	69 6e 76 65 6e 74 6f 72  79 2e 67 65 74 49 74 65   inventory.getIte
+3420	6d 28 63 61 6e 64 69 64  61 74 65 29 3b 0d 0a 20   m(candidate);.. 
+3430	20 20 20 20 20 20 20 20  20 20 20 20 20 20 20 69                  i
+3440	66 20 28 69 74 65 6d 20  3d 3d 20 6e 75 6c 6c 20   f (item == null 
+3450	7c 7c 20 0d 0a 20 20 20  20 20 20 20 20 20 20 20   || ..           
+3460	20 20 20 20 20 20 20 20  20 69 74 65 6d 2e 67 65            item.ge
+3470	74 54 79 70 65 28 29 20  3d 3d 20 4d 61 74 65 72   tType() == Mater
+3480	69 61 6c 2e 47 52 41 59  5f 53 54 41 49 4e 45 44   ial.GRAY_STAINED
+3490	5f 47 4c 41 53 53 5f 50  41 4e 45 20 7c 7c 0d 0a   _GLASS_PANE ||..
+34a0	20 20 20 20 20 20 20 20  20 20 20 20 20 20 20 20                   
+34b0	20 20 20 20 69 74 65 6d  2e 67 65 74 54 79 70 65       item.getType
+34c0	28 29 20 3d 3d 20 4d 61  74 65 72 69 61 6c 2e 42   () == Material.B
+34d0	4c 41 43 4b 5f 53 54 41  49 4e 45 44 5f 47 4c 41   LACK_STAINED_GLA
+34e0	53 53 5f 50 41 4e 45 29  20 7b 0d 0a 20 20 20 20   SS_PANE) {..    
+34f0	20 20 20 20 20 20 20 20  20 20 20 20 20 20 20 20                   
+3500	72 65 74 75 72 6e 20 63  61 6e 64 69 64 61 74 65   return candidate
+3510	3b 0d 0a 20 20 20 20 20  20 20 20 20 20 20 20 20   ;..             
+3520	20 20 20 7d 0d 0a 20 20  20 20 20 20 20 20 20 20      }..          
+3530	20 20 7d 0d 0a 20 20 20  20 20 20 20 20 7d 0d 0a     }..        }..
+3540	20 20 20 20 20 20 20 20  0d 0a 20 20 20 20 20 20           ..      
+3550	20 20 72 65 74 75 72 6e  20 2d 31 3b 20 2f 2f 20     return -1; // 
+3560	4e 6f 20 61 76 61 69 6c  61 62 6c 65 20 73 6c 6f   No available slo
+3570	74 0d 0a 20 20 20 20 7d  0d 0a 20 20 20 20 0d 0a   t..    }..    ..
+3580	20 20 20 20 2f 2a 2a 0d  0a 20 20 20 20 20 2a 20       /**..     * 
+3590	46 69 6e 64 73 20 62 6c  6f 63 6b 20 6c 6f 63 61   Finds block loca
+35a0	74 69 6f 6e 0d 0a 20 20  20 20 20 2a 2f 0d 0a 20   tion..     */.. 
+35b0	20 20 20 70 72 69 76 61  74 65 20 4c 6f 63 61 74      private Locat
+35c0	69 6f 6e 20 66 69 6e 64  42 6c 6f 63 6b 4c 6f 63   ion findBlockLoc
+35d0	61 74 69 6f 6e 28 43 6f  64 65 42 6c 6f 63 6b 20   ation(CodeBlock 
+35e0	62 6c 6f 63 6b 29 20 7b  0d 0a 20 20 20 20 20 20   block) {..      
+35f0	20 20 2f 2f 20 49 6e 20  74 68 65 20 6e 65 77 20     // In the new 
+3600	61 72 63 68 69 74 65 63  74 75 72 65 2c 20 77 65   architecture, we
+3610	20 77 6f 75 6c 64 20 75  73 65 20 42 6c 6f 63 6b    would use Block
+3620	50 6c 61 63 65 6d 65 6e  74 48 61 6e 64 6c 65 72   PlacementHandler
+3630	20 6f 72 20 42 6c 6f 63  6b 4c 69 6e 6b 65 72 20    or BlockLinker 
+3640	74 6f 20 66 69 6e 64 20  62 6c 6f 63 6b 20 6c 6f   to find block lo
+3650	63 61 74 69 6f 6e 73 0d  0a 20 20 20 20 20 20 20   cations..       
+3660	20 2f 2f 20 46 6f 72 20  6e 6f 77 2c 20 77 65 27    // For now, we'
+3670	6c 6c 20 72 65 74 75 72  6e 20 6e 75 6c 6c 20 61   ll return null a
+3680	73 20 74 68 69 73 20 69  73 20 61 20 73 69 6d 70   s this is a simp
+3690	6c 69 66 69 65 64 20 69  6d 70 6c 65 6d 65 6e 74   lified implement
+36a0	61 74 69 6f 6e 0d 0a 20  20 20 20 20 20 20 20 72   ation..        r
+36b0	65 74 75 72 6e 20 6e 75  6c 6c 3b 0d 0a 20 20 20   eturn null;..   
+36c0	20 7d 0d 0a 20 20 20 20  0d 0a 20 20 20 20 2f 2a    }..    ..    /*
+36d0	2a 0d 0a 20 20 20 20 20  2a 20 41 64 64 73 20 63   *..     * Adds c
+36e0	6f 6e 74 72 6f 6c 20 69  74 65 6d 73 20 77 69 74   ontrol items wit
+36f0	68 20 65 6e 68 61 6e 63  65 64 20 64 65 73 69 67   h enhanced desig
+3700	6e 0d 0a 20 20 20 20 20  2a 2f 0d 0a 20 20 20 20   n..     */..    
+3710	70 72 69 76 61 74 65 20  76 6f 69 64 20 61 64 64   private void add
+3720	43 6f 6e 74 72 6f 6c 49  74 65 6d 73 28 29 20 7b   ControlItems() {
+3730	0d 0a 20 20 20 20 20 20  20 20 2f 2f 20 52 65 66   ..        // Ref
+3740	72 65 73 68 20 62 75 74  74 6f 6e 20 77 69 74 68   resh button with
+3750	20 65 6e 68 61 6e 63 65  64 20 76 69 73 75 61 6c    enhanced visual
+3760	20 64 65 73 69 67 6e 0d  0a 20 20 20 20 20 20 20    design..       
+3770	20 49 74 65 6d 53 74 61  63 6b 20 72 65 66 72 65    ItemStack refre
+3780	73 68 20 3d 20 6e 65 77  20 49 74 65 6d 53 74 61   sh = new ItemSta
+3790	63 6b 28 4d 61 74 65 72  69 61 6c 2e 4c 49 4d 45   ck(Material.LIME
+37a0	5f 53 54 41 49 4e 45 44  5f 47 4c 41 53 53 29 3b   _STAINED_GLASS);
+37b0	0d 0a 20 20 20 20 20 20  20 20 49 74 65 6d 4d 65   ..        ItemMe
+37c0	74 61 20 72 65 66 72 65  73 68 4d 65 74 61 20 3d   ta refreshMeta =
+37d0	20 72 65 66 72 65 73 68  2e 67 65 74 49 74 65 6d    refresh.getItem
+37e0	4d 65 74 61 28 29 3b 0d  0a 20 20 20 20 20 20 20   Meta();..       
+37f0	20 72 65 66 72 65 73 68  4d 65 74 61 2e 73 65 74    refreshMeta.set
+3800	44 69 73 70 6c 61 79 4e  61 6d 65 28 22 c2 a7 61   DisplayName("..a
+3810	c2 a7 6c f0 9f 94 84 20  d0 9e d0 b1 d0 bd d0 be   ..l.... ........
+3820	d0 b2 d0 b8 d1 82 d1 8c  22 29 3b 0d 0a 20 20 20   ........");..   
+3830	20 20 20 20 20 4c 69 73  74 3c 53 74 72 69 6e 67        List<String
+3840	3e 20 72 65 66 72 65 73  68 4c 6f 72 65 20 3d 20   > refreshLore = 
+3850	6e 65 77 20 41 72 72 61  79 4c 69 73 74 3c 3e 28   new ArrayList<>(
+3860	29 3b 0d 0a 20 20 20 20  20 20 20 20 72 65 66 72   );..        refr
+3870	65 73 68 4c 6f 72 65 2e  61 64 64 28 22 c2 a7 37   eshLore.add("..7
+3880	d0 9f d0 b5 d1 80 d0 b5  d1 81 d1 82 d1 80 d0 be   ................
+3890	d0 b8 d1 82 d1 8c 20 d0  ba d0 b0 d1 80 d1 82 d1   ...... .........
+38a0	83 20 d1 81 d0 b2 d1 8f  d0 b7 d0 b5 d0 b9 22 29   . ............")
+38b0	3b 0d 0a 20 20 20 20 20  20 20 20 72 65 66 72 65   ;..        refre
+38c0	73 68 4c 6f 72 65 2e 61  64 64 28 22 22 29 3b 0d   shLore.add("");.
+38d0	0a 20 20 20 20 20 20 20  20 72 65 66 72 65 73 68   .        refresh
+38e0	4c 6f 72 65 2e 61 64 64  28 22 c2 a7 66 e2 9c a8   Lore.add("..f...
+38f0	20 52 65 66 65 72 65 6e  63 65 20 73 79 73 74 65    Reference syste
+3900	6d 2d d1 81 d1 82 d0 b8  d0 bb d1 8c 3a 20 d1 83   m-..........: ..
+3910	d0 bd d0 b8 d0 b2 d0 b5  d1 80 d1 81 d0 b0 d0 bb   ................
+3920	d1 8c d0 bd d1 8b d0 b5  20 d0 b1 d0 bb d0 be d0   ........ .......
+3930	ba d0 b8 22 29 3b 0d 0a  20 20 20 20 20 20 20 20   ...");..        
+3940	72 65 66 72 65 73 68 4c  6f 72 65 2e 61 64 64 28   refreshLore.add(
+3950	22 c2 a7 66 d1 81 20 d0  bd d0 b0 d1 81 d1 82 d1   "..f.. .........
+3960	80 d0 be d0 b9 d0 ba d0  be d0 b9 20 d1 87 d0 b5   ........... ....
+3970	d1 80 d0 b5 d0 b7 20 47  55 49 22 29 3b 0d 0a 20   ...... GUI");.. 
+3980	20 20 20 20 20 20 20 72  65 66 72 65 73 68 4d 65          refreshMe
+3990	74 61 2e 73 65 74 4c 6f  72 65 28 72 65 66 72 65   ta.setLore(refre
+39a0	73 68 4c 6f 72 65 29 3b  0d 0a 20 20 20 20 20 20   shLore);..      
+39b0	20 20 72 65 66 72 65 73  68 2e 73 65 74 49 74 65     refresh.setIte
+39c0	6d 4d 65 74 61 28 72 65  66 72 65 73 68 4d 65 74   mMeta(refreshMet
+39d0	61 29 3b 0d 0a 20 20 20  20 20 20 20 20 69 6e 76   a);..        inv
+39e0	65 6e 74 6f 72 79 2e 73  65 74 49 74 65 6d 28 34   entory.setItem(4
+39f0	35 2c 20 72 65 66 72 65  73 68 29 3b 0d 0a 20 20   5, refresh);..  
+3a00	20 20 20 20 20 20 0d 0a  20 20 20 20 20 20 20 20         ..        
+3a10	2f 2f 20 43 6c 6f 73 65  20 62 75 74 74 6f 6e 20   // Close button 
+3a20	77 69 74 68 20 65 6e 68  61 6e 63 65 64 20 76 69   with enhanced vi
+3a30	73 75 61 6c 20 64 65 73  69 67 6e 0d 0a 20 20 20   sual design..   
+3a40	20 20 20 20 20 49 74 65  6d 53 74 61 63 6b 20 63        ItemStack c
+3a50	6c 6f 73 65 20 3d 20 6e  65 77 20 49 74 65 6d 53   lose = new ItemS
+3a60	74 61 63 6b 28 4d 61 74  65 72 69 61 6c 2e 52 45   tack(Material.RE
+3a70	44 5f 53 54 41 49 4e 45  44 5f 47 4c 41 53 53 29   D_STAINED_GLASS)
+3a80	3b 0d 0a 20 20 20 20 20  20 20 20 49 74 65 6d 4d   ;..        ItemM
+3a90	65 74 61 20 63 6c 6f 73  65 4d 65 74 61 20 3d 20   eta closeMeta = 
+3aa0	63 6c 6f 73 65 2e 67 65  74 49 74 65 6d 4d 65 74   close.getItemMet
+3ab0	61 28 29 3b 0d 0a 20 20  20 20 20 20 20 20 63 6c   a();..        cl
+3ac0	6f 73 65 4d 65 74 61 2e  73 65 74 44 69 73 70 6c   oseMeta.setDispl
+3ad0	61 79 4e 61 6d 65 28 22  c2 a7 63 c2 a7 6c e2 9d   ayName("..c..l..
+3ae0	8c 20 d0 97 d0 b0 d0 ba  d1 80 d1 8b d1 82 d1 8c   . ..............
+3af0	22 29 3b 0d 0a 20 20 20  20 20 20 20 20 4c 69 73   ");..        Lis
+3b00	74 3c 53 74 72 69 6e 67  3e 20 63 6c 6f 73 65 4c   t<String> closeL
+3b10	6f 72 65 20 3d 20 6e 65  77 20 41 72 72 61 79 4c   ore = new ArrayL
+3b20	69 73 74 3c 3e 28 29 3b  0d 0a 20 20 20 20 20 20   ist<>();..      
+3b30	20 20 63 6c 6f 73 65 4c  6f 72 65 2e 61 64 64 28     closeLore.add(
+3b40	22 c2 a7 37 d0 97 d0 b0  d0 ba d1 80 d1 8b d1 82   "..7............
+3b50	d1 8c 20 d0 be d1 82 d0  bb d0 b0 d0 b4 d1 87 d0   .. .............
+3b60	b8 d0 ba 20 d1 81 d0 b2  d1 8f d0 b7 d0 b5 d0 b9   ... ............
+3b70	22 29 3b 0d 0a 20 20 20  20 20 20 20 20 63 6c 6f   ");..        clo
+3b80	73 65 4c 6f 72 65 2e 61  64 64 28 22 22 29 3b 0d   seLore.add("");.
+3b90	0a 20 20 20 20 20 20 20  20 63 6c 6f 73 65 4c 6f   .        closeLo
+3ba0	72 65 2e 61 64 64 28 22  c2 a7 66 e2 9c a8 20 52   re.add("..f... R
+3bb0	65 66 65 72 65 6e 63 65  20 73 79 73 74 65 6d 2d   eference system-
+3bc0	d1 81 d1 82 d0 b8 d0 bb  d1 8c 3a 20 d1 83 d0 bd   ..........: ....
+3bd0	d0 b8 d0 b2 d0 b5 d1 80  d1 81 d0 b0 d0 bb d1 8c   ................
+3be0	d0 bd d1 8b d0 b5 20 d0  b1 d0 bb d0 be d0 ba d0   ...... .........
+3bf0	b8 22 29 3b 0d 0a 20 20  20 20 20 20 20 20 63 6c   .");..        cl
+3c00	6f 73 65 4d 65 74 61 2e  73 65 74 4c 6f 72 65 28   oseMeta.setLore(
+3c10	63 6c 6f 73 65 4c 6f 72  65 29 3b 0d 0a 20 20 20   closeLore);..   
+3c20	20 20 20 20 20 63 6c 6f  73 65 2e 73 65 74 49 74        close.setIt
+3c30	65 6d 4d 65 74 61 28 63  6c 6f 73 65 4d 65 74 61   emMeta(closeMeta
+3c40	29 3b 0d 0a 20 20 20 20  20 20 20 20 69 6e 76 65   );..        inve
+3c50	6e 74 6f 72 79 2e 73 65  74 49 74 65 6d 28 35 33   ntory.setItem(53
+3c60	2c 20 63 6c 6f 73 65 29  3b 0d 0a 20 20 20 20 20   , close);..     
+3c70	20 20 20 0d 0a 20 20 20  20 20 20 20 20 2f 2f 20      ..        // 
+3c80	48 65 6c 70 20 62 75 74  74 6f 6e 20 77 69 74 68   Help button with
+3c90	20 65 6e 68 61 6e 63 65  64 20 76 69 73 75 61 6c    enhanced visual
+3ca0	20 64 65 73 69 67 6e 0d  0a 20 20 20 20 20 20 20    design..       
+3cb0	20 49 74 65 6d 53 74 61  63 6b 20 68 65 6c 70 20    ItemStack help 
+3cc0	3d 20 6e 65 77 20 49 74  65 6d 53 74 61 63 6b 28   = new ItemStack(
+3cd0	4d 61 74 65 72 69 61 6c  2e 42 4f 4f 4b 29 3b 0d   Material.BOOK);.
+3ce0	0a 20 20 20 20 20 20 20  20 49 74 65 6d 4d 65 74   .        ItemMet
+3cf0	61 20 68 65 6c 70 4d 65  74 61 20 3d 20 68 65 6c   a helpMeta = hel
+3d00	70 2e 67 65 74 49 74 65  6d 4d 65 74 61 28 29 3b   p.getItemMeta();
+3d10	0d 0a 20 20 20 20 20 20  20 20 68 65 6c 70 4d 65   ..        helpMe
+3d20	74 61 2e 73 65 74 44 69  73 70 6c 61 79 4e 61 6d   ta.setDisplayNam
+3d30	65 28 22 c2 a7 65 c2 a7  6c e2 9d 93 20 d0 9f d0   e("..e..l... ...
+3d40	be d0 bc d0 be d1 89 d1  8c 22 29 3b 0d 0a 20 20   .........");..  
+3d50	20 20 20 20 20 20 4c 69  73 74 3c 53 74 72 69 6e         List<Strin
+3d60	67 3e 20 68 65 6c 70 4c  6f 72 65 20 3d 20 6e 65   g> helpLore = ne
+3d70	77 20 41 72 72 61 79 4c  69 73 74 3c 3e 28 29 3b   w ArrayList<>();
+3d80	0d 0a 20 20 20 20 20 20  20 20 68 65 6c 70 4c 6f   ..        helpLo
+3d90	72 65 2e 61 64 64 28 22  c2 a7 37 d0 9a d0 b0 d0   re.add("..7.....
+3da0	ba 20 d1 87 d0 b8 d1 82  d0 b0 d1 82 d1 8c 20 d0   . ............ .
+3db0	ba d0 b0 d1 80 d1 82 d1  83 20 d1 81 d0 b2 d1 8f   ......... ......
+3dc0	d0 b7 d0 b5 d0 b9 3a 22  29 3b 0d 0a 20 20 20 20   ......:");..    
+3dd0	20 20 20 20 68 65 6c 70  4c 6f 72 65 2e 61 64 64       helpLore.add
+3de0	28 22 c2 a7 61 e2 86 92  20 c2 a7 37 d0 97 d0 b5   ("..a... ..7....
+3df0	d0 bb d1 91 d0 bd d0 b0  d1 8f 20 d1 81 d1 82 d1   .......... .....
+3e00	80 d0 b5 d0 bb d0 ba d0  b0 20 3d 20 d1 81 d0 bb   ......... = ....
+3e10	d0 b5 d0 b4 d1 83 d1 8e  d1 89 d0 b8 d0 b9 20 d0   .............. .
+3e20	b1 d0 bb d0 be d0 ba 22  29 3b 0d 0a 20 20 20 20   .......");..    
+3e30	20 20 20 20 68 65 6c 70  4c 6f 72 65 2e 61 64 64       helpLore.add
+3e40	28 22 c2 a7 62 e2 86 93  20 c2 a7 37 d0 a1 d0 b8   ("..b... ..7....
+3e50	d0 bd d1 8f d1 8f 20 d1  81 d1 82 d1 80 d0 b5 d0   ...... .........
+3e60	bb d0 ba d0 b0 20 3d 20  d0 b4 d0 be d1 87 d0 b5   ..... = ........
+3e70	d1 80 d0 bd d0 b8 d0 b9  20 d0 b1 d0 bb d0 be d0   ........ .......
+3e80	ba 22 29 3b 0d 0a 20 20  20 20 20 20 20 20 68 65   .");..        he
+3e90	6c 70 4c 6f 72 65 2e 61  64 64 28 22 c2 a7 65 e2   lpLore.add("..e.
+3ea0	ad 90 20 c2 a7 37 d0 96  d1 91 d0 bb d1 82 d0 b0   .. ..7..........
+3eb0	d1 8f 20 d0 b7 d0 b2 d0  b5 d0 b7 d0 b4 d0 b0 20   .. ............ 
+3ec0	3d 20 d0 ba d0 be d1 80  d0 bd d0 b5 d0 b2 d0 be   = ..............
+3ed0	d0 b9 20 d0 b1 d0 bb d0  be d0 ba 22 29 3b 0d 0a   .. ........");..
+3ee0	20 20 20 20 20 20 20 20  68 65 6c 70 4c 6f 72 65           helpLore
+3ef0	2e 61 64 64 28 22 22 29  3b 0d 0a 20 20 20 20 20   .add("");..     
+3f00	20 20 20 68 65 6c 70 4c  6f 72 65 2e 61 64 64 28      helpLore.add(
+3f10	22 c2 a7 65 d0 9a d0 bb  d0 b8 d0 ba d0 bd d0 b8   "..e............
+3f20	d1 82 d0 b5 20 d0 bf d0  be 20 d0 b1 d0 bb d0 be   .... .... ......
+3f30	d0 ba d1 83 20 d0 b4 d0  bb d1 8f 20 d1 82 d0 b5   .... ...... ....
+3f40	d0 bb d0 b5 d0 bf d0 be  d1 80 d1 82 d0 b0 d1 86   ................
+3f50	d0 b8 d0 b8 22 29 3b 0d  0a 20 20 20 20 20 20 20   ....");..       
+3f60	20 68 65 6c 70 4c 6f 72  65 2e 61 64 64 28 22 22    helpLore.add(""
+3f70	29 3b 0d 0a 20 20 20 20  20 20 20 20 68 65 6c 70   );..        help
+3f80	4c 6f 72 65 2e 61 64 64  28 22 c2 a7 66 e2 9c a8   Lore.add("..f...
+3f90	20 52 65 66 65 72 65 6e  63 65 20 73 79 73 74 65    Reference syste
+3fa0	6d 2d d1 81 d1 82 d0 b8  d0 bb d1 8c 3a 20 d1 83   m-..........: ..
+3fb0	d0 bd d0 b8 d0 b2 d0 b5  d1 80 d1 81 d0 b0 d0 bb   ................
+3fc0	d1 8c d0 bd d1 8b d0 b5  20 d0 b1 d0 bb d0 be d0   ........ .......
+3fd0	ba d0 b8 22 29 3b 0d 0a  20 20 20 20 20 20 20 20   ...");..        
+3fe0	68 65 6c 70 4c 6f 72 65  2e 61 64 64 28 22 c2 a7   helpLore.add("..
+3ff0	66 d1 81 20 d0 bd d0 b0  d1 81 d1 82 d1 80 d0 be   f.. ............
+4000	d0 b9 d0 ba d0 be d0 b9  20 d1 87 d0 b5 d1 80 d0   ........ .......
+4010	b5 d0 b7 20 47 55 49 22  29 3b 0d 0a 20 20 20 20   ... GUI");..    
+4020	20 20 20 20 68 65 6c 70  4d 65 74 61 2e 73 65 74       helpMeta.set
+4030	4c 6f 72 65 28 68 65 6c  70 4c 6f 72 65 29 3b 0d   Lore(helpLore);.
+4040	0a 20 20 20 20 20 20 20  20 68 65 6c 70 2e 73 65   .        help.se
+4050	74 49 74 65 6d 4d 65 74  61 28 68 65 6c 70 4d 65   tItemMeta(helpMe
+4060	74 61 29 3b 0d 0a 20 20  20 20 20 20 20 20 69 6e   ta);..        in
+4070	76 65 6e 74 6f 72 79 2e  73 65 74 49 74 65 6d 28   ventory.setItem(
+4080	34 39 2c 20 68 65 6c 70  29 3b 0d 0a 20 20 20 20   49, help);..    
+4090	20 20 20 20 0d 0a 20 20  20 20 20 20 20 20 2f 2f       ..        //
+40a0	20 41 64 64 20 62 61 63  6b 20 62 75 74 74 6f 6e    Add back button
+40b0	0d 0a 20 20 20 20 20 20  20 20 49 74 65 6d 53 74   ..        ItemSt
+40c0	61 63 6b 20 62 61 63 6b  42 75 74 74 6f 6e 20 3d   ack backButton =
+40d0	20 6e 65 77 20 49 74 65  6d 53 74 61 63 6b 28 4d    new ItemStack(M
+40e0	61 74 65 72 69 61 6c 2e  41 52 52 4f 57 29 3b 0d   aterial.ARROW);.
+40f0	0a 20 20 20 20 20 20 20  20 49 74 65 6d 4d 65 74   .        ItemMet
+4100	61 20 62 61 63 6b 4d 65  74 61 20 3d 20 62 61 63   a backMeta = bac
+4110	6b 42 75 74 74 6f 6e 2e  67 65 74 49 74 65 6d 4d   kButton.getItemM
+4120	65 74 61 28 29 3b 0d 0a  20 20 20 20 20 20 20 20   eta();..        
+4130	62 61 63 6b 4d 65 74 61  2e 73 65 74 44 69 73 70   backMeta.setDisp
+4140	6c 61 79 4e 61 6d 65 28  22 c2 a7 63 e2 ac 85 20   layName("..c... 
+4150	d0 9d d0 b0 d0 b7 d0 b0  d0 b4 22 29 3b 0d 0a 20   ..........");.. 
+4160	20 20 20 20 20 20 20 4c  69 73 74 3c 53 74 72 69          List<Stri
+4170	6e 67 3e 20 62 61 63 6b  4c 6f 72 65 20 3d 20 6e   ng> backLore = n
+4180	65 77 20 41 72 72 61 79  4c 69 73 74 3c 3e 28 29   ew ArrayList<>()
+4190	3b 0d 0a 20 20 20 20 20  20 20 20 62 61 63 6b 4c   ;..        backL
+41a0	6f 72 65 2e 61 64 64 28  22 c2 a7 37 d0 92 d0 b5   ore.add("..7....
+41b0	d1 80 d0 bd d1 83 d1 82  d1 8c d1 81 d1 8f 20 d0   .............. .
+41c0	ba 20 d0 bf d1 80 d0 b5  d0 b4 d1 8b d0 b4 d1 83   . ..............
+41d0	d1 89 d0 b5 d0 bc d1 83  20 d0 bc d0 b5 d0 bd d1   ........ .......
+41e0	8e 22 29 3b 0d 0a 20 20  20 20 20 20 20 20 62 61   .");..        ba
+41f0	63 6b 4c 6f 72 65 2e 61  64 64 28 22 22 29 3b 0d   ckLore.add("");.
+4200	0a 20 20 20 20 20 20 20  20 62 61 63 6b 4c 6f 72   .        backLor
+4210	65 2e 61 64 64 28 22 c2  a7 66 e2 9c a8 20 52 65   e.add("..f... Re
+4220	66 65 72 65 6e 63 65 20  73 79 73 74 65 6d 2d d1   ference system-.
+4230	81 d1 82 d0 b8 d0 bb d1  8c 3a 20 d1 83 d0 bd d0   .........: .....
+4240	b8 d0 b2 d0 b5 d1 80 d1  81 d0 b0 d0 bb d1 8c d0   ................
+4250	bd d1 8b d0 b5 20 d0 b1  d0 bb d0 be d0 ba d0 b8   ..... ..........
+4260	22 29 3b 0d 0a 20 20 20  20 20 20 20 20 62 61 63   ");..        bac
+4270	6b 4c 6f 72 65 2e 61 64  64 28 22 c2 a7 66 d1 81   kLore.add("..f..
+4280	20 d0 bd d0 b0 d1 81 d1  82 d1 80 d0 be d0 b9 d0    ...............
+4290	ba d0 be d0 b9 20 d1 87  d0 b5 d1 80 d0 b5 d0 b7   ..... ..........
+42a0	20 47 55 49 22 29 3b 0d  0a 20 20 20 20 20 20 20    GUI");..       
+42b0	20 62 61 63 6b 4d 65 74  61 2e 73 65 74 4c 6f 72    backMeta.setLor
+42c0	65 28 62 61 63 6b 4c 6f  72 65 29 3b 0d 0a 20 20   e(backLore);..  
+42d0	20 20 20 20 20 20 62 61  63 6b 42 75 74 74 6f 6e         backButton
+42e0	2e 73 65 74 49 74 65 6d  4d 65 74 61 28 62 61 63   .setItemMeta(bac
+42f0	6b 4d 65 74 61 29 3b 0d  0a 20 20 20 20 20 20 20   kMeta);..       
+4300	20 69 6e 76 65 6e 74 6f  72 79 2e 73 65 74 49 74    inventory.setIt
+4310	65 6d 28 34 36 2c 20 62  61 63 6b 42 75 74 74 6f   em(46, backButto
+4320	6e 29 3b 0d 0a 20 20 20  20 7d 0d 0a 20 20 20 20   n);..    }..    
+4330	0d 0a 20 20 20 20 2f 2a  2a 0d 0a 20 20 20 20 20   ..    /**..     
+4340	2a 20 53 68 6f 77 73 20  65 72 72 6f 72 20 6d 65   * Shows error me
+4350	73 73 61 67 65 0d 0a 20  20 20 20 20 2a 2f 0d 0a   ssage..     */..
+4360	20 20 20 20 70 72 69 76  61 74 65 20 76 6f 69 64       private void
+4370	20 73 68 6f 77 45 72 72  6f 72 28 53 74 72 69 6e    showError(Strin
+4380	67 20 6d 65 73 73 61 67  65 29 20 7b 0d 0a 20 20   g message) {..  
+4390	20 20 20 20 20 20 49 74  65 6d 53 74 61 63 6b 20         ItemStack 
+43a0	65 72 72 6f 72 49 74 65  6d 20 3d 20 6e 65 77 20   errorItem = new 
+43b0	49 74 65 6d 53 74 61 63  6b 28 4d 61 74 65 72 69   ItemStack(Materi
+43c0	61 6c 2e 42 41 52 52 49  45 52 29 3b 0d 0a 20 20   al.BARRIER);..  
+43d0	20 20 20 20 20 20 49 74  65 6d 4d 65 74 61 20 65         ItemMeta e
+43e0	72 72 6f 72 4d 65 74 61  20 3d 20 65 72 72 6f 72   rrorMeta = error
+43f0	49 74 65 6d 2e 67 65 74  49 74 65 6d 4d 65 74 61   Item.getItemMeta
+4400	28 29 3b 0d 0a 20 20 20  20 20 20 20 20 65 72 72   ();..        err
+4410	6f 72 4d 65 74 61 2e 73  65 74 44 69 73 70 6c 61   orMeta.setDispla
+4420	79 4e 61 6d 65 28 22 c2  a7 63 e2 9d 8c 20 d0 9e   yName("..c... ..
+4430	d1 88 d0 b8 d0 b1 d0 ba  d0 b0 22 29 3b 0d 0a 20   ..........");.. 
+4440	20 20 20 20 20 20 20 4c  69 73 74 3c 53 74 72 69          List<Stri
+4450	6e 67 3e 20 65 72 72 6f  72 4c 6f 72 65 20 3d 20   ng> errorLore = 
+4460	6e 65 77 20 41 72 72 61  79 4c 69 73 74 3c 3e 28   new ArrayList<>(
+4470	29 3b 0d 0a 20 20 20 20  20 20 20 20 65 72 72 6f   );..        erro
+4480	72 4c 6f 72 65 2e 61 64  64 28 22 c2 a7 37 22 20   rLore.add("..7" 
+4490	2b 20 6d 65 73 73 61 67  65 29 3b 0d 0a 20 20 20   + message);..   
+44a0	20 20 20 20 20 65 72 72  6f 72 4c 6f 72 65 2e 61        errorLore.a
+44b0	64 64 28 22 22 29 3b 0d  0a 20 20 20 20 20 20 20   dd("");..       
+44c0	20 65 72 72 6f 72 4c 6f  72 65 2e 61 64 64 28 22    errorLore.add("
+44d0	c2 a7 66 e2 9c a8 20 52  65 66 65 72 65 6e 63 65   ..f... Reference
+44e0	20 73 79 73 74 65 6d 2d  d1 81 d1 82 d0 b8 d0 bb    system-........
+44f0	d1 8c 3a 20 d1 83 d0 bd  d0 b8 d0 b2 d0 b5 d1 80   ..: ............
+4500	d1 81 d0 b0 d0 bb d1 8c  d0 bd d1 8b d0 b5 20 d0   .............. .
+4510	b1 d0 bb d0 be d0 ba d0  b8 22 29 3b 0d 0a 20 20   .........");..  
+4520	20 20 20 20 20 20 65 72  72 6f 72 4c 6f 72 65 2e         errorLore.
+4530	61 64 64 28 22 c2 a7 66  d1 81 20 d0 bd d0 b0 d1   add("..f.. .....
+4540	81 d1 82 d1 80 d0 be d0  b9 d0 ba d0 be d0 b9 20   ............... 
+4550	d1 87 d0 b5 d1 80 d0 b5  d0 b7 20 47 55 49 22 29   .......... GUI")
+4560	3b 0d 0a 20 20 20 20 20  20 20 20 65 72 72 6f 72   ;..        error
+4570	4d 65 74 61 2e 73 65 74  4c 6f 72 65 28 65 72 72   Meta.setLore(err
+4580	6f 72 4c 6f 72 65 29 3b  0d 0a 20 20 20 20 20 20   orLore);..      
+4590	20 20 65 72 72 6f 72 49  74 65 6d 2e 73 65 74 49     errorItem.setI
+45a0	74 65 6d 4d 65 74 61 28  65 72 72 6f 72 4d 65 74   temMeta(errorMet
+45b0	61 29 3b 0d 0a 20 20 20  20 20 20 20 20 69 6e 76   a);..        inv
+45c0	65 6e 74 6f 72 79 2e 73  65 74 49 74 65 6d 28 32   entory.setItem(2
+45d0	32 2c 20 65 72 72 6f 72  49 74 65 6d 29 3b 0d 0a   2, errorItem);..
+45e0	20 20 20 20 7d 0d 0a 20  20 20 20 0d 0a 20 20 20       }..    ..   
+45f0	20 2f 2a 2a 0d 0a 20 20  20 20 20 2a 20 48 61 6e    /**..     * Han
+4600	64 6c 65 73 20 69 6e 76  65 6e 74 6f 72 79 20 63   dles inventory c
+4610	6c 69 63 6b 20 65 76 65  6e 74 73 0d 0a 20 20 20   lick events..   
+4620	20 20 2a 2f 0d 0a 20 20  20 20 40 4f 76 65 72 72     */..    @Overr
+4630	69 64 65 0d 0a 20 20 20  20 70 75 62 6c 69 63 20   ide..    public 
+4640	76 6f 69 64 20 6f 6e 49  6e 76 65 6e 74 6f 72 79   void onInventory
+4650	43 6c 69 63 6b 28 49 6e  76 65 6e 74 6f 72 79 43   Click(InventoryC
+4660	6c 69 63 6b 45 76 65 6e  74 20 65 76 65 6e 74 29   lickEvent event)
+4670	20 7b 0d 0a 20 20 20 20  20 20 20 20 69 66 20 28    {..        if (
+4680	65 76 65 6e 74 2e 67 65  74 43 6c 69 63 6b 65 64   event.getClicked
+4690	49 6e 76 65 6e 74 6f 72  79 28 29 20 21 3d 20 69   Inventory() != i
+46a0	6e 76 65 6e 74 6f 72 79  29 20 72 65 74 75 72 6e   nventory) return
+46b0	3b 0d 0a 20 20 20 20 20  20 20 20 0d 0a 20 20 20   ;..        ..   
+46c0	20 20 20 20 20 65 76 65  6e 74 2e 73 65 74 43 61        event.setCa
+46d0	6e 63 65 6c 6c 65 64 28  74 72 75 65 29 3b 0d 0a   ncelled(true);..
+46e0	20 20 20 20 20 20 20 20  50 6c 61 79 65 72 20 70           Player p
+46f0	6c 61 79 65 72 20 3d 20  28 50 6c 61 79 65 72 29   layer = (Player)
+4700	20 65 76 65 6e 74 2e 67  65 74 57 68 6f 43 6c 69    event.getWhoCli
+4710	63 6b 65 64 28 29 3b 0d  0a 20 20 20 20 20 20 20   cked();..       
+4720	20 69 6e 74 20 73 6c 6f  74 20 3d 20 65 76 65 6e    int slot = even
+4730	74 2e 67 65 74 53 6c 6f  74 28 29 3b 0d 0a 20 20   t.getSlot();..  
+4740	20 20 20 20 20 20 0d 0a  20 20 20 20 20 20 20 20         ..        
+4750	2f 2f 20 48 61 6e 64 6c  65 20 73 6c 6f 74 20 63   // Handle slot c
+4760	6c 69 63 6b 73 0d 0a 20  20 20 20 20 20 20 20 69   licks..        i
+4770	66 20 28 73 6c 6f 74 54  6f 42 6c 6f 63 6b 4c 6f   f (slotToBlockLo
+4780	63 61 74 69 6f 6e 2e 63  6f 6e 74 61 69 6e 73 4b   cation.containsK
+4790	65 79 28 73 6c 6f 74 29  29 20 7b 0d 0a 20 20 20   ey(slot)) {..   
+47a0	20 20 20 20 20 20 20 20  20 4c 6f 63 61 74 69 6f            Locatio
+47b0	6e 20 62 6c 6f 63 6b 4c  6f 63 61 74 69 6f 6e 20   n blockLocation 
+47c0	3d 20 73 6c 6f 74 54 6f  42 6c 6f 63 6b 4c 6f 63   = slotToBlockLoc
+47d0	61 74 69 6f 6e 2e 67 65  74 28 73 6c 6f 74 29 3b   ation.get(slot);
+47e0	0d 0a 20 20 20 20 20 20  20 20 20 20 20 20 69 66   ..            if
+47f0	20 28 62 6c 6f 63 6b 4c  6f 63 61 74 69 6f 6e 20    (blockLocation 
+4800	21 3d 20 6e 75 6c 6c 29  20 7b 0d 0a 20 20 20 20   != null) {..    
+4810	20 20 20 20 20 20 20 20  20 20 20 20 70 6c 61 79               play
+4820	65 72 2e 74 65 6c 65 70  6f 72 74 28 62 6c 6f 63   er.teleport(bloc
+4830	6b 4c 6f 63 61 74 69 6f  6e 2e 61 64 64 28 30 2e   kLocation.add(0.
+4840	35 2c 20 31 2e 30 2c 20  30 2e 35 29 29 3b 0d 0a   5, 1.0, 0.5));..
+4850	20 20 20 20 20 20 20 20  20 20 20 20 20 20 20 20                   
+4860	70 6c 61 79 65 72 2e 73  65 6e 64 4d 65 73 73 61   player.sendMessa
+4870	67 65 28 22 c2 a7 61 d0  a2 d0 b5 d0 bb d0 b5 d0   ge("..a.........
+4880	bf d0 be d1 80 d1 82 d0  b8 d1 80 d0 be d0 b2 d0   ................
+4890	b0 d0 bd 20 d0 ba 20 d0  b1 d0 bb d0 be d0 ba d1   ... .. .........
+48a0	83 20 d0 bd d0 b0 20 d0  ba d0 be d0 be d1 80 d0   . .... .........
+48b0	b4 d0 b8 d0 bd d0 b0 d1  82 d0 b0 d1 85 3a 20 22   .............: "
+48c0	20 2b 20 0d 0a 20 20 20  20 20 20 20 20 20 20 20    + ..           
+48d0	20 20 20 20 20 20 20 20  20 62 6c 6f 63 6b 4c 6f            blockLo
+48e0	63 61 74 69 6f 6e 2e 67  65 74 42 6c 6f 63 6b 58   cation.getBlockX
+48f0	28 29 20 2b 20 22 2c 20  22 20 2b 20 62 6c 6f 63   () + ", " + bloc
+4900	6b 4c 6f 63 61 74 69 6f  6e 2e 67 65 74 42 6c 6f   kLocation.getBlo
+4910	63 6b 59 28 29 20 2b 20  22 2c 20 22 20 2b 20 62   ckY() + ", " + b
+4920	6c 6f 63 6b 4c 6f 63 61  74 69 6f 6e 2e 67 65 74   lockLocation.get
+4930	42 6c 6f 63 6b 5a 28 29  29 3b 0d 0a 20 20 20 20   BlockZ());..    
+4940	20 20 20 20 20 20 20 20  7d 0d 0a 20 20 20 20 20           }..     
+4950	20 20 20 7d 20 65 6c 73  65 20 69 66 20 28 73 6c      } else if (sl
+4960	6f 74 20 3d 3d 20 34 35  29 20 7b 20 2f 2f 20 52   ot == 45) { // R
+4970	65 66 72 65 73 68 20 62  75 74 74 6f 6e 0d 0a 20   efresh button.. 
+4980	20 20 20 20 20 20 20 20  20 20 20 73 65 74 75 70              setup
+4990	49 6e 76 65 6e 74 6f 72  79 28 29 3b 0d 0a 20 20   Inventory();..  
+49a0	20 20 20 20 20 20 20 20  20 20 70 6c 61 79 65 72             player
+49b0	2e 73 65 6e 64 4d 65 73  73 61 67 65 28 22 c2 a7   .sendMessage("..
+49c0	61 d0 9a d0 b0 d1 80 d1  82 d0 b0 20 d1 81 d0 b2   a.......... ....
+49d0	d1 8f d0 b7 d0 b5 d0 b9  20 d0 be d0 b1 d0 bd d0   ........ .......
+49e0	be d0 b2 d0 bb d0 b5 d0  bd d0 b0 21 22 29 3b 0d   ...........!");.
+49f0	0a 20 20 20 20 20 20 20  20 7d 20 65 6c 73 65 20   .        } else 
+4a00	69 66 20 28 73 6c 6f 74  20 3d 3d 20 35 33 29 20   if (slot == 53) 
+4a10	7b 20 2f 2f 20 43 6c 6f  73 65 20 62 75 74 74 6f   { // Close butto
+4a20	6e 0d 0a 20 20 20 20 20  20 20 20 20 20 20 20 70   n..            p
+4a30	6c 61 79 65 72 2e 63 6c  6f 73 65 49 6e 76 65 6e   layer.closeInven
+4a40	74 6f 72 79 28 29 3b 0d  0a 20 20 20 20 20 20 20   tory();..       
+4a50	20 7d 20 65 6c 73 65 20  69 66 20 28 73 6c 6f 74    } else if (slot
+4a60	20 3d 3d 20 34 39 29 20  7b 20 2f 2f 20 48 65 6c    == 49) { // Hel
+4a70	70 20 62 75 74 74 6f 6e  0d 0a 20 20 20 20 20 20   p button..      
+4a80	20 20 20 20 20 20 73 68  6f 77 48 65 6c 70 28 29         showHelp()
+4a90	3b 0d 0a 20 20 20 20 20  20 20 20 7d 20 65 6c 73   ;..        } els
+4aa0	65 20 69 66 20 28 73 6c  6f 74 20 3d 3d 20 34 36   e if (slot == 46
+4ab0	29 20 7b 20 2f 2f 20 42  61 63 6b 20 62 75 74 74   ) { // Back butt
+4ac0	6f 6e 0d 0a 20 20 20 20  20 20 20 20 20 20 20 20   on..            
+4ad0	2f 2f 20 43 6c 6f 73 65  20 74 68 65 20 63 75 72   // Close the cur
+4ae0	72 65 6e 74 20 6d 65 6e  75 0d 0a 20 20 20 20 20   rent menu..     
+4af0	20 20 20 20 20 20 20 70  6c 61 79 65 72 2e 63 6c          player.cl
+4b00	6f 73 65 49 6e 76 65 6e  74 6f 72 79 28 29 3b 0d   oseInventory();.
+4b10	0a 20 20 20 20 20 20 20  20 7d 0d 0a 20 20 20 20   .        }..    
+4b20	7d 0d 0a 20 20 20 20 0d  0a 20 20 20 20 2f 2a 2a   }..    ..    /**
+4b30	0d 0a 20 20 20 20 20 2a  20 53 68 6f 77 73 20 68   ..     * Shows h
+4b40	65 6c 70 20 69 6e 66 6f  72 6d 61 74 69 6f 6e 0d   elp information.
+4b50	0a 20 20 20 20 20 2a 2f  0d 0a 20 20 20 20 70 72   .     */..    pr
+4b60	69 76 61 74 65 20 76 6f  69 64 20 73 68 6f 77 48   ivate void showH
+4b70	65 6c 70 28 29 20 7b 0d  0a 20 20 20 20 20 20 20   elp() {..       
+4b80	20 49 74 65 6d 53 74 61  63 6b 20 68 65 6c 70 49    ItemStack helpI
+4b90	74 65 6d 20 3d 20 6e 65  77 20 49 74 65 6d 53 74   tem = new ItemSt
+4ba0	61 63 6b 28 4d 61 74 65  72 69 61 6c 2e 42 4f 4f   ack(Material.BOO
+4bb0	4b 29 3b 0d 0a 20 20 20  20 20 20 20 20 49 74 65   K);..        Ite
+4bc0	6d 4d 65 74 61 20 68 65  6c 70 4d 65 74 61 20 3d   mMeta helpMeta =
+4bd0	20 68 65 6c 70 49 74 65  6d 2e 67 65 74 49 74 65    helpItem.getIte
+4be0	6d 4d 65 74 61 28 29 3b  0d 0a 20 20 20 20 20 20   mMeta();..      
+4bf0	20 20 68 65 6c 70 4d 65  74 61 2e 73 65 74 44 69     helpMeta.setDi
+4c00	73 70 6c 61 79 4e 61 6d  65 28 22 c2 a7 65 e2 9d   splayName("..e..
+4c10	93 20 d0 9f d0 be d0 bc  d0 be d1 89 d1 8c 20 d0   . ............ .
+4c20	bf d0 be 20 d0 be d1 82  d0 bb d0 b0 d0 b4 d0 ba   ... ............
+4c30	d0 b5 20 d1 81 d0 b2 d1  8f d0 b7 d0 b5 d0 b9 22   .. ............"
+4c40	29 3b 0d 0a 20 20 20 20  20 20 20 20 4c 69 73 74   );..        List
+4c50	3c 53 74 72 69 6e 67 3e  20 68 65 6c 70 4c 6f 72   <String> helpLor
+4c60	65 20 3d 20 6e 65 77 20  41 72 72 61 79 4c 69 73   e = new ArrayLis
+4c70	74 3c 3e 28 29 3b 0d 0a  20 20 20 20 20 20 20 20   t<>();..        
+4c80	68 65 6c 70 4c 6f 72 65  2e 61 64 64 28 22 c2 a7   helpLore.add("..
+4c90	37 d0 9a d0 b0 d0 ba 20  d1 87 d0 b8 d1 82 d0 b0   7...... ........
+4ca0	d1 82 d1 8c 20 d0 ba d0  b0 d1 80 d1 82 d1 83 20   .... .......... 
+4cb0	d1 81 d0 b2 d1 8f d0 b7  d0 b5 d0 b9 3a 22 29 3b   ............:");
+4cc0	0d 0a 20 20 20 20 20 20  20 20 68 65 6c 70 4c 6f   ..        helpLo
+4cd0	72 65 2e 61 64 64 28 22  22 29 3b 0d 0a 20 20 20   re.add("");..   
+4ce0	20 20 20 20 20 68 65 6c  70 4c 6f 72 65 2e 61 64        helpLore.ad
+4cf0	64 28 22 c2 a7 61 e2 86  92 20 c2 a7 37 d0 97 d0   d("..a... ..7...
+4d00	b5 d0 bb d1 91 d0 bd d0  b0 d1 8f 20 d1 81 d1 82   ........... ....
+4d10	d1 80 d0 b5 d0 bb d0 ba  d0 b0 20 3d 20 d1 81 d0   .......... = ...
+4d20	bb d0 b5 d0 b4 d1 83 d1  8e d1 89 d0 b8 d0 b9 20   ............... 
+4d30	d0 b1 d0 bb d0 be d0 ba  22 29 3b 0d 0a 20 20 20   ........");..   
+4d40	20 20 20 20 20 68 65 6c  70 4c 6f 72 65 2e 61 64        helpLore.ad
+4d50	64 28 22 c2 a7 62 e2 86  93 20 c2 a7 37 d0 a1 d0   d("..b... ..7...
+4d60	b8 d0 bd d1 8f d1 8f 20  d1 81 d1 82 d1 80 d0 b5   ....... ........
+4d70	d0 bb d0 ba d0 b0 20 3d  20 d0 b4 d0 be d1 87 d0   ...... = .......
+4d80	b5 d1 80 d0 bd d0 b8 d0  b9 20 d0 b1 d0 bb d0 be   ......... ......
+4d90	d0 ba 22 29 3b 0d 0a 20  20 20 20 20 20 20 20 68   ..");..        h
+4da0	65 6c 70 4c 6f 72 65 2e  61 64 64 28 22 c2 a7 65   elpLore.add("..e
+4db0	e2 ad 90 20 c2 a7 37 d0  96 d1 91 d0 bb d1 82 d0   ... ..7.........
+4dc0	b0 d1 8f 20 d0 b7 d0 b2  d0 b5 d0 b7 d0 b4 d0 b0   ... ............
+4dd0	20 3d 20 d0 ba d0 be d1  80 d0 bd d0 b5 d0 b2 d0    = .............
+4de0	be d0 b9 20 d0 b1 d0 bb  d0 be d0 ba 22 29 3b 0d   ... ........");.
+4df0	0a 20 20 20 20 20 20 20  20 68 65 6c 70 4c 6f 72   .        helpLor
+4e00	65 2e 61 64 64 28 22 c2  a7 37 e2 80 a2 20 c2 a7   e.add("..7... ..
+4e10	37 d0 a1 d0 b5 d1 80 d0  b0 d1 8f 20 d1 82 d0 be   7.......... ....
+4e20	d1 87 d0 ba d0 b0 20 3d  20 d0 be d0 b1 d1 8b d1   ...... = .......
+4e30	87 d0 bd d1 8b d0 b9 20  d0 b1 d0 bb d0 be d0 ba   ....... ........
+4e40	22 29 3b 0d 0a 20 20 20  20 20 20 20 20 68 65 6c   ");..        hel
+4e50	70 4c 6f 72 65 2e 61 64  64 28 22 22 29 3b 0d 0a   pLore.add("");..
+4e60	20 20 20 20 20 20 20 20  68 65 6c 70 4c 6f 72 65           helpLore
+4e70	2e 61 64 64 28 22 c2 a7  37 d0 a1 d0 b8 d0 bc d0   .add("..7.......
+4e80	b2 d0 be d0 bb d1 8b 3a  22 29 3b 0d 0a 20 20 20   .......:");..   
+4e90	20 20 20 20 20 68 65 6c  70 4c 6f 72 65 2e 61 64        helpLore.ad
+4ea0	64 28 22 c2 a7 65 e2 98  85 20 c2 a7 37 2d 20 d0   d("..e... ..7- .
+4eb0	9a d0 be d1 80 d0 bd d0  b5 d0 b2 d0 be d0 b9 20   ............... 
+4ec0	d0 b1 d0 bb d0 be d0 ba  22 29 3b 0d 0a 20 20 20   ........");..   
+4ed0	20 20 20 20 20 68 65 6c  70 4c 6f 72 65 2e 61 64        helpLore.ad
+4ee0	64 28 22 c2 a7 61 e2 86  92 20 c2 a7 37 2d 20 d0   d("..a... ..7- .
+4ef0	a1 d0 bb d0 b5 d0 b4 d1  83 d1 8e d1 89 d0 b8 d0   ................
+4f00	b9 20 d0 b1 d0 bb d0 be  d0 ba 22 29 3b 0d 0a 20   . ........");.. 
+4f10	20 20 20 20 20 20 20 68  65 6c 70 4c 6f 72 65 2e          helpLore.
+4f20	61 64 64 28 22 c2 a7 62  e2 86 93 20 c2 a7 37 2d   add("..b... ..7-
+4f30	20 d0 94 d0 be d1 87 d0  b5 d1 80 d0 bd d0 b8 d0    ...............
+4f40	b9 20 d0 b1 d0 bb d0 be  d0 ba 22 29 3b 0d 0a 20   . ........");.. 
+4f50	20 20 20 20 20 20 20 68  65 6c 70 4c 6f 72 65 2e          helpLore.
+4f60	61 64 64 28 22 c2 a7 63  e2 86 91 20 c2 a7 37 2d   add("..c... ..7-
+4f70	20 d0 a0 d0 be d0 b4 d0  b8 d1 82 d0 b5 d0 bb d1    ...............
+4f80	8c d1 81 d0 ba d0 b8 d0  b9 20 d0 b1 d0 bb d0 be   ......... ......
+4f90	d0 ba 22 29 3b 0d 0a 20  20 20 20 20 20 20 20 68   ..");..        h
+4fa0	65 6c 70 4c 6f 72 65 2e  61 64 64 28 22 22 29 3b   elpLore.add("");
+4fb0	0d 0a 20 20 20 20 20 20  20 20 68 65 6c 70 4c 6f   ..        helpLo
+4fc0	72 65 2e 61 64 64 28 22  c2 a7 65 d0 9a d0 bb d0   re.add("..e.....
+4fd0	b8 d0 ba d0 bd d0 b8 d1  82 d0 b5 20 d0 bf d0 be   ........... ....
+4fe0	20 d0 b1 d0 bb d0 be d0  ba d1 83 20 d0 b4 d0 bb    .......... ....
+4ff0	d1 8f 20 d1 82 d0 b5 d0  bb d0 b5 d0 bf d0 be d1   .. .............
+5000	80 d1 82 d0 b0 d1 86 d0  b8 d0 b8 22 29 3b 0d 0a   ...........");..
+5010	20 20 20 20 20 20 20 20  68 65 6c 70 4c 6f 72 65           helpLore
+5020	2e 61 64 64 28 22 c2 a7  65 d0 9a d0 bb d0 b8 d0   .add("..e.......
+5030	ba d0 bd d0 b8 d1 82 d0  b5 20 5c 22 d0 9e d0 b1   ......... \"....
+5040	d0 bd d0 be d0 b2 d0 b8  d1 82 d1 8c 5c 22 20 d0   ............\" .
+5050	b4 d0 bb d1 8f 20 d0 bf  d0 b5 d1 80 d0 b5 d1 81   ..... ..........
+5060	d1 82 d1 80 d0 be d0 b9  d0 ba d0 b8 20 d0 ba d0   ............ ...
+5070	b0 d1 80 d1 82 d1 8b 22  29 3b 0d 0a 20 20 20 20   .......");..    
+5080	20 20 20 20 68 65 6c 70  4c 6f 72 65 2e 61 64 64       helpLore.add
+5090	28 22 22 29 3b 0d 0a 20  20 20 20 20 20 20 20 68   ("");..        h
+50a0	65 6c 70 4c 6f 72 65 2e  61 64 64 28 22 c2 a7 66   elpLore.add("..f
+50b0	e2 9c a8 20 52 65 66 65  72 65 6e 63 65 20 73 79   ... Reference sy
+50c0	73 74 65 6d 2d d1 81 d1  82 d0 b8 d0 bb d1 8c 3a   stem-..........:
+50d0	20 d1 83 d0 bd d0 b8 d0  b2 d0 b5 d1 80 d1 81 d0    ...............
+50e0	b0 d0 bb d1 8c d0 bd d1  8b d0 b5 20 d0 b1 d0 bb   ........... ....
+50f0	d0 be d0 ba d0 b8 22 29  3b 0d 0a 20 20 20 20 20   ......");..     
+5100	20 20 20 68 65 6c 70 4c  6f 72 65 2e 61 64 64 28      helpLore.add(
+5110	22 c2 a7 66 d1 81 20 d0  bd d0 b0 d1 81 d1 82 d1   "..f.. .........
+5120	80 d0 be d0 b9 d0 ba d0  be d0 b9 20 d1 87 d0 b5   ........... ....
+5130	d1 80 d0 b5 d0 b7 20 47  55 49 22 29 3b 0d 0a 20   ...... GUI");.. 
+5140	20 20 20 20 20 20 20 68  65 6c 70 4d 65 74 61 2e          helpMeta.
+5150	73 65 74 4c 6f 72 65 28  68 65 6c 70 4c 6f 72 65   setLore(helpLore
+5160	29 3b 0d 0a 20 20 20 20  20 20 20 20 68 65 6c 70   );..        help
+5170	49 74 65 6d 2e 73 65 74  49 74 65 6d 4d 65 74 61   Item.setItemMeta
+5180	28 68 65 6c 70 4d 65 74  61 29 3b 0d 0a 20 20 20   (helpMeta);..   
+5190	20 20 20 20 20 0d 0a 20  20 20 20 20 20 20 20 49        ..        I
+51a0	6e 76 65 6e 74 6f 72 79  20 68 65 6c 70 49 6e 76   nventory helpInv
+51b0	65 6e 74 6f 72 79 20 3d  20 42 75 6b 6b 69 74 2e   entory = Bukkit.
+51c0	63 72 65 61 74 65 49 6e  76 65 6e 74 6f 72 79 28   createInventory(
+51d0	6e 75 6c 6c 2c 20 32 37  2c 20 22 c2 a7 38 d0 9f   null, 27, "..8..
+51e0	d0 be d0 bc d0 be d1 89  d1 8c 20 d0 bf d0 be 20   .......... .... 
+51f0	d0 be d1 82 d0 bb d0 b0  d0 b4 d0 ba d0 b5 20 d1   .............. .
+5200	81 d0 b2 d1 8f d0 b7 d0  b5 d0 b9 22 29 3b 0d 0a   ...........");..
+5210	20 20 20 20 20 20 20 20  68 65 6c 70 49 6e 76 65           helpInve
+5220	6e 74 6f 72 79 2e 73 65  74 49 74 65 6d 28 31 33   ntory.setItem(13
+5230	2c 20 68 65 6c 70 49 74  65 6d 29 3b 0d 0a 20 20   , helpItem);..  
+5240	20 20 20 20 20 20 0d 0a  20 20 20 20 20 20 20 20         ..        
+5250	2f 2f 20 41 64 64 20 63  6c 6f 73 65 20 62 75 74   // Add close but
+5260	74 6f 6e 0d 0a 20 20 20  20 20 20 20 20 49 74 65   ton..        Ite
+5270	6d 53 74 61 63 6b 20 63  6c 6f 73 65 20 3d 20 6e   mStack close = n
+5280	65 77 20 49 74 65 6d 53  74 61 63 6b 28 4d 61 74   ew ItemStack(Mat
+5290	65 72 69 61 6c 2e 52 45  44 5f 53 54 41 49 4e 45   erial.RED_STAINE
+52a0	44 5f 47 4c 41 53 53 29  3b 0d 0a 20 20 20 20 20   D_GLASS);..     
+52b0	20 20 20 49 74 65 6d 4d  65 74 61 20 63 6c 6f 73      ItemMeta clos
+52c0	65 4d 65 74 61 20 3d 20  63 6c 6f 73 65 2e 67 65   eMeta = close.ge
+52d0	74 49 74 65 6d 4d 65 74  61 28 29 3b 0d 0a 20 20   tItemMeta();..  
+52e0	20 20 20 20 20 20 63 6c  6f 73 65 4d 65 74 61 2e         closeMeta.
+52f0	73 65 74 44 69 73 70 6c  61 79 4e 61 6d 65 28 22   setDisplayName("
+5300	c2 a7 63 c2 a7 6c e2 9d  8c 20 d0 97 d0 b0 d0 ba   ..c..l... ......
+5310	d1 80 d1 8b d1 82 d1 8c  22 29 3b 0d 0a 20 20 20   ........");..   
+5320	20 20 20 20 20 4c 69 73  74 3c 53 74 72 69 6e 67        List<String
+5330	3e 20 63 6c 6f 73 65 4c  6f 72 65 20 3d 20 6e 65   > closeLore = ne
+5340	77 20 41 72 72 61 79 4c  69 73 74 3c 3e 28 29 3b   w ArrayList<>();
+5350	0d 0a 20 20 20 20 20 20  20 20 63 6c 6f 73 65 4c   ..        closeL
+5360	6f 72 65 2e 61 64 64 28  22 c2 a7 37 d0 97 d0 b0   ore.add("..7....
+5370	d0 ba d1 80 d1 8b d1 82  d1 8c 20 d0 bf d0 be d0   .......... .....
+5380	bc d0 be d1 89 d1 8c 22  29 3b 0d 0a 20 20 20 20   .......");..    
+5390	20 20 20 20 63 6c 6f 73  65 4c 6f 72 65 2e 61 64       closeLore.ad
+53a0	64 28 22 22 29 3b 0d 0a  20 20 20 20 20 20 20 20   d("");..        
+53b0	63 6c 6f 73 65 4c 6f 72  65 2e 61 64 64 28 22 c2   closeLore.add(".
+53c0	a7 66 e2 9c a8 20 52 65  66 65 72 65 6e 63 65 20   .f... Reference 
+53d0	73 79 73 74 65 6d 2d d1  81 d1 82 d0 b8 d0 bb d1   system-.........
+53e0	8c 3a 20 d1 83 d0 bd d0  b8 d0 b2 d0 b5 d1 80 d1   .: .............
+53f0	81 d0 b0 d0 bb d1 8c d0  bd d1 8b d0 b5 20 d0 b1   ............. ..
+5400	d0 bb d0 be d0 ba d0 b8  22 29 3b 0d 0a 20 20 20   ........");..   
+5410	20 20 20 20 20 63 6c 6f  73 65 4c 6f 72 65 2e 61        closeLore.a
+5420	64 64 28 22 c2 a7 66 d1  81 20 d0 bd d0 b0 d1 81   dd("..f.. ......
+5430	d1 82 d1 80 d0 be d0 b9  d0 ba d0 be d0 b9 20 d1   .............. .
+5440	87 d0 b5 d1 80 d0 b5 d0  b7 20 47 55 49 22 29 3b   ......... GUI");
+5450	0d 0a 20 20 20 20 20 20  20 20 63 6c 6f 73 65 4d   ..        closeM
+5460	65 74 61 2e 73 65 74 4c  6f 72 65 28 63 6c 6f 73   eta.setLore(clos
+5470	65 4c 6f 72 65 29 3b 0d  0a 20 20 20 20 20 20 20   eLore);..       
+5480	20 63 6c 6f 73 65 2e 73  65 74 49 74 65 6d 4d 65    close.setItemMe
+5490	74 61 28 63 6c 6f 73 65  4d 65 74 61 29 3b 0d 0a   ta(closeMeta);..
+54a0	20 20 20 20 20 20 20 20  68 65 6c 70 49 6e 76 65           helpInve
+54b0	6e 74 6f 72 79 2e 73 65  74 49 74 65 6d 28 32 36   ntory.setItem(26
+54c0	2c 20 63 6c 6f 73 65 29  3b 0d 0a 20 20 20 20 20   , close);..     
+54d0	20 20 20 0d 0a 20 20 20  20 20 20 20 20 70 6c 61      ..        pla
+54e0	79 65 72 2e 6f 70 65 6e  49 6e 76 65 6e 74 6f 72   yer.openInventor
+54f0	79 28 68 65 6c 70 49 6e  76 65 6e 74 6f 72 79 29   y(helpInventory)
+5500	3b 0d 0a 20 20 20 20 7d  0d 0a 20 20 20 20 0d 0a   ;..    }..    ..
+5510	20 20 20 20 2f 2a 2a 0d  0a 20 20 20 20 20 2a 20       /**..     * 
+5520	48 61 6e 64 6c 65 73 20  69 6e 76 65 6e 74 6f 72   Handles inventor
+5530	79 20 63 6c 6f 73 65 20  65 76 65 6e 74 73 0d 0a   y close events..
+5540	20 20 20 20 20 2a 2f 0d  0a 20 20 20 20 40 4f 76        */..    @Ov
+5550	65 72 72 69 64 65 0d 0a  20 20 20 20 70 75 62 6c   erride..    publ
+5560	69 63 20 76 6f 69 64 20  6f 6e 49 6e 76 65 6e 74   ic void onInvent
+5570	6f 72 79 43 6c 6f 73 65  28 49 6e 76 65 6e 74 6f   oryClose(Invento
+5580	72 79 43 6c 6f 73 65 45  76 65 6e 74 20 65 76 65   ryCloseEvent eve
+5590	6e 74 29 20 7b 0d 0a 20  20 20 20 20 20 20 20 2f   nt) {..        /
+55a0	2f 20 43 6c 65 61 6e 75  70 20 72 65 73 6f 75 72   / Cleanup resour
+55b0	63 65 73 20 69 66 20 6e  65 65 64 65 64 0d 0a 20   ces if needed.. 
+55c0	20 20 20 20 20 20 20 73  6c 6f 74 54 6f 42 6c 6f          slotToBlo
+55d0	63 6b 4c 6f 63 61 74 69  6f 6e 2e 63 6c 65 61 72   ckLocation.clear
+55e0	28 29 3b 0d 0a 20 20 20  20 7d 0d 0a 20 20 20 20   ();..    }..    
+55f0	0d 0a 20 20 20 20 2f 2a  2a 0d 0a 20 20 20 20 20   ..    /**..     
+5600	2a 20 47 65 74 73 20 74  68 65 20 47 55 49 20 74   * Gets the GUI t
+5610	69 74 6c 65 20 66 6f 72  20 64 65 62 75 67 67 69   itle for debuggi
+5620	6e 67 0d 0a 20 20 20 20  20 2a 2f 0d 0a 20 20 20   ng..     */..   
+5630	20 40 4f 76 65 72 72 69  64 65 0d 0a 20 20 20 20    @Override..    
+5640	70 75 62 6c 69 63 20 53  74 72 69 6e 67 20 67 65   public String ge
+5650	74 47 55 49 54 69 74 6c  65 28 29 20 7b 0d 0a 20   tGUITitle() {.. 
+5660	20 20 20 20 20 20 20 72  65 74 75 72 6e 20 22 43          return "C
+5670	6f 6e 6e 65 63 74 69 6f  6e 20 44 65 62 75 67 20   onnection Debug 
+5680	47 55 49 22 3b 0d 0a 20  20 20 20 7d 0d 0a 20 20   GUI";..    }..  
+5690	20 20 0d 0a 20 20 20 20  2f 2a 2a 0d 0a 20 20 20     ..    /**..   
+56a0	20 20 2a 20 47 65 74 73  20 74 68 65 20 69 6e 76     * Gets the inv
+56b0	65 6e 74 6f 72 79 0d 0a  20 20 20 20 20 2a 2f 0d   entory..     */.
+56c0	0a 20 20 20 20 70 75 62  6c 69 63 20 49 6e 76 65   .    public Inve
+56d0	6e 74 6f 72 79 20 67 65  74 49 6e 76 65 6e 74 6f   ntory getInvento
+56e0	72 79 28 29 20 7b 0d 0a  20 20 20 20 20 20 20 20   ry() {..        
+56f0	72 65 74 75 72 6e 20 69  6e 76 65 6e 74 6f 72 79   return inventory
+5700	3b 0d 0a 20 20 20 20 7d  0d 0a 20 20 20 20 0d 0a   ;..    }..    ..
+5710	20 20 20 20 2f 2a 2a 0d  0a 20 20 20 20 20 2a 20       /**..     * 
+5720	49 6e 6e 65 72 20 63 6c  61 73 73 20 66 6f 72 20   Inner class for 
+5730	62 6c 6f 63 6b 20 63 6f  6e 6e 65 63 74 69 6f 6e   block connection
+5740	20 74 72 61 63 6b 69 6e  67 0d 0a 20 20 20 20 20    tracking..     
+5750	2a 2f 0d 0a 20 20 20 20  70 72 69 76 61 74 65 20   */..    private 
+5760	73 74 61 74 69 63 20 63  6c 61 73 73 20 42 6c 6f   static class Blo
+5770	63 6b 43 6f 6e 6e 65 63  74 69 6f 6e 20 7b 0d 0a   ckConnection {..
+5780	20 20 20 20 20 20 20 20  66 69 6e 61 6c 20 43 6f           final Co
+5790	64 65 42 6c 6f 63 6b 20  62 6c 6f 63 6b 3b 0d 0a   deBlock block;..
+57a0	20 20 20 20 20 20 20 20  66 69 6e 61 6c 20 4c 6f           final Lo
+57b0	63 61 74 69 6f 6e 20 6c  6f 63 61 74 69 6f 6e 3b   cation location;
+57c0	0d 0a 20 20 20 20 20 20  20 20 66 69 6e 61 6c 20   ..        final 
+57d0	69 6e 74 20 73 6c 6f 74  3b 0d 0a 20 20 20 20 20   int slot;..     
+57e0	20 20 20 66 69 6e 61 6c  20 69 6e 74 20 64 65 70      final int dep
+57f0	74 68 3b 0d 0a 20 20 20  20 20 20 20 20 0d 0a 20   th;..        .. 
+5800	20 20 20 20 20 20 20 42  6c 6f 63 6b 43 6f 6e 6e          BlockConn
+5810	65 63 74 69 6f 6e 28 43  6f 64 65 42 6c 6f 63 6b   ection(CodeBlock
+5820	20 62 6c 6f 63 6b 2c 20  4c 6f 63 61 74 69 6f 6e    block, Location
+5830	20 6c 6f 63 61 74 69 6f  6e 2c 20 69 6e 74 20 73    location, int s
+5840	6c 6f 74 2c 20 69 6e 74  20 64 65 70 74 68 29 20   lot, int depth) 
+5850	7b 0d 0a 20 20 20 20 20  20 20 20 20 20 20 20 74   {..            t
+5860	68 69 73 2e 62 6c 6f 63  6b 20 3d 20 62 6c 6f 63   his.block = bloc
+5870	6b 3b 0d 0a 20 20 20 20  20 20 20 20 20 20 20 20   k;..            
+5880	74 68 69 73 2e 6c 6f 63  61 74 69 6f 6e 20 3d 20   this.location = 
+5890	6c 6f 63 61 74 69 6f 6e  3b 0d 0a 20 20 20 20 20   location;..     
+58a0	20 20 20 20 20 20 20 74  68 69 73 2e 73 6c 6f 74          this.slot
+58b0	20 3d 20 73 6c 6f 74 3b  0d 0a 20 20 20 20 20 20    = slot;..      
+58c0	20 20 20 20 20 20 74 68  69 73 2e 64 65 70 74 68         this.depth
+58d0	20 3d 20 64 65 70 74 68  3b 0d 0a 20 20 20 20 20    = depth;..     
+58e0	20 20 20 7d 0d 0a 20 20  20 20 7d 0d 0a 7d            }..    }..}

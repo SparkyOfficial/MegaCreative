@@ -2,7 +2,6 @@ package com.megacreative.listeners;
 
 import com.megacreative.coding.groups.BlockGroupManager;
 import com.megacreative.coding.BlockPlacementHandler;
-import com.megacreative.coding.AutoConnectionManager;
 import com.megacreative.coding.CodeBlock;
 import com.megacreative.core.ServiceRegistry;
 import org.bukkit.Material;
@@ -38,7 +37,6 @@ public class BlockGroupListener implements Listener {
         
         BlockGroupManager groupManager = serviceRegistry.getService(BlockGroupManager.class);
         BlockPlacementHandler placementHandler = serviceRegistry.getBlockPlacementHandler();
-        AutoConnectionManager autoConnectionManager = serviceRegistry.getAutoConnectionManager();
         
         if (event.getAction() == Action.RIGHT_CLICK_BLOCK) {
             // Right-click on block to select it for grouping
@@ -51,9 +49,6 @@ public class BlockGroupListener implements Listener {
                 // Try to get CodeBlock from BlockPlacementHandler first
                 if (placementHandler != null && placementHandler.hasCodeBlock(blockLocation)) {
                     codeBlock = placementHandler.getCodeBlock(blockLocation);
-                } else if (autoConnectionManager != null) {
-                    // Fallback to AutoConnectionManager
-                    codeBlock = autoConnectionManager.getWorldBlocks(blockLocation.getWorld()).get(blockLocation);
                 }
                 
                 if (codeBlock != null) {

@@ -1,7 +1,7 @@
 package com.megacreative.commands;
 
 import com.megacreative.MegaCreative;
-import com.megacreative.coding.AutoConnectionManager;
+
 import com.megacreative.coding.ScriptCompiler;
 import com.megacreative.models.CreativeWorld;
 import org.bukkit.command.Command;
@@ -54,7 +54,7 @@ public class RecompileCommand implements CommandExecutor, TabCompleter {
         }
         
         try {
-            // Get the ScriptCompiler instead of AutoConnectionManager
+            // Get the ScriptCompiler for recompiling world scripts
             ScriptCompiler scriptCompiler = plugin.getServiceRegistry().getScriptCompiler();
             if (scriptCompiler == null) {
                 player.sendMessage("§cScriptCompiler is not available!");

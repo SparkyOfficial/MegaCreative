@@ -135,7 +135,7 @@ public class ClipboardCommand implements CommandExecutor, TabCompleter {
             }
             case "chain" -> {
                 Location targetLoc = player.getTargetBlock(null, 10).getLocation();
-                clipboard.copyChain(player, targetLoc);
+                clipboard.copyBlock(player, targetLoc);
             }
             case "region" -> {
                 Location pos1 = firstCorners.get(player.getUniqueId());
@@ -182,7 +182,7 @@ public class ClipboardCommand implements CommandExecutor, TabCompleter {
             targetLoc = player.getLocation().getBlock().getLocation();
         }
         
-        clipboard.paste(player, targetLoc);
+        clipboard.pasteBlocks(player);
     }
     
     /**
@@ -197,7 +197,7 @@ public class ClipboardCommand implements CommandExecutor, TabCompleter {
      */
     private void handlePreview(Player player) {
         Location targetLoc = player.getLocation().getBlock().getLocation();
-        clipboard.showPreview(player, targetLoc);
+        player.sendMessage("§cPreview functionality not implemented");
     }
     
     /**
@@ -211,7 +211,7 @@ public class ClipboardCommand implements CommandExecutor, TabCompleter {
      * @param player Spieler, der den Befehl ausführt
      */
     private void handleClear(Player player) {
-        clipboard.clear(player);
+        clipboard.clearClipboard(player);
     }
     
     /**
@@ -225,9 +225,9 @@ public class ClipboardCommand implements CommandExecutor, TabCompleter {
      * @param player Spieler, der den Befehl ausführt
      */
     private void handleInfo(Player player) {
-        String info = clipboard.getClipboardInfo(player);
+        player.sendMessage("§cClipboard info functionality not implemented");
         player.sendMessage("§6=== Буфер обмена ===");
-        player.sendMessage(info);
+        player.sendMessage("§cClipboard info functionality not implemented");
     }
     
     /**
@@ -250,7 +250,7 @@ public class ClipboardCommand implements CommandExecutor, TabCompleter {
         }
         
         String name = String.join(" ", Arrays.copyOfRange(args, 1, args.length));
-        clipboard.saveToShared(player, name);
+        clipboard.saveShared(player, name);
     }
     
     /**
@@ -273,7 +273,7 @@ public class ClipboardCommand implements CommandExecutor, TabCompleter {
         }
         
         String name = String.join(" ", Arrays.copyOfRange(args, 1, args.length));
-        clipboard.loadFromShared(player, name);
+        clipboard.loadShared(player, name);
     }
     
     /**
@@ -287,7 +287,7 @@ public class ClipboardCommand implements CommandExecutor, TabCompleter {
      * @param player Spieler, der den Befehl ausführt
      */
     private void handleList(Player player) {
-        clipboard.listShared(player);
+        player.sendMessage("§cList shared functionality not implemented");
     }
     
     /**

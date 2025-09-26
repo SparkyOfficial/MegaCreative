@@ -2,7 +2,6 @@ package com.megacreative.listeners;
 
 import com.megacreative.MegaCreative;
 import com.megacreative.coding.BlockPlacementHandler;
-import com.megacreative.coding.AutoConnectionManager;
 import com.megacreative.services.BlockConfigService;
 import com.megacreative.coding.CodeBlock;
 import com.megacreative.core.ServiceRegistry;
@@ -78,10 +77,9 @@ public class WorldLoadListener implements Listener {
             return;
         }
 
-        AutoConnectionManager connectionManager = serviceRegistry.getAutoConnectionManager();
         BlockConfigService configService = serviceRegistry.getBlockConfigService();
         
-        if (connectionManager == null || configService == null) {
+        if (configService == null) {
             plugin.getLogger().severe("Required services are not initialized!");
             return;
         }
@@ -109,7 +107,7 @@ public class WorldLoadListener implements Listener {
                     
                     for (BlockState tileEntity : tileEntities) {
                         if (tileEntity instanceof Sign) {
-                            processSignTileEntity((Sign) tileEntity, placementHandler, connectionManager, configService);
+                            processSignTileEntity((Sign) tileEntity, placementHandler, configService);
                             blockCount++;
                             
                             // Small delay every 10 blocks to prevent server lag
@@ -123,12 +121,8 @@ public class WorldLoadListener implements Listener {
                 }
             }
 
-            // Rebuild connections between blocks
-            plugin.getLogger().info("Rebuilding connections for " + blockCount + " code blocks...");
-            connectionManager.rebuildWorldConnections(world);
-            
-            // Synchronize with BlockPlacementHandler after rehydration
-            // placementHandler.synchronizeWithAutoConnection();
+            // In the new architecture, connections are handled automatically by BlockLinker and BlockHierarchyManager
+            plugin.getLogger().info("Code connections are managed automatically by BlockLinker and BlockHierarchyManager");
             
             long duration = System.currentTimeMillis() - startTime;
             plugin.getLogger().info(String.format(
@@ -148,9 +142,8 @@ public class WorldLoadListener implements Listener {
      */
     private void processSignTileEntity(Sign sign, 
                                      BlockPlacementHandler placementHandler,
-                                     AutoConnectionManager connectionManager,
                                      BlockConfigService configService) {
-        if (sign == null || placementHandler == null || connectionManager == null || configService == null) {
+        if (sign == null || placementHandler == null || configService == null) {
             return;
         }
 
@@ -174,10 +167,7 @@ public class WorldLoadListener implements Listener {
             // Recreate the CodeBlock object for this physical block
             CodeBlock recreatedBlock = placementHandler.recreateCodeBlockFromExisting(codeBlock, sign);
             
-            // Add to AutoConnectionManager tracking
-            if (recreatedBlock != null) {
-                connectionManager.addCodeBlock(new org.bukkit.Location(org.bukkit.Bukkit.getWorld(codeBlock.getWorld().getName()), codeBlock.getX(), codeBlock.getY(), codeBlock.getZ()), recreatedBlock);
-            }
+            // In the new architecture, BlockLinker and BlockHierarchyManager handle connections automatically
         } catch (Exception e) {
             Location loc = sign.getLocation();
             plugin.getLogger().log(Level.WARNING, 

@@ -195,8 +195,8 @@ public class CodeMoverListener implements Listener {
             placementHandler.getBlockCodeBlocks().put(newLoc, newBlock);
         }
         
-        // Rebuild connections for the entire world
-        plugin.getServiceRegistry().getAutoConnectionManager().rebuildWorldConnections(player.getWorld());
+        // In the new architecture, connections are handled automatically by BlockLinker and BlockHierarchyManager
+        // No need to manually rebuild connections
         
         player.sendMessage("§aЦепочка из " + newChain.size() + " блоков вставлена!");
         plugin.getLogger().info("Player " + player.getName() + " pasted " + newChain.size() + " code blocks");

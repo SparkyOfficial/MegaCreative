@@ -1,6 +1,5 @@
 package com.megacreative.core;
 
-import com.megacreative.coding.AutoConnectionManager;
 import com.megacreative.coding.BlockPlacementHandler;
 import com.megacreative.coding.ConnectionVisualizer;
 import com.megacreative.coding.ScriptCompiler;
@@ -141,7 +140,6 @@ public class ServiceRegistry implements DependencyContainer.Disposable {
     private void initializeCodingServices() {
         // Register coding service mappings
         dependencyContainer.registerType(BlockPlacementHandler.class, BlockPlacementHandler.class);
-        dependencyContainer.registerType(AutoConnectionManager.class, AutoConnectionManager.class);
         dependencyContainer.registerType(ConnectionVisualizer.class, ConnectionVisualizer.class);
         dependencyContainer.registerType(BlockLinker.class, BlockLinker.class);
         dependencyContainer.registerType(BlockHierarchyManager.class, BlockHierarchyManager.class);
@@ -284,10 +282,6 @@ public class ServiceRegistry implements DependencyContainer.Disposable {
     
     public BlockConfigManager getBlockConfigManager() { 
         return dependencyContainer.resolve(BlockConfigManager.class);
-    }
-    
-    public AutoConnectionManager getAutoConnectionManager() {
-        return dependencyContainer.resolve(AutoConnectionManager.class);
     }
     
     public DevInventoryManager getDevInventoryManager() {
