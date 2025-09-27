@@ -99,6 +99,110 @@ public class ScriptTriggerManager implements Listener {
     }
     
     @EventHandler
+    public void onMegaEntityPickupItem(MegaEntityPickupItemEvent event) {
+        // Find the creative world
+        CreativeWorld creativeWorld = worldManager.findCreativeWorldByBukkit(event.getPlayer().getWorld());
+        if (creativeWorld == null) return;
+        
+        // Check if player can code in this world
+        if (!creativeWorld.canCode(event.getPlayer())) return;
+        
+        // Execute scripts for onEntityPickupItem event in both PLAY and DEV modes
+        executeScriptsForEvent("onEntityPickupItem", event.getPlayer());
+    }
+    
+    @EventHandler
+    public void onMegaPlayerDeath(MegaPlayerDeathEvent event) {
+        // Find the creative world
+        CreativeWorld creativeWorld = worldManager.findCreativeWorldByBukkit(event.getPlayer().getWorld());
+        if (creativeWorld == null) return;
+        
+        // Check if player can code in this world
+        if (!creativeWorld.canCode(event.getPlayer())) return;
+        
+        // Execute scripts for onPlayerDeath event in both PLAY and DEV modes
+        executeScriptsForEvent("onPlayerDeath", event.getPlayer());
+    }
+    
+    @EventHandler
+    public void onMegaPlayerQuit(MegaPlayerQuitEvent event) {
+        // Find the creative world
+        CreativeWorld creativeWorld = worldManager.findCreativeWorldByBukkit(event.getPlayer().getWorld());
+        if (creativeWorld == null) return;
+        
+        // Check if player can code in this world
+        if (!creativeWorld.canCode(event.getPlayer())) return;
+        
+        // Execute scripts for onPlayerQuit event in both PLAY and DEV modes
+        executeScriptsForEvent("onPlayerQuit", event.getPlayer());
+    }
+    
+    @EventHandler
+    public void onMegaPlayerRespawn(MegaPlayerRespawnEvent event) {
+        // Find the creative world
+        CreativeWorld creativeWorld = worldManager.findCreativeWorldByBukkit(event.getPlayer().getWorld());
+        if (creativeWorld == null) return;
+        
+        // Check if player can code in this world
+        if (!creativeWorld.canCode(event.getPlayer())) return;
+        
+        // Execute scripts for onPlayerRespawn event in both PLAY and DEV modes
+        executeScriptsForEvent("onPlayerRespawn", event.getPlayer());
+    }
+    
+    @EventHandler
+    public void onMegaPlayerTeleport(MegaPlayerTeleportEvent event) {
+        // Find the creative world
+        CreativeWorld creativeWorld = worldManager.findCreativeWorldByBukkit(event.getPlayer().getWorld());
+        if (creativeWorld == null) return;
+        
+        // Check if player can code in this world
+        if (!creativeWorld.canCode(event.getPlayer())) return;
+        
+        // Execute scripts for onPlayerTeleport event in both PLAY and DEV modes
+        executeScriptsForEvent("onPlayerTeleport", event.getPlayer());
+    }
+    
+    @EventHandler
+    public void onMegaEntityDamage(MegaEntityDamageEvent event) {
+        // Find the creative world
+        CreativeWorld creativeWorld = worldManager.findCreativeWorldByBukkit(event.getPlayer().getWorld());
+        if (creativeWorld == null) return;
+        
+        // Check if player can code in this world
+        if (!creativeWorld.canCode(event.getPlayer())) return;
+        
+        // Execute scripts for onEntityDamage event in both PLAY and DEV modes
+        executeScriptsForEvent("onEntityDamage", event.getPlayer());
+    }
+    
+    @EventHandler
+    public void onMegaInventoryClick(MegaInventoryClickEvent event) {
+        // Find the creative world
+        CreativeWorld creativeWorld = worldManager.findCreativeWorldByBukkit(event.getPlayer().getWorld());
+        if (creativeWorld == null) return;
+        
+        // Check if player can code in this world
+        if (!creativeWorld.canCode(event.getPlayer())) return;
+        
+        // Execute scripts for onInventoryClick event in both PLAY and DEV modes
+        executeScriptsForEvent("onInventoryClick", event.getPlayer());
+    }
+    
+    @EventHandler
+    public void onMegaInventoryOpen(MegaInventoryOpenEvent event) {
+        // Find the creative world
+        CreativeWorld creativeWorld = worldManager.findCreativeWorldByBukkit(event.getPlayer().getWorld());
+        if (creativeWorld == null) return;
+        
+        // Check if player can code in this world
+        if (!creativeWorld.canCode(event.getPlayer())) return;
+        
+        // Execute scripts for onInventoryOpen event in both PLAY and DEV modes
+        executeScriptsForEvent("onInventoryOpen", event.getPlayer());
+    }
+    
+    @EventHandler
     public void onTick(com.megacreative.events.TickEvent event) {
         // Execute scripts for onTick event
         // This will trigger all scripts that start with EVENT_TICK
