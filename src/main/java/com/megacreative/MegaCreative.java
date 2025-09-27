@@ -180,6 +180,7 @@ public class MegaCreative extends JavaPlugin {
             getServer().getPluginManager().registerEvents(serviceRegistry.getBlockHierarchyManager(), this);
             getServer().getPluginManager().registerEvents(serviceRegistry.getWorldCodeRestorer(), this);
             getServer().getPluginManager().registerEvents(serviceRegistry.getCodeBlockSignManager(), this);
+            getServer().getPluginManager().registerEvents(serviceRegistry.getBlockPlacementHandler(), this);
             
             // Register DevInventoryManager to handle world change events
             getServer().getPluginManager().registerEvents(serviceRegistry.getDevInventoryManager(), this);
