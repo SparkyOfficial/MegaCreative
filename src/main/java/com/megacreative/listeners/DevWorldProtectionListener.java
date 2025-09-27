@@ -126,8 +126,6 @@ public class DevWorldProtectionListener implements Listener {
                displayName.contains(CodingItems.BRACKET_BLOCK_NAME) ||
                displayName.contains(CodingItems.ARROW_NOT_NAME) ||
                displayName.contains(CodingItems.GAME_VALUE_NAME) ||
-
-               displayName.contains(CodingItems.COPIER_TOOL_NAME) ||
                displayName.contains(CodingItems.DATA_CREATOR_NAME) ||
                displayName.contains(CodingItems.CODE_MOVER_NAME);
     }

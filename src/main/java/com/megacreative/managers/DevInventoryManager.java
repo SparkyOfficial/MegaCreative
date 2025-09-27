@@ -158,9 +158,7 @@ public class DevInventoryManager implements Listener {
         for (ItemStack item : player.getInventory().getContents()) {
             if (item != null && item.hasItemMeta() && item.getItemMeta().hasDisplayName()) {
                 String name = item.getItemMeta().getDisplayName();
-                if (name.contains("Копировщик блоков") || name.contains(CodingItems.COPIER_TOOL_NAME)) {
-                    hasCopier = true;
-                } else if (name.contains("Стрела НЕ") || name.contains(CodingItems.ARROW_NOT_NAME)) {
+                if (name.contains("Стрела НЕ") || name.contains(CodingItems.ARROW_NOT_NAME)) {
                     hasArrowNot = true;
                 } else if (name.contains("Создатель данных") || name.contains(CodingItems.DATA_CREATOR_NAME)) {
                     hasDataCreator = true;
@@ -173,7 +171,6 @@ public class DevInventoryManager implements Listener {
         }
     
         // Добавляем недостающие инструменты
-        if (!hasCopier) missingItems.add("copier");
         if (!hasArrowNot) missingItems.add("arrow_not");
         if (!hasDataCreator) missingItems.add("data_creator");
         if (!hasCodeMover) missingItems.add("code_mover");
@@ -188,17 +185,6 @@ public class DevInventoryManager implements Listener {
     private void giveMissingItems(Player player, List<String> missingItems) {
         for (String item : missingItems) {
             switch (item) {
-                case "copier" -> {
-                    ItemStack copier = new ItemStack(Material.GOLDEN_AXE);
-                    ItemMeta copierMeta = copier.getItemMeta();
-                    copierMeta.setDisplayName("§6📋 Копировщик блоков");
-                    copierMeta.setLore(Arrays.asList(
-                        "§7ЛКМ по блоку - скопировать",
-                        "§7ПКМ по блоку - вставить"
-                    ));
-                    copier.setItemMeta(copierMeta);
-                    player.getInventory().addItem(copier);
-                }
                 case "arrow_not" -> player.getInventory().addItem(CodingItems.getArrowNot());
                 case "data_creator" -> player.getInventory().addItem(CodingItems.getDataCreator());
                 case "code_mover" -> player.getInventory().addItem(CodingItems.getCodeMover());

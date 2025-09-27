@@ -36,7 +36,6 @@ public class CodingItems {
     public static final String ARROW_NOT_NAME = "§c⟨ Отрицание НЕ";
     public static final String GAME_VALUE_NAME = "§b🎮 Игровое значение";
 
-    public static final String COPIER_TOOL_NAME = "§6📋 Инструмент Выделения";
     public static final String DATA_CREATOR_NAME = "§b§lСоздать данные";
     public static final String CODE_MOVER_NAME = "§6🔄 Инструмент Перемещения";
 
@@ -62,7 +61,6 @@ public class CodingItems {
         CODING_ITEM_NAMES.add(ARROW_NOT_NAME);
         CODING_ITEM_NAMES.add(GAME_VALUE_NAME);
 
-        CODING_ITEM_NAMES.add(COPIER_TOOL_NAME);
         CODING_ITEM_NAMES.add(DATA_CREATOR_NAME);
         CODING_ITEM_NAMES.add(CODE_MOVER_NAME);
     }
@@ -129,16 +127,6 @@ public class CodingItems {
                 case "Игровое значение":
                     player.getInventory().addItem(getGameValue());
                     break;
-                case "Копировщик блоков":
-                    ItemStack copier = new ItemStack(Material.WOODEN_AXE);
-                    ItemMeta copierMeta = copier.getItemMeta();
-                    copierMeta.setDisplayName("§6📋 Инструмент Выделения");
-                    copierMeta.setLore(Arrays.asList(
-                        "§7ЛКМ - pos1, ПКМ - pos2. Для команды /clipboard copy region."
-                    ));
-                    copier.setItemMeta(copierMeta);
-                    player.getInventory().addItem(copier);
-                    break;
                 case "Создать данные":
                     player.getInventory().addItem(getDataCreator());
                     break;
@@ -177,22 +165,14 @@ public class CodingItems {
         player.getInventory().addItem(createSimpleBlock(Material.PISTON, BRACKET_BLOCK_NAME));
         player.getInventory().addItem(getArrowNot());
         // Removed getGameValue() - now in DataGUI
+    
+        // Железный слиток для создания данных
         player.getInventory().addItem(getDataCreator());
         
         // Перемещатель кода
         player.getInventory().addItem(getCodeMover());
-        
-        ItemStack copier = new ItemStack(Material.GOLDEN_AXE);
-        ItemMeta copierMeta = copier.getItemMeta();
-        copierMeta.setDisplayName("§6📋 Копировщик блоков");
-        copierMeta.setLore(Arrays.asList(
-            "§7ЛКМ по блоку - скопировать",
-            "§7ПКМ по блоку - вставить"
-        ));
-        copier.setItemMeta(copierMeta);
-        player.getInventory().addItem(copier);
 
-
+        // Removed Golden Axe tool - functionality now in CodeMoverListener
     }
     
     /**

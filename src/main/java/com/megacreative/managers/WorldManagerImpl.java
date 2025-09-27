@@ -845,15 +845,30 @@ public class WorldManagerImpl implements IWorldManager {
     }
     
     private void createDevWorldIfNotExists(CreativeWorld world) {
-        if (Bukkit.getWorld(world.getDevWorldName()) == null) {
-            // Create a dev world copy with coding features enabled
-            WorldCreator creator = new WorldCreator(world.getDevWorldName());
-            creator.environment(world.getWorldType().getEnvironment());
-            creator.copy(Bukkit.getWorld(world.getWorldName()));
+        String devWorldName = world.getDevWorldName();
+        if (Bukkit.getWorld(devWorldName) == null) {
+            plugin.getLogger().info("Development world " + devWorldName + " does not exist. Generating a new one...");
+
+            // ИСПОЛЬЗУЕМ ПРАВИЛЬНЫЙ ГЕНЕРАТОР!
+            WorldCreator creator = new WorldCreator(devWorldName);
+            creator.environment(World.Environment.NORMAL); // Обязательно для кастомных генераторов
+            creator.generator(new com.megacreative.worlds.DevWorldGenerator()); // Указываем наш генератор!
             
-            World devWorld = Bukkit.createWorld(creator);
+            // Удаляем generatorSettings, так как они конфликтуют с кастомным генератором
+            // creator.generatorSettings("..."); // ЭТА СТРОКА БОЛЬШЕ НЕ НУЖНА
+
+            World devWorld = creator.createWorld();
             if (devWorld != null) {
                 setupDevWorld(devWorld, world);
+                
+                // ВАЖНО: Обновляем статус основного мира, чтобы он знал о своей паре
+                world.setDualMode(CreativeWorld.WorldDualMode.PLAY); // Исходный мир теперь считается игровым
+                world.setPairedWorldId(world.getId()); // ID остается тот же, но теперь он знает о паре
+                saveWorld(world);
+                
+                plugin.getLogger().info("Successfully generated dev world: " + devWorld.getName());
+            } else {
+                plugin.getLogger().severe("CRITICAL: Failed to create development world " + devWorldName);
             }
         }
     }

@@ -8,7 +8,7 @@
 blocks:
   # Basic Blocks
   DIAMOND_BLOCK:
-    name: "Событие"
+    name: "&b&lСобытие"
     type: "EVENT"
     description: "Блоки событий, которые запускают скрипт"
     default_action: "onJoin"
@@ -32,7 +32,7 @@ blocks:
       - "onServerTPS"
   
   COBBLESTONE:
-    name: "Действие"
+    name: "&7&lДействие"
     type: "ACTION"
     description: "Блоки действий, которые выполняются в скрипте"
     default_action: "sendMessage"
@@ -76,7 +76,7 @@ blocks:
       - "executeAsyncCommand"
   
   OAK_PLANKS:
-    name: "Условие"
+    name: "&6&lУсловие"
     type: "CONDITION"
     description: "Блоки условий для проверки различных состояний"
     default_action: "hasItem"
@@ -113,7 +113,7 @@ blocks:
       - "checkServerOnline"
   
   IRON_BLOCK:
-    name: "Переменная"
+    name: "&f&lПеременная"
     type: "ACTION"
     description: "Блоки для работы с переменными"
     actions:
@@ -133,7 +133,7 @@ blocks:
       - "mapOperation"
   
   OBSIDIAN:
-    name: "Если переменная"
+    name: "&5&lЕсли переменная"
     type: "CONDITION"
     description: "Условия для проверки переменных"
     is_constructor: true
@@ -148,7 +148,7 @@ blocks:
       - "compareVariable"
   
   REDSTONE_BLOCK:
-    name: "Если игра"
+    name: "&c&lЕсли игра"
     type: "CONDITION"
     description: "Условия для проверки игровых состояний"
     is_constructor: true
@@ -166,7 +166,7 @@ blocks:
       - "worldTime"
   
   BRICKS:
-    name: "Если существо"
+    name: "&d&lЕсли существо"
     type: "CONDITION"
     description: "Условия для проверки существ"
     actions:
@@ -174,7 +174,7 @@ blocks:
       - "isNearBlock"
   
   EMERALD_BLOCK:
-    name: "Повторить N раз"
+    name: "&f&lПовторить N раз"
     type: "CONTROL"
     description: "Циклы и повторения"
     is_constructor: true
@@ -191,7 +191,7 @@ blocks:
       - "timedExecution"
   
   LAPIS_BLOCK:
-    name: "Вызвать функцию"
+    name: "&b&lВызвать функцию"
     type: "FUNCTION"
     description: "Функции и вызовы"
     actions:
@@ -201,7 +201,7 @@ blocks:
       - "customFunction"
   
   BOOKSHELF:
-    name: "Сохранить функцию"
+    name: "&d&lСохранить функцию"
     type: "FUNCTION"
     description: "Сохранение и управление функциями"
     actions:
@@ -209,7 +209,7 @@ blocks:
       - "callFunction"
   
   END_STONE:
-    name: "Иначе"
+    name: "&e&lИначе"
     type: "CONTROL"
     description: "Блок для альтернативного выполнения"
     actions:
@@ -217,7 +217,7 @@ blocks:
       - "conditionalBranch"
   
   NETHERITE_BLOCK:
-    name: "Игровое действие"
+    name: "&8&lИгровое действие"
     type: "ACTION"
     description: "Действия с игровым миром"
     actions:
@@ -239,7 +239,7 @@ blocks:
       - "discordWebhook"
   
   POLISHED_GRANITE:
-    name: "Получить данные"
+    name: "&a&lПолучить данные"
     type: "ACTION"
     description: "Получение различных данных"
     actions:
@@ -251,7 +251,7 @@ blocks:
       - "variableInspector"
   
   PISTON:
-    name: "Скобка"
+    name: "&6&lСкобка"
     type: "CONTROL"
     description: "Блок для группировки логических секций кода"
     actions:
@@ -661,7 +661,7 @@ action_configurations:
   isInWorld:
     slots:
       0:
-        name: "§aНазвание мира"
+        name: "§аНазвание мира"
         description: "§7Положите бумагу с названием мира"
         placeholder_item: "PAPER"
         slot_name: "world_slot"
@@ -880,7 +880,7 @@ action_configurations:
   checkServerOnline:
     slots:
       0:
-        name: "§aТип проверки"
+        name: "§аТип проверки"
         description: "§7Положите бумагу с типом проверки (online, empty, full или число игроков)"
         placeholder_item: "PAPER"
         slot_name: "check_type_slot"
@@ -1169,7 +1169,7 @@ action_configurations:
   onServerTPS:
     slots:
       0:
-        name: "§aПорог TPS"
+        name: "§аПорог TPS"
         description: "§7Положите бумагу с порогом TPS (1-20)"
         placeholder_item: "PAPER"
         slot_name: "tps_threshold"
@@ -1351,7 +1351,7 @@ advanced_events:
   onPlayerMove:
     material: DIAMOND_BLOCK
     type: "EVENT"
-    displayName: "Player Movement"
+    displayName: "&b&lPlayer Movement"
     description: "Triggers when a player moves to a different block"
     category: "player_events"
     parameters:
@@ -1361,7 +1361,7 @@ advanced_events:
   onPlayerLevelUp:
     material: EMERALD_BLOCK
     type: "EVENT"
-    displayName: "Player Level Up"
+    displayName: "&a&lPlayer Level Up"
     description: "Triggers when a player gains experience levels"
     category: "player_events"
     parameters:
@@ -1370,7 +1370,7 @@ advanced_events:
   onServerTPS:
     material: REDSTONE_BLOCK
     type: "EVENT"
-    displayName: "Server Performance"
+    displayName: "&c&lServer Performance"
     description: "Triggers based on server TPS performance"
     category: "server_events"
     parameters:
@@ -1385,7 +1385,7 @@ advanced_actions:
   playCustomSound:
     material: NOTE_BLOCK
     type: "ACTION"
-    displayName: "Play Custom Sound"
+    displayName: "&b&lPlay Custom Sound"
     description: "Plays a custom sound with advanced options"
     category: "audio_actions"
     parameters:
@@ -1397,7 +1397,7 @@ advanced_actions:
   spawnParticleEffect:
     material: FIREWORK_ROCKET
     type: "ACTION"
-    displayName: "Spawn Particle Effect"
+    displayName: "&d&lSpawn Particle Effect"
     description: "Creates advanced particle effects"
     category: "visual_actions"
     parameters:
@@ -1409,7 +1409,7 @@ advanced_actions:
   sendActionBar:
     material: EXPERIENCE_BOTTLE
     type: "ACTION"
-    displayName: "Send Action Bar"
+    displayName: "&e&lSend Action Bar"
     description: "Displays text in player's action bar"
     category: "communication_actions"
     parameters:
@@ -1419,7 +1419,7 @@ advanced_actions:
   executeAsyncCommand:
     material: COMMAND_BLOCK
     type: "ACTION"
-    displayName: "Execute Async Command"
+    displayName: "&6&lExecute Async Command"
     description: "Executes commands asynchronously to prevent lag"
     category: "system_actions"
     parameters:
@@ -1434,7 +1434,7 @@ advanced_conditions:
   checkPlayerStats:
     material: PLAYER_HEAD
     type: "CONDITION"
-    displayName: "Player Statistics"
+    displayName: "&b&lPlayer Statistics"
     description: "Checks player statistics and achievements"
     category: "player_conditions"
     parameters:
@@ -1445,7 +1445,7 @@ advanced_conditions:
   checkWorldWeather:
     material: CLOCK
     type: "CONDITION"
-    displayName: "Weather Condition"
+    displayName: "&7&lWeather Condition"
     description: "Checks current weather in world"
     category: "world_conditions"
     parameters:
@@ -1455,7 +1455,7 @@ advanced_conditions:
   checkPlayerInventory:
     material: CHEST
     type: "CONDITION"
-    displayName: "Inventory Check"
+    displayName: "&6&lInventory Check"
     description: "Checks player inventory contents"
     category: "inventory_conditions"
     parameters:
@@ -1466,7 +1466,7 @@ advanced_conditions:
   checkServerOnline:
     material: COMPARATOR
     type: "CONDITION"
-    displayName: "Server Player Count"
+    displayName: "&c&lServer Player Count"
     description: "Checks number of online players"
     category: "server_conditions"
     parameters:
@@ -1481,7 +1481,7 @@ control_flow:
   asyncLoop:
     material: REPEATER
     type: "CONTROL"
-    displayName: "Async Loop"
+    displayName: "&a&lAsync Loop"
     description: "Executes contained blocks in a non-blocking loop"
     category: "control_flow"
     parameters:
@@ -1491,7 +1491,7 @@ control_flow:
   conditionalBranch:
     material: COMPARATOR
     type: "CONTROL"
-    displayName: "Advanced If-Else"
+    displayName: "&6&lAdvanced If-Else"
     description: "Multi-condition branching with else-if support"
     category: "control_flow"
     parameters:
@@ -1500,7 +1500,7 @@ control_flow:
   timedExecution:
     material: CLOCK
     type: "CONTROL"
-    displayName: "Timed Execution"
+    displayName: "&e&lTimed Execution"
     description: "Executes blocks after a specified delay"
     category: "control_flow"
     parameters:
@@ -1515,7 +1515,7 @@ function_blocks:
   customFunction:
     material: ENDER_CHEST
     type: "FUNCTION"
-    displayName: "Custom Function"
+    displayName: "&5&lCustom Function"
     description: "Defines a reusable function with parameters"
     category: "functions"
     parameters:
@@ -1525,7 +1525,7 @@ function_blocks:
   callFunction:
     material: ENDER_EYE
     type: "ACTION"
-    displayName: "Call Function"
+    displayName: "&b&lCall Function"
     description: "Calls a previously defined function"
     category: "functions"
     parameters:
@@ -1540,7 +1540,7 @@ data_blocks:
   createList:
     material: BOOK
     type: "ACTION"
-    displayName: "Create List"
+    displayName: "&f&lCreate List"
     description: "Creates a new list variable"
     category: "data_structures"
     parameters:
@@ -1550,7 +1550,7 @@ data_blocks:
   listOperation:
     material: WRITABLE_BOOK
     type: "ACTION"
-    displayName: "List Operation"
+    displayName: "&7&lList Operation"
     description: "Performs operations on list variables"
     category: "data_structures"
     parameters:
@@ -1562,7 +1562,7 @@ data_blocks:
   createMap:
     material: MAP
     type: "ACTION"
-    displayName: "Create Map"
+    displayName: "&6&lCreate Map"
     description: "Creates a new map (dictionary) variable"
     category: "data_structures"
     parameters:
@@ -1571,7 +1571,7 @@ data_blocks:
   mapOperation:
     material: FILLED_MAP
     type: "ACTION"
-    displayName: "Map Operation"
+    displayName: "&e&lMap Operation"
     description: "Performs operations on map variables"
     category: "data_structures"
     parameters:
@@ -1588,7 +1588,7 @@ integration_blocks:
   worldGuardRegionCheck:
     material: SHIELD
     type: "CONDITION"
-    displayName: "WorldGuard Region"
+    displayName: "&9&lWorldGuard Region"
     description: "Checks if player is in a WorldGuard region"
     category: "integration"
     parameters:
@@ -1598,7 +1598,7 @@ integration_blocks:
   economyTransaction:
     material: GOLD_INGOT
     type: "ACTION"
-    displayName: "Economy Transaction"
+    displayName: "&6&lEconomy Transaction"
     description: "Handles economy transactions (requires Vault)"
     category: "integration"
     parameters:
@@ -1609,7 +1609,7 @@ integration_blocks:
   discordWebhook:
     material: PAPER
     type: "ACTION"
-    displayName: "Discord Webhook"
+    displayName: "&b&lDiscord Webhook"
     description: "Sends messages to Discord via webhook"
     category: "integration"
     parameters:
@@ -1625,7 +1625,7 @@ debug_blocks:
   debugLog:
     material: REDSTONE_TORCH
     type: "ACTION"
-    displayName: "Debug Log"
+    displayName: "&c&lDebug Log"
     description: "Logs debug information for script monitoring"
     category: "debugging"
     parameters:
@@ -1635,7 +1635,7 @@ debug_blocks:
   performanceMeasure:
     material: REDSTONE_COMPARATOR
     type: "CONTROL"
-    displayName: "Performance Measure"
+    displayName: "&e&lPerformance Measure"
     description: "Measures execution time of contained blocks"
     category: "debugging"
     parameters:
@@ -1644,7 +1644,7 @@ debug_blocks:
   variableInspector:
     material: SPYGLASS
     type: "ACTION"
-    displayName: "Variable Inspector"
+    displayName: "&a&lVariable Inspector"
     description: "Displays current variable values for debugging"
     category: "debugging"
     parameters:
