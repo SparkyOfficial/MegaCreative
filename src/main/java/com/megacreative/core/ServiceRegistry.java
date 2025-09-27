@@ -287,6 +287,22 @@ public class ServiceRegistry implements DependencyContainer.Disposable {
         // Register InteractiveGUIManager as a factory since it needs the plugin
         dependencyContainer.registerFactory(InteractiveGUIManager.class, (DependencyContainer.Supplier<InteractiveGUIManager>) () -> 
             new InteractiveGUIManager((MegaCreative) plugin));
+        // Register DevWorldProtectionListener as a factory since it needs dependencies
+        dependencyContainer.registerFactory(DevWorldProtectionListener.class, (DependencyContainer.Supplier<DevWorldProtectionListener>) () -> {
+            ITrustedPlayerManager trustedPlayerManager = dependencyContainer.resolve(ITrustedPlayerManager.class);
+            BlockConfigService blockConfigService = dependencyContainer.resolve(BlockConfigService.class);
+            
+            // Ensure BlockConfigService has loaded its configuration before creating DevWorldProtectionListener
+            if (blockConfigService != null && blockConfigService.getCodeBlockMaterials().isEmpty()) {
+                log.info("BlockConfigService has empty materials, forcing configuration load");
+                blockConfigService.reload();
+            }
+            
+            DevWorldProtectionListener listener = new DevWorldProtectionListener((MegaCreative) plugin, trustedPlayerManager, blockConfigService);
+            // Initialize dynamic allowed blocks after creation
+            listener.initializeDynamicAllowedBlocks();
+            return listener;
+        });
     }
     
     /**

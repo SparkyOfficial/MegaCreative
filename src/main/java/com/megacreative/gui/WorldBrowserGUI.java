@@ -240,14 +240,26 @@ public class WorldBrowserGUI implements GUIManager.ManagedGUIInterface {
      * @return Weltenindex oder -1, wenn der Slot keine Welt enthält
      */
     private int getWorldIndexFromSlot(int slot) {
+        // The world items are displayed in slots 10-16, 19-25, 28-34, 37-43
+        // This creates a 4-row by 7-column grid (28 items per page)
+        
+        // Check if slot is in the valid range for world items
         if (slot < 10 || slot > 43) return -1;
         
-        int row = slot / 9;
+        // Check if slot is in the border columns (0, 8) or in the gap columns (17, 26, 35, etc.)
         int col = slot % 9;
-        
         if (col == 0 || col == 8) return -1;
         
-        return (row - 1) * 7 + (col - 1) + page * 28;
+        // Calculate row and column within the display area
+        int row = (slot - 10) / 9;
+        int adjustedCol = col - 1; // Adjust for starting at column 1 (not 0)
+        
+        // Calculate the index within the current page
+        // Each row has 7 world items (columns 1-7), so multiply row by 7
+        int indexInPage = row * 7 + adjustedCol;
+        
+        // Return the global index by adding the page offset
+        return indexInPage + page * 28;
     }
     
     @Override

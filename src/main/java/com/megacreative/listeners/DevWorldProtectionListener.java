@@ -4,7 +4,7 @@ import com.megacreative.MegaCreative;
 import com.megacreative.coding.CodingItems;
 import com.megacreative.models.CreativeWorld;
 import com.megacreative.services.BlockConfigService;
-import com.megacreative.managers.TrustedPlayerManager;
+import com.megacreative.interfaces.ITrustedPlayerManager;
 import com.megacreative.managers.PlayerModeManager;
 import com.megacreative.worlds.DevWorldGenerator;
 import org.bukkit.Material;
@@ -31,7 +31,7 @@ import java.util.HashSet;
 public class DevWorldProtectionListener implements Listener {
 
     private final MegaCreative plugin;
-    private final TrustedPlayerManager trustedPlayerManager;
+    private final ITrustedPlayerManager trustedPlayerManager;
     private final BlockConfigService blockConfigService;
     
     // Жестко закодированные разрешенные материалы для инструментов разработчика
@@ -93,7 +93,7 @@ public class DevWorldProtectionListener implements Listener {
     );
 
     // Конструктор должен принимать зависимости
-    public DevWorldProtectionListener(MegaCreative plugin, TrustedPlayerManager trustedPlayerManager, BlockConfigService blockConfigService) {
+    public DevWorldProtectionListener(MegaCreative plugin, ITrustedPlayerManager trustedPlayerManager, BlockConfigService blockConfigService) {
         this.plugin = plugin;
         this.trustedPlayerManager = trustedPlayerManager;
         this.blockConfigService = blockConfigService;
@@ -101,7 +101,16 @@ public class DevWorldProtectionListener implements Listener {
     }
 
     public boolean isInDevWorld(Player player) {
-        return player.getWorld().getName().endsWith("_dev");
+        String worldName = player.getWorld().getName();
+        // Enhanced detection for dev worlds with new naming scheme to match BlockPlacementHandler
+        return worldName.contains("dev") || worldName.contains("Dev") || 
+               worldName.contains("разработка") || worldName.contains("Разработка") ||
+               worldName.contains("creative") || worldName.contains("Creative") ||
+               worldName.contains("-code") || worldName.endsWith("-code") || 
+               worldName.contains("_code") || worldName.endsWith("_dev") ||
+               worldName.contains("megacreative_") || worldName.contains("DEV") ||
+               // Check for dual world mode dev worlds
+               (worldName.startsWith("megacreative_") && worldName.endsWith("-code"));
     }
 
     private boolean isCodingItem(ItemStack item) {
@@ -130,12 +139,64 @@ public class DevWorldProtectionListener implements Listener {
                displayName.contains(CodingItems.CODE_MOVER_NAME);
     }
 
+    /**
+     * Инициализирует список разрешенных блоков
+     * Должен вызываться после полной инициализации BlockConfigService
+     */
+    public void initializeDynamicAllowedBlocks() {
+        allPermittedPlaceAndBreakBlocks.clear();
+        allPermittedPlaceAndBreakBlocks.addAll(ALLOWED_TOOLS_AND_UTILITIES_HARDCODED); 
+        
+        // Check if blockConfigService is available and has loaded its configuration
+        if (blockConfigService != null) {
+            // Ensure the blockConfigService has loaded its configuration
+            // If the materialToBlockIds map is empty, try to reload the configuration
+            if (blockConfigService.getCodeBlockMaterials().isEmpty()) {
+                plugin.getLogger().warning("DevWorldProtectionListener: BlockConfigService has empty code block materials, attempting to reload configuration");
+                blockConfigService.reload();
+            }
+            
+            allPermittedPlaceAndBreakBlocks.addAll(blockConfigService.getCodeBlockMaterials());
+            plugin.getLogger().info("DevWorldProtectionListener: Dynamically added " + blockConfigService.getCodeBlockMaterials().size() + " code blocks to permitted list.");
+        } else {
+            plugin.getLogger().severe("DevWorldProtectionListener: BlockConfigService is null during dynamic initialization. This indicates a ServiceRegistry initialization order issue.");
+        }
+    }
+    
+    /**
+     * Reloads the block configuration
+     * Should be called when the block configuration changes
+     */
+    public void reloadBlockConfig() {
+        if (blockConfigService != null) {
+            blockConfigService.reload();
+            initializeDynamicAllowedBlocks();
+            plugin.getLogger().info("DevWorldProtectionListener: Block configuration reloaded and permissions updated.");
+        }
+    }
+    
+    /**
+     * Lazy initialization of allowed blocks
+     * This ensures that the allowed blocks are properly initialized even if the initial initialization failed
+     */
+    private void ensureAllowedBlocksAreInitialized() {
+        // If the allowed blocks set is empty or only contains the hardcoded tools, 
+        // try to reinitialize it
+        if (allPermittedPlaceAndBreakBlocks.size() <= ALLOWED_TOOLS_AND_UTILITIES_HARDCODED.size()) {
+            plugin.getLogger().info("DevWorldProtectionListener: Reinitializing allowed blocks");
+            initializeDynamicAllowedBlocks();
+        }
+    }
+    
     // === ЗАЩИТА ОТ РАЗМЕЩЕНИЯ НЕРАЗРЕШЕННЫХ БЛОКОВ ===
     
     @EventHandler(priority = EventPriority.HIGHEST)
     public void onBlockPlace(BlockPlaceEvent event) {
         Player player = event.getPlayer();
         if (!isInDevWorld(player)) return;
+        
+        // Ensure allowed blocks are properly initialized
+        ensureAllowedBlocksAreInitialized();
         
         Material placedMaterial = event.getBlockPlaced().getType();
         
@@ -269,22 +330,7 @@ public class DevWorldProtectionListener implements Listener {
     }
     
     // === ВСПОМОГАТЕЛЬНЫЕ МЕТОДЫ ===
-    
-    /**
-     * Инициализирует список разрешенных блоков
-     * Должен вызываться после полной инициализации BlockConfigService
-     */
-    public void initializeDynamicAllowedBlocks() {
-        allPermittedPlaceAndBreakBlocks.clear();
-        allPermittedPlaceAndBreakBlocks.addAll(ALLOWED_TOOLS_AND_UTILITIES_HARDCODED); 
-        if (blockConfigService != null) {
-            allPermittedPlaceAndBreakBlocks.addAll(blockConfigService.getCodeBlockMaterials());
-            plugin.getLogger().info("DevWorldProtectionListener: Dynamically added " + blockConfigService.getCodeBlockMaterials().size() + " code blocks to permitted list.");
-        } else {
-            plugin.getLogger().severe("DevWorldProtectionListener: BlockConfigService is null during dynamic initialization. This indicates a ServiceRegistry initialization order issue.");
-        }
-    }
-    
+
     /**
      * Проверяет, является ли материал блоком кода
      * Uses the new BlockConfigService to determine this dynamically
@@ -399,17 +445,5 @@ public class DevWorldProtectionListener implements Listener {
         }
         
         return true;
-    }
-    
-    /**
-     * Reloads the block configuration
-     * Should be called when the block configuration changes
-     */
-    public void reloadBlockConfig() {
-        if (blockConfigService != null) {
-            blockConfigService.reload();
-            initializeDynamicAllowedBlocks();
-            plugin.getLogger().info("DevWorldProtectionListener: Block configuration reloaded and permissions updated.");
-        }
     }
 }
