@@ -1,7 +1,12 @@
-# Конфигурация блоков кодинга
-# Этот файл позволяет настраивать доступные блоки без перекомпиляции плагина
+# Unified Coding Blocks Configuration
+# This file consolidates all coding block configurations for MegaCreative
+
+# ============================================
+# BLOCK DEFINITIONS
+# ============================================
 
 blocks:
+  # Basic Blocks
   DIAMOND_BLOCK:
     name: "Событие"
     type: "EVENT"
@@ -22,6 +27,9 @@ blocks:
       - "onPlayerDeath"
       - "onCommand"
       - "onTick"
+      - "onPlayerInteract"
+      - "onPlayerLevelUp"
+      - "onServerTPS"
   
   COBBLESTONE:
     name: "Действие"
@@ -62,6 +70,10 @@ blocks:
       - "teleportToLocation"
       - "setExperience"
       - "sendCustomTitle"
+      - "playCustomSound"
+      - "spawnParticleEffect"
+      - "sendActionBar"
+      - "executeAsyncCommand"
   
   OAK_PLANKS:
     name: "Условие"
@@ -95,6 +107,10 @@ blocks:
       - "checkServerOnline"
       - "checkWorldWeather"
       - "worldGuardRegionCheck"
+      - "checkPlayerStats"
+      - "checkWorldWeather"
+      - "checkPlayerInventory"
+      - "checkServerOnline"
   
   IRON_BLOCK:
     name: "Переменная"
@@ -111,6 +127,10 @@ blocks:
       - "getGlobalVar"
       - "setServerVar"
       - "getServerVar"
+      - "createList"
+      - "listOperation"
+      - "createMap"
+      - "mapOperation"
   
   OBSIDIAN:
     name: "Если переменная"
@@ -167,6 +187,8 @@ blocks:
       - "repeatTrigger"
       - "asyncLoop"
       - "whileLoop"
+      - "asyncLoop"
+      - "timedExecution"
   
   LAPIS_BLOCK:
     name: "Вызвать функцию"
@@ -175,6 +197,8 @@ blocks:
     actions:
       - "callFunction"
       - "saveFunction"
+      - "callFunction"
+      - "customFunction"
   
   BOOKSHELF:
     name: "Сохранить функцию"
@@ -190,6 +214,7 @@ blocks:
     description: "Блок для альтернативного выполнения"
     actions:
       - "else"
+      - "conditionalBranch"
   
   NETHERITE_BLOCK:
     name: "Игровое действие"
@@ -210,6 +235,8 @@ blocks:
       - "addPlayerToTeam"
       - "saveLocation"
       - "getLocation"
+      - "economyTransaction"
+      - "discordWebhook"
   
   POLISHED_GRANITE:
     name: "Получить данные"
@@ -221,6 +248,7 @@ blocks:
       - "getGlobalVar"
       - "getServerVar"
       - "randomNumber"
+      - "variableInspector"
   
   PISTON:
     name: "Скобка"
@@ -229,9 +257,53 @@ blocks:
     actions:
       - "openBracket"
       - "closeBracket"
+      - "performanceMeasure"
 
-# --- НОВАЯ СИСТЕМА: ИМЕНОВАННЫЕ СЛОТЫ И ГРУППЫ ---
+# ============================================
+# ACTION CONFIGURATIONS
+# ============================================
+
 action_configurations:
+  # Player Actions
+  send_message:
+    name: "Send Message"
+    material: PAPER
+    action: SEND_MESSAGE
+    category: "Player"
+    lore:
+      - "Sends a message to the player"
+    parameters:
+      message: "Hello, %player%!"
+    enabled: true
+    
+  teleport_player:
+    name: "Teleport Player"
+    material: ENDER_PEARL
+    action: TELEPORT_PLAYER
+    category: "Player"
+    lore:
+      - "Teleports the player to a location"
+    parameters:
+      x: 0
+      y: 64
+      z: 0
+      world: world
+      yaw: 0
+      pitch: 0
+    enabled: true
+    
+  give_item:
+    name: "Give Item"
+    material: CHEST
+    action: GIVE_ITEM
+    category: "Player"
+    lore:
+      - "Gives an item to the player"
+    parameters:
+      item: "DIAMOND"
+      amount: 1
+    enabled: true
+
   # Конфигурация для действия sendMessage
   sendMessage:
     slots:
@@ -348,7 +420,7 @@ action_configurations:
   createScoreboard:
     slots:
       0:
-        name: "§aЗаголовок скорборда"
+        name: "§аЗаголовок скорборда"
         description: "§7Положите бумагу с названием заголовка скорборда"
         placeholder_item: "PAPER"
         slot_name: "title"
@@ -598,7 +670,7 @@ action_configurations:
   worldGuardRegionCheck:
     slots:
       0:
-        name: "§aНазвание региона"
+        name: "§аНазвание региона"
         description: "§7Положите бумагу с названием региона WorldGuard"
         placeholder_item: "PAPER"
         slot_name: "region_name_slot"
@@ -1002,622 +1074,579 @@ action_configurations:
         name: "§aТип блока"
         description: "§7Положите предмет блока для проверки"
         placeholder_item: "STONE"
-        slot_name: "block"
+        slot_name: "block_slot"
       1:
-        name: "§bОтносительная координата X"
-        description: "§7Положите бумагу с относительной координатой X (по умолчанию 0)"
+        name: "§bОператор сравнения"
+        description: "§7Положите бумагу с оператором (is, is_not)"
         placeholder_item: "PAPER"
-        slot_name: "relativeX"
+        slot_name: "operator"
+
+  # Advanced Action Configurations
+  playCustomSound:
+    slots:
+      0:
+        name: "§aЗвук"
+        description: "§7Положите бумагу с названием звука (minecraft:block.note_block.harp)"
+        placeholder_item: "PAPER"
+        slot_name: "sound"
+        validation: "sound_name"
+      1:
+        name: "§bГромкость"
+        description: "§7Положите бумагу с громкостью (0.0-1.0)"
+        placeholder_item: "PAPER"
+        slot_name: "volume"
+        validation: "number_range:0.0-1.0"
+        default_value: "1.0"
       2:
-        name: "§cОтносительная координата Y"
-        description: "§7Положите бумагу с относительной координатой Y (по умолчанию 0)"
+        name: "§cТон"
+        description: "§7Положите бумагу с тоном (0.5-2.0)"
         placeholder_item: "PAPER"
-        slot_name: "relativeY"
+        slot_name: "pitch"
+        validation: "number_range:0.5-2.0"
+        default_value: "1.0"
       3:
-        name: "§dОтносительная координата Z"
-        description: "§7Положите бумагу с относительной координатой Z (по умолчанию 0)"
-        placeholder_item: "PAPER"
-        slot_name: "relativeZ"
+        name: "§dРасположение"
+        description: "§7Положите предмет, представляющий расположение звука"
+        placeholder_item: "COMPASS"
+        slot_name: "location"
+        validation: "location"
 
-  # Конфигурация для действия setTime
-  setTime:
-    slots:
-      0:
-        name: "§aВремя суток"
-        description: "§7Положите бумагу с временем суток (0-24000)"
-        placeholder_item: "PAPER"
-        slot_name: "time"
-        required: true
-        validation: "number_range:0-24000"
-        hint: "Время суток от 0 до 24000 (0 = рассвет, 6000 = полдень, 12000 = закат, 18000 = полночь)"
-      1:
-        name: "§bРежим времени"
-        description: "§7Положите бумагу с режимом времени (relative, absolute)"
-        placeholder_item: "PAPER"
-        slot_name: "mode"
-        validation: "enum:relative,absolute"
-        default_value: "absolute"
-        hint: "relative - добавить к текущему времени, absolute - установить конкретное время"
-
-  # Конфигурация для действия setWeather
-  setWeather:
-    slots:
-      0:
-        name: "§aТип погоды"
-        description: "§7Положите бумагу с типом погоды (clear, rain, thunder)"
-        placeholder_item: "PAPER"
-        slot_name: "weather"
-        required: true
-        validation: "enum:clear,rain,thunder"
-        hint: "Выберите тип погоды: clear (ясно), rain (дождь), thunder (гроза)"
-
-  # Конфигурация для действия explosion
-  explosion:
-    slots:
-      0:
-        name: "§aСила взрыва"
-        description: "§7Положите бумагу с силой взрыва (0.0-10.0)"
-        placeholder_item: "PAPER"
-        slot_name: "power"
-        required: true
-        validation: "number_range:0.0-10.0"
-        hint: "Сила взрыва от 0.0 до 10.0 (меньше 1.0 - без разрушения блоков)"
-      1:
-        name: "§bРазрушать блоки"
-        description: "§7Положите бумагу с 'true' или 'false'"
-        placeholder_item: "PAPER"
-        slot_name: "break_blocks"
-        validation: "enum:true,false"
-        default_value: "true"
-        hint: "true - разрушать блоки, false - не разрушать блоки"
-      2:
-        name: "§cСоздать огонь"
-        description: "§7Положите бумагу с 'true' или 'false'"
-        placeholder_item: "PAPER"
-        slot_name: "create_fire"
-        validation: "enum:true,false"
-        default_value: "false"
-        hint: "true - создать огонь, false - не создавать огонь"
-
-  # Конфигурация для действия setBlock
-  setBlock:
-    slots:
-      0:
-        name: "§aТип блока"
-        description: "§7Положите предмет блока для установки"
-        placeholder_item: "STONE"
-        slot_name: "block_type"
-        required: true
-        hint: "Выберите тип блока для установки"
-      1:
-        name: "§bОтносительная координата X"
-        description: "§7Положите бумагу с относительной координатой X (по умолчанию 0)"
-        placeholder_item: "PAPER"
-        slot_name: "relative_x"
-        validation: "number"
-        default_value: "0"
-        hint: "Относительная координата X от игрока"
-      2:
-        name: "§cОтносительная координата Y"
-        description: "§7Положите бумагу с относительной координатой Y (по умолчанию 0)"
-        placeholder_item: "PAPER"
-        slot_name: "relative_y"
-        validation: "number"
-        default_value: "0"
-        hint: "Относительная координата Y от игрока"
-      3:
-        name: "§dОтносительная координата Z"
-        description: "§7Положите бумагу с относительной координатой Z (по умолчанию 0)"
-        placeholder_item: "PAPER"
-        slot_name: "relative_z"
-        validation: "number"
-        default_value: "0"
-        hint: "Относительная координата Z от игрока"
-
-  # Конфигурация для действия getPlayerName
-  getPlayerName:
-    slots:
-      0:
-        name: "§aЦелевая переменная"
-        description: "§7Положите бумагу с названием переменной для сохранения имени игрока"
-        placeholder_item: "PAPER"
-        slot_name: "target_variable"
-        required: true
-        validation: "length:1-16"
-        hint: "Имя переменной должно содержать от 1 до 16 символов"
-
-  # Конфигурация для действия randomNumber
-  randomNumber:
-    slots:
-      0:
-        name: "§aМинимальное значение"
-        description: "§7Положите бумагу с минимальным значением"
-        placeholder_item: "PAPER"
-        slot_name: "min_value"
-        required: true
-        validation: "number"
-        hint: "Минимальное значение для генерации случайного числа"
-      1:
-        name: "§bМаксимальное значение"
-        description: "§7Положите бумагу с максимальным значением"
-        placeholder_item: "PAPER"
-        slot_name: "max_value"
-        required: true
-        validation: "number"
-        hint: "Максимальное значение для генерации случайного числа"
-      2:
-        name: "§cЦелевая переменная"
-        description: "§7Положите бумагу с названием переменной для сохранения результата"
-        placeholder_item: "PAPER"
-        slot_name: "target_variable"
-        required: true
-        validation: "length:1-16"
-        hint: "Имя переменной должно содержать от 1 до 16 символов"
-
-  # Конфигурация для действия playParticle
-  playParticle:
+  spawnParticleEffect:
     slots:
       0:
         name: "§aТип частицы"
         description: "§7Положите бумагу с названием типа частицы"
         placeholder_item: "PAPER"
-        slot_name: "particle_type"
-        required: true
-        validation: "length:1-50"
-        hint: "Название типа частицы (например: REDSTONE, SMOKE_NORMAL, etc.)"
+        slot_name: "particle"
+        validation: "particle_type"
       1:
-        name: "§bКоличество частиц"
-        description: "§7Положите бумагу с количеством частиц (по умолчанию 10)"
+        name: "§bКоличество"
+        description: "§7Положите бумагу с количеством частиц"
         placeholder_item: "PAPER"
         slot_name: "count"
-        validation: "number_range:1-100"
+        validation: "number_range:1-1000"
         default_value: "10"
-        hint: "Количество частиц от 1 до 100"
       2:
-        name: "§cОтносительная координата X"
-        description: "§7Положите бумагу с относительной координатой X (по умолчанию 0)"
+        name: "§cРадиус распространения"
+        description: "§7Положите бумагу с радиусом распространения"
         placeholder_item: "PAPER"
-        slot_name: "relative_x"
-        validation: "number"
-        default_value: "0"
-        hint: "Относительная координата X от игрока"
+        slot_name: "spread"
+        validation: "number_range:0.0-10.0"
+        default_value: "1.0"
       3:
-        name: "§dОтносительная координата Y"
-        description: "§7Положите бумагу с относительной координатой Y (по умолчанию 0)"
+        name: "§dСкорость"
+        description: "§7Положите бумагу со скоростью частиц"
         placeholder_item: "PAPER"
-        slot_name: "relative_y"
-        validation: "number"
-        default_value: "0"
-        hint: "Относительная координата Y от игрока"
-      4:
-        name: "§eОтносительная координата Z"
-        description: "§7Положите бумагу с относительной координатой Z (по умолчанию 0)"
-        placeholder_item: "PAPER"
-        slot_name: "relative_z"
-        validation: "number"
-        default_value: "0"
-        hint: "Относительная координата Z от игрока"
+        slot_name: "speed"
+        validation: "number_range:0.0-10.0"
+        default_value: "1.0"
 
-  # Конфигурация для события onJoin
-  onJoin:
-    slots:
-      0:
-        name: "§aСообщение при входе"
-        description: "§7Положите бумагу с сообщением при входе игрока (оставьте пустым для отключения)"
-        placeholder_item: "PAPER"
-        slot_name: "join_message"
-        validation: "length:0-200"
-        hint: "Сообщение при входе игрока (до 200 символов)"
-
-  # Конфигурация для события onLeave
-  onLeave:
-    slots:
-      0:
-        name: "§aСообщение при выходе"
-        description: "§7Положите бумагу с сообщением при выходе игрока (оставьте пустым для отключения)"
-        placeholder_item: "PAPER"
-        slot_name: "leave_message"
-        validation: "length:0-200"
-        hint: "Сообщение при выходе игрока (до 200 символов)"
-
-  # Конфигурация для события onChat
-  onChat:
-    slots:
-      0:
-        name: "§aФормат чата"
-        description: "§7Положите бумагу с форматом чата (оставьте пустым для стандартного)"
-        placeholder_item: "PAPER"
-        slot_name: "chat_format"
-        validation: "length:0-200"
-        hint: "Формат чата (до 200 символов)"
-
-  # Конфигурация для события onBlockBreak
-  onBlockBreak:
-    slots:
-      0:
-        name: "§aТип блока"
-        description: "§7Положите предмет блока для отслеживания (оставьте пустым для всех блоков)"
-        placeholder_item: "STONE"
-        slot_name: "block_type"
-        hint: "Тип блока для отслеживания"
-
-  # Конфигурация для события onBlockPlace
-  onBlockPlace:
-    slots:
-      0:
-        name: "§aТип блока"
-        description: "§7Положите предмет блока для отслеживания (оставьте пустым для всех блоков)"
-        placeholder_item: "STONE"
-        slot_name: "block_type"
-        hint: "Тип блока для отслеживания"
-
-  # Конфигурация для события onPlayerMove
+  # Advanced Condition Configurations
   onPlayerMove:
     slots:
       0:
-        name: "§aРасстояние"
-        description: "§7Положите бумагу с расстоянием для срабатывания (по умолчанию 1)"
+        name: "§aМинимальное расстояние"
+        description: "§7Положите бумагу с минимальным расстоянием перемещения"
         placeholder_item: "PAPER"
         slot_name: "distance"
-        validation: "number_range:0.1-100"
-        default_value: "1"
-        hint: "Расстояние для срабатывания события"
-
-  # Конфигурация для события onPlayerDeath
-  onPlayerDeath:
-    slots:
-      0:
-        name: "§aСообщение о смерти"
-        description: "§7Положите бумагу с сообщением о смерти (оставьте пустым для стандартного)"
-        placeholder_item: "PAPER"
-        slot_name: "death_message"
-        validation: "length:0-200"
-        hint: "Сообщение о смерти игрока (до 200 символов)"
-
-  # Конфигурация для события onCommand
-  onCommand:
-    slots:
-      0:
-        name: "§aКоманда"
-        description: "§7Положите бумагу с названием команды"
-        placeholder_item: "PAPER"
-        slot_name: "command"
-        required: true
-        validation: "length:1-50"
-        hint: "Название команды (до 50 символов)"
-
-  # Конфигурация для события onTick
-  onTick:
-    slots:
-      0:
-        name: "§aИнтервал"
-        description: "§7Положите бумагу с интервалом в тиках (по умолчанию 20)"
-        placeholder_item: "PAPER"
-        slot_name: "interval"
-        validation: "number_range:1-1200"
-        default_value: "20"
-        hint: "Интервал в тиках (1-1200)"
-
-  # Конфигурация для действия teleport
-  teleport:
-    slots:
-      0:
-        name: "§aКоордината X"
-        description: "§7Положите бумагу с координатой X"
-        placeholder_item: "PAPER"
-        slot_name: "x"
-        required: true
         validation: "number"
-        hint: "Координата X для телепортации"
       1:
-        name: "§bКоордината Y"
-        description: "§7Положите бумагу с координатой Y"
-        placeholder_item: "PAPER"
-        slot_name: "y"
-        required: true
-        validation: "number"
-        hint: "Координата Y для телепортации"
-      2:
-        name: "§cКоордината Z"
-        description: "§7Положите бумагу с координатой Z"
-        placeholder_item: "PAPER"
-        slot_name: "z"
-        required: true
-        validation: "number"
-        hint: "Координата Z для телепортации"
-      3:
-        name: "§dМир"
-        description: "§7Положите бумагу с названием мира (оставьте пустым для текущего)"
+        name: "§bФильтр мира"
+        description: "§7Положите бумагу с названием мира (необязательно)"
         placeholder_item: "PAPER"
         slot_name: "world"
-        validation: "length:0-50"
-        hint: "Название мира для телепортации"
+        validation: "world_name"
 
-  # Конфигурация для действия giveItems
-  giveItems:
-    item_groups:
-      items_to_give:
-        slots: [0, 1, 2, 3, 4, 5, 6, 7, 8]
-        name: "§aПредметы для выдачи"
-        description: "§7Положите сюда все предметы, которые нужно выдать игроку"
-        placeholder_item: "CHEST"
-
-  # Конфигурация для действия spawnMob
-  spawnMob:
+  onPlayerLevelUp:
     slots:
       0:
-        name: "§aТип существа"
-        description: "§7Положите предмет, символизирующий существо для спавна"
-        placeholder_item: "ZOMBIE_HEAD"
-        slot_name: "mob_type"
-        required: true
-        hint: "Тип существа для спавна"
+        name: "§aМинимальный уровень"
+        description: "§7Положите бумагу с минимальным уровнем"
+        placeholder_item: "PAPER"
+        slot_name: "min_level"
+        validation: "number"
+
+  onServerTPS:
+    slots:
+      0:
+        name: "§aПорог TPS"
+        description: "§7Положите бумагу с порогом TPS (1-20)"
+        placeholder_item: "PAPER"
+        slot_name: "tps_threshold"
+        validation: "number_range:1-20"
       1:
-        name: "§bКоличество"
-        description: "§7Положите бумагу с количеством существ (по умолчанию 1)"
-        placeholder_item: "PAPER"
-        slot_name: "count"
-        validation: "number_range:1-100"
-        default_value: "1"
-        hint: "Количество существ для спавна"
-      2:
-        name: "§cОтносительная координата X"
-        description: "§7Положите бумагу с относительной координатой X (по умолчанию 0)"
-        placeholder_item: "PAPER"
-        slot_name: "relative_x"
-        validation: "number"
-        default_value: "0"
-        hint: "Относительная координата X от игрока"
-      3:
-        name: "§dОтносительная координата Y"
-        description: "§7Положите бумагу с относительной координатой Y (по умолчанию 0)"
-        placeholder_item: "PAPER"
-        slot_name: "relative_y"
-        validation: "number"
-        default_value: "0"
-        hint: "Относительная координата Y от игрока"
-      4:
-        name: "§eОтносительная координата Z"
-        description: "§7Положите бумагу с относительной координатой Z (по умолчанию 0)"
-        placeholder_item: "PAPER"
-        slot_name: "relative_z"
-        validation: "number"
-        default_value: "0"
-        hint: "Относительная координата Z от игрока"
-
-  # Конфигурация для действия healPlayer
-  healPlayer:
-    slots:
-      0:
-        name: "§aКоличество здоровья"
-        description: "§7Положите бумагу с количеством здоровья для восстановления (оставьте пустым для полного лечения)"
-        placeholder_item: "PAPER"
-        slot_name: "heal_amount"
-        validation: "number_range:0.5-20"
-        hint: "Количество здоровья для восстановления"
-
-  # Конфигурация для действия setGameMode
-  setGameMode:
-    slots:
-      0:
-        name: "§aРежим игры"
-        description: "§7Положите предмет, символизирующий режим игры (GRASS_BLOCK = SURVIVAL, BEDROCK = CREATIVE, SIGN = ADVENTURE, BARRIER = SPECTATOR)"
-        placeholder_item: "GRASS_BLOCK"
-        slot_name: "game_mode"
-        required: true
-        validation: "enum:SURVIVAL,CREATIVE,ADVENTURE,SPECTATOR"
-        hint: "Режим игры для установки"
-
-  # Конфигурация для условия isOp
-  isOp:
-    slots:
-      0:
-        name: "§aСтатус оператора"
-        description: "§7Положите бумагу с 'true' или 'false'"
-        placeholder_item: "PAPER"
-        slot_name: "op_status"
-        validation: "enum:true,false"
-        default_value: "true"
-        hint: "true - игрок является оператором, false - игрок не является оператором"
-
-  # Конфигурация для действия repeat
-  repeat:
-    slots:
-      0:
-        name: "§aКоличество повторений"
-        description: "§7Положите бумагу с количеством повторений (-1 для бесконечного)"
-        placeholder_item: "PAPER"
-        slot_name: "count"
-        validation: "number"
-        default_value: "-1"
-        hint: "Количество повторений (-1 для бесконечного)"
-
-  # Конфигурация для действия repeatTrigger
-  repeatTrigger:
-    slots:
-      0:
-        name: "§aКоличество повторений"
-        description: "§7Положите бумагу с количеством повторений (-1 для бесконечного)"
-        placeholder_item: "PAPER"
-        slot_name: "count"
-        validation: "number"
-        default_value: "-1"
-        hint: "Количество повторений (-1 для бесконечного)"
-      1:
-        name: "§bИнтервал"
-        description: "§7Положите бумагу с интервалом в тиках (по умолчанию 20)"
-        placeholder_item: "PAPER"
-        slot_name: "interval"
-        validation: "number_range:1-1200"
-        default_value: "20"
-        hint: "Интервал между повторениями в тиках"
-
-  # Конфигурация для действия callFunction
-  callFunction:
-    slots:
-      0:
-        name: "§aИмя функции"
-        description: "§7Положите бумагу с названием функции для вызова"
-        placeholder_item: "PAPER"
-        slot_name: "function_name"
-        required: true
-        validation: "length:1-50"
-        hint: "Название функции для вызова"
-
-  # Конфигурация для действия saveFunction
-  saveFunction:
-    slots:
-      0:
-        name: "§aИмя функции"
-        description: "§7Положите бумагу с названием функции для сохранения"
-        placeholder_item: "PAPER"
-        slot_name: "function_name"
-        required: true
-        validation: "length:1-50"
-        hint: "Название функции для сохранения"
-
-  # Конфигурация для действия else
-  else:
-    slots: {}
-
-  # Конфигурация для действия getVar
-  getVar:
-    slots:
-      0:
-        name: "§aИмя переменной"
-        description: "§7Положите бумагу с названием переменной"
-        placeholder_item: "PAPER"
-        slot_name: "name"
-        required: true
-        validation: "length:1-16"
-        hint: "Имя переменной для получения"
-      1:
-        name: "§bЦелевая переменная"
-        description: "§7Положите бумагу с названием целевой переменной"
-        placeholder_item: "PAPER"
-        slot_name: "target"
-        required: true
-        validation: "length:1-16"
-        hint: "Имя целевой переменной"
-
-  # Конфигурация для действия openBracket
-  openBracket:
-    slots: {}
-
-  # Конфигурация для действия closeBracket
-  closeBracket:
-    slots: {}
-
-  # Конфигурация для действия whileLoop
-  whileLoop:
-    slots:
-      0:
-        name: "§aУсловие цикла"
-        description: "§7Положите предмет, представляющий условие для цикла"
+        name: "§bУсловие"
+        description: "§7Положите бумагу с условием (above/below)"
         placeholder_item: "PAPER"
         slot_name: "condition"
-        required: true
-        hint: "Условие для проверки на каждой итерации цикла"
+        validation: "enum:above,below"
 
-  # Конфигурация для действия teleportToLocation
-  teleportToLocation:
+  # Data Structure Configurations
+  createList:
     slots:
       0:
-        name: "§aКоординаты"
-        description: "§7Положите бумагу с координатами в формате 'x,y,z' или 'world:x,y,z'"
+        name: "§aИмя списка"
+        description: "§7Положите бумагу с именем переменной списка"
         placeholder_item: "PAPER"
-        slot_name: "location"
-        required: true
-        validation: "length:1-100"
-        hint: "Формат: '100,64,100' или 'world:100,64,100'"
+        slot_name: "list_name"
+        validation: "variable_name"
       1:
-        name: "§bСообщение при телепортации"
-        description: "§7Положите бумагу с сообщением при телепортации (оставьте пустым для отключения)"
+        name: "§bНачальные значения"
+        description: "§7Положите предметы для начальных значений списка"
         placeholder_item: "PAPER"
-        slot_name: "message"
-        validation: "length:0-200"
-        hint: "Сообщение при телепортации"
-      2:
-        name: "§cЭффекты при телепортации"
-        description: "§7Положите бумагу с 'true' или 'false' для включения/выключения эффектов"
-        placeholder_item: "PAPER"
-        slot_name: "effects"
-        validation: "enum:true,false"
-        default_value: "true"
-        hint: "true - включить эффекты, false - выключить эффекты"
+        slot_name: "initial_values"
+        validation: "list"
 
-  # Конфигурация для действия setExperience
-  setExperience:
+  listOperation:
+    slots:
+      0:
+        name: "§aИмя списка"
+        description: "§7Положите бумагу с именем списка"
+        placeholder_item: "PAPER"
+        slot_name: "list_name"
+        validation: "variable_name"
+      1:
+        name: "§bОперация"
+        description: "§7Положите бумагу с операцией (add/remove/get/set/size)"
+        placeholder_item: "PAPER"
+        slot_name: "operation"
+        validation: "enum:add,remove,get,set,size"
+      2:
+        name: "§cЗначение"
+        description: "§7Положите предмет или бумагу со значением"
+        placeholder_item: "PAPER"
+        slot_name: "value"
+        validation: "any"
+      3:
+        name: "§dИндекс"
+        description: "§7Положите бумагу с индексом (для get/set)"
+        placeholder_item: "PAPER"
+        slot_name: "index"
+        validation: "number"
+
+  createMap:
+    slots:
+      0:
+        name: "§aИмя карты"
+        description: "§7Положите бумагу с именем переменной карты"
+        placeholder_item: "PAPER"
+        slot_name: "map_name"
+        validation: "variable_name"
+
+  mapOperation:
+    slots:
+      0:
+        name: "§aИмя карты"
+        description: "§7Положите бумагу с именем карты"
+        placeholder_item: "PAPER"
+        slot_name: "map_name"
+        validation: "variable_name"
+      1:
+        name: "§bОперация"
+        description: "§7Положите бумагу с операцией (put/get/remove/keys/values)"
+        placeholder_item: "PAPER"
+        slot_name: "operation"
+        validation: "enum:put,get,remove,keys,values"
+      2:
+        name: "§cКлюч"
+        description: "§7Положите бумагу с ключом"
+        placeholder_item: "PAPER"
+        slot_name: "key"
+        validation: "text"
+      3:
+        name: "§dЗначение"
+        description: "§7Положите предмет или бумагу со значением (для put)"
+        placeholder_item: "PAPER"
+        slot_name: "value"
+        validation: "any"
+
+  # Integration Configurations
+  economyTransaction:
     slots:
       0:
         name: "§aОперация"
-        description: "§7Положите бумагу с типом операции (SET, ADD, REMOVE)"
+        description: "§7Положите бумагу с операцией (give/take/check)"
         placeholder_item: "PAPER"
         slot_name: "operation"
-        required: true
-        validation: "enum:SET,ADD,REMOVE"
-        hint: "SET - установить уровень, ADD - добавить уровни, REMOVE - удалить уровни"
+        validation: "enum:give,take,check"
       1:
-        name: "§bЗначение"
-        description: "§7Положите бумагу с количеством уровней"
+        name: "§bСумма"
+        description: "§7Положите бумагу с суммой транзакции"
         placeholder_item: "PAPER"
         slot_name: "amount"
-        required: true
-        validation: "number_range:0-1000"
-        hint: "Количество уровней опыта"
+        validation: "number"
       2:
-        name: "§cПрогресс"
-        description: "§7Положите бумагу с прогрессом (0.0-1.0) или оставьте пустым"
-        placeholder_item: "PAPER"
-        slot_name: "progress"
-        validation: "number_range:0.0-1.0"
-        hint: "Прогресс уровня опыта (0.0-1.0)"
+        name: "§cЦелевой игрок"
+        description: "§7Положите предмет, представляющий игрока"
+        placeholder_item: "PLAYER_HEAD"
+        slot_name: "target"
+        validation: "player"
 
-  # Конфигурация для действия sendCustomTitle
-  sendCustomTitle:
+  discordWebhook:
     slots:
       0:
-        name: "§aЗаголовок"
-        description: "§7Положите бумагу с текстом заголовка"
+        name: "§aURL вебхука"
+        description: "§7Положите бумагу с URL вебхука Discord"
         placeholder_item: "PAPER"
-        slot_name: "title"
-        required: true
-        validation: "length:1-100"
-        hint: "Текст заголовка (до 100 символов)"
+        slot_name: "webhook_url"
+        validation: "url"
       1:
-        name: "§bПодзаголовок"
-        description: "§7Положите бумагу с текстом подзаголовка (оставьте пустым для отключения)"
+        name: "§bСообщение"
+        description: "§7Положите бумагу с сообщением для отправки"
         placeholder_item: "PAPER"
-        slot_name: "subtitle"
-        validation: "length:0-100"
-        hint: "Текст подзаголовка (до 100 символов)"
+        slot_name: "message"
+        validation: "text"
       2:
-        name: "§cВремя появления"
-        description: "§7Положите бумагу с временем появления в тиках (по умолчанию 10)"
+        name: "§cИмя бота"
+        description: "§7Положите бумагу с именем бота"
         placeholder_item: "PAPER"
-        slot_name: "fadeIn"
-        validation: "number_range:0-100"
-        default_value: "10"
-        hint: "Время появления в тиках"
-      3:
-        name: "§dВремя отображения"
-        description: "§7Положите бумагу с временем отображения в тиках (по умолчанию 70)"
-        placeholder_item: "PAPER"
-        slot_name: "stay"
-        validation: "number_range:0-1000"
-        default_value: "70"
-        hint: "Время отображения в тиках"
-      4:
-        name: "§eВремя исчезновения"
-        description: "§7Положите бумагу с временем исчезновения в тиках (по умолчанию 20)"
-        placeholder_item: "PAPER"
-        slot_name: "fadeOut"
-        validation: "number_range:0-100"
-        default_value: "20"
-        hint: "Время исчезновения в тиках"
+        slot_name: "username"
+        validation: "text"
 
-# Настройки по умолчанию
-defaults:
-  max_blocks_per_script: 100
-  max_recursion_depth: 50
-  execution_timeout_seconds: 30
+  # Debugging Configurations
+  debugLog:
+    slots:
+      0:
+        name: "§aСообщение"
+        description: "§7Положите бумагу с отладочным сообщением"
+        placeholder_item: "PAPER"
+        slot_name: "message"
+        validation: "text"
+      1:
+        name: "§bУровень"
+        description: "§7Положите бумагу с уровнем логирования (INFO/WARN/ERROR)"
+        placeholder_item: "PAPER"
+        slot_name: "level"
+        validation: "enum:INFO,WARN,ERROR"
+
+  performanceMeasure:
+    slots:
+      0:
+        name: "§aМетка"
+        description: "§7Положите бумагу с меткой измерения производительности"
+        placeholder_item: "PAPER"
+        slot_name: "label"
+        validation: "text"
+
+  variableInspector:
+    slots:
+      0:
+        name: "§aОбласть видимости"
+        description: "§7Положите бумагу с областью видимости (local/world/player/server)"
+        placeholder_item: "PAPER"
+        slot_name: "scope"
+        validation: "enum:local,world,player,server"
+      1:
+        name: "§bФильтр"
+        description: "§7Положите бумагу с фильтром имен переменных (необязательно)"
+        placeholder_item: "PAPER"
+        slot_name: "filter"
+        validation: "text"
+
+# ============================================
+# ADVANCED EVENT BLOCKS
+# ============================================
+
+advanced_events:
+  onPlayerMove:
+    material: DIAMOND_BLOCK
+    type: "EVENT"
+    displayName: "Player Movement"
+    description: "Triggers when a player moves to a different block"
+    category: "player_events"
+    parameters:
+      distance: { type: "NUMBER", slot: 0, description: "Minimum movement distance" }
+      world: { type: "TEXT", slot: 1, description: "World name filter (optional)" }
+
+  onPlayerLevelUp:
+    material: EMERALD_BLOCK
+    type: "EVENT"
+    displayName: "Player Level Up"
+    description: "Triggers when a player gains experience levels"
+    category: "player_events"
+    parameters:
+      min_level: { type: "NUMBER", slot: 0, description: "Minimum level reached" }
+
+  onServerTPS:
+    material: REDSTONE_BLOCK
+    type: "EVENT"
+    displayName: "Server Performance"
+    description: "Triggers based on server TPS performance"
+    category: "server_events"
+    parameters:
+      tps_threshold: { type: "NUMBER", slot: 0, description: "TPS threshold (1-20)" }
+      condition: { type: "TEXT", slot: 1, description: "above/below" }
+
+# ============================================
+# ADVANCED ACTION BLOCKS
+# ============================================
+
+advanced_actions:
+  playCustomSound:
+    material: NOTE_BLOCK
+    type: "ACTION"
+    displayName: "Play Custom Sound"
+    description: "Plays a custom sound with advanced options"
+    category: "audio_actions"
+    parameters:
+      sound: { type: "TEXT", slot: 0, description: "Sound name (minecraft:block.note_block.harp)" }
+      volume: { type: "NUMBER", slot: 1, description: "Volume (0.0-1.0)" }
+      pitch: { type: "NUMBER", slot: 2, description: "Pitch (0.5-2.0)" }
+      location: { type: "LOCATION", slot: 3, description: "Sound location" }
+
+  spawnParticleEffect:
+    material: FIREWORK_ROCKET
+    type: "ACTION"
+    displayName: "Spawn Particle Effect"
+    description: "Creates advanced particle effects"
+    category: "visual_actions"
+    parameters:
+      particle: { type: "TEXT", slot: 0, description: "Particle type" }
+      count: { type: "NUMBER", slot: 1, description: "Number of particles" }
+      spread: { type: "NUMBER", slot: 2, description: "Spread radius" }
+      speed: { type: "NUMBER", slot: 3, description: "Particle speed" }
+
+  sendActionBar:
+    material: EXPERIENCE_BOTTLE
+    type: "ACTION"
+    displayName: "Send Action Bar"
+    description: "Displays text in player's action bar"
+    category: "communication_actions"
+    parameters:
+      message: { type: "TEXT", slot: 0, description: "Action bar message" }
+      duration: { type: "NUMBER", slot: 1, description: "Display duration (ticks)" }
+
+  executeAsyncCommand:
+    material: COMMAND_BLOCK
+    type: "ACTION"
+    displayName: "Execute Async Command"
+    description: "Executes commands asynchronously to prevent lag"
+    category: "system_actions"
+    parameters:
+      command: { type: "TEXT", slot: 0, description: "Command to execute" }
+      delay: { type: "NUMBER", slot: 1, description: "Delay before execution (ticks)" }
+
+# ============================================
+# ADVANCED CONDITION BLOCKS
+# ============================================
+
+advanced_conditions:
+  checkPlayerStats:
+    material: PLAYER_HEAD
+    type: "CONDITION"
+    displayName: "Player Statistics"
+    description: "Checks player statistics and achievements"
+    category: "player_conditions"
+    parameters:
+      stat_type: { type: "TEXT", slot: 0, description: "Statistic type" }
+      value: { type: "NUMBER", slot: 1, description: "Comparison value" }
+      operator: { type: "TEXT", slot: 2, description: "Comparison operator (>=, <=, ==)" }
+
+  checkWorldWeather:
+    material: CLOCK
+    type: "CONDITION"
+    displayName: "Weather Condition"
+    description: "Checks current weather in world"
+    category: "world_conditions"
+    parameters:
+      weather: { type: "TEXT", slot: 0, description: "clear/rain/thunder" }
+      world: { type: "TEXT", slot: 1, description: "World name" }
+
+  checkPlayerInventory:
+    material: CHEST
+    type: "CONDITION"
+    displayName: "Inventory Check"
+    description: "Checks player inventory contents"
+    category: "inventory_conditions"
+    parameters:
+      item: { type: "ITEM", slot: 0, description: "Item to check for" }
+      amount: { type: "NUMBER", slot: 1, description: "Required amount" }
+      check_type: { type: "TEXT", slot: 2, description: "has/missing/exact" }
+
+  checkServerOnline:
+    material: COMPARATOR
+    type: "CONDITION"
+    displayName: "Server Player Count"
+    description: "Checks number of online players"
+    category: "server_conditions"
+    parameters:
+      count: { type: "NUMBER", slot: 0, description: "Player count threshold" }
+      operator: { type: "TEXT", slot: 1, description: "Comparison operator" }
+
+# ============================================
+# CONTROL FLOW BLOCKS
+# ============================================
+
+control_flow:
+  asyncLoop:
+    material: REPEATER
+    type: "CONTROL"
+    displayName: "Async Loop"
+    description: "Executes contained blocks in a non-blocking loop"
+    category: "control_flow"
+    parameters:
+      iterations: { type: "NUMBER", slot: 0, description: "Number of iterations (-1 for infinite)" }
+      delay: { type: "NUMBER", slot: 1, description: "Delay between iterations (ticks)" }
+
+  conditionalBranch:
+    material: COMPARATOR
+    type: "CONTROL"
+    displayName: "Advanced If-Else"
+    description: "Multi-condition branching with else-if support"
+    category: "control_flow"
+    parameters:
+      condition_count: { type: "NUMBER", slot: 0, description: "Number of conditions to check" }
+
+  timedExecution:
+    material: CLOCK
+    type: "CONTROL"
+    displayName: "Timed Execution"
+    description: "Executes blocks after a specified delay"
+    category: "control_flow"
+    parameters:
+      delay: { type: "NUMBER", slot: 0, description: "Delay in seconds" }
+      repeat: { type: "BOOLEAN", slot: 1, description: "Repeat execution" }
+
+# ============================================
+# FUNCTION BLOCKS
+# ============================================
+
+function_blocks:
+  customFunction:
+    material: ENDER_CHEST
+    type: "FUNCTION"
+    displayName: "Custom Function"
+    description: "Defines a reusable function with parameters"
+    category: "functions"
+    parameters:
+      function_name: { type: "TEXT", slot: 0, description: "Function identifier" }
+      param_count: { type: "NUMBER", slot: 1, description: "Number of parameters" }
+
+  callFunction:
+    material: ENDER_EYE
+    type: "ACTION"
+    displayName: "Call Function"
+    description: "Calls a previously defined function"
+    category: "functions"
+    parameters:
+      function_name: { type: "TEXT", slot: 0, description: "Function to call" }
+      args: { type: "LIST", slot: 1, description: "Function arguments" }
+
+# ============================================
+# DATA MANIPULATION BLOCKS
+# ============================================
+
+data_blocks:
+  createList:
+    material: BOOK
+    type: "ACTION"
+    displayName: "Create List"
+    description: "Creates a new list variable"
+    category: "data_structures"
+    parameters:
+      list_name: { type: "TEXT", slot: 0, description: "List variable name" }
+      initial_values: { type: "LIST", slot: 1, description: "Initial list contents" }
+
+  listOperation:
+    material: WRITABLE_BOOK
+    type: "ACTION"
+    displayName: "List Operation"
+    description: "Performs operations on list variables"
+    category: "data_structures"
+    parameters:
+      list_name: { type: "TEXT", slot: 0, description: "Target list name" }
+      operation: { type: "TEXT", slot: 1, description: "add/remove/get/set/size" }
+      value: { type: "ANY", slot: 2, description: "Operation value" }
+      index: { type: "NUMBER", slot: 3, description: "List index (for get/set)" }
+
+  createMap:
+    material: MAP
+    type: "ACTION"
+    displayName: "Create Map"
+    description: "Creates a new map (dictionary) variable"
+    category: "data_structures"
+    parameters:
+      map_name: { type: "TEXT", slot: 0, description: "Map variable name" }
+
+  mapOperation:
+    material: FILLED_MAP
+    type: "ACTION"
+    displayName: "Map Operation"
+    description: "Performs operations on map variables"
+    category: "data_structures"
+    parameters:
+      map_name: { type: "TEXT", slot: 0, description: "Target map name" }
+      operation: { type: "TEXT", slot: 1, description: "put/get/remove/keys/values" }
+      key: { type: "TEXT", slot: 2, description: "Map key" }
+      value: { type: "ANY", slot: 3, description: "Map value (for put)" }
+
+# ============================================
+# INTEGRATION BLOCKS
+# ============================================
+
+integration_blocks:
+  worldGuardRegionCheck:
+    material: SHIELD
+    type: "CONDITION"
+    displayName: "WorldGuard Region"
+    description: "Checks if player is in a WorldGuard region"
+    category: "integration"
+    parameters:
+      region_name: { type: "TEXT", slot: 0, description: "Region identifier" }
+      world: { type: "TEXT", slot: 1, description: "World name" }
+
+  economyTransaction:
+    material: GOLD_INGOT
+    type: "ACTION"
+    displayName: "Economy Transaction"
+    description: "Handles economy transactions (requires Vault)"
+    category: "integration"
+    parameters:
+      operation: { type: "TEXT", slot: 0, description: "give/take/check" }
+      amount: { type: "NUMBER", slot: 1, description: "Transaction amount" }
+      target: { type: "PLAYER", slot: 2, description: "Target player" }
+
+  discordWebhook:
+    material: PAPER
+    type: "ACTION"
+    displayName: "Discord Webhook"
+    description: "Sends messages to Discord via webhook"
+    category: "integration"
+    parameters:
+      webhook_url: { type: "TEXT", slot: 0, description: "Discord webhook URL" }
+      message: { type: "TEXT", slot: 1, description: "Message to send" }
+      username: { type: "TEXT", slot: 2, description: "Bot username" }
+
+# ============================================
+# DEBUGGING AND MONITORING BLOCKS
+# ============================================
+
+debug_blocks:
+  debugLog:
+    material: REDSTONE_TORCH
+    type: "ACTION"
+    displayName: "Debug Log"
+    description: "Logs debug information for script monitoring"
+    category: "debugging"
+    parameters:
+      message: { type: "TEXT", slot: 0, description: "Debug message" }
+      level: { type: "TEXT", slot: 1, description: "Log level (INFO/WARN/ERROR)" }
+
+  performanceMeasure:
+    material: REDSTONE_COMPARATOR
+    type: "CONTROL"
+    displayName: "Performance Measure"
+    description: "Measures execution time of contained blocks"
+    category: "debugging"
+    parameters:
+      label: { type: "TEXT", slot: 0, description: "Performance measurement label" }
+
+  variableInspector:
+    material: SPYGLASS
+    type: "ACTION"
+    displayName: "Variable Inspector"
+    description: "Displays current variable values for debugging"
+    category: "debugging"
+    parameters:
+      scope: { type: "TEXT", slot: 0, description: "Variable scope (local/world/player/server)" }
+      filter: { type: "TEXT", slot: 1, description: "Variable name filter (optional)" }
