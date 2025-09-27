@@ -78,7 +78,6 @@ public class CodingItems {
     public static void giveMissingItems(Player player, List<String> missingItems) {
         for (String itemName : missingItems) {
             switch (itemName) {
-
                 case "Блок события":
                     player.getInventory().addItem(createSimpleBlock(Material.DIAMOND_BLOCK, EVENT_BLOCK_NAME));
                     break;
@@ -93,6 +92,59 @@ public class CodingItems {
                     break;
                 case "Блок повтора":
                     player.getInventory().addItem(createSimpleBlock(Material.EMERALD_BLOCK, REPEAT_BLOCK_NAME));
+                    break;
+                case "Блок иначе":
+                    player.getInventory().addItem(createSimpleBlock(Material.END_STONE, ELSE_BLOCK_NAME));
+                    break;
+                case "Игровое действие":
+                    player.getInventory().addItem(createSimpleBlock(Material.NETHERITE_BLOCK, GAME_ACTION_BLOCK_NAME));
+                    break;
+                case "Если переменная":
+                    player.getInventory().addItem(createSimpleBlock(Material.OBSIDIAN, IF_VAR_BLOCK_NAME));
+                    break;
+                case "Если игра":
+                    player.getInventory().addItem(createSimpleBlock(Material.REDSTONE_BLOCK, IF_GAME_BLOCK_NAME));
+                    break;
+                case "Если существо":
+                    player.getInventory().addItem(createSimpleBlock(Material.BRICKS, IF_MOB_BLOCK_NAME));
+                    break;
+                case "Получить данные":
+                    player.getInventory().addItem(createSimpleBlock(Material.POLISHED_GRANITE, GET_DATA_BLOCK_NAME));
+                    break;
+                case "Вызвать функцию":
+                    player.getInventory().addItem(createSimpleBlock(Material.LAPIS_BLOCK, CALL_FUNCTION_BLOCK_NAME));
+                    break;
+                case "Сохранить функцию":
+                    player.getInventory().addItem(createSimpleBlock(Material.BOOKSHELF, SAVE_FUNCTION_BLOCK_NAME));
+                    break;
+                case "Повторяющийся триггер":
+                    player.getInventory().addItem(createSimpleBlock(Material.REDSTONE_BLOCK, REPEAT_TRIGGER_BLOCK_NAME));
+                    break;
+                case "Скобка":
+                    player.getInventory().addItem(createSimpleBlock(Material.PISTON, BRACKET_BLOCK_NAME));
+                    break;
+                case "Отрицание НЕ":
+                    player.getInventory().addItem(getArrowNot());
+                    break;
+                case "Игровое значение":
+                    player.getInventory().addItem(getGameValue());
+                    break;
+                case "Копировщик блоков":
+                    ItemStack copier = new ItemStack(Material.GOLDEN_AXE);
+                    ItemMeta copierMeta = copier.getItemMeta();
+                    copierMeta.setDisplayName(COPIER_TOOL_NAME);
+                    copierMeta.setLore(Arrays.asList(
+                        "§7ЛКМ по блоку - скопировать",
+                        "§7ПКМ по блоку - вставить"
+                    ));
+                    copier.setItemMeta(copierMeta);
+                    player.getInventory().addItem(copier);
+                    break;
+                case "Создать данные":
+                    player.getInventory().addItem(getDataCreator());
+                    break;
+                case "Перемещатель кода":
+                    player.getInventory().addItem(getCodeMover());
                     break;
                 default:
                     // Для неизвестных предметов выдаем базовый набор

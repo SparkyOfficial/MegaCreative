@@ -35,11 +35,6 @@ public class ScriptTriggerManager implements Listener {
     
     @EventHandler
     public void onMegaPlayerJoin(MegaPlayerJoinedEvent event) {
-        // Check player mode - only execute scripts in PLAY mode
-        if (!playerModeManager.isInPlayMode(event.getPlayer())) {
-            return;
-        }
-        
         // Find the creative world
         CreativeWorld creativeWorld = worldManager.findCreativeWorldByBukkit(event.getPlayer().getWorld());
         if (creativeWorld == null) return;
@@ -47,17 +42,12 @@ public class ScriptTriggerManager implements Listener {
         // Check if player can code in this world
         if (!creativeWorld.canCode(event.getPlayer())) return;
         
-        // Execute scripts for onJoin event
+        // Execute scripts for onJoin event in both PLAY and DEV modes
         executeScriptsForEvent("onJoin", event.getPlayer());
     }
     
     @EventHandler
     public void onMegaPlayerMove(MegaPlayerMoveEvent event) {
-        // Check player mode - only execute scripts in PLAY mode
-        if (!playerModeManager.isInPlayMode(event.getPlayer())) {
-            return;
-        }
-        
         // Find the creative world
         CreativeWorld creativeWorld = worldManager.findCreativeWorldByBukkit(event.getPlayer().getWorld());
         if (creativeWorld == null) return;
@@ -65,17 +55,12 @@ public class ScriptTriggerManager implements Listener {
         // Check if player can code in this world
         if (!creativeWorld.canCode(event.getPlayer())) return;
         
-        // Execute scripts for onPlayerMove event
+        // Execute scripts for onPlayerMove event in both PLAY and DEV modes
         executeScriptsForEvent("onPlayerMove", event.getPlayer());
     }
     
     @EventHandler
     public void onMegaPlayerChat(MegaPlayerChatEvent event) {
-        // Check player mode - only execute scripts in PLAY mode
-        if (!playerModeManager.isInPlayMode(event.getPlayer())) {
-            return;
-        }
-        
         // Find the creative world
         CreativeWorld creativeWorld = worldManager.findCreativeWorldByBukkit(event.getPlayer().getWorld());
         if (creativeWorld == null) return;
@@ -83,17 +68,12 @@ public class ScriptTriggerManager implements Listener {
         // Check if player can code in this world
         if (!creativeWorld.canCode(event.getPlayer())) return;
         
-        // Execute scripts for onChat event
+        // Execute scripts for onChat event in both PLAY and DEV modes
         executeScriptsForEvent("onChat", event.getPlayer());
     }
     
     @EventHandler
     public void onMegaBlockPlace(MegaBlockPlaceEvent event) {
-        // Check player mode - only execute scripts in PLAY mode
-        if (!playerModeManager.isInPlayMode(event.getPlayer())) {
-            return;
-        }
-        
         // Find the creative world
         CreativeWorld creativeWorld = worldManager.findCreativeWorldByBukkit(event.getPlayer().getWorld());
         if (creativeWorld == null) return;
@@ -101,17 +81,12 @@ public class ScriptTriggerManager implements Listener {
         // Check if player can code in this world
         if (!creativeWorld.canCode(event.getPlayer())) return;
         
-        // Execute scripts for onBlockPlace event
+        // Execute scripts for onBlockPlace event in both PLAY and DEV modes
         executeScriptsForEvent("onBlockPlace", event.getPlayer());
     }
     
     @EventHandler
     public void onMegaBlockBreak(MegaBlockBreakEvent event) {
-        // Check player mode - only execute scripts in PLAY mode
-        if (!playerModeManager.isInPlayMode(event.getPlayer())) {
-            return;
-        }
-        
         // Find the creative world
         CreativeWorld creativeWorld = worldManager.findCreativeWorldByBukkit(event.getPlayer().getWorld());
         if (creativeWorld == null) return;
@@ -119,7 +94,7 @@ public class ScriptTriggerManager implements Listener {
         // Check if player can code in this world
         if (!creativeWorld.canCode(event.getPlayer())) return;
         
-        // Execute scripts for onBlockBreak event
+        // Execute scripts for onBlockBreak event in both PLAY and DEV modes
         executeScriptsForEvent("onBlockBreak", event.getPlayer());
     }
     

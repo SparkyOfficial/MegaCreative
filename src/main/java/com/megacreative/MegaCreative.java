@@ -171,6 +171,9 @@ public class MegaCreative extends JavaPlugin {
             getServer().getPluginManager().registerEvents(serviceRegistry.getWorldCodeRestorer(), this);
             getServer().getPluginManager().registerEvents(serviceRegistry.getCodeBlockSignManager(), this);
             
+            // Register DevInventoryManager to handle world change events
+            getServer().getPluginManager().registerEvents(serviceRegistry.getDevInventoryManager(), this);
+            
             // Register new Bukkit listeners for clean event bus
             getServer().getPluginManager().registerEvents(new BukkitPlayerJoinListener(this), this);
             getServer().getPluginManager().registerEvents(new BukkitPlayerMoveListener(this), this);

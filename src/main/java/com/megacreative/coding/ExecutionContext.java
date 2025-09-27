@@ -11,9 +11,11 @@ import com.megacreative.coding.executors.AdvancedExecutionEngine.ExecutionMode;
 import com.megacreative.coding.executors.AdvancedExecutionEngine.Priority;
 import com.megacreative.coding.executors.ExecutionResult;
 import com.megacreative.coding.Constants;
+import com.megacreative.coding.ChestParser;
 import org.bukkit.Location;
 import org.bukkit.entity.Player;
 import org.bukkit.event.Event;
+import org.bukkit.inventory.ItemStack;
 
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -74,7 +76,10 @@ public class ExecutionContext {
     private boolean lastConditionResult = false;
     
     // No more redundant caches - using VariableManager directly
-
+    
+    // Chest parser for parameter extraction
+    private ChestParser chestParser;
+    
     /**
      * Full constructor with all parameters
      */
@@ -91,6 +96,11 @@ public class ExecutionContext {
         this.scriptId = creativeWorld != null ? creativeWorld.getId() : Constants.GLOBAL_SCOPE_ID;
         this.worldId = this.scriptId;
         this.variableManager = plugin != null ? plugin.getServiceRegistry().getVariableManager() : null;
+        
+        // Initialize chest parser if we have a block location
+        if (blockLocation != null) {
+            this.chestParser = ChestParser.forAdjacentChest(blockLocation);
+        }
     }
     
     /**
@@ -711,7 +721,66 @@ public class ExecutionContext {
         String context = getPlayerContext();
         return variableManager.getVariable(name, scope, context);
     }
-
+    
+    /**
+     * Gets text parameter from adjacent chest
+     * @param slot The chest slot (0-26)
+     * @return The text value or null if not found
+     */
+    public String getChestText(int slot) {
+        if (chestParser != null) {
+            return chestParser.getText(slot);
+        }
+        return null;
+    }
+    
+    /**
+     * Gets numeric parameter from adjacent chest
+     * @param slot The chest slot (0-26)
+     * @return The numeric value or 0 if not found
+     */
+    public double getChestNumber(int slot) {
+        if (chestParser != null) {
+            return chestParser.getNumber(slot);
+        }
+        return 0;
+    }
+    
+    /**
+     * Gets location parameter from adjacent chest
+     * @param slot The chest slot (0-26)
+     * @return The location or null if not found
+     */
+    public Location getChestLocation(int slot) {
+        if (chestParser != null) {
+            return chestParser.getLocation(slot);
+        }
+        return null;
+    }
+    
+    /**
+     * Gets item parameter from adjacent chest
+     * @param slot The chest slot (0-26)
+     * @return The item stack or null if not found
+     */
+    public ItemStack getChestItem(int slot) {
+        if (chestParser != null) {
+            return chestParser.getItem(slot);
+        }
+        return null;
+    }
+    
+    /**
+     * Gets all items from adjacent chest
+     * @return List of all items or empty list if no chest found
+     */
+    public List<ItemStack> getChestItems() {
+        if (chestParser != null) {
+            return chestParser.getAllItems();
+        }
+        return new ArrayList<>();
+    }
+    
     // Builder pattern
     public static Builder builder() {
         return new Builder();

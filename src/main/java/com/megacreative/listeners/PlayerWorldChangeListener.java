@@ -177,16 +177,46 @@ public class PlayerWorldChangeListener implements Listener {
         boolean hasConditionBlock = false;
         boolean hasVariableBlock = false;
         boolean hasRepeatBlock = false;
+        boolean hasElseBlock = false;
+        boolean hasGameActionBlock = false;
+        boolean hasIfVarBlock = false;
+        boolean hasIfGameBlock = false;
+        boolean hasIfMobBlock = false;
+        boolean hasGetDataBlock = false;
+        boolean hasCallFunctionBlock = false;
+        boolean hasSaveFunctionBlock = false;
+        boolean hasRepeatTriggerBlock = false;
+        boolean hasBracketBlock = false;
+        boolean hasArrowNot = false;
+        boolean hasGameValue = false;
+        boolean hasCopierTool = false;
+        boolean hasDataCreator = false;
+        boolean hasCodeMover = false;
         
         for (var item : player.getInventory().getContents()) {
             if (item != null && item.hasItemMeta() && item.getItemMeta().hasDisplayName()) {
                 String name = item.getItemMeta().getDisplayName();
 
-                if (name.contains("Событие игрока")) hasEventBlock = true;
-                if (name.contains("Действие игрока")) hasActionBlock = true;
-                if (name.contains("Условие")) hasConditionBlock = true;
-                if (name.contains("Переменная")) hasVariableBlock = true;
-                if (name.contains("Повторить")) hasRepeatBlock = true;
+                if (name.equals(CodingItems.EVENT_BLOCK_NAME)) hasEventBlock = true;
+                if (name.equals(CodingItems.ACTION_BLOCK_NAME)) hasActionBlock = true;
+                if (name.equals(CodingItems.CONDITION_BLOCK_NAME)) hasConditionBlock = true;
+                if (name.equals(CodingItems.VARIABLE_BLOCK_NAME)) hasVariableBlock = true;
+                if (name.equals(CodingItems.REPEAT_BLOCK_NAME)) hasRepeatBlock = true;
+                if (name.equals(CodingItems.ELSE_BLOCK_NAME)) hasElseBlock = true;
+                if (name.equals(CodingItems.GAME_ACTION_BLOCK_NAME)) hasGameActionBlock = true;
+                if (name.equals(CodingItems.IF_VAR_BLOCK_NAME)) hasIfVarBlock = true;
+                if (name.equals(CodingItems.IF_GAME_BLOCK_NAME)) hasIfGameBlock = true;
+                if (name.equals(CodingItems.IF_MOB_BLOCK_NAME)) hasIfMobBlock = true;
+                if (name.equals(CodingItems.GET_DATA_BLOCK_NAME)) hasGetDataBlock = true;
+                if (name.equals(CodingItems.CALL_FUNCTION_BLOCK_NAME)) hasCallFunctionBlock = true;
+                if (name.equals(CodingItems.SAVE_FUNCTION_BLOCK_NAME)) hasSaveFunctionBlock = true;
+                if (name.equals(CodingItems.REPEAT_TRIGGER_BLOCK_NAME)) hasRepeatTriggerBlock = true;
+                if (name.equals(CodingItems.BRACKET_BLOCK_NAME)) hasBracketBlock = true;
+                if (name.equals(CodingItems.ARROW_NOT_NAME)) hasArrowNot = true;
+                if (name.equals(CodingItems.GAME_VALUE_NAME)) hasGameValue = true;
+                if (name.equals(CodingItems.COPIER_TOOL_NAME)) hasCopierTool = true;
+                if (name.equals(CodingItems.DATA_CREATOR_NAME)) hasDataCreator = true;
+                if (name.equals(CodingItems.CODE_MOVER_NAME)) hasCodeMover = true;
             }
         }
 
@@ -195,6 +225,21 @@ public class PlayerWorldChangeListener implements Listener {
         if (!hasConditionBlock) missingItems.add("Блок условия");
         if (!hasVariableBlock) missingItems.add("Блок переменной");
         if (!hasRepeatBlock) missingItems.add("Блок повтора");
+        if (!hasElseBlock) missingItems.add("Блок иначе");
+        if (!hasGameActionBlock) missingItems.add("Игровое действие");
+        if (!hasIfVarBlock) missingItems.add("Если переменная");
+        if (!hasIfGameBlock) missingItems.add("Если игра");
+        if (!hasIfMobBlock) missingItems.add("Если существо");
+        if (!hasGetDataBlock) missingItems.add("Получить данные");
+        if (!hasCallFunctionBlock) missingItems.add("Вызвать функцию");
+        if (!hasSaveFunctionBlock) missingItems.add("Сохранить функцию");
+        if (!hasRepeatTriggerBlock) missingItems.add("Повторяющийся триггер");
+        if (!hasBracketBlock) missingItems.add("Скобка");
+        if (!hasArrowNot) missingItems.add("Отрицание НЕ");
+        if (!hasGameValue) missingItems.add("Игровое значение");
+        if (!hasCopierTool) missingItems.add("Копировщик блоков");
+        if (!hasDataCreator) missingItems.add("Создать данные");
+        if (!hasCodeMover) missingItems.add("Перемещатель кода");
         
         return missingItems;
     }

@@ -1,4 +1,4 @@
-package com.megacreative.util;
+package com.megacreative.utils;
 
 import org.bukkit.plugin.java.JavaPlugin;
 import java.net.URL;

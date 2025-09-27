@@ -1,21 +1,31 @@
 package com.megacreative.coding;
 
 import com.megacreative.MegaCreative;
-import com.megacreative.coding.BlockLinker;
-import com.megacreative.events.CodeBlockBrokenEvent;
-import com.megacreative.events.CodeBlockPlacedEvent;
+import com.megacreative.coding.activators.Activator;
+import com.megacreative.coding.activators.BlockBreakActivator;
+import com.megacreative.coding.activators.BlockPlaceActivator;
+import com.megacreative.coding.activators.BukkitEventActivator;
+import com.megacreative.coding.activators.ChatActivator;
+import com.megacreative.coding.activators.EntityPickupItemActivator;
+import com.megacreative.coding.activators.PlayerDeathActivator;
+import com.megacreative.coding.activators.PlayerJoinActivator;
+import com.megacreative.coding.activators.PlayerMoveActivator;
+import com.megacreative.coding.activators.PlayerQuitActivator;
+import com.megacreative.coding.activators.PlayerRespawnActivator;
+import com.megacreative.coding.activators.PlayerTeleportActivator;
 import com.megacreative.interfaces.IWorldManager;
 import com.megacreative.models.CreativeWorld;
 import com.megacreative.services.BlockConfigService;
+import com.megacreative.events.CodeBlockPlacedEvent;
+import com.megacreative.events.CodeBlockBrokenEvent;
 import org.bukkit.Location;
 import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.Listener;
-
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Map;
 import java.util.logging.Logger;
+import java.util.Map;
 
 /**
  * Отвечает ИСКЛЮЧИТЕЛЬНО за компиляцию и управление CodeScript'ами.
@@ -68,12 +78,80 @@ public class ScriptCompiler implements Listener {
             CreativeWorld creativeWorld = worldManager.findCreativeWorldByBukkit(location.getWorld());
 
             if (creativeWorld != null) {
+                // Create and register activator for this script
+                createAndRegisterActivator(eventBlock, script, creativeWorld, location);
+                
                 addScriptToWorld(eventBlock, script, creativeWorld, worldManager);
                 player.sendMessage("§a✓ Скрипт скомпилирован для события: §f" + eventBlock.getAction());
                 LOGGER.fine("Compiled and added script for event block: " + eventBlock.getAction());
             }
         } catch (Exception e) {
             LOGGER.severe("Failed to create script: " + e.getMessage());
+            e.printStackTrace();
+        }
+    }
+    
+    /**
+     * Creates and registers an activator for an event block
+     * @param eventBlock The event block
+     * @param script The compiled script
+     * @param creativeWorld The creative world
+     * @param location The location of the event block
+     */
+    private void createAndRegisterActivator(CodeBlock eventBlock, CodeScript script, CreativeWorld creativeWorld, Location location) {
+        try {
+            // Get the code handler for this world
+            CodeHandler codeHandler = creativeWorld.getCodeHandler();
+            if (codeHandler == null) {
+                LOGGER.warning("No code handler found for world: " + creativeWorld.getId());
+                return;
+            }
+            
+            // Get the script engine
+            ScriptEngine scriptEngine = plugin.getServiceRegistry().getScriptEngine();
+            
+            // Create the appropriate activator based on the event type
+            Activator activator = null;
+            
+            if ("onJoin".equals(eventBlock.getAction())) {
+                activator = new PlayerJoinActivator(creativeWorld, scriptEngine);
+            } else if ("onPlayerMove".equals(eventBlock.getAction())) {
+                activator = new PlayerMoveActivator(creativeWorld, scriptEngine);
+            } else if ("onBlockPlace".equals(eventBlock.getAction())) {
+                activator = new BlockPlaceActivator(creativeWorld, scriptEngine);
+            } else if ("onBlockBreak".equals(eventBlock.getAction())) {
+                activator = new BlockBreakActivator(creativeWorld, scriptEngine);
+            } else if ("onChat".equals(eventBlock.getAction())) {
+                activator = new ChatActivator(creativeWorld, scriptEngine);
+            } else if ("onPlayerQuit".equals(eventBlock.getAction())) {
+                activator = new PlayerQuitActivator(creativeWorld, scriptEngine);
+            } else if ("onPlayerDeath".equals(eventBlock.getAction())) {
+                activator = new PlayerDeathActivator(creativeWorld, scriptEngine);
+            } else if ("onPlayerRespawn".equals(eventBlock.getAction())) {
+                activator = new PlayerRespawnActivator(creativeWorld, scriptEngine);
+            } else if ("onPlayerTeleport".equals(eventBlock.getAction())) {
+                activator = new PlayerTeleportActivator(creativeWorld, scriptEngine);
+            } else if ("onEntityPickupItem".equals(eventBlock.getAction())) {
+                activator = new EntityPickupItemActivator(creativeWorld, scriptEngine);
+            }
+            
+            // If we created an activator, configure it and register it
+            if (activator != null) {
+                activator.setEventBlock(eventBlock);
+                activator.setScript(script);
+                
+                // Set location for BukkitEventActivator instances
+                if (activator instanceof BukkitEventActivator) {
+                    ((BukkitEventActivator) activator).setLocation(location);
+                } else if (activator instanceof PlayerJoinActivator) {
+                    ((PlayerJoinActivator) activator).setLocation(location);
+                }
+                
+                codeHandler.registerActivator(activator);
+                LOGGER.fine("Registered activator for event: " + eventBlock.getAction());
+            }
+        } catch (Exception e) {
+            LOGGER.severe("Failed to create activator for event block: " + eventBlock.getAction() + " - " + e.getMessage());
             e.printStackTrace();
         }
     }

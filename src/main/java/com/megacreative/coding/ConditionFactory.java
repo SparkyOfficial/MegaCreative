@@ -4,7 +4,7 @@ import com.megacreative.MegaCreative;
 import com.megacreative.coding.annotations.BlockMeta;
 import com.megacreative.coding.executors.ExecutionResult;
 import com.megacreative.coding.values.DataValue;
-import com.megacreative.util.ClassScanner;
+import com.megacreative.utils.ClassScanner;
 import com.megacreative.coding.events.EventPublisher;
 import com.megacreative.coding.events.CustomEvent;
 import com.megacreative.interfaces.IConditionFactory;
