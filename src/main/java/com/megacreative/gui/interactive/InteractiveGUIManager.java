@@ -531,11 +531,13 @@ public class InteractiveGUIManager implements Listener {
         @Override
         public void handleClick(org.bukkit.event.inventory.ClickType clickType) {
             // Text editing now properly implemented with anvil GUI and chat input fallback
-            MegaCreative plugin = MegaCreative.getInstance();
-            if (plugin == null) return;
-            
-            // Open anvil GUI for text input
-            openAnvilGUI(plugin, this);
+            // Since this is a static inner class, we can't access the outer class instance directly
+            // We'll need to get the plugin instance through other means
+            // Try to get the plugin instance through Bukkit
+            MegaCreative plugin = (MegaCreative) Bukkit.getPluginManager().getPlugin("MegaCreative");
+            if (plugin != null) {
+                openAnvilGUI(plugin, this);
+            }
         }
         
         @Override
@@ -591,7 +593,7 @@ public class InteractiveGUIManager implements Listener {
          * This implementation uses the proper registry system through GUIManager
          */
         private void storePendingTextInput(Player player, TextInputElement element) {
-            MegaCreative plugin = MegaCreative.getInstance();
+            MegaCreative plugin = (MegaCreative) Bukkit.getPluginManager().getPlugin("MegaCreative");
             if (plugin != null) {
                 ServiceRegistry serviceRegistry = plugin.getServiceRegistry();
                 if (serviceRegistry != null) {
@@ -623,7 +625,7 @@ public class InteractiveGUIManager implements Listener {
             }
             
             // Fallback to getting player from service registry
-            MegaCreative plugin = MegaCreative.getInstance();
+            MegaCreative plugin = (MegaCreative) Bukkit.getPluginManager().getPlugin("MegaCreative");
             if (plugin != null) {
                 ServiceRegistry serviceRegistry = plugin.getServiceRegistry();
                 if (serviceRegistry != null) {
@@ -762,7 +764,7 @@ public class InteractiveGUIManager implements Listener {
         @Override
         public void handleClick(org.bukkit.event.inventory.ClickType clickType) {
             // In a full implementation, this would open a dedicated GUI for item editing
-            MegaCreative plugin = MegaCreative.getInstance();
+            MegaCreative plugin = (MegaCreative) Bukkit.getPluginManager().getPlugin("MegaCreative");
             if (plugin == null) return;
             
             // Open dedicated item editor GUI
@@ -893,7 +895,7 @@ public class InteractiveGUIManager implements Listener {
                     Player player = (Player) event.getWhoClicked();
                     
                     // Get the element from player metadata
-                    MegaCreative plugin = MegaCreative.getInstance();
+                    MegaCreative plugin = (MegaCreative) Bukkit.getPluginManager().getPlugin("MegaCreative");
                     ItemStackEditorElement editorElement = null;
                     if (plugin != null) {
                         ServiceRegistry serviceRegistryInner = plugin.getServiceRegistry();
@@ -961,7 +963,7 @@ public class InteractiveGUIManager implements Listener {
                 public void onInventoryClose(InventoryCloseEvent event) {
                     // Clean up player metadata when inventory is closed
                     Player player = (Player) event.getPlayer();
-                    MegaCreative plugin = MegaCreative.getInstance();
+                    MegaCreative plugin = (MegaCreative) Bukkit.getPluginManager().getPlugin("MegaCreative");
                     if (plugin != null) {
                         ServiceRegistry serviceRegistryInner = plugin.getServiceRegistry();
                         if (serviceRegistryInner != null) {
@@ -1064,7 +1066,7 @@ public class InteractiveGUIManager implements Listener {
             };
             
             // Register and open the material selector
-            MegaCreative plugin = MegaCreative.getInstance();
+            MegaCreative plugin = (MegaCreative) Bukkit.getPluginManager().getPlugin("MegaCreative");
             if (plugin != null) {
                 ServiceRegistry serviceRegistry = plugin.getServiceRegistry();
                 if (serviceRegistry != null) {
@@ -1085,7 +1087,7 @@ public class InteractiveGUIManager implements Listener {
             player.sendMessage("§7(Type a number in chat, or type 'cancel' to cancel)");
             
             // Store the element for later retrieval when the player responds
-            MegaCreative plugin = MegaCreative.getInstance();
+            MegaCreative plugin = (MegaCreative) Bukkit.getPluginManager().getPlugin("MegaCreative");
             if (plugin != null) {
                 ServiceRegistry serviceRegistry = plugin.getServiceRegistry();
                 if (serviceRegistry != null) {
@@ -1112,7 +1114,7 @@ public class InteractiveGUIManager implements Listener {
             player.sendMessage("§7(Use & for color codes, e.g. &aGreen Sword)");
             
             // Store the element for later retrieval when the player responds
-            MegaCreative plugin = MegaCreative.getInstance();
+            MegaCreative plugin = (MegaCreative) Bukkit.getPluginManager().getPlugin("MegaCreative");
             if (plugin != null) {
                 ServiceRegistry serviceRegistry = plugin.getServiceRegistry();
                 if (serviceRegistry != null) {
@@ -1140,7 +1142,7 @@ public class InteractiveGUIManager implements Listener {
             player.sendMessage("§7(Type 'done' when finished adding lore lines)");
             
             // Store the element for later retrieval when the player responds
-            MegaCreative plugin = MegaCreative.getInstance();
+            MegaCreative plugin = (MegaCreative) Bukkit.getPluginManager().getPlugin("MegaCreative");
             if (plugin != null) {
                 ServiceRegistry serviceRegistry = plugin.getServiceRegistry();
                 if (serviceRegistry != null) {

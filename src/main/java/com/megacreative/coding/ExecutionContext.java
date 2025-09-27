@@ -5,6 +5,7 @@ import com.megacreative.coding.variables.VariableManager;
 import com.megacreative.coding.variables.IVariableManager.VariableScope;
 import com.megacreative.coding.values.DataValue;
 import com.megacreative.models.CreativeWorld;
+import com.megacreative.coding.events.CustomEvent;
 // 🎆 Reference system-style execution modes
 import com.megacreative.coding.executors.AdvancedExecutionEngine.ExecutionMode;
 import com.megacreative.coding.executors.AdvancedExecutionEngine.Priority;
@@ -39,7 +40,7 @@ public class ExecutionContext {
     private final MegaCreative plugin; // Ссылка на основной плагин
     private final Player player; // Игрок, который вызвал событие (может быть null)
     private final CreativeWorld creativeWorld; // Мир, в котором выполняется скрипт
-    private final Event event; // Само событие, которое вызвало скрипт
+    private final CustomEvent event; // Само событие, которое вызвало скрипт
     private final Location blockLocation; // Локация выполняемого блока (может быть null)
     private final CodeBlock currentBlock; // Текущий выполняемый блок (может быть null)
     
@@ -75,42 +76,34 @@ public class ExecutionContext {
     // No more redundant caches - using VariableManager directly
 
     /**
-     * Creates a new execution context with all required parameters.
-     * @param plugin The main plugin instance (required)
-     * @param player The player associated with this context (can be null)
-     * @param creativeWorld The world where the script is executing (can be null)
-     * @param event The event that triggered the execution (can be null)
-     * @param blockLocation The location of the block being executed (can be null)
-     * @param currentBlock The current code block being executed (can be null)
-     * @throws IllegalArgumentException if plugin is null
+     * Full constructor with all parameters
      */
-    public ExecutionContext(MegaCreative plugin, Player player, CreativeWorld creativeWorld, Event event, 
+    public ExecutionContext(MegaCreative plugin, Player player, CreativeWorld creativeWorld, CustomEvent event, 
                           Location blockLocation, CodeBlock currentBlock) {
-        if (plugin == null) {
-            throw new IllegalArgumentException("Plugin cannot be null");
-        }
         this.plugin = plugin;
         this.player = player;
         this.creativeWorld = creativeWorld;
         this.event = event;
-        this.blockLocation = blockLocation != null ? blockLocation.clone() : null;
+        this.blockLocation = blockLocation;
         this.currentBlock = currentBlock;
-        this.variableManager = plugin.getServiceRegistry().getVariableManager();
-        this.scriptId = currentBlock != null ? currentBlock.getId().toString() : Constants.GLOBAL_SCOPE_ID;
-        this.worldId = creativeWorld != null ? creativeWorld.getId() : Constants.GLOBAL_SCOPE_ID;
+        this.executionId = UUID.randomUUID().toString();
+        this.startTime = System.currentTimeMillis();
+        this.scriptId = creativeWorld != null ? creativeWorld.getId() : Constants.GLOBAL_SCOPE_ID;
+        this.worldId = this.scriptId;
+        this.variableManager = plugin != null ? plugin.getServiceRegistry().getVariableManager() : null;
     }
     
     /**
      * Constructor for executor engine compatibility
      */
-    public ExecutionContext(String executionId, CodeScript script, Player player, String trigger) {
+    public ExecutionContext(MegaCreative plugin, String executionId, CodeScript script, Player player, String trigger) {
         this.executionId = executionId;
         this.script = script;
         this.playerField = player;
         this.trigger = trigger;
         this.startTime = System.currentTimeMillis();
         // Get the plugin instance explicitly instead of using singleton
-        this.plugin = com.megacreative.MegaCreative.getInstance();
+        this.plugin = plugin;
         this.player = player;
         this.creativeWorld = null;
         this.event = null;
@@ -455,7 +448,7 @@ public class ExecutionContext {
         return creativeWorld;
     }
     
-    public Event getEvent() {
+    public CustomEvent getEvent() {
         return event;
     }
     
@@ -728,7 +721,7 @@ public class ExecutionContext {
         private MegaCreative plugin;
         private Player player;
         private CreativeWorld creativeWorld;
-        private Event event;
+        private CustomEvent event;
         private Location blockLocation;
         private CodeBlock currentBlock;
         
@@ -752,7 +745,7 @@ public class ExecutionContext {
             return this;
         }
         
-        public Builder event(Event event) {
+        public Builder event(CustomEvent event) {
             this.event = event;
             return this;
         }

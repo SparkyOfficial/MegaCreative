@@ -40,7 +40,7 @@ public class DataItemListener implements Listener {
 
             // Обновляем NBT и Lore предмета
             ItemMeta meta = itemInHand.getItemMeta();
-            meta.getPersistentDataContainer().set(DataItemFactory.DATA_VALUE_KEY, PersistentDataType.STRING, newValue);
+            meta.getPersistentDataContainer().set(DataItemFactory.getDataValueKey(), PersistentDataType.STRING, newValue);
             meta.setLore(Arrays.asList(
                 "§7Тип: §f" + data.type().name(),
                 "§7Значение: §f" + newValue

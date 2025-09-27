@@ -1,7 +1,6 @@
 package com.megacreative.coding;
 
 import com.megacreative.MegaCreative;
-import com.megacreative.coding.events.PlayerEventsListener;
 import com.megacreative.coding.events.CustomEventManager;
 import com.megacreative.coding.events.CustomEvent;
 import com.megacreative.coding.values.DataValue;
@@ -44,10 +43,10 @@ public class ManualIntegrationTest {
      */
     public static void demonstrateIntegration() {
         LOGGER.log(Level.INFO, "\n=== Integration Demonstration ===");
-        LOGGER.log(Level.INFO, "1. PlayerEventsListener receives Bukkit events");
-        LOGGER.log(Level.INFO, "2. It triggers custom events through CustomEventManager");
-        LOGGER.log(Level.INFO, "3. CustomEventManager handles event distribution to registered handlers");
-        LOGGER.log(Level.INFO, "4. Event handlers execute scripts using the ScriptEngine");
+        LOGGER.log(Level.INFO, "1. Bukkit*Listener classes receive Bukkit events");
+        LOGGER.log(Level.INFO, "2. They fire clean custom Mega*Event events");
+        LOGGER.log(Level.INFO, "3. ScriptTriggerManager listens to custom events");
+        LOGGER.log(Level.INFO, "4. ScriptTriggerManager executes scripts using the ScriptEngine");
         LOGGER.log(Level.INFO, "5. The script execution can trigger actions like SendMessageAction");
         LOGGER.log(Level.INFO, "6. Actions read parameters from GUI configuration chests");
         LOGGER.log(Level.INFO, "\nAll components are properly connected!");

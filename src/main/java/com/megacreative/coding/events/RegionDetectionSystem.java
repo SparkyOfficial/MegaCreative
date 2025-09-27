@@ -246,6 +246,13 @@ public class RegionDetectionSystem {
     }
     
     /**
+     * Creates a new region event handler
+     */
+    public RegionEventHandler createRegionEventHandler(String eventName, java.util.function.Predicate<Map<String, DataValue>> condition, int priority) {
+        return new RegionEventHandler(eventName, condition, priority, plugin);
+    }
+    
+    /**
      * Gets all defined regions
      */
     public Collection<Region> getAllRegions() {
@@ -288,9 +295,6 @@ public class RegionDetectionSystem {
      */
     public void setRegionScript(String regionId, String eventName, CodeScript script) {
         // Get the coding manager to save the script
-        MegaCreative plugin = MegaCreative.getInstance();
-        if (plugin == null) return;
-        
         ServiceRegistry serviceRegistry = plugin.getServiceRegistry();
         if (serviceRegistry == null) return;
         
@@ -315,9 +319,6 @@ public class RegionDetectionSystem {
      */
     public CodeScript getRegionScript(String regionId, String eventName) {
         // Get the coding manager to retrieve the script
-        MegaCreative plugin = MegaCreative.getInstance();
-        if (plugin == null) return null;
-        
         ServiceRegistry serviceRegistry = plugin.getServiceRegistry();
         if (serviceRegistry == null) return null;
         
@@ -336,9 +337,6 @@ public class RegionDetectionSystem {
      */
     public void removeRegionScript(String regionId, String eventName) {
         // Get the coding manager to delete the script
-        MegaCreative plugin = MegaCreative.getInstance();
-        if (plugin == null) return;
-        
         ServiceRegistry serviceRegistry = plugin.getServiceRegistry();
         if (serviceRegistry == null) return;
         
@@ -359,9 +357,6 @@ public class RegionDetectionSystem {
      */
     public void setGenericRegionScript(String eventName, CodeScript script) {
         // Get the coding manager to save the script
-        MegaCreative plugin = MegaCreative.getInstance();
-        if (plugin == null) return;
-        
         ServiceRegistry serviceRegistry = plugin.getServiceRegistry();
         if (serviceRegistry == null) return;
         
@@ -385,9 +380,6 @@ public class RegionDetectionSystem {
      */
     public CodeScript getGenericRegionScript(String eventName) {
         // Get the coding manager to retrieve the script
-        MegaCreative plugin = MegaCreative.getInstance();
-        if (plugin == null) return null;
-        
         ServiceRegistry serviceRegistry = plugin.getServiceRegistry();
         if (serviceRegistry == null) return null;
         
@@ -495,11 +487,13 @@ public class RegionDetectionSystem {
         private final String eventName;
         private final java.util.function.Predicate<Map<String, DataValue>> condition;
         private final int priority;
+        private final MegaCreative plugin; // Add plugin field
         
-        public RegionEventHandler(String eventName, java.util.function.Predicate<Map<String, DataValue>> condition, int priority) {
+        public RegionEventHandler(String eventName, java.util.function.Predicate<Map<String, DataValue>> condition, int priority, MegaCreative plugin) {
             this.eventName = eventName;
             this.condition = condition;
             this.priority = priority;
+            this.plugin = plugin; // Store plugin reference
         }
         
         public boolean canHandle(Map<String, DataValue> eventData) {
@@ -507,8 +501,8 @@ public class RegionDetectionSystem {
         }
         
         public void handle(Map<String, DataValue> eventData, Player player, String worldName) {
-            // Get the plugin instance
-            MegaCreative plugin = MegaCreative.getInstance();
+            // Get the plugin instance from the stored field
+            MegaCreative plugin = this.plugin;
             if (plugin == null) return;
             
             // Get the script engine through ServiceRegistry
@@ -601,7 +595,7 @@ public class RegionDetectionSystem {
          */
         private void executeRegionScript(ScriptEngine scriptEngine, String scriptId, ExecutionContext context, Player player, String regionId) {
             // Proper implementation that executes actual scripts
-            MegaCreative plugin = MegaCreative.getInstance();
+            MegaCreative plugin = this.plugin; // Use stored plugin reference
             if (plugin == null) return;
             
             plugin.getLogger().info("Executing script " + scriptId + " for player " + player.getName() + " in region " + regionId);

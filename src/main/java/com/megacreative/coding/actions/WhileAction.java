@@ -31,10 +31,6 @@ public class WhileAction implements BlockAction {
         this.plugin = plugin;
     }
     
-    public WhileAction() {
-        this.plugin = MegaCreative.getInstance();
-    }
-    
     @Override
     public ExecutionResult execute(CodeBlock block, ExecutionContext context) {
         Player player = context.getPlayer();

@@ -11,8 +11,29 @@ import java.util.Optional;
 
 public class DataItemFactory {
     
-    public static final NamespacedKey DATA_TYPE_KEY = new NamespacedKey(MegaCreative.getInstance(), "data_type");
-    public static final NamespacedKey DATA_VALUE_KEY = new NamespacedKey(MegaCreative.getInstance(), "data_value");
+    private static NamespacedKey DATA_TYPE_KEY;
+    private static NamespacedKey DATA_VALUE_KEY;
+    
+    // Initialize keys with plugin instance
+    public static void initialize(MegaCreative plugin) {
+        DATA_TYPE_KEY = new NamespacedKey(plugin, "data_type");
+        DATA_VALUE_KEY = new NamespacedKey(plugin, "data_value");
+    }
+    
+    // Remove fallback methods and use only the initialized keys
+    public static NamespacedKey getDataTypeKey() {
+        if (DATA_TYPE_KEY == null) {
+            throw new IllegalStateException("DataItemFactory not initialized. Call initialize() first.");
+        }
+        return DATA_TYPE_KEY;
+    }
+    
+    public static NamespacedKey getDataValueKey() {
+        if (DATA_VALUE_KEY == null) {
+            throw new IllegalStateException("DataItemFactory not initialized. Call initialize() first.");
+        }
+        return DATA_VALUE_KEY;
+    }
 
     public static ItemStack createDataItem(DataType type, String initialValue) {
         ItemStack item = new ItemStack(Material.BOOK); // Используем книгу как универсальный контейнер
@@ -24,8 +45,8 @@ public class DataItemFactory {
             "§7Значение: §f" + initialValue
         ));
         
-        meta.getPersistentDataContainer().set(DATA_TYPE_KEY, PersistentDataType.STRING, type.name());
-        meta.getPersistentDataContainer().set(DATA_VALUE_KEY, PersistentDataType.STRING, initialValue);
+        meta.getPersistentDataContainer().set(getDataTypeKey(), PersistentDataType.STRING, type.name());
+        meta.getPersistentDataContainer().set(getDataValueKey(), PersistentDataType.STRING, initialValue);
         
         item.setItemMeta(meta);
         return item;
@@ -35,11 +56,11 @@ public class DataItemFactory {
         if (item == null || !item.hasItemMeta()) return Optional.empty();
         
         var container = item.getItemMeta().getPersistentDataContainer();
-        if (!container.has(DATA_TYPE_KEY, PersistentDataType.STRING)) return Optional.empty();
+        if (!container.has(getDataTypeKey(), PersistentDataType.STRING)) return Optional.empty();
         
         try {
-            DataType type = DataType.valueOf(container.get(DATA_TYPE_KEY, PersistentDataType.STRING));
-            String value = container.get(DATA_VALUE_KEY, PersistentDataType.STRING);
+            DataType type = DataType.valueOf(container.get(getDataTypeKey(), PersistentDataType.STRING));
+            String value = container.get(getDataValueKey(), PersistentDataType.STRING);
             return Optional.of(new DataItem(type, value));
         } catch (Exception e) {
             return Optional.empty();
@@ -52,4 +73,4 @@ public class DataItemFactory {
     
     // Вложенный класс для удобства
     public record DataItem(DataType type, String value) {}
-} 
+}

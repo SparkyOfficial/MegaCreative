@@ -1,7 +1,6 @@
 package com.megacreative.coding;
 
 import com.megacreative.MegaCreative;
-import com.megacreative.coding.events.PlayerEventsListener;
 import com.megacreative.models.CreativeWorld;
 import com.megacreative.models.CreativeWorldType;
 import com.megacreative.services.BlockConfigService;
@@ -36,10 +35,10 @@ public class IntegrationVerification {
      */
     private static void verifyEventSystemIntegration() {
         LOGGER.log(Level.INFO, "1. Event System Integration Verification:");
-        LOGGER.log(Level.INFO, "   PlayerEventsListener receives Bukkit events");
-        LOGGER.log(Level.INFO, "   Finds appropriate CreativeWorld for players");
-        LOGGER.log(Level.INFO, "   Identifies scripts with matching event blocks");
-        LOGGER.log(Level.INFO, "   Calls ScriptEngine to execute scripts");
+        LOGGER.log(Level.INFO, "   Bukkit*Listener classes receive Bukkit events");
+        LOGGER.log(Level.INFO, "   Fire clean custom Mega*Event events");
+        LOGGER.log(Level.INFO, "   ScriptTriggerManager listens to custom events");
+        LOGGER.log(Level.INFO, "   ScriptTriggerManager calls ScriptEngine to execute scripts");
         LOGGER.log(Level.INFO, "");
     }
     

@@ -1,25 +1,28 @@
 package com.megacreative.coding;
 
+import com.megacreative.MegaCreative;
 import com.megacreative.coding.annotations.BlockMeta;
 import com.megacreative.coding.executors.ExecutionResult;
 import com.megacreative.coding.values.DataValue;
 import com.megacreative.util.ClassScanner;
 import com.megacreative.coding.events.EventPublisher;
 import com.megacreative.coding.events.CustomEvent;
+import com.megacreative.interfaces.IConditionFactory;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.function.Supplier;
 import java.util.logging.Logger;
 
-public class ConditionFactory implements EventPublisher {
+public class ConditionFactory implements IConditionFactory {
 
     private static final Logger LOGGER = Logger.getLogger(ConditionFactory.class.getName());
     
+    private final MegaCreative plugin;
     private final Map<String, Supplier<BlockCondition>> conditionRegistry = new HashMap<>();
     private final Map<String, String> conditionDisplayNames = new HashMap<>();
 
-    public ConditionFactory() {
-        // Constructor is now empty as registration happens later
+    public ConditionFactory(MegaCreative plugin) {
+        this.plugin = plugin;
     }
     
     /**
@@ -30,7 +33,6 @@ public class ConditionFactory implements EventPublisher {
         conditionDisplayNames.clear();
         String basePackage = "com.megacreative.coding.conditions";
         
-        com.megacreative.MegaCreative plugin = com.megacreative.MegaCreative.getInstance();
         if (plugin == null) {
             LOGGER.severe("Plugin instance not available for condition scanning");
             return;

@@ -130,7 +130,32 @@ public class ServiceRegistry implements DependencyContainer.Disposable {
     }
     
     private void initializeManagers() {
-        // These will be created on demand through the dependency container
+        // Register manager service mappings
+        dependencyContainer.registerType(TickManager.class, TickManager.class);
+        // Register GUIManager as a factory since it needs dependencies
+        dependencyContainer.registerFactory(GUIManager.class, (DependencyContainer.Supplier<GUIManager>) () -> {
+            IPlayerManager playerManager = dependencyContainer.resolve(IPlayerManager.class);
+            VariableManager variableManager = dependencyContainer.resolve(VariableManager.class);
+            return new GUIManager((MegaCreative) plugin, playerManager, variableManager);
+        });
+        // Register WorldManagerImpl as a factory since it needs dependencies
+        dependencyContainer.registerFactory(IWorldManager.class, (DependencyContainer.Supplier<IWorldManager>) () -> {
+            ConfigManager configManager = dependencyContainer.resolve(ConfigManager.class);
+            return new WorldManagerImpl(configManager, (MegaCreative) plugin);
+        });
+        dependencyContainer.registerType(TemplateManager.class, TemplateManager.class);
+        dependencyContainer.registerType(ScoreboardManager.class, ScoreboardManager.class);
+        dependencyContainer.registerType(GameScoreboardManager.class, GameScoreboardManager.class);
+        dependencyContainer.registerType(PlayerManagerImpl.class, PlayerManagerImpl.class);
+        dependencyContainer.registerType(TrustedPlayerManager.class, TrustedPlayerManager.class);
+        dependencyContainer.registerType(BlockConfigManager.class, BlockConfigManager.class);
+        dependencyContainer.registerType(DevInventoryManager.class, DevInventoryManager.class);
+        dependencyContainer.registerType(BlockGroupManager.class, BlockGroupManager.class);
+        dependencyContainer.registerType(VisualErrorHandler.class, VisualErrorHandler.class);
+        dependencyContainer.registerType(EnemyPlayerRestrictionManager.class, EnemyPlayerRestrictionManager.class);
+        dependencyContainer.registerType(PlayerModeManager.class, PlayerModeManager.class);
+        dependencyContainer.registerType(MessagingService.class, MessagingService.class);
+        dependencyContainer.registerType(ScriptPerformanceMonitor.class, ScriptPerformanceMonitor.class);
     }
     
     private void initializeImplementationManagers() {
@@ -146,6 +171,17 @@ public class ServiceRegistry implements DependencyContainer.Disposable {
         dependencyContainer.registerType(WorldCodeRestorer.class, WorldCodeRestorer.class);
         dependencyContainer.registerType(CodeBlockSignManager.class, CodeBlockSignManager.class);
         dependencyContainer.registerType(ScriptTriggerManager.class, ScriptTriggerManager.class);
+        
+        // Register interfaces for factories
+        dependencyContainer.registerType(com.megacreative.interfaces.IActionFactory.class, ActionFactory.class);
+        dependencyContainer.registerType(com.megacreative.interfaces.IConditionFactory.class, ConditionFactory.class);
+        dependencyContainer.registerType(com.megacreative.interfaces.IScriptEngine.class, DefaultScriptEngine.class);
+        
+        // Register concrete classes
+        dependencyContainer.registerFactory(ActionFactory.class, (DependencyContainer.Supplier<ActionFactory>) () -> 
+            new ActionFactory((MegaCreative) plugin));
+        dependencyContainer.registerFactory(ConditionFactory.class, (DependencyContainer.Supplier<ConditionFactory>) () -> 
+            new ConditionFactory((MegaCreative) plugin));
         
         // Register ScriptCompiler as a factory since it needs BlockLinker as a dependency
         dependencyContainer.registerFactory(ScriptCompiler.class, (DependencyContainer.Supplier<ScriptCompiler>) () -> {
@@ -170,6 +206,9 @@ public class ServiceRegistry implements DependencyContainer.Disposable {
         dependencyContainer.registerType(EventDataExtractorRegistry.class, EventDataExtractorRegistry.class);
         dependencyContainer.registerType(ReferenceSystemEventManager.class, ReferenceSystemEventManager.class);
         dependencyContainer.registerType(CodeCompiler.class, CodeCompiler.class);
+        // Register InteractiveGUIManager as a factory since it needs the plugin
+        dependencyContainer.registerFactory(InteractiveGUIManager.class, (DependencyContainer.Supplier<InteractiveGUIManager>) () -> 
+            new InteractiveGUIManager((MegaCreative) plugin));
     }
     
     /**
@@ -247,6 +286,10 @@ public class ServiceRegistry implements DependencyContainer.Disposable {
     public ITrustedPlayerManager getTrustedPlayerManager() { 
         return dependencyContainer.resolve(ITrustedPlayerManager.class);
     }
+
+    public TickManager getTickManager() {
+        return dependencyContainer.resolve(TickManager.class);
+    }
     
     public GUIManager getGuiManager() {
         return dependencyContainer.resolve(GUIManager.class);
@@ -296,16 +339,20 @@ public class ServiceRegistry implements DependencyContainer.Disposable {
         return dependencyContainer.resolve(BlockConfigService.class);
     }
     
-    public ActionFactory getActionFactory() {
-        return dependencyContainer.resolve(ActionFactory.class);
+    public IActionFactory getActionFactory() {
+        return dependencyContainer.resolve(IActionFactory.class);
     }
     
-    public ConditionFactory getConditionFactory() {
-        return dependencyContainer.resolve(ConditionFactory.class);
+    public IConditionFactory getConditionFactory() {
+        return dependencyContainer.resolve(IConditionFactory.class);
     }
     
     public ScriptEngine getScriptEngine() {
         return dependencyContainer.resolve(ScriptEngine.class);
+    }
+    
+    public IScriptEngine getScriptEngineInterface() {
+        return dependencyContainer.resolve(IScriptEngine.class);
     }
     
     public DefaultScriptEngine getDefaultScriptEngine() {

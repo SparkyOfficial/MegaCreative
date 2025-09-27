@@ -122,6 +122,23 @@ public class ScriptTriggerManager implements Listener {
         executeScriptsForEvent("onBlockBreak", event.getPlayer());
     }
     
+    @EventHandler
+    public void onTick(com.megacreative.events.TickEvent event) {
+        // Execute scripts for onTick event
+        // This will trigger all scripts that start with EVENT_TICK
+        executeScriptsForEvent("onTick", null);
+        
+        // Every 20 ticks (1 second), also trigger EVENT_SECOND scripts
+        if (event.getTick() % 20 == 0) {
+            executeScriptsForEvent("onSecond", null);
+        }
+        
+        // Every 1200 ticks (1 minute), also trigger EVENT_MINUTE scripts
+        if (event.getTick() % 1200 == 0) {
+            executeScriptsForEvent("onMinute", null);
+        }
+    }
+    
     /**
      * Execute scripts directly for an event
      * @param eventName the name of the event

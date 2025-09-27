@@ -1,38 +1,31 @@
 package com.megacreative.coding;
 
-import com.megacreative.MegaCreative;
-import com.megacreative.coding.cache.BlockExecutionCache;
-import com.megacreative.coding.executors.ExecutionResult;
-import com.megacreative.coding.variables.VariableManager;
-import com.megacreative.coding.debug.VisualDebugger;
-import com.megacreative.services.BlockConfigService;
-import com.megacreative.coding.CodeBlock;
-import com.megacreative.coding.CodeScript;
-import com.megacreative.coding.ExecutionContext;
-import com.megacreative.coding.BlockType;
-import com.megacreative.coding.events.EventPublisher;
-import com.megacreative.coding.events.CustomEvent;
-import com.megacreative.coding.values.DataValue;
-import com.megacreative.coding.executors.AdvancedExecutionEngine;
-import java.util.HashMap;
-import java.util.Map;
-import java.util.List;
 import java.util.ArrayList;
-// 🎆 Reference system-style advanced execution
-import com.megacreative.coding.executors.AdvancedExecutionEngine;
-import com.megacreative.coding.values.types.ListValue;
-import com.megacreative.coding.Constants;
-import org.bukkit.Material;
-import org.bukkit.entity.Player;
-import org.bukkit.scheduler.BukkitRunnable;
-
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
 import java.util.UUID;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.TimeUnit;
-import java.util.logging.Level;
 
-public class DefaultScriptEngine implements ScriptEngine, EnhancedScriptEngine, EventPublisher {
+import org.bukkit.Material;
+import org.bukkit.entity.Player;
+import org.bukkit.scheduler.BukkitRunnable;
+
+import com.megacreative.MegaCreative;
+import com.megacreative.coding.cache.BlockExecutionCache;
+import com.megacreative.coding.debug.VisualDebugger;
+import com.megacreative.coding.events.CustomEvent;
+import com.megacreative.coding.events.EventPublisher;
+import com.megacreative.coding.executors.AdvancedExecutionEngine;
+import com.megacreative.coding.executors.ExecutionResult;
+import com.megacreative.coding.values.DataValue;
+import com.megacreative.coding.variables.VariableManager;
+import com.megacreative.interfaces.IScriptEngine;
+import com.megacreative.services.BlockConfigService;
+
+public class DefaultScriptEngine implements ScriptEngine, EnhancedScriptEngine, EventPublisher, IScriptEngine {
     
     // Constants for block types
     private static final String BLOCK_TYPE_EVENT = "EVENT";
@@ -124,7 +117,7 @@ public class DefaultScriptEngine implements ScriptEngine, EnhancedScriptEngine, 
     private void initializeExecutors() {
         // Create factories (these would typically be injected)
         ActionFactory actionFactory = new ActionFactory(plugin);
-        ConditionFactory conditionFactory = new ConditionFactory();
+        ConditionFactory conditionFactory = new ConditionFactory(plugin);
         
         // Register executors for each block type
         executors.put(BlockType.EVENT, new EventBlockExecutor());
@@ -151,7 +144,7 @@ public class DefaultScriptEngine implements ScriptEngine, EnhancedScriptEngine, 
     
     public int getConditionCount() {
         // Get condition count from the condition factory
-        ConditionFactory conditionFactory = new ConditionFactory();
+        ConditionFactory conditionFactory = new ConditionFactory(plugin);
         return conditionFactory.getConditionCount();
     }
     

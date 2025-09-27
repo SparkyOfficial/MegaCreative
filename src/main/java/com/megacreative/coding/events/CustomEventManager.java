@@ -337,7 +337,7 @@ public class CustomEventManager implements Listener, EventPublisher, EventSubscr
      * Creates a new event handler from a code block
      */
     public EventHandler createEventHandler(CodeBlock handlerBlock, Player player, String worldName, int priority) {
-        return new EventHandler(handlerBlock, player, worldName, priority);
+        return new EventHandler(handlerBlock, player, worldName, priority, plugin);
     }
     
     /**
@@ -517,7 +517,6 @@ public class CustomEventManager implements Listener, EventPublisher, EventSubscr
      */
     private void startCorrelationCleanupTask() {
         // Use Bukkit's scheduler instead of creating direct threads
-        com.megacreative.MegaCreative plugin = com.megacreative.MegaCreative.getInstance();
         plugin.getServer().getScheduler().runTaskTimer(plugin, () -> {
             correlationEngine.cleanupExpiredInstances();
         }, 1200L, 1200L); // Run every minute (1200 ticks = 60 seconds)
@@ -532,13 +531,15 @@ public class CustomEventManager implements Listener, EventPublisher, EventSubscr
         private final String worldName;
         private final int priority;
         private final boolean isGlobal;
+        private final MegaCreative plugin;
         
-        public EventHandler(CodeBlock handlerBlock, Player player, String worldName, int priority) {
+        public EventHandler(CodeBlock handlerBlock, Player player, String worldName, int priority, MegaCreative plugin) {
             this.handlerBlock = handlerBlock;
             this.playerId = player != null ? player.getUniqueId() : null;
             this.worldName = worldName;
             this.priority = priority;
             this.isGlobal = worldName == null;
+            this.plugin = plugin;
         }
         
         public boolean canHandle(Player source, String sourceWorld, Map<String, DataValue> eventData) {
@@ -560,8 +561,8 @@ public class CustomEventManager implements Listener, EventPublisher, EventSubscr
             // Called from lines 183 and 262 in the same file
             if (handlerBlock != null) {
                 try {
-                    // Get the plugin instance from the MegaCreative singleton
-                    com.megacreative.MegaCreative plugin = com.megacreative.MegaCreative.getInstance();
+                    // Get the plugin instance from the stored field
+                    com.megacreative.MegaCreative plugin = this.plugin;
                     
                     // Set event data as local variables for the handler
                     com.megacreative.coding.variables.VariableManager variableManager = 
@@ -603,7 +604,8 @@ public class CustomEventManager implements Listener, EventPublisher, EventSubscr
                     }
                 } catch (Exception e) {
                     // Log error but don't propagate to avoid breaking other handlers
-                    com.megacreative.MegaCreative.getInstance().getLogger().warning(
+                    com.megacreative.MegaCreative plugin = this.plugin;
+                    plugin.getLogger().warning(
                         "Error in EventHandler: " + e.getMessage()
                     );
                 }
@@ -690,7 +692,7 @@ public class CustomEventManager implements Listener, EventPublisher, EventSubscr
      * Schedules an event trigger
      */
     public void scheduleTrigger(String triggerId, long delayMs, Player player, String world) {
-        ScheduledTrigger scheduled = new ScheduledTrigger(triggerId, delayMs, player, world);
+        ScheduledTrigger scheduled = new ScheduledTrigger(triggerId, delayMs, player, world, plugin);
         scheduledTriggers.put(triggerId, scheduled);
         scheduled.schedule(this);
     }
@@ -723,19 +725,20 @@ public class CustomEventManager implements Listener, EventPublisher, EventSubscr
         private final long delayMs;
         private final UUID playerId;
         private final String worldName;
+        private final MegaCreative plugin; // Add plugin reference
         private boolean cancelled = false;
         private int taskId = -1; // Bukkit task ID
         
-        public ScheduledTrigger(String triggerId, long delayMs, Player player, String worldName) {
+        public ScheduledTrigger(String triggerId, long delayMs, Player player, String worldName, MegaCreative plugin) {
             this.triggerId = triggerId;
             this.delayMs = delayMs;
             this.playerId = player != null ? player.getUniqueId() : null;
             this.worldName = worldName;
+            this.plugin = plugin; // Store plugin reference
         }
         
         public void schedule(CustomEventManager manager) {
             // Use Bukkit's scheduler instead of creating direct threads
-            com.megacreative.MegaCreative plugin = com.megacreative.MegaCreative.getInstance();
             this.taskId = plugin.getServer().getScheduler().scheduleSyncDelayedTask(plugin, () -> {
                 if (!cancelled) {
                     manager.executeAdvancedTrigger(triggerId, 
@@ -748,7 +751,6 @@ public class CustomEventManager implements Listener, EventPublisher, EventSubscr
         public void cancel() {
             cancelled = true;
             if (taskId != -1) {
-                com.megacreative.MegaCreative plugin = com.megacreative.MegaCreative.getInstance();
                 plugin.getServer().getScheduler().cancelTask(taskId);
             }
         }

@@ -98,6 +98,9 @@ public class MegaCreative extends JavaPlugin {
         // Register this plugin instance as a singleton in the dependency container
         this.dependencyContainer.registerSingleton(MegaCreative.class, this);
         
+        // Initialize DataItemFactory with plugin instance
+        com.megacreative.coding.data.DataItemFactory.initialize(this);
+        
         // Create service registry
         this.serviceRegistry = new ServiceRegistry(this, dependencyContainer);
         
@@ -186,8 +189,11 @@ public class MegaCreative extends JavaPlugin {
         tickTask = new BukkitRunnable() {
             @Override
             public void run() {
-                // Trigger onTick event for all creative worlds
-                // We're not using PlayerEventsListener anymore, we'll implement tick handling differently
+                // Use TickManager to handle tick events
+                if (serviceRegistry != null) {
+                    serviceRegistry.getTickManager().tick();
+                }
+                
                 tpsCheckCounter++;
                 if (tpsCheckCounter >= 20) {
                     // Check TPS every 20 ticks (1 second)

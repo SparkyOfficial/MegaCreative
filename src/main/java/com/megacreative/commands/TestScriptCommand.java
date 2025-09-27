@@ -3,7 +3,7 @@ package com.megacreative.commands;
 import com.megacreative.MegaCreative;
 import com.megacreative.coding.CodeBlock;
 import com.megacreative.coding.CodeScript;
-import com.megacreative.coding.ScriptEngine;
+import com.megacreative.interfaces.IScriptEngine;
 import com.megacreative.core.ServiceRegistry;
 import com.megacreative.coding.values.DataValue;
 import org.bukkit.command.Command;
@@ -40,7 +40,7 @@ public class TestScriptCommand implements CommandExecutor {
                 return true;
             }
             
-            ScriptEngine scriptEngine = serviceRegistry.getScriptEngine();
+            IScriptEngine scriptEngine = serviceRegistry.getScriptEngineInterface();
             if (scriptEngine == null) {
                 player.sendMessage("Script engine not available!");
                 return true;

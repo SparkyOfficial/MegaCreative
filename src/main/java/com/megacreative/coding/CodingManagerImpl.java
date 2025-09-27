@@ -3,7 +3,6 @@ package com.megacreative.coding;
 import com.megacreative.MegaCreative;
 import com.megacreative.coding.containers.BlockContainerManager;
 import com.megacreative.coding.debug.VisualDebugger;
-import com.megacreative.coding.events.PlayerEventsListener;
 import com.megacreative.coding.executors.ExecutionResult;
 import com.megacreative.coding.values.DataValue;
 import com.megacreative.coding.variables.VariableManager;
@@ -450,7 +449,7 @@ public class CodingManagerImpl implements ICodingManager {
         if (serviceRegistry == null) {
             return null;
         }
-        return serviceRegistry.getService(ScriptEngine.class);
+        return serviceRegistry.getScriptEngine();
     }
     
     @Override

@@ -1,18 +1,13 @@
 package com.megacreative.coding.events;
 
+import com.megacreative.MegaCreative;
 import com.megacreative.coding.values.DataValue;
 import org.bukkit.entity.Player;
-import java.util.Objects;
-import java.util.logging.Logger;
-import java.util.concurrent.atomic.AtomicInteger;
 
 import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
-import java.util.function.Predicate;
+import java.util.logging.Logger;
 
-/**
- * Advanced event trigger system supporting event chaining, conditional triggering, and scheduled events
- */
 public class AdvancedEventTrigger {
     private static final Logger log = Logger.getLogger(AdvancedEventTrigger.class.getName());
     
@@ -24,16 +19,30 @@ public class AdvancedEventTrigger {
     private final long delayMs;
     private final int repeatCount;
     private final long repeatIntervalMs;
-    
     private final UUID ownerId;
     private final String worldName;
     private final boolean isGlobal;
-    
-    private long createdTime;
-    private final AtomicInteger executionCount = new AtomicInteger(0);
-    private boolean isActive = true;
-    
-    // Getters and Setters
+    private final MegaCreative plugin; // Add plugin reference
+
+    public AdvancedEventTrigger(String triggerId, String eventName, Map<String, DataValue> eventData,
+                               TriggerCondition condition, List<EventChain> eventChains,
+                               long delayMs, int repeatCount, long repeatIntervalMs,
+                               UUID ownerId, String worldName, boolean isGlobal, MegaCreative plugin) {
+        this.triggerId = triggerId;
+        this.eventName = eventName;
+        this.eventData = eventData != null ? new HashMap<>(eventData) : new HashMap<>();
+        this.condition = condition;
+        this.eventChains = eventChains != null ? new ArrayList<>(eventChains) : new ArrayList<>();
+        this.delayMs = delayMs;
+        this.repeatCount = repeatCount;
+        this.repeatIntervalMs = repeatIntervalMs;
+        this.ownerId = ownerId;
+        this.worldName = worldName;
+        this.isGlobal = isGlobal;
+        this.plugin = plugin; // Store plugin reference
+    }
+
+    // Getters
     public String getTriggerId() { return triggerId; }
     public String getEventName() { return eventName; }
     public Map<String, DataValue> getEventData() { return new HashMap<>(eventData); }
@@ -45,23 +54,73 @@ public class AdvancedEventTrigger {
     public UUID getOwnerId() { return ownerId; }
     public String getWorldName() { return worldName; }
     public boolean isGlobal() { return isGlobal; }
-    public long getCreatedTime() { return createdTime; }
-    public void setCreatedTime(long createdTime) { this.createdTime = createdTime; }
-    public int getExecutionCount() { return executionCount.get(); }
-    public void incrementExecutionCount() { executionCount.incrementAndGet(); }
+    public MegaCreative getPlugin() { return plugin; } // Add getter for plugin
+
+    /**
+     * Executes the trigger
+     */
+    public void execute(CustomEventManager eventManager, Player player, String world) {
+        // Check condition if present
+        if (condition != null && !condition.test(player, world, eventData)) {
+            log.info("Trigger condition not met for: " + triggerId);
+            return;
+        }
+        
+        // Add trigger-specific data to the event data
+        Map<String, DataValue> data = new HashMap<>(eventData);
+        data.put("trigger_id", DataValue.fromObject(triggerId));
+        data.put("trigger_time", DataValue.fromObject(System.currentTimeMillis()));
+        
+        // Execute immediate trigger or schedule delayed execution
+        if (delayMs <= 0) {
+            // Execute immediately
+            eventManager.triggerEvent(eventName, data, player, world);
+            
+            // Handle event chains
+            for (EventChain chain : eventChains) {
+                if (chain.getDelayMs() > 0) {
+                    scheduleDelayedExecution(eventManager, player, world, data, chain.getDelayMs());
+                } else {
+                    eventManager.triggerEvent(chain.getChainedEventName(), data, player, world);
+                }
+            }
+        } else {
+            // Schedule delayed execution
+            scheduleDelayedExecution(eventManager, player, world, data, delayMs);
+        }
+    }
     
-    // equals and hashCode
+    private void scheduleDelayedExecution(CustomEventManager eventManager, Player player, 
+                                       String world, Map<String, DataValue> data, long delay) {
+        // Use Bukkit's scheduler instead of creating direct threads
+        plugin.getServer().getScheduler().runTaskLater(plugin, () -> {
+            eventManager.triggerEvent(eventName, data, player, world);
+        }, delay / 50); // Convert milliseconds to ticks (1 tick = 50ms)
+    }
+    
     @Override
     public boolean equals(Object o) {
         if (this == o) return true;
         if (o == null || getClass() != o.getClass()) return false;
         AdvancedEventTrigger that = (AdvancedEventTrigger) o;
-        return Objects.equals(triggerId, that.triggerId);
+        return delayMs == that.delayMs &&
+               repeatCount == that.repeatCount &&
+               repeatIntervalMs == that.repeatIntervalMs &&
+               isGlobal == that.isGlobal &&
+               Objects.equals(triggerId, that.triggerId) &&
+               Objects.equals(eventName, that.eventName) &&
+               Objects.equals(eventData, that.eventData) &&
+               Objects.equals(condition, that.condition) &&
+               Objects.equals(eventChains, that.eventChains) &&
+               Objects.equals(ownerId, that.ownerId) &&
+               Objects.equals(worldName, that.worldName) &&
+               Objects.equals(plugin, that.plugin);
     }
     
     @Override
     public int hashCode() {
-        return Objects.hash(triggerId);
+        return Objects.hash(triggerId, eventName, eventData, condition, eventChains,
+                           delayMs, repeatCount, repeatIntervalMs, ownerId, worldName, isGlobal, plugin);
     }
     
     @Override
@@ -69,148 +128,10 @@ public class AdvancedEventTrigger {
         return "AdvancedEventTrigger{" +
                "triggerId='" + triggerId + '\'' +
                ", eventName='" + eventName + '\'' +
-               ", ownerId=" + ownerId +
+               ", delayMs=" + delayMs +
+               ", repeatCount=" + repeatCount +
                ", isGlobal=" + isGlobal +
                '}';
-    }
-    public AdvancedEventTrigger(String triggerId, String eventName, Map<String, DataValue> eventData,
-                               TriggerCondition condition, List<EventChain> eventChains,
-                               long delayMs, int repeatCount, long repeatIntervalMs,
-                               UUID ownerId, String worldName, boolean isGlobal) {
-        this.triggerId = triggerId;
-        this.eventName = eventName;
-        this.eventData = new ConcurrentHashMap<>(eventData);
-        this.condition = condition;
-        this.eventChains = new ArrayList<>(eventChains);
-        this.delayMs = delayMs;
-        this.repeatCount = repeatCount;
-        this.repeatIntervalMs = repeatIntervalMs;
-        this.ownerId = ownerId;
-        this.worldName = worldName;
-        this.isGlobal = isGlobal;
-        this.createdTime = System.currentTimeMillis();
-    }
-    
-    /**
-     * Checks if this trigger can be executed for the given player and world
-     */
-    public boolean canExecute(Player player, String world) {
-        if (!isActive) return false;
-        
-        // Check owner restriction
-        if (ownerId != null && player != null && !ownerId.equals(player.getUniqueId())) {
-            return false;
-        }
-        
-        // Check world restriction
-        if (worldName != null && !isGlobal && world != null && !worldName.equals(world)) {
-            return false;
-        }
-        
-        // Check condition
-        if (condition != null && player != null && !condition.test(player)) {
-            return false;
-        }
-        
-        // Check repeat limit
-        if (repeatCount > 0 && executionCount.get() >= repeatCount) {
-            return false;
-        }
-        
-        return true;
-    }
-    
-    /**
-     * Executes this trigger
-     */
-    public void execute(CustomEventManager eventManager, Player player, String world) {
-        if (!canExecute(player, world)) {
-            return;
-        }
-        
-        // Trigger the main event
-        eventManager.triggerEvent(eventName, eventData, player, world);
-        
-        // Execute event chains
-        for (EventChain chain : eventChains) {
-            chain.execute(eventManager, player, world, eventData);
-        }
-        
-        // Handle repeat logic
-        if (repeatCount > 0 && executionCount.incrementAndGet() >= repeatCount) {
-            isActive = false;
-        }
-    }
-    
-    /**
-     * Trigger condition interface
-     */
-    @FunctionalInterface
-    public interface TriggerCondition extends Predicate<Player> {
-        boolean test(Player player);
-    }
-    
-    /**
-     * Event chain that can be triggered after the main event
-     */
-    public static class EventChain {
-        private final String chainedEventName;
-        private final Map<String, Object> chainedEventData;
-        private final long delayMs;
-        private final TriggerCondition condition;
-        
-        public String getChainedEventName() { return chainedEventName; }
-        public Map<String, Object> getChainedEventData() { return new HashMap<>(chainedEventData); }
-        public long getDelayMs() { return delayMs; }
-        public TriggerCondition getCondition() { return condition; }
-        
-        public EventChain(String chainedEventName, Map<String, Object> chainedEventData, 
-                         long delayMs, TriggerCondition condition) {
-            this.chainedEventName = chainedEventName;
-            this.chainedEventData = new HashMap<>(chainedEventData);
-            this.delayMs = delayMs;
-            this.condition = condition;
-        }
-        
-        public void execute(CustomEventManager eventManager, Player player, String world, 
-                          Map<String, DataValue> parentEventData) {
-            // Check condition
-            if (condition != null && player != null && !condition.test(player)) {
-                return;
-            }
-            
-            // Prepare chained event data
-            Map<String, DataValue> finalData = new HashMap<>();
-            for (Map.Entry<String, Object> entry : chainedEventData.entrySet()) {
-                // Handle data transformation from parent event
-                if (entry.getValue() instanceof String && ((String) entry.getValue()).startsWith("$")) {
-                    String parentKey = ((String) entry.getValue()).substring(1);
-                    if (parentEventData.containsKey(parentKey)) {
-                        finalData.put(entry.getKey(), parentEventData.get(parentKey));
-                    }
-                } else {
-                    finalData.put(entry.getKey(), DataValue.fromObject(entry.getValue()));
-                }
-            }
-            
-            // Schedule or immediate execution
-            if (delayMs > 0) {
-                // Schedule delayed execution
-                scheduleDelayedExecution(eventManager, player, world, finalData, delayMs);
-            } else {
-                // Immediate execution
-                eventManager.triggerEvent(chainedEventName, finalData, player, world);
-            }
-        }
-        
-        private void scheduleDelayedExecution(CustomEventManager eventManager, Player player, 
-                                           String world, Map<String, DataValue> data, long delay) {
-            // Use Bukkit's scheduler instead of creating direct threads
-            com.megacreative.MegaCreative plugin = com.megacreative.MegaCreative.getInstance();
-            plugin.getServer().getScheduler().runTaskLater(plugin, () -> {
-                eventManager.triggerEvent(chainedEventName, data, player, world);
-            }, delay / 50); // Convert milliseconds to ticks (1 tick = 50ms)
-        }
     }
     
     /**
@@ -228,7 +149,8 @@ public class AdvancedEventTrigger {
         private UUID ownerId;
         private String worldName;
         private boolean isGlobal = false;
-        
+        private MegaCreative plugin; // Add plugin to builder
+
         public Builder(String eventName) {
             this.eventName = eventName;
         }
@@ -284,12 +206,50 @@ public class AdvancedEventTrigger {
             return this;
         }
         
+        public Builder plugin(MegaCreative plugin) { // Add plugin setter
+            this.plugin = plugin;
+            return this;
+        }
+        
         public AdvancedEventTrigger build() {
             return new AdvancedEventTrigger(
                 triggerId, eventName, eventData, condition, eventChains,
                 delayMs, repeatCount, repeatIntervalMs,
-                ownerId, worldName, isGlobal
+                ownerId, worldName, isGlobal, plugin
             );
+        }
+    }
+    
+    // Inner classes
+    @FunctionalInterface
+    public interface TriggerCondition {
+        boolean test(Player player, String world, Map<String, DataValue> eventData);
+    }
+    
+    public static class EventChain {
+        private final String chainedEventName;
+        private final long delayMs;
+        
+        public EventChain(String chainedEventName, long delayMs) {
+            this.chainedEventName = chainedEventName;
+            this.delayMs = delayMs;
+        }
+        
+        public String getChainedEventName() { return chainedEventName; }
+        public long getDelayMs() { return delayMs; }
+        
+        @Override
+        public boolean equals(Object o) {
+            if (this == o) return true;
+            if (o == null || getClass() != o.getClass()) return false;
+            EventChain that = (EventChain) o;
+            return delayMs == that.delayMs &&
+                   Objects.equals(chainedEventName, that.chainedEventName);
+        }
+        
+        @Override
+        public int hashCode() {
+            return Objects.hash(chainedEventName, delayMs);
         }
     }
 }

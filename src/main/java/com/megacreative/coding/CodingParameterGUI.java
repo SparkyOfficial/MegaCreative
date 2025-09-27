@@ -1,5 +1,6 @@
 package com.megacreative.coding;
 
+import com.megacreative.MegaCreative;
 import com.megacreative.gui.AnvilInputGUI;
 import com.megacreative.managers.GUIManager;
 import org.bukkit.Bukkit;
@@ -79,6 +80,7 @@ public class CodingParameterGUI implements GUIManager.ManagedGUIInterface {
     private static final String ACTION_RANDOM_NUMBER = "randomNumber";
     private static final String ACTION_PLAY_PARTICLE = "playParticle";
 
+    private final MegaCreative plugin;
     private final Player player;
     private final String action;
     private final Location blockLocation;
@@ -89,7 +91,8 @@ public class CodingParameterGUI implements GUIManager.ManagedGUIInterface {
     private int currentPage = 0;
     private static final int ITEMS_PER_PAGE = 7;
 
-    public CodingParameterGUI(Player player, String action, Location blockLocation, Consumer<Map<String, Object>> onComplete, GUIManager guiManager) {
+    public CodingParameterGUI(MegaCreative plugin, Player player, String action, Location blockLocation, Consumer<Map<String, Object>> onComplete, GUIManager guiManager) {
+        this.plugin = plugin;
         this.player = player;
         this.action = action;
         this.blockLocation = blockLocation;
@@ -381,7 +384,7 @@ public class CodingParameterGUI implements GUIManager.ManagedGUIInterface {
                 String currentValue = parameters.getOrDefault(field.getKey(), field.getDefaultValue()).toString();
                 
                 // Открываем наковальню для ввода
-                new AnvilInputGUI(com.megacreative.MegaCreative.getInstance(), player, PARAMETER_INPUT_TITLE_PREFIX + field.getName(), (newValue) -> {
+                new AnvilInputGUI(plugin, player, PARAMETER_INPUT_TITLE_PREFIX + field.getName(), (newValue) -> {
                     try {
                         // Этот код выполнится, когда игрок подтвердит ввод в наковальне
                         parameters.put(field.getKey(), newValue);
@@ -389,13 +392,13 @@ public class CodingParameterGUI implements GUIManager.ManagedGUIInterface {
 
                         // --- ИСПРАВЛЕНИЕ ---
                         // Обновляем и открываем ТЕКУЩЕЕ GUI, а не создаем новое
-                        Bukkit.getScheduler().runTask(com.megacreative.MegaCreative.getInstance(), () -> {
+                        Bukkit.getScheduler().runTask(plugin, () -> {
                             this.refresh(); // Обновляем иконки в инвентаре
                             this.open();    // Показываем его игроку снова
                         });
                     } catch (Exception e) {
                         player.sendMessage(PARAMETER_UPDATE_ERROR + e.getMessage());
-                        com.megacreative.MegaCreative.getInstance().getLogger().warning("Ошибка в CodingParameterGUI: " + e.getMessage());
+                        plugin.getLogger().warning("Ошибка в CodingParameterGUI: " + e.getMessage());
                     }
                 }, () -> {
                     // Callback для отмены
@@ -403,7 +406,7 @@ public class CodingParameterGUI implements GUIManager.ManagedGUIInterface {
                 });
             } catch (Exception e) {
                 player.sendMessage(PARAMETER_SELECTION_ERROR + e.getMessage());
-                com.megacreative.MegaCreative.getInstance().getLogger().warning("Ошибка в CodingParameterGUI при выборе параметра: " + e.getMessage());
+                plugin.getLogger().warning("Ошибка в CodingParameterGUI при выборе параметра: " + e.getMessage());
             }
         }
     }

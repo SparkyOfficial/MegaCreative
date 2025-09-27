@@ -106,11 +106,9 @@ public class StatusCommand implements CommandExecutor {
 
                 boolean hasBlockConfig = false;
                 boolean hasScriptEngine = false;
-                boolean hasPlayerEvents = false;
                 boolean hasGui = false;
                 try { hasBlockConfig = registry.hasService(com.megacreative.services.BlockConfigService.class); } catch (Exception ignored) {}
                 try { hasScriptEngine = registry.hasService(com.megacreative.coding.ScriptEngine.class); } catch (Exception ignored) {}
-                try { hasPlayerEvents = registry.hasService(com.megacreative.coding.events.PlayerEventsListener.class); } catch (Exception ignored) {}
                 try { hasGui = registry.hasService(com.megacreative.managers.GUIManager.class); } catch (Exception ignored) {}
 
                 player.sendMessage("§6=== Диагностика ===");
@@ -118,7 +116,6 @@ public class StatusCommand implements CommandExecutor {
                 player.sendMessage("§7TPS: §f" + getServerTpsSafe());
                 player.sendMessage("§7Сервисы: §fBlockConfig=" + tick(hasBlockConfig)
                         + " §fScriptEngine=" + tick(hasScriptEngine)
-                        + " §fPlayerEvents=" + tick(hasPlayerEvents)
                         + " §fGUI=" + tick(hasGui));
             }
         } catch (Exception ignored) {}

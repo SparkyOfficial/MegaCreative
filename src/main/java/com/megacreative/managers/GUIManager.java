@@ -46,19 +46,22 @@ public class GUIManager implements Listener {
     
     /**
      * Constructor with required dependencies
+     * @param plugin The main plugin instance
      * @param playerManager The player manager instance
      * @param variableManager The variable manager instance
      *
      * Конструктор с необходимыми зависимостями
+     * @param plugin основной экземпляр плагина
      * @param playerManager экземпляр менеджера игроков
      * @param variableManager экземпляр менеджера переменных
      *
      * Konstruktor mit erforderlichen Abhängigkeiten
+     * @param plugin Die Haupt-Plugin-Instanz
      * @param playerManager Die Spieler-Manager-Instanz
      * @param variableManager Die Variablen-Manager-Instanz
      */
-    public GUIManager(IPlayerManager playerManager, VariableManager variableManager) {
-        this.plugin = MegaCreative.getInstance();
+    public GUIManager(MegaCreative plugin, IPlayerManager playerManager, VariableManager variableManager) {
+        this.plugin = plugin;
         this.playerManager = playerManager;
         this.variableManager = variableManager;
     }

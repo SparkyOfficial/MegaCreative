@@ -87,6 +87,36 @@ public class WorldManagerImpl implements IWorldManager {
     }
     
     /**
+     * Constructor for ServiceRegistry (uses ConfigManager and Plugin)
+     *
+     * Конструктор для ServiceRegistry (использует ConfigManager и Plugin)
+     *
+     * Konstruktor für ServiceRegistry (verwendet ConfigManager und Plugin)
+     */
+    public WorldManagerImpl(ConfigManager configManager, MegaCreative plugin) {
+        this.plugin = plugin; // Use the injected plugin
+        this.codingManager = null; // Will be injected by ServiceRegistry
+        this.configManager = configManager;
+        this.worlds = new HashMap<>();
+        this.playerWorlds = new HashMap<>();
+        
+        // Load settings from config with null safety
+        if (configManager != null) {
+            this.maxWorldsPerPlayer = configManager.getMaxWorldsPerPlayer();
+            this.worldBorderSize = configManager.getWorldBorderSize();
+        } else {
+            this.maxWorldsPerPlayer = 5; // Default value
+            this.worldBorderSize = 300; // Default value
+        }
+        
+        // Do not load worlds immediately - wait for delayed initialization
+        if (plugin != null) {
+            // Reduced logging - only log when debugging
+            // plugin.getLogger().info("WorldManagerImpl created, worlds will be loaded later");
+        }
+    }
+    
+    /**
      * Constructor for ServiceRegistry (uses ConfigManager)
      *
      * Конструктор для ServiceRegistry (использует ConfigManager)
@@ -94,7 +124,7 @@ public class WorldManagerImpl implements IWorldManager {
      * Konstruktor für ServiceRegistry (verwendet ConfigManager)
      */
     public WorldManagerImpl(ConfigManager configManager) {
-        this.plugin = MegaCreative.getInstance(); // Try to get plugin from singleton
+        this.plugin = null; // Will be injected later
         this.codingManager = null; // Will be injected by ServiceRegistry
         this.configManager = configManager;
         this.worlds = new HashMap<>();
@@ -133,16 +163,13 @@ public class WorldManagerImpl implements IWorldManager {
     }
     
     /**
-     * Gets the plugin instance, trying to get it from MegaCreative singleton if not directly set
+     * Gets the plugin instance
      *
-     * Получает экземпляр плагина, пытаясь получить его из синглтона MegaCreative, если не установлен напрямую
+     * Получает экземпляр плагина
      *
-     * Gibt die Plugin-Instanz zurück und versucht, sie vom MegaCreative-Singleton zu erhalten, falls nicht direkt gesetzt
+     * Gibt die Plugin-Instanz zurück
      */
     private Plugin getPlugin() {
-        if (plugin == null) {
-            plugin = MegaCreative.getInstance();
-        }
         return plugin;
     }
     

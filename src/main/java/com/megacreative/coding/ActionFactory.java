@@ -6,6 +6,7 @@ import com.megacreative.util.ClassScanner;
 import com.megacreative.coding.events.EventPublisher;
 import com.megacreative.coding.events.CustomEvent;
 import com.megacreative.coding.values.DataValue;
+import com.megacreative.interfaces.IActionFactory;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.function.Supplier;
@@ -18,7 +19,7 @@ import java.util.logging.Logger;
  *
  * Fabrik zum Erstellen von Blockaktionen mit anmerkungsbasierter Erkennung
  */
-public class ActionFactory implements EventPublisher {
+public class ActionFactory implements IActionFactory {
     private static final Logger LOGGER = java.util.logging.Logger.getLogger(ActionFactory.class.getName());
 
     private final Map<String, Supplier<BlockAction>> actionRegistry = new HashMap<>();
