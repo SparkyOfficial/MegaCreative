@@ -244,16 +244,16 @@ public class ScriptTriggerManager implements Listener {
     public void onTick(com.megacreative.events.TickEvent event) {
         // Execute scripts for onTick event
         // This will trigger all scripts that start with EVENT_TICK
-        executeScriptsForEvent("onTick", null);
+        executeScriptsForGlobalEvent("onTick");
         
         // Every 20 ticks (1 second), also trigger EVENT_SECOND scripts
         if (event.getTick() % 20 == 0) {
-            executeScriptsForEvent("onSecond", null);
+            executeScriptsForGlobalEvent("onSecond");
         }
         
         // Every 1200 ticks (1 minute), also trigger EVENT_MINUTE scripts
         if (event.getTick() % 1200 == 0) {
-            executeScriptsForEvent("onMinute", null);
+            executeScriptsForGlobalEvent("onMinute");
         }
     }
     
@@ -285,5 +285,26 @@ public class ScriptTriggerManager implements Listener {
         
         // Handle the event through the code handler
         codeHandler.handleEvent(eventName, gameEvent, player);
+    }
+    
+    /**
+     * Execute scripts for global events that don't have a specific world
+     * @param eventName the name of the global event
+     */
+    private void executeScriptsForGlobalEvent(String eventName) {
+        // For global events, we execute scripts in all loaded worlds
+        for (CreativeWorld creativeWorld : worldManager.getCreativeWorlds()) {
+            // Get the code handler for this world
+            CodeHandler codeHandler = creativeWorld.getCodeHandler();
+            if (codeHandler == null) {
+                continue; // Skip worlds without code handlers
+            }
+            
+            // Create a game event with context data
+            GameEvent gameEvent = new GameEvent(eventName);
+            
+            // Handle the event through the code handler
+            codeHandler.handleEvent(eventName, gameEvent, null);
+        }
     }
 }

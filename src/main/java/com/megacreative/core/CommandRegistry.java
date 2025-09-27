@@ -166,5 +166,11 @@ public class CommandRegistry {
         if (plugin.getCommand("cc") != null) {
             plugin.getCommand("cc").setExecutor(new GlobalChatCommand(plugin));
         }
+        
+        // Register create world command
+        if (plugin.getCommand("create") != null) {
+            IWorldManager worldManager = serviceRegistry.getWorldManager();
+            plugin.getCommand("create").setExecutor(new CreateWorldCommand(plugin, worldManager));
+        }
     }
 }
