@@ -65,7 +65,9 @@ public class AsyncLoopControl implements BlockAction {
             BukkitTask task = loopTask.runTaskTimer(context.getPlugin(), delayTicks, delayTicks);
             
             // Track the loop for cleanup
-            activeLoops.put(generateLoopId(playerId), task);
+            UUID loopId = generateLoopId(playerId);
+            activeLoops.put(loopId, task);
+            loopTask.setLoopId(loopId); // Store the loop ID in the task for cleanup
             
             // Debug feedback
             if (context.isDebugMode()) {
@@ -153,6 +155,7 @@ public class AsyncLoopControl implements BlockAction {
         private final int maxIterations;
         private final long startTime;
         private int currentIteration;
+        private UUID loopId; // Store the loop ID for cleanup
         
         public AsyncLoopTask(ExecutionContext context, CodeBlock loopBlock, int maxIterations, long delay) {
             this.context = context;
@@ -160,6 +163,13 @@ public class AsyncLoopControl implements BlockAction {
             this.maxIterations = maxIterations;
             this.startTime = System.currentTimeMillis();
             this.currentIteration = 0;
+        }
+        
+        /**
+         * Sets the loop ID for tracking
+         */
+        public void setLoopId(UUID loopId) {
+            this.loopId = loopId;
         }
         
         @Override
@@ -333,8 +343,13 @@ public class AsyncLoopControl implements BlockAction {
          */
         private void cleanup() {
             cancel();
-            // Remove from active loops tracking
-            activeLoops.entrySet().removeIf(entry -> entry.getValue().equals(this));
+            // Remove from active loops tracking using the stored loop ID
+            if (loopId != null) {
+                BukkitTask task = activeLoops.remove(loopId);
+                if (task != null) {
+                    task.cancel();
+                }
+            }
         }
     }
 }
