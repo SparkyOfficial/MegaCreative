@@ -37,15 +37,28 @@ public class BlockPlacementHandler implements Listener {
     private static final Logger log = Logger.getLogger(BlockPlacementHandler.class.getName());
     
     private final MegaCreative plugin;
-    private final ITrustedPlayerManager trustedPlayerManager;
-    private final BlockConfigService blockConfigService;
+    private ITrustedPlayerManager trustedPlayerManager;
+    private BlockConfigService blockConfigService;
     private final Map<Location, CodeBlock> blockCodeBlocks = new HashMap<>();
     
     public BlockPlacementHandler(MegaCreative plugin) {
         this.plugin = plugin;
-        ServiceRegistry registry = plugin.getServiceRegistry();
-        this.trustedPlayerManager = registry != null ? registry.getTrustedPlayerManager() : null;
-        this.blockConfigService = registry != null ? registry.getBlockConfigService() : null;
+        // Dependencies will be lazily initialized when needed
+    }
+    
+    // Lazy initialization methods
+    private ITrustedPlayerManager getTrustedPlayerManager() {
+        if (trustedPlayerManager == null && plugin != null && plugin.getServiceRegistry() != null) {
+            trustedPlayerManager = plugin.getServiceRegistry().getTrustedPlayerManager();
+        }
+        return trustedPlayerManager;
+    }
+    
+    private BlockConfigService getBlockConfigService() {
+        if (blockConfigService == null && plugin != null && plugin.getServiceRegistry() != null) {
+            blockConfigService = plugin.getServiceRegistry().getBlockConfigService();
+        }
+        return blockConfigService;
     }
     
     /**
@@ -67,11 +80,12 @@ public class BlockPlacementHandler implements Listener {
      * @return true if the event is registered, false otherwise
      */
     private boolean isRegisteredEvent(String eventId) {
-        if (blockConfigService == null || eventId == null) {
+        BlockConfigService configService = getBlockConfigService();
+        if (configService == null || eventId == null) {
             return false;
         }
         // Try to get the block config to see if it's registered
-        BlockConfigService.BlockConfig config = blockConfigService.getBlockConfig(eventId);
+        BlockConfigService.BlockConfig config = configService.getBlockConfig(eventId);
         return config != null;
     }
     
@@ -193,7 +207,8 @@ public class BlockPlacementHandler implements Listener {
     
     // Вспомогательный метод для создания CodeBlock
     private CodeBlock createCodeBlockFor(Block block) {
-        if (blockConfigService == null) {
+        BlockConfigService configService = getBlockConfigService();
+        if (configService == null) {
             return null;
         }
 
@@ -205,7 +220,7 @@ public class BlockPlacementHandler implements Listener {
         }
         
         // Это наш кодовый блок?
-        if (blockConfigService.isCodeBlock(block.getType())) {
+        if (configService.isCodeBlock(block.getType())) {
             return new CodeBlock(block.getType().name(), "NOT_SET");
         }
 
@@ -248,6 +263,11 @@ public class BlockPlacementHandler implements Listener {
         String blockId = getBlockIdentifier(codeBlock);
         
         // Получаем наш реестр
+        if (plugin == null || plugin.getServiceRegistry() == null) {
+            player.sendMessage("§cError: Service registry not available!");
+            return;
+        }
+        
         GUIRegistry guiRegistry = plugin.getServiceRegistry().getGuiRegistry();
         if (guiRegistry == null) {
             player.sendMessage("§cError: GUIRegistry not found!");
@@ -299,12 +319,15 @@ public class BlockPlacementHandler implements Listener {
      */
     public boolean isInDevWorld(Player player) {
         String worldName = player.getWorld().getName();
+        // Enhanced detection for dev worlds with new naming scheme
         return worldName.contains("dev") || worldName.contains("Dev") || 
                worldName.contains("разработка") || worldName.contains("Разработка") ||
                worldName.contains("creative") || worldName.contains("Creative") ||
                worldName.contains("-code") || worldName.endsWith("-code") || 
                worldName.contains("_code") || worldName.endsWith("_dev") ||
-               worldName.contains("megacreative_");
+               worldName.contains("megacreative_") || worldName.contains("DEV") ||
+               // Check for dual world mode dev worlds
+               (worldName.startsWith("megacreative_") && worldName.endsWith("-code"));
     }
     
     /**
@@ -373,14 +396,15 @@ public class BlockPlacementHandler implements Listener {
         Block below = block.getRelative(org.bukkit.block.BlockFace.DOWN);
         
         // If blockConfigService is not available, allow placement (fallback)
-        if (blockConfigService == null) {
+        BlockConfigService configService = getBlockConfigService();
+        if (configService == null) {
             // Reduced logging - only log when debugging
             // plugin.getLogger().info("BlockConfigService is null, allowing placement");
             return true;
         }
         
         // Get block config
-        BlockConfigService.BlockConfig config = blockConfigService.getBlockConfigByMaterial(block.getType());
+        BlockConfigService.BlockConfig config = configService.getBlockConfigByMaterial(block.getType());
         
         // If no config found, allow placement (fallback)
         if (config == null) {
@@ -430,7 +454,8 @@ public class BlockPlacementHandler implements Listener {
         Material material = block.getType();
         
         // Check if this is a code block material
-        if (blockConfigService == null || !blockConfigService.isCodeBlock(material)) {
+        BlockConfigService configService = getBlockConfigService();
+        if (configService == null || !configService.isCodeBlock(material)) {
             // Handle brackets specially
             if (material == Material.PISTON || material == Material.STICKY_PISTON) {
                 CodeBlock bracketBlock = new CodeBlock(material.name(), "BRACKET");

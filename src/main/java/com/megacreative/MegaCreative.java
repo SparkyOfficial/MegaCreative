@@ -43,6 +43,7 @@ public class MegaCreative extends JavaPlugin {
     private static MegaCreative instance;
     
     /**
+    /**
      * Gets the singleton instance of the plugin
      * @return The plugin instance
      */
@@ -198,6 +199,9 @@ public class MegaCreative extends JavaPlugin {
             
             // Register PlayerWorldChangeListener to handle player world changes and give coding items
             getServer().getPluginManager().registerEvents(new PlayerWorldChangeListener(this), this);
+            
+            // Register GUIManager to handle GUI events
+            getServer().getPluginManager().registerEvents(serviceRegistry.getGuiManager(), this);
             
             // Register ScriptTriggerManager to listen to our custom events
             getServer().getPluginManager().registerEvents(serviceRegistry.getScriptTriggerManager(), this);

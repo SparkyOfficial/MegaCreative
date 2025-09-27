@@ -236,6 +236,7 @@ public class ServiceRegistry implements DependencyContainer.Disposable {
     
     private void initializeCodingServices() {
         // Register coding service mappings
+        // BlockPlacementHandler will be created on demand, with lazy initialization of dependencies
         dependencyContainer.registerType(BlockPlacementHandler.class, BlockPlacementHandler.class);
         dependencyContainer.registerType(ConnectionVisualizer.class, ConnectionVisualizer.class);
         dependencyContainer.registerType(BlockLinker.class, BlockLinker.class);

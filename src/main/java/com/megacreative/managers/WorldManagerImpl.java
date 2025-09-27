@@ -301,7 +301,8 @@ public class WorldManagerImpl implements IWorldManager {
      * @return A unique ID string
      */
     private String generateUniqueId() {
-        return UUID.randomUUID().toString().replace("-", "");
+        // Generate a 6-digit numeric ID instead of long UUID
+        return String.format("%06d", ThreadLocalRandom.current().nextInt(100000, 999999));
     }
     
     /**
