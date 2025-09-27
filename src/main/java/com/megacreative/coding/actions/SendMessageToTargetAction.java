@@ -26,14 +26,11 @@ public class SendMessageToTargetAction implements BlockAction {
             DataValue messageValue = block.getParameter("message");
             DataValue targetValue = block.getParameter("target");
             
-            if (messageValue == null) {
-                return ExecutionResult.error("No message specified");
+            if (messageValue == null || messageValue.asString() == null || messageValue.asString().trim().isEmpty()) {
+                return ExecutionResult.error("No message provided");
             }
             
-            String message = messageValue.asString();
-            if (message == null || message.trim().isEmpty()) {
-                return ExecutionResult.error("Message cannot be empty");
-            }
+            String message = messageValue.asString().trim();
             
             // Parse target selector
             String targetSelectorStr = targetValue != null ? targetValue.asString() : "@s"; // Default to self
@@ -49,7 +46,6 @@ public class SendMessageToTargetAction implements BlockAction {
             // Get messaging service
             MessagingService messagingService = context.getPlugin().getServiceRegistry().getMessagingService();
             
-            // Send message to all targets
             for (Player target : targets) {
                 // Replace placeholders
                 String finalMessage = message
@@ -67,7 +63,7 @@ public class SendMessageToTargetAction implements BlockAction {
             return ExecutionResult.success("Message sent to " + targets.size() + " player(s)");
             
         } catch (Exception e) {
-            return ExecutionResult.error("Failed to send message to target: " + e.getMessage());
+            return ExecutionResult.error("Failed to send message: " + e.getMessage());
         }
     }
 }

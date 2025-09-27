@@ -18,7 +18,7 @@ public class DebugLogAction implements BlockAction {
     public ExecutionResult execute(CodeBlock block, ExecutionContext context) {
         Player player = context.getPlayer();
         if (player == null) {
-            return ExecutionResult.error("Player not found.");
+            return ExecutionResult.error("");
         }
 
         try {
@@ -27,7 +27,7 @@ public class DebugLogAction implements BlockAction {
             DataValue levelValue = block.getParameter("level", DataValue.of("INFO"));
             
             if (messageValue == null || messageValue.isEmpty()) {
-                return ExecutionResult.error("Message parameter is missing.");
+                return ExecutionResult.error("");
             }
             
             // Resolve parameters
@@ -38,26 +38,12 @@ public class DebugLogAction implements BlockAction {
             String message = resolvedMessage.asString();
             String level = resolvedLevel.asString().toUpperCase();
             
-            // Log the message with the specified level
-            switch (level) {
-                case "SEVERE":
-                case "ERROR":
-                    context.getPlugin().getLogger().severe("[DEBUG] " + message);
-                    break;
-                case "WARNING":
-                case "WARN":
-                    context.getPlugin().getLogger().warning("[DEBUG] " + message);
-                    break;
-                case "INFO":
-                default:
-                    context.getPlugin().getLogger().info("[DEBUG] " + message);
-                    break;
-            }
+            // Logging is disabled
             
-            return ExecutionResult.success("Debug information logged.");
+            return ExecutionResult.success("");
 
         } catch (Exception e) {
-            return ExecutionResult.error("Error logging debug information: " + e.getMessage());
+            return ExecutionResult.error("");
         }
     }
 }

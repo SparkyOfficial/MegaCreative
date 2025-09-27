@@ -12,14 +12,9 @@ public class MemoryMonitor {
     private final GarbageCollectionMonitor gcMonitor = new GarbageCollectionMonitor();
     private final ScheduledExecutorService scheduler = Executors.newScheduledThreadPool(1);
     private volatile boolean isRunning = false;
-    private Logger logger;
     
     public MemoryMonitor() {
         // Default constructor
-    }
-    
-    public MemoryMonitor(Logger logger) {
-        this.logger = logger;
     }
     
     /**
@@ -51,29 +46,13 @@ public class MemoryMonitor {
         if (!isRunning) {
             isRunning = true;
             gcMonitor.start();
-            
             // Start monitoring thread to periodically log memory usage
             scheduler.scheduleAtFixedRate(this::logMemoryUsage, 0, 30, TimeUnit.SECONDS);
         }
     }
     
-    /**
-     * Logs current memory usage to the logger
-     */
     private void logMemoryUsage() {
-        if (logger != null) {
-            MemoryUsage usage = getCurrentUsage();
-            GarbageCollectionMonitor.GcStatistics gcStats = getGcStatistics();
-            
-            logger.info(String.format(
-                "Memory Usage: %.1fMB / %.1fMB (%.1f%%) | GC Collections: %d | GC Time: %dms",
-                usage.getUsedMemoryMB(),
-                usage.getMaxMemoryMB(),
-                usage.getMemoryUsagePercentage(),
-                gcStats.getTotalGcCount(),
-                gcStats.getTotalGcTime()
-            ));
-        }
+        // Memory logging disabled
     }
     
     /**

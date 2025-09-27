@@ -33,33 +33,24 @@ public class WhileAction implements BlockAction {
     
     @Override
     public ExecutionResult execute(CodeBlock block, ExecutionContext context) {
-        Player player = context.getPlayer();
-        if (player != null) {
-            player.sendMessage("§eExecuting while loop action");
-        }
-        
         // Get the condition from the container configuration
         String condition = getConditionFromContainer(block, context);
         
         if (condition == null || condition.isEmpty()) {
-            if (player != null) {
-                player.sendMessage("§cWhile loop condition not configured");
-            }
-            return ExecutionResult.error("While loop condition not configured");
+            // While loop condition not configured
+            return ExecutionResult.error("while loop condition not configured");
         }
         
         // Evaluate the condition
         boolean conditionResult = evaluateCondition(condition, context);
         
-        if (player != null) {
-            player.sendMessage("§aWhile loop condition evaluated to: " + conditionResult);
-        }
+        // While loop condition evaluated
         
-        return ExecutionResult.success("While loop executed with condition result: " + conditionResult);
+        return ExecutionResult.success("while loop executed with condition result: " + conditionResult);
     }
     
     /**
-     * Gets condition from the container configuration
+
      */
     private String getConditionFromContainer(CodeBlock block, ExecutionContext context) {
         try {

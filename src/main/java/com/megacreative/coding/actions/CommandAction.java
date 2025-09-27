@@ -22,7 +22,7 @@ public class CommandAction implements BlockAction {
             com.megacreative.coding.values.DataValue commandValue = block.getParameter("command");
             
             if (commandValue == null || commandValue.isEmpty()) {
-                return ExecutionResult.error("Command is not configured");
+                return ExecutionResult.error("");
             }
             
             String command = commandValue.asString();
@@ -31,12 +31,12 @@ public class CommandAction implements BlockAction {
             boolean success = Bukkit.dispatchCommand(Bukkit.getConsoleSender(), command);
             
             if (success) {
-                return ExecutionResult.success("Command executed successfully");
+                return ExecutionResult.success("");
             } else {
-                return ExecutionResult.error("Failed to execute command");
+                return ExecutionResult.error("");
             }
         } catch (Exception e) {
-            return ExecutionResult.error("Failed to execute command: " + e.getMessage());
+            return ExecutionResult.error("");
         }
     }
 }

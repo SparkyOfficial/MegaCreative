@@ -23,10 +23,7 @@ public class HealPlayerAction implements BlockAction {
         }
 
         try {
-            // Get heal amount parameter
             double healAmount = getHealAmount(block);
-            
-            // Apply healing
             double currentHealth = player.getHealth();
             double maxHealth = player.getMaxHealth();
             double newHealth = Math.min(maxHealth, currentHealth + healAmount);

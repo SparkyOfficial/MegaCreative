@@ -27,14 +27,10 @@ import java.util.List;
 import java.util.logging.Logger;
 import java.util.Map;
 
-/**
- * Отвечает ИСКЛЮЧИТЕЛЬНО за компиляцию и управление CodeScript'ами.
- * Слушает события добавления/удаления блоков и пересобирает скрипты в мире.
- */
+// Отвечает ИСКЛЮЧИТЕЛЬНО за компиляцию и управление CodeScript'ами.
+// Слушает события добавления/удаления блоков и пересобирает скрипты в мире.
 public class ScriptCompiler implements Listener {
     
-    private static final Logger LOGGER = Logger.getLogger(ScriptCompiler.class.getName());
-
     private final MegaCreative plugin;
     private final BlockConfigService blockConfigService;
     private final BlockLinker blockLinker; // Нужен для сборки цепочки блоков
@@ -46,48 +42,38 @@ public class ScriptCompiler implements Listener {
     }
     
     @EventHandler
-    public void onCodeBlockPlaced(CodeBlockPlacedEvent event) {
-        if (isEventBlock(event.getCodeBlock())) {
-            createAndAddScript(event.getCodeBlock(), event.getPlayer(), event.getLocation());
-        }
-    }
-
-    @EventHandler
-    public void onCodeBlockBroken(CodeBlockBrokenEvent event) {
-        if (isEventBlock(event.getCodeBlock())) {
-            removeScript(event.getCodeBlock(), event.getLocation());
-        }
-    }
-
-    private boolean isEventBlock(CodeBlock block) {
-        if (block == null || block.getAction() == null) return false;
-        BlockConfigService.BlockConfig config = blockConfigService.getBlockConfig(block.getAction());
-        if (config == null) return false;
-        return "EVENT".equals(config.getType());
-    }
-    
-    private void createAndAddScript(CodeBlock eventBlock, Player player, Location location) {
+    public void onBlockPlace(CodeBlockPlacedEvent event) {
         try {
+            Location location = event.getLocation();
+            CodeBlock eventBlock = event.getCodeBlock();
+            
+            // Compile script from this event block
             CodeScript script = compileScriptFromEventBlock(eventBlock);
-            if (script == null) {
-                player.sendMessage("§cОшибка компиляции скрипта!");
-                return;
-            }
-
+            
             IWorldManager worldManager = plugin.getServiceRegistry().getWorldManager();
             CreativeWorld creativeWorld = worldManager.findCreativeWorldByBukkit(location.getWorld());
-
+            
             if (creativeWorld != null) {
                 // Create and register activator for this script
                 createAndRegisterActivator(eventBlock, script, creativeWorld, location);
                 
                 addScriptToWorld(eventBlock, script, creativeWorld, worldManager);
-                player.sendMessage("§a✓ Скрипт скомпилирован для события: §f" + eventBlock.getAction());
-                LOGGER.fine("Compiled and added script for event block: " + eventBlock.getAction());
             }
         } catch (Exception e) {
-            LOGGER.severe("Failed to create script: " + e.getMessage());
-            e.printStackTrace();
+            // Ошибка компиляции скрипта
+        }
+    }
+    
+    @EventHandler
+    public void onBlockBreak(CodeBlockBrokenEvent event) {
+        try {
+            Location location = event.getLocation();
+            CodeBlock eventBlock = event.getCodeBlock();
+            
+            // Remove script associated with this event block
+            removeScript(eventBlock, location);
+        } catch (Exception e) {
+            // Ошибка удаления скрипта
         }
     }
     
@@ -103,7 +89,6 @@ public class ScriptCompiler implements Listener {
             // Get the code handler for this world
             CodeHandler codeHandler = creativeWorld.getCodeHandler();
             if (codeHandler == null) {
-                LOGGER.warning("No code handler found for world: " + creativeWorld.getId());
                 return;
             }
             
@@ -148,11 +133,8 @@ public class ScriptCompiler implements Listener {
                 }
                 
                 codeHandler.registerActivator(activator);
-                LOGGER.fine("Registered activator for event: " + eventBlock.getAction());
             }
         } catch (Exception e) {
-            LOGGER.severe("Failed to create activator for event block: " + eventBlock.getAction() + " - " + e.getMessage());
-            e.printStackTrace();
         }
     }
     
@@ -166,24 +148,21 @@ public class ScriptCompiler implements Listener {
                     boolean removed = scripts.removeIf(script -> script.getRootBlock().getId().equals(eventBlock.getId()));
                     if (removed) {
                         worldManager.saveWorld(creativeWorld);
-                        LOGGER.fine("Removed script for event block: " + eventBlock.getAction());
                     }
                 }
             }
         } catch (Exception e) {
-            LOGGER.severe("Failed to remove script: " + e.getMessage());
-            e.printStackTrace();
         }
     }
     
     private CodeScript compileScriptFromEventBlock(CodeBlock eventBlock) {
-        // Логика компиляции здесь. Она просто следует по `nextBlock` и `children` связям,
-        // которые уже установил BlockLinker.
+        // Compilation logic here. It simply follows the `nextBlock` and `children` links
+        // that were already set up by BlockLinker.
         
-        // ВАЖНО: Мы не перестраиваем связи здесь. Мы им доверяем.
-        // BlockLinker отвечает за структуру, а компилятор - за ее чтение.
+        // IMPORTANT: We don't rebuild the links here. We trust them.
+        // BlockLinker is responsible for the structure, and the compiler is responsible for reading it.
         
-        return new CodeScript(eventBlock); // Для простоты пока создаем скрипт только с корневым блоком
+        return new CodeScript(eventBlock); // For now, create a script with only the root block
     }
 
     private void addScriptToWorld(CodeBlock eventBlock, CodeScript script, CreativeWorld creativeWorld, IWorldManager worldManager) {
@@ -204,12 +183,9 @@ public class ScriptCompiler implements Listener {
      * @param world the world to recompile scripts for
      */
     public void recompileWorldScripts(org.bukkit.World world) {
-        LOGGER.fine("Recompiling all scripts for world: " + world.getName());
-        
         try {
             IWorldManager worldManager = plugin.getServiceRegistry().getWorldManager();
             if (worldManager == null) {
-                LOGGER.warning("World manager not available");
                 return;
             }
             
@@ -220,9 +196,6 @@ public class ScriptCompiler implements Listener {
             List<CodeScript> newScripts = new ArrayList<>();
             
             // Find all event blocks in the world and compile scripts from them
-            int scriptCount = 0;
-            int errorCount = 0;
-            
             for (Map.Entry<Location, CodeBlock> entry : blockLinker.getWorldBlocks(world).entrySet()) {
                 CodeBlock block = entry.getValue();
                 if (isEventBlock(block)) {
@@ -230,15 +203,9 @@ public class ScriptCompiler implements Listener {
                         CodeScript compiledScript = compileScriptFromEventBlock(block);
                         if (compiledScript != null) {
                             newScripts.add(compiledScript);
-                            scriptCount++;
-                            LOGGER.fine("Successfully compiled script: " + compiledScript.getName());
-                        } else {
-                            errorCount++;
-                            LOGGER.warning("Failed to compile script from event block at " + entry.getKey());
                         }
                     } catch (Exception e) {
-                        errorCount++;
-                        LOGGER.log(java.util.logging.Level.SEVERE, "Error compiling script from event block at " + entry.getKey() + ": " + e.getMessage(), e);
+                        // Ignore errors during compilation
                     }
                 }
             }
@@ -247,10 +214,21 @@ public class ScriptCompiler implements Listener {
             creativeWorld.setScripts(newScripts);
             worldManager.saveWorld(creativeWorld);
             
-            LOGGER.fine("Recompiled " + scriptCount + " scripts for world: " + world.getName() + " with " + errorCount + " errors");
         } catch (Exception e) {
-            LOGGER.severe("Failed to recompile world scripts: " + e.getMessage());
-            e.printStackTrace();
         }
+    }
+    
+    /**
+     * Checks if a block is an event block
+     * @param block the block to check
+     * @return true if the block is an event block
+     */
+    private boolean isEventBlock(CodeBlock block) {
+        if (block == null || block.getAction() == null) {
+            return false;
+        }
+        
+        // Check if the block action starts with "on" which indicates an event
+        return block.getAction().startsWith("on");
     }
 }

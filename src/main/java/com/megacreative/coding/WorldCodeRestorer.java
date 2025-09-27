@@ -14,13 +14,9 @@ import java.util.logging.Logger;
  *
  * Восстанавливает соединения кодовых блоков при загрузке мира
  * Слушает события WorldLoadEvent и восстанавливает соединения для всех кодовых блоков в мире
- *
- * Stellt Codeblock-Verbindungen beim Laden einer Welt wieder her
  * Hört auf WorldLoadEvent und baut Verbindungen für alle Codeblöcke in der Welt wieder auf
  */
 public class WorldCodeRestorer implements Listener {
-    
-    private static final Logger LOGGER = Logger.getLogger(WorldCodeRestorer.class.getName());
     
     private final MegaCreative plugin;
     private final ServiceRegistry serviceRegistry;
@@ -39,15 +35,11 @@ public class WorldCodeRestorer implements Listener {
         
         // Check if this is a development world
         if (isDevWorld(world)) {
-            LOGGER.info("Restoring code connections for world: " + world.getName());
-            
             try {
                 // In the new architecture, connection restoration is handled by BlockLinker and BlockHierarchyManager
                 // These services listen to events and manage connections automatically
-                LOGGER.info("Code connections are managed automatically by BlockLinker and BlockHierarchyManager");
             } catch (Exception e) {
-                LOGGER.severe("Failed to restore code connections for world " + world.getName() + ": " + e.getMessage());
-                e.printStackTrace();
+                // Silent error handling
             }
         }
     }

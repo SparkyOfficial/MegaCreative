@@ -27,14 +27,11 @@ import java.util.logging.Logger;
 
 /**
  * Script trigger manager that listens to our custom events and triggers script execution
- * This replaces the old PlayerEventsListener which listened directly to Bukkit events
  * 
  * This class is now completely decoupled from Bukkit events and only listens to our
  * clean, internal events
  */
 public class ScriptTriggerManager implements Listener {
-    private static final Logger LOGGER = Logger.getLogger(ScriptTriggerManager.class.getName());
-    
     private final MegaCreative plugin;
     private final IWorldManager worldManager;
     private final PlayerModeManager playerModeManager;
@@ -47,213 +44,223 @@ public class ScriptTriggerManager implements Listener {
     
     @EventHandler
     public void onMegaPlayerJoin(MegaPlayerJoinedEvent event) {
-        // Find the creative world
-        CreativeWorld creativeWorld = worldManager.findCreativeWorldByBukkit(event.getPlayer().getWorld());
-        if (creativeWorld == null) return;
+        if (event == null || event.getPlayer() == null || worldManager == null) return;
         
-        // Check if player can code in this world
-        if (!creativeWorld.canCode(event.getPlayer())) return;
-        
-        // Find the code handler for this world
-        CodeHandler codeHandler = creativeWorld.getCodeHandler();
-        if (codeHandler == null) return;
-        
-        // Get all activators for this event
-        List<Activator> activators = codeHandler.getActivatorsForEvent("onJoin");
-        if (activators.isEmpty()) return;
-        
-        // Execute each activator with proper context data
-        for (Activator activator : activators) {
-            if (activator instanceof PlayerJoinActivator && activator.isEnabled() && activator.getScript() != null) {
-                PlayerJoinActivator playerJoinActivator = (PlayerJoinActivator) activator;
-                playerJoinActivator.activate(event.getPlayer(), event.isFirstJoin());
+        try {
+            CreativeWorld creativeWorld = worldManager.findCreativeWorldByBukkit(event.getPlayer().getWorld());
+            if (creativeWorld == null || !creativeWorld.canCode(event.getPlayer())) return;
+            
+            CodeHandler codeHandler = creativeWorld.getCodeHandler();
+            if (codeHandler == null) return;
+            
+            List<Activator> activators = codeHandler.getActivatorsForEvent("onJoin");
+            if (activators == null || activators.isEmpty()) return;
+            
+            for (Activator activator : activators) {
+                if (activator instanceof PlayerJoinActivator && activator.isEnabled() && activator.getScript() != null) {
+                    ((PlayerJoinActivator) activator).activate(event.getPlayer(), event.isFirstJoin());
+                }
             }
+        } catch (Exception e) {
+            // Suppress exception
         }
     }
     
     @EventHandler
     public void onMegaPlayerMove(MegaPlayerMoveEvent event) {
-        // Find the creative world
-        CreativeWorld creativeWorld = worldManager.findCreativeWorldByBukkit(event.getPlayer().getWorld());
-        if (creativeWorld == null) return;
+        if (event == null || event.getPlayer() == null || worldManager == null) return;
         
-        // Check if player can code in this world
-        if (!creativeWorld.canCode(event.getPlayer())) return;
-        
-        // Find the code handler for this world
-        CodeHandler codeHandler = creativeWorld.getCodeHandler();
-        if (codeHandler == null) return;
-        
-        // Get all activators for this event
-        List<Activator> activators = codeHandler.getActivatorsForEvent("onPlayerMove");
-        if (activators.isEmpty()) return;
-        
-        // Execute each activator with proper context data
-        for (Activator activator : activators) {
-            if (activator instanceof PlayerMoveActivator && activator.isEnabled() && activator.getScript() != null) {
-                PlayerMoveActivator playerMoveActivator = (PlayerMoveActivator) activator;
-                playerMoveActivator.activate(event.getPlayer(), event.getFrom(), event.getTo());
+        try {
+            CreativeWorld creativeWorld = worldManager.findCreativeWorldByBukkit(event.getPlayer().getWorld());
+            if (creativeWorld == null || !creativeWorld.canCode(event.getPlayer())) return;
+            
+            CodeHandler codeHandler = creativeWorld.getCodeHandler();
+            if (codeHandler == null) return;
+            
+            List<Activator> activators = codeHandler.getActivatorsForEvent("onPlayerMove");
+            if (activators == null || activators.isEmpty()) return;
+            
+            for (Activator activator : activators) {
+                if (activator instanceof PlayerMoveActivator && activator.isEnabled() && activator.getScript() != null) {
+                    ((PlayerMoveActivator) activator).activate(event.getPlayer(), event.getFrom(), event.getTo());
+                }
             }
+        } catch (Exception e) {
+            // Suppress exception
         }
     }
     
     @EventHandler
     public void onMegaPlayerChat(MegaPlayerChatEvent event) {
-        // Find the creative world
-        CreativeWorld creativeWorld = worldManager.findCreativeWorldByBukkit(event.getPlayer().getWorld());
-        if (creativeWorld == null) return;
+        if (event == null || event.getPlayer() == null || worldManager == null) return;
         
-        // Check if player can code in this world
-        if (!creativeWorld.canCode(event.getPlayer())) return;
-        
-        // Execute scripts for onChat event in both PLAY and DEV modes
-        executeScriptsForEvent("onChat", event.getPlayer());
+        try {
+            CreativeWorld creativeWorld = worldManager.findCreativeWorldByBukkit(event.getPlayer().getWorld());
+            if (creativeWorld == null || !creativeWorld.canCode(event.getPlayer())) return;
+            
+            executeScriptsForEvent("onChat", event.getPlayer());
+        } catch (Exception e) {
+            // Suppress exception
+        }
     }
     
     @EventHandler
     public void onMegaBlockPlace(MegaBlockPlaceEvent event) {
-        // Find the creative world
-        CreativeWorld creativeWorld = worldManager.findCreativeWorldByBukkit(event.getPlayer().getWorld());
-        if (creativeWorld == null) return;
+        if (event == null || event.getPlayer() == null || worldManager == null) return;
         
-        // Check if player can code in this world
-        if (!creativeWorld.canCode(event.getPlayer())) return;
-        
-        // Execute scripts for onBlockPlace event in both PLAY and DEV modes
-        executeScriptsForEvent("onBlockPlace", event.getPlayer());
+        try {
+            CreativeWorld creativeWorld = worldManager.findCreativeWorldByBukkit(event.getPlayer().getWorld());
+            if (creativeWorld == null || !creativeWorld.canCode(event.getPlayer())) return;
+            
+            executeScriptsForEvent("onBlockPlace", event.getPlayer());
+        } catch (Exception e) {
+            // Suppress exception
+        }
     }
     
     @EventHandler
     public void onMegaBlockBreak(MegaBlockBreakEvent event) {
-        // Find the creative world
-        CreativeWorld creativeWorld = worldManager.findCreativeWorldByBukkit(event.getPlayer().getWorld());
-        if (creativeWorld == null) return;
+        if (event == null || event.getPlayer() == null || worldManager == null) return;
         
-        // Check if player can code in this world
-        if (!creativeWorld.canCode(event.getPlayer())) return;
-        
-        // Execute scripts for onBlockBreak event in both PLAY and DEV modes
-        executeScriptsForEvent("onBlockBreak", event.getPlayer());
+        try {
+            CreativeWorld creativeWorld = worldManager.findCreativeWorldByBukkit(event.getPlayer().getWorld());
+            if (creativeWorld == null || !creativeWorld.canCode(event.getPlayer())) return;
+            
+            executeScriptsForEvent("onBlockBreak", event.getPlayer());
+        } catch (Exception e) {
+            // Suppress exception
+        }
     }
     
     @EventHandler
     public void onMegaEntityPickupItem(MegaEntityPickupItemEvent event) {
-        // Find the creative world
-        CreativeWorld creativeWorld = worldManager.findCreativeWorldByBukkit(event.getPlayer().getWorld());
-        if (creativeWorld == null) return;
+        if (event == null || event.getPlayer() == null || worldManager == null) return;
         
-        // Check if player can code in this world
-        if (!creativeWorld.canCode(event.getPlayer())) return;
-        
-        // Execute scripts for onEntityPickupItem event in both PLAY and DEV modes
-        executeScriptsForEvent("onEntityPickupItem", event.getPlayer());
+        try {
+            CreativeWorld creativeWorld = worldManager.findCreativeWorldByBukkit(event.getPlayer().getWorld());
+            if (creativeWorld == null || !creativeWorld.canCode(event.getPlayer())) return;
+            
+            executeScriptsForEvent("onEntityPickupItem", event.getPlayer());
+        } catch (Exception e) {
+            // Suppress exception
+        }
     }
     
     @EventHandler
     public void onMegaPlayerDeath(MegaPlayerDeathEvent event) {
-        // Find the creative world
-        CreativeWorld creativeWorld = worldManager.findCreativeWorldByBukkit(event.getPlayer().getWorld());
-        if (creativeWorld == null) return;
+        if (event == null || event.getPlayer() == null || worldManager == null) return;
         
-        // Check if player can code in this world
-        if (!creativeWorld.canCode(event.getPlayer())) return;
-        
-        // Execute scripts for onPlayerDeath event in both PLAY and DEV modes
-        executeScriptsForEvent("onPlayerDeath", event.getPlayer());
+        try {
+            CreativeWorld creativeWorld = worldManager.findCreativeWorldByBukkit(event.getPlayer().getWorld());
+            if (creativeWorld == null || !creativeWorld.canCode(event.getPlayer())) return;
+            
+            executeScriptsForEvent("onPlayerDeath", event.getPlayer());
+        } catch (Exception e) {
+            // Suppress exception
+        }
     }
-    
     @EventHandler
     public void onMegaPlayerQuit(MegaPlayerQuitEvent event) {
-        // Find the creative world
-        CreativeWorld creativeWorld = worldManager.findCreativeWorldByBukkit(event.getPlayer().getWorld());
-        if (creativeWorld == null) return;
+        if (event == null || event.getPlayer() == null || worldManager == null) return;
         
-        // Check if player can code in this world
-        if (!creativeWorld.canCode(event.getPlayer())) return;
-        
-        // Execute scripts for onPlayerQuit event in both PLAY and DEV modes
-        executeScriptsForEvent("onPlayerQuit", event.getPlayer());
+        try {
+            CreativeWorld creativeWorld = worldManager.findCreativeWorldByBukkit(event.getPlayer().getWorld());
+            if (creativeWorld == null || !creativeWorld.canCode(event.getPlayer())) return;
+            
+            executeScriptsForEvent("onQuit", event.getPlayer());
+        } catch (Exception e) {
+            // Suppress exception
+        }
     }
     
     @EventHandler
     public void onMegaPlayerRespawn(MegaPlayerRespawnEvent event) {
-        // Find the creative world
-        CreativeWorld creativeWorld = worldManager.findCreativeWorldByBukkit(event.getPlayer().getWorld());
-        if (creativeWorld == null) return;
+        if (event == null || event.getPlayer() == null || worldManager == null) return;
         
-        // Check if player can code in this world
-        if (!creativeWorld.canCode(event.getPlayer())) return;
-        
-        // Execute scripts for onPlayerRespawn event in both PLAY and DEV modes
-        executeScriptsForEvent("onPlayerRespawn", event.getPlayer());
+        try {
+            CreativeWorld creativeWorld = worldManager.findCreativeWorldByBukkit(event.getPlayer().getWorld());
+            if (creativeWorld == null || !creativeWorld.canCode(event.getPlayer())) return;
+            
+            executeScriptsForEvent("onRespawn", event.getPlayer());
+        } catch (Exception e) {
+            // Suppress exception
+        }
     }
     
     @EventHandler
     public void onMegaPlayerTeleport(MegaPlayerTeleportEvent event) {
-        // Find the creative world
-        CreativeWorld creativeWorld = worldManager.findCreativeWorldByBukkit(event.getPlayer().getWorld());
-        if (creativeWorld == null) return;
+        if (event == null || event.getPlayer() == null || worldManager == null) return;
         
-        // Check if player can code in this world
-        if (!creativeWorld.canCode(event.getPlayer())) return;
-        
-        // Execute scripts for onPlayerTeleport event in both PLAY and DEV modes
-        executeScriptsForEvent("onPlayerTeleport", event.getPlayer());
+        try {
+            CreativeWorld creativeWorld = worldManager.findCreativeWorldByBukkit(event.getPlayer().getWorld());
+            if (creativeWorld == null || !creativeWorld.canCode(event.getPlayer())) return;
+            
+            executeScriptsForEvent("onTeleport", event.getPlayer());
+        } catch (Exception e) {
+            // Suppress exception
+        }
     }
     
     @EventHandler
     public void onMegaEntityDamage(MegaEntityDamageEvent event) {
-        // Find the creative world
-        CreativeWorld creativeWorld = worldManager.findCreativeWorldByBukkit(event.getPlayer().getWorld());
-        if (creativeWorld == null) return;
+        if (event == null || event.getPlayer() == null || worldManager == null) return;
         
-        // Check if player can code in this world
-        if (!creativeWorld.canCode(event.getPlayer())) return;
-        
-        // Execute scripts for onEntityDamage event in both PLAY and DEV modes
-        executeScriptsForEvent("onEntityDamage", event.getPlayer());
+        try {
+            org.bukkit.entity.Player player = event.getPlayer();
+            CreativeWorld creativeWorld = worldManager.findCreativeWorldByBukkit(player.getWorld());
+            if (creativeWorld == null || !creativeWorld.canCode(player)) return;
+            
+            executeScriptsForEvent("onEntityDamage", player);
+        } catch (Exception e) {
+            // Suppress exception
+        }
     }
     
     @EventHandler
     public void onMegaInventoryClick(MegaInventoryClickEvent event) {
-        // Find the creative world
-        CreativeWorld creativeWorld = worldManager.findCreativeWorldByBukkit(event.getPlayer().getWorld());
-        if (creativeWorld == null) return;
+        if (event == null || event.getPlayer() == null || worldManager == null) return;
         
-        // Check if player can code in this world
-        if (!creativeWorld.canCode(event.getPlayer())) return;
-        
-        // Execute scripts for onInventoryClick event in both PLAY and DEV modes
-        executeScriptsForEvent("onInventoryClick", event.getPlayer());
+        try {
+            org.bukkit.entity.Player player = event.getPlayer();
+            CreativeWorld creativeWorld = worldManager.findCreativeWorldByBukkit(player.getWorld());
+            if (creativeWorld == null || !creativeWorld.canCode(player)) return;
+            
+            executeScriptsForEvent("onInventoryClick", player);
+        } catch (Exception e) {
+            // Suppress exception
+        }
     }
     
     @EventHandler
     public void onMegaInventoryOpen(MegaInventoryOpenEvent event) {
-        // Find the creative world
-        CreativeWorld creativeWorld = worldManager.findCreativeWorldByBukkit(event.getPlayer().getWorld());
-        if (creativeWorld == null) return;
+        if (event == null || event.getPlayer() == null || worldManager == null) return;
         
-        // Check if player can code in this world
-        if (!creativeWorld.canCode(event.getPlayer())) return;
-        
-        // Execute scripts for onInventoryOpen event in both PLAY and DEV modes
-        executeScriptsForEvent("onInventoryOpen", event.getPlayer());
+        try {
+            CreativeWorld creativeWorld = worldManager.findCreativeWorldByBukkit(event.getPlayer().getWorld());
+            if (creativeWorld == null || !creativeWorld.canCode(event.getPlayer())) return;
+            
+            executeScriptsForEvent("onInventoryOpen", event.getPlayer());
+        } catch (Exception e) {
+            // Suppress exception
+        }
     }
     
     @EventHandler
     public void onTick(com.megacreative.events.TickEvent event) {
-        // Execute scripts for onTick event
-        // This will trigger all scripts that start with EVENT_TICK
-        executeScriptsForGlobalEvent("onTick");
+        if (event == null || worldManager == null) return;
         
-        // Every 20 ticks (1 second), also trigger EVENT_SECOND scripts
-        if (event.getTick() % 20 == 0) {
-            executeScriptsForGlobalEvent("onSecond");
-        }
-        
-        // Every 1200 ticks (1 minute), also trigger EVENT_MINUTE scripts
-        if (event.getTick() % 1200 == 0) {
-            executeScriptsForGlobalEvent("onMinute");
+        try {
+            executeScriptsForGlobalEvent("onTick");
+            
+            if (event.getTick() % 20 == 0) {
+                executeScriptsForGlobalEvent("onSecond");
+            }
+            
+            if (event.getTick() % 1200 == 0) {
+                executeScriptsForGlobalEvent("onMinute");
+            }
+        } catch (Exception e) {
+            // Suppress exception
         }
     }
     
@@ -263,28 +270,33 @@ public class ScriptTriggerManager implements Listener {
      * @param player the player associated with the event
      */
     private void executeScriptsForEvent(String eventName, org.bukkit.entity.Player player) {
-        // Find the creative world
-        CreativeWorld creativeWorld = worldManager.findCreativeWorldByBukkit(player != null ? player.getWorld() : null);
-        if (creativeWorld == null) {
-            LOGGER.warning("No creative world found for event: " + eventName);
+        if (eventName == null || worldManager == null) {
             return;
         }
         
-        // Get the code handler for this world
-        CodeHandler codeHandler = creativeWorld.getCodeHandler();
-        if (codeHandler == null) {
-            LOGGER.warning("No code handler found for world: " + creativeWorld.getId());
-            return;
+        try {
+            // Find the creative world
+            CreativeWorld creativeWorld = worldManager.findCreativeWorldByBukkit(player != null ? player.getWorld() : null);
+            if (creativeWorld == null) {
+                return;
+            }
+            
+            // Get the code handler for this world
+            CodeHandler codeHandler = creativeWorld.getCodeHandler();
+            if (codeHandler == null) {
+                return;
+            }
+            
+            // Create a game event with context data
+            GameEvent gameEvent = new GameEvent(eventName);
+            if (player != null) {
+                gameEvent.setPlayer(player);
+            }
+            
+            // Handle the event through the code handler
+            codeHandler.handleEvent(eventName, gameEvent, player);
+        } catch (Exception e) {
         }
-        
-        // Create a game event with context data
-        GameEvent gameEvent = new GameEvent(eventName);
-        if (player != null) {
-            gameEvent.setPlayer(player);
-        }
-        
-        // Handle the event through the code handler
-        codeHandler.handleEvent(eventName, gameEvent, player);
     }
     
     /**
@@ -292,19 +304,28 @@ public class ScriptTriggerManager implements Listener {
      * @param eventName the name of the global event
      */
     private void executeScriptsForGlobalEvent(String eventName) {
-        // For global events, we execute scripts in all loaded worlds
-        for (CreativeWorld creativeWorld : worldManager.getCreativeWorlds()) {
-            // Get the code handler for this world
-            CodeHandler codeHandler = creativeWorld.getCodeHandler();
-            if (codeHandler == null) {
-                continue; // Skip worlds without code handlers
+        if (eventName == null || worldManager == null) {
+            return;
+        }
+        
+        try {
+            // For global events, we execute scripts in all loaded worlds
+            for (CreativeWorld creativeWorld : worldManager.getCreativeWorlds()) {
+                if (creativeWorld == null) continue;
+                
+                // Get the code handler for this world
+                CodeHandler codeHandler = creativeWorld.getCodeHandler();
+                if (codeHandler == null) {
+                    continue; // Skip worlds without code handlers
+                }
+                
+                // Create a game event with context data
+                GameEvent gameEvent = new GameEvent(eventName);
+                
+                // Handle the event through the code handler
+                codeHandler.handleEvent(eventName, gameEvent, null);
             }
-            
-            // Create a game event with context data
-            GameEvent gameEvent = new GameEvent(eventName);
-            
-            // Handle the event through the code handler
-            codeHandler.handleEvent(eventName, gameEvent, null);
+        } catch (Exception e) {
         }
     }
 }

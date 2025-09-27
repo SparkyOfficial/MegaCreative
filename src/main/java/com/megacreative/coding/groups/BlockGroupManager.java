@@ -49,9 +49,6 @@ public class BlockGroupManager {
         GroupSelectionState state = new GroupSelectionState();
         playerSelections.put(player.getUniqueId(), state);
         
-        player.sendMessage("§a✓ Group selection mode activated!");
-        player.sendMessage("§7Right-click blocks to select them for grouping");
-        
         log.fine("Player " + player.getName() + " started group selection mode");
     }
     
@@ -61,21 +58,16 @@ public class BlockGroupManager {
     public void selectBlock(Player player, Location blockLocation, CodeBlock codeBlock) {
         GroupSelectionState state = playerSelections.get(player.getUniqueId());
         if (state == null) {
-            player.sendMessage("§cYou are not in group selection mode!");
             return;
         }
         
         if (state.getSelectedBlocks().containsKey(blockLocation)) {
             // Deselect block
             state.getSelectedBlocks().remove(blockLocation);
-            player.sendMessage("§e- Deselected block: " + codeBlock.getAction());
         } else {
             // Select block
             state.getSelectedBlocks().put(blockLocation, codeBlock);
-            player.sendMessage("§a+ Selected block: " + codeBlock.getAction());
         }
-        
-        player.sendMessage("§7Selected: " + state.getSelectedBlocks().size() + " blocks");
     }
     
     /**
@@ -83,7 +75,6 @@ public class BlockGroupManager {
      */
     public void cancelSelection(Player player) {
         playerSelections.remove(player.getUniqueId());
-        player.sendMessage("§e✖ Group selection cancelled");
     }
     
     /**
@@ -106,12 +97,10 @@ public class BlockGroupManager {
     public void collapseGroup(Player player, String groupName) {
         BlockGroup group = findGroupByName(player, groupName);
         if (group == null) {
-            player.sendMessage("§cGroup not found: " + groupName);
             return;
         }
         
         group.setCollapsed(true);
-        player.sendMessage("§a✓ Collapsed group: " + groupName);
     }
     
     /**
@@ -120,12 +109,10 @@ public class BlockGroupManager {
     public void expandGroup(Player player, String groupName) {
         BlockGroup group = findGroupByName(player, groupName);
         if (group == null) {
-            player.sendMessage("§cGroup not found: " + groupName);
             return;
         }
         
         group.setCollapsed(false);
-        player.sendMessage("§a✓ Expanded group: " + groupName);
     }
     
     /**
@@ -135,16 +122,12 @@ public class BlockGroupManager {
         String worldName = player.getWorld().getName();
         Map<UUID, BlockGroup> groups = worldGroups.get(worldName);
         if (groups == null) {
-            player.sendMessage("§cGroup not found: " + groupName);
             return;
         }
         
         BlockGroup group = findGroupByName(player, groupName);
         if (group != null) {
             groups.remove(group.getId());
-            player.sendMessage("§a✓ Deleted group: " + groupName);
-        } else {
-            player.sendMessage("§cGroup not found: " + groupName);
         }
     }
     
@@ -155,16 +138,7 @@ public class BlockGroupManager {
         String worldName = player.getWorld().getName();
         Map<UUID, BlockGroup> groups = worldGroups.get(worldName);
         if (groups == null || groups.isEmpty()) {
-            player.sendMessage("§eNo groups found in this world");
             return;
-        }
-        
-        player.sendMessage("§a§lYour Groups:");
-        for (BlockGroup group : groups.values()) {
-            if (group.getOwner().equals(player.getUniqueId())) {
-                String status = group.isCollapsed() ? "§c[Collapsed]" : "§a[Expanded]";
-                player.sendMessage("§7- " + status + " §f" + group.getName() + " §7(" + group.getBlocks().size() + " blocks)");
-            }
         }
     }
     
@@ -206,13 +180,7 @@ public class BlockGroupManager {
      */
     public void createGroupFromSelection(Player player, String groupName) {
         GroupSelectionState state = playerSelections.get(player.getUniqueId());
-        if (state == null) {
-            player.sendMessage("§cYou are not in group selection mode!");
-            return;
-        }
-        
-        if (state.getSelectedBlocks().isEmpty()) {
-            player.sendMessage("§cNo blocks selected for grouping!");
+        if (state == null || state.getSelectedBlocks().isEmpty()) {
             return;
         }
         
@@ -233,8 +201,6 @@ public class BlockGroupManager {
         // Clear selection
         clearSelection(player);
         
-        player.sendMessage("§a✓ Created group: " + group.getName() + " (" + group.getBlocks().size() + " blocks)");
-        
         log.info("Player " + player.getName() + " created group: " + group.getName() + 
                 " with " + group.getBlocks().size() + " blocks");
     }
@@ -245,13 +211,7 @@ public class BlockGroupManager {
     public void createAdvancedGroupFromSelection(Player player, String groupName, 
                                                AdvancedBlockGroup.ExecutionMode executionMode) {
         GroupSelectionState state = playerSelections.get(player.getUniqueId());
-        if (state == null) {
-            player.sendMessage("§cYou are not in group selection mode!");
-            return;
-        }
-        
-        if (state.getSelectedBlocks().isEmpty()) {
-            player.sendMessage("§cNo blocks selected for grouping!");
+        if (state == null || state.getSelectedBlocks().isEmpty()) {
             return;
         }
         
@@ -274,9 +234,6 @@ public class BlockGroupManager {
         // Clear selection
         clearSelection(player);
         
-        player.sendMessage("§a✓ Created advanced group: " + group.getName() + " (" + group.getBlocks().size() + " blocks)");
-        player.sendMessage("§7Execution mode: " + executionMode);
-        
         log.info("Player " + player.getName() + " created advanced group: " + group.getName() + 
                 " with " + group.getBlocks().size() + " blocks");
     }
@@ -287,7 +244,6 @@ public class BlockGroupManager {
     public AdvancedBlockGroup convertToAdvancedGroup(Player player, String groupName) {
         BlockGroup regularGroup = findGroupByName(player, groupName);
         if (regularGroup == null) {
-            player.sendMessage("§cGroup not found: " + groupName);
             return null;
         }
         
@@ -314,7 +270,6 @@ public class BlockGroupManager {
         worldAdvancedGroups.computeIfAbsent(worldName, k -> new ConcurrentHashMap<>())
                           .put(advancedGroup.getId(), advancedGroup);
         
-        player.sendMessage("§a✓ Converted group to advanced: " + groupName);
         return advancedGroup;
     }
     
@@ -329,15 +284,7 @@ public class BlockGroupManager {
      * Lists all templates
      */
     public void listTemplates(Player player) {
-        if (templates.isEmpty()) {
-            player.sendMessage("§eNo templates found");
-            return;
-        }
-        
-        player.sendMessage("§a§lAvailable Templates:");
-        for (AdvancedBlockGroup template : templates.values()) {
-            player.sendMessage("§7- §f" + template.getName() + " §7(" + template.getBlocks().size() + " blocks)");
-        }
+        // Метод оставлен для совместимости, но больше не выводит сообщения в чат
     }
     
     /**
@@ -346,12 +293,10 @@ public class BlockGroupManager {
     public void toggleGroupLock(Player player, String groupName) {
         AdvancedBlockGroup group = findAdvancedGroupByName(player, groupName);
         if (group == null) {
-            player.sendMessage("§cAdvanced group not found: " + groupName);
             return;
         }
         
         group.setLocked(!group.isLocked());
-        player.sendMessage("§a✓ Group " + groupName + " is now " + (group.isLocked() ? "§clocked" : "§aunlocked"));
     }
     
     /**

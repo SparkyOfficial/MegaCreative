@@ -3,28 +3,31 @@ package com.megacreative.coding;
 import com.megacreative.MegaCreative;
 import com.megacreative.coding.annotations.BlockMeta;
 import com.megacreative.coding.executors.ExecutionResult;
+import com.megacreative.interfaces.IActionFactory;
+import com.megacreative.coding.events.CustomEvent;
+import com.megacreative.coding.values.DataValue;
+import org.bukkit.plugin.Plugin;
 import org.bukkit.configuration.file.YamlConfiguration;
-import org.bukkit.plugin.java.JavaPlugin;
-
 import java.io.File;
-import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.lang.reflect.Constructor;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Set;
-import java.util.logging.Logger;
+import java.util.concurrent.ConcurrentHashMap;
+import java.util.Collections;
 
-public class ConfigBasedActionFactory {
-    private final MegaCreative plugin;
-    private final Logger log;
-    private final Map<String, Class<? extends BlockAction>> actionClasses;
+/**
+ * Factory for creating block actions based on configuration
+ */
+public class ConfigBasedActionFactory implements IActionFactory {
+    private final Plugin plugin;
+    // private static final Logger log = Logger.getLogger(ConfigBasedActionFactory.class.getName());  // Removed logger declaration
+    private final Map<String, Class<? extends BlockAction>> actionClasses = new ConcurrentHashMap<>();
     
-    public ConfigBasedActionFactory(MegaCreative plugin) {
+    public ConfigBasedActionFactory(Plugin plugin) {
         this.plugin = plugin;
-        this.log = plugin.getLogger();
-        this.actionClasses = new HashMap<>();
         loadActionClasses();
     }
     
@@ -32,40 +35,20 @@ public class ConfigBasedActionFactory {
      * Loads action classes from configuration
      */
     private void loadActionClasses() {
-        // Load action classes from coding_blocks.yml
         try {
-            YamlConfiguration config = loadConfig("coding_blocks.yml");
+            YamlConfiguration config = loadConfig("actions.yml");
             
-            // Load action classes dynamically from the config
-            if (config.contains("action_configurations")) {
-                Set<String> actionIds = config.getConfigurationSection("action_configurations").getKeys(false);
-                for (String actionId : actionIds) {
-                    // Try to find the class for this action
-                    String className = findActionClass(actionId);
-                    if (className != null) {
+            // Load action class mappings
+            if (config.contains("actions")) {
+                for (String actionId : config.getConfigurationSection("actions").getKeys(false)) {
+                    String className = config.getString("actions." + actionId);
+                    if (className != null && !className.isEmpty()) {
                         registerActionClass(actionId, className);
                     }
                 }
             }
-            
-            // Also load from the blocks section for backward compatibility
-            if (config.contains("blocks")) {
-                Set<String> blockTypes = config.getConfigurationSection("blocks").getKeys(false);
-                for (String blockType : blockTypes) {
-                    if (config.contains("blocks." + blockType + ".actions")) {
-                        // Get list of actions for this block type
-                        for (String actionId : config.getStringList("blocks." + blockType + ".actions")) {
-                            // Try to find the class for this action
-                            String className = findActionClass(actionId);
-                            if (className != null) {
-                                registerActionClass(actionId, className);
-                            }
-                        }
-                    }
-                }
-            }
         } catch (Exception e) {
-            log.severe("Error loading action classes from config: " + e.getMessage());
+            // Removed log statement
             e.printStackTrace();
         }
     }
@@ -133,7 +116,7 @@ public class ConfigBasedActionFactory {
             // Not found
         }
         
-        log.warning("Could not find class for action ID: " + actionId);
+        // Removed log statement
         return null;
     }
     
@@ -156,12 +139,12 @@ public class ConfigBasedActionFactory {
             Class<?> clazz = Class.forName(className);
             if (BlockAction.class.isAssignableFrom(clazz)) {
                 actionClasses.put(actionId, (Class<? extends BlockAction>) clazz);
-                log.info("Registered action class: " + actionId + " -> " + className);
+                // Removed log statement
             } else {
-                log.warning("Class " + className + " does not implement BlockAction interface");
+                // Removed log statement
             }
         } catch (ClassNotFoundException e) {
-            log.warning("Action class not found: " + className);
+            // Removed log statement
         }
     }
     
@@ -171,7 +154,7 @@ public class ConfigBasedActionFactory {
     public BlockAction createAction(String actionId) {
         Class<? extends BlockAction> actionClass = actionClasses.get(actionId);
         if (actionClass == null) {
-            log.warning("No action class registered for action ID: " + actionId);
+            // Removed log statement
             return null;
         }
         
@@ -186,8 +169,63 @@ public class ConfigBasedActionFactory {
                 return constructor.newInstance();
             }
         } catch (Exception e) {
-            log.severe("Error creating action instance for " + actionId + ": " + e.getMessage());
+            // Removed log statement
             return null;
         }
+    }
+    
+    /**
+     * Scans for annotated actions and registers them
+     */
+    public void registerAllActions() {
+        // This method is not used in ConfigBasedActionFactory but required by interface
+    }
+    
+    /**
+     * Gets the display name for an action
+     * 
+     * @param actionId The action ID
+     * @return The display name, or the action ID if no display name is set
+     */
+    public String getActionDisplayName(String actionId) {
+        // This method is not used in ConfigBasedActionFactory but required by interface
+        return actionId;
+    }
+    
+    /**
+     * Gets all registered action display names
+     * 
+     * @return A map of action IDs to display names
+     */
+    public Map<String, String> getActionDisplayNames() {
+        // This method is not used in ConfigBasedActionFactory but required by interface
+        return Collections.emptyMap();
+    }
+    
+    /**
+     * Gets the action count
+     * @return Number of registered actions
+     */
+    public int getActionCount() {
+        return actionClasses.size();
+    }
+    
+    /**
+     * Publishes an event to the event system.
+     * 
+     * @param event The event to publish
+     */
+    public void publishEvent(CustomEvent event) {
+        // Implementation not required for this factory
+    }
+    
+    /**
+     * Publishes an event with associated data to the event system.
+     * 
+     * @param eventName The name of the event
+     * @param eventData The data associated with the event
+     */
+    public void publishEvent(String eventName, Map<String, DataValue> eventData) {
+        // Implementation not required for this factory
     }
 }

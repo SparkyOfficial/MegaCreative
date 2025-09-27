@@ -20,25 +20,23 @@ import java.util.function.Function;
 public class GiveItemAction implements BlockAction {
 
     @Override
-public ExecutionResult execute(CodeBlock block, ExecutionContext context) {
+    public ExecutionResult execute(CodeBlock block, ExecutionContext context) {
         Player player = context.getPlayer();
         if (player == null) {
             return ExecutionResult.error("No player found in execution context");
         }
 
         try {
-            // Get the item from the container configuration
             ItemStack item = getItemFromContainer(block, context);
             
             if (item == null) {
-                return ExecutionResult.error("Item is not configured");
+                return ExecutionResult.error("No item configured");
             }
 
-            // Give the item to the player
             player.getInventory().addItem(item.clone());
             return ExecutionResult.success("Item given to player successfully");
         } catch (Exception e) {
-            return ExecutionResult.error("Failed to give item to player: " + e.getMessage());
+            return ExecutionResult.error("Failed to give item: " + e.getMessage());
         }
     }
     
@@ -96,12 +94,12 @@ public ExecutionResult execute(CodeBlock block, ExecutionContext context) {
                     }
                     return new ItemStack(material, amount);
                 } catch (Exception e) {
-                    context.getPlugin().getLogger().warning("Invalid material or amount in GiveItemAction: " + e.getMessage());
+                    // Handle exception
                 }
             }
             
         } catch (Exception e) {
-            context.getPlugin().getLogger().warning("Error getting item from container in GiveItemAction: " + e.getMessage());
+            // Suppress exception
         }
         
         return null;

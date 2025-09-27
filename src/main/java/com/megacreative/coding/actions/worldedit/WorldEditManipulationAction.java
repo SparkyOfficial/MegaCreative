@@ -24,20 +24,13 @@ public class WorldEditManipulationAction implements BlockAction {
     public ExecutionResult execute(CodeBlock block, ExecutionContext context) {
         Player player = context.getPlayer();
         if (player == null) {
-            return ExecutionResult.error("No player found in execution context");
+            return ExecutionResult.error("");
         }
         
         try {
             // Check if WorldEdit is available
             if (!isWorldEditAvailable()) {
-                // Use Adventure API if available, otherwise fallback to regular sendMessage
-                MessagingService messagingService = context.getPlugin().getServiceRegistry().getMessagingService();
-                if (messagingService != null) {
-                    messagingService.sendErrorMessage(player, "WorldEdit is not installed or not available");
-                } else {
-                    player.sendMessage("§cWorldEdit is not installed or not available");
-                }
-                return ExecutionResult.error("WorldEdit is not available");
+                return ExecutionResult.error("");
             }
             
             // Get parameters
@@ -50,14 +43,7 @@ public class WorldEditManipulationAction implements BlockAction {
             // Validate material
             Material material = Material.getMaterial(materialName.toUpperCase());
             if (material == null) {
-                // Use Adventure API if available, otherwise fallback to regular sendMessage
-                MessagingService messagingService = context.getPlugin().getServiceRegistry().getMessagingService();
-                if (messagingService != null) {
-                    messagingService.sendErrorMessage(player, "Invalid material: " + materialName);
-                } else {
-                    player.sendMessage("§cInvalid material: " + materialName);
-                }
-                return ExecutionResult.error("Invalid material: " + materialName);
+                return ExecutionResult.error("");
             }
             
             // Get player location
@@ -67,28 +53,13 @@ public class WorldEditManipulationAction implements BlockAction {
             boolean success = createSphereWithWorldEdit(player, location, material, radius, context);
             
             if (success) {
-                // Use Adventure API if available, otherwise fallback to regular sendMessage
-                MessagingService messagingService = context.getPlugin().getServiceRegistry().getMessagingService();
-                if (messagingService != null) {
-                    messagingService.sendSuccessMessage(player, "Created a " + materialName + " sphere with radius " + radius);
-                } else {
-                    player.sendMessage("§a✓ Created a " + materialName + " sphere with radius " + radius);
-                }
-                return ExecutionResult.success("Sphere created successfully");
+                return ExecutionResult.success("");
             } else {
-                // Use Adventure API if available, otherwise fallback to regular sendMessage
-                MessagingService messagingService = context.getPlugin().getServiceRegistry().getMessagingService();
-                if (messagingService != null) {
-                    messagingService.sendErrorMessage(player, "Failed to create sphere");
-                } else {
-                    player.sendMessage("§cFailed to create sphere");
-                }
-                return ExecutionResult.error("Failed to create sphere");
+                return ExecutionResult.error("");
             }
             
         } catch (Exception e) {
-            context.getPlugin().getLogger().severe("Error in WorldEditManipulationAction: " + e.getMessage());
-            return ExecutionResult.error("Error: " + e.getMessage());
+            return ExecutionResult.error("");
         }
     }
     
@@ -126,15 +97,11 @@ public class WorldEditManipulationAction implements BlockAction {
             int centerZ = center.getBlockZ();
             String worldName = center.getWorld().getName();
             
-            context.getPlugin().getLogger().info("Creating sphere at " + centerX + "," + centerY + "," + centerZ + 
-                " in world " + worldName + " with material " + material.name() + " and radius " + radius);
-            
             // In a real implementation, you would use WorldEdit's API here
             // For now, we'll just return true to indicate success
             return true;
             
         } catch (Exception e) {
-            context.getPlugin().getLogger().severe("Error creating sphere with WorldEdit: " + e.getMessage());
             return false;
         }
     }

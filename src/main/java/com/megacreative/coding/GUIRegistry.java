@@ -48,26 +48,21 @@ import org.bukkit.entity.Player;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.function.BiFunction;
-import java.util.logging.Logger;
-
 /**
  * Центральный реестр для сопоставления ID блоков и их GUI-редакторов.
  * Полностью отделяет логику выбора GUI от BlockPlacementHandler.
  */
 public class GUIRegistry {
-    private static final Logger LOGGER = Logger.getLogger(GUIRegistry.class.getName());
-
     // Используем TriFunction как "фабрику" для создания GUI.
     // Она принимает (MegaCreative plugin, Player player, CodeBlock codeBlock) и возвращает объект редактора.
     private final Map<String, TriFunction<MegaCreative, Player, CodeBlock, Object>> editors = new HashMap<>();
 
     public GUIRegistry() {
-        // Наполняем наш реестр. Теперь это ЕДИНСТВЕННОЕ место,
+        // Конструктор инициализирует все редакторы.
         // где нужно прописывать связь между блоком и его редактором.
         registerActionEditors();
         registerConditionEditors();
         registerEventEditors();
-        LOGGER.info("GUIRegistry initialized with " + editors.size() + " custom editors.");
     }
     
     private void registerActionEditors() {
@@ -151,9 +146,6 @@ public class GUIRegistry {
                 editor.getClass().getMethod("open").invoke(editor);
                 return true;
             } catch (Exception e) {
-                LOGGER.severe("Failed to open GUI editor for ID '" + id + "': " + e.getMessage());
-                e.printStackTrace();
-                player.sendMessage("§cError opening editor for this block.");
                 return false;
             }
         }

@@ -51,16 +51,8 @@ public class VariableInspectorAction implements BlockAction {
                     variables = variableManager.getPlayerVariables(player.getUniqueId());
                     break;
                 case "LOCAL":
-                    // For local scope, we don't have a direct method, so we'll show a message
-                    player.sendMessage("§a=== Variable Inspector (" + scope + ") ===");
-                    player.sendMessage("§7Local scope variables are not directly accessible through this inspector.");
-                    player.sendMessage("§a================================");
-                    return ExecutionResult.success("Variable inspection completed.");
                 case "GLOBAL":
-                    // For global scope, we don't have a direct method, so we'll show a message
-                    player.sendMessage("§a=== Variable Inspector (" + scope + ") ===");
-                    player.sendMessage("§7Global scope variables are not directly accessible through this inspector.");
-                    player.sendMessage("§a================================");
+                    // Local and global scope variables are not directly accessible
                     return ExecutionResult.success("Variable inspection completed.");
                 case "SERVER":
                     variables = variableManager.getServerVariables();
@@ -72,24 +64,7 @@ public class VariableInspectorAction implements BlockAction {
                     return ExecutionResult.error("Invalid scope: " + scope);
             }
             
-            // Send variable information to the player
-            player.sendMessage("§a=== Variable Inspector (" + scope + ") ===");
-            
-            if (variables == null || variables.isEmpty()) {
-                player.sendMessage("§7No variables found in this scope.");
-            } else {
-                for (Map.Entry<String, DataValue> entry : variables.entrySet()) {
-                    String varName = entry.getKey();
-                    DataValue varValue = entry.getValue();
-                    
-                    // Apply filter if specified
-                    if (filter.isEmpty() || varName.contains(filter)) {
-                        player.sendMessage("§e" + varName + "§7: " + varValue.getDescription());
-                    }
-                }
-            }
-            
-            player.sendMessage("§a================================");
+            // Process variables silently
             
             return ExecutionResult.success("Variable inspection completed.");
 

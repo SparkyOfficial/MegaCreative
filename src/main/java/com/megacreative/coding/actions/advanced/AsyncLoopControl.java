@@ -16,6 +16,8 @@ import org.bukkit.plugin.Plugin;
 import org.bukkit.scheduler.BukkitRunnable;
 import org.bukkit.scheduler.BukkitTask;
 
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Map;
 import java.util.UUID;
 import java.util.concurrent.ConcurrentHashMap;
@@ -98,8 +100,9 @@ public class AsyncLoopControl implements BlockAction {
      * Counts active loops for a specific player
      */
     private int countActiveLoops(UUID playerId) {
+        if (playerId == null) return 0;
         return (int) activeLoops.keySet().stream()
-                              .filter(id -> id.toString().startsWith(playerId.toString()))
+                              .filter(id -> id != null && id.toString().startsWith(playerId.toString()))
                               .count();
     }
     
@@ -107,6 +110,7 @@ public class AsyncLoopControl implements BlockAction {
      * Generates unique loop ID for tracking
      */
     private UUID generateLoopId(UUID playerId) {
+        if (playerId == null) return UUID.randomUUID();
         return UUID.nameUUIDFromBytes((playerId.toString() + System.currentTimeMillis()).getBytes(java.nio.charset.StandardCharsets.UTF_8));
     }
     
@@ -115,6 +119,10 @@ public class AsyncLoopControl implements BlockAction {
      */
     private double resolveNumberParameter(ParameterResolver resolver, ExecutionContext context, 
                                         CodeBlock block, String paramName, double defaultValue) {
+        if (resolver == null || context == null || block == null || paramName == null) {
+            return defaultValue;
+        }
+        
         DataValue rawValue = block.getParameter(paramName);
         if (rawValue == null) return defaultValue;
         
@@ -129,20 +137,46 @@ public class AsyncLoopControl implements BlockAction {
      * Cleanup method to stop all loops for a player (called on disconnect)
      */
     public static void cleanupPlayerLoops(UUID playerId) {
-        activeLoops.entrySet().removeIf(entry -> {
-            if (entry.getKey().toString().startsWith(playerId.toString())) {
-                entry.getValue().cancel();
-                return true;
+        if (playerId == null) return;
+        
+        // Create a list of entries to remove to avoid ConcurrentModificationException
+        List<Map.Entry<UUID, BukkitTask>> entriesToRemove = new ArrayList<>();
+        
+        for (Map.Entry<UUID, BukkitTask> entry : activeLoops.entrySet()) {
+            if (entry.getKey() != null && entry.getKey().toString().startsWith(playerId.toString())) {
+                try {
+                    if (entry.getValue() != null) {
+                        entry.getValue().cancel();
+                    }
+                } catch (Exception e) {
+                    // Ignore exceptions during cleanup
+                }
+                entriesToRemove.add(entry);
             }
-            return false;
-        });
+        }
+        
+        // Remove entries safely
+        for (Map.Entry<UUID, BukkitTask> entry : entriesToRemove) {
+            activeLoops.remove(entry.getKey());
+        }
     }
     
     /**
      * Emergency cleanup to stop all active loops
      */
     public static void cleanupAllLoops() {
-        activeLoops.values().forEach(BukkitTask::cancel);
+        // Cancel all tasks first
+        for (BukkitTask task : activeLoops.values()) {
+            try {
+                if (task != null) {
+                    task.cancel();
+                }
+            } catch (Exception e) {
+                // Ignore exceptions during cleanup
+            }
+        }
+        
+        // Clear the map
         activeLoops.clear();
     }
     
@@ -158,7 +192,7 @@ public class AsyncLoopControl implements BlockAction {
         private UUID loopId; // Store the loop ID for cleanup
         
         public AsyncLoopTask(ExecutionContext context, CodeBlock loopBlock, int maxIterations, long delay) {
-            this.context = context;
+            this.context = context != null ? context : null;
             this.loopBlock = loopBlock;
             this.maxIterations = maxIterations;
             this.startTime = System.currentTimeMillis();
@@ -204,7 +238,10 @@ public class AsyncLoopControl implements BlockAction {
             }
             
             if (isTimeLimitExceeded()) {
-                context.getPlayer().sendMessage("§cAsync loop timed out after 10 minutes");
+                Player player = context != null ? context.getPlayer() : null;
+                if (player != null) {
+                    player.sendMessage("§cAsync loop timed out after 10 minutes");
+                }
                 cleanup();
                 return false;
             }
@@ -216,6 +253,7 @@ public class AsyncLoopControl implements BlockAction {
          * Checks if the player is still online
          */
         private boolean isPlayerOnline() {
+            if (context == null) return false;
             Player player = context.getPlayer();
             return player != null && player.isOnline();
         }
@@ -238,7 +276,7 @@ public class AsyncLoopControl implements BlockAction {
          * Logs loop completion message in debug mode
          */
         private void logCompletion() {
-            if (context.isDebugMode()) {
+            if (context != null && context.isDebugMode()) {
                 Player player = context.getPlayer();
                 if (player != null) {
                     player.sendMessage("§7[DEBUG] Async loop completed: " + currentIteration + " iterations");
@@ -250,7 +288,7 @@ public class AsyncLoopControl implements BlockAction {
          * Logs progress every 100 iterations in debug mode
          */
         private void logProgress() {
-            if (currentIteration % 100 == 0 && context.isDebugMode()) {
+            if (currentIteration % 100 == 0 && context != null && context.isDebugMode()) {
                 Player player = context.getPlayer();
                 if (player != null) {
                     long elapsed = System.currentTimeMillis() - startTime;
@@ -264,9 +302,14 @@ public class AsyncLoopControl implements BlockAction {
          * Handles errors during loop execution
          */
         private void handleExecutionError(Exception e) {
+            if (context == null) {
+                cleanup();
+                return;
+            }
+            
             Player player = context.getPlayer();
             if (player != null) {
-                player.sendMessage("§cError in async loop iteration " + currentIteration + ": " + e.getMessage());
+                player.sendMessage("§cError in async loop iteration " + currentIteration + ": " + (e.getMessage() != null ? e.getMessage() : "Unknown error"));
                 if (context.isDebugMode()) {
                     context.getPlugin().getLogger().severe("Stack trace: " + java.util.Arrays.toString(e.getStackTrace()));
                 }
@@ -278,7 +321,7 @@ public class AsyncLoopControl implements BlockAction {
          * Executes all child blocks of the loop control block
          */
         private void executeChildBlocks() {
-            if (loopBlock.getChildren() == null || loopBlock.getChildren().isEmpty()) {
+            if (context == null || loopBlock == null || loopBlock.getChildren() == null || loopBlock.getChildren().isEmpty()) {
                 return;
             }
             
@@ -298,9 +341,11 @@ public class AsyncLoopControl implements BlockAction {
                 } catch (Exception e) {
                     // Log error but continue with next block
                     if (context.getPlayer() != null) {
-                        context.getPlayer().sendMessage("§cError in loop iteration: " + e.getMessage());
+                        context.getPlayer().sendMessage("§cError in loop iteration: " + (e.getMessage() != null ? e.getMessage() : "Unknown error"));
                     }
-                    context.getPlugin().getLogger().log(Level.SEVERE, "Error in AsyncLoopControl", e);
+                    if (context.getPlugin() != null) {
+                        context.getPlugin().getLogger().log(Level.SEVERE, "Error in AsyncLoopControl", e);
+                    }
                 }
             }
         }
@@ -309,28 +354,40 @@ public class AsyncLoopControl implements BlockAction {
          * Executes a single child block using the appropriate action
          */
         private void executeChildBlock(ExecutionContext childContext, CodeBlock childBlock) {
+            if (childContext == null || childBlock == null) return;
+            
             // This should integrate with the existing action registry system
             String action = childBlock.getAction();
             
             if (action != null) {
-                // Get the action factory from the plugin's service registry
-                com.megacreative.coding.ActionFactory actionFactory = context.getPlugin().getServiceRegistry().getService(com.megacreative.coding.ActionFactory.class);
-                if (actionFactory != null) {
-                    // Create and execute the action
-                    com.megacreative.coding.BlockAction blockAction = actionFactory.createAction(action);
-                    if (blockAction != null) {
-                        try {
-                            blockAction.execute(childBlock, childContext);
-                        } catch (Exception e) {
-                            context.getPlugin().getLogger().severe("Error executing action " + action + " in async loop: " + e.getMessage());
+                try {
+                    // Get the action factory from the plugin's service registry
+                    com.megacreative.coding.ActionFactory actionFactory = childContext.getPlugin() != null ? 
+                        childContext.getPlugin().getServiceRegistry().getService(com.megacreative.coding.ActionFactory.class) : null;
+                    
+                    if (actionFactory != null) {
+                        // Create and execute the action
+                        com.megacreative.coding.BlockAction blockAction = actionFactory.createAction(action);
+                        if (blockAction != null) {
+                            try {
+                                blockAction.execute(childBlock, childContext);
+                            } catch (Exception e) {
+                                if (childContext.getPlugin() != null) {
+                                    childContext.getPlugin().getLogger().severe("Error executing action " + action + " in async loop: " + (e.getMessage() != null ? e.getMessage() : "Unknown error"));
+                                }
+                            }
+                        } else if (childContext.getPlugin() != null) {
+                            childContext.getPlugin().getLogger().warning("Unknown action in async loop: " + action);
                         }
-                    } else {
-                        context.getPlugin().getLogger().warning("Unknown action in async loop: " + action);
+                    }
+                } catch (Exception e) {
+                    if (childContext.getPlugin() != null) {
+                        childContext.getPlugin().getLogger().severe("Error accessing action factory in async loop: " + (e.getMessage() != null ? e.getMessage() : "Unknown error"));
                     }
                 }
                 
-                if (context.isDebugMode()) {
-                    Player player = context.getPlayer();
+                if (childContext.isDebugMode()) {
+                    Player player = childContext.getPlayer();
                     if (player != null && action != null) {
                         player.sendMessage("§7[LOOP] Executing: " + action + " (iteration " + currentIteration + ")");
                     }
@@ -342,12 +399,21 @@ public class AsyncLoopControl implements BlockAction {
          * Cleanup the loop and remove from tracking
          */
         private void cleanup() {
-            cancel();
+            try {
+                cancel();
+            } catch (Exception e) {
+                // Ignore exceptions during cleanup
+            }
+            
             // Remove from active loops tracking using the stored loop ID
             if (loopId != null) {
                 BukkitTask task = activeLoops.remove(loopId);
                 if (task != null) {
-                    task.cancel();
+                    try {
+                        task.cancel();
+                    } catch (Exception e) {
+                        // Ignore exceptions during cleanup
+                    }
                 }
             }
         }

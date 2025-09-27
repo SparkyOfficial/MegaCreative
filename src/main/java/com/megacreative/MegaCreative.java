@@ -64,17 +64,10 @@ public class MegaCreative extends JavaPlugin {
         logger = getLogger();
         
         try {
-            // Simplified plugin initialization - only set up DI container
             initializeDependencyInjection();
-            
-            // Bootstrap the application
             bootstrap();
-            
-            getLogger().info("MegaCreative enabled successfully!");
-            
         } catch (Exception e) {
             getLogger().severe("Failed to enable MegaCreative: " + e.getMessage());
-            getLogger().severe("Stack trace: " + java.util.Arrays.toString(e.getStackTrace()));
             getServer().getPluginManager().disablePlugin(this);
         }
     }
@@ -96,12 +89,13 @@ public class MegaCreative extends JavaPlugin {
             if (serviceRegistry != null) {
                 serviceRegistry.dispose();
             }
-            
-            getLogger().info("MegaCreative disabled successfully!");
-            
         } catch (Exception e) {
             getLogger().severe("Error during plugin disable: " + e.getMessage());
-            getLogger().severe("Stack trace: " + java.util.Arrays.toString(e.getStackTrace()));
+        } finally {
+            // Ensure instance is cleared
+            synchronized (MegaCreative.class) {
+                instance = null;
+            }
         }
     }
     

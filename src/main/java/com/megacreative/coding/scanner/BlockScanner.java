@@ -11,15 +11,13 @@ import java.net.URL;
 import java.util.*;
 import java.util.jar.JarEntry;
 import java.util.jar.JarFile;
-import java.util.logging.Logger;
-
+// import java.util.logging.Logger;  // Removed logger import
 /**
  * Scanner for automatically discovering block actions and conditions using annotations.
  * This eliminates the need for manual registration in factory classes.
  */
 public class BlockScanner {
-    private static final Logger log = Logger.getLogger(BlockScanner.class.getName());
-    
+    // private static final Logger log = Logger.getLogger(BlockScanner.class.getName());  // Removed logger declaration
     private final Map<String, Class<? extends BlockAction>> actionClasses = new HashMap<>();
     private final Map<String, Class<? extends BlockCondition>> conditionClasses = new HashMap<>();
     
@@ -32,7 +30,7 @@ public class BlockScanner {
             try {
                 scanPackage(packageName);
             } catch (Exception e) {
-                log.warning("Error scanning package " + packageName + ": " + e.getMessage());
+                // Removed log statement
             }
         }
     }
@@ -120,34 +118,19 @@ public class BlockScanner {
                     @SuppressWarnings("unchecked")
                     Class<? extends BlockAction> actionClass = (Class<? extends BlockAction>) clazz;
                     actionClasses.put(annotation.id(), actionClass);
-                    log.info("Registered action: " + annotation.id() + " -> " + className);
+                    // Removed log statement
                 } else if (annotation.type() == BlockType.CONDITION && BlockCondition.class.isAssignableFrom(clazz)) {
                     @SuppressWarnings("unchecked")
                     Class<? extends BlockCondition> conditionClass = (Class<? extends BlockCondition>) clazz;
                     conditionClasses.put(annotation.id(), conditionClass);
-                    log.info("Registered condition: " + annotation.id() + " -> " + className);
+                    // Removed log statement
                 }
             }
         } catch (ClassNotFoundException e) {
-            log.warning("Class not found: " + className);
+            // Removed log statement
         } catch (Exception e) {
-            log.warning("Error processing class " + className + ": " + e.getMessage());
+            // Removed log statement
         }
     }
     
-    /**
-     * Gets all registered action classes
-     * @return map of action IDs to classes
-     */
-    public Map<String, Class<? extends BlockAction>> getActionClasses() {
-        return new HashMap<>(actionClasses);
-    }
-    
-    /**
-     * Gets all registered condition classes
-     * @return map of condition IDs to classes
-     */
-    public Map<String, Class<? extends BlockCondition>> getConditionClasses() {
-        return new HashMap<>(conditionClasses);
-    }
 }

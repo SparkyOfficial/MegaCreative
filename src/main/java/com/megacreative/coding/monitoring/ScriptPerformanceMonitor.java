@@ -10,15 +10,13 @@ import org.bukkit.plugin.Plugin;
 import java.util.*;
 import java.util.concurrent.*;
 import java.util.concurrent.atomic.*;
-import java.util.logging.Logger;
+// import java.util.logging.Logger;  // Removed logger import
 
 /**
  * Advanced performance monitoring system for visual programming scripts
  * Tracks execution times, memory usage, and provides optimization recommendations
  */
 public class ScriptPerformanceMonitor {
-    private static final Logger log = Logger.getLogger(ScriptPerformanceMonitor.class.getName());
-    
     private final Plugin plugin;
     private final long startTime;
     
@@ -76,8 +74,7 @@ public class ScriptPerformanceMonitor {
         this.memoryWarningThreshold = plugin.getConfig().getLong("coding.performance.memory_warning_threshold", 100 * 1024 * 1024);
         this.maxConcurrentScripts = plugin.getConfig().getInt("coding.max_concurrent_scripts", 20);
         
-        // Initialize memory monitor with logger
-        this.memoryMonitor = new MemoryMonitor(plugin.getLogger());
+        this.memoryMonitor = new MemoryMonitor();
         
         // Start monitoring services
         executionSampler.start();
@@ -126,10 +123,7 @@ public class ScriptPerformanceMonitor {
             bottleneckDetector.detectBottlenecks(metricsList);
             
             // Log slow executions
-            if (executionTime > slowExecutionThreshold) {
-                log.warning(String.format("Slow execution detected: %s/%s took %dms (threshold: %dms)", 
-                    scriptName, actionType, executionTime, slowExecutionThreshold));
-            }
+
         }
     }
     

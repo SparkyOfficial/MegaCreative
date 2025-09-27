@@ -30,13 +30,6 @@ public class ScriptDebugger {
         UUID playerId = player.getUniqueId();
         boolean currentState = playerDebugStates.getOrDefault(playerId, false);
         playerDebugStates.put(playerId, !currentState);
-        
-        if (!currentState) {
-            player.sendMessage("§a✓ Отладка скриптов включена");
-            player.sendMessage("§7Теперь вы будете видеть выполнение блоков!");
-        } else {
-            player.sendMessage("§c✗ Отладка скриптов отключена");
-        }
     }
 
     public void onBlockExecute(Player player, CodeBlock block, Location blockLocation) {
@@ -46,11 +39,6 @@ public class ScriptDebugger {
 
         // Показываем эффект выполнения блока
         showExecutionEffect(player, blockLocation, block.getMaterial());
-        
-        // Отправляем сообщение о выполнении
-        String actionName = block.getAction();
-        String materialName = getMaterialDisplayName(block.getMaterial());
-        player.sendMessage("§e▶ Выполняется: §f" + materialName + " §8(" + actionName + ")");
         
         // Записываем время выполнения
         recordExecutionTime(player, blockLocation);
@@ -63,19 +51,6 @@ public class ScriptDebugger {
 
         // Показываем эффект выполнения блока
         showExecutionEffect(player, blockLocation, block.getMaterial());
-        
-        // Отправляем сообщение с параметрами
-        String actionName = block.getAction();
-        String materialName = getMaterialDisplayName(block.getMaterial());
-        player.sendMessage("§e▶ Выполняется: §f" + materialName + " §8(" + actionName + ")");
-        
-        if (parameters != null && !parameters.isEmpty()) {
-            StringBuilder paramText = new StringBuilder("§7Параметры: ");
-            for (Map.Entry<String, Object> entry : parameters.entrySet()) {
-                paramText.append("§f").append(entry.getKey()).append("=").append(entry.getValue()).append("§7, ");
-            }
-            player.sendMessage(paramText.substring(0, paramText.length() - 4));
-        }
         
         // Записываем время выполнения
         recordExecutionTime(player, blockLocation);
@@ -146,30 +121,15 @@ public class ScriptDebugger {
     }
 
     public void onScriptStart(Player player, CodeScript script) {
-        if (!playerDebugStates.getOrDefault(player.getUniqueId(), false)) {
-            return;
-        }
-        
-        player.sendMessage("§a=== Начало выполнения скрипта ===");
-        player.sendMessage("§7Название: §f" + script.getName());
-        player.sendMessage("§7Активен: §fДа");
+        // Метод оставлен для совместимости
     }
 
     public void onScriptEnd(Player player, CodeScript script) {
-        if (!playerDebugStates.getOrDefault(player.getUniqueId(), false)) {
-            return;
-        }
-        
-        player.sendMessage("§c=== Конец выполнения скрипта ===");
+        // Метод оставлен для совместимости
     }
 
     public void onConditionResult(Player player, CodeBlock conditionBlock, boolean result) {
-        if (!playerDebugStates.getOrDefault(player.getUniqueId(), false)) {
-            return;
-        }
-        
-        String resultText = result ? "§aИстина" : "§cЛожь";
-        player.sendMessage("§7Условие " + conditionBlock.getAction() + ": " + resultText);
+        // Метод оставлен для совместимости
     }
 
     public boolean isDebugEnabled(Player player) {
@@ -177,23 +137,6 @@ public class ScriptDebugger {
     }
 
     public void showDebugStats(Player player) {
-        Map<Location, Long> times = blockExecutionTimes.get(player.getUniqueId());
-        if (times == null || times.isEmpty()) {
-            player.sendMessage("§7Нет данных о выполнении блоков");
-            return;
-        }
-        
-        player.sendMessage("§e=== Статистика выполнения ===");
-        player.sendMessage("§7Выполнено блоков: §f" + times.size());
-        
-        long totalTime = 0;
-        for (Long time : times.values()) {
-            totalTime += time;
-        }
-        
-        if (times.size() > 0) {
-            long avgTime = totalTime / times.size();
-            player.sendMessage("§7Среднее время выполнения: §f" + avgTime + "мс");
-        }
+        // Метод оставлен для совместимости
     }
-} 
+}

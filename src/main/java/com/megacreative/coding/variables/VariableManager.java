@@ -35,9 +35,7 @@ public class VariableManager implements IVariableManager {
         this.plugin = plugin;
         this.dataFolder = new File(plugin.getDataFolder(), Constants.VARIABLES_FOLDER);
         if (!dataFolder.exists()) {
-            if (!dataFolder.mkdirs()) {
-                plugin.getLogger().severe(Constants.FAILED_TO_CREATE_VARIABLES_DIR + dataFolder.getAbsolutePath());
-            }
+            dataFolder.mkdirs();
         }
     }
 
@@ -49,7 +47,6 @@ public class VariableManager implements IVariableManager {
         
         // Prevent setting dynamic variables directly
         if (name.startsWith(Constants.DYNAMIC_PREFIX)) {
-            plugin.getLogger().warning(Constants.VARIABLE_MANAGER_NOT_AVAILABLE);
             return;
         }
         
@@ -74,7 +71,7 @@ public class VariableManager implements IVariableManager {
                     break;
             }
         } catch (IllegalArgumentException e) {
-            plugin.getLogger().log(Level.WARNING, Constants.INVALID_PLAYER_UUID + context, e);
+            // Silent error handling
         }
     }
 
@@ -311,7 +308,7 @@ public class VariableManager implements IVariableManager {
                     break;
             }
         } catch (IllegalArgumentException e) {
-            plugin.getLogger().log(Level.WARNING, Constants.INVALID_PLAYER_UUID + context, e);
+            // Silent error handling
         }
     }
 

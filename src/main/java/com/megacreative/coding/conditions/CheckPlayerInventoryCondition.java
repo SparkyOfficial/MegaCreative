@@ -3,68 +3,77 @@ package com.megacreative.coding.conditions;
 import com.megacreative.coding.BlockCondition;
 import com.megacreative.coding.CodeBlock;
 import com.megacreative.coding.ExecutionContext;
-import com.megacreative.services.BlockConfigService;
 import com.megacreative.coding.annotations.BlockMeta;
 import com.megacreative.coding.BlockType;
+import com.megacreative.services.BlockConfigService;
 import org.bukkit.Material;
 import org.bukkit.entity.Player;
 import org.bukkit.inventory.ItemStack;
+import org.bukkit.inventory.PlayerInventory;
 import org.bukkit.inventory.meta.ItemMeta;
 
 import java.util.function.Function;
 
-@BlockMeta(id = "checkPlayerInventory", displayName = "§aCheck Player Inventory", type = BlockType.CONDITION)
+/**
+ * Condition for checking if a player has a specific item in their inventory.
+ * This condition checks the player's inventory for a specific item and amount.
+ */
+@BlockMeta(id = "checkPlayerInventory", displayName = "§bCheck Player Inventory", type = BlockType.CONDITION)
 public class CheckPlayerInventoryCondition implements BlockCondition {
 
     @Override
     public boolean evaluate(CodeBlock block, ExecutionContext context) {
         Player player = context.getPlayer();
-        if (player == null) return false;
+        if (player == null) {
+            return false;
+        }
 
         try {
-            // Get parameters from the container configuration
-            CheckPlayerInventoryParams params = getInventoryParamsFromContainer(block, context);
-            
-            if (params.itemStr == null || params.itemStr.isEmpty()) {
-                context.getPlugin().getLogger().warning("InventoryCheck: 'item' parameter is missing.");
+            CheckPlayerInventoryParams params = getInventoryParams(block, context);
+            if (params == null) {
                 return false;
             }
 
             Material material = Material.matchMaterial(params.itemStr);
             if (material == null) {
-                context.getPlugin().getLogger().warning("InventoryCheck: Invalid material '" + params.itemStr + "'.");
                 return false;
             }
             
             int amount = params.amount;
             String checkType = params.checkType.toLowerCase();
-
+            
+            PlayerInventory inventory = player.getInventory();
+            int count = 0;
+            
+            // Count items of the specified type
+            for (ItemStack item : inventory.getContents()) {
+                if (item != null && item.getType() == material) {
+                    count += item.getAmount();
+                }
+            }
+            
+            // Evaluate based on check type
             switch (checkType) {
                 case "has":
-                    return player.getInventory().containsAtLeast(new ItemStack(material), amount);
-                case "missing":
-                    return !player.getInventory().containsAtLeast(new ItemStack(material), amount);
-                case "exact":
-                    int count = 0;
-                    for (ItemStack item : player.getInventory().getContents()) {
-                        if (item != null && item.getType() == material) {
-                            count += item.getAmount();
-                        }
-                    }
+                    return count >= amount;
+                case "has_exactly":
                     return count == amount;
+                case "has_less_than":
+                    return count < amount;
+                case "has_more_than":
+                    return count > amount;
                 default:
                     return false;
             }
         } catch (Exception e) {
-            context.getPlugin().getLogger().severe("Error evaluating CheckPlayerInventoryCondition: " + e.getMessage());
             return false;
         }
     }
     
     /**
-     * Gets inventory parameters from the container configuration
+     * Gets inventory parameters from the block configuration
      */
-    private CheckPlayerInventoryParams getInventoryParamsFromContainer(CodeBlock block, ExecutionContext context) {
+    private CheckPlayerInventoryParams getInventoryParams(CodeBlock block, ExecutionContext context) {
         CheckPlayerInventoryParams params = new CheckPlayerInventoryParams();
         
         try {
@@ -72,41 +81,45 @@ public class CheckPlayerInventoryCondition implements BlockCondition {
             BlockConfigService blockConfigService = context.getPlugin().getServiceRegistry().getBlockConfigService();
             
             // Get the slot resolver for this condition
-            Function<String, Integer> slotResolver = blockConfigService.getSlotResolver(block.getCondition());
+            Function<String, Integer> slotResolver = blockConfigService.getSlotResolver(block.getAction());
             
             if (slotResolver != null) {
-                // Get item from the item_slot
-                Integer itemSlot = slotResolver.apply("item_slot");
+                // Get item type from item slot
+                Integer itemSlot = slotResolver.apply("item");
                 if (itemSlot != null) {
-                    ItemStack itemItem = block.getConfigItem(itemSlot);
-                    if (itemItem != null) {
+                    ItemStack item = block.getConfigItem(itemSlot);
+                    if (item != null) {
                         // Extract item type from item
-                        params.itemStr = getItemTypeFromItem(itemItem);
-                    }
-                }
-                
-                // Get amount from the amount_slot
-                Integer amountSlot = slotResolver.apply("amount_slot");
-                if (amountSlot != null) {
-                    ItemStack amountItem = block.getConfigItem(amountSlot);
-                    if (amountItem != null && amountItem.hasItemMeta()) {
-                        // Extract amount from item
-                        params.amount = getAmountFromItem(amountItem);
-                    }
-                }
-                
-                // Get check type from the check_type_slot
-                Integer checkTypeSlot = slotResolver.apply("check_type_slot");
-                if (checkTypeSlot != null) {
-                    ItemStack checkTypeItem = block.getConfigItem(checkTypeSlot);
-                    if (checkTypeItem != null && checkTypeItem.hasItemMeta()) {
-                        // Extract check type from item
-                        params.checkType = getCheckTypeFromItem(checkTypeItem);
+                        params.itemStr = getItemTypeFromItem(item);
+                        
+                        // Extract amount from amount slot or item
+                        Integer amountSlot = slotResolver.apply("amount");
+                        if (amountSlot != null) {
+                            ItemStack amountItem = block.getConfigItem(amountSlot);
+                            if (amountItem != null) {
+                                params.amount = getAmountFromItem(amountItem);
+                            }
+                        } else {
+                            // Extract amount from item
+                            params.amount = getAmountFromItem(item);
+                        }
+                        
+                        // Extract check type from check type slot or item
+                        Integer checkTypeSlot = slotResolver.apply("check_type");
+                        if (checkTypeSlot != null) {
+                            ItemStack checkTypeItem = block.getConfigItem(checkTypeSlot);
+                            if (checkTypeItem != null) {
+                                params.checkType = getCheckTypeFromItem(checkTypeItem);
+                            }
+                        } else {
+                            // Extract check type from item
+                            params.checkType = getCheckTypeFromItem(item);
+                        }
                     }
                 }
             }
         } catch (Exception e) {
-            context.getPlugin().getLogger().warning("Error getting inventory parameters from container in CheckPlayerInventoryCondition: " + e.getMessage());
+            // Suppress exception
         }
         
         return params;

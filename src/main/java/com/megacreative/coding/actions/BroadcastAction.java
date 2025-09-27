@@ -15,20 +15,18 @@ import org.bukkit.Bukkit;
 @BlockMeta(id = "broadcast", displayName = "§aBroadcast Message", type = BlockType.ACTION)
 public class BroadcastAction implements BlockAction {
 
-    @Override
     public ExecutionResult execute(CodeBlock block, ExecutionContext context) {
         try {
-            // Get message parameter
             com.megacreative.coding.values.DataValue messageValue = block.getParameter("message");
             
             if (messageValue == null || messageValue.isEmpty()) {
-                return ExecutionResult.error("Message is not configured");
+                return ExecutionResult.error("No message provided");
             }
             
             String message = messageValue.asString();
-            
-            // Broadcast the message
-            Bukkit.broadcastMessage(message);
+            if (message != null && !message.trim().isEmpty()) {
+                Bukkit.broadcastMessage(message);
+            }
             
             return ExecutionResult.success("Message broadcasted successfully");
         } catch (Exception e) {

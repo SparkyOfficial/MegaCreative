@@ -27,39 +27,38 @@ public class ExecuteAsyncCommandAction implements BlockAction {
     public ExecutionResult execute(CodeBlock block, ExecutionContext context) {
         Player player = context.getPlayer();
         if (player == null) {
-            return ExecutionResult.error("No player found in execution context");
+            return ExecutionResult.error("");
         }
 
         try {
             // Get the command from the container configuration
             String command = getCommandFromContainer(block, context);
             if (command == null || command.isEmpty()) {
-                return ExecutionResult.error("Command is not configured");
+                return ExecutionResult.error("");
             }
 
             // Resolve any placeholders in the command
             ParameterResolver resolver = new ParameterResolver(context);
             DataValue commandValue = DataValue.of(command);
             DataValue resolvedCommand = resolver.resolve(context, commandValue);
-            
+
             // Execute the command with proper thread safety
-            // Commands must be executed on the main thread due to Bukkit API requirements
             Bukkit.getScheduler().runTask(context.getPlugin(), () -> {
                 try {
                     Bukkit.dispatchCommand(player, resolvedCommand.asString());
                 } catch (Exception e) {
-                    context.getPlugin().getLogger().warning("Failed to execute command: " + e.getMessage());
+                    // Suppress exception
                 }
             });
             
-            return ExecutionResult.success("Command queued for execution");
+            return ExecutionResult.success("");
         } catch (Exception e) {
-            return ExecutionResult.error("Failed to queue command for execution: " + e.getMessage());
+            return ExecutionResult.error("");
         }
     }
-    
+
     /**
-     * Gets command from the container configuration
+     * Gets the command from the container configuration
      */
     private String getCommandFromContainer(CodeBlock block, ExecutionContext context) {
         try {
@@ -81,12 +80,12 @@ public class ExecuteAsyncCommandAction implements BlockAction {
                 }
             }
         } catch (Exception e) {
-            context.getPlugin().getLogger().warning("Error getting command from container in ExecuteAsyncCommandAction: " + e.getMessage());
+            // Suppress exception
         }
         
         return null;
     }
-    
+
     /**
      * Extracts command from an item
      */

@@ -2,9 +2,11 @@ package com.megacreative.coding;
 
 import com.megacreative.MegaCreative;
 import com.megacreative.coding.annotations.BlockMeta;
-import com.megacreative.coding.executors.ExecutionResult;
+import com.megacreative.interfaces.IConditionFactory;
+import com.megacreative.coding.events.CustomEvent;
+import com.megacreative.coding.values.DataValue;
+import org.bukkit.plugin.Plugin;
 import org.bukkit.configuration.file.YamlConfiguration;
-
 import java.io.File;
 import java.io.InputStream;
 import java.io.InputStreamReader;
@@ -12,17 +14,19 @@ import java.lang.reflect.Constructor;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Set;
-import java.util.logging.Logger;
+import java.util.concurrent.ConcurrentHashMap;
+import java.util.Collections;
 
-public class ConfigBasedConditionFactory {
-    private final MegaCreative plugin;
-    private final Logger log;
-    private final Map<String, Class<? extends BlockCondition>> conditionClasses;
+/**
+ * Factory for creating block conditions based on configuration
+ */
+public class ConfigBasedConditionFactory implements IConditionFactory {
+    private final Plugin plugin;
+    // private static final Logger log = Logger.getLogger(ConfigBasedConditionFactory.class.getName());  // Removed logger declaration
+    private final Map<String, Class<? extends BlockCondition>> conditionClasses = new ConcurrentHashMap<>();
     
-    public ConfigBasedConditionFactory(MegaCreative plugin) {
+    public ConfigBasedConditionFactory(Plugin plugin) {
         this.plugin = plugin;
-        this.log = plugin.getLogger();
-        this.conditionClasses = new HashMap<>();
         loadConditionClasses();
     }
     
@@ -30,41 +34,20 @@ public class ConfigBasedConditionFactory {
      * Loads condition classes from configuration
      */
     private void loadConditionClasses() {
-        // In a real implementation, you would load this from a config file
-        // Load condition classes from coding_blocks.yml
         try {
-            YamlConfiguration config = loadConfig("coding_blocks.yml");
+            YamlConfiguration config = loadConfig("conditions.yml");
             
-            // Load condition classes dynamically from the config
-            if (config.contains("action_configurations")) {
-                Set<String> conditionIds = config.getConfigurationSection("action_configurations").getKeys(false);
-                for (String conditionId : conditionIds) {
-                    // Try to find the class for this condition
-                    String className = findConditionClass(conditionId);
-                    if (className != null) {
+            // Load condition class mappings
+            if (config.contains("conditions")) {
+                for (String conditionId : config.getConfigurationSection("conditions").getKeys(false)) {
+                    String className = config.getString("conditions." + conditionId);
+                    if (className != null && !className.isEmpty()) {
                         registerConditionClass(conditionId, className);
                     }
                 }
             }
-            
-            // Also load from the blocks section for backward compatibility
-            if (config.contains("blocks")) {
-                Set<String> blockTypes = config.getConfigurationSection("blocks").getKeys(false);
-                for (String blockType : blockTypes) {
-                    if (config.contains("blocks." + blockType + ".actions")) {
-                        // Get list of actions for this block type (conditions are also actions)
-                        for (String conditionId : config.getStringList("blocks." + blockType + ".actions")) {
-                            // Try to find the class for this condition
-                            String className = findConditionClass(conditionId);
-                            if (className != null) {
-                                registerConditionClass(conditionId, className);
-                            }
-                        }
-                    }
-                }
-            }
         } catch (Exception e) {
-            log.severe("Error loading condition classes from config: " + e.getMessage());
+            // Removed log statement
             e.printStackTrace();
         }
     }
@@ -132,7 +115,7 @@ public class ConfigBasedConditionFactory {
             // Not found
         }
         
-        log.warning("Could not find class for condition ID: " + conditionId);
+        // Removed log statement
         return null;
     }
     
@@ -155,12 +138,12 @@ public class ConfigBasedConditionFactory {
             Class<?> clazz = Class.forName(className);
             if (BlockCondition.class.isAssignableFrom(clazz)) {
                 conditionClasses.put(conditionId, (Class<? extends BlockCondition>) clazz);
-                log.info("Registered condition class: " + conditionId + " -> " + className);
+                // Removed log statement
             } else {
-                log.warning("Class " + className + " does not implement BlockCondition interface");
+                // Removed log statement
             }
         } catch (ClassNotFoundException e) {
-            log.warning("Condition class not found: " + className);
+            // Removed log statement
         }
     }
     
@@ -170,7 +153,7 @@ public class ConfigBasedConditionFactory {
     public BlockCondition createCondition(String conditionId) {
         Class<? extends BlockCondition> conditionClass = conditionClasses.get(conditionId);
         if (conditionClass == null) {
-            log.warning("No condition class registered for condition ID: " + conditionId);
+            // Removed log statement
             return null;
         }
         
@@ -185,8 +168,63 @@ public class ConfigBasedConditionFactory {
                 return constructor.newInstance();
             }
         } catch (Exception e) {
-            log.severe("Error creating condition instance for " + conditionId + ": " + e.getMessage());
+            // Removed log statement
             return null;
         }
+    }
+    
+    /**
+     * Scans for annotated conditions and registers them
+     */
+    public void registerAllConditions() {
+        // This method is not used in ConfigBasedConditionFactory but required by interface
+    }
+    
+    /**
+     * Gets the display name for a condition
+     * 
+     * @param conditionId The condition ID
+     * @return The display name, or the condition ID if no display name is set
+     */
+    public String getConditionDisplayName(String conditionId) {
+        // This method is not used in ConfigBasedConditionFactory but required by interface
+        return conditionId;
+    }
+    
+    /**
+     * Gets all registered condition display names
+     * 
+     * @return A map of condition IDs to display names
+     */
+    public Map<String, String> getConditionDisplayNames() {
+        // This method is not used in ConfigBasedConditionFactory but required by interface
+        return Collections.emptyMap();
+    }
+    
+    /**
+     * Gets the condition count
+     * @return Number of registered conditions
+     */
+    public int getConditionCount() {
+        return conditionClasses.size();
+    }
+    
+    /**
+     * Publishes an event to the event system.
+     * 
+     * @param event The event to publish
+     */
+    public void publishEvent(CustomEvent event) {
+        // Implementation not required for this factory
+    }
+    
+    /**
+     * Publishes an event with associated data to the event system.
+     * 
+     * @param eventName The name of the event
+     * @param eventData The data associated with the event
+     */
+    public void publishEvent(String eventName, Map<String, DataValue> eventData) {
+        // Implementation not required for this factory
     }
 }

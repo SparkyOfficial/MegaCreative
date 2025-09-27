@@ -2,7 +2,7 @@ package com.megacreative.coding.groups;
 
 import com.megacreative.coding.CodeBlock;
 import org.bukkit.Location;
-import java.util.logging.Logger;
+// import java.util.logging.Logger;  // Removed logger import
 
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -22,13 +22,13 @@ import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
 import com.google.gson.reflect.TypeToken;
 import java.lang.reflect.Type;
-import java.util.logging.Level;
+// import java.util.logging.Level;  // Removed logger level import
 
 /**
  * Manages group templates for creating reusable block group configurations
  */
 public class GroupTemplateManager {
-    private static final Logger log = Logger.getLogger(GroupTemplateManager.class.getName());
+    // private static final Logger log = Logger.getLogger(GroupTemplateManager.class.getName());  // Removed logger declaration
     private static final Gson GSON = new GsonBuilder().setPrettyPrinting().create();
     
     private final BlockGroupManager groupManager;
@@ -65,7 +65,6 @@ public class GroupTemplateManager {
         // Save template to disk
         saveTemplateToDisk(template);
         
-        log.info("Created template: " + templateName + " from group " + group.getName());
         return template;
     }
     
@@ -88,7 +87,6 @@ public class GroupTemplateManager {
         // Save template to disk
         saveTemplateToDisk(template);
         
-        log.info("Created template: " + templateName + " from " + blocks.size() + " blocks");
         return template;
     }
     
@@ -127,7 +125,6 @@ public class GroupTemplateManager {
         if (removed != null) {
             // Delete template file from disk
             deleteTemplateFile(templateName);
-            log.info("Deleted template: " + templateName);
         }
     }
     
@@ -140,7 +137,6 @@ public class GroupTemplateManager {
             template.setDescription(newDescription);
             // Save updated template to disk
             saveTemplateToDisk(template);
-            log.info("Updated template description: " + templateName);
         }
     }
     
@@ -153,7 +149,6 @@ public class GroupTemplateManager {
             template.addTag(tag);
             // Save updated template to disk
             saveTemplateToDisk(template);
-            log.info("Added tag '" + tag + "' to template: " + templateName);
         }
     }
     
@@ -166,7 +161,6 @@ public class GroupTemplateManager {
             template.removeTag(tag);
             // Save updated template to disk
             saveTemplateToDisk(template);
-            log.info("Removed tag '" + tag + "' from template: " + templateName);
         }
     }
     
@@ -177,7 +171,6 @@ public class GroupTemplateManager {
         for (GroupTemplate template : templates.values()) {
             saveTemplateToDisk(template);
         }
-        log.info("Saved " + templates.size() + " templates to disk");
     }
     
     /**
@@ -190,7 +183,6 @@ public class GroupTemplateManager {
             try {
                 Files.createDirectories(templatePath);
             } catch (IOException e) {
-                log.log(Level.SEVERE, "Failed to create template directory: " + templateDirectory, e);
                 return;
             }
         }
@@ -201,10 +193,7 @@ public class GroupTemplateManager {
                 .filter(path -> path.toString().endsWith(".json"))
                 .forEach(this::loadTemplateFromFile);
         } catch (IOException e) {
-            log.log(Level.SEVERE, "Failed to list template files in directory: " + templateDirectory, e);
         }
-        
-        log.info("Loaded " + templates.size() + " templates from disk");
     }
     
     /**
@@ -225,9 +214,7 @@ public class GroupTemplateManager {
             Path filePath = templatePath.resolve(template.getName() + ".json");
             Files.write(filePath, json.getBytes());
             
-            log.fine("Saved template to disk: " + template.getName());
         } catch (Exception e) {
-            log.log(Level.SEVERE, "Failed to save template to disk: " + template.getName(), e);
         }
     }
     
@@ -245,10 +232,8 @@ public class GroupTemplateManager {
             // Add to templates map
             if (template != null && template.getName() != null) {
                 templates.put(template.getName(), template);
-                log.fine("Loaded template from disk: " + template.getName());
             }
         } catch (Exception e) {
-            log.log(Level.SEVERE, "Failed to load template from file: " + filePath, e);
         }
     }
     
@@ -260,10 +245,8 @@ public class GroupTemplateManager {
             Path filePath = Paths.get(templateDirectory, templateName + ".json");
             if (Files.exists(filePath)) {
                 Files.delete(filePath);
-                log.fine("Deleted template file: " + templateName);
             }
         } catch (Exception e) {
-            log.log(Level.SEVERE, "Failed to delete template file: " + templateName, e);
         }
     }
     
@@ -273,7 +256,6 @@ public class GroupTemplateManager {
     public void exportTemplate(String templateName, String exportPath) {
         GroupTemplate template = templates.get(templateName);
         if (template == null) {
-            log.warning("Template not found: " + templateName);
             return;
         }
         
@@ -285,9 +267,7 @@ public class GroupTemplateManager {
             Path filePath = Paths.get(exportPath);
             Files.write(filePath, json.getBytes());
             
-            log.info("Exported template: " + templateName + " to " + exportPath);
         } catch (Exception e) {
-            log.log(Level.SEVERE, "Failed to export template: " + templateName, e);
         }
     }
     
@@ -307,11 +287,9 @@ public class GroupTemplateManager {
             if (template != null && template.getName() != null) {
                 templates.put(template.getName(), template);
                 saveTemplateToDisk(template); // Save to standard location
-                log.info("Imported template: " + template.getName());
                 return template;
             }
         } catch (Exception e) {
-            log.log(Level.SEVERE, "Failed to import template from: " + importPath, e);
         }
         
         return null;

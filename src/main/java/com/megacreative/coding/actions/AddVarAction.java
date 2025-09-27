@@ -30,19 +30,19 @@ public class AddVarAction implements BlockAction {
             // Get and validate parameters
             AddVarParams params = getAndValidateParams(block, context);
             if (params == null) {
-                return ExecutionResult.error("Invalid variable configuration");
+                return ExecutionResult.error("");
             }
 
             // Parse the numeric value to add
             double valueToAdd = parseValue(params.valueStr);
             if (Double.isNaN(valueToAdd)) {
-                return ExecutionResult.error("Invalid value: " + params.valueStr);
+                return ExecutionResult.error("");
             }
 
             // Process the variable update
             return updateVariableValue(context, params.nameStr, valueToAdd);
         } catch (Exception e) {
-            return ExecutionResult.error("Failed to update variable: " + e.getMessage());
+            return ExecutionResult.error("");
         }
     }
 
@@ -97,13 +97,7 @@ public class AddVarAction implements BlockAction {
         double newValue = currentValue + valueToAdd;
         setVariableValue(variableManager, scopeInfo, varName, newValue, context.getScriptId(), player);
 
-        // Log the operation
-        context.getPlugin().getLogger().info(
-                String.format("Adding %s to variable %s (new value: %s)",
-                        valueToAdd, varName, newValue)
-        );
-
-        return ExecutionResult.success("Variable updated successfully");
+        return ExecutionResult.success("");
     }
 
     /**
@@ -237,7 +231,6 @@ public class AddVarAction implements BlockAction {
                 }
             }
         } catch (Exception e) {
-            context.getPlugin().getLogger().warning("Error getting variable parameters from container in AddVarAction: " + e.getMessage());
         }
 
         return params;

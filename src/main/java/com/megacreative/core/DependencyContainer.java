@@ -229,20 +229,40 @@ public class DependencyContainer {
      * Disposes all registered disposable services
      */
     public void dispose() {
+        log.info("Starting DependencyContainer disposal...");
+        
         // Dispose in reverse order
+        List<Exception> disposalExceptions = new ArrayList<>();
+        
         for (int i = disposables.size() - 1; i >= 0; i--) {
             try {
-                disposables.get(i).dispose();
+                Disposable disposable = disposables.get(i);
+                if (disposable != null) {
+                    disposable.dispose();
+                }
             } catch (Exception e) {
+                disposalExceptions.add(e);
                 log.log(Level.WARNING, "Error disposing service", e);
             }
         }
         
-        disposables.clear();
-        singletons.clear();
-        implementations.clear();
-        factories.clear();
-        creating.clear();
+        // Clear all collections
+        try {
+            disposables.clear();
+            singletons.clear();
+            implementations.clear();
+            factories.clear();
+            creating.clear();
+        } catch (Exception e) {
+            log.log(Level.WARNING, "Error clearing collections", e);
+        }
+        
+        // Log any disposal exceptions
+        if (!disposalExceptions.isEmpty()) {
+            log.warning("Encountered " + disposalExceptions.size() + " exceptions during disposal");
+        }
+        
+        log.info("DependencyContainer disposal completed");
     }
     
     // Legacy methods for backward compatibility
