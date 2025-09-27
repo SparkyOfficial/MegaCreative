@@ -2,7 +2,6 @@ package com.megacreative.listeners;
 
 import com.megacreative.coding.data.DataItemFactory;
 import com.megacreative.coding.data.DataType;
-import org.bukkit.Material;
 import org.bukkit.NamespacedKey;
 import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
@@ -38,16 +37,28 @@ public class DataItemListener implements Listener {
                 }
             }
 
-            // Обновляем NBT и Lore предмета
-            ItemMeta meta = itemInHand.getItemMeta();
-            meta.getPersistentDataContainer().set(DataItemFactory.getDataValueKey(), PersistentDataType.STRING, newValue);
-            meta.setLore(Arrays.asList(
-                "§7Тип: §f" + data.type().name(),
-                "§7Значение: §f" + newValue
-            ));
-            itemInHand.setItemMeta(meta);
+            // Schedule the inventory update synchronously
+            String finalNewValue = newValue;
+            DataItemFactory.DataItem finalData = data;
+            event.getPlayer().getServer().getScheduler().runTask(
+                com.megacreative.MegaCreative.getInstance(), 
+                () -> {
+                    // Обновляем NBT и Lore предмета
+                    ItemStack currentItem = player.getInventory().getItemInMainHand();
+                    if (DataItemFactory.isDataItem(currentItem)) {
+                        ItemMeta meta = currentItem.getItemMeta();
+                        meta.getPersistentDataContainer().set(DataItemFactory.getDataValueKey(), PersistentDataType.STRING, finalNewValue);
+                        meta.setLore(Arrays.asList(
+                            "§7Тип: §f" + finalData.type().name(),
+                            "§7Значение: §f" + finalNewValue
+                        ));
+                        currentItem.setItemMeta(meta);
+                        player.getInventory().setItemInMainHand(currentItem);
+                    }
 
-            player.sendMessage("§a✓ Значение для предмета '" + data.type().getDisplayName() + "' установлено на: §e" + newValue);
+                    player.sendMessage("§a✓ Значение для предмета '" + finalData.type().getDisplayName() + "' установлено на: §e" + finalNewValue);
+                }
+            );
         }
     }
-} 
+}

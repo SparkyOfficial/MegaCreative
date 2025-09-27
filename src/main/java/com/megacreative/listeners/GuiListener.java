@@ -72,257 +72,224 @@ public class GuiListener implements Listener {
         Player player = event.getPlayer();
         String message = event.getMessage().trim();
         
-        // Handle text input for InteractiveGUIManager
-        GUIManager guiManager = plugin.getServiceRegistry().getGuiManager();
-        if (guiManager != null) {
-            // Check if player is waiting for text input
-            Boolean awaitingTextInput = guiManager.getPlayerMetadata(player, "awaiting_text_input", Boolean.class);
-            if (Boolean.TRUE.equals(awaitingTextInput)) {
-                event.setCancelled(true);
-                
-                // Get the text input element
-                InteractiveGUIManager.TextInputElement element = guiManager.getPlayerMetadata(player, "pending_text_input_element", InteractiveGUIManager.TextInputElement.class);
-                if (element != null) {
-                    // Handle cancel command
-                    if (message.equalsIgnoreCase("cancel")) {
-                        player.sendMessage("§cText input cancelled");
-                        guiManager.setPlayerMetadata(player, "awaiting_text_input", false);
-                        guiManager.setPlayerMetadata(player, "pending_text_input_element", null);
-                        return;
-                    }
-                    
-                    // Set the value in the element
-                    element.setValue(DataValue.of(message));
-                    player.sendMessage("§aText input accepted: §f" + message);
-                    
-                    // Clear the pending input state
-                    guiManager.setPlayerMetadata(player, "awaiting_text_input", false);
-                    guiManager.setPlayerMetadata(player, "pending_text_input_element", null);
-                    
-                    // Update the GUI if it's still open
-                    InteractiveGUIManager interactiveGUI = guiManager.getInteractiveGUIManager();
-                    if (interactiveGUI != null) {
-                        interactiveGUI.refreshGUI(player);
-                    }
-                    return;
-                }
-            }
-            
-            // Check if player is waiting for amount input
-            Boolean awaitingAmountInput = guiManager.getPlayerMetadata(player, "awaiting_amount_input", Boolean.class);
-            if (Boolean.TRUE.equals(awaitingAmountInput)) {
-                event.setCancelled(true);
-                
-                // Get the item stack editor element
-                InteractiveGUIManager.ItemStackEditorElement element = guiManager.getPlayerMetadata(player, "pending_amount_element", InteractiveGUIManager.ItemStackEditorElement.class);
-                if (element != null) {
-                    // Handle cancel command
-                    if (message.equalsIgnoreCase("cancel")) {
-                        player.sendMessage("§cAmount input cancelled");
-                        guiManager.setPlayerMetadata(player, "awaiting_amount_input", false);
-                        guiManager.setPlayerMetadata(player, "pending_amount_element", null);
+        // Handle text input for InteractiveGUIManager synchronously
+        event.setCancelled(true);
+        event.getPlayer().getServer().getScheduler().runTask(
+            com.megacreative.MegaCreative.getInstance(), 
+            () -> {
+                // Handle text input for InteractiveGUIManager
+                GUIManager guiManager = plugin.getServiceRegistry().getGuiManager();
+                if (guiManager != null) {
+                    // Check if player is waiting for text input
+                    Boolean awaitingTextInput = guiManager.getPlayerMetadata(player, "awaiting_text_input", Boolean.class);
+                    if (Boolean.TRUE.equals(awaitingTextInput)) {
                         
-                        // Reopen the item editor GUI
-                        InteractiveGUIManager interactiveGUI = guiManager.getInteractiveGUIManager();
-                        if (interactiveGUI != null) {
-                            interactiveGUI.refreshGUI(player);
-                        }
-                        return;
-                    }
-                    
-                    // Parse and validate the amount
-                    try {
-                        int amount = Integer.parseInt(message);
-                        if (amount >= 1 && amount <= 64) {
-                            // Update the item amount
-                            ItemStack currentItem = (ItemStack) element.getValue().getValue();
-                            if (currentItem != null) {
-                                currentItem.setAmount(amount);
-                                element.setValue(DataValue.of(currentItem));
-                                player.sendMessage("§aAmount set to: §f" + amount);
+                        // Get the text input element
+                        InteractiveGUIManager.TextInputElement element = guiManager.getPlayerMetadata(player, "pending_text_input_element", InteractiveGUIManager.TextInputElement.class);
+                        if (element != null) {
+                            // Handle cancel command
+                            if (message.equalsIgnoreCase("cancel")) {
+                                player.sendMessage("§cText input cancelled");
+                                guiManager.setPlayerMetadata(player, "awaiting_text_input", false);
+                                guiManager.setPlayerMetadata(player, "pending_text_input_element", null);
+                                return;
                             }
-                        } else {
-                            player.sendMessage("§cAmount must be between 1 and 64");
+                            
+                            // Set the value in the element
+                            element.setValue(DataValue.of(message));
+                            player.sendMessage("§aText input accepted: §f" + message);
+                            
+                            // Clear the pending input state
+                            guiManager.setPlayerMetadata(player, "awaiting_text_input", false);
+                            guiManager.setPlayerMetadata(player, "pending_text_input_element", null);
+                            
+                            // Update the GUI if it's still open
+                            InteractiveGUIManager interactiveGUI = guiManager.getInteractiveGUIManager();
+                            if (interactiveGUI != null) {
+                                interactiveGUI.refreshGUI(player);
+                            }
                             return;
                         }
-                    } catch (NumberFormatException e) {
-                        player.sendMessage("§cPlease enter a valid number");
-                        return;
                     }
                     
-                    // Clear the pending input state
-                    guiManager.setPlayerMetadata(player, "awaiting_amount_input", false);
-                    guiManager.setPlayerMetadata(player, "pending_amount_element", null);
-                    
-                    // Reopen the item editor GUI
-                    InteractiveGUIManager interactiveGUI = guiManager.getInteractiveGUIManager();
-                    if (interactiveGUI != null) {
-                        interactiveGUI.refreshGUI(player);
-                    }
-                    return;
-                }
-            }
-            
-            // Check if player is waiting for name input
-            Boolean awaitingNameInput = guiManager.getPlayerMetadata(player, "awaiting_name_input", Boolean.class);
-            if (Boolean.TRUE.equals(awaitingNameInput)) {
-                event.setCancelled(true);
-                
-                // Get the item stack editor element
-                InteractiveGUIManager.ItemStackEditorElement element = guiManager.getPlayerMetadata(player, "pending_name_element", InteractiveGUIManager.ItemStackEditorElement.class);
-                if (element != null) {
-                    // Handle cancel command
-                    if (message.equalsIgnoreCase("cancel")) {
-                        player.sendMessage("§cName input cancelled");
-                        guiManager.setPlayerMetadata(player, "awaiting_name_input", false);
-                        guiManager.setPlayerMetadata(player, "pending_name_element", null);
+                    // Check if player is waiting for amount input
+                    Boolean awaitingAmountInput = guiManager.getPlayerMetadata(player, "awaiting_amount_input", Boolean.class);
+                    if (Boolean.TRUE.equals(awaitingAmountInput)) {
                         
-                        // Reopen the item editor GUI
-                        InteractiveGUIManager interactiveGUI = guiManager.getInteractiveGUIManager();
-                        if (interactiveGUI != null) {
-                            interactiveGUI.refreshGUI(player);
+                        // Get the item stack editor element
+                        InteractiveGUIManager.ItemStackEditorElement element = guiManager.getPlayerMetadata(player, "pending_amount_element", InteractiveGUIManager.ItemStackEditorElement.class);
+                        if (element != null) {
+                            // Handle cancel command
+                            if (message.equalsIgnoreCase("cancel")) {
+                                player.sendMessage("§cAmount input cancelled");
+                                guiManager.setPlayerMetadata(player, "awaiting_amount_input", false);
+                                guiManager.setPlayerMetadata(player, "pending_amount_element", null);
+                                
+                                // Reopen the item editor GUI
+                                InteractiveGUIManager interactiveGUI = guiManager.getInteractiveGUIManager();
+                                if (interactiveGUI != null) {
+                                    interactiveGUI.refreshGUI(player);
+                                }
+                                return;
+                            }
+                            
+                            // Parse and validate the amount
+                            try {
+                                int amount = Integer.parseInt(message);
+                                if (amount >= 1 && amount <= 64) {
+                                    // Update the item amount
+                                    ItemStack currentItem = (ItemStack) element.getValue().getValue();
+                                    if (currentItem != null) {
+                                        currentItem.setAmount(amount);
+                                        element.setValue(DataValue.of(currentItem));
+                                        player.sendMessage("§aAmount set to: §f" + amount);
+                                    }
+                                } else {
+                                    player.sendMessage("§cAmount must be between 1 and 64");
+                                    return;
+                                }
+                            } catch (NumberFormatException e) {
+                                player.sendMessage("§cPlease enter a valid number");
+                                return;
+                            }
+                            
+                            // Clear the pending input state
+                            guiManager.setPlayerMetadata(player, "awaiting_amount_input", false);
+                            guiManager.setPlayerMetadata(player, "pending_amount_element", null);
+                            
+                            // Reopen the item editor GUI
+                            InteractiveGUIManager interactiveGUI = guiManager.getInteractiveGUIManager();
+                            if (interactiveGUI != null) {
+                                interactiveGUI.refreshGUI(player);
+                            }
+                            return;
                         }
-                        return;
                     }
                     
-                    // Update the item name (with color code support)
-                    ItemStack currentItem = (ItemStack) element.getValue().getValue();
-                    if (currentItem != null) {
-                        ItemMeta meta = currentItem.getItemMeta();
-                        if (meta != null) {
-                            // Replace & with § for color codes
-                            String coloredName = message.replace('&', '§');
-                            meta.setDisplayName(coloredName);
-                            currentItem.setItemMeta(meta);
-                            element.setValue(DataValue.of(currentItem));
-                            player.sendMessage("§aName set to: §f" + coloredName);
-                        }
-                    }
-                    
-                    // Clear the pending input state
-                    guiManager.setPlayerMetadata(player, "awaiting_name_input", false);
-                    guiManager.setPlayerMetadata(player, "pending_name_element", null);
-                    
-                    // Reopen the item editor GUI
-                    InteractiveGUIManager interactiveGUI = guiManager.getInteractiveGUIManager();
-                    if (interactiveGUI != null) {
-                        interactiveGUI.refreshGUI(player);
-                    }
-                    return;
-                }
-            }
-            
-            // Check if player is waiting for lore input
-            Boolean awaitingLoreInput = guiManager.getPlayerMetadata(player, "awaiting_lore_input", Boolean.class);
-            if (Boolean.TRUE.equals(awaitingLoreInput)) {
-                event.setCancelled(true);
-                
-                // Get the item stack editor element
-                InteractiveGUIManager.ItemStackEditorElement element = guiManager.getPlayerMetadata(player, "pending_lore_element", InteractiveGUIManager.ItemStackEditorElement.class);
-                if (element != null) {
-                    // Handle cancel command
-                    if (message.equalsIgnoreCase("cancel")) {
-                        player.sendMessage("§cLore input cancelled");
-                        guiManager.setPlayerMetadata(player, "awaiting_lore_input", false);
-                        guiManager.setPlayerMetadata(player, "pending_lore_element", null);
-                        guiManager.setPlayerMetadata(player, "current_lore_lines", null);
+                    // Check if player is waiting for name input
+                    Boolean awaitingNameInput = guiManager.getPlayerMetadata(player, "awaiting_name_input", Boolean.class);
+                    if (Boolean.TRUE.equals(awaitingNameInput)) {
                         
-                        // Reopen the item editor GUI
-                        InteractiveGUIManager interactiveGUI = guiManager.getInteractiveGUIManager();
-                        if (interactiveGUI != null) {
-                            interactiveGUI.refreshGUI(player);
-                        }
-                        return;
-                    }
-                    
-                    // Handle "done" command to finish lore input
-                    if (message.equalsIgnoreCase("done")) {
-                        // Get the current lore lines
-                        @SuppressWarnings("unchecked")
-                        List<String> loreLines = guiManager.getPlayerMetadata(player, "current_lore_lines", List.class);
-                        if (loreLines != null) {
-                            // Update the item lore
+                        // Get the item stack editor element
+                        InteractiveGUIManager.ItemStackEditorElement element = guiManager.getPlayerMetadata(player, "pending_name_element", InteractiveGUIManager.ItemStackEditorElement.class);
+                        if (element != null) {
+                            // Handle cancel command
+                            if (message.equalsIgnoreCase("cancel")) {
+                                player.sendMessage("§cName input cancelled");
+                                guiManager.setPlayerMetadata(player, "awaiting_name_input", false);
+                                guiManager.setPlayerMetadata(player, "pending_name_element", null);
+                                
+                                // Reopen the item editor GUI
+                                InteractiveGUIManager interactiveGUI = guiManager.getInteractiveGUIManager();
+                                if (interactiveGUI != null) {
+                                    interactiveGUI.refreshGUI(player);
+                                }
+                                return;
+                            }
+                            
+                            // Update the item name (with color code support)
                             ItemStack currentItem = (ItemStack) element.getValue().getValue();
                             if (currentItem != null) {
                                 ItemMeta meta = currentItem.getItemMeta();
                                 if (meta != null) {
-                                    // Apply color codes to all lore lines
-                                    List<String> coloredLore = new ArrayList<>();
-                                    for (String line : loreLines) {
-                                        coloredLore.add(line.replace('&', '§'));
-                                    }
-                                    meta.setLore(coloredLore);
+                                    // Replace & with § for color codes
+                                    String coloredName = message.replace('&', '§');
+                                    meta.setDisplayName(coloredName);
                                     currentItem.setItemMeta(meta);
                                     element.setValue(DataValue.of(currentItem));
-                                    player.sendMessage("§aLore updated with " + loreLines.size() + " lines");
+                                    player.sendMessage("§aName set to: §f" + coloredName);
                                 }
                             }
+                            
+                            // Clear the pending input state
+                            guiManager.setPlayerMetadata(player, "awaiting_name_input", false);
+                            guiManager.setPlayerMetadata(player, "pending_name_element", null);
+                            
+                            // Reopen the item editor GUI
+                            InteractiveGUIManager interactiveGUI = guiManager.getInteractiveGUIManager();
+                            if (interactiveGUI != null) {
+                                interactiveGUI.refreshGUI(player);
+                            }
+                            return;
                         }
-                        
-                        // Clear the pending input state
-                        guiManager.setPlayerMetadata(player, "awaiting_lore_input", false);
-                        guiManager.setPlayerMetadata(player, "pending_lore_element", null);
-                        guiManager.setPlayerMetadata(player, "current_lore_lines", null);
-                        
-                        // Reopen the item editor GUI
-                        InteractiveGUIManager interactiveGUI = guiManager.getInteractiveGUIManager();
-                        if (interactiveGUI != null) {
-                            interactiveGUI.refreshGUI(player);
-                        }
-                        return;
                     }
                     
-                    // Add the line to the current lore
-                    @SuppressWarnings("unchecked")
-                    List<String> loreLines = guiManager.getPlayerMetadata(player, "current_lore_lines", List.class);
-                    if (loreLines == null) {
-                        loreLines = new ArrayList<>();
-                    }
-                    loreLines.add(message);
-                    guiManager.setPlayerMetadata(player, "current_lore_lines", loreLines);
-                    player.sendMessage("§aLore line added. Type 'done' when finished or 'cancel' to cancel.");
-                    return;
-                }
-            }
-        }
-        
-        if (message.equalsIgnoreCase("УДАЛИТЬ")) {
-            event.setCancelled(true);
-            
-            if (guiManager.isAwaitingDeleteConfirmation(player)) {
-                new org.bukkit.scheduler.BukkitRunnable() {
-                    @Override
-                    public void run() {
-                        String worldId = guiManager.getDeleteConfirmationWorldId(player);
-                        var world = plugin.getServiceRegistry().getWorldManager().getWorld(worldId);
-                        if (world != null) {
-                            plugin.getServiceRegistry().getWorldManager().deleteWorld(world.getId(), player);
-                            player.sendMessage("§aWorld deleted successfully!");
-                        } else {
-                            player.sendMessage("§cWorld not found!");
-                        }
-                        guiManager.clearDeleteConfirmation(player);
-                    }
-                }.runTask(plugin);
-            } else {
-                // Use the GUIManager metadata system for delete confirmations
-                if (guiManager.isAwaitingDeleteConfirmation(player)) {
-                    new org.bukkit.scheduler.BukkitRunnable() {
-                        @Override
-                        public void run() {
-                            String worldId = guiManager.getDeleteConfirmationWorldId(player);
-                            var world = plugin.getServiceRegistry().getWorldManager().getWorld(worldId);
-                            if (world != null) {
-                                plugin.getServiceRegistry().getWorldManager().deleteWorld(world.getId(), player);
-                                player.sendMessage("§aWorld deleted successfully!");
-                            } else {
-                                player.sendMessage("§cWorld not found!");
+                    // Check if player is waiting for lore input
+                    Boolean awaitingLoreInput = guiManager.getPlayerMetadata(player, "awaiting_lore_input", Boolean.class);
+                    if (Boolean.TRUE.equals(awaitingLoreInput)) {
+                        
+                        // Get the item stack editor element
+                        InteractiveGUIManager.ItemStackEditorElement element = guiManager.getPlayerMetadata(player, "pending_lore_element", InteractiveGUIManager.ItemStackEditorElement.class);
+                        if (element != null) {
+                            // Handle cancel command
+                            if (message.equalsIgnoreCase("cancel")) {
+                                player.sendMessage("§cLore input cancelled");
+                                guiManager.setPlayerMetadata(player, "awaiting_lore_input", false);
+                                guiManager.setPlayerMetadata(player, "pending_lore_element", null);
+                                guiManager.setPlayerMetadata(player, "current_lore_lines", null);
+                                
+                                // Reopen the item editor GUI
+                                InteractiveGUIManager interactiveGUI = guiManager.getInteractiveGUIManager();
+                                if (interactiveGUI != null) {
+                                    interactiveGUI.refreshGUI(player);
+                                }
+                                return;
                             }
-                            guiManager.clearDeleteConfirmation(player);
+                            
+                            // Handle "done" command to finish lore input
+                            if (message.equalsIgnoreCase("done")) {
+                                // Get the current lore lines
+                                @SuppressWarnings("unchecked")
+                                List<String> loreLines = guiManager.getPlayerMetadata(player, "current_lore_lines", List.class);
+                                if (loreLines != null) {
+                                    // Update the item lore
+                                    ItemStack currentItem = (ItemStack) element.getValue().getValue();
+                                    if (currentItem != null) {
+                                        ItemMeta meta = currentItem.getItemMeta();
+                                        if (meta != null) {
+                                            // Apply color codes to all lore lines
+                                            List<String> coloredLore = new ArrayList<>();
+                                            for (String line : loreLines) {
+                                                coloredLore.add(line.replace('&', '§'));
+                                            }
+                                            meta.setLore(coloredLore);
+                                            currentItem.setItemMeta(meta);
+                                            element.setValue(DataValue.of(currentItem));
+                                            player.sendMessage("§aLore updated with " + loreLines.size() + " lines");
+                                        }
+                                    }
+                                }
+                                
+                                // Clear the pending input state
+                                guiManager.setPlayerMetadata(player, "awaiting_lore_input", false);
+                                guiManager.setPlayerMetadata(player, "pending_lore_element", null);
+                                guiManager.setPlayerMetadata(player, "current_lore_lines", null);
+                                
+                                // Reopen the item editor GUI
+                                InteractiveGUIManager interactiveGUI = guiManager.getInteractiveGUIManager();
+                                if (interactiveGUI != null) {
+                                    interactiveGUI.refreshGUI(player);
+                                }
+                                return;
+                            }
+                            
+                            // Add the line to the current lore
+                            @SuppressWarnings("unchecked")
+                            List<String> loreLines = guiManager.getPlayerMetadata(player, "current_lore_lines", List.class);
+                            if (loreLines == null) {
+                                loreLines = new ArrayList<>();
+                            }
+                            loreLines.add(message);
+                            guiManager.setPlayerMetadata(player, "current_lore_lines", loreLines);
+                            player.sendMessage("§aLine added to lore. Type 'done' when finished or 'cancel' to abort.");
+                            return;
                         }
-                    }.runTask(plugin);
+                    }
                 }
+                
+                // If no special handling, send the message normally
+                player.chat(message);
             }
-        }
+        );
     }
 }

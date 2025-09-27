@@ -26,7 +26,9 @@ public class BukkitPlayerChatListener implements Listener {
             bukkitEvent.getMessage()
         );
         
-        // Publish it to our event system
-        plugin.getServer().getPluginManager().callEvent(internalEvent);
+        // Publish it to our event system synchronously since MegaPlayerChatEvent is synchronous only
+        plugin.getServer().getScheduler().runTask(plugin, () -> {
+            plugin.getServer().getPluginManager().callEvent(internalEvent);
+        });
     }
 }

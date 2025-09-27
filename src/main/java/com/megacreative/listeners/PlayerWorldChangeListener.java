@@ -131,6 +131,10 @@ public class PlayerWorldChangeListener implements Listener {
             player.setGameMode(GameMode.ADVENTURE);
             plugin.getServiceRegistry().getPlayerModeManager().setMode(player, PlayerModeManager.PlayerMode.PLAY);
             player.sendMessage("§aВы вошли в игровой режим.");
+        } else {
+            // Player is in a non-creative world (hub, etc.)
+            // Give them starter items
+            plugin.getServiceRegistry().getPlayerManager().giveStarterItems(player);
         }
     }
     

@@ -495,13 +495,19 @@ public class ReferenceSystemEventsListener implements Listener {
         Player player = event.getPlayer();
         plugin.getLogger().fine(".EVT Player chatted: " + player.getName());
         
-        // Execute chat script if exists
-        CodeScript script = chatScripts.get("on_chat");
-        if (script != null) {
-            Map<String, Object> data = new HashMap<>();
-            data.put("message", event.getMessage());
-            executeScript(script, player, "player_chat", event.getMessage(), data);
-        }
+        // Execute chat script if exists synchronously
+        event.getPlayer().getServer().getScheduler().runTask(
+            com.megacreative.MegaCreative.getInstance(), 
+            () -> {
+                // Execute chat script if exists
+                CodeScript script = chatScripts.get("on_chat");
+                if (script != null) {
+                    Map<String, Object> data = new HashMap<>();
+                    data.put("message", event.getMessage());
+                    executeScript(script, player, "player_chat", event.getMessage(), data);
+                }
+            }
+        );
     }
     
     /**

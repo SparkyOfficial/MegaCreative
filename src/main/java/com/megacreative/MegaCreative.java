@@ -22,6 +22,7 @@ import com.megacreative.listeners.BukkitInventoryClickListener;
 import com.megacreative.listeners.BukkitInventoryOpenListener;
 import com.megacreative.listeners.PlayerWorldChangeListener;
 import com.megacreative.listeners.DataItemListener;
+import com.megacreative.listeners.WorldInteractListener;
 import org.bukkit.plugin.java.JavaPlugin;
 import org.bukkit.scheduler.BukkitRunnable;
 import org.bukkit.scheduler.BukkitTask;
@@ -208,6 +209,9 @@ public class MegaCreative extends JavaPlugin {
             
             // Register DataItemListener to handle data item events
             getServer().getPluginManager().registerEvents(new DataItemListener(), this);
+            
+            // Register WorldInteractListener to handle starter item interactions
+            getServer().getPluginManager().registerEvents(new WorldInteractListener(this), this);
         }
     }
     
