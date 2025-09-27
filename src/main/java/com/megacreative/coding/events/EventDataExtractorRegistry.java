@@ -41,6 +41,7 @@ public class EventDataExtractorRegistry {
         registerExtractor(new PlayerJoinEventDataExtractor());
         registerExtractor(new PlayerDeathEventDataExtractor());
         registerExtractor(new BlockBreakEventDataExtractor());
+        registerExtractor(new BlockPlaceEventDataExtractor());
         registerExtractor(new PlayerInteractEventDataExtractor());
         registerExtractor(new PlayerCommandPreprocessEventDataExtractor());
         

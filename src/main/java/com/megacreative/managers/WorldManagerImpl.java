@@ -3,6 +3,7 @@ package com.megacreative.managers;
 import com.megacreative.MegaCreative;
 import com.megacreative.coding.BlockType;
 import com.megacreative.coding.CodeBlock;
+import com.megacreative.coding.CodeHandler;
 import com.megacreative.interfaces.IWorldManager;
 import com.megacreative.interfaces.ICodingManager;
 import com.megacreative.models.*;
@@ -372,6 +373,13 @@ public class WorldManagerImpl implements IWorldManager {
                     // Загрузка скриптов для мира (тоже синхронно, т.к. связано с миром)
                     if (codingManager != null) {
                         codingManager.loadScriptsForWorld(creativeWorld);
+                    }
+                    
+                    // Initialize CodeHandler for the world
+                    if (plugin instanceof MegaCreative) {
+                        MegaCreative megaPlugin = (MegaCreative) plugin;
+                        CodeHandler codeHandler = new CodeHandler(megaPlugin, creativeWorld);
+                        creativeWorld.setCodeHandler(codeHandler);
                     }
                     
                     // Телепортация - синхронно
@@ -1136,6 +1144,14 @@ public class WorldManagerImpl implements IWorldManager {
                         // getPlugin().getLogger().info("Loaded scripts for world: " + world.getName());
                     } else {
                         getPlugin().getLogger().warning("CodingManager is null, could not load scripts for world: " + world.getName());
+                    }
+                    
+                    // Initialize CodeHandler for the world
+                    Plugin plugin = getPlugin();
+                    if (plugin instanceof MegaCreative) {
+                        MegaCreative megaPlugin = (MegaCreative) plugin;
+                        CodeHandler codeHandler = new CodeHandler(megaPlugin, world);
+                        world.setCodeHandler(codeHandler);
                     }
                 } else {
                     getPlugin().getLogger().severe("Failed to load/create Bukkit world: " + world.getWorldName());

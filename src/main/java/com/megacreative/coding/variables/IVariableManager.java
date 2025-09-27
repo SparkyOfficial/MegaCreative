@@ -1,5 +1,6 @@
 package com.megacreative.coding.variables;
 
+import com.megacreative.coding.events.GameEvent;
 import com.megacreative.coding.values.DataValue;
 import com.megacreative.coding.values.ValueType;
 import org.bukkit.entity.Player;
@@ -80,6 +81,15 @@ public interface IVariableManager {
         // Default implementation will be overridden in VariableManager
         if (scopes.length > 0) {
             return getVariable(name, scopes[0], context);
+        }
+        return null;
+    }
+    
+    // Enhanced variable resolution using GameEvent context
+    default DataValue resolveVariableWithContext(String name, GameEvent context) {
+        // Default implementation will be overridden in VariableManager
+        if (context != null && context.getPlayer() != null) {
+            return resolveVariable(name, context.getPlayer().getUniqueId().toString());
         }
         return null;
     }

@@ -1,6 +1,7 @@
 package com.megacreative.coding;
 
 import com.megacreative.MegaCreative;
+import com.megacreative.coding.events.GameEvent;
 import com.megacreative.events.*;
 import com.megacreative.interfaces.IWorldManager;
 import com.megacreative.managers.PlayerModeManager;
@@ -145,8 +146,27 @@ public class ScriptTriggerManager implements Listener {
      * @param player the player associated with the event
      */
     private void executeScriptsForEvent(String eventName, org.bukkit.entity.Player player) {
-        // This method would contain the logic to find and execute scripts for the event
-        // For now, we'll just log that the event was received
-        LOGGER.info("Received custom event: " + eventName + " for player: " + player.getName());
+        // Find the creative world
+        CreativeWorld creativeWorld = worldManager.findCreativeWorldByBukkit(player != null ? player.getWorld() : null);
+        if (creativeWorld == null) {
+            LOGGER.warning("No creative world found for event: " + eventName);
+            return;
+        }
+        
+        // Get the code handler for this world
+        CodeHandler codeHandler = creativeWorld.getCodeHandler();
+        if (codeHandler == null) {
+            LOGGER.warning("No code handler found for world: " + creativeWorld.getId());
+            return;
+        }
+        
+        // Create a game event with context data
+        GameEvent gameEvent = new GameEvent(eventName);
+        if (player != null) {
+            gameEvent.setPlayer(player);
+        }
+        
+        // Handle the event through the code handler
+        codeHandler.handleEvent(eventName, gameEvent, player);
     }
 }

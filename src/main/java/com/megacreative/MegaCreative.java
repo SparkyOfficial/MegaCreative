@@ -31,6 +31,14 @@ import java.util.logging.Level;
 public class MegaCreative extends JavaPlugin {
     
     private static MegaCreative instance;
+    
+    /**
+     * Gets the singleton instance of the plugin
+     * @return The plugin instance
+     */
+    public static MegaCreative getInstance() {
+        return instance;
+    }
     private DependencyContainer dependencyContainer;
     private ServiceRegistry serviceRegistry;
     private CommandRegistry commandRegistry;
@@ -224,11 +232,7 @@ public class MegaCreative extends JavaPlugin {
         }.runTaskTimerAsynchronously(this, 6000L, 6000L); // 5 minutes interval
     }
     
-    // Static access methods
-    
-    public static MegaCreative getInstance() {
-        return instance;
-    }
+    // Service access methods (dependency injection preferred over static access)
     
     /**
      * Gets the service registry for accessing services

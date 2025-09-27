@@ -2,6 +2,7 @@ package com.megacreative.coding.variables;
 
 import com.megacreative.MegaCreative;
 import com.megacreative.coding.Constants;
+import com.megacreative.coding.events.GameEvent;
 import com.megacreative.coding.values.DataValue;
 import com.megacreative.coding.values.ValueType;
 import org.bukkit.Bukkit;
@@ -452,6 +453,79 @@ public class VariableManager implements IVariableManager {
             DataValue value = getVariable(name, scope, context);
             if (value != null) return value;
         }
+        return null;
+    }
+    
+    @Override
+    public DataValue resolveVariableWithContext(String name, GameEvent context) {
+        if (name == null || context == null) {
+            return null;
+        }
+        
+        // Try to resolve using player context first
+        if (context.getPlayer() != null) {
+            String playerContext = context.getPlayer().getUniqueId().toString();
+            DataValue value = resolveVariable(name, playerContext);
+            if (value != null) return value;
+        }
+        
+        // Try to resolve using custom data from GameEvent
+        Object customValue = context.getCustomData(name);
+        if (customValue != null) {
+            return DataValue.fromObject(customValue);
+        }
+        
+        // Try to resolve using special GameEvent properties
+        switch (name.toLowerCase()) {
+            case "event":
+            case "eventname":
+                return DataValue.fromObject(context.getEventName());
+            case "timestamp":
+                return DataValue.fromObject(context.getTimestamp());
+            case "player":
+            case "playername":
+                if (context.getPlayer() != null) {
+                    return DataValue.fromObject(context.getPlayer().getName());
+                }
+                break;
+            case "playeruuid":
+                if (context.getPlayer() != null) {
+                    return DataValue.fromObject(context.getPlayer().getUniqueId().toString());
+                }
+                break;
+            case "location":
+            case "locationx":
+                if (context.getLocation() != null) {
+                    return DataValue.fromObject(context.getLocation().getBlockX());
+                }
+                break;
+            case "locationy":
+                if (context.getLocation() != null) {
+                    return DataValue.fromObject(context.getLocation().getBlockY());
+                }
+                break;
+            case "locationz":
+                if (context.getLocation() != null) {
+                    return DataValue.fromObject(context.getLocation().getBlockZ());
+                }
+                break;
+            case "message":
+            case "chatmessage":
+                if (context.getMessage() != null) {
+                    return DataValue.fromObject(context.getMessage());
+                }
+                break;
+            case "firstjoin":
+                return DataValue.fromObject(context.isFirstJoin());
+            default:
+                // Check if it's a custom property
+                Object customData = context.getCustomData(name);
+                if (customData != null) {
+                    return DataValue.fromObject(customData);
+                }
+                break;
+        }
+        
         return null;
     }
 }
