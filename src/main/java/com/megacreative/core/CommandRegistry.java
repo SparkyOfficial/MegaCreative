@@ -133,6 +133,10 @@ public class CommandRegistry {
                 plugin.getCommand("delete").setExecutor(new DeleteCommand(plugin));
             }
             
+            if (plugin.getCommand("confirmdelete") != null) {
+                plugin.getCommand("confirmdelete").setExecutor(new ConfirmDeleteCommand(plugin));
+            }
+            
             // Register function management command
             if (plugin.getCommand("function") != null) {
                 FunctionCommand functionCommand = new FunctionCommand(plugin);

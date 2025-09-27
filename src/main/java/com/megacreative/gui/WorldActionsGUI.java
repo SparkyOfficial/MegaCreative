@@ -123,6 +123,18 @@ public class WorldActionsGUI implements GUIManager.ManagedGUIInterface {
         scriptsButton.setItemMeta(scriptsMeta);
         inventory.setItem(13, scriptsButton);
         
+        // Удалить мир
+        ItemStack deleteButton = new ItemStack(Material.BARRIER);
+        ItemMeta deleteMeta = deleteButton.getItemMeta();
+        deleteMeta.setDisplayName("§c§lУдалить мир");
+        deleteMeta.setLore(Arrays.asList(
+            "§7Удалить мир навсегда",
+            "§c⚠ Это действие нельзя отменить!",
+            "§e▶ Нажмите для удаления"
+        ));
+        deleteButton.setItemMeta(deleteMeta);
+        inventory.setItem(14, deleteButton);
+        
         // Кнопка назад
         ItemStack backButton = new ItemStack(Material.ARROW);
         ItemMeta backMeta = backButton.getItemMeta();
@@ -218,6 +230,15 @@ public class WorldActionsGUI implements GUIManager.ManagedGUIInterface {
             player.closeInventory();
             // GUIManager will handle cleanup automatically
             new ScriptsGUI(plugin, player).open();
+        }
+        
+        // Удалить мир
+        else if (displayName.contains("Удалить мир")) {
+            player.closeInventory();
+            // GUIManager will handle cleanup automatically
+            // Confirm deletion with the player
+            player.sendMessage("§cВы уверены, что хотите удалить мир '" + world.getName() + "'? Это действие нельзя отменить.");
+            player.sendMessage("§cВведите /confirmdelete " + world.getId() + " для подтверждения удаления.");
         }
     }
 }
