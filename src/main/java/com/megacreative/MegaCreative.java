@@ -127,6 +127,9 @@ public class MegaCreative extends JavaPlugin {
      * Bootstrap the application by starting core services
      */
     private void bootstrap() {
+        // Connect services after initialization but before use
+        serviceRegistry.connectServices();
+        
         // Register events
         registerEvents();
         

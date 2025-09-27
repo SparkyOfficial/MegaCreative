@@ -1,6 +1,7 @@
 package com.megacreative.commands;
 
 import java.util.List;
+import java.util.logging.Level;
 
 import org.bukkit.GameMode;
 import org.bukkit.World;
@@ -11,6 +12,7 @@ import org.bukkit.entity.Player;
 
 import com.megacreative.MegaCreative;
 import com.megacreative.coding.CodeScript;
+import com.megacreative.coding.executors.ExecutionResult;
 import com.megacreative.managers.PlayerModeManager;
 import com.megacreative.models.CreativeWorld;
 import com.megacreative.services.CodeCompiler;
@@ -69,21 +71,27 @@ public class PlayCommand implements CommandExecutor {
             return true;
         }
         
-        // Simplified PlayCommand - just switch to play world
-        // All logic is now in PlayerWorldChangeListener
-        
-        // Find the creative world
-        CreativeWorld creativeWorld = plugin.getServiceRegistry().getWorldManager().findCreativeWorldByBukkit(player.getWorld());
-        
-        if (creativeWorld == null) {
-            player.sendMessage("§cYou are not in a MegaCreative world!");
+        try {
+            // Find the creative world
+            CreativeWorld creativeWorld = plugin.getServiceRegistry().getWorldManager().findCreativeWorldByBukkit(player.getWorld());
+            
+            if (creativeWorld == null) {
+                player.sendMessage("§cYou are not in a MegaCreative world!");
+                return true;
+            }
+            
+            // Switch to play world using WorldManager
+            plugin.getServiceRegistry().getWorldManager().switchToPlayWorld(player, creativeWorld.getId());
+            
+            // Execute onJoin script if it exists
+            executeOnJoinScript(player, creativeWorld);
+            
+            return true;
+        } catch (Exception e) {
+            plugin.getLogger().log(Level.SEVERE, "Error executing /play command for player " + player.getName(), e);
+            player.sendMessage("§cAn error occurred while switching to play mode. Please contact an administrator.");
             return true;
         }
-        
-        // Switch to play world using WorldManager
-        plugin.getServiceRegistry().getWorldManager().switchToPlayWorld(player, creativeWorld.getId());
-        
-        return true;
     }
     
     /**
@@ -92,31 +100,53 @@ public class PlayCommand implements CommandExecutor {
      * @param creativeWorld The creative world to search for scripts
      */
     private void executeOnJoinScript(Player player, CreativeWorld creativeWorld) {
-        // Find the onJoin script using the new architecture
-        if (creativeWorld.getScripts() != null) {
-            for (CodeScript script : creativeWorld.getScripts()) {
-                // Check if the script's root block is an onJoin event
-                if (script.getRootBlock() != null && 
-                    "onJoin".equals(script.getRootBlock().getAction())) {
-                    
-                    // Execute script using ScriptEngine
-                    if (plugin.getServiceRegistry().getScriptEngine() != null) {
-                        plugin.getServiceRegistry().getScriptEngine().executeScript(script, player, "play_mode_start")
-                            .whenComplete((result, throwable) -> {
-                                if (throwable != null) {
-                                    player.sendMessage("§cError executing onJoin script: " + throwable.getMessage());
-                                    plugin.getLogger().warning("onJoin script execution failed with exception: " + throwable.getMessage());
-                                } else if (result != null && !result.isSuccess()) {
-                                    player.sendMessage("§conJoin script execution failed: " + result.getMessage());
-                                    plugin.getLogger().warning("onJoin script execution failed: " + result.getMessage());
-                                } else {
-                                    plugin.getLogger().info("Successfully executed onJoin script for player: " + player.getName());
-                                }
-                            });
+        try {
+            // Find the onJoin script using the new architecture
+            if (creativeWorld.getScripts() != null) {
+                for (CodeScript script : creativeWorld.getScripts()) {
+                    // Check if the script's root block is an onJoin event
+                    if (script.getRootBlock() != null && 
+                        "onJoin".equals(script.getRootBlock().getAction())) {
+                        
+                        // Execute script using ScriptEngine
+                        if (plugin.getServiceRegistry().getScriptEngine() != null) {
+                            plugin.getServiceRegistry().getScriptEngine().executeScript(script, player, "play_mode_start")
+                                .whenComplete((result, throwable) -> {
+                                    try {
+                                        if (throwable != null) {
+                                            player.sendMessage("§cError executing onJoin script: " + throwable.getMessage());
+                                            plugin.getLogger().log(Level.WARNING, "onJoin script execution failed with exception for player " + player.getName(), throwable);
+                                        } else if (result != null) {
+                                            if (!result.isSuccess()) {
+                                                player.sendMessage("§conJoin script execution failed: " + result.getMessage());
+                                                plugin.getLogger().warning("onJoin script execution failed for player " + player.getName() + ": " + result.getMessage());
+                                                
+                                                // Log additional error details if available
+                                                if (result.getError() != null) {
+                                                    plugin.getLogger().log(Level.WARNING, "Detailed error for onJoin script execution", result.getError());
+                                                }
+                                            } else {
+                                                plugin.getLogger().info("Successfully executed onJoin script for player: " + player.getName());
+                                            }
+                                        } else {
+                                            plugin.getLogger().warning("onJoin script execution returned null result for player: " + player.getName());
+                                        }
+                                    } catch (Exception e) {
+                                        plugin.getLogger().log(Level.SEVERE, "Error handling onJoin script completion for player " + player.getName(), e);
+                                        player.sendMessage("§cError handling script result: " + e.getMessage());
+                                    }
+                                });
+                        } else {
+                            plugin.getLogger().warning("ScriptEngine is not available for onJoin script execution for player: " + player.getName());
+                            player.sendMessage("§cScript engine is not available. onJoin script cannot be executed.");
+                        }
+                        break;
                     }
-                    break;
                 }
             }
+        } catch (Exception e) {
+            plugin.getLogger().log(Level.SEVERE, "Error finding or executing onJoin script for player " + player.getName(), e);
+            player.sendMessage("§cError processing onJoin script: " + e.getMessage());
         }
     }
 }

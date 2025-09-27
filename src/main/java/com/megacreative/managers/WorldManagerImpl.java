@@ -9,6 +9,7 @@ import com.megacreative.interfaces.ICodingManager;
 import com.megacreative.models.*;
 import com.megacreative.utils.ConfigManager;
 import com.megacreative.utils.JsonSerializer;
+import com.megacreative.worlds.DevWorldGenerator;
 import org.bukkit.*;
 import org.bukkit.entity.Player;
 import org.bukkit.plugin.Plugin;
@@ -195,6 +196,7 @@ public class WorldManagerImpl implements IWorldManager {
      * Welt-Manager-Initialisierung - lädt alle Welten aus Dateien
      * Sollte NACH der Erstellung aller anderen Manager aufgerufen werden
      */
+    @Override
     public void initialize() {
         // Check if plugin is available
         Plugin plugin = getPlugin();
@@ -239,8 +241,8 @@ public class WorldManagerImpl implements IWorldManager {
             int loadedCount = 0;
             for (File worldFile : worldFiles) {
                 try {
-                    // Skip world loading for now to avoid compilation errors
-                    // Proper implementation would go here
+                    loadWorldFromFile(worldFile);
+                    loadedCount++;
                 } catch (Exception e) {
                     plugin.getLogger().warning("Failed to load world from " + worldFile.getName() + ": " + e.getMessage());
                 }
@@ -252,6 +254,159 @@ public class WorldManagerImpl implements IWorldManager {
             if (plugin != null) {
                 plugin.getLogger().severe("Error in loadWorlds: " + e.getMessage());
             }
+        }
+    }
+    
+    /**
+     * Loads a single world from a JSON file
+     * @param worldFile The JSON file containing world data
+     */
+    private void loadWorldFromFile(File worldFile) {
+        Plugin plugin = getPlugin();
+        if (plugin == null || !(plugin instanceof MegaCreative)) {
+            return;
+        }
+        
+        try {
+            // Read the JSON file
+            String jsonContent = new String(java.nio.file.Files.readAllBytes(worldFile.toPath()));
+            
+            // Deserialize the world
+            CreativeWorld world = com.megacreative.utils.JsonSerializer.deserializeWorld(jsonContent, (MegaCreative) plugin);
+            
+            if (world != null) {
+                // Register the world in memory
+                worlds.put(world.getId(), world);
+                
+                // Register the world with the player
+                playerWorlds.computeIfAbsent(world.getOwnerId(), k -> new ArrayList<>()).add(world.getId());
+                
+                // Load scripts for the world
+                if (codingManager != null) {
+                    codingManager.loadScriptsForWorld(world);
+                }
+                
+                plugin.getLogger().info("Successfully loaded world: " + world.getName() + " (ID: " + world.getId() + ")");
+            } else {
+                plugin.getLogger().warning("Failed to deserialize world from file: " + worldFile.getName());
+            }
+        } catch (Exception e) {
+            plugin.getLogger().severe("Error loading world from file " + worldFile.getName() + ": " + e.getMessage());
+            e.printStackTrace();
+        }
+    }
+    
+    /**
+     * Generates a unique ID for worlds
+     * @return A unique ID string
+     */
+    private String generateUniqueId() {
+        return UUID.randomUUID().toString().replace("-", "");
+    }
+    
+    /**
+     * Checks if a world with the given name already exists
+     * @param name The world name to check
+     * @return true if a world with that name exists, false otherwise
+     */
+    private boolean worldExists(String name) {
+        for (CreativeWorld world : worlds.values()) {
+            if (world.getName().equalsIgnoreCase(name)) {
+                return true;
+            }
+        }
+        return false;
+    }
+    
+    /**
+     * Gets the number of worlds owned by a player
+     * @param player The player to check
+     * @return The number of worlds owned by the player
+     */
+    @Override
+    public int getPlayerWorldCount(Player player) {
+        List<String> playerWorldIds = playerWorlds.get(player.getUniqueId());
+        return playerWorldIds != null ? playerWorldIds.size() : 0;
+    }
+    
+    /**
+     * Validates a world name
+     * @param name The world name to validate
+     * @return true if the name is valid, false otherwise
+     */
+    private boolean isValidWorldName(String name) {
+        if (name == null || name.trim().isEmpty()) {
+            return false;
+        }
+        
+        // Check length (3-20 characters)
+        if (name.length() < 3 || name.length() > 20) {
+            return false;
+        }
+        
+        // Check for valid characters (letters, numbers, underscores)
+        return name.matches("[a-zA-Z0-9_]+");
+    }
+    
+    /**
+     * Saves a world to storage
+     * @param world The world to save
+     */
+    @Override
+    public void saveWorld(CreativeWorld world) {
+        Plugin plugin = getPlugin();
+        if (plugin == null || !(plugin instanceof MegaCreative)) {
+            return;
+        }
+        
+        try {
+            // Serialize the world to JSON
+            String json = com.megacreative.utils.JsonSerializer.serializeWorld(world);
+            
+            // Write to file
+            File worldsDir = new File(plugin.getDataFolder(), "worlds");
+            if (!worldsDir.exists()) {
+                worldsDir.mkdirs();
+            }
+            
+            File worldFile = new File(worldsDir, world.getId() + ".json");
+            java.nio.file.Files.write(worldFile.toPath(), json.getBytes(java.nio.charset.StandardCharsets.UTF_8));
+            
+            // Save scripts for the world
+            if (codingManager != null) {
+                // Scripts are saved by the coding manager
+            }
+        } catch (Exception e) {
+            plugin.getLogger().severe("Error saving world " + world.getName() + ": " + e.getMessage());
+            e.printStackTrace();
+        }
+    }
+    
+    /**
+     * Saves a world asynchronously
+     * @param world The world to save
+     * @param player The player who triggered the save
+     */
+    @Override
+    public void saveWorldAsync(CreativeWorld world, Player player) {
+        Plugin plugin = getPlugin();
+        if (plugin == null) {
+            return;
+        }
+        
+        Bukkit.getScheduler().runTaskAsynchronously(plugin, () -> {
+            saveWorld(world);
+        });
+    }
+    
+    /**
+     * Saves all worlds
+     */
+    @Override
+    public void saveAllWorlds() {
+        // Save all worlds in the system
+        for (CreativeWorld world : worlds.values()) {
+            saveWorld(world);
         }
     }
     
@@ -271,6 +426,7 @@ public class WorldManagerImpl implements IWorldManager {
      * @param name der Weltname
      * @param worldType der Welttyp
      */
+    @Override
     public void createWorld(Player player, String name, CreativeWorldType worldType) {
         createWorld(player, name, worldType, CreativeWorld.WorldDualMode.STANDALONE, null);
     }
@@ -294,6 +450,7 @@ public class WorldManagerImpl implements IWorldManager {
      * @param name der Weltname
      * @param worldType der Welttyp
      */
+    @Override
     public void createDualWorld(Player player, String name, CreativeWorldType worldType) {
         // Create dev world first
         String devWorldId = generateUniqueId();
@@ -489,6 +646,7 @@ public class WorldManagerImpl implements IWorldManager {
         world.setSpawnLocation(0, world.getHighestBlockYAt(0, 0) + 1, 0);
     }
     
+    @Override
     public void deleteWorld(String worldId, Player requester) {
         CreativeWorld world = worlds.get(worldId);
         if (world == null || !world.isOwner(requester)) {
@@ -630,6 +788,7 @@ public class WorldManagerImpl implements IWorldManager {
         }
     }
     
+    @Override
     public CreativeWorld getWorld(String id) {
         return worlds.get(id);
     }
@@ -638,6 +797,7 @@ public class WorldManagerImpl implements IWorldManager {
      * Получает все творческие миры
      * @return Список всех творческих миров
      */
+    @Override
     public List<CreativeWorld> getCreativeWorlds() {
         return new ArrayList<>(worlds.values());
     }
@@ -645,6 +805,7 @@ public class WorldManagerImpl implements IWorldManager {
     /**
      * 🎆 ENHANCED: Reference system-style world pairing and switching methods
      */
+    @Override
     public CreativeWorld getPairedWorld(CreativeWorld world) {
         if (world.getPairedWorldId() != null) {
             return getWorld(world.getPairedWorldId());
@@ -653,6 +814,7 @@ public class WorldManagerImpl implements IWorldManager {
     }
     
     // 🎆 ENHANCED: Add missing switchToDevWorld method for proper dev mode switching
+    @Override
     public void switchToDevWorld(Player player, String worldId) {
         CreativeWorld world = getWorld(worldId);
         if (world == null) {
@@ -703,6 +865,7 @@ public class WorldManagerImpl implements IWorldManager {
         }
     }
     
+    @Override
     public void switchToPlayWorld(Player player, String worldId) {
         CreativeWorld world = getWorld(worldId);
         if (world == null) {
@@ -801,6 +964,7 @@ public class WorldManagerImpl implements IWorldManager {
     }
     
     // 🎆 ENHANCED: Add missing switchToBuildWorld method for proper build mode switching
+    @Override
     public void switchToBuildWorld(Player player, String worldId) {
         CreativeWorld world = getWorld(worldId);
         if (world == null) {
@@ -852,7 +1016,7 @@ public class WorldManagerImpl implements IWorldManager {
             // ИСПОЛЬЗУЕМ ПРАВИЛЬНЫЙ ГЕНЕРАТОР!
             WorldCreator creator = new WorldCreator(devWorldName);
             creator.environment(World.Environment.NORMAL); // Обязательно для кастомных генераторов
-            creator.generator(new com.megacreative.worlds.DevWorldGenerator()); // Указываем наш генератор!
+            creator.generator(new DevWorldGenerator()); // Указываем наш генератор!
             
             // Удаляем generatorSettings, так как они конфликтуют с кастомным генератором
             // creator.generatorSettings("..."); // ЭТА СТРОКА БОЛЬШЕ НЕ НУЖНА
@@ -882,6 +1046,8 @@ public class WorldManagerImpl implements IWorldManager {
         devWorld.setGameRule(GameRule.KEEP_INVENTORY, true); // Keep items on death
         devWorld.setGameRule(GameRule.DO_IMMEDIATE_RESPAWN, true); // Instant respawn
     }
+    
+    @Override
     public CreativeWorld getWorldByName(String name) {
         if (name == null || name.isEmpty()) {
             return null;
@@ -904,12 +1070,7 @@ public class WorldManagerImpl implements IWorldManager {
         return null;
     }
     
-    /**
-     * 🎆 ENHANCED: Finds CreativeWorld by Bukkit world with dual world architecture support
-     * Handles both old-style (_dev) and new reference system-style (-world, -code) naming
-     * @param bukkitWorld Bukkit-мир
-     * @return Найденный CreativeWorld или null, если не найден
-     */
+    @Override
     public CreativeWorld findCreativeWorldByBukkit(World bukkitWorld) {
         if (bukkitWorld == null) return null;
         
@@ -935,271 +1096,53 @@ public class WorldManagerImpl implements IWorldManager {
             if (devIndex != -1 && devIndex < endIndex) endIndex = devIndex;
             
             if (startIndex < endIndex) {
-                String preciseId = worldName.substring(startIndex, endIndex);
-                // getPlugin().getLogger().info("Trying to find world with precise ID: " + preciseId);
-                CreativeWorld preciseResult = getWorld(preciseId);
-                if (preciseResult != null) {
-                    // getPlugin().getLogger().info("Found world when searching for precise ID " + preciseId + ": " + preciseResult.getName() + " (ID: " + preciseResult.getId() + ")");
-                    return preciseResult;
-                }
-            }
-            
-            // Fallback to simple extraction - but be more careful about the order
-            String id = worldName;
-            // Remove prefix first
-            id = id.replace("megacreative_", "");
-            // Then remove suffixes in order from longest to shortest to avoid partial matches
-            id = id.replace("-code", "");
-            id = id.replace("-world", "");
-            id = id.replace("_dev", "");
-            
-            // getPlugin().getLogger().info("Trying to find world with fallback ID: " + id);
-            CreativeWorld result = getWorld(id);
-            if (result != null) {
-                // getPlugin().getLogger().info("Found world when searching for fallback ID " + id + ": " + result.getName() + " (ID: " + result.getId() + ")");
-                return result;
+                String id = worldName.substring(startIndex, endIndex);
+                return worlds.get(id);
             }
         }
         
-        // 🎆 ENHANCED: Handle new reference system-style dual world naming
-        // Format: worldname-code or worldname-world
-        for (CreativeWorld world : worlds.values()) {
-            // Reduced logging - only log when debugging
-            // getPlugin().getLogger().info("Checking world: " + world.getName() + " (ID: " + world.getId() + ")");
-            
-            // Check if this is the main world
-            if (worldName.equals(world.getWorldName())) {
-                // Reduced logging - only log when debugging
-                // getPlugin().getLogger().info("Matched main world name: " + world.getWorldName());
-                return world;
-            }
-            
-            // Check if this is a dev world (old style)
-            if (worldName.equals(world.getDevWorldName())) {
-                // Reduced logging - only log when debugging
-                // getPlugin().getLogger().info("Matched dev world name: " + world.getDevWorldName());
-                return world;
-            }
-            
-            // Check reference system-style naming patterns
-            if (world.getDualMode() != CreativeWorld.WorldDualMode.STANDALONE) {
-                String baseName = world.getBaseName();
-                
-                // Check -code suffix (dev world)
-                if (worldName.equals(baseName + "-code")) {
-                    // Reduced logging - only log when debugging
-                    // getPlugin().getLogger().info("Matched -code pattern: " + baseName + "-code");
-                    return world;
-                }
-                
-                // Check -world suffix (play world)
-                if (worldName.equals(baseName + "-world")) {
-                    // Reduced logging - only log when debugging
-                    // getPlugin().getLogger().info("Matched -world pattern: " + baseName + "-world");
+        // Handle new reference system-style naming
+        if (worldName.endsWith("-world") || worldName.endsWith("-code")) {
+            // Extract the base name
+            String baseName = worldName.substring(0, worldName.length() - 6);
+            for (CreativeWorld world : worlds.values()) {
+                if (world.getDevWorldName().equals(worldName) || world.getPlayWorldName().equals(worldName)) {
                     return world;
                 }
             }
-            
-            // 🔧 FIX: Handle additional naming patterns for better compatibility
-            // Check if worldName contains the world ID
-            if (worldName.contains(world.getId())) {
-                // Reduced logging - only log when debugging
-                // getPlugin().getLogger().info("Matched ID pattern: " + world.getId());
-                return world;
-            }
         }
         
-        // 🔧 FIX: Try to extract ID from world name for megacreative_ worlds
-        if (worldName.startsWith("megacreative_")) {
-            String[] parts = worldName.replace("megacreative_", "").split("[_-]");
-            if (parts.length > 0) {
-                String potentialId = parts[0];
-                CreativeWorld result = getWorld(potentialId);
-                if (result != null) {
-                    // Reduced logging - only log when debugging
-                    // getPlugin().getLogger().info("Found world by extracted ID: " + potentialId);
-                    // getPlugin().getLogger().info("Found world when searching for split ID " + potentialId + ": " + result.getName() + " (ID: " + result.getId() + ")");
-                    return result;
-                }
-            }
-        }
-        
-        // Reduced logging - only log when debugging
-        // getPlugin().getLogger().warning("No CreativeWorld found for Bukkit world: " + worldName);
-        // getPlugin().getLogger().warning("No CreativeWorld found for Bukkit world: " + worldName + ". Available worlds: " + worlds.size());
-        // for (CreativeWorld world : worlds.values()) {
-        //     getPlugin().getLogger().warning("  - World ID: " + world.getId() + ", Name: " + world.getName() + ", WorldName: " + world.getWorldName());
-        // }
+        // If nothing found, return null
         return null;
     }
     
+    @Override
     public List<CreativeWorld> getPlayerWorlds(Player player) {
+        List<CreativeWorld> playerWorldsList = new ArrayList<>();
         List<String> worldIds = playerWorlds.get(player.getUniqueId());
-        if (worldIds == null) return new ArrayList<>();
         
-        return worldIds.stream()
-            .map(worlds::get)
-            .filter(Objects::nonNull)
-            .toList();
+        if (worldIds != null) {
+            for (String worldId : worldIds) {
+                CreativeWorld world = worlds.get(worldId);
+                if (world != null) {
+                    playerWorldsList.add(world);
+                }
+            }
+        }
+        
+        return playerWorldsList;
     }
     
+    @Override
     public List<CreativeWorld> getAllPublicWorlds() {
-        return worlds.values().stream()
-            .filter(world -> !world.isPrivate())
-            .sorted((a, b) -> Integer.compare(b.getOnlineCount(), a.getOnlineCount()))
-            .toList();
-    }
-    
-    public int getPlayerWorldCount(Player player) {
-        List<String> worldIds = playerWorlds.get(player.getUniqueId());
-        return worldIds != null ? worldIds.size() : 0;
-    }
-    
-    private String generateUniqueId() {
-        String id;
-        do {
-            id = String.valueOf(ThreadLocalRandom.current().nextInt(100000, 999999));
-        } while (worlds.containsKey(id));
-        return id;
-    }
-    
-    /**
-     * Асинхронное сохранение мира с синхронизацией
-     */
-    public void saveWorldAsync(CreativeWorld world, Player player) {
-        Bukkit.getScheduler().runTaskAsynchronously(getPlugin(), () -> {
-            synchronized (worldSaveLock) {
-                try {
-                    saveWorld(world);
-                    // Уведомление об успехе в главном потоке
-                    Bukkit.getScheduler().runTask(getPlugin(), () -> 
-                        player.sendMessage("§aМир '" + world.getName() + "' успешно сохранен!"));
-                } catch (Exception e) {
-                    getPlugin().getLogger().severe("Критическая ошибка при сохранении мира " + world.getId() + ": " + e.getMessage());
-                    getPlugin().getLogger().severe("Stack trace: " + java.util.Arrays.toString(e.getStackTrace()));
-                    // Уведомление об ошибке в главном потоке
-                    Bukkit.getScheduler().runTask(getPlugin(), () -> 
-                        player.sendMessage("§cПроизошла ошибка при сохранении мира."));
-                }
+        List<CreativeWorld> publicWorlds = new ArrayList<>();
+        for (CreativeWorld world : worlds.values()) {
+            // A world is public if it's not private
+            if (!world.isPrivate()) {
+                publicWorlds.add(world);
             }
-        });
-    }
-    
-    public void saveWorld(CreativeWorld world) {
-        File dataFolder = new File(getPlugin().getDataFolder(), "worlds");
-        if (!dataFolder.exists()) {
-            dataFolder.mkdirs();
         }
-        
-        File worldFile = new File(dataFolder, world.getId() + ".yml");
-        YamlConfiguration config = new YamlConfiguration();
-        
-        try {
-            // Используем безопасную DTO сериализацию
-            String worldJson = JsonSerializer.serializeWorld(world);
-            config.set("worldData", worldJson);
-            config.save(worldFile);
-            
-            getPlugin().getLogger().fine("World " + world.getId() + " saved successfully using safe DTO serialization");
-        } catch (Exception e) {
-            getPlugin().getLogger().severe("Ошибка сохранения мира " + world.getId() + ": " + e.getMessage());
-            getPlugin().getLogger().severe("Stack trace: " + java.util.Arrays.toString(e.getStackTrace()));
-        }
-    }
-    
-    public void saveAllWorlds() {
-        worlds.values().forEach(this::saveWorld);
-    }
-    
-    private void loadWorld(File worldFile) {
-        YamlConfiguration config = YamlConfiguration.loadConfiguration(worldFile);
-        
-        // Используем Gson для десериализации мира из JSON
-        String worldJson = config.getString("worldData");
-        if (worldJson == null) {
-            getPlugin().getLogger().warning("Файл мира " + worldFile.getName() + " не содержит данных worldData");
-            return;
-        }
-        
-        try {
-            CreativeWorld world = com.megacreative.utils.JsonSerializer.deserializeWorld(worldJson, (MegaCreative) getPlugin());
-            if (world != null) {
-                worlds.put(world.getId(), world);
-                playerWorlds.computeIfAbsent(world.getOwnerId(), k -> new ArrayList<>()).add(world.getId());
-                
-                // Reduced logging - only log when debugging
-                // getPlugin().getLogger().info("Successfully loaded creative world: " + world.getName() + " (ID: " + world.getId() + ")");
-
-                // Автоматическая загрузка мира и скриптов, если он уже существует
-                World bukkitWorld = Bukkit.getWorld(world.getWorldName());
-                if (bukkitWorld == null) {
-                    // Reduced logging - only log when debugging
-                    // getPlugin().getLogger().info("Bukkit world " + world.getWorldName() + " not found, attempting to create it...");
-                    WorldCreator creator = new WorldCreator(world.getWorldName());
-                    switch (world.getWorldType()) {
-                        case FLAT -> {
-                            creator.type(WorldType.FLAT);
-                            creator.generatorSettings("{\"layers\":[{\"block\":\"bedrock\",\"height\":1},{\"block\":\"stone\",\"height\":2},{\"block\":\"grass_block\",\"height\":1}],\"biome\":\"plains\"}");
-                        }
-                        case VOID -> {
-                            creator.type(WorldType.FLAT);
-                            creator.generatorSettings("{\"layers\":[{\"block\":\"air\",\"height\":1}],\"biome\":\"plains\"}");
-                        }
-                        case OCEAN -> creator.type(WorldType.NORMAL);
-                        case NETHER -> creator.environment(World.Environment.NETHER);
-                        case END -> creator.environment(World.Environment.THE_END);
-                        default -> creator.type(WorldType.NORMAL);
-                    }
-                    bukkitWorld = creator.createWorld();
-                }
-                
-                if (bukkitWorld != null) {
-                    // Reduced logging - only log when debugging
-                    // getPlugin().getLogger().info("Successfully loaded/created Bukkit world: " + bukkitWorld.getName());
-                    ICodingManager codingManager = ((MegaCreative) getPlugin()).getServiceRegistry().getCodingManager();
-                    if (codingManager != null) {
-                        codingManager.loadScriptsForWorld(world);
-                        // Reduced logging - only log when debugging
-                        // getPlugin().getLogger().info("Loaded scripts for world: " + world.getName());
-                    } else {
-                        getPlugin().getLogger().warning("CodingManager is null, could not load scripts for world: " + world.getName());
-                    }
-                    
-                    // Initialize CodeHandler for the world
-                    Plugin plugin = getPlugin();
-                    if (plugin instanceof MegaCreative) {
-                        MegaCreative megaPlugin = (MegaCreative) plugin;
-                        CodeHandler codeHandler = new CodeHandler(megaPlugin, world);
-                        world.setCodeHandler(codeHandler);
-                    }
-                } else {
-                    getPlugin().getLogger().severe("Failed to load/create Bukkit world: " + world.getWorldName());
-                }
-            } else {
-                getPlugin().getLogger().warning("Failed to deserialize world from file: " + worldFile.getName());
-            }
-        } catch (Exception e) {
-            getPlugin().getLogger().severe("Ошибка загрузки мира " + worldFile.getName() + ": " + e.getMessage());
-            e.printStackTrace();
-        }
-    }
-    
-    /**
-     * Проверяет корректность имени мира
-     */
-    private boolean isValidWorldName(String name) {
-        return name != null && 
-               name.length() >= 3 && 
-               name.length() <= 20 && 
-               name.matches("^[a-zA-Z0-9_\\sА-Яа-яЁё]+$");
-    }
-    
-    /**
-     * Проверяет, существует ли мир с таким именем
-     */
-    private boolean worldExists(String name) {
-        return worlds.values().stream()
-                .anyMatch(world -> world.getName().equalsIgnoreCase(name));
+        return publicWorlds;
     }
     
     @Override
@@ -1207,10 +1150,8 @@ public class WorldManagerImpl implements IWorldManager {
         // Save all worlds before shutdown
         saveAllWorlds();
         
-        // Clear caches to free memory
+        // Clear collections
         worlds.clear();
         playerWorlds.clear();
-        
-        // Any other cleanup needed for world management
     }
 }

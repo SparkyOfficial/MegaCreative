@@ -57,6 +57,13 @@ public class ServiceRegistry implements DependencyContainer.Disposable {
     private final Plugin plugin;
     private final DependencyContainer dependencyContainer;
     
+    // Track initialization phases
+    private boolean coreServicesRegistered = false;
+    private boolean managersInitialized = false;
+    private boolean codingServicesInitialized = false;
+    private boolean newArchitectureServicesInitialized = false;
+    private boolean servicesConnected = false;
+    
     /**
      * Creates a new service registry
      * @param plugin The plugin instance
@@ -71,6 +78,7 @@ public class ServiceRegistry implements DependencyContainer.Disposable {
         
         // Register core services
         registerCoreServices();
+        coreServicesRegistered = true;
     }
     
     /**
@@ -107,21 +115,78 @@ public class ServiceRegistry implements DependencyContainer.Disposable {
             
             // Initialize managers
             initializeManagers();
+            managersInitialized = true;
             
             // Initialize implementation managers
             initializeImplementationManagers();
             
             // Initialize coding services
             initializeCodingServices();
+            codingServicesInitialized = true;
             
             // Initialize new architecture services
             initializeNewArchitectureServices();
+            newArchitectureServicesInitialized = true;
             
             log.info("Service Registry initialized successfully!");
         } catch (Exception e) {
             log.severe("Failed to initialize Service Registry: " + e.getMessage());
             e.printStackTrace();
             throw new RuntimeException("Service registry initialization failed", e);
+        }
+    }
+    
+    /**
+     * Connect services that depend on each other after they are all created
+     * This should be called after all services are registered and initialized
+     */
+    public void connectServices() {
+        if (servicesConnected) {
+            return; // Already connected
+        }
+        
+        try {
+            log.info("Connecting services...");
+            
+            // Connect ScriptEngine to AdvancedFunctionManager
+            ScriptEngine scriptEngine = dependencyContainer.resolve(ScriptEngine.class);
+            AdvancedFunctionManager advancedFunctionManager = dependencyContainer.resolve(AdvancedFunctionManager.class);
+            
+            if (scriptEngine != null && advancedFunctionManager != null) {
+                advancedFunctionManager.setScriptEngine(scriptEngine);
+                log.info("Connected ScriptEngine to AdvancedFunctionManager");
+            } else {
+                log.warning("Could not connect ScriptEngine to AdvancedFunctionManager - one or both are null");
+                log.info("ScriptEngine: " + (scriptEngine != null));
+                log.info("AdvancedFunctionManager: " + (advancedFunctionManager != null));
+            }
+            
+            // Connect WorldManager to CodingManager
+            IWorldManager worldManager = dependencyContainer.resolve(IWorldManager.class);
+            ICodingManager codingManager = dependencyContainer.resolve(ICodingManager.class);
+            
+            if (worldManager != null && codingManager != null && worldManager instanceof WorldManagerImpl) {
+                ((WorldManagerImpl) worldManager).setCodingManager(codingManager);
+                log.info("Connected CodingManager to WorldManager");
+            }
+            
+            // Connect Plugin to WorldManager
+            if (worldManager != null && worldManager instanceof WorldManagerImpl) {
+                ((WorldManagerImpl) worldManager).setPlugin(plugin);
+                log.info("Connected Plugin to WorldManager");
+            }
+            
+            // Initialize WorldManager after all dependencies are connected
+            if (worldManager != null) {
+                worldManager.initialize();
+                log.info("WorldManager initialized");
+            }
+            
+            servicesConnected = true;
+            log.info("All services connected successfully!");
+        } catch (Exception e) {
+            log.severe("Failed to connect services: " + e.getMessage());
+            e.printStackTrace();
         }
     }
     
@@ -195,7 +260,7 @@ public class ServiceRegistry implements DependencyContainer.Disposable {
             return new ScriptCompiler((MegaCreative) plugin, blockConfigService, blockLinker);
         });
         
-        // Register ScriptEngine as a factory
+        // Register ScriptEngine as a factory - this is critical for proper initialization
         dependencyContainer.registerFactory(ScriptEngine.class, (DependencyContainer.Supplier<ScriptEngine>) () -> {
             VariableManager variableManager = dependencyContainer.resolve(VariableManager.class);
             VisualDebugger visualDebugger = dependencyContainer.resolve(VisualDebugger.class);

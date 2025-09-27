@@ -29,8 +29,8 @@ public class CodingParameterGUI implements GUIManager.ManagedGUIInterface {
     private static final String CURRENT_VALUE_PREFIX = "§eТекущее значение: §f";
     private static final String CLICK_TO_CHANGE = "§e▶ Нажмите для изменения";
     private static final String DONE_BUTTON_NAME = "§a§lГотово";
-    private static final String PREV_PAGE_BUTTON_NAME = "§e§lПредыдущая страница";
-    private static final String NEXT_PAGE_BUTTON_NAME = "§e§lСледующая страница";
+    private static final String PREV_PAGE_BUTTON_NAME = "§e§лПредыдущая страница";
+    private static final String NEXT_PAGE_BUTTON_NAME = "§e§лСледующая страница";
     private static final String PARAMETER_INPUT_TITLE_PREFIX = "Ввод параметра: ";
     private static final String PARAMETER_UPDATED_MESSAGE = "§a✅ Параметр '%s' обновлен!";
     private static final String PARAMETER_UPDATE_ERROR = "§c❌ Ошибка при обновлении параметра: ";
@@ -393,8 +393,14 @@ public class CodingParameterGUI implements GUIManager.ManagedGUIInterface {
                         // --- ИСПРАВЛЕНИЕ ---
                         // Обновляем и открываем ТЕКУЩЕЕ GUI, а не создаем новое
                         Bukkit.getScheduler().runTask(plugin, () -> {
-                            this.refresh(); // Обновляем иконки в инвентаре
-                            this.open();    // Показываем его игроку снова
+                            // Получаем ссылку на существующее GUI через GUIManager
+                            GUIManager.ManagedGUIInterface currentGUI = guiManager.getActiveGUI(player);
+                            if (currentGUI instanceof CodingParameterGUI) {
+                                // Обновляем иконки в инвентаре
+                                ((CodingParameterGUI) currentGUI).refresh();
+                                // Открываем обновленный инвентарь
+                                player.openInventory(inventory);
+                            }
                         });
                     } catch (Exception e) {
                         player.sendMessage(PARAMETER_UPDATE_ERROR + e.getMessage());
