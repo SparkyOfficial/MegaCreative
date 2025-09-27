@@ -2,11 +2,9 @@ package com.megacreative.coding.activators;
 
 import com.megacreative.coding.ScriptEngine;
 import com.megacreative.coding.events.GameEvent;
-import com.megacreative.coding.events.GameEventFactory;
 import com.megacreative.models.CreativeWorld;
 import org.bukkit.Location;
 import org.bukkit.entity.Player;
-import org.bukkit.event.player.PlayerMoveEvent;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -17,11 +15,9 @@ import java.util.Map;
 public class PlayerMoveActivator extends BukkitEventActivator {
     
     private boolean onlyOnNewBlock = true;
-    private final GameEventFactory eventFactory;
     
     public PlayerMoveActivator(CreativeWorld creativeWorld, ScriptEngine scriptEngine) {
         super(creativeWorld, scriptEngine);
-        this.eventFactory = new GameEventFactory();
     }
     
     /**
@@ -70,16 +66,18 @@ public class PlayerMoveActivator extends BukkitEventActivator {
             }
         }
         
-        // Create a Bukkit event to extract data from
-        PlayerMoveEvent bukkitEvent = new PlayerMoveEvent(player, from, to);
+        // Create a game event with player move context
+        GameEvent gameEvent = new GameEvent("onPlayerMove");
+        gameEvent.setPlayer(player);
+        if (location != null) {
+            gameEvent.setLocation(location);
+        }
         
-        // Create custom data for backward compatibility
+        // Add custom data
         Map<String, Object> customData = new HashMap<>();
         customData.put("from", from);
         customData.put("to", to);
-        
-        // Create a game event with player move context using the factory
-        GameEvent gameEvent = eventFactory.createGameEvent("onPlayerMove", bukkitEvent, player, customData);
+        gameEvent.setCustomData(customData);
         
         // Activate the script
         super.activate(gameEvent, player);

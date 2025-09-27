@@ -18,6 +18,7 @@ import org.bukkit.inventory.Inventory;
 import org.bukkit.inventory.ItemStack;
 import com.megacreative.coding.values.DataValue;
 import com.megacreative.coding.values.types.*;
+import com.megacreative.coding.ChestParser;
 
 import java.util.*;
 import java.util.logging.Logger;
@@ -810,96 +811,72 @@ public class CodeCompiler {
     }
     
     private void readParametersFromContainer(Location blockLocation, CodeBlock codeBlock) {
-        // Look for container (chest) above the block
-        // Искать контейнер (сундук) над блоком
-        // Suche nach Container (Truhe) über dem Block
-        Location containerLocation = blockLocation.clone().add(0, 1, 0);
-        Block containerBlock = containerLocation.getBlock();
+        // Use the ChestParser system to read parameters from adjacent chests
+        ChestParser chestParser = ChestParser.forAdjacentChest(blockLocation);
         
-        // 🔧 FIX: Add null check for containerBlock
-        // 🔧 ИСПРАВЛЕНИЕ: Добавить проверку на null для блока контейнера
-        // 🔧 FIX: Null-Prüfung für Containerblock hinzufügen
-        if (containerBlock == null) {
-            return;
-        }
-        
-        // 🔧 FIX: containerBlock is never null here, so condition is always false
-        // 🔧 ИСПРАВЛЕНИЕ: containerBlock никогда не равен null здесь, поэтому условие всегда ложно
-        // 🔧 FIX: containerBlock ist hier nie null, daher ist die Bedingung immer falsch
-        // Removed unnecessary null check as containerBlock is never null here
-        if (containerBlock.getState() instanceof Container) {
-            Container container = (Container) containerBlock.getState();
-            Inventory inventory = container.getInventory();
+        if (chestParser != null) {
+            // Convert chest items to DataValue parameters
+            convertChestItemsToParameters(chestParser, codeBlock);
             
-            // Convert ItemStacks to DataValue parameters
-            // Преобразовать ItemStacks в параметры DataValue
-            // ItemStacks in DataValue-Parameter konvertieren
-            convertItemStacksToParameters(inventory, codeBlock);
-            
-            logger.fine("Found container with parameters for block at " + blockLocation);
-            // Найден контейнер с параметрами для блока в
-            // Container mit Parametern für Block bei gefunden
-            // Found container with parameters for block at
+            logger.fine("Found adjacent chest with parameters for block at " + blockLocation);
             
             // Add visual feedback for parameter reading
-            // Добавить визуальную обратную связь для чтения параметров
-            // Visuelles Feedback für Parameterlesen hinzufügen
             // 🔧 FIX: Add null check for world
             // 🔧 ИСПРАВЛЕНИЕ: Добавить проверку на null для мира
             // 🔧 FIX: Null-Prüfung für Welt hinzufügen
-            if (containerLocation.getWorld() != null) {
-                containerLocation.getWorld().spawnParticle(org.bukkit.Particle.ENCHANTMENT_TABLE, 
-                    containerLocation.add(0.5, 0.5, 0.5), 5, 0.3, 0.3, 0.3, 1.0);
+            if (chestParser.getChestLocation().getWorld() != null) {
+                chestParser.getChestLocation().getWorld().spawnParticle(org.bukkit.Particle.ENCHANTMENT_TABLE, 
+                    chestParser.getChestLocation().add(0.5, 0.5, 0.5), 5, 0.3, 0.3, 0.3, 1.0);
             }
         }
     }
 
     /**
-     * Преобразует ItemStacks из инвентаря контейнера в параметры DataValue в CodeBlock
+     * Преобразует предметы из сундука в параметры DataValue в CodeBlock
      *
-     * Converts ItemStacks from container inventory to DataValue parameters in CodeBlock
+     * Converts chest items to DataValue parameters in CodeBlock
      *
-     * Konvertiert ItemStacks aus Container-Inventar in DataValue-Parameter im CodeBlock
+     * Konvertiert Truhengegenstände in DataValue-Parameter im CodeBlock
      */
-    private void convertItemStacksToParameters(Inventory inventory, CodeBlock codeBlock) {
+    private void convertChestItemsToParameters(ChestParser chestParser, CodeBlock codeBlock) {
         Map<String, DataValue> newParameters = new HashMap<>();
         int processedItems = 0;
         
-        // Process each slot in the inventory
-        // Обработать каждый слот в инвентаре
-        // Jeden Slot im Inventar verarbeiten
-        for (int slot = 0; slot < inventory.getSize(); slot++) {
-            ItemStack item = inventory.getItem(slot);
-            if (item == null || item.getType().isAir()) continue;
+        // Process each slot in the chest inventory
+        // Обработать каждый слот в инвентаре сундука
+        // Jeden Slot im Truheninventar verarbeiten
+        for (int slot = 0; slot < chestParser.getChestInventory().getSize(); slot++) {
+            // Use ChestParser methods to get different types of parameters
+            String textParam = chestParser.getText(slot);
+            if (textParam != null) {
+                String paramName = getParameterNameForSlot(codeBlock.getAction(), slot);
+                newParameters.put(paramName, new TextValue(textParam));
+                processedItems++;
+                continue;
+            }
             
-            // Skip placeholder items
-            // Пропустить элементы-заполнители
-            // Platzhalterelemente überspringen
-            if (isPlaceholderItem(item)) continue;
+            double numberParam = chestParser.getNumber(slot);
+            if (numberParam != 0) { // 0 is the default, so non-zero means we found a number
+                String paramName = getParameterNameForSlot(codeBlock.getAction(), slot);
+                newParameters.put(paramName, new NumberValue(numberParam));
+                processedItems++;
+                continue;
+            }
             
-            // Try to determine parameter name for this slot
-            // Попытаться определить имя параметра для этого слота
-            // Versuche, den Parameternamen für diesen Slot zu bestimmen
-            String paramName = getParameterNameForSlot(codeBlock.getAction(), slot);
-            // 🔧 FIX: paramName is never null here, so condition is always false
-            // 🔧 ИСПРАВЛЕНИЕ: paramName никогда не равен null здесь, поэтому условие всегда ложно
-            // 🔧 FIX: paramName ist hier nie null, daher ist die Bedingung immer falsch
-            // Removed unnecessary null check as paramName is never null here
-            // Fallback: use generic slot-based parameter name
-            // Резервный вариант: использовать общее имя параметра на основе слота
-            // Fallback: Generischen Slot-basierten Parameternamen verwenden
-            // paramName = "slot_" + slot;
+            Location locationParam = chestParser.getLocation(slot);
+            if (locationParam != null) {
+                String paramName = getParameterNameForSlot(codeBlock.getAction(), slot);
+                newParameters.put(paramName, new LocationValue(locationParam));
+                processedItems++;
+                continue;
+            }
             
-            // Convert ItemStack to DataValue
-            // Преобразовать ItemStack в DataValue
-            // ItemStack in DataValue konvertieren
-            DataValue paramValue = convertItemStackToDataValue(item);
-            // 🔧 FIX: paramValue is never null here, so condition is always true
-            // 🔧 ИСПРАВЛЕНИЕ: paramValue никогда не равен null здесь, поэтому условие всегда истинно
-            // 🔧 FIX: paramValue ist hier nie null, daher ist die Bedingung immer wahr
-            // Removed unnecessary null check as paramValue is never null here
-            newParameters.put(paramName, paramValue);
-            processedItems++;
+            ItemStack itemParam = chestParser.getItem(slot);
+            if (itemParam != null && itemParam.getType() != Material.AIR) {
+                String paramName = getParameterNameForSlot(codeBlock.getAction(), slot);
+                newParameters.put(paramName, convertItemStackToDataValue(itemParam));
+                processedItems++;
+            }
         }
         
         // Update CodeBlock parameters
@@ -910,10 +887,7 @@ public class CodeCompiler {
         }
         
         if (processedItems > 0) {
-            logger.fine("Converted " + processedItems + " ItemStacks to DataValue parameters for block " + codeBlock.getAction());
-            // Преобразовано ItemStacks в параметры DataValue для блока
-            // Konvertierte ItemStacks in DataValue-Parameter für Block
-            // Converted ItemStacks to DataValue parameters for block
+            logger.fine("Converted " + processedItems + " chest items to DataValue parameters for block " + codeBlock.getAction());
         }
     }
 
@@ -1459,7 +1433,7 @@ public class CodeCompiler {
      * @param worldId Die Welt-ID
      * @param codeLines Die kompilierten Codezeilen
      *
-     * Speichert kompилиerten Code in einer Konfigurationsdatei wie im WorldCode-System des Referenzsystems
+     * Speichert kompilierten Code in einer Konfigurationsdatei wie im WorldCode-System des Referenzsystems
      */
     public void saveCompiledCode(String worldId, List<String> codeLines) {
         // Save to WorldCode configuration like reference system's WorldCode system

@@ -61,7 +61,9 @@ public class PlayerWorldChangeListener implements Listener {
         plugin.getServiceRegistry().getScoreboardManager().setScoreboard(player);
         
         // Проверяем инвентарь при входе в dev-мир
-        if (toWorld.getName().endsWith("_dev") || toWorld.getName().endsWith("-code")) {
+        // Используем правильную проверку на основе мира и разрешений
+        CreativeWorld creativeWorld = plugin.getServiceRegistry().getWorldManager().findCreativeWorldByBukkit(toWorld);
+        if (creativeWorld != null && creativeWorld.canCode(player)) {
             List<String> missingItems = getMissingCodingItems(player);
             if (!missingItems.isEmpty()) {
                 CodingItems.giveMissingItems(player, missingItems);
@@ -91,6 +93,15 @@ public class PlayerWorldChangeListener implements Listener {
         if (creativeWorld != null) {
             String mode = determineWorldMode(world, creativeWorld);
             plugin.getServiceRegistry().getPlayerManager().trackPlayerWorldEntry(player, creativeWorld.getId(), mode);
+            
+            // Проверяем инвентарь при входе в dev-мир
+            // Используем правильную проверку на основе мира и разрешений
+            if (creativeWorld.canCode(player)) {
+                List<String> missingItems = getMissingCodingItems(player);
+                if (!missingItems.isEmpty()) {
+                    CodingItems.giveMissingItems(player, missingItems);
+                }
+            }
         }
     }
     

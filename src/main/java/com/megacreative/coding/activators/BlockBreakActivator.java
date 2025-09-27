@@ -2,13 +2,11 @@ package com.megacreative.coding.activators;
 
 import com.megacreative.coding.ScriptEngine;
 import com.megacreative.coding.events.GameEvent;
-import com.megacreative.coding.events.GameEventFactory;
 import com.megacreative.models.CreativeWorld;
 import org.bukkit.Location;
 import org.bukkit.Material;
 import org.bukkit.block.Block;
 import org.bukkit.entity.Player;
-import org.bukkit.event.block.BlockBreakEvent;
 import org.bukkit.inventory.ItemStack;
 
 import java.util.HashMap;
@@ -23,11 +21,9 @@ public class BlockBreakActivator extends BukkitEventActivator {
     
     private Material blockType;
     private boolean anyBlockType = true;
-    private final GameEventFactory eventFactory;
     
     public BlockBreakActivator(CreativeWorld creativeWorld, ScriptEngine scriptEngine) {
         super(creativeWorld, scriptEngine);
-        this.eventFactory = new GameEventFactory();
     }
     
     /**
@@ -89,18 +85,21 @@ public class BlockBreakActivator extends BukkitEventActivator {
             return;
         }
         
-        // Create a Bukkit event to extract data from
-        BlockBreakEvent bukkitEvent = new BlockBreakEvent(block, player);
+        // Create a game event with block break context
+        GameEvent gameEvent = new GameEvent("onBlockBreak");
+        gameEvent.setPlayer(player);
+        if (location != null) {
+            gameEvent.setLocation(location);
+        } else if (block.getLocation() != null) {
+            gameEvent.setLocation(block.getLocation());
+        }
         
-        // Create custom data for backward compatibility
+        // Add custom data
         Map<String, Object> customData = new HashMap<>();
         customData.put("block", block);
         customData.put("blockType", block.getType());
         customData.put("drops", drops);
-        
-        // Create a game event with block break context using the factory
-        GameEvent gameEvent = eventFactory.createGameEvent("onBlockBreak", bukkitEvent, player, customData);
-        gameEvent.setLocation(block.getLocation());
+        gameEvent.setCustomData(customData);
         
         // Activate the script
         super.activate(gameEvent, player);

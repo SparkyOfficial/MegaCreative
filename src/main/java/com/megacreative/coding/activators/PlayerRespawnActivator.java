@@ -2,11 +2,9 @@ package com.megacreative.coding.activators;
 
 import com.megacreative.coding.ScriptEngine;
 import com.megacreative.coding.events.GameEvent;
-import com.megacreative.coding.events.GameEventFactory;
 import com.megacreative.models.CreativeWorld;
 import org.bukkit.Location;
 import org.bukkit.entity.Player;
-import org.bukkit.event.player.PlayerRespawnEvent;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -16,11 +14,8 @@ import java.util.Map;
  */
 public class PlayerRespawnActivator extends BukkitEventActivator {
     
-    private final GameEventFactory eventFactory;
-    
     public PlayerRespawnActivator(CreativeWorld creativeWorld, ScriptEngine scriptEngine) {
         super(creativeWorld, scriptEngine);
-        this.eventFactory = new GameEventFactory();
     }
     
     @Override
@@ -44,17 +39,20 @@ public class PlayerRespawnActivator extends BukkitEventActivator {
             return;
         }
         
-        // Create a Bukkit event to extract data from
-        PlayerRespawnEvent bukkitEvent = new PlayerRespawnEvent(player, respawnLocation, isBedSpawn);
+        // Create a game event with player respawn context
+        GameEvent gameEvent = new GameEvent("onPlayerRespawn");
+        gameEvent.setPlayer(player);
+        if (location != null) {
+            gameEvent.setLocation(location);
+        } else if (respawnLocation != null) {
+            gameEvent.setLocation(respawnLocation);
+        }
         
-        // Create custom data for backward compatibility
+        // Add custom data
         Map<String, Object> customData = new HashMap<>();
         customData.put("respawnLocation", respawnLocation);
         customData.put("isBedSpawn", isBedSpawn);
-        
-        // Create a game event with player respawn context using the factory
-        GameEvent gameEvent = eventFactory.createGameEvent("onPlayerRespawn", bukkitEvent, player, customData);
-        gameEvent.setLocation(respawnLocation);
+        gameEvent.setCustomData(customData);
         
         // Activate the script
         super.activate(gameEvent, player);

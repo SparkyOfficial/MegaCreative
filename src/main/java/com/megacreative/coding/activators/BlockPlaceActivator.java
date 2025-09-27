@@ -2,13 +2,11 @@ package com.megacreative.coding.activators;
 
 import com.megacreative.coding.ScriptEngine;
 import com.megacreative.coding.events.GameEvent;
-import com.megacreative.coding.events.GameEventFactory;
 import com.megacreative.models.CreativeWorld;
 import org.bukkit.Location;
 import org.bukkit.Material;
 import org.bukkit.block.Block;
 import org.bukkit.entity.Player;
-import org.bukkit.event.block.BlockPlaceEvent;
 import org.bukkit.inventory.ItemStack;
 import java.util.HashMap;
 import java.util.Map;
@@ -21,11 +19,9 @@ public class BlockPlaceActivator extends BukkitEventActivator {
     
     private Material blockType;
     private boolean anyBlockType = true;
-    private final GameEventFactory eventFactory;
     
     public BlockPlaceActivator(CreativeWorld creativeWorld, ScriptEngine scriptEngine) {
         super(creativeWorld, scriptEngine);
-        this.eventFactory = new GameEventFactory();
     }
     
     /**
@@ -87,18 +83,21 @@ public class BlockPlaceActivator extends BukkitEventActivator {
             return;
         }
         
-        // Create a Bukkit event to extract data from
-        BlockPlaceEvent bukkitEvent = new BlockPlaceEvent(block, block.getState(), block, itemInHand, player, true, null);
+        // Create a game event with block place context
+        GameEvent gameEvent = new GameEvent("onBlockPlace");
+        gameEvent.setPlayer(player);
+        if (location != null) {
+            gameEvent.setLocation(location);
+        } else if (block.getLocation() != null) {
+            gameEvent.setLocation(block.getLocation());
+        }
         
-        // Create custom data for backward compatibility
+        // Add custom data
         Map<String, Object> customData = new HashMap<>();
         customData.put("block", block);
         customData.put("blockType", block.getType());
         customData.put("itemInHand", itemInHand);
-        
-        // Create a game event with block place context using the factory
-        GameEvent gameEvent = eventFactory.createGameEvent("onBlockPlace", bukkitEvent, player, customData);
-        gameEvent.setLocation(block.getLocation());
+        gameEvent.setCustomData(customData);
         
         // Activate the script
         super.activate(gameEvent, player);

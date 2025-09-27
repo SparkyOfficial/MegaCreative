@@ -2,11 +2,9 @@ package com.megacreative.coding.activators;
 
 import com.megacreative.coding.ScriptEngine;
 import com.megacreative.coding.events.GameEvent;
-import com.megacreative.coding.events.GameEventFactory;
 import com.megacreative.models.CreativeWorld;
 import org.bukkit.Location;
 import org.bukkit.entity.Player;
-import org.bukkit.event.entity.PlayerDeathEvent;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -16,11 +14,8 @@ import java.util.Map;
  */
 public class PlayerDeathActivator extends BukkitEventActivator {
     
-    private final GameEventFactory eventFactory;
-    
     public PlayerDeathActivator(CreativeWorld creativeWorld, ScriptEngine scriptEngine) {
         super(creativeWorld, scriptEngine);
-        this.eventFactory = new GameEventFactory();
     }
     
     @Override
@@ -43,16 +38,19 @@ public class PlayerDeathActivator extends BukkitEventActivator {
             return;
         }
         
-        // Create a Bukkit event to extract data from
-        PlayerDeathEvent bukkitEvent = new PlayerDeathEvent(player, null, 0, deathMessage);
+        // Create a game event with player death context
+        GameEvent gameEvent = new GameEvent("onPlayerDeath");
+        gameEvent.setPlayer(player);
+        if (location != null) {
+            gameEvent.setLocation(location);
+        } else if (player.getLocation() != null) {
+            gameEvent.setLocation(player.getLocation());
+        }
         
-        // Create custom data for backward compatibility
+        // Add custom data
         Map<String, Object> customData = new HashMap<>();
         customData.put("deathMessage", deathMessage);
-        
-        // Create a game event with player death context using the factory
-        GameEvent gameEvent = eventFactory.createGameEvent("onPlayerDeath", bukkitEvent, player, customData);
-        gameEvent.setLocation(player.getLocation());
+        gameEvent.setCustomData(customData);
         
         // Activate the script
         super.activate(gameEvent, player);

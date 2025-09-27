@@ -2,14 +2,11 @@ package com.megacreative.coding.activators;
 
 import com.megacreative.coding.ScriptEngine;
 import com.megacreative.coding.events.GameEvent;
-import com.megacreative.coding.events.GameEventFactory;
 import com.megacreative.models.CreativeWorld;
 import org.bukkit.Location;
 import org.bukkit.entity.Player;
-import org.bukkit.event.player.AsyncPlayerChatEvent;
 import java.util.HashMap;
 import java.util.Map;
-import java.util.Set;
 
 /**
  * Activator that handles player chat events.
@@ -19,11 +16,9 @@ public class ChatActivator extends BukkitEventActivator {
     
     private String keyword;
     private boolean anyMessage = true;
-    private final GameEventFactory eventFactory;
     
     public ChatActivator(CreativeWorld creativeWorld, ScriptEngine scriptEngine) {
         super(creativeWorld, scriptEngine);
-        this.eventFactory = new GameEventFactory();
     }
     
     /**
@@ -84,16 +79,18 @@ public class ChatActivator extends BukkitEventActivator {
             return;
         }
         
-        // Create a Bukkit event to extract data from
-        AsyncPlayerChatEvent bukkitEvent = new AsyncPlayerChatEvent(false, player, message, Set.of(player));
+        // Create a game event with chat context
+        GameEvent gameEvent = new GameEvent("onChat");
+        gameEvent.setPlayer(player);
+        if (location != null) {
+            gameEvent.setLocation(location);
+        }
+        gameEvent.setMessage(message);
         
-        // Create custom data for backward compatibility
+        // Add custom data
         Map<String, Object> customData = new HashMap<>();
         customData.put("message", message);
-        
-        // Create a game event with chat context using the factory
-        GameEvent gameEvent = eventFactory.createGameEvent("onChat", bukkitEvent, player, customData);
-        gameEvent.setMessage(message);
+        gameEvent.setCustomData(customData);
         
         // Activate the script
         super.activate(gameEvent, player);

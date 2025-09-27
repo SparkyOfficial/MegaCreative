@@ -2,11 +2,9 @@ package com.megacreative.coding.activators;
 
 import com.megacreative.coding.ScriptEngine;
 import com.megacreative.coding.events.GameEvent;
-import com.megacreative.coding.events.GameEventFactory;
 import com.megacreative.models.CreativeWorld;
 import org.bukkit.Location;
 import org.bukkit.entity.Player;
-import org.bukkit.event.entity.EntityPickupItemEvent;
 import org.bukkit.inventory.ItemStack;
 import java.util.HashMap;
 import java.util.Map;
@@ -15,13 +13,25 @@ import java.util.Map;
  * Activator that handles entity pickup item events.
  * This activator listens to EntityPickupItemEvent and triggers script execution.
  */
-public class EntityPickupItemActivator extends BukkitEventActivator {
+public class EntityPickupItemActivator extends Activator {
     
-    private final GameEventFactory eventFactory;
+    private Location location;
     
     public EntityPickupItemActivator(CreativeWorld creativeWorld, ScriptEngine scriptEngine) {
         super(creativeWorld, scriptEngine);
-        this.eventFactory = new GameEventFactory();
+    }
+    
+    /**
+     * Sets the location of this activator in the world
+     * @param location The location to set
+     */
+    public void setLocation(Location location) {
+        this.location = location;
+    }
+    
+    @Override
+    public Location getLocation() {
+        return location;
     }
     
     @Override
@@ -45,17 +55,22 @@ public class EntityPickupItemActivator extends BukkitEventActivator {
             return;
         }
         
-        // Create a Bukkit event to extract data from
-        EntityPickupItemEvent bukkitEvent = new EntityPickupItemEvent(player, item, quantity);
+        // Create a game event with entity pickup item context
+        GameEvent gameEvent = new GameEvent("onEntityPickupItem");
+        gameEvent.setPlayer(player);
+        if (location != null) {
+            gameEvent.setLocation(location);
+        }
         
-        // Create custom data for backward compatibility
+        // Add custom data
         Map<String, Object> customData = new HashMap<>();
-        customData.put("item", item);
+        if (item != null) {
+            customData.put("itemType", item.getType().name());
+            customData.put("itemName", item.hasItemMeta() && item.getItemMeta().hasDisplayName() 
+                ? item.getItemMeta().getDisplayName() : "");
+        }
         customData.put("quantity", quantity);
-        
-        // Create a game event with entity pickup item context using the factory
-        GameEvent gameEvent = eventFactory.createGameEvent("onEntityPickupItem", bukkitEvent, player, customData);
-        gameEvent.setLocation(player.getLocation());
+        gameEvent.setCustomData(customData);
         
         // Activate the script
         super.activate(gameEvent, player);
