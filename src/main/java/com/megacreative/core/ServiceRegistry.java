@@ -33,6 +33,7 @@ import com.megacreative.gui.coding.EnhancedActionParameterGUI;
 import com.megacreative.services.MessagingService;
 import com.megacreative.MegaCreative;
 import com.megacreative.tools.CodeBlockClipboard;
+import com.megacreative.coding.CodingManagerImpl;
 // 🎆 Reference system-style comprehensive events
 import com.megacreative.managers.ReferenceSystemEventManager;
 import com.megacreative.utils.ConfigManager;
@@ -207,6 +208,12 @@ public class ServiceRegistry implements DependencyContainer.Disposable {
         dependencyContainer.registerFactory(IWorldManager.class, (DependencyContainer.Supplier<IWorldManager>) () -> {
             ConfigManager configManager = dependencyContainer.resolve(ConfigManager.class);
             return new WorldManagerImpl(configManager, (MegaCreative) plugin);
+        });
+        
+        // Register CodingManagerImpl as a factory since it needs dependencies
+        dependencyContainer.registerFactory(ICodingManager.class, (DependencyContainer.Supplier<ICodingManager>) () -> {
+            IWorldManager worldManager = dependencyContainer.resolve(IWorldManager.class);
+            return new CodingManagerImpl((MegaCreative) plugin, worldManager);
         });
         dependencyContainer.registerType(TemplateManager.class, TemplateManager.class);
         dependencyContainer.registerType(ScoreboardManager.class, ScoreboardManager.class);
