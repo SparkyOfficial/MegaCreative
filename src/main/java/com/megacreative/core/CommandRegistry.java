@@ -162,11 +162,6 @@ public class CommandRegistry {
             plugin.getCommand("execute").setExecutor(new ExecuteCommand(plugin));
         }
         
-        // Test script command for verification
-        if (plugin.getCommand("testscript") != null) {
-            plugin.getCommand("testscript").setExecutor(new TestScriptCommand(plugin));
-        }
-        
         // Global chat command
         if (plugin.getCommand("cc") != null) {
             plugin.getCommand("cc").setExecutor(new GlobalChatCommand(plugin));

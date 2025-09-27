@@ -12,6 +12,15 @@ import com.megacreative.listeners.BukkitPlayerMoveListener;
 import com.megacreative.listeners.BukkitPlayerChatListener;
 import com.megacreative.listeners.BukkitBlockPlaceListener;
 import com.megacreative.listeners.BukkitBlockBreakListener;
+import com.megacreative.listeners.BukkitEntityPickupItemListener;
+import com.megacreative.listeners.BukkitPlayerDeathListener;
+import com.megacreative.listeners.BukkitPlayerQuitListener;
+import com.megacreative.listeners.BukkitPlayerRespawnListener;
+import com.megacreative.listeners.BukkitPlayerTeleportListener;
+import com.megacreative.listeners.BukkitEntityDamageListener;
+import com.megacreative.listeners.BukkitInventoryClickListener;
+import com.megacreative.listeners.BukkitInventoryOpenListener;
+import com.megacreative.listeners.PlayerWorldChangeListener;
 import org.bukkit.plugin.java.JavaPlugin;
 import org.bukkit.scheduler.BukkitRunnable;
 import org.bukkit.scheduler.BukkitTask;
@@ -180,6 +189,17 @@ public class MegaCreative extends JavaPlugin {
             getServer().getPluginManager().registerEvents(new BukkitPlayerChatListener(this), this);
             getServer().getPluginManager().registerEvents(new BukkitBlockPlaceListener(this), this);
             getServer().getPluginManager().registerEvents(new BukkitBlockBreakListener(this), this);
+            getServer().getPluginManager().registerEvents(new BukkitEntityPickupItemListener(this), this);
+            getServer().getPluginManager().registerEvents(new BukkitPlayerDeathListener(this), this);
+            getServer().getPluginManager().registerEvents(new BukkitPlayerQuitListener(this), this);
+            getServer().getPluginManager().registerEvents(new BukkitPlayerRespawnListener(this), this);
+            getServer().getPluginManager().registerEvents(new BukkitPlayerTeleportListener(this), this);
+            getServer().getPluginManager().registerEvents(new BukkitEntityDamageListener(this), this);
+            getServer().getPluginManager().registerEvents(new BukkitInventoryClickListener(this), this);
+            getServer().getPluginManager().registerEvents(new BukkitInventoryOpenListener(this), this);
+            
+            // Register PlayerWorldChangeListener to handle player world changes and give coding items
+            getServer().getPluginManager().registerEvents(new PlayerWorldChangeListener(this), this);
             
             // Register ScriptTriggerManager to listen to our custom events
             getServer().getPluginManager().registerEvents(serviceRegistry.getScriptTriggerManager(), this);

@@ -170,7 +170,12 @@ public class ServiceRegistry implements DependencyContainer.Disposable {
         dependencyContainer.registerType(BlockHierarchyManager.class, BlockHierarchyManager.class);
         dependencyContainer.registerType(WorldCodeRestorer.class, WorldCodeRestorer.class);
         dependencyContainer.registerType(CodeBlockSignManager.class, CodeBlockSignManager.class);
-        dependencyContainer.registerType(ScriptTriggerManager.class, ScriptTriggerManager.class);
+        // Register ScriptTriggerManager as a factory since it needs dependencies
+        dependencyContainer.registerFactory(ScriptTriggerManager.class, (DependencyContainer.Supplier<ScriptTriggerManager>) () -> {
+            IWorldManager worldManager = dependencyContainer.resolve(IWorldManager.class);
+            PlayerModeManager playerModeManager = dependencyContainer.resolve(PlayerModeManager.class);
+            return new ScriptTriggerManager((MegaCreative) plugin, worldManager, playerModeManager);
+        });
         
         // Register interfaces for factories
         dependencyContainer.registerType(com.megacreative.interfaces.IActionFactory.class, ActionFactory.class);

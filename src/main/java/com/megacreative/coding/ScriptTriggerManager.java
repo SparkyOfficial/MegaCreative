@@ -1,6 +1,20 @@
 package com.megacreative.coding;
 
 import com.megacreative.MegaCreative;
+import com.megacreative.coding.activators.Activator;
+import com.megacreative.coding.activators.PlayerJoinActivator;
+import com.megacreative.coding.activators.PlayerMoveActivator;
+import com.megacreative.coding.activators.BlockPlaceActivator;
+import com.megacreative.coding.activators.BlockBreakActivator;
+import com.megacreative.coding.activators.ChatActivator;
+import com.megacreative.coding.activators.EntityDamageActivator;
+import com.megacreative.coding.activators.EntityPickupItemActivator;
+import com.megacreative.coding.activators.InventoryClickActivator;
+import com.megacreative.coding.activators.PlayerDeathActivator;
+import com.megacreative.coding.activators.PlayerQuitActivator;
+import com.megacreative.coding.activators.PlayerRespawnActivator;
+import com.megacreative.coding.activators.PlayerTeleportActivator;
+import com.megacreative.coding.activators.TickActivator;
 import com.megacreative.coding.events.GameEvent;
 import com.megacreative.events.*;
 import com.megacreative.interfaces.IWorldManager;
@@ -8,6 +22,7 @@ import com.megacreative.managers.PlayerModeManager;
 import com.megacreative.models.CreativeWorld;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.Listener;
+import java.util.List;
 import java.util.logging.Logger;
 
 /**
@@ -21,14 +36,11 @@ public class ScriptTriggerManager implements Listener {
     private static final Logger LOGGER = Logger.getLogger(ScriptTriggerManager.class.getName());
     
     private final MegaCreative plugin;
-    private final ScriptEngine scriptEngine;
     private final IWorldManager worldManager;
     private final PlayerModeManager playerModeManager;
     
-    public ScriptTriggerManager(MegaCreative plugin, ScriptEngine scriptEngine, 
-                               IWorldManager worldManager, PlayerModeManager playerModeManager) {
+    public ScriptTriggerManager(MegaCreative plugin, IWorldManager worldManager, PlayerModeManager playerModeManager) {
         this.plugin = plugin;
-        this.scriptEngine = scriptEngine;
         this.worldManager = worldManager;
         this.playerModeManager = playerModeManager;
     }
@@ -42,8 +54,21 @@ public class ScriptTriggerManager implements Listener {
         // Check if player can code in this world
         if (!creativeWorld.canCode(event.getPlayer())) return;
         
-        // Execute scripts for onJoin event in both PLAY and DEV modes
-        executeScriptsForEvent("onJoin", event.getPlayer());
+        // Find the code handler for this world
+        CodeHandler codeHandler = creativeWorld.getCodeHandler();
+        if (codeHandler == null) return;
+        
+        // Get all activators for this event
+        List<Activator> activators = codeHandler.getActivatorsForEvent("onJoin");
+        if (activators.isEmpty()) return;
+        
+        // Execute each activator with proper context data
+        for (Activator activator : activators) {
+            if (activator instanceof PlayerJoinActivator && activator.isEnabled() && activator.getScript() != null) {
+                PlayerJoinActivator playerJoinActivator = (PlayerJoinActivator) activator;
+                playerJoinActivator.activate(event.getPlayer(), event.isFirstJoin());
+            }
+        }
     }
     
     @EventHandler
@@ -55,8 +80,21 @@ public class ScriptTriggerManager implements Listener {
         // Check if player can code in this world
         if (!creativeWorld.canCode(event.getPlayer())) return;
         
-        // Execute scripts for onPlayerMove event in both PLAY and DEV modes
-        executeScriptsForEvent("onPlayerMove", event.getPlayer());
+        // Find the code handler for this world
+        CodeHandler codeHandler = creativeWorld.getCodeHandler();
+        if (codeHandler == null) return;
+        
+        // Get all activators for this event
+        List<Activator> activators = codeHandler.getActivatorsForEvent("onPlayerMove");
+        if (activators.isEmpty()) return;
+        
+        // Execute each activator with proper context data
+        for (Activator activator : activators) {
+            if (activator instanceof PlayerMoveActivator && activator.isEnabled() && activator.getScript() != null) {
+                PlayerMoveActivator playerMoveActivator = (PlayerMoveActivator) activator;
+                playerMoveActivator.activate(event.getPlayer(), event.getFrom(), event.getTo());
+            }
+        }
     }
     
     @EventHandler

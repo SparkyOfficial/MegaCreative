@@ -96,12 +96,12 @@ public class CodeHandler {
         
         LOGGER.info("Handling event: " + eventName + " with " + eventActivators.size() + " activators");
         
-        // Execute scripts for each activator
+        // Execute scripts for each activator by calling their activate method
         for (Activator activator : eventActivators) {
             if (activator.isEnabled() && activator.getScript() != null) {
                 try {
-                    // Execute the script through the script engine
-                    scriptEngine.executeScript(activator.getScript(), player, eventName);
+                    // Call the activator's activate method which will create the proper GameEvent
+                    activator.activate(gameEvent, player);
                 } catch (Exception e) {
                     LOGGER.severe("Error executing script for activator " + activator.getId() + ": " + e.getMessage());
                     e.printStackTrace();

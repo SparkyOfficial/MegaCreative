@@ -221,7 +221,8 @@ public class DevInventoryManager implements Listener {
     }
     
     private boolean isDevWorld(String worldName) {
-        return worldName.endsWith("_dev");
+        // Use the same logic as PlayerWorldChangeListener
+        return worldName.endsWith("-code") || worldName.endsWith("_dev");
     }
     
     /**

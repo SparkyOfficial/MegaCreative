@@ -484,7 +484,7 @@ public class CreativeWorld {
         // Legacy-Fallback
         return isOwner(player) || isTrustedCoder(player);
     }
-    
+       
     /**
      * 🎆 ENHANCED: Checks if player can access the world in specific mode
      *
