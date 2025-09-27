@@ -65,55 +65,8 @@ public class DevCommand implements CommandExecutor {
             return true;
         }
         
-        // Get the PlayerModeManager
-        PlayerModeManager modeManager = plugin.getServiceRegistry().getPlayerModeManager();
-        
-        // Check if player is already in DEV mode
-        if (modeManager.isInDevMode(player)) {
-            player.sendMessage("§cYou are already in DEV mode!");
-            return true;
-        }
-        
-        // Switch player to DEV mode
-        modeManager.setMode(player, PlayerModeManager.PlayerMode.DEV);
-        
-        // Change game mode to CREATIVE
-        player.setGameMode(GameMode.CREATIVE);
-        
-        // Clear inventory
-        player.getInventory().clear();
-        
-        // Give coding items
-        CodingItems.giveCodingItems(player, plugin);
-        
-        // Проверяем подкоманды
-        if (args.length > 0) {
-            switch (args[0].toLowerCase()) {
-                case "refresh", "tools" -> {
-                    plugin.getServiceRegistry().getDevInventoryManager().refreshTools(player);
-                    return true;
-                }
-                case "variables" -> {
-                    openVariablesMenu(player);
-                    return true;
-                }
-                case "help" -> {
-                    sendHelp(player);
-                    return true;
-                }
-                // 🎆 ENHANCED: Add dual world switching support
-                case "switch", "code" -> {
-                    // Find current world and switch to its dev version
-                    CreativeWorld currentWorld = findCreativeWorld(player.getWorld());
-                    if (currentWorld != null && currentWorld.isPaired()) {
-                        plugin.getServiceRegistry().getWorldManager().switchToDevWorld(player, currentWorld.getId());
-                        return true;
-                    }
-                    // Fall through to normal dev mode creation
-                }
-            }
-        }
-        
+        // Simplified DevCommand - just switch to dev world
+        // All logic is now in PlayerWorldChangeListener
         World currentWorld = player.getWorld();
         CreativeWorld creativeWorld = findCreativeWorld(currentWorld);
        
@@ -126,49 +79,10 @@ public class DevCommand implements CommandExecutor {
             player.sendMessage("§cУ вас нет прав на кодирование в этом мире!");
             return true;
         }
-       
-        creativeWorld.setMode(WorldMode.DEV);
-
-        // Запускаем всю логику в основном потоке сервера для потокобезопасности
-        new org.bukkit.scheduler.BukkitRunnable() {
-            @Override
-            public void run() {
-                // Проверяем существование мира в основном потоке
-                World devWorld = Bukkit.getWorld(creativeWorld.getDevWorldName());
-                if (devWorld != null) {
-                    // Мир уже существует, просто телепортируем
-                    teleportToDevWorld(player, devWorld);
-                } else {
-                    // Мир нужно создать
-                    player.sendMessage("§eСоздаем мир для разработки...");
-                    
-                    try {
-                        World newDevWorld = createDevWorld(creativeWorld);
-                        if (newDevWorld != null) {
-                            setupDevWorld(newDevWorld);
-                            teleportToDevWorld(player, newDevWorld);
-                            
-                            // Сохраняем мир асинхронно
-                            Bukkit.getScheduler().runTaskAsynchronously(plugin, () -> {
-                                try {
-                                    plugin.getServiceRegistry().getWorldManager().saveWorld(creativeWorld);
-                                } catch (Exception e) {
-                                    plugin.getLogger().warning("Не удалось сохранить данные мира: " + e.getMessage());
-                                    Bukkit.getScheduler().runTask(plugin, () -> 
-                                        player.sendMessage("§cНе удалось сохранить данные мира. Обратитесь к администратору."));
-                                }
-                            });
-                        } else {
-                            player.sendMessage("§cОшибка создания мира разработки!");
-                        }
-                    } catch (Exception e) {
-                        plugin.getLogger().severe("Ошибка при создании мира разработки: " + e.getMessage());
-                        plugin.getLogger().severe("Stack trace: " + java.util.Arrays.toString(e.getStackTrace()));
-                        player.sendMessage("§cПроизошла критическая ошибка при создании мира разработки.");
-                    }
-                }
-            }
-        }.runTask(plugin); // Выполнить в основном потоке
+        
+        // Switch to dev world using WorldManager
+        plugin.getServiceRegistry().getWorldManager().switchToDevWorld(player, creativeWorld.getId());
+        
         return true;
     }
     

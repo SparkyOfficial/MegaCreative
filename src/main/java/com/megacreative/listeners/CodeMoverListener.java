@@ -267,7 +267,7 @@ public class CodeMoverListener implements Listener {
             return false;
         }
         
-        return item.getItemMeta().getDisplayName().contains("Перемещатель кода");
+        return item.getItemMeta().getDisplayName().contains("Инструмент Перемещения");
     }
     
     /**

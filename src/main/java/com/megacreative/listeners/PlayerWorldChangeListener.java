@@ -2,7 +2,9 @@ package com.megacreative.listeners;
 
 import com.megacreative.MegaCreative;
 import com.megacreative.coding.CodingItems;
+import com.megacreative.managers.PlayerModeManager;
 import com.megacreative.models.CreativeWorld;
+import org.bukkit.GameMode;
 import org.bukkit.World;
 import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
@@ -60,14 +62,34 @@ public class PlayerWorldChangeListener implements Listener {
         // Когда игрок меняет мир, заново устанавливаем ему скорборд
         plugin.getServiceRegistry().getScoreboardManager().setScoreboard(player);
         
-        // Проверяем инвентарь при входе в dev-мир
-        // Используем правильную проверку на основе мира и разрешений
+        // Save inventory when leaving dev world
+        if (isDevWorld(fromWorld.getName())) {
+            plugin.getServiceRegistry().getDevInventoryManager().savePlayerInventory(player);
+        }
+
+        // Determine the creative world
         CreativeWorld creativeWorld = plugin.getServiceRegistry().getWorldManager().findCreativeWorldByBukkit(toWorld);
-        if (creativeWorld != null && creativeWorld.canCode(player)) {
-            List<String> missingItems = getMissingCodingItems(player);
-            if (!missingItems.isEmpty()) {
-                CodingItems.giveMissingItems(player, missingItems);
-            }
+        if (creativeWorld == null) {
+            // If player switched to a normal world (not dev/play), restore their inventory
+            plugin.getServiceRegistry().getDevInventoryManager().restorePlayerInventory(player);
+            player.setGameMode(GameMode.SURVIVAL); // or another default mode
+            return;
+        }
+
+        // Configure player based on the type of world they entered
+        if (isDevWorld(toWorld.getName())) {
+            // Player entered DEV world
+            player.getInventory().clear();
+            CodingItems.giveCodingItems(player, plugin); // Give coding items ONLY here
+            player.setGameMode(GameMode.CREATIVE);
+            plugin.getServiceRegistry().getPlayerModeManager().setMode(player, PlayerModeManager.PlayerMode.DEV);
+            player.sendMessage("§eВы вошли в режим разработки.");
+        } else {
+            // Player entered PLAY world or another world
+            plugin.getServiceRegistry().getDevInventoryManager().restorePlayerInventory(player);
+            player.setGameMode(GameMode.ADVENTURE); // Game mode for playing
+            plugin.getServiceRegistry().getPlayerModeManager().setMode(player, PlayerModeManager.PlayerMode.PLAY);
+            player.sendMessage("§aВы вошли в игровой режим.");
         }
     }
     
@@ -93,15 +115,22 @@ public class PlayerWorldChangeListener implements Listener {
         if (creativeWorld != null) {
             String mode = determineWorldMode(world, creativeWorld);
             plugin.getServiceRegistry().getPlayerManager().trackPlayerWorldEntry(player, creativeWorld.getId(), mode);
-            
-            // Проверяем инвентарь при входе в dev-мир
-            // Используем правильную проверку на основе мира и разрешений
-            if (creativeWorld.canCode(player)) {
-                List<String> missingItems = getMissingCodingItems(player);
-                if (!missingItems.isEmpty()) {
-                    CodingItems.giveMissingItems(player, missingItems);
-                }
-            }
+        }
+        
+        // Configure player based on the world they're in
+        if (isDevWorld(world.getName())) {
+            // Player is in DEV world
+            player.getInventory().clear();
+            CodingItems.giveCodingItems(player, plugin); // Give coding items ONLY here
+            player.setGameMode(GameMode.CREATIVE);
+            plugin.getServiceRegistry().getPlayerModeManager().setMode(player, PlayerModeManager.PlayerMode.DEV);
+            player.sendMessage("§eВы вошли в режим разработки.");
+        } else if (creativeWorld != null) {
+            // Player is in PLAY world
+            plugin.getServiceRegistry().getDevInventoryManager().restorePlayerInventory(player);
+            player.setGameMode(GameMode.ADVENTURE);
+            plugin.getServiceRegistry().getPlayerModeManager().setMode(player, PlayerModeManager.PlayerMode.PLAY);
+            player.sendMessage("§aВы вошли в игровой режим.");
         }
     }
     
@@ -173,85 +202,9 @@ public class PlayerWorldChangeListener implements Listener {
     }
     
     /**
-     * Проверяет, каких предметов для кодинга не хватает игроку
-     *
-     * Checks which coding items are missing for the player
-     *
-     * Prüft, welche Coding-Items dem Spieler fehlen
+     * Check if a world is a development world
      */
-    private List<String> getMissingCodingItems(Player player) {
-        List<String> missingItems = new ArrayList<>();
-        
-        // Проверяем наличие ключевых предметов
-        boolean hasEventBlock = false;
-        boolean hasActionBlock = false;
-        boolean hasConditionBlock = false;
-        boolean hasVariableBlock = false;
-        boolean hasRepeatBlock = false;
-        boolean hasElseBlock = false;
-        boolean hasGameActionBlock = false;
-        boolean hasIfVarBlock = false;
-        boolean hasIfGameBlock = false;
-        boolean hasIfMobBlock = false;
-        boolean hasGetDataBlock = false;
-        boolean hasCallFunctionBlock = false;
-        boolean hasSaveFunctionBlock = false;
-        boolean hasRepeatTriggerBlock = false;
-        boolean hasBracketBlock = false;
-        boolean hasArrowNot = false;
-        boolean hasGameValue = false;
-        boolean hasCopierTool = false;
-        boolean hasDataCreator = false;
-        boolean hasCodeMover = false;
-        
-        for (var item : player.getInventory().getContents()) {
-            if (item != null && item.hasItemMeta() && item.getItemMeta().hasDisplayName()) {
-                String name = item.getItemMeta().getDisplayName();
-
-                if (name.equals(CodingItems.EVENT_BLOCK_NAME)) hasEventBlock = true;
-                if (name.equals(CodingItems.ACTION_BLOCK_NAME)) hasActionBlock = true;
-                if (name.equals(CodingItems.CONDITION_BLOCK_NAME)) hasConditionBlock = true;
-                if (name.equals(CodingItems.VARIABLE_BLOCK_NAME)) hasVariableBlock = true;
-                if (name.equals(CodingItems.REPEAT_BLOCK_NAME)) hasRepeatBlock = true;
-                if (name.equals(CodingItems.ELSE_BLOCK_NAME)) hasElseBlock = true;
-                if (name.equals(CodingItems.GAME_ACTION_BLOCK_NAME)) hasGameActionBlock = true;
-                if (name.equals(CodingItems.IF_VAR_BLOCK_NAME)) hasIfVarBlock = true;
-                if (name.equals(CodingItems.IF_GAME_BLOCK_NAME)) hasIfGameBlock = true;
-                if (name.equals(CodingItems.IF_MOB_BLOCK_NAME)) hasIfMobBlock = true;
-                if (name.equals(CodingItems.GET_DATA_BLOCK_NAME)) hasGetDataBlock = true;
-                if (name.equals(CodingItems.CALL_FUNCTION_BLOCK_NAME)) hasCallFunctionBlock = true;
-                if (name.equals(CodingItems.SAVE_FUNCTION_BLOCK_NAME)) hasSaveFunctionBlock = true;
-                if (name.equals(CodingItems.REPEAT_TRIGGER_BLOCK_NAME)) hasRepeatTriggerBlock = true;
-                if (name.equals(CodingItems.BRACKET_BLOCK_NAME)) hasBracketBlock = true;
-                if (name.equals(CodingItems.ARROW_NOT_NAME)) hasArrowNot = true;
-                if (name.equals(CodingItems.GAME_VALUE_NAME)) hasGameValue = true;
-                if (name.equals(CodingItems.COPIER_TOOL_NAME)) hasCopierTool = true;
-                if (name.equals(CodingItems.DATA_CREATOR_NAME)) hasDataCreator = true;
-                if (name.equals(CodingItems.CODE_MOVER_NAME)) hasCodeMover = true;
-            }
-        }
-
-        if (!hasEventBlock) missingItems.add("Блок события");
-        if (!hasActionBlock) missingItems.add("Блок действия");
-        if (!hasConditionBlock) missingItems.add("Блок условия");
-        if (!hasVariableBlock) missingItems.add("Блок переменной");
-        if (!hasRepeatBlock) missingItems.add("Блок повтора");
-        if (!hasElseBlock) missingItems.add("Блок иначе");
-        if (!hasGameActionBlock) missingItems.add("Игровое действие");
-        if (!hasIfVarBlock) missingItems.add("Если переменная");
-        if (!hasIfGameBlock) missingItems.add("Если игра");
-        if (!hasIfMobBlock) missingItems.add("Если существо");
-        if (!hasGetDataBlock) missingItems.add("Получить данные");
-        if (!hasCallFunctionBlock) missingItems.add("Вызвать функцию");
-        if (!hasSaveFunctionBlock) missingItems.add("Сохранить функцию");
-        if (!hasRepeatTriggerBlock) missingItems.add("Повторяющийся триггер");
-        if (!hasBracketBlock) missingItems.add("Скобка");
-        if (!hasArrowNot) missingItems.add("Отрицание НЕ");
-        if (!hasGameValue) missingItems.add("Игровое значение");
-        if (!hasCopierTool) missingItems.add("Копировщик блоков");
-        if (!hasDataCreator) missingItems.add("Создать данные");
-        if (!hasCodeMover) missingItems.add("Перемещатель кода");
-        
-        return missingItems;
+    private boolean isDevWorld(String worldName) {
+        return worldName.endsWith("_dev") || worldName.contains("-code");
     }
 }

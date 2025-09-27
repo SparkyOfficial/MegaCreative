@@ -36,9 +36,9 @@ public class CodingItems {
     public static final String ARROW_NOT_NAME = "§c⟨ Отрицание НЕ";
     public static final String GAME_VALUE_NAME = "§b🎮 Игровое значение";
 
-    public static final String COPIER_TOOL_NAME = "§6📋 Копировщик блоков";
+    public static final String COPIER_TOOL_NAME = "§6📋 Инструмент Выделения";
     public static final String DATA_CREATOR_NAME = "§b§lСоздать данные";
-    public static final String CODE_MOVER_NAME = "§6🔄 Перемещатель кода";
+    public static final String CODE_MOVER_NAME = "§6🔄 Инструмент Перемещения";
 
     // --- ДОБАВЛЯЕМ АВТОМАТИЧЕСКУЮ ПРОВЕРКУ ---
     private static final Set<String> CODING_ITEM_NAMES = new HashSet<>();
@@ -130,12 +130,11 @@ public class CodingItems {
                     player.getInventory().addItem(getGameValue());
                     break;
                 case "Копировщик блоков":
-                    ItemStack copier = new ItemStack(Material.GOLDEN_AXE);
+                    ItemStack copier = new ItemStack(Material.WOODEN_AXE);
                     ItemMeta copierMeta = copier.getItemMeta();
-                    copierMeta.setDisplayName(COPIER_TOOL_NAME);
+                    copierMeta.setDisplayName("§6📋 Инструмент Выделения");
                     copierMeta.setLore(Arrays.asList(
-                        "§7ЛКМ по блоку - скопировать",
-                        "§7ПКМ по блоку - вставить"
+                        "§7ЛКМ - pos1, ПКМ - pos2. Для команды /clipboard copy region."
                     ));
                     copier.setItemMeta(copierMeta);
                     player.getInventory().addItem(copier);
@@ -177,9 +176,7 @@ public class CodingItems {
         player.getInventory().addItem(createSimpleBlock(Material.REDSTONE_BLOCK, "§e⏰ Повторяющийся триггер"));
         player.getInventory().addItem(createSimpleBlock(Material.PISTON, BRACKET_BLOCK_NAME));
         player.getInventory().addItem(getArrowNot());
-        player.getInventory().addItem(getGameValue());
-    
-        // Железный слиток для создания данных
+        // Removed getGameValue() - now in DataGUI
         player.getInventory().addItem(getDataCreator());
         
         // Перемещатель кода
@@ -253,7 +250,7 @@ public class CodingItems {
             "§eShift+ПКМ§7 - скопировать цепочку",
             "§aПКМ§7 - вставить цепочку",
             "§cЛКМ§7 - очистить буфер",
-            "§8Копирует всю связанную цепочку"
+            "§8Для быстрого перемещения отдельных веток кода"
         ));
         item.setItemMeta(meta);
         return item;

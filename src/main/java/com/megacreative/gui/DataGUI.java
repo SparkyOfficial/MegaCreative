@@ -122,6 +122,20 @@ public class DataGUI implements GUIManager.ManagedGUIInterface {
         potionData.setItemMeta(potionMeta);
         inventory.setItem(13, potionData);
         
+        // Игровое значение
+        ItemStack gameValue = new ItemStack(Material.GOLDEN_APPLE);
+        ItemMeta gameValueMeta = gameValue.getItemMeta();
+        gameValueMeta.setDisplayName("§b🎮 Игровое значение");
+        gameValueMeta.setLore(Arrays.asList(
+            "§7Используйте для получения игровых значений:",
+            "§aПКМ§7 - открыть меню выбора значения",
+            "§7Можно использовать в параметрах блоков",
+            "§8Примеры: здоровье, голод, позиция и т.д.",
+            "§e▶ Нажмите для получения"
+        ));
+        gameValue.setItemMeta(gameValueMeta);
+        inventory.setItem(14, gameValue);
+        
         // Кнопка назад
         ItemStack backButton = new ItemStack(Material.ARROW);
         ItemMeta backMeta = backButton.getItemMeta();
@@ -199,6 +213,10 @@ public class DataGUI implements GUIManager.ManagedGUIInterface {
             giveDataItem(DataType.VARIABLE);
         } else if (displayName.contains("Эффекты зелья")) {
             giveDataItem(DataType.POTION_EFFECT);
+        } else if (displayName.contains("Игровое значение")) {
+            // Give the game value item from CodingItems
+            player.getInventory().addItem(com.megacreative.coding.CodingItems.getGameValue());
+            player.sendMessage("§a✓ Вы получили Игровое значение");
         }
     }
     

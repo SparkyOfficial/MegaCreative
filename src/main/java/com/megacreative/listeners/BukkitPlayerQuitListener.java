@@ -22,7 +22,7 @@ public class BukkitPlayerQuitListener implements Listener {
         
         try {
             // Clean up async loops for this player
-            com.megacreative.coding.actions.advanced.AsyncLoopControl.cleanupPlayerLoops(event.getPlayer().getUniqueId());
+            com.megacreative.coding.actions.control.AsyncLoopControl.cleanupPlayerLoops(event.getPlayer().getUniqueId());
             
             // Additional cleanup can be added here if needed
         } catch (Exception e) {
