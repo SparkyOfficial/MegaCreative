@@ -6,7 +6,7 @@ description: Advanced Minecraft plugin for world creation and visual programming
 website: https://github.com/megacreative
 
 # Кодил это? Впиши себя сам
-author: Sparky(_ProSto4eloVek_)
+author: Sparky(_ProSto4eloVek_), kogtyv
 
 # Dependencies
 softdepend: [WorldEdit, WorldGuard, Vault]
