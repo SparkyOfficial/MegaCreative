@@ -691,7 +691,12 @@ public class WorldManagerImpl implements IWorldManager {
         // Удаление из памяти
         worlds.remove(worldId);
         if (playerWorlds.containsKey(world.getOwnerId())) {
-            playerWorlds.get(world.getOwnerId()).remove(worldId);
+            List<String> playerWorldList = playerWorlds.get(world.getOwnerId());
+            playerWorldList.remove(worldId);
+            // If the player has no more worlds, remove the entry entirely
+            if (playerWorldList.isEmpty()) {
+                playerWorlds.remove(world.getOwnerId());
+            }
         }
         if (codingManager != null) {
             codingManager.unloadScriptsForWorld(world);
@@ -723,12 +728,41 @@ public class WorldManagerImpl implements IWorldManager {
     private void deleteWorldFilesInternal(CreativeWorld world, Player requester) {
         File worldFolder = new File(Bukkit.getWorldContainer(), world.getWorldName());
         File devWorldFolder = new File(Bukkit.getWorldContainer(), world.getDevWorldName());
-        File dataFile = new File(getPlugin().getDataFolder(), "worlds/" + world.getId() + ".yml");
+        File dataFile = new File(getPlugin().getDataFolder(), "worlds/" + world.getId() + ".json");
         
         try {
+            // Try to delete main world folder
             boolean successMain = deleteFolderRecursive(worldFolder);
+            if (!successMain) {
+                // Try again after a short delay
+                try {
+                    Thread.sleep(100);
+                    successMain = deleteFolderRecursive(worldFolder);
+                } catch (InterruptedException ignored) {}
+            }
+            
+            // Try to delete dev world folder
             boolean successDev = deleteFolderRecursive(devWorldFolder);
-            boolean successDataFile = dataFile.delete();
+            if (!successDev) {
+                // Try again after a short delay
+                try {
+                    Thread.sleep(100);
+                    successDev = deleteFolderRecursive(devWorldFolder);
+                } catch (InterruptedException ignored) {}
+            }
+            
+            // Try to delete data file
+            boolean successDataFile = true;
+            if (dataFile.exists()) {
+                successDataFile = dataFile.delete();
+                if (!successDataFile) {
+                    // Try again after a short delay
+                    try {
+                        Thread.sleep(100);
+                        successDataFile = dataFile.delete();
+                    } catch (InterruptedException ignored) {}
+                }
+            }
             
             if (successMain && successDev && successDataFile) {
                 // Reduced logging - only log when debugging
@@ -738,6 +772,13 @@ public class WorldManagerImpl implements IWorldManager {
                 getPlugin().getLogger().warning("Failed to fully delete world files for world ID " + world.getId() + 
                                             ". Main: " + successMain + ", Dev: " + successDev + ", Data: " + successDataFile);
                 requester.sendMessage("§c⚠ Ошибка удаления всех файлов мира. Возможно, они были заблокированы. Проверьте логи сервера.");
+                
+                // Try one more time with more aggressive approach
+                Bukkit.getScheduler().runTaskLater(getPlugin(), () -> {
+                    if (worldFolder.exists()) deleteFolderRecursive(worldFolder);
+                    if (devWorldFolder.exists()) deleteFolderRecursive(devWorldFolder);
+                    if (dataFile.exists()) dataFile.delete();
+                }, 20L); // Run after 1 second
             }
         } catch (Exception e) {
             getPlugin().getLogger().severe("Error deleting world files for world ID " + world.getId() + ": " + e.getMessage());
