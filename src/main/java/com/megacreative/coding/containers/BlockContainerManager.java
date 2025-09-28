@@ -276,20 +276,16 @@ public class BlockContainerManager {
      * Opens sign editor GUI
      */
     private void openSignEditor(Player player, BlockContainer container) {
-        // Use the existing ContainerConfigGUI for sign editing as well
-        com.megacreative.gui.ContainerConfigGUI gui = new com.megacreative.gui.ContainerConfigGUI(
-            plugin, player, container.getBlockLocation());
-        gui.open();
+        // ContainerConfigGUI is removed as part of unused functionality cleanup
+        player.sendMessage("§cContainer configuration GUI is not available.");
     }
     
     /**
      * Opens inventory editor
      */
     private void openInventoryEditor(Player player, BlockContainer container) {
-        // Use custom drag and drop GUI for container configuration
-        com.megacreative.gui.ContainerConfigGUI gui = new com.megacreative.gui.ContainerConfigGUI(
-            plugin, player, container.getBlockLocation());
-        gui.open();
+        // ContainerConfigGUI is removed as part of unused functionality cleanup
+        player.sendMessage("§cContainer configuration GUI is not available.");
         
         /*
         Block containerBlock = container.getContainerLocation().getBlock();

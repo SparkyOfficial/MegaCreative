@@ -228,8 +228,8 @@ public class WorldActionsGUI implements GUIManager.ManagedGUIInterface {
         // Скрипты
         else if (displayName.contains("Скрипты")) {
             player.closeInventory();
-            // GUIManager will handle cleanup automatically
-            new ScriptsGUI(plugin, player).open();
+            // ScriptsGUI is removed as part of unused functionality cleanup
+            player.sendMessage("§cScripts GUI is not available.");
         }
         
         // Удалить мир

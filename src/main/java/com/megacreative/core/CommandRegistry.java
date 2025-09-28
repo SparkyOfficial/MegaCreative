@@ -105,15 +105,9 @@ public class CommandRegistry {
                 plugin.getCommand("dev").setExecutor(new DevCommand(plugin));
             }
             
-            if (plugin.getCommand("templates") != null) {
-                plugin.getCommand("templates").setExecutor(new TemplatesCommand(plugin));
-            }
-            
             if (plugin.getCommand("worldsettings") != null) {
                 plugin.getCommand("worldsettings").setExecutor(new WorldSettingsCommand(plugin));
             }
-            
-
             
             if (plugin.getCommand("addfloor") != null) {
                 plugin.getCommand("addfloor").setExecutor(new AddFloorCommand(plugin));
@@ -151,8 +145,6 @@ public class CommandRegistry {
                 plugin.getCommand("performance").setExecutor(performanceCommand);
                 plugin.getCommand("performance").setTabCompleter(performanceCommand);
             }
-            
-
             
             // Global chat command
             if (plugin.getCommand("cc") != null) {

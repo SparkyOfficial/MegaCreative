@@ -12,6 +12,7 @@ import com.megacreative.events.CodeBlockBrokenEvent;
 import com.megacreative.events.MegaBlockPlaceEvent;
 import com.megacreative.coding.values.DataValue;
 import com.megacreative.gui.coding.ActionSelectionGUI;
+import com.megacreative.gui.coding.CodeBlockGUI;
 import org.bukkit.Material;
 import org.bukkit.block.Block;
 import org.bukkit.block.Sign;
@@ -115,12 +116,14 @@ public class BlockPlacementHandler implements Listener {
 
         Player player = event.getPlayer();
         Block block = event.getBlockPlaced();
+        log.info("[DEBUG] Player " + player.getName() + " placed block " + block.getType() + " at " + block.getLocation());
 
         // Проверка на поверхность установки
         if (!isCorrectPlacementSurface(block)) {
             player.sendMessage("§cThis block can only be placed on the correct surface!");
             player.playSound(block.getLocation(), org.bukkit.Sound.ENTITY_VILLAGER_NO, 1.0f, 0.8f);
             event.setCancelled(true);
+            log.warning("[DEBUG] Block placement cancelled: incorrect surface for " + block.getType());
             return;
         }
 
@@ -131,12 +134,13 @@ public class BlockPlacementHandler implements Listener {
             player.sendMessage("§cYou can only place special coding blocks!");
             player.playSound(block.getLocation(), org.bukkit.Sound.ENTITY_VILLAGER_NO, 1.0f, 0.8f);
             event.setCancelled(true);
+            log.warning("[DEBUG] Block placement cancelled: not a coding block " + block.getType());
             return;
         }
 
         // 1. Сохраняем созданный блок
         blockCodeBlocks.put(block.getLocation(), newCodeBlock);
-        player.sendMessage("§a[DEBUG] Создан блок: " + newCodeBlock.toString() + " в " + block.getLocation());
+        log.info("[DEBUG] Created block: " + newCodeBlock.toString() + " at " + block.getLocation());
         
         // 2. Создаем табличку для визуализации
         createSignForBlock(block.getLocation(), newCodeBlock);
@@ -280,6 +284,31 @@ public class BlockPlacementHandler implements Listener {
     }
     
     /**
+     * Переключает тип скобки (открывающая/закрывающая)
+     * @param codeBlock Блок кода-скобки
+     * @param block Блок в мире
+     * @param player Игрок, который кликнул
+     */
+    private void toggleBracketType(CodeBlock codeBlock, Block block, Player player) {
+        if (codeBlock == null || !codeBlock.isBracket() || block == null || player == null) {
+            return;
+        }
+        
+        // Переключаем тип скобки
+        CodeBlock.BracketType currentType = codeBlock.getBracketType();
+        CodeBlock.BracketType newType = (currentType == CodeBlock.BracketType.OPEN) ? 
+            CodeBlock.BracketType.CLOSE : CodeBlock.BracketType.OPEN;
+        codeBlock.setBracketType(newType);
+        
+        // Обновляем визуальное представление
+        createSignForBlock(block.getLocation(), codeBlock);
+        
+        // Отправляем сообщение игроку
+        player.sendMessage("§aBracket type changed to: " + newType.getDisplayName());
+        player.playSound(block.getLocation(), org.bukkit.Sound.BLOCK_NOTE_BLOCK_PLING, 1.0f, 1.0f);
+    }
+    
+    /**
      * Определяет тип блока для универсального GUI
      * @param codeBlock Блок кода
      * @param blockId ID блока
@@ -326,21 +355,26 @@ public class BlockPlacementHandler implements Listener {
     }
     
     /**
-     * Вспомогательный метод для получения уникального ID блока (actionId, eventId и т.д.).
+     * Получает идентификатор блока для определения типа GUI
+     * @param codeBlock Блок кода
+     * @return Идентификатор блока
      */
     private String getBlockIdentifier(CodeBlock codeBlock) {
-        if (codeBlock.getAction() != null && !codeBlock.getAction().equals("NOT_SET")) {
-            return codeBlock.getAction();
+        if (codeBlock == null) {
+            return null;
         }
-        if (codeBlock.getEvent() != null && !codeBlock.getEvent().equals("NOT_SET")) {
-            return codeBlock.getEvent();
+        
+        // Проверяем параметры блока для определения его типа
+        String action = codeBlock.getAction();
+        String event = codeBlock.getEvent();
+        
+        if (action != null && !action.equals("NOT_SET")) {
+            return action;
+        } else if (event != null && !event.equals("NOT_SET")) {
+            return event;
         }
-        // Проверяем условие в параметрах
-        String condition = codeBlock.getParameter("condition");
-        if (condition != null && !condition.equals("NOT_SET")) {
-            return condition;
-        }
-        return null; // ID не установлен
+        
+        return codeBlock.getParameter("id") != null ? codeBlock.getParameter("id").asString() : "NOT_SET";
     }
     
     /**
@@ -427,8 +461,7 @@ public class BlockPlacementHandler implements Listener {
         // If blockConfigService is not available, allow placement (fallback)
         BlockConfigService configService = getBlockConfigService();
         if (configService == null) {
-            // Reduced logging - only log when debugging
-            // plugin.getLogger().info("BlockConfigService is null, allowing placement");
+            log.warning("[DEBUG] BlockConfigService is null, allowing placement for " + block.getType());
             return true;
         }
         
@@ -437,28 +470,24 @@ public class BlockPlacementHandler implements Listener {
         
         // If no config found, allow placement (fallback)
         if (config == null) {
-            // Reduced logging - only log when debugging
-            // plugin.getLogger().info("No config found for material " + block.getType() + ", allowing placement");
+            log.warning("[DEBUG] No config found for material " + block.getType() + ", allowing placement");
             return true;
         }
         
-        // Reduced logging - only log when debugging
-        // plugin.getLogger().info("Checking placement for block type: " + block.getType() + ", config type: " + config.getType());
-        // plugin.getLogger().info("Block below type: " + below.getType());
+        log.info("[DEBUG] Checking placement for block type: " + block.getType() + ", config type: " + config.getType());
+        log.info("[DEBUG] Block below type: " + below.getType());
         
         // Check if this is an EVENT block (DIAMOND_BLOCK)
         if ("EVENT".equals(config.getType())) {
             // EVENT blocks should only be placed on blue glass
             boolean correct = below.getType() == org.bukkit.Material.BLUE_STAINED_GLASS;
-            // Reduced logging - only log when debugging
-            // plugin.getLogger().info("EVENT block placement check: " + correct + " (should be on blue glass)");
+            log.info("[DEBUG] EVENT block placement check: " + correct + " (should be on blue glass)");
             return correct;
         } else {
             // All other blocks should only be placed on grey glass
             boolean correct = below.getType() == org.bukkit.Material.GRAY_STAINED_GLASS || 
                    below.getType() == org.bukkit.Material.LIGHT_GRAY_STAINED_GLASS;
-            // Reduced logging - only log when debugging
-            // plugin.getLogger().info("Non-EVENT block placement check: " + correct + " (should be on grey glass)");
+            log.info("[DEBUG] Non-EVENT block placement check: " + correct + " (should be on grey glass)");
             return correct;
         }
     }

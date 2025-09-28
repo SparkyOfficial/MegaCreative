@@ -780,6 +780,7 @@ public class CodeBlock implements Cloneable {
      * @return The execution condition or an empty string if not defined
      */
     public String getCondition() {
-        return "";
+        DataValue conditionValue = getParameter("condition");
+        return conditionValue != null ? conditionValue.asString() : "";
     }
 }

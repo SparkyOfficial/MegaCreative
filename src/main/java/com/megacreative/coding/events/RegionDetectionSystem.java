@@ -601,10 +601,9 @@ public class RegionDetectionSystem {
             plugin.getLogger().info("Executing script " + scriptId + " for player " + player.getName() + " in region " + regionId);
             
             // Load and execute the actual script by scriptId
-            // First check if it's a template
-            CodeScript script = plugin.getServiceRegistry().getTemplateManager().getTemplate(scriptId);
+            CodeScript script = null;
             
-            // If not found in templates, check in the current world
+            // Check in the current world
             if (script == null) {
                 CreativeWorld creativeWorld = plugin.getServiceRegistry().getWorldManager().findCreativeWorldByBukkit(player.getWorld());
                 if (creativeWorld != null) {

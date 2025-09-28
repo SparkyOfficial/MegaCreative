@@ -5,6 +5,7 @@ import com.megacreative.managers.GUIManager;
 import com.megacreative.services.BlockConfigService;
 import com.megacreative.coding.CodeBlock;
 import com.megacreative.coding.BlockPlacementHandler;
+import com.megacreative.coding.values.DataValue;
 import org.bukkit.Bukkit;
 import org.bukkit.Material;
 import org.bukkit.entity.Player;
@@ -380,9 +381,12 @@ public class CodeBlockGUI implements GUIManager.ManagedGUIInterface {
         CodeBlock codeBlock = plugin.getServiceRegistry().getBlockPlacementHandler().getCodeBlock(blockLocation);
         if (codeBlock != null) {
             // Загружаем параметры из блока кода
-            Map<String, String> parameters = codeBlock.getParameters();
+            Map<String, DataValue> parameters = codeBlock.getParameters();
             if (parameters != null) {
-                blockParameters.putAll(parameters);
+                // Convert DataValue parameters to String parameters
+                for (Map.Entry<String, DataValue> entry : parameters.entrySet()) {
+                    blockParameters.put(entry.getKey(), entry.getValue().asString());
+                }
             }
         }
     }
@@ -531,9 +535,13 @@ public class CodeBlockGUI implements GUIManager.ManagedGUIInterface {
             }
 
             // Сохраняем параметры в блок кода
+            // Convert String parameters to DataValue parameters
+            Map<String, DataValue> dataValueParameters = new HashMap<>();
             for (Map.Entry<String, String> entry : blockParameters.entrySet()) {
-                codeBlock.setParameter(entry.getKey(), entry.getValue());
+                dataValueParameters.put(entry.getKey(), DataValue.fromObject(entry.getValue()));
             }
+            
+            codeBlock.setParameters(dataValueParameters);
 
             // Обновляем действие блока
             if (blockType.equals("ACTION") || blockType.equals("EVENT") || blockType.equals("CONDITION")) {
@@ -542,7 +550,7 @@ public class CodeBlockGUI implements GUIManager.ManagedGUIInterface {
                 } else if (blockType.equals("EVENT")) {
                     codeBlock.setEvent(blockId);
                 } else if (blockType.equals("CONDITION")) {
-                    codeBlock.setParameter("condition", blockId);
+                    codeBlock.setParameter("condition", DataValue.fromObject(blockId));
                 }
             }
 

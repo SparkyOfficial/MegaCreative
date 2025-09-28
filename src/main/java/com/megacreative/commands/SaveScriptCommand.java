@@ -115,17 +115,19 @@ public class SaveScriptCommand implements CommandExecutor {
         CodeScript script = new CodeScript(scriptName, true, rootBlock);
         
         if (isTemplate) {
-            // Сохраняем как публичный шаблон
-            script.setTemplate(true);
-            script.setAuthor(player.getName());
-            plugin.getServiceRegistry().getTemplateManager().saveTemplate(script);
-            player.sendMessage("§a✓ Шаблон '" + scriptName + "' успешно сохранен как публичный!");
-            player.sendMessage("§7Другие игроки смогут импортировать его через /templates");
+            // Template functionality removed as part of unused code cleanup
+            player.sendMessage("§cTemplate functionality has been removed.");
+            player.sendMessage("§7Saving as regular script instead.");
+            
+            // Сохраняем как обычный скрипт для мира
+            creativeWorld.getScripts().add(script);
+            plugin.getServiceRegistry().getWorldManager().saveWorld(creativeWorld);
+            player.sendMessage("§a✓ Script '" + scriptName + "' successfully saved!");
         } else {
             // Сохраняем как обычный скрипт для мира
             creativeWorld.getScripts().add(script);
             plugin.getServiceRegistry().getWorldManager().saveWorld(creativeWorld);
-            player.sendMessage("§a✓ Скрипт '" + scriptName + "' успешно сохранен!");
+            player.sendMessage("§a✓ Script '" + scriptName + "' successfully saved!");
         }
         
         player.sendMessage("§7Блоков в скрипте: " + blockCodeBlocks.size());

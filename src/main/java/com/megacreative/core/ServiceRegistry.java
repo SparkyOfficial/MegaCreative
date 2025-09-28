@@ -7,7 +7,6 @@ import com.megacreative.coding.ScriptEngine;
 import com.megacreative.coding.DefaultScriptEngine;
 import com.megacreative.coding.ActionFactory;
 import com.megacreative.coding.ConditionFactory;
-import com.megacreative.coding.GUIRegistry;
 import com.megacreative.coding.BlockLinker;
 import com.megacreative.coding.BlockHierarchyManager;
 import com.megacreative.coding.WorldCodeRestorer;
@@ -215,7 +214,6 @@ public class ServiceRegistry implements DependencyContainer.Disposable {
             IWorldManager worldManager = dependencyContainer.resolve(IWorldManager.class);
             return new CodingManagerImpl((MegaCreative) plugin, worldManager);
         });
-        dependencyContainer.registerType(TemplateManager.class, TemplateManager.class);
         dependencyContainer.registerType(ScoreboardManager.class, ScoreboardManager.class);
         dependencyContainer.registerType(GameScoreboardManager.class, GameScoreboardManager.class);
         dependencyContainer.registerType(PlayerManagerImpl.class, PlayerManagerImpl.class);
@@ -374,10 +372,6 @@ public class ServiceRegistry implements DependencyContainer.Disposable {
         return dependencyContainer.resolve(ICodingManager.class);
     }
     
-    public TemplateManager getTemplateManager() { 
-        return dependencyContainer.resolve(TemplateManager.class);
-    }
-    
     public ScoreboardManager getScoreboardManager() { 
         return dependencyContainer.resolve(ScoreboardManager.class);
     }
@@ -396,10 +390,6 @@ public class ServiceRegistry implements DependencyContainer.Disposable {
     
     public GUIManager getGuiManager() {
         return dependencyContainer.resolve(GUIManager.class);
-    }
-    
-    public GUIRegistry getGuiRegistry() {
-        return dependencyContainer.resolve(GUIRegistry.class);
     }
     
     public VariableManager getVariableManager() { 

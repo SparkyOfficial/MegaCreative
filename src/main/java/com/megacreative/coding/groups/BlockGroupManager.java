@@ -27,19 +27,12 @@ public class BlockGroupManager {
     // Advanced block groups
     private final Map<String, Map<UUID, AdvancedBlockGroup>> worldAdvancedGroups = new ConcurrentHashMap<>();
     
-    // Group templates manager
-    private final GroupTemplateManager templateManager;
-    
-    // Templates
-    private final Map<String, AdvancedBlockGroup> templates = new ConcurrentHashMap<>();
-    
     // Player selection state for creating groups
     private final Map<UUID, GroupSelectionState> playerSelections = new ConcurrentHashMap<>();
     
     public BlockGroupManager(Plugin plugin, IPlayerManager playerManager) {
         this.plugin = plugin;
         this.playerManager = playerManager;
-        this.templateManager = new GroupTemplateManager(this);
     }
     
     /**
@@ -274,20 +267,6 @@ public class BlockGroupManager {
     }
     
     /**
-     * Gets the template manager
-     */
-    public GroupTemplateManager getTemplateManager() {
-        return templateManager;
-    }
-    
-    /**
-     * Lists all templates
-     */
-    public void listTemplates(Player player) {
-        // Метод оставлен для совместимости, но больше не выводит сообщения в чат
-    }
-    
-    /**
      * Locks/unlocks a group
      */
     public void toggleGroupLock(Player player, String groupName) {
@@ -371,7 +350,6 @@ public class BlockGroupManager {
     public void cleanup() {
         worldGroups.clear();
         worldAdvancedGroups.clear();
-        templates.clear();
         playerSelections.clear();
     }
     

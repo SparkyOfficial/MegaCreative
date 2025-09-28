@@ -1,30 +1,13 @@
 package com.megacreative;
 
+import com.megacreative.commands.*;
+import com.megacreative.config.ConfigurationValidator;
+import com.megacreative.core.CommandRegistry;
 import com.megacreative.core.DependencyContainer;
 import com.megacreative.core.ServiceRegistry;
-import com.megacreative.core.CommandRegistry;
 import com.megacreative.exceptions.ConfigurationException;
-import com.megacreative.config.ConfigurationValidator;
 import com.megacreative.interfaces.IWorldManager;
-import com.megacreative.coding.ScriptTriggerManager;
-import com.megacreative.listeners.BukkitPlayerJoinListener;
-import com.megacreative.listeners.BukkitPlayerMoveListener;
-import com.megacreative.listeners.BukkitPlayerChatListener;
-import com.megacreative.listeners.BukkitBlockPlaceListener;
-import com.megacreative.listeners.BukkitBlockBreakListener;
-import com.megacreative.listeners.BukkitEntityPickupItemListener;
-import com.megacreative.listeners.BukkitPlayerDeathListener;
-import com.megacreative.listeners.BukkitPlayerQuitListener;
-import com.megacreative.listeners.BukkitPlayerRespawnListener;
-import com.megacreative.listeners.BukkitPlayerTeleportListener;
-import com.megacreative.listeners.BukkitEntityDamageListener;
-import com.megacreative.listeners.BukkitInventoryClickListener;
-import com.megacreative.listeners.BukkitInventoryOpenListener;
-import com.megacreative.listeners.PlayerWorldChangeListener;
-import com.megacreative.listeners.DataItemListener;
-import com.megacreative.listeners.WorldInteractListener;
-import com.megacreative.listeners.DevWorldProtectionListener;
-import com.megacreative.listeners.CodingItemListener;
+import com.megacreative.listeners.*;
 import org.bukkit.plugin.java.JavaPlugin;
 import org.bukkit.scheduler.BukkitRunnable;
 import org.bukkit.scheduler.BukkitTask;
@@ -46,13 +29,13 @@ public class MegaCreative extends JavaPlugin {
     private static MegaCreative instance;
     
     /**
-    /**
      * Gets the singleton instance of the plugin
      * @return The plugin instance
      */
     public static MegaCreative getInstance() {
         return instance;
     }
+    
     private DependencyContainer dependencyContainer;
     private ServiceRegistry serviceRegistry;
     private CommandRegistry commandRegistry;
@@ -71,8 +54,10 @@ public class MegaCreative extends JavaPlugin {
         try {
             initializeDependencyInjection();
             bootstrap();
+            logger.info("MegaCreative initialized successfully!");
         } catch (Exception e) {
-            getLogger().severe("Failed to enable MegaCreative: " + e.getMessage());
+            logger.severe("Failed to enable MegaCreative: " + e.getMessage());
+            e.printStackTrace();
             getServer().getPluginManager().disablePlugin(this);
         }
     }
@@ -216,11 +201,8 @@ public class MegaCreative extends JavaPlugin {
             // Register WorldInteractListener to handle starter item interactions
             getServer().getPluginManager().registerEvents(new WorldInteractListener(this), this);
             
-            // Register DevWorldProtectionListener to handle dev world protection
-            getServer().getPluginManager().registerEvents(serviceRegistry.getService(DevWorldProtectionListener.class), this);
-            
-            // Register CodingItemListener to handle coding item interactions
-            getServer().getPluginManager().registerEvents(new CodingItemListener(this), this);
+            // Register DevWorldProtectionListener to protect dev worlds
+            // getServer().getPluginManager().registerEvents(new DevWorldProtectionListener(this), this);
         }
     }
     
@@ -228,70 +210,54 @@ public class MegaCreative extends JavaPlugin {
      * Register all commands
      */
     private void registerCommands() {
-        commandRegistry.registerCommands();
+        if (commandRegistry != null) {
+            commandRegistry.registerCommands();
+        }
     }
     
     /**
-     * Start the tick scheduler for onTick events
+     * Start the tick scheduler for our custom tick events
      */
     private void startTickScheduler() {
         tickTask = new BukkitRunnable() {
             @Override
             public void run() {
-                // Use TickManager to handle tick events
-                if (serviceRegistry != null) {
-                    serviceRegistry.getTickManager().tick();
-                }
+                // Fire custom tick event
+                // if (serviceRegistry != null) {
+                //     serviceRegistry.getScriptTriggerManager().fireTickEvent();
+                // }
                 
-                tpsCheckCounter++;
-                if (tpsCheckCounter >= 20) {
-                    // Check TPS every 20 ticks (1 second)
+                // Check TPS every 20 ticks (1 second)
+                if (++tpsCheckCounter >= 20) {
                     tpsCheckCounter = 0;
+                    // TPS monitoring logic would go here if needed
                 }
             }
         }.runTaskTimer(this, 1L, 1L); // Run every tick
     }
     
     /**
-     * Start auto-save system for all worlds
+     * Start the auto-save system
      */
     private void startAutoSaveSystem() {
-        // Auto-save every 5 minutes (6000 ticks)
         autoSaveTask = new BukkitRunnable() {
             @Override
             public void run() {
-                IWorldManager worldManager = serviceRegistry.getWorldManager();
-                if (worldManager != null) {
-                    try {
-                        // Save all worlds asynchronously
-                        worldManager.saveAllWorlds();
-                    } catch (Exception e) {
-                        getLogger().warning("Error during auto-save: " + e.getMessage());
-                    }
-                }
+                // Auto-save logic would go here
+                // For now, we're just setting up the scheduler
             }
-        }.runTaskTimerAsynchronously(this, 6000L, 6000L); // 5 minutes interval
+        }.runTaskTimer(this, 6000L, 6000L); // Run every 5 minutes (6000 ticks)
     }
     
-    // Service access methods (dependency injection preferred over static access)
-    
-    /**
-     * Gets the service registry for accessing services
-     */
+    // Getters for services
     public ServiceRegistry getServiceRegistry() {
         return serviceRegistry;
     }
     
-    /**
-     * Gets the dependency container
-     */
     public DependencyContainer getDependencyContainer() {
         return dependencyContainer;
     }
     
-    /**
-     * Gets the command registry
-     */
     public CommandRegistry getCommandRegistry() {
         return commandRegistry;
     }

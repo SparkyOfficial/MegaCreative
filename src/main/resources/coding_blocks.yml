@@ -185,8 +185,6 @@ blocks:
     actions:
       - "repeat"
       - "repeatTrigger"
-      - "repeat"
-      - "repeatTrigger"
       - "timedExecution"
   
   LAPIS_BLOCK:
@@ -961,6 +959,53 @@ action_configurations:
         placeholder_item: "PAPER"
         slot_name: "value"
   
+  # Конфигурация для действия getPlayerName
+  getPlayerName:
+    slots:
+      0:
+        name: "§aЦелевая переменная"
+        description: "§7Положите бумагу с названием переменной для сохранения имени игрока"
+        placeholder_item: "PAPER"
+        slot_name: "targetVariable"
+        validation: "length:1-32"
+        hint: "Имя переменной для сохранения имени игрока"
+
+  # Конфигурация для действия getVar
+  getVar:
+    slots:
+      0:
+        name: "§aИмя переменной"
+        description: "§7Положите бумагу с названием переменной для получения"
+        placeholder_item: "PAPER"
+        slot_name: "sourceVariable"
+        validation: "length:1-32"
+        hint: "Имя переменной для получения значения"
+      1:
+        name: "§bЦелевая переменная"
+        description: "§7Положите бумагу с названием целевой переменной"
+        placeholder_item: "PAPER"
+        slot_name: "targetVariable"
+        validation: "length:1-32"
+        hint: "Имя переменной для сохранения результата"
+
+  # Конфигурация для действия getGlobalVar
+  getGlobalVar:
+    slots:
+      0:
+        name: "§aИмя глобальной переменной"
+        description: "§7Положите бумагу с названием глобальной переменной"
+        placeholder_item: "PAPER"
+        slot_name: "globalVariable"
+        validation: "length:1-32"
+        hint: "Имя глобальной переменной для получения"
+      1:
+        name: "§bЦелевая переменная"
+        description: "§7Положите бумагу с названием целевой переменной"
+        placeholder_item: "PAPER"
+        slot_name: "targetVariable"
+        validation: "length:1-32"
+        hint: "Имя переменной для сохранения результата"
+
   # Конфигурация для действия getServerVar
   getServerVar:
     slots:
@@ -968,12 +1013,61 @@ action_configurations:
         name: "§aИмя серверной переменной"
         description: "§7Положите бумагу с названием серверной переменной"
         placeholder_item: "PAPER"
-        slot_name: "name"
+        slot_name: "serverVariable"
+        validation: "length:1-32"
+        hint: "Имя серверной переменной для получения"
       1:
         name: "§bЦелевая переменная"
         description: "§7Положите бумагу с названием целевой переменной"
         placeholder_item: "PAPER"
-        slot_name: "target"
+        slot_name: "targetVariable"
+        validation: "length:1-32"
+        hint: "Имя переменной для сохранения результата"
+
+  # Конфигурация для действия randomNumber
+  randomNumber:
+    slots:
+      0:
+        name: "§aМинимальное значение"
+        description: "§7Положите бумагу с минимальным значением (по умолчанию 1)"
+        placeholder_item: "PAPER"
+        slot_name: "minValue"
+        validation: "number"
+        default_value: "1"
+        hint: "Минимальное значение для генерации"
+      1:
+        name: "§bМаксимальное значение"
+        description: "§7Положите бумагу с максимальным значением (по умолчанию 100)"
+        placeholder_item: "PAPER"
+        slot_name: "maxValue"
+        validation: "number"
+        default_value: "100"
+        hint: "Максимальное значение для генерации"
+      2:
+        name: "§cЦелевая переменная"
+        description: "§7Положите бумагу с названием переменной для сохранения результата"
+        placeholder_item: "PAPER"
+        slot_name: "targetVariable"
+        validation: "length:1-32"
+        hint: "Имя переменной для сохранения случайного числа"
+
+  # Конфигурация для действия variableInspector
+  variableInspector:
+    slots:
+      0:
+        name: "§aОбласть видимости"
+        description: "§7Положите бумагу с областью видимости (local/world/player/server)"
+        placeholder_item: "PAPER"
+        slot_name: "scope"
+        validation: "enum:local,world,player,server"
+        hint: "Область видимости для инспекции переменных"
+      1:
+        name: "§bФильтр"
+        description: "§7Положите бумагу с фильтром имен переменных (необязательно)"
+        placeholder_item: "PAPER"
+        slot_name: "filter"
+        validation: "text"
+        hint: "Фильтр для поиска конкретных переменных"
 
   # Конфигурация для условия ifVarEquals
   ifVarEquals:
