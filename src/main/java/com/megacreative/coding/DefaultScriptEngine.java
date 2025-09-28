@@ -758,7 +758,7 @@ public class DefaultScriptEngine implements ScriptEngine, EnhancedScriptEngine, 
                                                            AdvancedExecutionEngine.Priority priority, 
                                                            String trigger) {
         // Implementation for enhanced script execution
-        return CompletableFuture.completedFuture(ExecutionResult.success("Enhanced script execution not implemented"));
+        return advancedExecutionEngine.executeScript(script, player, mode, priority, trigger);
     }
     
     @Override
@@ -767,30 +767,86 @@ public class DefaultScriptEngine implements ScriptEngine, EnhancedScriptEngine, 
                                                           AdvancedExecutionEngine.Priority priority, 
                                                           String trigger) {
         // Implementation for enhanced block execution
-        return CompletableFuture.completedFuture(ExecutionResult.success("Enhanced block execution not implemented"));
+        // For now, we'll execute the block as a single-script execution
+        if (block == null) {
+            return CompletableFuture.completedFuture(ExecutionResult.success(Constants.BLOCK_IS_NULL));
+        }
+        
+        // Create a temporary script containing just this block
+        CodeScript tempScript = new CodeScript(block);
+        // The script is enabled by default in the constructor
+        
+        return advancedExecutionEngine.executeScript(tempScript, player, mode, priority, trigger);
     }
     
     @Override
     public CompletableFuture<ExecutionResult> executeScriptDelayed(CodeScript script, Player player, 
                                                                  long delayTicks, String trigger) {
         // Implementation for delayed script execution
-        return CompletableFuture.completedFuture(ExecutionResult.success("Delayed script execution not implemented"));
+        return advancedExecutionEngine.executeScript(script, player, 
+            AdvancedExecutionEngine.ExecutionMode.DELAYED, 
+            AdvancedExecutionEngine.Priority.NORMAL, 
+            trigger);
     }
     
     @Override
     public CompletableFuture<ExecutionResult[]> executeScriptsBatch(CodeScript[] scripts, Player player, String trigger) {
         // Implementation for batch script execution
-        return CompletableFuture.completedFuture(new ExecutionResult[0]);
+        if (scripts == null || scripts.length == 0) {
+            return CompletableFuture.completedFuture(new ExecutionResult[0]);
+        }
+        
+        CompletableFuture<ExecutionResult[]> future = new CompletableFuture<>();
+        List<CompletableFuture<ExecutionResult>> futures = new ArrayList<>();
+        
+        // Execute all scripts with batch mode
+        for (CodeScript script : scripts) {
+            if (script != null && script.isEnabled() && script.getRootBlock() != null) {
+                CompletableFuture<ExecutionResult> scriptFuture = advancedExecutionEngine.executeScript(
+                    script, player, 
+                    AdvancedExecutionEngine.ExecutionMode.BATCH, 
+                    AdvancedExecutionEngine.Priority.NORMAL, 
+                    trigger);
+                futures.add(scriptFuture);
+            }
+        }
+        
+        // Wait for all scripts to complete
+        CompletableFuture.allOf(futures.toArray(new CompletableFuture[0]))
+            .thenRun(() -> {
+                ExecutionResult[] results = new ExecutionResult[futures.size()];
+                for (int i = 0; i < futures.size(); i++) {
+                    try {
+                        results[i] = futures.get(i).get();
+                    } catch (Exception e) {
+                        results[i] = ExecutionResult.error("Batch execution error: " + e.getMessage());
+                    }
+                }
+                future.complete(results);
+            })
+            .exceptionally(throwable -> {
+                future.completeExceptionally(throwable);
+                return null;
+            });
+        
+        return future;
     }
     
     @Override
     public void cancelPlayerExecutions(Player player) {
         // Implementation for canceling player executions
+        if (advancedExecutionEngine != null && player != null) {
+            advancedExecutionEngine.cancelPlayerExecutions(player);
+        }
     }
     
     @Override
     public AdvancedExecutionEngine.ExecutionStatistics getExecutionStatistics() {
         // Implementation for getting execution statistics
+        if (advancedExecutionEngine != null) {
+            return advancedExecutionEngine.getStatistics();
+        }
+        
         return new AdvancedExecutionEngine.ExecutionStatistics(
             0L, // totalExecutions
             0L, // successfulExecutions
@@ -815,12 +871,20 @@ public class DefaultScriptEngine implements ScriptEngine, EnhancedScriptEngine, 
     @Override
     public boolean isOverloaded() {
         // Implementation for checking if engine is overloaded
+        if (advancedExecutionEngine != null) {
+            AdvancedExecutionEngine.ExecutionStatistics stats = advancedExecutionEngine.getStatistics();
+            // Consider overloaded if throughput is very high or active sessions are too many
+            return stats.getThroughput() > 50.0 || stats.getActiveSessions() > 50;
+        }
         return false;
     }
     
     @Override
     public double getCurrentThroughput() {
         // Implementation for getting current throughput
+        if (advancedExecutionEngine != null) {
+            return advancedExecutionEngine.getStatistics().getThroughput();
+        }
         return 0.0;
     }
 }
