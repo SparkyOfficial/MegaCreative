@@ -24,6 +24,7 @@ import com.megacreative.listeners.PlayerWorldChangeListener;
 import com.megacreative.listeners.DataItemListener;
 import com.megacreative.listeners.WorldInteractListener;
 import com.megacreative.listeners.DevWorldProtectionListener;
+import com.megacreative.listeners.CodingItemListener;
 import org.bukkit.plugin.java.JavaPlugin;
 import org.bukkit.scheduler.BukkitRunnable;
 import org.bukkit.scheduler.BukkitTask;
@@ -217,6 +218,9 @@ public class MegaCreative extends JavaPlugin {
             
             // Register DevWorldProtectionListener to handle dev world protection
             getServer().getPluginManager().registerEvents(serviceRegistry.getService(DevWorldProtectionListener.class), this);
+            
+            // Register CodingItemListener to handle coding item interactions
+            getServer().getPluginManager().registerEvents(new CodingItemListener(this), this);
         }
     }
     

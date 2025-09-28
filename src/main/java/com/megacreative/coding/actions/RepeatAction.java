@@ -98,10 +98,10 @@ public class RepeatAction implements BlockAction {
                     }
                 }
                 
-                player.sendMessage(String.format(Constants.CYCLE_EXECUTED_N_TIMES, times));
+                player.sendMessage("§a🔄 Повторено " + times + " раз");
             } catch (Exception e) {
                 logError(context, "Error executing repeat loop: " + e.getMessage(), e);
-                player.sendMessage(String.format(Constants.ERROR_EXECUTING_CYCLE, e.getMessage()));
+                player.sendMessage("§cОшибка при выполнении повторения: " + e.getMessage());
             }
         });
     }

@@ -217,8 +217,7 @@ public class Constants {
     public static final String NO_BLOCK_TO_REPEAT = "No block to repeat";
     public static final String FAILED_TO_GET_SCRIPT_ENGINE = "Failed to get ScriptEngine";
     public static final String REPEAT_ACTION_STARTED = "Repeat action started";
-    public static final String CYCLE_EXECUTED_N_TIMES = "§a🔄 Цикл выполнен %d раз";
-    public static final String ERROR_EXECUTING_CYCLE = "§cОшибка при выполнении цикла: %s";
+
     public static final String REPEAT_LOOP_TERMINATED_BY_BREAK = "§aRepeat loop terminated by break statement at iteration %d";
     public static final String SKIPPING_ITERATION_DUE_TO_CONTINUE = "§aSkipping iteration %d due to continue statement";
     public static final String ERROR_IN_ITERATION = "§cОшибка в итерации %d: %s";

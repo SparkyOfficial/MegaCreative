@@ -43,7 +43,6 @@ permissions:
       megacreative.command.build: true
       megacreative.command.dev: true
       megacreative.command.hub: true
-      megacreative.command.function: true
       megacreative.command.interactive: true
       megacreative.command.performance: true
 
@@ -52,8 +51,6 @@ permissions:
     default: op
     children:
       megacreative.command.reload: true
-      megacreative.command.debug: true
-      megacreative.command.status: true
       megacreative.command.trusted: true
       megacreative.world.bypass: true
 
@@ -159,25 +156,6 @@ commands:
     permission: megacreative.command.worldsettings
     permission-message: '&cYou do not have permission to modify world settings.'
 
-  debug:
-    description: Управление отладкой скриптов.
-    usage: |
-      &6/debug on &f- Включить отладку
-      &6/debug off &f- Выключить отладку
-      &6/debug stats &f- Показать статистику
-      &6/debug status &f- Показать статус
-      &6/debug help &f- Показать справку
-    permission: megacreative.command.debug
-    permission-message: '&cУ вас нет прав на использование отладки.'
-    aliases: [dbg]
-
-  status:
-    description: Проверка статуса режима мира.
-    usage: /status
-    permission: megacreative.command.status
-    permission-message: '&cУ вас нет прав на просмотр статуса.'
-    aliases: [st]
-
   trusted:
     description: Управление доверенными игроками
     usage: |
@@ -231,18 +209,6 @@ commands:
     permission: megacreative.user
     aliases: [grp, organize]
 
-  function:
-    description: 🎆 Reference system-style function management
-    usage: |
-      &6/function list [scope] &f- List available functions
-      &6/function info <name> &f- Show function details
-      &6/function call <name> [args...] &f- Test function execution
-      &6/function remove <name> &f- Remove your function
-      &6/function stats &f- Show function statistics
-      &6/function help &f- Show function help
-    permission: megacreative.user
-    aliases: [func, fn]
-
   interactive:
     description: 🎆 Reference system-style interactive GUI system
     usage: |
@@ -254,27 +220,11 @@ commands:
     permission: megacreative.user
     aliases: [gui, igui]
 
-  execution:
-    description: 🎆 Advanced execution engine control and testing
-    usage: |
-      &6/execution test <mode> &f- Test execution modes
-      &6/execution stats &f- Show performance statistics
-      &6/execution benchmark &f- Run performance benchmark
-      &6/execution cancel &f- Cancel all executions
-    permission: megacreative.user
-    aliases: [exe, perf]
-
   delete:
     description: Удалить ваш мир
     usage: /<command> <ID мира> [confirm]
     permission: megacreative.user
     aliases: [del, remove]
-
-  testcompile:
-    description: 🎆 Test compilation system
-    usage: /<command> [world_name]
-    permission: megacreative.admin
-    aliases: [tcomp, compiletest]
 
   enemy:
     description: Enemy player management
@@ -292,18 +242,6 @@ commands:
       &6/performance clear &f- Clear performance data (admin only)
     permission: megacreative.user
     aliases: [perfmon, monitor]
-
-  execute:
-    description: Execute a script manually for testing
-    usage: /execute
-    permission: megacreative.user
-    aliases: [exec]
-
-  testscript:
-    description: Test script execution functionality
-    usage: /testscript
-    permission: megacreative.user
-    aliases: [ts]
 
   cc:
     description: Send message to global chat

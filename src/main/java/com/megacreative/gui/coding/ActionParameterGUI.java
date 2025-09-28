@@ -658,14 +658,7 @@ public class ActionParameterGUI implements GUIManager.ManagedGUIInterface {
                     return "Команда должна начинаться с '/' или содержать ':'";
                 }
                 break;
-            case "asyncloop":
-                if (slot == 10 && !isValidNumber(itemName)) { // Adjusted slot index
-                    return "Количество итераций должно быть числом";
-                }
-                if (slot == 11 && !isValidNumber(itemName)) { // Adjusted slot index
-                    return "Задержка должна быть числом";
-                }
-                break;
+
             case "giveitem":
                 if (slot == 10 && item.getType().isAir()) { // Adjusted slot index
                     return "Предмет не может быть пустым";

@@ -185,9 +185,8 @@ blocks:
     actions:
       - "repeat"
       - "repeatTrigger"
-      - "asyncLoop"
-      - "whileLoop"
-      - "asyncLoop"
+      - "repeat"
+      - "repeatTrigger"
       - "timedExecution"
   
   LAPIS_BLOCK:
@@ -398,23 +397,7 @@ action_configurations:
         validation: "regex:^[\\w/][\\w\\s\\-._~:/?#\\[\\]@!$&'()*+,;=]*$"
         hint: "Команда должна начинаться с буквы или / и содержать допустимые символы"
   
-  # Конфигурация для действия asyncLoop
-  asyncLoop:
-    slots:
-      0:
-        name: "§aКоличество итераций"
-        description: "§7Положите бумагу с названием 'iterations:X'"
-        placeholder_item: "PAPER"
-        slot_name: "iterations"
-        validation: "number_range:1-1000"
-        hint: "Количество итераций от 1 до 1000"
-      1:
-        name: "§bЗадержка между итерациями (в тиках)"
-        description: "§7Положите бумагу с названием 'delay:X'"
-        placeholder_item: "PAPER"
-        slot_name: "delay"
-        validation: "number_range:1-1200"
-        hint: "Задержка от 1 до 1200 тиков (1 минута)"
+
   
   # Конфигурация для действия createScoreboard
   createScoreboard:
@@ -1478,16 +1461,6 @@ advanced_conditions:
 # ============================================
 
 control_flow:
-  asyncLoop:
-    material: REPEATER
-    type: "CONTROL"
-    displayName: "&a&lAsync Loop"
-    description: "Executes contained blocks in a non-blocking loop"
-    category: "control_flow"
-    parameters:
-      iterations: { type: "NUMBER", slot: 0, description: "Number of iterations (-1 for infinite)" }
-      delay: { type: "NUMBER", slot: 1, description: "Delay between iterations (ticks)" }
-
   conditionalBranch:
     material: COMPARATOR
     type: "CONTROL"

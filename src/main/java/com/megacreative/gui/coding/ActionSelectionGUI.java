@@ -546,7 +546,7 @@ public class ActionSelectionGUI implements GUIManager.ManagedGUIInterface {
             case "setblock": return "Установить блок";
             case "wait": return "Ожидание";
             case "randomnumber": return "Случайное число";
-            case "asyncloop": return "Асинхронный цикл";
+
             case "createscoreboard": return "Создать скорборд";
             case "setscore": return "Установить счет";
             case "incrementscore": return "Увеличить счет";
@@ -583,7 +583,7 @@ public class ActionSelectionGUI implements GUIManager.ManagedGUIInterface {
             // Control
             case "repeat": return "Повторить";
             case "repeattrigger": return "Повторить триггер";
-            case "whileloop": return "Пока цикл";
+
             case "else": return "Иначе";
             case "openBracket": return "Открыть скобку";
             case "closeBracket": return "Закрыть скобку";
@@ -650,7 +650,7 @@ public class ActionSelectionGUI implements GUIManager.ManagedGUIInterface {
             case "setblock": return "Устанавливает блок";
             case "wait": return "Задержка выполнения";
             case "randomnumber": return "Генерирует случайное число";
-            case "asyncloop": return "Повторяет действие асинхронно";
+
             case "createscoreboard": return "Создает скорборд";
             case "setscore": return "Устанавливает счет в скорборде";
             case "incrementscore": return "Увеличивает счет в скорборде";
@@ -687,7 +687,7 @@ public class ActionSelectionGUI implements GUIManager.ManagedGUIInterface {
             // Control
             case "repeat": return "Повторяет действие";
             case "repeattrigger": return "Повторяет действие с триггером";
-            case "whileloop": return "Выполняет пока условие истинно";
+
             case "else": return "Выполняет если предыдущее условие ложно";
             case "openBracket": return "Открывает скобку для группировки";
             case "closeBracket": return "Закрывает скобку для группировки";

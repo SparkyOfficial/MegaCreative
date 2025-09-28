@@ -21,8 +21,7 @@ public class BukkitPlayerQuitListener implements Listener {
         if (event == null || event.getPlayer() == null) return;
         
         try {
-            // Clean up async loops for this player
-            com.megacreative.coding.actions.control.AsyncLoopControl.cleanupPlayerLoops(event.getPlayer().getUniqueId());
+
             
             // Additional cleanup can be added here if needed
         } catch (Exception e) {

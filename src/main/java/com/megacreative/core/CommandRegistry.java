@@ -113,13 +113,7 @@ public class CommandRegistry {
                 plugin.getCommand("worldsettings").setExecutor(new WorldSettingsCommand(plugin));
             }
             
-            if (plugin.getCommand("debug") != null) {
-                plugin.getCommand("debug").setExecutor(new DebugCommand(plugin));
-            }
-            
-            if (plugin.getCommand("status") != null) {
-                plugin.getCommand("status").setExecutor(new StatusCommand(plugin));
-            }
+
             
             if (plugin.getCommand("addfloor") != null) {
                 plugin.getCommand("addfloor").setExecutor(new AddFloorCommand(plugin));
@@ -137,23 +131,11 @@ public class CommandRegistry {
                 plugin.getCommand("confirmdelete").setExecutor(new ConfirmDeleteCommand(plugin));
             }
             
-            // Register function management command
-            if (plugin.getCommand("function") != null) {
-                FunctionCommand functionCommand = new FunctionCommand(plugin);
-                plugin.getCommand("function").setExecutor(functionCommand);
-                plugin.getCommand("function").setTabCompleter(functionCommand);
-            }
-            
             // Register interactive GUI command
             if (plugin.getCommand("interactive") != null) {
                 InteractiveCommand interactiveCommand = new InteractiveCommand(plugin);
                 plugin.getCommand("interactive").setExecutor(interactiveCommand);
                 plugin.getCommand("interactive").setTabCompleter(interactiveCommand);
-            }
-            
-            // Advanced execution command
-            if (plugin.getCommand("execution") != null) {
-                plugin.getCommand("execution").setExecutor(new ExecutionCommand(plugin));
             }
             
             // Enemy player management command
@@ -170,10 +152,7 @@ public class CommandRegistry {
                 plugin.getCommand("performance").setTabCompleter(performanceCommand);
             }
             
-            // Execute command for manual script execution
-            if (plugin.getCommand("execute") != null) {
-                plugin.getCommand("execute").setExecutor(new ExecuteCommand(plugin));
-            }
+
             
             // Global chat command
             if (plugin.getCommand("cc") != null) {

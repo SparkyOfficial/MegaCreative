@@ -342,13 +342,7 @@ public class ServiceRegistry implements DependencyContainer.Disposable {
         log.info("Shutting down MegaCreative services...");
         
         try {
-            // Emergency cleanup of async loops before disposing services
-            try {
-                com.megacreative.coding.actions.control.AsyncLoopControl.cleanupAllLoops();
-                log.info("Async loops cleaned up during service shutdown");
-            } catch (Exception e) {
-                log.log(Level.WARNING, "Error cleaning up async loops during shutdown", e);
-            }
+
             
             // Let the dependency container dispose all disposable services
             if (dependencyContainer != null) {
