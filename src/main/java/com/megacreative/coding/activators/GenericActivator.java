@@ -11,22 +11,27 @@ import java.util.List;
 import java.util.concurrent.atomic.AtomicInteger;
 
 /**
- * Activator that triggers when a player moves
+ * Generic activator that can be used for any activator type
  */
-public class PlayerMoveActivator extends Activator {
+public class GenericActivator extends Activator {
     
-    public PlayerMoveActivator(MegaCreative plugin, CreativeWorld world) {
+    private final ActivatorType type;
+    private final ItemStack icon;
+    
+    public GenericActivator(MegaCreative plugin, CreativeWorld world, ActivatorType type) {
         super(plugin, world);
+        this.type = type;
+        this.icon = type.getIcon();
     }
     
     @Override
     public ActivatorType getType() {
-        return ActivatorType.PLAYER_MOVE;
+        return type;
     }
     
     @Override
     public ItemStack getIcon() {
-        return new ItemStack(Material.FEATHER);
+        return icon;
     }
     
     @Override
@@ -35,6 +40,7 @@ public class PlayerMoveActivator extends Activator {
         this.selectedEntities = selectedEntities;
         
         // Execute all actions associated with this activator
+        // This would integrate with the existing script execution system
         for (com.megacreative.coding.CodeBlock action : actionList) {
             try {
                 // Get the script engine from the plugin
@@ -44,24 +50,24 @@ public class PlayerMoveActivator extends Activator {
                     // Execute the action block
                     scriptEngine.executeBlock(action, 
                         selectedEntities.isEmpty() ? null : (org.bukkit.entity.Player) selectedEntities.get(0), 
-                        "activator_player_move")
+                        "activator_" + getType().name().toLowerCase())
                         .thenAccept(result -> {
                             if (!result.isSuccess()) {
                                 plugin.getLogger().warning(
-                                    "PlayerMove activator execution failed: " + result.getMessage()
+                                    "Generic activator execution failed for " + getType().getDisplayName() + ": " + result.getMessage()
                                 );
                             }
                         })
                         .exceptionally(throwable -> {
                             plugin.getLogger().warning(
-                                "Error in PlayerMove activator execution: " + throwable.getMessage()
+                                "Error in generic activator execution for " + getType().getDisplayName() + ": " + throwable.getMessage()
                             );
                             return null;
                         });
                 }
             } catch (Exception e) {
                 plugin.getLogger().warning(
-                    "Error executing action in PlayerMove activator: " + e.getMessage()
+                    "Error executing action in generic activator " + getType().getDisplayName() + ": " + e.getMessage()
                 );
             }
         }

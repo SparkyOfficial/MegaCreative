@@ -1,56 +1,69 @@
 package com.megacreative.coding.activators;
 
-import com.megacreative.coding.ScriptEngine;
-import com.megacreative.coding.events.GameEvent;
+import com.megacreative.MegaCreative;
 import com.megacreative.models.CreativeWorld;
-import org.bukkit.Location;
-import org.bukkit.entity.Player;
-import java.util.HashMap;
-import java.util.Map;
+import com.megacreative.coding.events.GameEvent;
+import org.bukkit.Material;
+import org.bukkit.entity.Entity;
+import org.bukkit.inventory.ItemStack;
+
+import java.util.List;
+import java.util.concurrent.atomic.AtomicInteger;
 
 /**
- * Activator that handles player quit events.
- * This activator listens to PlayerQuitEvent and triggers script execution.
+ * Activator that triggers when a player quits the world
  */
-public class PlayerQuitActivator extends BukkitEventActivator {
+public class PlayerQuitActivator extends Activator {
     
-    public PlayerQuitActivator(CreativeWorld creativeWorld, ScriptEngine scriptEngine) {
-        super(creativeWorld, scriptEngine);
+    public PlayerQuitActivator(MegaCreative plugin, CreativeWorld world) {
+        super(plugin, world);
     }
     
     @Override
-    public String getEventName() {
-        return "onPlayerQuit";
+    public ActivatorType getType() {
+        return ActivatorType.PLAYER_QUIT;
     }
     
     @Override
-    public String getDisplayName() {
-        return "Player Quit Event";
+    public ItemStack getIcon() {
+        return new ItemStack(Material.IRON_DOOR);
     }
     
-    /**
-     * Activates this activator for a player quit event
-     * @param player The player who quit
-     * @param quitMessage The quit message
-     */
-    public void activate(Player player, String quitMessage) {
-        if (!enabled || script == null) {
-            return;
+    @Override
+    public void execute(GameEvent gameEvent, List<Entity> selectedEntities, int stackCounter, AtomicInteger callCounter) {
+        // Set the selected entities
+        this.selectedEntities = selectedEntities;
+        
+        // Execute all actions associated with this activator
+        for (com.megacreative.coding.CodeBlock action : actionList) {
+            try {
+                // Get the script engine from the plugin
+                com.megacreative.coding.ScriptEngine scriptEngine = plugin.getServiceRegistry().getScriptEngine();
+                
+                if (scriptEngine != null) {
+                    // Execute the action block
+                    scriptEngine.executeBlock(action, 
+                        selectedEntities.isEmpty() ? null : (org.bukkit.entity.Player) selectedEntities.get(0), 
+                        "activator_player_quit")
+                        .thenAccept(result -> {
+                            if (!result.isSuccess()) {
+                                plugin.getLogger().warning(
+                                    "PlayerQuit activator execution failed: " + result.getMessage()
+                                );
+                            }
+                        })
+                        .exceptionally(throwable -> {
+                            plugin.getLogger().warning(
+                                "Error in PlayerQuit activator execution: " + throwable.getMessage()
+                            );
+                            return null;
+                        });
+                }
+            } catch (Exception e) {
+                plugin.getLogger().warning(
+                    "Error executing action in PlayerQuit activator: " + e.getMessage()
+                );
+            }
         }
-        
-        // Create a game event with player quit context
-        GameEvent gameEvent = new GameEvent("onPlayerQuit");
-        gameEvent.setPlayer(player);
-        if (location != null) {
-            gameEvent.setLocation(location);
-        }
-        
-        // Add custom data
-        Map<String, Object> customData = new HashMap<>();
-        customData.put("quitMessage", quitMessage);
-        gameEvent.setCustomData(customData);
-        
-        // Activate the script
-        super.activate(gameEvent, player);
     }
 }

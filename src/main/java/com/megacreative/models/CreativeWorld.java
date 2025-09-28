@@ -1014,6 +1014,10 @@ public class CreativeWorld {
         this.isPrivate = isPrivate;
     }
     
+    public boolean isPublic() {
+        return !isPrivate;
+    }
+    
     public void setCreatedTime(long createdTime) {
         this.createdTime = createdTime;
     }

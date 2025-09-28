@@ -1,81 +1,69 @@
 package com.megacreative.coding.activators;
 
-import com.megacreative.coding.ScriptEngine;
-import com.megacreative.coding.events.GameEvent;
+import com.megacreative.MegaCreative;
 import com.megacreative.models.CreativeWorld;
-import org.bukkit.Location;
-import org.bukkit.entity.Player;
-import java.util.HashMap;
-import java.util.Map;
+import com.megacreative.coding.events.GameEvent;
+import org.bukkit.Material;
+import org.bukkit.entity.Entity;
+import org.bukkit.inventory.ItemStack;
+
+import java.util.List;
+import java.util.concurrent.atomic.AtomicInteger;
 
 /**
- * Activator that handles player join events.
- * This activator listens to PlayerJoinEvent and triggers script execution.
+ * Activator that triggers when a player joins the world
  */
 public class PlayerJoinActivator extends Activator {
     
-    private Location location;
-    private boolean isFirstJoin = false;
-    
-    public PlayerJoinActivator(CreativeWorld creativeWorld, ScriptEngine scriptEngine) {
-        super(creativeWorld, scriptEngine);
-    }
-    
-    /**
-     * Sets whether this is the first join for the player
-     */
-    public void setFirstJoin(boolean firstJoin) {
-        this.isFirstJoin = firstJoin;
-    }
-    
-    /**
-     * Checks if this is the first join for the player
-     */
-    public boolean isFirstJoin() {
-        return isFirstJoin;
-    }
-    
-    /**
-     * Sets the location of this activator in the world
-     */
-    public void setLocation(Location location) {
-        this.location = location;
+    public PlayerJoinActivator(MegaCreative plugin, CreativeWorld world) {
+        super(plugin, world);
     }
     
     @Override
-    public String getEventName() {
-        return "onJoin";
+    public ActivatorType getType() {
+        return ActivatorType.PLAYER_JOIN;
     }
     
     @Override
-    public String getDisplayName() {
-        return "Player Join Event";
+    public ItemStack getIcon() {
+        return new ItemStack(Material.OAK_DOOR);
     }
     
     @Override
-    public Location getLocation() {
-        return location;
-    }
-    
-    /**
-     * Activates this activator for a player join event
-     * @param player The player who joined
-     * @param isFirstJoin Whether this is the player's first join
-     */
-    public void activate(Player player, boolean isFirstJoin) {
-        if (!enabled || script == null) {
-            return;
-        }
+    public void execute(GameEvent gameEvent, List<Entity> selectedEntities, int stackCounter, AtomicInteger callCounter) {
+        // Set the selected entities
+        this.selectedEntities = selectedEntities;
         
-        // Create a game event with player join context
-        GameEvent gameEvent = new GameEvent("onJoin");
-        gameEvent.setPlayer(player);
-        if (location != null) {
-            gameEvent.setLocation(location);
+        // Execute all actions associated with this activator
+        for (com.megacreative.coding.CodeBlock action : actionList) {
+            try {
+                // Get the script engine from the plugin
+                com.megacreative.coding.ScriptEngine scriptEngine = plugin.getServiceRegistry().getScriptEngine();
+                
+                if (scriptEngine != null) {
+                    // Execute the action block
+                    scriptEngine.executeBlock(action, 
+                        selectedEntities.isEmpty() ? null : (org.bukkit.entity.Player) selectedEntities.get(0), 
+                        "activator_player_join")
+                        .thenAccept(result -> {
+                            if (!result.isSuccess()) {
+                                plugin.getLogger().warning(
+                                    "PlayerJoin activator execution failed: " + result.getMessage()
+                                );
+                            }
+                        })
+                        .exceptionally(throwable -> {
+                            plugin.getLogger().warning(
+                                "Error in PlayerJoin activator execution: " + throwable.getMessage()
+                            );
+                            return null;
+                        });
+                }
+            } catch (Exception e) {
+                plugin.getLogger().warning(
+                    "Error executing action in PlayerJoin activator: " + e.getMessage()
+                );
+            }
         }
-        gameEvent.setFirstJoin(isFirstJoin);
-        
-        // Activate the script
-        super.activate(gameEvent, player);
     }
 }

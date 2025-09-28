@@ -1,11 +1,14 @@
 package com.megacreative.coding.activators;
 
-import com.megacreative.coding.ScriptEngine;
+import com.megacreative.MegaCreative;
 import com.megacreative.coding.events.GameEvent;
 import com.megacreative.models.CreativeWorld;
 import org.bukkit.Location;
 import org.bukkit.event.Event;
 import org.bukkit.entity.Player;
+import org.bukkit.entity.Entity;
+import java.util.List;
+import java.util.concurrent.atomic.AtomicInteger;
 
 /**
  * Base class for activators that handle Bukkit events.
@@ -15,8 +18,8 @@ public abstract class BukkitEventActivator extends Activator {
     
     protected Location location;
     
-    public BukkitEventActivator(CreativeWorld creativeWorld, ScriptEngine scriptEngine) {
-        super(creativeWorld, scriptEngine);
+    public BukkitEventActivator(MegaCreative plugin, CreativeWorld world) {
+        super(plugin, world);
     }
     
     /**
@@ -25,11 +28,6 @@ public abstract class BukkitEventActivator extends Activator {
      */
     public void setLocation(Location location) {
         this.location = location;
-    }
-    
-    @Override
-    public Location getLocation() {
-        return location;
     }
     
     /**

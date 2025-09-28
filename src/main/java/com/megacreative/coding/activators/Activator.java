@@ -1,117 +1,123 @@
 package com.megacreative.coding.activators;
 
+import com.megacreative.MegaCreative;
 import com.megacreative.coding.CodeBlock;
-import com.megacreative.coding.CodeScript;
-import com.megacreative.coding.ScriptEngine;
-import com.megacreative.coding.events.GameEvent;
 import com.megacreative.models.CreativeWorld;
-import org.bukkit.Location;
+import org.bukkit.entity.Entity;
 import org.bukkit.entity.Player;
+
 import java.util.List;
 import java.util.UUID;
+import java.util.concurrent.atomic.AtomicInteger;
 
 /**
- * Base class for all activators.
- * Activators are the "glue" that connects Bukkit events to script execution.
- * They listen to Bukkit events, package them into GameEvents, and trigger script execution.
+ * Base class for all activators that trigger code execution
+ * Similar to YottaCreative's activator system but adapted for MegaCreative's architecture
  */
 public abstract class Activator {
     
-    protected final String id;
-    protected final CreativeWorld creativeWorld;
-    protected final ScriptEngine scriptEngine;
-    protected CodeBlock eventBlock;
-    protected CodeScript script;
-    protected boolean enabled = true;
+    protected MegaCreative plugin;
+    protected CreativeWorld world;
+    protected List<CodeBlock> actionList;
+    protected List<Entity> selectedEntities;
+    protected String customName;
+    protected UUID id;
     
-    public Activator(CreativeWorld creativeWorld, ScriptEngine scriptEngine) {
-        this.id = UUID.randomUUID().toString();
-        this.creativeWorld = creativeWorld;
-        this.scriptEngine = scriptEngine;
+    public Activator(MegaCreative plugin, CreativeWorld world) {
+        this.plugin = plugin;
+        this.world = world;
+        this.id = UUID.randomUUID();
+        this.actionList = new java.util.ArrayList<>();
+        this.selectedEntities = new java.util.ArrayList<>();
     }
     
     /**
-     * Gets the unique ID of this activator
+     * Gets the type of this activator
      */
-    public String getId() {
-        return id;
+    public abstract ActivatorType getType();
+    
+    /**
+     * Gets the icon representation for this activator
+     */
+    public abstract org.bukkit.inventory.ItemStack getIcon();
+    
+    /**
+     * Executes this activator with the given event and entities
+     */
+    public abstract void execute(com.megacreative.coding.events.GameEvent gameEvent, 
+                               List<Entity> selectedEntities, 
+                               int stackCounter, 
+                               AtomicInteger callCounter);
+    
+    /**
+     * Gets the list of actions associated with this activator
+     */
+    public List<CodeBlock> getActionList() {
+        return actionList;
+    }
+    
+    /**
+     * Adds an action to this activator
+     */
+    public void addAction(CodeBlock action) {
+        actionList.add(action);
     }
     
     /**
      * Gets the creative world this activator belongs to
      */
-    public CreativeWorld getCreativeWorld() {
-        return creativeWorld;
+    public CreativeWorld getWorld() {
+        return world;
     }
     
     /**
-     * Sets the event block that triggers this activator
+     * Gets the selected entities for this activator
      */
-    public void setEventBlock(CodeBlock eventBlock) {
-        this.eventBlock = eventBlock;
+    public List<Entity> getSelectedEntities() {
+        return selectedEntities;
     }
     
     /**
-     * Gets the event block that triggers this activator
+     * Sets the selected entities for this activator
      */
-    public CodeBlock getEventBlock() {
-        return eventBlock;
+    public void setSelectedEntities(List<Entity> selectedEntities) {
+        this.selectedEntities = selectedEntities;
     }
     
     /**
-     * Sets the script associated with this activator
+     * Gets the custom name of this activator
      */
-    public void setScript(CodeScript script) {
-        this.script = script;
+    public String getCustomName() {
+        return customName;
     }
     
     /**
-     * Gets the script associated with this activator
+     * Sets the custom name of this activator
      */
-    public CodeScript getScript() {
-        return script;
+    public void setCustomName(String customName) {
+        this.customName = customName;
     }
     
     /**
-     * Checks if this activator is enabled
+     * Gets the unique ID of this activator
      */
-    public boolean isEnabled() {
-        return enabled;
+    public UUID getId() {
+        return id;
     }
     
     /**
-     * Sets whether this activator is enabled
+     * Simple execution method that uses default entity from game event
      */
-    public void setEnabled(boolean enabled) {
-        this.enabled = enabled;
-    }
-    
-    /**
-     * Activates this activator, triggering script execution
-     * @param gameEvent The game event that triggered this activation
-     * @param player The player associated with the event (can be null)
-     */
-    public void activate(GameEvent gameEvent, Player player) {
-        if (!enabled || script == null) {
-            return;
+    public void execute(com.megacreative.coding.events.GameEvent gameEvent, 
+                       int stackCounter, 
+                       AtomicInteger callCounter) {
+        // Use the player from the game event as the default entity
+        List<Entity> entities = new java.util.ArrayList<>();
+        if (gameEvent.getPlayer() != null) {
+            entities.add(gameEvent.getPlayer());
+        } else if (gameEvent.getEntity() != null) {
+            entities.add(gameEvent.getEntity());
         }
-        
-        // Execute the script through the script engine
-        scriptEngine.executeScript(script, player, gameEvent.getEventName());
+        execute(gameEvent, entities, stackCounter, callCounter);
     }
-    
-    /**
-     * Gets the name of the event this activator handles
-     */
-    public abstract String getEventName();
-    
-    /**
-     * Gets the display name of this activator
-     */
-    public abstract String getDisplayName();
-    
-    /**
-     * Gets the location of this activator in the world
-     */
-    public abstract Location getLocation();
 }

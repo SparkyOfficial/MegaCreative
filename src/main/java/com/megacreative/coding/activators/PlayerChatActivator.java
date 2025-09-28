@@ -11,22 +11,22 @@ import java.util.List;
 import java.util.concurrent.atomic.AtomicInteger;
 
 /**
- * Activator that triggers when a player moves
+ * Activator that triggers when a player sends a chat message
  */
-public class PlayerMoveActivator extends Activator {
+public class PlayerChatActivator extends Activator {
     
-    public PlayerMoveActivator(MegaCreative plugin, CreativeWorld world) {
+    public PlayerChatActivator(MegaCreative plugin, CreativeWorld world) {
         super(plugin, world);
     }
     
     @Override
     public ActivatorType getType() {
-        return ActivatorType.PLAYER_MOVE;
+        return ActivatorType.PLAYER_CHAT;
     }
     
     @Override
     public ItemStack getIcon() {
-        return new ItemStack(Material.FEATHER);
+        return new ItemStack(Material.BOOK);
     }
     
     @Override
@@ -44,24 +44,24 @@ public class PlayerMoveActivator extends Activator {
                     // Execute the action block
                     scriptEngine.executeBlock(action, 
                         selectedEntities.isEmpty() ? null : (org.bukkit.entity.Player) selectedEntities.get(0), 
-                        "activator_player_move")
+                        "activator_player_chat")
                         .thenAccept(result -> {
                             if (!result.isSuccess()) {
                                 plugin.getLogger().warning(
-                                    "PlayerMove activator execution failed: " + result.getMessage()
+                                    "PlayerChat activator execution failed: " + result.getMessage()
                                 );
                             }
                         })
                         .exceptionally(throwable -> {
                             plugin.getLogger().warning(
-                                "Error in PlayerMove activator execution: " + throwable.getMessage()
+                                "Error in PlayerChat activator execution: " + throwable.getMessage()
                             );
                             return null;
                         });
                 }
             } catch (Exception e) {
                 plugin.getLogger().warning(
-                    "Error executing action in PlayerMove activator: " + e.getMessage()
+                    "Error executing action in PlayerChat activator: " + e.getMessage()
                 );
             }
         }

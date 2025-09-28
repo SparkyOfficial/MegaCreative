@@ -1,15 +1,18 @@
 package com.megacreative.coding.activators;
 
-import com.megacreative.coding.ScriptEngine;
+import com.megacreative.MegaCreative;
 import com.megacreative.coding.events.GameEvent;
 import com.megacreative.models.CreativeWorld;
 import org.bukkit.Location;
 import org.bukkit.Material;
 import org.bukkit.block.Block;
 import org.bukkit.entity.Player;
+import org.bukkit.entity.Entity;
 import org.bukkit.inventory.ItemStack;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.List;
+import java.util.concurrent.atomic.AtomicInteger;
 
 /**
  * Activator that handles block place events.
@@ -19,9 +22,11 @@ public class BlockPlaceActivator extends BukkitEventActivator {
     
     private Material blockType;
     private boolean anyBlockType = true;
+    private boolean enabled = true;
+    private com.megacreative.coding.CodeBlock script;
     
-    public BlockPlaceActivator(CreativeWorld creativeWorld, ScriptEngine scriptEngine) {
-        super(creativeWorld, scriptEngine);
+    public BlockPlaceActivator(MegaCreative plugin, CreativeWorld world) {
+        super(plugin, world);
     }
     
     /**
@@ -57,14 +62,73 @@ public class BlockPlaceActivator extends BukkitEventActivator {
         return anyBlockType;
     }
     
-    @Override
-    public String getEventName() {
-        return "onBlockPlace";
+    public boolean isEnabled() {
+        return enabled;
+    }
+    
+    public void setEnabled(boolean enabled) {
+        this.enabled = enabled;
+    }
+    
+    public com.megacreative.coding.CodeBlock getScript() {
+        return script;
+    }
+    
+    public void setScript(com.megacreative.coding.CodeBlock script) {
+        this.script = script;
     }
     
     @Override
-    public String getDisplayName() {
-        return "Block Place Event";
+    public ActivatorType getType() {
+        return ActivatorType.BLOCK_PLACE;
+    }
+    
+    @Override
+    public ItemStack getIcon() {
+        return new ItemStack(Material.STONE);
+    }
+    
+    @Override
+    public void execute(GameEvent gameEvent, List<Entity> selectedEntities, int stackCounter, AtomicInteger callCounter) {
+        if (!enabled || script == null) {
+            return;
+        }
+        
+        // Execute all actions associated with this activator
+        for (com.megacreative.coding.CodeBlock action : actionList) {
+            try {
+                // Get the script engine from the plugin
+                com.megacreative.coding.ScriptEngine scriptEngine = plugin.getServiceRegistry().getScriptEngine();
+                
+                if (scriptEngine != null) {
+                    // Convert the first entity to a player if possible
+                    Player player = null;
+                    if (!selectedEntities.isEmpty() && selectedEntities.get(0) instanceof Player) {
+                        player = (Player) selectedEntities.get(0);
+                    }
+                    
+                    // Execute the action block
+                    scriptEngine.executeBlock(action, player, "activator_block_place")
+                        .thenAccept(result -> {
+                            if (!result.isSuccess()) {
+                                plugin.getLogger().warning(
+                                    "BlockPlace activator execution failed: " + result.getMessage()
+                                );
+                            }
+                        })
+                        .exceptionally(throwable -> {
+                            plugin.getLogger().warning(
+                                "Error in BlockPlace activator execution: " + throwable.getMessage()
+                            );
+                            return null;
+                        });
+                }
+            } catch (Exception e) {
+                plugin.getLogger().warning(
+                    "Error executing action in BlockPlace activator: " + e.getMessage()
+                );
+            }
+        }
     }
     
     /**
@@ -100,6 +164,6 @@ public class BlockPlaceActivator extends BukkitEventActivator {
         gameEvent.setCustomData(customData);
         
         // Activate the script
-        super.activate(gameEvent, player);
+        execute(gameEvent, new java.util.ArrayList<>(), 0, new java.util.concurrent.atomic.AtomicInteger(0));
     }
 }

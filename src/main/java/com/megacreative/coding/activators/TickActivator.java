@@ -1,10 +1,19 @@
 package com.megacreative.coding.activators;
 
+import com.megacreative.MegaCreative;
 import com.megacreative.coding.ScriptEngine;
 import com.megacreative.coding.events.GameEvent;
 import com.megacreative.coding.events.GameEventFactory;
 import com.megacreative.models.CreativeWorld;
+import com.megacreative.coding.CodeBlock;
 import org.bukkit.Location;
+import org.bukkit.Material;
+import org.bukkit.entity.Entity;
+import org.bukkit.entity.Player;
+import org.bukkit.inventory.ItemStack;
+
+import java.util.List;
+import java.util.concurrent.atomic.AtomicInteger;
 
 /**
  * Activator that handles tick events.
@@ -15,11 +24,23 @@ public class TickActivator extends Activator {
     private Location location;
     private final GameEventFactory eventFactory;
     private String tickType; // "onTick", "onSecond", "onMinute"
+    private boolean enabled = true;
+    private CodeBlock script;
     
-    public TickActivator(CreativeWorld creativeWorld, ScriptEngine scriptEngine, String tickType) {
-        super(creativeWorld, scriptEngine);
+    public TickActivator(MegaCreative plugin, CreativeWorld world, String tickType) {
+        super(plugin, world);
         this.eventFactory = new GameEventFactory();
         this.tickType = tickType;
+    }
+    
+    @Override
+    public ActivatorType getType() {
+        return ActivatorType.TICK;
+    }
+    
+    @Override
+    public ItemStack getIcon() {
+        return new ItemStack(Material.CLOCK);
     }
     
     /**
@@ -43,26 +64,63 @@ public class TickActivator extends Activator {
         this.location = location;
     }
     
-    @Override
-    public String getEventName() {
-        return tickType;
+    public boolean isEnabled() {
+        return enabled;
+    }
+    
+    public void setEnabled(boolean enabled) {
+        this.enabled = enabled;
+    }
+    
+    public CodeBlock getScript() {
+        return script;
+    }
+    
+    public void setScript(CodeBlock script) {
+        this.script = script;
     }
     
     @Override
-    public String getDisplayName() {
-        switch (tickType) {
-            case "onSecond":
-                return "Second Tick Event";
-            case "onMinute":
-                return "Minute Tick Event";
-            default:
-                return "Tick Event";
+    public void execute(GameEvent gameEvent, List<Entity> selectedEntities, int stackCounter, AtomicInteger callCounter) {
+        if (!enabled || script == null) {
+            return;
         }
-    }
-    
-    @Override
-    public Location getLocation() {
-        return location;
+        
+        // Execute all actions associated with this activator
+        for (CodeBlock action : actionList) {
+            try {
+                // Get the script engine from the plugin
+                ScriptEngine scriptEngine = plugin.getServiceRegistry().getScriptEngine();
+                
+                if (scriptEngine != null) {
+                    // Convert the first entity to a player if possible
+                    Player player = null;
+                    if (!selectedEntities.isEmpty() && selectedEntities.get(0) instanceof Player) {
+                        player = (Player) selectedEntities.get(0);
+                    }
+                    
+                    // Execute the action block
+                    scriptEngine.executeBlock(action, player, "activator_tick")
+                        .thenAccept(result -> {
+                            if (!result.isSuccess()) {
+                                plugin.getLogger().warning(
+                                    "Tick activator execution failed: " + result.getMessage()
+                                );
+                            }
+                        })
+                        .exceptionally(throwable -> {
+                            plugin.getLogger().warning(
+                                "Error in Tick activator execution: " + throwable.getMessage()
+                            );
+                            return null;
+                        });
+                }
+            } catch (Exception e) {
+                plugin.getLogger().warning(
+                    "Error executing action in Tick activator: " + e.getMessage()
+                );
+            }
+        }
     }
     
     /**
@@ -79,6 +137,6 @@ public class TickActivator extends Activator {
         gameEvent.setCustomData("tick", tickNumber);
         
         // Activate the script
-        super.activate(gameEvent, null);
+        execute(gameEvent, new java.util.ArrayList<>(), 0, new AtomicInteger(0));
     }
 }

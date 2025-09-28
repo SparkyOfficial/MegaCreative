@@ -10,6 +10,7 @@ import com.megacreative.models.*;
 import com.megacreative.utils.ConfigManager;
 import com.megacreative.utils.JsonSerializer;
 import com.megacreative.worlds.DevWorldGenerator;
+import com.megacreative.coding.activators.ActivatorManager;
 import org.bukkit.*;
 import org.bukkit.entity.Player;
 import org.bukkit.plugin.Plugin;
@@ -286,6 +287,15 @@ public class WorldManagerImpl implements IWorldManager {
                     codingManager.loadScriptsForWorld(world);
                 }
                 
+                // Register CodeHandler with ActivatorManager
+                if (plugin instanceof MegaCreative) {
+                    MegaCreative megaPlugin = (MegaCreative) plugin;
+                    ActivatorManager activatorManager = megaPlugin.getServiceRegistry().getActivatorManager();
+                    if (activatorManager != null && world.getCodeHandler() != null) {
+                        activatorManager.registerCodeHandler(world.getId(), world.getCodeHandler());
+                    }
+                }
+                
                 plugin.getLogger().info("Successfully loaded world: " + world.getName() + " (ID: " + world.getId() + ")");
             } else {
                 plugin.getLogger().warning("Failed to deserialize world from file: " + worldFile.getName());
@@ -537,11 +547,17 @@ public class WorldManagerImpl implements IWorldManager {
                         codingManager.loadScriptsForWorld(creativeWorld);
                     }
                     
-                    // Initialize CodeHandler for the world
+                    // Initialize CodeHandler for the world and register with ActivatorManager
                     if (plugin instanceof MegaCreative) {
                         MegaCreative megaPlugin = (MegaCreative) plugin;
                         CodeHandler codeHandler = new CodeHandler(megaPlugin, creativeWorld);
                         creativeWorld.setCodeHandler(codeHandler);
+                        
+                        // Register with ActivatorManager
+                        ActivatorManager activatorManager = megaPlugin.getServiceRegistry().getActivatorManager();
+                        if (activatorManager != null) {
+                            activatorManager.registerCodeHandler(worldId, codeHandler);
+                        }
                     }
                     
                     // Телепортация - синхронно
@@ -714,6 +730,12 @@ public class WorldManagerImpl implements IWorldManager {
             
             if (blockPlacementHandler != null && devWorldToRemove != null) {
                 blockPlacementHandler.clearAllCodeBlocksInWorld(devWorldToRemove);
+            }
+            
+            // Unregister CodeHandler from ActivatorManager
+            com.megacreative.coding.activators.ActivatorManager activatorManager = megaPlugin.getServiceRegistry().getActivatorManager();
+            if (activatorManager != null) {
+                activatorManager.unregisterCodeHandler(worldId);
             }
         }
 
@@ -1035,9 +1057,13 @@ public class WorldManagerImpl implements IWorldManager {
         if (bukkitWorld != null) {
             player.teleport(bukkitWorld.getSpawnLocation());
             player.setGameMode(org.bukkit.GameMode.CREATIVE);
-            player.sendMessage("§aWorld mode changed to §f§lBUILD§a!");
-            player.sendMessage("§7❌ Code disabled, scripts will not execute");
-            player.sendMessage("§7Creative mode for builders");
+            
+            // Give coding items DYNAMICALLY
+            com.megacreative.coding.CodingItems.giveCodingItems(player, (MegaCreative) plugin);
+            
+            player.sendMessage("§a🎮 Switched to build mode!");
+            player.sendMessage("§7✅ Building enabled, scripts will execute");
+            player.sendMessage("§7Creative mode for building");
             
             // 🎆 ENHANCED: Track world mode switch
             if (plugin instanceof MegaCreative) {
@@ -1045,126 +1071,73 @@ public class WorldManagerImpl implements IWorldManager {
             }
             
             saveWorld(world);
-        } else {
-            player.sendMessage("§cFailed to switch to build world!");
         }
     }
     
+    /**
+     * Creates a development world if it doesn't exist
+     * @param world The creative world to create a dev world for
+     */
     private void createDevWorldIfNotExists(CreativeWorld world) {
         String devWorldName = world.getDevWorldName();
-        if (Bukkit.getWorld(devWorldName) == null) {
-            plugin.getLogger().info("Development world " + devWorldName + " does not exist. Generating a new one...");
-
-            // ИСПОЛЬЗУЕМ ПРАВИЛЬНЫЙ ГЕНЕРАТОР!
+        World bukkitWorld = Bukkit.getWorld(devWorldName);
+        
+        if (bukkitWorld == null) {
             WorldCreator creator = new WorldCreator(devWorldName);
-            creator.environment(World.Environment.NORMAL); // Обязательно для кастомных генераторов
-            creator.generator(new DevWorldGenerator()); // Указываем наш генератор!
+            creator.environment(world.getWorldType().getEnvironment());
             
-            // Удаляем generatorSettings, так как они конфликтуют с кастомным генератором
-            // creator.generatorSettings("..."); // ЭТА СТРОКА БОЛЬШЕ НЕ НУЖНА
-
-            World devWorld = creator.createWorld();
-            if (devWorld != null) {
-                setupDevWorld(devWorld, world);
-                
-                // ВАЖНО: Обновляем статус основного мира, чтобы он знал о своей паре
-                world.setDualMode(CreativeWorld.WorldDualMode.PLAY); // Исходный мир теперь считается игровым
-                world.setPairedWorldId(world.getId()); // ID остается тот же, но теперь он знает о паре
-                saveWorld(world);
-                
-                plugin.getLogger().info("Successfully generated dev world: " + devWorld.getName());
-            } else {
-                plugin.getLogger().severe("CRITICAL: Failed to create development world " + devWorldName);
-            }
-        }
-    }
-    
-    private void setupDevWorld(World devWorld, CreativeWorld creativeWorld) {
-        // Enhanced setup for development world
-        setupWorld(devWorld, creativeWorld);
-        
-        // Additional dev world specific settings
-        devWorld.setGameRule(GameRule.DO_MOB_SPAWNING, false); // No mobs in dev mode
-        devWorld.setGameRule(GameRule.KEEP_INVENTORY, true); // Keep items on death
-        devWorld.setGameRule(GameRule.DO_IMMEDIATE_RESPAWN, true); // Instant respawn
-    }
-    
-    @Override
-    public CreativeWorld getWorldByName(String name) {
-        if (name == null || name.isEmpty()) {
-            return null;
-        }
-        
-        // Сначала ищем точное совпадение
-        for (CreativeWorld world : worlds.values()) {
-            if (name.equalsIgnoreCase(world.getName())) {
-                return world;
-            }
-        }
-        
-        // Если точного совпадения нет, ищем частичное (без учета регистра)
-        for (CreativeWorld world : worlds.values()) {
-            if (world.getName().toLowerCase().contains(name.toLowerCase())) {
-                return world;
-            }
-        }
-        
-        return null;
-    }
-    
-    @Override
-    public CreativeWorld findCreativeWorldByBukkit(World bukkitWorld) {
-        if (bukkitWorld == null) return null;
-        
-        String worldName = bukkitWorld.getName();
-        // Reduced logging - only log when debugging
-        // getPlugin().getLogger().info("Looking for CreativeWorld for Bukkit world: " + worldName);
-        // getPlugin().getLogger().info("Available worlds in memory: " + worlds.size());
-        
-        // Handle old-style megacreative_ naming
-        if (worldName.startsWith("megacreative_")) {
-            // 🔧 FIX: More precise ID extraction for complex naming
-            // Extract everything between "megacreative_" and the first suffix
-            int startIndex = "megacreative_".length();
-            int endIndex = worldName.length();
-            
-            // Find the first suffix
-            int codeIndex = worldName.indexOf("-code");
-            int worldIndex = worldName.indexOf("-world");
-            int devIndex = worldName.indexOf("_dev");
-            
-            if (codeIndex != -1 && codeIndex < endIndex) endIndex = codeIndex;
-            if (worldIndex != -1 && worldIndex < endIndex) endIndex = worldIndex;
-            if (devIndex != -1 && devIndex < endIndex) endIndex = devIndex;
-            
-            if (startIndex < endIndex) {
-                String id = worldName.substring(startIndex, endIndex);
-                return worlds.get(id);
-            }
-        }
-        
-        // Handle new reference system-style naming
-        if (worldName.endsWith("-world") || worldName.endsWith("-code")) {
-            // Extract the base name
-            String baseName = worldName.substring(0, worldName.length() - 6);
-            for (CreativeWorld world : worlds.values()) {
-                if (world.getDevWorldName().equals(worldName) || world.getPlayWorldName().equals(worldName)) {
-                    return world;
+            // Set appropriate world type
+            switch (world.getWorldType()) {
+                case FLAT -> {
+                    creator.type(WorldType.FLAT);
+                    creator.generatorSettings("{\"layers\":[{\"block\":\"bedrock\",\"height\":1},{\"block\":\"stone\",\"height\":2},{\"block\":\"grass_block\",\"height\":1}],\"biome\":\"plains\"}");
                 }
+                case VOID -> {
+                    creator.type(WorldType.FLAT);
+                    creator.generatorSettings("{\"layers\":[{\"block\":\"air\",\"height\":1}],\"biome\":\"plains\"}");
+                }
+                case OCEAN -> creator.type(WorldType.NORMAL);
+                case NETHER -> creator.environment(World.Environment.NETHER);
+                case END -> creator.environment(World.Environment.THE_END);
+                default -> creator.type(WorldType.NORMAL);
+            }
+            
+            bukkitWorld = Bukkit.createWorld(creator);
+            
+            if (bukkitWorld != null) {
+                // Setup the dev world
+                setupWorld(bukkitWorld, world);
             }
         }
-        
-        // If nothing found, return null
-        return null;
     }
     
+    /**
+     * Gets all public worlds
+     * @return List of all public creative worlds
+     */
+    @Override
+    public List<CreativeWorld> getAllPublicWorlds() {
+        List<CreativeWorld> publicWorlds = new ArrayList<>();
+        for (CreativeWorld world : worlds.values()) {
+            if (world.isPublic()) {
+                publicWorlds.add(world);
+            }
+        }
+        return publicWorlds;
+    }
+    
+    /**
+     * Gets all worlds owned by a player
+     * @param player The player
+     * @return List of player's creative worlds
+     */
     @Override
     public List<CreativeWorld> getPlayerWorlds(Player player) {
         List<CreativeWorld> playerWorldsList = new ArrayList<>();
-        List<String> worldIds = playerWorlds.get(player.getUniqueId());
+        List<String> playerWorldIds = playerWorlds.get(player.getUniqueId());
         
-        if (worldIds != null) {
-            for (String worldId : worldIds) {
+        if (playerWorldIds != null) {
+            for (String worldId : playerWorldIds) {
                 CreativeWorld world = worlds.get(worldId);
                 if (world != null) {
                     playerWorldsList.add(world);
@@ -1175,25 +1148,54 @@ public class WorldManagerImpl implements IWorldManager {
         return playerWorldsList;
     }
     
+    /**
+     * Finds a creative world by its name
+     * @param name The world name
+     * @return The creative world or null if not found
+     */
     @Override
-    public List<CreativeWorld> getAllPublicWorlds() {
-        List<CreativeWorld> publicWorlds = new ArrayList<>();
+    public CreativeWorld getWorldByName(String name) {
         for (CreativeWorld world : worlds.values()) {
-            // A world is public if it's not private
-            if (!world.isPrivate()) {
-                publicWorlds.add(world);
+            if (world.getName().equalsIgnoreCase(name)) {
+                return world;
             }
         }
-        return publicWorlds;
+        return null;
     }
     
+    /**
+     * Finds a creative world by its Bukkit world
+     * @param bukkitWorld The Bukkit world
+     * @return The creative world or null if not found
+     */
+    @Override
+    public CreativeWorld findCreativeWorldByBukkit(World bukkitWorld) {
+        if (bukkitWorld == null) return null;
+        
+        String worldName = bukkitWorld.getName();
+        for (CreativeWorld world : worlds.values()) {
+            if (world.getWorldName().equals(worldName) || 
+                world.getDevWorldName().equals(worldName) || 
+                world.getPlayWorldName().equals(worldName)) {
+                return world;
+            }
+        }
+        return null;
+    }
+    
+    /**
+     * Shuts down the world manager
+     * Saves all worlds and cleans up resources
+     */
     @Override
     public void shutdown() {
-        // Save all worlds before shutdown
-        saveAllWorlds();
-        
-        // Clear collections
-        worlds.clear();
-        playerWorlds.clear();
+        try {
+            saveAllWorlds();
+            // Clean up any resources if needed
+        } catch (Exception e) {
+            if (plugin != null) {
+                plugin.getLogger().severe("Error during WorldManager shutdown: " + e.getMessage());
+            }
+        }
     }
 }

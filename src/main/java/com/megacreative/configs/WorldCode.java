@@ -27,8 +27,12 @@ public class WorldCode {
         
         if (!file.exists()) {
             try {
-                file.createNewFile();
-                logger.info("Created world-codes.yml configuration file");
+                boolean created = file.createNewFile();
+                if (created) {
+                    logger.info("Created world-codes.yml configuration file");
+                } else {
+                    logger.warning("world-codes.yml file already exists or could not be created");
+                }
             } catch (IOException e) {
                 logger.severe("Failed to create world-codes.yml file: " + e.getMessage());
             }
@@ -46,7 +50,7 @@ public class WorldCode {
         try {
             customFile.save(file);
         } catch (IOException e) {
-            System.out.println("Couldn't save WorldCode file");
+            System.out.println("Couldn't save WorldCode file: " + e.getMessage());
         }
     }
     

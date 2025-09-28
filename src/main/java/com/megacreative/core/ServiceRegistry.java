@@ -37,6 +37,7 @@ import com.megacreative.coding.CodingManagerImpl;
 import com.megacreative.managers.ReferenceSystemEventManager;
 import com.megacreative.utils.ConfigManager;
 import com.megacreative.services.CodeCompiler;
+import com.megacreative.coding.activators.ActivatorManager;
 import org.bukkit.plugin.Plugin;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.logging.Level;
@@ -101,6 +102,8 @@ public class ServiceRegistry implements DependencyContainer.Disposable {
             configManager.loadConfig();
             return configManager;
         });
+        // Register ActivatorManager
+        dependencyContainer.registerFactory(ActivatorManager.class, (DependencyContainer.Supplier<ActivatorManager>) () -> new ActivatorManager((MegaCreative) plugin));
     }
     
     /**
@@ -534,5 +537,9 @@ public class ServiceRegistry implements DependencyContainer.Disposable {
     
     public ScriptTriggerManager getScriptTriggerManager() {
         return dependencyContainer.resolve(ScriptTriggerManager.class);
+    }
+    
+    public ActivatorManager getActivatorManager() {
+        return dependencyContainer.resolve(ActivatorManager.class);
     }
 }

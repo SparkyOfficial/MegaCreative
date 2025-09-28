@@ -3,7 +3,6 @@ package com.megacreative.coding.activators;
 import com.megacreative.MegaCreative;
 import com.megacreative.models.CreativeWorld;
 import com.megacreative.coding.events.GameEvent;
-import org.bukkit.Material;
 import org.bukkit.entity.Entity;
 import org.bukkit.inventory.ItemStack;
 
@@ -11,22 +10,23 @@ import java.util.List;
 import java.util.concurrent.atomic.AtomicInteger;
 
 /**
- * Activator that triggers when a player moves
+ * Base class for activators that have a custom name
+ * Similar to YottaCreative's NamedActivator
  */
-public class PlayerMoveActivator extends Activator {
+public abstract class NamedActivator extends Activator {
     
-    public PlayerMoveActivator(MegaCreative plugin, CreativeWorld world) {
+    protected String customName;
+    
+    public NamedActivator(MegaCreative plugin, CreativeWorld world) {
         super(plugin, world);
     }
     
-    @Override
-    public ActivatorType getType() {
-        return ActivatorType.PLAYER_MOVE;
+    public String getCustomName() {
+        return customName;
     }
     
-    @Override
-    public ItemStack getIcon() {
-        return new ItemStack(Material.FEATHER);
+    public void setCustomName(String customName) {
+        this.customName = customName;
     }
     
     @Override
@@ -35,6 +35,7 @@ public class PlayerMoveActivator extends Activator {
         this.selectedEntities = selectedEntities;
         
         // Execute all actions associated with this activator
+        // This would integrate with the existing script execution system
         for (com.megacreative.coding.CodeBlock action : actionList) {
             try {
                 // Get the script engine from the plugin
@@ -44,24 +45,24 @@ public class PlayerMoveActivator extends Activator {
                     // Execute the action block
                     scriptEngine.executeBlock(action, 
                         selectedEntities.isEmpty() ? null : (org.bukkit.entity.Player) selectedEntities.get(0), 
-                        "activator_player_move")
+                        "activator_" + getType().name().toLowerCase())
                         .thenAccept(result -> {
                             if (!result.isSuccess()) {
                                 plugin.getLogger().warning(
-                                    "PlayerMove activator execution failed: " + result.getMessage()
+                                    "Activator execution failed for " + getType().getDisplayName() + ": " + result.getMessage()
                                 );
                             }
                         })
                         .exceptionally(throwable -> {
                             plugin.getLogger().warning(
-                                "Error in PlayerMove activator execution: " + throwable.getMessage()
+                                "Error in activator execution for " + getType().getDisplayName() + ": " + throwable.getMessage()
                             );
                             return null;
                         });
                 }
             } catch (Exception e) {
                 plugin.getLogger().warning(
-                    "Error executing action in PlayerMove activator: " + e.getMessage()
+                    "Error executing action in activator " + getType().getDisplayName() + ": " + e.getMessage()
                 );
             }
         }

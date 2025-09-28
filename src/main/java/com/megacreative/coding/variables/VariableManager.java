@@ -35,7 +35,10 @@ public class VariableManager implements IVariableManager {
         this.plugin = plugin;
         this.dataFolder = new File(plugin.getDataFolder(), Constants.VARIABLES_FOLDER);
         if (!dataFolder.exists()) {
-            dataFolder.mkdirs();
+            boolean created = dataFolder.mkdirs();
+            if (!created) {
+                plugin.getLogger().warning("Failed to create variables directory: " + dataFolder.getAbsolutePath());
+            }
         }
     }
 
