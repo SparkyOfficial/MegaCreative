@@ -231,6 +231,8 @@ public class AddVarAction implements BlockAction {
                 }
             }
         } catch (Exception e) {
+            // Log the exception instead of ignoring it
+            context.getPlugin().getLogger().warning("Error getting variable parameters from container: " + e.getMessage());
         }
 
         return params;

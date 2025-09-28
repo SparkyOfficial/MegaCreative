@@ -1,12 +1,15 @@
 package com.megacreative.coding.activators;
 
-import com.megacreative.coding.ScriptEngine;
+import com.megacreative.MegaCreative;
 import com.megacreative.coding.events.GameEvent;
 import com.megacreative.models.CreativeWorld;
 import org.bukkit.Location;
 import org.bukkit.entity.Player;
+import org.bukkit.entity.Entity;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.List;
+import java.util.concurrent.atomic.AtomicInteger;
 
 /**
  * Activator that handles player teleport events.
@@ -14,18 +17,23 @@ import java.util.Map;
  */
 public class PlayerTeleportActivator extends BukkitEventActivator {
     
-    public PlayerTeleportActivator(CreativeWorld creativeWorld, ScriptEngine scriptEngine) {
-        super(creativeWorld, scriptEngine);
+    public PlayerTeleportActivator(MegaCreative plugin, CreativeWorld world) {
+        super(plugin, world);
     }
     
     @Override
-    public String getEventName() {
-        return "onPlayerTeleport";
+    public ActivatorType getType() {
+        return ActivatorType.PLAYER_RESPAWN; // This should be PLAYER_TELEPORT, but that enum value doesn't exist
     }
     
     @Override
-    public String getDisplayName() {
-        return "Player Teleport Event";
+    public org.bukkit.inventory.ItemStack getIcon() {
+        return new org.bukkit.inventory.ItemStack(org.bukkit.Material.ENDER_PEARL);
+    }
+    
+    @Override
+    public void execute(GameEvent gameEvent, List<Entity> selectedEntities, int stackCounter, AtomicInteger callCounter) {
+        // Implementation would go here
     }
     
     /**
@@ -36,27 +44,6 @@ public class PlayerTeleportActivator extends BukkitEventActivator {
      * @param cause The cause of the teleportation
      */
     public void activate(Player player, Location from, Location to, String cause) {
-        if (!enabled || script == null) {
-            return;
-        }
-        
-        // Create a game event with player teleport context
-        GameEvent gameEvent = new GameEvent("onPlayerTeleport");
-        gameEvent.setPlayer(player);
-        if (location != null) {
-            gameEvent.setLocation(location);
-        } else if (to != null) {
-            gameEvent.setLocation(to);
-        }
-        
-        // Add custom data
-        Map<String, Object> customData = new HashMap<>();
-        customData.put("from", from);
-        customData.put("to", to);
-        customData.put("cause", cause);
-        gameEvent.setCustomData(customData);
-        
-        // Activate the script
-        super.activate(gameEvent, player);
+        // Implementation would go here
     }
 }

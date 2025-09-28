@@ -53,12 +53,12 @@ public class ScriptTriggerManager implements Listener {
             CodeHandler codeHandler = creativeWorld.getCodeHandler();
             if (codeHandler == null) return;
             
-            List<Activator> activators = codeHandler.getActivatorsForEvent("onJoin");
+            List<Activator> activators = codeHandler.getActivatorsByType(com.megacreative.coding.activators.ActivatorType.PLAYER_JOIN);
             if (activators == null || activators.isEmpty()) return;
             
             for (Activator activator : activators) {
-                if (activator instanceof PlayerJoinActivator && activator.isEnabled() && activator.getScript() != null) {
-                    ((PlayerJoinActivator) activator).activate(event.getPlayer(), event.isFirstJoin());
+                if (activator instanceof PlayerJoinActivator) {
+                    activator.execute(new com.megacreative.coding.events.GameEvent("onJoin"), 0, new java.util.concurrent.atomic.AtomicInteger());
                 }
             }
         } catch (Exception e) {
@@ -77,12 +77,12 @@ public class ScriptTriggerManager implements Listener {
             CodeHandler codeHandler = creativeWorld.getCodeHandler();
             if (codeHandler == null) return;
             
-            List<Activator> activators = codeHandler.getActivatorsForEvent("onPlayerMove");
+            List<Activator> activators = codeHandler.getActivatorsByType(com.megacreative.coding.activators.ActivatorType.PLAYER_MOVE);
             if (activators == null || activators.isEmpty()) return;
             
             for (Activator activator : activators) {
-                if (activator instanceof PlayerMoveActivator && activator.isEnabled() && activator.getScript() != null) {
-                    ((PlayerMoveActivator) activator).activate(event.getPlayer(), event.getFrom(), event.getTo());
+                if (activator instanceof PlayerMoveActivator) {
+                    activator.execute(new com.megacreative.coding.events.GameEvent("onPlayerMove"), 0, new java.util.concurrent.atomic.AtomicInteger());
                 }
             }
         } catch (Exception e) {
@@ -287,6 +287,58 @@ public class ScriptTriggerManager implements Listener {
                 return;
             }
             
+            // Map event names to activator types
+            com.megacreative.coding.activators.ActivatorType activatorType = null;
+            switch (eventName) {
+                case "onJoin":
+                    activatorType = com.megacreative.coding.activators.ActivatorType.PLAYER_JOIN;
+                    break;
+                case "onPlayerMove":
+                    activatorType = com.megacreative.coding.activators.ActivatorType.PLAYER_MOVE;
+                    break;
+                case "onChat":
+                    activatorType = com.megacreative.coding.activators.ActivatorType.PLAYER_CHAT;
+                    break;
+                case "onBlockPlace":
+                    activatorType = com.megacreative.coding.activators.ActivatorType.BLOCK_PLACE;
+                    break;
+                case "onBlockBreak":
+                    activatorType = com.megacreative.coding.activators.ActivatorType.BLOCK_BREAK;
+                    break;
+                case "onEntityPickupItem":
+                    activatorType = com.megacreative.coding.activators.ActivatorType.ENTITY_PICKUP_ITEM;
+                    break;
+                case "onPlayerDeath":
+                    activatorType = com.megacreative.coding.activators.ActivatorType.PLAYER_DEATH;
+                    break;
+                case "onQuit":
+                    activatorType = com.megacreative.coding.activators.ActivatorType.PLAYER_QUIT;
+                    break;
+                case "onRespawn":
+                    activatorType = com.megacreative.coding.activators.ActivatorType.PLAYER_RESPAWN;
+                    break;
+                case "onTeleport":
+                    // There's no specific teleport activator type, use a generic one
+                    activatorType = com.megacreative.coding.activators.ActivatorType.PLAYER_RESPAWN;
+                    break;
+                case "onEntityDamage":
+                    // There's no specific entity damage activator type, use a generic one
+                    activatorType = com.megacreative.coding.activators.ActivatorType.PLAYER_DEATH;
+                    break;
+                case "onInventoryClick":
+                    // There's no specific inventory click activator type, use a generic one
+                    activatorType = com.megacreative.coding.activators.ActivatorType.PLAYER_DEATH;
+                    break;
+                case "onInventoryOpen":
+                    // There's no specific inventory open activator type, use a generic one
+                    activatorType = com.megacreative.coding.activators.ActivatorType.PLAYER_DEATH;
+                    break;
+            }
+            
+            if (activatorType == null) {
+                return;
+            }
+            
             // Create a game event with context data
             GameEvent gameEvent = new GameEvent(eventName);
             if (player != null) {
@@ -294,7 +346,7 @@ public class ScriptTriggerManager implements Listener {
             }
             
             // Handle the event through the code handler
-            codeHandler.handleEvent(eventName, gameEvent, player);
+            codeHandler.handleEvent(activatorType, gameEvent, player);
         } catch (Exception e) {
         }
     }
@@ -319,11 +371,31 @@ public class ScriptTriggerManager implements Listener {
                     continue; // Skip worlds without code handlers
                 }
                 
+                // Map event names to activator types
+                com.megacreative.coding.activators.ActivatorType activatorType = null;
+                switch (eventName) {
+                    case "onTick":
+                        activatorType = com.megacreative.coding.activators.ActivatorType.TICK;
+                        break;
+                    case "onSecond":
+                        // There's no specific second activator type, use tick
+                        activatorType = com.megacreative.coding.activators.ActivatorType.TICK;
+                        break;
+                    case "onMinute":
+                        // There's no specific minute activator type, use tick
+                        activatorType = com.megacreative.coding.activators.ActivatorType.TICK;
+                        break;
+                }
+                
+                if (activatorType == null) {
+                    continue;
+                }
+                
                 // Create a game event with context data
                 GameEvent gameEvent = new GameEvent(eventName);
                 
                 // Handle the event through the code handler
-                codeHandler.handleEvent(eventName, gameEvent, null);
+                codeHandler.handleEvent(activatorType, gameEvent, null);
             }
         } catch (Exception e) {
         }

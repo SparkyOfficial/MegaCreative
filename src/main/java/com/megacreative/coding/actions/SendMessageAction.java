@@ -89,6 +89,8 @@ public class SendMessageAction implements BlockAction {
             }
             
         } catch (Exception e) {
+            // Log the exception instead of ignoring it
+            context.getPlugin().getLogger().warning("Error getting message from container: " + e.getMessage());
         }
         return null;
 

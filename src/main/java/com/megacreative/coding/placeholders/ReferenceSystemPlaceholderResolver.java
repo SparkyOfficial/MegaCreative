@@ -700,6 +700,10 @@ public class ReferenceSystemPlaceholderResolver {
                         return String.format("%.1f%%", number * 100);
                     default:
                         int decimals = Integer.parseInt(format);
+                        // Ensure decimals is non-negative to prevent malformed format strings
+                        if (decimals < 0) {
+                            decimals = 0;
+                        }
                         return String.format("%." + decimals + "f", number);
                 }
             } catch (Exception e) {

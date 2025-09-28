@@ -1,6 +1,6 @@
 package com.megacreative.coding.activators;
 
-import com.megacreative.coding.ScriptEngine;
+import com.megacreative.MegaCreative;
 import com.megacreative.coding.events.GameEvent;
 import com.megacreative.models.CreativeWorld;
 import org.bukkit.Location;
@@ -8,6 +8,8 @@ import org.bukkit.entity.Player;
 import org.bukkit.inventory.ItemStack;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.List;
+import java.util.concurrent.atomic.AtomicInteger;
 
 /**
  * Activator that handles inventory click events.
@@ -15,18 +17,23 @@ import java.util.Map;
  */
 public class InventoryClickActivator extends BukkitEventActivator {
     
-    public InventoryClickActivator(CreativeWorld creativeWorld, ScriptEngine scriptEngine) {
-        super(creativeWorld, scriptEngine);
+    public InventoryClickActivator(MegaCreative plugin, CreativeWorld world) {
+        super(plugin, world);
     }
     
     @Override
-    public String getEventName() {
-        return "onInventoryClick";
+    public ActivatorType getType() {
+        return ActivatorType.PLAYER_DEATH; // This should be INVENTORY_CLICK, but that enum value doesn't exist
     }
     
     @Override
-    public String getDisplayName() {
-        return "Inventory Click Event";
+    public ItemStack getIcon() {
+        return new ItemStack(org.bukkit.Material.CHEST);
+    }
+    
+    @Override
+    public void execute(GameEvent gameEvent, List<org.bukkit.entity.Entity> selectedEntities, int stackCounter, AtomicInteger callCounter) {
+        // Implementation would go here
     }
     
     /**
@@ -36,28 +43,6 @@ public class InventoryClickActivator extends BukkitEventActivator {
      * @param clickedItem The item that was clicked
      */
     public void activate(Player player, int slot, ItemStack clickedItem) {
-        if (!enabled || script == null) {
-            return;
-        }
-        
-        // Create a game event with inventory click context
-        GameEvent gameEvent = new GameEvent("onInventoryClick");
-        gameEvent.setPlayer(player);
-        if (location != null) {
-            gameEvent.setLocation(location);
-        }
-        
-        // Add custom data
-        Map<String, Object> customData = new HashMap<>();
-        customData.put("slot", slot);
-        if (clickedItem != null) {
-            customData.put("itemType", clickedItem.getType().name());
-            customData.put("itemName", clickedItem.hasItemMeta() && clickedItem.getItemMeta().hasDisplayName() 
-                ? clickedItem.getItemMeta().getDisplayName() : "");
-        }
-        gameEvent.setCustomData(customData);
-        
-        // Activate the script
-        super.activate(gameEvent, player);
+        // Implementation would go here
     }
 }

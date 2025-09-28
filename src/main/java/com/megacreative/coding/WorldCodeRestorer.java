@@ -38,8 +38,11 @@ public class WorldCodeRestorer implements Listener {
             try {
                 // In the new architecture, connection restoration is handled by BlockLinker and BlockHierarchyManager
                 // These services listen to events and manage connections automatically
+                // For now, we'll log that the world was loaded
+                plugin.getLogger().info("Development world loaded: " + world.getName() + " - connection restoration handled by services");
             } catch (Exception e) {
-                // Silent error handling
+                // Log the error instead of silent handling
+                plugin.getLogger().warning("Error handling world load for " + world.getName() + ": " + e.getMessage());
             }
         }
     }

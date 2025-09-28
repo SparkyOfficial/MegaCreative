@@ -60,7 +60,8 @@ public class ScriptCompiler implements Listener {
                 addScriptToWorld(eventBlock, script, creativeWorld, worldManager);
             }
         } catch (Exception e) {
-            // Ошибка компиляции скрипта
+            // Log the error instead of ignoring it
+            plugin.getLogger().warning("Error compiling script from block place event: " + e.getMessage());
         }
     }
     
@@ -73,7 +74,8 @@ public class ScriptCompiler implements Listener {
             // Remove script associated with this event block
             removeScript(eventBlock, location);
         } catch (Exception e) {
-            // Ошибка удаления скрипта
+            // Log the error instead of ignoring it
+            plugin.getLogger().warning("Error removing script from block break event: " + e.getMessage());
         }
     }
     
@@ -92,49 +94,46 @@ public class ScriptCompiler implements Listener {
                 return;
             }
             
-            // Get the script engine
-            ScriptEngine scriptEngine = plugin.getServiceRegistry().getScriptEngine();
-            
             // Create the appropriate activator based on the event type
             Activator activator = null;
             
             if ("onJoin".equals(eventBlock.getAction())) {
-                activator = new PlayerJoinActivator(creativeWorld, scriptEngine);
+                activator = new PlayerJoinActivator(plugin, creativeWorld);
             } else if ("onPlayerMove".equals(eventBlock.getAction())) {
-                activator = new PlayerMoveActivator(creativeWorld, scriptEngine);
+                activator = new PlayerMoveActivator(plugin, creativeWorld);
             } else if ("onBlockPlace".equals(eventBlock.getAction())) {
-                activator = new BlockPlaceActivator(creativeWorld, scriptEngine);
+                activator = new BlockPlaceActivator(plugin, creativeWorld);
             } else if ("onBlockBreak".equals(eventBlock.getAction())) {
-                activator = new BlockBreakActivator(creativeWorld, scriptEngine);
+                activator = new BlockBreakActivator(plugin, creativeWorld);
             } else if ("onChat".equals(eventBlock.getAction())) {
-                activator = new ChatActivator(creativeWorld, scriptEngine);
+                activator = new ChatActivator(plugin, creativeWorld);
             } else if ("onPlayerQuit".equals(eventBlock.getAction())) {
-                activator = new PlayerQuitActivator(creativeWorld, scriptEngine);
+                activator = new PlayerQuitActivator(plugin, creativeWorld);
             } else if ("onPlayerDeath".equals(eventBlock.getAction())) {
-                activator = new PlayerDeathActivator(creativeWorld, scriptEngine);
+                activator = new PlayerDeathActivator(plugin, creativeWorld);
             } else if ("onPlayerRespawn".equals(eventBlock.getAction())) {
-                activator = new PlayerRespawnActivator(creativeWorld, scriptEngine);
+                activator = new PlayerRespawnActivator(plugin, creativeWorld);
             } else if ("onPlayerTeleport".equals(eventBlock.getAction())) {
-                activator = new PlayerTeleportActivator(creativeWorld, scriptEngine);
+                activator = new PlayerTeleportActivator(plugin, creativeWorld);
             } else if ("onEntityPickupItem".equals(eventBlock.getAction())) {
-                activator = new EntityPickupItemActivator(creativeWorld, scriptEngine);
+                activator = new EntityPickupItemActivator(plugin, creativeWorld);
             }
             
             // If we created an activator, configure it and register it
             if (activator != null) {
-                activator.setEventBlock(eventBlock);
-                activator.setScript(script);
+                // Add the script to the activator's action list
+                activator.addAction(eventBlock);
                 
                 // Set location for BukkitEventActivator instances
                 if (activator instanceof BukkitEventActivator) {
                     ((BukkitEventActivator) activator).setLocation(location);
-                } else if (activator instanceof PlayerJoinActivator) {
-                    ((PlayerJoinActivator) activator).setLocation(location);
                 }
                 
                 codeHandler.registerActivator(activator);
             }
         } catch (Exception e) {
+            // Log the error instead of ignoring it
+            plugin.getLogger().warning("Error creating and registering activator: " + e.getMessage());
         }
     }
     
@@ -152,6 +151,8 @@ public class ScriptCompiler implements Listener {
                 }
             }
         } catch (Exception e) {
+            // Log the error instead of ignoring it
+            plugin.getLogger().warning("Error removing script: " + e.getMessage());
         }
     }
     

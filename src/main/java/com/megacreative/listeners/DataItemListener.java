@@ -12,6 +12,7 @@ import org.bukkit.inventory.meta.ItemMeta;
 import org.bukkit.persistence.PersistentDataType;
 
 import java.util.Arrays;
+import java.util.Optional;
 
 public class DataItemListener implements Listener {
 
@@ -24,7 +25,13 @@ public class DataItemListener implements Listener {
         if (DataItemFactory.isDataItem(itemInHand)) {
             event.setCancelled(true);
             
-            DataItemFactory.DataItem data = DataItemFactory.fromItemStack(itemInHand).get();
+            Optional<DataItemFactory.DataItem> dataItemOpt = DataItemFactory.fromItemStack(itemInHand);
+            if (!dataItemOpt.isPresent()) {
+                player.sendMessage("§cОшибка! Не удалось получить данные из предмета.");
+                return;
+            }
+            
+            DataItemFactory.DataItem data = dataItemOpt.get();
             String newValue = event.getMessage();
             
             // Валидация

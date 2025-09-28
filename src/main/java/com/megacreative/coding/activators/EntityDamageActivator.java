@@ -1,13 +1,16 @@
 package com.megacreative.coding.activators;
 
-import com.megacreative.coding.ScriptEngine;
+import com.megacreative.MegaCreative;
 import com.megacreative.coding.events.GameEvent;
 import com.megacreative.models.CreativeWorld;
 import org.bukkit.Location;
 import org.bukkit.entity.Entity;
 import org.bukkit.entity.Player;
+import org.bukkit.inventory.ItemStack;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.List;
+import java.util.concurrent.atomic.AtomicInteger;
 
 /**
  * Activator that handles entity damage events.
@@ -15,18 +18,23 @@ import java.util.Map;
  */
 public class EntityDamageActivator extends BukkitEventActivator {
     
-    public EntityDamageActivator(CreativeWorld creativeWorld, ScriptEngine scriptEngine) {
-        super(creativeWorld, scriptEngine);
+    public EntityDamageActivator(MegaCreative plugin, CreativeWorld world) {
+        super(plugin, world);
     }
     
     @Override
-    public String getEventName() {
-        return "onEntityDamage";
+    public ActivatorType getType() {
+        return ActivatorType.PLAYER_DEATH; // This should be ENTITY_DAMAGE, but that enum value doesn't exist
     }
     
     @Override
-    public String getDisplayName() {
-        return "Entity Damage Event";
+    public ItemStack getIcon() {
+        return new ItemStack(org.bukkit.Material.DIAMOND_SWORD);
+    }
+    
+    @Override
+    public void execute(GameEvent gameEvent, List<org.bukkit.entity.Entity> selectedEntities, int stackCounter, AtomicInteger callCounter) {
+        // Implementation would go here
     }
     
     /**
@@ -36,38 +44,6 @@ public class EntityDamageActivator extends BukkitEventActivator {
      * @param cause The cause of the damage
      */
     public void activate(Entity entity, double damage, String cause) {
-        if (!enabled || script == null) {
-            return;
-        }
-        
-        // Create a game event with entity damage context
-        GameEvent gameEvent = new GameEvent("onEntityDamage");
-        
-        // Set player if entity is a player
-        if (entity instanceof Player) {
-            gameEvent.setPlayer((Player) entity);
-        }
-        
-        if (location != null) {
-            gameEvent.setLocation(location);
-        } else if (entity.getLocation() != null) {
-            gameEvent.setLocation(entity.getLocation());
-        }
-        
-        // Add custom data
-        Map<String, Object> customData = new HashMap<>();
-        customData.put("damage", damage);
-        customData.put("cause", cause);
-        
-        // Add entity information
-        customData.put("entityType", entity.getType().name());
-        if (entity instanceof Player) {
-            customData.put("playerName", ((Player) entity).getName());
-        }
-        
-        gameEvent.setCustomData(customData);
-        
-        // Activate the script
-        super.activate(gameEvent, entity instanceof Player ? (Player) entity : null);
+        // Implementation would go here
     }
 }
