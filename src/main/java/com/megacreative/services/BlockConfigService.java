@@ -617,7 +617,11 @@ public class BlockConfigService {
             // Lade Strukturkonfiguration, wenn Block ein Konstruktor ist
             if (isConstructor && section.contains("structure")) {
                 ConfigurationSection structureSection = section.getConfigurationSection("structure");
-                this.structure = new StructureConfig(structureSection);
+                if (structureSection != null) {
+                    this.structure = new StructureConfig(structureSection);
+                } else {
+                    this.structure = null;
+                }
             } else {
                 this.structure = null;
             }

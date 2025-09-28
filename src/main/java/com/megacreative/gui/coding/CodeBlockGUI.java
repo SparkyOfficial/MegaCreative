@@ -52,9 +52,10 @@ public class CodeBlockGUI implements GUIManager.ManagedGUIInterface {
 
     // 🎆 Улучшенные возможности
     private boolean hasUnsavedChanges = false;
-    private final Map<Integer, String> slotValidationErrors = new HashMap<>();
-    private final Map<Integer, Boolean> slotValidationStatus = new HashMap<>();
-    private final Map<Integer, String> slotCurrentValues = new HashMap<>();
+    // Removed unused collections that were never queried:
+    // private final Map<Integer, String> slotValidationErrors = new HashMap<>();
+    // private final Map<Integer, Boolean> slotValidationStatus = new HashMap<>();
+    // private final Map<Integer, String> slotCurrentValues = new HashMap<>();
     private final Map<String, String> blockParameters = new HashMap<>();
 
     // 🎆 Цветовая схема для разных типов блоков
@@ -170,12 +171,15 @@ public class CodeBlockGUI implements GUIManager.ManagedGUIInterface {
             var actionConfig = actionConfigurations.getConfigurationSection(blockId);
             if (actionConfig != null && actionConfig.contains("slots")) {
                 // Подсчитываем количество слотов в конфигурации
-                Set<String> slotKeys = actionConfig.getConfigurationSection("slots").getKeys(false);
-                int maxSlots = slotKeys.stream().mapToInt(Integer::parseInt).max().orElse(0);
+                var slotsSection = actionConfig.getConfigurationSection("slots");
+                if (slotsSection != null) {
+                    Set<String> slotKeys = slotsSection.getKeys(false);
+                    int maxSlots = slotKeys.stream().mapToInt(Integer::parseInt).max().orElse(0);
 
-                // Рассчитываем размер инвентаря (кратно 9, минимум 27, максимум 54)
-                int requiredRows = (int) Math.ceil((maxSlots + 10) / 9.0); // +10 для заголовка и кнопок
-                return Math.max(27, Math.min(54, requiredRows * 9));
+                    // Рассчитываем размер инвентаря (кратно 9, минимум 27, максимум 54)
+                    int requiredRows = (int) Math.ceil((maxSlots + 10) / 9.0); // +10 для заголовка и кнопок
+                    return Math.max(27, Math.min(54, requiredRows * 9));
+                }
             }
         }
 
@@ -268,18 +272,20 @@ public class CodeBlockGUI implements GUIManager.ManagedGUIInterface {
         // Проверяем наличие секции slots
         if (actionConfig.contains("slots")) {
             var slotsSection = actionConfig.getConfigurationSection("slots");
-            Set<String> slotKeys = slotsSection.getKeys(false);
+            if (slotsSection != null) {
+                Set<String> slotKeys = slotsSection.getKeys(false);
 
-            for (String slotKey : slotKeys) {
-                try {
-                    int slot = Integer.parseInt(slotKey);
-                    var slotConfig = slotsSection.getConfigurationSection(slotKey);
+                for (String slotKey : slotKeys) {
+                    try {
+                        int slot = Integer.parseInt(slotKey);
+                        var slotConfig = slotsSection.getConfigurationSection(slotKey);
 
-                    if (slotConfig != null) {
-                        createSlotItem(slot, slotConfig);
+                        if (slotConfig != null) {
+                            createSlotItem(slot, slotConfig);
+                        }
+                    } catch (NumberFormatException e) {
+                        player.sendMessage("§cОшибка: Неверный номер слота: " + slotKey);
                     }
-                } catch (NumberFormatException e) {
-                    player.sendMessage("§cОшибка: Неверный номер слота: " + slotKey);
                 }
             }
         } else {
@@ -325,10 +331,7 @@ public class CodeBlockGUI implements GUIManager.ManagedGUIInterface {
 
         inventory.setItem(slot, slotItem);
 
-        // Сохраняем информацию о слоте для валидации
-        slotValidationErrors.put(slot, "");
-        slotValidationStatus.put(slot, true);
-        slotCurrentValues.put(slot, "");
+        // Removed unused slot validation maps that were never queried
     }
 
     /**

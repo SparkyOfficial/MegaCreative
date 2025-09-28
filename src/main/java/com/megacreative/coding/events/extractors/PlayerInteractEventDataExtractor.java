@@ -98,8 +98,8 @@ public class PlayerInteractEventDataExtractor extends AbstractEventDataExtractor
                 item.getItemMeta().getDisplayName() : 
                 item.getType().name()));
             data.put("itemLore", DataValue.fromObject(
-                item.hasItemMeta() && item.getItemMeta().hasLore() ? 
-                String.join("\\n", item.getItemMeta().getLore()) : 
+                item.hasItemMeta() ? 
+                (item.getItemMeta().hasLore() ? String.join("\\n", item.getItemMeta().getLore()) : "") :
                 ""));
         } else {
             // Set default values for when no item is held

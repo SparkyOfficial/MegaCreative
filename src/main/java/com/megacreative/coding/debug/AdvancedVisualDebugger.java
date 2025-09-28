@@ -43,7 +43,7 @@ public class AdvancedVisualDebugger {
     private final Map<UUID, VisualizationSession> visualizationSessions = new ConcurrentHashMap<>();
     private final Map<UUID, PerformanceAnalyzer> performanceAnalyzers = new ConcurrentHashMap<>();
     private final Map<UUID, BreakpointManager> breakpointManagers = new ConcurrentHashMap<>();
-    private final Map<Location, Breakpoint> globalBreakpoints = new ConcurrentHashMap<>();
+    // Removed unused globalBreakpoints collection
     
     public AdvancedVisualDebugger(MegaCreative plugin, VisualDebugger basicDebugger) {
         this.plugin = plugin;
@@ -89,17 +89,13 @@ public class AdvancedVisualDebugger {
         private final Player player;
         private final CodeScript script;
         private final VisualizationMode mode;
-        private final Map<Location, VisualizationState> blockStates = new HashMap<>();
+        // Removed unused collections: blockStates, executionHistory, activeBreakpoints, watchExpressions, metadata
         private boolean active = true;
         private long startTime;
         private long lastUpdate;
         private int currentStep = 0;
-        private final List<Object> executionHistory = new ArrayList<>();
-        private final Set<UUID> activeBreakpoints = new HashSet<>();
         private boolean paused = false;
         private int executionSpeed = 1; // 1x speed by default
-        private final Map<String, DataValue> watchExpressions = new HashMap<>();
-        private final Map<String, Object> metadata = new HashMap<>();
         private CodeBlock currentBlock; // Current block being executed
         private Location currentLocation; // Location of current block
         private CompletableFuture<Void> executionFuture; // Future for async execution
@@ -126,9 +122,7 @@ public class AdvancedVisualDebugger {
         public UUID getSessionId() { return sessionId; }
         public Player getPlayer() { return player; }
         public CodeScript getScript() { return script; }
-        public Map<Location, VisualizationState> getBlockStates() { 
-            return new HashMap<>(blockStates); 
-        }
+        // Removed getBlockStates method
         public boolean isActive() { return active; }
         public void setActive(boolean active) { this.active = active; }
         public long getStartTime() { return startTime; }
@@ -137,23 +131,14 @@ public class AdvancedVisualDebugger {
         public void setLastUpdate(long lastUpdate) { this.lastUpdate = lastUpdate; }
         public int getCurrentStep() { return currentStep; }
         public void setCurrentStep(int currentStep) { this.currentStep = currentStep; }
-        @SuppressWarnings("unchecked")
-        public List<ExecutionStep> getExecutionHistory() {
-            List<ExecutionStep> result = new ArrayList<>();
-            for (Object item : executionHistory) {
-                if (item instanceof ExecutionStep) {
-                    result.add((ExecutionStep) item);
-                }
-            }
-            return result;
-        }
-        public Set<UUID> getActiveBreakpoints() { return new HashSet<>(activeBreakpoints); }
+        // Removed getExecutionHistory method
+        // Removed getActiveBreakpoints method
         public boolean isPaused() { return paused; }
         public void setPaused(boolean paused) { this.paused = paused; }
         public int getExecutionSpeed() { return executionSpeed; }
         public void setExecutionSpeed(int executionSpeed) { this.executionSpeed = executionSpeed; }
-        public Map<String, DataValue> getWatchExpressions() { return new HashMap<>(watchExpressions); }
-        public Map<String, Object> getMetadata() { return new HashMap<>(metadata); }
+        // Removed getWatchExpressions method
+        // Removed getMetadata method
         public CodeBlock getCurrentBlock() { return currentBlock; }
         public void setCurrentBlock(CodeBlock currentBlock) { this.currentBlock = currentBlock; }
         public Location getCurrentLocation() { return currentLocation; }
@@ -211,9 +196,6 @@ public class AdvancedVisualDebugger {
         private final Player player;
         private final CodeScript script;
         private final Map<String, ExecutionRecord> executionRecords = new HashMap<>();
-        private final Map<String, Long> executionTimes = new HashMap<>();
-        private final Map<String, Integer> executionCounts = new HashMap<>();
-        private final Map<String, Map<CodeBlock, Integer>> blockExecutionCounts = new HashMap<>();
         private long startTime;
         private long totalExecutionTime = 0;
         private int totalExecutions = 0;
@@ -233,13 +215,6 @@ public class AdvancedVisualDebugger {
         public int getTotalExecutions() { return executionRecords.size(); }
         public long getTotalExecutionTime() { return totalExecutionTime; }
         public List<ExecutionRecord> getExecutionRecords() { return new ArrayList<>(executionRecords.values()); }
-        public Map<String, Long> getExecutionTimes() { return new HashMap<>(executionTimes); }
-        public Map<String, Integer> getExecutionCounts() { return new HashMap<>(executionCounts); }
-        public Map<String, Map<CodeBlock, Integer>> getBlockExecutionCounts() { 
-            Map<String, Map<CodeBlock, Integer>> copy = new HashMap<>();
-            blockExecutionCounts.forEach((k, v) -> copy.put(k, new HashMap<>(v)));
-            return copy;
-        }
         public long getStartTime() { return startTime; }
         public void setStartTime(long startTime) { this.startTime = startTime; }
         public boolean isActive() { return isActive; }
@@ -427,7 +402,7 @@ public class AdvancedVisualDebugger {
      */
     public static class BreakpointManager {
         private final Map<Location, Breakpoint> breakpoints = new ConcurrentHashMap<>();
-        private final Map<String, Object> breakpointData = new ConcurrentHashMap<>();
+        // Removed unused breakpointData collection
         
         public void addBreakpoint(Breakpoint breakpoint) {
             breakpoints.put(breakpoint.getLocation(), breakpoint);
@@ -449,17 +424,7 @@ public class AdvancedVisualDebugger {
             return breakpoints.containsKey(location);
         }
         
-        public void setBreakpointData(String key, Object data) {
-            breakpointData.put(key, data);
-        }
-        
-        public Object getBreakpointData(String key) {
-            return breakpointData.get(key);
-        }
-        
-        public void removeBreakpointData(String key) {
-            breakpointData.remove(key);
-        }
+        // Removed unused breakpoint data methods
     }
     
     // Visualization session management
@@ -501,7 +466,7 @@ public class AdvancedVisualDebugger {
         
         Breakpoint breakpoint = new Breakpoint(location, condition);
         manager.addBreakpoint(breakpoint);
-        globalBreakpoints.put(location, breakpoint);
+        // Removed unused globalBreakpoints.put(location, breakpoint);
         
         player.sendMessage("§a✓ Breakpoint set at " + formatLocation(location));
         if (condition != null && !condition.isEmpty()) {
@@ -518,7 +483,7 @@ public class AdvancedVisualDebugger {
         BreakpointManager manager = breakpointManagers.get(player.getUniqueId());
         if (manager != null) {
             if (manager.removeBreakpoint(location)) {
-                globalBreakpoints.remove(location);
+                // Removed unused globalBreakpoints.remove(location);
                 player.sendMessage("§a✓ Breakpoint removed at " + formatLocation(location));
             } else {
                 player.sendMessage("§cNo breakpoint found at " + formatLocation(location));
@@ -676,7 +641,7 @@ public class AdvancedVisualDebugger {
         visualizationSessions.clear();
         performanceAnalyzers.clear();
         breakpointManagers.clear();
-        globalBreakpoints.clear();
+        // Removed unused globalBreakpoints.clear();
     }
     
     // Private helper methods

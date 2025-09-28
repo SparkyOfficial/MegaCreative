@@ -40,10 +40,13 @@ public class ConfigBasedActionFactory implements IActionFactory {
             
             // Load action class mappings
             if (config.contains("actions")) {
-                for (String actionId : config.getConfigurationSection("actions").getKeys(false)) {
-                    String className = config.getString("actions." + actionId);
-                    if (className != null && !className.isEmpty()) {
-                        registerActionClass(actionId, className);
+                var actionsSection = config.getConfigurationSection("actions");
+                if (actionsSection != null) {
+                    for (String actionId : actionsSection.getKeys(false)) {
+                        String className = config.getString("actions." + actionId);
+                        if (className != null && !className.isEmpty()) {
+                            registerActionClass(actionId, className);
+                        }
                     }
                 }
             }

@@ -68,15 +68,16 @@ public class DivVarAction implements BlockAction {
             
             // Try to get the variable from different scopes
             DataValue currentVar = null;
-            String scopeContext = null;
             VariableManager.VariableScope scope = null;
             
             // First try player variables
             if (player != null) {
-                currentVar = variableManager.getPlayerVariable(player.getUniqueId(), varName);
-                if (currentVar != null) {
-                    scope = VariableManager.VariableScope.PLAYER;
-                    scopeContext = player.getUniqueId().toString();
+                java.util.UUID playerUUID = player.getUniqueId();
+                if (playerUUID != null) {
+                    currentVar = variableManager.getPlayerVariable(playerUUID, varName);
+                    if (currentVar != null) {
+                        scope = VariableManager.VariableScope.PLAYER;
+                    }
                 }
             }
             
@@ -85,7 +86,6 @@ public class DivVarAction implements BlockAction {
                 currentVar = variableManager.getLocalVariable(context.getScriptId(), varName);
                 if (currentVar != null) {
                     scope = VariableManager.VariableScope.LOCAL;
-                    scopeContext = context.getScriptId();
                 }
             }
             
@@ -94,7 +94,6 @@ public class DivVarAction implements BlockAction {
                 currentVar = variableManager.getGlobalVariable(varName);
                 if (currentVar != null) {
                     scope = VariableManager.VariableScope.GLOBAL;
-                    scopeContext = "global";
                 }
             }
             
@@ -103,7 +102,6 @@ public class DivVarAction implements BlockAction {
                 currentVar = variableManager.getServerVariable(varName);
                 if (currentVar != null) {
                     scope = VariableManager.VariableScope.SERVER;
-                    scopeContext = "server";
                 }
             }
             
@@ -125,7 +123,12 @@ public class DivVarAction implements BlockAction {
             DataValue newValueData = DataValue.of(newValue);
             switch (scope) {
                 case PLAYER:
-                    variableManager.setPlayerVariable(player.getUniqueId(), varName, newValueData);
+                    if (player != null) {
+                        java.util.UUID playerUUID = player.getUniqueId();
+                        if (playerUUID != null) {
+                            variableManager.setPlayerVariable(playerUUID, varName, newValueData);
+                        }
+                    }
                     break;
                 case LOCAL:
                     variableManager.setLocalVariable(context.getScriptId(), varName, newValueData);
@@ -227,7 +230,7 @@ public class DivVarAction implements BlockAction {
      * Helper class to hold variable parameters
      */
     private static class DivVarParams {
-        String nameStr = "";
-        String valueStr = "";
+        String nameStr;
+        String valueStr;
     }
 }

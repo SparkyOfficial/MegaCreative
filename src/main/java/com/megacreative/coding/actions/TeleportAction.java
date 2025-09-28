@@ -14,6 +14,7 @@ import org.bukkit.entity.Player;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.inventory.meta.ItemMeta;
 
+import java.util.List; // Added import
 import java.util.function.Function;
 
 /**
@@ -133,30 +134,33 @@ public class TeleportAction implements BlockAction {
             
             // Check lore for location data
             if (meta.hasLore()) {
-                for (String line : meta.getLore()) {
-                    String cleanLine = org.bukkit.ChatColor.stripColor(line).trim();
-                    if (cleanLine.startsWith("Location:") || cleanLine.startsWith("Loc:")) {
-                        String locationPart = cleanLine.substring(cleanLine.indexOf(":") + 1).trim();
-                        String[] parts = locationPart.split(",");
-                        
-                        try {
-                            if (parts.length >= 3) {
-                                double x = Double.parseDouble(parts[0].trim());
-                                double y = Double.parseDouble(parts[1].trim());
-                                double z = Double.parseDouble(parts[2].trim());
-                                
-                                World world = context.getPlayer().getWorld();
-                                if (parts.length >= 4) {
-                                    World targetWorld = org.bukkit.Bukkit.getWorld(parts[3].trim());
-                                    if (targetWorld != null) {
-                                        world = targetWorld;
+                List<String> lore = meta.getLore();
+                if (lore != null) {
+                    for (String line : lore) {
+                        String cleanLine = org.bukkit.ChatColor.stripColor(line).trim();
+                        if (cleanLine.startsWith("Location:") || cleanLine.startsWith("Loc:")) {
+                            String locationPart = cleanLine.substring(cleanLine.indexOf(":") + 1).trim();
+                            String[] parts = locationPart.split(",");
+                            
+                            try {
+                                if (parts.length >= 3) {
+                                    double x = Double.parseDouble(parts[0].trim());
+                                    double y = Double.parseDouble(parts[1].trim());
+                                    double z = Double.parseDouble(parts[2].trim());
+                                    
+                                    World world = context.getPlayer().getWorld();
+                                    if (parts.length >= 4) {
+                                        World targetWorld = org.bukkit.Bukkit.getWorld(parts[3].trim());
+                                        if (targetWorld != null) {
+                                            world = targetWorld;
+                                        }
                                     }
+                                    
+                                    return new Location(world, x, y, z);
                                 }
-                                
-                                return new Location(world, x, y, z);
+                            } catch (NumberFormatException e) {
+                                // Continue to next lore line
                             }
-                        } catch (NumberFormatException e) {
-                            // Continue to next lore line
                         }
                     }
                 }

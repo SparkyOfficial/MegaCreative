@@ -44,7 +44,13 @@ public class IsRidingCondition implements BlockCondition {
                 
                 try {
                     EntityType entityType = EntityType.valueOf(resolvedEntityStr.toUpperCase());
-                    return player.isInsideVehicle() && player.getVehicle().getType() == entityType;
+                    if (player.isInsideVehicle()) {
+                        org.bukkit.entity.Entity vehicle = player.getVehicle();
+                        if (vehicle != null) {
+                            return vehicle.getType() == entityType;
+                        }
+                    }
+                    return false;
                 } catch (IllegalArgumentException e) {
                     return false;
                 }

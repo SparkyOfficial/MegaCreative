@@ -604,6 +604,8 @@ public class BlockConfigManager implements Listener {
      */
     private DataValue extractValueFromParameterItem(ItemStack item, List<String> lore) {
         // Look for "Value: " line in lore
+        if (lore == null) return new TextValue(item.getType().name().toLowerCase());
+        
         for (String line : lore) {
             String cleanLine = line.replaceAll("§[0-9a-fk-or]", "");
             if (cleanLine.startsWith("Value: ")) {
@@ -611,7 +613,7 @@ public class BlockConfigManager implements Listener {
                 
                 // Check type from the previous line
                 int index = lore.indexOf(line);
-                if (index > 0) {
+                if (index > 0 && index - 1 < lore.size()) {
                     String typeLine = lore.get(index - 1).replaceAll("§[0-9a-fk-or]", "");
                     
                     if (typeLine.contains("Number")) {

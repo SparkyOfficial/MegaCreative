@@ -39,10 +39,13 @@ public class ConfigBasedConditionFactory implements IConditionFactory {
             
             // Load condition class mappings
             if (config.contains("conditions")) {
-                for (String conditionId : config.getConfigurationSection("conditions").getKeys(false)) {
-                    String className = config.getString("conditions." + conditionId);
-                    if (className != null && !className.isEmpty()) {
-                        registerConditionClass(conditionId, className);
+                var conditionsSection = config.getConfigurationSection("conditions");
+                if (conditionsSection != null) {
+                    for (String conditionId : conditionsSection.getKeys(false)) {
+                        String className = config.getString("conditions." + conditionId);
+                        if (className != null && !className.isEmpty()) {
+                            registerConditionClass(conditionId, className);
+                        }
                     }
                 }
             }

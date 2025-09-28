@@ -671,7 +671,7 @@ public class WorldManagerImpl implements IWorldManager {
         }
         
         // Сначала убеждаемся, что мир полностью выгружен
-        boolean unloadedMain = true;
+        boolean unloadedMain;
         World bukkitWorld = Bukkit.getWorld(world.getWorldName());
         if (bukkitWorld != null) {
             if (!bukkitWorld.getPlayers().isEmpty()) { // Сначала кикаем игроков, если они там есть.
@@ -683,9 +683,11 @@ public class WorldManagerImpl implements IWorldManager {
                 requester.sendMessage("§cНе удалось полностью выгрузить основной мир. Возможно, требуется перезагрузка сервера.");
                 return; // Не можем удалить файлы, если мир не выгружен
             }
+        } else {
+            unloadedMain = true; // World is already unloaded
         }
 
-        boolean unloadedDev = true;
+        boolean unloadedDev;
         World devWorld = Bukkit.getWorld(world.getDevWorldName());
         if (devWorld != null) {
             if (!devWorld.getPlayers().isEmpty()) { // Кикаем игроков
@@ -697,12 +699,9 @@ public class WorldManagerImpl implements IWorldManager {
                 requester.sendMessage("§cНе удалось полностью выгрузить мир разработки. Возможно, требуется перезагрузка сервера.");
                 return; // Не можем удалить файлы, если мир не выгружен
             }
+        } else {
+            unloadedDev = true; // World is already unloaded
         }
-
-        // 🔧 FIX: Condition !unloadedMain || !unloadedDev is always false
-        // 🔧 ИСПРАВЛЕНИЕ: Условие !unloadedMain || !unloadedDev всегда ложно
-        // 🔧 FIX: Bedingung !unloadedMain || !unloadedDev ist immer falsch
-        // Removed unnecessary condition check as it's always false
 
         // Удаление из памяти
         worlds.remove(worldId);
@@ -989,18 +988,26 @@ public class WorldManagerImpl implements IWorldManager {
             } else {
                 // Set appropriate world type
                 switch (world.getWorldType()) {
-                    case FLAT -> {
+                    case FLAT:
                         creator.type(WorldType.FLAT);
                         creator.generatorSettings("{\"layers\":[{\"block\":\"bedrock\",\"height\":1},{\"block\":\"stone\",\"height\":2},{\"block\":\"grass_block\",\"height\":1}],\"biome\":\"plains\"}");
-                    }
-                    case VOID -> {
+                        break;
+                    case VOID:
                         creator.type(WorldType.FLAT);
                         creator.generatorSettings("{\"layers\":[{\"block\":\"air\",\"height\":1}],\"biome\":\"plains\"}");
-                    }
-                    case OCEAN -> creator.type(WorldType.NORMAL);
-                    case NETHER -> creator.environment(World.Environment.NETHER);
-                    case END -> creator.environment(World.Environment.THE_END);
-                    default -> creator.type(WorldType.NORMAL);
+                        break;
+                    case OCEAN:
+                        creator.type(WorldType.NORMAL);
+                        break;
+                    case NETHER:
+                        creator.environment(World.Environment.NETHER);
+                        break;
+                    case END:
+                        creator.environment(World.Environment.THE_END);
+                        break;
+                    default:
+                        creator.type(WorldType.NORMAL);
+                        break;
                 }
             }
             bukkitWorld = Bukkit.createWorld(creator);
@@ -1088,18 +1095,26 @@ public class WorldManagerImpl implements IWorldManager {
             
             // Set appropriate world type
             switch (world.getWorldType()) {
-                case FLAT -> {
+                case FLAT:
                     creator.type(WorldType.FLAT);
                     creator.generatorSettings("{\"layers\":[{\"block\":\"bedrock\",\"height\":1},{\"block\":\"stone\",\"height\":2},{\"block\":\"grass_block\",\"height\":1}],\"biome\":\"plains\"}");
-                }
-                case VOID -> {
+                    break;
+                case VOID:
                     creator.type(WorldType.FLAT);
                     creator.generatorSettings("{\"layers\":[{\"block\":\"air\",\"height\":1}],\"biome\":\"plains\"}");
-                }
-                case OCEAN -> creator.type(WorldType.NORMAL);
-                case NETHER -> creator.environment(World.Environment.NETHER);
-                case END -> creator.environment(World.Environment.THE_END);
-                default -> creator.type(WorldType.NORMAL);
+                    break;
+                case OCEAN:
+                    creator.type(WorldType.NORMAL);
+                    break;
+                case NETHER:
+                    creator.environment(World.Environment.NETHER);
+                    break;
+                case END:
+                    creator.environment(World.Environment.THE_END);
+                    break;
+                default:
+                    creator.type(WorldType.NORMAL);
+                    break;
             }
             
             bukkitWorld = Bukkit.createWorld(creator);
@@ -1126,33 +1141,6 @@ public class WorldManagerImpl implements IWorldManager {
         return publicWorlds;
     }
     
-    /**
-     * Gets all worlds owned by a player
-     * @param player The player
-     * @return List of player's creative worlds
-     */
-    @Override
-    public List<CreativeWorld> getPlayerWorlds(Player player) {
-        List<CreativeWorld> playerWorldsList = new ArrayList<>();
-        List<String> playerWorldIds = playerWorlds.get(player.getUniqueId());
-        
-        if (playerWorldIds != null) {
-            for (String worldId : playerWorldIds) {
-                CreativeWorld world = worlds.get(worldId);
-                if (world != null) {
-                    playerWorldsList.add(world);
-                }
-            }
-        }
-        
-        return playerWorldsList;
-    }
-    
-    /**
-     * Finds a creative world by its name
-     * @param name The world name
-     * @return The creative world or null if not found
-     */
     @Override
     public CreativeWorld getWorldByName(String name) {
         for (CreativeWorld world : worlds.values()) {
@@ -1163,39 +1151,43 @@ public class WorldManagerImpl implements IWorldManager {
         return null;
     }
     
-    /**
-     * Finds a creative world by its Bukkit world
-     * @param bukkitWorld The Bukkit world
-     * @return The creative world or null if not found
-     */
     @Override
     public CreativeWorld findCreativeWorldByBukkit(World bukkitWorld) {
         if (bukkitWorld == null) return null;
         
         String worldName = bukkitWorld.getName();
         for (CreativeWorld world : worlds.values()) {
-            if (world.getWorldName().equals(worldName) || 
-                world.getDevWorldName().equals(worldName) || 
-                world.getPlayWorldName().equals(worldName)) {
+            if (world.getWorldName().equals(worldName) || world.getDevWorldName().equals(worldName)) {
                 return world;
             }
         }
         return null;
     }
     
-    /**
-     * Shuts down the world manager
-     * Saves all worlds and cleans up resources
-     */
     @Override
-    public void shutdown() {
-        try {
-            saveAllWorlds();
-            // Clean up any resources if needed
-        } catch (Exception e) {
-            if (plugin != null) {
-                plugin.getLogger().severe("Error during WorldManager shutdown: " + e.getMessage());
+    public List<CreativeWorld> getPlayerWorlds(Player player) {
+        if (player == null) return new ArrayList<>();
+        
+        List<String> worldIds = playerWorlds.get(player.getUniqueId());
+        if (worldIds == null) return new ArrayList<>();
+        
+        List<CreativeWorld> playerWorldsList = new ArrayList<>();
+        for (String worldId : worldIds) {
+            CreativeWorld world = worlds.get(worldId);
+            if (world != null) {
+                playerWorldsList.add(world);
             }
         }
+        return playerWorldsList;
+    }
+    
+    @Override
+    public void shutdown() {
+        // Save all worlds before shutdown
+        saveAllWorlds();
+        
+        // Clear all collections
+        worlds.clear();
+        playerWorlds.clear();
     }
 }

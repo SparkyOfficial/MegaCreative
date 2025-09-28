@@ -517,48 +517,50 @@ public class ActionParameterGUI implements GUIManager.ManagedGUIInterface {
                 var slotConfig = slotsConfig.getConfigurationSection(slotKey);
                 
                 // Check for dependency conditions
-                String dependencyCondition = slotConfig.getString("dependency");
-                if (dependencyCondition != null) {
-                    String[] parts = dependencyCondition.split(" ");
-                    if (parts.length == 3) {
-                        String dependencySlotName = parts[0];
-                        String operator = parts[1];
-                        String expectedValue = parts[2];
-                        boolean isNotEqual = operator.equals("!=");
-                        
-                        // Find the dependency slot number
-                        Integer dependencySlot = findSlotNumberByName(dependencySlotName);
-                        if (dependencySlot != null) {
-                            // Adjust dependency slot for larger inventory
-                            int adjustedDependencySlot = dependencySlot + 9; // Start from row 2
-                            String currentValue = slotCurrentValues.get(adjustedDependencySlot);
+                if (slotConfig != null) {
+                    String dependencyCondition = slotConfig.getString("dependency");
+                    if (dependencyCondition != null) {
+                        String[] parts = dependencyCondition.split(" ");
+                        if (parts.length == 3) {
+                            String dependencySlotName = parts[0];
+                            String operator = parts[1];
+                            String expectedValue = parts[2];
+                            boolean isNotEqual = operator.equals("!=");
                             
-                            // Check if dependency condition is met
-                            boolean conditionMet = false;
-                            if (currentValue != null) {
-                                if (isNotEqual) {
-                                    conditionMet = !currentValue.equals(expectedValue);
-                                } else {
-                                    conditionMet = currentValue.equals(expectedValue);
+                            // Find the dependency slot number
+                            Integer dependencySlot = findSlotNumberByName(dependencySlotName);
+                            if (dependencySlot != null) {
+                                // Adjust dependency slot for larger inventory
+                                int adjustedDependencySlot = dependencySlot + 9; // Start from row 2
+                                String currentValue = slotCurrentValues.get(adjustedDependencySlot);
+                                
+                                // Check if dependency condition is met
+                                boolean conditionMet = false;
+                                if (currentValue != null) {
+                                    if (isNotEqual) {
+                                        conditionMet = !currentValue.equals(expectedValue);
+                                    } else {
+                                        conditionMet = currentValue.equals(expectedValue);
+                                    }
                                 }
-                            }
-                            
-                            // If condition is not met, mark dependent slot as invalid
-                            if (!conditionMet) {
-                                String error = "Доступно только если " + dependencySlotName + 
-                                    (isNotEqual ? " ≠ " : " = ") + expectedValue;
-                                slotValidationErrors.put(adjustedSlot, error);
-                                slotValidationStatus.put(adjustedSlot, false);
-                                updateSlotVisualFeedback(adjustedSlot, false, error);
-                            } else {
-                                // Re-validate the slot since dependency condition is now met
-                                ItemStack item = inventory.getItem(adjustedSlot);
-                                if (item != null && !item.getType().isAir()) {
-                                    String newError = validateItemForSlot(adjustedSlot, item);
-                                    boolean newValid = (newError == null);
-                                    slotValidationErrors.put(adjustedSlot, newError);
-                                    slotValidationStatus.put(adjustedSlot, newValid);
-                                    updateSlotVisualFeedback(adjustedSlot, newValid, newError);
+                                
+                                // If condition is not met, mark dependent slot as invalid
+                                if (!conditionMet) {
+                                    String error = "Доступно только если " + dependencySlotName + 
+                                        (isNotEqual ? " ≠ " : " = ") + expectedValue;
+                                    slotValidationErrors.put(adjustedSlot, error);
+                                    slotValidationStatus.put(adjustedSlot, false);
+                                    updateSlotVisualFeedback(adjustedSlot, false, error);
+                                } else {
+                                    // Re-validate the slot since dependency condition is now met
+                                    ItemStack item = inventory.getItem(adjustedSlot);
+                                    if (item != null && !item.getType().isAir()) {
+                                        String newError = validateItemForSlot(adjustedSlot, item);
+                                        boolean newValid = (newError == null);
+                                        slotValidationErrors.put(adjustedSlot, newError);
+                                        slotValidationStatus.put(adjustedSlot, newValid);
+                                        updateSlotVisualFeedback(adjustedSlot, newValid, newError);
+                                    }
                                 }
                             }
                         }

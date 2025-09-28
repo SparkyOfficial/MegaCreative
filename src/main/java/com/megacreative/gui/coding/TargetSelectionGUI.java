@@ -410,30 +410,32 @@ public class TargetSelectionGUI implements GUIManager.ManagedGUIInterface {
         
         // Handle category inventory clicks
         if (inventory.getSize() == 54 && inventory.getItem(49) != null && 
-            inventory.getItem(49).hasItemMeta() && 
-            inventory.getItem(49).getItemMeta().getDisplayName().equals("§c⬅ Назад")) {
+            inventory.getItem(49).hasItemMeta()) {
+            ItemMeta backMeta = inventory.getItem(49).getItemMeta();
+            if (backMeta != null && backMeta.getDisplayName().equals("§c⬅ Назад")) {
             
-            // This is a category inventory, handle back button
-            if (slot == 49) {
-                // Reopen main inventory
-                player.closeInventory();
-                Bukkit.getScheduler().runTaskLater(plugin, this::open, 1L);
+                // This is a category inventory, handle back button
+                if (slot == 49) {
+                    // Reopen main inventory
+                    player.closeInventory();
+                    Bukkit.getScheduler().runTaskLater(plugin, this::open, 1L);
+                    return;
+                }
+                
+                // Find target ID in lore
+                String targetId = null;
+                for (String line : lore) {
+                    if (line.startsWith("§8ID: ")) {
+                        targetId = line.substring(6); // Remove "§8ID: " prefix
+                        break;
+                    }
+                }
+                
+                if (targetId != null) {
+                    selectTarget(targetId);
+                }
                 return;
             }
-            
-            // Find target ID in lore
-            String targetId = null;
-            for (String line : lore) {
-                if (line.startsWith("§8ID: ")) {
-                    targetId = line.substring(6); // Remove "§8ID: " prefix
-                    break;
-                }
-            }
-            
-            if (targetId != null) {
-                selectTarget(targetId);
-            }
-            return;
         }
         
         // Find target ID in lore for main inventory

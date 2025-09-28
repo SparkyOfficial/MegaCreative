@@ -73,7 +73,7 @@ public class EconomyTransactionAction implements BlockAction {
             }
 
             // Выполняем запрошенную операцию
-            String operation = params.operation().toLowerCase();
+            String operation = params.operation() != null ? params.operation().toLowerCase() : "";
             return switch (operation) {
                 case OP_GIVE -> executeGive(economy, player, params.amount(), params.target());
                 case OP_TAKE -> executeTake(economy, player, params.amount(), params.target());

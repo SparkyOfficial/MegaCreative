@@ -18,8 +18,9 @@ import java.util.jar.JarFile;
  */
 public class BlockScanner {
     // private static final Logger log = Logger.getLogger(BlockScanner.class.getName());  // Removed logger declaration
-    private final Map<String, Class<? extends BlockAction>> actionClasses = new HashMap<>();
-    private final Map<String, Class<? extends BlockCondition>> conditionClasses = new HashMap<>();
+    // Removed unused collections that were never queried:
+    // private final Map<String, Class<? extends BlockAction>> actionClasses = new HashMap<>();
+    // private final Map<String, Class<? extends BlockCondition>> conditionClasses = new HashMap<>();
     
     /**
      * Scans packages for annotated block classes
@@ -117,12 +118,14 @@ public class BlockScanner {
                 if (annotation.type() == BlockType.ACTION && BlockAction.class.isAssignableFrom(clazz)) {
                     @SuppressWarnings("unchecked")
                     Class<? extends BlockAction> actionClass = (Class<? extends BlockAction>) clazz;
-                    actionClasses.put(annotation.id(), actionClass);
+                    // Removed unused actionClasses map
+                    // actionClasses.put(annotation.id(), actionClass);
                     // Removed log statement
                 } else if (annotation.type() == BlockType.CONDITION && BlockCondition.class.isAssignableFrom(clazz)) {
                     @SuppressWarnings("unchecked")
                     Class<? extends BlockCondition> conditionClass = (Class<? extends BlockCondition>) clazz;
-                    conditionClasses.put(annotation.id(), conditionClass);
+                    // Removed unused conditionClasses map
+                    // conditionClasses.put(annotation.id(), conditionClass);
                     // Removed log statement
                 }
             }
