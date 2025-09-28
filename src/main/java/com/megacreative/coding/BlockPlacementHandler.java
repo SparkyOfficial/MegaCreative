@@ -136,6 +136,7 @@ public class BlockPlacementHandler implements Listener {
 
         // 1. Сохраняем созданный блок
         blockCodeBlocks.put(block.getLocation(), newCodeBlock);
+        player.sendMessage("§a[DEBUG] Создан блок: " + newCodeBlock.toString() + " в " + block.getLocation());
         
         // 2. Создаем табличку для визуализации
         createSignForBlock(block.getLocation(), newCodeBlock);
@@ -169,6 +170,7 @@ public class BlockPlacementHandler implements Listener {
         // Если по этому адресу был наш CodeBlock...
         if (blockCodeBlocks.containsKey(loc)) {
             CodeBlock removedBlock = blockCodeBlocks.remove(loc);
+            player.sendMessage("§c[DEBUG] Удален блок: " + removedBlock.toString() + " из " + loc);
             
             // 1. Удаляем табличку
             removeSignFromBlock(loc);
@@ -259,29 +261,67 @@ public class BlockPlacementHandler implements Listener {
             return;
         }
         
-        // --- НОВАЯ, УПРОЩЕННАЯ ЛОГИКА ---
-        
+        // --- НОВАЯ УНИВЕРСАЛЬНАЯ ЛОГИКА ---
+
         String blockId = getBlockIdentifier(codeBlock);
-        
-        // Получаем наш реестр
-        if (plugin == null || plugin.getServiceRegistry() == null) {
-            player.sendMessage("§cError: Service registry not available!");
-            return;
-        }
-        
-        GUIRegistry guiRegistry = plugin.getServiceRegistry().getGuiRegistry();
-        if (guiRegistry == null) {
-            player.sendMessage("§cError: GUIRegistry not found!");
-            return;
-        }
-        
-        // Пытаемся открыть специализированный редактор
-        boolean opened = guiRegistry.open(blockId, plugin, player, codeBlock);
-        
-        // Если для блока еще не задано действие ИЛИ не нашлось редактора,
-        // открываем GUI выбора действия.
-        if (!opened) {
+
+        // Если блок еще не настроен, открываем выбор действия
+        if (blockId == null || blockId.equals("NOT_SET")) {
             new ActionSelectionGUI(plugin, player, location, codeBlock.getMaterial()).open();
+            return;
+        }
+
+        // Определяем тип блока для универсального GUI
+        String blockType = determineBlockType(codeBlock, blockId);
+
+        // Открываем универсальный GUI для настройки параметров
+        CodeBlockGUI parameterGUI = new CodeBlockGUI(plugin, player, location, blockId, blockType);
+        parameterGUI.open();
+    }
+    
+    /**
+     * Определяет тип блока для универсального GUI
+     * @param codeBlock Блок кода
+     * @param blockId ID блока
+     * @return Тип блока (EVENT, ACTION, CONDITION, CONTROL, FUNCTION, VARIABLE)
+     */
+    private String determineBlockType(CodeBlock codeBlock, String blockId) {
+        BlockConfigService configService = getBlockConfigService();
+        if (configService == null) {
+            return "ACTION"; // Fallback
+        }
+
+        BlockConfigService.BlockConfig config = configService.getBlockConfig(blockId);
+        if (config != null) {
+            return config.getType();
+        }
+
+        // Fallback: определяем по материалу блока
+        Material material = codeBlock.getMaterial();
+        switch (material) {
+            case DIAMOND_BLOCK:
+                return "EVENT";
+            case COBBLESTONE:
+                return "ACTION";
+            case OAK_PLANKS:
+                return "CONDITION";
+            case OBSIDIAN:
+                return "CONDITION"; // IF_VARIABLE
+            case REDSTONE_BLOCK:
+                return "CONDITION"; // IF_GAME
+            case BRICKS:
+                return "CONDITION"; // IF_ENTITY
+            case EMERALD_BLOCK:
+                return "CONTROL";   // REPEAT
+            case LAPIS_BLOCK:
+            case BOOKSHELF:
+                return "FUNCTION";
+            case IRON_BLOCK:
+                return "VARIABLE";
+            case END_STONE:
+                return "CONTROL";   // ELSE
+            default:
+                return "ACTION"; // Fallback
         }
     }
     
@@ -295,24 +335,12 @@ public class BlockPlacementHandler implements Listener {
         if (codeBlock.getEvent() != null && !codeBlock.getEvent().equals("NOT_SET")) {
             return codeBlock.getEvent();
         }
-        if (codeBlock.getCondition() != null && !codeBlock.getCondition().equals("NOT_SET")) {
-            return codeBlock.getCondition();
+        // Проверяем условие в параметрах
+        String condition = codeBlock.getParameter("condition");
+        if (condition != null && !condition.equals("NOT_SET")) {
+            return condition;
         }
         return null; // ID не установлен
-    }
-    
-    /**
-     * Toggles bracket type (open/closed) for a code block
-     */
-    private void toggleBracketType(CodeBlock codeBlock, Block block, Player player) {
-        CodeBlock.BracketType newType = codeBlock.getBracketType() == CodeBlock.BracketType.OPEN ? 
-            CodeBlock.BracketType.CLOSE : CodeBlock.BracketType.OPEN;
-        codeBlock.setBracketType(newType);
-        
-        // Update the sign to reflect the new bracket type
-        createSignForBlock(block.getLocation(), codeBlock);
-        
-        player.sendMessage("§aBracket switched to: " + newType.getDisplayName());
     }
     
     /**
