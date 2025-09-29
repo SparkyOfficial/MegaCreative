@@ -56,13 +56,6 @@ import java.util.concurrent.ConcurrentHashMap;
 public class ReferenceSystemCustomEventsListener implements Listener {
     
     private final MegaCreative plugin;
-    private final Map<String, CodeScript> regionScripts = new ConcurrentHashMap<>();
-    private final Map<String, CodeScript> variableScripts = new ConcurrentHashMap<>();
-    private final Map<String, CodeScript> timerScripts = new ConcurrentHashMap<>();
-    private final Map<String, CodeScript> actionScripts = new ConcurrentHashMap<>();
-    private final Map<String, CodeScript> scoreScripts = new ConcurrentHashMap<>();
-    private final Map<String, CodeScript> functionScripts = new ConcurrentHashMap<>();
-    private final Map<String, CodeScript> worldScripts = new ConcurrentHashMap<>();
     
     public ReferenceSystemCustomEventsListener(MegaCreative plugin) {
         this.plugin = plugin;
@@ -80,13 +73,7 @@ public class ReferenceSystemCustomEventsListener implements Listener {
         Player player = event.getPlayer();
         // Проверить, вошел ли игрок в новый регион / Check if player entered a new region / Prüfen, ob der Spieler eine neue Region betreten hat
         if (hasPlayerEnteredRegion(event.getFrom(), event.getTo())) {
-            // Выполнить скрипт входа в регион, если он существует
-            // Execute enter region script if it exists
-            // Regionenbetretens-Skript ausführen, falls vorhanden
-            CodeScript script = regionScripts.get("on_enter");
-            if (script != null) {
-                executeScript(script, player, "region_enter", "region_" + getRegionName(event.getTo()));
-            }
+            // Removed unused regionScripts collection
         }
     }
     
@@ -98,13 +85,7 @@ public class ReferenceSystemCustomEventsListener implements Listener {
         Player player = event.getPlayer();
         // Проверить, покинул ли игрок регион / Check if player left a region / Prüfen, ob der Spieler eine Region verlassen hat
         if (hasPlayerLeftRegion(event.getFrom(), event.getTo())) {
-            // Выполнить скрипт выхода из региона, если он существует
-            // Execute leave region script if it exists
-            // Regionenverlassens-Skript ausführen, falls vorhanden
-            CodeScript script = regionScripts.get("on_leave");
-            if (script != null) {
-                executeScript(script, player, "region_leave", "region_" + getRegionName(event.getFrom()));
-            }
+            // Removed unused regionScripts collection
         }
     }
     
@@ -120,17 +101,7 @@ public class ReferenceSystemCustomEventsListener implements Listener {
         // Вызывается при изменении переменных игрока / Triggered when player variables change / Wird ausgelöst, wenn sich Spielervariablen ändern
         Player player = event.getPlayer();
         
-        // Выполнить скрипт изменения переменной, если он существует
-        // Execute variable change script if it exists
-        // Variablenänderungs-Skript ausführen, falls vorhanden
-        CodeScript script = variableScripts.get("on_change");
-        if (script != null) {
-            Map<String, Object> data = new HashMap<>();
-            data.put("variable_name", event.getVariableName());
-            data.put("old_value", event.getOldValue());
-            data.put("new_value", event.getNewValue());
-            executeScript(script, player, "variable_change", event.getVariableName(), data);
-        }
+        // Removed unused variableScripts collection
     }
     
     // ============================================================================
@@ -145,16 +116,7 @@ public class ReferenceSystemCustomEventsListener implements Listener {
         // Вызывается при истечении таймеров / Triggered when timers expire / Wird ausgelöst, wenn Timer ablaufen
         Player player = event.getPlayer();
         
-        // Выполнить скрипт истечения таймера, если он существует
-        // Execute timer expire script if it exists
-        // Timerablaufs-Skript ausführen, falls vorhanden
-        CodeScript script = timerScripts.get("on_expire");
-        if (script != null) {
-            Map<String, Object> data = new HashMap<>();
-            data.put("timer_name", event.getTimerName());
-            data.put("duration", event.getDuration());
-            executeScript(script, player, "timer_expire", event.getTimerName(), data);
-        }
+        // Removed unused timerScripts collection
     }
     
     // ============================================================================
@@ -169,16 +131,7 @@ public class ReferenceSystemCustomEventsListener implements Listener {
         // Вызывается при выполнении пользовательских действий / Triggered when players perform custom actions / Wird ausgelöst, wenn Spieler benutzerdefinierte Aktionen ausführen
         Player player = event.getPlayer();
         
-        // Выполнить скрипт пользовательского действия, если он существует
-        // Execute custom action script if it exists
-        // Benutzerdefiniertes Aktionsskript ausführen, falls vorhanden
-        CodeScript script = actionScripts.get("on_action");
-        if (script != null) {
-            Map<String, Object> data = new HashMap<>();
-            data.put("action_name", event.getActionName());
-            data.put("action_data", event.getActionData());
-            executeScript(script, player, "custom_action", event.getActionName(), data);
-        }
+        // Removed unused actionScripts collection
     }
     
     // ============================================================================
@@ -193,17 +146,7 @@ public class ReferenceSystemCustomEventsListener implements Listener {
         // Вызывается при изменении очков игрока / Triggered when player scores change / Wird ausgelöst, wenn sich die Punktzahl eines Spielers ändert
         Player player = event.getPlayer();
         
-        // Выполнить скрипт изменения очков, если он существует
-        // Execute score change script if it exists
-        // Punktestandsänderungs-Skript ausführen, falls vorhanden
-        CodeScript script = scoreScripts.get("on_change");
-        if (script != null) {
-            Map<String, Object> data = new HashMap<>();
-            data.put("score_type", event.getScoreType());
-            data.put("old_score", event.getOldScore());
-            data.put("new_score", event.getNewScore());
-            executeScript(script, player, "score_change", event.getScoreType(), data);
-        }
+        // Removed unused scoreScripts collection
     }
     
     // ============================================================================
@@ -218,16 +161,7 @@ public class ReferenceSystemCustomEventsListener implements Listener {
         // Вызывается при вызове функций / Triggered when functions are called / Wird ausgelöst, wenn Funktionen aufgerufen werden
         Player player = event.getPlayer();
         
-        // Выполнить скрипт вызова функции, если он существует
-        // Execute function call script if it exists
-        // Funktionsaufruf-Skript ausführen, falls vorhanden
-        CodeScript script = functionScripts.get("on_call");
-        if (script != null) {
-            Map<String, Object> data = new HashMap<>();
-            data.put("function_name", event.getFunctionName());
-            data.put("parameters", event.getParameters());
-            executeScript(script, player, "function_call", event.getFunctionName(), data);
-        }
+        // Removed unused functionScripts collection
     }
     
     // ============================================================================
@@ -242,17 +176,7 @@ public class ReferenceSystemCustomEventsListener implements Listener {
         // Вызывается при смене режима мира / Triggered when world modes change / Wird ausgelöst, wenn sich der Weltenmodus ändert
         Player player = event.getPlayer();
         
-        // Выполнить скрипт смены режима мира, если он существует
-        // Execute world mode change script if it exists
-        // Weltenmodus-Änderungs-Skript ausführen, falls vorhanden
-        CodeScript script = worldScripts.get("on_mode_change");
-        if (script != null) {
-            Map<String, Object> data = new HashMap<>();
-            data.put("world_name", event.getWorldName());
-            data.put("old_mode", event.getOldMode());
-            data.put("new_mode", event.getNewMode());
-            executeScript(script, player, "world_mode_change", event.getWorldName(), data);
-        }
+        // Removed unused worldScripts collection
     }
     
     // ============================================================================

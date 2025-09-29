@@ -94,21 +94,26 @@ public class DevInventoryManager implements Listener {
                 meta.setLore(lore);
                 item.setItemMeta(meta);
             }
-            player.getInventory().setItem(currentSlot++, item);
+            player.getInventory().setItem(currentSlot, item);
+            currentSlot++;
         }
 
         // Добавляем специальные инструменты
         if (currentSlot < 36) {
-            player.getInventory().setItem(currentSlot++, CodingItems.getGameValue());
+            player.getInventory().setItem(currentSlot, CodingItems.getGameValue());
+            currentSlot++;
         }
         if (currentSlot < 36) {
-            player.getInventory().setItem(currentSlot++, CodingItems.getArrowNot());
+            player.getInventory().setItem(currentSlot, CodingItems.getArrowNot());
+            currentSlot++;
         }
         if (currentSlot < 36) {
-            player.getInventory().setItem(currentSlot++, CodingItems.getDataCreator());
+            player.getInventory().setItem(currentSlot, CodingItems.getDataCreator());
+            currentSlot++;
         }
         if (currentSlot < 36) {
-            player.getInventory().setItem(currentSlot++, CodingItems.getCodeMover());
+            player.getInventory().setItem(currentSlot, CodingItems.getCodeMover());
+            // No need to increment currentSlot after the last item
         }
 
         player.updateInventory();

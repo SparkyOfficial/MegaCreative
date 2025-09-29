@@ -142,8 +142,6 @@ public class ConfigBasedConditionFactory implements IConditionFactory {
             if (BlockCondition.class.isAssignableFrom(clazz)) {
                 conditionClasses.put(conditionId, (Class<? extends BlockCondition>) clazz);
                 // Removed log statement
-            } else {
-                // Removed log statement
             }
         } catch (ClassNotFoundException e) {
             // Removed log statement

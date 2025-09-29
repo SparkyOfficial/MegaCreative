@@ -41,7 +41,7 @@ public class VariableInspectorAction implements BlockAction {
             }
             
             // Get variables based on scope
-            Map<String, DataValue> variables = null;
+            Map<String, DataValue> variables;
             
             switch (scope) {
                 case "PLAYER":

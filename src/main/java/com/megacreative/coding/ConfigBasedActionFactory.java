@@ -143,8 +143,6 @@ public class ConfigBasedActionFactory implements IActionFactory {
             if (BlockAction.class.isAssignableFrom(clazz)) {
                 actionClasses.put(actionId, (Class<? extends BlockAction>) clazz);
                 // Removed log statement
-            } else {
-                // Removed log statement
             }
         } catch (ClassNotFoundException e) {
             // Removed log statement

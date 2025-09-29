@@ -113,10 +113,7 @@ public class WorldManagerImpl implements IWorldManager {
         }
         
         // Do not load worlds immediately - wait for delayed initialization
-        if (plugin != null) {
-            // Reduced logging - only log when debugging
-            // plugin.getLogger().info("WorldManagerImpl created, worlds will be loaded later");
-        }
+        // Removed empty if statement
     }
     
     /**
@@ -143,11 +140,7 @@ public class WorldManagerImpl implements IWorldManager {
         }
         
         // Do not load worlds immediately - wait for delayed initialization
-        Plugin plugin = getPlugin();
-        if (plugin != null) {
-            // Reduced logging - only log when debugging
-            // plugin.getLogger().info("WorldManagerImpl created, worlds will be loaded later");
-        }
+        // Removed empty if statement
     }
     
     /**
@@ -159,10 +152,7 @@ public class WorldManagerImpl implements IWorldManager {
      */
     public void setPlugin(Plugin plugin) {
         this.plugin = plugin;
-        if (plugin != null) {
-            // Reduced logging - only log when debugging
-            // plugin.getLogger().info("Plugin set in WorldManagerImpl");
-        }
+        // Removed empty if statement
     }
     
     /**
@@ -671,36 +661,30 @@ public class WorldManagerImpl implements IWorldManager {
         }
         
         // Сначала убеждаемся, что мир полностью выгружен
-        boolean unloadedMain;
         World bukkitWorld = Bukkit.getWorld(world.getWorldName());
         if (bukkitWorld != null) {
             if (!bukkitWorld.getPlayers().isEmpty()) { // Сначала кикаем игроков, если они там есть.
                 bukkitWorld.getPlayers().forEach(p -> p.teleport(getPlugin().getServer().getWorlds().get(0).getSpawnLocation()));
             }
-            unloadedMain = Bukkit.unloadWorld(bukkitWorld, false); // Сохранять изменения в момент удаления - не всегда хорошая идея, т.к. может сохранить ошибки
+            boolean unloadedMain = Bukkit.unloadWorld(bukkitWorld, false); // Сохранять изменения в момент удаления - не всегда хорошая идея, т.к. может сохранить ошибки
             if (!unloadedMain) {
                 getPlugin().getLogger().warning("Failed to unload main world: " + world.getWorldName() + ". Files might be locked.");
                 requester.sendMessage("§cНе удалось полностью выгрузить основной мир. Возможно, требуется перезагрузка сервера.");
                 return; // Не можем удалить файлы, если мир не выгружен
             }
-        } else {
-            unloadedMain = true; // World is already unloaded
         }
 
-        boolean unloadedDev;
         World devWorld = Bukkit.getWorld(world.getDevWorldName());
         if (devWorld != null) {
             if (!devWorld.getPlayers().isEmpty()) { // Кикаем игроков
                 devWorld.getPlayers().forEach(p -> p.teleport(getPlugin().getServer().getWorlds().get(0).getSpawnLocation()));
             }
-            unloadedDev = Bukkit.unloadWorld(devWorld, false);
+            boolean unloadedDev = Bukkit.unloadWorld(devWorld, false);
              if (!unloadedDev) {
                 getPlugin().getLogger().warning("Failed to unload dev world: " + world.getDevWorldName() + ". Files might be locked.");
                 requester.sendMessage("§cНе удалось полностью выгрузить мир разработки. Возможно, требуется перезагрузка сервера.");
                 return; // Не можем удалить файлы, если мир не выгружен
             }
-        } else {
-            unloadedDev = true; // World is already unloaded
         }
 
         // Удаление из памяти

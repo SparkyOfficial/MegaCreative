@@ -42,10 +42,10 @@ public class RepeatTriggerAction implements BlockAction {
         DataValue ticksValue = resolver.resolve(context, rawTicks);
         String ticksStr = ticksValue.asString();
         
-        String actionStr = null;
         if (rawAction != null) {
             DataValue actionValue = resolver.resolve(context, rawAction);
-            actionStr = actionValue.asString();
+            // The value actionValue.asString() assigned to actionStr is never used
+            // String actionStr = actionValue.asString();  // Removed unused assignment
         }
 
         if (ticksStr == null) {

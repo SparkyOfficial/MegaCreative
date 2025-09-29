@@ -43,7 +43,7 @@ public class GenericCondition implements BlockCondition {
             
             // Get the condition handler
             BiFunction<ExecutionContext, Map<String, DataValue>, Boolean> handler = CONDITION_HANDLERS.get(conditionId);
-            boolean result = false;
+            boolean result;
             
             if (handler != null) {
                 result = handler.apply(context, params);

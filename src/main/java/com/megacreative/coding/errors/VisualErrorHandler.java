@@ -12,16 +12,12 @@ public class VisualErrorHandler {
     private static final Logger log = Logger.getLogger(VisualErrorHandler.class.getName());
     
     private final Plugin plugin;
-    private final Map<Location, ErrorDisplay> activeErrors = new ConcurrentHashMap<>();
-    
+
     public VisualErrorHandler(Plugin plugin) {
         this.plugin = plugin;
     }
     
     public void showError(Location blockLocation, String errorMessage, ErrorSeverity severity, Player... viewers) {
-        ErrorDisplay display = new ErrorDisplay(blockLocation, errorMessage, severity);
-        activeErrors.put(blockLocation, display);
-        
         for (Player viewer : viewers) {
             viewer.sendMessage(severity.getIcon() + " " + errorMessage);
         }
@@ -36,11 +32,9 @@ public class VisualErrorHandler {
     }
     
     public void clearErrorAt(Location location) {
-        activeErrors.remove(location);
     }
     
     public void cleanup() {
-        activeErrors.clear();
     }
     
     public enum ErrorSeverity {

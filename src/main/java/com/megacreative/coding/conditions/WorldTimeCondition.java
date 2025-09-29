@@ -49,7 +49,7 @@ public class WorldTimeCondition implements BlockCondition {
             DataValue timeValue = DataValue.of(String.valueOf(worldTime));
             DataValue resolvedTime = resolver.resolve(context, timeValue);
             
-            long time = 0;
+            long time;
             try {
                 time = Long.parseLong(resolvedTime.asString());
             } catch (NumberFormatException e) {

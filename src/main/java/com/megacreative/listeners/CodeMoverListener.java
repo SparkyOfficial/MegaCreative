@@ -153,7 +153,6 @@ public class CodeMoverListener implements Listener {
         
         // Create copies of blocks to avoid modifying originals in clipboard
         List<CodeBlock> newChain = new ArrayList<>();
-        List<Location> newLocations = new ArrayList<>();
         
         for (int i = 0; i < chainToPaste.size(); i++) {
             CodeBlock oldBlock = chainToPaste.get(i);
@@ -176,7 +175,6 @@ public class CodeMoverListener implements Listener {
             // Create a deep copy of the block
             CodeBlock newBlock = oldBlock.clone();
             newChain.add(newBlock);
-            newLocations.add(newLoc);
             
             // Place the block physically
             Block physicalBlock = newLoc.getBlock();

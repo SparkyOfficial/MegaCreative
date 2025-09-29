@@ -83,7 +83,7 @@ public class CreateScriptCommand implements CommandExecutor {
         }
 
         String scriptType = args[0].toLowerCase();
-        CodeScript script = null;
+        CodeScript script;
 
         switch (scriptType) {
             case "welcome":

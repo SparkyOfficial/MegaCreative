@@ -17,7 +17,6 @@ import java.util.UUID;
 public class GameScoreboardManager {
     private final MegaCreative plugin;
     private final Map<UUID, Scoreboard> playerScoreboards = new HashMap<>();
-    private final Map<String, Objective> gameObjectives = new HashMap<>();
     
     public GameScoreboardManager(MegaCreative plugin) {
         this.plugin = plugin;
@@ -157,8 +156,6 @@ public class GameScoreboardManager {
         objective = scoreboard.registerNewObjective("game_global", "dummy", ChatColor.translateAlternateColorCodes('&', title));
         objective.setDisplaySlot(DisplaySlot.SIDEBAR);
         
-        gameObjectives.put("game_global", objective);
-        
         return objective;
     }
     
@@ -254,7 +251,6 @@ public class GameScoreboardManager {
      */
     public void clearAllScoreboards() {
         playerScoreboards.clear();
-        gameObjectives.clear();
         
         // Удаляем глобальный скорборд
         Scoreboard mainScoreboard = Bukkit.getScoreboardManager().getMainScoreboard();

@@ -475,7 +475,7 @@ public class DefaultScriptEngine implements ScriptEngine, EnhancedScriptEngine, 
             }
         }
 
-        ExecutionResult result = null;
+        ExecutionResult result;
 
         try {
             // --- ОСНОВНАЯ ЛОГИКА ---
@@ -684,6 +684,7 @@ public class DefaultScriptEngine implements ScriptEngine, EnhancedScriptEngine, 
     }
     
     /**
+    /**
      * Convert string type to BlockType enum
      */
     private BlockType getBlockTypeFromString(String type) {
@@ -789,8 +790,111 @@ public class DefaultScriptEngine implements ScriptEngine, EnhancedScriptEngine, 
             trigger);
     }
     
+
+    
+    // Getters for performance settings
+    public long getMaxExecutionTimeMs() {
+        return maxExecutionTimeMs;
+    }
+    
+    public void setMaxExecutionTimeMs(long maxExecutionTimeMs) {
+        this.maxExecutionTimeMs = maxExecutionTimeMs;
+    }
+    
+    public int getMaxInstructionsPerTick() {
+        return maxInstructionsPerTick;
+    }
+    
+    /**
+     * Set the maximum instructions per tick to prevent lag
+     * 
+     * @param maxInstructions Maximum instructions per server tick
+     */
+    @Override
+    public void setMaxInstructionsPerTick(int maxInstructions) {
+        this.maxInstructionsPerTick = maxInstructions;
+    }
+    
+    /**
+     * Set the maximum execution time for scripts
+     * 
+     * @param maxTimeMs Maximum execution time in milliseconds
+     */
+    @Override
+    public void setMaxExecutionTime(long maxTimeMs) {
+        this.maxExecutionTimeMs = maxTimeMs;
+    }
+    
+
+    
+    /**
+     * Cancel all executions for a specific player
+     * 
+     * @param player The player whose executions to cancel
+     */
+    @Override
+    public void cancelPlayerExecutions(Player player) {
+        // Delegate to the advanced execution engine
+        advancedExecutionEngine.cancelPlayerExecutions(player);
+    }
+    
+    /**
+     * Get execution statistics and performance metrics
+     * 
+     * @return Execution statistics
+     */
+    @Override
+    public AdvancedExecutionEngine.ExecutionStatistics getExecutionStatistics() {
+        return advancedExecutionEngine.getStatistics();
+    }
+    
+    /**
+     * Check if the engine is currently overloaded
+     * 
+     * @return true if the engine is under heavy load
+     */
+    @Override
+    public boolean isOverloaded() {
+        // Check if we're overloaded based on active sessions and thread pool
+        return activeExecutions.size() > 50 || // More than 50 active executions
+               advancedExecutionEngine.getStatistics().getActiveThreads() >= 4; // All threads busy
+    }
+    
+    /**
+     * Get the current throughput (executions per second)
+     * 
+     * @return Current execution throughput
+     */
+    @Override
+    public double getCurrentThroughput() {
+        // Get throughput from the advanced execution engine statistics
+        AdvancedExecutionEngine.ExecutionStatistics stats = advancedExecutionEngine.getStatistics();
+        return stats != null ? stats.getThroughput() : 0.0;
+    }
+    
+    /**
+     * Execute multiple scripts in batch mode
+     * 
+     * @param scripts Array of scripts to execute
+     * @param player The player context
+     * @param trigger The trigger that caused execution
+     * @return CompletableFuture with batch execution result
+     */
     @Override
     public CompletableFuture<ExecutionResult[]> executeScriptsBatch(CodeScript[] scripts, Player player, String trigger) {
         // Implementation for batch script execution
         if (scripts == null || scripts.length == 0) {
-            return CompletableFuture.completed
+            return CompletableFuture.completedFuture(new ExecutionResult[0]);
+        }
+        
+        CompletableFuture<ExecutionResult>[] futures = new CompletableFuture[scripts.length];
+        for (int i = 0; i < scripts.length; i++) {
+            futures[i] = executeScript(scripts[i], player, trigger);
+        }
+        
+        return CompletableFuture.allOf(futures)
+            .thenApply(v -> java.util.Arrays.stream(futures)
+                .map(CompletableFuture::join)
+                .toArray(ExecutionResult[]::new));
+    }
+}
