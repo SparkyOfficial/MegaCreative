@@ -89,6 +89,9 @@ public class ControlFlowBlockExecutor implements BlockExecutor {
             boolean conditionResult = conditionHandler.evaluate(block, context);
             LOGGER.fine("Conditional branch condition " + conditionId + " evaluated to " + conditionResult);
             
+            // Store the condition result in the execution context for use by the ScriptEngine
+            context.setVariable("_condition_result", conditionResult);
+            
             // Return result with condition evaluation
             return new ExecutionResult.Builder()
                 .success(true)

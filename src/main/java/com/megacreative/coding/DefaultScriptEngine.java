@@ -268,24 +268,12 @@ public class DefaultScriptEngine implements ScriptEngine, EnhancedScriptEngine, 
                     }
                     ExecutionResult result = processBlock(script.getRootBlock(), context, 0);
                     
-                    // Handle special result types
-                    if (result.isPause()) {
-                        // Schedule continuation after pause
-                        long ticks = result.getPauseTicks();
-                        plugin.getServer().getScheduler().runTaskLater(plugin, () -> {
-                            try {
-                                ExecutionResult nextResult = processBlock(script.getRootBlock().getNextBlock(), context, 0);
-                                completeScriptExecution(nextResult, future, script, player, trigger, executionId);
-                            } catch (Exception e) {
-                                future.completeExceptionally(e);
-                                activeExecutions.remove(executionId);
-                            }
-                        }, ticks);
-                        return; // Don't complete the future yet
-                    } else if (result.isAwait()) {
-                        // Attach continuation to the future
-                        result.getAwaitFuture().thenRun(() -> {
-                            plugin.getServer().getScheduler().runTask(plugin, () -> {
+                    // Handle special result types with switch-case as requested
+                    switch (getResultType(result)) {
+                        case PAUSE:
+                            // Schedule continuation after pause
+                            long ticks = result.getPauseTicks();
+                            plugin.getServer().getScheduler().runTaskLater(plugin, () -> {
                                 try {
                                     ExecutionResult nextResult = processBlock(script.getRootBlock().getNextBlock(), context, 0);
                                     completeScriptExecution(nextResult, future, script, player, trigger, executionId);
@@ -293,18 +281,34 @@ public class DefaultScriptEngine implements ScriptEngine, EnhancedScriptEngine, 
                                     future.completeExceptionally(e);
                                     activeExecutions.remove(executionId);
                                 }
+                            }, ticks);
+                            return; // Don't complete the future yet
+                        case AWAIT:
+                            // Attach continuation to the future
+                            result.getAwaitFuture().thenRun(() -> {
+                                plugin.getServer().getScheduler().runTask(plugin, () -> {
+                                    try {
+                                        ExecutionResult nextResult = processBlock(script.getRootBlock().getNextBlock(), context, 0);
+                                        completeScriptExecution(nextResult, future, script, player, trigger, executionId);
+                                    } catch (Exception e) {
+                                        future.completeExceptionally(e);
+                                        activeExecutions.remove(executionId);
+                                    }
+                                });
+                            }).exceptionally(throwable -> {
+                                plugin.getServer().getScheduler().runTask(plugin, () -> {
+                                    future.completeExceptionally(throwable);
+                                    activeExecutions.remove(executionId);
+                                });
+                                return null;
                             });
-                        }).exceptionally(throwable -> {
-                            plugin.getServer().getScheduler().runTask(plugin, () -> {
-                                future.completeExceptionally(throwable);
-                                activeExecutions.remove(executionId);
-                            });
-                            return null;
-                        });
-                        return; // Don't complete the future yet
+                            return; // Don't complete the future yet
+                        case NORMAL:
+                        default:
+                            // Continue with normal completion
+                            completeScriptExecution(result, future, script, player, trigger, executionId);
+                            break;
                     }
-                    
-                    completeScriptExecution(result, future, script, player, trigger, executionId);
                 } catch (Exception e) {
                     String errorMsg = "Script execution error: " + e.getMessage();
                     plugin.getLogger().log(java.util.logging.Level.SEVERE, errorMsg, e);
@@ -389,40 +393,44 @@ public class DefaultScriptEngine implements ScriptEngine, EnhancedScriptEngine, 
                                           " with action: " + (block != null ? block.getAction() : "null"));
                     ExecutionResult result = processBlock(block, context, 0);
                     
-                    // Handle special result types
-                    if (result.isPause()) {
-                        // Schedule continuation after pause
-                        long ticks = result.getPauseTicks();
-                        plugin.getServer().getScheduler().runTaskLater(plugin, () -> {
-                            try {
-                                ExecutionResult nextResult = processBlock(block.getNextBlock(), context, 0);
-                                future.complete(nextResult);
-                            } catch (Exception e) {
-                                future.completeExceptionally(e);
-                            }
-                        }, ticks);
-                        return; // Don't complete the future yet
-                    } else if (result.isAwait()) {
-                        // Attach continuation to the future
-                        result.getAwaitFuture().thenRun(() -> {
-                            plugin.getServer().getScheduler().runTask(plugin, () -> {
+                    // Handle special result types with switch-case as requested
+                    switch (getResultType(result)) {
+                        case PAUSE:
+                            // Schedule continuation after pause
+                            long ticks = result.getPauseTicks();
+                            plugin.getServer().getScheduler().runTaskLater(plugin, () -> {
                                 try {
                                     ExecutionResult nextResult = processBlock(block.getNextBlock(), context, 0);
                                     future.complete(nextResult);
                                 } catch (Exception e) {
                                     future.completeExceptionally(e);
                                 }
+                            }, ticks);
+                            return; // Don't complete the future yet
+                        case AWAIT:
+                            // Attach continuation to the future
+                            result.getAwaitFuture().thenRun(() -> {
+                                plugin.getServer().getScheduler().runTask(plugin, () -> {
+                                    try {
+                                        ExecutionResult nextResult = processBlock(block.getNextBlock(), context, 0);
+                                        future.complete(nextResult);
+                                    } catch (Exception e) {
+                                        future.completeExceptionally(e);
+                                    }
+                                });
+                            }).exceptionally(throwable -> {
+                                plugin.getServer().getScheduler().runTask(plugin, () -> {
+                                    future.completeExceptionally(throwable);
+                                });
+                                return null;
                             });
-                        }).exceptionally(throwable -> {
-                            plugin.getServer().getScheduler().runTask(plugin, () -> {
-                                future.completeExceptionally(throwable);
-                            });
-                            return null;
-                        });
-                        return; // Don't complete the future yet
+                            return; // Don't complete the future yet
+                        case NORMAL:
+                        default:
+                            // Continue with normal completion
+                            future.complete(result);
+                            break;
                     }
-                    
-                    future.complete(result);
                 } catch (Exception e) {
                     String errorMsg = "Block execution error: " + e.getMessage();
                     plugin.getLogger().log(java.util.logging.Level.SEVERE, errorMsg, e);
@@ -635,15 +643,47 @@ public class DefaultScriptEngine implements ScriptEngine, EnhancedScriptEngine, 
                 return processBlock(block.getNextBlock(), context, recursionDepth + 1);
             }
             
-            // Handle special result types (pause, await)
-            if (result.isPause()) {
-                // Return the pause result - the caller will handle scheduling
-                plugin.getLogger().info("Block execution paused for " + result.getPauseTicks() + " ticks");
-                return result;
-            } else if (result.isAwait()) {
-                // Return the await result - the caller will handle the future
-                plugin.getLogger().info("Block execution awaiting CompletableFuture");
-                return result;
+            // Handle special result types with switch-case as requested
+            switch (getResultType(result)) {
+                case PAUSE:
+                    // Return the pause result - the caller will handle scheduling
+                    plugin.getLogger().info("Block execution paused for " + result.getPauseTicks() + " ticks");
+                    return result;
+                case AWAIT:
+                    // Return the await result - the caller will handle the future
+                    plugin.getLogger().info("Block execution awaiting CompletableFuture");
+                    return result;
+                case NORMAL:
+                default:
+                    // Continue with normal processing
+                    break;
+            }
+            
+            // Handle conditional branches specifically
+            if (blockType == BlockType.CONTROL && "conditionalBranch".equals(block.getAction())) {
+                // Get the condition result from the execution result details
+                Object conditionResultObj = result.getDetail("condition_result");
+                if (conditionResultObj instanceof Boolean) {
+                    boolean conditionResult = (Boolean) conditionResultObj;
+                    
+                    if (conditionResult) {
+                        // Condition is true, execute the true branch (children)
+                        plugin.getLogger().info("Condition is true, executing true branch");
+                        if (!block.getChildren().isEmpty()) {
+                            // Execute the first child block in the true branch
+                            CodeBlock trueBranch = block.getChildren().get(0);
+                            return processBlock(trueBranch, context, recursionDepth + 1);
+                        }
+                    } else {
+                        // Condition is false, look for an else block
+                        plugin.getLogger().info("Condition is false, looking for else branch");
+                        CodeBlock elseBlock = findElseBlock(block);
+                        if (elseBlock != null) {
+                            plugin.getLogger().info("Found else block, executing else branch");
+                            return processBlock(elseBlock, context, recursionDepth + 1);
+                        }
+                    }
+                }
             }
         
             // Cache the result before returning
@@ -674,6 +714,87 @@ public class DefaultScriptEngine implements ScriptEngine, EnhancedScriptEngine, 
             }
             return ExecutionResult.error(errorMsg);
         }
+    }
+    
+    /**
+     * Determine the type of ExecutionResult for switch-case handling
+     */
+    private ResultType getResultType(ExecutionResult result) {
+        if (result == null) {
+            return ResultType.NORMAL;
+        }
+        
+        if (result.isPause()) {
+            return ResultType.PAUSE;
+        }
+        
+        if (result.isAwait()) {
+            return ResultType.AWAIT;
+        }
+        
+        return ResultType.NORMAL;
+    }
+    
+    /**
+     * Enum for ExecutionResult types to enable switch-case handling
+     */
+    private enum ResultType {
+        NORMAL,
+        PAUSE,
+        AWAIT
+    }
+    
+    /**
+     * Finds the else block associated with a conditional branch
+     * 
+     * @param conditionalBlock The conditional branch block
+     * @return The else block if found, null otherwise
+     */
+    private CodeBlock findElseBlock(CodeBlock conditionalBlock) {
+        // Look for the else block in the chain after the conditional block's children
+        if (conditionalBlock == null) {
+            return null;
+        }
+        
+        // First, find the end of the true branch
+        CodeBlock current = null;
+        
+        // If there are children, the true branch is the chain of children
+        if (!conditionalBlock.getChildren().isEmpty()) {
+            // Get the last child in the true branch
+            current = conditionalBlock.getChildren().get(conditionalBlock.getChildren().size() - 1);
+            
+            // Follow the chain to the end of the true branch
+            while (current != null && current.getNextBlock() != null) {
+                current = current.getNextBlock();
+            }
+        } else {
+            // If no children, the true branch is just the next block
+            current = conditionalBlock.getNextBlock();
+            
+            // Follow the chain to the end of the true branch
+            while (current != null && current.getNextBlock() != null && !"else".equals(current.getAction())) {
+                current = current.getNextBlock();
+            }
+        }
+        
+        // Check if the current block is an else block
+        if (current != null && "else".equals(current.getAction())) {
+            return current;
+        }
+        
+        // If we didn't find an else block directly, look in the next block
+        if (conditionalBlock.getNextBlock() != null) {
+            current = conditionalBlock.getNextBlock();
+            while (current != null) {
+                if ("else".equals(current.getAction())) {
+                    return current;
+                }
+                current = current.getNextBlock();
+            }
+        }
+        
+        return null;
     }
     
     /**
@@ -721,6 +842,22 @@ public class DefaultScriptEngine implements ScriptEngine, EnhancedScriptEngine, 
         try {
             // Process the current block
             ExecutionResult result = processBlock(block, context, recursionDepth);
+            
+            // Handle special result types with switch-case as requested
+            switch (getResultType(result)) {
+                case PAUSE:
+                    // Return the pause result - the caller will handle scheduling
+                    plugin.getLogger().info("Block execution paused for " + result.getPauseTicks() + " ticks in chain");
+                    return result;
+                case AWAIT:
+                    // Return the await result - the caller will handle the future
+                    plugin.getLogger().info("Block execution awaiting CompletableFuture in chain");
+                    return result;
+                case NORMAL:
+                default:
+                    // Continue with normal processing
+                    break;
+            }
             
             // If the result indicates termination (break/continue), return it
             if (result.isTerminated()) {
