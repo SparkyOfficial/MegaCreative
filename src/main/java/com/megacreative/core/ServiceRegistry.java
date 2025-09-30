@@ -24,7 +24,6 @@ import com.megacreative.coding.events.EventDataExtractorRegistry;
 import com.megacreative.interfaces.*;
 import com.megacreative.managers.*;
 import com.megacreative.services.BlockConfigService;
-import com.megacreative.services.FunctionManager;
 import com.megacreative.coding.functions.AdvancedFunctionManager;
 import com.megacreative.gui.interactive.InteractiveGUIManager;
 import com.megacreative.gui.interactive.ReferenceSystemStyleGUI;
@@ -95,7 +94,6 @@ public class ServiceRegistry implements DependencyContainer.Disposable {
         dependencyContainer.registerFactory(VariableManager.class, (DependencyContainer.Supplier<VariableManager>) () -> new VariableManager((MegaCreative) plugin));
         dependencyContainer.registerFactory(VisualDebugger.class, (DependencyContainer.Supplier<VisualDebugger>) () -> new VisualDebugger((MegaCreative) plugin));
         dependencyContainer.registerFactory(BlockConfigService.class, (DependencyContainer.Supplier<BlockConfigService>) () -> new BlockConfigService((MegaCreative) plugin));
-        dependencyContainer.registerFactory(FunctionManager.class, (DependencyContainer.Supplier<FunctionManager>) () -> new FunctionManager((MegaCreative) plugin));
         dependencyContainer.registerFactory(AdvancedFunctionManager.class, (DependencyContainer.Supplier<AdvancedFunctionManager>) () -> new AdvancedFunctionManager((MegaCreative) plugin));
         dependencyContainer.registerFactory(ConfigManager.class, (DependencyContainer.Supplier<ConfigManager>) () -> {
             ConfigManager configManager = new ConfigManager((MegaCreative) plugin);
@@ -497,10 +495,6 @@ public class ServiceRegistry implements DependencyContainer.Disposable {
     
     public ReferenceSystemEventManager getReferenceSystemEventManager() {
         return dependencyContainer.resolve(ReferenceSystemEventManager.class);
-    }
-    
-    public FunctionManager getFunctionManager() {
-        return dependencyContainer.resolve(FunctionManager.class);
     }
     
     public AdvancedFunctionManager getAdvancedFunctionManager() {

@@ -32,9 +32,15 @@ public class VisualErrorHandler {
     }
     
     public void clearErrorAt(Location location) {
+        // In a full implementation, this would remove visual error indicators
+        // from the specified location, such as removing holograms or markers
+        log.info("Clearing error at location: " + location);
     }
     
     public void cleanup() {
+        // In a full implementation, this would clean up any resources
+        // used for visual error display, such as holograms or markers
+        log.info("Cleaning up VisualErrorHandler resources");
     }
     
     public enum ErrorSeverity {

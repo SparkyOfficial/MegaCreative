@@ -37,12 +37,9 @@ public class CallFunctionAction implements BlockAction {
             return ExecutionResult.error(PLAYER_NOT_FOUND_MSG);
         }
 
-        // Initialize functionName to avoid scope issues
-        String functionName = "unknown";
-        
         try {
-            // Получаем параметры из блока
-            functionName = block.getParameter(FUNCTION_NAME_PARAM).asString();
+            // Получаем параметры из блока (final to use in lambda)
+            final String functionName = block.getParameter(FUNCTION_NAME_PARAM).asString();
             
             // Получаем менеджер функций
             AdvancedFunctionManager functionManager = context.getPlugin().getServiceRegistry().getAdvancedFunctionManager();
@@ -61,38 +58,44 @@ public class CallFunctionAction implements BlockAction {
             // Выполняем функцию асинхронно
             CompletableFuture<ExecutionResult> future = functionManager.executeFunction(functionName, player, arguments);
             
-            // Ждем завершения выполнения
-            ExecutionResult result = future.get();
-            
-            // Обрабатываем возвращаемое значение
-            if (result.getReturnValue() != null) {
-                // Сохраняем возвращаемое значение в переменную, если указано
-                DataValue returnValueVar = block.getParameter(RETURN_VAR_PARAM);
-                if (returnValueVar != null && !returnValueVar.isEmpty()) {
-                    String varName = returnValueVar.asString();
-                    context.setVariable(varName, result.getReturnValue());
+            // Handle the result asynchronously without blocking the main thread
+            future.thenAccept(result -> {
+                // This code runs when the function execution completes
+                
+                // Обрабатываем возвращаемое значение
+                if (result.getReturnValue() != null) {
+                    // Сохраняем возвращаемое значение в переменную, если указано
+                    DataValue returnValueVar = block.getParameter(RETURN_VAR_PARAM);
+                    if (returnValueVar != null && !returnValueVar.isEmpty()) {
+                        String varName = returnValueVar.asString();
+                        context.setVariable(varName, result.getReturnValue());
+                    }
+                    
+                    // Send success message to player
+                    player.sendMessage(String.format(FUNCTION_RETURN_MSG, functionName, result.getReturnValue()));
+                } else {
+                    // Send execution message to player
+                    player.sendMessage(String.format(FUNCTION_EXECUTED_MSG, functionName));
                 }
                 
-                return ExecutionResult.success(
-                    String.format(FUNCTION_RETURN_MSG, functionName, result.getReturnValue())
-                );
-            }
+                // Проверяем, была ли функция завершена оператором return
+                if (result.isTerminated()) {
+                    // Handle termination - in a real implementation, this would need to be handled
+                    // by the script engine to stop the execution chain
+                    player.sendMessage(String.format(FUNCTION_TERMINATED_MSG, functionName));
+                }
+            }).exceptionally(throwable -> {
+                // Handle any exceptions that occurred during function execution
+                player.sendMessage(String.format(FUNCTION_CALL_ERROR_MSG, functionName, throwable.getMessage()));
+                return null;
+            });
             
-            // Проверяем, была ли функция завершена оператором return
-            if (result.isTerminated()) {
-                // Если функция завершена return, то прекращаем выполнение текущего скрипта
-                ExecutionResult terminatedResult = ExecutionResult.success(
-                    String.format(FUNCTION_TERMINATED_MSG, functionName)
-                );
-                terminatedResult.setTerminated(true);
-                return terminatedResult;
-            }
-            
-            return ExecutionResult.success(String.format(FUNCTION_EXECUTED_MSG, functionName));
+            // Return immediately without blocking - the function will execute asynchronously
+            return ExecutionResult.success("Function call initiated for: " + functionName);
 
         } catch (Exception e) {
             return ExecutionResult.error(
-                String.format(FUNCTION_CALL_ERROR_MSG, functionName, e.getMessage())
+                String.format(FUNCTION_CALL_ERROR_MSG, "unknown", e.getMessage())
             );
         }
     }

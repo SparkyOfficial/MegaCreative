@@ -196,7 +196,7 @@ public class MegaCreative extends JavaPlugin {
             getServer().getPluginManager().registerEvents(serviceRegistry.getScriptTriggerManager(), this);
             
             // Register DataItemListener to handle data item events
-            getServer().getPluginManager().registerEvents(new DataItemListener(), this);
+            getServer().getPluginManager().registerEvents(new DataItemListener(this), this);
             
             // Register WorldInteractListener to handle starter item interactions
             getServer().getPluginManager().registerEvents(new WorldInteractListener(this), this);

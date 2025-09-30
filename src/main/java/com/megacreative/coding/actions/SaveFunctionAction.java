@@ -7,10 +7,14 @@ import com.megacreative.coding.ParameterResolver;
 import com.megacreative.coding.executors.ExecutionResult;
 import com.megacreative.coding.values.DataValue;
 import com.megacreative.MegaCreative;
-import com.megacreative.services.FunctionManager;
+import com.megacreative.coding.functions.AdvancedFunctionManager;
+import com.megacreative.coding.functions.FunctionDefinition;
 import org.bukkit.Bukkit;
 import org.bukkit.World;
 import org.bukkit.entity.Player;
+
+import java.util.ArrayList;
+import java.util.List;
 
 public class SaveFunctionAction implements BlockAction {
     
@@ -46,11 +50,11 @@ public class SaveFunctionAction implements BlockAction {
             return ExecutionResult.error("Plugin not available");
         }
 
-        // Получаем FunctionManager
-        FunctionManager functionManager = plugin.getServiceRegistry().getFunctionManager();
+        // Получаем AdvancedFunctionManager
+        AdvancedFunctionManager functionManager = plugin.getServiceRegistry().getAdvancedFunctionManager();
         if (functionManager == null) {
-            player.sendMessage("§cОшибка: FunctionManager недоступен");
-            return ExecutionResult.error("FunctionManager not available");
+            player.sendMessage("§cОшибка: AdvancedFunctionManager недоступен");
+            return ExecutionResult.error("AdvancedFunctionManager not available");
         }
 
         // Получаем текущий мир игрока
@@ -67,19 +71,31 @@ public class SaveFunctionAction implements BlockAction {
             return ExecutionResult.error("No block to save as function");
         }
 
-        // Регистрируем функцию через FunctionManager
-        // Получаем имя мира из CreativeWorld
-        String worldName = creativeWorld.getWorldName();
-        if (functionManager.functionExists(worldName, functionName)) {
-            player.sendMessage("§cОшибка: функция '" + functionName + "' уже существует");
-            return ExecutionResult.error("Function '" + functionName + "' already exists");
+        // Создаем определение функции
+        List<CodeBlock> functionBlocks = new ArrayList<>();
+        functionBlocks.add(functionRoot);
+        
+        FunctionDefinition function = new FunctionDefinition(
+            functionName,
+            "Сохраненная функция: " + functionName,
+            player,
+            new ArrayList<>(), // Параметры (пока пустой список)
+            functionBlocks,
+            null, // Тип возвращаемого значения (пока null)
+            FunctionDefinition.FunctionScope.WORLD // Область видимости
+        );
+
+        // Регистрируем функцию через AdvancedFunctionManager
+        boolean registered = functionManager.registerFunction(function);
+        
+        if (registered) {
+            // Сохраняем мир
+            plugin.getServiceRegistry().getWorldManager().saveWorld(creativeWorld);
+            player.sendMessage("§a💾 Функция '" + functionName + "' сохранена");
+            return ExecutionResult.success("Function '" + functionName + "' saved");
+        } else {
+            player.sendMessage("§cОшибка: не удалось сохранить функцию '" + functionName + "'");
+            return ExecutionResult.error("Failed to save function '" + functionName + "'");
         }
-        
-        functionManager.registerFunction(worldName, functionName, functionRoot);
-        
-        // Сохраняем мир
-        plugin.getServiceRegistry().getWorldManager().saveWorld(creativeWorld);
-        player.sendMessage("§a💾 Функция '" + functionName + "' сохранена");
-        return ExecutionResult.success("Function '" + functionName + "' saved");
     }
 }

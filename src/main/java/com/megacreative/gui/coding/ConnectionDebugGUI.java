@@ -179,7 +179,25 @@ public class ConnectionDebugGUI implements GUIManager.ManagedGUIInterface {
         }
         
         // In the new architecture, we can check for parent blocks through the BlockHierarchyManager
-        // For now, we'll return false as this is a simplified implementation
+        // For now, we'll check if any other block references this block as a child or next block
+        if (blockPlacementHandler != null) {
+            Map<Location, CodeBlock> allBlocks = blockPlacementHandler.getBlockCodeBlocks();
+            if (allBlocks != null) {
+                for (CodeBlock otherBlock : allBlocks.values()) {
+                    if (otherBlock != block) {
+                        // Check if otherBlock has this block as a child
+                        if (otherBlock.getChildren().contains(block)) {
+                            return true;
+                        }
+                        // Check if otherBlock has this block as next block
+                        if (otherBlock.getNextBlock() == block) {
+                            return true;
+                        }
+                    }
+                }
+            }
+        }
+        
         return false;
     }
     
@@ -328,7 +346,22 @@ public class ConnectionDebugGUI implements GUIManager.ManagedGUIInterface {
      */
     private Location findBlockLocation(CodeBlock block) {
         // In the new architecture, we would use BlockPlacementHandler or BlockLinker to find block locations
-        // For now, we'll return null as this is a simplified implementation
+        // For now, we'll search through all loaded blocks to find the matching one
+        if (block == null || blockPlacementHandler == null) {
+            return null;
+        }
+        
+        // Get all code blocks and search for the matching one
+        Map<Location, CodeBlock> allCodeBlocks = blockPlacementHandler.getBlockCodeBlocks();
+        if (allCodeBlocks != null) {
+            for (Map.Entry<Location, CodeBlock> entry : allCodeBlocks.entrySet()) {
+                if (entry.getValue() == block || 
+                    (entry.getValue().getId() != null && entry.getValue().getId().equals(block.getId()))) {
+                    return entry.getKey();
+                }
+            }
+        }
+        
         return null;
     }
     

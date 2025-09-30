@@ -11,103 +11,98 @@ import com.megacreative.services.MessagingService;
 import com.megacreative.coding.annotations.BlockMeta;
 import com.megacreative.coding.BlockType;
 import org.bukkit.entity.Player;
-import org.bukkit.inventory.ItemStack;
-import org.bukkit.inventory.meta.ItemMeta;
 
 import java.util.function.Function;
 
 /**
- * Action for sending a message to a player.
- * This action retrieves a message from the container configuration and sends it to the player.
+ * Unified action for sending messages to a player.
+ * Supports chat messages, action bar messages, and titles based on the "type" parameter.
+ * 
+ * Parameters:
+ * - "message": The message content (required)
+ * - "type": The message type - "chat", "actionbar", "title", or "subtitle" (default: "chat")
+ * - "subtitle": The subtitle content (required when type is "title")
+ * - "fadeIn": Fade in time in ticks (used for titles, default: 10)
+ * - "stay": Stay time in ticks (used for titles, default: 70)
+ * - "fadeOut": Fade out time in ticks (used for titles, default: 20)
  */
+@BlockMeta(id = "sendMessage", displayName = "§aSend Message", type = BlockType.ACTION)
 public class SendMessageAction implements BlockAction {
 
     @Override
     public ExecutionResult execute(CodeBlock block, ExecutionContext context) {
         Player player = context.getPlayer();
         if (player == null) {
-            return ExecutionResult.error("");
+            return ExecutionResult.error("No player found in execution context");
         }
 
         try {
-            // Get the message from the container configuration
-            String message = getMessageFromContainer(block, context);
-            
-            if (message == null || message.isEmpty()) {
-                return ExecutionResult.error("");
+            // Get message content (required)
+            DataValue messageValue = block.getParameter("message");
+            if (messageValue == null || messageValue.isEmpty()) {
+                return ExecutionResult.error("Message content is required");
             }
+            String message = messageValue.asString();
+
+            // Get message type (default to chat)
+            DataValue typeValue = block.getParameter("type", DataValue.of("chat"));
+            String type = typeValue.asString().toLowerCase();
 
             // Resolve any placeholders in the message
             ParameterResolver resolver = new ParameterResolver(context);
             String resolvedMessage = resolver.resolveString(context, message);
-            
-            // Send the message to the player using Adventure API if available
-            MessagingService messagingService = context.getPlugin().getServiceRegistry().getMessagingService();
-            if (messagingService != null) {
-                messagingService.sendMessage(player, resolvedMessage);
-            } else {
-                // Fallback to regular sendMessage if Adventure API is not available
-                player.sendMessage(resolvedMessage);
-            }
-            
-            return ExecutionResult.success("");
-        } catch (Exception e) {
-            return ExecutionResult.error("");
-        }
-    }
-    
-    /**
-     * Gets message from the container configuration
-     */
-    private String getMessageFromContainer(CodeBlock block, ExecutionContext context) {
-        try {
-            // Get the BlockConfigService to resolve slot names
-            BlockConfigService blockConfigService = context.getPlugin().getServiceRegistry().getBlockConfigService();
-            
-            // Get the slot resolver for this action
-            Function<String, Integer> slotResolver = blockConfigService.getSlotResolver(block.getAction());
-            
-            if (slotResolver != null) {
-                // Get message from the message slot
-                Integer messageSlot = slotResolver.apply("message_slot");
-                
-                if (messageSlot != null) {
-                    ItemStack messageItem = block.getConfigItem(messageSlot);
-                    
-                    if (messageItem != null && messageItem.hasItemMeta()) {
-                        // Extract message from item name or lore
-                        return getMessageFromItem(messageItem);
-                    }
-                }
-            }
-            
-            // Fallback to parameter-based configuration
-            DataValue messageParam = block.getParameter("message");
-            
-            if (messageParam != null && !messageParam.isEmpty()) {
-                return messageParam.asString();
-            }
-            
-        } catch (Exception e) {
-            // Log the exception instead of ignoring it
-            context.getPlugin().getLogger().warning("Error getting message from container: " + e.getMessage());
-        }
-        return null;
 
+            // Send message based on type
+            switch (type) {
+                case "actionbar":
+                    player.sendActionBar(resolvedMessage);
+                    return ExecutionResult.success("Action bar message sent successfully");
+                    
+                case "title":
+                    // For title, we also need subtitle
+                    DataValue subtitleValue = block.getParameter("subtitle");
+                    String subtitle = "";
+                    if (subtitleValue != null && !subtitleValue.isEmpty()) {
+                        subtitle = resolver.resolveString(context, subtitleValue.asString());
+                    }
+                    
+                    // Get timing parameters with defaults
+                    int fadeIn = getTimingParameter(block, "fadeIn", 10);
+                    int stay = getTimingParameter(block, "stay", 70);
+                    int fadeOut = getTimingParameter(block, "fadeOut", 20);
+                    
+                    player.sendTitle(resolvedMessage, subtitle, fadeIn, stay, fadeOut);
+                    return ExecutionResult.success("Title sent successfully");
+                    
+                case "chat":
+                default:
+                    // Send the message to the player using Adventure API if available
+                    MessagingService messagingService = context.getPlugin().getServiceRegistry().getMessagingService();
+                    if (messagingService != null) {
+                        messagingService.sendMessage(player, resolvedMessage);
+                    } else {
+                        // Fallback to regular sendMessage if Adventure API is not available
+                        player.sendMessage(resolvedMessage);
+                    }
+                    return ExecutionResult.success("Chat message sent successfully");
+            }
+        } catch (Exception e) {
+            return ExecutionResult.error("Failed to send message: " + e.getMessage());
+        }
     }
     
     /**
-     * Extracts message from an item
+     * Gets timing parameter with validation
      */
-    private String getMessageFromItem(ItemStack item) {
-        ItemMeta meta = item.getItemMeta();
-        if (meta != null) {
-            String displayName = meta.getDisplayName();
-            if (displayName != null && !displayName.isEmpty()) {
-                // Return the display name as is, preserving color codes
-                return displayName;
+    private int getTimingParameter(CodeBlock block, String paramName, int defaultValue) {
+        DataValue value = block.getParameter(paramName);
+        if (value != null && !value.isEmpty()) {
+            try {
+                return Math.max(0, value.asNumber().intValue());
+            } catch (NumberFormatException e) {
+                // Use default if parsing fails
             }
         }
-        return null;
+        return defaultValue;
     }
 }

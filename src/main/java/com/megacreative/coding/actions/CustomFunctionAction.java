@@ -6,12 +6,16 @@ import com.megacreative.coding.ExecutionContext;
 import com.megacreative.coding.annotations.BlockMeta;
 import com.megacreative.coding.BlockType;
 import com.megacreative.coding.executors.ExecutionResult;
-import com.megacreative.services.FunctionManager;
+import com.megacreative.coding.functions.AdvancedFunctionManager;
+import com.megacreative.coding.functions.FunctionDefinition;
 import org.bukkit.entity.Player;
+
+import java.util.ArrayList;
+import java.util.List;
 
 /**
  * Action for defining custom functions.
- * When executed, it registers the function in the FunctionManager.
+ * When executed, it registers the function in the AdvancedFunctionManager.
  */
 @BlockMeta(id = "customFunction", displayName = "§aCustom Function", type = BlockType.ACTION)
 public class CustomFunctionAction implements BlockAction {
@@ -32,23 +36,34 @@ public class CustomFunctionAction implements BlockAction {
                 return ExecutionResult.error("У функции '" + functionName + "' нет тела (дочерних блоков).");
             }
             
-            // Получаем первый блок тела функции
-            CodeBlock firstBlock = block.getChildren().get(0);
+            // Получаем блоки тела функции
+            List<CodeBlock> functionBlocks = new ArrayList<>(block.getChildren());
             
             // Получаем менеджер функций
-            FunctionManager functionManager = context.getPlugin().getServiceRegistry().getFunctionManager();
+            AdvancedFunctionManager functionManager = context.getPlugin().getServiceRegistry().getAdvancedFunctionManager();
             if (functionManager == null) {
                 return ExecutionResult.error("Менеджер функций не доступен.");
             }
             
-            // Получаем имя мира
-            String worldName = player.getWorld().getName();
+            // Создаем определение функции
+            FunctionDefinition function = new FunctionDefinition(
+                functionName,
+                "Пользовательская функция: " + functionName,
+                player,
+                new ArrayList<>(), // Параметры (пока пустой список)
+                functionBlocks,
+                null, // Тип возвращаемого значения (пока null)
+                FunctionDefinition.FunctionScope.WORLD // Область видимости
+            );
             
             // Регистрируем функцию
-            functionManager.registerFunction(worldName, functionName, firstBlock);
+            boolean registered = functionManager.registerFunction(function);
             
-            // Не выполняем дочерние блоки немедленно - они будут выполнены при вызове функции
-            return ExecutionResult.success("Функция '" + functionName + "' определена.");
+            if (registered) {
+                return ExecutionResult.success("Функция '" + functionName + "' определена.");
+            } else {
+                return ExecutionResult.error("Не удалось зарегистрировать функцию '" + functionName + "'.");
+            }
 
         } catch (Exception e) {
             return ExecutionResult.error("Ошибка при определении функции: " + e.getMessage());

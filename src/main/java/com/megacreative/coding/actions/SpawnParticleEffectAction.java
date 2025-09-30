@@ -6,13 +6,17 @@ import com.megacreative.coding.ExecutionContext;
 import com.megacreative.coding.ParameterResolver;
 import com.megacreative.coding.executors.ExecutionResult;
 import com.megacreative.coding.values.DataValue;
+import com.megacreative.coding.annotations.BlockMeta;
+import com.megacreative.coding.BlockType;
 import org.bukkit.Particle;
+import org.bukkit.Location;
 import org.bukkit.entity.Player;
 
 /**
  * Action to spawn particle effects with configurable parameters.
  * Includes safety limits to prevent server lag.
  */
+@BlockMeta(id = "spawnParticleEffect", displayName = "§aSpawn Particle Effect", type = BlockType.ACTION)
 public class SpawnParticleEffectAction implements BlockAction {
     
     // Maximum number of particles that can be spawned at once to prevent lag
@@ -21,6 +25,8 @@ public class SpawnParticleEffectAction implements BlockAction {
     private static final double MAX_SPREAD = 10.0;
     // Maximum speed value to prevent particles from moving too fast
     private static final double MAX_SPEED = 5.0;
+    // Maximum offset values
+    private static final double MAX_OFFSET = 10.0;
 
     @Override
     public ExecutionResult execute(CodeBlock block, ExecutionContext context) {
@@ -37,8 +43,11 @@ public class SpawnParticleEffectAction implements BlockAction {
             // Get parameters from the block with default values
             DataValue particleValue = block.getParameter("particle");
             DataValue countValue = block.getParameter("count", DataValue.of(10));
-            DataValue spreadValue = block.getParameter("spread", DataValue.of(1.0));
+            DataValue offsetXValue = block.getParameter("offsetX", DataValue.of(0.5));
+            DataValue offsetYValue = block.getParameter("offsetY", DataValue.of(0.5));
+            DataValue offsetZValue = block.getParameter("offsetZ", DataValue.of(0.5));
             DataValue speedValue = block.getParameter("speed", DataValue.of(0.1));
+            DataValue patternValue = block.getParameter("pattern", DataValue.of("basic"));
             
             if (particleValue == null || particleValue.isEmpty()) {
                 return ExecutionResult.error("Particle type parameter is missing.");
@@ -48,21 +57,41 @@ public class SpawnParticleEffectAction implements BlockAction {
             ParameterResolver resolver = new ParameterResolver(context);
             DataValue resolvedParticle = resolver.resolve(context, particleValue);
             DataValue resolvedCount = resolver.resolve(context, countValue);
-            DataValue resolvedSpread = resolver.resolve(context, spreadValue);
+            DataValue resolvedOffsetX = resolver.resolve(context, offsetXValue);
+            DataValue resolvedOffsetY = resolver.resolve(context, offsetYValue);
+            DataValue resolvedOffsetZ = resolver.resolve(context, offsetZValue);
             DataValue resolvedSpeed = resolver.resolve(context, speedValue);
+            DataValue resolvedPattern = resolver.resolve(context, patternValue);
             
             if (resolvedParticle == null || resolvedParticle.isEmpty()) {
                 return ExecutionResult.error("Could not resolve particle type.");
             }
             
             String particleType = resolvedParticle.asString().toUpperCase();
+            String pattern = resolvedPattern.asString().toLowerCase();
             
             // Validate particle type
             Particle particle;
             try {
                 particle = Particle.valueOf(particleType);
             } catch (IllegalArgumentException e) {
-                return ExecutionResult.error("Invalid particle type: " + particleType);
+                // Try some common aliases
+                switch (particleType) {
+                    case "HAPPY":
+                    case "VILLAGER":
+                        particle = Particle.VILLAGER_HAPPY;
+                        break;
+                    case "HEARTS":
+                    case "LOVE":
+                        particle = Particle.HEART;
+                        break;
+                    case "MAGIC":
+                    case "ENCHANT":
+                        particle = Particle.ENCHANTMENT_TABLE;
+                        break;
+                    default:
+                        return ExecutionResult.error("Invalid particle type: " + particleType);
+                }
             }
             
             // Validate and sanitize count
@@ -80,16 +109,27 @@ public class SpawnParticleEffectAction implements BlockAction {
                 return ExecutionResult.error("Invalid particle count: " + resolvedCount.asString());
             }
             
-            // Validate and sanitize spread
-            double spread;
+            // Validate and sanitize offsets
+            double offsetX, offsetY, offsetZ;
             try {
-                spread = Math.abs(resolvedSpread.asNumber().doubleValue());
-                if (spread > MAX_SPREAD) {
-                    context.getPlugin().getLogger().warning("Particle spread " + spread + " exceeds maximum of " + MAX_SPREAD + ". Clamping to maximum.");
-                    spread = MAX_SPREAD;
+                offsetX = Math.abs(resolvedOffsetX.asNumber().doubleValue());
+                offsetY = Math.abs(resolvedOffsetY.asNumber().doubleValue());
+                offsetZ = Math.abs(resolvedOffsetZ.asNumber().doubleValue());
+                
+                if (offsetX > MAX_OFFSET) {
+                    context.getPlugin().getLogger().warning("Particle offsetX " + offsetX + " exceeds maximum of " + MAX_OFFSET + ". Clamping to maximum.");
+                    offsetX = MAX_OFFSET;
+                }
+                if (offsetY > MAX_OFFSET) {
+                    context.getPlugin().getLogger().warning("Particle offsetY " + offsetY + " exceeds maximum of " + MAX_OFFSET + ". Clamping to maximum.");
+                    offsetY = MAX_OFFSET;
+                }
+                if (offsetZ > MAX_OFFSET) {
+                    context.getPlugin().getLogger().warning("Particle offsetZ " + offsetZ + " exceeds maximum of " + MAX_OFFSET + ". Clamping to maximum.");
+                    offsetZ = MAX_OFFSET;
                 }
             } catch (NumberFormatException e) {
-                return ExecutionResult.error("Invalid spread value: " + resolvedSpread.asString());
+                return ExecutionResult.error("Invalid offset value: " + e.getMessage());
             }
             
             // Validate and sanitize speed
@@ -104,21 +144,134 @@ public class SpawnParticleEffectAction implements BlockAction {
                 return ExecutionResult.error("Invalid speed value: " + resolvedSpeed.asString());
             }
             
-            // Spawn particles
-            player.getWorld().spawnParticle(
-                particle,
-                player.getLocation(),
-                count,
-                spread,
-                spread,
-                spread,
-                speed
-            );
+            // Determine spawn location
+            Location location = context.getBlockLocation() != null ? 
+                context.getBlockLocation() : player.getLocation();
             
-            return ExecutionResult.success("Particle effect created.");
+            // Spawn particles based on pattern
+            if ("basic".equals(pattern) || count <= 10) {
+                // Basic particle spawning
+                location.getWorld().spawnParticle(
+                    particle,
+                    location,
+                    count,
+                    offsetX,
+                    offsetY,
+                    offsetZ,
+                    speed
+                );
+            } else {
+                // Advanced patterns for larger counts
+                spawnAdvancedPattern(player, location, particle, count, offsetX, offsetY, offsetZ, speed, pattern);
+            }
+            
+            return ExecutionResult.success("Particle effect '" + particleType + "' created with " + count + " particles.");
 
         } catch (Exception e) {
             return ExecutionResult.error("Error creating particle effect: " + e.getMessage());
+        }
+    }
+    
+    /**
+     * Spawns particles with advanced patterns
+     */
+    private void spawnAdvancedPattern(Player player, Location center, Particle particle, 
+                                   int count, double offsetX, double offsetY, double offsetZ, 
+                                   double speed, String pattern) {
+        switch (pattern) {
+            case "circle":
+            case "circular":
+                spawnCircularPattern(player, center, particle, count, offsetX, speed);
+                break;
+            case "sphere":
+                spawnSpherePattern(player, center, particle, count, offsetX, speed);
+                break;
+            case "burst":
+            case "explosion":
+                spawnBurstPattern(player, center, particle, count, offsetX, speed);
+                break;
+            default:
+                // Auto-select pattern based on count
+                if (count <= 20) {
+                    spawnCircularPattern(player, center, particle, count, offsetX, speed);
+                } else if (count <= 50) {
+                    spawnSpherePattern(player, center, particle, count, offsetX, speed);
+                } else {
+                    spawnBurstPattern(player, center, particle, count, offsetX, speed);
+                }
+                break;
+        }
+    }
+    
+    /**
+     * Creates a circular particle pattern
+     */
+    private void spawnCircularPattern(Player player, Location center, Particle particle, 
+                                    int count, double radius, double speed) {
+        for (int i = 0; i < count; i++) {
+            double angle = (2 * Math.PI * i) / count;
+            double x = center.getX() + Math.cos(angle) * radius;
+            double z = center.getZ() + Math.sin(angle) * radius;
+            double y = center.getY() + (Math.random() - 0.5) * radius * 0.5;
+            
+            Location particleLocation = new Location(center.getWorld(), x, y, z);
+            
+            double velX = Math.cos(angle) * speed;
+            double velZ = Math.sin(angle) * speed;
+            double velY = (Math.random() - 0.5) * speed;
+            
+            player.spawnParticle(particle, particleLocation, 1, velX, velY, velZ, 0);
+        }
+    }
+    
+    /**
+     * Creates a 3D sphere particle pattern
+     */
+    private void spawnSpherePattern(Player player, Location center, Particle particle, 
+                                  int count, double radius, double speed) {
+        for (int i = 0; i < count; i++) {
+            double theta = Math.random() * 2 * Math.PI;
+            double phi = Math.acos(2 * Math.random() - 1);
+            
+            double x = center.getX() + radius * Math.sin(phi) * Math.cos(theta);
+            double y = center.getY() + radius * Math.cos(phi);
+            double z = center.getZ() + radius * Math.sin(phi) * Math.sin(theta);
+            
+            Location particleLocation = new Location(center.getWorld(), x, y, z);
+            
+            double velX = (x - center.getX()) / radius * speed;
+            double velY = (y - center.getY()) / radius * speed;
+            double velZ = (z - center.getZ()) / radius * speed;
+            
+            player.spawnParticle(particle, particleLocation, 1, velX, velY, velZ, 0);
+        }
+    }
+    
+    /**
+     * Creates an explosive burst pattern
+     */
+    private void spawnBurstPattern(Player player, Location center, Particle particle, 
+                                 int count, double spread, double speed) {
+        int ringsCount = Math.min(5, count / 10);
+        int particlesPerRing = count / ringsCount;
+        
+        for (int ring = 0; ring < ringsCount; ring++) {
+            double ringHeight = center.getY() + (ring - ringsCount / 2.0) * spread * 0.3;
+            double ringRadius = spread * (0.5 + ring * 0.2);
+            
+            for (int p = 0; p < particlesPerRing; p++) {
+                double angle = (2 * Math.PI * p) / particlesPerRing;
+                double x = center.getX() + Math.cos(angle) * ringRadius;
+                double z = center.getZ() + Math.sin(angle) * ringRadius;
+                
+                Location particleLocation = new Location(center.getWorld(), x, ringHeight, z);
+                
+                double velX = Math.cos(angle) * speed * (1 + ring * 0.3);
+                double velZ = Math.sin(angle) * speed * (1 + ring * 0.3);
+                double velY = (Math.random() - 0.3) * speed;
+                
+                player.spawnParticle(particle, particleLocation, 1, velX, velY, velZ, 0);
+            }
         }
     }
 }

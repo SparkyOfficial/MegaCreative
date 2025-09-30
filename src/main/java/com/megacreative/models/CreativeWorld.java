@@ -121,6 +121,37 @@ public class CreativeWorld {
     private Set<UUID> onlinePlayers;
     
     /**
+     * Script engine for this world
+     *
+     * Движок скриптов для этого мира
+     *
+     * Skript-Engine für diese Welt
+     */
+    private ScriptEngine scriptEngine;
+    
+    /**
+     * Gets the script engine for this world
+     * @return The script engine
+     *
+     * Получает движок скриптов для этого мира
+     * @return Движок скриптов
+     *
+     * Ruft die Skript-Engine für diese Welt ab
+     * @return Die Skript-Engine
+     */
+    public ScriptEngine getScriptEngine() {
+        return scriptEngine;
+    }
+    
+    /**
+     * Sets the script engine for this world
+     * @param scriptEngine The script engine to set
+     */
+    public void setScriptEngine(ScriptEngine scriptEngine) {
+        this.scriptEngine = scriptEngine;
+    }
+    
+    /**
      * 🎆 ENHANCED: World dual mode enum
      *
      * 🎆 ENHANCED: Перечисление двойного режима мира
@@ -616,21 +647,6 @@ public class CreativeWorld {
      */
     public void setCodeHandler(CodeHandler codeHandler) {
         this.codeHandler = codeHandler;
-    }
-    
-    /**
-     * Gets the script engine for this world
-     * @return The script engine
-     *
-     * Получает движок скриптов для этого мира
-     * @return Движок скриптов
-     *
-     * Ruft die Skript-Engine für diese Welt ab
-     * @return Die Skript-Engine
-     */
-    public ScriptEngine getScriptEngine() {
-        // Get the script engine from the plugin's service registry
-        return MegaCreative.getInstance().getServiceRegistry().getScriptEngine();
     }
     
     /**

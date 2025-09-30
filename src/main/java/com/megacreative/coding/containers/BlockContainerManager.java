@@ -20,7 +20,9 @@ import java.util.concurrent.ConcurrentHashMap;
 import com.megacreative.coding.containers.ContainerType;
 import com.megacreative.coding.containers.ActionConfiguration;
 import com.megacreative.coding.containers.ActionParameter;
+import org.bukkit.Bukkit;
 import org.bukkit.Location;
+import org.bukkit.metadata.FixedMetadataValue;
 
 /**
  * Advanced container system for code blocks
@@ -276,23 +278,57 @@ public class BlockContainerManager {
      * Opens sign editor GUI
      */
     private void openSignEditor(Player player, BlockContainer container) {
-        // ContainerConfigGUI is removed as part of unused functionality cleanup
-        player.sendMessage("§cContainer configuration GUI is not available.");
+        Block containerBlock = container.getContainerLocation().getBlock();
+        if (containerBlock.getState() instanceof Sign sign) {
+            // Create a proper GUI for sign editing instead of just sending messages
+            // We'll create an inventory-based editor for the sign lines
+            Inventory signEditor = Bukkit.createInventory(null, 9, "§eSign Editor: " + container.getAction());
+            
+            // Add current sign lines as editable items
+            for (int i = 0; i < 4; i++) {
+                String line = sign.getLine(i);
+                ItemStack lineItem = new ItemStack(Material.PAPER);
+                ItemMeta meta = lineItem.getItemMeta();
+                meta.setDisplayName("§eLine " + (i + 1));
+                List<String> lore = new ArrayList<>();
+                lore.add("§7Current: " + (line.isEmpty() ? "§o<empty>" : line));
+                lore.add("");
+                lore.add("§aClick to edit");
+                meta.setLore(lore);
+                lineItem.setItemMeta(meta);
+                signEditor.setItem(i, lineItem);
+            }
+            
+            // Add save button
+            ItemStack saveButton = new ItemStack(Material.LIME_WOOL);
+            ItemMeta saveMeta = saveButton.getItemMeta();
+            saveMeta.setDisplayName("§a§lSave Changes");
+            List<String> saveLore = new ArrayList<>();
+            saveLore.add("§7Click to save and close");
+            saveMeta.setLore(saveLore);
+            saveButton.setItemMeta(saveMeta);
+            signEditor.setItem(8, saveButton);
+            
+            // Store container reference for later use
+            player.setMetadata("editing_sign_container", new FixedMetadataValue(plugin, container));
+            
+            // Open the editor inventory
+            player.openInventory(signEditor);
+        } else {
+            player.sendMessage("§cSign is not available.");
+        }
     }
     
     /**
      * Opens inventory editor
      */
     private void openInventoryEditor(Player player, BlockContainer container) {
-        // ContainerConfigGUI is removed as part of unused functionality cleanup
-        player.sendMessage("§cContainer configuration GUI is not available.");
-        
-        /*
         Block containerBlock = container.getContainerLocation().getBlock();
         if (containerBlock.getState() instanceof Container containerState) {
             player.openInventory(containerState.getInventory());
+        } else {
+            player.sendMessage("§cContainer is not available.");
         }
-        */
     }
     
     /**

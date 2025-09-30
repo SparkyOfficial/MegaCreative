@@ -75,7 +75,7 @@ public class GuiListener implements Listener {
         // Handle text input for InteractiveGUIManager synchronously
         event.setCancelled(true);
         event.getPlayer().getServer().getScheduler().runTask(
-            com.megacreative.MegaCreative.getInstance(), 
+            plugin, 
             () -> {
                 // Handle text input for InteractiveGUIManager
                 GUIManager guiManager = plugin.getServiceRegistry().getGuiManager();

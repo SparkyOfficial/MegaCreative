@@ -497,7 +497,7 @@ public class ReferenceSystemEventsListener implements Listener {
         
         // Execute chat script if exists synchronously
         event.getPlayer().getServer().getScheduler().runTask(
-            com.megacreative.MegaCreative.getInstance(), 
+            plugin, 
             () -> {
                 // Execute chat script if exists
                 CodeScript script = chatScripts.get("on_chat");

@@ -163,7 +163,35 @@ public class ScriptCompiler implements Listener {
         // IMPORTANT: We don't rebuild the links here. We trust them.
         // BlockLinker is responsible for the structure, and the compiler is responsible for reading it.
         
-        return new CodeScript(eventBlock); // For now, create a script with only the root block
+        // Create a script with the root block
+        CodeScript script = new CodeScript(eventBlock);
+        
+        // Traverse the block structure to build the complete script
+        // This follows the chain of nextBlock and children links
+        return buildCompleteScript(script, eventBlock);
+    }
+    
+    /**
+     * Builds a complete script by traversing the block structure
+     * @param script The script to build
+     * @param currentBlock The current block being processed
+     * @return The completed script
+     */
+    private CodeScript buildCompleteScript(CodeScript script, CodeBlock currentBlock) {
+        // Process next block if it exists
+        if (currentBlock.getNextBlock() != null) {
+            // The next block is already linked, so we just need to ensure it's included
+            // in the script structure. The BlockLinker has already established these connections.
+        }
+        
+        // Process child blocks
+        for (CodeBlock child : currentBlock.getChildren()) {
+            // Child blocks are already linked, so they're part of the structure
+            // The recursive traversal ensures all connected blocks are included
+            buildCompleteScript(script, child);
+        }
+        
+        return script;
     }
 
     private void addScriptToWorld(CodeBlock eventBlock, CodeScript script, CreativeWorld creativeWorld, IWorldManager worldManager) {

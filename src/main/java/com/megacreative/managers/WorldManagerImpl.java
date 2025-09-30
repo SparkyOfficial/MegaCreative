@@ -4,6 +4,7 @@ import com.megacreative.MegaCreative;
 import com.megacreative.coding.BlockType;
 import com.megacreative.coding.CodeBlock;
 import com.megacreative.coding.CodeHandler;
+import com.megacreative.coding.ScriptEngine;
 import com.megacreative.interfaces.IWorldManager;
 import com.megacreative.interfaces.ICodingManager;
 import com.megacreative.models.*;
@@ -266,6 +267,13 @@ public class WorldManagerImpl implements IWorldManager {
             CreativeWorld world = com.megacreative.utils.JsonSerializer.deserializeWorld(jsonContent, (MegaCreative) plugin);
             
             if (world != null) {
+                // Inject ScriptEngine into CreativeWorld
+                if (plugin instanceof MegaCreative) {
+                    MegaCreative megaPlugin = (MegaCreative) plugin;
+                    ScriptEngine scriptEngine = megaPlugin.getServiceRegistry().getScriptEngine();
+                    world.setScriptEngine(scriptEngine);
+                }
+
                 // Register the world in memory
                 worlds.put(world.getId(), world);
                 
@@ -527,6 +535,13 @@ public class WorldManagerImpl implements IWorldManager {
                 if (newWorld != null) {
                     // Настройка мира (границы, геймрулы) - должно должно быть синхронно
                     setupWorld(newWorld, creativeWorld);
+
+                    // Inject ScriptEngine into CreativeWorld
+                    if (plugin instanceof MegaCreative) {
+                        MegaCreative megaPlugin = (MegaCreative) plugin;
+                        ScriptEngine scriptEngine = megaPlugin.getServiceRegistry().getScriptEngine();
+                        creativeWorld.setScriptEngine(scriptEngine);
+                    }
 
                     // Регистрация мира в памяти
                     worlds.put(worldId, creativeWorld);

@@ -1,5 +1,6 @@
 package com.megacreative.listeners;
 
+import com.megacreative.MegaCreative;
 import com.megacreative.coding.data.DataItemFactory;
 import com.megacreative.coding.data.DataType;
 import org.bukkit.NamespacedKey;
@@ -15,6 +16,12 @@ import java.util.Arrays;
 import java.util.Optional;
 
 public class DataItemListener implements Listener {
+    
+    private final MegaCreative plugin;
+    
+    public DataItemListener(MegaCreative plugin) {
+        this.plugin = plugin;
+    }
 
     @EventHandler
     public void onPlayerChat(AsyncPlayerChatEvent event) {
@@ -48,7 +55,7 @@ public class DataItemListener implements Listener {
             String finalNewValue = newValue;
             DataItemFactory.DataItem finalData = data;
             event.getPlayer().getServer().getScheduler().runTask(
-                com.megacreative.MegaCreative.getInstance(), 
+                plugin, 
                 () -> {
                     // Обновляем NBT и Lore предмета
                     ItemStack currentItem = player.getInventory().getItemInMainHand();

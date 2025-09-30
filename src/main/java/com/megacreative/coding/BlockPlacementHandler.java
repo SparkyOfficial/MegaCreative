@@ -116,14 +116,12 @@ public class BlockPlacementHandler implements Listener {
 
         Player player = event.getPlayer();
         Block block = event.getBlockPlaced();
-        log.info("[DEBUG] Player " + player.getName() + " placed block " + block.getType() + " at " + block.getLocation());
 
         // Проверка на поверхность установки
         if (!isCorrectPlacementSurface(block)) {
             player.sendMessage("§cThis block can only be placed on the correct surface!");
             player.playSound(block.getLocation(), org.bukkit.Sound.ENTITY_VILLAGER_NO, 1.0f, 0.8f);
             event.setCancelled(true);
-            log.warning("[DEBUG] Block placement cancelled: incorrect surface for " + block.getType());
             return;
         }
 
@@ -134,13 +132,11 @@ public class BlockPlacementHandler implements Listener {
             player.sendMessage("§cYou can only place special coding blocks!");
             player.playSound(block.getLocation(), org.bukkit.Sound.ENTITY_VILLAGER_NO, 1.0f, 0.8f);
             event.setCancelled(true);
-            log.warning("[DEBUG] Block placement cancelled: not a coding block " + block.getType());
             return;
         }
 
         // 1. Сохраняем созданный блок
         blockCodeBlocks.put(block.getLocation(), newCodeBlock);
-        log.info("[DEBUG] Created block: " + newCodeBlock.toString() + " at " + block.getLocation());
         
         // 2. Создаем табличку для визуализации
         createSignForBlock(block.getLocation(), newCodeBlock);
@@ -174,7 +170,6 @@ public class BlockPlacementHandler implements Listener {
         // Если по этому адресу был наш CodeBlock...
         if (blockCodeBlocks.containsKey(loc)) {
             CodeBlock removedBlock = blockCodeBlocks.remove(loc);
-            player.sendMessage("§c[DEBUG] Удален блок: " + removedBlock.toString() + " из " + loc);
             
             // 1. Удаляем табличку
             removeSignFromBlock(loc);
@@ -461,7 +456,6 @@ public class BlockPlacementHandler implements Listener {
         // If blockConfigService is not available, allow placement (fallback)
         BlockConfigService configService = getBlockConfigService();
         if (configService == null) {
-            log.warning("[DEBUG] BlockConfigService is null, allowing placement for " + block.getType());
             return true;
         }
         
@@ -470,25 +464,17 @@ public class BlockPlacementHandler implements Listener {
         
         // If no config found, allow placement (fallback)
         if (config == null) {
-            log.warning("[DEBUG] No config found for material " + block.getType() + ", allowing placement");
             return true;
         }
-        
-        log.info("[DEBUG] Checking placement for block type: " + block.getType() + ", config type: " + config.getType());
-        log.info("[DEBUG] Block below type: " + below.getType());
         
         // Check if this is an EVENT block (DIAMOND_BLOCK)
         if ("EVENT".equals(config.getType())) {
             // EVENT blocks should only be placed on blue glass
-            boolean correct = below.getType() == org.bukkit.Material.BLUE_STAINED_GLASS;
-            log.info("[DEBUG] EVENT block placement check: " + correct + " (should be on blue glass)");
-            return correct;
+            return below.getType() == org.bukkit.Material.BLUE_STAINED_GLASS;
         } else {
             // All other blocks should only be placed on grey glass
-            boolean correct = below.getType() == org.bukkit.Material.GRAY_STAINED_GLASS || 
+            return below.getType() == org.bukkit.Material.GRAY_STAINED_GLASS || 
                    below.getType() == org.bukkit.Material.LIGHT_GRAY_STAINED_GLASS;
-            log.info("[DEBUG] Non-EVENT block placement check: " + correct + " (should be on grey glass)");
-            return correct;
         }
     }
     
