@@ -3,44 +3,41 @@ package com.megacreative.coding.conditions;
 import com.megacreative.coding.BlockCondition;
 import com.megacreative.coding.CodeBlock;
 import com.megacreative.coding.ExecutionContext;
-import com.megacreative.services.BlockConfigService;
+import com.megacreative.coding.ParameterResolver;
+import com.megacreative.coding.annotations.BlockMeta;
+import com.megacreative.coding.BlockType;
+import com.megacreative.coding.values.DataValue;
 import org.bukkit.entity.Entity;
 import org.bukkit.entity.EntityType;
 import org.bukkit.entity.LivingEntity;
 import org.bukkit.entity.Player;
-import org.bukkit.inventory.ItemStack;
-import org.bukkit.inventory.meta.ItemMeta;
-
-import java.util.function.Function;
-
-import com.megacreative.coding.annotations.BlockMeta;
-import com.megacreative.coding.BlockType;
 
 /**
- * Condition for checking if a mob is near the player from container configuration.
+ * Condition for checking if a mob is near the player from the new parameter system.
  * This condition returns true if a mob is within a specified distance of the player.
  */
 @BlockMeta(id = "mobNear", displayName = "§aMob Near", type = BlockType.CONDITION)
 public class MobNearCondition implements BlockCondition {
 
     @Override
-    public boolean evaluate(CodeBlock block, ExecutionContext context) {
+public boolean evaluate(CodeBlock block, ExecutionContext context) {
         Player player = context.getPlayer();
         if (player == null) {
             return false;
         }
 
         try {
-            // Get parameters from the container configuration
-            MobNearParams params = getMobParamsFromContainer(block, context);
+            // Get parameters from the new parameter system
+            DataValue mobValue = block.getParameter("mob");
+            DataValue distanceValue = block.getParameter("distance");
             
             // Parse distance parameter (default to 10)
             int distance = 10;
-            if (params.distanceStr != null && !params.distanceStr.isEmpty()) {
+            if (distanceValue != null && !distanceValue.isEmpty()) {
                 try {
-                    distance = Math.max(1, Integer.parseInt(params.distanceStr));
+                    distance = Math.max(1, distanceValue.asNumber().intValue());
                 } catch (NumberFormatException e) {
-                    // Use default distance if parsing fails
+                    context.getPlugin().getLogger().warning("MobNearCondition: Invalid distance value, using default 10.");
                 }
             }
 
@@ -48,14 +45,23 @@ public class MobNearCondition implements BlockCondition {
             for (Entity entity : player.getNearbyEntities(distance, distance, distance)) {
                 if (entity instanceof LivingEntity) {
                     // If a specific mob type is specified, check if it matches
-                    if (params.mobStr != null && !params.mobStr.isEmpty()) {
-                        try {
-                            EntityType mobType = EntityType.valueOf(params.mobStr.toUpperCase());
-                            if (entity.getType() == mobType) {
-                                return true;
+                    if (mobValue != null && !mobValue.isEmpty()) {
+                        // Resolve any placeholders in the mob name
+                        ParameterResolver resolver = new ParameterResolver(context);
+                        DataValue resolvedMob = resolver.resolve(context, mobValue);
+                        
+                        // Parse mob type parameter
+                        String mobName = resolvedMob.asString();
+                        if (mobName != null && !mobName.isEmpty()) {
+                            try {
+                                EntityType mobType = EntityType.valueOf(mobName.toUpperCase());
+                                if (entity.getType() == mobType) {
+                                    return true;
+                                }
+                            } catch (IllegalArgumentException e) {
+                                context.getPlugin().getLogger().warning("MobNearCondition: Invalid mob type '" + mobName + "'.");
+                                // If mob type is invalid, continue checking other entities
                             }
-                        } catch (IllegalArgumentException e) {
-                            // If mob type is invalid, continue checking other entities
                         }
                     } else {
                         // If no specific mob type is specified, any mob will do
@@ -67,72 +73,9 @@ public class MobNearCondition implements BlockCondition {
             return false;
         } catch (Exception e) {
             // If there's an error, return false
+            context.getPlugin().getLogger().warning("Error in MobNearCondition: " + e.getMessage());
             return false;
         }
-    }
-    
-    /**
-     * Gets mob parameters from the container configuration
-     */
-    private MobNearParams getMobParamsFromContainer(CodeBlock block, ExecutionContext context) {
-        MobNearParams params = new MobNearParams();
-        
-        try {
-            // Get the BlockConfigService to resolve slot names
-            BlockConfigService blockConfigService = context.getPlugin().getServiceRegistry().getBlockConfigService();
-            
-            // Get the slot resolver for this condition
-            Function<String, Integer> slotResolver = blockConfigService.getSlotResolver(block.getCondition());
-            
-            if (slotResolver != null) {
-                // Get mob from the mob_slot
-                Integer mobSlot = slotResolver.apply("mob_slot");
-                if (mobSlot != null) {
-                    ItemStack mobItem = block.getConfigItem(mobSlot);
-                    if (mobItem != null) {
-                        // Extract mob type from item
-                        params.mobStr = getMobTypeFromItem(mobItem);
-                    }
-                }
-                
-                // Get distance from the distance_slot
-                Integer distanceSlot = slotResolver.apply("distance_slot");
-                if (distanceSlot != null) {
-                    ItemStack distanceItem = block.getConfigItem(distanceSlot);
-                    if (distanceItem != null && distanceItem.hasItemMeta()) {
-                        // Extract distance from item
-                        params.distanceStr = getDistanceFromItem(distanceItem);
-                    }
-                }
-            }
-        } catch (Exception e) {
-            context.getPlugin().getLogger().warning("Error getting mob parameters from container in MobNearCondition: " + e.getMessage());
-        }
-        
-        return params;
-    }
-    
-    /**
-     * Extracts mob type from an item
-     */
-    private String getMobTypeFromItem(ItemStack item) {
-        // For mob type, we'll use the item type name
-        return item.getType().name();
-    }
-    
-    /**
-     * Extracts distance from an item
-     */
-    private String getDistanceFromItem(ItemStack item) {
-        ItemMeta meta = item.getItemMeta();
-        if (meta != null) {
-            String displayName = meta.getDisplayName();
-            if (displayName != null && !displayName.isEmpty()) {
-                // Remove color codes and return the distance
-                return displayName.replaceAll("[§0-9]", "").trim();
-            }
-        }
-        return null;
     }
     
     /**

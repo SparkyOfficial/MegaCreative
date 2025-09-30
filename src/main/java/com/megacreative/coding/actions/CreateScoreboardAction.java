@@ -8,19 +8,14 @@ import com.megacreative.coding.annotations.BlockMeta;
 import com.megacreative.coding.BlockType;
 import com.megacreative.coding.executors.ExecutionResult;
 import com.megacreative.coding.values.DataValue;
-import com.megacreative.services.BlockConfigService;
 import org.bukkit.entity.Player;
-import org.bukkit.inventory.ItemStack;
-import org.bukkit.inventory.meta.ItemMeta;
 import org.bukkit.scoreboard.Scoreboard;
 import org.bukkit.scoreboard.Objective;
 import org.bukkit.scoreboard.DisplaySlot;
 
-import java.util.function.Function;
-
 /**
  * Action for creating a scoreboard.
- * This action retrieves parameters from the container configuration and creates a scoreboard.
+ * This action retrieves parameters from the new parameter system.
  */
 @BlockMeta(id = "createScoreboard", displayName = "§aCreate Scoreboard", type = BlockType.ACTION)
 public class CreateScoreboardAction implements BlockAction {
@@ -33,15 +28,16 @@ public class CreateScoreboardAction implements BlockAction {
         }
 
         try {
-            // Get parameters from the container configuration
-            String title = getTitleFromContainer(block, context);
+            // Get parameters from the new parameter system
+            DataValue titleValue = block.getParameter("title");
+            if (titleValue == null || titleValue.isEmpty()) {
+                return ExecutionResult.error("No scoreboard title provided");
+            }
 
             // Resolve any placeholders in the title
             ParameterResolver resolver = new ParameterResolver(context);
-            DataValue titleValue = DataValue.of(title);
             DataValue resolvedTitle = resolver.resolve(context, titleValue);
             
-            // Parse parameters
             String scoreboardTitle = resolvedTitle.asString();
             
             if (scoreboardTitle == null || scoreboardTitle.isEmpty()) {
@@ -72,49 +68,5 @@ public class CreateScoreboardAction implements BlockAction {
         } catch (Exception e) {
             return ExecutionResult.error("Failed to create scoreboard: " + e.getMessage());
         }
-    }
-    
-    /**
-     * Gets title from the container configuration
-     */
-    private String getTitleFromContainer(CodeBlock block, ExecutionContext context) {
-        try {
-            // Get the BlockConfigService to resolve slot names
-            BlockConfigService blockConfigService = context.getPlugin().getServiceRegistry().getBlockConfigService();
-            
-            // Get the slot resolver for this action
-            Function<String, Integer> slotResolver = blockConfigService.getSlotResolver(block.getAction());
-            
-            if (slotResolver != null) {
-                // Get title from the title slot
-                Integer titleSlot = slotResolver.apply("title");
-                if (titleSlot != null) {
-                    ItemStack titleItem = block.getConfigItem(titleSlot);
-                    if (titleItem != null && titleItem.hasItemMeta()) {
-                        // Extract title from item
-                        return getTitleFromItem(titleItem);
-                    }
-                }
-            }
-        } catch (Exception e) {
-            context.getPlugin().getLogger().warning("Error getting title from container in CreateScoreboardAction: " + e.getMessage());
-        }
-        
-        return "Scoreboard";
-    }
-    
-    /**
-     * Extracts title from an item
-     */
-    private String getTitleFromItem(ItemStack item) {
-        ItemMeta meta = item.getItemMeta();
-        if (meta != null) {
-            String displayName = meta.getDisplayName();
-            if (displayName != null && !displayName.isEmpty()) {
-                // Remove color codes and return the title
-                return displayName.replaceAll("[§0-9]", "").trim();
-            }
-        }
-        return "Scoreboard";
     }
 }

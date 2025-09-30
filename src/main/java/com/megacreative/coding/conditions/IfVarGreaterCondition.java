@@ -8,15 +8,10 @@ import com.megacreative.coding.annotations.BlockMeta;
 import com.megacreative.coding.BlockType;
 import com.megacreative.coding.values.DataValue;
 import com.megacreative.coding.variables.VariableManager;
-import com.megacreative.services.BlockConfigService;
 import org.bukkit.entity.Player;
-import org.bukkit.inventory.ItemStack;
-import org.bukkit.inventory.meta.ItemMeta;
-
-import java.util.function.Function;
 
 /**
- * Condition for checking if a variable is greater than a specific value from container configuration.
+ * Condition for checking if a variable is greater than a specific value from the new parameter system.
  * This condition returns true if the specified variable is greater than the specified value.
  */
 @BlockMeta(id = "ifVarGreater", displayName = "§aIf Variable Greater", type = BlockType.CONDITION)
@@ -30,19 +25,23 @@ public class IfVarGreaterCondition implements BlockCondition {
         }
 
         try {
-            // Get parameters from the container configuration
-            IfVarGreaterParams params = getVarParamsFromContainer(block, context);
+            // Get parameters from the new parameter system
+            DataValue nameValue = block.getParameter("name");
+            DataValue valueValue = block.getParameter("value");
             
-            if (params.nameStr == null || params.nameStr.isEmpty()) {
+            if (nameValue == null || nameValue.isEmpty()) {
+                context.getPlugin().getLogger().warning("IfVarGreaterCondition: 'name' parameter is missing.");
+                return false;
+            }
+            
+            if (valueValue == null || valueValue.isEmpty()) {
+                context.getPlugin().getLogger().warning("IfVarGreaterCondition: 'value' parameter is missing.");
                 return false;
             }
 
             // Resolve any placeholders in the parameters
             ParameterResolver resolver = new ParameterResolver(context);
-            DataValue nameValue = DataValue.of(params.nameStr);
             DataValue resolvedName = resolver.resolve(context, nameValue);
-            
-            DataValue valueValue = DataValue.of(params.valueStr);
             DataValue resolvedValue = resolver.resolve(context, valueValue);
             
             // Parse parameters
@@ -50,6 +49,7 @@ public class IfVarGreaterCondition implements BlockCondition {
             String compareValueStr = resolvedValue.asString();
             
             if (varName == null || varName.isEmpty() || compareValueStr == null || compareValueStr.isEmpty()) {
+                context.getPlugin().getLogger().warning("IfVarGreaterCondition: One or more parameters are empty.");
                 return false;
             }
 
@@ -58,6 +58,7 @@ public class IfVarGreaterCondition implements BlockCondition {
             try {
                 compareValue = Double.parseDouble(compareValueStr);
             } catch (NumberFormatException e) {
+                context.getPlugin().getLogger().warning("IfVarGreaterCondition: Invalid value '" + compareValueStr + "' for comparison.");
                 return false;
             }
 
@@ -89,6 +90,7 @@ public class IfVarGreaterCondition implements BlockCondition {
             
             // If we couldn't find the variable, return false
             if (varValueData == null) {
+                context.getPlugin().getLogger().warning("IfVarGreaterCondition: Variable '" + varName + "' not found.");
                 return false;
             }
             
@@ -97,6 +99,7 @@ public class IfVarGreaterCondition implements BlockCondition {
             try {
                 varValue = varValueData.asNumber().doubleValue();
             } catch (NumberFormatException e) {
+                context.getPlugin().getLogger().warning("IfVarGreaterCondition: Variable '" + varName + "' is not a valid number.");
                 return false;
             }
 
@@ -104,81 +107,9 @@ public class IfVarGreaterCondition implements BlockCondition {
             return varValue > compareValue;
         } catch (Exception e) {
             // If there's an error, return false
+            context.getPlugin().getLogger().warning("Error in IfVarGreaterCondition: " + e.getMessage());
             return false;
         }
-    }
-    
-    /**
-     * Gets variable parameters from the container configuration
-     */
-    private IfVarGreaterParams getVarParamsFromContainer(CodeBlock block, ExecutionContext context) {
-        IfVarGreaterParams params = new IfVarGreaterParams();
-        
-        try {
-            // Get the BlockConfigService to resolve slot names
-            BlockConfigService blockConfigService = context.getPlugin().getServiceRegistry().getBlockConfigService();
-            
-            // Get the slot resolver for this condition
-            Function<String, Integer> slotResolver = blockConfigService.getSlotResolver(block.getCondition());
-            
-            if (slotResolver != null) {
-                // Get variable name from the name slot
-                Integer nameSlot = slotResolver.apply("name");
-                if (nameSlot != null) {
-                    ItemStack nameItem = block.getConfigItem(nameSlot);
-                    if (nameItem != null && nameItem.hasItemMeta()) {
-                        // Extract variable name from item
-                        params.nameStr = getVariableNameFromItem(nameItem);
-                    }
-                }
-                
-                // Get value from the value slot
-                Integer valueSlot = slotResolver.apply("value");
-                if (valueSlot != null) {
-                    ItemStack valueItem = block.getConfigItem(valueSlot);
-                    if (valueItem != null) {
-                        // Extract value from item
-                        params.valueStr = getValueFromItem(valueItem);
-                    }
-                }
-            }
-        } catch (Exception e) {
-            context.getPlugin().getLogger().warning("Error getting variable parameters from container in IfVarGreaterCondition: " + e.getMessage());
-        }
-        
-        return params;
-    }
-    
-    /**
-     * Extracts variable name from an item
-     */
-    private String getVariableNameFromItem(ItemStack item) {
-        ItemMeta meta = item.getItemMeta();
-        if (meta != null) {
-            String displayName = meta.getDisplayName();
-            if (displayName != null && !displayName.isEmpty()) {
-                // Remove color codes and return the variable name
-                return displayName.replaceAll("[§0-9]", "").trim();
-            }
-        }
-        return null;
-    }
-    
-    /**
-     * Extracts value from an item
-     */
-    private String getValueFromItem(ItemStack item) {
-        ItemMeta meta = item.getItemMeta();
-        if (meta != null) {
-            String displayName = meta.getDisplayName();
-            if (displayName != null && !displayName.isEmpty()) {
-                // Remove color codes and return the value
-                return displayName.replaceAll("[§0-9]", "").trim();
-            }
-        }
-        
-        // If no display name, use the item amount as a number
-        return String.valueOf(item.getAmount());
     }
     
     /**

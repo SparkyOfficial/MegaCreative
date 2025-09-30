@@ -3,9 +3,11 @@ package com.megacreative.coding.actions;
 import com.megacreative.coding.BlockAction;
 import com.megacreative.coding.CodeBlock;
 import com.megacreative.coding.ExecutionContext;
+import com.megacreative.coding.ParameterResolver;
 import com.megacreative.coding.executors.ExecutionResult;
 import com.megacreative.coding.annotations.BlockMeta;
 import com.megacreative.coding.BlockType;
+import com.megacreative.coding.values.DataValue;
 import org.bukkit.Bukkit;
 
 /**
@@ -19,24 +21,28 @@ public class CommandAction implements BlockAction {
     public ExecutionResult execute(CodeBlock block, ExecutionContext context) {
         try {
             // Get command parameter
-            com.megacreative.coding.values.DataValue commandValue = block.getParameter("command");
+            DataValue commandValue = block.getParameter("command");
             
             if (commandValue == null || commandValue.isEmpty()) {
-                return ExecutionResult.error("");
+                return ExecutionResult.error("No command provided");
             }
             
-            String command = commandValue.asString();
+            // Resolve any placeholders in the command
+            ParameterResolver resolver = new ParameterResolver(context);
+            DataValue resolvedCommand = resolver.resolve(context, commandValue);
+            
+            String command = resolvedCommand.asString();
             
             // Execute the command
             boolean success = Bukkit.dispatchCommand(Bukkit.getConsoleSender(), command);
             
             if (success) {
-                return ExecutionResult.success("");
+                return ExecutionResult.success("Command executed successfully");
             } else {
-                return ExecutionResult.error("");
+                return ExecutionResult.error("Failed to execute command: " + command);
             }
         } catch (Exception e) {
-            return ExecutionResult.error("");
+            return ExecutionResult.error("Error executing command: " + e.getMessage());
         }
     }
 }

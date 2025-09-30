@@ -3,15 +3,12 @@ package com.megacreative.coding.conditions;
 import com.megacreative.coding.BlockCondition;
 import com.megacreative.coding.CodeBlock;
 import com.megacreative.coding.ExecutionContext;
-import com.megacreative.services.BlockConfigService;
+import com.megacreative.coding.ParameterResolver;
 import com.megacreative.coding.annotations.BlockMeta;
 import com.megacreative.coding.BlockType;
+import com.megacreative.coding.values.DataValue;
 import org.bukkit.Statistic;
 import org.bukkit.entity.Player;
-import org.bukkit.inventory.ItemStack;
-import org.bukkit.inventory.meta.ItemMeta;
-
-import java.util.function.Function;
 
 @BlockMeta(id = "checkPlayerStats", displayName = "§aCheck Player Stats", type = BlockType.CONDITION)
 public class CheckPlayerStatsCondition implements BlockCondition {
@@ -22,22 +19,30 @@ public class CheckPlayerStatsCondition implements BlockCondition {
         if (player == null) return false;
         
         try {
-            // Get parameters from the container configuration
-            CheckPlayerStatsParams params = getStatsParamsFromContainer(block, context);
+            // Get parameters from the new parameter system
+            DataValue statTypeValue = block.getParameter("stat_type");
+            DataValue valueValue = block.getParameter("value");
+            DataValue operatorValue = block.getParameter("operator");
             
-            if (params.statType == null || params.statType.isEmpty()) {
+            if (statTypeValue == null || statTypeValue.isEmpty()) {
                 context.getPlugin().getLogger().warning("CheckPlayerStatsCondition: 'stat_type' parameter is missing.");
                 return false;
             }
             
-            if (params.valueStr == null || params.valueStr.isEmpty()) {
+            if (valueValue == null || valueValue.isEmpty()) {
                 context.getPlugin().getLogger().warning("CheckPlayerStatsCondition: 'value' parameter is missing.");
                 return false;
             }
             
-            String statType = params.statType.toUpperCase();
-            double checkValue = params.value;
-            String operator = params.operator;
+            // Resolve any placeholders in the parameters
+            ParameterResolver resolver = new ParameterResolver(context);
+            DataValue resolvedStatType = resolver.resolve(context, statTypeValue);
+            DataValue resolvedValue = resolver.resolve(context, valueValue);
+            DataValue resolvedOperator = operatorValue != null ? resolver.resolve(context, operatorValue) : null;
+            
+            String statType = resolvedStatType.asString().toUpperCase();
+            double checkValue = resolvedValue.asNumber().doubleValue();
+            String operator = resolvedOperator != null ? resolvedOperator.asString() : "==";
             
             // Get the player's statistic value
             double playerStatValue = 0;
@@ -72,109 +77,6 @@ public class CheckPlayerStatsCondition implements BlockCondition {
             context.getPlugin().getLogger().severe("Error evaluating CheckPlayerStatsCondition: " + e.getMessage());
             return false;
         }
-    }
-    
-    /**
-     * Gets stats parameters from the container configuration
-     */
-    private CheckPlayerStatsParams getStatsParamsFromContainer(CodeBlock block, ExecutionContext context) {
-        CheckPlayerStatsParams params = new CheckPlayerStatsParams();
-        
-        try {
-            // Get the BlockConfigService to resolve slot names
-            BlockConfigService blockConfigService = context.getPlugin().getServiceRegistry().getBlockConfigService();
-            
-            // Get the slot resolver for this condition
-            Function<String, Integer> slotResolver = blockConfigService.getSlotResolver(block.getCondition());
-            
-            if (slotResolver != null) {
-                // Get stat type from the stat_type_slot
-                Integer statTypeSlot = slotResolver.apply("stat_type_slot");
-                if (statTypeSlot != null) {
-                    ItemStack statTypeItem = block.getConfigItem(statTypeSlot);
-                    if (statTypeItem != null && statTypeItem.hasItemMeta()) {
-                        // Extract stat type from item
-                        params.statType = getStatTypeFromItem(statTypeItem);
-                    }
-                }
-                
-                // Get value from the value_slot
-                Integer valueSlot = slotResolver.apply("value_slot");
-                if (valueSlot != null) {
-                    ItemStack valueItem = block.getConfigItem(valueSlot);
-                    if (valueItem != null && valueItem.hasItemMeta()) {
-                        // Extract value from item
-                        params.valueStr = getValueFromItem(valueItem);
-                        if (params.valueStr != null && !params.valueStr.isEmpty()) {
-                            try {
-                                params.value = Double.parseDouble(params.valueStr);
-                            } catch (NumberFormatException e) {
-                                // Use default value if parsing fails
-                            }
-                        }
-                    }
-                }
-                
-                // Get operator from the operator_slot
-                Integer operatorSlot = slotResolver.apply("operator_slot");
-                if (operatorSlot != null) {
-                    ItemStack operatorItem = block.getConfigItem(operatorSlot);
-                    if (operatorItem != null && operatorItem.hasItemMeta()) {
-                        // Extract operator from item
-                        params.operator = getOperatorFromItem(operatorItem);
-                    }
-                }
-            }
-        } catch (Exception e) {
-            context.getPlugin().getLogger().warning("Error getting stats parameters from container in CheckPlayerStatsCondition: " + e.getMessage());
-        }
-        
-        return params;
-    }
-    
-    /**
-     * Extracts stat type from an item
-     */
-    private String getStatTypeFromItem(ItemStack item) {
-        ItemMeta meta = item.getItemMeta();
-        if (meta != null) {
-            String displayName = meta.getDisplayName();
-            if (displayName != null && !displayName.isEmpty()) {
-                // Remove color codes and return the stat type
-                return displayName.replaceAll("[§0-9]", "").trim();
-            }
-        }
-        return null;
-    }
-    
-    /**
-     * Extracts value from an item
-     */
-    private String getValueFromItem(ItemStack item) {
-        ItemMeta meta = item.getItemMeta();
-        if (meta != null) {
-            String displayName = meta.getDisplayName();
-            if (displayName != null && !displayName.isEmpty()) {
-                // Remove color codes and return the value
-                return displayName.replaceAll("[§0-9]", "").trim();
-            }
-        }
-        return null;
-    }
-    
-    /**
-     * Extracts operator from an item
-     */
-    private String getOperatorFromItem(ItemStack item) {
-        ItemMeta meta = item.getItemMeta();
-        if (meta != null) {
-            String displayName = meta.getDisplayName();
-            if (displayName != null && !displayName.isEmpty()) {
-                // Remove color codes and return the operator
-                return displayName.replaceAll("[§0-9]", "").trim();
-            }
-        }
-        return "=="; // Default operator
     }
     
     /**

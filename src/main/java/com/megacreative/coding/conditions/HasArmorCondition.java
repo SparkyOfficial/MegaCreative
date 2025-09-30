@@ -7,16 +7,13 @@ import com.megacreative.coding.ParameterResolver;
 import com.megacreative.coding.annotations.BlockMeta;
 import com.megacreative.coding.BlockType;
 import com.megacreative.coding.values.DataValue;
-import com.megacreative.services.BlockConfigService;
 import org.bukkit.Material;
 import org.bukkit.entity.Player;
 import org.bukkit.inventory.ItemStack;
-import org.bukkit.inventory.meta.ItemMeta;
-
-import java.util.function.Function;
+import org.bukkit.inventory.PlayerInventory;
 
 /**
- * Condition for checking if a player is wearing specific armor from container configuration.
+ * Condition for checking if a player is wearing specific armor from the new parameter system.
  * This condition returns true if the player is wearing the specified armor piece.
  */
 @BlockMeta(id = "hasArmor", displayName = "§aHas Armor", type = BlockType.CONDITION)
@@ -30,31 +27,33 @@ public class HasArmorCondition implements BlockCondition {
         }
 
         try {
-            // Get parameters from the container configuration
-            HasArmorParams params = getArmorParamsFromContainer(block, context);
+            // Get parameters from the new parameter system
+            DataValue armorValue = block.getParameter("armor");
             
-            if (params.armorStr == null || params.armorStr.isEmpty()) {
+            if (armorValue == null || armorValue.isEmpty()) {
+                context.getPlugin().getLogger().warning("HasArmorCondition: 'armor' parameter is missing.");
                 return false;
             }
 
             // Resolve any placeholders in the armor name
             ParameterResolver resolver = new ParameterResolver(context);
-            DataValue armorValue = DataValue.of(params.armorStr);
             DataValue resolvedArmor = resolver.resolve(context, armorValue);
             
             // Parse armor parameter
             String armorName = resolvedArmor.asString();
             if (armorName == null || armorName.isEmpty()) {
+                context.getPlugin().getLogger().warning("HasArmorCondition: 'armor' parameter is empty.");
                 return false;
             }
 
             // Check if player is wearing the specified armor
             try {
                 Material material = Material.valueOf(armorName.toUpperCase());
-                ItemStack helmet = player.getInventory().getHelmet();
-                ItemStack chestplate = player.getInventory().getChestplate();
-                ItemStack leggings = player.getInventory().getLeggings();
-                ItemStack boots = player.getInventory().getBoots();
+                PlayerInventory inventory = player.getInventory();
+                ItemStack helmet = inventory.getHelmet();
+                ItemStack chestplate = inventory.getChestplate();
+                ItemStack leggings = inventory.getLeggings();
+                ItemStack boots = inventory.getBoots();
                 
                 // Check each armor slot
                 return (helmet != null && helmet.getType() == material) ||
@@ -62,51 +61,14 @@ public class HasArmorCondition implements BlockCondition {
                        (leggings != null && leggings.getType() == material) ||
                        (boots != null && boots.getType() == material);
             } catch (IllegalArgumentException e) {
+                context.getPlugin().getLogger().warning("HasArmorCondition: Invalid armor material '" + armorName + "'.");
                 return false;
             }
         } catch (Exception e) {
             // If there's an error, return false
+            context.getPlugin().getLogger().warning("Error in HasArmorCondition: " + e.getMessage());
             return false;
         }
-    }
-    
-    /**
-     * Gets armor parameters from the container configuration
-     */
-    private HasArmorParams getArmorParamsFromContainer(CodeBlock block, ExecutionContext context) {
-        HasArmorParams params = new HasArmorParams();
-        
-        try {
-            // Get the BlockConfigService to resolve slot names
-            BlockConfigService blockConfigService = context.getPlugin().getServiceRegistry().getBlockConfigService();
-            
-            // Get the slot resolver for this condition
-            Function<String, Integer> slotResolver = blockConfigService.getSlotResolver(block.getCondition());
-            
-            if (slotResolver != null) {
-                // Get armor from the armor_slot
-                Integer armorSlot = slotResolver.apply("armor_slot");
-                if (armorSlot != null) {
-                    ItemStack armorItem = block.getConfigItem(armorSlot);
-                    if (armorItem != null) {
-                        // Extract armor type from item
-                        params.armorStr = getArmorTypeFromItem(armorItem);
-                    }
-                }
-            }
-        } catch (Exception e) {
-            context.getPlugin().getLogger().warning("Error getting armor parameters from container in HasArmorCondition: " + e.getMessage());
-        }
-        
-        return params;
-    }
-    
-    /**
-     * Extracts armor type from an item
-     */
-    private String getArmorTypeFromItem(ItemStack item) {
-        // For armor type, we'll use the item type name
-        return item.getType().name();
     }
     
     /**

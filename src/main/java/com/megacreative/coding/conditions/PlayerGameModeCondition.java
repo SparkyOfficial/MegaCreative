@@ -3,19 +3,15 @@ package com.megacreative.coding.conditions;
 import com.megacreative.coding.BlockCondition;
 import com.megacreative.coding.CodeBlock;
 import com.megacreative.coding.ExecutionContext;
-import com.megacreative.services.BlockConfigService;
-import org.bukkit.GameMode;
-import org.bukkit.entity.Player;
-import org.bukkit.inventory.ItemStack;
-import org.bukkit.inventory.meta.ItemMeta;
-
-import java.util.function.Function;
-
+import com.megacreative.coding.ParameterResolver;
 import com.megacreative.coding.annotations.BlockMeta;
 import com.megacreative.coding.BlockType;
+import com.megacreative.coding.values.DataValue;
+import org.bukkit.GameMode;
+import org.bukkit.entity.Player;
 
 /**
- * Condition for checking if a player is in a specific game mode from container configuration.
+ * Condition for checking if a player is in a specific game mode from the new parameter system.
  * This condition returns true if the player is in the specified game mode.
  */
 @BlockMeta(id = "playerGameMode", displayName = "§aPlayer Game Mode", type = BlockType.CONDITION)
@@ -29,12 +25,22 @@ public class PlayerGameModeCondition implements BlockCondition {
         }
 
         try {
-            // Get parameters from the container configuration
-            PlayerGameModeParams params = getGameModeParamsFromContainer(block, context);
+            // Get parameters from the new parameter system
+            DataValue modeValue = block.getParameter("mode");
             
             // Parse game mode parameter
-            String modeName = params.modeStr;
+            if (modeValue == null || modeValue.isEmpty()) {
+                context.getPlugin().getLogger().warning("PlayerGameModeCondition: 'mode' parameter is missing.");
+                return false;
+            }
+            
+            // Resolve any placeholders in the mode name
+            ParameterResolver resolver = new ParameterResolver(context);
+            DataValue resolvedMode = resolver.resolve(context, modeValue);
+            
+            String modeName = resolvedMode.asString();
             if (modeName == null || modeName.isEmpty()) {
+                context.getPlugin().getLogger().warning("PlayerGameModeCondition: 'mode' parameter is empty.");
                 return false;
             }
 
@@ -43,58 +49,14 @@ public class PlayerGameModeCondition implements BlockCondition {
                 GameMode gameMode = GameMode.valueOf(modeName.toUpperCase());
                 return player.getGameMode() == gameMode;
             } catch (IllegalArgumentException e) {
+                context.getPlugin().getLogger().warning("PlayerGameModeCondition: Invalid game mode '" + modeName + "'.");
                 return false;
             }
         } catch (Exception e) {
             // If there's an error, return false
+            context.getPlugin().getLogger().warning("Error in PlayerGameModeCondition: " + e.getMessage());
             return false;
         }
-    }
-    
-    /**
-     * Gets game mode parameters from the container configuration
-     */
-    private PlayerGameModeParams getGameModeParamsFromContainer(CodeBlock block, ExecutionContext context) {
-        PlayerGameModeParams params = new PlayerGameModeParams();
-        
-        try {
-            // Get the BlockConfigService to resolve slot names
-            BlockConfigService blockConfigService = context.getPlugin().getServiceRegistry().getBlockConfigService();
-            
-            // Get the slot resolver for this condition
-            Function<String, Integer> slotResolver = blockConfigService.getSlotResolver(block.getCondition());
-            
-            if (slotResolver != null) {
-                // Get game mode from the mode_slot
-                Integer modeSlot = slotResolver.apply("mode_slot");
-                if (modeSlot != null) {
-                    ItemStack modeItem = block.getConfigItem(modeSlot);
-                    if (modeItem != null && modeItem.hasItemMeta()) {
-                        // Extract game mode from item
-                        params.modeStr = getGameModeFromItem(modeItem);
-                    }
-                }
-            }
-        } catch (Exception e) {
-            context.getPlugin().getLogger().warning("Error getting game mode parameters from container in PlayerGameModeCondition: " + e.getMessage());
-        }
-        
-        return params;
-    }
-    
-    /**
-     * Extracts game mode from an item
-     */
-    private String getGameModeFromItem(ItemStack item) {
-        ItemMeta meta = item.getItemMeta();
-        if (meta != null) {
-            String displayName = meta.getDisplayName();
-            if (displayName != null && !displayName.isEmpty()) {
-                // Remove color codes and return the game mode
-                return displayName.replaceAll("[§0-9]", "").trim();
-            }
-        }
-        return null;
     }
     
     /**

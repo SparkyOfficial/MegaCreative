@@ -7,18 +7,13 @@ import com.megacreative.coding.ParameterResolver;
 import com.megacreative.coding.executors.ExecutionResult;
 import com.megacreative.coding.values.DataValue;
 import com.megacreative.coding.variables.VariableManager;
-import com.megacreative.services.BlockConfigService;
 import com.megacreative.coding.annotations.BlockMeta;
 import com.megacreative.coding.BlockType;
 import org.bukkit.entity.Player;
-import org.bukkit.inventory.ItemStack;
-import org.bukkit.inventory.meta.ItemMeta;
-
-import java.util.function.Function;
 
 /**
  * Action for subtracting a value from a variable.
- * This action retrieves variable parameters from the container configuration and subtracts the value from the variable.
+ * This action retrieves variable parameters from the new parameter system and subtracts the value from the variable.
  */
 @BlockMeta(id = "subVar", displayName = "§aSubtract from Variable", type = BlockType.ACTION)
 public class SubVarAction implements BlockAction {
@@ -26,46 +21,41 @@ public class SubVarAction implements BlockAction {
     @Override
     public ExecutionResult execute(CodeBlock block, ExecutionContext context) {
         try {
-            // Get and validate parameters
-            SubVarParams params = getAndValidateParams(block, context);
-            if (params == null) {
-                return ExecutionResult.error("Invalid variable configuration");
+            // Get and validate parameters from the new parameter system
+            DataValue nameValue = block.getParameter("name");
+            DataValue valueValue = block.getParameter("value");
+            
+            if (nameValue == null || nameValue.isEmpty()) {
+                return ExecutionResult.error("No variable name provided");
+            }
+            
+            if (valueValue == null || valueValue.isEmpty()) {
+                return ExecutionResult.error("No value provided");
+            }
+
+            // Resolve any placeholders in the parameters
+            ParameterResolver resolver = new ParameterResolver(context);
+            DataValue resolvedName = resolver.resolve(context, nameValue);
+            DataValue resolvedValue = resolver.resolve(context, valueValue);
+            
+            String varName = resolvedName.asString();
+            String valueStr = resolvedValue.asString();
+
+            if (varName == null || varName.isEmpty()) {
+                return ExecutionResult.error("Invalid variable name");
             }
 
             // Parse the numeric value to subtract
-            double valueToSubtract = parseValue(params.valueStr);
+            double valueToSubtract = parseValue(valueStr);
             if (Double.isNaN(valueToSubtract)) {
-                return ExecutionResult.error("Invalid value: " + params.valueStr);
+                return ExecutionResult.error("Invalid value: " + valueStr);
             }
 
             // Process the variable update
-            return updateVariableValue(context, params.nameStr, valueToSubtract);
+            return updateVariableValue(context, varName, valueToSubtract);
         } catch (Exception e) {
             return ExecutionResult.error("Failed to update variable: " + e.getMessage());
         }
-    }
-
-    /**
-     * Gets and validates parameters from the block and context
-     */
-    private SubVarParams getAndValidateParams(CodeBlock block, ExecutionContext context) {
-        SubVarParams params = getVarParamsFromContainer(block, context);
-        if (params.nameStr == null || params.nameStr.isEmpty()) {
-            return null;
-        }
-
-        // Resolve any placeholders in the parameters
-        ParameterResolver resolver = new ParameterResolver(context);
-        String varName = resolver.resolve(context, DataValue.of(params.nameStr)).asString();
-        String valueStr = resolver.resolve(context, DataValue.of(params.valueStr)).asString();
-
-        if (varName == null || varName.isEmpty()) {
-            return null;
-        }
-
-        params.nameStr = varName;
-        params.valueStr = valueStr;
-        return params;
     }
 
     /**
@@ -199,79 +189,6 @@ public class SubVarAction implements BlockAction {
                 // Fallback to local variable
                 variableManager.setLocalVariable(scriptId, varName, newValueData);
         }
-    }
-
-    /**
-     * Gets variable parameters from the container configuration
-     */
-    private SubVarParams getVarParamsFromContainer(CodeBlock block, ExecutionContext context) {
-        SubVarParams params = new SubVarParams();
-
-        try {
-            // Get the BlockConfigService to resolve slot names
-            BlockConfigService blockConfigService = context.getPlugin().getServiceRegistry().getBlockConfigService();
-
-            // Get the slot resolver for this action
-            Function<String, Integer> slotResolver = blockConfigService.getSlotResolver(block.getAction());
-
-            if (slotResolver != null) {
-                // Get variable name from the name slot
-                Integer nameSlot = slotResolver.apply("name");
-                if (nameSlot != null) {
-                    ItemStack nameItem = block.getConfigItem(nameSlot);
-                    if (nameItem != null && nameItem.hasItemMeta()) {
-                        // Extract variable name from item
-                        params.nameStr = getVariableNameFromItem(nameItem);
-                    }
-                }
-
-                // Get value from the value slot
-                Integer valueSlot = slotResolver.apply("value");
-                if (valueSlot != null) {
-                    ItemStack valueItem = block.getConfigItem(valueSlot);
-                    if (valueItem != null) {
-                        // Extract value from item
-                        params.valueStr = getValueFromItem(valueItem);
-                    }
-                }
-            }
-        } catch (Exception e) {
-            context.getPlugin().getLogger().warning("Error getting variable parameters from container in SubVarAction: " + e.getMessage());
-        }
-
-        return params;
-    }
-
-    /**
-     * Extracts variable name from an item
-     */
-    private String getVariableNameFromItem(ItemStack item) {
-        ItemMeta meta = item.getItemMeta();
-        if (meta != null) {
-            String displayName = meta.getDisplayName();
-            if (displayName != null && !displayName.isEmpty()) {
-                // Remove color codes and return the variable name
-                return displayName.replaceAll("[§0-9]", "").trim();
-            }
-        }
-        return null;
-    }
-
-    /**
-     * Extracts value from an item
-     */
-    private String getValueFromItem(ItemStack item) {
-        ItemMeta meta = item.getItemMeta();
-        if (meta != null) {
-            String displayName = meta.getDisplayName();
-            if (displayName != null && !displayName.isEmpty()) {
-                // Remove color codes and return the value
-                return displayName.replaceAll("[§0-9]", "").trim();
-            }
-        }
-
-        // If no display name, use the item amount as a number
-        return String.valueOf(item.getAmount());
     }
 
     /**

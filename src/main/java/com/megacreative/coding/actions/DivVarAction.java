@@ -9,16 +9,11 @@ import com.megacreative.coding.BlockType;
 import com.megacreative.coding.executors.ExecutionResult;
 import com.megacreative.coding.values.DataValue;
 import com.megacreative.coding.variables.VariableManager;
-import com.megacreative.services.BlockConfigService;
 import org.bukkit.entity.Player;
-import org.bukkit.inventory.ItemStack;
-import org.bukkit.inventory.meta.ItemMeta;
-
-import java.util.function.Function;
 
 /**
  * Action for dividing a variable by a value.
- * This action retrieves variable parameters from the container configuration and divides the variable by the value.
+ * This action retrieves variable parameters from the new parameter system.
  */
 @BlockMeta(id = "divVar", displayName = "§aDivide Variable", type = BlockType.ACTION)
 public class DivVarAction implements BlockAction {
@@ -26,19 +21,21 @@ public class DivVarAction implements BlockAction {
     @Override
     public ExecutionResult execute(CodeBlock block, ExecutionContext context) {
         try {
-            // Get variable parameters from the container configuration
-            DivVarParams params = getVarParamsFromContainer(block, context);
+            // Get parameters from the new parameter system
+            DataValue nameValue = block.getParameter("name");
+            DataValue valueValue = block.getParameter("value");
             
-            if (params.nameStr == null || params.nameStr.isEmpty()) {
-                return ExecutionResult.error("Variable name is not configured");
+            if (nameValue == null || nameValue.isEmpty()) {
+                return ExecutionResult.error("No variable name provided");
+            }
+            
+            if (valueValue == null || valueValue.isEmpty()) {
+                return ExecutionResult.error("No value provided");
             }
 
             // Resolve any placeholders in the parameters
             ParameterResolver resolver = new ParameterResolver(context);
-            DataValue nameValue = DataValue.of(params.nameStr);
             DataValue resolvedName = resolver.resolve(context, nameValue);
-            
-            DataValue valueValue = DataValue.of(params.valueStr);
             DataValue resolvedValue = resolver.resolve(context, valueValue);
             
             // Parse parameters
@@ -151,86 +148,5 @@ public class DivVarAction implements BlockAction {
         } catch (Exception e) {
             return ExecutionResult.error("Failed to update variable: " + e.getMessage());
         }
-    }
-    
-    /**
-     * Gets variable parameters from the container configuration
-     */
-    private DivVarParams getVarParamsFromContainer(CodeBlock block, ExecutionContext context) {
-        DivVarParams params = new DivVarParams();
-        
-        try {
-            // Get the BlockConfigService to resolve slot names
-            BlockConfigService blockConfigService = context.getPlugin().getServiceRegistry().getBlockConfigService();
-            
-            // Get the slot resolver for this action
-            Function<String, Integer> slotResolver = blockConfigService.getSlotResolver(block.getAction());
-            
-            if (slotResolver != null) {
-                // Get variable name from the name slot
-                Integer nameSlot = slotResolver.apply("name");
-                if (nameSlot != null) {
-                    ItemStack nameItem = block.getConfigItem(nameSlot);
-                    if (nameItem != null && nameItem.hasItemMeta()) {
-                        // Extract variable name from item
-                        params.nameStr = getVariableNameFromItem(nameItem);
-                    }
-                }
-                
-                // Get value from the value slot
-                Integer valueSlot = slotResolver.apply("value");
-                if (valueSlot != null) {
-                    ItemStack valueItem = block.getConfigItem(valueSlot);
-                    if (valueItem != null) {
-                        // Extract value from item
-                        params.valueStr = getValueFromItem(valueItem);
-                    }
-                }
-            }
-        } catch (Exception e) {
-            context.getPlugin().getLogger().warning("Error getting variable parameters from container in DivVarAction: " + e.getMessage());
-        }
-        
-        return params;
-    }
-    
-    /**
-     * Extracts variable name from an item
-     */
-    private String getVariableNameFromItem(ItemStack item) {
-        ItemMeta meta = item.getItemMeta();
-        if (meta != null) {
-            String displayName = meta.getDisplayName();
-            if (displayName != null && !displayName.isEmpty()) {
-                // Remove color codes and return the variable name
-                return displayName.replaceAll("[§0-9]", "").trim();
-            }
-        }
-        return null;
-    }
-    
-    /**
-     * Extracts value from an item
-     */
-    private String getValueFromItem(ItemStack item) {
-        ItemMeta meta = item.getItemMeta();
-        if (meta != null) {
-            String displayName = meta.getDisplayName();
-            if (displayName != null && !displayName.isEmpty()) {
-                // Remove color codes and return the value
-                return displayName.replaceAll("[§0-9]", "").trim();
-            }
-        }
-        
-        // If no display name, use the item amount as a number
-        return String.valueOf(item.getAmount());
-    }
-    
-    /**
-     * Helper class to hold variable parameters
-     */
-    private static class DivVarParams {
-        String nameStr;
-        String valueStr;
     }
 }

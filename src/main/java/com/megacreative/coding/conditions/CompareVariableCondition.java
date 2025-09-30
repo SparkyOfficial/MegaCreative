@@ -8,15 +8,10 @@ import com.megacreative.coding.annotations.BlockMeta;
 import com.megacreative.coding.BlockType;
 import com.megacreative.coding.values.DataValue;
 import com.megacreative.coding.variables.VariableManager;
-import com.megacreative.services.BlockConfigService;
 import org.bukkit.entity.Player;
-import org.bukkit.inventory.ItemStack;
-import org.bukkit.inventory.meta.ItemMeta;
-
-import java.util.function.Function;
 
 /**
- * Condition for comparing two variables from container configuration.
+ * Condition for comparing two variables from the new parameter system.
  * This condition returns true if the comparison between the two variables is true.
  */
 @BlockMeta(id = "compareVariable", displayName = "§aCompare Variables", type = BlockType.CONDITION)
@@ -30,24 +25,30 @@ public class CompareVariableCondition implements BlockCondition {
         }
 
         try {
-            // Get parameters from the container configuration
-            CompareVariableParams params = getVarParamsFromContainer(block, context);
+            // Get parameters from the new parameter system
+            DataValue var1Value = block.getParameter("var1");
+            DataValue operatorValue = block.getParameter("operator");
+            DataValue var2Value = block.getParameter("var2");
             
-            if (params.var1Str == null || params.var1Str.isEmpty() || 
-                params.operatorStr == null || params.operatorStr.isEmpty() ||
-                params.var2Str == null || params.var2Str.isEmpty()) {
+            if (var1Value == null || var1Value.isEmpty()) {
+                context.getPlugin().getLogger().warning("CompareVariableCondition: 'var1' parameter is missing.");
+                return false;
+            }
+            
+            if (operatorValue == null || operatorValue.isEmpty()) {
+                context.getPlugin().getLogger().warning("CompareVariableCondition: 'operator' parameter is missing.");
+                return false;
+            }
+            
+            if (var2Value == null || var2Value.isEmpty()) {
+                context.getPlugin().getLogger().warning("CompareVariableCondition: 'var2' parameter is missing.");
                 return false;
             }
 
             // Resolve any placeholders in the parameters
             ParameterResolver resolver = new ParameterResolver(context);
-            DataValue var1Value = DataValue.of(params.var1Str);
             DataValue resolvedVar1 = resolver.resolve(context, var1Value);
-            
-            DataValue operatorValue = DataValue.of(params.operatorStr);
             DataValue resolvedOperator = resolver.resolve(context, operatorValue);
-            
-            DataValue var2Value = DataValue.of(params.var2Str);
             DataValue resolvedVar2 = resolver.resolve(context, var2Value);
             
             // Parse parameters
@@ -58,6 +59,7 @@ public class CompareVariableCondition implements BlockCondition {
             if (var1Name == null || var1Name.isEmpty() || 
                 operator == null || operator.isEmpty() ||
                 var2Name == null || var2Name.isEmpty()) {
+                context.getPlugin().getLogger().warning("CompareVariableCondition: One or more parameters are empty.");
                 return false;
             }
 
@@ -181,6 +183,7 @@ public class CompareVariableCondition implements BlockCondition {
                         return false;
                     }
                 default:
+                    context.getPlugin().getLogger().warning("CompareVariableCondition: Invalid operator '" + operator + "'.");
                     return false;
             }
         } catch (Exception e) {
@@ -188,87 +191,6 @@ public class CompareVariableCondition implements BlockCondition {
             context.getPlugin().getLogger().warning("Error in CompareVariableCondition: " + e.getMessage());
             return false;
         }
-    }
-    
-    /**
-     * Gets variable parameters from the container configuration
-     */
-    private CompareVariableParams getVarParamsFromContainer(CodeBlock block, ExecutionContext context) {
-        CompareVariableParams params = new CompareVariableParams();
-        
-        try {
-            // Get the BlockConfigService to resolve slot names
-            BlockConfigService blockConfigService = context.getPlugin().getServiceRegistry().getBlockConfigService();
-            
-            // Get the slot resolver for this condition
-            Function<String, Integer> slotResolver = blockConfigService.getSlotResolver(block.getCondition());
-            
-            if (slotResolver != null) {
-                // Get first variable from the var1 slot
-                Integer var1Slot = slotResolver.apply("var1");
-                if (var1Slot != null) {
-                    ItemStack var1Item = block.getConfigItem(var1Slot);
-                    if (var1Item != null && var1Item.hasItemMeta()) {
-                        // Extract first variable name from item
-                        params.var1Str = getVariableNameFromItem(var1Item);
-                    }
-                }
-                
-                // Get operator from the operator slot
-                Integer operatorSlot = slotResolver.apply("operator");
-                if (operatorSlot != null) {
-                    ItemStack operatorItem = block.getConfigItem(operatorSlot);
-                    if (operatorItem != null && operatorItem.hasItemMeta()) {
-                        // Extract operator from item
-                        params.operatorStr = getOperatorFromItem(operatorItem);
-                    }
-                }
-                
-                // Get second variable from the var2 slot
-                Integer var2Slot = slotResolver.apply("var2");
-                if (var2Slot != null) {
-                    ItemStack var2Item = block.getConfigItem(var2Slot);
-                    if (var2Item != null && var2Item.hasItemMeta()) {
-                        // Extract second variable name from item
-                        params.var2Str = getVariableNameFromItem(var2Item);
-                    }
-                }
-            }
-        } catch (Exception e) {
-            context.getPlugin().getLogger().warning("Error getting variable parameters from container in CompareVariableCondition: " + e.getMessage());
-        }
-        
-        return params;
-    }
-    
-    /**
-     * Extracts variable name from an item
-     */
-    private String getVariableNameFromItem(ItemStack item) {
-        ItemMeta meta = item.getItemMeta();
-        if (meta != null) {
-            String displayName = meta.getDisplayName();
-            if (displayName != null && !displayName.isEmpty()) {
-                // Remove color codes and return the variable name
-                return displayName.replaceAll("[§0-9]", "").trim();
-            }
-        }
-        return null;
-    }
-    
-    /**
-     * Extracts operator from an item
-     */
-    private String getOperatorFromItem(ItemStack item) {
-        ItemMeta meta = item.getItemMeta();
-        if (meta != null) {
-            String displayName = meta.getDisplayName();
-            if (displayName != null && !displayName.isEmpty()) {
-                // Remove color codes and return the operator
-                return displayName.replaceAll("[§0-9]", "").trim();
-            }
-        }
-        return null;
     }
     
     /**

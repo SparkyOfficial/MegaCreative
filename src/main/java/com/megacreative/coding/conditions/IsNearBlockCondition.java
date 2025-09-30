@@ -3,18 +3,15 @@ package com.megacreative.coding.conditions;
 import com.megacreative.coding.BlockCondition;
 import com.megacreative.coding.CodeBlock;
 import com.megacreative.coding.ExecutionContext;
+import com.megacreative.coding.ParameterResolver;
 import com.megacreative.coding.annotations.BlockMeta;
 import com.megacreative.coding.BlockType;
-import com.megacreative.services.BlockConfigService;
+import com.megacreative.coding.values.DataValue;
 import org.bukkit.Material;
 import org.bukkit.entity.Player;
-import org.bukkit.inventory.ItemStack;
-import org.bukkit.inventory.meta.ItemMeta;
-
-import java.util.function.Function;
 
 /**
- * Condition for checking if a specific block type is near the player from container configuration.
+ * Condition for checking if a specific block type is near the player from the new parameter system.
  * This condition returns true if the specified block type is within a specified distance of the player.
  */
 @BlockMeta(id = "isNearBlock", displayName = "§aIs Near Block", type = BlockType.CONDITION)
@@ -28,22 +25,33 @@ public class IsNearBlockCondition implements BlockCondition {
         }
 
         try {
-            // Get parameters from the container configuration
-            IsNearBlockParams params = getBlockParamsFromContainer(block, context);
+            // Get parameters from the new parameter system
+            DataValue blockValue = block.getParameter("block");
+            DataValue distanceValue = block.getParameter("distance");
             
             // Parse block type parameter
-            String blockName = params.blockStr;
+            if (blockValue == null || blockValue.isEmpty()) {
+                context.getPlugin().getLogger().warning("IsNearBlockCondition: 'block' parameter is missing.");
+                return false;
+            }
+            
+            // Resolve any placeholders in the block type
+            ParameterResolver resolver = new ParameterResolver(context);
+            DataValue resolvedBlock = resolver.resolve(context, blockValue);
+            
+            String blockName = resolvedBlock.asString();
             if (blockName == null || blockName.isEmpty()) {
+                context.getPlugin().getLogger().warning("IsNearBlockCondition: 'block' parameter is empty.");
                 return false;
             }
 
             // Parse distance parameter (default to 5)
             int distance = 5;
-            if (params.distanceStr != null && !params.distanceStr.isEmpty()) {
+            if (distanceValue != null && !distanceValue.isEmpty()) {
                 try {
-                    distance = Math.max(1, Integer.parseInt(params.distanceStr));
+                    distance = Math.max(1, distanceValue.asNumber().intValue());
                 } catch (NumberFormatException e) {
-                    // Use default distance if parsing fails
+                    context.getPlugin().getLogger().warning("IsNearBlockCondition: Invalid distance value, using default 5.");
                 }
             }
 
@@ -64,76 +72,14 @@ public class IsNearBlockCondition implements BlockCondition {
                 
                 return false;
             } catch (IllegalArgumentException e) {
+                context.getPlugin().getLogger().warning("IsNearBlockCondition: Invalid block material '" + blockName + "'.");
                 return false;
             }
         } catch (Exception e) {
             // If there's an error, return false
+            context.getPlugin().getLogger().warning("Error in IsNearBlockCondition: " + e.getMessage());
             return false;
         }
-    }
-    
-    /**
-     * Gets block parameters from the container configuration
-     */
-    private IsNearBlockParams getBlockParamsFromContainer(CodeBlock block, ExecutionContext context) {
-        IsNearBlockParams params = new IsNearBlockParams();
-        
-        try {
-            // Get the BlockConfigService to resolve slot names
-            BlockConfigService blockConfigService = context.getPlugin().getServiceRegistry().getBlockConfigService();
-            
-            // Get the slot resolver for this condition
-            Function<String, Integer> slotResolver = blockConfigService.getSlotResolver(block.getCondition());
-            
-            if (slotResolver != null) {
-                // Get block from the block_slot
-                Integer blockSlot = slotResolver.apply("block_slot");
-                if (blockSlot != null) {
-                    ItemStack blockItem = block.getConfigItem(blockSlot);
-                    if (blockItem != null) {
-                        // Extract block type from item
-                        params.blockStr = getBlockTypeFromItem(blockItem);
-                    }
-                }
-                
-                // Get distance from the distance_slot
-                Integer distanceSlot = slotResolver.apply("distance_slot");
-                if (distanceSlot != null) {
-                    ItemStack distanceItem = block.getConfigItem(distanceSlot);
-                    if (distanceItem != null && distanceItem.hasItemMeta()) {
-                        // Extract distance from item
-                        params.distanceStr = getDistanceFromItem(distanceItem);
-                    }
-                }
-            }
-        } catch (Exception e) {
-            context.getPlugin().getLogger().warning("Error getting block parameters from container in IsNearBlockCondition: " + e.getMessage());
-        }
-        
-        return params;
-    }
-    
-    /**
-     * Extracts block type from an item
-     */
-    private String getBlockTypeFromItem(ItemStack item) {
-        // For block type, we'll use the item type name
-        return item.getType().name();
-    }
-    
-    /**
-     * Extracts distance from an item
-     */
-    private String getDistanceFromItem(ItemStack item) {
-        ItemMeta meta = item.getItemMeta();
-        if (meta != null) {
-            String displayName = meta.getDisplayName();
-            if (displayName != null && !displayName.isEmpty()) {
-                // Remove color codes and return the distance
-                return displayName.replaceAll("[§0-9]", "").trim();
-            }
-        }
-        return null;
     }
     
     /**

@@ -4,21 +4,15 @@ import com.megacreative.coding.BlockCondition;
 import com.megacreative.coding.CodeBlock;
 import com.megacreative.coding.ExecutionContext;
 import com.megacreative.coding.ParameterResolver;
+import com.megacreative.coding.annotations.BlockMeta;
+import com.megacreative.coding.BlockType;
 import com.megacreative.coding.values.DataValue;
-import com.megacreative.coding.values.DataValue;
-import com.megacreative.services.BlockConfigService;
 import org.bukkit.Material;
 import org.bukkit.entity.Player;
 import org.bukkit.inventory.ItemStack;
-import org.bukkit.inventory.meta.ItemMeta;
-
-import java.util.function.Function;
-
-import com.megacreative.coding.annotations.BlockMeta;
-import com.megacreative.coding.BlockType;
 
 /**
- * Condition for checking if a player is holding a specific item from container configuration.
+ * Condition for checking if a player is holding a specific item from the new parameter system.
  * This condition returns true if the player is holding the specified item in their main hand.
  */
 @BlockMeta(id = "isPlayerHolding", displayName = "§aIs Player Holding", type = BlockType.CONDITION)
@@ -32,21 +26,22 @@ public class IsPlayerHoldingCondition implements BlockCondition {
         }
 
         try {
-            // Get parameters from the container configuration
-            IsPlayerHoldingParams params = getItemParamsFromContainer(block, context);
+            // Get parameters from the new parameter system
+            DataValue itemValue = block.getParameter("item");
             
-            if (params.itemStr == null || params.itemStr.isEmpty()) {
+            if (itemValue == null || itemValue.isEmpty()) {
+                context.getPlugin().getLogger().warning("IsPlayerHoldingCondition: 'item' parameter is missing.");
                 return false;
             }
 
             // Resolve any placeholders in the item name
             ParameterResolver resolver = new ParameterResolver(context);
-            DataValue itemValue = DataValue.of(params.itemStr);
             DataValue resolvedItem = resolver.resolve(context, itemValue);
             
             // Parse item parameter
             String itemName = resolvedItem.asString();
             if (itemName == null || itemName.isEmpty()) {
+                context.getPlugin().getLogger().warning("IsPlayerHoldingCondition: 'item' parameter is empty.");
                 return false;
             }
 
@@ -57,51 +52,14 @@ public class IsPlayerHoldingCondition implements BlockCondition {
                 
                 return itemInHand != null && itemInHand.getType() == material;
             } catch (IllegalArgumentException e) {
+                context.getPlugin().getLogger().warning("IsPlayerHoldingCondition: Invalid item material '" + itemName + "'.");
                 return false;
             }
         } catch (Exception e) {
             // If there's an error, return false
+            context.getPlugin().getLogger().warning("Error in IsPlayerHoldingCondition: " + e.getMessage());
             return false;
         }
-    }
-    
-    /**
-     * Gets item parameters from the container configuration
-     */
-    private IsPlayerHoldingParams getItemParamsFromContainer(CodeBlock block, ExecutionContext context) {
-        IsPlayerHoldingParams params = new IsPlayerHoldingParams();
-        
-        try {
-            // Get the BlockConfigService to resolve slot names
-            BlockConfigService blockConfigService = context.getPlugin().getServiceRegistry().getBlockConfigService();
-            
-            // Get the slot resolver for this condition
-            Function<String, Integer> slotResolver = blockConfigService.getSlotResolver(block.getCondition());
-            
-            if (slotResolver != null) {
-                // Get item from the item_slot
-                Integer itemSlot = slotResolver.apply("item_slot");
-                if (itemSlot != null) {
-                    ItemStack itemItem = block.getConfigItem(itemSlot);
-                    if (itemItem != null) {
-                        // Extract item type from item
-                        params.itemStr = getItemTypeFromItem(itemItem);
-                    }
-                }
-            }
-        } catch (Exception e) {
-            context.getPlugin().getLogger().warning("Error getting item parameters from container in IsPlayerHoldingCondition: " + e.getMessage());
-        }
-        
-        return params;
-    }
-    
-    /**
-     * Extracts item type from an item
-     */
-    private String getItemTypeFromItem(ItemStack item) {
-        // For item type, we'll use the item type name
-        return item.getType().name();
     }
     
     /**

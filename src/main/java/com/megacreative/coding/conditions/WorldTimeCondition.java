@@ -4,19 +4,13 @@ import com.megacreative.coding.BlockCondition;
 import com.megacreative.coding.CodeBlock;
 import com.megacreative.coding.ExecutionContext;
 import com.megacreative.coding.ParameterResolver;
-import com.megacreative.coding.values.DataValue;
-import com.megacreative.services.BlockConfigService;
-import org.bukkit.entity.Player;
-import org.bukkit.inventory.ItemStack;
-import org.bukkit.inventory.meta.ItemMeta;
-
-import java.util.function.Function;
-
 import com.megacreative.coding.annotations.BlockMeta;
 import com.megacreative.coding.BlockType;
+import com.megacreative.coding.values.DataValue;
+import org.bukkit.entity.Player;
 
 /**
- * Condition for checking world time from container configuration.
+ * Condition for checking world time from the new parameter system.
  * This condition returns true if the world time matches the specified criteria.
  */
 @BlockMeta(id = "worldTime", displayName = "§aWorld Time", type = BlockType.CONDITION)
@@ -30,35 +24,40 @@ public class WorldTimeCondition implements BlockCondition {
         }
 
         try {
-            // Get parameters from the container configuration
-            WorldTimeParams params = getTimeParamsFromContainer(block, context);
+            // Get parameters from the new parameter system
+            DataValue timeValue = block.getParameter("time");
+            DataValue operatorValue = block.getParameter("operator");
             
             // Parse time parameter
             long worldTime = 0;
-            if (params.timeStr != null && !params.timeStr.isEmpty()) {
+            if (timeValue != null && !timeValue.isEmpty()) {
                 try {
-                    worldTime = Long.parseLong(params.timeStr);
+                    worldTime = timeValue.asNumber().longValue();
                 } catch (NumberFormatException e) {
-                    // Use default time if parsing fails
+                    context.getPlugin().getLogger().warning("WorldTimeCondition: Invalid time value, using default 0.");
                     worldTime = 0;
                 }
             }
 
             // Resolve any placeholders in the time
             ParameterResolver resolver = new ParameterResolver(context);
-            DataValue timeValue = DataValue.of(String.valueOf(worldTime));
-            DataValue resolvedTime = resolver.resolve(context, timeValue);
+            DataValue resolvedTime = resolver.resolve(context, DataValue.of(String.valueOf(worldTime)));
             
             long time;
             try {
                 time = Long.parseLong(resolvedTime.asString());
             } catch (NumberFormatException e) {
-                // Use default time if parsing fails
+                context.getPlugin().getLogger().warning("WorldTimeCondition: Invalid resolved time value, using default 0.");
                 time = 0;
             }
 
             // Parse operator parameter (default to "equal")
-            String operator = params.operatorStr != null && !params.operatorStr.isEmpty() ? params.operatorStr : "equal";
+            String operator = "equal";
+            if (operatorValue != null && !operatorValue.isEmpty()) {
+                DataValue resolvedOperator = resolver.resolve(context, operatorValue);
+                operator = resolvedOperator.asString();
+            }
+            operator = operator != null && !operator.isEmpty() ? operator : "equal";
 
             // Get the current world time
             long currentWorldTime = player.getWorld().getTime();
@@ -84,83 +83,14 @@ public class WorldTimeCondition implements BlockCondition {
                 case "<=":
                     return currentWorldTime <= time;
                 default:
+                    context.getPlugin().getLogger().warning("WorldTimeCondition: Unknown operator '" + operator + "', using 'equal'.");
                     return currentWorldTime == time;
             }
         } catch (Exception e) {
             // If there's an error, return false
+            context.getPlugin().getLogger().warning("Error in WorldTimeCondition: " + e.getMessage());
             return false;
         }
-    }
-    
-    /**
-     * Gets time parameters from the container configuration
-     */
-    private WorldTimeParams getTimeParamsFromContainer(CodeBlock block, ExecutionContext context) {
-        WorldTimeParams params = new WorldTimeParams();
-        
-        try {
-            // Get the BlockConfigService to resolve slot names
-            BlockConfigService blockConfigService = context.getPlugin().getServiceRegistry().getBlockConfigService();
-            
-            // Get the slot resolver for this condition
-            Function<String, Integer> slotResolver = blockConfigService.getSlotResolver(block.getCondition());
-            
-            if (slotResolver != null) {
-                // Get time from the time slot
-                Integer timeSlot = slotResolver.apply("time");
-                if (timeSlot != null) {
-                    ItemStack timeItem = block.getConfigItem(timeSlot);
-                    if (timeItem != null && timeItem.hasItemMeta()) {
-                        // Extract time from item
-                        params.timeStr = getTimeFromItem(timeItem);
-                    }
-                }
-                
-                // Get operator from the operator slot
-                Integer operatorSlot = slotResolver.apply("operator");
-                if (operatorSlot != null) {
-                    ItemStack operatorItem = block.getConfigItem(operatorSlot);
-                    if (operatorItem != null && operatorItem.hasItemMeta()) {
-                        // Extract operator from item
-                        params.operatorStr = getOperatorFromItem(operatorItem);
-                    }
-                }
-            }
-        } catch (Exception e) {
-            context.getPlugin().getLogger().warning("Error getting time parameters from container in WorldTimeCondition: " + e.getMessage());
-        }
-        
-        return params;
-    }
-    
-    /**
-     * Extracts time from an item
-     */
-    private String getTimeFromItem(ItemStack item) {
-        ItemMeta meta = item.getItemMeta();
-        if (meta != null) {
-            String displayName = meta.getDisplayName();
-            if (displayName != null && !displayName.isEmpty()) {
-                // Remove color codes and return the time
-                return displayName.replaceAll("[§0-9]", "").trim();
-            }
-        }
-        return null;
-    }
-    
-    /**
-     * Extracts operator from an item
-     */
-    private String getOperatorFromItem(ItemStack item) {
-        ItemMeta meta = item.getItemMeta();
-        if (meta != null) {
-            String displayName = meta.getDisplayName();
-            if (displayName != null && !displayName.isEmpty()) {
-                // Remove color codes and return the operator
-                return displayName.replaceAll("[§0-9]", "").trim();
-            }
-        }
-        return null;
     }
     
     /**
