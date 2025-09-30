@@ -2,28 +2,28 @@ package com.megacreative.listeners;
 
 import com.megacreative.MegaCreative;
 import com.megacreative.coding.BlockPlacementHandler;
-import com.megacreative.services.BlockConfigService;
 import com.megacreative.coding.CodeBlock;
 import com.megacreative.core.ServiceRegistry;
+import com.megacreative.services.BlockConfigService;
 import org.bukkit.Bukkit;
-import org.bukkit.World;
 import org.bukkit.Chunk;
-import org.bukkit.block.BlockState;
-import org.bukkit.block.Sign;
+import org.bukkit.Material;
+import org.bukkit.World;
 import org.bukkit.block.Block;
 import org.bukkit.block.BlockFace;
+import org.bukkit.block.BlockState;
+import org.bukkit.block.Sign;
 import org.bukkit.event.EventHandler;
-import org.bukkit.event.EventPriority;
 import org.bukkit.event.Listener;
 import org.bukkit.event.world.WorldLoadEvent;
-import org.bukkit.Location;
-import org.bukkit.Material;
+import org.bukkit.scheduler.BukkitRunnable;
 
+import java.util.concurrent.atomic.AtomicInteger;
 import java.util.logging.Level;
 
 /**
- * WorldLoadListener for "hydrating" code blocks when worlds load
- * Restores CodeBlock objects from physical blocks and signs in the world
+ * Listens for world load events and rehydrates code blocks in the world
+ * This ensures that code blocks are properly restored when worlds are loaded
  */
 public class WorldLoadListener implements Listener {
     private final MegaCreative plugin;
@@ -32,28 +32,20 @@ public class WorldLoadListener implements Listener {
         this.plugin = plugin;
     }
 
-    @EventHandler(priority = EventPriority.MONITOR)
+    @EventHandler
     public void onWorldLoad(WorldLoadEvent event) {
-        if (event == null) return;
-        
         World world = event.getWorld();
-        if (world == null) {
-            plugin.getLogger().warning("WorldLoadEvent received with null world!");
-            return;
-        }
-        
         String worldName = world.getName();
-        if (worldName.endsWith("_dev") || worldName.endsWith("-code")) {
-            plugin.getLogger().info("Found dev world: " + worldName + ". Scheduling rehydration...");
-            
-            // Run on the next tick to ensure world is fully loaded
-            Bukkit.getScheduler().runTask(plugin, () -> {
+        
+        // Only process creative worlds
+        if (worldName.contains("_dev") || worldName.contains("_creative")) {
+            plugin.getServer().getScheduler().runTaskLater(plugin, () -> {
                 try {
                     rehydrateWorld(world);
                 } catch (Exception e) {
                     plugin.getLogger().log(Level.SEVERE, "Error during world rehydration for " + worldName, e);
                 }
-            });
+            }, 20L); // Run after 1 second to ensure world is fully loaded
         }
     }
 
@@ -84,35 +76,64 @@ public class WorldLoadListener implements Listener {
             return;
         }
 
-        int blockCount = 0;
+        // Process chunks asynchronously to prevent server lag
+        Chunk[] chunks = world.getLoadedChunks();
+        if (chunks == null || chunks.length == 0) {
+            plugin.getLogger().info("No chunks to process in world: " + world.getName());
+            return;
+        }
+        
+        plugin.getLogger().info("Processing " + chunks.length + " chunks in world: " + world.getName());
+        
+        // Process chunks in batches to prevent server lag
+        processChunksAsync(world, chunks, placementHandler, configService);
+    }
+    
+    private void processChunksAsync(World world, Chunk[] chunks, 
+                                  BlockPlacementHandler placementHandler, 
+                                  BlockConfigService configService) {
+        AtomicInteger chunkIndex = new AtomicInteger(0);
+        AtomicInteger blockCount = new AtomicInteger(0);
         long startTime = System.currentTimeMillis();
-
-        try {
-            // Get all loaded chunks
-            Chunk[] chunks = world.getLoadedChunks();
-            if (chunks == null || chunks.length == 0) {
-                plugin.getLogger().info("No chunks to process in world: " + world.getName());
-                return;
-            }
-            
-            plugin.getLogger().info("Processing " + chunks.length + " chunks in world: " + world.getName());
-            
-            // Process each chunk
-            for (Chunk chunk : chunks) {
-                if (chunk == null) continue;
+        
+        new BukkitRunnable() {
+            @Override
+            public void run() {
+                int currentIndex = chunkIndex.getAndIncrement();
+                
+                // Check if we've processed all chunks
+                if (currentIndex >= chunks.length) {
+                    // All chunks processed, finish up
+                    long duration = System.currentTimeMillis() - startTime;
+                    plugin.getLogger().info(String.format(
+                        "Rehydration complete for %s. Processed %d code blocks in %.2f seconds",
+                        world.getName(),
+                        blockCount.get(),
+                        duration / 1000.0
+                    ));
+                    cancel();
+                    return;
+                }
+                
+                // Process current chunk
+                Chunk chunk = chunks[currentIndex];
+                if (chunk == null) return;
                 
                 try {
                     BlockState[] tileEntities = chunk.getTileEntities();
-                    if (tileEntities == null || tileEntities.length == 0) continue;
+                    if (tileEntities == null || tileEntities.length == 0) return;
                     
+                    int processedInThisChunk = 0;
                     for (BlockState tileEntity : tileEntities) {
                         if (tileEntity instanceof Sign) {
                             processSignTileEntity((Sign) tileEntity, placementHandler, configService);
-                            blockCount++;
+                            blockCount.incrementAndGet();
+                            processedInThisChunk++;
                             
-                            // Small delay every 10 blocks to prevent server lag
-                            if (blockCount % 10 == 0) {
-                                Thread.sleep(1);
+                            // Yield every 10 blocks to prevent server lag
+                            if (processedInThisChunk % 10 == 0) {
+                                // Return control to the server, continue processing in next tick
+                                return;
                             }
                         }
                     }
@@ -120,21 +141,7 @@ public class WorldLoadListener implements Listener {
                     plugin.getLogger().log(Level.WARNING, "Error processing chunk at " + chunk.getX() + "," + chunk.getZ(), e);
                 }
             }
-
-            // In the new architecture, connections are handled automatically by BlockLinker and BlockHierarchyManager
-            plugin.getLogger().info("Code connections are managed automatically by BlockLinker and BlockHierarchyManager");
-            
-            long duration = System.currentTimeMillis() - startTime;
-            plugin.getLogger().info(String.format(
-                "Rehydration complete for %s. Processed %d code blocks in %.2f seconds",
-                world.getName(),
-                blockCount,
-                duration / 1000.0
-            ));
-            
-        } catch (Exception e) {
-            plugin.getLogger().log(Level.SEVERE, "Critical error during world rehydration for " + world.getName(), e);
-        }
+        }.runTaskTimer(plugin, 1L, 1L); // Run every tick
     }
 
     /**
@@ -169,7 +176,7 @@ public class WorldLoadListener implements Listener {
             
             // In the new architecture, BlockLinker and BlockHierarchyManager handle connections automatically
         } catch (Exception e) {
-            Location loc = sign.getLocation();
+            org.bukkit.Location loc = sign.getLocation();
             plugin.getLogger().log(Level.WARNING, 
                 String.format("Error processing sign at %s: %s", 
                     loc != null ? loc.toString() : "unknown location",
