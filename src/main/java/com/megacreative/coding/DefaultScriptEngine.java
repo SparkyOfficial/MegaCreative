@@ -24,6 +24,7 @@ import com.megacreative.coding.values.DataValue;
 import com.megacreative.coding.variables.VariableManager;
 import com.megacreative.interfaces.IScriptEngine;
 import com.megacreative.services.BlockConfigService;
+import com.megacreative.coding.events.CustomEventManager;
 
 public class DefaultScriptEngine implements ScriptEngine, EnhancedScriptEngine, EventPublisher, IScriptEngine {
     
@@ -87,6 +88,9 @@ public class DefaultScriptEngine implements ScriptEngine, EnhancedScriptEngine, 
     
     // Strategy pattern: Map of block executors
     private final Map<BlockType, BlockExecutor> executors = new HashMap<>();
+    
+    // Event manager for publishing events
+    private CustomEventManager eventManager;
     
     public DefaultScriptEngine(MegaCreative plugin, VariableManager variableManager, VisualDebugger debugger,
                                BlockConfigService blockConfigService) {
@@ -155,9 +159,40 @@ public class DefaultScriptEngine implements ScriptEngine, EnhancedScriptEngine, 
      */
     @Override
     public void publishEvent(CustomEvent event) {
-        // In a real implementation, this would send the event to the EventDispatcher
-        // For now, we'll just log it
-        plugin.getLogger().info("Published event: " + event.getName());
+        // Get the event manager from the service registry
+        if (eventManager == null) {
+            eventManager = plugin.getServiceRegistry().getService(CustomEventManager.class);
+        }
+        
+        // If we have an event manager, use it to trigger the event
+        if (eventManager != null) {
+            try {
+                // Create event data map
+                Map<String, DataValue> eventData = new HashMap<>();
+                
+                // Add basic event information
+                eventData.put("event_id", DataValue.fromObject(event.getId().toString()));
+                eventData.put("event_name", DataValue.fromObject(event.getName()));
+                eventData.put("event_category", DataValue.fromObject(event.getCategory()));
+                eventData.put("event_description", DataValue.fromObject(event.getDescription()));
+                eventData.put("event_author", DataValue.fromObject(event.getAuthor()));
+                eventData.put("event_created_time", DataValue.fromObject(event.getCreatedTime()));
+                
+                // Add event data fields
+                for (Map.Entry<String, CustomEvent.EventDataField> entry : event.getDataFields().entrySet()) {
+                    eventData.put("data_" + entry.getKey(), DataValue.fromObject(entry.getKey()));
+                }
+                
+                // Trigger the event through the event manager
+                eventManager.triggerEvent(event.getName(), eventData, null, "global");
+            } catch (Exception e) {
+                plugin.getLogger().severe("Failed to publish event through CustomEventManager: " + e.getMessage());
+                e.printStackTrace();
+            }
+        } else {
+            // Fallback to logging if no event manager is available
+            plugin.getLogger().info("Published event: " + event.getName());
+        }
     }
     
     /**
@@ -168,9 +203,24 @@ public class DefaultScriptEngine implements ScriptEngine, EnhancedScriptEngine, 
      */
     @Override
     public void publishEvent(String eventName, Map<String, DataValue> eventData) {
-        // In a real implementation, this would send the event to the EventDispatcher
-        // For now, we'll just log it
-        plugin.getLogger().info("Published event: " + eventName + " with data: " + eventData.size() + " fields");
+        // Get the event manager from the service registry
+        if (eventManager == null) {
+            eventManager = plugin.getServiceRegistry().getService(CustomEventManager.class);
+        }
+        
+        // If we have an event manager, use it to trigger the event
+        if (eventManager != null) {
+            try {
+                // Trigger the event through the event manager
+                eventManager.triggerEvent(eventName, eventData, null, "global");
+            } catch (Exception e) {
+                plugin.getLogger().severe("Failed to publish event through CustomEventManager: " + e.getMessage());
+                e.printStackTrace();
+            }
+        } else {
+            // Fallback to logging if no event manager is available
+            plugin.getLogger().info("Published event: " + eventName + " with data: " + eventData.size() + " fields");
+        }
     }
     
     @Override

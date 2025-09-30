@@ -23,7 +23,7 @@ public class PlayerTeleportActivator extends BukkitEventActivator {
     
     @Override
     public ActivatorType getType() {
-        return ActivatorType.PLAYER_RESPAWN; // This should be PLAYER_TELEPORT, but that enum value doesn't exist
+        return ActivatorType.PLAYER_TELEPORT;
     }
     
     @Override
@@ -33,7 +33,27 @@ public class PlayerTeleportActivator extends BukkitEventActivator {
     
     @Override
     public void execute(GameEvent gameEvent, List<Entity> selectedEntities, int stackCounter, AtomicInteger callCounter) {
-        // Implementation would go here
+        // Set the selected entities
+        this.selectedEntities = selectedEntities;
+        
+        // Execute all actions associated with this activator
+        // This would integrate with the existing script execution system
+        for (com.megacreative.coding.CodeBlock action : actionList) {
+            try {
+                // Get the script engine from the plugin
+                com.megacreative.coding.ScriptEngine scriptEngine = plugin.getServiceRegistry().getScriptEngine();
+                
+                if (scriptEngine != null) {
+                    // Execute the action block
+                    scriptEngine.executeBlock(action, 
+                        selectedEntities.isEmpty() ? null : (org.bukkit.entity.Player) selectedEntities.get(0), 
+                        "activator_player_teleport");
+                }
+            } catch (Exception e) {
+                plugin.getLogger().severe("Error executing action in PlayerTeleportActivator: " + e.getMessage());
+                e.printStackTrace();
+            }
+        }
     }
     
     /**

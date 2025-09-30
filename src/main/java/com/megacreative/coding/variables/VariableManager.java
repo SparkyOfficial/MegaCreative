@@ -30,6 +30,7 @@ public class VariableManager implements IVariableManager {
     private final Map<String, DataValue> persistentVariables = new ConcurrentHashMap<>();
     private final Map<String, VariableMetadata> variableMetadata = new ConcurrentHashMap<>();
     private final File dataFolder;
+    private final Map<String, DynamicVariable> dynamicVariables = new ConcurrentHashMap<>();
     
     public VariableManager(MegaCreative plugin) {
         this.plugin = plugin;
@@ -342,12 +343,16 @@ public class VariableManager implements IVariableManager {
     
     @Override
     public void registerDynamicVariable(String name, DynamicVariable variable) {
-        // Implementation would go here
+        if (name != null && variable != null) {
+            dynamicVariables.put(name, variable);
+        }
     }
     
     @Override
     public void unregisterDynamicVariable(String name) {
-        // Implementation would go here
+        if (name != null) {
+            dynamicVariables.remove(name);
+        }
     }
     
     @Override

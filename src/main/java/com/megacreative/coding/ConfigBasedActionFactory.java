@@ -27,6 +27,7 @@ public class ConfigBasedActionFactory implements IActionFactory {
     private final Plugin plugin;
     private static final Logger log = Logger.getLogger(ConfigBasedActionFactory.class.getName());
     private final Map<String, Class<? extends BlockAction>> actionClasses = new ConcurrentHashMap<>();
+    private final Map<String, String> actionDisplayNames = new ConcurrentHashMap<>();
     private CustomEventManager eventManager;
     
     public ConfigBasedActionFactory(Plugin plugin) {
@@ -182,8 +183,30 @@ public class ConfigBasedActionFactory implements IActionFactory {
      * Scans for annotated actions and registers them
      */
     public void registerAllActions() {
-        // This method is not used in ConfigBasedActionFactory but required by interface
-        log.info("registerAllActions called but not implemented in ConfigBasedActionFactory");
+        actionDisplayNames.clear();
+        // Load action display names from configuration
+        try {
+            YamlConfiguration config = loadConfig("actions.yml");
+            
+            // Load action display name mappings
+            if (config.contains("action_display_names")) {
+                var displayNamesSection = config.getConfigurationSection("action_display_names");
+                if (displayNamesSection != null) {
+                    for (String actionId : displayNamesSection.getKeys(false)) {
+                        String displayName = config.getString("action_display_names." + actionId);
+                        if (displayName != null && !displayName.isEmpty()) {
+                            // Store the display name mapping
+                            actionDisplayNames.put(actionId, displayName);
+                        }
+                    }
+                }
+            }
+            
+            log.info("ConfigBasedActionFactory registered all actions from configuration");
+        } catch (Exception e) {
+            log.severe("Error registering actions from configuration: " + e.getMessage());
+            e.printStackTrace();
+        }
     }
     
     /**
@@ -193,9 +216,14 @@ public class ConfigBasedActionFactory implements IActionFactory {
      * @return The display name, or the action ID if no display name is set
      */
     public String getActionDisplayName(String actionId) {
-        // This method is not used in ConfigBasedActionFactory but required by interface
-        log.fine("getActionDisplayName called but not implemented in ConfigBasedActionFactory");
-        return actionId;
+        try {
+            YamlConfiguration config = loadConfig("actions.yml");
+            String displayName = config.getString("action_display_names." + actionId);
+            return displayName != null && !displayName.isEmpty() ? displayName : actionId;
+        } catch (Exception e) {
+            log.fine("Could not get display name for action " + actionId + ": " + e.getMessage());
+            return actionId;
+        }
     }
     
     /**
@@ -204,9 +232,26 @@ public class ConfigBasedActionFactory implements IActionFactory {
      * @return A map of action IDs to display names
      */
     public Map<String, String> getActionDisplayNames() {
-        // This method is not used in ConfigBasedActionFactory but required by interface
-        log.fine("getActionDisplayNames called but not implemented in ConfigBasedActionFactory");
-        return Collections.emptyMap();
+        Map<String, String> displayNames = new HashMap<>();
+        try {
+            YamlConfiguration config = loadConfig("actions.yml");
+            
+            // Load action display name mappings
+            if (config.contains("action_display_names")) {
+                var displayNamesSection = config.getConfigurationSection("action_display_names");
+                if (displayNamesSection != null) {
+                    for (String actionId : displayNamesSection.getKeys(false)) {
+                        String displayName = config.getString("action_display_names." + actionId);
+                        if (displayName != null && !displayName.isEmpty()) {
+                            displayNames.put(actionId, displayName);
+                        }
+                    }
+                }
+            }
+        } catch (Exception e) {
+            log.fine("Could not load action display names: " + e.getMessage());
+        }
+        return displayNames;
     }
     
     /**

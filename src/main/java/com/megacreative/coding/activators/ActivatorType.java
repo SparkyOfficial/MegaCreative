@@ -29,10 +29,13 @@ public enum ActivatorType {
     PLAYER_MOVE("Player Move", Material.FEATHER, "Triggers when a player moves"),
     PLAYER_DEATH("Player Death", Material.BONE, "Triggers when a player dies"),
     PLAYER_RESPAWN("Player Respawn", Material.TOTEM_OF_UNDYING, "Triggers when a player respawns"),
+    PLAYER_TELEPORT("Player Teleport", Material.ENDER_PEARL, "Triggers when a player teleports"),
     ENTITY_PICKUP_ITEM("Entity Pickup Item", Material.HOPPER, "Triggers when an entity picks up an item"),
     CHAT("Chat", Material.BOOK, "Triggers when a player sends a chat message"),
     BLOCK_PLACE("Block Place", Material.STONE, "Triggers when a block is placed"),
     BLOCK_BREAK("Block Break", Material.STONE_PICKAXE, "Triggers when a block is broken"),
+    INVENTORY_CLICK("Inventory Click", Material.CHEST, "Triggers when a player clicks in an inventory"),
+    ENTITY_DAMAGE("Entity Damage", Material.DIAMOND_SWORD, "Triggers when an entity takes damage"),
     
     // Game events
     GAME_LOOP("Game Loop", Material.EMERALD_BLOCK, "Triggers repeatedly at specified intervals"),

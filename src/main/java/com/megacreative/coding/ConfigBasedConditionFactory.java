@@ -26,6 +26,7 @@ public class ConfigBasedConditionFactory implements IConditionFactory {
     private final Plugin plugin;
     private static final Logger log = Logger.getLogger(ConfigBasedConditionFactory.class.getName());
     private final Map<String, Class<? extends BlockCondition>> conditionClasses = new ConcurrentHashMap<>();
+    private final Map<String, String> conditionDisplayNames = new ConcurrentHashMap<>();
     private CustomEventManager eventManager;
     
     public ConfigBasedConditionFactory(Plugin plugin) {
@@ -181,8 +182,30 @@ public class ConfigBasedConditionFactory implements IConditionFactory {
      * Scans for annotated conditions and registers them
      */
     public void registerAllConditions() {
-        // This method is not used in ConfigBasedConditionFactory but required by interface
-        log.info("registerAllConditions called but not implemented in ConfigBasedConditionFactory");
+        conditionDisplayNames.clear();
+        // Load condition display names from configuration
+        try {
+            YamlConfiguration config = loadConfig("conditions.yml");
+            
+            // Load condition display name mappings
+            if (config.contains("condition_display_names")) {
+                var displayNamesSection = config.getConfigurationSection("condition_display_names");
+                if (displayNamesSection != null) {
+                    for (String conditionId : displayNamesSection.getKeys(false)) {
+                        String displayName = config.getString("condition_display_names." + conditionId);
+                        if (displayName != null && !displayName.isEmpty()) {
+                            // Store the display name mapping
+                            conditionDisplayNames.put(conditionId, displayName);
+                        }
+                    }
+                }
+            }
+            
+            log.info("ConfigBasedConditionFactory registered all conditions from configuration");
+        } catch (Exception e) {
+            log.severe("Error registering conditions from configuration: " + e.getMessage());
+            e.printStackTrace();
+        }
     }
     
     /**
@@ -192,9 +215,8 @@ public class ConfigBasedConditionFactory implements IConditionFactory {
      * @return The display name, or the condition ID if no display name is set
      */
     public String getConditionDisplayName(String conditionId) {
-        // This method is not used in ConfigBasedConditionFactory but required by interface
-        log.fine("getConditionDisplayName called but not implemented in ConfigBasedConditionFactory");
-        return conditionId;
+        String displayName = conditionDisplayNames.get(conditionId);
+        return displayName != null ? displayName : conditionId;
     }
     
     /**
@@ -203,9 +225,7 @@ public class ConfigBasedConditionFactory implements IConditionFactory {
      * @return A map of condition IDs to display names
      */
     public Map<String, String> getConditionDisplayNames() {
-        // This method is not used in ConfigBasedConditionFactory but required by interface
-        log.fine("getConditionDisplayNames called but not implemented in ConfigBasedConditionFactory");
-        return Collections.emptyMap();
+        return Collections.unmodifiableMap(conditionDisplayNames);
     }
     
     /**
