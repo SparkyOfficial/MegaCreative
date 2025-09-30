@@ -64,6 +64,25 @@ public class PlayerTeleportActivator extends BukkitEventActivator {
      * @param cause The cause of the teleportation
      */
     public void activate(Player player, Location from, Location to, String cause) {
-        // Implementation would go here
+        // Create a game event for this activation
+        GameEvent event = new GameEvent("player_teleport");
+        event.setPlayer(player);
+        event.setLocation(to);
+        
+        // Add teleport information to the event
+        Map<String, Object> eventData = new HashMap<>();
+        eventData.put("from_x", from.getX());
+        eventData.put("from_y", from.getY());
+        eventData.put("from_z", from.getZ());
+        eventData.put("from_world", from.getWorld().getName());
+        eventData.put("to_x", to.getX());
+        eventData.put("to_y", to.getY());
+        eventData.put("to_z", to.getZ());
+        eventData.put("to_world", to.getWorld().getName());
+        eventData.put("cause", cause);
+        event.setCustomData(eventData);
+        
+        // Execute the activator with the event
+        execute(event, List.of(player), 0, new AtomicInteger(0));
     }
 }

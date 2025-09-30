@@ -63,6 +63,17 @@ public class InventoryClickActivator extends BukkitEventActivator {
      * @param clickedItem The item that was clicked
      */
     public void activate(Player player, int slot, ItemStack clickedItem) {
-        // Implementation would go here
+        // Create a game event for this activation
+        GameEvent event = new GameEvent("inventory_click");
+        event.setPlayer(player);
+        
+        // Add click information to the event
+        Map<String, Object> eventData = new HashMap<>();
+        eventData.put("slot", slot);
+        eventData.put("clicked_item", clickedItem != null ? clickedItem.getType().name() : "AIR");
+        event.setCustomData(eventData);
+        
+        // Execute the activator with the event
+        execute(event, List.of(player), 0, new AtomicInteger(0));
     }
 }

@@ -64,6 +64,17 @@ public class EntityDamageActivator extends BukkitEventActivator {
      * @param cause The cause of the damage
      */
     public void activate(Entity entity, double damage, String cause) {
-        // Implementation would go here
+        // Create a game event for this activation
+        GameEvent event = new GameEvent("entity_damage");
+        event.setEntity(entity);
+        
+        // Add damage information to the event
+        Map<String, Object> eventData = new HashMap<>();
+        eventData.put("damage", damage);
+        eventData.put("cause", cause);
+        event.setCustomData(eventData);
+        
+        // Execute the activator with the event
+        execute(event, List.of(entity), 0, new AtomicInteger(0));
     }
 }

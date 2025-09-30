@@ -37,6 +37,7 @@ import com.megacreative.managers.ReferenceSystemEventManager;
 import com.megacreative.utils.ConfigManager;
 import com.megacreative.services.CodeCompiler;
 import com.megacreative.coding.activators.ActivatorManager;
+import com.megacreative.services.RepeatingTaskManager;
 import org.bukkit.plugin.Plugin;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.logging.Level;
@@ -95,6 +96,7 @@ public class ServiceRegistry implements DependencyContainer.Disposable {
         dependencyContainer.registerFactory(VisualDebugger.class, (DependencyContainer.Supplier<VisualDebugger>) () -> new VisualDebugger((MegaCreative) plugin));
         dependencyContainer.registerFactory(BlockConfigService.class, (DependencyContainer.Supplier<BlockConfigService>) () -> new BlockConfigService((MegaCreative) plugin));
         dependencyContainer.registerFactory(AdvancedFunctionManager.class, (DependencyContainer.Supplier<AdvancedFunctionManager>) () -> new AdvancedFunctionManager((MegaCreative) plugin));
+        dependencyContainer.registerFactory(RepeatingTaskManager.class, (DependencyContainer.Supplier<RepeatingTaskManager>) () -> new RepeatingTaskManager((MegaCreative) plugin));
         dependencyContainer.registerFactory(ConfigManager.class, (DependencyContainer.Supplier<ConfigManager>) () -> {
             ConfigManager configManager = new ConfigManager((MegaCreative) plugin);
             configManager.loadConfig();
@@ -439,6 +441,10 @@ public class ServiceRegistry implements DependencyContainer.Disposable {
     
     public IConditionFactory getConditionFactory() {
         return dependencyContainer.resolve(IConditionFactory.class);
+    }
+    
+    public RepeatingTaskManager getRepeatingTaskManager() {
+        return dependencyContainer.resolve(RepeatingTaskManager.class);
     }
     
     public ScriptEngine getScriptEngine() {

@@ -2,6 +2,8 @@ package com.megacreative.commands;
 
 import com.megacreative.MegaCreative;
 import com.megacreative.coding.actions.RepeatTriggerAction;
+import com.megacreative.core.ServiceRegistry;
+import com.megacreative.services.RepeatingTaskManager;
 import org.bukkit.command.Command;
 import org.bukkit.command.CommandExecutor;
 import org.bukkit.command.CommandSender;
@@ -69,10 +71,14 @@ public class StopRepeatCommand implements CommandExecutor {
         
         Player player = (Player) sender;
         
+        // Получаем RepeatingTaskManager из ServiceRegistry
+        ServiceRegistry serviceRegistry = plugin.getServiceRegistry();
+        RepeatingTaskManager taskManager = serviceRegistry.getRepeatingTaskManager();
+        
         if (args.length == 0) {
             // Останавливаем задачи для текущего игрока
-            if (RepeatTriggerAction.hasActiveTask(player.getUniqueId())) {
-                RepeatTriggerAction.stopRepeatingTask(player.getUniqueId());
+            if (taskManager.hasActiveTask(player.getUniqueId())) {
+                taskManager.stopRepeatingTask(player.getUniqueId());
                 player.sendMessage("§a✅ Ваши повторяющиеся задачи остановлены!");
             } else {
                 player.sendMessage("§eℹ У вас нет активных повторяющихся задач.");
@@ -80,7 +86,7 @@ public class StopRepeatCommand implements CommandExecutor {
         } else if (args.length == 1 && args[0].equalsIgnoreCase("all")) {
             // Останавливаем все задачи (только для операторов)
             if (player.isOp()) {
-                int stoppedCount = RepeatTriggerAction.stopAllRepeatingTasks();
+                int stoppedCount = taskManager.stopAllRepeatingTasks();
                 player.sendMessage("§a✅ Остановлено " + stoppedCount + " повторяющихся задач!");
             } else {
                 player.sendMessage("§c❌ У вас нет прав для остановки всех задач!");

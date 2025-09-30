@@ -1,5 +1,6 @@
 package com.megacreative.coding.actions;
 
+import com.megacreative.MegaCreative;
 import com.megacreative.coding.BlockAction;
 import com.megacreative.coding.CodeBlock;
 import com.megacreative.coding.ExecutionContext;
@@ -7,18 +8,16 @@ import com.megacreative.coding.ParameterResolver;
 import com.megacreative.coding.ScriptEngine;
 import com.megacreative.coding.executors.ExecutionResult;
 import com.megacreative.coding.values.DataValue;
-import com.megacreative.coding.variables.VariableManager;
 import com.megacreative.core.ServiceRegistry;
+import com.megacreative.services.RepeatingTaskManager;
 import org.bukkit.Bukkit;
 import org.bukkit.entity.Player;
+import org.bukkit.scheduler.BukkitTask;
 
-import java.util.HashMap;
-import java.util.Map;
 import java.util.UUID;
-import java.util.concurrent.CompletableFuture;
 
 public class RepeatTriggerAction implements BlockAction {
-    private static final Map<UUID, Integer> activeTasks = new HashMap<>();
+    // Removed static field and will use RepeatingTaskManager service instead
     
     @Override
     public ExecutionResult execute(CodeBlock block, ExecutionContext context) {
@@ -55,20 +54,24 @@ public class RepeatTriggerAction implements BlockAction {
         try {
             int ticks = Integer.parseInt(ticksStr);
             
+            // Получаем RepeatingTaskManager из ServiceRegistry
+            ServiceRegistry serviceRegistry = context.getPlugin().getServiceRegistry();
+            RepeatingTaskManager taskManager = serviceRegistry.getRepeatingTaskManager();
+            
             // Останавливаем предыдущую задачу для этого игрока, если она существует
-            stopRepeatingTask(player.getUniqueId());
+            taskManager.stopRepeatingTask(player.getUniqueId());
             
             // Создаем уникальный идентификатор для задачи
             UUID taskId = UUID.randomUUID();
             
             // Запускаем повторяющуюся задачу
-            int taskIdBukkit = Bukkit.getScheduler().runTaskTimer(context.getPlugin(), () -> {
+            BukkitTask task = Bukkit.getScheduler().runTaskTimer(context.getPlugin(), () -> {
                 try {
                     // Получаем ScriptEngine из ServiceRegistry
                     ScriptEngine scriptEngine = context.getPlugin().getServiceRegistry().getService(ScriptEngine.class);
                     if (scriptEngine == null) {
                         player.sendMessage("§cОшибка: не удалось получить ScriptEngine");
-                        stopRepeatingTask(player.getUniqueId());
+                        taskManager.stopRepeatingTask(player.getUniqueId());
                         return;
                     }
                     
@@ -80,18 +83,18 @@ public class RepeatTriggerAction implements BlockAction {
                         scriptEngine.executeBlockChain(nextBlock, player, "repeat_trigger")
                             .exceptionally(throwable -> {
                                 player.sendMessage("§cОшибка в повторяющемся триггере: " + throwable.getMessage());
-                                stopRepeatingTask(player.getUniqueId());
+                                taskManager.stopRepeatingTask(player.getUniqueId());
                                 return null;
                             });
                     }
                 } catch (Exception e) {
                     player.sendMessage("§cОшибка в повторяющемся триггере: " + e.getMessage());
-                    stopRepeatingTask(player.getUniqueId());
+                    taskManager.stopRepeatingTask(player.getUniqueId());
                 }
-            }, ticks, ticks).getTaskId();
+            }, ticks, ticks);
             
-            // Сохраняем ID задачи
-            activeTasks.put(player.getUniqueId(), taskIdBukkit);
+            // Сохраняем ID задачи через RepeatingTaskManager
+            taskManager.startRepeatingTask(player.getUniqueId(), task);
             
             player.sendMessage("§a🔄 Повторяющийся триггер запущен каждые " + ticks + " тиков");
             
@@ -105,10 +108,13 @@ public class RepeatTriggerAction implements BlockAction {
      * Останавливает повторяющуюся задачу для указанного игрока
      */
     public static void stopRepeatingTask(UUID playerId) {
-        Integer taskId = activeTasks.get(playerId);
-        if (taskId != null) {
-            Bukkit.getScheduler().cancelTask(taskId);
-            activeTasks.remove(playerId);
+        // Получаем RepeatingTaskManager из ServiceRegistry
+        MegaCreative plugin = MegaCreative.getInstance();
+        if (plugin != null && plugin.getServiceRegistry() != null) {
+            RepeatingTaskManager taskManager = plugin.getServiceRegistry().getRepeatingTaskManager();
+            if (taskManager != null) {
+                taskManager.stopRepeatingTask(playerId);
+            }
         }
     }
     
@@ -117,18 +123,29 @@ public class RepeatTriggerAction implements BlockAction {
      * @return Количество остановленных задач
      */
     public static int stopAllRepeatingTasks() {
-        int count = activeTasks.size();
-        for (Integer taskId : activeTasks.values()) {
-            Bukkit.getScheduler().cancelTask(taskId);
+        // Получаем RepeatingTaskManager из ServiceRegistry
+        MegaCreative plugin = MegaCreative.getInstance();
+        if (plugin != null && plugin.getServiceRegistry() != null) {
+            RepeatingTaskManager taskManager = plugin.getServiceRegistry().getRepeatingTaskManager();
+            if (taskManager != null) {
+                return taskManager.stopAllRepeatingTasks();
+            }
         }
-        activeTasks.clear();
-        return count;
+        return 0;
     }
     
     /**
      * Проверяет, есть ли активная повторяющаяся задача для игрока
      */
     public static boolean hasActiveTask(UUID playerId) {
-        return activeTasks.containsKey(playerId);
+        // Получаем RepeatingTaskManager из ServiceRegistry
+        MegaCreative plugin = MegaCreative.getInstance();
+        if (plugin != null && plugin.getServiceRegistry() != null) {
+            RepeatingTaskManager taskManager = plugin.getServiceRegistry().getRepeatingTaskManager();
+            if (taskManager != null) {
+                return taskManager.hasActiveTask(playerId);
+            }
+        }
+        return false;
     }
 }
