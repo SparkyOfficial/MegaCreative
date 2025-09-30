@@ -8,6 +8,7 @@ import com.megacreative.utils.ClassScanner;
 import com.megacreative.coding.events.EventPublisher;
 import com.megacreative.coding.events.CustomEvent;
 import com.megacreative.interfaces.IConditionFactory;
+import com.megacreative.coding.events.CustomEventManager;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.function.Supplier;
@@ -20,6 +21,7 @@ public class ConditionFactory implements IConditionFactory {
     private final MegaCreative plugin;
     private final Map<String, Supplier<BlockCondition>> conditionRegistry = new HashMap<>();
     private final Map<String, String> conditionDisplayNames = new HashMap<>();
+    private CustomEventManager eventManager;
 
     public ConditionFactory(MegaCreative plugin) {
         this.plugin = plugin;
@@ -114,9 +116,40 @@ public class ConditionFactory implements IConditionFactory {
      */
     @Override
     public void publishEvent(CustomEvent event) {
-        // In a real implementation, this would send the event to the EventDispatcher
-        // For now, we'll just log it
-        LOGGER.info("Published event: " + event.getName());
+        // Get the event manager from the service registry
+        if (eventManager == null) {
+            eventManager = plugin.getServiceRegistry().getService(CustomEventManager.class);
+        }
+        
+        // If we have an event manager, use it to trigger the event
+        if (eventManager != null) {
+            try {
+                // Create event data map
+                Map<String, DataValue> eventData = new HashMap<>();
+                
+                // Add basic event information
+                eventData.put("event_id", DataValue.fromObject(event.getId().toString()));
+                eventData.put("event_name", DataValue.fromObject(event.getName()));
+                eventData.put("event_category", DataValue.fromObject(event.getCategory()));
+                eventData.put("event_description", DataValue.fromObject(event.getDescription()));
+                eventData.put("event_author", DataValue.fromObject(event.getAuthor()));
+                eventData.put("event_created_time", DataValue.fromObject(event.getCreatedTime()));
+                
+                // Add event data fields
+                for (Map.Entry<String, DataValue> entry : eventData.entrySet()) {
+                    eventData.put("data_" + entry.getKey(), entry.getValue());
+                }
+                
+                // Trigger the event through the event manager
+                eventManager.triggerEvent(event.getName(), eventData, null, "global");
+            } catch (Exception e) {
+                LOGGER.severe("Failed to publish event through CustomEventManager: " + e.getMessage());
+                e.printStackTrace();
+            }
+        } else {
+            // Fallback to logging if no event manager is available
+            LOGGER.info("Published event: " + event.getName());
+        }
     }
     
     /**
@@ -127,8 +160,23 @@ public class ConditionFactory implements IConditionFactory {
      */
     @Override
     public void publishEvent(String eventName, Map<String, DataValue> eventData) {
-        // In a real implementation, this would send the event to the EventDispatcher
-        // For now, we'll just log it
-        LOGGER.info("Published event: " + eventName + " with data: " + eventData.size() + " fields");
+        // Get the event manager from the service registry
+        if (eventManager == null) {
+            eventManager = plugin.getServiceRegistry().getService(CustomEventManager.class);
+        }
+        
+        // If we have an event manager, use it to trigger the event
+        if (eventManager != null) {
+            try {
+                // Trigger the event through the event manager
+                eventManager.triggerEvent(eventName, eventData, null, "global");
+            } catch (Exception e) {
+                LOGGER.severe("Failed to publish event through CustomEventManager: " + e.getMessage());
+                e.printStackTrace();
+            }
+        } else {
+            // Fallback to logging if no event manager is available
+            LOGGER.info("Published event: " + eventName + " with data: " + eventData.size() + " fields");
+        }
     }
 }

@@ -6,6 +6,7 @@ import com.megacreative.coding.executors.ExecutionResult;
 import com.megacreative.interfaces.IActionFactory;
 import com.megacreative.coding.events.CustomEvent;
 import com.megacreative.coding.values.DataValue;
+import com.megacreative.coding.events.CustomEventManager;
 import org.bukkit.plugin.Plugin;
 import org.bukkit.configuration.file.YamlConfiguration;
 import java.io.File;
@@ -17,14 +18,16 @@ import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.Collections;
+import java.util.logging.Logger;
 
 /**
  * Factory for creating block actions based on configuration
  */
 public class ConfigBasedActionFactory implements IActionFactory {
     private final Plugin plugin;
-    // private static final Logger log = Logger.getLogger(ConfigBasedActionFactory.class.getName());  // Removed logger declaration
+    private static final Logger log = Logger.getLogger(ConfigBasedActionFactory.class.getName());
     private final Map<String, Class<? extends BlockAction>> actionClasses = new ConcurrentHashMap<>();
+    private CustomEventManager eventManager;
     
     public ConfigBasedActionFactory(Plugin plugin) {
         this.plugin = plugin;
@@ -51,7 +54,7 @@ public class ConfigBasedActionFactory implements IActionFactory {
                 }
             }
         } catch (Exception e) {
-            // Removed log statement
+            log.severe("Error loading action classes: " + e.getMessage());
             e.printStackTrace();
         }
     }
@@ -119,7 +122,7 @@ public class ConfigBasedActionFactory implements IActionFactory {
             // Not found
         }
         
-        // Removed log statement
+        log.warning("Could not find action class for: " + actionId);
         return null;
     }
     
@@ -142,10 +145,10 @@ public class ConfigBasedActionFactory implements IActionFactory {
             Class<?> clazz = Class.forName(className);
             if (BlockAction.class.isAssignableFrom(clazz)) {
                 actionClasses.put(actionId, (Class<? extends BlockAction>) clazz);
-                // Removed log statement
+                log.info("Registered action class: " + actionId + " -> " + className);
             }
         } catch (ClassNotFoundException e) {
-            // Removed log statement
+            log.warning("Action class not found: " + className);
         }
     }
     
@@ -155,7 +158,7 @@ public class ConfigBasedActionFactory implements IActionFactory {
     public BlockAction createAction(String actionId) {
         Class<? extends BlockAction> actionClass = actionClasses.get(actionId);
         if (actionClass == null) {
-            // Removed log statement
+            log.warning("No action class registered for action ID: " + actionId);
             return null;
         }
         
@@ -170,7 +173,7 @@ public class ConfigBasedActionFactory implements IActionFactory {
                 return constructor.newInstance();
             }
         } catch (Exception e) {
-            // Removed log statement
+            log.severe("Error creating action instance for " + actionId + ": " + e.getMessage());
             return null;
         }
     }
@@ -180,6 +183,7 @@ public class ConfigBasedActionFactory implements IActionFactory {
      */
     public void registerAllActions() {
         // This method is not used in ConfigBasedActionFactory but required by interface
+        log.info("registerAllActions called but not implemented in ConfigBasedActionFactory");
     }
     
     /**
@@ -190,6 +194,7 @@ public class ConfigBasedActionFactory implements IActionFactory {
      */
     public String getActionDisplayName(String actionId) {
         // This method is not used in ConfigBasedActionFactory but required by interface
+        log.fine("getActionDisplayName called but not implemented in ConfigBasedActionFactory");
         return actionId;
     }
     
@@ -200,6 +205,7 @@ public class ConfigBasedActionFactory implements IActionFactory {
      */
     public Map<String, String> getActionDisplayNames() {
         // This method is not used in ConfigBasedActionFactory but required by interface
+        log.fine("getActionDisplayNames called but not implemented in ConfigBasedActionFactory");
         return Collections.emptyMap();
     }
     
@@ -217,7 +223,40 @@ public class ConfigBasedActionFactory implements IActionFactory {
      * @param event The event to publish
      */
     public void publishEvent(CustomEvent event) {
-        // Implementation not required for this factory
+        // Get the event manager from the service registry
+        if (eventManager == null && plugin instanceof MegaCreative) {
+            eventManager = ((MegaCreative) plugin).getServiceRegistry().getService(CustomEventManager.class);
+        }
+        
+        // If we have an event manager, use it to trigger the event
+        if (eventManager != null) {
+            try {
+                // Create event data map
+                Map<String, DataValue> eventData = new HashMap<>();
+                
+                // Add basic event information
+                eventData.put("event_id", DataValue.fromObject(event.getId().toString()));
+                eventData.put("event_name", DataValue.fromObject(event.getName()));
+                eventData.put("event_category", DataValue.fromObject(event.getCategory()));
+                eventData.put("event_description", DataValue.fromObject(event.getDescription()));
+                eventData.put("event_author", DataValue.fromObject(event.getAuthor()));
+                eventData.put("event_created_time", DataValue.fromObject(event.getCreatedTime()));
+                
+                // Add event data fields
+                for (Map.Entry<String, CustomEvent.EventDataField> entry : event.getDataFields().entrySet()) {
+                    eventData.put("data_" + entry.getKey(), DataValue.fromObject(entry.getKey()));
+                }
+                
+                // Trigger the event through the event manager
+                eventManager.triggerEvent(event.getName(), eventData, null, "global");
+            } catch (Exception e) {
+                log.severe("Failed to publish event through CustomEventManager: " + e.getMessage());
+                e.printStackTrace();
+            }
+        } else {
+            // Fallback to logging if no event manager is available
+            log.info("Published event: " + event.getName());
+        }
     }
     
     /**
@@ -227,6 +266,23 @@ public class ConfigBasedActionFactory implements IActionFactory {
      * @param eventData The data associated with the event
      */
     public void publishEvent(String eventName, Map<String, DataValue> eventData) {
-        // Implementation not required for this factory
+        // Get the event manager from the service registry
+        if (eventManager == null && plugin instanceof MegaCreative) {
+            eventManager = ((MegaCreative) plugin).getServiceRegistry().getService(CustomEventManager.class);
+        }
+        
+        // If we have an event manager, use it to trigger the event
+        if (eventManager != null) {
+            try {
+                // Trigger the event through the event manager
+                eventManager.triggerEvent(eventName, eventData, null, "global");
+            } catch (Exception e) {
+                log.severe("Failed to publish event through CustomEventManager: " + e.getMessage());
+                e.printStackTrace();
+            }
+        } else {
+            // Fallback to logging if no event manager is available
+            log.info("Published event: " + eventName + " with data: " + eventData.size() + " fields");
+        }
     }
 }
