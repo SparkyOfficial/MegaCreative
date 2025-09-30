@@ -4,19 +4,18 @@ import com.megacreative.coding.BlockAction;
 import com.megacreative.coding.CodeBlock;
 import com.megacreative.coding.ExecutionContext;
 import com.megacreative.coding.executors.ExecutionResult;
-import com.megacreative.services.BlockConfigService;
-import com.megacreative.coding.annotations.BlockMeta; // Added import
-import com.megacreative.coding.BlockType; // Added import
+import com.megacreative.coding.annotations.BlockMeta;
+import com.megacreative.coding.BlockType;
+import com.megacreative.coding.values.DataValue;
 import org.bukkit.entity.Player;
 import org.bukkit.inventory.ItemStack;
-
-import java.util.function.Function;
+import org.bukkit.Material;
 
 /**
  * Action for giving an item to a player.
- * This action retrieves an item from the container configuration and gives it to the player.
+ * This action gives an item to the player based on parameters.
  */
-@BlockMeta(id = "giveItem", displayName = "§aGive Item", type = BlockType.ACTION) // Added annotation
+@BlockMeta(id = "giveItem", displayName = "§aGive Item", type = BlockType.ACTION)
 public class GiveItemAction implements BlockAction {
 
     @Override
@@ -27,81 +26,35 @@ public class GiveItemAction implements BlockAction {
         }
 
         try {
-            ItemStack item = getItemFromContainer(block, context);
+            // Get parameters from the new parameter system
+            DataValue materialValue = block.getParameter("material");
+            DataValue amountValue = block.getParameter("amount");
             
-            if (item == null) {
-                return ExecutionResult.error("No item configured");
+            if (materialValue == null || materialValue.isEmpty()) {
+                return ExecutionResult.error("Material parameter is missing");
             }
-
-            player.getInventory().addItem(item.clone());
+            
+            // Parse material
+            Material material = Material.valueOf(materialValue.asString().toUpperCase());
+            
+            // Parse amount (default to 1)
+            int amount = 1;
+            if (amountValue != null && !amountValue.isEmpty()) {
+                try {
+                    amount = Integer.parseInt(amountValue.asString());
+                    amount = Math.max(1, Math.min(64, amount)); // Clamp between 1 and 64
+                } catch (NumberFormatException e) {
+                    // Use default amount
+                }
+            }
+            
+            // Create and give item
+            ItemStack item = new ItemStack(material, amount);
+            player.getInventory().addItem(item);
+            
             return ExecutionResult.success("Item given to player successfully");
         } catch (Exception e) {
             return ExecutionResult.error("Failed to give item: " + e.getMessage());
         }
-    }
-    
-    /**
-     * 🎆 ENHANCED: Gets item from the container configuration with improved handling
-     */
-    private ItemStack getItemFromContainer(CodeBlock block, ExecutionContext context) {
-        try {
-            // Get the BlockConfigService to resolve slot names
-            BlockConfigService blockConfigService = context.getPlugin().getServiceRegistry().getBlockConfigService();
-            
-            // Get the slot resolver for this action
-            Function<String, Integer> slotResolver = blockConfigService.getSlotResolver(block.getAction());
-            
-            if (slotResolver != null) {
-                // Get item from the item slot (primary)
-                Integer itemSlot = slotResolver.apply("item");
-                if (itemSlot == null) {
-                    itemSlot = slotResolver.apply("item_slot"); // Fallback
-                }
-                
-                if (itemSlot != null) {
-                    ItemStack configuredItem = block.getConfigItem(itemSlot);
-                    if (configuredItem != null && !configuredItem.getType().isAir()) {
-                        // Get amount from amount slot if configured
-                        Integer amountSlot = slotResolver.apply("amount");
-                        if (amountSlot != null) {
-                            ItemStack amountItem = block.getConfigItem(amountSlot);
-                            if (amountItem != null && amountItem.hasItemMeta()) {
-                                String amountStr = org.bukkit.ChatColor.stripColor(
-                                    amountItem.getItemMeta().getDisplayName()).trim();
-                                try {
-                                    int amount = Integer.parseInt(amountStr);
-                                    configuredItem.setAmount(Math.max(1, Math.min(64, amount)));
-                                } catch (NumberFormatException e) {
-                                    // Use default amount from configured item
-                                }
-                            }
-                        }
-                        return configuredItem;
-                    }
-                }
-            }
-            
-            // 🎆 ENHANCED: Fallback to parameter-based configuration
-            com.megacreative.coding.values.DataValue materialParam = block.getParameter("material");
-            com.megacreative.coding.values.DataValue amountParam = block.getParameter("amount");
-            
-            if (materialParam != null && !materialParam.isEmpty()) {
-                try {
-                    org.bukkit.Material material = org.bukkit.Material.valueOf(materialParam.asString().toUpperCase());
-                    int amount = 1;
-                    if (amountParam != null && !amountParam.isEmpty()) {
-                        amount = Math.max(1, Math.min(64, Integer.parseInt(amountParam.asString())));
-                    }
-                    return new ItemStack(material, amount);
-                } catch (Exception e) {
-                    // Handle exception
-                }
-            }
-            
-        } catch (Exception e) {
-            // Suppress exception
-        }
-        
-        return null;
     }
 }

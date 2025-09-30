@@ -3,16 +3,14 @@ package com.megacreative.coding.conditions;
 import com.megacreative.coding.BlockCondition;
 import com.megacreative.coding.CodeBlock;
 import com.megacreative.coding.ExecutionContext;
+import com.megacreative.coding.ParameterResolver;
 import com.megacreative.coding.annotations.BlockMeta;
 import com.megacreative.coding.BlockType;
-import com.megacreative.services.BlockConfigService;
+import com.megacreative.coding.values.DataValue;
 import org.bukkit.Material;
 import org.bukkit.entity.Player;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.inventory.PlayerInventory;
-import org.bukkit.inventory.meta.ItemMeta;
-
-import java.util.function.Function;
 
 /**
  * Condition for checking if a player has a specific item in their inventory.
@@ -29,18 +27,45 @@ public class CheckPlayerInventoryCondition implements BlockCondition {
         }
 
         try {
-            CheckPlayerInventoryParams params = getInventoryParams(block, context);
-            if (params == null) {
-                return false;
-            }
-
-            Material material = Material.matchMaterial(params.itemStr);
-            if (material == null) {
+            // Get parameters from the new parameter system
+            DataValue itemValue = block.getParameter("item");
+            DataValue amountValue = block.getParameter("amount");
+            DataValue checkTypeValue = block.getParameter("check_type");
+            
+            if (itemValue == null || itemValue.isEmpty()) {
+                context.getPlugin().getLogger().warning("CheckPlayerInventoryCondition: 'item' parameter is missing.");
                 return false;
             }
             
-            int amount = params.amount;
-            String checkType = params.checkType.toLowerCase();
+            // Resolve any placeholders in the parameters
+            ParameterResolver resolver = new ParameterResolver(context);
+            DataValue resolvedItem = resolver.resolve(context, itemValue);
+            
+            String itemStr = resolvedItem.asString();
+            Material material = Material.matchMaterial(itemStr);
+            if (material == null) {
+                context.getPlugin().getLogger().warning("CheckPlayerInventoryCondition: Invalid item material '" + itemStr + "'.");
+                return false;
+            }
+            
+            // Parse amount (default to 1)
+            int amount = 1;
+            if (amountValue != null && !amountValue.isEmpty()) {
+                DataValue resolvedAmount = resolver.resolve(context, amountValue);
+                try {
+                    amount = Math.max(1, Integer.parseInt(resolvedAmount.asString()));
+                } catch (NumberFormatException e) {
+                    context.getPlugin().getLogger().warning("CheckPlayerInventoryCondition: Invalid amount, using default 1.");
+                }
+            }
+            
+            // Parse check type (default to "has")
+            String checkType = "has";
+            if (checkTypeValue != null && !checkTypeValue.isEmpty()) {
+                DataValue resolvedCheckType = resolver.resolve(context, checkTypeValue);
+                checkType = resolvedCheckType.asString();
+            }
+            checkType = checkType != null ? checkType.toLowerCase() : "has";
             
             PlayerInventory inventory = player.getInventory();
             int count = 0;
@@ -63,111 +88,13 @@ public class CheckPlayerInventoryCondition implements BlockCondition {
                 case "has_more_than":
                     return count > amount;
                 default:
+                    context.getPlugin().getLogger().warning("CheckPlayerInventoryCondition: Invalid check type '" + checkType + "'.");
                     return false;
             }
         } catch (Exception e) {
+            context.getPlugin().getLogger().severe("Error evaluating CheckPlayerInventoryCondition: " + e.getMessage());
             return false;
         }
-    }
-    
-    /**
-     * Gets inventory parameters from the block configuration
-     */
-    private CheckPlayerInventoryParams getInventoryParams(CodeBlock block, ExecutionContext context) {
-        CheckPlayerInventoryParams params = new CheckPlayerInventoryParams();
-        
-        try {
-            // Get the BlockConfigService to resolve slot names
-            BlockConfigService blockConfigService = context.getPlugin().getServiceRegistry().getBlockConfigService();
-            
-            // Get the slot resolver for this condition
-            Function<String, Integer> slotResolver = blockConfigService.getSlotResolver(block.getAction());
-            
-            if (slotResolver != null) {
-                // Get item type from item slot
-                Integer itemSlot = slotResolver.apply("item");
-                if (itemSlot != null) {
-                    ItemStack item = block.getConfigItem(itemSlot);
-                    if (item != null) {
-                        // Extract item type from item
-                        params.itemStr = getItemTypeFromItem(item);
-                        
-                        // Extract amount from amount slot or item
-                        Integer amountSlot = slotResolver.apply("amount");
-                        if (amountSlot != null) {
-                            ItemStack amountItem = block.getConfigItem(amountSlot);
-                            if (amountItem != null) {
-                                params.amount = getAmountFromItem(amountItem);
-                            }
-                        } else {
-                            // Extract amount from item
-                            params.amount = getAmountFromItem(item);
-                        }
-                        
-                        // Extract check type from check type slot or item
-                        Integer checkTypeSlot = slotResolver.apply("check_type");
-                        if (checkTypeSlot != null) {
-                            ItemStack checkTypeItem = block.getConfigItem(checkTypeSlot);
-                            if (checkTypeItem != null) {
-                                params.checkType = getCheckTypeFromItem(checkTypeItem);
-                            }
-                        } else {
-                            // Extract check type from item
-                            params.checkType = getCheckTypeFromItem(item);
-                        }
-                    }
-                }
-            }
-        } catch (Exception e) {
-            // Suppress exception
-        }
-        
-        return params;
-    }
-    
-    /**
-     * Extracts item type from an item
-     */
-    private String getItemTypeFromItem(ItemStack item) {
-        // For item type, we'll use the item type name
-        return item.getType().name();
-    }
-    
-    /**
-     * Extracts amount from an item
-     */
-    private int getAmountFromItem(ItemStack item) {
-        ItemMeta meta = item.getItemMeta();
-        if (meta != null) {
-            String displayName = meta.getDisplayName();
-            if (displayName != null && !displayName.isEmpty()) {
-                try {
-                    // Try to parse the amount from the display name
-                    String cleanName = displayName.replaceAll("[^0-9]", "");
-                    if (!cleanName.isEmpty()) {
-                        return Math.max(1, Integer.parseInt(cleanName));
-                    }
-                } catch (NumberFormatException e) {
-                    // Use default amount if parsing fails
-                }
-            }
-        }
-        return 1; // Default amount
-    }
-    
-    /**
-     * Extracts check type from an item
-     */
-    private String getCheckTypeFromItem(ItemStack item) {
-        ItemMeta meta = item.getItemMeta();
-        if (meta != null) {
-            String displayName = meta.getDisplayName();
-            if (displayName != null && !displayName.isEmpty()) {
-                // Return the check type from the display name
-                return displayName.replaceAll("[§0-9]", "").trim();
-            }
-        }
-        return "has"; // Default check type
     }
     
     /**

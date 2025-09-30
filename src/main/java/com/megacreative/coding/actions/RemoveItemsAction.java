@@ -6,19 +6,21 @@ import com.megacreative.coding.ExecutionContext;
 import com.megacreative.coding.ParameterResolver;
 import com.megacreative.coding.executors.ExecutionResult;
 import com.megacreative.coding.values.DataValue;
-import com.megacreative.coding.values.ListValue;
-import com.megacreative.services.BlockConfigService;
+import com.megacreative.coding.values.types.ListValue;
+import com.megacreative.coding.annotations.BlockMeta;
+import com.megacreative.coding.BlockType;
 import org.bukkit.entity.Player;
 import org.bukkit.inventory.ItemStack;
+import org.bukkit.Material;
 
 import java.util.List;
 import java.util.ArrayList;
-import java.util.function.Function;
 
 /**
  * Action for removing items from a player's inventory.
- * This action removes a list of items from the player's inventory based on container configuration.
+ * This action removes a list of items from the player's inventory based on parameters.
  */
+@BlockMeta(id = "removeItems", displayName = "§aRemove Items", type = BlockType.ACTION)
 public class RemoveItemsAction implements BlockAction {
 
     @Override
@@ -29,11 +31,36 @@ public class RemoveItemsAction implements BlockAction {
         }
 
         try {
-            // Get items from the container configuration
-            List<ItemStack> itemsToRemove = getItemsFromContainer(block, context);
+            // Get items parameter from the new parameter system
+            DataValue itemsValue = block.getParameter("items");
             
-            if (itemsToRemove.isEmpty()) {
+            if (itemsValue == null || itemsValue.isEmpty()) {
                 return ExecutionResult.error("No items configured for removal");
+            }
+
+            List<ItemStack> itemsToRemove = new ArrayList<>();
+            
+            // Handle different types of item specifications
+            if (itemsValue instanceof ListValue) {
+                // Handle list of items
+                ListValue listValue = (ListValue) itemsValue;
+                List<DataValue> itemList = listValue.getValues();
+                for (DataValue itemValue : itemList) {
+                    ItemStack item = parseItem(itemValue);
+                    if (item != null) {
+                        itemsToRemove.add(item);
+                    }
+                }
+            } else {
+                // Handle single item
+                ItemStack item = parseItem(itemsValue);
+                if (item != null) {
+                    itemsToRemove.add(item);
+                }
+            }
+
+            if (itemsToRemove.isEmpty()) {
+                return ExecutionResult.error("No valid items to remove");
             }
 
             int removedCount = 0;
@@ -55,50 +82,36 @@ public class RemoveItemsAction implements BlockAction {
     }
     
     /**
-     * Gets items from the container configuration
+     * Parses an item from a DataValue
      */
-    private List<ItemStack> getItemsFromContainer(CodeBlock block, ExecutionContext context) {
-        List<ItemStack> items = new ArrayList<>();
-        
+    private ItemStack parseItem(DataValue itemValue) {
         try {
-            // Get the BlockConfigService to resolve item groups
-            BlockConfigService blockConfigService = context.getPlugin().getServiceRegistry().getBlockConfigService();
-            
-            // Get the group slots resolver for this action
-            Function<String, int[]> groupSlotsResolver = blockConfigService.getGroupSlotsResolver(block.getAction());
-            
-            if (groupSlotsResolver != null) {
-                // Get items from the "items_to_remove" group
-                List<ItemStack> groupItems = block.getItemsFromNamedGroup("items_to_remove", 
-                    groupName -> {
-                        int[] slots = groupSlotsResolver.apply(groupName);
-                        if (slots != null) {
-                            List<Integer> slotList = new ArrayList<>();
-                            for (int slot : slots) {
-                                slotList.add(slot);
-                            }
-                            return slotList;
-                        }
-                        return new ArrayList<>();
-                    });
-                
-                items.addAll(groupItems);
+            if (itemValue == null || itemValue.isEmpty()) {
+                return null;
             }
             
-            // If no items from groups, try to get items from individual slots
-            if (items.isEmpty()) {
-                // Try to get items from config items directly
-                for (int i = 0; i < 9; i++) { // Standard chest size
-                    ItemStack item = block.getConfigItem(i);
-                    if (item != null && !item.getType().isAir()) {
-                        items.add(item);
-                    }
+            String itemStr = itemValue.asString();
+            if (itemStr == null || itemStr.isEmpty()) {
+                return null;
+            }
+            
+            // Parse format: MATERIAL:AMOUNT or just MATERIAL
+            String[] parts = itemStr.split(":");
+            Material material = Material.valueOf(parts[0].toUpperCase());
+            
+            int amount = 1;
+            if (parts.length > 1) {
+                try {
+                    amount = Integer.parseInt(parts[1]);
+                    amount = Math.max(1, Math.min(64, amount)); // Clamp between 1 and 64
+                } catch (NumberFormatException e) {
+                    // Use default amount
                 }
             }
+            
+            return new ItemStack(material, amount);
         } catch (Exception e) {
-            context.getPlugin().getLogger().warning("Error getting items from container in RemoveItemsAction: " + e.getMessage());
+            return null;
         }
-        
-        return items;
     }
 }

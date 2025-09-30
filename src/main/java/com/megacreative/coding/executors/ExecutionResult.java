@@ -5,6 +5,7 @@ import org.bukkit.entity.Player;
 
 import java.util.Map;
 import java.util.HashMap;
+import java.util.concurrent.CompletableFuture;
 
 /**
  * Represents the result of a script or block execution.
@@ -20,6 +21,8 @@ public class ExecutionResult {
     private boolean terminated = false;
     private Object returnValue;
     private boolean paused = false;
+    private Long pauseTicks = null;
+    private CompletableFuture<?> awaitFuture = null;
 
     private ExecutionResult(Builder builder) {
         this.success = builder.success;
@@ -29,6 +32,8 @@ public class ExecutionResult {
         this.error = builder.error;
         this.executionTime = builder.executionTime;
         this.details = builder.details != null ? new HashMap<>(builder.details) : new HashMap<>();
+        this.pauseTicks = builder.pauseTicks;
+        this.awaitFuture = builder.awaitFuture;
     }
 
     // Getters
@@ -99,6 +104,34 @@ public class ExecutionResult {
     }
 
     /**
+     * Checks if the execution should pause for a specific number of ticks
+     */
+    public boolean isPause() {
+        return pauseTicks != null;
+    }
+
+    /**
+     * Gets the number of ticks to pause for
+     */
+    public Long getPauseTicks() {
+        return pauseTicks;
+    }
+
+    /**
+     * Checks if the execution should await a CompletableFuture
+     */
+    public boolean isAwait() {
+        return awaitFuture != null;
+    }
+
+    /**
+     * Gets the CompletableFuture to await
+     */
+    public CompletableFuture<?> getAwaitFuture() {
+        return awaitFuture;
+    }
+
+    /**
      * Creates a success result with a message
      */
     public static ExecutionResult success(String message) {
@@ -130,6 +163,28 @@ public class ExecutionResult {
             .success(false)
             .message(message)
             .error(error)
+            .build();
+    }
+    
+    /**
+     * Creates a pause result with a specific number of ticks
+     */
+    public static ExecutionResult pause(long ticks) {
+        return new Builder()
+            .success(true)
+            .message("Execution paused for " + ticks + " ticks")
+            .pauseTicks(ticks)
+            .build();
+    }
+    
+    /**
+     * Creates an await result with a CompletableFuture
+     */
+    public static ExecutionResult await(CompletableFuture<?> future) {
+        return new Builder()
+            .success(true)
+            .message("Execution awaiting CompletableFuture")
+            .awaitFuture(future)
             .build();
     }
     
@@ -185,6 +240,8 @@ public class ExecutionResult {
         private Throwable error;
         private long executionTime;
         private Map<String, Object> details;
+        private Long pauseTicks = null;
+        private CompletableFuture<?> awaitFuture = null;
 
         public Builder success(boolean success) {
             this.success = success;
@@ -226,6 +283,16 @@ public class ExecutionResult {
                 this.details = new HashMap<>();
             }
             this.details.put(key, value);
+            return this;
+        }
+        
+        public Builder pauseTicks(Long pauseTicks) {
+            this.pauseTicks = pauseTicks;
+            return this;
+        }
+        
+        public Builder awaitFuture(CompletableFuture<?> awaitFuture) {
+            this.awaitFuture = awaitFuture;
             return this;
         }
 

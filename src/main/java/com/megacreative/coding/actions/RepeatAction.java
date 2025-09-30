@@ -7,18 +7,15 @@ import com.megacreative.coding.ExecutionContext;
 import com.megacreative.coding.ParameterResolver;
 import com.megacreative.coding.ScriptEngine;
 import com.megacreative.coding.executors.ExecutionResult;
-import com.megacreative.services.BlockConfigService;
-import com.megacreative.coding.annotations.BlockMeta; // Added import
-import com.megacreative.coding.BlockType; // Added import
+import com.megacreative.coding.annotations.BlockMeta;
+import com.megacreative.coding.BlockType;
+import com.megacreative.coding.values.DataValue;
 import org.bukkit.entity.Player;
-import org.bukkit.inventory.ItemStack;
-import org.bukkit.inventory.meta.ItemMeta;
 
 import java.util.concurrent.CompletableFuture;
-import java.util.function.Function;
 import java.util.logging.Level;
 
-@BlockMeta(id = "repeat", displayName = "§aRepeat", type = BlockType.ACTION) // Added annotation
+@BlockMeta(id = "repeat", displayName = "§aRepeat", type = BlockType.ACTION)
 public class RepeatAction implements BlockAction {
     
     // Constants for magic numbers
@@ -36,8 +33,8 @@ public class RepeatAction implements BlockAction {
         
         Player player = context.getPlayer();
 
-        // Get times parameter from the container configuration
-        int times = getTimesFromContainer(block, context);
+        // Get times parameter from the new parameter system
+        int times = getTimesFromParameter(block, context);
         
         // Validate repeat count
         ExecutionResult validationResult = validateRepeatCount(times);
@@ -199,54 +196,21 @@ public class RepeatAction implements BlockAction {
     }
     
     /**
-     * Gets times parameter from the container configuration
+     * Gets times parameter from the new parameter system
      */
-    private int getTimesFromContainer(CodeBlock block, ExecutionContext context) {
+    private int getTimesFromParameter(CodeBlock block, ExecutionContext context) {
         try {
-            // Get the BlockConfigService to resolve slot names
-            BlockConfigService blockConfigService = context.getPlugin().getServiceRegistry().getBlockConfigService();
+            // Get times parameter from the new parameter system
+            DataValue timesValue = block.getParameter("times");
             
-            // Get the slot resolver for this action
-            Function<String, Integer> slotResolver = blockConfigService.getSlotResolver(block.getAction());
-            
-            if (slotResolver != null) {
-                // Get times from the times slot
-                Integer timesSlot = slotResolver.apply("times_slot");
-                if (timesSlot != null) {
-                    ItemStack timesItem = block.getConfigItem(timesSlot);
-                    if (timesItem != null && timesItem.hasItemMeta()) {
-                        // Extract times from item
-                        return getTimesFromItem(timesItem);
-                    }
-                }
+            if (timesValue != null && !timesValue.isEmpty()) {
+                return Math.max(MIN_ITERATION_COUNT, Integer.parseInt(timesValue.asString()));
             }
         } catch (Exception e) {
-            logError(context, "Error getting times parameter from container in RepeatAction: " + e.getMessage(), e);
+            logError(context, "Error getting times parameter in RepeatAction: " + e.getMessage(), e);
         }
         
         return DEFAULT_ITERATION_COUNT; // Default to 1 iteration
-    }
-    
-    /**
-     * Extracts times from an item
-     */
-    private int getTimesFromItem(ItemStack item) {
-        try {
-            ItemMeta meta = item.getItemMeta();
-            if (meta != null) {
-                String displayName = meta.getDisplayName();
-                if (displayName != null && !displayName.isEmpty()) {
-                    // Try to parse times from display name
-                    String cleanName = displayName.replaceAll("[§0-9]", "").trim();
-                    return Math.max(MIN_ITERATION_COUNT, Integer.parseInt(cleanName));
-                }
-            }
-            
-            // Fallback to item amount
-            return Math.max(MIN_ITERATION_COUNT, item.getAmount());
-        } catch (Exception e) {
-            return DEFAULT_ITERATION_COUNT; // Default to 1 iteration
-        }
     }
     
     /**

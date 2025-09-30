@@ -9,10 +9,12 @@ import com.megacreative.coding.BlockType;
 import com.megacreative.coding.executors.ExecutionResult;
 import com.megacreative.coding.values.DataValue;
 import org.bukkit.entity.Player;
+
 import java.io.OutputStream;
 import java.net.HttpURLConnection;
 import java.net.URL;
 import java.nio.charset.StandardCharsets;
+import java.util.concurrent.CompletableFuture;
 
 @BlockMeta(id = "discordWebhook", displayName = "§aDiscord Webhook", type = BlockType.ACTION)
 public class DiscordWebhookAction implements BlockAction {
@@ -48,14 +50,24 @@ public class DiscordWebhookAction implements BlockAction {
             String message = resolvedMessage.asString();
             String username = resolvedUsername.asString();
             
-            // Send message to Discord webhook
-            boolean success = sendDiscordMessage(webhookUrl, message, username);
+            // Send message to Discord webhook asynchronously
+            CompletableFuture<Boolean> future = CompletableFuture.supplyAsync(() -> {
+                return sendDiscordMessage(webhookUrl, message, username);
+            });
             
-            if (success) {
-                return ExecutionResult.success("Message sent to Discord.");
-            } else {
-                return ExecutionResult.error("Failed to send message to Discord.");
-            }
+            // Create a CompletableFuture that will complete with an ExecutionResult
+            CompletableFuture<ExecutionResult> resultFuture = future.thenApply(success -> {
+                if (success) {
+                    return ExecutionResult.success("Message sent to Discord.");
+                } else {
+                    return ExecutionResult.error("Failed to send message to Discord.");
+                }
+            }).exceptionally(throwable -> {
+                return ExecutionResult.error("Error sending message to Discord: " + throwable.getMessage());
+            });
+            
+            // Return an await result - the ScriptEngine will handle the future
+            return ExecutionResult.await(resultFuture);
 
         } catch (Exception e) {
             return ExecutionResult.error("Error sending message to Discord: " + e.getMessage());

@@ -5,18 +5,17 @@ import com.megacreative.coding.CodeBlock;
 import com.megacreative.coding.ExecutionContext;
 import com.megacreative.coding.ParameterResolver;
 import com.megacreative.coding.executors.ExecutionResult;
-import com.megacreative.services.BlockConfigService;
+import com.megacreative.coding.values.DataValue;
+import com.megacreative.coding.annotations.BlockMeta;
+import com.megacreative.coding.BlockType;
 import org.bukkit.entity.Player;
 import org.bukkit.World;
-import org.bukkit.inventory.ItemStack;
-import org.bukkit.inventory.meta.ItemMeta;
-
-import java.util.function.Function;
 
 /**
  * Action for setting the weather in a world.
- * This action changes the world weather based on the container configuration.
+ * This action changes the world weather based on the new parameter system.
  */
+@BlockMeta(id = "setWeather", displayName = "§aSet Weather", type = BlockType.ACTION)
 public class SetWeatherAction implements BlockAction {
 
     @Override
@@ -27,8 +26,18 @@ public class SetWeatherAction implements BlockAction {
         }
 
         try {
-            // Get the weather type from the container configuration
-            String weatherType = getWeatherTypeFromContainer(block, context);
+            // Get the weather type from the new parameter system
+            DataValue weatherValue = block.getParameter("weather");
+            
+            if (weatherValue == null || weatherValue.isEmpty()) {
+                return ExecutionResult.error("Weather type is not configured");
+            }
+
+            // Resolve any placeholders in the weather type
+            ParameterResolver resolver = new ParameterResolver(context);
+            DataValue resolvedWeather = resolver.resolve(context, weatherValue);
+            
+            String weatherType = resolvedWeather.asString();
             
             if (weatherType == null || weatherType.isEmpty()) {
                 return ExecutionResult.error("Weather type is not configured");
@@ -62,49 +71,5 @@ public class SetWeatherAction implements BlockAction {
         } catch (Exception e) {
             return ExecutionResult.error("Failed to set weather: " + e.getMessage());
         }
-    }
-    
-    /**
-     * Gets weather type from the container configuration
-     */
-    private String getWeatherTypeFromContainer(CodeBlock block, ExecutionContext context) {
-        try {
-            // Get the BlockConfigService to resolve slot names
-            BlockConfigService blockConfigService = context.getPlugin().getServiceRegistry().getBlockConfigService();
-            
-            // Get the slot resolver for this action
-            Function<String, Integer> slotResolver = blockConfigService.getSlotResolver(block.getAction());
-            
-            if (slotResolver != null) {
-                // Get weather from the weather slot
-                Integer weatherSlot = slotResolver.apply("weather_slot");
-                if (weatherSlot != null) {
-                    ItemStack weatherItem = block.getConfigItem(weatherSlot);
-                    if (weatherItem != null && weatherItem.hasItemMeta()) {
-                        // Extract weather type from item
-                        return getWeatherTypeFromItem(weatherItem);
-                    }
-                }
-            }
-        } catch (Exception e) {
-            context.getPlugin().getLogger().warning("Error getting weather type from container in SetWeatherAction: " + e.getMessage());
-        }
-        
-        return null;
-    }
-    
-    /**
-     * Extracts weather type from an item
-     */
-    private String getWeatherTypeFromItem(ItemStack item) {
-        ItemMeta meta = item.getItemMeta();
-        if (meta != null) {
-            String displayName = meta.getDisplayName();
-            if (displayName != null && !displayName.isEmpty()) {
-                // Remove color codes and return the weather type
-                return displayName.replaceAll("[§0-9]", "").trim();
-            }
-        }
-        return null;
     }
 }

@@ -267,16 +267,44 @@ public class DefaultScriptEngine implements ScriptEngine, EnhancedScriptEngine, 
                         debugger.onScriptStart(player, script);
                     }
                     ExecutionResult result = processBlock(script.getRootBlock(), context, 0);
-                    future.complete(result);
                     
-                    // Publish script end event
-                    Map<String, DataValue> endEventData = new HashMap<>();
-                    endEventData.put("script_id", DataValue.fromObject(script.getId()));
-                    endEventData.put("player_name", DataValue.fromObject(getPlayerName(player)));
-                    endEventData.put("trigger", DataValue.fromObject(trigger));
-                    endEventData.put("success", DataValue.fromObject(result.isSuccess()));
-                    endEventData.put("message", DataValue.fromObject(result.getMessage()));
-                    publishEvent(EVENT_SCRIPT_END, endEventData);
+                    // Handle special result types
+                    if (result.isPause()) {
+                        // Schedule continuation after pause
+                        long ticks = result.getPauseTicks();
+                        plugin.getServer().getScheduler().runTaskLater(plugin, () -> {
+                            try {
+                                ExecutionResult nextResult = processBlock(script.getRootBlock().getNextBlock(), context, 0);
+                                completeScriptExecution(nextResult, future, script, player, trigger, executionId);
+                            } catch (Exception e) {
+                                future.completeExceptionally(e);
+                                activeExecutions.remove(executionId);
+                            }
+                        }, ticks);
+                        return; // Don't complete the future yet
+                    } else if (result.isAwait()) {
+                        // Attach continuation to the future
+                        result.getAwaitFuture().thenRun(() -> {
+                            plugin.getServer().getScheduler().runTask(plugin, () -> {
+                                try {
+                                    ExecutionResult nextResult = processBlock(script.getRootBlock().getNextBlock(), context, 0);
+                                    completeScriptExecution(nextResult, future, script, player, trigger, executionId);
+                                } catch (Exception e) {
+                                    future.completeExceptionally(e);
+                                    activeExecutions.remove(executionId);
+                                }
+                            });
+                        }).exceptionally(throwable -> {
+                            plugin.getServer().getScheduler().runTask(plugin, () -> {
+                                future.completeExceptionally(throwable);
+                                activeExecutions.remove(executionId);
+                            });
+                            return null;
+                        });
+                        return; // Don't complete the future yet
+                    }
+                    
+                    completeScriptExecution(result, future, script, player, trigger, executionId);
                 } catch (Exception e) {
                     String errorMsg = "Script execution error: " + e.getMessage();
                     plugin.getLogger().log(java.util.logging.Level.SEVERE, errorMsg, e);
@@ -289,6 +317,8 @@ public class DefaultScriptEngine implements ScriptEngine, EnhancedScriptEngine, 
                     errorEventData.put("trigger", DataValue.fromObject(trigger));
                     errorEventData.put("error", DataValue.fromObject(e.getMessage()));
                     publishEvent(EVENT_BLOCK_ERROR, errorEventData);
+                    
+                    activeExecutions.remove(executionId);
                 } catch (Throwable t) {
                     String errorMsg = "Critical script execution error: " + t.getMessage();
                     plugin.getLogger().log(java.util.logging.Level.SEVERE, errorMsg, t);
@@ -302,16 +332,37 @@ public class DefaultScriptEngine implements ScriptEngine, EnhancedScriptEngine, 
                     errorEventData.put("error", DataValue.fromObject(t.getMessage()));
                     errorEventData.put("critical", DataValue.fromObject(true));
                     publishEvent(EVENT_BLOCK_ERROR, errorEventData);
-                } finally {
-                    if (debugger.isDebugging(player)) {
-                        debugger.onScriptEnd(player, script);
-                    }
+                    
                     activeExecutions.remove(executionId);
                 }
             }
         }.runTask(plugin);
 
         return future;
+    }
+    
+    /**
+     * Completes script execution and handles cleanup
+     */
+    private void completeScriptExecution(ExecutionResult result, CompletableFuture<ExecutionResult> future, 
+                                       CodeScript script, Player player, String trigger, String executionId) {
+        try {
+            future.complete(result);
+            
+            // Publish script end event
+            Map<String, DataValue> endEventData = new HashMap<>();
+            endEventData.put("script_id", DataValue.fromObject(script.getId()));
+            endEventData.put("player_name", DataValue.fromObject(getPlayerName(player)));
+            endEventData.put("trigger", DataValue.fromObject(trigger));
+            endEventData.put("success", DataValue.fromObject(result.isSuccess()));
+            endEventData.put("message", DataValue.fromObject(result.getMessage()));
+            publishEvent(EVENT_SCRIPT_END, endEventData);
+        } finally {
+            if (debugger.isDebugging(player)) {
+                debugger.onScriptEnd(player, script);
+            }
+            activeExecutions.remove(executionId);
+        }
     }
     
     @Override
@@ -337,6 +388,40 @@ public class DefaultScriptEngine implements ScriptEngine, EnhancedScriptEngine, 
                     plugin.getLogger().info("Starting block execution for player: " + getPlayerName(player) + 
                                           " with action: " + (block != null ? block.getAction() : "null"));
                     ExecutionResult result = processBlock(block, context, 0);
+                    
+                    // Handle special result types
+                    if (result.isPause()) {
+                        // Schedule continuation after pause
+                        long ticks = result.getPauseTicks();
+                        plugin.getServer().getScheduler().runTaskLater(plugin, () -> {
+                            try {
+                                ExecutionResult nextResult = processBlock(block.getNextBlock(), context, 0);
+                                future.complete(nextResult);
+                            } catch (Exception e) {
+                                future.completeExceptionally(e);
+                            }
+                        }, ticks);
+                        return; // Don't complete the future yet
+                    } else if (result.isAwait()) {
+                        // Attach continuation to the future
+                        result.getAwaitFuture().thenRun(() -> {
+                            plugin.getServer().getScheduler().runTask(plugin, () -> {
+                                try {
+                                    ExecutionResult nextResult = processBlock(block.getNextBlock(), context, 0);
+                                    future.complete(nextResult);
+                                } catch (Exception e) {
+                                    future.completeExceptionally(e);
+                                }
+                            });
+                        }).exceptionally(throwable -> {
+                            plugin.getServer().getScheduler().runTask(plugin, () -> {
+                                future.completeExceptionally(throwable);
+                            });
+                            return null;
+                        });
+                        return; // Don't complete the future yet
+                    }
+                    
                     future.complete(result);
                 } catch (Exception e) {
                     String errorMsg = "Block execution error: " + e.getMessage();
@@ -548,6 +633,17 @@ public class DefaultScriptEngine implements ScriptEngine, EnhancedScriptEngine, 
                     executionCache.put(block, cacheContext, errorResult);
                 }
                 return processBlock(block.getNextBlock(), context, recursionDepth + 1);
+            }
+            
+            // Handle special result types (pause, await)
+            if (result.isPause()) {
+                // Return the pause result - the caller will handle scheduling
+                plugin.getLogger().info("Block execution paused for " + result.getPauseTicks() + " ticks");
+                return result;
+            } else if (result.isAwait()) {
+                // Return the await result - the caller will handle the future
+                plugin.getLogger().info("Block execution awaiting CompletableFuture");
+                return result;
             }
         
             // Cache the result before returning

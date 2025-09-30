@@ -4,7 +4,6 @@ import com.megacreative.coding.BlockAction;
 import com.megacreative.coding.CodeBlock;
 import com.megacreative.coding.ExecutionContext;
 import com.megacreative.coding.executors.ExecutionResult;
-import com.megacreative.coding.ScriptEngine;
 import com.megacreative.coding.functions.AdvancedFunctionManager;
 import com.megacreative.coding.values.DataValue;
 import com.megacreative.coding.annotations.BlockMeta;
@@ -58,40 +57,8 @@ public class CallFunctionAction implements BlockAction {
             // Выполняем функцию асинхронно
             CompletableFuture<ExecutionResult> future = functionManager.executeFunction(functionName, player, arguments);
             
-            // Handle the result asynchronously without blocking the main thread
-            future.thenAccept(result -> {
-                // This code runs when the function execution completes
-                
-                // Обрабатываем возвращаемое значение
-                if (result.getReturnValue() != null) {
-                    // Сохраняем возвращаемое значение в переменную, если указано
-                    DataValue returnValueVar = block.getParameter(RETURN_VAR_PARAM);
-                    if (returnValueVar != null && !returnValueVar.isEmpty()) {
-                        String varName = returnValueVar.asString();
-                        context.setVariable(varName, result.getReturnValue());
-                    }
-                    
-                    // Send success message to player
-                    player.sendMessage(String.format(FUNCTION_RETURN_MSG, functionName, result.getReturnValue()));
-                } else {
-                    // Send execution message to player
-                    player.sendMessage(String.format(FUNCTION_EXECUTED_MSG, functionName));
-                }
-                
-                // Проверяем, была ли функция завершена оператором return
-                if (result.isTerminated()) {
-                    // Handle termination - in a real implementation, this would need to be handled
-                    // by the script engine to stop the execution chain
-                    player.sendMessage(String.format(FUNCTION_TERMINATED_MSG, functionName));
-                }
-            }).exceptionally(throwable -> {
-                // Handle any exceptions that occurred during function execution
-                player.sendMessage(String.format(FUNCTION_CALL_ERROR_MSG, functionName, throwable.getMessage()));
-                return null;
-            });
-            
-            // Return immediately without blocking - the function will execute asynchronously
-            return ExecutionResult.success("Function call initiated for: " + functionName);
+            // Return an await result - the ScriptEngine will handle the future
+            return ExecutionResult.await(future);
 
         } catch (Exception e) {
             return ExecutionResult.error(

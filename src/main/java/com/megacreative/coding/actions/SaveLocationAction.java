@@ -6,17 +6,15 @@ import com.megacreative.coding.ExecutionContext;
 import com.megacreative.coding.ParameterResolver;
 import com.megacreative.coding.executors.ExecutionResult;
 import com.megacreative.coding.values.DataValue;
-import com.megacreative.services.BlockConfigService;
+import com.megacreative.coding.annotations.BlockMeta;
+import com.megacreative.coding.BlockType;
 import org.bukkit.entity.Player;
-import org.bukkit.inventory.ItemStack;
-import org.bukkit.inventory.meta.ItemMeta;
-
-import java.util.function.Function;
 
 /**
  * Action for saving a player's location.
- * This action retrieves parameters from the container configuration and saves a player's location.
+ * This action retrieves parameters from the new parameter system and saves a player's location.
  */
+@BlockMeta(id = "saveLocation", displayName = "§aSave Location", type = BlockType.ACTION)
 public class SaveLocationAction implements BlockAction {
 
     @Override
@@ -27,13 +25,16 @@ public class SaveLocationAction implements BlockAction {
         }
 
         try {
-            // Get parameters from the container configuration
-            String locationName = getLocationNameFromContainer(block, context);
+            // Get location name parameter from the new parameter system
+            DataValue locationNameValue = block.getParameter("locationName");
+
+            if (locationNameValue == null || locationNameValue.isEmpty()) {
+                return ExecutionResult.error("Location name parameter is missing");
+            }
 
             // Resolve any placeholders in the location name
             ParameterResolver resolver = new ParameterResolver(context);
-            DataValue locationNameVal = DataValue.of(locationName);
-            DataValue resolvedLocationName = resolver.resolve(context, locationNameVal);
+            DataValue resolvedLocationName = resolver.resolve(context, locationNameValue);
             
             // Parse parameters
             String locName = resolvedLocationName.asString();
@@ -56,49 +57,5 @@ public class SaveLocationAction implements BlockAction {
         } catch (Exception e) {
             return ExecutionResult.error("Failed to save location: " + e.getMessage());
         }
-    }
-    
-    /**
-     * Gets location name from the container configuration
-     */
-    private String getLocationNameFromContainer(CodeBlock block, ExecutionContext context) {
-        try {
-            // Get the BlockConfigService to resolve slot names
-            BlockConfigService blockConfigService = context.getPlugin().getServiceRegistry().getBlockConfigService();
-            
-            // Get the slot resolver for this action
-            Function<String, Integer> slotResolver = blockConfigService.getSlotResolver(block.getAction());
-            
-            if (slotResolver != null) {
-                // Get location name from the locationName slot
-                Integer locationNameSlot = slotResolver.apply("locationName");
-                if (locationNameSlot != null) {
-                    ItemStack locationNameItem = block.getConfigItem(locationNameSlot);
-                    if (locationNameItem != null && locationNameItem.hasItemMeta()) {
-                        // Extract location name from item
-                        return getLocationNameFromItem(locationNameItem);
-                    }
-                }
-            }
-        } catch (Exception e) {
-            context.getPlugin().getLogger().warning("Error getting location name from container in SaveLocationAction: " + e.getMessage());
-        }
-        
-        return "";
-    }
-    
-    /**
-     * Extracts location name from an item
-     */
-    private String getLocationNameFromItem(ItemStack item) {
-        ItemMeta meta = item.getItemMeta();
-        if (meta != null) {
-            String displayName = meta.getDisplayName();
-            if (displayName != null && !displayName.isEmpty()) {
-                // Remove color codes and return the location name
-                return displayName.replaceAll("[§0-9]", "").trim();
-            }
-        }
-        return "";
     }
 }
