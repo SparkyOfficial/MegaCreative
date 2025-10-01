@@ -88,6 +88,7 @@ public class ServiceRegistry implements DependencyContainer.Disposable {
     private void registerCoreServices() {
         // Register service registry mappings
         dependencyContainer.registerType(IWorldManager.class, WorldManagerImpl.class);
+        dependencyContainer.registerType(GameLoopManager.class, GameLoopManager.class);
         dependencyContainer.registerType(IPlayerManager.class, PlayerManagerImpl.class);
         dependencyContainer.registerType(ITrustedPlayerManager.class, TrustedPlayerManager.class);
         
@@ -198,37 +199,7 @@ public class ServiceRegistry implements DependencyContainer.Disposable {
     }
     
     private void initializeManagers() {
-        // Register manager service mappings
-        dependencyContainer.registerType(TickManager.class, TickManager.class);
-        // Register GUIManager as a factory since it needs dependencies
-        dependencyContainer.registerFactory(GUIManager.class, (DependencyContainer.Supplier<GUIManager>) () -> {
-            IPlayerManager playerManager = dependencyContainer.resolve(IPlayerManager.class);
-            VariableManager variableManager = dependencyContainer.resolve(VariableManager.class);
-            return new GUIManager((MegaCreative) plugin, playerManager, variableManager);
-        });
-        // Register WorldManagerImpl as a factory since it needs dependencies
-        dependencyContainer.registerFactory(IWorldManager.class, (DependencyContainer.Supplier<IWorldManager>) () -> {
-            ConfigManager configManager = dependencyContainer.resolve(ConfigManager.class);
-            return new WorldManagerImpl(configManager, (MegaCreative) plugin);
-        });
-        
-        // Register CodingManagerImpl as a factory since it needs dependencies
-        dependencyContainer.registerFactory(ICodingManager.class, (DependencyContainer.Supplier<ICodingManager>) () -> {
-            IWorldManager worldManager = dependencyContainer.resolve(IWorldManager.class);
-            return new CodingManagerImpl((MegaCreative) plugin, worldManager);
-        });
-        dependencyContainer.registerType(ScoreboardManager.class, ScoreboardManager.class);
-        dependencyContainer.registerType(GameScoreboardManager.class, GameScoreboardManager.class);
-        dependencyContainer.registerType(PlayerManagerImpl.class, PlayerManagerImpl.class);
-        dependencyContainer.registerType(TrustedPlayerManager.class, TrustedPlayerManager.class);
-        dependencyContainer.registerType(BlockConfigManager.class, BlockConfigManager.class);
-        dependencyContainer.registerType(DevInventoryManager.class, DevInventoryManager.class);
-        dependencyContainer.registerType(BlockGroupManager.class, BlockGroupManager.class);
-        dependencyContainer.registerType(VisualErrorHandler.class, VisualErrorHandler.class);
-        dependencyContainer.registerType(EnemyPlayerRestrictionManager.class, EnemyPlayerRestrictionManager.class);
-        dependencyContainer.registerType(PlayerModeManager.class, PlayerModeManager.class);
-        dependencyContainer.registerType(MessagingService.class, MessagingService.class);
-        dependencyContainer.registerType(ScriptPerformanceMonitor.class, ScriptPerformanceMonitor.class);
+        // These will be created on demand through the dependency container
     }
     
     private void initializeImplementationManagers() {
@@ -285,6 +256,11 @@ public class ServiceRegistry implements DependencyContainer.Disposable {
         dependencyContainer.registerType(EventDataExtractorRegistry.class, EventDataExtractorRegistry.class);
         dependencyContainer.registerType(ReferenceSystemEventManager.class, ReferenceSystemEventManager.class);
         dependencyContainer.registerType(CodeCompiler.class, CodeCompiler.class);
+        dependencyContainer.registerFactory(GameLoopManager.class, (DependencyContainer.Supplier<GameLoopManager>) () -> {
+            ScriptEngine scriptEngine = dependencyContainer.resolve(ScriptEngine.class);
+            IWorldManager worldManager = dependencyContainer.resolve(IWorldManager.class);
+            return new GameLoopManager((MegaCreative) plugin, worldManager, scriptEngine);
+        });
         // Register InteractiveGUIManager as a factory since it needs the plugin
         dependencyContainer.registerFactory(InteractiveGUIManager.class, (DependencyContainer.Supplier<InteractiveGUIManager>) () -> 
             new InteractiveGUIManager((MegaCreative) plugin));
@@ -429,6 +405,10 @@ public class ServiceRegistry implements DependencyContainer.Disposable {
     
     public ConfigManager getConfigManager() { 
         return dependencyContainer.resolve(ConfigManager.class);
+    }
+    
+    public GameLoopManager getGameLoopManager() {
+        return dependencyContainer.resolve(GameLoopManager.class);
     }
     
     public BlockConfigService getBlockConfigService() {

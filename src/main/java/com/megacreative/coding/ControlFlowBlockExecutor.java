@@ -2,6 +2,10 @@ package com.megacreative.coding;
 
 import com.megacreative.coding.executors.ExecutionResult;
 import com.megacreative.coding.values.DataValue;
+import com.megacreative.coding.values.types.ListValue;
+import com.megacreative.coding.variables.VariableManager;
+import java.util.List;
+import java.util.Map;
 import java.util.logging.Logger;
 
 /**
@@ -10,6 +14,7 @@ import java.util.logging.Logger;
  */
 public class ControlFlowBlockExecutor implements BlockExecutor {
     private static final Logger LOGGER = java.util.logging.Logger.getLogger(ControlFlowBlockExecutor.class.getName());
+    private static final int MAX_LOOP_ITERATIONS = 10000; // Prevent infinite loops
     
     private final ActionFactory actionFactory;
     private final ConditionFactory conditionFactory;
@@ -121,16 +126,18 @@ public class ControlFlowBlockExecutor implements BlockExecutor {
             }
             
             // Get maximum iterations to prevent infinite loops
-            int maxIterations = block.getParameterValue("maxIterations", Integer.class, 1000);
+            int maxIterations = block.getParameterValue("maxIterations", Integer.class, MAX_LOOP_ITERATIONS);
             
             LOGGER.fine("Processing while loop with condition: " + conditionId + ", max iterations: " + maxIterations);
             
-            // Return result indicating while loop was processed
+            // Store loop information for the ScriptEngine to handle
+            // The actual loop execution will be handled by the ScriptEngine
             return new ExecutionResult.Builder()
                 .success(true)
-                .message("While loop processed with condition " + conditionId)
+                .message("While loop initialized with condition " + conditionId)
                 .addDetail("condition_id", conditionId)
                 .addDetail("max_iterations", maxIterations)
+                .addDetail("loop_type", "while")
                 .build();
         } catch (Exception e) {
             LOGGER.severe("Exception during while loop processing: " + e.getMessage());
@@ -169,12 +176,14 @@ public class ControlFlowBlockExecutor implements BlockExecutor {
             
             LOGGER.fine("Processing for-each loop over collection: " + collectionName + " with variable: " + variableName);
             
-            // Return result indicating for-each loop was processed
+            // Store loop information for the ScriptEngine to handle
+            // The actual loop execution will be handled by the ScriptEngine
             return new ExecutionResult.Builder()
                 .success(true)
-                .message("For-each loop processed over collection " + collectionName)
+                .message("For-each loop initialized over collection " + collectionName)
                 .addDetail("collection_name", collectionName)
                 .addDetail("variable_name", variableName)
+                .addDetail("loop_type", "foreach")
                 .build();
         } catch (Exception e) {
             LOGGER.severe("Exception during for-each loop processing: " + e.getMessage());

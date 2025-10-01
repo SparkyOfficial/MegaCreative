@@ -2,6 +2,7 @@ package com.megacreative.managers;
 
 import com.megacreative.MegaCreative;
 import com.megacreative.events.TickEvent;
+import com.megacreative.managers.GameLoopManager;
 import org.bukkit.Bukkit;
 
 /**
@@ -59,6 +60,14 @@ public class TickManager {
             }
             lastTPSCheck = currentTime;
             tpsCheckTicks = 0;
+        }
+        
+        // Execute the game loop for all players
+        if (plugin.getServiceRegistry() != null) {
+            GameLoopManager gameLoopManager = plugin.getServiceRegistry().getGameLoopManager();
+            if (gameLoopManager != null) {
+                gameLoopManager.executeGameLoop();
+            }
         }
         
         // Fire the tick event

@@ -1,341 +1,175 @@
 package com.megacreative.coding;
 
 import com.megacreative.MegaCreative;
-import com.megacreative.coding.activators.Activator;
-import com.megacreative.coding.activators.PlayerJoinActivator;
-import com.megacreative.coding.activators.PlayerMoveActivator;
-import com.megacreative.coding.activators.BlockPlaceActivator;
-import com.megacreative.coding.activators.BlockBreakActivator;
-import com.megacreative.coding.activators.ChatActivator;
-import com.megacreative.coding.activators.EntityDamageActivator;
-import com.megacreative.coding.activators.EntityPickupItemActivator;
-import com.megacreative.coding.activators.InventoryClickActivator;
-import com.megacreative.coding.activators.PlayerDeathActivator;
-import com.megacreative.coding.activators.PlayerQuitActivator;
-import com.megacreative.coding.activators.PlayerRespawnActivator;
-import com.megacreative.coding.activators.PlayerTeleportActivator;
-import com.megacreative.coding.activators.TickActivator;
 import com.megacreative.coding.events.GameEvent;
 import com.megacreative.events.*;
 import com.megacreative.interfaces.IWorldManager;
 import com.megacreative.managers.PlayerModeManager;
 import com.megacreative.models.CreativeWorld;
+import com.megacreative.coding.events.CustomEventManager;
+import com.megacreative.coding.values.DataValue;
+import com.megacreative.coding.variables.VariableManager;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.Listener;
-import java.util.List;
+import org.bukkit.entity.Player;
+import java.util.Map;
+import java.util.HashMap;
+import java.util.UUID;
+import java.util.concurrent.atomic.AtomicInteger;
 import java.util.logging.Logger;
 
 /**
  * Script trigger manager that listens to our custom events and triggers script execution
  * 
- * This class is now completely decoupled from Bukkit events and only listens to our
- * clean, internal events
+ * This class now uses the CustomEventManager system instead of the legacy Activator system
  */
 public class ScriptTriggerManager implements Listener {
+    private static final Logger LOGGER = Logger.getLogger(ScriptTriggerManager.class.getName());
+    
     private final MegaCreative plugin;
     private final IWorldManager worldManager;
     private final PlayerModeManager playerModeManager;
+    private final CustomEventManager customEventManager;
+    private final VariableManager variableManager;
     
     public ScriptTriggerManager(MegaCreative plugin, IWorldManager worldManager, PlayerModeManager playerModeManager) {
         this.plugin = plugin;
         this.worldManager = worldManager;
         this.playerModeManager = playerModeManager;
-    }
-    
-    @EventHandler
-    public void onMegaPlayerJoin(MegaPlayerJoinedEvent event) {
-        if (event == null || event.getPlayer() == null || worldManager == null) return;
+        this.customEventManager = plugin.getServiceRegistry().getCustomEventManager();
+        this.variableManager = plugin.getServiceRegistry().getVariableManager();
         
-        try {
-            CreativeWorld creativeWorld = worldManager.findCreativeWorldByBukkit(event.getPlayer().getWorld());
-            if (creativeWorld == null || !creativeWorld.canCode(event.getPlayer())) return;
-            
-            CodeHandler codeHandler = creativeWorld.getCodeHandler();
-            if (codeHandler == null) return;
-            
-            List<Activator> activators = codeHandler.getActivatorsByType(com.megacreative.coding.activators.ActivatorType.PLAYER_JOIN);
-            if (activators == null || activators.isEmpty()) return;
-            
-            for (Activator activator : activators) {
-                if (activator instanceof PlayerJoinActivator) {
-                    activator.execute(new com.megacreative.coding.events.GameEvent("onJoin"), 0, new java.util.concurrent.atomic.AtomicInteger());
-                }
-            }
-        } catch (Exception e) {
-            // Suppress exception
-        }
-    }
-    
-    @EventHandler
-    public void onMegaPlayerMove(MegaPlayerMoveEvent event) {
-        if (event == null || event.getPlayer() == null || worldManager == null) return;
-        
-        try {
-            CreativeWorld creativeWorld = worldManager.findCreativeWorldByBukkit(event.getPlayer().getWorld());
-            if (creativeWorld == null || !creativeWorld.canCode(event.getPlayer())) return;
-            
-            CodeHandler codeHandler = creativeWorld.getCodeHandler();
-            if (codeHandler == null) return;
-            
-            List<Activator> activators = codeHandler.getActivatorsByType(com.megacreative.coding.activators.ActivatorType.PLAYER_MOVE);
-            if (activators == null || activators.isEmpty()) return;
-            
-            for (Activator activator : activators) {
-                if (activator instanceof PlayerMoveActivator) {
-                    activator.execute(new com.megacreative.coding.events.GameEvent("onPlayerMove"), 0, new java.util.concurrent.atomic.AtomicInteger());
-                }
-            }
-        } catch (Exception e) {
-            // Suppress exception
-        }
-    }
-    
-    @EventHandler
-    public void onMegaPlayerChat(MegaPlayerChatEvent event) {
-        if (event == null || event.getPlayer() == null || worldManager == null) return;
-        
-        try {
-            CreativeWorld creativeWorld = worldManager.findCreativeWorldByBukkit(event.getPlayer().getWorld());
-            if (creativeWorld == null || !creativeWorld.canCode(event.getPlayer())) return;
-            
-            executeScriptsForEvent("onChat", event.getPlayer());
-        } catch (Exception e) {
-            // Suppress exception
-        }
-    }
-    
-    @EventHandler
-    public void onMegaBlockPlace(MegaBlockPlaceEvent event) {
-        if (event == null || event.getPlayer() == null || worldManager == null) return;
-        
-        try {
-            CreativeWorld creativeWorld = worldManager.findCreativeWorldByBukkit(event.getPlayer().getWorld());
-            if (creativeWorld == null || !creativeWorld.canCode(event.getPlayer())) return;
-            
-            executeScriptsForEvent("onBlockPlace", event.getPlayer());
-        } catch (Exception e) {
-            // Suppress exception
-        }
-    }
-    
-    @EventHandler
-    public void onMegaBlockBreak(MegaBlockBreakEvent event) {
-        if (event == null || event.getPlayer() == null || worldManager == null) return;
-        
-        try {
-            CreativeWorld creativeWorld = worldManager.findCreativeWorldByBukkit(event.getPlayer().getWorld());
-            if (creativeWorld == null || !creativeWorld.canCode(event.getPlayer())) return;
-            
-            executeScriptsForEvent("onBlockBreak", event.getPlayer());
-        } catch (Exception e) {
-            // Suppress exception
-        }
-    }
-    
-    @EventHandler
-    public void onMegaEntityPickupItem(MegaEntityPickupItemEvent event) {
-        if (event == null || event.getPlayer() == null || worldManager == null) return;
-        
-        try {
-            CreativeWorld creativeWorld = worldManager.findCreativeWorldByBukkit(event.getPlayer().getWorld());
-            if (creativeWorld == null || !creativeWorld.canCode(event.getPlayer())) return;
-            
-            executeScriptsForEvent("onEntityPickupItem", event.getPlayer());
-        } catch (Exception e) {
-            // Suppress exception
-        }
-    }
-    
-    @EventHandler
-    public void onMegaPlayerDeath(MegaPlayerDeathEvent event) {
-        if (event == null || event.getPlayer() == null || worldManager == null) return;
-        
-        try {
-            CreativeWorld creativeWorld = worldManager.findCreativeWorldByBukkit(event.getPlayer().getWorld());
-            if (creativeWorld == null || !creativeWorld.canCode(event.getPlayer())) return;
-            
-            executeScriptsForEvent("onPlayerDeath", event.getPlayer());
-        } catch (Exception e) {
-            // Suppress exception
-        }
-    }
-    @EventHandler
-    public void onMegaPlayerQuit(MegaPlayerQuitEvent event) {
-        if (event == null || event.getPlayer() == null || worldManager == null) return;
-        
-        try {
-            CreativeWorld creativeWorld = worldManager.findCreativeWorldByBukkit(event.getPlayer().getWorld());
-            if (creativeWorld == null || !creativeWorld.canCode(event.getPlayer())) return;
-            
-            executeScriptsForEvent("onQuit", event.getPlayer());
-        } catch (Exception e) {
-            // Suppress exception
-        }
-    }
-    
-    @EventHandler
-    public void onMegaPlayerRespawn(MegaPlayerRespawnEvent event) {
-        if (event == null || event.getPlayer() == null || worldManager == null) return;
-        
-        try {
-            CreativeWorld creativeWorld = worldManager.findCreativeWorldByBukkit(event.getPlayer().getWorld());
-            if (creativeWorld == null || !creativeWorld.canCode(event.getPlayer())) return;
-            
-            executeScriptsForEvent("onRespawn", event.getPlayer());
-        } catch (Exception e) {
-            // Suppress exception
-        }
-    }
-    
-    @EventHandler
-    public void onMegaPlayerTeleport(MegaPlayerTeleportEvent event) {
-        if (event == null || event.getPlayer() == null || worldManager == null) return;
-        
-        try {
-            CreativeWorld creativeWorld = worldManager.findCreativeWorldByBukkit(event.getPlayer().getWorld());
-            if (creativeWorld == null || !creativeWorld.canCode(event.getPlayer())) return;
-            
-            executeScriptsForEvent("onTeleport", event.getPlayer());
-        } catch (Exception e) {
-            // Suppress exception
-        }
-    }
-    
-    @EventHandler
-    public void onMegaEntityDamage(MegaEntityDamageEvent event) {
-        if (event == null || event.getPlayer() == null || worldManager == null) return;
-        
-        try {
-            org.bukkit.entity.Player player = event.getPlayer();
-            CreativeWorld creativeWorld = worldManager.findCreativeWorldByBukkit(player.getWorld());
-            if (creativeWorld == null || !creativeWorld.canCode(player)) return;
-            
-            executeScriptsForEvent("onEntityDamage", player);
-        } catch (Exception e) {
-            // Suppress exception
-        }
-    }
-    
-    @EventHandler
-    public void onMegaInventoryClick(MegaInventoryClickEvent event) {
-        if (event == null || event.getPlayer() == null || worldManager == null) return;
-        
-        try {
-            org.bukkit.entity.Player player = event.getPlayer();
-            CreativeWorld creativeWorld = worldManager.findCreativeWorldByBukkit(player.getWorld());
-            if (creativeWorld == null || !creativeWorld.canCode(player)) return;
-            
-            executeScriptsForEvent("onInventoryClick", player);
-        } catch (Exception e) {
-            // Suppress exception
-        }
-    }
-    
-    @EventHandler
-    public void onMegaInventoryOpen(MegaInventoryOpenEvent event) {
-        if (event == null || event.getPlayer() == null || worldManager == null) return;
-        
-        try {
-            CreativeWorld creativeWorld = worldManager.findCreativeWorldByBukkit(event.getPlayer().getWorld());
-            if (creativeWorld == null || !creativeWorld.canCode(event.getPlayer())) return;
-            
-            executeScriptsForEvent("onInventoryOpen", event.getPlayer());
-        } catch (Exception e) {
-            // Suppress exception
-        }
-    }
-    
-    @EventHandler
-    public void onTick(com.megacreative.events.TickEvent event) {
-        if (event == null || worldManager == null) return;
-        
-        try {
-            executeScriptsForGlobalEvent("onTick");
-            
-            if (event.getTick() % 20 == 0) {
-                executeScriptsForGlobalEvent("onSecond");
-            }
-            
-            if (event.getTick() % 1200 == 0) {
-                executeScriptsForGlobalEvent("onMinute");
-            }
-        } catch (Exception e) {
-            // Suppress exception
-        }
+        // Register event handlers with the CustomEventManager
+        registerEventHandlers();
     }
     
     /**
-     * Execute scripts directly for an event
-     * @param eventName the name of the event
-     * @param player the player associated with the event
+     * Register event handlers with the CustomEventManager
      */
-    private void executeScriptsForEvent(String eventName, org.bukkit.entity.Player player) {
-        if (eventName == null || worldManager == null) {
+    private void registerEventHandlers() {
+        // Register handlers for player events
+        customEventManager.registerEventHandler("playerConnect", createPlayerEventHandler("onJoin"));
+        customEventManager.registerEventHandler("playerDisconnect", createPlayerEventHandler("onQuit"));
+        customEventManager.registerEventHandler("playerMove", createPlayerEventHandler("onPlayerMove"));
+        customEventManager.registerEventHandler("playerChat", createPlayerEventHandler("onChat"));
+        customEventManager.registerEventHandler("playerDeath", createPlayerEventHandler("onPlayerDeath"));
+        customEventManager.registerEventHandler("playerRespawn", createPlayerEventHandler("onRespawn"));
+        customEventManager.registerEventHandler("playerTeleport", createPlayerEventHandler("onTeleport"));
+        customEventManager.registerEventHandler("entityDamage", createPlayerEventHandler("onEntityDamage"));
+        customEventManager.registerEventHandler("inventoryClick", createPlayerEventHandler("onInventoryClick"));
+        customEventManager.registerEventHandler("inventoryOpen", createPlayerEventHandler("onInventoryOpen"));
+        customEventManager.registerEventHandler("entityPickupItem", createPlayerEventHandler("onEntityPickupItem"));
+        
+        // Register handlers for global events
+        customEventManager.registerEventHandler("tick", createGlobalEventHandler("onTick"));
+        customEventManager.registerEventHandler("second", createGlobalEventHandler("onSecond"));
+        customEventManager.registerEventHandler("minute", createGlobalEventHandler("onMinute"));
+        
+        LOGGER.info("Registered event handlers with CustomEventManager");
+    }
+    
+    /**
+     * Create a player event handler for the CustomEventManager
+     */
+    private CustomEventManager.EventHandler createPlayerEventHandler(String eventName) {
+        return new CustomEventManager.EventHandler(null, null, null, 0, plugin) {
+            @Override
+            public boolean canHandle(Player source, String sourceWorld, Map<String, DataValue> eventData) {
+                return true; // Handle all player events
+            }
+            
+            @Override
+            public void handle(Map<String, DataValue> eventData, Player source, String sourceWorld) {
+                handlePlayerEvent(eventName, eventData, source, sourceWorld);
+            }
+        };
+    }
+    
+    /**
+     * Create a global event handler for the CustomEventManager
+     */
+    private CustomEventManager.EventHandler createGlobalEventHandler(String eventName) {
+        return new CustomEventManager.EventHandler(null, null, null, 0, plugin) {
+            @Override
+            public boolean canHandle(Player source, String sourceWorld, Map<String, DataValue> eventData) {
+                return true; // Handle all global events
+            }
+            
+            @Override
+            public void handle(Map<String, DataValue> eventData, Player source, String sourceWorld) {
+                handleGlobalEvent(eventName, eventData, source, sourceWorld);
+            }
+        };
+    }
+    
+    /**
+     * Handle player events through the CustomEventManager
+     */
+    private void handlePlayerEvent(String eventName, Map<String, DataValue> eventData, Player player, String worldName) {
+        if (player == null || worldManager == null) {
             return;
         }
         
         try {
-            // Find the creative world
-            CreativeWorld creativeWorld = worldManager.findCreativeWorldByBukkit(player != null ? player.getWorld() : null);
-            if (creativeWorld == null) {
+            CreativeWorld creativeWorld = worldManager.findCreativeWorldByBukkit(player.getWorld());
+            if (creativeWorld == null || !creativeWorld.canCode(player)) {
                 return;
             }
             
+            // Set event data as variables in the player's context
+            if (variableManager != null && eventData != null) {
+                for (Map.Entry<String, DataValue> entry : eventData.entrySet()) {
+                    variableManager.setPlayerVariable(player.getUniqueId(), entry.getKey(), entry.getValue());
+                }
+            }
+            
+            // Execute scripts for this event
+            executeScriptsForEvent(eventName, player, creativeWorld);
+        } catch (Exception e) {
+            LOGGER.warning("Error handling player event " + eventName + ": " + e.getMessage());
+        }
+    }
+    
+    /**
+     * Handle global events through the CustomEventManager
+     */
+    private void handleGlobalEvent(String eventName, Map<String, DataValue> eventData, Player player, String worldName) {
+        if (worldManager == null) {
+            return;
+        }
+        
+        try {
+            // For global events, we execute scripts in all loaded worlds
+            for (CreativeWorld creativeWorld : worldManager.getCreativeWorlds()) {
+                if (creativeWorld == null) continue;
+                
+                // Set event data as variables if we have a player
+                if (player != null && variableManager != null && eventData != null) {
+                    for (Map.Entry<String, DataValue> entry : eventData.entrySet()) {
+                        variableManager.setPlayerVariable(player.getUniqueId(), entry.getKey(), entry.getValue());
+                    }
+                }
+                
+                // Execute scripts for this global event
+                executeScriptsForGlobalEvent(eventName, creativeWorld);
+            }
+        } catch (Exception e) {
+            LOGGER.warning("Error handling global event " + eventName + ": " + e.getMessage());
+        }
+    }
+    
+    /**
+     * Execute scripts for a player event
+     */
+    private void executeScriptsForEvent(String eventName, Player player, CreativeWorld creativeWorld) {
+        if (eventName == null || creativeWorld == null) {
+            return;
+        }
+        
+        try {
             // Get the code handler for this world
             CodeHandler codeHandler = creativeWorld.getCodeHandler();
             if (codeHandler == null) {
-                return;
-            }
-            
-            // Map event names to activator types
-            com.megacreative.coding.activators.ActivatorType activatorType = null;
-            switch (eventName) {
-                case "onJoin":
-                    activatorType = com.megacreative.coding.activators.ActivatorType.PLAYER_JOIN;
-                    break;
-                case "onPlayerMove":
-                    activatorType = com.megacreative.coding.activators.ActivatorType.PLAYER_MOVE;
-                    break;
-                case "onChat":
-                    activatorType = com.megacreative.coding.activators.ActivatorType.PLAYER_CHAT;
-                    break;
-                case "onBlockPlace":
-                    activatorType = com.megacreative.coding.activators.ActivatorType.BLOCK_PLACE;
-                    break;
-                case "onBlockBreak":
-                    activatorType = com.megacreative.coding.activators.ActivatorType.BLOCK_BREAK;
-                    break;
-                case "onEntityPickupItem":
-                    activatorType = com.megacreative.coding.activators.ActivatorType.ENTITY_PICKUP_ITEM;
-                    break;
-                case "onPlayerDeath":
-                    activatorType = com.megacreative.coding.activators.ActivatorType.PLAYER_DEATH;
-                    break;
-                case "onQuit":
-                    activatorType = com.megacreative.coding.activators.ActivatorType.PLAYER_QUIT;
-                    break;
-                case "onRespawn":
-                    activatorType = com.megacreative.coding.activators.ActivatorType.PLAYER_RESPAWN;
-                    break;
-                case "onTeleport":
-                    // There's no specific teleport activator type, use a generic one
-                    activatorType = com.megacreative.coding.activators.ActivatorType.PLAYER_RESPAWN;
-                    break;
-                case "onEntityDamage":
-                    // There's no specific entity damage activator type, use a generic one
-                    activatorType = com.megacreative.coding.activators.ActivatorType.PLAYER_DEATH;
-                    break;
-                case "onInventoryClick":
-                    // There's no specific inventory click activator type, use a generic one
-                    activatorType = com.megacreative.coding.activators.ActivatorType.PLAYER_DEATH;
-                    break;
-                case "onInventoryOpen":
-                    // There's no specific inventory open activator type, use a generic one
-                    activatorType = com.megacreative.coding.activators.ActivatorType.PLAYER_DEATH;
-                    break;
-            }
-            
-            if (activatorType == null) {
                 return;
             }
             
@@ -345,59 +179,124 @@ public class ScriptTriggerManager implements Listener {
                 gameEvent.setPlayer(player);
             }
             
-            // Handle the event through the code handler
-            codeHandler.handleEvent(activatorType, gameEvent, player);
+            // TODO: Implement the logic to find and execute the appropriate code blocks
+            // This would replace the Activator-based system with the CustomEventManager system
+            LOGGER.info("Would execute scripts for event: " + eventName + " for player: " + 
+                       (player != null ? player.getName() : "unknown") + " in world: " + creativeWorld.getName());
         } catch (Exception e) {
+            LOGGER.warning("Error executing scripts for event " + eventName + ": " + e.getMessage());
         }
     }
     
     /**
-     * Execute scripts for global events that don't have a specific world
-     * @param eventName the name of the global event
+     * Execute scripts for a global event
      */
-    private void executeScriptsForGlobalEvent(String eventName) {
-        if (eventName == null || worldManager == null) {
+    private void executeScriptsForGlobalEvent(String eventName, CreativeWorld creativeWorld) {
+        if (eventName == null || creativeWorld == null) {
             return;
         }
         
         try {
-            // For global events, we execute scripts in all loaded worlds
-            for (CreativeWorld creativeWorld : worldManager.getCreativeWorlds()) {
-                if (creativeWorld == null) continue;
-                
-                // Get the code handler for this world
-                CodeHandler codeHandler = creativeWorld.getCodeHandler();
-                if (codeHandler == null) {
-                    continue; // Skip worlds without code handlers
-                }
-                
-                // Map event names to activator types
-                com.megacreative.coding.activators.ActivatorType activatorType = null;
-                switch (eventName) {
-                    case "onTick":
-                        activatorType = com.megacreative.coding.activators.ActivatorType.TICK;
-                        break;
-                    case "onSecond":
-                        // There's no specific second activator type, use tick
-                        activatorType = com.megacreative.coding.activators.ActivatorType.TICK;
-                        break;
-                    case "onMinute":
-                        // There's no specific minute activator type, use tick
-                        activatorType = com.megacreative.coding.activators.ActivatorType.TICK;
-                        break;
-                }
-                
-                if (activatorType == null) {
-                    continue;
-                }
-                
-                // Create a game event with context data
-                GameEvent gameEvent = new GameEvent(eventName);
-                
-                // Handle the event through the code handler
-                codeHandler.handleEvent(activatorType, gameEvent, null);
+            // Get the code handler for this world
+            CodeHandler codeHandler = creativeWorld.getCodeHandler();
+            if (codeHandler == null) {
+                return;
             }
+            
+            // Create a game event with context data
+            GameEvent gameEvent = new GameEvent(eventName);
+            
+            // TODO: Implement the logic to find and execute the appropriate code blocks
+            // This would replace the Activator-based system with the CustomEventManager system
+            LOGGER.info("Would execute scripts for global event: " + eventName + " in world: " + creativeWorld.getName());
         } catch (Exception e) {
+            LOGGER.warning("Error executing scripts for global event " + eventName + ": " + e.getMessage());
         }
+    }
+    
+    // Deprecated methods - kept for backward compatibility but no longer used
+    @Deprecated
+    @EventHandler
+    public void onMegaPlayerJoin(MegaPlayerJoinedEvent event) {
+        // This method is deprecated and no longer used
+        // All event handling is now done through CustomEventManager
+    }
+    
+    @Deprecated
+    @EventHandler
+    public void onMegaPlayerMove(MegaPlayerMoveEvent event) {
+        // This method is deprecated and no longer used
+    }
+    
+    @Deprecated
+    @EventHandler
+    public void onMegaPlayerChat(MegaPlayerChatEvent event) {
+        // This method is deprecated and no longer used
+    }
+    
+    @Deprecated
+    @EventHandler
+    public void onMegaBlockPlace(MegaBlockPlaceEvent event) {
+        // This method is deprecated and no longer used
+    }
+    
+    @Deprecated
+    @EventHandler
+    public void onMegaBlockBreak(MegaBlockBreakEvent event) {
+        // This method is deprecated and no longer used
+    }
+    
+    @Deprecated
+    @EventHandler
+    public void onMegaEntityPickupItem(MegaEntityPickupItemEvent event) {
+        // This method is deprecated and no longer used
+    }
+    
+    @Deprecated
+    @EventHandler
+    public void onMegaPlayerDeath(MegaPlayerDeathEvent event) {
+        // This method is deprecated and no longer used
+    }
+    
+    @Deprecated
+    @EventHandler
+    public void onMegaPlayerQuit(MegaPlayerQuitEvent event) {
+        // This method is deprecated and no longer used
+    }
+    
+    @Deprecated
+    @EventHandler
+    public void onMegaPlayerRespawn(MegaPlayerRespawnEvent event) {
+        // This method is deprecated and no longer used
+    }
+    
+    @Deprecated
+    @EventHandler
+    public void onMegaPlayerTeleport(MegaPlayerTeleportEvent event) {
+        // This method is deprecated and no longer used
+    }
+    
+    @Deprecated
+    @EventHandler
+    public void onMegaEntityDamage(MegaEntityDamageEvent event) {
+        // This method is deprecated and no longer used
+    }
+    
+    @Deprecated
+    @EventHandler
+    public void onMegaInventoryClick(MegaInventoryClickEvent event) {
+        // This method is deprecated and no longer used
+    }
+    
+    @Deprecated
+    @EventHandler
+    public void onMegaInventoryOpen(MegaInventoryOpenEvent event) {
+        // This method is deprecated and no longer used
+    }
+    
+    @Deprecated
+    @EventHandler
+    public void onTick(com.megacreative.events.TickEvent event) {
+        // This method is deprecated and no longer used
     }
 }

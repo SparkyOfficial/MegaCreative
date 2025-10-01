@@ -8,6 +8,7 @@ import com.megacreative.core.ServiceRegistry;
 import com.megacreative.exceptions.ConfigurationException;
 import com.megacreative.interfaces.IWorldManager;
 import com.megacreative.listeners.*;
+import com.megacreative.managers.TickManager;
 import org.bukkit.plugin.java.JavaPlugin;
 import org.bukkit.scheduler.BukkitRunnable;
 import org.bukkit.scheduler.BukkitTask;
@@ -222,10 +223,13 @@ public class MegaCreative extends JavaPlugin {
         tickTask = new BukkitRunnable() {
             @Override
             public void run() {
-                // Fire custom tick event
-                // if (serviceRegistry != null) {
-                //     serviceRegistry.getScriptTriggerManager().fireTickEvent();
-                // }
+                // Get the TickManager from the service registry and call tick()
+                if (serviceRegistry != null) {
+                    TickManager tickManager = serviceRegistry.getTickManager();
+                    if (tickManager != null) {
+                        tickManager.tick();
+                    }
+                }
                 
                 // Check TPS every 20 ticks (1 second)
                 if (++tpsCheckCounter >= 20) {

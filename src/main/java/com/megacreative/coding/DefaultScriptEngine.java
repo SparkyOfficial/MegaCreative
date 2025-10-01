@@ -21,6 +21,7 @@ import com.megacreative.coding.events.EventPublisher;
 import com.megacreative.coding.executors.AdvancedExecutionEngine;
 import com.megacreative.coding.executors.ExecutionResult;
 import com.megacreative.coding.values.DataValue;
+import com.megacreative.coding.values.types.ListValue;
 import com.megacreative.coding.variables.VariableManager;
 import com.megacreative.interfaces.IScriptEngine;
 import com.megacreative.services.BlockConfigService;
@@ -92,6 +93,9 @@ public class DefaultScriptEngine implements ScriptEngine, EnhancedScriptEngine, 
     // Event manager for publishing events
     private CustomEventManager eventManager;
     
+    // Condition factory for evaluating conditions in control flow
+    private ConditionFactory conditionFactory;
+    
     public DefaultScriptEngine(MegaCreative plugin, VariableManager variableManager, VisualDebugger debugger,
                                BlockConfigService blockConfigService) {
         this.plugin = plugin;
@@ -121,7 +125,7 @@ public class DefaultScriptEngine implements ScriptEngine, EnhancedScriptEngine, 
     private void initializeExecutors() {
         // Create factories (these would typically be injected)
         ActionFactory actionFactory = new ActionFactory(plugin);
-        ConditionFactory conditionFactory = new ConditionFactory(plugin);
+        this.conditionFactory = new ConditionFactory(plugin); // Initialize conditionFactory field
         
         // Register executors for each block type
         executors.put(BlockType.EVENT, new EventBlockExecutor());
@@ -685,6 +689,50 @@ public class DefaultScriptEngine implements ScriptEngine, EnhancedScriptEngine, 
                     }
                 }
             }
+            
+            // Handle while loops
+            if (blockType == BlockType.CONTROL && "whileLoop".equals(block.getAction())) {
+                // Get loop information from the execution result details
+                Object conditionIdObj = result.getDetail("condition_id");
+                Object maxIterationsObj = result.getDetail("max_iterations");
+                
+                if (conditionIdObj instanceof String && maxIterationsObj instanceof Integer) {
+                    String conditionId = (String) conditionIdObj;
+                    int maxIterations = (Integer) maxIterationsObj;
+                    
+                    plugin.getLogger().info("Initializing while loop with condition: " + conditionId + ", max iterations: " + maxIterations);
+                    
+                    // Store loop information in context for recursive calls
+                    context.setVariable("_while_condition", conditionId);
+                    context.setVariable("_while_max_iterations", maxIterations);
+                    context.setVariable("_while_iteration_count", 0);
+                    
+                    // Start the loop by evaluating the condition
+                    return executeWhileLoop(block, context, recursionDepth);
+                }
+            }
+            
+            // Handle for-each loops
+            if (blockType == BlockType.CONTROL && "forEach".equals(block.getAction())) {
+                // Get loop information from the execution result details
+                Object collectionNameObj = result.getDetail("collection_name");
+                Object variableNameObj = result.getDetail("variable_name");
+                
+                if (collectionNameObj instanceof String && variableNameObj instanceof String) {
+                    String collectionName = (String) collectionNameObj;
+                    String variableName = (String) variableNameObj;
+                    
+                    plugin.getLogger().info("Initializing for-each loop over collection: " + collectionName + " with variable: " + variableName);
+                    
+                    // Store loop information in context for recursive calls
+                    context.setVariable("_foreach_collection", collectionName);
+                    context.setVariable("_foreach_variable", variableName);
+                    context.setVariable("_foreach_index", 0);
+                    
+                    // Start the loop by getting the collection
+                    return executeForEachLoop(block, context, recursionDepth);
+                }
+            }
         
             // Cache the result before returning
             if (result != null && result.isSuccess() && isCacheable(block)) {
@@ -1179,5 +1227,188 @@ public class DefaultScriptEngine implements ScriptEngine, EnhancedScriptEngine, 
             .thenApply(v -> java.util.Arrays.stream(futures)
                 .map(CompletableFuture::join)
                 .toArray(ExecutionResult[]::new));
+    }
+    
+    /**
+     * Executes a WHILE loop
+     * 
+     * @param block The while loop block
+     * @param context The execution context
+     * @param recursionDepth The current recursion depth
+     * @return The execution result
+     */
+    private ExecutionResult executeWhileLoop(CodeBlock block, ExecutionContext context, int recursionDepth) {
+        try {
+            // Prevent infinite recursion
+            if (recursionDepth > MAX_RECURSION_DEPTH) {
+                String errorMsg = ERROR_MAX_RECURSION_EXCEEDED_IN_WHILE_LOOP + " (depth: " + recursionDepth + ")";
+                plugin.getLogger().warning(errorMsg + " Player: " + 
+                    (context.getPlayer() != null ? context.getPlayer().getName() : "Unknown"));
+                return ExecutionResult.error(errorMsg);
+            }
+            
+            // Get loop information from context
+            Object conditionIdObj = context.getVariable("_while_condition");
+            Object maxIterationsObj = context.getVariable("_while_max_iterations");
+            Object iterationCountObj = context.getVariable("_while_iteration_count");
+            
+            if (!(conditionIdObj instanceof String) || !(maxIterationsObj instanceof Integer) || !(iterationCountObj instanceof Integer)) {
+                return ExecutionResult.error("Invalid while loop context");
+            }
+            
+            String conditionId = (String) conditionIdObj;
+            int maxIterations = (Integer) maxIterationsObj;
+            int iterationCount = (Integer) iterationCountObj;
+            
+            // Check iteration limit
+            if (iterationCount >= maxIterations) {
+                plugin.getLogger().info("While loop reached maximum iterations: " + maxIterations);
+                return ExecutionResult.success("While loop completed");
+            }
+            
+            // Evaluate the condition
+            BlockCondition conditionHandler = conditionFactory.createCondition(conditionId);
+            if (conditionHandler == null) {
+                return ExecutionResult.error("Condition handler not found for: " + conditionId);
+            }
+            
+            boolean conditionResult = conditionHandler.evaluate(block, context);
+            plugin.getLogger().fine("While loop condition " + conditionId + " evaluated to " + conditionResult);
+            
+            if (conditionResult) {
+                // Condition is true, execute the loop body
+                plugin.getLogger().info("While loop condition is true, executing loop body (iteration " + iterationCount + ")");
+                
+                // Update iteration count
+                context.setVariable("_while_iteration_count", iterationCount + 1);
+                
+                // Execute the first child block in the loop body
+                if (!block.getChildren().isEmpty()) {
+                    CodeBlock loopBody = block.getChildren().get(0);
+                    
+                    // Process the loop body
+                    ExecutionResult bodyResult = processBlock(loopBody, context, recursionDepth + 1);
+                    
+                    // Check if the loop was terminated (break/continue)
+                    if (bodyResult.isTerminated()) {
+                        if (bodyResult.getMessage().contains("BREAK")) {
+                            plugin.getLogger().info("While loop terminated by BREAK statement");
+                            return ExecutionResult.success("While loop terminated by BREAK");
+                        } else if (bodyResult.getMessage().contains("CONTINUE")) {
+                            plugin.getLogger().info("While loop iteration skipped by CONTINUE statement");
+                            // Continue to next iteration
+                        }
+                    }
+                    
+                    // After executing the loop body, recursively call executeWhileLoop to check condition again
+                    return executeWhileLoop(block, context, recursionDepth);
+                } else {
+                    // No loop body, just continue to next iteration
+                    return executeWhileLoop(block, context, recursionDepth);
+                }
+            } else {
+                // Condition is false, exit the loop
+                plugin.getLogger().info("While loop condition is false, exiting loop");
+                return ExecutionResult.success("While loop completed");
+            }
+        } catch (Exception e) {
+            String errorMsg = "Error executing while loop: " + e.getMessage();
+            plugin.getLogger().log(java.util.logging.Level.SEVERE, errorMsg, e);
+            return ExecutionResult.error(errorMsg);
+        }
+    }
+    
+    /**
+     * Executes a FOR EACH loop
+     * 
+     * @param block The for-each loop block
+     * @param context The execution context
+     * @param recursionDepth The current recursion depth
+     * @return The execution result
+     */
+    private ExecutionResult executeForEachLoop(CodeBlock block, ExecutionContext context, int recursionDepth) {
+        try {
+            // Prevent infinite recursion
+            if (recursionDepth > MAX_RECURSION_DEPTH) {
+                String errorMsg = ERROR_MAX_RECURSION_EXCEEDED_IN_WHILE_LOOP + " (depth: " + recursionDepth + ")";
+                plugin.getLogger().warning(errorMsg + " Player: " + 
+                    (context.getPlayer() != null ? context.getPlayer().getName() : "Unknown"));
+                return ExecutionResult.error(errorMsg);
+            }
+            
+            // Get loop information from context
+            Object collectionNameObj = context.getVariable("_foreach_collection");
+            Object variableNameObj = context.getVariable("_foreach_variable");
+            Object indexObj = context.getVariable("_foreach_index");
+            
+            if (!(collectionNameObj instanceof String) || !(variableNameObj instanceof String) || !(indexObj instanceof Integer)) {
+                return ExecutionResult.error("Invalid for-each loop context");
+            }
+            
+            String collectionName = (String) collectionNameObj;
+            String variableName = (String) variableNameObj;
+            int index = (Integer) indexObj;
+            
+            // Get the collection from variables
+            VariableManager variableManager = getVariableManager();
+            if (variableManager == null || context.getPlayer() == null) {
+                return ExecutionResult.error("Variable manager or player not available");
+            }
+            
+            DataValue collectionValue = variableManager.getPlayerVariable(context.getPlayer().getUniqueId(), collectionName);
+            if (collectionValue == null || !(collectionValue instanceof ListValue)) {
+                return ExecutionResult.error("Collection not found or not a list: " + collectionName);
+            }
+            
+            ListValue listValue = (ListValue) collectionValue;
+            List<DataValue> items = (List<DataValue>) listValue.getValue();
+            
+            // Check if we've processed all items
+            if (index >= items.size()) {
+                plugin.getLogger().info("For-each loop completed, processed " + index + " items");
+                return ExecutionResult.success("For-each loop completed");
+            }
+            
+            // Get the current item
+            DataValue currentItem = items.get(index);
+            
+            // Set the current item as the loop variable
+            variableManager.setPlayerVariable(context.getPlayer().getUniqueId(), variableName, currentItem);
+            
+            // Update index for next iteration
+            context.setVariable("_foreach_index", index + 1);
+            
+            // Execute the loop body
+            plugin.getLogger().info("For-each loop processing item " + index + " of " + items.size());
+            
+            // Execute the first child block in the loop body
+            if (!block.getChildren().isEmpty()) {
+                CodeBlock loopBody = block.getChildren().get(0);
+                
+                // Process the loop body
+                ExecutionResult bodyResult = processBlock(loopBody, context, recursionDepth + 1);
+                
+                // Check if the loop was terminated (break/continue)
+                if (bodyResult.isTerminated()) {
+                    if (bodyResult.getMessage().contains("BREAK")) {
+                        plugin.getLogger().info("For-each loop terminated by BREAK statement");
+                        return ExecutionResult.success("For-each loop terminated by BREAK");
+                    } else if (bodyResult.getMessage().contains("CONTINUE")) {
+                        plugin.getLogger().info("For-each loop iteration skipped by CONTINUE statement");
+                        // Continue to next iteration
+                    }
+                }
+                
+                // After executing the loop body, recursively call executeForEachLoop to process next item
+                return executeForEachLoop(block, context, recursionDepth);
+            } else {
+                // No loop body, just continue to next iteration
+                return executeForEachLoop(block, context, recursionDepth);
+            }
+        } catch (Exception e) {
+            String errorMsg = "Error executing for-each loop: " + e.getMessage();
+            plugin.getLogger().log(java.util.logging.Level.SEVERE, errorMsg, e);
+            return ExecutionResult.error(errorMsg);
+        }
     }
 }
