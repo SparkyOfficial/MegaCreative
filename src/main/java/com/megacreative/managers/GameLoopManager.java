@@ -1,16 +1,16 @@
 package com.megacreative.managers;
 
+import java.util.Map;
+import java.util.concurrent.ConcurrentHashMap;
+import java.util.logging.Logger;
+
+import org.bukkit.entity.Player;
+
 import com.megacreative.MegaCreative;
 import com.megacreative.coding.CodeHandler;
 import com.megacreative.coding.ScriptEngine;
 import com.megacreative.interfaces.IWorldManager;
 import com.megacreative.models.CreativeWorld;
-import org.bukkit.entity.Player;
-import org.bukkit.scheduler.BukkitRunnable;
-
-import java.util.Map;
-import java.util.concurrent.ConcurrentHashMap;
-import java.util.logging.Logger;
 
 /**
  * Manages the game loop system that executes code for each player at 20 TPS

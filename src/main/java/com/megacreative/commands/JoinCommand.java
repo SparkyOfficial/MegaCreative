@@ -93,9 +93,9 @@ public class JoinCommand implements CommandExecutor {
         World bukkitWorld = Bukkit.getWorld(creativeWorld.getWorldName());
         if (bukkitWorld == null) {
             player.sendMessage("§eЗагрузка мира...");
-            // Создаем мир если он не загружен
+            // Загружаем или создаем мир если он не загружен
             org.bukkit.WorldCreator creator = new org.bukkit.WorldCreator(creativeWorld.getWorldName());
-            bukkitWorld = creator.createWorld();
+            bukkitWorld = org.bukkit.Bukkit.createWorld(creator);
             if (bukkitWorld == null) {
                 player.sendMessage("§cОшибка загрузки мира!");
                 return true;

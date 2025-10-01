@@ -29,6 +29,7 @@ import org.bukkit.World;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.UUID;
+import java.util.concurrent.ConcurrentHashMap;
 import java.util.logging.Logger;
 
 /**
@@ -37,11 +38,14 @@ import java.util.logging.Logger;
  */
 public class BlockPlacementHandler implements Listener {
     private static final Logger log = Logger.getLogger(BlockPlacementHandler.class.getName());
-    
     private final MegaCreative plugin;
+    
+    // Use ConcurrentHashMap for thread safety
+    private final Map<Location, CodeBlock> blockCodeBlocks = new ConcurrentHashMap<>();
+    
+    // Lazy initialized dependencies
     private ITrustedPlayerManager trustedPlayerManager;
     private BlockConfigService blockConfigService;
-    private final Map<Location, CodeBlock> blockCodeBlocks = new HashMap<>();
     
     public BlockPlacementHandler(MegaCreative plugin) {
         this.plugin = plugin;
