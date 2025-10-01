@@ -280,6 +280,9 @@ public class ServiceRegistry implements DependencyContainer.Disposable {
             listener.initializeDynamicAllowedBlocks();
             return listener;
         });
+        // Register GUIClickListener as a factory since it needs the plugin
+        dependencyContainer.registerFactory(GUIClickListener.class, (DependencyContainer.Supplier<GUIClickListener>) () -> 
+            new GUIClickListener(plugin));
     }
     
     /**

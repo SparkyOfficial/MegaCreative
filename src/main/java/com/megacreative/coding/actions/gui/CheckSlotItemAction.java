@@ -74,8 +74,8 @@ public class CheckSlotItemAction implements BlockAction {
                 return ExecutionResult.error("Invalid slot number: " + slot + ". Must be between 0 and " + (guiInventory.getInventory().getSize() - 1));
             }
             
-            // Get the item in the slot
-            ItemStack slotItem = guiInventory.getSlotItem(slot);
+            // Get the item in the slot from the actual inventory
+            ItemStack slotItem = guiInventory.getInventory().getItem(slot);
             
             // Check if the item matches
             boolean matches = false;

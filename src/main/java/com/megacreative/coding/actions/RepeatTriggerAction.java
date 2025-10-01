@@ -108,7 +108,8 @@ public class RepeatTriggerAction implements BlockAction {
      * Останавливает повторяющуюся задачу для указанного игрока
      */
     public static void stopRepeatingTask(UUID playerId) {
-        // Получаем RepeatingTaskManager из ServiceRegistry
+        // This method should not be static and should use context instead
+        // For backward compatibility, we'll keep it but mark it as deprecated
         MegaCreative plugin = MegaCreative.getInstance();
         if (plugin != null && plugin.getServiceRegistry() != null) {
             RepeatingTaskManager taskManager = plugin.getServiceRegistry().getRepeatingTaskManager();
@@ -123,7 +124,8 @@ public class RepeatTriggerAction implements BlockAction {
      * @return Количество остановленных задач
      */
     public static int stopAllRepeatingTasks() {
-        // Получаем RepeatingTaskManager из ServiceRegistry
+        // This method should not be static and should use context instead
+        // For backward compatibility, we'll keep it but mark it as deprecated
         MegaCreative plugin = MegaCreative.getInstance();
         if (plugin != null && plugin.getServiceRegistry() != null) {
             RepeatingTaskManager taskManager = plugin.getServiceRegistry().getRepeatingTaskManager();
@@ -138,7 +140,8 @@ public class RepeatTriggerAction implements BlockAction {
      * Проверяет, есть ли активная повторяющаяся задача для игрока
      */
     public static boolean hasActiveTask(UUID playerId) {
-        // Получаем RepeatingTaskManager из ServiceRegistry
+        // This method should not be static and should use context instead
+        // For backward compatibility, we'll keep it but mark it as deprecated
         MegaCreative plugin = MegaCreative.getInstance();
         if (plugin != null && plugin.getServiceRegistry() != null) {
             RepeatingTaskManager taskManager = plugin.getServiceRegistry().getRepeatingTaskManager();

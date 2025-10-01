@@ -130,7 +130,13 @@ public class CreateMenuAction implements BlockAction {
         }
         
         public ItemStack getSlotItem(int slot) {
-            return slotItems.get(slot);
+            // First check if we have it in our map (for items set via setSlotItem)
+            ItemStack item = slotItems.get(slot);
+            // If not, check the actual inventory (for items added by player interaction)
+            if (item == null && inventory != null) {
+                item = inventory.getItem(slot);
+            }
+            return item;
         }
         
         public Map<Integer, ItemStack> getAllSlotItems() {

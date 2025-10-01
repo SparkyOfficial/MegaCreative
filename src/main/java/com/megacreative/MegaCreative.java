@@ -202,6 +202,9 @@ public class MegaCreative extends JavaPlugin {
             // Register WorldInteractListener to handle starter item interactions
             getServer().getPluginManager().registerEvents(new WorldInteractListener(this), this);
             
+            // Register GUIClickListener to handle GUI click events
+            getServer().getPluginManager().registerEvents(serviceRegistry.getService(GUIClickListener.class), this);
+            
             // Register DevWorldProtectionListener to protect dev worlds
             // getServer().getPluginManager().registerEvents(new DevWorldProtectionListener(this), this);
         }
