@@ -8,7 +8,7 @@ import com.megacreative.coding.annotations.BlockMeta;
 import com.megacreative.coding.BlockType;
 import com.megacreative.coding.executors.ExecutionResult;
 import com.megacreative.coding.values.DataValue;
-import com.megacreative.coding.values.MapValue;
+import com.megacreative.coding.values.types.MapValue;
 import com.megacreative.coding.variables.VariableManager;
 import com.megacreative.coding.variables.IVariableManager.VariableScope;
 import org.bukkit.entity.Player;

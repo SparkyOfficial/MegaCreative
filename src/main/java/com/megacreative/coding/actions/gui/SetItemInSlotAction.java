@@ -46,13 +46,13 @@ public class SetItemInSlotAction implements BlockAction {
                 return ExecutionResult.error("Menu variable name cannot be empty");
             }
             
-            // Get the GUI inventory from the variable
+            // Get the GUI inventory from the global variable
             VariableManager variableManager = plugin.getServiceRegistry().getVariableManager();
-            if (variableManager == null || context.getPlayer() == null) {
-                return ExecutionResult.error("Variable manager or player not available");
+            if (variableManager == null) {
+                return ExecutionResult.error("Variable manager not available");
             }
             
-            DataValue menuValue = variableManager.getPlayerVariable(context.getPlayer().getUniqueId(), menuVariableName);
+            DataValue menuValue = variableManager.getGlobalVariable(menuVariableName);
             if (menuValue == null || menuValue.getValue() == null) {
                 return ExecutionResult.error("Menu variable '" + menuVariableName + "' not found or is null");
             }

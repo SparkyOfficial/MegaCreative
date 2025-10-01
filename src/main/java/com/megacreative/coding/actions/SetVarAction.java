@@ -3,9 +3,13 @@ package com.megacreative.coding.actions;
 import com.megacreative.coding.BlockAction;
 import com.megacreative.coding.CodeBlock;
 import com.megacreative.coding.ExecutionContext;
+import com.megacreative.coding.ParameterResolver;
 import com.megacreative.coding.executors.ExecutionResult;
+import com.megacreative.coding.values.DataValue;
+import com.megacreative.coding.variables.VariableManager;
 import com.megacreative.coding.annotations.BlockMeta;
 import com.megacreative.coding.BlockType;
+import org.bukkit.entity.Player;
 
 /**
  * Action for setting a variable value.
@@ -17,23 +21,148 @@ public class SetVarAction implements BlockAction {
     @Override
     public ExecutionResult execute(CodeBlock block, ExecutionContext context) {
         try {
-            // Get variable name and value parameters
-            com.megacreative.coding.values.DataValue nameValue = block.getParameter("name");
-            com.megacreative.coding.values.DataValue valueValue = block.getParameter("value");
+            // Get and validate parameters from the new parameter system
+            DataValue nameValue = block.getParameter("name");
+            DataValue valueValue = block.getParameter("value");
             
             if (nameValue == null || nameValue.isEmpty()) {
-                return ExecutionResult.error("Variable name is not configured");
+                return ExecutionResult.error("No variable name provided");
             }
             
-            String varName = nameValue.asString();
-            com.megacreative.coding.values.DataValue varValue = valueValue;
+            if (valueValue == null || valueValue.isEmpty()) {
+                return ExecutionResult.error("No value provided");
+            }
+
+            // Resolve any placeholders in the parameters
+            ParameterResolver resolver = new ParameterResolver(context);
+            DataValue resolvedName = resolver.resolve(context, nameValue);
+            DataValue resolvedValue = resolver.resolve(context, valueValue);
             
-            // Set the variable in the context
-            context.setVariable(varName, varValue);
-            
-            return ExecutionResult.success("Variable set successfully");
+            String varName = resolvedName.asString();
+
+            if (varName == null || varName.isEmpty()) {
+                return ExecutionResult.error("Invalid variable name");
+            }
+
+            // Process the variable update
+            return setVariableValue(context, varName, resolvedValue);
         } catch (Exception e) {
             return ExecutionResult.error("Failed to set variable: " + e.getMessage());
+        }
+    }
+
+    /**
+     * Sets the variable value in the appropriate scope
+     */
+    private ExecutionResult setVariableValue(ExecutionContext context, String varName, DataValue valueToSet) {
+        VariableManager variableManager = context.getPlugin().getServiceRegistry().getVariableManager();
+        Player player = context.getPlayer();
+
+        // Find the variable in different scopes
+        VariableScopeInfo scopeInfo = findVariableScope(variableManager, player, context.getScriptId(), varName);
+
+        // Set the variable value in the appropriate scope
+        if (scopeInfo.getScope() == null) {
+            // Variable doesn't exist, create as local
+            variableManager.setLocalVariable(context.getScriptId(), varName, valueToSet);
+            return ExecutionResult.success("Variable set successfully as local variable");
+        }
+
+        switch (scopeInfo.getScope()) {
+            case PLAYER:
+                variableManager.setPlayerVariable(player.getUniqueId(), varName, valueToSet);
+                break;
+            case LOCAL:
+                variableManager.setLocalVariable(context.getScriptId(), varName, valueToSet);
+                break;
+            case GLOBAL:
+                variableManager.setGlobalVariable(varName, valueToSet);
+                break;
+            case SERVER:
+                variableManager.setServerVariable(varName, valueToSet);
+                break;
+            default:
+                // Fallback to local variable
+                variableManager.setLocalVariable(context.getScriptId(), varName, valueToSet);
+        }
+
+        return ExecutionResult.success("Variable set successfully");
+    }
+
+    /**
+     * Finds the scope of an existing variable
+     */
+    private VariableScopeInfo findVariableScope(VariableManager variableManager, Player player, String scriptId, String varName) {
+        // Try player variables first if player is not null
+        if (player != null) {
+            DataValue playerVar = variableManager.getPlayerVariable(player.getUniqueId(), varName);
+            if (playerVar != null) {
+                return new VariableScopeInfo(
+                        playerVar,
+                        VariableManager.VariableScope.PLAYER,
+                        player.getUniqueId().toString()
+                );
+            }
+        }
+
+        // Try local variables
+        DataValue localVar = variableManager.getLocalVariable(scriptId, varName);
+        if (localVar != null) {
+            return new VariableScopeInfo(
+                    localVar,
+                    VariableManager.VariableScope.LOCAL,
+                    scriptId
+            );
+        }
+
+        // Try global variables
+        DataValue globalVar = variableManager.getGlobalVariable(varName);
+        if (globalVar != null) {
+            return new VariableScopeInfo(
+                    globalVar,
+                    VariableManager.VariableScope.GLOBAL,
+                    "global"
+            );
+        }
+
+        // Try server variables
+        DataValue serverVar = variableManager.getServerVariable(varName);
+        if (serverVar != null) {
+            return new VariableScopeInfo(
+                    serverVar,
+                    VariableManager.VariableScope.SERVER,
+                    "server"
+            );
+        }
+
+        // Variable doesn't exist yet, will be created as local
+        return new VariableScopeInfo(null, null, null);
+    }
+
+    /**
+     * Helper class to hold variable scope information
+     */
+    private static class VariableScopeInfo {
+        private final DataValue currentVar;
+        private final VariableManager.VariableScope scope;
+        private final String scopeContext;
+
+        public VariableScopeInfo(DataValue currentVar, VariableManager.VariableScope scope, String scopeContext) {
+            this.currentVar = currentVar;
+            this.scope = scope;
+            this.scopeContext = scopeContext;
+        }
+
+        public DataValue getCurrentVar() {
+            return currentVar;
+        }
+
+        public VariableManager.VariableScope getScope() {
+            return scope;
+        }
+
+        public String getScopeContext() {
+            return scopeContext;
         }
     }
 }

@@ -1,8 +1,8 @@
 package com.megacreative.coding;
 
 import com.megacreative.coding.values.DataValue;
-import com.megacreative.coding.values.LocationValue;
-import com.megacreative.coding.values.PlayerValue;
+import com.megacreative.coding.values.types.LocationValue;
+import com.megacreative.coding.values.types.PlayerValue;
 import com.megacreative.coding.variables.VariableManager;
 import com.megacreative.coding.variables.IVariableManager;
 import com.megacreative.coding.placeholders.ReferenceSystemPlaceholderResolver;

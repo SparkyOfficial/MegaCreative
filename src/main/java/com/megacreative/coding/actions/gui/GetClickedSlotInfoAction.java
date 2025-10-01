@@ -86,13 +86,14 @@ public class GetClickedSlotInfoAction implements BlockAction {
             // Store the slot information in a variable
             VariableManager variableManager = plugin.getServiceRegistry().getVariableManager();
             if (variableManager != null && context.getPlayer() != null) {
+                // Store in player variable since this is player-specific information
                 variableManager.setPlayerVariable(
                     context.getPlayer().getUniqueId(), 
                     variableName, 
                     DataValue.fromObject(slotInfo)
                 );
             }
-            
+
             return ExecutionResult.success("Stored clicked slot information in variable '" + variableName + "'");
             
         } catch (Exception e) {

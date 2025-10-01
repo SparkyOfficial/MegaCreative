@@ -76,14 +76,14 @@ public class CreateMenuAction implements BlockAction {
             // We'll use a special wrapper to identify GUI inventories
             GUIInventory guiInventory = new GUIInventory(inventory, title, clickListener);
             
-            // Store in variable manager
+            // Store in variable manager as a global variable so any player can access it
             VariableManager variableManager = plugin.getServiceRegistry().getVariableManager();
-            if (variableManager != null && context.getPlayer() != null) {
-                variableManager.setPlayerVariable(context.getPlayer().getUniqueId(), variableName, DataValue.fromObject(guiInventory));
+            if (variableManager != null) {
+                variableManager.setGlobalVariable(variableName, DataValue.fromObject(guiInventory));
             }
             
-            return ExecutionResult.success("Created menu '" + title + "' with size " + size + " and stored in variable '" + variableName + "'");
-            
+            return ExecutionResult.success("Created menu '" + title + "' with size " + size + " and stored in global variable '" + variableName + "'");
+
         } catch (Exception e) {
             return ExecutionResult.error("Error creating menu: " + e.getMessage());
         }

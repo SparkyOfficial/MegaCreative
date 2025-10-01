@@ -106,49 +106,31 @@ public class RepeatTriggerAction implements BlockAction {
     
     /**
      * Останавливает повторяющуюся задачу для указанного игрока
+     * @deprecated Use RepeatingTaskManager service directly through ServiceRegistry
      */
+    @Deprecated
     public static void stopRepeatingTask(UUID playerId) {
-        // This method should not be static and should use context instead
-        // For backward compatibility, we'll keep it but mark it as deprecated
-        MegaCreative plugin = MegaCreative.getInstance();
-        if (plugin != null && plugin.getServiceRegistry() != null) {
-            RepeatingTaskManager taskManager = plugin.getServiceRegistry().getRepeatingTaskManager();
-            if (taskManager != null) {
-                taskManager.stopRepeatingTask(playerId);
-            }
-        }
+        // Deprecated method - use RepeatingTaskManager service directly
     }
     
     /**
      * Останавливает все повторяющиеся задачи
      * @return Количество остановленных задач
+     * @deprecated Use RepeatingTaskManager service directly through ServiceRegistry
      */
+    @Deprecated
     public static int stopAllRepeatingTasks() {
-        // This method should not be static and should use context instead
-        // For backward compatibility, we'll keep it but mark it as deprecated
-        MegaCreative plugin = MegaCreative.getInstance();
-        if (plugin != null && plugin.getServiceRegistry() != null) {
-            RepeatingTaskManager taskManager = plugin.getServiceRegistry().getRepeatingTaskManager();
-            if (taskManager != null) {
-                return taskManager.stopAllRepeatingTasks();
-            }
-        }
+        // Deprecated method - use RepeatingTaskManager service directly
         return 0;
     }
     
     /**
      * Проверяет, есть ли активная повторяющаяся задача для игрока
+     * @deprecated Use RepeatingTaskManager service directly through ServiceRegistry
      */
+    @Deprecated
     public static boolean hasActiveTask(UUID playerId) {
-        // This method should not be static and should use context instead
-        // For backward compatibility, we'll keep it but mark it as deprecated
-        MegaCreative plugin = MegaCreative.getInstance();
-        if (plugin != null && plugin.getServiceRegistry() != null) {
-            RepeatingTaskManager taskManager = plugin.getServiceRegistry().getRepeatingTaskManager();
-            if (taskManager != null) {
-                return taskManager.hasActiveTask(playerId);
-            }
-        }
+        // Deprecated method - use RepeatingTaskManager service directly
         return false;
     }
 }
