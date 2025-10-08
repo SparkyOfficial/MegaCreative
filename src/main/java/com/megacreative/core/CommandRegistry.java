@@ -173,21 +173,8 @@ public class CommandRegistry {
                 createCmd.setExecutor(new CreateWorldCommand(plugin, worldManager));
             }
             
-            // Register missing commands
-            org.bukkit.command.PluginCommand templatesCmd = plugin.getCommand("templates");
-            if (templatesCmd != null) {
-                templatesCmd.setExecutor(new TemplatesCommand(plugin));
-            }
-            
-            org.bukkit.command.PluginCommand clipboardCmd = plugin.getCommand("clipboard");
-            if (clipboardCmd != null) {
-                clipboardCmd.setExecutor(new ClipboardCommand(plugin));
-            }
-            
-            org.bukkit.command.PluginCommand testCmd = plugin.getCommand("test");
-            if (testCmd != null) {
-                testCmd.setExecutor(new TestCommand(plugin));
-            }
+            // Log successful command registration
+            log.info("All commands registered successfully");
         } catch (Exception e) {
             log.severe("Failed to register simple commands: " + e.getMessage());
         }

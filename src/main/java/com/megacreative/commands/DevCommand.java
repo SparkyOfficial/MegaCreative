@@ -114,59 +114,71 @@ public class DevCommand implements CommandExecutor {
             return;
         }
         
-        // Создаем простое GUI с предметами-переменными
-        org.bukkit.inventory.Inventory variablesInventory = org.bukkit.Bukkit.createInventory(null, 27, "§8Меню переменных");
+        // Создаем улучшенное GUI с предметами-переменными
+        org.bukkit.inventory.Inventory variablesInventory = org.bukkit.Bukkit.createInventory(null, 54, "§8§lМеню переменных");
         
-        // Текст (книга)
-        org.bukkit.inventory.ItemStack textVar = new org.bukkit.inventory.ItemStack(org.bukkit.Material.WRITABLE_BOOK);
-        org.bukkit.inventory.meta.ItemMeta textMeta = textVar.getItemMeta();
-        textMeta.setDisplayName("§e§lТекстовая переменная");
-        textMeta.setLore(java.util.Arrays.asList(
-            "§7Для хранения текста",
-            "§eПереименуйте с названием"
-        ));
-        textVar.setItemMeta(textMeta);
+        // Базовые типы переменных
+        createVariableItem(variablesInventory, 10, org.bukkit.Material.WRITABLE_BOOK, "§e§lТекстовая переменная",
+            "§7Для хранения текста", "§eПример: имя, сообщение", "§8Нажмите для создания");
+            
+        createVariableItem(variablesInventory, 12, org.bukkit.Material.SLIME_BALL, "§a§lЧисловая переменная",
+            "§7Для хранения чисел", "§eПример: счет, уровень", "§8Нажмите для создания");
+            
+        createVariableItem(variablesInventory, 14, org.bukkit.Material.COMPASS, "§b§lПеременная локации",
+            "§7Для хранения координат", "§eПример: точка спавна", "§8Нажмите для создания");
+            
+        createVariableItem(variablesInventory, 16, org.bukkit.Material.CHEST, "§6§lПеременная предмета",
+            "§7Для хранения предметов", "§eПример: награда", "§8Нажмите для создания");
+            
+        // Расширенные типы переменных
+        createVariableItem(variablesInventory, 28, org.bukkit.Material.REPEATER, "§d§lПеременная списка",
+            "§7Для хранения списков", "§eПример: топ игроков", "§8Нажмите для создания");
+            
+        createVariableItem(variablesInventory, 30, org.bukkit.Material.DISPENSER, "§5§lПеременная команды",
+            "§7Для хранения команд", "§eПример: действие", "§8Нажмите для создания");
+            
+        createVariableItem(variablesInventory, 32, org.bukkit.Material.PLAYER_HEAD, "§3§lПеременная игрока",
+            "§7Для хранения данных игрока", "§eПример: последний убийца", "§8Нажмите для создания");
+            
+        createVariableItem(variablesInventory, 34, org.bukkit.Material.HOPPER, "§c§lГлобальная переменная",
+            "§7Для хранения общих данных", "§eДоступна всем игрокам", "§8Нажмите для создания");
         
-        // Число (слайм)
-        org.bukkit.inventory.ItemStack numberVar = new org.bukkit.inventory.ItemStack(org.bukkit.Material.SLIME_BALL);
-        org.bukkit.inventory.meta.ItemMeta numberMeta = numberVar.getItemMeta();
-        numberMeta.setDisplayName("§a§lЧисловая переменная");
-        numberMeta.setLore(java.util.Arrays.asList(
-            "§7Для хранения чисел",
-            "§eПереименуйте с названием"
-        ));
-        numberVar.setItemMeta(numberMeta);
+        // Декоративные элементы
+        for (int i = 0; i < 9; i++) {
+            variablesInventory.setItem(i, createGlassPane());
+            variablesInventory.setItem(45 + i, createGlassPane());
+        }
         
-        // Локация (компас)
-        org.bukkit.inventory.ItemStack locationVar = new org.bukkit.inventory.ItemStack(org.bukkit.Material.COMPASS);
-        org.bukkit.inventory.meta.ItemMeta locationMeta = locationVar.getItemMeta();
-        locationMeta.setDisplayName("§b§lПеременная локации");
-        locationMeta.setLore(java.util.Arrays.asList(
-            "§7Для хранения координат",
-            "§eПереименуйте с названием"
-        ));
-        locationVar.setItemMeta(locationMeta);
-        
-        // Предмет (сундук)
-        org.bukkit.inventory.ItemStack itemVar = new org.bukkit.inventory.ItemStack(org.bukkit.Material.CHEST);
-        org.bukkit.inventory.meta.ItemMeta itemMeta = itemVar.getItemMeta();
-        itemMeta.setDisplayName("§6§lПеременная предмета");
-        itemMeta.setLore(java.util.Arrays.asList(
-            "§7Для хранения предметов",
-            "§eПереименуйте с названием"
-        ));
-        itemVar.setItemMeta(itemMeta);
-        
-        // Размещаем предметы в инвентаре
-        variablesInventory.setItem(10, textVar);
-        variablesInventory.setItem(12, numberVar);
-        variablesInventory.setItem(14, locationVar);
-        variablesInventory.setItem(16, itemVar);
+        // Кнопки управления
+        createVariableItem(variablesInventory, 48, org.bukkit.Material.BOOK, "§e§lПомощь",
+            "§7Нажмите для просмотра", "§7руководства по переменным");
+            
+        createVariableItem(variablesInventory, 50, org.bukkit.Material.BARRIER, "§c§lЗакрыть",
+            "§7Нажмите для закрытия", "§7меню переменных");
         
         // Открываем инвентарь
         player.openInventory(variablesInventory);
         player.playSound(player.getLocation(), org.bukkit.Sound.UI_BUTTON_CLICK, 0.7f, 1.0f);
-        player.sendMessage("§aМеню переменных открыто! Возьмите нужные предметы.");
+        player.sendMessage("§a§lМеню переменных открыто! §7Выберите тип переменной для создания.");
+    }
+    
+    private void createVariableItem(org.bukkit.inventory.Inventory inventory, int slot, org.bukkit.Material material,
+                                  String name, String... lore) {
+        org.bukkit.inventory.ItemStack item = new org.bukkit.inventory.ItemStack(material);
+        org.bukkit.inventory.meta.ItemMeta meta = item.getItemMeta();
+        meta.setDisplayName(name);
+        meta.setLore(java.util.Arrays.asList(lore));
+        item.setItemMeta(meta);
+        inventory.setItem(slot, item);
+    }
+    
+    private org.bukkit.inventory.ItemStack createGlassPane() {
+        org.bukkit.inventory.ItemStack glass = new org.bukkit.inventory.ItemStack(org.bukkit.Material.BLACK_STAINED_GLASS_PANE);
+        org.bukkit.inventory.meta.ItemMeta meta = glass.getItemMeta();
+        meta.setDisplayName(" ");
+        glass.setItemMeta(meta);
+        return glass;
+    }
     }
    
     /**

@@ -250,8 +250,23 @@ public class MegaCreative extends JavaPlugin {
         autoSaveTask = new BukkitRunnable() {
             @Override
             public void run() {
-                // Auto-save logic would go here
-                // For now, we're just setting up the scheduler
+                try {
+                    // Save all creative worlds
+                    if (serviceRegistry != null) {
+                        serviceRegistry.getWorldManager().saveAllWorlds();
+                    }
+                    
+                    // Save player data
+                    if (serviceRegistry != null) {
+                        serviceRegistry.getPlayerModeManager().saveAllPlayerData();
+                        serviceRegistry.getVariableManager().saveAllVariables();
+                    }
+                    
+                    logger.info("Auto-save completed successfully");
+                } catch (Exception e) {
+                    logger.severe("Error during auto-save: " + e.getMessage());
+                    e.printStackTrace();
+                }
             }
         }.runTaskTimer(this, 6000L, 6000L); // Run every 5 minutes (6000 ticks)
     }

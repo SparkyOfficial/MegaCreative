@@ -179,12 +179,25 @@ public class ScriptTriggerManager implements Listener {
                 gameEvent.setPlayer(player);
             }
             
-            // TODO: Implement the logic to find and execute the appropriate code blocks
-            // This would replace the Activator-based system with the CustomEventManager system
-            LOGGER.info("Would execute scripts for event: " + eventName + " for player: " + 
-                       (player != null ? player.getName() : "unknown") + " in world: " + creativeWorld.getName());
+            // Find all event handlers for this event type
+            Map<UUID, CustomEventManager.EventHandler> handlers = customEventManager.getEventHandlers(eventName);
+            if (handlers != null && !handlers.isEmpty()) {
+                for (CustomEventManager.EventHandler handler : handlers.values()) {
+                    // Check if handler can process this event
+                    if (handler.canHandle(player, creativeWorld.getName(), gameEvent.getEventData())) {
+                        // Execute the handler with event data
+                        handler.handle(gameEvent.getEventData(), player, creativeWorld.getName());
+                        
+                        // Log successful execution
+                        if (LOGGER.isLoggable(java.util.logging.Level.FINE)) {
+                            LOGGER.fine("Executed event handler for " + eventName + " in world " + creativeWorld.getName());
+                        }
+                    }
+                }
+            }
         } catch (Exception e) {
             LOGGER.warning("Error executing scripts for event " + eventName + ": " + e.getMessage());
+            e.printStackTrace();
         }
     }
     
@@ -206,11 +219,25 @@ public class ScriptTriggerManager implements Listener {
             // Create a game event with context data
             GameEvent gameEvent = new GameEvent(eventName);
             
-            // TODO: Implement the logic to find and execute the appropriate code blocks
-            // This would replace the Activator-based system with the CustomEventManager system
-            LOGGER.info("Would execute scripts for global event: " + eventName + " in world: " + creativeWorld.getName());
+            // Find all event handlers for this event type
+            Map<UUID, CustomEventManager.EventHandler> handlers = customEventManager.getEventHandlers(eventName);
+            if (handlers != null && !handlers.isEmpty()) {
+                for (CustomEventManager.EventHandler handler : handlers.values()) {
+                    // Check if handler can process this event
+                    if (handler.canHandle(null, creativeWorld.getName(), gameEvent.getEventData())) {
+                        // Execute the handler with event data
+                        handler.handle(gameEvent.getEventData(), null, creativeWorld.getName());
+                        
+                        // Log successful execution
+                        if (LOGGER.isLoggable(java.util.logging.Level.FINE)) {
+                            LOGGER.fine("Executed global event handler for " + eventName + " in world " + creativeWorld.getName());
+                        }
+                    }
+                }
+            }
         } catch (Exception e) {
             LOGGER.warning("Error executing scripts for global event " + eventName + ": " + e.getMessage());
+            e.printStackTrace();
         }
     }
     
