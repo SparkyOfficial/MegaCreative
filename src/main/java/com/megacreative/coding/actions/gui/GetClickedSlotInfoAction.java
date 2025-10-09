@@ -48,11 +48,11 @@ public class GetClickedSlotInfoAction implements BlockAction {
             
             // Get the GUI click event from the context
             Object eventObj = context.getEvent();
-            if (!(eventObj instanceof GUIClickEvent)) {
+            if (!(eventObj instanceof com.megacreative.events.GUIClickEvent)) {
                 return ExecutionResult.error("This action can only be used in a GUI click event context");
             }
             
-            GUIClickEvent guiClickEvent = (GUIClickEvent) eventObj;
+            com.megacreative.events.GUIClickEvent guiClickEvent = (com.megacreative.events.GUIClickEvent) eventObj;
             
             // Create a map with the slot information
             Map<String, Object> slotInfo = new HashMap<>();

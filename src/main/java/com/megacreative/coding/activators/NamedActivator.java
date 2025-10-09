@@ -15,8 +15,6 @@ import java.util.concurrent.atomic.AtomicInteger;
  */
 public abstract class NamedActivator extends Activator {
     
-    protected String customName;
-    
     public NamedActivator(MegaCreative plugin, CreativeWorld world) {
         super(plugin, world);
     }
