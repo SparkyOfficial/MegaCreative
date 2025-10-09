@@ -334,6 +334,29 @@ public class CustomEventManager implements Listener, EventPublisher, EventSubscr
     }
     
     /**
+     * Gets all event handlers for an event
+     */
+    public List<EventHandler> getEventHandlers(String eventName) {
+        // Return world-specific handlers
+        List<EventHandler> handlers = eventHandlers.get(eventName);
+        if (handlers == null) {
+            handlers = new ArrayList<>();
+        }
+        return handlers;
+    }
+    
+    /**
+     * Gets global event handlers for an event
+     */
+    public List<EventHandler> getGlobalEventHandlers(String eventName) {
+        List<EventHandler> handlers = globalEventHandlers.get(eventName);
+        if (handlers == null) {
+            handlers = new ArrayList<>();
+        }
+        return handlers;
+    }
+    
+    /**
      * Creates a new event handler from a code block
      */
     public EventHandler createEventHandler(CodeBlock handlerBlock, Player player, String worldName, int priority) {

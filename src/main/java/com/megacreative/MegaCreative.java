@@ -258,8 +258,8 @@ public class MegaCreative extends JavaPlugin {
                     
                     // Save player data
                     if (serviceRegistry != null) {
-                        serviceRegistry.getPlayerModeManager().saveAllPlayerData();
-                        serviceRegistry.getVariableManager().saveAllVariables();
+                        serviceRegistry.getPlayerManager().saveAllPlayerData();
+                        serviceRegistry.getVariableManager().savePersistentData();
                     }
                     
                     logger.info("Auto-save completed successfully");

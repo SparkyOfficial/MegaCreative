@@ -17,6 +17,7 @@ import java.util.HashMap;
 import java.util.UUID;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.logging.Logger;
+import java.util.List;
 
 /**
  * Script trigger manager that listens to our custom events and triggers script execution
@@ -180,9 +181,9 @@ public class ScriptTriggerManager implements Listener {
             }
             
             // Find all event handlers for this event type
-            Map<UUID, CustomEventManager.EventHandler> handlers = customEventManager.getEventHandlers(eventName);
+            List<CustomEventManager.EventHandler> handlers = customEventManager.getEventHandlers(eventName);
             if (handlers != null && !handlers.isEmpty()) {
-                for (CustomEventManager.EventHandler handler : handlers.values()) {
+                for (CustomEventManager.EventHandler handler : handlers) {
                     // Check if handler can process this event
                     if (handler.canHandle(player, creativeWorld.getName(), gameEvent.getEventData())) {
                         // Execute the handler with event data
@@ -220,9 +221,9 @@ public class ScriptTriggerManager implements Listener {
             GameEvent gameEvent = new GameEvent(eventName);
             
             // Find all event handlers for this event type
-            Map<UUID, CustomEventManager.EventHandler> handlers = customEventManager.getEventHandlers(eventName);
+            List<CustomEventManager.EventHandler> handlers = customEventManager.getEventHandlers(eventName);
             if (handlers != null && !handlers.isEmpty()) {
-                for (CustomEventManager.EventHandler handler : handlers.values()) {
+                for (CustomEventManager.EventHandler handler : handlers) {
                     // Check if handler can process this event
                     if (handler.canHandle(null, creativeWorld.getName(), gameEvent.getEventData())) {
                         // Execute the handler with event data

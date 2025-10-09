@@ -176,4 +176,16 @@ public class GameEvent {
             }
         }
     }
+    
+    /**
+     * Gets event data as a Map of String to DataValue
+     * @return Map of event data
+     */
+    public Map<String, DataValue> getEventData() {
+        Map<String, DataValue> eventData = new HashMap<>();
+        for (Map.Entry<String, Object> entry : customData.entrySet()) {
+            eventData.put(entry.getKey(), DataValue.fromObject(entry.getValue()));
+        }
+        return eventData;
+    }
 }

@@ -179,7 +179,6 @@ public class DevCommand implements CommandExecutor {
         glass.setItemMeta(meta);
         return glass;
     }
-    }
    
     /**
      * Телепортирует игрока в мир разработки и настраивает его
