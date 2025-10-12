@@ -721,8 +721,7 @@ public class ActionSelectionGUI implements GUIManager.ManagedGUIInterface {
         codeBlock.setAction(actionId);
         
         // Update the sign to reflect the new action
-        plugin.getServiceRegistry().getBlockPlacementHandler().createSignForBlock(blockLocation, codeBlock);
-        
+
         // Save the world
         var creativeWorld = plugin.getServiceRegistry().getWorldManager().findCreativeWorldByBukkit(player.getWorld());
         if (creativeWorld != null) {

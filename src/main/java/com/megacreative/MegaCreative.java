@@ -24,18 +24,10 @@ import java.util.logging.Level;
  *
  * Haupt-Plugin-Klasse - jetzt schlank und fokussiert auf den Plugin-Lebenszyklus
  * Verwendet ServiceRegistry für Dependency Injection, um das God Object-Muster zu vermeiden
+ * 
+ * @author Андрій Будильников
  */
 public class MegaCreative extends JavaPlugin {
-    
-    private static MegaCreative instance;
-    
-    /**
-     * Gets the singleton instance of the plugin
-     * @return The plugin instance
-     */
-    public static MegaCreative getInstance() {
-        return instance;
-    }
     
     private DependencyContainer dependencyContainer;
     private ServiceRegistry serviceRegistry;
@@ -47,9 +39,6 @@ public class MegaCreative extends JavaPlugin {
     
     @Override
     public void onEnable() {
-        synchronized (MegaCreative.class) {
-            instance = this;
-        }
         logger = getLogger();
         
         try {
@@ -82,11 +71,6 @@ public class MegaCreative extends JavaPlugin {
             }
         } catch (Exception e) {
             getLogger().severe("Error during plugin disable: " + e.getMessage());
-        } finally {
-            // Ensure instance is cleared
-            synchronized (MegaCreative.class) {
-                instance = null;
-            }
         }
     }
     
@@ -204,9 +188,6 @@ public class MegaCreative extends JavaPlugin {
             
             // Register GUIClickListener to handle GUI click events
             getServer().getPluginManager().registerEvents(serviceRegistry.getService(GUIClickListener.class), this);
-            
-            // Register DevWorldProtectionListener to protect dev worlds
-            // getServer().getPluginManager().registerEvents(new DevWorldProtectionListener(this), this);
         }
     }
     

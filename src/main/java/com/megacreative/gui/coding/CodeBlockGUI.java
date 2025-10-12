@@ -577,7 +577,7 @@ public class CodeBlockGUI implements GUIManager.ManagedGUIInterface {
         if (plugin.getServiceRegistry().getBlockPlacementHandler() != null) {
             CodeBlock codeBlock = plugin.getServiceRegistry().getBlockPlacementHandler().getCodeBlock(blockLocation);
             if (codeBlock != null) {
-                plugin.getServiceRegistry().getBlockPlacementHandler().createSignForBlock(blockLocation, codeBlock);
+
             }
         }
     }

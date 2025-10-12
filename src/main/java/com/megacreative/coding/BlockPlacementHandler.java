@@ -141,13 +141,12 @@ public class BlockPlacementHandler implements Listener {
 
         // 1. Сохраняем созданный блок
         blockCodeBlocks.put(block.getLocation(), newCodeBlock);
+        log.info("Created CodeBlock at " + block.getLocation() + " with material " + newCodeBlock.getMaterial());
         
-        // 2. Создаем табличку для визуализации
-        createSignForBlock(block.getLocation(), newCodeBlock);
-        
-        // 3. Отправляем наше собственное событие в систему!
+        // 2. Отправляем наше собственное событие в систему!
         CodeBlockPlacedEvent placedEvent = new CodeBlockPlacedEvent(player, newCodeBlock, block.getLocation());
         plugin.getServer().getPluginManager().callEvent(placedEvent);
+        log.info("Fired CodeBlockPlacedEvent for block at " + block.getLocation());
 
         player.sendMessage("§a✓ Code block placed!");
     }
@@ -174,9 +173,6 @@ public class BlockPlacementHandler implements Listener {
         // Если по этому адресу был наш CodeBlock...
         if (blockCodeBlocks.containsKey(loc)) {
             CodeBlock removedBlock = blockCodeBlocks.remove(loc);
-            
-            // 1. Удаляем табличку
-            removeSignFromBlock(loc);
             
             // 2. Отправляем наше событие об уничтожении!
             CodeBlockBrokenEvent brokenEvent = new CodeBlockBrokenEvent(player, removedBlock, loc);
@@ -298,9 +294,6 @@ public class BlockPlacementHandler implements Listener {
         CodeBlock.BracketType newType = (currentType == CodeBlock.BracketType.OPEN) ? 
             CodeBlock.BracketType.CLOSE : CodeBlock.BracketType.OPEN;
         codeBlock.setBracketType(newType);
-        
-        // Обновляем визуальное представление
-        createSignForBlock(block.getLocation(), codeBlock);
         
         // Отправляем сообщение игроку
         player.sendMessage("§aBracket type changed to: " + newType.getDisplayName());
@@ -590,129 +583,6 @@ public class BlockPlacementHandler implements Listener {
         return codeBlock;
     }
     
-    /**
-     * Creates a sign for a code block
-     * @param location Location of the code block
-     * @param codeBlock The code block
-     */
-    public void createSignForBlock(Location location, CodeBlock codeBlock) {
-        if (location == null || codeBlock == null) {
-            return;
-        }
-        
-        // Remove any existing signs
-        removeSignFromBlock(location);
-        
-        Block block = location.getBlock();
-        org.bukkit.block.BlockFace[] faces = {org.bukkit.block.BlockFace.NORTH, org.bukkit.block.BlockFace.EAST, 
-                                             org.bukkit.block.BlockFace.SOUTH, org.bukkit.block.BlockFace.WEST};
-        
-        String displayName = "NOT_SET";
-        if (blockConfigService != null) {
-            // First try to get display name from action
-            if (codeBlock.getAction() != null && !"NOT_SET".equals(codeBlock.getAction())) {
-                BlockConfigService.BlockConfig config = blockConfigService.getBlockConfig(codeBlock.getAction());
-                if (config != null) {
-                    displayName = config.getDisplayName();
-                } else {
-                    displayName = codeBlock.getAction();
-                }
-            } 
-            // If no action, try to get display name from event
-            else if (codeBlock.getEvent() != null && !"NOT_SET".equals(codeBlock.getEvent())) {
-                BlockConfigService.BlockConfig config = blockConfigService.getBlockConfig(codeBlock.getEvent());
-                if (config != null) {
-                    displayName = config.getDisplayName();
-                } else {
-                    displayName = codeBlock.getEvent();
-                }
-            }
-        }
-        
-        // Determine color based on block type
-        String colorCode = "§7"; // Default
-        if (codeBlock.isBracket()) {
-            colorCode = "§6"; // Brackets
-            displayName = codeBlock.getBracketType() != null ? codeBlock.getBracketType().getDisplayName() : "Bracket";
-        } else {
-            // Get the block config to determine the type
-            if (blockConfigService != null) {
-                BlockConfigService.BlockConfig config = null;
-                String actionOrEvent = null;
-                
-                // Try to get config for action first
-                if (codeBlock.getAction() != null && !"NOT_SET".equals(codeBlock.getAction())) {
-                    config = blockConfigService.getBlockConfig(codeBlock.getAction());
-                    actionOrEvent = codeBlock.getAction();
-                }
-                // If no action config, try event
-                else if (codeBlock.getEvent() != null && !"NOT_SET".equals(codeBlock.getEvent())) {
-                    config = blockConfigService.getBlockConfig(codeBlock.getEvent());
-                    actionOrEvent = codeBlock.getEvent();
-                }
-                
-                if (config != null) {
-                    String type = config.getType();
-                    if ("EVENT".equals(type)) {
-                        colorCode = "§e"; // Events
-                    } else if ("ACTION".equals(type)) {
-                        colorCode = "§a"; // Actions
-                    } else if ("CONDITION".equals(type)) {
-                        colorCode = "§6"; // Conditions
-                    } else if ("CONTROL".equals(type)) {
-                        colorCode = "§c"; // Control
-                    } else if ("FUNCTION".equals(type)) {
-                        colorCode = "§d"; // Functions
-                    } else if ("VARIABLE".equals(type)) {
-                        colorCode = "§b"; // Variables
-                    }
-                } else if (actionOrEvent != null && !"NOT_SET".equals(actionOrEvent)) {
-                    // Default color for unknown actions/events
-                    colorCode = "§f";
-                }
-            }
-        }
-        
-        for (org.bukkit.block.BlockFace face : faces) {
-            Block signBlock = block.getRelative(face);
-            if (signBlock.getType().isAir()) {
-                signBlock.setType(Material.OAK_WALL_SIGN, false);
-                
-                org.bukkit.block.data.type.WallSign wallSignData = (org.bukkit.block.data.type.WallSign) signBlock.getBlockData();
-                wallSignData.setFacing(face);
-                signBlock.setBlockData(wallSignData);
-                
-                org.bukkit.block.Sign signState = (org.bukkit.block.Sign) signBlock.getState();
-                signState.setLine(0, "§8============");
-                String line2 = displayName.length() > 15 ? displayName.substring(0, 15) : displayName;
-                signState.setLine(1, colorCode + line2);
-                signState.setLine(2, "§7Кликните ПКМ");
-                signState.setLine(3, "§8============");
-                signState.update(true);
-                return;
-            }
-        }
-    }
-    
-    /**
-     * Removes sign from a block
-     * @param location Location of the block
-     */
-    private void removeSignFromBlock(Location location) {
-        if (location == null) return;
-        
-        Block block = location.getBlock();
-        org.bukkit.block.BlockFace[] faces = {org.bukkit.block.BlockFace.NORTH, org.bukkit.block.BlockFace.SOUTH, 
-                                             org.bukkit.block.BlockFace.EAST, org.bukkit.block.BlockFace.WEST};
-        
-        for (org.bukkit.block.BlockFace face : faces) {
-            Block signBlock = block.getRelative(face);
-            if (signBlock.getBlockData() instanceof org.bukkit.block.data.type.WallSign) {
-                signBlock.setType(Material.AIR);
-            }
-        }
-    }
-
     /**
      * Checks if there's a CodeBlock at location
      */

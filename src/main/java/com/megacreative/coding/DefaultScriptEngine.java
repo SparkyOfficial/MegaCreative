@@ -1015,7 +1015,6 @@ public class DefaultScriptEngine implements ScriptEngine, EnhancedScriptEngine, 
     }
     
     /**
-    /**
      * Convert string type to BlockType enum
      */
     private BlockType getBlockTypeFromString(String type) {

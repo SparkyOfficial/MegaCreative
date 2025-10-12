@@ -27,15 +27,10 @@ public class CodeScript {
     
     // 🎆 ENHANCED: Add world name field for script persistence
     private String worldName;
-    
-    // Поля для шаблонов
-    private boolean isTemplate = false;
     private String author;
-    private String description = "";
+    private String description;
     
-    /**
-     * Основной конструктор
-     */
+    // Constructors
     public CodeScript(String name, boolean enabled, CodeBlock rootBlock) {
         this.id = UUID.randomUUID();
         this.name = name;
@@ -43,93 +38,40 @@ public class CodeScript {
         this.rootBlock = rootBlock;
     }
 
-    /**
-     * Конструктор с указанием типа скрипта
-     */
     public CodeScript(String name, boolean enabled, CodeBlock rootBlock, ScriptType type) {
         this(name, enabled, rootBlock);
         this.type = type;
     }
 
-    /**
-     * Конструктор для обратной совместимости или тестов
-     */
     public CodeScript(CodeBlock rootBlock) {
         this("Безымянный скрипт", true, rootBlock);
     }
 
-    // ===== Геттеры и сеттеры =====
+    // Getters and setters
+    public UUID getId() { return id; }
+    public void setId(UUID id) { this.id = id; }
     
-    public UUID getId() { 
-        return id; 
-    }
+    public String getName() { return name; }
+    public void setName(String name) { this.name = name; }
     
-    public void setId(UUID id) { 
-        this.id = id; 
-    }
+    public boolean isEnabled() { return enabled; }
+    public void setEnabled(boolean enabled) { this.enabled = enabled; }
     
-    public String getName() { 
-        return name; 
-    }
+    public ScriptType getType() { return type; }
+    public void setType(ScriptType type) { this.type = type; }
     
-    public void setName(String name) { 
-        this.name = name; 
-    }
+    public CodeBlock getRootBlock() { return rootBlock; }
     
-    public boolean isEnabled() { 
-        return enabled; 
-    }
+    public String getWorldName() { return worldName; }
+    public void setWorldName(String worldName) { this.worldName = worldName; }
     
-    public void setEnabled(boolean enabled) { 
-        this.enabled = enabled; 
-    }
+    public String getAuthor() { return author; }
+    public void setAuthor(String author) { this.author = author; }
     
-    public ScriptType getType() { 
-        return type; 
-    }
+    public String getDescription() { return description; }
+    public void setDescription(String description) { this.description = description; }
     
-    public void setType(ScriptType type) { 
-        this.type = type; 
-    }
-    
-    public CodeBlock getRootBlock() { 
-        return rootBlock; 
-    }
-    
-    // 🎆 ENHANCED: Add getter and setter for world name
-    public String getWorldName() {
-        return worldName;
-    }
-    
-    public void setWorldName(String worldName) {
-        this.worldName = worldName;
-    }
-    
-    public boolean isTemplate() { 
-        return isTemplate; 
-    }
-    
-    public void setTemplate(boolean template) { 
-        this.isTemplate = template; 
-    }
-    
-    public String getAuthor() { 
-        return author; 
-    }
-    
-    public void setAuthor(String author) { 
-        this.author = author; 
-    }
-    
-    public String getDescription() { 
-        return description; 
-    }
-    
-    public void setDescription(String description) { 
-        this.description = description; 
-    }
-    
-    // ===== Основные методы =====
+    // Main methods
     
     /**
      * Проверяет, является ли корневой блок событием.
@@ -166,7 +108,7 @@ public class CodeScript {
         collectBlocks(block.getNextBlock(), blocks);
     }
     
-    // ===== equals и hashCode =====
+    // equals and hashCode
     
     @Override
     public boolean equals(Object o) {
@@ -174,18 +116,18 @@ public class CodeScript {
         if (o == null || getClass() != o.getClass()) return false;
         CodeScript that = (CodeScript) o;
         return enabled == that.enabled &&
-               isTemplate == that.isTemplate &&
                Objects.equals(id, that.id) &&
                Objects.equals(name, that.name) &&
                type == that.type &&
                Objects.equals(rootBlock, that.rootBlock) &&
-               Objects.equals(worldName, that.worldName) &&
+               worldName == that.worldName &&
                Objects.equals(author, that.author) &&
                Objects.equals(description, that.description);
     }
     
     @Override
     public int hashCode() {
-        return Objects.hash(id, name, enabled, type, rootBlock, worldName, isTemplate, author, description);
+        return Objects.hash(id, name, enabled, type, rootBlock, worldName, 
+                author, description);
     }
 }

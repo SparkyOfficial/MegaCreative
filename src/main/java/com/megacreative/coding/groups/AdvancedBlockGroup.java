@@ -9,6 +9,12 @@ import java.util.concurrent.ConcurrentHashMap;
 
 /**
  * Advanced block group with enhanced functionality including nesting, templates, and execution control
+ * 
+ * Розширена група блоків з розширеними функціями, включаючи вкладеність та контроль виконання
+ * 
+ * Erweiterte Blockgruppe mit erweiterten Funktionen, einschließlich Verschachtelung und Ausführungssteuerung
+ * 
+ * @author Андрій Будильников
  */
 public class AdvancedBlockGroup extends BlockGroup {
     
@@ -25,9 +31,7 @@ public class AdvancedBlockGroup extends BlockGroup {
     public String getTemplateId() { return templateId; }
     public void setTemplateId(String templateId) { this.templateId = templateId; }
     
-    public boolean isTemplate() { return isTemplate; }
-    public void setTemplate(boolean template) { isTemplate = template; }
-    
+    // Group metadata
     public boolean isLocked() { return isLocked; }
     public void setLocked(boolean locked) { isLocked = locked; }
     
@@ -56,15 +60,14 @@ public class AdvancedBlockGroup extends BlockGroup {
         if (o == null || getClass() != o.getClass()) return false;
         if (!super.equals(o)) return false;
         AdvancedBlockGroup that = (AdvancedBlockGroup) o;
-        return isTemplate == that.isTemplate && 
-               isLocked == that.isLocked && 
-               executionLimit == that.executionLimit && 
+        return isLocked == that.isLocked &&
+               executionMode == that.executionMode &&
+               executionLimit == that.executionLimit &&
                executionCount == that.executionCount &&
                Objects.equals(metadata, that.metadata) &&
                Objects.equals(nestedGroups, that.nestedGroups) &&
                Objects.equals(tags, that.tags) &&
                Objects.equals(templateId, that.templateId) &&
-               executionMode == that.executionMode &&
                Objects.equals(conditionExpression, that.conditionExpression) &&
                Objects.equals(dependencies, that.dependencies) &&
                Objects.equals(version, that.version);
@@ -72,9 +75,9 @@ public class AdvancedBlockGroup extends BlockGroup {
     
     @Override
     public int hashCode() {
-        return Objects.hash(super.hashCode(), metadata, nestedGroups, tags, templateId, isTemplate, 
-                          isLocked, executionMode, executionLimit, executionCount, 
-                          conditionExpression, dependencies, version);
+        return Objects.hash(super.hashCode(), metadata, nestedGroups, tags, templateId, 
+                isLocked, executionMode, executionLimit, executionCount, 
+                conditionExpression, dependencies, version);
     }
     
     // Advanced features
@@ -82,7 +85,6 @@ public class AdvancedBlockGroup extends BlockGroup {
     private final List<UUID> nestedGroups = new ArrayList<>();
     private final Set<String> tags = new HashSet<>();
     private String templateId; // Reference to a template this group was created from
-    private boolean isTemplate = false; // Whether this group is a template
     private boolean isLocked = false; // Whether this group is locked from editing
     private ExecutionMode executionMode = ExecutionMode.SEQUENTIAL; // How blocks in this group are executed
     private int executionLimit = -1; // Maximum number of executions (-1 for unlimited)
@@ -267,39 +269,8 @@ public class AdvancedBlockGroup extends BlockGroup {
         
         // Copy advanced properties
         copy.setTemplateId(this.getTemplateId());
-        copy.setTemplate(this.isTemplate());
-        copy.setLocked(this.isLocked());
-        copy.setExecutionMode(this.getExecutionMode());
-        copy.setExecutionLimit(this.getExecutionLimit());
-        copy.setConditionExpression(this.getConditionExpression());
-        copy.setVersion(this.getVersion());
-        copy.setExecutionCount(0); // Reset execution count for the copy
-        
-        // Copy collections (create new instances to avoid reference sharing)
-        copy.setNestedGroups(new ArrayList<>(this.nestedGroups));
-        copy.setTags(new HashSet<>(this.tags));
-        copy.setDependencies(new ArrayList<>(this.dependencies));
-        
-        // Deep copy metadata
-        Map<String, Object> metadataCopy = new ConcurrentHashMap<>();
-        for (Map.Entry<String, Object> entry : this.metadata.entrySet()) {
-            // For deep copying, we need to handle different types appropriately
-            Object value = entry.getValue();
-            if (value instanceof Collection) {
-                value = new ArrayList<>((Collection<?>) value);
-            } else if (value instanceof Map) {
-                value = new HashMap<>((Map<?, ?>) value);
-            }
-            metadataCopy.put(entry.getKey(), value);
-        }
-        copy.setMetadata(metadataCopy);
-        
-        // Copy last modified time
-        copy.lastModified = this.lastModified;
-        
         return copy;
     }
-    
     
     /**
      * Execution modes for block groups

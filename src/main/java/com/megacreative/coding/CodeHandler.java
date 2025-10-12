@@ -42,7 +42,7 @@ public class CodeHandler {
      */
     public void registerActivator(Activator activator) {
         activators.put(activator.getId(), activator);
-        LOGGER.info("Registered activator: " + activator.getId() + " of type: " + activator.getType());
+        LOGGER.info("Registered activator: " + activator.getId() + " of type: " + activator.getType() + " with name: " + activator.getCustomName());
     }
     
     /**
@@ -100,8 +100,10 @@ public class CodeHandler {
         // Execute each activator
         for (Activator activator : typeActivators) {
             try {
+                LOGGER.info("Executing activator: " + activator.getId() + " of type: " + activatorType + " with name: " + activator.getCustomName());
                 // Execute the activator with the game event
                 activator.execute(gameEvent, 0, new AtomicInteger());
+                LOGGER.info("Successfully executed activator: " + activator.getId());
             } catch (Exception e) {
                 LOGGER.severe("Error executing activator " + activator.getId() + ": " + e.getMessage());
                 e.printStackTrace();

@@ -56,6 +56,7 @@ public class SendMessageAction implements BlockAction {
             switch (type) {
                 case "actionbar":
                     player.sendActionBar(resolvedMessage);
+                    context.getPlugin().getLogger().info("Executing SendMessageAction - Sent action bar message to player " + player.getName() + ": " + resolvedMessage);
                     return ExecutionResult.success("Action bar message sent successfully");
                     
                 case "title":
@@ -72,6 +73,7 @@ public class SendMessageAction implements BlockAction {
                     int fadeOut = getTimingParameter(block, "fadeOut", 20);
                     
                     player.sendTitle(resolvedMessage, subtitle, fadeIn, stay, fadeOut);
+                    context.getPlugin().getLogger().info("Executing SendMessageAction - Sent title to player " + player.getName() + ": " + resolvedMessage + " | " + subtitle);
                     return ExecutionResult.success("Title sent successfully");
                     
                 case "chat":
@@ -84,9 +86,11 @@ public class SendMessageAction implements BlockAction {
                         // Fallback to regular sendMessage if Adventure API is not available
                         player.sendMessage(resolvedMessage);
                     }
+                    context.getPlugin().getLogger().info("Executing SendMessageAction - Sent chat message to player " + player.getName() + ": " + resolvedMessage);
                     return ExecutionResult.success("Chat message sent successfully");
             }
         } catch (Exception e) {
+            context.getPlugin().getLogger().severe("Executing SendMessageAction - Failed to send message: " + e.getMessage());
             return ExecutionResult.error("Failed to send message: " + e.getMessage());
         }
     }

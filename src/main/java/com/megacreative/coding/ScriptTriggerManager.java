@@ -9,6 +9,7 @@ import com.megacreative.models.CreativeWorld;
 import com.megacreative.coding.events.CustomEventManager;
 import com.megacreative.coding.values.DataValue;
 import com.megacreative.coding.variables.VariableManager;
+import com.megacreative.coding.activators.ActivatorType;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.Listener;
 import org.bukkit.entity.Player;
@@ -58,13 +59,10 @@ public class ScriptTriggerManager implements Listener {
         customEventManager.registerEventHandler("playerTeleport", createPlayerEventHandler("onTeleport"));
         customEventManager.registerEventHandler("entityDamage", createPlayerEventHandler("onEntityDamage"));
         customEventManager.registerEventHandler("inventoryClick", createPlayerEventHandler("onInventoryClick"));
-        customEventManager.registerEventHandler("inventoryOpen", createPlayerEventHandler("onInventoryOpen"));
         customEventManager.registerEventHandler("entityPickupItem", createPlayerEventHandler("onEntityPickupItem"));
         
         // Register handlers for global events
         customEventManager.registerEventHandler("tick", createGlobalEventHandler("onTick"));
-        customEventManager.registerEventHandler("second", createGlobalEventHandler("onSecond"));
-        customEventManager.registerEventHandler("minute", createGlobalEventHandler("onMinute"));
         
         LOGGER.info("Registered event handlers with CustomEventManager");
     }
@@ -171,6 +169,7 @@ public class ScriptTriggerManager implements Listener {
             // Get the code handler for this world
             CodeHandler codeHandler = creativeWorld.getCodeHandler();
             if (codeHandler == null) {
+                LOGGER.warning("CodeHandler is null for world: " + creativeWorld.getName());
                 return;
             }
             
@@ -178,6 +177,15 @@ public class ScriptTriggerManager implements Listener {
             GameEvent gameEvent = new GameEvent(eventName);
             if (player != null) {
                 gameEvent.setPlayer(player);
+            }
+            
+            // Map event names to activator types
+            ActivatorType activatorType = mapEventToActivatorType(eventName);
+            if (activatorType != null) {
+                LOGGER.info("Executing scripts for event: " + eventName + " with activator type: " + activatorType);
+                codeHandler.handleEvent(activatorType, gameEvent, player);
+            } else {
+                LOGGER.warning("No activator type found for event: " + eventName);
             }
             
             // Find all event handlers for this event type
@@ -214,11 +222,21 @@ public class ScriptTriggerManager implements Listener {
             // Get the code handler for this world
             CodeHandler codeHandler = creativeWorld.getCodeHandler();
             if (codeHandler == null) {
+                LOGGER.warning("CodeHandler is null for world: " + creativeWorld.getName());
                 return;
             }
             
             // Create a game event with context data
             GameEvent gameEvent = new GameEvent(eventName);
+            
+            // Map event names to activator types
+            ActivatorType activatorType = mapEventToActivatorType(eventName);
+            if (activatorType != null) {
+                LOGGER.info("Executing scripts for global event: " + eventName + " with activator type: " + activatorType);
+                codeHandler.handleEvent(activatorType, gameEvent, null);
+            } else {
+                LOGGER.warning("No activator type found for global event: " + eventName);
+            }
             
             // Find all event handlers for this event type
             List<CustomEventManager.EventHandler> handlers = customEventManager.getEventHandlers(eventName);
@@ -242,89 +260,275 @@ public class ScriptTriggerManager implements Listener {
         }
     }
     
+    /**
+     * Maps event names to activator types
+     */
+    private ActivatorType mapEventToActivatorType(String eventName) {
+        switch (eventName) {
+            case "onJoin":
+                return ActivatorType.PLAYER_JOIN;
+            case "onQuit":
+                return ActivatorType.PLAYER_QUIT;
+            case "onPlayerMove":
+                return ActivatorType.PLAYER_MOVE;
+            case "onChat":
+                return ActivatorType.PLAYER_CHAT;
+            case "onPlayerDeath":
+                return ActivatorType.PLAYER_DEATH;
+            case "onRespawn":
+                return ActivatorType.PLAYER_RESPAWN;
+            case "onTeleport":
+                return ActivatorType.PLAYER_TELEPORT;
+            case "onEntityDamage":
+                return ActivatorType.ENTITY_DAMAGE;
+            case "onInventoryClick":
+                return ActivatorType.INVENTORY_CLICK;
+            case "onEntityPickupItem":
+                return ActivatorType.ENTITY_PICKUP_ITEM;
+            case "onTick":
+                return ActivatorType.TICK;
+            case "onBlockPlace":
+                return ActivatorType.BLOCK_PLACE;
+            case "onBlockBreak":
+                return ActivatorType.BLOCK_BREAK;
+            default:
+                LOGGER.warning("Unknown event name: " + eventName);
+                return null;
+        }
+    }
+    
     // Deprecated methods - kept for backward compatibility but no longer used
     @Deprecated
     @EventHandler
     public void onMegaPlayerJoin(MegaPlayerJoinedEvent event) {
         // This method is deprecated and no longer used
         // All event handling is now done through CustomEventManager
+        Player player = event.getPlayer();
+        CreativeWorld creativeWorld = worldManager.findCreativeWorldByBukkit(player.getWorld());
+
+        if (creativeWorld != null) {
+            CodeHandler codeHandler = creativeWorld.getCodeHandler();
+            // Create a game event
+            GameEvent gameEvent = new GameEvent("onJoin");
+            gameEvent.setPlayer(player);
+            // Trigger all PLAYER_JOIN activators
+            codeHandler.handleEvent(ActivatorType.PLAYER_JOIN, gameEvent, player);
+            LOGGER.info("Triggered PLAYER_JOIN activators for player " + player.getName());
+        }
     }
     
     @Deprecated
     @EventHandler
     public void onMegaPlayerMove(MegaPlayerMoveEvent event) {
         // This method is deprecated and no longer used
+        Player player = event.getPlayer();
+        CreativeWorld creativeWorld = worldManager.findCreativeWorldByBukkit(player.getWorld());
+
+        if (creativeWorld != null) {
+            CodeHandler codeHandler = creativeWorld.getCodeHandler();
+            // Create a game event
+            GameEvent gameEvent = new GameEvent("onPlayerMove");
+            gameEvent.setPlayer(player);
+            // Trigger all PLAYER_MOVE activators
+            codeHandler.handleEvent(ActivatorType.PLAYER_MOVE, gameEvent, player);
+            LOGGER.info("Triggered PLAYER_MOVE activators for player " + player.getName());
+        }
     }
     
     @Deprecated
     @EventHandler
     public void onMegaPlayerChat(MegaPlayerChatEvent event) {
         // This method is deprecated and no longer used
+        Player player = event.getPlayer();
+        CreativeWorld creativeWorld = worldManager.findCreativeWorldByBukkit(player.getWorld());
+
+        if (creativeWorld != null) {
+            CodeHandler codeHandler = creativeWorld.getCodeHandler();
+            // Create a game event
+            GameEvent gameEvent = new GameEvent("onChat");
+            gameEvent.setPlayer(player);
+            // Trigger all PLAYER_CHAT activators
+            codeHandler.handleEvent(ActivatorType.PLAYER_CHAT, gameEvent, player);
+            LOGGER.info("Triggered PLAYER_CHAT activators for player " + player.getName());
+        }
     }
     
     @Deprecated
     @EventHandler
     public void onMegaBlockPlace(MegaBlockPlaceEvent event) {
         // This method is deprecated and no longer used
+        Player player = event.getPlayer();
+        CreativeWorld creativeWorld = worldManager.findCreativeWorldByBukkit(player.getWorld());
+
+        if (creativeWorld != null) {
+            CodeHandler codeHandler = creativeWorld.getCodeHandler();
+            // Create a game event
+            GameEvent gameEvent = new GameEvent("onBlockPlace");
+            gameEvent.setPlayer(player);
+            // Trigger all BLOCK_PLACE activators
+            codeHandler.handleEvent(ActivatorType.BLOCK_PLACE, gameEvent, player);
+            LOGGER.info("Triggered BLOCK_PLACE activators for player " + player.getName());
+        }
     }
     
     @Deprecated
     @EventHandler
     public void onMegaBlockBreak(MegaBlockBreakEvent event) {
         // This method is deprecated and no longer used
+        Player player = event.getPlayer();
+        CreativeWorld creativeWorld = worldManager.findCreativeWorldByBukkit(player.getWorld());
+
+        if (creativeWorld != null) {
+            CodeHandler codeHandler = creativeWorld.getCodeHandler();
+            // Create a game event
+            GameEvent gameEvent = new GameEvent("onBlockBreak");
+            gameEvent.setPlayer(player);
+            // Trigger all BLOCK_BREAK activators
+            codeHandler.handleEvent(ActivatorType.BLOCK_BREAK, gameEvent, player);
+            LOGGER.info("Triggered BLOCK_BREAK activators for player " + player.getName());
+        }
     }
     
     @Deprecated
     @EventHandler
     public void onMegaEntityPickupItem(MegaEntityPickupItemEvent event) {
         // This method is deprecated and no longer used
+        Player player = event.getPlayer();
+        CreativeWorld creativeWorld = worldManager.findCreativeWorldByBukkit(player.getWorld());
+
+        if (creativeWorld != null) {
+            CodeHandler codeHandler = creativeWorld.getCodeHandler();
+            // Create a game event
+            GameEvent gameEvent = new GameEvent("onEntityPickupItem");
+            gameEvent.setPlayer(player);
+            // Trigger all ENTITY_PICKUP_ITEM activators
+            codeHandler.handleEvent(ActivatorType.ENTITY_PICKUP_ITEM, gameEvent, player);
+            LOGGER.info("Triggered ENTITY_PICKUP_ITEM activators for player " + player.getName());
+        }
     }
     
     @Deprecated
     @EventHandler
     public void onMegaPlayerDeath(MegaPlayerDeathEvent event) {
         // This method is deprecated and no longer used
+        Player player = event.getPlayer();
+        CreativeWorld creativeWorld = worldManager.findCreativeWorldByBukkit(player.getWorld());
+
+        if (creativeWorld != null) {
+            CodeHandler codeHandler = creativeWorld.getCodeHandler();
+            // Create a game event
+            GameEvent gameEvent = new GameEvent("onPlayerDeath");
+            gameEvent.setPlayer(player);
+            // Trigger all PLAYER_DEATH activators
+            codeHandler.handleEvent(ActivatorType.PLAYER_DEATH, gameEvent, player);
+            LOGGER.info("Triggered PLAYER_DEATH activators for player " + player.getName());
+        }
     }
     
     @Deprecated
     @EventHandler
     public void onMegaPlayerQuit(MegaPlayerQuitEvent event) {
         // This method is deprecated and no longer used
+        Player player = event.getPlayer();
+        CreativeWorld creativeWorld = worldManager.findCreativeWorldByBukkit(player.getWorld());
+
+        if (creativeWorld != null) {
+            CodeHandler codeHandler = creativeWorld.getCodeHandler();
+            // Create a game event
+            GameEvent gameEvent = new GameEvent("onQuit");
+            gameEvent.setPlayer(player);
+            // Trigger all PLAYER_QUIT activators
+            codeHandler.handleEvent(ActivatorType.PLAYER_QUIT, gameEvent, player);
+            LOGGER.info("Triggered PLAYER_QUIT activators for player " + player.getName());
+        }
     }
     
     @Deprecated
     @EventHandler
     public void onMegaPlayerRespawn(MegaPlayerRespawnEvent event) {
         // This method is deprecated and no longer used
+        Player player = event.getPlayer();
+        CreativeWorld creativeWorld = worldManager.findCreativeWorldByBukkit(player.getWorld());
+
+        if (creativeWorld != null) {
+            CodeHandler codeHandler = creativeWorld.getCodeHandler();
+            // Create a game event
+            GameEvent gameEvent = new GameEvent("onRespawn");
+            gameEvent.setPlayer(player);
+            // Trigger all PLAYER_RESPAWN activators
+            codeHandler.handleEvent(ActivatorType.PLAYER_RESPAWN, gameEvent, player);
+            LOGGER.info("Triggered PLAYER_RESPAWN activators for player " + player.getName());
+        }
     }
     
     @Deprecated
     @EventHandler
     public void onMegaPlayerTeleport(MegaPlayerTeleportEvent event) {
         // This method is deprecated and no longer used
+        Player player = event.getPlayer();
+        CreativeWorld creativeWorld = worldManager.findCreativeWorldByBukkit(player.getWorld());
+
+        if (creativeWorld != null) {
+            CodeHandler codeHandler = creativeWorld.getCodeHandler();
+            // Create a game event
+            GameEvent gameEvent = new GameEvent("onTeleport");
+            gameEvent.setPlayer(player);
+            // Trigger all PLAYER_TELEPORT activators
+            codeHandler.handleEvent(ActivatorType.PLAYER_TELEPORT, gameEvent, player);
+            LOGGER.info("Triggered PLAYER_TELEPORT activators for player " + player.getName());
+        }
     }
     
     @Deprecated
     @EventHandler
     public void onMegaEntityDamage(MegaEntityDamageEvent event) {
         // This method is deprecated and no longer used
+        Player player = event.getPlayer();
+        CreativeWorld creativeWorld = worldManager.findCreativeWorldByBukkit(player.getWorld());
+
+        if (creativeWorld != null) {
+            CodeHandler codeHandler = creativeWorld.getCodeHandler();
+            // Create a game event
+            GameEvent gameEvent = new GameEvent("onEntityDamage");
+            gameEvent.setPlayer(player);
+            // Trigger all ENTITY_DAMAGE activators
+            codeHandler.handleEvent(ActivatorType.ENTITY_DAMAGE, gameEvent, player);
+            LOGGER.info("Triggered ENTITY_DAMAGE activators for player " + player.getName());
+        }
     }
     
     @Deprecated
     @EventHandler
     public void onMegaInventoryClick(MegaInventoryClickEvent event) {
         // This method is deprecated and no longer used
-    }
-    
-    @Deprecated
-    @EventHandler
-    public void onMegaInventoryOpen(MegaInventoryOpenEvent event) {
-        // This method is deprecated and no longer used
+        Player player = event.getPlayer();
+        CreativeWorld creativeWorld = worldManager.findCreativeWorldByBukkit(player.getWorld());
+
+        if (creativeWorld != null) {
+            CodeHandler codeHandler = creativeWorld.getCodeHandler();
+            // Create a game event
+            GameEvent gameEvent = new GameEvent("onInventoryClick");
+            gameEvent.setPlayer(player);
+            // Trigger all INVENTORY_CLICK activators
+            codeHandler.handleEvent(ActivatorType.INVENTORY_CLICK, gameEvent, player);
+            LOGGER.info("Triggered INVENTORY_CLICK activators for player " + player.getName());
+        }
     }
     
     @Deprecated
     @EventHandler
     public void onTick(com.megacreative.events.TickEvent event) {
         // This method is deprecated and no longer used
+        // For global events, we execute scripts in all loaded worlds
+        for (CreativeWorld creativeWorld : worldManager.getCreativeWorlds()) {
+            if (creativeWorld == null) continue;
+            
+            CodeHandler codeHandler = creativeWorld.getCodeHandler();
+            // Create a game event
+            GameEvent gameEvent = new GameEvent("onTick");
+            // Trigger all TICK activators
+            codeHandler.handleEvent(ActivatorType.TICK, gameEvent, null);
+            LOGGER.info("Triggered TICK activators for world " + creativeWorld.getName());
+        }
     }
 }

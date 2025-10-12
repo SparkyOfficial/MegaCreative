@@ -442,7 +442,7 @@ public class AdvancedScriptOptimizer {
                 suggestions.add(new OptimizationSuggestion(
                     "DuplicateBlocks",
                     "Found " + entry.getValue() + " duplicate code blocks",
-                    "Consider creating a reusable function or template for duplicate blocks",
+                    "Consider creating a reusable function for duplicate blocks",
                     OptimizationPriority.MEDIUM,
                     false,
                     null

@@ -211,8 +211,21 @@ public class ServiceRegistry implements DependencyContainer.Disposable {
         // BlockPlacementHandler will be created on demand, with lazy initialization of dependencies
         dependencyContainer.registerType(BlockPlacementHandler.class, BlockPlacementHandler.class);
         dependencyContainer.registerType(ConnectionVisualizer.class, ConnectionVisualizer.class);
-        dependencyContainer.registerType(BlockLinker.class, BlockLinker.class);
-        dependencyContainer.registerType(BlockHierarchyManager.class, BlockHierarchyManager.class);
+        // Register BlockLinker as a factory since it needs BlockPlacementHandler as a dependency
+        dependencyContainer.registerFactory(BlockLinker.class, (DependencyContainer.Supplier<BlockLinker>) () -> {
+            BlockPlacementHandler placementHandler = dependencyContainer.resolve(BlockPlacementHandler.class);
+            BlockLinker linker = new BlockLinker((MegaCreative) plugin);
+            // Set the shared location to block map from BlockPlacementHandler
+            linker.setSharedLocationToBlock(placementHandler.getBlockCodeBlocks());
+            return linker;
+        });
+        // Register BlockHierarchyManager as a factory since it needs BlockPlacementHandler as a dependency
+        dependencyContainer.registerFactory(BlockHierarchyManager.class, (DependencyContainer.Supplier<BlockHierarchyManager>) () -> {
+            BlockPlacementHandler placementHandler = dependencyContainer.resolve(BlockPlacementHandler.class);
+            BlockHierarchyManager hierarchyManager = new BlockHierarchyManager();
+            // We'll need to modify BlockHierarchyManager to accept a shared map
+            return hierarchyManager;
+        });
         dependencyContainer.registerType(WorldCodeRestorer.class, WorldCodeRestorer.class);
         dependencyContainer.registerType(CodeBlockSignManager.class, CodeBlockSignManager.class);
         // Register ScriptTriggerManager as a factory since it needs dependencies

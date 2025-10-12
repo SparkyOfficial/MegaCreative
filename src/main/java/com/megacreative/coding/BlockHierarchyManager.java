@@ -24,6 +24,32 @@ public class BlockHierarchyManager implements Listener {
     private static final Logger LOGGER = Logger.getLogger(BlockHierarchyManager.class.getName());
     
     private final Map<Location, CodeBlock> locationToBlock = new HashMap<>();
+    // Shared map with other connection managers
+    private Map<Location, CodeBlock> sharedLocationToBlock = new HashMap<>();
+    
+    /**
+     * Sets the shared location to block map
+     * @param sharedMap The shared map
+     */
+    public void setSharedLocationToBlock(Map<Location, CodeBlock> sharedMap) {
+        this.sharedLocationToBlock = sharedMap;
+    }
+    
+    /**
+     * Gets a block at a specific location, checking both local and shared maps
+     * @param location The location to check
+     * @return The code block at that location, or null if not found
+     */
+    private CodeBlock getBlockAtLocation(Location location) {
+        // First check our own map
+        CodeBlock block = locationToBlock.get(location);
+        if (block != null) {
+            return block;
+        }
+        
+        // Then check the shared map
+        return sharedLocationToBlock.get(location);
+    }
     
     /**
      * Handles block placement and establishes parent-child relationships
@@ -74,7 +100,8 @@ public class BlockHierarchyManager implements Listener {
                     childLocation.getBlockY(), 
                     parentZ
                 );
-                CodeBlock parentBlock = locationToBlock.get(parentLocation);
+                // Use the shared map to find parent blocks
+                CodeBlock parentBlock = getBlockAtLocation(parentLocation);
                 
                 if (parentBlock != null && isControlBlock(parentBlock)) {
                     LOGGER.fine("Found parent block at (" + parentX + ", " + parentLine + 
@@ -102,6 +129,13 @@ public class BlockHierarchyManager implements Listener {
     private String getLocationString(CodeBlock block) {
         // Find the location of this block in our map
         for (Map.Entry<Location, CodeBlock> entry : locationToBlock.entrySet()) {
+            if (entry.getValue() == block) {
+                Location loc = entry.getKey();
+                return "(" + loc.getBlockX() + ", " + loc.getBlockZ() + ")";
+            }
+        }
+        // Also check the shared map
+        for (Map.Entry<Location, CodeBlock> entry : sharedLocationToBlock.entrySet()) {
             if (entry.getValue() == block) {
                 Location loc = entry.getKey();
                 return "(" + loc.getBlockX() + ", " + loc.getBlockZ() + ")";

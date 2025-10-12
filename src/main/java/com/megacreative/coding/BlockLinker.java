@@ -22,6 +22,8 @@ import java.util.logging.Logger;
  *
  * Behandelt horizontale Verbindungen zwischen Codeblöcken (nextBlock-Beziehungen)
  * Hört auf CodeBlockPlacedEvent und stellt Verbindungen zwischen benachbarten Blöcken her
+ * 
+ * @author Андрій Будильников
  */
 public class BlockLinker implements Listener {
     
@@ -68,6 +70,22 @@ public class BlockLinker implements Listener {
     }
     
     /**
+     * Gets a block at a specific location, checking both local and shared maps
+     * @param location The location to check
+     * @return The code block at that location, or null if not found
+     */
+    private CodeBlock getBlockAtLocation(Location location) {
+        // First check our own map
+        CodeBlock block = locationToBlock.get(location);
+        if (block != null) {
+            return block;
+        }
+        
+        // Then check the shared map
+        return sharedLocationToBlock.get(location);
+    }
+    
+    /**
      * Handles block placement and establishes horizontal connections
      */
     @EventHandler
@@ -87,7 +105,7 @@ public class BlockLinker implements Listener {
         // Connect with previous block in the same line (horizontal connection)
         Location prevLocation = getPreviousLocationInLine(location);
         if (prevLocation != null) {
-            CodeBlock prevBlock = locationToBlock.get(prevLocation);
+            CodeBlock prevBlock = getBlockAtLocation(prevLocation);
             if (prevBlock != null && !prevBlock.isBracket()) { // Skip brackets
                 prevBlock.setNextBlock(codeBlock);
                 LOGGER.fine("Connected horizontal: " + prevLocation + " -> " + location);
@@ -101,7 +119,7 @@ public class BlockLinker implements Listener {
         // Connect with next block in the same line (for validation)
         Location nextLocation = getNextLocationInLine(location);
         if (nextLocation != null) {
-            CodeBlock nextBlock = locationToBlock.get(nextLocation);
+            CodeBlock nextBlock = getBlockAtLocation(nextLocation);
             if (nextBlock != null && !nextBlock.isBracket()) { // Skip brackets
                 codeBlock.setNextBlock(nextBlock);
                 LOGGER.fine("Connected horizontal: " + location + " -> " + nextLocation);
@@ -127,7 +145,7 @@ public class BlockLinker implements Listener {
             // Find matching closing bracket or end of control structure
             Location endLocation = findControlStructureEnd(location);
             if (endLocation != null) {
-                CodeBlock endBlock = locationToBlock.get(endLocation);
+                CodeBlock endBlock = getBlockAtLocation(endLocation);
                 if (endBlock != null) {
                     // Create connection to end of control structure
                     codeBlock.setNextBlock(endBlock);
@@ -145,7 +163,7 @@ public class BlockLinker implements Listener {
             // Find function end or return statement
             Location functionEndLocation = findFunctionEnd(location);
             if (functionEndLocation != null) {
-                CodeBlock functionEndBlock = locationToBlock.get(functionEndLocation);
+                CodeBlock functionEndBlock = getBlockAtLocation(functionEndLocation);
                 if (functionEndBlock != null) {
                     // Create connection to end of function
                     codeBlock.setNextBlock(functionEndBlock);
@@ -206,7 +224,7 @@ public class BlockLinker implements Listener {
         // Look for the next block at the same indentation level
         for (int x = startX + 1; x < maxBlocksPerLine; x++) {
             Location checkLocation = new Location(world, x, startLocation.getBlockY(), startLocation.getBlockZ());
-            CodeBlock checkBlock = locationToBlock.get(checkLocation);
+            CodeBlock checkBlock = getBlockAtLocation(checkLocation);
             
             if (checkBlock != null) {
                 // If we find a block at the same indentation level, it's the end of the control structure
@@ -241,7 +259,7 @@ public class BlockLinker implements Listener {
         // Look for a return statement or end of function
         for (int x = startX + 1; x < maxBlocksPerLine; x++) {
             Location checkLocation = new Location(world, x, startLocation.getBlockY(), startLocation.getBlockZ());
-            CodeBlock checkBlock = locationToBlock.get(checkLocation);
+            CodeBlock checkBlock = getBlockAtLocation(checkLocation);
             
             if (checkBlock != null) {
                 // If we find a return statement, it's the end of the function
@@ -311,7 +329,7 @@ public class BlockLinker implements Listener {
                 // Check if the next block actually exists at the expected location
                 Location expectedLocation = getNextLocationInLine(location);
                 if (expectedLocation != null) {
-                    CodeBlock actualBlock = locationToBlock.get(expectedLocation);
+                    CodeBlock actualBlock = getBlockAtLocation(expectedLocation);
                     if (actualBlock != nextBlock) {
                         LOGGER.warning("Invalid next block connection at " + location);
                         isValid = false;
@@ -357,7 +375,7 @@ public class BlockLinker implements Listener {
             // Re-establish horizontal connections
             Location prevLocation = getPreviousLocationInLine(location);
             if (prevLocation != null) {
-                CodeBlock prevBlock = locationToBlock.get(prevLocation);
+                CodeBlock prevBlock = getBlockAtLocation(prevLocation);
                 if (prevBlock != null && !prevBlock.isBracket()) {
                     prevBlock.setNextBlock(block);
                 }
@@ -365,7 +383,7 @@ public class BlockLinker implements Listener {
             
             Location nextLocation = getNextLocationInLine(location);
             if (nextLocation != null) {
-                CodeBlock nextBlock = locationToBlock.get(nextLocation);
+                CodeBlock nextBlock = getBlockAtLocation(nextLocation);
                 if (nextBlock != null && !nextBlock.isBracket()) {
                     block.setNextBlock(nextBlock);
                 }
