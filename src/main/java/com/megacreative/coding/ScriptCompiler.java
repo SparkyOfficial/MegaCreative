@@ -19,6 +19,7 @@ import com.megacreative.services.BlockConfigService;
 import com.megacreative.events.CodeBlockPlacedEvent;
 import com.megacreative.events.CodeBlockBrokenEvent;
 import org.bukkit.Location;
+import org.bukkit.World;
 import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.Listener;
@@ -211,39 +212,43 @@ public class ScriptCompiler implements Listener {
      * This should be called when the world is loaded or when significant changes are made
      * @param world the world to recompile scripts for
      */
-    public void recompileWorldScripts(org.bukkit.World world) {
+    public void compileWorldScripts(World world) {
         try {
             IWorldManager worldManager = plugin.getServiceRegistry().getWorldManager();
-            if (worldManager == null) {
-                return;
-            }
-            
             CreativeWorld creativeWorld = worldManager.findCreativeWorldByBukkit(world);
             if (creativeWorld == null) return;
             
+            // Get the block placement handler to access all code blocks
+            BlockPlacementHandler placementHandler = plugin.getServiceRegistry().getBlockPlacementHandler();
             
             List<CodeScript> newScripts = new ArrayList<>();
             
-            
-            for (Map.Entry<Location, CodeBlock> entry : blockLinker.getWorldBlocks(world).entrySet()) {
-                CodeBlock block = entry.getValue();
-                if (isEventBlock(block)) {
-                    try {
-                        CodeScript compiledScript = compileScriptFromEventBlock(block);
-                        if (compiledScript != null) {
-                            newScripts.add(compiledScript);
+            // Use the placement handler to get all blocks in the world
+            for (Map.Entry<Location, CodeBlock> entry : placementHandler.getBlockCodeBlocks().entrySet()) {
+                Location location = entry.getKey();
+                // Check if this block is in the specified world
+                if (location.getWorld().equals(world)) {
+                    CodeBlock block = entry.getValue();
+                    if (isEventBlock(block)) {
+                        try {
+                            CodeScript compiledScript = compileScriptFromEventBlock(block);
+                            if (compiledScript != null) {
+                                newScripts.add(compiledScript);
+                            }
+                        } catch (Exception e) {
+                            // Log the exception but continue processing other blocks
+                            plugin.getLogger().warning("Error compiling script from block: " + e.getMessage());
                         }
-                    } catch (Exception e) {
-                        
                     }
                 }
             }
-            
             
             creativeWorld.setScripts(newScripts);
             worldManager.saveWorld(creativeWorld);
             
         } catch (Exception e) {
+            // Log the exception
+            plugin.getLogger().warning("Error compiling world scripts: " + e.getMessage());
         }
     }
     

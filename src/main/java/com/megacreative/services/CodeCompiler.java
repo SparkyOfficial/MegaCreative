@@ -80,11 +80,8 @@ public class CodeCompiler {
         
         
         
-        
-        
         Map<Location, CodeBlock> scannedBlocks = scanWorldStructure(world);
         logger.info("World scan found " + scannedBlocks.size() + " code blocks");
-        
         
         
         
@@ -170,9 +167,6 @@ public class CodeCompiler {
         
         
         
-        
-        
-        
         buildScriptStructure(eventLocation, eventBlock, script);
         
         logger.fine("Completed compilation of script: " + script.getName());
@@ -204,9 +198,6 @@ public class CodeCompiler {
         
         
         
-        
-        
-        
         scanPhysicalBlocks(startLocation, startBlock);
         
         
@@ -216,8 +207,8 @@ public class CodeCompiler {
         if (scriptCompiler != null) {
             logger.fine("Recompiling world scripts with ScriptCompiler");
             
-            
-            scriptCompiler.recompileWorldScripts(startLocation.getWorld());
+            // Use the correct method name
+            scriptCompiler.compileWorldScripts(startLocation.getWorld());
         }
         
         logger.fine("Script structure building completed for script: " + script.getName());
@@ -254,10 +245,6 @@ public class CodeCompiler {
         int blocksProcessed = 0;
         
         logger.fine("Scanning physical blocks in area: (" + startX + "," + startZ + ") to (" + endX + "," + endZ + ")");
-        
-        
-        
-        
         
         
         
@@ -533,9 +520,6 @@ public class CodeCompiler {
         
         
         logger.info("Starting enhanced world scan for code structures in world: " + world.getName());
-        
-        
-        
         
         
         
@@ -1328,10 +1312,6 @@ public class CodeCompiler {
         
         
         
-        
-        
-        
-        
         String worldId = world.getName().replace("-code", "");
         if (!compiledCode.isEmpty()) {
             WorldCode.setCode(worldId, compiledCode);
@@ -1444,10 +1424,6 @@ public class CodeCompiler {
         
         
         logger.info("Code lines: " + codeLines.size());
-        
-        
-        
-        
         
         
         

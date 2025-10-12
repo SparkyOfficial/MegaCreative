@@ -207,53 +207,48 @@ public class ServiceRegistry implements DependencyContainer.Disposable {
     }
     
     private void initializeCodingServices() {
-        
-        
+        // Register coding service mappings
+        // BlockPlacementHandler will be created on demand, with lazy initialization of dependencies
         dependencyContainer.registerType(BlockPlacementHandler.class, BlockPlacementHandler.class);
         dependencyContainer.registerType(ConnectionVisualizer.class, ConnectionVisualizer.class);
-        
+        // Register BlockLinker as a factory since it needs BlockPlacementHandler as a dependency
         dependencyContainer.registerFactory(BlockLinker.class, (DependencyContainer.Supplier<BlockLinker>) () -> {
             BlockPlacementHandler placementHandler = dependencyContainer.resolve(BlockPlacementHandler.class);
-            BlockLinker linker = new BlockLinker((MegaCreative) plugin);
-            
-            linker.setSharedLocationToBlock(placementHandler.getBlockCodeBlocks());
-            return linker;
+            return new BlockLinker((MegaCreative) plugin, placementHandler);
         });
-        
+        // Register BlockHierarchyManager as a factory since it needs BlockPlacementHandler as a dependency
         dependencyContainer.registerFactory(BlockHierarchyManager.class, (DependencyContainer.Supplier<BlockHierarchyManager>) () -> {
             BlockPlacementHandler placementHandler = dependencyContainer.resolve(BlockPlacementHandler.class);
-            BlockHierarchyManager hierarchyManager = new BlockHierarchyManager();
-            
-            return hierarchyManager;
+            return new BlockHierarchyManager(placementHandler);
         });
         dependencyContainer.registerType(WorldCodeRestorer.class, WorldCodeRestorer.class);
         dependencyContainer.registerType(CodeBlockSignManager.class, CodeBlockSignManager.class);
-        
+        // Register ScriptTriggerManager as a factory since it needs dependencies
         dependencyContainer.registerFactory(ScriptTriggerManager.class, (DependencyContainer.Supplier<ScriptTriggerManager>) () -> {
             IWorldManager worldManager = dependencyContainer.resolve(IWorldManager.class);
             PlayerModeManager playerModeManager = dependencyContainer.resolve(PlayerModeManager.class);
             return new ScriptTriggerManager((MegaCreative) plugin, worldManager, playerModeManager);
         });
         
-        
+        // Register interfaces for factories
         dependencyContainer.registerType(com.megacreative.interfaces.IActionFactory.class, ActionFactory.class);
         dependencyContainer.registerType(com.megacreative.interfaces.IConditionFactory.class, ConditionFactory.class);
         dependencyContainer.registerType(com.megacreative.interfaces.IScriptEngine.class, DefaultScriptEngine.class);
         
-        
+        // Register concrete classes
         dependencyContainer.registerFactory(ActionFactory.class, (DependencyContainer.Supplier<ActionFactory>) () -> 
             new ActionFactory((MegaCreative) plugin));
         dependencyContainer.registerFactory(ConditionFactory.class, (DependencyContainer.Supplier<ConditionFactory>) () -> 
             new ConditionFactory((MegaCreative) plugin));
         
-        
+        // Register ScriptCompiler as a factory since it needs BlockLinker as a dependency
         dependencyContainer.registerFactory(ScriptCompiler.class, (DependencyContainer.Supplier<ScriptCompiler>) () -> {
             BlockConfigService blockConfigService = dependencyContainer.resolve(BlockConfigService.class);
             BlockLinker blockLinker = dependencyContainer.resolve(BlockLinker.class);
             return new ScriptCompiler((MegaCreative) plugin, blockConfigService, blockLinker);
         });
         
-        
+        // Register ScriptEngine as a factory - this is critical for proper initialization
         dependencyContainer.registerFactory(ScriptEngine.class, (DependencyContainer.Supplier<ScriptEngine>) () -> {
             VariableManager variableManager = dependencyContainer.resolve(VariableManager.class);
             VisualDebugger visualDebugger = dependencyContainer.resolve(VisualDebugger.class);
