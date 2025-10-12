@@ -24,7 +24,7 @@ public class OptimizationSuggestion {
         this.location = location;
     }
     
-    // Getters
+    
     public String getType() {
         return type;
     }

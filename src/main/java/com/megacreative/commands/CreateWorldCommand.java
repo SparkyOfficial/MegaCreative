@@ -67,7 +67,7 @@ public class CreateWorldCommand implements CommandExecutor {
             return true;
         }
         
-        // Check if player can create more worlds
+        
         if (worldManager.getPlayerWorldCount(player) >= 5) {
             player.sendMessage("§c❌ Вы уже создали максимальное количество миров (5)!");
             return true;
@@ -91,7 +91,7 @@ public class CreateWorldCommand implements CommandExecutor {
         String typeStr = args[0].toLowerCase();
         CreativeWorldType worldType;
         
-        // 🎆 ENHANCED: Check for dual world creation mode
+        
         boolean isDualMode = false;
         
         try {
@@ -101,19 +101,19 @@ public class CreateWorldCommand implements CommandExecutor {
             return true;
         }
         
-        // 🎆 ENHANCED: Parse arguments for dual mode and world name
+        
         String worldName;
         int nameStartIndex = 1;
         
-        // Check for --dual flag
+        
         if (args.length > 1 && args[1].equals("--dual")) {
             isDualMode = true;
             nameStartIndex = 2;
         }
         
-        // Generate world name - use provided name or generate default
+        
         if (args.length > nameStartIndex) {
-            // Join all remaining arguments to form the world name
+            
             StringBuilder nameBuilder = new StringBuilder();
             for (int i = nameStartIndex; i < args.length; i++) {
                 if (i > nameStartIndex) nameBuilder.append(" ");
@@ -121,11 +121,11 @@ public class CreateWorldCommand implements CommandExecutor {
             }
             worldName = nameBuilder.toString();
         } else {
-            // Generate default world name
+            
             worldName = player.getName() + "'s World " + (worldManager.getPlayerWorldCount(player) + 1);
         }
         
-        // Validate world name
+        
         if (worldName.length() < 3 || worldName.length() > 20) {
             player.sendMessage("§cНазвание мира должно содержать от 3 до 20 символов!");
             return true;
@@ -136,7 +136,7 @@ public class CreateWorldCommand implements CommandExecutor {
             return true;
         }
         
-        // Create the world
+        
         if (isDualMode) {
             player.sendMessage("§a⏳ Создание парных миров \"" + worldName + "\"...");
             player.sendMessage("§7🔧 Мир разработки: " + worldName + "-code");
@@ -149,8 +149,8 @@ public class CreateWorldCommand implements CommandExecutor {
             worldManager.createWorld(player, worldName, worldType);
         }
         
-        // The world creation is handled in the WorldManager
-        // It will send appropriate messages to the player
+        
+        
         
         return true;
     }

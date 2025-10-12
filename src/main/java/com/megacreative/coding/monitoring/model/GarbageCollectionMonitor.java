@@ -40,15 +40,15 @@ public class GarbageCollectionMonitor {
             gcTime += gcBean.getCollectionTime();
         }
         
-        // Calculate deltas since last check
+        
         long gcCountDelta = gcCount - lastGcCount;
         long gcTimeDelta = gcTime - lastGcTime;
         
-        // Update last values
+        
         lastGcCount = gcCount;
         lastGcTime = gcTime;
         
-        // Update totals
+        
         totalGcCount.addAndGet(gcCountDelta);
         totalGcTime.addAndGet(gcTimeDelta);
         
@@ -61,7 +61,7 @@ public class GarbageCollectionMonitor {
     public void start() {
         if (!isRunning) {
             isRunning = true;
-            // Initialize the counters
+            
             getCurrentStatistics();
             log.info("GarbageCollectionMonitor started");
         }

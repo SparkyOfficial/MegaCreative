@@ -18,7 +18,7 @@ import java.util.concurrent.ConcurrentHashMap;
  */
 public class AdvancedBlockGroup extends BlockGroup {
     
-    // Getters and Setters
+    
     public Map<String, Object> getMetadata() { return metadata; }
     public void setMetadata(Map<String, Object> metadata) { this.metadata.clear(); this.metadata.putAll(metadata); }
     
@@ -31,7 +31,7 @@ public class AdvancedBlockGroup extends BlockGroup {
     public String getTemplateId() { return templateId; }
     public void setTemplateId(String templateId) { this.templateId = templateId; }
     
-    // Group metadata
+    
     public boolean isLocked() { return isLocked; }
     public void setLocked(boolean locked) { isLocked = locked; }
     
@@ -53,7 +53,7 @@ public class AdvancedBlockGroup extends BlockGroup {
     public String getVersion() { return version; }
     public void setVersion(String version) { this.version = version; }
     
-    // equals and hashCode
+    
     @Override
     public boolean equals(Object o) {
         if (this == o) return true;
@@ -80,21 +80,21 @@ public class AdvancedBlockGroup extends BlockGroup {
                 conditionExpression, dependencies, version);
     }
     
-    // Advanced features
+    
     private final Map<String, Object> metadata = new ConcurrentHashMap<>();
     private final List<UUID> nestedGroups = new ArrayList<>();
     private final Set<String> tags = new HashSet<>();
-    private String templateId; // Reference to a template this group was created from
-    private boolean isLocked = false; // Whether this group is locked from editing
-    private ExecutionMode executionMode = ExecutionMode.SEQUENTIAL; // How blocks in this group are executed
-    private int executionLimit = -1; // Maximum number of executions (-1 for unlimited)
-    private int executionCount = 0; // Current execution count
+    private String templateId; 
+    private boolean isLocked = false; 
+    private ExecutionMode executionMode = ExecutionMode.SEQUENTIAL; 
+    private int executionLimit = -1; 
+    private int executionCount = 0; 
     
-    // Conditional execution
-    private String conditionExpression; // Expression that must be true for group to execute
-    private List<UUID> dependencies = new ArrayList<>(); // Groups that must execute before this one
     
-    // Versioning
+    private String conditionExpression; 
+    private List<UUID> dependencies = new ArrayList<>(); 
+    
+    
     private String version = "1.0";
     private long lastModified = System.currentTimeMillis();
     
@@ -199,12 +199,12 @@ public class AdvancedBlockGroup extends BlockGroup {
      * Checks if this group can be executed based on its conditions
      */
     public boolean canExecute() {
-        // Check execution limit
+        
         if (executionLimit > 0 && executionCount >= executionLimit) {
             return false;
         }
         
-        // Check if locked
+        
         if (isLocked) {
             return false;
         }
@@ -252,13 +252,13 @@ public class AdvancedBlockGroup extends BlockGroup {
      * Creates a copy of this group
      */
     public AdvancedBlockGroup copy(String newName, UUID newOwnerId) {
-        // Create a deep copy of the blocks map
+        
         Map<Location, CodeBlock> blocksCopy = new HashMap<>();
         for (Map.Entry<Location, CodeBlock> entry : this.getBlocks().entrySet()) {
             blocksCopy.put(entry.getKey().clone(), entry.getValue());
         }
         
-        // Create a new group with the copied blocks
+        
         AdvancedBlockGroup copy = new AdvancedBlockGroup(
             UUID.randomUUID(),
             newName != null ? newName : this.getName() + "_copy",
@@ -267,7 +267,7 @@ public class AdvancedBlockGroup extends BlockGroup {
             this.getBounds()
         );
         
-        // Copy advanced properties
+        
         copy.setTemplateId(this.getTemplateId());
         return copy;
     }
@@ -276,9 +276,9 @@ public class AdvancedBlockGroup extends BlockGroup {
      * Execution modes for block groups
      */
     public enum ExecutionMode {
-        SEQUENTIAL,    // Execute blocks in order
-        PARALLEL,      // Execute all blocks simultaneously
-        RANDOM,        // Execute blocks in random order
-        CONDITIONAL    // Execute blocks based on individual conditions
+        SEQUENTIAL,    
+        PARALLEL,      
+        RANDOM,        
+        CONDITIONAL    
     }
 }

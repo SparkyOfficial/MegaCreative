@@ -17,7 +17,7 @@ public class GetServerVarAction implements BlockAction {
     @Override
     public ExecutionResult execute(CodeBlock block, ExecutionContext context) {
         try {
-            // Get variable parameters from the new parameter system
+            
             DataValue nameValue = block.getParameter("name");
             DataValue targetValue = block.getParameter("target");
             
@@ -29,12 +29,12 @@ public class GetServerVarAction implements BlockAction {
                 return ExecutionResult.error("No target variable provided");
             }
 
-            // Resolve any placeholders in the parameters
+            
             ParameterResolver resolver = new ParameterResolver(context);
             DataValue resolvedName = resolver.resolve(context, nameValue);
             DataValue resolvedTarget = resolver.resolve(context, targetValue);
             
-            // Parse parameters
+            
             String varName = resolvedName.asString();
             String targetVar = resolvedTarget.asString();
             
@@ -46,12 +46,12 @@ public class GetServerVarAction implements BlockAction {
                 return ExecutionResult.error("Invalid target variable");
             }
 
-            // Get the actual variable value from the VariableManager
+            
             VariableManager variableManager = context.getPlugin().getServiceRegistry().getVariableManager();
             DataValue serverVar = variableManager.getServerVariable(varName);
             Object varValue = serverVar != null ? serverVar.getValue() : "";
             
-            // Store the value in the target variable (using local scope)
+            
             variableManager.setLocalVariable(context.getScriptId(), targetVar, DataValue.of(varValue));
             
             context.getPlugin().getLogger().info("Getting server variable " + varName + " into " + targetVar);

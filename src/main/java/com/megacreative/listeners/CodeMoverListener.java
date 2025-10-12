@@ -32,7 +32,7 @@ public class CodeMoverListener implements Listener {
     
     @EventHandler
     public void onPlayerInteract(PlayerInteractEvent event) {
-        // Fix double firing by only processing main hand
+        
         if (event.getHand() != org.bukkit.inventory.EquipmentSlot.HAND) {
             return;
         }
@@ -40,12 +40,12 @@ public class CodeMoverListener implements Listener {
         Player player = event.getPlayer();
         ItemStack item = player.getInventory().getItemInMainHand();
         
-        // Check if player is using the code mover tool
+        
         if (!isMoverTool(item)) {
             return;
         }
         
-        // Only work in dev worlds
+        
         if (!isInDevWorld(player)) {
             player.sendMessage("§cИнструмент перемещения работает только в мирах разработки!");
             return;
@@ -53,15 +53,15 @@ public class CodeMoverListener implements Listener {
         
         event.setCancelled(true);
         
-        // Handle different actions
+        
         if (event.getAction() == Action.RIGHT_CLICK_BLOCK && player.isSneaking()) {
-            // Shift + Right-click: Copy chain
+            
             copyChain(player, event.getClickedBlock());
         } else if (event.getAction() == Action.RIGHT_CLICK_BLOCK) {
-            // Right-click: Paste chain
+            
             pasteChain(player, event.getClickedBlock());
         } else if (event.getAction() == Action.LEFT_CLICK_AIR || event.getAction() == Action.LEFT_CLICK_BLOCK) {
-            // Left-click: Clear clipboard
+            
             clearClipboard(player);
         }
     }
@@ -89,7 +89,7 @@ public class CodeMoverListener implements Listener {
             return;
         }
         
-        // Collect the entire chain starting from this block
+        
         List<CodeBlock> chain = new ArrayList<>();
         List<Location> locations = new ArrayList<>();
         
@@ -100,7 +100,7 @@ public class CodeMoverListener implements Listener {
             return;
         }
         
-        // Store in clipboard
+        
         clipboard.put(player.getUniqueId(), chain);
         clipboardLocations.put(player.getUniqueId(), locations);
         
@@ -134,67 +134,67 @@ public class CodeMoverListener implements Listener {
         
         Location pasteLoc = clickedBlock.getLocation();
         
-        // Calculate offset from original first block to paste location
+        
         Location originalFirst = originalLocations.get(0);
         int xOffset = pasteLoc.getBlockX() - originalFirst.getBlockX();
         int zOffset = pasteLoc.getBlockZ() - originalFirst.getBlockZ();
         
-        // Remove old blocks from their locations
+        
         for (Location oldLoc : originalLocations) {
             Block block = oldLoc.getBlock();
             if (block.getType() != Material.AIR) {
                 block.setType(Material.AIR);
-                // Remove signs and containers
+                
                 removeSignFromBlock(oldLoc);
                 removeContainerAboveBlock(oldLoc);
             }
             placementHandler.getBlockCodeBlocks().remove(oldLoc);
         }
         
-        // Create copies of blocks to avoid modifying originals in clipboard
+        
         List<CodeBlock> newChain = new ArrayList<>();
         
         for (int i = 0; i < chainToPaste.size(); i++) {
             CodeBlock oldBlock = chainToPaste.get(i);
             Location oldLoc = originalLocations.get(i);
             
-            // Calculate new location with offset
+            
             Location newLoc = new Location(
                 pasteLoc.getWorld(),
                 oldLoc.getBlockX() + xOffset,
-                pasteLoc.getBlockY(), // Use paste location Y
+                pasteLoc.getBlockY(), 
                 oldLoc.getBlockZ() + zOffset
             );
             
-            // Validate new location
+            
             if (!isValidCodePosition(newLoc.getBlockX(), newLoc.getBlockZ())) {
                 player.sendMessage("§cНе удается вставить блок в позицию: " + newLoc.getBlockX() + ", " + newLoc.getBlockZ());
                 continue;
             }
             
-            // Create a deep copy of the block
+            
             CodeBlock newBlock = oldBlock.clone();
             newChain.add(newBlock);
             
-            // Place the block physically
+            
             Block physicalBlock = newLoc.getBlock();
             physicalBlock.setType(newBlock.getMaterial());
             
-            // Handle special block types
+            
             if (newBlock.isBracket()) {
                 setPistonDirection(physicalBlock, newBlock.getBracketType());
                 updateBracketSign(newLoc, newBlock.getBracketType());
             } else {
-                // Create normal sign
+                
                 setSignOnBlock(newLoc, getBlockDisplayName(newBlock));
             }
             
-            // Add to placement handler
+            
             placementHandler.getBlockCodeBlocks().put(newLoc, newBlock);
         }
         
-        // In the new architecture, connections are handled automatically by BlockLinker and BlockHierarchyManager
-        // No need to manually rebuild connections
+        
+        
         
         player.sendMessage("§aЦепочка из " + newChain.size() + " блоков вставлена!");
         plugin.getLogger().info("Player " + player.getName() + " pasted " + newChain.size() + " code blocks");
@@ -216,14 +216,14 @@ public class CodeMoverListener implements Listener {
                              List<CodeBlock> chain, List<Location> locations, 
                              BlockPlacementHandler placementHandler) {
         if (currentBlock == null || chain.contains(currentBlock)) {
-            return; // Avoid infinite loops
+            return; 
         }
         
-        // Add current block to chain
+        
         chain.add(currentBlock);
         locations.add(currentLoc);
         
-        // Follow next block in sequence
+        
         CodeBlock nextBlock = currentBlock.getNextBlock();
         if (nextBlock != null) {
             Location nextLoc = findLocationOfBlock(nextBlock, placementHandler);
@@ -232,7 +232,7 @@ public class CodeMoverListener implements Listener {
             }
         }
         
-        // Follow child blocks (for conditionals, loops)
+        
         for (CodeBlock childBlock : currentBlock.getChildren()) {
             Location childLoc = findLocationOfBlock(childBlock, placementHandler);
             if (childLoc != null) {
@@ -275,7 +275,7 @@ public class CodeMoverListener implements Listener {
         return player.getWorld().getName().endsWith("_dev");
     }
     
-    // Helper methods for block placement (similar to BlockPlacementHandler)
+    
     
     private void setPistonDirection(Block pistonBlock, CodeBlock.BracketType bracketType) {
         if (pistonBlock.getBlockData() instanceof org.bukkit.block.data.type.Piston pistonData) {
@@ -289,7 +289,7 @@ public class CodeMoverListener implements Listener {
     }
     
     private void updateBracketSign(Location location, CodeBlock.BracketType bracketType) {
-        // Implementation similar to BlockPlacementHandler.updateBracketSign()
+        
         removeSignFromBlock(location);
         
         Block block = location.getBlock();
@@ -317,7 +317,7 @@ public class CodeMoverListener implements Listener {
     }
     
     private void setSignOnBlock(Location location, String text) {
-        // Implementation similar to BlockPlacementHandler.setSignOnBlock()
+        
         removeSignFromBlock(location);
         
         Block block = location.getBlock();
@@ -376,7 +376,7 @@ public class CodeMoverListener implements Listener {
      * Validates if a position is valid for code placement
      */
     private boolean isValidCodePosition(int x, int z) {
-        // Basic validation - can be enhanced based on DevWorldGenerator logic
-        return x >= 0 && x < 50 && z >= 0; // Adjust limits as needed
+        
+        return x >= 0 && x < 50 && z >= 0; 
     }
 }

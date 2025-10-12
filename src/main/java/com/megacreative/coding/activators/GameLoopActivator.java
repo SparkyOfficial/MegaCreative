@@ -16,7 +16,7 @@ import java.util.concurrent.atomic.AtomicInteger;
  */
 public class GameLoopActivator extends NamedActivator {
     
-    private int ticks = 20; // Default to 1 second (20 ticks)
+    private int ticks = 20; 
     private int currentTicks = ticks;
     private GameEvent gameEvent;
     
@@ -60,8 +60,8 @@ public class GameLoopActivator extends NamedActivator {
     
     @Override
     public void execute(GameEvent gameEvent, List<Entity> selectedEntities, int stackCounter, AtomicInteger callCounter) {
-        // For game loop, we might want to select all players in the world
-        // This would be implemented based on the specific requirements
+        
+        
         super.execute(gameEvent, selectedEntities, stackCounter, callCounter);
     }
 }

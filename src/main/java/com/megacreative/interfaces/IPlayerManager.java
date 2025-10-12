@@ -205,7 +205,7 @@ public interface IPlayerManager {
      */
     boolean isFavorite(UUID playerId, String worldId);
     
-    // 🎆 ENHANCED: World tracking methods for dual world architecture
+    
     
     /**
      * Tracks player entry into a world and mode

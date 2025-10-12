@@ -52,7 +52,7 @@ public class AnimatedParticleSystem {
         
         isRunning = true;
         long startTime = System.currentTimeMillis();
-        long endTime = startTime + (durationTicks * 50); // 50ms per tick
+        long endTime = startTime + (durationTicks * 50); 
         
         animationTask = new BukkitRunnable() {
             @Override
@@ -63,17 +63,17 @@ public class AnimatedParticleSystem {
                     return;
                 }
                 
-                // Calculate progress (0.0 to 1.0)
+                
                 double progress = (double) (currentTime - startTime) / (endTime - startTime);
                 
-                // Update and render all animations
+                
                 for (ParticleAnimation animation : animations) {
                     animation.update(progress);
                     List<Vector3D> particles = animation.getParticles(progress);
                     ParticleShapeGenerator.spawnParticles(player, particle, particles, center);
                 }
             }
-        }.runTaskTimer(plugin, 0L, 1L); // Run every tick
+        }.runTaskTimer(plugin, 0L, 1L); 
         
         return this;
     }
@@ -153,12 +153,12 @@ public class AnimatedParticleSystem {
                 center, radius, particleCount, new Vector3D(0, 1, 0)
             );
             
-            // Apply rotation
+            
             for (int i = 0; i < currentParticles.size(); i++) {
                 Vector3D particle = currentParticles.get(i);
                 Vector3D relative = particle.subtract(center);
                 
-                // Rotate around the rotation axis
+                
                 double angle = currentRotation;
                 relative = relative.rotateX(angle * rotationAxis.x)
                                   .rotateY(angle * rotationAxis.y)
@@ -199,7 +199,7 @@ public class AnimatedParticleSystem {
         }
         
         private void updateParticles(double progress) {
-            // Calculate current radius based on sine wave
+            
             double radius = minRadius + (maxRadius - minRadius) * 
                           (0.5 + 0.5 * Math.sin(progress * Math.PI * 2));
             
@@ -243,7 +243,7 @@ public class AnimatedParticleSystem {
         }
         
         private void updateParticles(double progress) {
-            // Move the wave by adjusting the phase
+            
             double phase = progress * Math.PI * 4;
             
             currentParticles = ParticleShapeGenerator.createWave(

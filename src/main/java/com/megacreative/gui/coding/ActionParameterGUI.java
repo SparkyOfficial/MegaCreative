@@ -43,11 +43,11 @@ public class ActionParameterGUI implements GUIManager.ManagedGUIInterface {
     private final GUIManager guiManager;
     private final BlockConfigService blockConfigService;
     
-    // 🎆 Enhanced features
+    
     private boolean hasUnsavedChanges = false;
     private final Map<Integer, String> slotValidationErrors = new HashMap<>();
     private final Map<Integer, Boolean> slotValidationStatus = new HashMap<>();
-    // 🎆 NEW: Store current values for dependent validation
+    
     private final Map<Integer, String> slotCurrentValues = new HashMap<>();
     
     /**
@@ -65,7 +65,7 @@ public class ActionParameterGUI implements GUIManager.ManagedGUIInterface {
         this.guiManager = plugin.getServiceRegistry().getGuiManager();
         this.blockConfigService = plugin.getServiceRegistry().getBlockConfigService();
         
-        // Create inventory with appropriate size (54 slots for double chest GUI)
+        
         this.inventory = Bukkit.createInventory(null, 54, "§8Настройка: " + actionId);
         
         setupInventory();
@@ -77,20 +77,20 @@ public class ActionParameterGUI implements GUIManager.ManagedGUIInterface {
     private void setupInventory() {
         inventory.clear();
         
-        // Add decorative border with category-specific materials
+        
         ItemStack borderItem = new ItemStack(Material.BLACK_STAINED_GLASS_PANE);
         ItemMeta borderMeta = borderItem.getItemMeta();
         borderMeta.setDisplayName(" ");
         borderItem.setItemMeta(borderMeta);
         
-        // Fill border slots
+        
         for (int i = 0; i < 54; i++) {
             if (i < 9 || i >= 45 || i % 9 == 0 || i % 9 == 8) {
                 inventory.setItem(i, borderItem);
             }
         }
         
-        // Add action information with enhanced visual design
+        
         ItemStack infoItem = new ItemStack(Material.BOOK);
         ItemMeta infoMeta = infoItem.getItemMeta();
         infoMeta.setDisplayName("§e§l" + actionId);
@@ -110,13 +110,13 @@ public class ActionParameterGUI implements GUIManager.ManagedGUIInterface {
         infoItem.setItemMeta(infoMeta);
         inventory.setItem(4, infoItem);
         
-        // Load action-specific configuration
+        
         loadActionConfiguration();
         
-        // Load existing parameters from the code block
+        
         loadExistingParameters();
         
-        // Add back button
+        
         ItemStack backButton = new ItemStack(Material.ARROW);
         ItemMeta backMeta = backButton.getItemMeta();
         backMeta.setDisplayName("§c⬅ Назад");
@@ -131,7 +131,7 @@ public class ActionParameterGUI implements GUIManager.ManagedGUIInterface {
      * Loads the action configuration from coding_blocks.yml and sets up placeholder items
      */
     private void loadActionConfiguration() {
-        // Get the action configurations directly from BlockConfigService
+        
         var actionConfigurations = blockConfigService.getActionConfigurations();
         if (actionConfigurations == null) {
             player.sendMessage("§eИнформация: Используются базовые настройки для " + actionId);
@@ -139,10 +139,10 @@ public class ActionParameterGUI implements GUIManager.ManagedGUIInterface {
             return;
         }
         
-        // Get configuration for this specific action
+        
         var actionConfig = actionConfigurations.getConfigurationSection(actionId);
         if (actionConfig == null) {
-            // No specific configuration, use generic slots
+            
             player.sendMessage("§eИнформация: Конфигурация для " + actionId + " не найдена, используются базовые слоты");
             setupGenericSlots();
             return;
@@ -150,19 +150,19 @@ public class ActionParameterGUI implements GUIManager.ManagedGUIInterface {
         
         player.sendMessage("§a✓ Загружена конфигурация для " + actionId);
         
-        // Check for named slots configuration
+        
         var slotsConfig = actionConfig.getConfigurationSection("slots");
         if (slotsConfig != null) {
             setupNamedSlots(slotsConfig);
         }
         
-        // Check for item groups configuration  
+        
         var itemGroupsConfig = actionConfig.getConfigurationSection("item_groups");
         if (itemGroupsConfig != null) {
             setupItemGroups(itemGroupsConfig);
         }
         
-        // If neither slots nor item_groups were configured, use generic setup
+        
         if (slotsConfig == null && itemGroupsConfig == null) {
             player.sendMessage("§eИнформация: Слоты не настроены для " + actionId + ", используются базовые");
             setupGenericSlots();
@@ -178,8 +178,8 @@ public class ActionParameterGUI implements GUIManager.ManagedGUIInterface {
         for (String slotKey : slotsConfig.getKeys(false)) {
             try {
                 int slotIndex = Integer.parseInt(slotKey);
-                // Adjust slot index for the larger inventory (54 slots)
-                int adjustedSlot = slotIndex + 9; // Start from row 2
+                
+                int adjustedSlot = slotIndex + 9; 
                 if (adjustedSlot < 9 || adjustedSlot >= 45) {
                     plugin.getLogger().warning("Неверный индекс слота в конфигурации: " + slotKey + " для " + actionId);
                     continue;
@@ -193,7 +193,7 @@ public class ActionParameterGUI implements GUIManager.ManagedGUIInterface {
                 String placeholderItem = slotConfig.getString("placeholder_item", "PAPER");
                 String slotName = slotConfig.getString("slot_name", "slot_" + slotIndex);
                 
-                // Create placeholder item
+                
                 Material material = Material.matchMaterial(placeholderItem);
                 if (material == null) {
                     plugin.getLogger().warning("Неверный материал: " + placeholderItem + " для " + actionId + ", используется PAPER");
@@ -206,11 +206,11 @@ public class ActionParameterGUI implements GUIManager.ManagedGUIInterface {
                     meta.setDisplayName(name);
                     List<String> lore = new ArrayList<>();
                     
-                    // Split long descriptions into multiple lines
+                    
                     String[] descLines = description.split("\\. ");
                     for (String line : descLines) {
                         if (line.length() > 40) {
-                            // Split long lines
+                            
                             String[] words = line.split(" ");
                             StringBuilder currentLine = new StringBuilder();
                             for (String word : words) {
@@ -242,7 +242,7 @@ public class ActionParameterGUI implements GUIManager.ManagedGUIInterface {
                 inventory.setItem(adjustedSlot, placeholder);
                 configuredSlots++;
             } catch (NumberFormatException e) {
-                // Invalid slot index, skip
+                
                 plugin.getLogger().warning("Неверный формат индекса слота: " + slotKey + " для " + actionId);
             }
         }
@@ -265,7 +265,7 @@ public class ActionParameterGUI implements GUIManager.ManagedGUIInterface {
             String description = groupConfig.getString("description", "Описание группы");
             String placeholderItem = groupConfig.getString("placeholder_item", "CHEST");
             
-            // Create placeholder items for each slot in the group
+            
             Material material = Material.matchMaterial(placeholderItem);
             if (material == null) material = Material.CHEST;
             
@@ -284,9 +284,9 @@ public class ActionParameterGUI implements GUIManager.ManagedGUIInterface {
                 placeholder.setItemMeta(meta);
             }
             
-            // Place placeholder items in all slots of the group (adjusted for larger inventory)
+            
             for (int slot : slots) {
-                int adjustedSlot = slot + 9; // Start from row 2
+                int adjustedSlot = slot + 9; 
                 if (adjustedSlot >= 9 && adjustedSlot < 45) {
                     inventory.setItem(adjustedSlot, placeholder);
                 }
@@ -298,7 +298,7 @@ public class ActionParameterGUI implements GUIManager.ManagedGUIInterface {
      * Sets up generic slots when no specific configuration is found
      */
     private void setupGenericSlots() {
-        // Create generic placeholder items for slots 10-44 (main area)
+        
         ItemStack placeholder = new ItemStack(Material.PAPER);
         ItemMeta meta = placeholder.getItemMeta();
         if (meta != null) {
@@ -311,7 +311,7 @@ public class ActionParameterGUI implements GUIManager.ManagedGUIInterface {
         }
         
         for (int i = 10; i < 44; i++) {
-            // Skip border slots
+            
             if (i % 9 != 0 && i % 9 != 8) {
                 inventory.setItem(i, placeholder);
             }
@@ -328,15 +328,15 @@ public class ActionParameterGUI implements GUIManager.ManagedGUIInterface {
         CodeBlock codeBlock = placementHandler.getCodeBlock(blockLocation);
         if (codeBlock == null) return;
         
-        // Load existing configuration items
+        
         Map<Integer, ItemStack> configItems = codeBlock.getConfigItems();
         if (configItems != null) {
             for (Map.Entry<Integer, ItemStack> entry : configItems.entrySet()) {
                 int slot = entry.getKey();
                 ItemStack item = entry.getValue();
                 
-                // Adjust slot index for the larger inventory
-                int adjustedSlot = slot + 9; // Start from row 2
+                
+                int adjustedSlot = slot + 9; 
                 if (adjustedSlot >= 9 && adjustedSlot < 45 && item != null && !item.getType().isAir()) {
                     inventory.setItem(adjustedSlot, item);
                 }
@@ -355,13 +355,13 @@ public class ActionParameterGUI implements GUIManager.ManagedGUIInterface {
         CodeBlock codeBlock = placementHandler.getCodeBlock(blockLocation);
         if (codeBlock == null) return;
         
-        // 🎆 ENHANCED: Check validation status before saving
+        
         boolean hasErrors = false;
         boolean hasWarnings = false;
         List<String> errorMessages = new ArrayList<>();
         List<String> warningMessages = new ArrayList<>();
         
-        // Check for validation errors
+        
         for (Map.Entry<Integer, String> entry : slotValidationErrors.entrySet()) {
             if (entry.getValue() != null) {
                 hasErrors = true;
@@ -369,7 +369,7 @@ public class ActionParameterGUI implements GUIManager.ManagedGUIInterface {
             }
         }
         
-        // Check for required slots that are empty
+        
         for (int slot = 0; slot < inventory.getSize(); slot++) {
             if (isSlotRequired(slot)) {
                 ItemStack item = inventory.getItem(slot);
@@ -380,7 +380,7 @@ public class ActionParameterGUI implements GUIManager.ManagedGUIInterface {
             }
         }
         
-        // 🎆 NEW: Check for dependent parameter errors
+        
         for (Map.Entry<Integer, String> entry : slotValidationErrors.entrySet()) {
             String error = entry.getValue();
             if (error != null && error.startsWith("Доступно только если")) {
@@ -389,7 +389,7 @@ public class ActionParameterGUI implements GUIManager.ManagedGUIInterface {
             }
         }
         
-        // Provide feedback to player
+        
         if (hasErrors && !errorMessages.isEmpty()) {
             player.sendMessage("§c⚠ Обнаружены ошибки в конфигурации:");
             for (String error : errorMessages) {
@@ -404,21 +404,21 @@ public class ActionParameterGUI implements GUIManager.ManagedGUIInterface {
             }
         }
         
-        // Clear existing configuration
+        
         codeBlock.clearConfigItems();
         
-        // Save items from inventory to code block
+        
         int savedItems = 0;
         int validItems = 0;
         for (int i = 0; i < inventory.getSize(); i++) {
             ItemStack item = inventory.getItem(i);
-            // Adjust slot index back to original when saving
-            int originalSlot = i - 9; // Adjust back from row 2
+            
+            int originalSlot = i - 9; 
             if (originalSlot >= 0 && item != null && !item.getType().isAir() && !isPlaceholderItem(item)) {
                 codeBlock.setConfigItem(originalSlot, item);
                 savedItems++;
                 
-                // Count valid items
+                
                 if (slotValidationStatus.getOrDefault(i, true)) {
                     validItems++;
                 }
@@ -443,10 +443,10 @@ public class ActionParameterGUI implements GUIManager.ManagedGUIInterface {
             player.playSound(player.getLocation(), org.bukkit.Sound.BLOCK_NOTE_BLOCK_CHIME, 1.0f, 1.0f);
         }
         
-        // Reset unsaved changes flag
+        
         hasUnsavedChanges = false;
         
-        // Save the world to persist changes
+        
         var creativeWorld = plugin.getServiceRegistry().getWorldManager().findCreativeWorldByBukkit(player.getWorld());
         if (creativeWorld != null) {
             plugin.getServiceRegistry().getWorldManager().saveWorld(creativeWorld);
@@ -461,7 +461,7 @@ public class ActionParameterGUI implements GUIManager.ManagedGUIInterface {
         String error = null;
         boolean isValid = true;
         
-        // Store current value for dependent validation
+        
         if (item != null && item.hasItemMeta() && item.getItemMeta().hasDisplayName()) {
             slotCurrentValues.put(slot, item.getItemMeta().getDisplayName());
         } else {
@@ -469,13 +469,13 @@ public class ActionParameterGUI implements GUIManager.ManagedGUIInterface {
         }
         
         if (item == null || item.getType().isAir()) {
-            // Empty slot - check if required
+            
             if (isSlotRequired(slot)) {
                 error = "Обязательный параметр";
                 isValid = false;
             }
         } else {
-            // Validate item type and content
+            
             error = validateItemForSlot(slot, item);
             isValid = (error == null);
         }
@@ -483,13 +483,13 @@ public class ActionParameterGUI implements GUIManager.ManagedGUIInterface {
         slotValidationErrors.put(slot, error);
         slotValidationStatus.put(slot, isValid);
         
-        // Update visual feedback
+        
         updateSlotVisualFeedback(slot, isValid, error);
         
-        // 🎆 NEW: Validate dependent slots
+        
         validateDependentSlots(slot);
         
-        // Track unsaved changes
+        
         hasUnsavedChanges = true;
     }
     
@@ -506,17 +506,17 @@ public class ActionParameterGUI implements GUIManager.ManagedGUIInterface {
         var slotsConfig = actionConfig.getConfigurationSection("slots");
         if (slotsConfig == null) return;
         
-        // Check all slots for dependencies on the changed slot
+        
         for (String slotKey : slotsConfig.getKeys(false)) {
             try {
                 int slot = Integer.parseInt(slotKey);
-                // Adjust slot index for the larger inventory
-                int adjustedSlot = slot + 9; // Start from row 2
-                if (adjustedSlot == changedSlot) continue; // Skip the slot that just changed
+                
+                int adjustedSlot = slot + 9; 
+                if (adjustedSlot == changedSlot) continue; 
                 
                 var slotConfig = slotsConfig.getConfigurationSection(slotKey);
                 
-                // Check for dependency conditions
+                
                 if (slotConfig != null) {
                     String dependencyCondition = slotConfig.getString("dependency");
                     if (dependencyCondition != null) {
@@ -527,14 +527,14 @@ public class ActionParameterGUI implements GUIManager.ManagedGUIInterface {
                             String expectedValue = parts[2];
                             boolean isNotEqual = operator.equals("!=");
                             
-                            // Find the dependency slot number
+                            
                             Integer dependencySlot = findSlotNumberByName(dependencySlotName);
                             if (dependencySlot != null) {
-                                // Adjust dependency slot for larger inventory
-                                int adjustedDependencySlot = dependencySlot + 9; // Start from row 2
+                                
+                                int adjustedDependencySlot = dependencySlot + 9; 
                                 String currentValue = slotCurrentValues.get(adjustedDependencySlot);
                                 
-                                // Check if dependency condition is met
+                                
                                 boolean conditionMet = false;
                                 if (currentValue != null) {
                                     if (isNotEqual) {
@@ -544,7 +544,7 @@ public class ActionParameterGUI implements GUIManager.ManagedGUIInterface {
                                     }
                                 }
                                 
-                                // If condition is not met, mark dependent slot as invalid
+                                
                                 if (!conditionMet) {
                                     String error = "Доступно только если " + dependencySlotName + 
                                         (isNotEqual ? " ≠ " : " = ") + expectedValue;
@@ -552,7 +552,7 @@ public class ActionParameterGUI implements GUIManager.ManagedGUIInterface {
                                     slotValidationStatus.put(adjustedSlot, false);
                                     updateSlotVisualFeedback(adjustedSlot, false, error);
                                 } else {
-                                    // Re-validate the slot since dependency condition is now met
+                                    
                                     ItemStack item = inventory.getItem(adjustedSlot);
                                     if (item != null && !item.getType().isAir()) {
                                         String newError = validateItemForSlot(adjustedSlot, item);
@@ -567,7 +567,7 @@ public class ActionParameterGUI implements GUIManager.ManagedGUIInterface {
                     }
                 }
             } catch (NumberFormatException e) {
-                // Invalid slot index, skip
+                
             }
         }
     }
@@ -585,7 +585,7 @@ public class ActionParameterGUI implements GUIManager.ManagedGUIInterface {
         var slotsConfig = actionConfig.getConfigurationSection("slots");
         if (slotsConfig == null) return null;
         
-        // Find the slot configuration by slot_name
+        
         for (String slotKey : slotsConfig.getKeys(false)) {
             try {
                 var slotConfig = slotsConfig.getConfigurationSection(slotKey);
@@ -596,7 +596,7 @@ public class ActionParameterGUI implements GUIManager.ManagedGUIInterface {
                     }
                 }
             } catch (NumberFormatException e) {
-                // Invalid slot index, skip
+                
             }
         }
         
@@ -616,14 +616,14 @@ public class ActionParameterGUI implements GUIManager.ManagedGUIInterface {
         var slotsConfig = actionConfig.getConfigurationSection("slots");
         if (slotsConfig == null) return false;
         
-        // Adjust slot index back to original
-        int originalSlot = slot - 9; // Adjust back from row 2
+        
+        int originalSlot = slot - 9; 
         if (originalSlot < 0) return false;
         
         var slotConfig = slotsConfig.getConfigurationSection(String.valueOf(originalSlot));
         if (slotConfig == null) return false;
         
-        return slotConfig.getBoolean("required", originalSlot == 0); // First slot usually required
+        return slotConfig.getBoolean("required", originalSlot == 0); 
     }
     
     /**
@@ -636,72 +636,72 @@ public class ActionParameterGUI implements GUIManager.ManagedGUIInterface {
         
         String itemName = item.getItemMeta().getDisplayName();
         
-        // Get slot name from configuration
+        
         String slotName = getSlotName(slot);
         
-        // Action-specific validation based on slot name
+        
         if (slotName != null) {
-            // Validate based on slot name and validation rules from config
+            
             String validationError = validateItemBySlotName(slotName, item);
             if (validationError != null) {
                 return validationError;
             }
         }
         
-        // Fallback to action-specific validation
+        
         switch (actionId.toLowerCase()) {
             case "sendmessage":
-                if (slot == 10 && itemName.trim().isEmpty()) { // Adjusted slot index
+                if (slot == 10 && itemName.trim().isEmpty()) { 
                     return "Сообщение не может быть пустым";
                 }
                 break;
             case "executeasynccommand":
-                if (slot == 10 && !itemName.startsWith("/") && !itemName.contains(":")) { // Adjusted slot index
+                if (slot == 10 && !itemName.startsWith("/") && !itemName.contains(":")) { 
                     return "Команда должна начинаться с '/' или содержать ':'";
                 }
                 break;
 
             case "giveitem":
-                if (slot == 10 && item.getType().isAir()) { // Adjusted slot index
+                if (slot == 10 && item.getType().isAir()) { 
                     return "Предмет не может быть пустым";
                 }
-                if (slot == 11 && !isValidNumber(itemName)) { // Adjusted slot index
+                if (slot == 11 && !isValidNumber(itemName)) { 
                     return "Количество должно быть числом";
                 }
                 break;
             case "playsound":
-                if (slot == 10 && !isValidSoundName(itemName)) { // Adjusted slot index
+                if (slot == 10 && !isValidSoundName(itemName)) { 
                     return "Неверное имя звука";
                 }
-                if (slot == 11 && !isValidNumberInRange(itemName, 0.0, 1.0)) { // Adjusted slot index
+                if (slot == 11 && !isValidNumberInRange(itemName, 0.0, 1.0)) { 
                     return "Громкость должна быть от 0.0 до 1.0";
                 }
-                if (slot == 12 && !isValidNumberInRange(itemName, 0.5, 2.0)) { // Adjusted slot index
+                if (slot == 12 && !isValidNumberInRange(itemName, 0.5, 2.0)) { 
                     return "Тон должен быть от 0.5 до 2.0";
                 }
                 break;
             case "effect":
-                if (slot == 10 && !isValidEffectName(itemName)) { // Adjusted slot index
+                if (slot == 10 && !isValidEffectName(itemName)) { 
                     return "Неверное имя эффекта";
                 }
-                if (slot == 11 && !isValidNumber(itemName)) { // Adjusted slot index
+                if (slot == 11 && !isValidNumber(itemName)) { 
                     return "Длительность должна быть числом";
                 }
-                if (slot == 12 && !isValidNumberInRange(itemName, 1, 255)) { // Adjusted slot index
+                if (slot == 12 && !isValidNumberInRange(itemName, 1, 255)) { 
                     return "Уровень должен быть от 1 до 255";
                 }
                 break;
             case "wait":
-                if (slot == 10 && !isValidNumber(itemName)) { // Adjusted slot index
+                if (slot == 10 && !isValidNumber(itemName)) { 
                     return "Время ожидания должно быть числом";
                 }
                 break;
             default:
-                // No specific validation for this action
+                
                 break;
         }
         
-        return null; // No error
+        return null; 
     }
     
     /**
@@ -717,8 +717,8 @@ public class ActionParameterGUI implements GUIManager.ManagedGUIInterface {
         var slotsConfig = actionConfig.getConfigurationSection("slots");
         if (slotsConfig == null) return null;
         
-        // Adjust slot index back to original
-        int originalSlot = slot - 9; // Adjust back from row 2
+        
+        int originalSlot = slot - 9; 
         if (originalSlot < 0) return null;
         
         var slotConfig = slotsConfig.getConfigurationSection(String.valueOf(originalSlot));
@@ -740,13 +740,13 @@ public class ActionParameterGUI implements GUIManager.ManagedGUIInterface {
         var slotsConfig = actionConfig.getConfigurationSection("slots");
         if (slotsConfig == null) return null;
         
-        // Find the slot configuration by slot_name
+        
         for (String slotKey : slotsConfig.getKeys(false)) {
             var slotConfig = slotsConfig.getConfigurationSection(slotKey);
             if (slotConfig != null) {
                 String configSlotName = slotConfig.getString("slot_name");
                 if (slotName.equals(configSlotName)) {
-                    // Found the slot, check validation rules
+                    
                     String validation = slotConfig.getString("validation");
                     if (validation != null) {
                         return validateItemByRule(item, validation);
@@ -756,7 +756,7 @@ public class ActionParameterGUI implements GUIManager.ManagedGUIInterface {
             }
         }
         
-        return null; // No validation rule found
+        return null; 
     }
     
     /**
@@ -812,7 +812,7 @@ public class ActionParameterGUI implements GUIManager.ManagedGUIInterface {
                 }
                 break;
             default:
-                // Handle range validations like "number_range:0.0-1.0"
+                
                 if (validationRule.startsWith("number_range:")) {
                     String range = validationRule.substring("number_range:".length());
                     String[] parts = range.split("-");
@@ -828,21 +828,21 @@ public class ActionParameterGUI implements GUIManager.ManagedGUIInterface {
                         }
                     }
                 }
-                // Handle regex validations like "regex:[a-zA-Z]+"
+                
                 else if (validationRule.startsWith("regex:")) {
                     String regex = validationRule.substring("regex:".length());
                     if (!isValidRegex(itemName, regex)) {
                         return "Значение не соответствует формату: " + regex;
                     }
                 }
-                // Handle length validations like "length:5-20"
+                
                 else if (validationRule.startsWith("length:")) {
                     String lengthSpec = validationRule.substring("length:".length());
                     if (!isValidLength(itemName, lengthSpec)) {
                         return "Длина значения должна быть от " + lengthSpec.replace("-", " до ");
                     }
                 }
-                // Handle enum validations like "enum:option1,option2,option3"
+                
                 else if (validationRule.startsWith("enum:")) {
                     String enumValues = validationRule.substring("enum:".length());
                     if (!isValidEnum(itemName, enumValues)) {
@@ -852,7 +852,7 @@ public class ActionParameterGUI implements GUIManager.ManagedGUIInterface {
                 break;
         }
         
-        return null; // No error
+        return null; 
     }
     
     /**
@@ -861,10 +861,10 @@ public class ActionParameterGUI implements GUIManager.ManagedGUIInterface {
     private boolean isValidWorldName(String worldName) {
         if (worldName == null || worldName.trim().isEmpty()) return false;
         
-        // Remove color codes
+        
         String cleaned = worldName.replaceAll("§[0-9a-fk-r]", "").trim();
         
-        // Check for pattern like "world:Name" or just "Name"
+        
         if (cleaned.contains(":")) {
             String[] parts = cleaned.split(":");
             if (parts.length == 2) {
@@ -872,7 +872,7 @@ public class ActionParameterGUI implements GUIManager.ManagedGUIInterface {
             }
         }
         
-        // World names can contain letters, numbers, underscores, hyphens, and dots
+        
         return cleaned.matches("[a-zA-Z0-9_.\\-]+");
     }
 
@@ -889,7 +889,7 @@ public class ActionParameterGUI implements GUIManager.ManagedGUIInterface {
         org.bukkit.configuration.ConfigurationSection slotsConfig = actionConfig.getConfigurationSection("slots");
         if (slotsConfig == null) return null;
         
-        // Find the slot configuration by slot_name
+        
         for (String slotKey : slotsConfig.getKeys(false)) {
             try {
                 org.bukkit.configuration.ConfigurationSection slotConfig = slotsConfig.getConfigurationSection(slotKey);
@@ -900,7 +900,7 @@ public class ActionParameterGUI implements GUIManager.ManagedGUIInterface {
                     }
                 }
             } catch (NumberFormatException e) {
-                // Invalid slot index, skip
+                
             }
         }
         
@@ -913,10 +913,10 @@ public class ActionParameterGUI implements GUIManager.ManagedGUIInterface {
     private boolean isValidPlayerName(String playerName) {
         if (playerName == null || playerName.trim().isEmpty()) return false;
         
-        // Remove color codes (0-9, a-f, k-r) and common prefixes
+        
         String cleaned = playerName.replaceAll("§[0-9a-fk-r]", "").trim();
         
-        // Check for pattern like "player:Name" or just "Name"
+        
         if (cleaned.contains(":")) {
             String[] parts = cleaned.split(":");
             if (parts.length == 2) {
@@ -924,7 +924,7 @@ public class ActionParameterGUI implements GUIManager.ManagedGUIInterface {
             }
         }
         
-        // Player names can contain letters, numbers, underscores, hyphens, and dots
+        
         return cleaned.matches("[a-zA-Z0-9_.\\-]+");
     }
 
@@ -934,10 +934,10 @@ public class ActionParameterGUI implements GUIManager.ManagedGUIInterface {
     private boolean isValidMaterialName(String materialName) {
         if (materialName == null || materialName.trim().isEmpty()) return false;
         
-        // Remove color codes
+        
         String cleaned = materialName.replaceAll("§[0-9a-fk-r]", "").trim();
         
-        // Check for pattern like "material:Name" or just "Name"
+        
         if (cleaned.contains(":")) {
             String[] parts = cleaned.split(":");
             if (parts.length == 2) {
@@ -949,7 +949,7 @@ public class ActionParameterGUI implements GUIManager.ManagedGUIInterface {
             Integer.parseInt(cleaned);
             return true;
         } catch (NumberFormatException e) {
-            // Try parsing as double for decimal numbers
+            
             try {
                 Double.parseDouble(cleaned);
                 return true;
@@ -972,15 +972,15 @@ public class ActionParameterGUI implements GUIManager.ManagedGUIInterface {
         List<String> lore = meta.getLore();
         if (lore == null) lore = new ArrayList<>();
         
-        // Remove old validation messages
+        
         lore.removeIf(line -> line.contains("✓") || line.contains("✗") || line.contains("Ошибка:") || line.contains("Статус:") || line.contains("Подсказка:"));
         
-        // Add new validation status with enhanced visual feedback
+        
         if (isValid) {
             lore.add("§a✓ Параметр корректен");
             lore.add("§7Статус: §aГотов к использованию");
             
-            // Add glow effect for valid items
+            
             if (meta.hasEnchants()) {
                 meta.removeEnchant(org.bukkit.enchantments.Enchantment.DURABILITY);
             }
@@ -989,7 +989,7 @@ public class ActionParameterGUI implements GUIManager.ManagedGUIInterface {
             lore.add("§c✗ Ошибка: " + error);
             lore.add("§7Статус: §cТребуется исправление");
             
-            // Add red glow effect for invalid items
+            
             if (meta.hasEnchants()) {
                 meta.removeEnchant(org.bukkit.enchantments.Enchantment.DURABILITY);
             }
@@ -998,7 +998,7 @@ public class ActionParameterGUI implements GUIManager.ManagedGUIInterface {
             lore.add("§7Статус: §eОжидает проверки");
         }
         
-        // Add helpful hints based on slot configuration
+        
         String slotName = getSlotName(slot);
         if (slotName != null) {
             String hint = getValidationHint(slotName);
@@ -1010,10 +1010,10 @@ public class ActionParameterGUI implements GUIManager.ManagedGUIInterface {
         meta.setLore(lore);
         currentItem.setItemMeta(meta);
         
-        // Update item in inventory
+        
         inventory.setItem(slot, currentItem);
         
-        // Add particle effect for validation feedback
+        
         Location effectLoc = player.getLocation().add(0, 1, 0);
         if (isValid) {
             player.spawnParticle(org.bukkit.Particle.VILLAGER_HAPPY, effectLoc, 5, 0.3, 0.3, 0.3, 0.1);
@@ -1035,13 +1035,13 @@ public class ActionParameterGUI implements GUIManager.ManagedGUIInterface {
         var slotsConfig = actionConfig.getConfigurationSection("slots");
         if (slotsConfig == null) return null;
         
-        // Find the slot configuration by slot_name
+        
         for (String slotKey : slotsConfig.getKeys(false)) {
             var slotConfig = slotsConfig.getConfigurationSection(slotKey);
             if (slotConfig != null) {
                 String configSlotName = slotConfig.getString("slot_name");
                 if (slotName.equals(configSlotName)) {
-                    // Found the slot, get hint
+                    
                     return slotConfig.getString("hint", "");
                 }
             }
@@ -1076,7 +1076,7 @@ public class ActionParameterGUI implements GUIManager.ManagedGUIInterface {
         List<String> lore = meta.getLore();
         if (lore == null) return false;
         
-        // Check if any line contains the placeholder indicator
+        
         for (String line : lore) {
             if (line.contains("Поместите предмет сюда") || line.contains("для настройки")) {
                 return true;
@@ -1093,10 +1093,10 @@ public class ActionParameterGUI implements GUIManager.ManagedGUIInterface {
         guiManager.registerGUI(player, this, inventory);
         player.openInventory(inventory);
         
-        // Audio feedback when opening GUI
+        
         player.playSound(player.getLocation(), org.bukkit.Sound.BLOCK_CHEST_OPEN, 0.6f, 1.1f);
         
-        // Add visual effects for reference system-style magic
+        
         player.spawnParticle(org.bukkit.Particle.ENCHANTMENT_TABLE, 
             player.getLocation().add(0, 1, 0), 10, 0.5, 0.5, 0.5, 1);
     }
@@ -1119,24 +1119,24 @@ public class ActionParameterGUI implements GUIManager.ManagedGUIInterface {
         if (!player.equals(event.getWhoClicked())) return;
         if (!inventory.equals(event.getInventory())) return;
         
-        event.setCancelled(true); // Cancel all clicks by default
+        event.setCancelled(true); 
         
         int slot = event.getSlot();
         
-        // Handle back button click
+        
         if (slot == 49) {
-            // Go back to action selection
+            
             player.closeInventory();
             Bukkit.getScheduler().runTaskLater(plugin, () -> {
-                ActionSelectionGUI actionGUI = new ActionSelectionGUI(plugin, player, blockLocation, Material.STONE); // Default material
+                ActionSelectionGUI actionGUI = new ActionSelectionGUI(plugin, player, blockLocation, Material.STONE); 
                 actionGUI.open();
             }, 1L);
             return;
         }
         
-        // Allow interaction with center slots for parameter configuration
+        
         if (slot >= 9 && slot < 45 && slot % 9 != 0 && slot % 9 != 8) {
-            // 🎆 ENHANCED: Trigger real-time validation after item placement
+            
             org.bukkit.Bukkit.getScheduler().runTaskLater(plugin, () -> {
                 ItemStack newItem = inventory.getItem(slot);
                 validateSlot(slot, newItem);
@@ -1144,7 +1144,7 @@ public class ActionParameterGUI implements GUIManager.ManagedGUIInterface {
             return;
         }
         
-        // Check for named slots based on configuration
+        
         ItemStack clickedItem = event.getCurrentItem();
         if (clickedItem != null && clickedItem.hasItemMeta()) {
             ItemMeta meta = clickedItem.getItemMeta();
@@ -1153,7 +1153,7 @@ public class ActionParameterGUI implements GUIManager.ManagedGUIInterface {
                 if (lore != null) {
                     for (String line : lore) {
                         if (line.contains("ID:") || line.contains("Группа:")) {
-                            // This is a configured slot, allow interaction
+                            
                             return;
                         }
                     }
@@ -1161,13 +1161,13 @@ public class ActionParameterGUI implements GUIManager.ManagedGUIInterface {
             }
         }
         
-        // Handle clicks on special items
+        
         ItemStack clicked = event.getCurrentItem();
         if (clicked == null || !clicked.hasItemMeta()) return;
         
         String displayName = clicked.getItemMeta().getDisplayName();
         
-        // Handle info item click
+        
         if (displayName.contains(actionId)) {
             player.sendMessage("§eПодсказка: Перетащите предметы в центральные слоты для настройки параметров.");
         }
@@ -1179,11 +1179,11 @@ public class ActionParameterGUI implements GUIManager.ManagedGUIInterface {
      * @param event Inventory close event
      */
     public void onInventoryClose(InventoryCloseEvent event) {
-        // Save parameters when GUI is closed
+        
         saveParameters();
         
-        // Optional cleanup when GUI is closed
-        // GUIManager handles automatic unregistration
+        
+        
     }
     
     @Override
@@ -1191,8 +1191,8 @@ public class ActionParameterGUI implements GUIManager.ManagedGUIInterface {
      * Performs resource cleanup when interface is closed
      */
     public void onCleanup() {
-        // Called when GUI is being cleaned up by GUIManager
-        // No special cleanup needed for this GUI
+        
+        
     }
     
     /**

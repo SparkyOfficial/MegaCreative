@@ -28,26 +28,26 @@ public class MapOperationAction implements BlockAction {
         }
 
         try {
-            // Получаем параметры из блока
+            
             String mapName = block.getParameter("map_name").asString();
             String operation = block.getParameter("operation").asString();
             
-            // Получаем менеджер переменных
+            
             var variableManager = context.getPlugin().getServiceRegistry().getVariableManager();
             
-            // Получаем или создаем карту
+            
             DataValue mapValue = variableManager.getVariable(mapName, IVariableManager.VariableScope.PLAYER, player.getUniqueId().toString());
             Map<String, DataValue> map;
             
             if (mapValue != null && mapValue.getType() == ValueType.DICTIONARY) {
-                // Convert to Map<String, DataValue>
+                
                 map = (Map<String, DataValue>) ((com.megacreative.coding.values.types.MapValue) mapValue).getValue();
             } else {
                 map = new HashMap<>();
                 variableManager.setVariable(mapName, new MapValue(map), IVariableManager.VariableScope.PLAYER, player.getUniqueId().toString());
             }
             
-            // Выполняем операцию в зависимости от типа
+            
             switch (operation.toLowerCase()) {
                 case "put":
                     String keyToPut = block.getParameter("key").asString();
@@ -76,7 +76,7 @@ public class MapOperationAction implements BlockAction {
                     break;
                     
                 case "keys":
-                    // Возвращаем список всех ключей
+                    
                     List<DataValue> keys = new ArrayList<>();
                     for (String k : map.keySet()) {
                         keys.add(new TextValue(k));
@@ -86,7 +86,7 @@ public class MapOperationAction implements BlockAction {
                     break;
                     
                 case "values":
-                    // Возвращаем список всех значений
+                    
                     List<DataValue> values = new ArrayList<>(map.values());
                     String valuesVariable = block.getParameter("values_variable").asString();
                     variableManager.setVariable(valuesVariable, new ListValue(values), IVariableManager.VariableScope.PLAYER, player.getUniqueId().toString());

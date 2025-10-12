@@ -51,7 +51,7 @@ public class ScriptBuilder {
      * Updates the script inventory display
      */
     private void updateInventory() {
-        // TODO: Implement inventory update logic
+        
     }
     
     /**
@@ -111,13 +111,13 @@ public class ScriptBuilder {
      * Saves the current script to a file
      */
     public void saveScript(String name) {
-        // TODO: Implement script saving logic
+        
     }
     
     /**
      * Loads a script from a file
      */
     public void loadScript(String name) {
-        // TODO: Implement script loading logic
+        
     }
 }

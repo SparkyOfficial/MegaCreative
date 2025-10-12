@@ -26,13 +26,13 @@ public class SetArmorAction implements BlockAction {
         }
 
         try {
-            // Get armor items from the new parameter system
+            
             DataValue helmetValue = block.getParameter("helmet");
             DataValue chestplateValue = block.getParameter("chestplate");
             DataValue leggingsValue = block.getParameter("leggings");
             DataValue bootsValue = block.getParameter("boots");
             
-            // Set the armor pieces
+            
             if (helmetValue != null && !helmetValue.isEmpty()) {
                 ItemStack helmet = parseItem(helmetValue);
                 if (helmet != null) {
@@ -81,7 +81,7 @@ public class SetArmorAction implements BlockAction {
                 return null;
             }
             
-            // Parse format: MATERIAL:AMOUNT or just MATERIAL
+            
             String[] parts = itemStr.split(":");
             Material material = Material.valueOf(parts[0].toUpperCase());
             
@@ -89,9 +89,9 @@ public class SetArmorAction implements BlockAction {
             if (parts.length > 1) {
                 try {
                     amount = Integer.parseInt(parts[1]);
-                    amount = Math.max(1, Math.min(64, amount)); // Clamp between 1 and 64
+                    amount = Math.max(1, Math.min(64, amount)); 
                 } catch (NumberFormatException e) {
-                    // Use default amount
+                    
                 }
             }
             

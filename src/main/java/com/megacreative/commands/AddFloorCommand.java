@@ -66,17 +66,17 @@ public class AddFloorCommand implements CommandExecutor {
         
         Player player = (Player) sender;
         
-        // Check if player is in a dev world
+        
         String worldName = player.getWorld().getName();
         if (!isDevWorld(worldName)) {
             player.sendMessage("§cЭта команда работает только в мирах разработки!");
             return true;
         }
         
-        // Parse floor number
+        
         int floorNumber;
         if (args.length == 0) {
-            // Default to floor 1 if no argument provided
+            
             floorNumber = 1;
         } else {
             try {
@@ -88,7 +88,7 @@ public class AddFloorCommand implements CommandExecutor {
             }
         }
         
-        // Validate floor number
+        
         if (floorNumber < 1) {
             player.sendMessage("§cНомер этажа должен быть больше 0!");
             return true;
@@ -99,13 +99,13 @@ public class AddFloorCommand implements CommandExecutor {
             return true;
         }
         
-        // Check permissions
+        
         if (!player.hasPermission("megacreative.addfloor") && !player.isOp()) {
             player.sendMessage("§cУ вас нет прав для использования этой команды!");
             return true;
         }
         
-        // Create the floor
+        
         try {
             DevWorldGenerator.addFloorForPlayer(player.getWorld(), player, floorNumber);
         } catch (Exception e) {

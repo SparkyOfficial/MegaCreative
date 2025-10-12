@@ -20,14 +20,14 @@ public class BukkitEntityPickupItemListener implements Listener {
     
     @EventHandler
     public void onEntityPickupItem(EntityPickupItemEvent bukkitEvent) {
-        // Create our custom event
+        
         MegaEntityPickupItemEvent internalEvent = new MegaEntityPickupItemEvent(
             (org.bukkit.entity.Player) bukkitEvent.getEntity(),
             bukkitEvent.getItem().getItemStack(),
             bukkitEvent.getItem().getItemStack().getAmount()
         );
         
-        // Publish it to our event system
+        
         plugin.getServer().getPluginManager().callEvent(internalEvent);
     }
 }

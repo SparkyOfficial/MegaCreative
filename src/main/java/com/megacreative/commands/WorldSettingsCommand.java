@@ -102,12 +102,12 @@ public class WorldSettingsCommand implements CommandExecutor {
     private CreativeWorld findCreativeWorld(World bukkitWorld) {
         String worldName = bukkitWorld.getName();
         
-        // 🔧 FIX: Remove prefix and ALL possible suffixes for dual world architecture
+        
         if (worldName.startsWith("megacreative_")) {
             String id = worldName.replace("megacreative_", "")
-                                  .replace("-code", "")    // New dev world suffix
-                                  .replace("-world", "")   // New play world suffix  
-                                  .replace("_dev", "");    // Legacy compatibility
+                                  .replace("-code", "")    
+                                  .replace("-world", "")   
+                                  .replace("_dev", "");    
             return plugin.getServiceRegistry().getWorldManager().getWorld(id);
         }
         return null;

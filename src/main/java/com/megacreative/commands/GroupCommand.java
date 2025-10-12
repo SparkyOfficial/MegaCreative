@@ -1,7 +1,7 @@
 package com.megacreative.commands;
 
 import com.megacreative.coding.groups.BlockGroupManager;
-import com.megacreative.coding.groups.AdvancedBlockGroup; // Import AdvancedBlockGroup
+import com.megacreative.coding.groups.AdvancedBlockGroup; 
 import com.megacreative.core.ServiceRegistry;
 import org.bukkit.command.Command;
 import org.bukkit.command.CommandExecutor;
@@ -158,12 +158,12 @@ public class GroupCommand implements CommandExecutor, TabCompleter {
         if (args.length == 2) {
             String subCommand = args[0].toLowerCase();
             if ("collapse".equals(subCommand) || "expand".equals(subCommand) || "delete".equals(subCommand)) {
-                // Get group names for the player
+                
                 BlockGroupManager groupManager = serviceRegistry.getService(BlockGroupManager.class);
                 if (groupManager != null && sender instanceof Player player) {
                     List<String> groupNames = new ArrayList<>();
                     
-                    // Get advanced groups (regular groups don't have a public method to access them)
+                    
                     List<AdvancedBlockGroup> advancedGroups = groupManager.getPlayerAdvancedGroups(player);
                     for (AdvancedBlockGroup group : advancedGroups) {
                         groupNames.add(group.getName());
@@ -171,7 +171,7 @@ public class GroupCommand implements CommandExecutor, TabCompleter {
                     
                     return groupNames;
                 }
-                // Fallback to empty list if group manager is not available
+                
                 return new ArrayList<>();
             }
         }

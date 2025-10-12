@@ -40,10 +40,10 @@ public class ReferenceSystemStyleGUI {
         InteractiveGUI gui = guiManager.createInteractiveGUI(player, 
             "🎆 Reference System Block Editor - " + block.getAction(), 54);
         
-        // Title display
+        
         gui.getInventory().setItem(4, createTitleItem(block));
         
-        // Material selector (if block supports material parameter)
+        
         if (block.hasParameter("material")) {
             Map<String, Object> materialProps = new HashMap<>();
             materialProps.put("materials", Arrays.asList(
@@ -55,7 +55,7 @@ public class ReferenceSystemStyleGUI {
             InteractiveGUIManager.MaterialSelectorElement materialSelector = 
                 new InteractiveGUIManager.MaterialSelectorElement("material", materialProps);
             
-            // Bind to block parameter
+            
             materialSelector.addChangeListener(value -> {
                 block.setParameter("material", value.getValue());
                 saveBlockToWorld(player, block);
@@ -64,7 +64,7 @@ public class ReferenceSystemStyleGUI {
             gui.setElement(10, materialSelector);
         }
         
-        // Amount/Count slider
+        
         if (block.hasParameter("amount") || block.hasParameter("count")) {
             Map<String, Object> amountProps = new HashMap<>();
             amountProps.put("min", 1.0);
@@ -84,7 +84,7 @@ public class ReferenceSystemStyleGUI {
             gui.setElement(12, amountSlider);
         }
         
-        // Mode toggle (enabled/disabled)
+        
         Map<String, Object> enabledProps = new HashMap<>();
         enabledProps.put("modes", Arrays.asList("ENABLED", "DISABLED"));
         
@@ -99,7 +99,7 @@ public class ReferenceSystemStyleGUI {
         
         gui.setElement(14, enabledToggle);
         
-        // Color picker (if applicable)
+        
         if (block.getAction().contains("color") || block.hasParameter("color")) {
             Map<String, Object> colorProps = new HashMap<>();
             
@@ -114,7 +114,7 @@ public class ReferenceSystemStyleGUI {
             gui.setElement(16, colorPicker);
         }
         
-        // Add save/cancel buttons
+        
         gui.getInventory().setItem(45, createSaveButton());
         gui.getInventory().setItem(53, createCancelButton());
         
@@ -128,7 +128,7 @@ public class ReferenceSystemStyleGUI {
         InteractiveGUI gui = guiManager.createInteractiveGUI(player, 
             "🎆 Reference System World Settings - " + world.getName(), 54);
         
-        // World mode toggle
+        
         Map<String, Object> modeProps = new HashMap<>();
         modeProps.put("modes", Arrays.asList("BUILD", "PLAY", "DEV"));
         
@@ -146,7 +146,7 @@ public class ReferenceSystemStyleGUI {
         
         gui.setElement(10, modeToggle);
         
-        // Time setting
+        
         Map<String, Object> timeProps = new HashMap<>();
         timeProps.put("min", 0.0);
         timeProps.put("max", 24000.0);
@@ -163,7 +163,7 @@ public class ReferenceSystemStyleGUI {
         
         gui.setElement(12, timeSlider);
         
-        // Weather toggle
+        
         Map<String, Object> weatherProps = new HashMap<>();
         weatherProps.put("modes", Arrays.asList("CLEAR", "RAIN", "THUNDER"));
         
@@ -190,7 +190,7 @@ public class ReferenceSystemStyleGUI {
         
         gui.setElement(14, weatherToggle);
         
-        // Difficulty toggle
+        
         Map<String, Object> difficultyProps = new HashMap<>();
         difficultyProps.put("modes", Arrays.asList("PEACEFUL", "EASY", "NORMAL", "HARD"));
         
@@ -219,7 +219,7 @@ public class ReferenceSystemStyleGUI {
         InteractiveGUI gui = guiManager.createInteractiveGUI(player, 
             "🎆 Reference System Item Editor - " + parameterName, 27);
         
-        // Item stack editor
+        
         Map<String, Object> itemProps = new HashMap<>();
         
         InteractiveGUIManager.ItemStackEditorElement itemEditor = 
@@ -227,7 +227,7 @@ public class ReferenceSystemStyleGUI {
         
         gui.setElement(13, itemEditor);
         
-        // Amount slider
+        
         Map<String, Object> amountProps = new HashMap<>();
         amountProps.put("min", 1.0);
         amountProps.put("max", 64.0);
@@ -239,7 +239,7 @@ public class ReferenceSystemStyleGUI {
         
         gui.setElement(15, amountSlider);
         
-        // Material selector
+        
         Map<String, Object> materialProps = new HashMap<>();
         materialProps.put("materials", Arrays.asList(
             Material.STONE, Material.DIRT, Material.OAK_PLANKS, Material.IRON_INGOT,
@@ -310,7 +310,7 @@ public class ReferenceSystemStyleGUI {
     }
     
     private void saveBlockToWorld(Player player, CodeBlock block) {
-        // Find the creative world and save
+        
         CreativeWorld world = plugin.getServiceRegistry().getWorldManager().findCreativeWorldByBukkit(player.getWorld());
         if (world != null) {
             plugin.getServiceRegistry().getWorldManager().saveWorld(world);

@@ -25,27 +25,27 @@ import java.util.regex.Pattern;
  */
 public class ReferenceSystemPlaceholderResolver {
     
-    // Placeholder patterns
+    
     private static final Pattern REFERENCESYSTEM_PATTERN = Pattern.compile("([a-zA-Z_][a-zA-Z0-9_]*)\\[([^\\]]+)\\]~");
     private static final Pattern MODERN_PATTERN = Pattern.compile("\\$\\{([^}]+)\\}");
     private static final Pattern CLASSIC_PATTERN = Pattern.compile("%([^%]+)%");
     
-    // Built-in prefix handlers
+    
     private static final Map<String, PlaceholderHandler> BUILTIN_HANDLERS = new HashMap<>();
     
     static {
-        // Core reference system-style handlers
-        BUILTIN_HANDLERS.put("apple", new VariablePlaceholderHandler()); // apple[variable]~
-        BUILTIN_HANDLERS.put("var", new VariablePlaceholderHandler());   // var[variable]~
-        BUILTIN_HANDLERS.put("player", new PlayerPlaceholderHandler()); // player[name]~
-        BUILTIN_HANDLERS.put("world", new WorldPlaceholderHandler());   // world[name]~
-        BUILTIN_HANDLERS.put("math", new MathPlaceholderHandler());     // math[variable+5]~
-        BUILTIN_HANDLERS.put("time", new TimePlaceholderHandler());     // time[format]~
-        BUILTIN_HANDLERS.put("random", new RandomPlaceholderHandler()); // random[1-100]~
-        BUILTIN_HANDLERS.put("location", new LocationPlaceholderHandler()); // location[x]~
-        BUILTIN_HANDLERS.put("server", new ServerPlaceholderHandler()); // server[online]~
-        BUILTIN_HANDLERS.put("color", new ColorPlaceholderHandler());   // color[red]~
-        BUILTIN_HANDLERS.put("format", new FormatPlaceholderHandler()); // format[number|2]~
+        
+        BUILTIN_HANDLERS.put("apple", new VariablePlaceholderHandler()); 
+        BUILTIN_HANDLERS.put("var", new VariablePlaceholderHandler());   
+        BUILTIN_HANDLERS.put("player", new PlayerPlaceholderHandler()); 
+        BUILTIN_HANDLERS.put("world", new WorldPlaceholderHandler());   
+        BUILTIN_HANDLERS.put("math", new MathPlaceholderHandler());     
+        BUILTIN_HANDLERS.put("time", new TimePlaceholderHandler());     
+        BUILTIN_HANDLERS.put("random", new RandomPlaceholderHandler()); 
+        BUILTIN_HANDLERS.put("location", new LocationPlaceholderHandler()); 
+        BUILTIN_HANDLERS.put("server", new ServerPlaceholderHandler()); 
+        BUILTIN_HANDLERS.put("color", new ColorPlaceholderHandler());   
+        BUILTIN_HANDLERS.put("format", new FormatPlaceholderHandler()); 
     }
     
     /**
@@ -58,13 +58,13 @@ public class ReferenceSystemPlaceholderResolver {
         
         String result = text;
         
-        // Process reference system-style placeholders first (highest priority)
+        
         result = resolveReferenceSystemPlaceholders(result, context);
         
-        // Process modern ${} placeholders
+        
         result = resolveModernPlaceholders(result, context);
         
-        // Process classic %% placeholders (lowest priority)
+        
         result = resolveClassicPlaceholders(result, context);
         
         return result;
@@ -81,7 +81,7 @@ public class ReferenceSystemPlaceholderResolver {
             String prefix = matcher.group(1);
             String content = matcher.group(2);
             
-            // Handle default values: variable|default
+            
             String defaultValue = "";
             if (content.contains("|")) {
                 String[] parts = content.split("\\|", 2);
@@ -89,14 +89,14 @@ public class ReferenceSystemPlaceholderResolver {
                 defaultValue = parts[1];
             }
             
-            // Get handler for prefix
+            
             PlaceholderHandler handler = BUILTIN_HANDLERS.get(prefix.toLowerCase());
             String replacement;
             
             if (handler != null) {
                 replacement = handler.resolve(content, context, defaultValue);
             } else {
-                // Unknown prefix, treat as variable
+                
                 replacement = BUILTIN_HANDLERS.get("apple").resolve(prefix + "." + content, context, defaultValue);
             }
             
@@ -123,7 +123,7 @@ public class ReferenceSystemPlaceholderResolver {
             String replacement = resolveSimplePlaceholder(placeholder, context);
             
             if (replacement == null) {
-                replacement = matcher.group(0); // Keep original if not found
+                replacement = matcher.group(0); 
             }
             
             matcher.appendReplacement(result, Matcher.quoteReplacement(replacement));
@@ -145,7 +145,7 @@ public class ReferenceSystemPlaceholderResolver {
             String replacement = resolveSimplePlaceholder(placeholder, context);
             
             if (replacement == null) {
-                replacement = matcher.group(0); // Keep original if not found
+                replacement = matcher.group(0); 
             }
             
             matcher.appendReplacement(result, Matcher.quoteReplacement(replacement));
@@ -161,7 +161,7 @@ public class ReferenceSystemPlaceholderResolver {
     private static String resolveSimplePlaceholder(String placeholder, ExecutionContext context) {
         Player player = context.getPlayer();
         
-        // Player-related placeholders
+        
         if (player != null) {
             switch (placeholder.toLowerCase()) {
                 case "player":
@@ -184,15 +184,15 @@ public class ReferenceSystemPlaceholderResolver {
                 case "player_z":
                     return String.valueOf(player.getLocation().getBlockZ());
                 default:
-                    // Return null for unknown placeholders to allow fallback mechanisms
+                    
                     return null;
             }
         }
         
-        // Variable placeholders with enhanced scope resolution
+        
         VariableManager variableManager = context.getPlugin().getServiceRegistry().getVariableManager();
         if (variableManager != null && player != null) {
-            // Use enhanced variable resolution with fallback mechanism
+            
             String playerContext = player.getUniqueId().toString();
             DataValue value = variableManager.resolveVariable(placeholder, playerContext);
             if (value != null && !value.isEmpty()) {
@@ -200,7 +200,7 @@ public class ReferenceSystemPlaceholderResolver {
             }
         }
         
-        // Built-in placeholders
+        
         switch (placeholder.toLowerCase()) {
             case "timestamp":
                 return String.valueOf(System.currentTimeMillis());
@@ -211,7 +211,7 @@ public class ReferenceSystemPlaceholderResolver {
             case "server_max":
                 return String.valueOf(Bukkit.getMaxPlayers());
             default:
-                // Return null for unknown placeholders to allow fallback mechanisms
+                
                 return null;
         }
     }
@@ -240,7 +240,7 @@ public class ReferenceSystemPlaceholderResolver {
                 return defaultValue;
             }
             
-            // Use enhanced variable resolution with fallback mechanism
+            
             String playerContext = player.getUniqueId().toString();
             DataValue value = variableManager.resolveVariable(content, playerContext);
             return value != null && !value.isEmpty() ? value.asString() : defaultValue;
@@ -324,10 +324,10 @@ public class ReferenceSystemPlaceholderResolver {
         @Override
         public String resolve(String content, ExecutionContext context, String defaultValue) {
             try {
-                // Replace variables in math expression
+                
                 String expression = ReferenceSystemPlaceholderResolver.resolvePlaceholders(content, context);
                 
-                // Simple math evaluation (basic operations only for security)
+                
                 return evaluateSimpleMath(expression);
             } catch (Exception e) {
                 return defaultValue;
@@ -335,11 +335,11 @@ public class ReferenceSystemPlaceholderResolver {
         }
         
         private String evaluateSimpleMath(String expression) {
-            // Basic math evaluation - only allow numbers and basic operators
+            
             expression = expression.replaceAll("[^0-9+\\-*/().\\s]", "");
             
             try {
-                // Implement a proper math expression parser with operator precedence
+                
                 return String.valueOf(evaluateExpression(expression.trim()));
             } catch (Exception e) {
                 return "0";
@@ -351,15 +351,15 @@ public class ReferenceSystemPlaceholderResolver {
          * Supports +, -, *, /, parentheses, and whitespace
          */
         private double evaluateExpression(String expression) {
-            // Handle empty expressions
+            
             if (expression == null || expression.isEmpty()) {
                 return 0.0;
             }
             
-            // Remove all whitespace
+            
             expression = expression.replaceAll("\\s+", "");
             
-            // Handle parentheses first (highest precedence)
+            
             int lastOpenParen = expression.lastIndexOf('(');
             if (lastOpenParen != -1) {
                 int closingParen = findMatchingParen(expression, lastOpenParen);
@@ -373,7 +373,7 @@ public class ReferenceSystemPlaceholderResolver {
                 }
             }
             
-            // Handle multiplication and division (left to right)
+            
             for (int i = 0; i < expression.length(); i++) {
                 char c = expression.charAt(i);
                 if (c == '*' || c == '/') {
@@ -381,7 +381,7 @@ public class ReferenceSystemPlaceholderResolver {
                     double right = parseRightOperand(expression, i);
                     double result = (c == '*') ? left * right : left / right;
                     
-                    // Find the positions of the operands
+                    
                     int leftStart = findLeftOperandStart(expression, i);
                     int rightEnd = findRightOperandEnd(expression, i);
                     
@@ -392,15 +392,15 @@ public class ReferenceSystemPlaceholderResolver {
                 }
             }
             
-            // Handle addition and subtraction (left to right)
+            
             for (int i = 0; i < expression.length(); i++) {
                 char c = expression.charAt(i);
-                if (c == '+' || (c == '-' && i > 0)) { // Don't treat leading minus as operator
+                if (c == '+' || (c == '-' && i > 0)) { 
                     double left = parseLeftOperand(expression, i);
                     double right = parseRightOperand(expression, i);
                     double result = (c == '+') ? left + right : left - right;
                     
-                    // Find the positions of the operands
+                    
                     int leftStart = findLeftOperandStart(expression, i);
                     int rightEnd = findRightOperandEnd(expression, i);
                     
@@ -411,7 +411,7 @@ public class ReferenceSystemPlaceholderResolver {
                 }
             }
             
-            // If we get here, it's just a number
+            
             return Double.parseDouble(expression);
         }
         
@@ -430,7 +430,7 @@ public class ReferenceSystemPlaceholderResolver {
                     }
                 }
             }
-            return -1; // Not found
+            return -1; 
         }
         
         /**
@@ -455,14 +455,14 @@ public class ReferenceSystemPlaceholderResolver {
          * Finds the start position of the left operand
          */
         private int findLeftOperandStart(String expression, int operatorPos) {
-            // Handle negative numbers
+            
             if (operatorPos > 0 && expression.charAt(operatorPos - 1) == '-') {
                 operatorPos--;
-                // Check if this minus is unary (part of a negative number)
+                
                 if (operatorPos == 0 || "+-*/(".indexOf(expression.charAt(operatorPos - 1)) != -1) {
-                    // This is a unary minus, continue looking for the start
+                    
                 } else {
-                    // This is a binary minus, go back to the previous operator
+                    
                     operatorPos++;
                 }
             }
@@ -470,7 +470,7 @@ public class ReferenceSystemPlaceholderResolver {
             for (int i = operatorPos - 1; i >= 0; i--) {
                 char c = expression.charAt(i);
                 if ("+-*/".indexOf(c) != -1) {
-                    // Special case for unary minus
+                    
                     if (c == '-' && (i == 0 || "+-*/(".indexOf(expression.charAt(i - 1)) != -1)) {
                         continue;
                     }
@@ -486,11 +486,11 @@ public class ReferenceSystemPlaceholderResolver {
         private int findRightOperandEnd(String expression, int operatorPos) {
             for (int i = operatorPos + 1; i < expression.length(); i++) {
                 char c = expression.charAt(i);
-                // Stop at operators or parentheses
+                
                 if ("+-*/()".indexOf(c) != -1) {
-                    // Special case for unary minus
+                    
                     if (c == '-' && (i == operatorPos + 1)) {
-                        // This is a unary minus, continue
+                        
                         continue;
                     }
                     return i;
@@ -513,7 +513,7 @@ public class ReferenceSystemPlaceholderResolver {
                     content = "HH:mm:ss";
                 }
                 
-                // Handle predefined formats
+                
                 switch (content.toLowerCase()) {
                     case "short":
                         content = "HH:mm";
@@ -688,7 +688,7 @@ public class ReferenceSystemPlaceholderResolver {
                 String value = parts[0];
                 String format = parts.length > 1 ? parts[1] : "0";
                 
-                // Resolve any placeholders in the value
+                
                 value = ReferenceSystemPlaceholderResolver.resolvePlaceholders(value, context);
                 
                 double number = Double.parseDouble(value);
@@ -700,7 +700,7 @@ public class ReferenceSystemPlaceholderResolver {
                         return String.format("%.1f%%", number * 100);
                     default:
                         int decimals = Integer.parseInt(format);
-                        // Ensure decimals is non-negative to prevent malformed format strings
+                        
                         if (decimals < 0) {
                             decimals = 0;
                         }

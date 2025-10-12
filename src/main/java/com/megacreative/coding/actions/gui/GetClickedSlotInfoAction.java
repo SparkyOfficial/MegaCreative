@@ -34,7 +34,7 @@ public class GetClickedSlotInfoAction implements BlockAction {
     @Override
     public ExecutionResult execute(CodeBlock block, ExecutionContext context) {
         try {
-            // Get parameters
+            
             DataValue variableValue = block.getParameter("variable");
             
             if (variableValue == null) {
@@ -46,7 +46,7 @@ public class GetClickedSlotInfoAction implements BlockAction {
                 return ExecutionResult.error("Variable name cannot be empty");
             }
             
-            // Get the GUI click event from the context
+            
             Object eventObj = context.getEvent();
             if (!(eventObj instanceof com.megacreative.events.GUIClickEvent)) {
                 return ExecutionResult.error("This action can only be used in a GUI click event context");
@@ -54,14 +54,14 @@ public class GetClickedSlotInfoAction implements BlockAction {
             
             com.megacreative.events.GUIClickEvent guiClickEvent = (com.megacreative.events.GUIClickEvent) eventObj;
             
-            // Create a map with the slot information
+            
             Map<String, Object> slotInfo = new HashMap<>();
             slotInfo.put("slot", guiClickEvent.getSlot());
             slotInfo.put("clickType", guiClickEvent.getClickType());
             slotInfo.put("menuTitle", guiClickEvent.getMenuTitle());
             slotInfo.put("player", guiClickEvent.getPlayer().getName());
             
-            // Add item information if there is an item
+            
             ItemStack clickedItem = guiClickEvent.getItem();
             if (clickedItem != null) {
                 Map<String, Object> itemInfo = new HashMap<>();
@@ -69,12 +69,12 @@ public class GetClickedSlotInfoAction implements BlockAction {
                 itemInfo.put("amount", clickedItem.getAmount());
                 
                 if (clickedItem.hasItemMeta()) {
-                    // Add display name if present
+                    
                     if (clickedItem.getItemMeta().hasDisplayName()) {
                         itemInfo.put("displayName", clickedItem.getItemMeta().getDisplayName());
                     }
                     
-                    // Add lore if present
+                    
                     if (clickedItem.getItemMeta().hasLore()) {
                         itemInfo.put("lore", clickedItem.getItemMeta().getLore());
                     }
@@ -83,10 +83,10 @@ public class GetClickedSlotInfoAction implements BlockAction {
                 slotInfo.put("item", itemInfo);
             }
             
-            // Store the slot information in a variable
+            
             VariableManager variableManager = plugin.getServiceRegistry().getVariableManager();
             if (variableManager != null && context.getPlayer() != null) {
-                // Store in player variable since this is player-specific information
+                
                 variableManager.setPlayerVariable(
                     context.getPlayer().getUniqueId(), 
                     variableName, 

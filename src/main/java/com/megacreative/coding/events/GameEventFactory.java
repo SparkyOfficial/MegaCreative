@@ -37,7 +37,7 @@ public class GameEventFactory {
         GameEvent gameEvent = new GameEvent(eventName);
         gameEvent.setPlayer(player);
         
-        // Extract data using the EventDataExtractor system
+        
         if (bukkitEvent != null && extractorRegistry.hasExtractor(bukkitEvent.getClass())) {
             try {
                 Map<String, DataValue> extractedData = extractorRegistry.extractData(bukkitEvent);

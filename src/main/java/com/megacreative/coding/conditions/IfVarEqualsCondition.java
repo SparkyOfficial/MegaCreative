@@ -17,7 +17,7 @@ public class IfVarEqualsCondition implements BlockCondition {
     @Override
     public boolean evaluate(CodeBlock block, ExecutionContext context) {
         try {
-            // Get variable name and expected value parameters
+            
             DataValue nameValue = block.getParameter("name");
             DataValue expectedValue = block.getParameter("value");
             
@@ -27,17 +27,17 @@ public class IfVarEqualsCondition implements BlockCondition {
             
             String varName = nameValue.asString();
             
-            // Get the variable from the context as DataValue
+            
             DataValue varValue = context.getVariableAsDataValue(varName);
             
             if (varValue == null || expectedValue == null) {
                 return false;
             }
             
-            // Compare values
+            
             return varValue.asString().equals(expectedValue.asString());
         } catch (Exception e) {
-            // If there's an error, return false
+            
             return false;
         }
     }

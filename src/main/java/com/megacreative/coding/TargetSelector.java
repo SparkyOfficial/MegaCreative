@@ -14,13 +14,13 @@ import java.util.Map;
  */
 public class TargetSelector {
     
-    // Constants for selector types
+    
     private static final String SELECTOR_NEAREST = "@p";
     private static final String SELECTOR_RANDOM = "@r";
     private static final String SELECTOR_ALL = "@a";
     private static final String SELECTOR_SELF = "@s";
     
-    // Constants for selector arguments
+    
     private static final String ARG_RADIUS = "r";
     private static final String ARG_GAMEMODE = "m";
     private static final String ARG_NAME = "name";
@@ -29,20 +29,20 @@ public class TargetSelector {
     private static final String ARG_Y = "y";
     private static final String ARG_Z = "z";
     
-    // Additional constants for selector argument values
+    
     private static final String COORD_X = "x";
     private static final String COORD_Y = "y";
     private static final String COORD_Z = "z";
     
-    // Random instance for generating random numbers
+    
     private static final Random RANDOM = new Random();
     
     public enum TargetType {
-        SELF,        // @s - the executing player
-        NEAREST,     // @p - nearest player
-        RANDOM,      // @r - random player
-        ALL,         // @a - all players
-        ENTITY       // Specific entity type
+        SELF,        
+        NEAREST,     
+        RANDOM,      
+        ALL,         
+        ENTITY       
     }
     
     private final TargetType targetType;
@@ -89,17 +89,17 @@ public class TargetSelector {
                 break;
                 
             case ENTITY:
-                // Handle entity selection if needed
+                
                 targets.add(context.getPlayer());
                 break;
                 
             default:
-                // Default case - add the executing player
+                
                 targets.add(context.getPlayer());
                 break;
         }
         
-        // Apply filters based on selector arguments
+        
         if (selectorArgument != null && !selectorArgument.isEmpty()) {
             targets = applyFilters(targets, context);
         }
@@ -114,11 +114,11 @@ public class TargetSelector {
      * @return Filtered list of targets
      */
     private List<Player> applyFilters(List<Player> targets, ExecutionContext context) {
-        // Parse the selector arguments
+        
         String[] args = selectorArgument.split(",");
         List<Player> filteredTargets = new ArrayList<>(targets);
         
-        // Parse arguments into a map for easier access
+        
         Map<String, String> argumentMap = new HashMap<>();
         for (String arg : args) {
             String[] parts = arg.split("=");
@@ -127,7 +127,7 @@ public class TargetSelector {
             }
         }
         
-        // Process each argument
+        
         for (Map.Entry<String, String> entry : argumentMap.entrySet()) {
             processArgument(entry.getKey(), entry.getValue(), filteredTargets, context, argumentMap);
         }
@@ -145,30 +145,30 @@ public class TargetSelector {
      */
     private void processArgument(String key, String value, List<Player> targets, ExecutionContext context, Map<String, String> allArguments) {
         switch (key) {
-            case ARG_RADIUS: // Radius
+            case ARG_RADIUS: 
                 applyRadiusFilter(targets, context, value, allArguments);
                 break;
                 
-            case ARG_GAMEMODE: // Game mode
+            case ARG_GAMEMODE: 
                 applyGameModeFilter(targets, value);
                 break;
                 
-            case ARG_NAME: // Player name
+            case ARG_NAME: 
                 applyNameFilter(targets, value);
                 break;
                 
-            case ARG_TEAM: // Team name
-                // This would require scoreboard integration
+            case ARG_TEAM: 
+                
                 break;
                 
-            case ARG_X: // X coordinate
-            case ARG_Y: // Y coordinate
-            case ARG_Z: // Z coordinate
-                // These are handled with 'r' parameter and stored in allArguments
+            case ARG_X: 
+            case ARG_Y: 
+            case ARG_Z: 
+                
                 break;
                 
             default:
-                // Default case - no action needed for unknown arguments
+                
                 break;
         }
     }
@@ -184,7 +184,7 @@ public class TargetSelector {
             targets.removeIf(player -> 
                 player.getLocation().distance(referenceLocation) > radius);
         } catch (NumberFormatException e) {
-            // Invalid radius, ignore
+            
         }
     }
     
@@ -198,12 +198,12 @@ public class TargetSelector {
         double y = playerLocation.getY();
         double z = playerLocation.getZ();
         
-        // Override coordinates if specified in arguments
+        
         if (arguments.containsKey(ARG_X)) {
             try {
                 x = Double.parseDouble(arguments.get(ARG_X));
             } catch (NumberFormatException e) {
-                // Keep player's X coordinate
+                
             }
         }
         
@@ -211,7 +211,7 @@ public class TargetSelector {
             try {
                 y = Double.parseDouble(arguments.get(ARG_Y));
             } catch (NumberFormatException e) {
-                // Keep player's Y coordinate
+                
             }
         }
         
@@ -219,11 +219,11 @@ public class TargetSelector {
             try {
                 z = Double.parseDouble(arguments.get(ARG_Z));
             } catch (NumberFormatException e) {
-                // Keep player's Z coordinate
+                
             }
         }
         
-        // Create new location with the determined coordinates
+        
         return new Location(playerLocation.getWorld(), x, y, z);
     }
     
@@ -247,11 +247,11 @@ public class TargetSelector {
                     targets.removeIf(player -> player.getGameMode() != org.bukkit.GameMode.SPECTATOR);
                     break;
                 default:
-                    // Invalid game mode, ignore
+                    
                     break;
             }
         } catch (NumberFormatException e) {
-            // Invalid game mode, ignore
+            
         }
     }
     
@@ -276,7 +276,7 @@ public class TargetSelector {
         
         for (Player target : player.getWorld().getPlayers()) {
             if (target.equals(player)) {
-                continue; // Skip the reference player
+                continue; 
             }
             
             double distance = playerLocation.distance(target.getLocation());
@@ -296,13 +296,13 @@ public class TargetSelector {
      */
     private Player findRandomPlayer(Player player) {
         List<Player> players = new ArrayList<>(player.getWorld().getPlayers());
-        players.remove(player); // Remove the reference player
+        players.remove(player); 
         
         if (players.isEmpty()) {
             return null;
         }
         
-        // Using java.util.Random.nextInt() instead of Math.random()
+        
         int randomIndex = RANDOM.nextInt(players.size());
         return players.get(randomIndex);
     }
@@ -317,7 +317,7 @@ public class TargetSelector {
             return new TargetSelector(TargetType.SELF, null);
         }
         
-        // Handle Minecraft-style selectors
+        
         if (selector.startsWith("@")) {
             switch (selector) {
                 case SELECTOR_NEAREST:
@@ -329,12 +329,12 @@ public class TargetSelector {
                 case SELECTOR_SELF:
                     return new TargetSelector(TargetType.SELF, null);
                 default:
-                    // Handle selectors with arguments like @p[x=10,y=20,z=30,r=5]
+                    
                     return parseAdvancedSelector(selector);
             }
         }
         
-        // Default to self
+        
         return new TargetSelector(TargetType.SELF, selector);
     }
     
@@ -344,12 +344,12 @@ public class TargetSelector {
      * @return A TargetSelector instance
      */
     private static TargetSelector parseAdvancedSelector(String selector) {
-        // Parse selectors with arguments like @p[x=10,y=20,z=30,r=5]
+        
         int bracketStart = selector.indexOf('[');
         int bracketEnd = selector.indexOf(']');
         
         if (bracketStart == -1 || bracketEnd == -1 || bracketEnd <= bracketStart) {
-            // Invalid format, return basic selector
+            
             if (selector.startsWith(SELECTOR_NEAREST)) {
                 return new TargetSelector(TargetType.NEAREST, selector);
             } else if (selector.startsWith(SELECTOR_RANDOM)) {
@@ -362,9 +362,9 @@ public class TargetSelector {
             return new TargetSelector(TargetType.SELF, selector);
         }
         
-        // Extract the selector type
+        
         String selectorType = selector.substring(0, bracketStart);
-        // Extract the arguments part
+        
         String arguments = selector.substring(bracketStart + 1, bracketEnd);
         
         TargetType targetType;
@@ -389,7 +389,7 @@ public class TargetSelector {
         return new TargetSelector(targetType, arguments);
     }
     
-    // Getters
+    
     public TargetType getTargetType() {
         return targetType;
     }

@@ -20,7 +20,7 @@ public class WorldGuardRegionCheckCondition implements BlockCondition {
         if (player == null) return false;
         
         try {
-            // Get parameters from the new parameter system
+            
             DataValue regionNameValue = block.getParameter("region_name");
             DataValue worldNameValue = block.getParameter("world");
             
@@ -29,7 +29,7 @@ public class WorldGuardRegionCheckCondition implements BlockCondition {
                 return false;
             }
             
-            // Resolve any placeholders in the parameters
+            
             ParameterResolver resolver = new ParameterResolver(context);
             DataValue resolvedRegionName = resolver.resolve(context, regionNameValue);
             
@@ -44,40 +44,40 @@ public class WorldGuardRegionCheckCondition implements BlockCondition {
             worldName = (worldName != null && !worldName.isEmpty()) ? 
                 worldName : player.getWorld().getName();
             
-            // Check if WorldGuard is available
+            
             if (!Bukkit.getPluginManager().isPluginEnabled("WorldGuard")) {
                 context.getPlugin().getLogger().warning("WorldGuardRegionCheckCondition: WorldGuard is not installed or enabled.");
                 return false;
             }
             
-            // Get the world
+            
             World world = Bukkit.getWorld(worldName);
             if (world == null) {
                 context.getPlugin().getLogger().warning("WorldGuardRegionCheckCondition: World '" + worldName + "' not found.");
                 return false;
             }
             
-            // Try to get WorldGuard API
+            
             try {
-                // Use reflection to access WorldGuard API to avoid direct dependency
+                
                 Class<?> worldGuardClass = Class.forName("com.sk89q.worldguard.WorldGuard");
                 Object worldGuardInstance = worldGuardClass.getMethod("getInstance").invoke(null);
                 Object platform = worldGuardInstance.getClass().getMethod("getPlatform").invoke(worldGuardInstance);
                 Object regionContainer = platform.getClass().getMethod("getRegionContainer").invoke(platform);
                 
-                // Get the world wrapper
+                
                 Class<?> worldEditWorldClass = Class.forName("com.sk89q.worldedit.world.World");
                 Class<?> bukkitAdapterClass = Class.forName("com.sk89q.worldedit.bukkit.BukkitAdapter");
                 Object worldEditWorld = bukkitAdapterClass.getMethod("adapt", World.class).invoke(null, world);
                 
-                // Get region manager for the world
+                
                 Object regionManager = regionContainer.getClass().getMethod("get", worldEditWorldClass).invoke(regionContainer, worldEditWorld);
                 if (regionManager == null) {
                     context.getPlugin().getLogger().warning("WorldGuardRegionCheckCondition: No region manager for world '" + worldName + "'.");
                     return false;
                 }
                 
-                // Get the region
+                
                 Class<?> protectedRegionClass = Class.forName("com.sk89q.worldguard.protection.regions.ProtectedRegion");
                 Object region = regionManager.getClass().getMethod("getRegion", String.class).invoke(regionManager, regionName);
                 if (region == null) {
@@ -85,7 +85,7 @@ public class WorldGuardRegionCheckCondition implements BlockCondition {
                     return false;
                 }
                 
-                // Check if player is in the region
+                
                 Class<?> locationClass = Class.forName("com.sk89q.worldedit.util.Location");
                 Class<?> vector3Class = Class.forName("com.sk89q.worldedit.math.Vector3");
                 Object playerLocation = bukkitAdapterClass.getMethod("adapt", org.bukkit.Location.class).invoke(null, player.getLocation());

@@ -28,16 +28,16 @@ public class AddPlayerToTeamAction implements BlockAction {
         }
 
         try {
-            // Get parameters using the new unified parameter system
+            
             String teamName = ParameterUtils.getStringParameter(block, context, "teamName", "teamName", "");
             String targetPlayer = ParameterUtils.getStringParameter(block, context, "targetPlayer", "targetPlayer", "");
             
-            // If no target player is specified, use the current player
+            
             if (targetPlayer == null || targetPlayer.isEmpty()) {
                 targetPlayer = player.getName();
             }
 
-            // Resolve any placeholders in the parameters
+            
             ParameterResolver resolver = new ParameterResolver(context);
             teamName = resolver.resolveString(context, teamName);
             targetPlayer = resolver.resolveString(context, targetPlayer);
@@ -46,7 +46,7 @@ public class AddPlayerToTeamAction implements BlockAction {
                 return ExecutionResult.error("Invalid team name");
             }
 
-            // Add player to the team using the scoreboard system
+            
             Scoreboard scoreboard = player.getScoreboard();
             Team team = scoreboard.getTeam(teamName);
             
@@ -54,7 +54,7 @@ public class AddPlayerToTeamAction implements BlockAction {
                 return ExecutionResult.error("Team not found: " + teamName);
             }
             
-            // Add the player to the team
+            
             team.addEntry(targetPlayer);
 
             return ExecutionResult.success("Player added to team successfully");

@@ -77,19 +77,19 @@ public class MessagingService {
             return;
         }
         
-        // Create a beautiful formatted chat message
+        
         Component chatMessage = Component.text()
             .append(Component.text("[Глобальный Чат] ", NamedTextColor.GOLD, TextDecoration.BOLD))
             .append(Component.text(player.getName() + ": ", NamedTextColor.AQUA))
             .append(Component.text(message, NamedTextColor.WHITE))
             .build();
         
-        // Send to all online players
+        
         for (Player onlinePlayer : plugin.getServer().getOnlinePlayers()) {
             adventure.player(onlinePlayer).sendMessage(chatMessage);
         }
         
-        // Also send to console
+        
         adventure.console().sendMessage(chatMessage);
         
         logger.info("[Global Chat] " + player.getName() + ": " + message);
@@ -158,7 +158,7 @@ public class MessagingService {
      * @return Component with gradient colors
      */
     public Component createGradientText(String text) {
-        // Simple gradient from gold to aqua
+        
         return Component.text(text)
             .color(NamedTextColor.GOLD);
     }

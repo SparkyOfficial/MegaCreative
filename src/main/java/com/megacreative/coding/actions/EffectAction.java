@@ -27,7 +27,7 @@ public class EffectAction implements BlockAction {
         }
 
         try {
-            // Get effect parameters from the new parameter system
+            
             DataValue effectValue = block.getParameter("effect");
             DataValue durationValue = block.getParameter("duration");
             DataValue amplifierValue = block.getParameter("amplifier");
@@ -36,7 +36,7 @@ public class EffectAction implements BlockAction {
                 return ExecutionResult.error("No effect provided");
             }
 
-            // Resolve any placeholders in the effect name
+            
             ParameterResolver resolver = new ParameterResolver(context);
             DataValue resolvedEffect = resolver.resolve(context, effectValue);
             
@@ -45,37 +45,37 @@ public class EffectAction implements BlockAction {
                 return ExecutionResult.error("Invalid effect name");
             }
 
-            // Parse effect type
+            
             PotionEffectType effectType = parsePotionEffect(effectName);
             if (effectType == null) {
                 return ExecutionResult.error("Unknown effect: " + effectName);
             }
 
-            // Parse duration (default to 30 seconds)
-            int duration = 600; // 30 seconds in ticks
+            
+            int duration = 600; 
             if (durationValue != null && !durationValue.isEmpty()) {
                 try {
-                    duration = Integer.parseInt(durationValue.asString()) * 20; // Convert seconds to ticks
+                    duration = Integer.parseInt(durationValue.asString()) * 20; 
                 } catch (NumberFormatException e) {
-                    // Use default duration
+                    
                 }
             }
 
-            // Parse amplifier (default to level 1)
-            int amplifier = 0; // Level 1 (amplifier 0)
+            
+            int amplifier = 0; 
             if (amplifierValue != null && !amplifierValue.isEmpty()) {
                 try {
-                    amplifier = Integer.parseInt(amplifierValue.asString()) - 1; // Convert level to amplifier
+                    amplifier = Integer.parseInt(amplifierValue.asString()) - 1; 
                 } catch (NumberFormatException e) {
-                    // Use default amplifier
+                    
                 }
             }
 
-            // Validate and constrain parameters
-            duration = Math.max(1, Math.min(72000, duration)); // 1 tick to 1 hour
-            amplifier = Math.max(0, Math.min(255, amplifier)); // Level 1-256
+            
+            duration = Math.max(1, Math.min(72000, duration)); 
+            amplifier = Math.max(0, Math.min(255, amplifier)); 
 
-            // Create and apply the potion effect
+            
             PotionEffect potionEffect = new PotionEffect(effectType, duration, amplifier);
             player.addPotionEffect(potionEffect);
             
@@ -97,10 +97,10 @@ public class EffectAction implements BlockAction {
         }
         
         try {
-            // Try parsing as direct enum name first
+            
             return PotionEffectType.getByName(effectName.toUpperCase());
         } catch (Exception e) {
-            // Try common effect name mappings
+            
             String upperName = effectName.toUpperCase().replace(" ", "_");
             
             switch (upperName) {
@@ -156,7 +156,7 @@ public class EffectAction implements BlockAction {
                 case "HUNGER":
                     return PotionEffectType.SATURATION;
                 default:
-                    // Try with minecraft namespace
+                    
                     return PotionEffectType.getByName("minecraft:" + effectName.toLowerCase());
             }
         }

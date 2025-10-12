@@ -71,12 +71,12 @@ public class StopRepeatCommand implements CommandExecutor {
         
         Player player = (Player) sender;
         
-        // Получаем RepeatingTaskManager из ServiceRegistry
+        
         ServiceRegistry serviceRegistry = plugin.getServiceRegistry();
         RepeatingTaskManager taskManager = serviceRegistry.getRepeatingTaskManager();
         
         if (args.length == 0) {
-            // Останавливаем задачи для текущего игрока
+            
             if (taskManager.hasActiveTask(player.getUniqueId())) {
                 taskManager.stopRepeatingTask(player.getUniqueId());
                 player.sendMessage("§a✅ Ваши повторяющиеся задачи остановлены!");
@@ -84,7 +84,7 @@ public class StopRepeatCommand implements CommandExecutor {
                 player.sendMessage("§eℹ У вас нет активных повторяющихся задач.");
             }
         } else if (args.length == 1 && args[0].equalsIgnoreCase("all")) {
-            // Останавливаем все задачи (только для операторов)
+            
             if (player.isOp()) {
                 int stoppedCount = taskManager.stopAllRepeatingTasks();
                 player.sendMessage("§a✅ Остановлено " + stoppedCount + " повторяющихся задач!");

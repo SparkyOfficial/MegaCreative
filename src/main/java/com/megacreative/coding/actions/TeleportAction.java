@@ -26,7 +26,7 @@ public class TeleportAction implements BlockAction {
         }
 
         try {
-            // Get location parameters from the new parameter system
+            
             DataValue xValue = block.getParameter("x");
             DataValue yValue = block.getParameter("y");
             DataValue zValue = block.getParameter("z");
@@ -36,12 +36,12 @@ public class TeleportAction implements BlockAction {
                 return ExecutionResult.error("Location coordinates are not configured");
             }
 
-            // Parse coordinates
+            
             double x = Double.parseDouble(xValue.asString());
             double y = Double.parseDouble(yValue.asString());
             double z = Double.parseDouble(zValue.asString());
             
-            // Determine world (default to current world)
+            
             World world = player.getWorld();
             if (worldValue != null && !worldValue.isEmpty()) {
                 World targetWorld = org.bukkit.Bukkit.getWorld(worldValue.asString());
@@ -50,7 +50,7 @@ public class TeleportAction implements BlockAction {
                 }
             }
 
-            // Create location and teleport player
+            
             Location location = new Location(world, x, y, z);
             player.teleport(location);
             

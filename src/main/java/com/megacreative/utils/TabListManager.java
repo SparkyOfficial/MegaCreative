@@ -14,9 +14,9 @@ import org.bukkit.entity.Player;
  */
 public class TabListManager {
 
-    // ASCII-арт, который будет в заголовке
-    // ASCII art that will be in the header
-    // ASCII-Kunst, die in der Kopfzeile steht
+    
+    
+    
     private static final String HEADER =
             ChatColor.AQUA + "" + ChatColor.BOLD + " __  __      _        ______                _   \n" +
             ChatColor.AQUA + "" + ChatColor.BOLD + "|  \\/  |    | |      |  ____|              | |  \n" +
@@ -43,16 +43,16 @@ public class TabListManager {
                 ChatColor.DARK_GRAY + " | " +
                 ChatColor.GRAY + "Ваш пинг: " + ChatColor.GREEN + player.getPing() + "ms" +
                 "\n" + ChatColor.AQUA + "Приятной игры!";
-                // Players online:
-                // Your ping:
-                // Have a nice game!
-                // Spieler online:
-                // Dein Ping:
-                // Viel Spaß beim Spielen!
+                
+                
+                
+                
+                
+                
 
-        // Конвертируем старый формат в новый
-        // Convert old format to new
-        // Konvertiere altes Format in neues
+        
+        
+        
         Component headerComponent = Component.text(HEADER);
         Component footerComponent = Component.text(footerText);
 

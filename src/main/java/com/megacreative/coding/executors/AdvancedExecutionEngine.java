@@ -39,19 +39,19 @@ import java.util.ArrayList;
 public class AdvancedExecutionEngine {
     
     public enum ExecutionMode {
-        SYNCHRONOUS,        // Execute immediately on main thread
-        ASYNCHRONOUS,      // Execute on async thread pool
-        DELAYED,           // Execute after specified delay
-        BATCH,             // Execute multiple scripts together
-        PRIORITIZED        // Execute based on priority levels
+        SYNCHRONOUS,        
+        ASYNCHRONOUS,      
+        DELAYED,           
+        BATCH,             
+        PRIORITIZED        
     }
     
     public enum Priority {
-        CRITICAL(0),    // Real-time operations (movement, combat)
-        HIGH(1),        // Important events (join, death)
-        NORMAL(2),      // Standard operations (chat, commands)
-        LOW(3),         // Background tasks (statistics, cleanup)
-        IDLE(4);        // Non-essential operations
+        CRITICAL(0),    
+        HIGH(1),        
+        NORMAL(2),      
+        LOW(3),         
+        IDLE(4);        
         
         private final int level;
         
@@ -70,13 +70,13 @@ public class AdvancedExecutionEngine {
     private final Map<Priority, List<ExecutionTask>> priorityQueues;
     private final ExecutionMonitor monitor;
     
-    // Performance settings
+    
     private static final int MAX_ASYNC_THREADS = 4;
-    private static final int MAX_EXECUTION_TIME_MS = 5000; // 5 seconds max per script
+    private static final int MAX_EXECUTION_TIME_MS = 5000; 
     private static final int MAX_INSTRUCTIONS_PER_TICK = 1000;
     private static final int BATCH_SIZE = 10;
     
-    // Statistics
+    
     private long totalExecutions = 0;
     private long successfulExecutions = 0;
     private long failedExecutions = 0;
@@ -89,12 +89,12 @@ public class AdvancedExecutionEngine {
         this.priorityQueues = new ConcurrentHashMap<>();
         this.monitor = new ExecutionMonitor();
         
-        // Initialize priority queues
+        
         for (Priority priority : Priority.values()) {
             priorityQueues.put(priority, new ArrayList<>());
         }
         
-        // Start background processor
+        
         startBackgroundProcessor();
         
         plugin.getLogger().info("🎆 Advanced Execution Engine initialized with " + MAX_ASYNC_THREADS + " async threads");
@@ -122,7 +122,7 @@ public class AdvancedExecutionEngine {
                 return executeAsynchronous(session, future, startTime);
             
             case DELAYED:
-                return executeDelayed(session, future, startTime, 20L); // 1 second default delay
+                return executeDelayed(session, future, startTime, 20L); 
             
             case BATCH:
                 return executeBatch(session, future, startTime);
@@ -142,7 +142,7 @@ public class AdvancedExecutionEngine {
     private CompletableFuture<ExecutionResult> executeSynchronous(ExecutionSession session, 
                                                                  CompletableFuture<ExecutionResult> future, long startTime) {
         try {
-            // Execute immediately on main thread
+            
             new BukkitRunnable() {
                 @Override
                 public void run() {
@@ -173,7 +173,7 @@ public class AdvancedExecutionEngine {
     private CompletableFuture<ExecutionResult> executeAsynchronous(ExecutionSession session, 
                                                                   CompletableFuture<ExecutionResult> future, long startTime) {
         try {
-            // Execute on async thread pool
+            
             asyncExecutor.submit(() -> {
                 try {
                     ExecutionResult result = executeScriptInternal(session);
@@ -230,7 +230,7 @@ public class AdvancedExecutionEngine {
      */
     private CompletableFuture<ExecutionResult> executeBatch(ExecutionSession session, 
                                                            CompletableFuture<ExecutionResult> future, long startTime) {
-        // Add to batch queue and process when batch is full or timeout occurs
+        
         synchronized (priorityQueues.get(Priority.NORMAL)) {
             priorityQueues.get(Priority.NORMAL).add(new ExecutionTask(session, future, startTime));
         }
@@ -255,7 +255,7 @@ public class AdvancedExecutionEngine {
      */
     private ExecutionResult executeScriptInternal(ExecutionSession session) {
         try {
-            // Create execution context with enhanced monitoring
+            
             ExecutionContext context = new ExecutionContext.Builder()
                 .plugin(plugin)
                 .player(session.getPlayer())
@@ -266,10 +266,10 @@ public class AdvancedExecutionEngine {
                 .maxInstructions(getMaxInstructionsForPriority(session.getPriority()))
                 .build();
             
-            // Set execution timeout
+            
             context.setExecutionTimeout(System.currentTimeMillis() + MAX_EXECUTION_TIME_MS);
             
-            // Execute using default script engine
+            
             return plugin.getServiceRegistry().getService(com.megacreative.coding.ScriptEngine.class)
                 .executeScript(session.getScript(), session.getPlayer(), session.getTrigger())
                 .get(MAX_EXECUTION_TIME_MS, TimeUnit.MILLISECONDS);
@@ -304,7 +304,7 @@ public class AdvancedExecutionEngine {
                 processBatchQueues();
                 monitor.updateStatistics();
             }
-        }.runTaskTimerAsynchronously(plugin, 20L, 20L); // Run every second
+        }.runTaskTimerAsynchronously(plugin, 20L, 20L); 
     }
     
     /**
@@ -341,7 +341,7 @@ public class AdvancedExecutionEngine {
                     batch.add(batchQueue.remove(0));
                 }
                 
-                // Execute batch on main thread
+                
                 new BukkitRunnable() {
                     @Override
                     public void run() {
@@ -396,7 +396,7 @@ public class AdvancedExecutionEngine {
             failedExecutions++;
         }
         
-        // Calculate rolling average
+        
         averageExecutionTime = (averageExecutionTime + executionTime) / 2;
         
         monitor.recordExecution(executionTime, success);
@@ -434,14 +434,14 @@ public class AdvancedExecutionEngine {
      * Shutdown the execution engine
      */
     public void shutdown() {
-        // Cancel all active sessions
+        
         activeSessions.values().forEach(ExecutionSession::cancel);
         activeSessions.clear();
         
-        // Clear all queues
+        
         priorityQueues.values().forEach(List::clear);
         
-        // Shutdown async executor
+        
         asyncExecutor.shutdown();
         try {
             if (!asyncExecutor.awaitTermination(5, TimeUnit.SECONDS)) {
@@ -455,7 +455,7 @@ public class AdvancedExecutionEngine {
         plugin.getLogger().info("🎆 Advanced Execution Engine shutdown complete");
     }
     
-    // Inner classes
+    
     
     /**
      * Execution session data
@@ -478,7 +478,7 @@ public class AdvancedExecutionEngine {
             this.trigger = trigger;
         }
         
-        // Getters
+        
         public UUID getId() { return id; }
         public CodeScript getScript() { return script; }
         public Player getPlayer() { return player; }
@@ -525,7 +525,7 @@ public class AdvancedExecutionEngine {
             long currentTime = System.currentTimeMillis();
             long timeDiff = currentTime - lastUpdateTime;
             
-            if (timeDiff >= 1000) { // Update every second
+            if (timeDiff >= 1000) { 
                 throughput = (executionsLastSecond * 1000.0) / timeDiff;
                 executionsLastSecond = 0;
                 lastUpdateTime = currentTime;
@@ -560,7 +560,7 @@ public class AdvancedExecutionEngine {
             this.throughput = throughput;
         }
         
-        // Getters
+        
         public long getTotalExecutions() { return totalExecutions; }
         public long getSuccessfulExecutions() { return successfulExecutions; }
         public long getFailedExecutions() { return failedExecutions; }

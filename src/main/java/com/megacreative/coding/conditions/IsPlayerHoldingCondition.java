@@ -26,7 +26,7 @@ public class IsPlayerHoldingCondition implements BlockCondition {
         }
 
         try {
-            // Get parameters from the new parameter system
+            
             DataValue itemValue = block.getParameter("item");
             
             if (itemValue == null || itemValue.isEmpty()) {
@@ -34,18 +34,18 @@ public class IsPlayerHoldingCondition implements BlockCondition {
                 return false;
             }
 
-            // Resolve any placeholders in the item name
+            
             ParameterResolver resolver = new ParameterResolver(context);
             DataValue resolvedItem = resolver.resolve(context, itemValue);
             
-            // Parse item parameter
+            
             String itemName = resolvedItem.asString();
             if (itemName == null || itemName.isEmpty()) {
                 context.getPlugin().getLogger().warning("IsPlayerHoldingCondition: 'item' parameter is empty.");
                 return false;
             }
 
-            // Check if player is holding the specified item
+            
             try {
                 Material material = Material.valueOf(itemName.toUpperCase());
                 ItemStack itemInHand = player.getInventory().getItemInMainHand();
@@ -56,7 +56,7 @@ public class IsPlayerHoldingCondition implements BlockCondition {
                 return false;
             }
         } catch (Exception e) {
-            // If there's an error, return false
+            
             context.getPlugin().getLogger().warning("Error in IsPlayerHoldingCondition: " + e.getMessage());
             return false;
         }

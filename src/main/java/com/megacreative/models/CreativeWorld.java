@@ -77,12 +77,12 @@ public class CreativeWorld {
      *
      * 🎆 ENHANCED: Reference system-style: Duale Weltunterstützung
      */
-    private String pairedWorldId; // ID of the paired world (dev/play)
-    // ID парного мира (dev/play)
-    // ID der gekoppelten Welt (dev/play)
-    private WorldDualMode dualMode; // Whether this is dev or play world
-    // Является ли это миром разработки или игры
-    // Ob es sich um eine Entwicklungs- oder Spielwelt handelt
+    private String pairedWorldId; 
+    
+    
+    private WorldDualMode dualMode; 
+    
+    
     
     /**
      * 🎆 ENHANCED: Advanced permission system
@@ -160,14 +160,14 @@ public class CreativeWorld {
      */
     public enum WorldDualMode {
         DEV("code", "§e🔧 Development"),
-        // Разработка
-        // Entwicklung
+        
+        
         PLAY("world", "§a🎮 Play"),
-        // Игра
-        // Spielen
+        
+        
         STANDALONE("single", "§7📦 Standalone");
-        // Автономный
-        // Eigenständig
+        
+        
         
         private final String suffix;
         private final String displayName;
@@ -223,9 +223,9 @@ public class CreativeWorld {
      * Standardkonstruktor
      */
     public CreativeWorld() {
-        // Конструктор по умолчанию для десериализации
-        // Default constructor for deserialization
-        // Standardkonstruktor für Deserialisierung
+        
+        
+        
         this.flags = new WorldFlags();
         this.trustedBuilders = new HashSet<>();
         this.trustedAdmins = new HashSet<>();
@@ -288,15 +288,15 @@ public class CreativeWorld {
         this.scripts = new ArrayList<>();
         this.onlinePlayers = new HashSet<>();
         
-        // 🎆 ENHANCED: Initialize dual world support
-        // 🎆 ENHANCED: Инициализировать двойную поддержку миров
-        // 🎆 ENHANCED: Duale Weltunterstützung initialisieren
+        
+        
+        
         this.dualMode = WorldDualMode.STANDALONE;
         this.pairedWorldId = null;
         
-        // 🎆 ENHANCED: Initialize advanced permissions
-        // 🎆 ENHANCED: Инициализировать продвинутые разрешения
-        // 🎆 ENHANCED: Erweiterte Berechtigungen initialisieren
+        
+        
+        
         this.permissions = new WorldPermissions();
     }
     
@@ -353,9 +353,9 @@ public class CreativeWorld {
      * @return Entwicklungs-Weltname
      */
     public String getDevWorldName() {
-        // Legacy support - now returns the dev mode world name
-        // Поддержка устаревших версий - теперь возвращает имя мира разработки
-        // Legacy-Unterstützung - gibt jetzt den Entwicklungsmodus-Weltnamen zurück
+        
+        
+        
         if (dualMode == WorldDualMode.DEV) {
             return getWorldName();
         }
@@ -474,17 +474,17 @@ public class CreativeWorld {
      * @return true, wenn der Spieler bearbeiten kann
      */
     public boolean canEdit(Player player) {
-        // 🎆 ENHANCED: Use advanced permission system with fallback to legacy
-        // 🎆 ENHANCED: Использовать продвинутую систему разрешений с откатом к устаревшей
-        // 🎆 ENHANCED: Erweitertes Berechtigungssystem mit Fallback zur Legacy-Version verwenden
+        
+        
+        
         if (permissions != null) {
             return isOwner(player) || 
                    permissions.canAccess(player, dualMode) && 
                    permissions.canPerform(player, "build", dualMode);
         }
-        // Legacy fallback
-        // Откат к устаревшей версии
-        // Legacy-Fallback
+        
+        
+        
         return isOwner(player) || isTrustedBuilder(player);
     }
     
@@ -502,17 +502,17 @@ public class CreativeWorld {
      * @return true, wenn der Spieler codieren kann
      */
     public boolean canCode(Player player) {
-        // 🎆 ENHANCED: Use advanced permission system with fallback to legacy
-        // 🎆 ENHANCED: Использовать продвинутую систему разрешений с откатом к устаревшей
-        // 🎆 ENHANCED: Erweitertes Berechtigungssystem mit Fallback zur Legacy-Version verwenden
+        
+        
+        
         if (permissions != null) {
             return isOwner(player) || 
                    permissions.canAccess(player, dualMode) && 
                    permissions.canPerform(player, "code", dualMode);
         }
-        // Legacy fallback
-        // Откат к устаревшей версии
-        // Legacy-Fallback
+        
+        
+        
         return isOwner(player) || isTrustedCoder(player);
     }
        
@@ -527,9 +527,9 @@ public class CreativeWorld {
         if (permissions != null) {
             return isOwner(player) || permissions.canAccess(player, mode);
         }
-        // Legacy fallback - public access
-        // Откат к устаревшей версии - публичный доступ
-        // Legacy-Fallback - öffentlicher Zugriff
+        
+        
+        
         return !isPrivate || isOwner(player) || isTrustedBuilder(player);
     }
     
@@ -544,9 +544,9 @@ public class CreativeWorld {
         if (permissions != null) {
             return isOwner(player) || permissions.canPerform(player, action, dualMode);
         }
-        // Legacy fallback
-        // Откат к устаревшей версии
-        // Legacy-Fallback
+        
+        
+        
         switch (action.toLowerCase()) {
             case "build":
             case "edit":
@@ -797,9 +797,9 @@ public class CreativeWorld {
         return players;
     }
     
-    // Дополнительные геттеры для совместимости
-    // Additional getters for compatibility
-    // Zusätzliche Getter für Kompatibilität
+    
+    
+    
     public String getId() {
         return id;
     }
@@ -815,9 +815,9 @@ public class CreativeWorld {
         try {
             return UUID.fromString(id);
         } catch (IllegalArgumentException e) {
-            // Generate a consistent UUID from the string ID if it's not a valid UUID
-            // Генерировать согласованный UUID из строкового ID, если это недопустимый UUID
-            // Einen konsistenten UUID aus der Zeichenfolgen-ID generieren, wenn es kein gültiger UUID ist
+            
+            
+            
             return UUID.nameUUIDFromBytes(id.getBytes(java.nio.charset.StandardCharsets.UTF_8));
         }
     }

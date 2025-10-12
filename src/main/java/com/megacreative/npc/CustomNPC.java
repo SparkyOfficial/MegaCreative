@@ -25,7 +25,7 @@ public class CustomNPC {
         this.uniqueId = UUID.randomUUID();
         this.name = name;
         this.location = location.clone();
-        this.equipment = new ItemStack[6]; // Helmet, Chestplate, Leggings, Boots, Main Hand, Off Hand
+        this.equipment = new ItemStack[6]; 
         this.gravity = true;
         this.visible = true;
         this.collidable = true;
@@ -36,8 +36,8 @@ public class CustomNPC {
      * @return true if successful, false otherwise
      */
     public boolean spawn() {
-        // This would be implemented with a library like Citizens or custom entity creation
-        // For now, we'll just mark it as spawned
+        
+        
         return true;
     }
     
@@ -57,7 +57,7 @@ public class CustomNPC {
      */
     public void lookAt(Player player) {
         if (entity != null && player != null) {
-            // Implementation would depend on the NPC library used
+            
         }
     }
     
@@ -67,7 +67,7 @@ public class CustomNPC {
      */
     public void walkTo(Location target) {
         if (entity != null && target != null) {
-            // Implementation would depend on the NPC library used
+            
         }
     }
     
@@ -77,7 +77,7 @@ public class CustomNPC {
      */
     public void playAnimation(String animation) {
         if (entity != null) {
-            // Implementation would depend on the NPC library used
+            
         }
     }
     
@@ -87,7 +87,7 @@ public class CustomNPC {
      */
     public void talk(String message) {
         if (entity != null) {
-            // Implementation would depend on the NPC library used
+            
         }
     }
     
@@ -100,7 +100,7 @@ public class CustomNPC {
         if (slot >= 0 && slot < equipment.length) {
             equipment[slot] = item;
             if (entity != null) {
-                // Update the entity's equipment
+                
             }
         }
     }
@@ -117,7 +117,7 @@ public class CustomNPC {
         return null;
     }
     
-    // Getters and setters
+    
     
     public UUID getUniqueId() {
         return uniqueId;
@@ -161,7 +161,7 @@ public class CustomNPC {
     public void setGravity(boolean gravity) {
         this.gravity = gravity;
         if (entity != null) {
-            // Set gravity on the entity
+            
         }
     }
     
@@ -172,7 +172,7 @@ public class CustomNPC {
     public void setVisible(boolean visible) {
         this.visible = visible;
         if (entity != null) {
-            // Set visibility on the entity
+            
         }
     }
     
@@ -183,7 +183,7 @@ public class CustomNPC {
     public void setCollidable(boolean collidable) {
         this.collidable = collidable;
         if (entity != null) {
-            // Set collision on the entity
+            
         }
     }
 }

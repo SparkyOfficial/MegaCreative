@@ -72,7 +72,7 @@ public class PlayCommand implements CommandExecutor {
         }
         
         try {
-            // Find the creative world
+            
             CreativeWorld creativeWorld = plugin.getServiceRegistry().getWorldManager().findCreativeWorldByBukkit(player.getWorld());
             
             if (creativeWorld == null) {
@@ -80,10 +80,10 @@ public class PlayCommand implements CommandExecutor {
                 return true;
             }
             
-            // Switch to play world using WorldManager
+            
             plugin.getServiceRegistry().getWorldManager().switchToPlayWorld(player, creativeWorld.getId());
             
-            // Execute onJoin script if it exists
+            
             executeOnJoinScript(player, creativeWorld);
             
             return true;
@@ -101,14 +101,14 @@ public class PlayCommand implements CommandExecutor {
      */
     private void executeOnJoinScript(Player player, CreativeWorld creativeWorld) {
         try {
-            // Find the onJoin script using the new architecture
+            
             if (creativeWorld.getScripts() != null) {
                 for (CodeScript script : creativeWorld.getScripts()) {
-                    // Check if the script's root block is an onJoin event
+                    
                     if (script.getRootBlock() != null && 
                         "onJoin".equals(script.getRootBlock().getAction())) {
                         
-                        // Execute script using ScriptEngine
+                        
                         if (plugin.getServiceRegistry().getScriptEngine() != null) {
                             plugin.getServiceRegistry().getScriptEngine().executeScript(script, player, "play_mode_start")
                                 .whenComplete((result, throwable) -> {
@@ -121,7 +121,7 @@ public class PlayCommand implements CommandExecutor {
                                                 player.sendMessage("§conJoin script execution failed: " + result.getMessage());
                                                 plugin.getLogger().warning("onJoin script execution failed for player " + player.getName() + ": " + result.getMessage());
                                                 
-                                                // Log additional error details if available
+                                                
                                                 if (result.getError() != null) {
                                                     plugin.getLogger().log(Level.WARNING, "Detailed error for onJoin script execution", result.getError());
                                                 }

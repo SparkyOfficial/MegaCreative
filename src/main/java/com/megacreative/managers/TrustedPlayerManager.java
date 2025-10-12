@@ -45,12 +45,12 @@ public class TrustedPlayerManager implements ITrustedPlayerManager {
     @Override
     public void saveTrustedPlayers() {
         try {
-            // Clear existing data
+            
             for (String key : config.getKeys(false)) {
                 config.set(key, null);
             }
             
-            // Save trusted players by world
+            
             for (Map.Entry<UUID, Map<UUID, TrustedPlayer>> worldEntry : worldTrustedPlayers.entrySet()) {
                 String worldKey = worldEntry.getKey().toString();
                 ConfigurationSection worldSection = config.createSection(worldKey);
@@ -67,7 +67,7 @@ public class TrustedPlayerManager implements ITrustedPlayerManager {
                 }
             }
             
-            // Save to file
+            
             config.save(trustedPlayersFile);
         } catch (IOException e) {
             plugin.getLogger().severe("Ошибка при сохранении доверенных игроков: " + e.getMessage());
@@ -83,10 +83,10 @@ public class TrustedPlayerManager implements ITrustedPlayerManager {
         }
         
         try {
-            // Load the configuration
+            
             config.load(trustedPlayersFile);
             
-            // Load trusted players by world
+            
             for (String worldKey : config.getKeys(false)) {
                 try {
                     UUID worldId = UUID.fromString(worldKey);
@@ -146,12 +146,12 @@ public class TrustedPlayerManager implements ITrustedPlayerManager {
     
     @Override
     public boolean canCodeInDevWorld(Player player) {
-        // Ops can always code
+        
         if (player.isOp()) {
             return true;
         }
         
-        // Check if player is a trusted coder in any world
+        
         for (Map<UUID, TrustedPlayer> worldPlayers : worldTrustedPlayers.values()) {
             TrustedPlayer trustedPlayer = worldPlayers.get(player.getUniqueId());
             if (trustedPlayer != null && trustedPlayer.getType() == TrustedPlayer.TrustedPlayerType.TRUSTED_CODER) {
@@ -171,19 +171,19 @@ public class TrustedPlayerManager implements ITrustedPlayerManager {
         UUID worldId = world.getWorldId();
         UUID playerId = trustedPlayer.getUniqueId();
         
-        // Initialize world entry if it doesn't exist
+        
         worldTrustedPlayers.computeIfAbsent(worldId, k -> new HashMap<>());
         
-        // Check if player is already trusted
+        
         if (worldTrustedPlayers.get(worldId).containsKey(playerId)) {
-            return; // Already trusted
+            return; 
         }
         
-        // Add the player as trusted for this world
+        
         TrustedPlayer trusted = new TrustedPlayer(
             playerId,
             trustedPlayer.getName(),
-            TrustedPlayer.TrustedPlayerType.TRUSTED_BUILDER, // Default to builder
+            TrustedPlayer.TrustedPlayerType.TRUSTED_BUILDER, 
             System.currentTimeMillis(),
             owner.getUniqueId()
         );
@@ -201,7 +201,7 @@ public class TrustedPlayerManager implements ITrustedPlayerManager {
         UUID worldId = world.getWorldId();
         UUID playerId = trustedPlayer.getUniqueId();
         
-        // Remove the player from the world's trusted players if they exist
+        
         if (worldTrustedPlayers.containsKey(worldId)) {
             Map<UUID, TrustedPlayer> worldPlayers = worldTrustedPlayers.get(worldId);
             if (worldPlayers != null && worldPlayers.remove(playerId) != null) {
@@ -219,15 +219,15 @@ public class TrustedPlayerManager implements ITrustedPlayerManager {
         UUID worldId = world.getWorldId();
         UUID playerId = player.getUniqueId();
         
-        // Check if the world has any trusted players
+        
         if (!worldTrustedPlayers.containsKey(worldId)) {
             return false;
         }
         
-        // Get the world's trusted players map
+        
         Map<UUID, TrustedPlayer> worldPlayers = worldTrustedPlayers.get(worldId);
         
-        // Check if the player is in the trusted players map
+        
         return worldPlayers != null && worldPlayers.containsKey(playerId);
     }
     
@@ -239,7 +239,7 @@ public class TrustedPlayerManager implements ITrustedPlayerManager {
         
         UUID worldId = world.getWorldId();
         
-        // Return an empty list if the world has no trusted players
+        
         if (!worldTrustedPlayers.containsKey(worldId)) {
             return new ArrayList<>();
         }
@@ -307,7 +307,7 @@ public class TrustedPlayerManager implements ITrustedPlayerManager {
         
         for (Map.Entry<UUID, Map<UUID, TrustedPlayer>> entry : worldTrustedPlayers.entrySet()) {
             if (entry.getValue() != null && entry.getValue().containsKey(playerId)) {
-                // Convert UUID to string for getWorld method
+                
                 CreativeWorld world = plugin.getServiceRegistry().getWorldManager().getWorld(entry.getKey().toString());
                 if (world != null) {
                     trustedWorlds.add(world);

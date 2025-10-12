@@ -92,20 +92,20 @@ public class ChatActivator extends BukkitEventActivator {
             return;
         }
         
-        // Execute all actions associated with this activator
+        
         for (com.megacreative.coding.CodeBlock action : actionList) {
             try {
-                // Get the script engine from the plugin
+                
                 com.megacreative.coding.ScriptEngine scriptEngine = plugin.getServiceRegistry().getScriptEngine();
                 
                 if (scriptEngine != null) {
-                    // Convert the first entity to a player if possible
+                    
                     Player player = null;
                     if (!selectedEntities.isEmpty() && selectedEntities.get(0) instanceof Player) {
                         player = (Player) selectedEntities.get(0);
                     }
                     
-                    // Execute the action block
+                    
                     scriptEngine.executeBlock(action, player, "activator_chat")
                         .thenAccept(result -> {
                             if (!result.isSuccess()) {
@@ -139,12 +139,12 @@ public class ChatActivator extends BukkitEventActivator {
             return;
         }
         
-        // Check if we should only trigger for specific keywords
+        
         if (!anyMessage && keyword != null && !message.contains(keyword)) {
             return;
         }
         
-        // Create a game event with chat context
+        
         GameEvent gameEvent = new GameEvent("onChat");
         gameEvent.setPlayer(player);
         if (location != null) {
@@ -152,12 +152,12 @@ public class ChatActivator extends BukkitEventActivator {
         }
         gameEvent.setMessage(message);
         
-        // Add custom data
+        
         Map<String, Object> customData = new HashMap<>();
         customData.put("message", message);
         gameEvent.setCustomData(customData);
         
-        // Activate the script
+        
         execute(gameEvent, new java.util.ArrayList<>(), 0, new java.util.concurrent.atomic.AtomicInteger(0));
     }
 }

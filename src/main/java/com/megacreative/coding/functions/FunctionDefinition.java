@@ -30,35 +30,35 @@ public class FunctionDefinition {
     private final Player owner;
     private final long createdTime;
     
-    // Function structure
+    
     private final List<FunctionParameter> parameters;
     private final List<CodeBlock> functionBlocks;
     private final ValueType returnType;
     private final FunctionScope scope;
     private final FunctionVisibility visibility;
     
-    // Execution control
+    
     private boolean enabled = true;
     private int maxRecursionDepth = 10;
-    private long maxExecutionTime = 5000; // 5 seconds
+    private long maxExecutionTime = 5000; 
     private int callCount = 0;
     private long totalExecutionTime = 0;
     
-    // Access control
+    
     private final Set<UUID> allowedPlayers = ConcurrentHashMap.newKeySet();
     private final Set<String> requiredPermissions = ConcurrentHashMap.newKeySet();
     
     public enum FunctionScope {
-        GLOBAL,     // Available to all worlds and players
-        WORLD,      // Available only within the same world
-        PLAYER,     // Available only to the owner
-        SHARED      // Available to specified players
+        GLOBAL,     
+        WORLD,      
+        PLAYER,     
+        SHARED      
     }
     
     public enum FunctionVisibility {
-        PUBLIC,     // Visible in function browser
-        PRIVATE,    // Hidden from browser
-        PROTECTED   // Visible only to allowed users
+        PUBLIC,     
+        PRIVATE,    
+        PROTECTED   
     }
     
     public FunctionDefinition(String name, String description, Player owner, List<FunctionParameter> parameters,
@@ -74,7 +74,7 @@ public class FunctionDefinition {
         this.visibility = FunctionVisibility.PUBLIC;
         this.createdTime = System.currentTimeMillis();
         
-        // Validate function structure
+        
         validateFunction();
     }
     
@@ -94,7 +94,7 @@ public class FunctionDefinition {
             throw new IllegalArgumentException("Function must have at least one code block");
         }
         
-        // Check for duplicate parameter names
+        
         Set<String> paramNames = new HashSet<>();
         for (FunctionParameter param : parameters) {
             if (!paramNames.add(param.getName())) {
@@ -111,14 +111,14 @@ public class FunctionDefinition {
             return false;
         }
         
-        // Check scope permissions
+        
         switch (scope) {
             case PLAYER:
                 return player.getUniqueId().equals(owner.getUniqueId());
             case SHARED:
                 return allowedPlayers.contains(player.getUniqueId()) || player.getUniqueId().equals(owner.getUniqueId());
             case WORLD:
-                // Would need world context to check
+                
                 return true;
             case GLOBAL:
                 return true;
@@ -139,12 +139,12 @@ public class FunctionDefinition {
             FunctionParameter param = parameters.get(i);
             DataValue arg = arguments[i];
             
-            // Check required parameters
+            
             if (param.isRequired() && (arg == null || arg.isEmpty())) {
                 return ValidationResult.error("Required parameter '" + param.getName() + "' is missing");
             }
             
-            // Check type compatibility
+            
             if (arg != null && !arg.isEmpty()) {
                 if (!param.getType().isCompatible(arg.getType())) {
                     return ValidationResult.error("Parameter '" + param.getName() + "' expects " + 
@@ -162,7 +162,7 @@ public class FunctionDefinition {
     public Map<String, DataValue> createLocalScope(DataValue[] arguments) {
         Map<String, DataValue> localScope = new HashMap<>();
         
-        // Bind arguments to parameters
+        
         for (int i = 0; i < parameters.size(); i++) {
             FunctionParameter param = parameters.get(i);
             DataValue value = i < arguments.length ? arguments[i] : param.getDefaultValue();
@@ -195,7 +195,7 @@ public class FunctionDefinition {
         return new FunctionStatistics(callCount, avgExecutionTime, totalExecutionTime);
     }
     
-    // Getters and setters
+    
     
     public String getName() { return name; }
     public String getDescription() { return description; }
@@ -215,7 +215,7 @@ public class FunctionDefinition {
     public void setMaxRecursionDepth(int maxRecursionDepth) { this.maxRecursionDepth = maxRecursionDepth; }
     public void setMaxExecutionTime(long maxExecutionTime) { this.maxExecutionTime = maxExecutionTime; }
     
-    // Access control methods
+    
     
     public void addAllowedPlayer(UUID playerId) {
         allowedPlayers.add(playerId);
@@ -259,7 +259,7 @@ public class FunctionDefinition {
             this.description = description;
         }
         
-        // Getters
+        
         public String getName() { return name; }
         public ValueType getType() { return type; }
         public boolean isRequired() { return required; }

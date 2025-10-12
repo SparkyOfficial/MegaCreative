@@ -93,7 +93,7 @@ public class PerformanceCommand implements CommandExecutor, TabCompleter {
         player.sendMessage("§7Script Profiles: §f" + report.getScriptProfilesCount());
         player.sendMessage("§7Uptime: §f" + formatUptime(report.getUptimeMs()));
         
-        // Memory usage
+        
         MemoryUsage memory = report.getMemoryUsage();
         if (memory != null) {
             player.sendMessage("§7Memory Usage: §f" + String.format("%.1f", memory.getUsedMemoryMB()) + "MB / " + 
@@ -101,7 +101,7 @@ public class PerformanceCommand implements CommandExecutor, TabCompleter {
                              "(" + String.format("%.1f", memory.getMemoryUsagePercentage()) + "%)");
         }
         
-        // Garbage collection statistics
+        
         GarbageCollectionMonitor.GcStatistics gcStats = report.getGcStatistics();
         if (gcStats != null) {
             player.sendMessage("§7GC Collections: §f" + gcStats.getTotalGcCount() + 
@@ -113,7 +113,7 @@ public class PerformanceCommand implements CommandExecutor, TabCompleter {
             }
         }
         
-        // Bottlenecks
+        
         Collection<Bottleneck> bottlenecks = report.getBottlenecks();
         if (!bottlenecks.isEmpty()) {
             player.sendMessage("§cDetected Bottlenecks: §f" + bottlenecks.size());
@@ -147,7 +147,7 @@ public class PerformanceCommand implements CommandExecutor, TabCompleter {
         player.sendMessage("§7Success Rate: §f" + String.format("%.1f", profile.getSuccessRate() * 100) + "%");
         player.sendMessage("§7Error Rate: §f" + String.format("%.1f", profile.getErrorRate() * 100) + "%");
         
-        // Action performance data
+        
         Collection<ActionPerformanceData> actionData = profile.getAllActionData();
         if (!actionData.isEmpty()) {
             player.sendMessage("§7Action Performance:");
@@ -172,7 +172,7 @@ public class PerformanceCommand implements CommandExecutor, TabCompleter {
             return;
         }
         
-        // Get the script from the actual script system
+        
         com.megacreative.coding.CodeScript script = plugin.getServiceRegistry().getCodingManager().getScript(scriptName);
         if (script == null) {
             player.sendMessage("§cScript '" + scriptName + "' not found!");
@@ -195,7 +195,7 @@ public class PerformanceCommand implements CommandExecutor, TabCompleter {
             player.sendMessage("§aNo optimization suggestions found! Script is well optimized.");
         } else {
             for (OptimizationSuggestion suggestion : suggestions) {
-                String color = "§7"; // Default to LOW
+                String color = "§7"; 
                 OptimizationPriority priority = suggestion.getPriority();
                 if (priority == OptimizationPriority.CRITICAL) {
                     color = "§4";
@@ -227,13 +227,13 @@ public class PerformanceCommand implements CommandExecutor, TabCompleter {
         } else {
             player.sendMessage("§7Detected " + bottlenecks.size() + " bottlenecks:");
             
-            // Group by severity
+            
             Map<Bottleneck.Severity, List<Bottleneck>> grouped = new HashMap<>();
             for (Bottleneck bottleneck : bottlenecks) {
                 grouped.computeIfAbsent(bottleneck.getSeverity(), k -> new ArrayList<>()).add(bottleneck);
             }
             
-            // Display by severity (critical first)
+            
             for (Bottleneck.Severity severity : Arrays.asList(
                     Bottleneck.Severity.CRITICAL, 
                     Bottleneck.Severity.HIGH, 
@@ -242,7 +242,7 @@ public class PerformanceCommand implements CommandExecutor, TabCompleter {
                 
                 List<Bottleneck> list = grouped.get(severity);
                 if (list != null && !list.isEmpty()) {
-                    String color = "§7"; // Default to LOW
+                    String color = "§7"; 
                     if (severity == Bottleneck.Severity.CRITICAL) {
                         color = "§4";
                     } else if (severity == Bottleneck.Severity.HIGH) {
@@ -306,7 +306,7 @@ public class PerformanceCommand implements CommandExecutor, TabCompleter {
         if (args.length == 1) {
             completions.addAll(Arrays.asList("report", "script", "optimize", "bottlenecks", "clear"));
         } else if (args.length == 2 && (args[0].equalsIgnoreCase("script") || args[0].equalsIgnoreCase("optimize"))) {
-            // Return actual script names from all worlds
+            
             for (com.megacreative.models.CreativeWorld world : plugin.getServiceRegistry().getWorldManager().getCreativeWorlds()) {
                 if (world.getScripts() != null) {
                     for (com.megacreative.coding.CodeScript script : world.getScripts()) {
@@ -316,7 +316,7 @@ public class PerformanceCommand implements CommandExecutor, TabCompleter {
             }
         }
         
-        // Filter based on what the player has typed so far
+        
         List<String> filtered = new ArrayList<>();
         String lastArg = args[args.length - 1].toLowerCase();
         for (String completion : completions) {

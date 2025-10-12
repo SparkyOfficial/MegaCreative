@@ -24,26 +24,26 @@ public class ListOperationAction implements BlockAction {
         }
 
         try {
-            // Получаем параметры из блока
+            
             String listName = block.getParameter("list_name").asString();
             String operation = block.getParameter("operation").asString();
             
-            // Получаем менеджер переменных
+            
             var variableManager = context.getPlugin().getServiceRegistry().getVariableManager();
             
-            // Получаем или создаем список
+            
             DataValue listValue = variableManager.getVariable(listName, IVariableManager.VariableScope.PLAYER, player.getUniqueId().toString());
             List<DataValue> list;
             
             if (listValue != null && listValue.getType() == ValueType.LIST) {
-                // Convert to List<DataValue>
+                
                 list = (List<DataValue>) ((com.megacreative.coding.values.types.ListValue) listValue).getValue();
             } else {
                 list = new ArrayList<>();
                 variableManager.setVariable(listName, new ListValue(list), IVariableManager.VariableScope.PLAYER, player.getUniqueId().toString());
             }
             
-            // Выполняем операцию в зависимости от типа
+            
             switch (operation.toLowerCase()) {
                 case "add":
                     DataValue valueToAdd = block.getParameter("value");

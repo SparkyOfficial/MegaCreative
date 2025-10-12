@@ -72,22 +72,22 @@ public class GuiListener implements Listener {
         Player player = event.getPlayer();
         String message = event.getMessage().trim();
         
-        // Handle text input for InteractiveGUIManager synchronously
+        
         event.setCancelled(true);
         event.getPlayer().getServer().getScheduler().runTask(
             plugin, 
             () -> {
-                // Handle text input for InteractiveGUIManager
+                
                 GUIManager guiManager = plugin.getServiceRegistry().getGuiManager();
                 if (guiManager != null) {
-                    // Check if player is waiting for text input
+                    
                     Boolean awaitingTextInput = guiManager.getPlayerMetadata(player, "awaiting_text_input", Boolean.class);
                     if (Boolean.TRUE.equals(awaitingTextInput)) {
                         
-                        // Get the text input element
+                        
                         InteractiveGUIManager.TextInputElement element = guiManager.getPlayerMetadata(player, "pending_text_input_element", InteractiveGUIManager.TextInputElement.class);
                         if (element != null) {
-                            // Handle cancel command
+                            
                             if (message.equalsIgnoreCase("cancel")) {
                                 player.sendMessage("§cText input cancelled");
                                 guiManager.setPlayerMetadata(player, "awaiting_text_input", false);
@@ -95,15 +95,15 @@ public class GuiListener implements Listener {
                                 return;
                             }
                             
-                            // Set the value in the element
+                            
                             element.setValue(DataValue.of(message));
                             player.sendMessage("§aText input accepted: §f" + message);
                             
-                            // Clear the pending input state
+                            
                             guiManager.setPlayerMetadata(player, "awaiting_text_input", false);
                             guiManager.setPlayerMetadata(player, "pending_text_input_element", null);
                             
-                            // Update the GUI if it's still open
+                            
                             InteractiveGUIManager interactiveGUI = guiManager.getInteractiveGUIManager();
                             if (interactiveGUI != null) {
                                 interactiveGUI.refreshGUI(player);
@@ -112,20 +112,20 @@ public class GuiListener implements Listener {
                         }
                     }
                     
-                    // Check if player is waiting for amount input
+                    
                     Boolean awaitingAmountInput = guiManager.getPlayerMetadata(player, "awaiting_amount_input", Boolean.class);
                     if (Boolean.TRUE.equals(awaitingAmountInput)) {
                         
-                        // Get the item stack editor element
+                        
                         InteractiveGUIManager.ItemStackEditorElement element = guiManager.getPlayerMetadata(player, "pending_amount_element", InteractiveGUIManager.ItemStackEditorElement.class);
                         if (element != null) {
-                            // Handle cancel command
+                            
                             if (message.equalsIgnoreCase("cancel")) {
                                 player.sendMessage("§cAmount input cancelled");
                                 guiManager.setPlayerMetadata(player, "awaiting_amount_input", false);
                                 guiManager.setPlayerMetadata(player, "pending_amount_element", null);
                                 
-                                // Reopen the item editor GUI
+                                
                                 InteractiveGUIManager interactiveGUI = guiManager.getInteractiveGUIManager();
                                 if (interactiveGUI != null) {
                                     interactiveGUI.refreshGUI(player);
@@ -133,11 +133,11 @@ public class GuiListener implements Listener {
                                 return;
                             }
                             
-                            // Parse and validate the amount
+                            
                             try {
                                 int amount = Integer.parseInt(message);
                                 if (amount >= 1 && amount <= 64) {
-                                    // Update the item amount
+                                    
                                     ItemStack currentItem = (ItemStack) element.getValue().getValue();
                                     if (currentItem != null) {
                                         currentItem.setAmount(amount);
@@ -153,11 +153,11 @@ public class GuiListener implements Listener {
                                 return;
                             }
                             
-                            // Clear the pending input state
+                            
                             guiManager.setPlayerMetadata(player, "awaiting_amount_input", false);
                             guiManager.setPlayerMetadata(player, "pending_amount_element", null);
                             
-                            // Reopen the item editor GUI
+                            
                             InteractiveGUIManager interactiveGUI = guiManager.getInteractiveGUIManager();
                             if (interactiveGUI != null) {
                                 interactiveGUI.refreshGUI(player);
@@ -166,20 +166,20 @@ public class GuiListener implements Listener {
                         }
                     }
                     
-                    // Check if player is waiting for name input
+                    
                     Boolean awaitingNameInput = guiManager.getPlayerMetadata(player, "awaiting_name_input", Boolean.class);
                     if (Boolean.TRUE.equals(awaitingNameInput)) {
                         
-                        // Get the item stack editor element
+                        
                         InteractiveGUIManager.ItemStackEditorElement element = guiManager.getPlayerMetadata(player, "pending_name_element", InteractiveGUIManager.ItemStackEditorElement.class);
                         if (element != null) {
-                            // Handle cancel command
+                            
                             if (message.equalsIgnoreCase("cancel")) {
                                 player.sendMessage("§cName input cancelled");
                                 guiManager.setPlayerMetadata(player, "awaiting_name_input", false);
                                 guiManager.setPlayerMetadata(player, "pending_name_element", null);
                                 
-                                // Reopen the item editor GUI
+                                
                                 InteractiveGUIManager interactiveGUI = guiManager.getInteractiveGUIManager();
                                 if (interactiveGUI != null) {
                                     interactiveGUI.refreshGUI(player);
@@ -187,12 +187,12 @@ public class GuiListener implements Listener {
                                 return;
                             }
                             
-                            // Update the item name (with color code support)
+                            
                             ItemStack currentItem = (ItemStack) element.getValue().getValue();
                             if (currentItem != null) {
                                 ItemMeta meta = currentItem.getItemMeta();
                                 if (meta != null) {
-                                    // Replace & with § for color codes
+                                    
                                     String coloredName = message.replace('&', '§');
                                     meta.setDisplayName(coloredName);
                                     currentItem.setItemMeta(meta);
@@ -201,11 +201,11 @@ public class GuiListener implements Listener {
                                 }
                             }
                             
-                            // Clear the pending input state
+                            
                             guiManager.setPlayerMetadata(player, "awaiting_name_input", false);
                             guiManager.setPlayerMetadata(player, "pending_name_element", null);
                             
-                            // Reopen the item editor GUI
+                            
                             InteractiveGUIManager interactiveGUI = guiManager.getInteractiveGUIManager();
                             if (interactiveGUI != null) {
                                 interactiveGUI.refreshGUI(player);
@@ -214,21 +214,21 @@ public class GuiListener implements Listener {
                         }
                     }
                     
-                    // Check if player is waiting for lore input
+                    
                     Boolean awaitingLoreInput = guiManager.getPlayerMetadata(player, "awaiting_lore_input", Boolean.class);
                     if (Boolean.TRUE.equals(awaitingLoreInput)) {
                         
-                        // Get the item stack editor element
+                        
                         InteractiveGUIManager.ItemStackEditorElement element = guiManager.getPlayerMetadata(player, "pending_lore_element", InteractiveGUIManager.ItemStackEditorElement.class);
                         if (element != null) {
-                            // Handle cancel command
+                            
                             if (message.equalsIgnoreCase("cancel")) {
                                 player.sendMessage("§cLore input cancelled");
                                 guiManager.setPlayerMetadata(player, "awaiting_lore_input", false);
                                 guiManager.setPlayerMetadata(player, "pending_lore_element", null);
                                 guiManager.setPlayerMetadata(player, "current_lore_lines", null);
                                 
-                                // Reopen the item editor GUI
+                                
                                 InteractiveGUIManager interactiveGUI = guiManager.getInteractiveGUIManager();
                                 if (interactiveGUI != null) {
                                     interactiveGUI.refreshGUI(player);
@@ -236,18 +236,18 @@ public class GuiListener implements Listener {
                                 return;
                             }
                             
-                            // Handle "done" command to finish lore input
+                            
                             if (message.equalsIgnoreCase("done")) {
-                                // Get the current lore lines
+                                
                                 @SuppressWarnings("unchecked")
                                 List<String> loreLines = guiManager.getPlayerMetadata(player, "current_lore_lines", List.class);
                                 if (loreLines != null) {
-                                    // Update the item lore
+                                    
                                     ItemStack currentItem = (ItemStack) element.getValue().getValue();
                                     if (currentItem != null) {
                                         ItemMeta meta = currentItem.getItemMeta();
                                         if (meta != null) {
-                                            // Apply color codes to all lore lines
+                                            
                                             List<String> coloredLore = new ArrayList<>();
                                             for (String line : loreLines) {
                                                 coloredLore.add(line.replace('&', '§'));
@@ -260,12 +260,12 @@ public class GuiListener implements Listener {
                                     }
                                 }
                                 
-                                // Clear the pending input state
+                                
                                 guiManager.setPlayerMetadata(player, "awaiting_lore_input", false);
                                 guiManager.setPlayerMetadata(player, "pending_lore_element", null);
                                 guiManager.setPlayerMetadata(player, "current_lore_lines", null);
                                 
-                                // Reopen the item editor GUI
+                                
                                 InteractiveGUIManager interactiveGUI = guiManager.getInteractiveGUIManager();
                                 if (interactiveGUI != null) {
                                     interactiveGUI.refreshGUI(player);
@@ -273,7 +273,7 @@ public class GuiListener implements Listener {
                                 return;
                             }
                             
-                            // Add the line to the current lore
+                            
                             @SuppressWarnings("unchecked")
                             List<String> loreLines = guiManager.getPlayerMetadata(player, "current_lore_lines", List.class);
                             if (loreLines == null) {
@@ -287,7 +287,7 @@ public class GuiListener implements Listener {
                     }
                 }
                 
-                // If no special handling, send the message normally
+                
                 player.chat(message);
             }
         );

@@ -68,13 +68,13 @@ public class HubCommand implements CommandExecutor {
             return true;
         }
         
-        // Первый мир в списке сервера обычно является лобби
+        
         World hubWorld = Bukkit.getWorlds().get(0); 
         
         player.teleport(hubWorld.getSpawnLocation());
         player.sendMessage("§aВы вернулись в хаб!");
         
-        // Очищаем инвентарь и выдаем стартовые предметы
+        
         player.getInventory().clear();
         playerManager.giveStarterItems(player);
         

@@ -24,13 +24,13 @@ public class BottleneckDetector {
             return;
         }
         
-        // Clear previous bottlenecks for re-analysis
+        
         bottlenecks.clear();
         
         for (ScriptMetrics metric : metrics) {
-            // Check for slow average execution time
+            
             double avgTime = metric.getAverageExecutionTime();
-            if (avgTime > 100) { // More than 100ms average
+            if (avgTime > 100) { 
                 Bottleneck bottleneck = new Bottleneck(
                     metric.getScriptName(),
                     "OverallExecution",
@@ -41,9 +41,9 @@ public class BottleneckDetector {
                 bottlenecks.put(metric.getScriptName() + "_avg_time", bottleneck);
             }
             
-            // Check for high error rates
+            
             double errorRate = metric.getErrorRate();
-            if (errorRate > 0.1) { // More than 10% error rate
+            if (errorRate > 0.1) { 
                 Bottleneck bottleneck = new Bottleneck(
                     metric.getScriptName(),
                     "ErrorRate",
@@ -54,9 +54,9 @@ public class BottleneckDetector {
                 bottlenecks.put(metric.getScriptName() + "_error_rate", bottleneck);
             }
             
-            // Check for peak execution times
+            
             long peakTime = metric.getPeakExecutionTime();
-            if (peakTime > 500) { // More than 500ms peak
+            if (peakTime > 500) { 
                 Bottleneck bottleneck = new Bottleneck(
                     metric.getScriptName(),
                     "PeakExecution",
@@ -85,7 +85,7 @@ public class BottleneckDetector {
     public void start() {
         if (!isRunning) {
             isRunning = true;
-            // Start background thread for continuous monitoring (every 30 seconds)
+            
             detectionTask = scheduler.scheduleAtFixedRate(this::performPeriodicDetection, 30, 30, TimeUnit.SECONDS);
             log.info("BottleneckDetector started");
         }
@@ -96,8 +96,8 @@ public class BottleneckDetector {
      * This would be called periodically to check for new bottlenecks
      */
     private void performPeriodicDetection() {
-        // Access the latest metrics to check for new bottlenecks
-        // Implementation would analyze performance data and identify bottlenecks
+        
+        
     }
     
     /**

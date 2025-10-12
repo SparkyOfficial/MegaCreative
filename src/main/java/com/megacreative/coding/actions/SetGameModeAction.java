@@ -26,17 +26,17 @@ public class SetGameModeAction implements BlockAction {
         }
 
         try {
-            // Get the game mode from the new parameter system
+            
             DataValue modeValue = block.getParameter("mode");
             
             if (modeValue == null || modeValue.isEmpty()) {
                 return ExecutionResult.error("Game mode is not configured");
             }
 
-            // Parse game mode
+            
             GameMode gameMode = GameMode.valueOf(modeValue.asString().toUpperCase());
 
-            // Set the game mode
+            
             player.setGameMode(gameMode);
             return ExecutionResult.success("Game mode set to " + gameMode.name());
         } catch (Exception e) {

@@ -26,14 +26,14 @@ public class BlockConfigService {
 
     private final MegaCreative plugin;
     private final Logger logger;
-    // Ключ - это ID блока из YAML (onPlayerMove, sendMessage и т.д.)
-    // Key is the block ID from YAML (onPlayerMove, sendMessage, etc.)
-    // Schlüssel ist die Block-ID aus YAML (onPlayerMove, sendMessage, etc.)
+    
+    
+    
     private final Map<String, BlockConfig> blockConfigs = new HashMap<>();
     private final Map<Material, List<String>> materialToBlockIds = new HashMap<>();
-    // Configuration for action slots
-    // Конфигурация для слотов действий
-    // Konfiguration für Aktionsslots
+    
+    
+    
     private ConfigurationSection actionConfigurations;
 
     /**
@@ -61,7 +61,7 @@ public class BlockConfigService {
      */
     public void reload() {
         load();
-        // After reloading, make sure action parameters are loaded for all blocks
+        
         loadActionParametersForAllBlocks();
     }
 
@@ -93,11 +93,11 @@ public class BlockConfigService {
     public void ensureMaterialsAreSet() {
         for (BlockConfig config : blockConfigs.values()) {
             if (config.getMaterial() == null) {
-                // Try to set material based on the config ID
+                
                 Material material = Material.matchMaterial(config.getId());
                 if (material != null) {
                     config.setMaterial(material);
-                    // Update the material mapping
+                    
                     materialToBlockIds.computeIfAbsent(material, k -> new ArrayList<>()).add(config.getId());
                     plugin.getLogger().info("Set material " + material.name() + " for block config " + config.getId());
                 }
@@ -123,19 +123,19 @@ public class BlockConfigService {
 
         YamlConfiguration config = YamlConfiguration.loadConfiguration(configFile);
         
-        // Debug logging
+        
         plugin.getLogger().info("Loading coding_blocks.yml from: " + configFile.getAbsolutePath());
         plugin.getLogger().info("File exists: " + configFile.exists());
         
-        // Load action configurations
-        // Загружаем конфигурации действий
-        // Lade Aktionskonfigurationen
+        
+        
+        
         actionConfigurations = config.getConfigurationSection("action_configurations");
         plugin.getLogger().info("Action configurations loaded: " + (actionConfigurations != null));
 
-        // ПРАВИЛЬНО: читаем ключи внутри секции blocks
-        // CORRECTLY: read keys within the blocks section
-        // RICHTIG: Lese Schlüssel innerhalb des blocks-Abschnitts
+        
+        
+        
         ConfigurationSection blocksSection = config.getConfigurationSection("blocks");
         plugin.getLogger().info("Blocks section exists: " + (blocksSection != null));
         
@@ -149,24 +149,24 @@ public class BlockConfigService {
                         BlockConfig blockConfig = new BlockConfig(id, section, plugin);
                         blockConfigs.put(id, blockConfig);
                         
-                        // 🔧 FIX: Set the material correctly based on the block ID (which should match a material)
+                        
                         Material material = Material.matchMaterial(id);
                         if (material != null) {
-                            // Use the setter method to set the material
+                            
                             blockConfig.setMaterial(material);
                             materialToBlockIds.computeIfAbsent(material, k -> new ArrayList<>()).add(id);
                             plugin.getLogger().info("Successfully loaded block config: " + id + " with material " + material);
                         } else {
                             plugin.getLogger().warning("Invalid material for block config: " + id);
-                            // For blocks that don't have a direct material match, we still want to register them
-                            // This is for cases where the block ID doesn't match the material name
-                            // For example, OBSIDIAN is a condition block, but we still want to register it
+                            
+                            
+                            
                         }
                     } catch (Exception e) {
                         plugin.getLogger().warning("Failed to load block config for ID '" + id + "': " + e.getMessage());
-                        // Не удалось загрузить конфигурацию блока для ID:
-                        // Fehler beim Laden der Blockkonfiguration für ID:
-                        e.printStackTrace(); // Add stack trace for debugging
+                        
+                        
+                        e.printStackTrace(); 
                     }
                 } else {
                     plugin.getLogger().warning("Section is null for ID: " + id);
@@ -174,13 +174,13 @@ public class BlockConfigService {
             }
         }
         plugin.getLogger().info("Loaded " + blockConfigs.size() + " block definitions from coding_blocks.yml.");
-        // Загружено определений блоков из coding_blocks.yml
-        // Blockdefinitionen aus coding_blocks.yml geladen
         
-        // Ensure all materials are properly set
+        
+        
+        
         ensureMaterialsAreSet();
         
-        // Log loaded materials for debugging
+        
         plugin.getLogger().info("Loaded materials: " + materialToBlockIds.keySet().size());
         for (Material material : materialToBlockIds.keySet()) {
             List<String> actions = materialToBlockIds.get(material);
@@ -355,7 +355,7 @@ public class BlockConfigService {
         List<String> ids = materialToBlockIds.getOrDefault(material, Collections.emptyList());
         if (!ids.isEmpty()) {
             BlockConfig config = getBlockConfig(ids.get(0));
-            // 🔧 FIX: Ensure the material is set correctly
+            
             if (config != null && config.getMaterial() == null) {
                 try {
                     java.lang.reflect.Field materialField = BlockConfig.class.getDeclaredField("material");
@@ -454,9 +454,9 @@ public class BlockConfigService {
                         int slotIndex = Integer.parseInt(slotKey);
                         slotMap.put(slotName, slotIndex);
                     } catch (NumberFormatException e) {
-                        // Ignore invalid slot indices
-                        // Игнорировать недопустимые индексы слотов
-                        // Ignoriere ungültige Slot-Indizes
+                        
+                        
+                        
                     }
                 }
             }
@@ -542,14 +542,14 @@ public class BlockConfigService {
         private final String displayName;
         private final String description;
         private final String category;
-        private final String defaultAction;  // 🔧 FIX: Add default action field
-        // 🔧 ИСПРАВЛЕНИЕ: Добавить поле действия по умолчанию
-        // 🔧 FIX: Füge Standardaktionsfeld hinzu
+        private final String defaultAction;  
+        
+        
         private final boolean isConstructor;
         private final StructureConfig structure;
         private final Map<String, Object> parameters;
         private final List<String> actions;
-        private final Map<String, ParameterConfig> actionParameters; // New field for action parameters
+        private final Map<String, ParameterConfig> actionParameters; 
 
         /**
          * Creates block configuration from configuration section
@@ -569,9 +569,9 @@ public class BlockConfigService {
          */
         public BlockConfig(String id, ConfigurationSection section, MegaCreative plugin) {
             this.id = id;
-            // Set material based on the block ID which should match a material name
+            
             this.material = Material.matchMaterial(id);
-            // If material is null, try to determine from type
+            
             if (this.material == null) {
                 String type = section.getString("type", "ACTION").toUpperCase();
                 switch (type) {
@@ -594,27 +594,27 @@ public class BlockConfigService {
                         this.material = Material.IRON_BLOCK;
                         break;
                     default:
-                        this.material = Material.STONE; // Fallback
+                        this.material = Material.STONE; 
                         break;
                 }
             }
             this.type = section.getString("type", "ACTION").toUpperCase();
-            // В YAML используется поле "name", не "displayName"
-            // In YAML, the "name" field is used, not "displayName"
-            // In YAML wird das Feld "name" verwendet, nicht "displayName"
+            
+            
+            
             this.displayName = ChatColor.translateAlternateColorCodes('&', section.getString("name", id));
             this.description = section.getString("description", "No description.");
-            // Нет описания
-            // Keine Beschreibung
+            
+            
             this.category = section.getString("category", "default");
-            this.defaultAction = section.getString("default_action", null);  // 🔧 FIX: Read default action from config
-            // 🔧 ИСПРАВЛЕНИЕ: Чтение действия по умолчанию из конфигурации
-            // 🔧 FIX: Lese Standardaktion aus Konfiguration
+            this.defaultAction = section.getString("default_action", null);  
+            
+            
             this.isConstructor = section.getBoolean("is_constructor", false);
             
-            // Загружаем конфигурацию структуры, если блок является конструктором
-            // Load structure configuration if block is a constructor
-            // Lade Strukturkonfiguration, wenn Block ein Konstruktor ist
+            
+            
+            
             if (isConstructor && section.contains("structure")) {
                 ConfigurationSection structureSection = section.getConfigurationSection("structure");
                 if (structureSection != null) {
@@ -634,32 +634,32 @@ public class BlockConfigService {
                 }
             }
             
-            // Store actions list
+            
             this.actions = section.getStringList("actions");
             
-            // Load action parameters - defer this until after service registry is fully initialized
+            
             this.actionParameters = new HashMap<>();
-            // ConfigurationSection actionConfigurations = plugin.getServiceRegistry().getBlockConfigService().getActionConfigurations();
-            // if (actionConfigurations != null) {
-            //     for (String action : this.actions) {
-            //         ConfigurationSection actionSection = actionConfigurations.getConfigurationSection(action);
-            //         if (actionSection != null) {
-            //             ConfigurationSection slots = actionSection.getConfigurationSection("slots");
-            //             if (slots != null) {
-            //                 for (String slotKey : slots.getKeys(false)) {
-            //                     ConfigurationSection slotSection = slots.getConfigurationSection(slotKey);
-            //                     if (slotSection != null) {
-            //                         String slotName = slotSection.getString("slot_name");
-            //                         if (slotName != null) {
-            //                             ParameterConfig paramConfig = new ParameterConfig(slotSection);
-            //                             this.actionParameters.put(slotName, paramConfig);
-            //                         }
-            //                     }
-            //                 }
-            //             }
-            //         }
-            //     }
-            // }
+            
+            
+            
+            
+            
+            
+            
+            
+            
+            
+            
+            
+            
+            
+            
+            
+            
+            
+            
+            
+            
         }
         
         /**
@@ -668,13 +668,13 @@ public class BlockConfigService {
          */
         public void loadActionParameters(MegaCreative plugin) {
             try {
-                // Check if service registry is available
+                
                 if (plugin == null || plugin.getServiceRegistry() == null) {
-                    // Service registry not yet initialized, defer loading
+                    
                     return;
                 }
                 
-                // Load action parameters
+                
                 BlockConfigService blockConfigService = plugin.getServiceRegistry().getBlockConfigService();
                 if (blockConfigService == null) {
                     return;
@@ -699,13 +699,13 @@ public class BlockConfigService {
                                 }
                             }
                             
-                            // Also load item groups
+                            
                             ConfigurationSection itemGroups = actionSection.getConfigurationSection("item_groups");
                             if (itemGroups != null) {
                                 for (String groupKey : itemGroups.getKeys(false)) {
                                     ConfigurationSection groupSection = itemGroups.getConfigurationSection(groupKey);
                                     if (groupSection != null) {
-                                        // For item groups, we'll create a special parameter config
+                                        
                                         ParameterConfig paramConfig = new ParameterConfig(groupSection);
                                         this.actionParameters.put(groupKey, paramConfig);
                                     }
@@ -715,34 +715,34 @@ public class BlockConfigService {
                     }
                 }
             } catch (Exception e) {
-                // Log the error but don't crash the plugin
+                
                 java.util.logging.Logger.getLogger(BlockConfig.class.getName()).warning("Failed to load action parameters: " + e.getMessage());
-                e.printStackTrace(); // Add stack trace for debugging
+                e.printStackTrace(); 
             }
         }
         
-        // 🔧 FIX: Add setter for material
+        
         public void setMaterial(Material material) {
             this.material = material;
         }
         
-        // Геттеры
-        // Getters
-        // Getter
+        
+        
+        
         public String getId() { return id; }
         public Material getMaterial() { return material; }
         public String getType() { return type; }
         public String getDisplayName() { return displayName; }
         public String getDescription() { return description; }
         public String getCategory() { return category; }
-        public String getDefaultAction() { return defaultAction; }  // 🔧 FIX: Add getter for default action
-        // 🔧 ИСПРАВЛЕНИЕ: Добавить геттер для действия по умолчанию
-        // 🔧 FIX: Füge Getter für Standardaktion hinzu
+        public String getDefaultAction() { return defaultAction; }  
+        
+        
         public boolean isConstructor() { return isConstructor; }
         public StructureConfig getStructure() { return structure; }
         public Map<String, Object> getParameters() { return parameters; }
         public List<String> getActions() { return actions != null ? new ArrayList<>(actions) : new ArrayList<>(); }
-        public Map<String, ParameterConfig> getActionParameters() { return actionParameters; } // New getter
+        public Map<String, ParameterConfig> getActionParameters() { return actionParameters; } 
     }
     
     /**
@@ -803,7 +803,7 @@ public class BlockConfigService {
             this.hint = section.getString("hint");
         }
         
-        // Getters
+        
         public String getSlotName() { return slotName; }
         public String getName() { return name; }
         public String getDescription() { return description; }

@@ -19,13 +19,13 @@ public class EventCorrelationEngine {
     
     private final CustomEventManager eventManager;
     
-    // Pattern definitions
+    
     private final Map<String, EventPattern> patterns = new ConcurrentHashMap<>();
     
-    // Active pattern instances being tracked
+    
     private final Map<String, PatternInstance> activeInstances = new ConcurrentHashMap<>();
     
-    // Pattern completion listeners
+    
     private final List<PatternCompletionListener> completionListeners = new CopyOnWriteArrayList<>();
     
     public EventCorrelationEngine(CustomEventManager eventManager) {
@@ -45,7 +45,7 @@ public class EventCorrelationEngine {
      */
     public void unregisterPattern(String patternId) {
         patterns.remove(patternId);
-        // Clean up any active instances of this pattern
+        
         activeInstances.entrySet().removeIf(entry -> 
             entry.getValue().getPattern().getPatternId().equals(patternId));
         log.info("Unregistered event pattern: " + patternId);
@@ -62,16 +62,16 @@ public class EventCorrelationEngine {
      * Processes an event for pattern matching
      */
     public void processEvent(String eventName, Map<String, DataValue> eventData, Player source, String worldName) {
-        // Check all registered patterns
+        
         for (EventPattern pattern : patterns.values()) {
-            // Check if this event matches the first step of any pattern
+            
             if (pattern.getSteps().isEmpty()) continue;
             
             EventPattern.Step firstStep = pattern.getSteps().get(0);
             if (firstStep.getEventName().equals(eventName) && 
                 (firstStep.getCondition() == null || firstStep.getCondition().test(eventData))) {
                 
-                // Create new pattern instance
+                
                 String instanceId = UUID.randomUUID().toString();
                 PatternInstance instance = new PatternInstance(instanceId, pattern, source, worldName);
                 instance.recordStep(0, eventName, eventData);
@@ -81,7 +81,7 @@ public class EventCorrelationEngine {
             }
         }
         
-        // Check existing pattern instances for continuation
+        
         processActiveInstances(eventName, eventData, source, worldName);
     }
     
@@ -97,13 +97,13 @@ public class EventCorrelationEngine {
             String instanceId = entry.getKey();
             PatternInstance instance = entry.getValue();
             
-            // Skip if this instance is already completed or expired
+            
             if (instance.isCompleted() || instance.isExpired()) {
                 iterator.remove();
                 continue;
             }
             
-            // Check if this event continues the pattern
+            
             EventPattern pattern = instance.getPattern();
             int nextStepIndex = instance.getCompletedSteps().size();
             
@@ -113,21 +113,21 @@ public class EventCorrelationEngine {
                 if (nextStep.getEventName().equals(eventName) && 
                     (nextStep.getCondition() == null || nextStep.getCondition().test(eventData))) {
                     
-                    // Record this step
+                    
                     instance.recordStep(nextStepIndex, eventName, eventData);
                     
-                    // Check if pattern is now complete
+                    
                     if (instance.getCompletedSteps().size() == pattern.getSteps().size()) {
                         instance.markCompleted();
                         iterator.remove();
                         
-                        // Notify completion listeners
+                        
                         notifyPatternCompletion(instance);
                         
                         log.info("Pattern completed: " + pattern.getPatternId() + " (instance: " + instanceId + ")");
                     }
                 }
-                // If event doesn't match next step, instance continues waiting
+                
             }
         }
     }
@@ -193,7 +193,7 @@ public class EventCorrelationEngine {
         private final String name;
         private final String description;
         private final List<Step> steps;
-        private final long timeoutMs; // Timeout for pattern completion
+        private final long timeoutMs; 
         
         public String getPatternId() { return patternId; }
         public String getName() { return name; }
@@ -268,7 +268,7 @@ public class EventCorrelationEngine {
             private String name;
             private String description = "";
             private List<Step> steps = new ArrayList<>();
-            private long timeoutMs = 30000; // 30 seconds default
+            private long timeoutMs = 30000; 
             
             public Builder(String name) {
                 this.name = name;

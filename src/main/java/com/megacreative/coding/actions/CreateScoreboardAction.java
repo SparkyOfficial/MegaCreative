@@ -28,13 +28,13 @@ public class CreateScoreboardAction implements BlockAction {
         }
 
         try {
-            // Get parameters from the new parameter system
+            
             DataValue titleValue = block.getParameter("title");
             if (titleValue == null || titleValue.isEmpty()) {
                 return ExecutionResult.error("No scoreboard title provided");
             }
 
-            // Resolve any placeholders in the title
+            
             ParameterResolver resolver = new ParameterResolver(context);
             DataValue resolvedTitle = resolver.resolve(context, titleValue);
             
@@ -44,13 +44,13 @@ public class CreateScoreboardAction implements BlockAction {
                 return ExecutionResult.error("Invalid scoreboard title");
             }
 
-            // Create the scoreboard using the Bukkit scoreboard system
+            
             Scoreboard scoreboard = player.getScoreboard();
             if (scoreboard == null) {
                 scoreboard = org.bukkit.Bukkit.getScoreboardManager().getNewScoreboard();
             }
             
-            // Create or get the objective
+            
             Objective objective = scoreboard.getObjective("main");
             if (objective == null) {
                 objective = scoreboard.registerNewObjective("main", "dummy", scoreboardTitle);
@@ -58,10 +58,10 @@ public class CreateScoreboardAction implements BlockAction {
                 objective.setDisplayName(scoreboardTitle);
             }
             
-            // Set the display slot
+            
             objective.setDisplaySlot(DisplaySlot.SIDEBAR);
             
-            // Apply the scoreboard to the player
+            
             player.setScoreboard(scoreboard);
 
             return ExecutionResult.success("Scoreboard created successfully");

@@ -98,9 +98,9 @@ public class CreativeWorldData {
             }
         }
         
-        // 🎆 ENHANCED: Copy dual world data
-        // 🎆 ENHANCED: Копировать данные двойного мира
-        // 🎆 ENHANCED: Duale Weltdaten kopieren
+        
+        
+        
         this.pairedWorldId = world.getPairedWorldId();
         this.dualMode = world.getDualMode();
     }

@@ -29,8 +29,8 @@ public class WorldPermissions {
          * Privater Zugriffsmodus
          */
         PRIVATE("§c🔒 Private", "Only trusted players can access"),
-        // Только доверенные игроки могут получить доступ
-        // Nur vertrauenswürdige Spieler können zugreifen
+        
+        
         /**
          * Friends only access mode
          *
@@ -39,8 +39,8 @@ public class WorldPermissions {
          * Nur-Freunde-Zugriffsmodus
          */
         FRIENDS_ONLY("§e👥 Friends Only", "Only trusted builders and coders can access"),
-        // Только доверенные строители и программисты могут получить доступ
-        // Nur vertrauenswürdige Baumeister und Coder können zugreifen
+        
+        
         /**
          * Public access mode
          *
@@ -49,8 +49,8 @@ public class WorldPermissions {
          * Öffentlicher Zugriffsmodus
          */
         PUBLIC("§a🌍 Public", "Everyone can access"),
-        // Каждый может получить доступ
-        // Jeder kann zugreifen
+        
+        
         /**
          * Whitelist access mode
          *
@@ -59,8 +59,8 @@ public class WorldPermissions {
          * Whitelist-Zugriffsmodus
          */
         WHITELIST("§f📝 Whitelist", "Only whitelisted players can access"),
-        // Только игроки из белого списка могут получить доступ
-        // Nur Spieler auf der Whitelist können zugreifen
+        
+        
         /**
          * Blacklist access mode
          *
@@ -69,8 +69,8 @@ public class WorldPermissions {
          * Blacklist-Zugriffsmodus
          */
         BLACKLIST("§7🚫 Blacklist", "Everyone except blacklisted players can access");
-        // Каждый, кроме игроков из черного списка, может получить доступ
-        // Jeder außer Spieler auf der Blacklist können zugreifen
+        
+        
         
         private final String displayName;
         private final String description;
@@ -134,8 +134,8 @@ public class WorldPermissions {
          * Besucher-Berechtigungsebene
          */
         VISITOR("§7👁 Visitor", "Can view and explore"),
-        // Может просматривать и исследовать
-        // Kann ansehen und erkunden
+        
+        
         /**
          * Player permission level
          *
@@ -144,8 +144,8 @@ public class WorldPermissions {
          * Spieler-Berechtigungsebene
          */
         PLAYER("§f🎮 Player", "Can interact and play"),
-        // Может взаимодействовать и играть
-        // Kann interagieren und spielen
+        
+        
         /**
          * Builder permission level
          *
@@ -154,8 +154,8 @@ public class WorldPermissions {
          * Baumeister-Berechtigungsebene
          */
         BUILDER("§6🔨 Builder", "Can build and modify"),
-        // Может строить и изменять
-        // Kann bauen und modifizieren
+        
+        
         /**
          * Coder permission level
          *
@@ -164,8 +164,8 @@ public class WorldPermissions {
          * Coder-Berechtigungsebene
          */
         CODER("§e💻 Coder", "Can code and script"),
-        // Может программировать и создавать скрипты
-        // Kann codieren und Skripte erstellen
+        
+        
         /**
          * Admin permission level
          *
@@ -174,8 +174,8 @@ public class WorldPermissions {
          * Admin-Berechtigungsebene
          */
         ADMIN("§c⚡ Admin", "Full world control");
-        // Полный контроль над миром
-        // Vollständige Weltkontrolle
+        
+        
         
         private final String displayName;
         private final String description;
@@ -266,9 +266,9 @@ public class WorldPermissions {
      * Standardkonstruktor
      */
     public WorldPermissions() {
-        // Default settings for new worlds
-        // Настройки по умолчанию для новых миров
-        // Standardeinstellungen für neue Welten
+        
+        
+        
     }
     
     /**
@@ -282,16 +282,16 @@ public class WorldPermissions {
         UUID playerId = player.getUniqueId();
         AccessMode accessMode = worldMode == CreativeWorld.WorldDualMode.DEV ? devWorldAccess : playWorldAccess;
         
-        // Always allow if player has permission override
-        // Всегда разрешать, если у игрока есть переопределение разрешений
-        // Immer erlauben, wenn der Spieler eine Berechtigungsüberschreibung hat
+        
+        
+        
         if (player.hasPermission("megacreative.world.bypass")) {
             return true;
         }
         
-        // Check blacklist first
-        // Сначала проверить черный список
-        // Zuerst Blacklist prüfen
+        
+        
+        
         if (blacklist.contains(playerId)) {
             return false;
         }
@@ -331,9 +331,9 @@ public class WorldPermissions {
         UUID playerId = player.getUniqueId();
         PermissionLevel level = playerPermissions.getOrDefault(playerId, PermissionLevel.VISITOR);
         
-        // Always allow if player has permission override
-        // Всегда разрешать, если у игрока есть переопределение разрешений
-        // Immer erlauben, wenn der Spieler eine Berechtigungsüberschreibung hat
+        
+        
+        
         if (player.hasPermission("megacreative.world.bypass")) {
             return true;
         }
@@ -403,9 +403,9 @@ public class WorldPermissions {
      */
     public void addToWhitelist(UUID playerId) {
         whitelist.add(playerId);
-        blacklist.remove(playerId); // Remove from blacklist if present
-        // Удалить из черного списка, если присутствует
-        // Von der Blacklist entfernen, falls vorhanden
+        blacklist.remove(playerId); 
+        
+        
     }
     
     /**
@@ -428,12 +428,12 @@ public class WorldPermissions {
      */
     public void addToBlacklist(UUID playerId) {
         blacklist.add(playerId);
-        whitelist.remove(playerId); // Remove from whitelist if present
-        // Удалить из белого списка, если присутствует
-        // Von der Whitelist entfernen, falls vorhanden
-        playerPermissions.remove(playerId); // Remove permissions
-        // Удалить разрешения
-        // Berechtigungen entfernen
+        whitelist.remove(playerId); 
+        
+        
+        playerPermissions.remove(playerId); 
+        
+        
     }
     
     /**
@@ -447,9 +447,9 @@ public class WorldPermissions {
         blacklist.remove(playerId);
     }
     
-    // Getters and setters
-    // Геттеры и сеттеры
-    // Getter und Setter
+    
+    
+    
     public AccessMode getPlayWorldAccess() { return playWorldAccess; }
     public void setPlayWorldAccess(AccessMode playWorldAccess) { this.playWorldAccess = playWorldAccess; }
     

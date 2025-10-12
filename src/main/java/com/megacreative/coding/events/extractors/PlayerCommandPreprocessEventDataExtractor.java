@@ -20,7 +20,7 @@ public class PlayerCommandPreprocessEventDataExtractor extends AbstractEventData
     
     @Override
     protected void initializeVariables() {
-        // Player variables
+        
         registerVariable("playerName", "Name of the player who executed the command");
         registerVariable("playerUUID", "UUID of the player who executed the command");
         registerVariable("playerDisplayName", "Display name of the player");
@@ -30,7 +30,7 @@ public class PlayerCommandPreprocessEventDataExtractor extends AbstractEventData
         registerVariable("playerLevel", "Level of the player");
         registerVariable("playerExp", "Experience of the player");
         
-        // Command location variables
+        
         registerVariable("commandX", "X coordinate where command was executed");
         registerVariable("commandY", "Y coordinate where command was executed");
         registerVariable("commandZ", "Z coordinate where command was executed");
@@ -39,7 +39,7 @@ public class PlayerCommandPreprocessEventDataExtractor extends AbstractEventData
         registerVariable("commandYaw", "Yaw rotation at command location");
         registerVariable("commandPitch", "Pitch rotation at command location");
         
-        // Command specific variables
+        
         registerVariable("fullCommand", "Complete command with slash (e.g., '/help test')");
         registerVariable("command", "Command without slash (e.g., 'help test')");
         registerVariable("commandName", "Command name only (e.g., 'help')");
@@ -53,14 +53,14 @@ public class PlayerCommandPreprocessEventDataExtractor extends AbstractEventData
         
         Player player = event.getPlayer();
         
-        // Extract player data
+        
         extractPlayerData(data, player);
         
-        // Extract command location data
+        
         Location commandLocation = player.getLocation();
         extractLocationData(data, commandLocation, "command");
         
-        // Command specific data
+        
         String fullCommand = event.getMessage();
         String command = fullCommand.startsWith("/") ? fullCommand.substring(1) : fullCommand;
         String[] parts = command.split(" ", 2);

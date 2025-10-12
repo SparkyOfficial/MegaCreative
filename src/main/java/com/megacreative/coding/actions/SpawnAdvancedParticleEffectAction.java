@@ -46,19 +46,19 @@ public class SpawnAdvancedParticleEffectAction implements BlockAction {
         }
 
         try {
-            // Get parameters from the block
+            
             DataValue particleValue = block.getParameter("particle");
             DataValue shapeValue = block.getParameter("shape", DataValue.of("circle"));
             DataValue radiusValue = block.getParameter("radius", DataValue.of(1.0));
             DataValue particleCountValue = block.getParameter("particleCount", DataValue.of(20));
             DataValue isAnimatedValue = block.getParameter("isAnimated", DataValue.of(false));
-            DataValue durationValue = block.getParameter("duration", DataValue.of(100)); // 5 seconds default
+            DataValue durationValue = block.getParameter("duration", DataValue.of(100)); 
             
             if (particleValue == null || particleValue.isEmpty()) {
                 return ExecutionResult.error("Particle type parameter is missing.");
             }
             
-            // Resolve parameters
+            
             ParameterResolver resolver = new ParameterResolver(context);
             DataValue resolvedParticle = resolver.resolve(context, particleValue);
             DataValue resolvedShape = resolver.resolve(context, shapeValue);
@@ -78,12 +78,12 @@ public class SpawnAdvancedParticleEffectAction implements BlockAction {
             boolean isAnimated = resolvedIsAnimated.asBoolean();
             int duration = Math.max(1, resolvedDuration.asNumber().intValue());
             
-            // Validate particle type
+            
             Particle particle;
             try {
                 particle = Particle.valueOf(particleType);
             } catch (IllegalArgumentException e) {
-                // Try some common aliases
+                
                 switch (particleType) {
                     case "HAPPY":
                     case "VILLAGER":
@@ -102,17 +102,17 @@ public class SpawnAdvancedParticleEffectAction implements BlockAction {
                 }
             }
             
-            // Determine spawn location
+            
             Location location = context.getBlockLocation() != null ? 
                 context.getBlockLocation() : player.getLocation();
             
-            Vector3D center = new Vector3D(0, 0, 0); // Relative to the location
+            Vector3D center = new Vector3D(0, 0, 0); 
             
             if (isAnimated) {
-                // Create animated particle system
+                
                 AnimatedParticleSystem system = new AnimatedParticleSystem(plugin, player, location, particle);
                 
-                // Add appropriate animation based on shape
+                
                 switch (shape) {
                     case "circle":
                         system.addAnimation(new AnimatedParticleSystem.RotatingCircleAnimation(
@@ -136,12 +136,12 @@ public class SpawnAdvancedParticleEffectAction implements BlockAction {
                         break;
                 }
                 
-                // Start the animation
+                
                 system.start(duration);
                 
                 return ExecutionResult.success("Started animated " + shape + " particle effect with " + particleCount + " particles.");
             } else {
-                // Create static particle shape
+                
                 List<Vector3D> particles;
                 
                 switch (shape) {
@@ -177,7 +177,7 @@ public class SpawnAdvancedParticleEffectAction implements BlockAction {
                         break;
                 }
                 
-                // Spawn the particles
+                
                 ParticleShapeGenerator.spawnParticles(player, particle, particles, location);
                 
                 return ExecutionResult.success("Created " + shape + " particle effect with " + particles.size() + " particles.");

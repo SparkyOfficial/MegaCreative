@@ -25,32 +25,32 @@ public class SaveLocationAction implements BlockAction {
         }
 
         try {
-            // Get location name parameter from the new parameter system
+            
             DataValue locationNameValue = block.getParameter("locationName");
 
             if (locationNameValue == null || locationNameValue.isEmpty()) {
                 return ExecutionResult.error("Location name parameter is missing");
             }
 
-            // Resolve any placeholders in the location name
+            
             ParameterResolver resolver = new ParameterResolver(context);
             DataValue resolvedLocationName = resolver.resolve(context, locationNameValue);
             
-            // Parse parameters
+            
             String locName = resolvedLocationName.asString();
             
             if (locName == null || locName.isEmpty()) {
                 return ExecutionResult.error("Invalid location name");
             }
 
-            // Save the location using the VariableManager
+            
             com.megacreative.coding.variables.VariableManager variableManager = context.getPlugin().getServiceRegistry().getVariableManager();
             org.bukkit.Location location = player.getLocation();
             
-            // Convert location to a string format "x,y,z,world"
+            
             String locationStr = location.getX() + "," + location.getY() + "," + location.getZ() + "," + location.getWorld().getName();
             
-            // Store the location as a player variable
+            
             variableManager.setPlayerVariable(player.getUniqueId(), locName, DataValue.of(locationStr));
             
             return ExecutionResult.success("Location '" + locName + "' saved successfully at " + locationStr);

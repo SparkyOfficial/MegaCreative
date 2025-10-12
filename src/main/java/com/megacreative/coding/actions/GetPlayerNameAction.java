@@ -23,34 +23,34 @@ public class GetPlayerNameAction implements BlockAction {
         }
 
         try {
-            // Get parameters from the new parameter system
+            
             DataValue targetValue = block.getParameter("target");
             
             if (targetValue == null || targetValue.isEmpty()) {
                 return ExecutionResult.error("No target variable provided");
             }
 
-            // Resolve any placeholders in the parameters
+            
             ParameterResolver resolver = new ParameterResolver(context);
             DataValue resolvedTarget = resolver.resolve(context, targetValue);
             
-            // Parse parameters
+            
             String targetVar = resolvedTarget.asString();
             
             if (targetVar == null || targetVar.isEmpty()) {
                 return ExecutionResult.error("Invalid target variable");
             }
 
-            // Get the player's name
+            
             String playerName = player.getName();
 
-            // 🎆 ENHANCED: Actually set the variable using VariableManager
+            
             VariableManager variableManager = context.getPlugin().getServiceRegistry().getVariableManager();
             if (variableManager == null) {
                 return ExecutionResult.error("Variable manager not available");
             }
             
-            // Set the variable for the player
+            
             DataValue dataValue = DataValue.of(playerName);
             variableManager.setPlayerVariable(player.getUniqueId(), targetVar, dataValue);
             

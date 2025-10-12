@@ -7,7 +7,7 @@ package com.megacreative.coding;
  */
 public class Constants {
     
-    // Common error messages
+    
     public static final String PLUGIN_CANNOT_BE_NULL = "Plugin cannot be null";
     public static final String PLAYER_REQUIRED_FOR_ACTION = "Player required for action: ";
     public static final String UNKNOWN_ACTION_TYPE = "Unknown action type: ";
@@ -18,27 +18,27 @@ public class Constants {
     public static final String START_BLOCK_IS_NULL = "Start block is null.";
     public static final String END_OF_CHAIN_OR_CANCELLED = "End of chain or cancelled.";
     
-    // Variable scope identifiers
+    
     public static final String GLOBAL_SCOPE = "global";
     public static final String SCRIPT_UNKNOWN = "script_unknown";
     public static final String UNKNOWN_WORLD = "unknown_world";
     
-    // World name patterns
+    
     public static final String DEV_WORLD_PATTERN = "dev";
     public static final String DEV_WORLD_PATTERN_RU = "разработка";
     public static final String CREATIVE_WORLD_PATTERN = "creative";
     
-    // Permission strings
+    
     public static final String DEBUG_PERMISSION = "megacreative.debug";
     
-    // Test command subcommands
+    
     public static final String TEST_RUN = "run";
     public static final String TEST_LIST = "list";
     public static final String TEST_CREATE = "create";
     public static final String TEST_SAMPLE = "sample";
     public static final String TEST_HELP = "help";
     
-    // Test command messages
+    
     public static final String TEST_COMMAND_PLAYERS_ONLY = "§cThis command can only be used by players!";
     public static final String TEST_UNKNOWN_SUBCOMMAND = "§cUnknown subcommand: ";
     public static final String TEST_USAGE_RUN = "§cUsage: /test run <suite> [testcase]";
@@ -59,17 +59,17 @@ public class Constants {
     public static final String TEST_FAILED_TEST_FORMAT = "§c  ✗ ";
     public static final String TEST_AVAILABLE_SUITES = "§e=== Available Test Suites ===";
     
-    // Connection debug GUI messages
+    
     public static final String CONNECTION_DEBUG_GUI_TITLE = "§8🔗 Связи блоков";
     public static final String BLOCK_NOT_FOUND = "Блок не найден";
     public static final String NEXT_BLOCK_ARROW = "§a→ Следующий";
     public static final String CHILD_BLOCK_ARROW = "§b↓ Дочерний";
     public static final String BLOCK_UNASSIGNED = "Неназначено";
     
-    // Auto connection manager messages
+    
     public static final String BLOCK_REMOVED_MESSAGE = "§cБлок кода удален и отсоединён от цепочки!";
     
-    // Generic action messages
+    
     public static final String DEFAULT_MESSAGE = "Hello World";
     public static final String EMPTY_STRING = "";
     public static final String TELEPORT_SUCCESS = "§aTeleported to: ";
@@ -90,14 +90,14 @@ public class Constants {
     public static final String ERROR_SETTING_TIME = "§cError setting time: ";
     public static final String ERROR_SETTING_WEATHER = "§cError setting weather: ";
     
-    // Variable manager error messages
+    
     public static final String CANNOT_SET_VARIABLE = "Cannot set variable: script ID is not available";
     public static final String CANNOT_SET_GLOBAL_VARIABLE = "Cannot set global variable: world ID is not available";
     public static final String CANNOT_SET_PLAYER_VARIABLE = "Cannot set player variable: player is not available";
     public static final String VARIABLE_MANAGER_NOT_AVAILABLE = "VariableManager is not available";
     public static final String INVALID_PLAYER_UUID = "Invalid player UUID: ";
     
-    // Advanced script optimizer messages
+    
     public static final String DEEPLY_NESTED_LOOP = "DeeplyNestedLoop";
     public static final String DEEPLY_NESTED_LOOP_DESC = "Loop at position ";
     public static final String DEEPLY_NESTED_LOOP_RECOMMENDATION = "Consider flattening nested loops or using more efficient data structures";
@@ -123,7 +123,7 @@ public class Constants {
     public static final String REPEATED_ACTIONS_DESC = "Action '";
     public static final String REPEATED_ACTIONS_RECOMMENDATION = "Consider creating a reusable function for repeated actions";
     
-    // Default script engine messages
+    
     public static final String SCRIPT_VALIDATION_FAILED = "Script validation failed: ";
     public static final String ERRORS_FOUND = " errors found. ";
     public static final String FIRST_ERROR = "First error: ";
@@ -138,10 +138,10 @@ public class Constants {
     public static final String MAX_RECURSION_EXCEEDED = "Max recursion depth exceeded.";
     public static final String UNKNOWN_BLOCK_ACTION = "Unknown block action ID: ";
     
-    // File and folder names
+    
     public static final String VARIABLES_FOLDER = "variables";
     
-    // VariableManager constants
+    
     public static final String FAILED_TO_CREATE_VARIABLES_DIR = "Failed to create variables directory: ";
     public static final String NAME_VALUE_SCOPE_CANNOT_BE_NULL = "Name, value, and scope cannot be null";
     public static final String DYNAMIC_PREFIX = "dynamic_";
@@ -153,7 +153,7 @@ public class Constants {
     public static final String SERVER_PREFIX = "server_";
     public static final String PERSISTENT_PREFIX = "persistent_";
     
-    // TestCommand constants
+    
     public static final String SAMPLE_SUITE_NAME = "sample";
     public static final String TEST_RESULTS_HEADER = "§e=== Test Suite Results ===";
     public static final String NO_TEST_RESULTS = "§cNo test results to display";
@@ -174,7 +174,7 @@ public class Constants {
     public static final String TEST_COMMAND_HELP_SAMPLE = "§7/test sample §f- Create a sample test suite named 'sample'";
     public static final String TEST_COMMAND_HELP_HELP = "§7/test help §f- Show this help message";
     
-    // AdvancedScriptOptimizer constants
+    
     public static final String APPLIED_OPTIMIZATION = "Applied optimization: ";
     public static final String APPLIED_OPTIMIZATION_TO_SCRIPT = " to script: ";
     public static final String UNKNOWN_OPTIMIZATION_TYPE = "Unknown optimization type: ";
@@ -195,7 +195,7 @@ public class Constants {
     public static final String CONDITION_FOLLOWED_BY = "  - ";
     public static final String CONDITION_FOLLOWED_BY_SUFFIX = " followed by ";
     
-    // ExecutionContext constants
+    
     public static final String GLOBAL_SCOPE_ID = "global";
     public static final String SCRIPT_ID_PREFIX = "script_";
     public static final String BREAK_FLAG_SET = "Break flag set to: ";
@@ -203,14 +203,14 @@ public class Constants {
     public static final String CONTINUE_FLAG_SET = "Continue flag set to: ";
     public static final String CONTINUE_FLAG_CLEARED = "Continue flag cleared";
     
-    // ConnectionDebugGUI constants
+    
     public static final String NEXT_SLOT = "next";
     public static final String CHILD_SLOT_PREFIX = "child";
     
-    // DefaultScriptEngine constants
+    
     public static final String MAX_RECURSION_EXCEEDED_IN_WHILE_LOOP = "Max recursion depth exceeded in while loop.";
     
-    // RepeatAction constants
+    
     public static final String PLAYER_OR_BLOCK_IS_NULL = "Player or block is null";
     public static final String REPEAT_COUNT_MUST_BE_GREATER_THAN_0 = "Repeat count must be greater than 0";
     public static final String MAXIMUM_REPEAT_COUNT_IS_1000 = "Maximum repeat count is 1000";
@@ -222,7 +222,7 @@ public class Constants {
     public static final String SKIPPING_ITERATION_DUE_TO_CONTINUE = "§aSkipping iteration %d due to continue statement";
     public static final String ERROR_IN_ITERATION = "§cОшибка в итерации %d: %s";
     
-    // Private constructor to prevent instantiation
+    
     private Constants() {
         throw new AssertionError("Constants class should not be instantiated");
     }

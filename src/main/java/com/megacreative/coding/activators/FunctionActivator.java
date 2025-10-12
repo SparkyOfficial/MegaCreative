@@ -32,10 +32,10 @@ public class FunctionActivator extends NamedActivator {
     
     @Override
     public void execute(GameEvent gameEvent, List<Entity> selectedEntities, int stackCounter, AtomicInteger callCounter) {
-        // Set the selected entities
+        
         this.selectedEntities = selectedEntities;
         
-        // Execute all actions associated with this function
+        
         super.execute(gameEvent, selectedEntities, stackCounter, callCounter);
     }
 }

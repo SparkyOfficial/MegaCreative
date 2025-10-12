@@ -43,7 +43,7 @@ public class NPCInteractionAction implements BlockAction {
         }
 
         try {
-            // Get parameters from the block
+            
             DataValue npcIdValue = block.getParameter("npcId");
             DataValue interactionTypeValue = block.getParameter("interactionType", DataValue.of("talk"));
             DataValue messageValue = block.getParameter("message");
@@ -56,7 +56,7 @@ public class NPCInteractionAction implements BlockAction {
                 return ExecutionResult.error("NPC ID parameter is missing.");
             }
             
-            // Resolve parameters
+            
             ParameterResolver resolver = new ParameterResolver(context);
             DataValue resolvedNpcId = resolver.resolve(context, npcIdValue);
             DataValue resolvedInteractionType = resolver.resolve(context, interactionTypeValue);
@@ -66,19 +66,19 @@ public class NPCInteractionAction implements BlockAction {
             DataValue resolvedTargetY = targetYValue != null ? resolver.resolve(context, targetYValue) : null;
             DataValue resolvedTargetZ = targetZValue != null ? resolver.resolve(context, targetZValue) : null;
             
-            // Get NPC manager
+            
             NPCManager npcManager = plugin.getServiceRegistry().getService(NPCManager.class);
             if (npcManager == null) {
                 return ExecutionResult.error("NPC Manager not available.");
             }
             
-            // Get the NPC by ID
+            
             CustomNPC npc;
             try {
                 UUID npcId = UUID.fromString(resolvedNpcId.asString());
                 npc = npcManager.getNPC(npcId);
             } catch (IllegalArgumentException e) {
-                // Try by name
+                
                 npc = npcManager.getNPC(resolvedNpcId.asString());
             }
             
@@ -86,7 +86,7 @@ public class NPCInteractionAction implements BlockAction {
                 return ExecutionResult.error("NPC not found: " + resolvedNpcId.asString());
             }
             
-            // Perform the interaction
+            
             String interactionType = resolvedInteractionType.asString().toLowerCase();
             
             switch (interactionType) {

@@ -21,7 +21,7 @@ public class ListValue implements DataValue {
         this.values = new ArrayList<>(values);
     }
     
-    // Static factory method for compatibility with existing code
+    
     @SuppressWarnings("unchecked")
     public static ListValue fromRawList(List<?> rawValues) {
         List<DataValue> convertedValues = new ArrayList<>();

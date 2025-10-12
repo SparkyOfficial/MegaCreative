@@ -25,7 +25,7 @@ public class SetScoreAction implements BlockAction {
         }
 
         try {
-            // Get parameters from the new parameter system
+            
             DataValue keyValue = block.getParameter("key");
             DataValue valueValue = block.getParameter("value");
             
@@ -37,12 +37,12 @@ public class SetScoreAction implements BlockAction {
                 return ExecutionResult.error("No score value provided");
             }
 
-            // Resolve any placeholders in the parameters
+            
             ParameterResolver resolver = new ParameterResolver(context);
             DataValue resolvedKey = resolver.resolve(context, keyValue);
             DataValue resolvedValue = resolver.resolve(context, valueValue);
             
-            // Parse parameters
+            
             String key = resolvedKey.asString();
             String valueStr = resolvedValue.asString();
             
@@ -50,7 +50,7 @@ public class SetScoreAction implements BlockAction {
                 return ExecutionResult.error("Invalid score key");
             }
 
-            // Parse the value as a number
+            
             int value;
             try {
                 value = Integer.parseInt(valueStr);
@@ -58,7 +58,7 @@ public class SetScoreAction implements BlockAction {
                 return ExecutionResult.error("Invalid score value: " + valueStr);
             }
 
-            // Set the score using the Bukkit scoreboard system
+            
             Scoreboard scoreboard = player.getScoreboard();
             if (scoreboard == null) {
                 return ExecutionResult.error("No scoreboard found for player");

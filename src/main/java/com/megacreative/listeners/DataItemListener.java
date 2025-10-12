@@ -28,7 +28,7 @@ public class DataItemListener implements Listener {
         Player player = event.getPlayer();
         ItemStack itemInHand = player.getInventory().getItemInMainHand();
 
-        // Проверяем, держит ли игрок наш предмет-данные
+        
         if (DataItemFactory.isDataItem(itemInHand)) {
             event.setCancelled(true);
             
@@ -41,7 +41,7 @@ public class DataItemListener implements Listener {
             DataItemFactory.DataItem data = dataItemOpt.get();
             String newValue = event.getMessage();
             
-            // Валидация
+            
             if (data.type() == DataType.NUMBER) {
                 try {
                     Double.parseDouble(newValue);
@@ -51,13 +51,13 @@ public class DataItemListener implements Listener {
                 }
             }
 
-            // Schedule the inventory update synchronously
+            
             String finalNewValue = newValue;
             DataItemFactory.DataItem finalData = data;
             event.getPlayer().getServer().getScheduler().runTask(
                 plugin, 
                 () -> {
-                    // Обновляем NBT и Lore предмета
+                    
                     ItemStack currentItem = player.getInventory().getItemInMainHand();
                     if (DataItemFactory.isDataItem(currentItem)) {
                         ItemMeta meta = currentItem.getItemMeta();

@@ -20,18 +20,18 @@ public class BukkitInventoryOpenListener implements Listener {
     
     @EventHandler
     public void onInventoryOpen(InventoryOpenEvent bukkitEvent) {
-        // Only handle player inventory open events
+        
         if (!(bukkitEvent.getPlayer() instanceof org.bukkit.entity.Player)) {
             return;
         }
         
-        // Create our custom event
+        
         MegaInventoryOpenEvent internalEvent = new MegaInventoryOpenEvent(
             (org.bukkit.entity.Player) bukkitEvent.getPlayer(),
             bukkitEvent.getInventory()
         );
         
-        // Publish it to our event system
+        
         plugin.getServer().getPluginManager().callEvent(internalEvent);
     }
 }

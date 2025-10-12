@@ -36,7 +36,7 @@ public class BlockExecutionCache {
         this.maxSize = maxSize;
     }
     
-    // Add constructor to match usage in DefaultScriptEngine
+    
     public BlockExecutionCache(long ttl, TimeUnit timeUnit, long maxSize) {
         this.ttlInMillis = timeUnit.toMillis(ttl);
         this.maxSize = (int) maxSize;
@@ -73,7 +73,7 @@ public class BlockExecutionCache {
             return;
         }
         
-        // Clean up before adding new entries if we're approaching the limit
+        
         if (cache.size() >= maxSize * 0.9) {
             cleanup();
         }

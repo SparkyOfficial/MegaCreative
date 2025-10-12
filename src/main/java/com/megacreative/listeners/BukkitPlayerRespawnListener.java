@@ -20,14 +20,14 @@ public class BukkitPlayerRespawnListener implements Listener {
     
     @EventHandler
     public void onPlayerRespawn(PlayerRespawnEvent bukkitEvent) {
-        // Create our custom event
+        
         MegaPlayerRespawnEvent internalEvent = new MegaPlayerRespawnEvent(
             bukkitEvent.getPlayer(),
             bukkitEvent.getRespawnLocation(),
             bukkitEvent.isBedSpawn()
         );
         
-        // Publish it to our event system
+        
         plugin.getServer().getPluginManager().callEvent(internalEvent);
     }
 }

@@ -22,7 +22,7 @@ public class PlayerHealthCondition implements BlockCondition {
         }
 
         try {
-            // Get health parameter
+            
             com.megacreative.coding.values.DataValue healthValue = block.getParameter("health");
             if (healthValue == null || healthValue.isEmpty()) {
                 return false;
@@ -31,10 +31,10 @@ public class PlayerHealthCondition implements BlockCondition {
             double requiredHealth = Double.parseDouble(healthValue.asString());
             double playerHealth = player.getHealth();
             
-            // Check if player health is greater than or equal to required health
+            
             return playerHealth >= requiredHealth;
         } catch (Exception e) {
-            // If there's an error, return false
+            
             return false;
         }
     }

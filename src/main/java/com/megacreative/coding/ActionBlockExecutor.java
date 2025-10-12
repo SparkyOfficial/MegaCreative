@@ -29,7 +29,7 @@ public class ActionBlockExecutor implements BlockExecutor {
             return ExecutionResult.error("Action ID is null or empty");
         }
         
-        // Log the action being executed
+        
         LOGGER.info("Executing action: " + actionId + " for player: " + 
                    (context.getPlayer() != null ? context.getPlayer().getName() : "unknown"));
         

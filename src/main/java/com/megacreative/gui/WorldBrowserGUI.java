@@ -63,7 +63,7 @@ public class WorldBrowserGUI implements GUIManager.ManagedGUIInterface {
     private void setupInventory() {
         inventory.clear();
         
-        // Заполнение стеклом
+        
         ItemStack glass = new ItemStack(Material.GRAY_STAINED_GLASS_PANE);
         ItemMeta glassMeta = glass.getItemMeta();
         glassMeta.setDisplayName(" ");
@@ -73,12 +73,12 @@ public class WorldBrowserGUI implements GUIManager.ManagedGUIInterface {
             inventory.setItem(i, glass);
         }
         
-        // Получение публичных миров
+        
         List<CreativeWorld> publicWorlds = plugin.getServiceRegistry().getWorldManager().getAllPublicWorlds();
         int startIndex = page * 28;
         int endIndex = Math.min(startIndex + 28, publicWorlds.size());
         
-        // Отображение миров
+        
         int slot = 10;
         for (int i = startIndex; i < endIndex; i++) {
             if (slot > 43) break;
@@ -108,7 +108,7 @@ public class WorldBrowserGUI implements GUIManager.ManagedGUIInterface {
             if (slot % 9 == 8) slot += 2;
         }
         
-        // Навигация
+        
         if (page > 0) {
             ItemStack prevButton = new ItemStack(Material.ARROW);
             ItemMeta prevMeta = prevButton.getItemMeta();
@@ -125,7 +125,7 @@ public class WorldBrowserGUI implements GUIManager.ManagedGUIInterface {
             inventory.setItem(53, nextButton);
         }
         
-        // Информация
+        
         ItemStack infoItem = new ItemStack(Material.BOOK);
         ItemMeta infoMeta = infoItem.getItemMeta();
         infoMeta.setDisplayName("§e§лИнформация");
@@ -163,7 +163,7 @@ public class WorldBrowserGUI implements GUIManager.ManagedGUIInterface {
      * Öffnet die GUI für den Spieler
      */
     public void open() {
-        // Use the new GUIManager system instead of old GuiListener
+        
         plugin.getServiceRegistry().getGuiManager().registerGUI(player, this, inventory);
         player.openInventory(inventory);
     }
@@ -193,7 +193,7 @@ public class WorldBrowserGUI implements GUIManager.ManagedGUIInterface {
         
         String displayName = clicked.getItemMeta().getDisplayName();
         
-        // Навигация
+        
         if (displayName.contains("Предыдущая страница")) {
             page--;
             setupInventory();
@@ -206,7 +206,7 @@ public class WorldBrowserGUI implements GUIManager.ManagedGUIInterface {
             return;
         }
         
-        // Клик по миру
+        
         List<CreativeWorld> publicWorlds = plugin.getServiceRegistry().getWorldManager().getAllPublicWorlds();
         int slot = event.getSlot();
         int worldIndex = getWorldIndexFromSlot(slot);
@@ -215,11 +215,11 @@ public class WorldBrowserGUI implements GUIManager.ManagedGUIInterface {
             CreativeWorld world = publicWorlds.get(worldIndex);
             
             if (event.isLeftClick()) {
-                // Вход в мир
+                
                 player.closeInventory();
                 player.performCommand("join " + world.getId());
             } else if (event.isRightClick()) {
-                // Действия с миром
+                
                 player.closeInventory();
                 new WorldActionsGUI(plugin, player, world).open();
             }
@@ -240,25 +240,25 @@ public class WorldBrowserGUI implements GUIManager.ManagedGUIInterface {
      * @return Weltenindex oder -1, wenn der Slot keine Welt enthält
      */
     private int getWorldIndexFromSlot(int slot) {
-        // The world items are displayed in slots 10-16, 19-25, 28-34, 37-43
-        // This creates a 4-row by 7-column grid (28 items per page)
         
-        // Check if slot is in the valid range for world items
+        
+        
+        
         if (slot < 10 || slot > 43) return -1;
         
-        // Check if slot is in the border columns (0, 8) or in the gap columns (17, 26, 35, etc.)
+        
         int col = slot % 9;
         if (col == 0 || col == 8) return -1;
         
-        // Calculate row and column within the display area
-        int row = (slot - 10) / 9;
-        int adjustedCol = col - 1; // Adjust for starting at column 1 (not 0)
         
-        // Calculate the index within the current page
-        // Each row has 7 world items (columns 1-7), so multiply row by 7
+        int row = (slot - 10) / 9;
+        int adjustedCol = col - 1; 
+        
+        
+        
         int indexInPage = row * 7 + adjustedCol;
         
-        // Return the global index by adding the page offset
+        
         return indexInPage + page * 28;
     }
     
@@ -274,8 +274,8 @@ public class WorldBrowserGUI implements GUIManager.ManagedGUIInterface {
      * @param event Inventarschließ-Ereignis
      */
     public void onInventoryClose(InventoryCloseEvent event) {
-        // Optional cleanup when GUI is closed
-        // GUIManager handles automatic unregistration
+        
+        
     }
     
     @Override
@@ -287,7 +287,7 @@ public class WorldBrowserGUI implements GUIManager.ManagedGUIInterface {
      * Führt eine Ressourcenbereinigung durch, wenn die Schnittstelle geschlossen wird
      */
     public void onCleanup() {
-        // Called when GUI is being cleaned up by GUIManager
-        // No special cleanup needed for this GUI
+        
+        
     }
 }

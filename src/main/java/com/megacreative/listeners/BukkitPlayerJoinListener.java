@@ -20,13 +20,13 @@ public class BukkitPlayerJoinListener implements Listener {
     
     @EventHandler
     public void onPlayerJoin(PlayerJoinEvent bukkitEvent) {
-        // Create our custom event
+        
         MegaPlayerJoinedEvent internalEvent = new MegaPlayerJoinedEvent(
             bukkitEvent.getPlayer(),
             !bukkitEvent.getPlayer().hasPlayedBefore()
         );
         
-        // Publish it to our event system
+        
         plugin.getServer().getPluginManager().callEvent(internalEvent);
     }
 }

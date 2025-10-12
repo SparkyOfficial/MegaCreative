@@ -34,7 +34,7 @@ public class BlockContainerManager {
     private final MegaCreative plugin;
     private final BlockConfigService blockConfigService;
     
-    // Container mappings
+    
     private final Map<Location, BlockContainer> containers = new ConcurrentHashMap<>();
     private final Map<Location, Location> blockToContainer = new ConcurrentHashMap<>();
     
@@ -49,10 +49,10 @@ public class BlockContainerManager {
     public BlockContainer createContainer(Location blockLocation, ContainerType type, String action) {
         Location containerLocation = blockLocation.clone().add(0, 1, 0);
         
-        // Remove existing container if present
+        
         removeContainer(blockLocation);
         
-        // Create the container block
+        
         Block containerBlock = containerLocation.getBlock();
         
         switch (type) {
@@ -72,13 +72,13 @@ public class BlockContainerManager {
                 containerBlock.setType(Material.CHEST);
         }
         
-        // Create container object
+        
         BlockContainer container = new BlockContainer(blockLocation, containerLocation, type, action);
         
-        // Initialize container content
+        
         initializeContainer(container);
         
-        // Store mappings
+        
         containers.put(containerLocation, container);
         blockToContainer.put(blockLocation, containerLocation);
         
@@ -111,7 +111,7 @@ public class BlockContainerManager {
         if (signBlock.getState() instanceof Sign sign) {
             String action = container.getAction();
             
-            // Get action configuration
+            
             var actionConfig = getActionConfiguration(action);
             
             sign.setLine(0, "§1§l" + action);
@@ -134,10 +134,10 @@ public class BlockContainerManager {
             String action = container.getAction();
             var actionConfig = getActionConfiguration(action);
             
-            // Clear inventory
+            
             inventory.clear();
             
-            // Add parameter slots
+            
             int slot = 0;
             for (ActionParameter param : actionConfig.getParameters()) {
                 if (slot >= inventory.getSize()) break;
@@ -147,7 +147,7 @@ public class BlockContainerManager {
                 slot++;
             }
             
-            // Add help item
+            
             if (slot < inventory.getSize()) {
                 ItemStack helpItem = createHelpItem(action);
                 inventory.setItem(inventory.getSize() - 1, helpItem);
@@ -234,10 +234,10 @@ public class BlockContainerManager {
     public void removeContainer(Location blockLocation) {
         Location containerLocation = blockToContainer.get(blockLocation);
         if (containerLocation != null) {
-            // Remove the container block
+            
             containerLocation.getBlock().setType(Material.AIR);
             
-            // Remove from mappings
+            
             containers.remove(containerLocation);
             blockToContainer.remove(blockLocation);
             
@@ -280,11 +280,11 @@ public class BlockContainerManager {
     private void openSignEditor(Player player, BlockContainer container) {
         Block containerBlock = container.getContainerLocation().getBlock();
         if (containerBlock.getState() instanceof Sign sign) {
-            // Create a proper GUI for sign editing instead of just sending messages
-            // We'll create an inventory-based editor for the sign lines
+            
+            
             Inventory signEditor = Bukkit.createInventory(null, 9, "§eSign Editor: " + container.getAction());
             
-            // Add current sign lines as editable items
+            
             for (int i = 0; i < 4; i++) {
                 String line = sign.getLine(i);
                 ItemStack lineItem = new ItemStack(Material.PAPER);
@@ -299,7 +299,7 @@ public class BlockContainerManager {
                 signEditor.setItem(i, lineItem);
             }
             
-            // Add save button
+            
             ItemStack saveButton = new ItemStack(Material.LIME_WOOL);
             ItemMeta saveMeta = saveButton.getItemMeta();
             saveMeta.setDisplayName("§a§lSave Changes");
@@ -309,10 +309,10 @@ public class BlockContainerManager {
             saveButton.setItemMeta(saveMeta);
             signEditor.setItem(8, saveButton);
             
-            // Store container reference for later use
+            
             player.setMetadata("editing_sign_container", new FixedMetadataValue(plugin, container));
             
-            // Open the editor inventory
+            
             player.openInventory(signEditor);
         } else {
             player.sendMessage("§cSign is not available.");
@@ -383,7 +383,7 @@ public class BlockContainerManager {
         if (containerBlock.getState() instanceof Container containerState) {
             Inventory inventory = containerState.getInventory();
             
-            // Update parameter items with actual values
+            
             String action = container.getAction();
             var actionConfig = getActionConfiguration(action);
             
@@ -458,17 +458,17 @@ public class BlockContainerManager {
         });
     }
     
-    // === HELPER METHODS ===
+    
     
     private ActionConfiguration getActionConfiguration(String action) {
-        // Integrate with BlockConfigService for proper action registry integration
+        
         if (blockConfigService != null) {
             com.megacreative.services.BlockConfigService.BlockConfig blockConfig = blockConfigService.getBlockConfig(action);
             if (blockConfig != null) {
                 return createActionConfigurationFromBlockConfig(action, blockConfig);
             }
         }
-        // Fallback to simple configuration if BlockConfigService is not available
+        
         return new ActionConfiguration(action);
     }
     
@@ -476,7 +476,7 @@ public class BlockContainerManager {
      * Creates an ActionConfiguration from a BlockConfig
      */
     private ActionConfiguration createActionConfigurationFromBlockConfig(String action, com.megacreative.services.BlockConfigService.BlockConfig blockConfig) {
-        // Create parameters list from BlockConfig data
+        
         Map<String, com.megacreative.services.BlockConfigService.ParameterConfig> paramConfigs = blockConfig.getActionParameters();
         List<ActionParameter> parameters = new ArrayList<>();
         
@@ -485,12 +485,12 @@ public class BlockContainerManager {
                 com.megacreative.services.BlockConfigService.ParameterConfig paramConfig = entry.getValue();
                 String paramName = paramConfig.getName() != null ? paramConfig.getName() : entry.getKey();
                 String description = paramConfig.getDescription() != null ? paramConfig.getDescription() : "Parameter for " + action;
-                ValueType type = ValueType.ANY; // Default type, could be enhanced with more specific type mapping
+                ValueType type = ValueType.ANY; 
                 parameters.add(new ActionParameter(paramName, type, description));
             }
         }
         
-        // Create a custom ActionConfiguration with the new parameters
+        
         return new ActionConfiguration(action) {
             private final List<ActionParameter> customParameters = parameters;
             
@@ -507,7 +507,7 @@ public class BlockContainerManager {
     }
     
     private String getActionDescription(String action) {
-        // Get description from action registry
+        
         return "Performs the " + action + " operation with the specified parameters.";
     }
 }

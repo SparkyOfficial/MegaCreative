@@ -17,9 +17,9 @@ import java.util.Set;
  */
 public class SafeCommandExecutor {
     
-    // Белый список разрешенных команд
-    // White list of allowed commands
-    // Weiße Liste erlaubter Befehle
+    
+    
+    
     private static final Set<String> ALLOWED_COMMANDS = Set.of(
         "gamemode", "time", "weather", "difficulty", "say", "me", "tell",
         "tp", "teleport", "give", "effect", "clear", "enchant", "title",
@@ -55,31 +55,31 @@ public class SafeCommandExecutor {
         
         String baseCommand = parts[0].toLowerCase();
         
-        // Проверяем, разрешена ли команда
-        // Check if command is allowed
-        // Prüfen, ob der Befehl erlaubt ist
+        
+        
+        
         if (!ALLOWED_COMMANDS.contains(baseCommand)) {
             return false;
         }
         
-        // Дополнительная проверка прав
-        // Additional permission check
-        // Zusätzliche Berechtigungsprüfung
+        
+        
+        
         if (!player.hasPermission("megacreative.script.command." + baseCommand)) {
             return false;
         }
         
-        // Дополнительные проверки безопасности для критических команд
-        // Additional security checks for critical commands
-        // Zusätzliche Sicherheitsprüfungen für kritische Befehle
+        
+        
+        
         if (!isCommandSafe(baseCommand, parts)) {
             return false;
         }
         
         try {
-            // Безопасное выполнение команды
-            // Safe command execution
-            // Sichere Befehlsausführung
+            
+            
+            
             boolean success = Bukkit.dispatchCommand(player, command);
             return success;
         } catch (Exception e) {
@@ -104,14 +104,14 @@ public class SafeCommandExecutor {
      * @return true, wenn der Befehl sicher ist
      */
     private static boolean isCommandSafe(String baseCommand, String[] parts) {
-        // Блокируем команды с потенциально опасными параметрами
-        // Block commands with potentially dangerous parameters
-        // Blockiere Befehle mit potenziell gefährlichen Parametern
+        
+        
+        
         switch (baseCommand) {
             case "gamemode":
-                // Разрешаем только стандартные режимы игры
-                // Allow only standard game modes
-                // Erlaube nur Standard-Spielmodi
+                
+                
+                
                 if (parts.length > 1) {
                     String mode = parts[1].toLowerCase();
                     return mode.equals("survival") || mode.equals("creative") || 
@@ -122,15 +122,15 @@ public class SafeCommandExecutor {
                 return true;
                 
             case "give":
-                // Ограничиваем количество предметов
-                // Limit item quantity
-                // Begrenze die Artikelmenge
+                
+                
+                
                 if (parts.length > 2) {
                     try {
                         int amount = Integer.parseInt(parts[2]);
-                        return amount <= 64; // Максимум 64 предмета
-                        // Maximum 64 items
-                        // Maximal 64 Gegenstände
+                        return amount <= 64; 
+                        
+                        
                     } catch (NumberFormatException e) {
                         return false;
                     }
@@ -138,15 +138,15 @@ public class SafeCommandExecutor {
                 return true;
                 
             case "effect":
-                // Ограничиваем длительность эффектов
-                // Limit effect duration
-                // Begrenze die Effektdauer
+                
+                
+                
                 if (parts.length > 2) {
                     try {
                         int duration = Integer.parseInt(parts[2]);
-                        return duration <= 600; // Максимум 30 секунд (600 тиков)
-                        // Maximum 30 seconds (600 ticks)
-                        // Maximal 30 Sekunden (600 Ticks)
+                        return duration <= 600; 
+                        
+                        
                     } catch (NumberFormatException e) {
                         return false;
                     }
@@ -154,9 +154,9 @@ public class SafeCommandExecutor {
                 return true;
                 
             case "kill":
-                // Разрешаем убивать только себя (проверка будет в executeCommand)
-                // Allow killing only yourself (check will be in executeCommand)
-                // Erlaube nur das Töten von sich selbst (Prüfung erfolgt in executeCommand)
+                
+                
+                
                 return true;
                 
             default:

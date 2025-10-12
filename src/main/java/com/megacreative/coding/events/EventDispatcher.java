@@ -17,10 +17,10 @@ public class EventDispatcher {
     
     private final MegaCreative plugin;
     
-    // Map of event names to lists of subscribers
+    
     private final Map<String, List<EventSubscriber>> subscribers = new ConcurrentHashMap<>();
     
-    // Map of subscriber instances to their subscribed events (for efficient removal)
+    
     private final Map<EventSubscriber, Set<String>> subscriberEvents = new ConcurrentHashMap<>();
     
     public EventDispatcher(MegaCreative plugin) {
@@ -81,11 +81,11 @@ public class EventDispatcher {
             return;
         }
         
-        // Sort subscribers by priority (highest first)
+        
         List<EventSubscriber> sortedSubscribers = new ArrayList<>(eventSubscribers);
         sortedSubscribers.sort((a, b) -> Integer.compare(b.getPriority(), a.getPriority()));
         
-        // Dispatch to subscribers
+        
         for (EventSubscriber subscriber : sortedSubscribers) {
             try {
                 if (subscriber.shouldHandleEvent(eventName, eventData, source, worldName)) {

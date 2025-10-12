@@ -27,7 +27,7 @@ public class CheckPlayerInventoryCondition implements BlockCondition {
         }
 
         try {
-            // Get parameters from the new parameter system
+            
             DataValue itemValue = block.getParameter("item");
             DataValue amountValue = block.getParameter("amount");
             DataValue checkTypeValue = block.getParameter("check_type");
@@ -37,7 +37,7 @@ public class CheckPlayerInventoryCondition implements BlockCondition {
                 return false;
             }
             
-            // Resolve any placeholders in the parameters
+            
             ParameterResolver resolver = new ParameterResolver(context);
             DataValue resolvedItem = resolver.resolve(context, itemValue);
             
@@ -48,7 +48,7 @@ public class CheckPlayerInventoryCondition implements BlockCondition {
                 return false;
             }
             
-            // Parse amount (default to 1)
+            
             int amount = 1;
             if (amountValue != null && !amountValue.isEmpty()) {
                 DataValue resolvedAmount = resolver.resolve(context, amountValue);
@@ -59,7 +59,7 @@ public class CheckPlayerInventoryCondition implements BlockCondition {
                 }
             }
             
-            // Parse check type (default to "has")
+            
             String checkType = "has";
             if (checkTypeValue != null && !checkTypeValue.isEmpty()) {
                 DataValue resolvedCheckType = resolver.resolve(context, checkTypeValue);
@@ -70,14 +70,14 @@ public class CheckPlayerInventoryCondition implements BlockCondition {
             PlayerInventory inventory = player.getInventory();
             int count = 0;
             
-            // Count items of the specified type
+            
             for (ItemStack item : inventory.getContents()) {
                 if (item != null && item.getType() == material) {
                     count += item.getAmount();
                 }
             }
             
-            // Evaluate based on check type
+            
             switch (checkType) {
                 case "has":
                     return count >= amount;

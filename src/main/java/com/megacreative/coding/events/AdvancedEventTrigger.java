@@ -22,7 +22,7 @@ public class AdvancedEventTrigger {
     private final UUID ownerId;
     private final String worldName;
     private final boolean isGlobal;
-    private final MegaCreative plugin; // Add plugin reference
+    private final MegaCreative plugin; 
 
     public AdvancedEventTrigger(String triggerId, String eventName, Map<String, DataValue> eventData,
                                TriggerCondition condition, List<EventChain> eventChains,
@@ -39,10 +39,10 @@ public class AdvancedEventTrigger {
         this.ownerId = ownerId;
         this.worldName = worldName;
         this.isGlobal = isGlobal;
-        this.plugin = plugin; // Store plugin reference
+        this.plugin = plugin; 
     }
 
-    // Getters
+    
     public String getTriggerId() { return triggerId; }
     public String getEventName() { return eventName; }
     public Map<String, DataValue> getEventData() { return new HashMap<>(eventData); }
@@ -54,29 +54,29 @@ public class AdvancedEventTrigger {
     public UUID getOwnerId() { return ownerId; }
     public String getWorldName() { return worldName; }
     public boolean isGlobal() { return isGlobal; }
-    public MegaCreative getPlugin() { return plugin; } // Add getter for plugin
+    public MegaCreative getPlugin() { return plugin; } 
 
     /**
      * Executes the trigger
      */
     public void execute(CustomEventManager eventManager, Player player, String world) {
-        // Check condition if present
+        
         if (condition != null && !condition.test(player, world, eventData)) {
             log.info("Trigger condition not met for: " + triggerId);
             return;
         }
         
-        // Add trigger-specific data to the event data
+        
         Map<String, DataValue> data = new HashMap<>(eventData);
         data.put("trigger_id", DataValue.fromObject(triggerId));
         data.put("trigger_time", DataValue.fromObject(System.currentTimeMillis()));
         
-        // Execute immediate trigger or schedule delayed execution
+        
         if (delayMs <= 0) {
-            // Execute immediately
+            
             eventManager.triggerEvent(eventName, data, player, world);
             
-            // Handle event chains
+            
             for (EventChain chain : eventChains) {
                 if (chain.getDelayMs() > 0) {
                     scheduleDelayedExecution(eventManager, player, world, data, chain.getDelayMs());
@@ -85,17 +85,17 @@ public class AdvancedEventTrigger {
                 }
             }
         } else {
-            // Schedule delayed execution
+            
             scheduleDelayedExecution(eventManager, player, world, data, delayMs);
         }
     }
     
     private void scheduleDelayedExecution(CustomEventManager eventManager, Player player, 
                                        String world, Map<String, DataValue> data, long delay) {
-        // Use Bukkit's scheduler instead of creating direct threads
+        
         plugin.getServer().getScheduler().runTaskLater(plugin, () -> {
             eventManager.triggerEvent(eventName, data, player, world);
-        }, delay / 50); // Convert milliseconds to ticks (1 tick = 50ms)
+        }, delay / 50); 
     }
     
     @Override
@@ -149,7 +149,7 @@ public class AdvancedEventTrigger {
         private UUID ownerId;
         private String worldName;
         private boolean isGlobal = false;
-        private MegaCreative plugin; // Add plugin to builder
+        private MegaCreative plugin; 
 
         public Builder(String eventName) {
             this.eventName = eventName;
@@ -206,7 +206,7 @@ public class AdvancedEventTrigger {
             return this;
         }
         
-        public Builder plugin(MegaCreative plugin) { // Add plugin setter
+        public Builder plugin(MegaCreative plugin) { 
             this.plugin = plugin;
             return this;
         }
@@ -220,7 +220,7 @@ public class AdvancedEventTrigger {
         }
     }
     
-    // Inner classes
+    
     @FunctionalInterface
     public interface TriggerCondition {
         boolean test(Player player, String world, Map<String, DataValue> eventData);

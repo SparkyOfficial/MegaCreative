@@ -15,12 +15,12 @@ public class CheckServerOnlineCondition implements BlockCondition {
     @Override
     public boolean evaluate(CodeBlock block, ExecutionContext context) {
         try {
-            // Get parameters from the new parameter system
+            
             DataValue checkTypeValue = block.getParameter("check_type");
             
-            String checkType = "online"; // Default check type
+            String checkType = "online"; 
             if (checkTypeValue != null && !checkTypeValue.isEmpty()) {
-                // Resolve any placeholders in the check type
+                
                 ParameterResolver resolver = new ParameterResolver(context);
                 DataValue resolvedCheckType = resolver.resolve(context, checkTypeValue);
                 checkType = resolvedCheckType.asString();
@@ -36,7 +36,7 @@ public class CheckServerOnlineCondition implements BlockCondition {
                 case "full":
                     return Bukkit.getMaxPlayers() <= playerCount;
                 default:
-                    // Check if player count is greater than or equal to a specific number
+                    
                     try {
                         int requiredPlayers = Integer.parseInt(checkType);
                         return playerCount >= requiredPlayers;

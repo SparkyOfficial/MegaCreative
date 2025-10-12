@@ -27,7 +27,7 @@ public class CreateTeamAction implements BlockAction {
         }
 
         try {
-            // Get parameters from the new parameter system
+            
             DataValue teamNameValue = block.getParameter("teamName");
             DataValue displayNameValue = block.getParameter("displayName");
             DataValue prefixValue = block.getParameter("prefix");
@@ -37,14 +37,14 @@ public class CreateTeamAction implements BlockAction {
                 return ExecutionResult.error("No team name provided");
             }
 
-            // Resolve any placeholders in the parameters
+            
             ParameterResolver resolver = new ParameterResolver(context);
             DataValue resolvedTeamName = resolver.resolve(context, teamNameValue);
             DataValue resolvedDisplayName = resolver.resolve(context, displayNameValue);
             DataValue resolvedPrefix = resolver.resolve(context, prefixValue);
             DataValue resolvedSuffix = resolver.resolve(context, suffixValue);
             
-            // Parse parameters
+            
             String teamName = resolvedTeamName.asString();
             String displayName = resolvedDisplayName.asString();
             String prefix = resolvedPrefix.asString();
@@ -54,11 +54,11 @@ public class CreateTeamAction implements BlockAction {
                 return ExecutionResult.error("Invalid team name");
             }
 
-            // Create the team using the scoreboard system
+            
             Scoreboard scoreboard = player.getScoreboard();
             Team team = scoreboard.registerNewTeam(teamName);
             
-            // Set team properties
+            
             if (displayName != null && !displayName.isEmpty()) {
                 team.setDisplayName(displayName);
             }

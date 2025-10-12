@@ -10,7 +10,7 @@ import java.util.*;
  */
 public class ScriptValidator {
     
-    // Error message constants
+    
     private static final String ERROR_SCRIPT_IS_NULL = "Script is null";
     private static final String ERROR_SCRIPT_NAME_REQUIRED = "Script name is required";
     private static final String WARNING_SCRIPT_NAME_LONG = "Script name is very long";
@@ -112,13 +112,13 @@ public class ScriptValidator {
         List<ValidationError> errors = new ArrayList<>();
         List<ValidationError> warnings = new ArrayList<>();
         
-        // Validate script name
+        
         validateScriptName(script, errors, warnings);
         
-        // Validate root block
+        
         validateRootBlock(script, errors, warnings);
         
-        // Check for common script issues
+        
         checkScriptStructure(script, errors, warnings);
         
         return new ValidationResult(errors.isEmpty(), errors, warnings);
@@ -151,10 +151,10 @@ public class ScriptValidator {
         if (script.getRootBlock() == null) {
             errors.add(new ValidationError(ValidationError.Severity.ERROR, ERROR_SCRIPT_ROOT_BLOCK_REQUIRED, null, "rootBlock"));
         } else {
-            // Validate block connections and structure
-            // validateBlockStructure(script.getRootBlock(), errors, warnings);
             
-            // Validate block graph for circular references and other issues
+            
+            
+            
             BlockGraphValidator.ValidationResult graphResult = blockGraphValidator.validate(script.getRootBlock());
             if (!graphResult.isValid()) {
                 for (String error : graphResult.getErrors()) {
@@ -175,17 +175,17 @@ public class ScriptValidator {
         CodeBlock current = block;
         
         while (current != null) {
-            // Prevent infinite loops
+            
             if (!visitedBlocks.add(current.getId())) {
                 errors.add(new ValidationError(ValidationError.Severity.ERROR, 
                     "Infinite loop detected in block chain", current, null));
                 break;
             }
             
-            // Validate current block
+            
             validateBlock(current, errors, warnings);
             
-            // Move to next block
+            
             current = current.getNextBlock();
         }
     }
@@ -196,19 +196,19 @@ public class ScriptValidator {
     private void validateBlock(CodeBlock block, List<ValidationError> errors, List<ValidationError> warnings) {
         if (block == null) return;
         
-        // Validate block has required fields
+        
         validateBlockFields(block, errors);
         
-        // Validate action and parameters
+        
         validateBlockAction(block, errors, warnings);
         
-        // Validate children
+        
         validateBlockChildren(block, errors, warnings);
         
-        // Validate bracket consistency
+        
         validateBracketConsistency(block, errors);
         
-        // Check for potential issues
+        
         checkBlockIssues(block, errors, warnings);
     }
     
@@ -233,19 +233,19 @@ public class ScriptValidator {
     private void validateBlockAction(CodeBlock block, List<ValidationError> errors, List<ValidationError> warnings) {
         String action = block.getAction();
         if (action == null || action.trim().isEmpty()) {
-            return; // Already validated in validateBlockFields
+            return; 
         }
         
-        // Validate action exists in configuration
+        
         BlockConfigService.BlockConfig config = blockConfigService.getBlockConfig(action);
         if (config == null) {
             errors.add(new ValidationError(ValidationError.Severity.ERROR, 
                 ERROR_UNKNOWN_BLOCK_ACTION + action, block, "action"));
         } else {
-            // Validate block parameters against configuration
+            
             validateBlockParameters(block, config, errors, warnings);
             
-            // Validate block type matches configuration
+            
             validateBlockType(block, config, errors);
         }
     }
@@ -255,13 +255,13 @@ public class ScriptValidator {
      */
     private void validateBlockParameters(CodeBlock block, BlockConfigService.BlockConfig config, 
                                        List<ValidationError> errors, List<ValidationError> warnings) {
-        // Check required parameters
-        Map<String, BlockConfigService.ParameterConfig> paramConfigs = config.getActionParameters(); // Fixed: use getActionParameters()
+        
+        Map<String, BlockConfigService.ParameterConfig> paramConfigs = config.getActionParameters(); 
         if (paramConfigs != null) {
             checkRequiredParameters(block, paramConfigs, errors);
         }
         
-        // Validate parameter values
+        
         validateParameterValues(block, paramConfigs, errors, warnings);
     }
     
@@ -296,7 +296,7 @@ public class ScriptValidator {
                 continue;
             }
             
-            // Check for empty values in required parameters
+            
             BlockConfigService.ParameterConfig paramConfig = paramConfigs != null ? paramConfigs.get(paramName) : null;
             if (paramConfig != null && paramConfig.isRequired()) {
                 if (value.isEmpty()) {
@@ -343,16 +343,16 @@ public class ScriptValidator {
      * Checks for potential issues in a block
      */
     private void checkBlockIssues(CodeBlock block, List<ValidationError> errors, List<ValidationError> warnings) {
-        // Check for deprecated actions
+        
         if (isDeprecatedAction(block.getAction())) {
             warnings.add(new ValidationError(ValidationError.Severity.WARNING, 
                 WARNING_ACTION_DEPRECATED + block.getAction(), block, "action"));
         }
         
-        // Check for potentially problematic parameter combinations
+        
         checkParameterCombinations(block, warnings);
         
-        // Check for performance issues
+        
         checkPerformanceIssues(block, warnings);
     }
     
@@ -360,18 +360,18 @@ public class ScriptValidator {
      * Checks script structure for common issues
      */
     private void checkScriptStructure(CodeScript script, List<ValidationError> errors, List<ValidationError> warnings) {
-        // Check for empty scripts
+        
         if (script.getRootBlock() == null) {
-            return; // Already reported as error
+            return; 
         }
         
-        // Check if script has any executable blocks
+        
         if (!hasExecutableBlocks(script.getRootBlock())) {
             warnings.add(new ValidationError(ValidationError.Severity.WARNING, 
                 WARNING_SCRIPT_NO_EXECUTABLE_BLOCKS, null, null));
         }
         
-        // Check for unreachable blocks
+        
         checkUnreachableBlocks(script, warnings);
     }
     
@@ -381,7 +381,7 @@ public class ScriptValidator {
     private boolean hasExecutableBlocks(CodeBlock rootBlock) {
         CodeBlock current = rootBlock;
         while (current != null) {
-            // Events and actions are executable
+            
             BlockConfigService.BlockConfig config = blockConfigService.getBlockConfig(current.getAction());
             if (config != null && ("EVENT".equals(config.getType()) || "ACTION".equals(config.getType()))) {
                 return true;
@@ -399,19 +399,19 @@ public class ScriptValidator {
             return;
         }
         
-        // Find all blocks in the script
+        
         Set<CodeBlock> allBlocks = new HashSet<>();
         collectAllBlocks(script.getRootBlock(), allBlocks);
         
-        // Find all reachable blocks starting from the root
+        
         Set<CodeBlock> reachableBlocks = new HashSet<>();
         findReachableBlocks(script.getRootBlock(), reachableBlocks);
         
-        // Identify unreachable blocks
+        
         Set<CodeBlock> unreachableBlocks = new HashSet<>(allBlocks);
         unreachableBlocks.removeAll(reachableBlocks);
         
-        // Add warnings for unreachable blocks
+        
         for (CodeBlock block : unreachableBlocks) {
             warnings.add(new ValidationError(ValidationError.Severity.WARNING, 
                 "Unreachable block: " + (block.getAction() != null ? block.getAction() : "unnamed"), 
@@ -429,19 +429,19 @@ public class ScriptValidator {
         
         allBlocks.add(block);
         
-        // Collect next block in chain
+        
         if (block.getNextBlock() != null) {
             collectAllBlocks(block.getNextBlock(), allBlocks);
         }
         
-        // Collect children blocks
+        
         for (CodeBlock child : block.getChildren()) {
             collectAllBlocks(child, allBlocks);
         }
         
-        // For control blocks, collect special blocks
+        
         if ("conditionalBranch".equals(block.getAction())) {
-            // Collect else block if it exists
+            
             CodeBlock trueBlock = block.getNextBlock();
             if (trueBlock != null) {
                 CodeBlock current = trueBlock;
@@ -465,24 +465,24 @@ public class ScriptValidator {
         
         reachableBlocks.add(block);
         
-        // Follow next block in chain
+        
         if (block.getNextBlock() != null) {
             findReachableBlocks(block.getNextBlock(), reachableBlocks);
         }
         
-        // Follow children blocks
+        
         for (CodeBlock child : block.getChildren()) {
             findReachableBlocks(child, reachableBlocks);
         }
         
-        // For control blocks, follow special execution paths
+        
         if ("conditionalBranch".equals(block.getAction())) {
-            // Both true and else branches are reachable
+            
             CodeBlock trueBlock = block.getNextBlock();
             if (trueBlock != null) {
                 findReachableBlocks(trueBlock, reachableBlocks);
                 
-                // Find else block if it exists
+                
                 CodeBlock current = trueBlock;
                 while (current != null && current.getNextBlock() != null) {
                     current = current.getNextBlock();
@@ -492,12 +492,12 @@ public class ScriptValidator {
                 }
             }
         } else if ("whileLoop".equals(block.getAction())) {
-            // Loop body is reachable
+            
             if (block.getNextBlock() != null) {
                 findReachableBlocks(block.getNextBlock(), reachableBlocks);
             }
         } else if ("forEach".equals(block.getAction())) {
-            // Loop body is reachable
+            
             if (block.getNextBlock() != null) {
                 findReachableBlocks(block.getNextBlock(), reachableBlocks);
             }
@@ -508,16 +508,16 @@ public class ScriptValidator {
      * Checks for problematic parameter combinations
      */
     private void checkParameterCombinations(CodeBlock block, List<ValidationError> warnings) {
-        // This would contain logic to detect problematic parameter combinations
-        // For example, checking if mutually exclusive parameters are both set
-        // Or if required parameter combinations are missing
+        
+        
+        
     }
     
     /**
      * Checks for potential performance issues
      */
     private void checkPerformanceIssues(CodeBlock block, List<ValidationError> warnings) {
-        // Check for potentially expensive operations
+        
         String action = block.getAction();
         if ("whileLoop".equals(action)) {
             warnings.add(new ValidationError(ValidationError.Severity.WARNING, 
@@ -525,7 +525,7 @@ public class ScriptValidator {
         } else if ("forEach".equals(action)) {
             DataValue listParam = block.getParameter("list");
             if (listParam != null && listParam.getType().getName().equals("List")) {
-                // Could check list size if available
+                
             }
         }
     }
@@ -534,24 +534,24 @@ public class ScriptValidator {
      * Checks if a block type is valid for the configuration
      */
     private boolean isValidBlockType(CodeBlock block, String expectedType) {
-        // This would contain logic to validate that the block's material and action
-        // are consistent with the expected block type from configuration
+        
+        
         if (block == null || expectedType == null) {
             return false;
         }
         
-        // Check if the block config service is available
+        
         if (blockConfigService == null) {
             return false;
         }
         
-        // Get the block configuration for the material
+        
         List<BlockConfigService.BlockConfig> configs = blockConfigService.getBlockConfigsForMaterial(block.getMaterial());
         if (configs == null || configs.isEmpty()) {
             return false;
         }
         
-        // Check if any of the configs supports this action
+        
         for (BlockConfigService.BlockConfig config : configs) {
             List<String> actions = config.getActions();
             if (actions != null && actions.contains(block.getAction())) {
@@ -566,11 +566,11 @@ public class ScriptValidator {
      * Checks if an action is deprecated
      */
     private boolean isDeprecatedAction(String action) {
-        // Maintain a list of deprecated actions and check against it
-        // This helps developers identify when they're using outdated functionality
+        
+        
         if (action == null) return false;
         
-        // List of deprecated actions
+        
         Set<String> deprecatedActions = Set.of(
             "oldSendMessage", 
             "deprecatedTeleport",

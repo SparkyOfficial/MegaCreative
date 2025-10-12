@@ -22,7 +22,7 @@ import java.util.concurrent.ConcurrentHashMap;
 public class GUIClickListener implements Listener {
     private final Plugin plugin;
     
-    // Track which inventories are custom GUIs
+    
     private final Map<Inventory, String> guiInventories = new ConcurrentHashMap<>();
     
     public GUIClickListener(Plugin plugin) {
@@ -38,18 +38,18 @@ public class GUIClickListener implements Listener {
         Player player = (Player) event.getWhoClicked();
         Inventory inventory = event.getInventory();
         
-        // Check if this is one of our custom GUIs
+        
         String menuTitle = guiInventories.get(inventory);
         if (menuTitle != null) {
-            // Cancel the event to prevent players from taking items
+            
             event.setCancelled(true);
             
-            // Get the clicked item
+            
             ItemStack clickedItem = event.getCurrentItem();
             int slot = event.getSlot();
             String clickType = event.getClick().name();
             
-            // Fire the custom GUI click event
+            
             GUIClickEvent guiClickEvent = new GUIClickEvent(player, inventory, slot, clickedItem, clickType, menuTitle);
             plugin.getServer().getPluginManager().callEvent(guiClickEvent);
         }

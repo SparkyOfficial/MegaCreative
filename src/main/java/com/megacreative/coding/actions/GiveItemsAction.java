@@ -31,7 +31,7 @@ public class GiveItemsAction implements BlockAction {
         }
 
         try {
-            // Get items parameter from the new parameter system
+            
             DataValue itemsValue = block.getParameter("items");
             
             if (itemsValue == null || itemsValue.isEmpty()) {
@@ -40,9 +40,9 @@ public class GiveItemsAction implements BlockAction {
 
             List<ItemStack> itemsToGive = new ArrayList<>();
             
-            // Handle different types of item specifications
+            
             if (itemsValue instanceof ListValue) {
-                // Handle list of items
+                
                 ListValue listValue = (ListValue) itemsValue;
                 List<DataValue> itemList = listValue.getValues();
                 for (DataValue itemValue : itemList) {
@@ -52,7 +52,7 @@ public class GiveItemsAction implements BlockAction {
                     }
                 }
             } else {
-                // Handle single item
+                
                 ItemStack item = parseItem(itemsValue);
                 if (item != null) {
                     itemsToGive.add(item);
@@ -65,7 +65,7 @@ public class GiveItemsAction implements BlockAction {
 
             int itemCount = 0;
             
-            // Give each item to the player
+            
             for (ItemStack item : itemsToGive) {
                 if (item != null && item.getType().isItem()) {
                     player.getInventory().addItem(item.clone());
@@ -93,7 +93,7 @@ public class GiveItemsAction implements BlockAction {
                 return null;
             }
             
-            // Parse format: MATERIAL:AMOUNT or just MATERIAL
+            
             String[] parts = itemStr.split(":");
             Material material = Material.valueOf(parts[0].toUpperCase());
             
@@ -101,9 +101,9 @@ public class GiveItemsAction implements BlockAction {
             if (parts.length > 1) {
                 try {
                     amount = Integer.parseInt(parts[1]);
-                    amount = Math.max(1, Math.min(64, amount)); // Clamp between 1 and 64
+                    amount = Math.max(1, Math.min(64, amount)); 
                 } catch (NumberFormatException e) {
-                    // Use default amount
+                    
                 }
             }
             

@@ -27,11 +27,11 @@ public boolean evaluate(CodeBlock block, ExecutionContext context) {
         }
 
         try {
-            // Get parameters from the new parameter system
+            
             DataValue mobValue = block.getParameter("mob");
             DataValue distanceValue = block.getParameter("distance");
             
-            // Parse distance parameter (default to 10)
+            
             int distance = 10;
             if (distanceValue != null && !distanceValue.isEmpty()) {
                 try {
@@ -41,16 +41,16 @@ public boolean evaluate(CodeBlock block, ExecutionContext context) {
                 }
             }
 
-            // Check for mobs near the player
+            
             for (Entity entity : player.getNearbyEntities(distance, distance, distance)) {
                 if (entity instanceof LivingEntity) {
-                    // If a specific mob type is specified, check if it matches
+                    
                     if (mobValue != null && !mobValue.isEmpty()) {
-                        // Resolve any placeholders in the mob name
+                        
                         ParameterResolver resolver = new ParameterResolver(context);
                         DataValue resolvedMob = resolver.resolve(context, mobValue);
                         
-                        // Parse mob type parameter
+                        
                         String mobName = resolvedMob.asString();
                         if (mobName != null && !mobName.isEmpty()) {
                             try {
@@ -60,11 +60,11 @@ public boolean evaluate(CodeBlock block, ExecutionContext context) {
                                 }
                             } catch (IllegalArgumentException e) {
                                 context.getPlugin().getLogger().warning("MobNearCondition: Invalid mob type '" + mobName + "'.");
-                                // If mob type is invalid, continue checking other entities
+                                
                             }
                         }
                     } else {
-                        // If no specific mob type is specified, any mob will do
+                        
                         return true;
                     }
                 }
@@ -72,7 +72,7 @@ public boolean evaluate(CodeBlock block, ExecutionContext context) {
             
             return false;
         } catch (Exception e) {
-            // If there's an error, return false
+            
             context.getPlugin().getLogger().warning("Error in MobNearCondition: " + e.getMessage());
             return false;
         }

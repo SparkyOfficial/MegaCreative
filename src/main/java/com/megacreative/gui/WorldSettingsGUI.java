@@ -66,7 +66,7 @@ public class WorldSettingsGUI implements GUIManager.ManagedGUIInterface {
     private void setupInventory() {
         inventory.clear();
         
-        // Заполнение стеклом
+        
         ItemStack glass = new ItemStack(Material.GRAY_STAINED_GLASS_PANE);
         ItemMeta glassMeta = glass.getItemMeta();
         glassMeta.setDisplayName(" ");
@@ -78,7 +78,7 @@ public class WorldSettingsGUI implements GUIManager.ManagedGUIInterface {
         
         WorldFlags flags = world.getFlags();
         
-        // Настройки флагов
+        
         ItemStack mobSpawning = new ItemStack(flags.isMobSpawning() ? Material.ZOMBIE_HEAD : Material.BARRIER);
         ItemMeta mobMeta = mobSpawning.getItemMeta();
         mobMeta.setDisplayName("§e§лСпавн мобов");
@@ -109,7 +109,7 @@ public class WorldSettingsGUI implements GUIManager.ManagedGUIInterface {
         explosions.setItemMeta(expMeta);
         inventory.setItem(12, explosions);
         
-        // Кнопка удаления мира
+        
         ItemStack deleteButton = new ItemStack(Material.RED_STAINED_GLASS);
         ItemMeta deleteMeta = deleteButton.getItemMeta();
         deleteMeta.setDisplayName("§c§лУдалить мир");
@@ -121,7 +121,7 @@ public class WorldSettingsGUI implements GUIManager.ManagedGUIInterface {
         deleteButton.setItemMeta(deleteMeta);
         inventory.setItem(16, deleteButton);
         
-        // Кнопка назад
+        
         ItemStack backButton = new ItemStack(Material.ARROW);
         ItemMeta backMeta = backButton.getItemMeta();
         backMeta.setDisplayName("§e§лНазад");
@@ -152,7 +152,7 @@ public class WorldSettingsGUI implements GUIManager.ManagedGUIInterface {
      * Öffnet die GUI für den Spieler
      */
     public void open() {
-        // Use the new GUIManager system
+        
         plugin.getServiceRegistry().getGuiManager().registerGUI(player, this, inventory);
         player.openInventory(inventory);
     }
@@ -181,24 +181,24 @@ public class WorldSettingsGUI implements GUIManager.ManagedGUIInterface {
         
         String displayName = clicked.getItemMeta().getDisplayName();
         
-        // Кнопка назад
+        
         if (displayName.contains("Назад")) {
             player.closeInventory();
-            // GUIManager will handle cleanup automatically
+            
             new MyWorldsGUI(plugin, player).open();
             return;
         }
         
-        // Удаление мира
+        
         if (displayName.contains("Удалить мир")) {
             player.closeInventory();
-            // GUIManager will handle cleanup automatically
+            
             player.sendMessage("§cДля удаления мира напишите в чат: §eУДАЛИТЬ");
             plugin.getServiceRegistry().getGuiManager().setAwaitingDeleteConfirmation(player, world.getId());
             return;
         }
         
-        // Изменение флагов
+        
         WorldFlags flags = world.getFlags();
         
         if (displayName.contains("Спавн мобов")) {

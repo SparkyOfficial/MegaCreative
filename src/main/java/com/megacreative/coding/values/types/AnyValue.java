@@ -59,12 +59,12 @@ public class AnyValue implements DataValue, Cloneable {
     @Override
     public DataValue clone() {
         try {
-            // Call super.clone() first to create the new instance
+            
             AnyValue cloned = (AnyValue) super.clone();
-            // For AnyValue, we don't need to clone the value as it's immutable or managed by the caller
+            
             return cloned;
         } catch (CloneNotSupportedException e) {
-            // This should never happen since we implement Cloneable
+            
             throw new AssertionError("Clone not supported", e);
         }
     }

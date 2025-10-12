@@ -44,34 +44,34 @@ public class CodeBlockGUI implements GUIManager.ManagedGUIInterface {
     private final MegaCreative plugin;
     private final Player player;
     private final Location blockLocation;
-    private final String blockId; // actionId, eventId, conditionId, etc.
-    private final String blockType; // EVENT, ACTION, CONDITION, CONTROL, FUNCTION, VARIABLE
+    private final String blockId; 
+    private final String blockType; 
     private final Inventory inventory;
     private final GUIManager guiManager;
     private final BlockConfigService blockConfigService;
 
-    // 🎆 Улучшенные возможности
+    
     private boolean hasUnsavedChanges = false;
-    // Removed unused collections that were never queried:
-    // private final Map<Integer, String> slotValidationErrors = new HashMap<>();
-    // private final Map<Integer, Boolean> slotValidationStatus = new HashMap<>();
-    // private final Map<Integer, String> slotCurrentValues = new HashMap<>();
+    
+    
+    
+    
     private final Map<String, String> blockParameters = new HashMap<>();
 
-    // 🎆 Цветовая схема для разных типов блоков
+    
     private static final Map<String, String> TYPE_COLORS = new HashMap<>();
     private static final Map<String, Material> TYPE_MATERIALS = new HashMap<>();
 
     static {
-        // Цвета для разных типов блоков
-        TYPE_COLORS.put("EVENT", "§e");      // Желтый для событий
-        TYPE_COLORS.put("ACTION", "§a");     // Зеленый для действий
-        TYPE_COLORS.put("CONDITION", "§6");   // Оранжевый для условий
-        TYPE_COLORS.put("CONTROL", "§c");    // Красный для управления
-        TYPE_COLORS.put("FUNCTION", "§d");   // Розовый для функций
-        TYPE_COLORS.put("VARIABLE", "§b");   // Голубой для переменных
+        
+        TYPE_COLORS.put("EVENT", "§e");      
+        TYPE_COLORS.put("ACTION", "§a");     
+        TYPE_COLORS.put("CONDITION", "§6");   
+        TYPE_COLORS.put("CONTROL", "§c");    
+        TYPE_COLORS.put("FUNCTION", "§d");   
+        TYPE_COLORS.put("VARIABLE", "§b");   
 
-        // Материалы для заголовков разных типов
+        
         TYPE_MATERIALS.put("EVENT", Material.NETHER_STAR);
         TYPE_MATERIALS.put("ACTION", Material.REDSTONE);
         TYPE_MATERIALS.put("CONDITION", Material.COMPARATOR);
@@ -96,7 +96,7 @@ public class CodeBlockGUI implements GUIManager.ManagedGUIInterface {
         this.blockType = blockType;
         this.guiManager = plugin.getServiceRegistry().getGuiManager();
 
-        // Инициализация сервисов
+        
         if (plugin != null && plugin.getServiceRegistry() != null) {
             this.blockConfigService = plugin.getServiceRegistry().getBlockConfigService();
         } else {
@@ -104,7 +104,7 @@ public class CodeBlockGUI implements GUIManager.ManagedGUIInterface {
             player.sendMessage("§cОшибка: Сервис конфигурации блоков недоступен!");
         }
 
-        // Создание инвентаря с динамическим размером
+        
         String guiTitle = createGUITitle();
         this.inventory = Bukkit.createInventory(null, calculateInventorySize(), guiTitle);
 
@@ -148,7 +148,7 @@ public class CodeBlockGUI implements GUIManager.ManagedGUIInterface {
             }
         }
 
-        // Fallback: human-readable names for common actions
+        
         switch (blockId.toLowerCase()) {
             case "sendmessage": return "Отправить сообщение";
             case "teleport": return "Телепортировать";
@@ -165,25 +165,25 @@ public class CodeBlockGUI implements GUIManager.ManagedGUIInterface {
      * 🎆 РАСЧЕТ РАЗМЕРА ИНВЕНТАРЯ
      */
     private int calculateInventorySize() {
-        // Загружаем конфигурацию для определения количества слотов
+        
         var actionConfigurations = blockConfigService.getActionConfigurations();
         if (actionConfigurations != null) {
             var actionConfig = actionConfigurations.getConfigurationSection(blockId);
             if (actionConfig != null && actionConfig.contains("slots")) {
-                // Подсчитываем количество слотов в конфигурации
+                
                 var slotsSection = actionConfig.getConfigurationSection("slots");
                 if (slotsSection != null) {
                     Set<String> slotKeys = slotsSection.getKeys(false);
                     int maxSlots = slotKeys.stream().mapToInt(Integer::parseInt).max().orElse(0);
 
-                    // Рассчитываем размер инвентаря (кратно 9, минимум 27, максимум 54)
-                    int requiredRows = (int) Math.ceil((maxSlots + 10) / 9.0); // +10 для заголовка и кнопок
+                    
+                    int requiredRows = (int) Math.ceil((maxSlots + 10) / 9.0); 
                     return Math.max(27, Math.min(54, requiredRows * 9));
                 }
             }
         }
 
-        return 45; // Размер по умолчанию
+        return 45; 
     }
 
     /**
@@ -192,19 +192,19 @@ public class CodeBlockGUI implements GUIManager.ManagedGUIInterface {
     private void setupInventory() {
         inventory.clear();
 
-        // Добавляем декоративную рамку
+        
         addDecorativeBorder();
 
-        // Добавляем информационный элемент
+        
         addInfoItem();
 
-        // Загружаем конфигурацию действия
+        
         loadActionConfiguration();
 
-        // Загружаем существующие параметры из блока кода
+        
         loadExistingParameters();
 
-        // Добавляем кнопки управления
+        
         addControlButtons();
     }
 
@@ -218,7 +218,7 @@ public class CodeBlockGUI implements GUIManager.ManagedGUIInterface {
         borderMeta.setDisplayName(" ");
         borderItem.setItemMeta(borderMeta);
 
-        // Заполняем рамку
+        
         for (int i = 0; i < inventory.getSize(); i++) {
             if (i < 9 || i >= inventory.getSize() - 9 || i % 9 == 0 || i % 9 == 8) {
                 inventory.setItem(i, borderItem);
@@ -269,7 +269,7 @@ public class CodeBlockGUI implements GUIManager.ManagedGUIInterface {
             return;
         }
 
-        // Проверяем наличие секции slots
+        
         if (actionConfig.contains("slots")) {
             var slotsSection = actionConfig.getConfigurationSection("slots");
             if (slotsSection != null) {
@@ -289,7 +289,7 @@ public class CodeBlockGUI implements GUIManager.ManagedGUIInterface {
                 }
             }
         } else {
-            // Если нет слотов, создаем базовые
+            
             setupGenericSlots();
         }
     }
@@ -305,7 +305,7 @@ public class CodeBlockGUI implements GUIManager.ManagedGUIInterface {
         String validation = slotConfig.getString("validation", "");
         String hint = slotConfig.getString("hint", "");
 
-        // Получаем материал для placeholder
+        
         Material placeholderMaterial = getMaterialByName(placeholderItemName);
 
         ItemStack slotItem = new ItemStack(placeholderMaterial);
@@ -331,14 +331,14 @@ public class CodeBlockGUI implements GUIManager.ManagedGUIInterface {
 
         inventory.setItem(slot, slotItem);
 
-        // Removed unused slot validation maps that were never queried
+        
     }
 
     /**
      * 🎆 НАСТРОЙКА БАЗОВЫХ СЛОТОВ (FALLBACK)
      */
     private void setupGenericSlots() {
-        // Создаем базовые слоты для общих параметров
+        
         createGenericParameterSlot(10, "Основной параметр", "PAPER", "main_param");
         createGenericParameterSlot(12, "Дополнительный параметр", "PAPER", "extra_param");
     }
@@ -369,7 +369,7 @@ public class CodeBlockGUI implements GUIManager.ManagedGUIInterface {
         try {
             return Material.valueOf(name.toUpperCase());
         } catch (IllegalArgumentException e) {
-            return Material.PAPER; // Fallback
+            return Material.PAPER; 
         }
     }
 
@@ -383,10 +383,10 @@ public class CodeBlockGUI implements GUIManager.ManagedGUIInterface {
 
         CodeBlock codeBlock = plugin.getServiceRegistry().getBlockPlacementHandler().getCodeBlock(blockLocation);
         if (codeBlock != null) {
-            // Загружаем параметры из блока кода
+            
             Map<String, DataValue> parameters = codeBlock.getParameters();
             if (parameters != null) {
-                // Convert DataValue parameters to String parameters
+                
                 for (Map.Entry<String, DataValue> entry : parameters.entrySet()) {
                     blockParameters.put(entry.getKey(), entry.getValue().asString());
                 }
@@ -398,7 +398,7 @@ public class CodeBlockGUI implements GUIManager.ManagedGUIInterface {
      * 🎆 ДОБАВЛЕНИЕ КНОПОК УПРАВЛЕНИЯ
      */
     private void addControlButtons() {
-        // Кнопка "Назад"
+        
         ItemStack backButton = new ItemStack(Material.ARROW);
         ItemMeta backMeta = backButton.getItemMeta();
         backMeta.setDisplayName("§c⬅ Назад");
@@ -408,7 +408,7 @@ public class CodeBlockGUI implements GUIManager.ManagedGUIInterface {
         backButton.setItemMeta(backMeta);
         inventory.setItem(inventory.getSize() - 5, backButton);
 
-        // Кнопка "Сохранить"
+        
         ItemStack saveButton = new ItemStack(Material.EMERALD_BLOCK);
         ItemMeta saveMeta = saveButton.getItemMeta();
         saveMeta.setDisplayName("§a✓ Сохранить");
@@ -429,10 +429,10 @@ public class CodeBlockGUI implements GUIManager.ManagedGUIInterface {
         guiManager.registerGUI(player, this, inventory);
         player.openInventory(inventory);
 
-        // Аудио обратная связь
+        
         player.playSound(player.getLocation(), org.bukkit.Sound.UI_BUTTON_CLICK, 0.7f, 1.2f);
 
-        // Визуальные эффекты
+        
         player.spawnParticle(org.bukkit.Particle.ENCHANTMENT_TABLE,
             player.getLocation().add(0, 1, 0), 10, 0.5, 0.5, 0.5, 1);
     }
@@ -455,19 +455,19 @@ public class CodeBlockGUI implements GUIManager.ManagedGUIInterface {
         ItemMeta meta = clicked.getItemMeta();
         String displayName = meta.getDisplayName();
 
-        // Обработка кнопки "Назад"
+        
         if (displayName.contains("Назад")) {
             handleBackButton();
             return;
         }
 
-        // Обработка кнопки "Сохранить"
+        
         if (displayName.contains("Сохранить")) {
             handleSaveButton();
             return;
         }
 
-        // Обработка клика по слоту параметра
+        
         handleParameterSlotClick(event.getSlot(), clicked);
     }
 
@@ -476,13 +476,13 @@ public class CodeBlockGUI implements GUIManager.ManagedGUIInterface {
      */
     private void handleBackButton() {
         if (hasUnsavedChanges) {
-            // Показываем предупреждение о несохраненных изменениях
+            
             player.sendMessage("§e⚠ У вас есть несохраненные изменения!");
             player.sendMessage("§7Сохраните их перед выходом или они будут потеряны.");
             return;
         }
 
-        // Возвращаемся к выбору действий
+        
         ActionSelectionGUI selectionGUI = new ActionSelectionGUI(plugin, player, blockLocation,
             getBlockMaterial());
         selectionGUI.open();
@@ -496,15 +496,15 @@ public class CodeBlockGUI implements GUIManager.ManagedGUIInterface {
             hasUnsavedChanges = false;
             player.sendMessage("§a✓ Параметры сохранены!");
 
-            // Обновляем табличку блока
+            
             updateBlockSign();
 
-            // Визуальные эффекты успеха
+            
             player.spawnParticle(org.bukkit.Particle.VILLAGER_HAPPY,
                 player.getLocation().add(0, 1, 0), 15, 0.5, 0.5, 0.5, 1);
             player.playSound(player.getLocation(), org.bukkit.Sound.ENTITY_EXPERIENCE_ORB_PICKUP, 1.0f, 1.2f);
 
-            // Обновляем кнопки
+            
             addControlButtons();
         }
     }
@@ -513,12 +513,12 @@ public class CodeBlockGUI implements GUIManager.ManagedGUIInterface {
      * 🎆 ОБРАБОТКА КЛИКА ПО СЛОТУ ПАРАМЕТРА
      */
     private void handleParameterSlotClick(int slot, ItemStack clicked) {
-        // Здесь будет логика для изменения параметров
-        // Пока просто показываем информацию
+        
+        
         player.sendMessage("§7Клик по слоту " + slot + ": " + clicked.getItemMeta().getDisplayName());
 
-        // В будущем здесь будет открытие специализированного интерфейса для ввода значения
-        // Например, для строк - AnvilGUI, для предметов - выбор предмета, и т.д.
+        
+        
     }
 
     /**
@@ -537,8 +537,8 @@ public class CodeBlockGUI implements GUIManager.ManagedGUIInterface {
                 return false;
             }
 
-            // Сохраняем параметры в блок кода
-            // Convert String parameters to DataValue parameters
+            
+            
             Map<String, DataValue> dataValueParameters = new HashMap<>();
             for (Map.Entry<String, String> entry : blockParameters.entrySet()) {
                 dataValueParameters.put(entry.getKey(), DataValue.fromObject(entry.getValue()));
@@ -546,7 +546,7 @@ public class CodeBlockGUI implements GUIManager.ManagedGUIInterface {
             
             codeBlock.setParameters(dataValueParameters);
 
-            // Обновляем действие блока
+            
             if (blockType.equals("ACTION") || blockType.equals("EVENT") || blockType.equals("CONDITION")) {
                 if (blockType.equals("ACTION")) {
                     codeBlock.setAction(blockId);
@@ -557,7 +557,7 @@ public class CodeBlockGUI implements GUIManager.ManagedGUIInterface {
                 }
             }
 
-            // Сохраняем мир
+            
             var creativeWorld = plugin.getServiceRegistry().getWorldManager().findCreativeWorldByBukkit(player.getWorld());
             if (creativeWorld != null) {
                 plugin.getServiceRegistry().getWorldManager().saveWorld(creativeWorld);
@@ -586,19 +586,19 @@ public class CodeBlockGUI implements GUIManager.ManagedGUIInterface {
      * 🎆 ПОЛУЧЕНИЕ МАТЕРИАЛА БЛОКА
      */
     private Material getBlockMaterial() {
-        // Получаем материал блока из его расположения
+        
         return blockLocation.getBlock().getType();
     }
 
     @Override
     public void onInventoryClose(InventoryCloseEvent event) {
-        // Опциональная очистка при закрытии GUI
-        // GUIManager автоматически снимает регистрацию
+        
+        
     }
 
     @Override
     public void onCleanup() {
-        // Вызывается при очистке GUI через GUIManager
-        // Специальная очистка не требуется для этого GUI
+        
+        
     }
 }

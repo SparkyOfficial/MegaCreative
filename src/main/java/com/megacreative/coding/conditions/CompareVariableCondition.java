@@ -25,7 +25,7 @@ public class CompareVariableCondition implements BlockCondition {
         }
 
         try {
-            // Get parameters from the new parameter system
+            
             DataValue var1Value = block.getParameter("var1");
             DataValue operatorValue = block.getParameter("operator");
             DataValue var2Value = block.getParameter("var2");
@@ -45,13 +45,13 @@ public class CompareVariableCondition implements BlockCondition {
                 return false;
             }
 
-            // Resolve any placeholders in the parameters
+            
             ParameterResolver resolver = new ParameterResolver(context);
             DataValue resolvedVar1 = resolver.resolve(context, var1Value);
             DataValue resolvedOperator = resolver.resolve(context, operatorValue);
             DataValue resolvedVar2 = resolver.resolve(context, var2Value);
             
-            // Parse parameters
+            
             String var1Name = resolvedVar1.asString();
             String operator = resolvedOperator.asString();
             String var2Name = resolvedVar2.asString();
@@ -63,13 +63,13 @@ public class CompareVariableCondition implements BlockCondition {
                 return false;
             }
 
-            // Get the actual variable values from the VariableManager
+            
             VariableManager variableManager = context.getPlugin().getServiceRegistry().getVariableManager();
             Object var1ValueObj = null;
             Object var2ValueObj = null;
             
-            // Try to get the first variable from different scopes
-            // First try player variables
+            
+            
             if (player != null) {
                 DataValue playerVar = variableManager.getPlayerVariable(player.getUniqueId(), var1Name);
                 if (playerVar != null) {
@@ -77,7 +77,7 @@ public class CompareVariableCondition implements BlockCondition {
                 }
             }
             
-            // If not found, try local variables
+            
             if (var1ValueObj == null) {
                 DataValue localVar = variableManager.getLocalVariable(context.getScriptId(), var1Name);
                 if (localVar != null) {
@@ -85,7 +85,7 @@ public class CompareVariableCondition implements BlockCondition {
                 }
             }
             
-            // If not found, try global variables
+            
             if (var1ValueObj == null) {
                 DataValue globalVar = variableManager.getGlobalVariable(var1Name);
                 if (globalVar != null) {
@@ -93,7 +93,7 @@ public class CompareVariableCondition implements BlockCondition {
                 }
             }
             
-            // If not found, try server variables
+            
             if (var1ValueObj == null) {
                 DataValue serverVar = variableManager.getServerVariable(var1Name);
                 if (serverVar != null) {
@@ -101,8 +101,8 @@ public class CompareVariableCondition implements BlockCondition {
                 }
             }
             
-            // Try to get the second variable from different scopes
-            // First try player variables
+            
+            
             if (player != null) {
                 DataValue playerVar = variableManager.getPlayerVariable(player.getUniqueId(), var2Name);
                 if (playerVar != null) {
@@ -110,7 +110,7 @@ public class CompareVariableCondition implements BlockCondition {
                 }
             }
             
-            // If not found, try local variables
+            
             if (var2ValueObj == null) {
                 DataValue localVar = variableManager.getLocalVariable(context.getScriptId(), var2Name);
                 if (localVar != null) {
@@ -118,7 +118,7 @@ public class CompareVariableCondition implements BlockCondition {
                 }
             }
             
-            // If not found, try global variables
+            
             if (var2ValueObj == null) {
                 DataValue globalVar = variableManager.getGlobalVariable(var2Name);
                 if (globalVar != null) {
@@ -126,7 +126,7 @@ public class CompareVariableCondition implements BlockCondition {
                 }
             }
             
-            // If not found, try server variables
+            
             if (var2ValueObj == null) {
                 DataValue serverVar = variableManager.getServerVariable(var2Name);
                 if (serverVar != null) {
@@ -134,11 +134,11 @@ public class CompareVariableCondition implements BlockCondition {
                 }
             }
 
-            // Convert values to strings for comparison
+            
             String var1ValueStr = var1ValueObj != null ? var1ValueObj.toString() : "";
             String var2ValueStr = var2ValueObj != null ? var2ValueObj.toString() : "";
 
-            // Compare the variables based on the operator
+            
             switch (operator) {
                 case "==":
                 case "equals":
@@ -187,7 +187,7 @@ public class CompareVariableCondition implements BlockCondition {
                     return false;
             }
         } catch (Exception e) {
-            // If there's an error, return false
+            
             context.getPlugin().getLogger().warning("Error in CompareVariableCondition: " + e.getMessage());
             return false;
         }

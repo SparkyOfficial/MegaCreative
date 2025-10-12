@@ -22,10 +22,10 @@ public class ParticleShapeGenerator {
     public static List<Vector3D> createCircle(Vector3D center, double radius, int particleCount, Vector3D normal) {
         List<Vector3D> particles = new ArrayList<>();
         
-        // Normalize the normal vector
+        
         normal = normal.normalize();
         
-        // Create two perpendicular vectors to the normal
+        
         Vector3D u, v;
         if (Math.abs(normal.z) < 0.9) {
             u = new Vector3D(0, 0, 1).cross(normal).normalize();
@@ -34,7 +34,7 @@ public class ParticleShapeGenerator {
         }
         v = normal.cross(u).normalize();
         
-        // Generate points on the circle
+        
         for (int i = 0; i < particleCount; i++) {
             double angle = 2 * Math.PI * i / particleCount;
             Vector3D point = u.multiply(Math.cos(angle) * radius)
@@ -55,15 +55,15 @@ public class ParticleShapeGenerator {
     public static List<Vector3D> createSphere(Vector3D center, double radius, int particleCount) {
         List<Vector3D> particles = new ArrayList<>();
         
-        // Use Fibonacci sphere algorithm for even distribution
+        
         double goldenRatio = (1 + Math.sqrt(5)) / 2;
         double angleIncrement = Math.PI * 2 * goldenRatio;
         
         for (int i = 0; i < particleCount; i++) {
-            double y = 1 - (i / (double)(particleCount - 1)) * 2;  // y goes from 1 to -1
-            double radiusAtY = Math.sqrt(1 - y * y);  // radius at y
+            double y = 1 - (i / (double)(particleCount - 1)) * 2;  
+            double radiusAtY = Math.sqrt(1 - y * y);  
             
-            double theta = angleIncrement * i;  // golden angle increment
+            double theta = angleIncrement * i;  
             
             double x = Math.cos(theta) * radiusAtY;
             double z = Math.sin(theta) * radiusAtY;
@@ -92,7 +92,7 @@ public class ParticleShapeGenerator {
         List<Vector3D> particles = new ArrayList<>();
         
         for (int i = 0; i < particleCount; i++) {
-            double t = (double) i / (particleCount - 1);  // 0 to 1
+            double t = (double) i / (particleCount - 1);  
             double angle = 2 * Math.PI * turns * t;
             
             double x = center.x + Math.cos(angle) * radius;
@@ -120,19 +120,19 @@ public class ParticleShapeGenerator {
         List<Vector3D> particles = new ArrayList<>();
         
         for (int i = 0; i < particleCount; i++) {
-            double t = (double) i / (particleCount - 1);  // 0 to 1
+            double t = (double) i / (particleCount - 1);  
             double pos = -length/2 + t * length;
             double wave = amplitude * Math.sin(2 * Math.PI * frequency * t);
             
             Vector3D point;
             switch (axis) {
-                case 0: // X axis
+                case 0: 
                     point = new Vector3D(center.x + pos, center.y + wave, center.z);
                     break;
-                case 1: // Y axis
+                case 1: 
                     point = new Vector3D(center.x, center.y + pos, center.z + wave);
                     break;
-                case 2: // Z axis
+                case 2: 
                     point = new Vector3D(center.x + wave, center.y, center.z + pos);
                     break;
                 default:
@@ -161,16 +161,16 @@ public class ParticleShapeGenerator {
         for (int i = 0; i < majorParticleCount; i++) {
             double majorAngle = 2 * Math.PI * i / majorParticleCount;
             
-            // Position of the tube center
+            
             double tubeCenterX = center.x + Math.cos(majorAngle) * majorRadius;
             double tubeCenterZ = center.z + Math.sin(majorAngle) * majorRadius;
             Vector3D tubeCenter = new Vector3D(tubeCenterX, center.y, tubeCenterZ);
             
-            // Create particles around the tube
+            
             for (int j = 0; j < minorParticleCount; j++) {
                 double minorAngle = 2 * Math.PI * j / minorParticleCount;
                 
-                // Position relative to tube center
+                
                 double relX = Math.cos(majorAngle) * Math.cos(minorAngle) * minorRadius;
                 double relY = Math.sin(minorAngle) * minorRadius;
                 double relZ = Math.sin(majorAngle) * Math.cos(minorAngle) * minorRadius;

@@ -33,18 +33,18 @@ public class PlayerTeleportActivator extends BukkitEventActivator {
     
     @Override
     public void execute(GameEvent gameEvent, List<Entity> selectedEntities, int stackCounter, AtomicInteger callCounter) {
-        // Set the selected entities
+        
         this.selectedEntities = selectedEntities;
         
-        // Execute all actions associated with this activator
-        // This would integrate with the existing script execution system
+        
+        
         for (com.megacreative.coding.CodeBlock action : actionList) {
             try {
-                // Get the script engine from the plugin
+                
                 com.megacreative.coding.ScriptEngine scriptEngine = plugin.getServiceRegistry().getScriptEngine();
                 
                 if (scriptEngine != null) {
-                    // Execute the action block
+                    
                     scriptEngine.executeBlock(action, 
                         selectedEntities.isEmpty() ? null : (org.bukkit.entity.Player) selectedEntities.get(0), 
                         "activator_player_teleport");
@@ -64,12 +64,12 @@ public class PlayerTeleportActivator extends BukkitEventActivator {
      * @param cause The cause of the teleportation
      */
     public void activate(Player player, Location from, Location to, String cause) {
-        // Create a game event for this activation
+        
         GameEvent event = new GameEvent("player_teleport");
         event.setPlayer(player);
         event.setLocation(to);
         
-        // Add teleport information to the event
+        
         Map<String, Object> eventData = new HashMap<>();
         eventData.put("from_x", from.getX());
         eventData.put("from_y", from.getY());
@@ -82,7 +82,7 @@ public class PlayerTeleportActivator extends BukkitEventActivator {
         eventData.put("cause", cause);
         event.setCustomData(eventData);
         
-        // Execute the activator with the event
+        
         execute(event, List.of(player), 0, new AtomicInteger(0));
     }
 }

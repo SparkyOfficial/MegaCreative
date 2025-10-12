@@ -29,13 +29,13 @@ public class ParameterUtils {
     public static String getStringParameter(CodeBlock block, ExecutionContext context, 
                                           String paramName, String slotName, String defaultValue) {
         try {
-            // First try the new parameter system
+            
             DataValue paramValue = block.getParameter(paramName);
             if (paramValue != null && !paramValue.isEmpty()) {
                 return paramValue.asString();
             }
             
-            // Fallback to the old container-based system
+            
             if (slotName != null && !slotName.isEmpty()) {
                 String containerValue = getStringFromContainer(block, context, slotName);
                 if (containerValue != null && !containerValue.isEmpty()) {
@@ -65,23 +65,23 @@ public class ParameterUtils {
     public static int getIntParameter(CodeBlock block, ExecutionContext context, 
                                     String paramName, String slotName, int defaultValue) {
         try {
-            // First try the new parameter system
+            
             DataValue paramValue = block.getParameter(paramName);
             if (paramValue != null && !paramValue.isEmpty()) {
                 return paramValue.asNumber().intValue();
             }
             
-            // Fallback to the old container-based system
+            
             if (slotName != null && !slotName.isEmpty()) {
                 String containerValue = getStringFromContainer(block, context, slotName);
                 if (containerValue != null && !containerValue.isEmpty()) {
                     try {
-                        // Try to parse as integer
+                        
                         return Integer.parseInt(containerValue.replaceAll("[^0-9]", ""));
                     } catch (NumberFormatException e) {
-                        // Use item amount as fallback
-                        // Note: This would require access to the ItemStack which is not available here
-                        // In a real implementation, we would need to pass the ItemStack or find another approach
+                        
+                        
+                        
                     }
                 }
             }
@@ -108,13 +108,13 @@ public class ParameterUtils {
                 return null;
             }
             
-            // Get the BlockConfigService to resolve slot names
+            
             BlockConfigService blockConfigService = context.getPlugin().getServiceRegistry().getBlockConfigService();
             if (blockConfigService == null) {
                 return null;
             }
             
-            // Get the slot resolver for this action/condition
+            
             String actionId = block.getAction();
             String conditionId = block.getCondition();
             String id = (actionId != null) ? actionId : conditionId;
@@ -128,7 +128,7 @@ public class ParameterUtils {
                 return null;
             }
             
-            // Get item from the slot
+            
             Integer slotIndex = slotResolver.apply(slotName);
             if (slotIndex == null || slotIndex == -1) {
                 return null;
@@ -139,7 +139,7 @@ public class ParameterUtils {
                 return null;
             }
             
-            // Extract value from item
+            
             return getStringFromItem(item);
         } catch (Exception e) {
             if (context != null && context.getPlugin() != null) {
@@ -161,7 +161,7 @@ public class ParameterUtils {
         if (meta != null) {
             String displayName = meta.getDisplayName();
             if (displayName != null && !displayName.isEmpty()) {
-                // Return the display name as is, preserving color codes
+                
                 return displayName;
             }
         }
@@ -178,7 +178,7 @@ public class ParameterUtils {
     public static String getCleanStringFromItem(ItemStack item) {
         String value = getStringFromItem(item);
         if (value != null && !value.isEmpty()) {
-            // Remove color codes but preserve other characters
+            
             return value.replaceAll("[§][0-9a-fk-or]", "");
         }
         return value;

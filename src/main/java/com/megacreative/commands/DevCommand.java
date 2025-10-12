@@ -65,8 +65,8 @@ public class DevCommand implements CommandExecutor {
             return true;
         }
         
-        // Simplified DevCommand - just switch to dev world
-        // All logic is now in PlayerWorldChangeListener
+        
+        
         World currentWorld = player.getWorld();
         CreativeWorld creativeWorld = findCreativeWorld(currentWorld);
        
@@ -80,7 +80,7 @@ public class DevCommand implements CommandExecutor {
             return true;
         }
         
-        // Switch to dev world using WorldManager
+        
         plugin.getServiceRegistry().getWorldManager().switchToDevWorld(player, creativeWorld.getId());
         
         return true;
@@ -108,16 +108,16 @@ public class DevCommand implements CommandExecutor {
      * Öffnet das Variablen-Menü (Grundimplementierung)
      */
     private void openVariablesMenu(Player player) {
-        // Проверяем, что игрок в мире разработки
+        
         if (!player.getWorld().getName().endsWith("_dev")) {
             player.sendMessage("§cКоманда /dev variables доступна только в мире разработки!");
             return;
         }
         
-        // Создаем улучшенное GUI с предметами-переменными
+        
         org.bukkit.inventory.Inventory variablesInventory = org.bukkit.Bukkit.createInventory(null, 54, "§8§lМеню переменных");
         
-        // Базовые типы переменных
+        
         createVariableItem(variablesInventory, 10, org.bukkit.Material.WRITABLE_BOOK, "§e§lТекстовая переменная",
             "§7Для хранения текста", "§eПример: имя, сообщение", "§8Нажмите для создания");
             
@@ -130,7 +130,7 @@ public class DevCommand implements CommandExecutor {
         createVariableItem(variablesInventory, 16, org.bukkit.Material.CHEST, "§6§lПеременная предмета",
             "§7Для хранения предметов", "§eПример: награда", "§8Нажмите для создания");
             
-        // Расширенные типы переменных
+        
         createVariableItem(variablesInventory, 28, org.bukkit.Material.REPEATER, "§d§lПеременная списка",
             "§7Для хранения списков", "§eПример: топ игроков", "§8Нажмите для создания");
             
@@ -143,20 +143,20 @@ public class DevCommand implements CommandExecutor {
         createVariableItem(variablesInventory, 34, org.bukkit.Material.HOPPER, "§c§lГлобальная переменная",
             "§7Для хранения общих данных", "§eДоступна всем игрокам", "§8Нажмите для создания");
         
-        // Декоративные элементы
+        
         for (int i = 0; i < 9; i++) {
             variablesInventory.setItem(i, createGlassPane());
             variablesInventory.setItem(45 + i, createGlassPane());
         }
         
-        // Кнопки управления
+        
         createVariableItem(variablesInventory, 48, org.bukkit.Material.BOOK, "§e§lПомощь",
             "§7Нажмите для просмотра", "§7руководства по переменным");
             
         createVariableItem(variablesInventory, 50, org.bukkit.Material.BARRIER, "§c§lЗакрыть",
             "§7Нажмите для закрытия", "§7меню переменных");
         
-        // Открываем инвентарь
+        
         player.openInventory(variablesInventory);
         player.playSound(player.getLocation(), org.bukkit.Sound.UI_BUTTON_CLICK, 0.7f, 1.0f);
         player.sendMessage("§a§lМеню переменных открыто! §7Выберите тип переменной для создания.");
@@ -189,10 +189,10 @@ public class DevCommand implements CommandExecutor {
         player.teleport(devWorld.getSpawnLocation());
         player.setGameMode(GameMode.CREATIVE);
         
-        // Очищаем инвентарь перед выдачей предметов
+        
         player.getInventory().clear();
         
-        // Выдаем блоки кодирования ДИНАМИЧЕСКИ
+        
         CodingItems.giveCodingItems(player, plugin);
         
         player.sendMessage("§aВы телепортированы в мир разработки!");
@@ -208,30 +208,30 @@ public class DevCommand implements CommandExecutor {
             creator.type(WorldType.FLAT);
             creator.environment(World.Environment.NORMAL);
             
-            // Используем наш кастомный генератор для мира разработки
+            
             creator.generator(new com.megacreative.worlds.DevWorldGenerator());
             
-            // 🔧 FIX: Add proper flat world generator settings to prevent "No key layers" error
+            
             creator.generatorSettings("{\"layers\":[{\"block\":\"bedrock\",\"height\":1},{\"block\":\"stone\",\"height\":2},{\"block\":\"grass_block\",\"height\":1}],\"biome\":\"plains\"}");
             creator.generateStructures(false);
             
-            // Создаем мир с минимальными настройками
+            
             return Bukkit.createWorld(creator);
             
         } catch (Exception e) {
             plugin.getLogger().severe("Ошибка создания мира разработки: " + e.getMessage());
             plugin.getLogger().severe("Stack trace: " + java.util.Arrays.toString(e.getStackTrace()));
             
-            // Попытка создать мир с минимальными настройками
+            
             try {
                 WorldCreator fallbackCreator = new WorldCreator(creativeWorld.getDevWorldName());
                 fallbackCreator.environment(World.Environment.NORMAL);
                 fallbackCreator.type(WorldType.NORMAL);
                 fallbackCreator.generateStructures(false);
-                // Используем наш кастомный генератор для мира разработки
+                
                 fallbackCreator.generator(new com.megacreative.worlds.DevWorldGenerator());
                 
-                // Настройка (setupDevWorld) должна происходить в основном потоке
+                
                 return Bukkit.createWorld(fallbackCreator);
                 
             } catch (Exception fallbackException) {
@@ -252,20 +252,20 @@ public class DevCommand implements CommandExecutor {
             devWorld.setGameRule(GameRule.DO_FIRE_TICK, false);
             devWorld.setGameRule(GameRule.MOB_GRIEFING, false);
             
-            devWorld.setTime(6000); // День
+            devWorld.setTime(6000); 
             devWorld.setStorm(false);
             devWorld.setThundering(false);
             
-            // Устанавливаем спавн в безопасное место
+            
             Location spawnLocation = new Location(devWorld, 0, 70, 0);
             
-            // Проверяем по флагу, чтобы не делать это каждый раз
+            
             if (!devWorld.getPersistentDataContainer().has(new NamespacedKey(plugin, "initialized"), PersistentDataType.BYTE)) {
                 plugin.getLogger().info("Производится первичная настройка мира разработки...");
                 
-                // Спавн над платформой
+                
                 spawnLocation = new Location(devWorld, 0, 66, 0);
-                // Ставим флаг, что мир настроен
+                
                 devWorld.getPersistentDataContainer().set(new NamespacedKey(plugin, "initialized"), PersistentDataType.BYTE, (byte)1);
             }
             
@@ -273,7 +273,7 @@ public class DevCommand implements CommandExecutor {
            
             WorldBorder border = devWorld.getWorldBorder();
             border.setCenter(0, 0);
-            border.setSize(400); // Увеличиваем размер для удобства разработки
+            border.setSize(400); 
             border.setWarningDistance(10);
             
         } catch (Exception e) {
@@ -285,12 +285,12 @@ public class DevCommand implements CommandExecutor {
         try {
             String worldName = bukkitWorld.getName();
             
-            // 🔧 FIX: Remove prefix and ALL possible suffixes for dual world architecture
+            
             if (worldName.startsWith("megacreative_")) {
                 String id = worldName.replace("megacreative_", "")
-                                      .replace("-code", "")    // New dev world suffix
-                                      .replace("-world", "")   // New play world suffix  
-                                      .replace("_dev", "");    // Legacy compatibility
+                                      .replace("-code", "")    
+                                      .replace("-world", "")   
+                                      .replace("_dev", "");    
                 return plugin.getServiceRegistry().getWorldManager().getWorld(id);
             }
         } catch (Exception e) {

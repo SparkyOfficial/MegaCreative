@@ -36,7 +36,7 @@ public class CompilationListener implements Listener {
         Player player = event.getPlayer();
         World fromWorld = event.getFrom();
         
-        // Check if player is leaving a dev world
+        
         if (fromWorld.getName().contains("-code")) {
             compileWorldCode(fromWorld);
         }
@@ -47,7 +47,7 @@ public class CompilationListener implements Listener {
         Player player = event.getPlayer();
         World world = player.getWorld();
         
-        // Check if player is leaving a dev world
+        
         if (world.getName().contains("-code")) {
             compileWorldCode(world);
         }
@@ -60,18 +60,18 @@ public class CompilationListener implements Listener {
         try {
             logger.info("Starting automatic compilation for world: " + world.getName());
             
-            // Get the CodeCompiler service
+            
             CodeCompiler codeCompiler = plugin.getServiceRegistry().getCodeCompiler();
             if (codeCompiler == null) {
                 logger.severe("CodeCompiler service not available for automatic compilation!");
                 return;
             }
             
-            // Compile world to code strings
+            
             List<String> codeStrings = codeCompiler.compileWorldToCodeStrings(world);
             logger.info("Compiled " + codeStrings.size() + " lines of code from world: " + world.getName());
             
-            // Save compiled code to WorldCode configuration
+            
             String worldId = world.getName().replace("-code", "");
             codeCompiler.saveCompiledCode(worldId, codeStrings);
             

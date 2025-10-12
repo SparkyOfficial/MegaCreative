@@ -42,9 +42,9 @@ public class HealPlayerAction implements BlockAction {
             try {
                 return Double.parseDouble(value.asString());
             } catch (NumberFormatException e) {
-                // Default to 20 (full heal)
+                
             }
         }
-        return 20.0; // Default to full heal
+        return 20.0; 
     }
 }

@@ -23,7 +23,7 @@ public class TickActivator extends Activator {
     
     private Location location;
     private final GameEventFactory eventFactory;
-    private String tickType; // "onTick", "onSecond", "onMinute"
+    private String tickType; 
     private boolean enabled = true;
     private CodeBlock script;
     
@@ -86,20 +86,20 @@ public class TickActivator extends Activator {
             return;
         }
         
-        // Execute all actions associated with this activator
+        
         for (CodeBlock action : actionList) {
             try {
-                // Get the script engine from the plugin
+                
                 ScriptEngine scriptEngine = plugin.getServiceRegistry().getScriptEngine();
                 
                 if (scriptEngine != null) {
-                    // Convert the first entity to a player if possible
+                    
                     Player player = null;
                     if (!selectedEntities.isEmpty() && selectedEntities.get(0) instanceof Player) {
                         player = (Player) selectedEntities.get(0);
                     }
                     
-                    // Execute the action block
+                    
                     scriptEngine.executeBlock(action, player, "activator_tick")
                         .thenAccept(result -> {
                             if (!result.isSuccess()) {
@@ -132,11 +132,11 @@ public class TickActivator extends Activator {
             return;
         }
         
-        // Create a game event with tick context
+        
         GameEvent gameEvent = new GameEvent(tickType);
         gameEvent.setCustomData("tick", tickNumber);
         
-        // Activate the script
+        
         execute(gameEvent, new java.util.ArrayList<>(), 0, new AtomicInteger(0));
     }
 }

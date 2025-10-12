@@ -27,7 +27,7 @@ public class SetBlockAction implements BlockAction {
         }
 
         try {
-            // Get block parameters from the new parameter system
+            
             DataValue blockValue = block.getParameter("block");
             DataValue relativeXValue = block.getParameter("relativeX");
             DataValue relativeYValue = block.getParameter("relativeY");
@@ -37,11 +37,11 @@ public class SetBlockAction implements BlockAction {
                 return ExecutionResult.error("No block provided");
             }
 
-            // Resolve any placeholders in the parameters
+            
             ParameterResolver resolver = new ParameterResolver(context);
             DataValue resolvedBlockName = resolver.resolve(context, blockValue);
             
-            // Parse parameters
+            
             String blockName = resolvedBlockName.asString();
             int relativeX = 0;
             int relativeY = 0;
@@ -51,7 +51,7 @@ public class SetBlockAction implements BlockAction {
                 try {
                     relativeX = Integer.parseInt(relativeXValue.asString());
                 } catch (NumberFormatException e) {
-                    // Use default value
+                    
                 }
             }
             
@@ -59,7 +59,7 @@ public class SetBlockAction implements BlockAction {
                 try {
                     relativeY = Integer.parseInt(relativeYValue.asString());
                 } catch (NumberFormatException e) {
-                    // Use default value
+                    
                 }
             }
             
@@ -67,24 +67,24 @@ public class SetBlockAction implements BlockAction {
                 try {
                     relativeZ = Integer.parseInt(relativeZValue.asString());
                 } catch (NumberFormatException e) {
-                    // Use default value
+                    
                 }
             }
 
-            // Parse the block material
+            
             Material material;
             try {
                 material = Material.valueOf(blockName.toUpperCase());
             } catch (IllegalArgumentException e) {
-                // Use default material if parsing fails
+                
                 material = Material.STONE;
             }
 
-            // Calculate the target location
+            
             Location playerLocation = player.getLocation();
             Location targetLocation = playerLocation.clone().add(relativeX, relativeY, relativeZ);
             
-            // Set the actual block in the world
+            
             targetLocation.getBlock().setType(material);
             
             context.getPlugin().getLogger().info("Setting block " + material + " at relative position (" + relativeX + ", " + relativeY + ", " + relativeZ + ")");

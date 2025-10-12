@@ -28,7 +28,7 @@ public class ShowMenuAction implements BlockAction {
     @Override
     public ExecutionResult execute(CodeBlock block, ExecutionContext context) {
         try {
-            // Get parameters
+            
             DataValue menuVariableValue = block.getParameter("menuVariable");
             DataValue playerValue = block.getParameter("player");
             
@@ -41,7 +41,7 @@ public class ShowMenuAction implements BlockAction {
                 return ExecutionResult.error("Menu variable name cannot be empty");
             }
             
-            // Get the GUI inventory from the global variable
+            
             VariableManager variableManager = plugin.getServiceRegistry().getVariableManager();
             if (variableManager == null) {
                 return ExecutionResult.error("Variable manager not available");
@@ -58,7 +58,7 @@ public class ShowMenuAction implements BlockAction {
             
             CreateMenuAction.GUIInventory guiInventory = (CreateMenuAction.GUIInventory) menuValue.getValue();
             
-            // Determine which player to show the menu to
+            
             org.bukkit.entity.Player targetPlayer = context.getPlayer();
             if (playerValue != null && playerValue.getValue() instanceof org.bukkit.entity.Player) {
                 targetPlayer = (org.bukkit.entity.Player) playerValue.getValue();
@@ -68,7 +68,7 @@ public class ShowMenuAction implements BlockAction {
                 return ExecutionResult.error("Target player not available");
             }
             
-            // Show the menu to the player
+            
             targetPlayer.openInventory(guiInventory.getInventory());
             
             return ExecutionResult.success("Showed menu '" + guiInventory.getTitle() + "' to player " + targetPlayer.getName());

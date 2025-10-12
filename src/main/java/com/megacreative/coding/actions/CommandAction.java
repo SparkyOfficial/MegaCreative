@@ -20,20 +20,20 @@ public class CommandAction implements BlockAction {
     @Override
     public ExecutionResult execute(CodeBlock block, ExecutionContext context) {
         try {
-            // Get command parameter
+            
             DataValue commandValue = block.getParameter("command");
             
             if (commandValue == null || commandValue.isEmpty()) {
                 return ExecutionResult.error("No command provided");
             }
             
-            // Resolve any placeholders in the command
+            
             ParameterResolver resolver = new ParameterResolver(context);
             DataValue resolvedCommand = resolver.resolve(context, commandValue);
             
             String command = resolvedCommand.asString();
             
-            // Execute the command
+            
             boolean success = Bukkit.dispatchCommand(Bukkit.getConsoleSender(), command);
             
             if (success) {

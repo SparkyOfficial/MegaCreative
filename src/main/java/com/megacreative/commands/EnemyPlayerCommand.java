@@ -76,7 +76,7 @@ public class EnemyPlayerCommand implements CommandExecutor, TabCompleter {
         
         Player player = (Player) sender;
         
-        // Проверяем права доступа
+        
         if (!player.hasPermission("megacreative.admin")) {
             player.sendMessage("§cУ вас нет прав на использование этой команды!");
             return true;
@@ -140,11 +140,11 @@ public class EnemyPlayerCommand implements CommandExecutor, TabCompleter {
      * @param playerName Name des hinzuzufügenden Spielers
      */
     private void addEnemyPlayer(Player sender, String playerName) {
-        // Добавляем игрока в список враждебных
+        
         enemyPlayerManager.addEnemyPlayer(playerName);
         sender.sendMessage("§aИгрок " + playerName + " добавлен в список враждебных игроков!");
         
-        // Если игрок онлайн, кикаем его
+        
         Player target = plugin.getServer().getPlayer(playerName);
         if (target != null && target.isOnline()) {
             target.kickPlayer("§cВы были добавлены в черный список сервера!");
@@ -165,7 +165,7 @@ public class EnemyPlayerCommand implements CommandExecutor, TabCompleter {
      * @param playerName Name des zu entfernenden Spielers
      */
     private void removeEnemyPlayer(Player sender, String playerName) {
-        // Удаляем игрока из списка враждебных
+        
         enemyPlayerManager.removeEnemyPlayer(playerName);
         sender.sendMessage("§aИгрок " + playerName + " удален из списка враждебных игроков!");
     }
@@ -215,7 +215,7 @@ public class EnemyPlayerCommand implements CommandExecutor, TabCompleter {
                     sender.sendMessage("§cИспользование: /enemy restricted add <игрок>");
                     return;
                 }
-                // Note: This would require modifying the config file to persist the change
+                
                 sender.sendMessage("§eДобавление игроков с ограниченным доступом требует ручного изменения конфигурации.");
                 break;
                 
@@ -224,7 +224,7 @@ public class EnemyPlayerCommand implements CommandExecutor, TabCompleter {
                     sender.sendMessage("§cИспользование: /enemy restricted remove <игрок>");
                     return;
                 }
-                // Note: This would require modifying the config file to persist the change
+                
                 sender.sendMessage("§eУдаление игроков с ограниченным доступом требует ручного изменения конфигурации.");
                 break;
                 
@@ -309,7 +309,7 @@ public class EnemyPlayerCommand implements CommandExecutor, TabCompleter {
         
         if (args.length == 2) {
             if (args[0].equalsIgnoreCase("add") || args[0].equalsIgnoreCase("remove")) {
-                // Return list of online players
+                
                 List<String> playerNames = new ArrayList<>();
                 for (Player onlinePlayer : plugin.getServer().getOnlinePlayers()) {
                     playerNames.add(onlinePlayer.getName());
@@ -328,7 +328,7 @@ public class EnemyPlayerCommand implements CommandExecutor, TabCompleter {
         
         if (args.length == 3 && args[0].equalsIgnoreCase("restricted")) {
             if (args[1].equalsIgnoreCase("add") || args[1].equalsIgnoreCase("remove")) {
-                // Return list of online players
+                
                 List<String> playerNames = new ArrayList<>();
                 for (Player onlinePlayer : plugin.getServer().getOnlinePlayers()) {
                     playerNames.add(onlinePlayer.getName());

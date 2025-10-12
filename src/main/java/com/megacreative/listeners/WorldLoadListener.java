@@ -37,7 +37,7 @@ public class WorldLoadListener implements Listener {
         World world = event.getWorld();
         String worldName = world.getName();
         
-        // Only process creative worlds
+        
         if (worldName.contains("_dev") || worldName.contains("_creative")) {
             plugin.getServer().getScheduler().runTaskLater(plugin, () -> {
                 try {
@@ -45,7 +45,7 @@ public class WorldLoadListener implements Listener {
                 } catch (Exception e) {
                     plugin.getLogger().log(Level.SEVERE, "Error during world rehydration for " + worldName, e);
                 }
-            }, 20L); // Run after 1 second to ensure world is fully loaded
+            }, 20L); 
         }
     }
 
@@ -76,7 +76,7 @@ public class WorldLoadListener implements Listener {
             return;
         }
 
-        // Process chunks asynchronously to prevent server lag
+        
         Chunk[] chunks = world.getLoadedChunks();
         if (chunks == null || chunks.length == 0) {
             plugin.getLogger().info("No chunks to process in world: " + world.getName());
@@ -85,7 +85,7 @@ public class WorldLoadListener implements Listener {
         
         plugin.getLogger().info("Processing " + chunks.length + " chunks in world: " + world.getName());
         
-        // Process chunks in batches to prevent server lag
+        
         processChunksAsync(world, chunks, placementHandler, configService);
     }
     
@@ -101,9 +101,9 @@ public class WorldLoadListener implements Listener {
             public void run() {
                 int currentIndex = chunkIndex.getAndIncrement();
                 
-                // Check if we've processed all chunks
+                
                 if (currentIndex >= chunks.length) {
-                    // All chunks processed, finish up
+                    
                     long duration = System.currentTimeMillis() - startTime;
                     plugin.getLogger().info(String.format(
                         "Rehydration complete for %s. Processed %d code blocks in %.2f seconds",
@@ -115,7 +115,7 @@ public class WorldLoadListener implements Listener {
                     return;
                 }
                 
-                // Process current chunk
+                
                 Chunk chunk = chunks[currentIndex];
                 if (chunk == null) return;
                 
@@ -130,9 +130,9 @@ public class WorldLoadListener implements Listener {
                             blockCount.incrementAndGet();
                             processedInThisChunk++;
                             
-                            // Yield every 10 blocks to prevent server lag
+                            
                             if (processedInThisChunk % 10 == 0) {
-                                // Return control to the server, continue processing in next tick
+                                
                                 return;
                             }
                         }
@@ -141,7 +141,7 @@ public class WorldLoadListener implements Listener {
                     plugin.getLogger().log(Level.WARNING, "Error processing chunk at " + chunk.getX() + "," + chunk.getZ(), e);
                 }
             }
-        }.runTaskTimer(plugin, 1L, 1L); // Run every tick
+        }.runTaskTimer(plugin, 1L, 1L); 
     }
 
     /**
@@ -171,10 +171,10 @@ public class WorldLoadListener implements Listener {
                 return;
             }
 
-            // Recreate the CodeBlock object for this physical block
+            
             CodeBlock recreatedBlock = placementHandler.recreateCodeBlockFromExisting(codeBlock, sign);
             
-            // In the new architecture, BlockLinker and BlockHierarchyManager handle connections automatically
+            
         } catch (Exception e) {
             org.bukkit.Location loc = sign.getLocation();
             plugin.getLogger().log(Level.WARNING, 
@@ -191,28 +191,28 @@ public class WorldLoadListener implements Listener {
      * Checks if a sign is part of a code block by examining its text
      */
     private boolean isCodeSign(Sign sign) {
-        // Check if this is a code sign by looking for our special markers
+        
         String[] lines = sign.getLines();
         if (lines.length < 3) return false;
         
-        // Check for our special formatting
+        
         return lines[0].contains("============") || 
-               lines[0].contains("★★★★★★★★★★★★") || // Smart signs
-               lines[1].contains("§e") || // Event blocks
-               lines[1].contains("§a") || // Action blocks
-               lines[1].contains("§6") || // Condition/bracket blocks
+               lines[0].contains("★★★★★★★★★★★★") || 
+               lines[1].contains("§e") || 
+               lines[1].contains("§a") || 
+               lines[1].contains("§6") || 
                lines[2].contains("Кликните ПКМ") || 
                lines[2].contains("Клик для настройки");
     }
 
     private Block findAssociatedCodeBlock(Sign sign) {
-        // Check all adjacent faces for a code block
+        
         Block signBlock = sign.getBlock();
         BlockFace[] faces = { BlockFace.NORTH, BlockFace.SOUTH, BlockFace.EAST, BlockFace.WEST };
         
         for (BlockFace face : faces) {
             Block potentialBlock = signBlock.getRelative(face.getOppositeFace());
-            // Check if this is a configured code block material
+            
             if (plugin.getServiceRegistry() != null && 
                 plugin.getServiceRegistry().getBlockConfigService() != null &&
                 plugin.getServiceRegistry().getBlockConfigService().isCodeBlock(potentialBlock.getType())) {

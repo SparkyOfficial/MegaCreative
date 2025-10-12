@@ -29,7 +29,7 @@ public class IsNearEntityCondition implements BlockCondition {
         }
 
         try {
-            // Get parameters from the new parameter system
+            
             DataValue entityValue = block.getParameter("entity");
             DataValue distanceValue = block.getParameter("distance");
             
@@ -38,7 +38,7 @@ public class IsNearEntityCondition implements BlockCondition {
                 return false;
             }
 
-            // Parse distance parameter (default to 5)
+            
             double distance = 5.0;
             if (distanceValue != null && !distanceValue.isEmpty()) {
                 try {
@@ -48,26 +48,26 @@ public class IsNearEntityCondition implements BlockCondition {
                 }
             }
 
-            // Resolve any placeholders in the entity type
+            
             ParameterResolver resolver = new ParameterResolver(context);
             DataValue resolvedEntity = resolver.resolve(context, entityValue);
             
-            // Parse entity type parameter
+            
             String entityName = resolvedEntity.asString();
             if (entityName == null || entityName.isEmpty()) {
                 context.getPlugin().getLogger().warning("IsNearEntityCondition: 'entity' parameter is empty.");
                 return false;
             }
 
-            // Check if the specified entity type is near the player
+            
             try {
                 EntityType entityType = EntityType.valueOf(entityName.toUpperCase());
                 Location playerLocation = player.getLocation();
                 
-                // Get nearby entities within the specified distance
+                
                 Collection<Entity> nearbyEntities = player.getWorld().getNearbyEntities(playerLocation, distance, distance, distance);
                 
-                // Check if any of the nearby entities are of the specified type
+                
                 for (Entity entity : nearbyEntities) {
                     if (entity.getType() == entityType) {
                         return true;
@@ -80,7 +80,7 @@ public class IsNearEntityCondition implements BlockCondition {
                 return false;
             }
         } catch (Exception e) {
-            // If there's an error, return false
+            
             context.getPlugin().getLogger().warning("Error in IsNearEntityCondition: " + e.getMessage());
             return false;
         }

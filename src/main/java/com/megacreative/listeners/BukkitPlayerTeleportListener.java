@@ -20,7 +20,7 @@ public class BukkitPlayerTeleportListener implements Listener {
     
     @EventHandler
     public void onPlayerTeleport(PlayerTeleportEvent bukkitEvent) {
-        // Create our custom event
+        
         MegaPlayerTeleportEvent internalEvent = new MegaPlayerTeleportEvent(
             bukkitEvent.getPlayer(),
             bukkitEvent.getFrom(),
@@ -28,7 +28,7 @@ public class BukkitPlayerTeleportListener implements Listener {
             bukkitEvent.getCause().name()
         );
         
-        // Publish it to our event system
+        
         plugin.getServer().getPluginManager().callEvent(internalEvent);
     }
 }

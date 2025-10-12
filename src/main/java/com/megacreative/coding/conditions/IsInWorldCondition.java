@@ -23,7 +23,7 @@ public class IsInWorldCondition implements BlockCondition {
         }
 
         try {
-            // Get world parameter
+            
             com.megacreative.coding.values.DataValue worldValue = block.getParameter("world");
             if (worldValue == null || worldValue.isEmpty()) {
                 return false;
@@ -32,10 +32,10 @@ public class IsInWorldCondition implements BlockCondition {
             String worldName = worldValue.asString();
             World playerWorld = player.getWorld();
             
-            // Check if player is in the specified world
+            
             return playerWorld.getName().equals(worldName);
         } catch (Exception e) {
-            // If there's an error, return false
+            
             return false;
         }
     }

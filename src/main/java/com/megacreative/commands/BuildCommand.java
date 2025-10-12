@@ -73,10 +73,10 @@ public class BuildCommand implements CommandExecutor {
             return true;
         }
         
-        // Set player mode to DEV (build mode is a form of DEV mode)
+        
         playerModeManager.setMode(player, PlayerModeManager.PlayerMode.DEV);
         
-        // Check if worldManager is available
+        
         if (worldManager == null) {
             player.sendMessage("§cWorld manager not available!");
             return true;
@@ -84,26 +84,26 @@ public class BuildCommand implements CommandExecutor {
         
         CreativeWorld creativeWorld = worldManager.findCreativeWorldByBukkit(player.getWorld());
         
-        // 🔧 FIX: Enhanced world finding logic with better pattern matching
+        
         if (creativeWorld == null) {
             player.sendMessage("§cYou are not in a MegaCreative world!");
             player.sendMessage("§7Current world: " + player.getWorld().getName());
             player.sendMessage("§7Available worlds: " + worldManager.getCreativeWorlds().size());
             
-            // Try multiple pattern matching approaches
+            
             String worldName = player.getWorld().getName();
             
             if (worldName.startsWith("megacreative_")) {
-                // Extract ID using more precise method for complex naming
+                
                 String potentialId = null;
                 
-                // Handle new reference system-style naming (megacreative_ID-code, megacreative_ID-world)
+                
                 if (worldName.contains("-code") || worldName.contains("-world")) {
-                    // Extract everything between "megacreative_" and the first suffix
+                    
                     int startIndex = "megacreative_".length();
                     int endIndex = worldName.length();
                     
-                    // Find the first suffix
+                    
                     int codeIndex = worldName.indexOf("-code");
                     int worldIndex = worldName.indexOf("-world");
                     int devIndex = worldName.indexOf("_dev");
@@ -116,11 +116,11 @@ public class BuildCommand implements CommandExecutor {
                         potentialId = worldName.substring(startIndex, endIndex);
                     }
                 } 
-                // Handle legacy naming (megacreative_ID_dev)
+                
                 else if (worldName.contains("_dev")) {
                     potentialId = worldName.replace("megacreative_", "").replace("_dev", "");
                 }
-                // Handle basic naming (megacreative_ID)
+                
                 else {
                     potentialId = worldName.replace("megacreative_", "");
                 }
@@ -133,7 +133,7 @@ public class BuildCommand implements CommandExecutor {
                 }
             }
             
-            // If still not found, try all available worlds
+            
             if (creativeWorld == null) {
                 for (CreativeWorld world : worldManager.getCreativeWorlds()) {
                     if (worldName.contains(world.getId()) || worldName.contains(world.getName().toLowerCase().replace(" ", ""))) {
@@ -143,45 +143,45 @@ public class BuildCommand implements CommandExecutor {
                 }
             }
             
-            // If still not found, return
+            
             if (creativeWorld == null) {
                 player.sendMessage("§cUnable to find associated MegaCreative world. Please contact an administrator.");
                 return true;
             }
         }
         
-        // Check permissions
+        
         if (!creativeWorld.canEdit(player)) {
             player.sendMessage("§cYou don't have permission to edit this world!");
             return true;
         }
         
-        // Save current world's code blocks before switching
+        
         if (blockPlacementHandler != null) {
             blockPlacementHandler.saveAllCodeBlocksInWorld(player.getWorld());
         }
         
-        // Save player inventory before switching
+        
         if (devInventoryManager != null) {
             devInventoryManager.savePlayerInventory(player);
         }
         
-        // Restore player inventory for build mode
+        
         if (devInventoryManager != null) {
             devInventoryManager.restorePlayerInventory(player);
         }
         
-        // Switch to build world
+        
         worldManager.switchToBuildWorld(player, creativeWorld.getId());
         
         player.sendMessage("§aWorld mode changed to §f§lBUILD§a!");
         player.sendMessage("§7❌ Code disabled, scripts will not execute");
         player.sendMessage("§7Creative mode for builders");
         
-        // Clear inventory to prevent item duplication
+        
         player.getInventory().clear();
         
-        // Save world state
+        
         worldManager.saveWorld(creativeWorld);
         
         return true;

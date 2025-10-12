@@ -37,7 +37,7 @@ import java.util.concurrent.ConcurrentHashMap;
 public class BlockConfigManager implements Listener {
 
     private final MegaCreative plugin;
-    // Отслеживаем, какой игрок какой блок сейчас настраивает
+    
     private final Map<UUID, Location> configuringBlocks = new ConcurrentHashMap<>();
 
     public BlockConfigManager(MegaCreative plugin) {
@@ -49,10 +49,10 @@ public class BlockConfigManager implements Listener {
      * Shuts down the BlockConfigManager and cleans up resources
      */
     public void shutdown() {
-        // Clear all configuring blocks to prevent memory leaks
+        
         configuringBlocks.clear();
         
-        // Any other cleanup if needed
+        
     }
 
     /**
@@ -67,13 +67,13 @@ public class BlockConfigManager implements Listener {
             return;
         }
 
-        // Check if block needs action selection first
+        
         String currentAction = codeBlock.getAction();
         if (currentAction == null || currentAction.equals("Настройка...") || currentAction.isEmpty()) {
-            // Show action selection GUI first
+            
             showActionSelectionGUI(player, codeBlock, blockLocation);
         } else {
-            // Show parameter configuration GUI
+            
             showParameterConfigGUI(player, codeBlock, blockLocation);
         }
     }
@@ -82,7 +82,7 @@ public class BlockConfigManager implements Listener {
      * Shows action selection GUI for the block
      */
     private void showActionSelectionGUI(Player player, CodeBlock codeBlock, Location blockLocation) {
-        // Get available actions from BlockConfigService
+        
         var blockConfigService = plugin.getServiceRegistry().getBlockConfigService();
         List<String> availableActions = blockConfigService.getActionsForMaterial(codeBlock.getMaterial());
         
@@ -93,7 +93,7 @@ public class BlockConfigManager implements Listener {
         
         player.sendMessage("§eВыберите действие для блока...");
         
-        // Create and open ActionSelectionGUI
+        
         ActionSelectionGUI actionGUI = new ActionSelectionGUI(
             plugin, 
             player, 
@@ -107,13 +107,13 @@ public class BlockConfigManager implements Listener {
      * Shows parameter configuration GUI for the block
      */
     private void showParameterConfigGUI(Player player, CodeBlock codeBlock, Location blockLocation) {
-        // Создаем инвентарь (сундук на 27 слотов - 3 ряда)
+        
         Inventory configInventory = Bukkit.createInventory(null, 27, "§8Настройка: " + codeBlock.getAction());
 
-        // Load current DataValue parameters into GUI as ItemStacks
+        
         loadParametersFromGui(configInventory, codeBlock);
         
-        // Загружаем сохраненные предметы в GUI
+        
         if (codeBlock.getConfigItems() != null) {
             for (Map.Entry<Integer, ItemStack> entry : codeBlock.getConfigItems().entrySet()) {
                 if (entry.getKey() < configInventory.getSize()) {
@@ -122,10 +122,10 @@ public class BlockConfigManager implements Listener {
             }
         }
         
-        // --- НОВАЯ ЛОГИКА: ДОБАВЛЯЕМ PLACEHOLDER ПРЕДМЕТЫ ---
+        
         addPlaceholderItems(configInventory, codeBlock);
         
-        // Запоминаем, что игрок настраивает этот блок
+        
         configuringBlocks.put(player.getUniqueId(), blockLocation);
         player.openInventory(configInventory);
         
@@ -140,31 +140,31 @@ public class BlockConfigManager implements Listener {
     private void addPlaceholderItems(Inventory inventory, CodeBlock codeBlock) {
         String actionName = codeBlock.getAction();
         
-        // Get BlockConfigService instead of BlockConfiguration
+        
         var blockConfigService = plugin.getServiceRegistry().getBlockConfigService();
         
-        // Implement proper placeholder system integration
-        // This involves adding placeholder items to the GUI based on the action configuration
+        
+        
         try {
-            // Get the action configuration from the action configurations section
+            
             var actionConfigurations = blockConfigService.getActionConfigurations();
             if (actionConfigurations != null) {
                 var actionConfig = actionConfigurations.getConfigurationSection(actionName);
                 if (actionConfig != null) {
-                    // Get slots configuration
+                    
                     var slots = actionConfig.getConfigurationSection("slots");
                     if (slots != null) {
-                        // Add placeholder items for each parameter slot
+                        
                         for (String slotKey : slots.getKeys(false)) {
                             var slotConfig = slots.getConfigurationSection(slotKey);
                             if (slotConfig != null) {
                                 String paramName = slotConfig.getString("slot_name");
                                 if (paramName != null) {
-                                    // Get the slot index for this parameter
+                                    
                                     Integer slotIndex = blockConfigService.getSlotResolver(actionName).apply(paramName);
                                     if (slotIndex != null && slotIndex >= 0) {
-                                        // Create a placeholder item for this parameter
-                                        // Create a parameter config map for the placeholder
+                                        
+                                        
                                         Map<String, Object> paramConfig = new HashMap<>();
                                         paramConfig.put("name", paramName);
                                         paramConfig.put("type", slotConfig.getString("type", "string"));
@@ -172,7 +172,7 @@ public class BlockConfigManager implements Listener {
                                         
                                         ItemStack placeholderItem = createPlaceholderItem(paramConfig);
                                         if (placeholderItem != null) {
-                                            // Add the placeholder item to the inventory
+                                            
                                             inventory.setItem(slotIndex, placeholderItem);
                                         }
                                     }
@@ -192,21 +192,21 @@ public class BlockConfigManager implements Listener {
      */
     private ItemStack createPlaceholderItem(Map<String, Object> paramConfig) {
         try {
-            // Extract parameter information from the config map
+            
             String name = (String) paramConfig.getOrDefault("name", "Unknown Parameter");
             String type = (String) paramConfig.getOrDefault("type", "string");
             String description = (String) paramConfig.getOrDefault("description", "");
             
-            // Create an item based on the parameter type
+            
             Material material = getMaterialForParameterType(type);
             ItemStack item = new ItemStack(material);
             ItemMeta meta = item.getItemMeta();
             
             if (meta != null) {
-                // Set display name
+                
                 meta.setDisplayName("§7" + name);
                 
-                // Set lore with parameter information
+                
                 List<String> lore = new ArrayList<>();
                 lore.add("§8Parameter: " + name);
                 lore.add("§8Type: " + type);
@@ -224,7 +224,7 @@ public class BlockConfigManager implements Listener {
             
             return item;
         } catch (Exception e) {
-            // Return null if we can't create the placeholder item
+            
             return null;
         }
     }
@@ -264,14 +264,14 @@ public class BlockConfigManager implements Listener {
         
         UUID playerId = player.getUniqueId();
 
-        // Проверяем, настраивал ли этот игрок блок
+        
         if (!configuringBlocks.containsKey(playerId)) {
             return;
         }
         
-        // Проверяем, что это наше GUI
+        
         if (!event.getView().getTitle().startsWith("§8Настройка:")) {
-            // Если игрок открыл что-то другое, не закрыв наше GUI, то просто ждем закрытия нашего.
+            
             return;
         }
 
@@ -279,13 +279,13 @@ public class BlockConfigManager implements Listener {
         CodeBlock codeBlock = plugin.getServiceRegistry().getBlockPlacementHandler().getBlockCodeBlocks().get(blockLocation);
         
         if (codeBlock != null) {
-            // Convert ItemStacks to DataValue parameters
+            
             convertItemStacksToParameters(event.getInventory(), codeBlock);
             
-            // Очищаем старую конфигурацию
+            
             codeBlock.clearConfigItems();
             
-            // Считываем все предметы из инвентаря и сохраняем в CodeBlock
+            
             int savedItems = 0;
             for (int i = 0; i < event.getInventory().getSize(); i++) {
                 ItemStack item = event.getInventory().getItem(i);
@@ -295,12 +295,12 @@ public class BlockConfigManager implements Listener {
                 }
             }
             
-            // NEW: Automatically create container for PlayerEntryAction with autoGiveItem=true
+            
             if ("PlayerEntryAction".equals(codeBlock.getAction())) {
-                // Check if autoGiveItem parameter is set to true
+                
                 DataValue autoGiveItem = codeBlock.getParameter("autoGiveItem");
                 if (autoGiveItem != null && autoGiveItem.asBoolean()) {
-                    // Create container automatically
+                    
                     createAutomaticContainer(blockLocation, codeBlock);
                 }
             }
@@ -311,14 +311,14 @@ public class BlockConfigManager implements Listener {
                 player.sendMessage("§eℹ Конфигурация блока очищена.");
             }
             
-            // Сохраняем весь мир, чтобы изменения не потерялись после перезагрузки
+            
             var creativeWorld = plugin.getServiceRegistry().getWorldManager().findCreativeWorldByBukkit(player.getWorld());
             if (creativeWorld != null) {
                 plugin.getServiceRegistry().getWorldManager().saveWorld(creativeWorld);
             }
         }
         
-        // Убираем игрока из списка настраивающих
+        
         configuringBlocks.remove(playerId);
     }
     
@@ -328,17 +328,17 @@ public class BlockConfigManager implements Listener {
      */
     private void createAutomaticContainer(Location blockLocation, CodeBlock codeBlock) {
         try {
-            // Get the container manager from the service registry
+            
             var containerManager = plugin.getServiceRegistry().getBlockContainerManager();
             if (containerManager == null) {
                 plugin.getLogger().warning("Container manager is not available for automatic container creation");
                 return;
             }
             
-            // Create a chest container above the block
+            
             containerManager.createContainer(blockLocation, com.megacreative.coding.containers.ContainerType.CHEST, "PlayerEntryAction");
             
-            // Notify the player
+            
             var player = Bukkit.getPlayer(configuringBlocks.entrySet().stream()
                 .filter(entry -> entry.getValue().equals(blockLocation))
                 .map(Map.Entry::getKey)
@@ -371,9 +371,9 @@ public class BlockConfigManager implements Listener {
         configuringBlocks.remove(player.getUniqueId());
     }
     
-    // ================================
-    // DATAVALUE INTEGRATION METHODS
-    // ================================
+    
+    
+    
     
     /**
      * Loads current DataValue parameters from CodeBlock into GUI as ItemStacks
@@ -387,7 +387,7 @@ public class BlockConfigManager implements Listener {
         
         plugin.getLogger().info("Loading " + parameters.size() + " parameters for action: " + codeBlock.getAction());
         
-        // Convert each parameter to ItemStack representation using BlockConfigService mapping
+        
         var blockConfigService = plugin.getServiceRegistry().getBlockConfigService();
         for (Map.Entry<String, DataValue> entry : parameters.entrySet()) {
             String paramName = entry.getKey();
@@ -395,7 +395,7 @@ public class BlockConfigManager implements Listener {
             
             if (paramValue == null) continue;
             
-            // Find the appropriate slot for this parameter from config
+            
             Integer slot = blockConfigService != null ? blockConfigService.findSlotForParameter(codeBlock.getAction(), paramName) : null;
             if (slot != null && slot >= 0 && slot < inventory.getSize()) {
                 ItemStack paramItem = convertDataValueToItemStack(paramName, paramValue);
@@ -408,7 +408,7 @@ public class BlockConfigManager implements Listener {
             } else {
                 plugin.getLogger().warning("No slot found for parameter: " + paramName + " (action: " + codeBlock.getAction() + ")");
                 
-                // Try to put in first available slot as fallback
+                
                 for (int i = 0; i < inventory.getSize(); i++) {
                     if (inventory.getItem(i) == null || inventory.getItem(i).getType().isAir()) {
                         ItemStack paramItem = convertDataValueToItemStack(paramName, paramValue);
@@ -430,23 +430,23 @@ public class BlockConfigManager implements Listener {
         Map<String, DataValue> newParameters = new HashMap<>();
         int processedItems = 0;
         
-        // Process each slot in the inventory
+        
         for (int slot = 0; slot < inventory.getSize(); slot++) {
             ItemStack item = inventory.getItem(slot);
             if (item == null || item.getType().isAir()) continue;
             
-            // Skip placeholder items
+            
             if (isPlaceholderItem(item)) continue;
             
-            // Try to determine parameter name for this slot via BlockConfigService
+            
             var blockConfigService = plugin.getServiceRegistry().getBlockConfigService();
             String paramName = blockConfigService != null ? blockConfigService.getParameterNameForSlot(codeBlock.getAction(), slot) : null;
             if (paramName == null) {
-                // Fallback: use generic slot-based parameter name
+                
                 paramName = "slot_" + slot;
             }
             
-            // Convert ItemStack to DataValue
+            
             DataValue paramValue = convertItemStackToDataValue(item);
             if (paramValue != null) {
                 newParameters.put(paramName, paramValue);
@@ -454,12 +454,12 @@ public class BlockConfigManager implements Listener {
             }
         }
         
-        // Update CodeBlock parameters
+        
         for (Map.Entry<String, DataValue> entry : newParameters.entrySet()) {
             codeBlock.setParameter(entry.getKey(), entry.getValue());
         }
         
-        Player player = null; // We'll get from context later
+        Player player = null; 
         if (processedItems > 0) {
             plugin.getLogger().info("Converted " + processedItems + " ItemStacks to DataValue parameters for block " + codeBlock.getAction());
         }
@@ -473,7 +473,7 @@ public class BlockConfigManager implements Listener {
         String displayName;
         List<String> lore = new ArrayList<>();
         
-        // Determine material based on DataValue type
+        
         switch (value.getType()) {
             case TEXT -> {
                 material = Material.PAPER;
@@ -499,7 +499,7 @@ public class BlockConfigManager implements Listener {
                 displayName = "§f" + paramName + ": §dList[" + listValue.size() + "]"; 
                 lore.add("§7Type: §dList");
                 lore.add("§7Size: §d" + listValue.size());
-                // Show first few items
+                
                 List<DataValue> items = listValue.getValues();
                 for (int i = 0; i < Math.min(3, items.size()); i++) {
                     lore.add("§7[" + i + "] §f" + items.get(i).asString());
@@ -541,24 +541,24 @@ public class BlockConfigManager implements Listener {
         ItemMeta meta = item.getItemMeta();
         String displayName = meta != null && meta.hasDisplayName() ? meta.getDisplayName() : "";
         
-        // Clean display name from color codes for processing
+        
         String cleanName = displayName.replaceAll("§[0-9a-fk-or]", "");
         
-        // 1. Try to extract value from existing parameter items (our converted items)
+        
         if (meta != null && meta.hasLore()) {
             List<String> lore = meta.getLore();
             for (String line : lore) {
                 if (line.startsWith("§8Parameter: ")) {
-                    // This is a parameter item we created - extract the value
+                    
                     return extractValueFromParameterItem(item, lore);
                 }
             }
         }
         
-        // 2. Try to detect type from material
+        
         switch (item.getType()) {
             case PAPER:
-                // Extract text from display name or use item name
+                
                 if (!cleanName.isEmpty()) {
                     return new TextValue(cleanName);
                 } else {
@@ -567,7 +567,7 @@ public class BlockConfigManager implements Listener {
             
             case GOLD_NUGGET:
             case GOLD_INGOT:
-                // Try to parse number from name or use amount
+                
                 if (!cleanName.isEmpty()) {
                     try {
                         String numberStr = cleanName.replaceAll("[^0-9.-]", "");
@@ -585,15 +585,15 @@ public class BlockConfigManager implements Listener {
             
             case CHEST:
             case BARREL:
-                // Consider these as lists or containers
+                
                 return new ListValue();
             
             default:
-                // For other items, create text value from name or material
+                
                 if (!cleanName.isEmpty()) {
                     return new TextValue(cleanName);
                 } else {
-                    // Use material name as text value
+                    
                     return new TextValue(item.getType().name().toLowerCase().replace("_", " "));
                 }
         }
@@ -603,15 +603,15 @@ public class BlockConfigManager implements Listener {
      * Extracts value from a parameter item we created
      */
     private DataValue extractValueFromParameterItem(ItemStack item, List<String> lore) {
-        // Look for "Value: " line in lore
+        
         if (lore == null) return new TextValue(item.getType().name().toLowerCase());
         
         for (String line : lore) {
             String cleanLine = line.replaceAll("§[0-9a-fk-or]", "");
             if (cleanLine.startsWith("Value: ")) {
-                String valueStr = cleanLine.substring(7); // Remove "Value: "
+                String valueStr = cleanLine.substring(7); 
                 
-                // Check type from the previous line
+                
                 int index = lore.indexOf(line);
                 if (index > 0 && index - 1 < lore.size()) {
                     String typeLine = lore.get(index - 1).replaceAll("§[0-9a-fk-or]", "");
@@ -625,18 +625,18 @@ public class BlockConfigManager implements Listener {
                     } else if (typeLine.contains("Boolean")) {
                         return new BooleanValue("True".equalsIgnoreCase(valueStr));
                     } else if (typeLine.contains("List")) {
-                        // Implement list parsing
-                        // Try to parse the list from the value string
+                        
+                        
                         return parseListFromString(valueStr);
                     }
                 }
                 
-                // Default to text
+                
                 return new TextValue(valueStr);
             }
         }
         
-        // Fallback
+        
         return new TextValue(item.getType().name().toLowerCase());
     }
     
@@ -652,26 +652,26 @@ public class BlockConfigManager implements Listener {
             return new ListValue(new ArrayList<>());
         }
         
-        // Remove brackets if present
+        
         String cleanString = listString.trim();
         if (cleanString.startsWith("[") && cleanString.endsWith("]")) {
             cleanString = cleanString.substring(1, cleanString.length() - 1);
         }
         
-        // Split by comma and create DataValues
+        
         List<DataValue> values = new ArrayList<>();
         if (!cleanString.isEmpty()) {
-            // Handle quoted strings that might contain commas
+            
             String[] items = parseListItems(cleanString);
             
             for (String item : items) {
                 String trimmedItem = item.trim();
-                // Try to parse as number first
+                
                 try {
                     double number = Double.parseDouble(trimmedItem);
                     values.add(DataValue.fromObject(number));
                 } catch (NumberFormatException e) {
-                    // Treat as string
+                    
                     values.add(DataValue.fromObject(trimmedItem));
                 }
             }
@@ -712,7 +712,7 @@ public class BlockConfigManager implements Listener {
             }
         }
         
-        // Add the last item
+        
         items.add(currentItem.toString());
         
         return items.toArray(new String[0]);
@@ -726,7 +726,7 @@ public class BlockConfigManager implements Listener {
         if (blockConfigService == null) return null;
         Integer slot = blockConfigService.findSlotForParameter(action, paramName);
         if (slot != null) return slot;
-        // Fallback: param_# naming
+        
         if (paramName != null && paramName.startsWith("param_")) {
             try { return Integer.parseInt(paramName.substring(6)); } catch (NumberFormatException ignored) {}
         }
@@ -741,7 +741,7 @@ public class BlockConfigManager implements Listener {
         if (blockConfigService == null) return null;
         String name = blockConfigService.getParameterNameForSlot(action, slot);
         if (name != null) return name;
-        return "param_" + slot; // fallback
+        return "param_" + slot; 
     }
     
     /**

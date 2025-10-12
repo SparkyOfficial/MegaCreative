@@ -6,7 +6,7 @@ import com.megacreative.coding.variables.IVariableManager.VariableScope;
 import com.megacreative.coding.values.DataValue;
 import com.megacreative.models.CreativeWorld;
 import com.megacreative.coding.events.CustomEvent;
-// 🎆 Reference system-style execution modes
+
 import com.megacreative.coding.executors.AdvancedExecutionEngine.ExecutionMode;
 import com.megacreative.coding.executors.AdvancedExecutionEngine.Priority;
 import com.megacreative.coding.executors.ExecutionResult;
@@ -30,7 +30,7 @@ import java.util.UUID;
  */
 public class ExecutionContext {
 
-    // Fields for executor engine compatibility
+    
     private String executionId;
     private CodeScript script;
     private Player playerField;
@@ -39,45 +39,45 @@ public class ExecutionContext {
     private CodeBlock currentBlockField;
     private boolean cancelledField = false;
 
-    private final MegaCreative plugin; // Ссылка на основной плагин
-    private final Player player; // Игрок, который вызвал событие (может быть null)
-    private final CreativeWorld creativeWorld; // Мир, в котором выполняется скрипт
-    private final CustomEvent event; // Само событие, которое вызвало скрипт
-    private final Location blockLocation; // Локация выполняемого блока (может быть null)
-    private final CodeBlock currentBlock; // Текущий выполняемый блок (может быть null)
+    private final MegaCreative plugin; 
+    private final Player player; 
+    private final CreativeWorld creativeWorld; 
+    private final CustomEvent event; 
+    private final Location blockLocation; 
+    private final CodeBlock currentBlock; 
     
-    // Debugging control
+    
     private boolean paused = false;
     private boolean stepping = false;
     private boolean cancelled = false;
     
-    // Loop control flags for break/continue support
+    
     private boolean breakFlag = false;
     private boolean continueFlag = false;
     
-    // Instruction counter for loop protection
+    
     private int instructionCount = 0;
     
-    // 🎆 Reference system-style execution enhancements
+    
     private ExecutionMode executionMode = ExecutionMode.SYNCHRONOUS;
     private Priority priority = Priority.NORMAL;
     private int maxInstructions = 1000;
     private long executionTimeout = 0;
     private long executionStartTime = System.currentTimeMillis();
 
-    // Ссылка на менеджер переменных
+    
     private final VariableManager variableManager;
     
-    // Идентификаторы для доступа к переменным
-    private final String scriptId; // Идентификатор скрипта
-    private final String worldId;  // Идентификатор мира
     
-    // Track the result of the last condition evaluation for else block handling
+    private final String scriptId; 
+    private final String worldId;  
+    
+    
     private boolean lastConditionResult = false;
     
-    // No more redundant caches - using VariableManager directly
     
-    // Chest parser for parameter extraction
+    
+    
     private ChestParser chestParser;
     
     /**
@@ -97,7 +97,7 @@ public class ExecutionContext {
         this.worldId = this.scriptId;
         this.variableManager = plugin != null ? plugin.getServiceRegistry().getVariableManager() : null;
         
-        // Initialize chest parser if we have a block location
+        
         if (blockLocation != null) {
             this.chestParser = ChestParser.forAdjacentChest(blockLocation);
         }
@@ -112,7 +112,7 @@ public class ExecutionContext {
         this.playerField = player;
         this.trigger = trigger;
         this.startTime = System.currentTimeMillis();
-        // Get the plugin instance explicitly instead of using singleton
+        
         this.plugin = plugin;
         this.player = player;
         this.creativeWorld = null;
@@ -219,7 +219,7 @@ public class ExecutionContext {
             return null;
         }
         
-        // Use enhanced variable resolution with fallback mechanism
+        
         String context = getPlayerContext();
         DataValue value = variableManager.resolveVariable(name, context);
         return value != null ? value.getValue() : null;
@@ -336,7 +336,7 @@ public class ExecutionContext {
     }
     
     
-    // === МЕТОДЫ ДЛЯ РАБОТЫ СО СПИСКАМИ ===
+    
     
     /**
      * Создает или обновляет список
@@ -378,7 +378,7 @@ public class ExecutionContext {
         }
     }
     
-    // --- МЕТОДЫ ДЛЯ РАБОТЫ С БУЛЕВЫМИ ПЕРЕМЕННЫМИ ---
+    
     
     /**
      * Sets a boolean variable in the execution context.
@@ -412,7 +412,7 @@ public class ExecutionContext {
         if (value instanceof Number) {
             return (Number) value;
         }
-        return 0; // Default value
+        return 0; 
     }
     
     /**
@@ -429,7 +429,7 @@ public class ExecutionContext {
         } else if (value instanceof Number) {
             return ((Number) value).intValue() != 0;
         }
-        return false; // Default value
+        return false; 
     }
     
     /**
@@ -452,7 +452,7 @@ public class ExecutionContext {
     }
     
     
-    // Геттеры
+    
     
     public CreativeWorld getCreativeWorld() {
         return creativeWorld;
@@ -466,7 +466,7 @@ public class ExecutionContext {
         return blockLocation;
     }
     
-    // Debugging control methods
+    
     
     public boolean isPaused() {
         return paused;
@@ -492,14 +492,14 @@ public class ExecutionContext {
         this.cancelled = cancelled;
     }
     
-    // Loop control flag methods for break/continue support
+    
     public boolean hasBreakFlag() {
         return breakFlag;
     }
     
     public void setBreakFlag(boolean breakFlag) {
         this.breakFlag = breakFlag;
-        // Log break flag changes for debugging
+        
         if (plugin != null && plugin.getLogger() != null) {
             plugin.getLogger().fine(Constants.BREAK_FLAG_SET + breakFlag);
         }
@@ -507,7 +507,7 @@ public class ExecutionContext {
     
     public void clearBreakFlag() {
         this.breakFlag = false;
-        // Log break flag changes for debugging
+        
         if (plugin != null && plugin.getLogger() != null) {
             plugin.getLogger().fine(Constants.BREAK_FLAG_CLEARED);
         }
@@ -519,7 +519,7 @@ public class ExecutionContext {
     
     public void setContinueFlag(boolean continueFlag) {
         this.continueFlag = continueFlag;
-        // Log continue flag changes for debugging
+        
         if (plugin != null && plugin.getLogger() != null) {
             plugin.getLogger().fine(Constants.CONTINUE_FLAG_SET + continueFlag);
         }
@@ -527,7 +527,7 @@ public class ExecutionContext {
     
     public void clearContinueFlag() {
         this.continueFlag = false;
-        // Log continue flag changes for debugging
+        
         if (plugin != null && plugin.getLogger() != null) {
             plugin.getLogger().fine(Constants.CONTINUE_FLAG_CLEARED);
         }
@@ -537,7 +537,7 @@ public class ExecutionContext {
      * Gets script ID for variable resolution
      */
     public String getScriptId() {
-        // Generate script ID based on current block or world
+        
         if (currentBlock != null) {
             return Constants.SCRIPT_ID_PREFIX + currentBlock.getId().toString();
         }
@@ -559,12 +559,12 @@ public class ExecutionContext {
      * Debug mode provides additional logging and feedback during script execution
      */
     public boolean isDebugMode() {
-        // Check if player has debug permissions
+        
         if (player != null && player.hasPermission(Constants.DEBUG_PERMISSION)) {
             return true;
         }
         
-        // Default to false for safety
+        
         return false;
     }
     
@@ -606,7 +606,7 @@ public class ExecutionContext {
         instructionCount = 0;
     }
     
-    // 🎆 Reference system-style execution mode methods
+    
     
     /**
      * Gets the execution mode for this context
@@ -702,7 +702,7 @@ public class ExecutionContext {
             return null;
         }
         
-        // Use enhanced variable resolution with fallback mechanism
+        
         String context = getPlayerContext();
         return variableManager.resolveVariable(name, context);
     }
@@ -781,7 +781,7 @@ public class ExecutionContext {
         return new ArrayList<>();
     }
     
-    // Builder pattern
+    
     public static Builder builder() {
         return new Builder();
     }
@@ -794,7 +794,7 @@ public class ExecutionContext {
         private Location blockLocation;
         private CodeBlock currentBlock;
         
-        // 🎆 Reference system-style execution mode fields
+        
         private ExecutionMode executionMode = ExecutionMode.SYNCHRONOUS;
         private Priority priority = Priority.NORMAL;
         private int maxInstructions = 1000;
@@ -829,7 +829,7 @@ public class ExecutionContext {
             return this;
         }
         
-        // 🎆 Reference system-style execution mode builders
+        
         public Builder executionMode(ExecutionMode executionMode) {
             this.executionMode = executionMode;
             return this;

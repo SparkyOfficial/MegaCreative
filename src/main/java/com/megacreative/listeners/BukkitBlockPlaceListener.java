@@ -20,14 +20,14 @@ public class BukkitBlockPlaceListener implements Listener {
     
     @EventHandler
     public void onBlockPlace(BlockPlaceEvent bukkitEvent) {
-        // Create our custom event
+        
         MegaBlockPlaceEvent internalEvent = new MegaBlockPlaceEvent(
             bukkitEvent.getPlayer(),
             bukkitEvent.getBlock().getLocation(),
             bukkitEvent.getBlock().getType()
         );
         
-        // Publish it to our event system
+        
         plugin.getServer().getPluginManager().callEvent(internalEvent);
     }
 }

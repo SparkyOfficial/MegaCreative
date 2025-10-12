@@ -137,20 +137,20 @@ public class TrustedPlayerCommand implements CommandExecutor, TabCompleter {
             return true;
         }
         
-        // Get the world where the player is currently located
+        
         CreativeWorld world = plugin.getServiceRegistry().getWorldManager().getWorldByName(player.getWorld().getName());
         if (world == null) {
             sender.sendMessage("§c❌ Вы должны находиться в мире MegaCreative!");
             return true;
         }
         
-        // Check if the player is the owner of the world
+        
         if (!world.getOwnerId().equals(player.getUniqueId())) {
             sender.sendMessage("§c❌ Вы не являетесь владельцем этого мира!");
             return true;
         }
         
-        // Add the player as trusted
+        
         try {
             plugin.getServiceRegistry().getTrustedPlayerManager().addTrustedPlayer(world, targetPlayer, player);
             sender.sendMessage("§a✅ Игрок " + targetPlayer.getName() + " добавлен в доверенные!");
@@ -198,26 +198,26 @@ public class TrustedPlayerCommand implements CommandExecutor, TabCompleter {
             return true;
         }
         
-        // Get the world where the player is currently located
+        
         CreativeWorld world = plugin.getServiceRegistry().getWorldManager().getWorldByName(player.getWorld().getName());
         if (world == null) {
             sender.sendMessage("§c❌ Вы должны находиться в мире MegaCreative!");
             return true;
         }
         
-        // Check if the player is the owner of the world
+        
         if (!world.getOwnerId().equals(player.getUniqueId())) {
             sender.sendMessage("§c❌ Вы не являетесь владельцем этого мира!");
             return true;
         }
         
-        // Check if the target player is trusted in this world
+        
         if (!plugin.getServiceRegistry().getTrustedPlayerManager().isTrustedPlayer(world, targetPlayer)) {
             sender.sendMessage("§c❌ Игрок " + targetPlayer.getName() + " не является доверенным в этом мире!");
             return true;
         }
         
-        // Remove the player from trusted
+        
         try {
             plugin.getServiceRegistry().getTrustedPlayerManager().removeTrustedPlayer(world, targetPlayer, player);
             sender.sendMessage("§a✅ Игрок " + targetPlayer.getName() + " удален из доверенных!");
@@ -258,7 +258,7 @@ public class TrustedPlayerCommand implements CommandExecutor, TabCompleter {
             return true;
         }
 
-        // Get trusted players for the current world
+        
         List<TrustedPlayer> trustedPlayers = plugin.getServiceRegistry().getTrustedPlayerManager().getTrustedPlayers(world);
         
         if (trustedPlayers.isEmpty()) {
@@ -266,7 +266,7 @@ public class TrustedPlayerCommand implements CommandExecutor, TabCompleter {
             return true;
         }
 
-        // Separate builders and coders
+        
         List<TrustedPlayer> builders = new ArrayList<>();
         List<TrustedPlayer> coders = new ArrayList<>();
         
@@ -278,7 +278,7 @@ public class TrustedPlayerCommand implements CommandExecutor, TabCompleter {
             }
         }
 
-        // Display the lists
+        
         if (!builders.isEmpty()) {
             sender.sendMessage("§aДоверенные строители:");
             for (TrustedPlayer trusted : builders) {
@@ -339,13 +339,13 @@ public class TrustedPlayerCommand implements CommandExecutor, TabCompleter {
             return true;
         }
 
-        // Check if the target player is trusted in this world
+        
         if (!plugin.getServiceRegistry().getTrustedPlayerManager().isTrustedPlayer(world, targetPlayer)) {
             sender.sendMessage("§7Игрок " + targetPlayerName + " не является доверенным в этом мире.");
             return true;
         }
         
-        // Get the trusted player info
+        
         List<TrustedPlayer> trustedPlayers = plugin.getServiceRegistry().getTrustedPlayerManager().getTrustedPlayers(world);
         TrustedPlayer trustedPlayer = trustedPlayers.stream()
             .filter(tp -> tp.getPlayerId().equals(targetPlayer.getUniqueId()))
@@ -393,20 +393,20 @@ public class TrustedPlayerCommand implements CommandExecutor, TabCompleter {
 
         Player player = (Player) sender;
         
-        // Check if player is in a valid world
+        
         CreativeWorld world = plugin.getServiceRegistry().getWorldManager().getWorldByName(player.getWorld().getName());
         if (world == null) {
             player.sendMessage("§c❌ Вы должны находиться в мире MegaCreative!");
             return true;
         }
         
-        // Check if player is the owner of the world
+        
         if (!world.getOwnerId().equals(player.getUniqueId())) {
             player.sendMessage("§c❌ Вы не являетесь владельцем этого мира!");
             return true;
         }
         
-        // Open the GUI
+        
         try {
             new com.megacreative.gui.TrustedPlayersGUI(plugin, player).open();
             player.sendMessage("§a✅ Открыто меню управления доверенными игроками!");
@@ -467,14 +467,14 @@ public class TrustedPlayerCommand implements CommandExecutor, TabCompleter {
             return new ArrayList<>();
         }
 
-        // Get the player and their current world
+        
         Player player = (Player) sender;
         CreativeWorld world = plugin.getServiceRegistry().getWorldManager().getWorldByName(player.getWorld().getName());
         if (world == null) {
             return new ArrayList<>();
         }
 
-        // Only show tab completion for world owners
+        
         if (!world.getOwnerId().equals(player.getUniqueId())) {
             return new ArrayList<>();
         }
@@ -487,7 +487,7 @@ public class TrustedPlayerCommand implements CommandExecutor, TabCompleter {
 
         if (args.length == 2) {
             if (args[0].equalsIgnoreCase("remove") || args[0].equalsIgnoreCase("info")) {
-                // Only show players that are trusted in the current world
+                
                 List<TrustedPlayer> trustedPlayers = plugin.getServiceRegistry().getTrustedPlayerManager().getTrustedPlayers(world);
                 return trustedPlayers.stream()
                         .map(trusted -> Bukkit.getOfflinePlayer(trusted.getPlayerId()).getName())
@@ -495,14 +495,14 @@ public class TrustedPlayerCommand implements CommandExecutor, TabCompleter {
                         .filter(name -> name.toLowerCase().startsWith(args[1].toLowerCase()))
                         .collect(Collectors.toList());
             } else if (args[0].equalsIgnoreCase("add")) {
-                // Show all online players except the sender and those already trusted
+                
                 List<UUID> trustedPlayerIds = plugin.getServiceRegistry().getTrustedPlayerManager().getTrustedPlayers(world).stream()
                         .map(TrustedPlayer::getPlayerId)
                         .collect(Collectors.toList());
                 
                 return Bukkit.getOnlinePlayers().stream()
-                        .filter(p -> !p.getUniqueId().equals(player.getUniqueId())) // Exclude self
-                        .filter(p -> !trustedPlayerIds.contains(p.getUniqueId())) // Exclude already trusted
+                        .filter(p -> !p.getUniqueId().equals(player.getUniqueId())) 
+                        .filter(p -> !trustedPlayerIds.contains(p.getUniqueId())) 
                         .map(Player::getName)
                         .filter(name -> name.toLowerCase().startsWith(args[1].toLowerCase()))
                         .collect(Collectors.toList());

@@ -25,18 +25,18 @@ public class ExplosionAction implements BlockAction {
         }
 
         try {
-            // Get explosion parameters from the new parameter system
+            
             DataValue powerValue = block.getParameter("power");
             DataValue fireValue = block.getParameter("fire");
             DataValue breakBlocksValue = block.getParameter("breakBlocks");
 
-            // Parse parameters with defaults
+            
             float power = 4.0f;
             if (powerValue != null && !powerValue.isEmpty()) {
                 try {
                     power = Math.max(0, Float.parseFloat(powerValue.asString()));
                 } catch (NumberFormatException e) {
-                    // Use default power
+                    
                 }
             }
 
@@ -50,7 +50,7 @@ public class ExplosionAction implements BlockAction {
                 breakBlocks = Boolean.parseBoolean(breakBlocksValue.asString());
             }
 
-            // Create the explosion at the player's location
+            
             Location location = player.getLocation();
             boolean success = player.getWorld().createExplosion(location, power, fire, breakBlocks);
             

@@ -27,13 +27,13 @@ import java.util.List;
 import java.util.logging.Logger;
 import java.util.Map;
 
-// Отвечает ИСКЛЮЧИТЕЛЬНО за компиляцию и управление CodeScript'ами.
-// Слушает события добавления/удаления блоков и пересобирает скрипты в мире.
+
+
 public class ScriptCompiler implements Listener {
     
     private final MegaCreative plugin;
     private final BlockConfigService blockConfigService;
-    private final BlockLinker blockLinker; // Нужен для сборки цепочки блоков
+    private final BlockLinker blockLinker; 
 
     public ScriptCompiler(MegaCreative plugin, BlockConfigService blockConfigService, BlockLinker blockLinker) {
         this.plugin = plugin;
@@ -47,20 +47,20 @@ public class ScriptCompiler implements Listener {
             Location location = event.getLocation();
             CodeBlock eventBlock = event.getCodeBlock();
             
-            // Compile script from this event block
+            
             CodeScript script = compileScriptFromEventBlock(eventBlock);
             
             IWorldManager worldManager = plugin.getServiceRegistry().getWorldManager();
             CreativeWorld creativeWorld = worldManager.findCreativeWorldByBukkit(location.getWorld());
             
             if (creativeWorld != null) {
-                // Create and register activator for this script
+                
                 createAndRegisterActivator(eventBlock, script, creativeWorld, location);
                 
                 addScriptToWorld(eventBlock, script, creativeWorld, worldManager);
             }
         } catch (Exception e) {
-            // Log the error instead of ignoring it
+            
             plugin.getLogger().warning("Error compiling script from block place event: " + e.getMessage());
         }
     }
@@ -71,10 +71,10 @@ public class ScriptCompiler implements Listener {
             Location location = event.getLocation();
             CodeBlock eventBlock = event.getCodeBlock();
             
-            // Remove script associated with this event block
+            
             removeScript(eventBlock, location);
         } catch (Exception e) {
-            // Log the error instead of ignoring it
+            
             plugin.getLogger().warning("Error removing script from block break event: " + e.getMessage());
         }
     }
@@ -88,13 +88,13 @@ public class ScriptCompiler implements Listener {
      */
     private void createAndRegisterActivator(CodeBlock eventBlock, CodeScript script, CreativeWorld creativeWorld, Location location) {
         try {
-            // Get the code handler for this world
+            
             CodeHandler codeHandler = creativeWorld.getCodeHandler();
             if (codeHandler == null) {
                 return;
             }
             
-            // Create the appropriate activator based on the event type
+            
             Activator activator = null;
             
             if ("onJoin".equals(eventBlock.getAction())) {
@@ -119,12 +119,12 @@ public class ScriptCompiler implements Listener {
                 activator = new EntityPickupItemActivator(plugin, creativeWorld);
             }
             
-            // If we created an activator, configure it and register it
+            
             if (activator != null) {
-                // Add the script to the activator's action list
+                
                 activator.addAction(eventBlock);
                 
-                // Set location for BukkitEventActivator instances
+                
                 if (activator instanceof BukkitEventActivator) {
                     ((BukkitEventActivator) activator).setLocation(location);
                 }
@@ -132,7 +132,7 @@ public class ScriptCompiler implements Listener {
                 codeHandler.registerActivator(activator);
             }
         } catch (Exception e) {
-            // Log the error instead of ignoring it
+            
             plugin.getLogger().warning("Error creating and registering activator: " + e.getMessage());
         }
     }
@@ -151,23 +151,23 @@ public class ScriptCompiler implements Listener {
                 }
             }
         } catch (Exception e) {
-            // Log the error instead of ignoring it
+            
             plugin.getLogger().warning("Error removing script: " + e.getMessage());
         }
     }
     
     private CodeScript compileScriptFromEventBlock(CodeBlock eventBlock) {
-        // Compilation logic here. It simply follows the `nextBlock` and `children` links
-        // that were already set up by BlockLinker.
         
-        // IMPORTANT: We don't rebuild the links here. We trust them.
-        // BlockLinker is responsible for the structure, and the compiler is responsible for reading it.
         
-        // Create a script with the root block
+        
+        
+        
+        
+        
         CodeScript script = new CodeScript(eventBlock);
         
-        // Traverse the block structure to build the complete script
-        // This follows the chain of nextBlock and children links
+        
+        
         return buildCompleteScript(script, eventBlock);
     }
     
@@ -178,16 +178,16 @@ public class ScriptCompiler implements Listener {
      * @return The completed script
      */
     private CodeScript buildCompleteScript(CodeScript script, CodeBlock currentBlock) {
-        // Process next block if it exists
+        
         if (currentBlock.getNextBlock() != null) {
-            // The next block is already linked, so we just need to ensure it's included
-            // in the script structure. The BlockLinker has already established these connections.
+            
+            
         }
         
-        // Process child blocks
+        
         for (CodeBlock child : currentBlock.getChildren()) {
-            // Child blocks are already linked, so they're part of the structure
-            // The recursive traversal ensures all connected blocks are included
+            
+            
             buildCompleteScript(script, child);
         }
         
@@ -200,7 +200,7 @@ public class ScriptCompiler implements Listener {
             scripts = new ArrayList<>();
             creativeWorld.setScripts(scripts);
         }
-        // Избегаем дубликатов, удаляя старый скрипт, если он был привязан к этому же блоку
+        
         scripts.removeIf(existingScript -> existingScript.getRootBlock().getId().equals(eventBlock.getId()));
         scripts.add(script);
         worldManager.saveWorld(creativeWorld);
@@ -221,10 +221,10 @@ public class ScriptCompiler implements Listener {
             CreativeWorld creativeWorld = worldManager.findCreativeWorldByBukkit(world);
             if (creativeWorld == null) return;
             
-            // Clear existing scripts
+            
             List<CodeScript> newScripts = new ArrayList<>();
             
-            // Find all event blocks in the world and compile scripts from them
+            
             for (Map.Entry<Location, CodeBlock> entry : blockLinker.getWorldBlocks(world).entrySet()) {
                 CodeBlock block = entry.getValue();
                 if (isEventBlock(block)) {
@@ -234,12 +234,12 @@ public class ScriptCompiler implements Listener {
                             newScripts.add(compiledScript);
                         }
                     } catch (Exception e) {
-                        // Ignore errors during compilation
+                        
                     }
                 }
             }
             
-            // Update the creative world with new scripts
+            
             creativeWorld.setScripts(newScripts);
             worldManager.saveWorld(creativeWorld);
             
@@ -257,7 +257,7 @@ public class ScriptCompiler implements Listener {
             return false;
         }
         
-        // Check if the block action starts with "on" which indicates an event
+        
         return block.getAction().startsWith("on");
     }
 }

@@ -20,21 +20,21 @@ public class BukkitPlayerMoveListener implements Listener {
     
     @EventHandler
     public void onPlayerMove(PlayerMoveEvent bukkitEvent) {
-        // Optimization: don't fire event for micro-movements
+        
         if (bukkitEvent.getFrom().getBlockX() == bukkitEvent.getTo().getBlockX() && 
             bukkitEvent.getFrom().getBlockY() == bukkitEvent.getTo().getBlockY() && 
             bukkitEvent.getFrom().getBlockZ() == bukkitEvent.getTo().getBlockZ()) {
             return;
         }
         
-        // Create our custom event
+        
         MegaPlayerMoveEvent internalEvent = new MegaPlayerMoveEvent(
             bukkitEvent.getPlayer(),
             bukkitEvent.getFrom(),
             bukkitEvent.getTo()
         );
         
-        // Publish it to our event system
+        
         plugin.getServer().getPluginManager().callEvent(internalEvent);
     }
 }

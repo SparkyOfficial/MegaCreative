@@ -37,22 +37,22 @@ public class SendMessageAction implements BlockAction {
         }
 
         try {
-            // Get message content (required)
+            
             DataValue messageValue = block.getParameter("message");
             if (messageValue == null || messageValue.isEmpty()) {
                 return ExecutionResult.error("Message content is required");
             }
             String message = messageValue.asString();
 
-            // Get message type (default to chat)
+            
             DataValue typeValue = block.getParameter("type", DataValue.of("chat"));
             String type = typeValue.asString().toLowerCase();
 
-            // Resolve any placeholders in the message
+            
             ParameterResolver resolver = new ParameterResolver(context);
             String resolvedMessage = resolver.resolveString(context, message);
 
-            // Send message based on type
+            
             switch (type) {
                 case "actionbar":
                     player.sendActionBar(resolvedMessage);
@@ -60,14 +60,14 @@ public class SendMessageAction implements BlockAction {
                     return ExecutionResult.success("Action bar message sent successfully");
                     
                 case "title":
-                    // For title, we also need subtitle
+                    
                     DataValue subtitleValue = block.getParameter("subtitle");
                     String subtitle = "";
                     if (subtitleValue != null && !subtitleValue.isEmpty()) {
                         subtitle = resolver.resolveString(context, subtitleValue.asString());
                     }
                     
-                    // Get timing parameters with defaults
+                    
                     int fadeIn = getTimingParameter(block, "fadeIn", 10);
                     int stay = getTimingParameter(block, "stay", 70);
                     int fadeOut = getTimingParameter(block, "fadeOut", 20);
@@ -78,12 +78,12 @@ public class SendMessageAction implements BlockAction {
                     
                 case "chat":
                 default:
-                    // Send the message to the player using Adventure API if available
+                    
                     MessagingService messagingService = context.getPlugin().getServiceRegistry().getMessagingService();
                     if (messagingService != null) {
                         messagingService.sendMessage(player, resolvedMessage);
                     } else {
-                        // Fallback to regular sendMessage if Adventure API is not available
+                        
                         player.sendMessage(resolvedMessage);
                     }
                     context.getPlugin().getLogger().info("Executing SendMessageAction - Sent chat message to player " + player.getName() + ": " + resolvedMessage);
@@ -104,7 +104,7 @@ public class SendMessageAction implements BlockAction {
             try {
                 return Math.max(0, value.asNumber().intValue());
             } catch (NumberFormatException e) {
-                // Use default if parsing fails
+                
             }
         }
         return defaultValue;

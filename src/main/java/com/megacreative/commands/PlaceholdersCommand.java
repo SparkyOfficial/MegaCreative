@@ -99,7 +99,7 @@ public class PlaceholdersCommand implements CommandExecutor {
                 showExamples(player);
                 break;
             default:
-                // Treat as placeholder test
+                
                 testPlaceholder(player, String.join(" ", args));
                 break;
         }
@@ -145,7 +145,7 @@ public class PlaceholdersCommand implements CommandExecutor {
      * @param player Spieler, für den die Demonstration angezeigt wird
      */
     private void showDemo(Player player) {
-        // Set up demo variables
+        
         plugin.getServiceRegistry().getVariableManager().setPlayerVariable(
             player.getUniqueId(), "demo_score", DataValue.of("1500"));
         plugin.getServiceRegistry().getVariableManager().setPlayerVariable(
@@ -153,13 +153,13 @@ public class PlaceholdersCommand implements CommandExecutor {
         plugin.getServiceRegistry().getVariableManager().setPlayerVariable(
             player.getUniqueId(), "demo_money", DataValue.of("12345.67"));
             
-        // Create execution context
+        
         CreativeWorld world = worldManager.findCreativeWorldByBukkit(player.getWorld());
         ExecutionContext context = new ExecutionContext(plugin, player, world, null, null, null);
         
         player.sendMessage("§8§m                    §r §6§lPlaceholder Demo §8§m                    ");
         
-        // Demo different placeholder types
+        
         String[] demoTexts = {
             "color[gold]~=== player[name]~'s Profile ===",
             "color[green]~❤ Health: player[health]~/player[max_health]~",
@@ -196,7 +196,7 @@ public class PlaceholdersCommand implements CommandExecutor {
      * @param text Text mit Platzhaltern zum Testen
      */
     private void testPlaceholder(Player player, String text) {
-        // Create execution context
+        
         CreativeWorld world = worldManager.findCreativeWorldByBukkit(player.getWorld());
         ExecutionContext context = new ExecutionContext(plugin, player, world, null, null, null);
         

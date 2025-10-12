@@ -21,16 +21,16 @@ public class GenericBlockCondition implements BlockCondition {
     
     @Override
     public boolean evaluate(CodeBlock block, ExecutionContext context) {
-        // Default implementation - can be overridden by subclasses
-        // or configured via the BlockConfig
         
-        // Log the evaluation for debugging
+        
+        
+        
         context.getPlugin().getLogger().info("Evaluating generic condition: " + config.getName());
         
-        // Get the condition type from the configuration
+        
         String conditionType = config.getActionName();
         
-        // Process based on condition type
+        
         switch (conditionType.toUpperCase()) {
             case "HAS_ITEM":
                 return evaluateHasItem(block, context);
@@ -38,7 +38,7 @@ public class GenericBlockCondition implements BlockCondition {
                 return evaluateHasPermission(block, context);
             case "VARIABLE_COMPARE":
                 return evaluateVariableCompare(block, context);
-            // Add more condition types as needed
+            
             default:
                 context.getPlugin().getLogger().warning("Unknown condition type: " + conditionType);
                 return false;
@@ -46,14 +46,14 @@ public class GenericBlockCondition implements BlockCondition {
     }
     
     private boolean evaluateHasItem(CodeBlock block, ExecutionContext context) {
-        // Example: Check if player has a specific item
+        
         if (context.getPlayer() == null) {
             return false;
         }
         
-        // Get parameters from the block's parameters
+        
         Object materialObj = block.getParameter("material");
-        String materialName = materialObj != null ? materialObj.toString() : "STONE"; // Default
+        String materialName = materialObj != null ? materialObj.toString() : "STONE"; 
         
         Object amountObj = block.getParameter("amount");
         int amount = amountObj instanceof Number ? ((Number) amountObj).intValue() : 1;
@@ -68,7 +68,7 @@ public class GenericBlockCondition implements BlockCondition {
     }
     
     private boolean evaluateHasPermission(CodeBlock block, ExecutionContext context) {
-        // Example: Check if player has a specific permission
+        
         if (context.getPlayer() == null) {
             return false;
         }
@@ -84,7 +84,7 @@ public class GenericBlockCondition implements BlockCondition {
     }
     
     private boolean evaluateVariableCompare(CodeBlock block, ExecutionContext context) {
-        // Example: Compare a variable with a value
+        
         Object varNameObj = block.getParameter("variable");
         String varName = varNameObj != null ? varNameObj.toString() : null;
         
@@ -98,13 +98,13 @@ public class GenericBlockCondition implements BlockCondition {
             return false;
         }
         
-        // Get the variable value from the context
+        
         Object varValue = context.getVariable(varName);
         if (varValue == null) {
             return false;
         }
         
-        // Compare based on operator
+        
         switch (operator) {
             case "==":
                 return String.valueOf(varValue).equals(value);

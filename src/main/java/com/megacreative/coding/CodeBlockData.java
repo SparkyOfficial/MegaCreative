@@ -9,13 +9,13 @@ import java.util.*;
  */
 public class CodeBlockData {
     public UUID id;
-    public String materialName; // Store material name instead of Material object
+    public String materialName; 
     public String action;
-    public Map<String, Object> parameters; // Parameters as simple objects
-    public List<CodeBlockData> children; // Children also in data format
-    public CodeBlockData nextBlock; // Next block
-    public Map<Integer, Map<String, Object>> configItems; // Serialized ItemStacks
-    public String bracketType; // Store as string
+    public Map<String, Object> parameters; 
+    public List<CodeBlockData> children; 
+    public CodeBlockData nextBlock; 
+    public Map<Integer, Map<String, Object>> configItems; 
+    public String bracketType; 
 
     public CodeBlockData() {}
 
@@ -27,7 +27,7 @@ public class CodeBlockData {
         this.materialName = block.getMaterial() != null ? block.getMaterial().name() : null;
         this.action = block.getAction();
         
-        // Convert DataValue to simple objects
+        
         this.parameters = new HashMap<>();
         if (block.getParameters() != null) {
             block.getParameters().forEach((key, dataValue) -> {
@@ -35,7 +35,7 @@ public class CodeBlockData {
             });
         }
 
-        // Recursively convert child blocks
+        
         this.children = new ArrayList<>();
         if (block.getChildren() != null) {
             for (CodeBlock child : block.getChildren()) {
@@ -43,12 +43,12 @@ public class CodeBlockData {
             }
         }
         
-        // Recursively convert next block
+        
         if (block.getNextBlock() != null) {
             this.nextBlock = new CodeBlockData(block.getNextBlock());
         }
 
-        // Serialize ItemStacks properly using Bukkit's safe serialization!
+        
         this.configItems = new HashMap<>();
         if (block.getConfigItems() != null) {
             block.getConfigItems().forEach((slot, itemStack) -> {

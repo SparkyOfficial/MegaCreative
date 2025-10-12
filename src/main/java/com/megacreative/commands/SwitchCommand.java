@@ -70,7 +70,7 @@ public class SwitchCommand implements CommandExecutor {
             return true;
         }
         
-        // Find current creative world
+        
         CreativeWorld currentWorld = worldManager.findCreativeWorldByBukkit(player.getWorld());
         if (currentWorld == null) {
             player.sendMessage("§cВы не находитесь в мире MegaCreative!");

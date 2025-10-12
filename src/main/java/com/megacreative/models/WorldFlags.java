@@ -70,9 +70,9 @@ public class WorldFlags {
         this.dayNightCycle = true;
     }
     
-    // Getters and setters with documentation
-    // Геттеры и сеттеры с документацией
-    // Getter und Setter mit Dokumentation
+    
+    
+    
     
     /**
      * @return true if mob spawning is enabled, false otherwise

@@ -29,7 +29,7 @@ public class CloseMenuAction implements BlockAction {
     @Override
     public ExecutionResult execute(CodeBlock block, ExecutionContext context) {
         try {
-            // Get the player parameter, or use the context player if not specified
+            
             DataValue playerValue = block.getParameter("player");
             Player targetPlayer = context.getPlayer();
             
@@ -41,22 +41,22 @@ public class CloseMenuAction implements BlockAction {
                 return ExecutionResult.error("No player available to close menu for");
             }
 
-            // Get the menu variable parameter
+            
             DataValue menuValue = block.getParameter("menu");
             if (menuValue == null) {
-                // Close the player's inventory directly
+                
                 targetPlayer.closeInventory();
                 return ExecutionResult.success("Closed menu for player " + targetPlayer.getName());
             }
             
             String menuVariableName = menuValue.asString();
             if (menuVariableName == null || menuVariableName.isEmpty()) {
-                // Close the player's inventory directly
+                
                 targetPlayer.closeInventory();
                 return ExecutionResult.success("Closed menu for player " + targetPlayer.getName());
             }
 
-            // Get the GUI inventory from the global variable
+            
             VariableManager variableManager = plugin.getServiceRegistry().getVariableManager();
             if (variableManager == null) {
                 return ExecutionResult.error("Variable manager not available");
@@ -71,7 +71,7 @@ public class CloseMenuAction implements BlockAction {
                 return ExecutionResult.error("Variable '" + menuVariableName + "' does not contain a valid menu");
             }
             
-            // Close the player's inventory
+            
             targetPlayer.closeInventory();
             
             return ExecutionResult.success("Closed menu for player " + targetPlayer.getName());

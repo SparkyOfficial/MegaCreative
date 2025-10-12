@@ -24,19 +24,19 @@ public class DependencyContainer {
         log.setLevel(Level.INFO);
     }
     
-    // Storage for singleton instances
+    
     private final Map<Class<?>, Object> singletons = new ConcurrentHashMap<>();
     
-    // Storage for implementation mappings (interface -> implementation)
+    
     private final Map<Class<?>, Class<?>> implementations = new ConcurrentHashMap<>();
     
-    // Storage for factory functions
+    
     private final Map<Class<?>, Supplier<?>> factories = new ConcurrentHashMap<>();
     
-    // Track classes currently being created to prevent circular dependencies
+    
     private final Set<Class<?>> creating = Collections.synchronizedSet(new HashSet<>());
     
-    // Lifecycle management
+    
     private final List<Disposable> disposables = new ArrayList<>();
     
     /**
@@ -49,7 +49,7 @@ public class DependencyContainer {
         singletons.put(type, implementation);
         log.fine("Registered singleton: " + type.getSimpleName());
         
-        // Register for disposal if it implements Disposable
+        
         if (implementation instanceof Disposable) {
             disposables.add((Disposable) implementation);
         }
@@ -85,18 +85,18 @@ public class DependencyContainer {
      */
     @SuppressWarnings("unchecked")
     public <T> T resolve(Class<T> type) {
-        // Check for existing singleton
+        
         if (singletons.containsKey(type)) {
             return (T) singletons.get(type);
         }
         
-        // Check for factory
+        
         if (factories.containsKey(type)) {
             Supplier<T> factory = (Supplier<T>) factories.get(type);
             T instance = factory.get();
             singletons.put(type, instance);
             
-            // Register for disposal if it implements Disposable
+            
             if (instance instanceof Disposable) {
                 disposables.add((Disposable) instance);
             }
@@ -104,7 +104,7 @@ public class DependencyContainer {
             return instance;
         }
         
-        // Prevent circular dependencies
+        
         if (creating.contains(type)) {
             throw new RuntimeException("Circular dependency detected for type: " + type.getName());
         }
@@ -112,16 +112,16 @@ public class DependencyContainer {
         try {
             creating.add(type);
             
-            // Get implementation class
+            
             Class<?> implementationClass = implementations.getOrDefault(type, type);
             
-            // Create instance with dependency injection
+            
             T instance = createInstance((Class<T>) implementationClass);
             
-            // Register as singleton for future use
+            
             singletons.put(type, instance);
             
-            // Register for disposal if it implements Disposable
+            
             if (instance instanceof Disposable) {
                 disposables.add((Disposable) instance);
             }
@@ -137,11 +137,11 @@ public class DependencyContainer {
      */
     @SuppressWarnings("unchecked")
     private <T> T createInstance(Class<T> clazz) {
-        // Try to find the best constructor
+        
         Constructor<?> bestConstructor = findBestConstructor(clazz);
         
         if (bestConstructor == null) {
-            // If no suitable constructor found, try no-arg constructor
+            
             try {
                 return clazz.getDeclaredConstructor().newInstance();
             } catch (Exception e) {
@@ -150,7 +150,7 @@ public class DependencyContainer {
         }
         
         try {
-            // Resolve constructor parameters
+            
             Parameter[] parameters = bestConstructor.getParameters();
             Object[] args = new Object[parameters.length];
             
@@ -172,7 +172,7 @@ public class DependencyContainer {
     private Constructor<?> findBestConstructor(Class<?> clazz) {
         Constructor<?>[] constructors = clazz.getConstructors();
         
-        // Find best constructor (prefer one with most parameters that we can resolve)
+        
         Constructor<?> bestConstructor = null;
         int maxResolvableParams = -1;
         
@@ -211,12 +211,12 @@ public class DependencyContainer {
      */
     private boolean hasSuitableConstructor(Class<?> type) {
         try {
-            // Check if it's a concrete class with a resolvable constructor
+            
             if (type.isInterface()) {
-                // For interfaces, check if we have an implementation
+                
                 return implementations.containsKey(type);
             } else {
-                // For concrete classes, check if we can resolve its dependencies
+                
                 Constructor<?> constructor = findBestConstructor(type);
                 return constructor != null;
             }
@@ -231,7 +231,7 @@ public class DependencyContainer {
     public void dispose() {
         log.info("Starting DependencyContainer disposal...");
         
-        // Dispose in reverse order
+        
         List<Exception> disposalExceptions = new ArrayList<>();
         
         for (int i = disposables.size() - 1; i >= 0; i--) {
@@ -246,7 +246,7 @@ public class DependencyContainer {
             }
         }
         
-        // Clear all collections
+        
         try {
             disposables.clear();
             singletons.clear();
@@ -257,7 +257,7 @@ public class DependencyContainer {
             log.log(Level.WARNING, "Error clearing collections", e);
         }
         
-        // Log any disposal exceptions
+        
         if (!disposalExceptions.isEmpty()) {
             log.warning("Encountered " + disposalExceptions.size() + " exceptions during disposal");
         }
@@ -265,7 +265,7 @@ public class DependencyContainer {
         log.info("DependencyContainer disposal completed");
     }
     
-    // Legacy methods for backward compatibility
+    
     
     /**
      * @deprecated Use registerSingleton instead

@@ -16,15 +16,15 @@ public class PlayerManagerImpl implements IPlayerManager {
     private final MegaCreative plugin;
     private final Map<UUID, Set<String>> playerFavorites;
     
-    // Player mode manager for DEV/PLAY mode system
+    
     private final PlayerModeManager playerModeManager = new PlayerModeManager();
     
-    // 🎆 ENHANCED: World tracking for dual world architecture
-    private final Map<UUID, PlayerWorldSession> playerSessions; // Current sessions
-    private final Map<String, Map<UUID, String>> worldPlayerModes; // World -> Player -> Mode
-    private final Map<String, WorldStatistics> worldStats; // World analytics
     
-    // Session tracking class
+    private final Map<UUID, PlayerWorldSession> playerSessions; 
+    private final Map<String, Map<UUID, String>> worldPlayerModes; 
+    private final Map<String, WorldStatistics> worldStats; 
+    
+    
     private static class PlayerWorldSession {
         private final String worldId;
         private final String mode;
@@ -42,7 +42,7 @@ public class PlayerManagerImpl implements IPlayerManager {
         public long getSessionTime() { return System.currentTimeMillis() - entryTime; }
     }
     
-    // World statistics class
+    
     private static class WorldStatistics {
         private final Set<UUID> uniqueVisitors = new HashSet<>();
         private long totalTimeSpent = 0;
@@ -71,7 +71,7 @@ public class PlayerManagerImpl implements IPlayerManager {
         this.plugin = plugin;
         this.playerFavorites = new HashMap<>();
         
-        // 🎆 ENHANCED: Initialize world tracking collections
+        
         this.playerSessions = new ConcurrentHashMap<>();
         this.worldPlayerModes = new ConcurrentHashMap<>();
         this.worldStats = new ConcurrentHashMap<>();
@@ -79,18 +79,18 @@ public class PlayerManagerImpl implements IPlayerManager {
     
     @Override
     public void initialize() {
-        // Инициализация менеджера игроков
+        
     }
     
     @Override
     public void registerPlayer(Player player) {
-        // Register player in system
+        
     }
     
     @Override
     public void unregisterPlayer(Player player) {
-        // Remove player from system
-        // Clear player mode when they leave
+        
+        
         playerModeManager.clearMode(player);
     }
     
@@ -98,20 +98,20 @@ public class PlayerManagerImpl implements IPlayerManager {
     public Map<String, Object> getPlayerData(UUID playerId) {
         Map<String, Object> data = new HashMap<>();
         
-        // Add favorites
+        
         Set<String> favorites = playerFavorites.get(playerId);
         if (favorites != null) {
             data.put("favorites", new ArrayList<>(favorites));
         }
         
-        // Add mode
+        
         Player player = plugin.getServer().getPlayer(playerId);
         if (player != null) {
             PlayerModeManager.PlayerMode mode = playerModeManager.getMode(player);
             data.put("mode", mode != null ? mode.name() : "DEV");
         }
         
-        // Add session data
+        
         PlayerWorldSession session = playerSessions.get(playerId);
         if (session != null) {
             Map<String, Object> sessionData = new HashMap<>();
@@ -127,14 +127,14 @@ public class PlayerManagerImpl implements IPlayerManager {
     
     @Override
     public void setPlayerData(UUID playerId, Map<String, Object> data) {
-        // Set favorites
+        
         Object favoritesObj = data.get("favorites");
         if (favoritesObj instanceof java.util.List) {
             Set<String> favorites = new HashSet<>((java.util.List<String>) favoritesObj);
             playerFavorites.put(playerId, favorites);
         }
         
-        // Set mode
+        
         Object modeObj = data.get("mode");
         if (modeObj instanceof String) {
             try {
@@ -144,49 +144,49 @@ public class PlayerManagerImpl implements IPlayerManager {
                     playerModeManager.setMode(player, mode);
                 }
             } catch (IllegalArgumentException e) {
-                // Ignore invalid mode
+                
             }
         }
     }
     
     @Override
     public boolean isPlayerRegistered(UUID playerId) {
-        // Проверка регистрации игрока
+        
         return true;
     }
     
     @Override
     public int getPlayerCount() {
-        // Количество зарегистрированных игроков
+        
         return playerFavorites.size();
     }
     
     @Override
     public void saveAllPlayerData() {
-        // Save player favorites data
+        
         File playerDataFolder = new File(plugin.getDataFolder(), "players");
         if (!playerDataFolder.exists()) {
             playerDataFolder.mkdirs();
         }
         
-        // Save each player's data
+        
         for (Map.Entry<UUID, Set<String>> entry : playerFavorites.entrySet()) {
             UUID playerId = entry.getKey();
             Set<String> favorites = entry.getValue();
             
             try {
-                // Create player data file
+                
                 File playerFile = new File(playerDataFolder, playerId.toString() + ".json");
                 
-                // Create data map
+                
                 Map<String, Object> playerData = new HashMap<>();
                 playerData.put("favorites", new ArrayList<>(favorites));
                 
-                // Add player mode data
+                
                 PlayerModeManager.PlayerMode mode = playerModeManager.getMode(plugin.getServer().getPlayer(playerId));
                 playerData.put("mode", mode != null ? mode.name() : "DEV");
                 
-                // Add world tracking data
+                
                 PlayerWorldSession session = playerSessions.get(playerId);
                 if (session != null) {
                     Map<String, Object> sessionData = new HashMap<>();
@@ -196,7 +196,7 @@ public class PlayerManagerImpl implements IPlayerManager {
                     playerData.put("currentSession", sessionData);
                 }
                 
-                // Serialize and save
+                
                 String jsonData = serializeToJson(playerData);
                 java.nio.file.Files.write(playerFile.toPath(), jsonData.getBytes(java.nio.charset.StandardCharsets.UTF_8));
                 
@@ -215,29 +215,29 @@ public class PlayerManagerImpl implements IPlayerManager {
             return;
         }
         
-        // Load each player's data
+        
         File[] playerFiles = playerDataFolder.listFiles((dir, name) -> name.endsWith(".json"));
         if (playerFiles == null) return;
         
         int loadedCount = 0;
         for (File playerFile : playerFiles) {
             try {
-                // Parse player UUID from filename
-                String fileName = playerFile.getName();
-                UUID playerId = UUID.fromString(fileName.substring(0, fileName.length() - 5)); // Remove .json
                 
-                // Read and parse data
+                String fileName = playerFile.getName();
+                UUID playerId = UUID.fromString(fileName.substring(0, fileName.length() - 5)); 
+                
+                
                 String jsonData = new String(java.nio.file.Files.readAllBytes(playerFile.toPath()));
                 Map<String, Object> playerData = deserializeFromJson(jsonData);
                 
-                // Load favorites
+                
                 Object favoritesObj = playerData.get("favorites");
                 if (favoritesObj instanceof java.util.List) {
                     Set<String> favorites = new HashSet<>((java.util.List<String>) favoritesObj);
                     playerFavorites.put(playerId, favorites);
                 }
                 
-                // Load mode
+                
                 Object modeObj = playerData.get("mode");
                 if (modeObj instanceof String) {
                     try {
@@ -247,11 +247,11 @@ public class PlayerManagerImpl implements IPlayerManager {
                             playerModeManager.setMode(player, mode);
                         }
                     } catch (IllegalArgumentException e) {
-                        // Ignore invalid mode
+                        
                     }
                 }
                 
-                // Load session data
+                
                 Object sessionObj = playerData.get("currentSession");
                 if (sessionObj instanceof Map) {
                     Map<?, ?> sessionData = (Map<?, ?>) sessionObj;
@@ -276,7 +276,7 @@ public class PlayerManagerImpl implements IPlayerManager {
 
     @Override
     public void clearPlayerData(UUID playerId) {
-        // Очистка данных игрока
+        
         playerFavorites.remove(playerId);
     }
     
@@ -284,7 +284,7 @@ public class PlayerManagerImpl implements IPlayerManager {
     public void giveStarterItems(Player player) {
         player.getInventory().clear();
         
-        // Алмаз (Мои миры)
+        
         ItemStack myWorldsItem = new ItemStack(Material.DIAMOND);
         ItemMeta myWorldsMeta = myWorldsItem.getItemMeta();
         myWorldsMeta.setDisplayName("§b§lМои миры");
@@ -295,7 +295,7 @@ public class PlayerManagerImpl implements IPlayerManager {
         ));
         myWorldsItem.setItemMeta(myWorldsMeta);
         
-        // Компас (Браузер миров)
+        
         ItemStack browserItem = new ItemStack(Material.COMPASS);
         ItemMeta browserMeta = browserItem.getItemMeta();
         browserMeta.setDisplayName("§a§lБраузер миров");
@@ -333,40 +333,40 @@ public class PlayerManagerImpl implements IPlayerManager {
     
     @Override
     public void shutdown() {
-        // 🎆 ENHANCED: Process final sessions before shutdown
+        
         for (Map.Entry<UUID, PlayerWorldSession> entry : playerSessions.entrySet()) {
             PlayerWorldSession session = entry.getValue();
             recordSessionEnd(entry.getKey(), session);
         }
         
-        // Clear player favorites to free memory
+        
         playerFavorites.clear();
         
-        // 🎆 ENHANCED: Clear tracking data
+        
         playerSessions.clear();
         worldPlayerModes.clear();
         worldStats.clear();
         
-        // Any other cleanup needed for player data
+        
     }
     
-    // 🎆 ENHANCED: World tracking implementation
+    
     
     @Override
     public void trackPlayerWorldEntry(Player player, String worldId, String mode) {
         UUID playerId = player.getUniqueId();
         
-        // End previous session if exists
+        
         PlayerWorldSession previousSession = playerSessions.get(playerId);
         if (previousSession != null) {
             recordSessionEnd(playerId, previousSession);
         }
         
-        // Start new session
+        
         PlayerWorldSession newSession = new PlayerWorldSession(worldId, mode);
         playerSessions.put(playerId, newSession);
         
-        // Track in world-player mapping
+        
         worldPlayerModes.computeIfAbsent(worldId, k -> new ConcurrentHashMap<>())
                        .put(playerId, mode);
         
@@ -377,13 +377,13 @@ public class PlayerManagerImpl implements IPlayerManager {
     public void trackPlayerWorldExit(Player player, String worldId) {
         UUID playerId = player.getUniqueId();
         
-        // End current session
+        
         PlayerWorldSession session = playerSessions.remove(playerId);
         if (session != null && session.getWorldId().equals(worldId)) {
             recordSessionEnd(playerId, session);
         }
         
-        // Remove from world-player mapping
+        
         Map<UUID, String> worldPlayers = worldPlayerModes.get(worldId);
         if (worldPlayers != null) {
             worldPlayers.remove(playerId);
@@ -435,7 +435,7 @@ public class PlayerManagerImpl implements IPlayerManager {
         String mode = session.getMode();
         long duration = session.getSessionTime();
         
-        // Update world statistics
+        
         worldStats.computeIfAbsent(worldId, k -> new WorldStatistics())
                  .recordSession(playerId, mode, duration);
         
@@ -451,7 +451,7 @@ public class PlayerManagerImpl implements IPlayerManager {
         return playerModeManager;
     }
     
-    // Simple JSON serialization helper
+    
     private String serializeToJson(Map<String, Object> data) {
         StringBuilder sb = new StringBuilder();
         sb.append("{");
@@ -466,21 +466,21 @@ public class PlayerManagerImpl implements IPlayerManager {
         return sb.toString();
     }
     
-    // Simple JSON deserialization helper
+    
     private Map<String, Object> deserializeFromJson(String json) {
-        // Simplified implementation - in practice you'd want a real JSON parser
+        
         Map<String, Object> result = new HashMap<>();
-        // For now, return empty map as we're using Bukkit's configuration system elsewhere
+        
         return result;
     }
     
-    // Helper method to escape JSON strings
+    
     private String escapeJson(String str) {
         if (str == null) return "null";
         return str.replace("\\", "\\\\").replace("\"", "\\\"").replace("\n", "\\n").replace("\r", "\\r").replace("\t", "\\t");
     }
     
-    // Helper method to serialize values to JSON format
+    
     private String serializeValue(Object value) {
         if (value == null) return "null";
         if (value instanceof String) return "\"" + escapeJson((String) value) + "\"";

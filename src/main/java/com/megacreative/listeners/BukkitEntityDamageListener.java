@@ -20,19 +20,19 @@ public class BukkitEntityDamageListener implements Listener {
     
     @EventHandler
     public void onEntityDamage(EntityDamageEvent bukkitEvent) {
-        // Only handle player damage events
+        
         if (!(bukkitEvent.getEntity() instanceof org.bukkit.entity.Player)) {
             return;
         }
         
-        // Create our custom event
+        
         MegaEntityDamageEvent internalEvent = new MegaEntityDamageEvent(
             (org.bukkit.entity.Player) bukkitEvent.getEntity(),
             bukkitEvent.getDamage(),
             bukkitEvent.getCause()
         );
         
-        // Publish it to our event system
+        
         plugin.getServer().getPluginManager().callEvent(internalEvent);
     }
 }

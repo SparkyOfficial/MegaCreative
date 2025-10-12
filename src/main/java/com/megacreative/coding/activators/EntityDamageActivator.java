@@ -34,18 +34,18 @@ public class EntityDamageActivator extends BukkitEventActivator {
     
     @Override
     public void execute(GameEvent gameEvent, List<org.bukkit.entity.Entity> selectedEntities, int stackCounter, AtomicInteger callCounter) {
-        // Set the selected entities
+        
         this.selectedEntities = selectedEntities;
         
-        // Execute all actions associated with this activator
-        // This would integrate with the existing script execution system
+        
+        
         for (com.megacreative.coding.CodeBlock action : actionList) {
             try {
-                // Get the script engine from the plugin
+                
                 com.megacreative.coding.ScriptEngine scriptEngine = plugin.getServiceRegistry().getScriptEngine();
                 
                 if (scriptEngine != null) {
-                    // Execute the action block
+                    
                     scriptEngine.executeBlock(action, 
                         selectedEntities.isEmpty() ? null : (org.bukkit.entity.Player) selectedEntities.get(0), 
                         "activator_entity_damage");
@@ -64,17 +64,17 @@ public class EntityDamageActivator extends BukkitEventActivator {
      * @param cause The cause of the damage
      */
     public void activate(Entity entity, double damage, String cause) {
-        // Create a game event for this activation
+        
         GameEvent event = new GameEvent("entity_damage");
         event.setEntity(entity);
         
-        // Add damage information to the event
+        
         Map<String, Object> eventData = new HashMap<>();
         eventData.put("damage", damage);
         eventData.put("cause", cause);
         event.setCustomData(eventData);
         
-        // Execute the activator with the event
+        
         execute(event, List.of(entity), 0, new AtomicInteger(0));
     }
 }

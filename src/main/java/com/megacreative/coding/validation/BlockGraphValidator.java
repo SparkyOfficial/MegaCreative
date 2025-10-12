@@ -38,32 +38,32 @@ public class BlockGraphValidator {
         
         UUID blockId = block.getId();
         
-        // Check for circular reference
+        
         if (currentPath.contains(blockId)) {
             errors.add("Circular reference detected in block chain");
             return;
         }
         
-        // Skip if already visited (prevoves infinite recursion)
+        
         if (visitedBlocks.contains(blockId)) {
             return;
         }
         
-        // Mark as visited and add to current path
+        
         visitedBlocks.add(blockId);
         currentPath.add(blockId);
         
         try {
-            // Validate next block
+            
             validateBlock(block.getNextBlock());
             
-            // Validate child blocks
+            
             for (CodeBlock child : block.getChildren()) {
                 validateBlock(child);
             }
             
         } finally {
-            // Remove from current path when backtracking
+            
             currentPath.remove(blockId);
         }
     }

@@ -22,7 +22,7 @@ public class ClassScanner {
                 if (className.startsWith(packageName)) {
                     try {
                         classes.add(Class.forName(className, false, plugin.getClass().getClassLoader()));
-                    } catch (ClassNotFoundException | NoClassDefFoundError e) { // Ловим обе ошибки
+                    } catch (ClassNotFoundException | NoClassDefFoundError e) { 
                         plugin.getLogger().warning("Не удалось загрузить класс (возможно, отсутствует зависимость): " + className);
                     }
                 }

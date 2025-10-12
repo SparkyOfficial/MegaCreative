@@ -47,13 +47,13 @@ public class TickManager {
         tickCounter++;
         tpsCheckTicks++;
         
-        // Update TPS every 20 ticks (1 second)
+        
         if (tpsCheckTicks >= 20) {
             long currentTime = System.currentTimeMillis();
             long timeDiff = currentTime - lastTPSCheck;
             if (timeDiff > 0) {
                 currentTPS = (20.0 * 1000.0) / timeDiff;
-                // Ensure TPS doesn't exceed 20
+                
                 if (currentTPS > 20.0) {
                     currentTPS = 20.0;
                 }
@@ -62,7 +62,7 @@ public class TickManager {
             tpsCheckTicks = 0;
         }
         
-        // Execute the game loop for all players
+        
         if (plugin.getServiceRegistry() != null) {
             GameLoopManager gameLoopManager = plugin.getServiceRegistry().getGameLoopManager();
             if (gameLoopManager != null) {
@@ -70,7 +70,7 @@ public class TickManager {
             }
         }
         
-        // Fire the tick event
+        
         TickEvent tickEvent = new TickEvent(tickCounter, currentTPS);
         Bukkit.getPluginManager().callEvent(tickEvent);
     }

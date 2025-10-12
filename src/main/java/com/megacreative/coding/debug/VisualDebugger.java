@@ -15,7 +15,7 @@ import org.bukkit.command.CommandSender;
 import org.bukkit.event.Event;
 import org.bukkit.inventory.ItemStack;
 
-// Required for variable watching
+
 import java.util.Map;
 import java.util.HashMap;
 import java.util.List;
@@ -31,20 +31,20 @@ public class VisualDebugger {
     private final MegaCreative plugin;
     private final Map<UUID, DebugSession> activeSessions = new ConcurrentHashMap<>();
     
-    // Advanced debugging features
+    
     private final Map<UUID, BreakpointManager> breakpointManagers = new ConcurrentHashMap<>();
     private final Map<UUID, ExecutionTracer> executionTracers = new ConcurrentHashMap<>();
     private final Map<UUID, VariableWatcher> variableWatchers = new ConcurrentHashMap<>();
     private final Map<UUID, PerformanceProfiler> performanceProfilers = new ConcurrentHashMap<>();
     
-    // Advanced visual debugger
+    
     private final AdvancedVisualDebugger advancedDebugger;
     
     public VisualDebugger(MegaCreative plugin) {
         this.plugin = plugin;
         this.advancedDebugger = new AdvancedVisualDebugger(plugin, this);
         
-        // Initialize breakpoint managers for online players
+        
         plugin.getServer().getScheduler().runTaskTimer(plugin, () -> {
             for (Player player : plugin.getServer().getOnlinePlayers()) {
                 breakpointManagers.computeIfAbsent(player.getUniqueId(), k -> new BreakpointManager());
@@ -52,7 +52,7 @@ public class VisualDebugger {
                 variableWatchers.computeIfAbsent(player.getUniqueId(), k -> new VariableWatcher());
                 performanceProfilers.computeIfAbsent(player.getUniqueId(), k -> new PerformanceProfiler());
             }
-        }, 20L, 6000L); // Check every 5 minutes
+        }, 20L, 6000L); 
     }
     
     /**
@@ -70,7 +70,7 @@ public class VisualDebugger {
         activeSessions.put(player.getUniqueId(), session);
         player.sendMessage("§a✓ Visual debugger started: " + sessionName);
         
-        // Initialize breakpoint manager for this player
+        
         breakpointManagers.computeIfAbsent(player.getUniqueId(), k -> new BreakpointManager());
     }
     
@@ -80,7 +80,7 @@ public class VisualDebugger {
     public void stopDebugSession(Player player) {
         DebugSession session = activeSessions.remove(player.getUniqueId());
         if (session != null) {
-            // Clean up resources
+            
             breakpointManagers.remove(player.getUniqueId());
             executionTracers.remove(player.getUniqueId());
             variableWatchers.remove(player.getUniqueId());
@@ -122,10 +122,10 @@ public class VisualDebugger {
      * @param errorMessage The error message to log
      */
     public void logError(Player player, String errorMessage) {
-        // Log the error to the console
+        
         log.severe(errorMessage);
         
-        // Show the error to the player if they're in a debug session
+        
         DebugSession session = activeSessions.get(player.getUniqueId());
         if (session != null) {
             session.errorCount++;
@@ -259,7 +259,7 @@ public class VisualDebugger {
         if (advancedDebugger != null) {
             advancedDebugger.stepToNextBlock(player);
         } else {
-            // Use Adventure API if available, otherwise fallback to regular sendMessage
+            
             MessagingService messagingService = plugin.getServiceRegistry().getMessagingService();
             if (messagingService != null) {
                 messagingService.sendErrorMessage(player, "Advanced debugger not available");
@@ -276,7 +276,7 @@ public class VisualDebugger {
         if (advancedDebugger != null) {
             advancedDebugger.continueExecution(player);
         } else {
-            // Use Adventure API if available, otherwise fallback to regular sendMessage
+            
             MessagingService messagingService = plugin.getServiceRegistry().getMessagingService();
             if (messagingService != null) {
                 messagingService.sendErrorMessage(player, "Advanced debugger not available");
@@ -295,7 +295,7 @@ public class VisualDebugger {
         
         DebugSession session = activeSessions.get(player.getUniqueId());
         if (session != null) {
-            // Use Adventure API if available, otherwise fallback to regular sendMessage
+            
             MessagingService messagingService = plugin.getServiceRegistry().getMessagingService();
             if (messagingService != null) {
                 messagingService.sendSuccessMessage(player, "Execution tracing started (max " + maxSteps + " steps)");
@@ -311,7 +311,7 @@ public class VisualDebugger {
     public void stopTracing(Player player) {
         ExecutionTracer tracer = executionTracers.remove(player.getUniqueId());
         if (tracer != null) {
-            // Use Adventure API if available, otherwise fallback to regular sendMessage
+            
             MessagingService messagingService = plugin.getServiceRegistry().getMessagingService();
             if (messagingService != null) {
                 messagingService.sendErrorMessage(player, "Execution tracing stopped");
@@ -329,7 +329,7 @@ public class VisualDebugger {
     public void showTrace(Player player) {
         ExecutionTracer tracer = executionTracers.get(player.getUniqueId());
         if (tracer == null) {
-            // Use Adventure API if available, otherwise fallback to regular sendMessage
+            
             MessagingService messagingService = plugin.getServiceRegistry().getMessagingService();
             if (messagingService != null) {
                 messagingService.sendErrorMessage(player, "No execution trace available");
@@ -341,7 +341,7 @@ public class VisualDebugger {
         
         List<ExecutionStep> steps = tracer.getTrace();
         if (steps.isEmpty()) {
-            // Use Adventure API if available, otherwise fallback to regular sendMessage
+            
             MessagingService messagingService = plugin.getServiceRegistry().getMessagingService();
             if (messagingService != null) {
                 messagingService.sendWarningMessage(player, "Execution trace is empty");
@@ -351,7 +351,7 @@ public class VisualDebugger {
             return;
         }
         
-        // Use Adventure API if available, otherwise fallback to regular sendMessage
+        
         MessagingService messagingService = plugin.getServiceRegistry().getMessagingService();
         if (messagingService != null) {
             messagingService.sendMessage(player, "Execution Trace (" + steps.size() + " steps):");
@@ -359,7 +359,7 @@ public class VisualDebugger {
             player.sendMessage("§a§lExecution Trace (" + steps.size() + " steps):");
         }
         
-        int maxSteps = Math.min(steps.size(), 10); // Show only last 10 steps
+        int maxSteps = Math.min(steps.size(), 10); 
         int start = Math.max(0, steps.size() - maxSteps);
         
         for (int i = start; i < steps.size(); i++) {
@@ -392,7 +392,7 @@ public class VisualDebugger {
         );
         
         watcher.addWatch(variableName, expression);
-        // Use Adventure API if available, otherwise fallback to regular sendMessage
+        
         MessagingService messagingService = plugin.getServiceRegistry().getMessagingService();
         if (messagingService != null) {
             messagingService.sendSuccessMessage(player, "Watching variable: " + variableName);
@@ -407,7 +407,7 @@ public class VisualDebugger {
     public void unwatchVariable(Player player, String variableName) {
         VariableWatcher watcher = variableWatchers.get(player.getUniqueId());
         if (watcher != null && watcher.removeWatch(variableName)) {
-            // Use Adventure API if available, otherwise fallback to regular sendMessage
+            
             MessagingService messagingService = plugin.getServiceRegistry().getMessagingService();
             if (messagingService != null) {
                 messagingService.sendSuccessMessage(player, "Stopped watching variable: " + variableName);
@@ -423,7 +423,7 @@ public class VisualDebugger {
     public void showWatchedVariables(Player player) {
         VariableWatcher watcher = variableWatchers.get(player.getUniqueId());
         if (watcher == null || watcher.getWatches().isEmpty()) {
-            // Use Adventure API if available, otherwise fallback to regular sendMessage
+            
             MessagingService messagingService = plugin.getServiceRegistry().getMessagingService();
             if (messagingService != null) {
                 messagingService.sendWarningMessage(player, "No variables being watched");
@@ -433,7 +433,7 @@ public class VisualDebugger {
             return;
         }
         
-        // Use Adventure API if available, otherwise fallback to regular sendMessage
+        
         MessagingService messagingService = plugin.getServiceRegistry().getMessagingService();
         if (messagingService != null) {
             messagingService.sendMessage(player, "Watched Variables:");
@@ -462,7 +462,7 @@ public class VisualDebugger {
         );
         
         profiler.startProfiling();
-        // Use Adventure API if available, otherwise fallback to regular sendMessage
+        
         MessagingService messagingService = plugin.getServiceRegistry().getMessagingService();
         if (messagingService != null) {
             messagingService.sendSuccessMessage(player, "Performance profiling started");
@@ -478,7 +478,7 @@ public class VisualDebugger {
         PerformanceProfiler profiler = performanceProfilers.get(player.getUniqueId());
         if (profiler != null) {
             profiler.stopProfiling();
-            // Use Adventure API if available, otherwise fallback to regular sendMessage
+            
             MessagingService messagingService = plugin.getServiceRegistry().getMessagingService();
             if (messagingService != null) {
                 messagingService.sendErrorMessage(player, "Performance profiling stopped");
@@ -531,7 +531,7 @@ public class VisualDebugger {
         
         player.sendMessage("§a▶ Starting script: " + script.getName());
         
-        // Start performance profiling
+        
         PerformanceProfiler profiler = performanceProfilers.get(player.getUniqueId());
         if (profiler != null) {
             profiler.startScript(script.getName());
@@ -547,7 +547,7 @@ public class VisualDebugger {
         
         player.sendMessage("§c▣ Script ended: " + script.getName());
         
-        // End performance profiling
+        
         PerformanceProfiler profiler = performanceProfilers.get(player.getUniqueId());
         if (profiler != null) {
             profiler.endScript();
@@ -563,12 +563,12 @@ public class VisualDebugger {
         
         session.executionStep++;
         
-        // Check for breakpoints using advanced debugger if available
+        
         if (advancedDebugger != null) {
-            // The advanced debugger handles breakpoint checking internally
+            
             advancedDebugger.visualizeBlockExecution(player, block, blockLocation);
         } else {
-            // Fallback to basic breakpoint checking
+            
             BreakpointManager bpManager = breakpointManagers.get(player.getUniqueId());
             if (bpManager != null && bpManager.hasBreakpointAt(blockLocation)) {
                 Breakpoint bp = bpManager.getBreakpointAt(blockLocation);
@@ -576,16 +576,16 @@ public class VisualDebugger {
                 player.sendMessage("§7Location: " + formatLocation(blockLocation));
             }
             
-            // Add to execution trace
+            
             ExecutionTracer tracer = executionTracers.get(player.getUniqueId());
             if (tracer != null) {
                 tracer.addStep(new ExecutionStep(block.getAction(), blockLocation, System.currentTimeMillis()));
             }
             
-            // Visualize execution
+            
             visualizeBlockExecution(player, block, blockLocation);
             
-            // Show execution message
+            
             player.sendMessage("§e▶ Executing: " + block.getAction() + 
                               " §7(" + formatLocation(blockLocation) + ")");
         }
@@ -616,7 +616,7 @@ public class VisualDebugger {
         player.sendMessage("§fErrors: " + session.errorCount);
         player.sendMessage("§fSession: " + session.sessionName);
         
-        // Show additional info if available
+        
         BreakpointManager bpManager = breakpointManagers.get(player.getUniqueId());
         if (bpManager != null) {
             player.sendMessage("§fBreakpoints: " + bpManager.getBreakpoints().size());
@@ -699,11 +699,11 @@ public class VisualDebugger {
             return;
         }
         
-        // Visualize the block execution using the advanced debugger
+        
         if (advancedDebugger != null) {
             advancedDebugger.visualizeBlockExecution(player, block, blockLocation);
         } else {
-            // Fallback visualization if advanced debugger is not available
+            
             try {
                 player.sendBlockChange(blockLocation, blockLocation.getBlock().getBlockData());
             } catch (Exception e) {
@@ -746,7 +746,7 @@ public class VisualDebugger {
      * Shuts down the visual debugger and cleans up resources
      */
     public void shutdown() {
-        // Stop all debug sessions
+        
         for (UUID playerId : new HashSet<>(activeSessions.keySet())) {
             Player player = plugin.getServer().getPlayer(playerId);
             if (player != null) {
@@ -754,7 +754,7 @@ public class VisualDebugger {
             }
         }
         
-        // Stop all visualization sessions
+        
         for (UUID playerId : new HashSet<>(breakpointManagers.keySet())) {
             Player player = plugin.getServer().getPlayer(playerId);
             if (player != null) {
@@ -762,14 +762,14 @@ public class VisualDebugger {
             }
         }
         
-        // Clear all collections
+        
         activeSessions.clear();
         breakpointManagers.clear();
         executionTracers.clear();
         variableWatchers.clear();
         performanceProfilers.clear();
         
-        // Shutdown advanced debugger
+        
         if (advancedDebugger != null) {
             advancedDebugger.shutdown();
         }
@@ -803,7 +803,7 @@ public class VisualDebugger {
             this.createdTime = System.currentTimeMillis();
         }
         
-        // Getters
+        
         public Location getLocation() { return location; }
         public String getCondition() { return condition; }
         public long getCreatedTime() { return createdTime; }
@@ -859,7 +859,7 @@ public class VisualDebugger {
             this.timestamp = timestamp;
         }
         
-        // Getters
+        
         public String getAction() { return action; }
         public Location getLocation() { return location; }
         public long getTimestamp() { return timestamp; }
@@ -874,22 +874,22 @@ public class VisualDebugger {
         private int tracedSteps = 0;
         
         public ExecutionTracer() {
-            this(1000); // Default to 1000 steps
+            this(1000); 
         }
         
         public ExecutionTracer(int maxSteps) {
-            this.maxSteps = maxSteps > 0 ? maxSteps : 1000; // Ensure positive value
+            this.maxSteps = maxSteps > 0 ? maxSteps : 1000; 
         }
         
         public void addStep(ExecutionStep step) {
             tracedSteps++;
             if (trace.size() >= maxSteps) {
-                trace.remove(0); // Remove oldest step
+                trace.remove(0); 
             }
             trace.add(step);
         }
         
-        // Getters
+        
         public List<ExecutionStep> getTrace() { return new ArrayList<>(trace); }
         public int getTracedSteps() { return tracedSteps; }
         public int getMaxSteps() { return maxSteps; }

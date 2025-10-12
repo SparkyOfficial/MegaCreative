@@ -17,7 +17,7 @@ import java.util.ArrayList;
  */
 public class CodingItems {
     
-    // Константы названий предметов для защиты от потери
+    
     public static final String EVENT_BLOCK_NAME = "§b§lСобытие игрока";
     public static final String CONDITION_BLOCK_NAME = "§6§lУсловие игрока";
     public static final String ACTION_BLOCK_NAME = "§7§lДействие игрока";
@@ -39,7 +39,7 @@ public class CodingItems {
     public static final String DATA_CREATOR_NAME = "§b§lСоздать данные";
     public static final String CODE_MOVER_NAME = "§6🔄 Инструмент Перемещения";
 
-    // --- ДОБАВЛЯЕМ АВТОМАТИЧЕСКУЮ ПРОВЕРКУ ---
+    
     private static final Set<String> CODING_ITEM_NAMES = new HashSet<>();
 
     static {
@@ -68,7 +68,7 @@ public class CodingItems {
     public static boolean isDisplayNameACodingItem(String displayName) {
         return CODING_ITEM_NAMES.contains(displayName);
     }
-    // --- КОНЕЦ БЛОКА ---
+    
 
     /**
      * Выдаёт игроку только недостающие предметы для кодинга
@@ -134,7 +134,7 @@ public class CodingItems {
                     player.getInventory().addItem(getCodeMover());
                     break;
                 default:
-                    // Для неизвестных предметов выдаем базовый набор
+                    
                     if (itemName.contains("блок") || itemName.contains("Блок")) {
                         player.getInventory().addItem(createSimpleBlock(Material.STONE, "§7" + itemName));
                     }
@@ -147,7 +147,7 @@ public class CodingItems {
      * Выдаёт игроку 9 новых универсальных блоков для кодинга
      */
     public static void giveCodingItems(Player player) {
-        // Универсальные блоки для кодинга
+        
         player.getInventory().addItem(createSimpleBlock(Material.DIAMOND_BLOCK, "§b§lСобытие игрока"));
         player.getInventory().addItem(createSimpleBlock(Material.OAK_PLANKS, "§6§lУсловие игрока"));
         player.getInventory().addItem(createSimpleBlock(Material.COBBLESTONE, "§7§lДействие игрока"));
@@ -164,22 +164,22 @@ public class CodingItems {
         player.getInventory().addItem(createSimpleBlock(Material.REDSTONE_BLOCK, "§e⏰ Повторяющийся триггер"));
         player.getInventory().addItem(createSimpleBlock(Material.PISTON, BRACKET_BLOCK_NAME));
         player.getInventory().addItem(getArrowNot());
-        // Removed getGameValue() - now in DataGUI
+        
     
-        // Железный слиток для создания данных
+        
         player.getInventory().addItem(getDataCreator());
         
-        // Перемещатель кода
+        
         player.getInventory().addItem(getCodeMover());
 
-        // Removed Golden Axe tool - functionality now in CodeMoverListener
+        
     }
     
     /**
      * Выдает игроку полный набор блоков кодирования, сгенерированный из конфигурации.
      */
     public static void giveCodingItems(Player player, MegaCreative plugin) {
-        player.getInventory().clear(); // Очищаем инвентарь для чистоты
+        player.getInventory().clear(); 
         
         BlockConfigService configService = plugin.getServiceRegistry().getBlockConfigService();
         if (configService == null) {
@@ -187,18 +187,18 @@ public class CodingItems {
             return;
         }
 
-        // Проходим по ВСЕМ блокам, определенным в coding_blocks.yml
+        
         for (BlockConfigService.BlockConfig config : configService.getAllBlockConfigs()) {
             ItemStack item = new ItemStack(config.getMaterial());
             ItemMeta meta = item.getItemMeta();
             if (meta != null) {
-                // ВАЖНО: Отображаемое имя предмета ДОЛЖНО быть уникальным displayName из конфига
+                
                 meta.setDisplayName(config.getDisplayName()); 
                 
                 List<String> lore = new ArrayList<>();
                 lore.add("§7" + config.getDescription());
                 lore.add("§8Тип: " + config.getType());
-                lore.add("§8ID: " + config.getId()); // ID для внутренней логики
+                lore.add("§8ID: " + config.getId()); 
                 meta.setLore(lore);
                 item.setItemMeta(meta);
             }

@@ -37,27 +37,27 @@ public class CallFunctionAction implements BlockAction {
         }
 
         try {
-            // Получаем параметры из блока (final to use in lambda)
+            
             final String functionName = block.getParameter(FUNCTION_NAME_PARAM).asString();
             
-            // Получаем менеджер функций
+            
             AdvancedFunctionManager functionManager = context.getPlugin().getServiceRegistry().getAdvancedFunctionManager();
             if (functionManager == null) {
                 return ExecutionResult.error(FUNCTION_MANAGER_UNAVAILABLE_MSG);
             }
             
-            // Проверяем, существует ли функция
+            
             if (functionManager.findFunction(functionName, player) == null) {
                 return ExecutionResult.error(String.format(FUNCTION_NOT_FOUND_MSG, functionName));
             }
             
-            // Получаем аргументы функции из блока
+            
             DataValue[] arguments = getFunctionArguments(block);
             
-            // Выполняем функцию асинхронно
+            
             CompletableFuture<ExecutionResult> future = functionManager.executeFunction(functionName, player, arguments);
             
-            // Return an await result - the ScriptEngine will handle the future
+            
             return ExecutionResult.await(future);
 
         } catch (Exception e) {
@@ -71,7 +71,7 @@ public class CallFunctionAction implements BlockAction {
      * Получает аргументы функции из блока кода
      */
     private DataValue[] getFunctionArguments(CodeBlock block) {
-        // Получаем аргументы из параметров блока
+        
         DataValue argsValue = block.getParameter(ARGUMENTS_PARAM);
         if (argsValue != null && argsValue.getValue() instanceof Object[]) {
             Object[] argsArray = (Object[]) argsValue.getValue();
@@ -82,7 +82,7 @@ public class CallFunctionAction implements BlockAction {
             return arguments;
         }
         
-        // По умолчанию возвращаем пустой массив
+        
         return new DataValue[0];
     }
 }

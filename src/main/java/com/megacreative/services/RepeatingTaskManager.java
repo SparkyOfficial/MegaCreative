@@ -32,10 +32,10 @@ public class RepeatingTaskManager implements DependencyContainer.Disposable {
      * @return The task ID
      */
     public int startRepeatingTask(UUID playerId, BukkitTask task) {
-        // Stop any existing task for this player
+        
         stopRepeatingTask(playerId);
         
-        // Store the new task
+        
         activeTasks.put(playerId, task.getTaskId());
         LOGGER.fine("Started repeating task " + task.getTaskId() + " for player " + playerId);
         

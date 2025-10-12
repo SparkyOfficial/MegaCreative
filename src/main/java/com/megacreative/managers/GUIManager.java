@@ -33,15 +33,15 @@ public class GUIManager implements Listener {
     private final IPlayerManager playerManager;
     private final VariableManager variableManager;
     
-    // Thread-safe maps to prevent memory leaks
-    // Потокобезопасные карты для предотвращения утечек памяти
-    // Thread-sichere Karten zur Verhinderung von Speicherlecks
+    
+    
+    
     private final Map<UUID, ManagedGUI> activeGUIs = new ConcurrentHashMap<>();
     private final Map<Inventory, ManagedGUI> inventoryToGUI = new ConcurrentHashMap<>();
     
-    // Player metadata storage
-    // Хранилище метаданных игроков
-    // Spieler-Metadaten-Speicher
+    
+    
+    
     private final Map<UUID, Map<String, Object>> playerMetadata = new ConcurrentHashMap<>();
     
     /**
@@ -74,7 +74,7 @@ public class GUIManager implements Listener {
      * Schaltet den GUIManager herunter und bereinigt Ressourcen
      */
     public void shutdown() {
-        // Close all open GUIs
+        
         for (UUID playerId : new ArrayList<>(activeGUIs.keySet())) {
             Player player = plugin.getServer().getPlayer(playerId);
             if (player != null && player.isOnline()) {
@@ -82,7 +82,7 @@ public class GUIManager implements Listener {
             }
         }
         
-        // Clear all references
+        
         activeGUIs.clear();
         inventoryToGUI.clear();
         playerMetadata.clear();
@@ -113,9 +113,9 @@ public class GUIManager implements Listener {
          * Verarbeitet Inventar-Schließen-Ereignisse
          */
         default void onInventoryClose(InventoryCloseEvent event) {
-            // Default implementation - override if needed
-            // Стандартная реализация - переопределите при необходимости
-            // Standardimplementierung - überschreiben falls nötig
+            
+            
+            
         }
         
         /**
@@ -126,9 +126,9 @@ public class GUIManager implements Listener {
          * Wird aufgerufen, wenn die GUI bereinigt wird
          */
         default void onCleanup() {
-            // Default implementation - override if needed
-            // Стандартная реализация - переопределите при необходимости
-            // Standardimplementierung - überschreiben falls nötig
+            
+            
+            
         }
         
         /**
@@ -210,7 +210,7 @@ public class GUIManager implements Listener {
             gui.onCleanup();
         }
         
-        // Getters
+        
         public long getCreatedTime() { return createdTime; }
         public long getLastAccessTime() { return lastAccessTime; }
         public String getTitle() { return title; }
@@ -226,7 +226,7 @@ public class GUIManager implements Listener {
     public void registerGUI(Player player, ManagedGUIInterface gui, Inventory inventory) {
         UUID playerId = player.getUniqueId();
         
-        // Clean up any existing GUI for this player
+        
         unregisterGUI(player);
         
         ManagedGUI managedGUI = new ManagedGUI(gui);
@@ -248,10 +248,10 @@ public class GUIManager implements Listener {
         ManagedGUI managedGUI = activeGUIs.remove(playerId);
         
         if (managedGUI != null) {
-            // Remove from inventory mapping
+            
             inventoryToGUI.entrySet().removeIf(entry -> entry.getValue().equals(managedGUI));
             
-            // Call cleanup
+            
             managedGUI.cleanup();
             
             log.fine("Unregistered GUI: " + managedGUI.getTitle() + " for player: " + player.getName());
@@ -363,9 +363,9 @@ public class GUIManager implements Listener {
         return null;
     }
     
-    // === Методы для работы с подтверждением удаления мира ===
-    // === Methods for working with world deletion confirmation ===
-    // === Methoden für die Arbeit mit der Weltlöschbestätigung ===
+    
+    
+    
     
     /**
      * Устанавливает флаг ожидания подтверждения удаления мира
@@ -413,9 +413,9 @@ public class GUIManager implements Listener {
         removePlayerMetadata(player, "awaiting_delete_confirmation");
     }
     
-    // === Методы для работы с вводом комментариев ===
-    // === Methods for working with comment input ===
-    // === Methoden für die Arbeit mit Kommentareingaben ===
+    
+    
+    
     
     /**
      * Устанавливает флаг ожидания ввода комментария

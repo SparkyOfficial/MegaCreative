@@ -23,17 +23,17 @@ import com.megacreative.MegaCreative;
  */
 public class JsonSerializer {
     
-    // Стандартный Gson для объектов без необходимости сериализации ItemStack
-    // Standard Gson for objects without ItemStack serialization needs
-    // Standard-Gson für Objekte ohne ItemStack-Serialisierungsbedarf
+    
+    
+    
     private static final Gson gson = new GsonBuilder()
             .setPrettyPrinting()
             .serializeNulls()
             .create();
     
-    // Расширенный Gson с поддержкой сериализации ItemStack для CodeBlocks
-    // Enhanced Gson with ItemStack serialization support for CodeBlocks
-    // Erweiterter Gson mit ItemStack-Serialisierungsunterstützung für CodeBlocks
+    
+    
+    
     private static final Gson gsonWithItemStacks = ConfigItemsTypeAdapters.createGsonWithAdapters();
     
     /**
@@ -87,9 +87,9 @@ public class JsonSerializer {
      * @return JSON-Zeichenfolge
      */
     public static String serializeWorld(CreativeWorld world) {
-        // Используем DTO для избежания проблем с Java 9+ модулями
-        // Use DTO to avoid problems with Java 9+ modules
-        // Verwenden Sie DTO, um Probleme mit Java 9+-Modulen zu vermeiden
+        
+        
+        
         com.megacreative.models.CreativeWorldData worldData = new com.megacreative.models.CreativeWorldData(world);
         return toJson(worldData);
     }
@@ -115,14 +115,14 @@ public class JsonSerializer {
             com.megacreative.models.CreativeWorldData worldData = fromJson(json, com.megacreative.models.CreativeWorldData.class);
             if (worldData == null) return null;
             
-            // Создаем полноценный CreativeWorld из данных
-            // Create a full CreativeWorld from data
-            // Erstellen Sie eine vollständige CreativeWorld aus Daten
+            
+            
+            
             CreativeWorld world = new CreativeWorld(worldData.id, worldData.name, worldData.ownerId, worldData.ownerName, worldData.worldType);
             
-            // Восстанавливаем все поля
-            // Restore all fields
-            // Alle Felder wiederherstellen
+            
+            
+            
             world.setDescription(worldData.description);
             world.setMode(worldData.mode);
             world.setPrivate(worldData.isPrivate);
@@ -137,9 +137,9 @@ public class JsonSerializer {
             if (worldData.dislikedBy != null) world.setDislikedBy(worldData.dislikedBy);
             if (worldData.favoriteBy != null) world.setFavoriteBy(worldData.favoriteBy);
             if (worldData.comments != null) world.setComments(worldData.comments);
-            // Восстанавливаем скрипты
-            // Restore scripts
-            // Skripte wiederherstellen
+            
+            
+            
             java.util.List<com.megacreative.coding.CodeScript> restoredScripts = new ArrayList<>();
             if (worldData.scripts != null) {
                 for (CodeScriptData scriptData : worldData.scripts) {
@@ -157,9 +157,9 @@ public class JsonSerializer {
             }
             world.setScripts(restoredScripts);
             
-            // 🎆 ENHANCED: Restore dual world data
-            // 🎆 УЛУЧШЕНО: Восстановление данных двойного мира
-            // 🎆 VERBESSERT: Dual-World-Daten wiederherstellen
+            
+            
+            
             if (worldData.pairedWorldId != null) {
                 world.setPairedWorldId(worldData.pairedWorldId);
             }
@@ -170,8 +170,8 @@ public class JsonSerializer {
             return world;
         } catch (Exception e) {
             plugin.getLogger().severe("Failed to deserialize CreativeWorld: " + e.getMessage());
-            // Не удалось десериализовать CreativeWorld:
-            // Fehler beim Deserialisieren von CreativeWorld:
+            
+            
             return null;
         }
     }
@@ -265,53 +265,53 @@ public class JsonSerializer {
         com.megacreative.coding.CodeBlock block = new com.megacreative.coding.CodeBlock(materialName, data.action);
         block.setId(data.id);
 
-        // Восстанавливаем параметры
-        // Restore parameters
-        // Parameter wiederherstellen
+        
+        
+        
         if (data.parameters != null) {
             data.parameters.forEach((key, value) -> {
                 block.setParameter(key, DataValue.fromObject(value));
             });
         }
 
-        // Восстанавливаем configItems из сериализованной карты
-        // Restore configItems from serialized map
-        // configItems aus serialisierter Karte wiederherstellen
+        
+        
+        
         if (data.configItems != null) {
             data.configItems.forEach((slot, map) -> {
                 try {
                     ItemStack itemStack = ItemStack.deserialize(map);
                     block.setConfigItem(slot, itemStack);
                 } catch (Exception e) {
-                    // Логируем ошибку, но продолжаем работу
-                    // Log error but continue working
-                    // Fehler protokollieren, aber weiterarbeiten
+                    
+                    
+                    
                     System.err.println("Failed to deserialize ItemStack: " + e.getMessage());
-                    // Не удалось десериализовать ItemStack:
-                    // Fehler beim Deserialisieren von ItemStack:
+                    
+                    
                     System.err.println("Stack trace: " + java.util.Arrays.toString(e.getStackTrace()));
-                    // Трассировка стека:
-                    // Stapelverfolgung:
+                    
+                    
                 }
             });
         }
         
-        // Восстанавливаем скобки
-        // Restore brackets
-        // Klammern wiederherstellen
+        
+        
+        
         if (data.bracketType != null) {
             try {
                 block.setBracketType(com.megacreative.coding.CodeBlock.BracketType.valueOf(data.bracketType));
             } catch (IllegalArgumentException e) {
-                // Игнорируем неверные значения
-                // Ignore invalid values
-                // Ungültige Werte ignorieren
+                
+                
+                
             }
         }
         
-        // Рекурсивно восстанавливаем следующие и дочерние блоки
-        // Recursively restore next and child blocks
-        // Rekursiv nächste und untergeordnete Blöcke wiederherstellen
+        
+        
+        
         if (data.nextBlock != null) {
             block.setNextBlock(restoreCodeBlock(data.nextBlock));
         }

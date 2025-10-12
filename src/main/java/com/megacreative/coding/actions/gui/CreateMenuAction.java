@@ -37,7 +37,7 @@ public class CreateMenuAction implements BlockAction {
     @Override
     public ExecutionResult execute(CodeBlock block, ExecutionContext context) {
         try {
-            // Get parameters
+            
             DataValue sizeValue = block.getParameter("size");
             DataValue titleValue = block.getParameter("title");
             DataValue variableValue = block.getParameter("variable");
@@ -50,7 +50,7 @@ public class CreateMenuAction implements BlockAction {
             String title = titleValue.asString();
             String variableName = variableValue.asString();
             
-            // Validate size (must be multiple of 9, up to 54)
+            
             if (size <= 0 || size > 54 || size % 9 != 0) {
                 return ExecutionResult.error("Invalid menu size: " + size + ". Size must be a multiple of 9 and between 9-54.");
             }
@@ -63,20 +63,20 @@ public class CreateMenuAction implements BlockAction {
                 return ExecutionResult.error("Variable name cannot be empty");
             }
             
-            // Create the inventory
+            
             Inventory inventory = Bukkit.createInventory(null, size, title);
             
-            // Register the inventory with the click listener
+            
             GUIClickListener clickListener = plugin.getServiceRegistry().getService(GUIClickListener.class);
             if (clickListener != null) {
                 clickListener.registerGUIInventory(inventory, title);
             }
             
-            // Store the inventory in a variable
-            // We'll use a special wrapper to identify GUI inventories
+            
+            
             GUIInventory guiInventory = new GUIInventory(inventory, title, clickListener);
             
-            // Store in variable manager as a global variable so any player can access it
+            
             VariableManager variableManager = plugin.getServiceRegistry().getVariableManager();
             if (variableManager != null) {
                 variableManager.setGlobalVariable(variableName, DataValue.fromObject(guiInventory));
@@ -130,9 +130,9 @@ public class CreateMenuAction implements BlockAction {
         }
         
         public ItemStack getSlotItem(int slot) {
-            // First check if we have it in our map (for items set via setSlotItem)
+            
             ItemStack item = slotItems.get(slot);
-            // If not, check the actual inventory (for items added by player interaction)
+            
             if (item == null && inventory != null) {
                 item = inventory.getItem(slot);
             }

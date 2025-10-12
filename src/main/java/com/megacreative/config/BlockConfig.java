@@ -45,9 +45,9 @@ public class BlockConfig {
         plugin.saveDefaultConfig();
         this.config = plugin.getConfig();
         
-        // Загружаем материалы блоков
-        // Load block materials
-        // Block-Materialien laden
+        
+        
+        
         blockMaterials.clear();
         if (config.contains("blocks")) {
             for (String key : config.getConfigurationSection("blocks").getKeys(false)) {
@@ -57,8 +57,8 @@ public class BlockConfig {
                     blockMaterials.put(key, material);
                 } catch (IllegalArgumentException e) {
                     plugin.getLogger().warning("Invalid material type: " + materialName);
-                    // Недопустимый тип материала:
-                    // Ungültiger Materialtyp:
+                    
+                    
                 }
             }
         }
@@ -115,16 +115,16 @@ public class BlockConfig {
      * Speichert die aktuelle Konfiguration auf der Festplatte
      */
     public void save() {
-        // Обновляем конфигурацию с текущими материалами блоков
-        // Update config with current block materials
-        // Konfiguration mit aktuellen Blockmaterialien aktualisieren
+        
+        
+        
         for (Map.Entry<String, Material> entry : blockMaterials.entrySet()) {
             config.set("blocks." + entry.getKey(), entry.getValue().name());
         }
         
-        // Сохраняем на диск
-        // Save to disk
-        // Auf Festplatte speichern
+        
+        
+        
         plugin.saveConfig();
     }
 }

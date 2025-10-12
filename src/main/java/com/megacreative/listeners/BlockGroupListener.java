@@ -30,7 +30,7 @@ public class BlockGroupListener implements Listener {
         Player player = event.getPlayer();
         ItemStack item = player.getInventory().getItemInMainHand();
         
-        // Check if player is holding the group selection tool
+        
         if (item.getType() != Material.GOLDEN_SWORD) return;
         if (!item.hasItemMeta()) return;
         if (!"§6Block Group Selector".equals(item.getItemMeta().getDisplayName())) return;
@@ -39,14 +39,14 @@ public class BlockGroupListener implements Listener {
         BlockPlacementHandler placementHandler = serviceRegistry.getBlockPlacementHandler();
         
         if (event.getAction() == Action.RIGHT_CLICK_BLOCK) {
-            // Right-click on block to select it for grouping
+            
             event.setCancelled(true);
             
             if (event.getClickedBlock() != null) {
                 org.bukkit.Location blockLocation = event.getClickedBlock().getLocation();
                 CodeBlock codeBlock = null;
                 
-                // Try to get CodeBlock from BlockPlacementHandler first
+                
                 if (placementHandler != null && placementHandler.hasCodeBlock(blockLocation)) {
                     codeBlock = placementHandler.getCodeBlock(blockLocation);
                 }
@@ -58,11 +58,11 @@ public class BlockGroupListener implements Listener {
                 }
             }
         } else if (event.getAction() == Action.LEFT_CLICK_AIR) {
-            // Left-click air to create group from selection
+            
             event.setCancelled(true);
             groupManager.createGroupFromSelection(player, null);
         } else if (event.getAction() == Action.RIGHT_CLICK_AIR) {
-            // Right-click air to show current selection info
+            
             event.setCancelled(true);
             showSelectionInfo(player, groupManager);
         }
@@ -76,14 +76,14 @@ public class BlockGroupListener implements Listener {
         Player player = event.getPlayer();
         ItemStack item = player.getInventory().getItemInMainHand();
         
-        // Don't interfere if player is using group selection tool
+        
         if (item.getType() == Material.GOLDEN_SWORD && item.hasItemMeta() &&
             "§6Block Group Selector".equals(item.getItemMeta().getDisplayName())) {
             return;
         }
         
         if (event.getAction() == Action.RIGHT_CLICK_BLOCK && event.getClickedBlock() != null) {
-            // Check if clicking on a collapsed group (ender chest)
+            
             if (event.getClickedBlock().getType() == Material.ENDER_CHEST) {
                 BlockGroupManager groupManager = serviceRegistry.getService(BlockGroupManager.class);
                 groupManager.handleCollapsedGroupClick(player, event.getClickedBlock().getLocation());
@@ -96,7 +96,7 @@ public class BlockGroupListener implements Listener {
         Player player = event.getPlayer();
         ItemStack item = event.getItemDrop().getItemStack();
         
-        // Check if player dropped the group selection tool (cancel selection)
+        
         if (item.getType() == Material.GOLDEN_SWORD && item.hasItemMeta()) {
             if ("§6Block Group Selector".equals(item.getItemMeta().getDisplayName())) {
                 event.setCancelled(true);

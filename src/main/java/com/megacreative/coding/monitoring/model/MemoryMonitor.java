@@ -14,7 +14,7 @@ public class MemoryMonitor {
     private volatile boolean isRunning = false;
     
     public MemoryMonitor() {
-        // Default constructor
+        
     }
     
     /**
@@ -46,13 +46,13 @@ public class MemoryMonitor {
         if (!isRunning) {
             isRunning = true;
             gcMonitor.start();
-            // Start monitoring thread to periodically log memory usage
+            
             scheduler.scheduleAtFixedRate(this::logMemoryUsage, 0, 30, TimeUnit.SECONDS);
         }
     }
     
     private void logMemoryUsage() {
-        // Memory logging disabled
+        
     }
     
     /**

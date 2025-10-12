@@ -52,31 +52,31 @@ public class CommandListener implements Listener {
         String message = event.getMessage();
         if (message == null || !message.startsWith("/")) return;
         
-        String command = message.substring(1); // Remove the leading '/'
+        String command = message.substring(1); 
         
-        // Find the creative world
+        
         CreativeWorld creativeWorld = plugin.getServiceRegistry().getWorldManager().findCreativeWorldByBukkit(player.getWorld());
         if (creativeWorld == null) return;
         
-        // Check if player can code in this world
+        
         if (!creativeWorld.canCode(player)) return;
         
-        // Find scripts triggered by this command
+        
         for (CodeScript script : creativeWorld.getScripts()) {
-            // Check if the script's root block is an onCommand event
+            
             if (script.getRootBlock() != null && 
                 "onCommand".equals(script.getRootBlock().getAction())) {
                 
-                // Get the command parameter from the root block
+                
                 Object commandParam = script.getRootBlock().getParameter("command");
                 String triggerCommand = commandParam != null ? commandParam.toString() : null;
                 
-                // Check if this script should be triggered by this command
+                
                 if (triggerCommand != null && command.startsWith(triggerCommand)) {
-                    // Get script engine
+                    
                     ScriptEngine scriptEngine = plugin.getServiceRegistry().getService(ScriptEngine.class);
                     if (scriptEngine != null) {
-                        // Execute script
+                        
                         scriptEngine.executeScript(script, player, "command")
                             .whenComplete((result, throwable) -> {
                                 if (throwable != null) {

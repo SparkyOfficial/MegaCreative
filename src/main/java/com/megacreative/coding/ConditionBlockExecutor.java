@@ -29,7 +29,7 @@ public class ConditionBlockExecutor implements BlockExecutor {
             return ExecutionResult.error("Condition ID is null or empty");
         }
         
-        // Log the condition being evaluated
+        
         LOGGER.info("Evaluating condition: " + conditionId + " for player: " + 
                    (context.getPlayer() != null ? context.getPlayer().getName() : "unknown"));
         
@@ -38,7 +38,7 @@ public class ConditionBlockExecutor implements BlockExecutor {
             try {
                 boolean result = conditionHandler.evaluate(block, context);
                 LOGGER.fine("Condition " + conditionId + " evaluated to " + result);
-                // Create result with details about the condition evaluation
+                
                 return new ExecutionResult.Builder()
                     .success(true)
                     .message("Condition " + conditionId + " evaluated to " + result)

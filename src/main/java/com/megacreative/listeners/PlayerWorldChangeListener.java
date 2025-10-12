@@ -56,38 +56,38 @@ public class PlayerWorldChangeListener implements Listener {
         World fromWorld = event.getFrom();
         World toWorld = player.getWorld();
         
-        // 🎆 ENHANCED: Track world changes for analytics
+        
         trackWorldChange(player, fromWorld, toWorld);
         
-        // Когда игрок меняет мир, заново устанавливаем ему скорборд
+        
         plugin.getServiceRegistry().getScoreboardManager().setScoreboard(player);
         
-        // Save inventory when leaving dev world
+        
         if (isDevWorld(fromWorld.getName())) {
             plugin.getServiceRegistry().getDevInventoryManager().savePlayerInventory(player);
         }
 
-        // Determine the creative world
+        
         CreativeWorld creativeWorld = plugin.getServiceRegistry().getWorldManager().findCreativeWorldByBukkit(toWorld);
         if (creativeWorld == null) {
-            // If player switched to a normal world (not dev/play), restore their inventory
+            
             plugin.getServiceRegistry().getDevInventoryManager().restorePlayerInventory(player);
-            player.setGameMode(GameMode.SURVIVAL); // or another default mode
+            player.setGameMode(GameMode.SURVIVAL); 
             return;
         }
 
-        // Configure player based on the type of world they entered
+        
         if (isDevWorld(toWorld.getName())) {
-            // Player entered DEV world
+            
             player.getInventory().clear();
-            CodingItems.giveCodingItems(player, plugin); // Give coding items ONLY here
+            CodingItems.giveCodingItems(player, plugin); 
             player.setGameMode(GameMode.CREATIVE);
             plugin.getServiceRegistry().getPlayerModeManager().setMode(player, PlayerModeManager.PlayerMode.DEV);
             player.sendMessage("§eВы вошли в режим разработки.");
         } else {
-            // Player entered PLAY world or another world
+            
             plugin.getServiceRegistry().getDevInventoryManager().restorePlayerInventory(player);
-            player.setGameMode(GameMode.ADVENTURE); // Game mode for playing
+            player.setGameMode(GameMode.ADVENTURE); 
             plugin.getServiceRegistry().getPlayerModeManager().setMode(player, PlayerModeManager.PlayerMode.PLAY);
             player.sendMessage("§aВы вошли в игровой режим.");
         }
@@ -108,32 +108,32 @@ public class PlayerWorldChangeListener implements Listener {
         Player player = event.getPlayer();
         World world = player.getWorld();
         
-        // 🎆 ENHANCED: Track join to current world
-        // 🎆 УСОВЕРШЕНСТВОВАННАЯ: Отслеживание входа в текущий мир
-        // 🎆 VERBESSERTE: Verfolgung des Beitritts zur aktuellen Welt
+        
+        
+        
         CreativeWorld creativeWorld = plugin.getServiceRegistry().getWorldManager().findCreativeWorldByBukkit(world);
         if (creativeWorld != null) {
             String mode = determineWorldMode(world, creativeWorld);
             plugin.getServiceRegistry().getPlayerManager().trackPlayerWorldEntry(player, creativeWorld.getId(), mode);
         }
         
-        // Configure player based on the world they're in
+        
         if (isDevWorld(world.getName())) {
-            // Player is in DEV world
+            
             player.getInventory().clear();
-            CodingItems.giveCodingItems(player, plugin); // Give coding items ONLY here
+            CodingItems.giveCodingItems(player, plugin); 
             player.setGameMode(GameMode.CREATIVE);
             plugin.getServiceRegistry().getPlayerModeManager().setMode(player, PlayerModeManager.PlayerMode.DEV);
             player.sendMessage("§eВы вошли в режим разработки.");
         } else if (creativeWorld != null) {
-            // Player is in PLAY world
+            
             plugin.getServiceRegistry().getDevInventoryManager().restorePlayerInventory(player);
             player.setGameMode(GameMode.ADVENTURE);
             plugin.getServiceRegistry().getPlayerModeManager().setMode(player, PlayerModeManager.PlayerMode.PLAY);
             player.sendMessage("§aВы вошли в игровой режим.");
         } else {
-            // Player is in a non-creative world (hub, etc.)
-            // Give them starter items
+            
+            
             plugin.getServiceRegistry().getPlayerManager().giveStarterItems(player);
         }
     }
@@ -153,9 +153,9 @@ public class PlayerWorldChangeListener implements Listener {
         Player player = event.getPlayer();
         World world = player.getWorld();
         
-        // 🎆 ENHANCED: Track exit from current world
-        // 🎆 УСОВЕРШЕНСТВОВАННАЯ: Отслеживание выхода из текущего мира
-        // 🎆 VERBESSERTE: Verfolgung des Verlassens der aktuellen Welt
+        
+        
+        
         CreativeWorld creativeWorld = plugin.getServiceRegistry().getWorldManager().findCreativeWorldByBukkit(world);
         if (creativeWorld != null) {
             plugin.getServiceRegistry().getPlayerManager().trackPlayerWorldExit(player, creativeWorld.getId());
@@ -170,13 +170,13 @@ public class PlayerWorldChangeListener implements Listener {
      * 🎆 VERBESSERTE: Verfolgt Weltwechsel für duale Welt-Analysen
      */
     private void trackWorldChange(Player player, World fromWorld, World toWorld) {
-        // Track exit from previous world
+        
         CreativeWorld fromCreativeWorld = plugin.getServiceRegistry().getWorldManager().findCreativeWorldByBukkit(fromWorld);
         if (fromCreativeWorld != null) {
             plugin.getServiceRegistry().getPlayerManager().trackPlayerWorldExit(player, fromCreativeWorld.getId());
         }
         
-        // Track entry to new world
+        
         CreativeWorld toCreativeWorld = plugin.getServiceRegistry().getWorldManager().findCreativeWorldByBukkit(toWorld);
         if (toCreativeWorld != null) {
             String mode = determineWorldMode(toWorld, toCreativeWorld);

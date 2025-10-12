@@ -45,7 +45,7 @@ public class ChestParser {
      * @return The ChestParser, or null if no chest is found
      */
     public static ChestParser forAdjacentChest(Location signLocation) {
-        // Check all adjacent blocks for a chest
+        
         BlockFace[] faces = {BlockFace.NORTH, BlockFace.SOUTH, BlockFace.EAST, BlockFace.WEST, BlockFace.UP, BlockFace.DOWN};
         
         for (BlockFace face : faces) {
@@ -74,7 +74,7 @@ public class ChestParser {
             return null;
         }
         
-        // Check if it's a book (written book or writable book)
+        
         if (item.getType() == Material.WRITTEN_BOOK || item.getType() == Material.WRITABLE_BOOK) {
             ItemMeta meta = item.getItemMeta();
             if (meta != null && meta.hasDisplayName()) {
@@ -100,7 +100,7 @@ public class ChestParser {
             return 0;
         }
         
-        // Check if it's a slime ball
+        
         if (item.getType() == Material.SLIME_BALL) {
             ItemMeta meta = item.getItemMeta();
             if (meta != null && meta.hasDisplayName()) {
@@ -130,7 +130,7 @@ public class ChestParser {
             return null;
         }
         
-        // Check if it's paper
+        
         if (item.getType() == Material.PAPER) {
             ItemMeta meta = item.getItemMeta();
             if (meta != null && meta.hasDisplayName()) {
@@ -141,7 +141,7 @@ public class ChestParser {
                         double y = Double.parseDouble(parts[1].trim());
                         double z = Double.parseDouble(parts[2].trim());
                         
-                        // Use the chest's world if no world is specified
+                        
                         return new Location(chestLocation.getWorld(), x, y, z);
                     } catch (NumberFormatException e) {
                         LOGGER.warning("Invalid location format in chest slot " + slot + ": " + meta.getDisplayName());

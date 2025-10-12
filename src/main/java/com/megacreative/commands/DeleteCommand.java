@@ -75,13 +75,13 @@ public class DeleteCommand implements CommandExecutor {
             return true;
         }
         
-        // Проверка, что игрок - владелец
+        
         if (!world.isOwner(player)) {
             player.sendMessage("§cТолько владелец может удалить этот мир.");
             return true;
         }
         
-        // Подтверждение удаления
+        
         if (args.length < 2 || !args[1].equalsIgnoreCase("confirm")) {
             player.sendMessage("§eВы уверены, что хотите удалить мир '" + world.getName() + "'?");
             player.sendMessage("§eВсе данные будут потеряны безвозвратно!");
@@ -90,7 +90,7 @@ public class DeleteCommand implements CommandExecutor {
         }
         
         plugin.getServiceRegistry().getWorldManager().deleteWorld(worldId, player);
-        // WorldManager сам отправит сообщение об успехе.
+        
         return true;
     }
 }

@@ -42,7 +42,7 @@ public class TargetSelectionGUI implements GUIManager.ManagedGUIInterface {
     private final Inventory inventory;
     private final GUIManager guiManager;
     
-    // Target types available in the system with enhanced categorization
+    
     public enum TargetType {
         PLAYER("@p", "§aТекущий игрок", Material.PLAYER_HEAD, "Игрок, который запустил скрипт", "👤 Игроки"),
         ALL_PLAYERS("@a", "§6Все игроки", Material.GOLDEN_HELMET, "Все игроки на сервере", "👥 Группы"),
@@ -89,7 +89,7 @@ public class TargetSelectionGUI implements GUIManager.ManagedGUIInterface {
         this.blockMaterial = blockMaterial;
         this.guiManager = plugin.getServiceRegistry().getGuiManager();
         
-        // Create inventory with appropriate size (54 slots for double chest GUI)
+        
         this.inventory = Bukkit.createInventory(null, 54, "§8Выбор цели: " + getBlockDisplayName());
         
         setupInventory();
@@ -110,20 +110,20 @@ public class TargetSelectionGUI implements GUIManager.ManagedGUIInterface {
     private void setupInventory() {
         inventory.clear();
         
-        // Add decorative border with category-specific materials
+        
         ItemStack borderItem = new ItemStack(Material.BLACK_STAINED_GLASS_PANE);
         ItemMeta borderMeta = borderItem.getItemMeta();
         borderMeta.setDisplayName(" ");
         borderItem.setItemMeta(borderMeta);
         
-        // Fill border slots
+        
         for (int i = 0; i < 54; i++) {
             if (i < 9 || i >= 45 || i % 9 == 0 || i % 9 == 8) {
                 inventory.setItem(i, borderItem);
             }
         }
         
-        // Add title item with enhanced visual design
+        
         ItemStack titleItem = new ItemStack(blockMaterial);
         ItemMeta titleMeta = titleItem.getItemMeta();
         titleMeta.setDisplayName("§e§l" + getBlockDisplayName());
@@ -139,10 +139,10 @@ public class TargetSelectionGUI implements GUIManager.ManagedGUIInterface {
         titleItem.setItemMeta(titleMeta);
         inventory.setItem(4, titleItem);
         
-        // Add category selection first
+        
         loadCategoryOptions();
         
-        // Add back button
+        
         ItemStack backButton = new ItemStack(Material.ARROW);
         ItemMeta backMeta = backButton.getItemMeta();
         backMeta.setDisplayName("§c⬅ Назад");
@@ -157,13 +157,13 @@ public class TargetSelectionGUI implements GUIManager.ManagedGUIInterface {
      * Loads category options for target selection
      */
     private void loadCategoryOptions() {
-        // Get unique categories
+        
         Set<String> categories = new LinkedHashSet<>();
         for (TargetType targetType : TargetType.values()) {
             categories.add(targetType.getCategory());
         }
         
-        // Place category options in a nice grid layout
+        
         int[] slots = {10, 11, 12, 13, 14, 15, 16, 19, 20, 21, 22, 23, 24, 25, 28, 29, 30, 31, 32, 33, 34};
         int slotIndex = 0;
         
@@ -180,7 +180,7 @@ public class TargetSelectionGUI implements GUIManager.ManagedGUIInterface {
      * Creates category item
      */
     private ItemStack createCategoryItem(String category) {
-        // Determine material based on category
+        
         Material material;
         switch (category) {
             case "👤 Игроки":
@@ -234,23 +234,23 @@ public class TargetSelectionGUI implements GUIManager.ManagedGUIInterface {
      * Opens category-specific target selection
      */
     private void openCategoryTargets(String category) {
-        // Create new inventory for category targets
+        
         Inventory categoryInventory = Bukkit.createInventory(null, 54, "§8Цели: " + category);
         
-        // Add decorative border
+        
         ItemStack borderItem = new ItemStack(Material.GRAY_STAINED_GLASS_PANE);
         ItemMeta borderMeta = borderItem.getItemMeta();
         borderMeta.setDisplayName(" ");
         borderItem.setItemMeta(borderMeta);
         
-        // Fill border slots
+        
         for (int i = 0; i < 54; i++) {
             if (i < 9 || i >= 45 || i % 9 == 0 || i % 9 == 8) {
                 categoryInventory.setItem(i, borderItem);
             }
         }
         
-        // Add back button
+        
         ItemStack backButton = new ItemStack(Material.ARROW);
         ItemMeta backMeta = backButton.getItemMeta();
         backMeta.setDisplayName("§c⬅ Назад");
@@ -260,10 +260,10 @@ public class TargetSelectionGUI implements GUIManager.ManagedGUIInterface {
         backButton.setItemMeta(backMeta);
         categoryInventory.setItem(49, backButton);
         
-        // Load targets for this category
+        
         loadTargetsForCategory(categoryInventory, category);
         
-        // Open the category inventory
+        
         player.openInventory(categoryInventory);
     }
     
@@ -271,7 +271,7 @@ public class TargetSelectionGUI implements GUIManager.ManagedGUIInterface {
      * Loads targets for category
      */
     private void loadTargetsForCategory(Inventory inventory, String category) {
-        // Place target options in a nice grid layout
+        
         int[] slots = {10, 11, 12, 13, 14, 15, 16, 19, 20, 21, 22, 23, 24, 25, 28, 29, 30, 31, 32, 33, 34};
         int slotIndex = 0;
         
@@ -300,7 +300,7 @@ public class TargetSelectionGUI implements GUIManager.ManagedGUIInterface {
             lore.add("§7" + targetType.getDescription());
             lore.add("");
             
-            // 🎆 ENHANCED: Add usage examples and context
+            
             switch (targetType) {
                 case PLAYER:
                     lore.add("§a✓ Примеры использования:");
@@ -356,10 +356,10 @@ public class TargetSelectionGUI implements GUIManager.ManagedGUIInterface {
         guiManager.registerGUI(player, this, inventory);
         player.openInventory(inventory);
         
-        // Audio feedback when opening GUI
+        
         player.playSound(player.getLocation(), org.bukkit.Sound.UI_BUTTON_CLICK, 0.7f, 0.8f);
         
-        // Add visual effects for reference system-style magic
+        
         player.spawnParticle(org.bukkit.Particle.ENCHANTMENT_TABLE, 
             player.getLocation().add(0, 1, 0), 10, 0.5, 0.5, 0.5, 1);
     }
@@ -382,11 +382,11 @@ public class TargetSelectionGUI implements GUIManager.ManagedGUIInterface {
         if (!player.equals(event.getWhoClicked())) return;
         if (!inventory.equals(event.getInventory())) return;
         
-        event.setCancelled(true); // Cancel all clicks by default
+        event.setCancelled(true); 
         
         int slot = event.getSlot();
         
-        // Handle back button
+        
         if (slot == 49) {
             player.closeInventory();
             return;
@@ -398,9 +398,9 @@ public class TargetSelectionGUI implements GUIManager.ManagedGUIInterface {
         ItemMeta meta = clicked.getItemMeta();
         String displayName = meta.getDisplayName();
         
-        // Check if it's a category item
+        
         if (displayName.startsWith("§6§l")) {
-            String category = displayName.substring(4); // Remove color codes
+            String category = displayName.substring(4); 
             openCategoryTargets(category);
             return;
         }
@@ -408,25 +408,25 @@ public class TargetSelectionGUI implements GUIManager.ManagedGUIInterface {
         List<String> lore = meta.getLore();
         if (lore == null) return;
         
-        // Handle category inventory clicks
+        
         if (inventory.getSize() == 54 && inventory.getItem(49) != null && 
             inventory.getItem(49).hasItemMeta()) {
             ItemMeta backMeta = inventory.getItem(49).getItemMeta();
             if (backMeta != null && backMeta.getDisplayName().equals("§c⬅ Назад")) {
             
-                // This is a category inventory, handle back button
+                
                 if (slot == 49) {
-                    // Reopen main inventory
+                    
                     player.closeInventory();
                     Bukkit.getScheduler().runTaskLater(plugin, this::open, 1L);
                     return;
                 }
                 
-                // Find target ID in lore
+                
                 String targetId = null;
                 for (String line : lore) {
                     if (line.startsWith("§8ID: ")) {
-                        targetId = line.substring(6); // Remove "§8ID: " prefix
+                        targetId = line.substring(6); 
                         break;
                     }
                 }
@@ -438,11 +438,11 @@ public class TargetSelectionGUI implements GUIManager.ManagedGUIInterface {
             }
         }
         
-        // Find target ID in lore for main inventory
+        
         String targetId = null;
         for (String line : lore) {
             if (line.startsWith("§8ID: ")) {
-                targetId = line.substring(6); // Remove "§8ID: " prefix
+                targetId = line.substring(6); 
                 break;
             }
         }
@@ -459,7 +459,7 @@ public class TargetSelectionGUI implements GUIManager.ManagedGUIInterface {
         try {
             TargetType selectedTarget = TargetType.valueOf(targetId);
             
-            // Get the code block
+            
             BlockPlacementHandler placementHandler = plugin.getServiceRegistry().getBlockPlacementHandler();
             if (placementHandler == null) {
                 player.sendMessage("§cОшибка: Не удалось получить обработчик блоков");
@@ -472,27 +472,27 @@ public class TargetSelectionGUI implements GUIManager.ManagedGUIInterface {
                 return;
             }
             
-            // Set the target parameter
+            
             codeBlock.setParameter("target", selectedTarget.getSelector());
             
-            // Save the world
+            
             var creativeWorld = plugin.getServiceRegistry().getWorldManager().findCreativeWorldByBukkit(player.getWorld());
             if (creativeWorld != null) {
                 plugin.getServiceRegistry().getWorldManager().saveWorld(creativeWorld);
             }
             
-            // Notify player with enhanced feedback
+            
             player.sendMessage("§a✓ Цель установлена: " + selectedTarget.getDisplayName());
             player.sendMessage("§7» Селектор: §f" + selectedTarget.getSelector());
             player.sendMessage("§e⚡ Теперь выберите действие для блока.");
             
-            // Close this GUI
+            
             player.closeInventory();
             
-            // Play success sound
+            
             player.playSound(player.getLocation(), org.bukkit.Sound.ENTITY_EXPERIENCE_ORB_PICKUP, 1.0f, 1.5f);
             
-            // Open ActionSelectionGUI next
+            
             openActionSelectionGUI();
             
         } catch (IllegalArgumentException e) {
@@ -504,11 +504,11 @@ public class TargetSelectionGUI implements GUIManager.ManagedGUIInterface {
      * Opens ActionSelectionGUI after target selection
      */
     private void openActionSelectionGUI() {
-        // Open ActionSelectionGUI after target selection
+        
         Bukkit.getScheduler().runTaskLater(plugin, () -> {
             ActionSelectionGUI actionGUI = new ActionSelectionGUI(plugin, player, blockLocation, blockMaterial);
             actionGUI.open();
-        }, 5L); // Small delay to ensure smooth transition
+        }, 5L); 
     }
     
     @Override
@@ -517,8 +517,8 @@ public class TargetSelectionGUI implements GUIManager.ManagedGUIInterface {
      * @param event Inventory close event
      */
     public void onInventoryClose(InventoryCloseEvent event) {
-        // Optional cleanup when GUI is closed
-        // GUIManager handles automatic unregistration
+        
+        
     }
     
     @Override
@@ -526,7 +526,7 @@ public class TargetSelectionGUI implements GUIManager.ManagedGUIInterface {
      * Performs resource cleanup when interface is closed
      */
     public void onCleanup() {
-        // Called when GUI is being cleaned up by GUIManager
-        // No special cleanup needed for this GUI
+        
+        
     }
 }

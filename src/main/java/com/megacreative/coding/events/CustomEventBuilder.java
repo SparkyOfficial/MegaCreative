@@ -172,7 +172,7 @@ public class CustomEventBuilder {
         event.setOneTime(isOneTime);
         event.setPriority(priority);
         
-        // Add data fields
+        
         for (CustomEvent.EventDataField field : dataFields.values()) {
             if (field.getDefaultValue() != null) {
                 event.addDataField(field.getName(), field.getExpectedType(), field.getDefaultValue(), field.getDescription());
@@ -181,7 +181,7 @@ public class CustomEventBuilder {
             }
         }
         
-        // Add tags
+        
         for (String tag : tags) {
             event.addTag(tag);
         }

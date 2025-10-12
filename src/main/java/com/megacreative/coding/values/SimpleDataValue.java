@@ -97,7 +97,7 @@ public class SimpleDataValue implements DataValue {
 
     @Override
     public boolean isValid() {
-        // A SimpleDataValue is valid if it has a type and a value
+        
         return type != null && value != null;
     }
     

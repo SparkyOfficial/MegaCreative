@@ -47,13 +47,13 @@ public class ActionFactory implements IActionFactory {
                     try {
                         Supplier<BlockAction> supplier = () -> {
                             try {
-                                // Try constructor with MegaCreative parameter first
+                                
                                 try {
                                     java.lang.reflect.Constructor<? extends BlockAction> constructor = 
                                         clazz.asSubclass(BlockAction.class).getConstructor(MegaCreative.class);
                                     return constructor.newInstance(plugin);
                                 } catch (NoSuchMethodException e) {
-                                    // Fallback to no-argument constructor
+                                    
                                     java.lang.reflect.Constructor<? extends BlockAction> constructor = 
                                         clazz.asSubclass(BlockAction.class).getConstructor();
                                     return constructor.newInstance();
@@ -100,7 +100,7 @@ public class ActionFactory implements IActionFactory {
         if (supplier != null) {
             return supplier.get();
         }
-        return null; // Не логируем ошибку здесь, чтобы не спамить
+        return null; 
     }
 
     /**
@@ -143,18 +143,18 @@ public class ActionFactory implements IActionFactory {
      */
     @Override
     public void publishEvent(CustomEvent event) {
-        // Get the event manager from the service registry
+        
         if (eventManager == null) {
             eventManager = plugin.getServiceRegistry().getService(CustomEventManager.class);
         }
         
-        // If we have an event manager, use it to trigger the event
+        
         if (eventManager != null) {
             try {
-                // Create event data map
+                
                 Map<String, DataValue> eventData = new HashMap<>();
                 
-                // Add basic event information
+                
                 eventData.put("event_id", DataValue.fromObject(event.getId().toString()));
                 eventData.put("event_name", DataValue.fromObject(event.getName()));
                 eventData.put("event_category", DataValue.fromObject(event.getCategory()));
@@ -162,19 +162,19 @@ public class ActionFactory implements IActionFactory {
                 eventData.put("event_author", DataValue.fromObject(event.getAuthor()));
                 eventData.put("event_created_time", DataValue.fromObject(event.getCreatedTime()));
                 
-                // Add event data fields
+                
                 for (Map.Entry<String, DataValue> entry : eventData.entrySet()) {
                     eventData.put("data_" + entry.getKey(), entry.getValue());
                 }
                 
-                // Trigger the event through the event manager
+                
                 eventManager.triggerEvent(event.getName(), eventData, null, "global");
             } catch (Exception e) {
                 LOGGER.severe("Failed to publish event through CustomEventManager: " + e.getMessage());
                 e.printStackTrace();
             }
         } else {
-            // Fallback to logging if no event manager is available
+            
             LOGGER.info("Published event: " + event.getName());
         }
     }
@@ -187,22 +187,22 @@ public class ActionFactory implements IActionFactory {
      */
     @Override
     public void publishEvent(String eventName, Map<String, DataValue> eventData) {
-        // Get the event manager from the service registry
+        
         if (eventManager == null) {
             eventManager = plugin.getServiceRegistry().getService(CustomEventManager.class);
         }
         
-        // If we have an event manager, use it to trigger the event
+        
         if (eventManager != null) {
             try {
-                // Trigger the event through the event manager
+                
                 eventManager.triggerEvent(eventName, eventData, null, "global");
             } catch (Exception e) {
                 LOGGER.severe("Failed to publish event through CustomEventManager: " + e.getMessage());
                 e.printStackTrace();
             }
         } else {
-            // Fallback to logging if no event manager is available
+            
             LOGGER.info("Published event: " + eventName + " with data: " + eventData.size() + " fields");
         }
     }

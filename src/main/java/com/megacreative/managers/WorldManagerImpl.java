@@ -39,9 +39,9 @@ public class WorldManagerImpl implements IWorldManager {
     private final int maxWorldsPerPlayer;
     private final int worldBorderSize;
     
-    // Синхронизация для операций с мирами
-    // Synchronization for world operations
-    // Synchronisation für Weltoperationen
+    
+    
+    
     private final Object worldSaveLock = new Object();
     private final Object worldCreationLock = new Object();
     
@@ -59,13 +59,13 @@ public class WorldManagerImpl implements IWorldManager {
         this.worlds = new HashMap<>();
         this.playerWorlds = new HashMap<>();
         
-        // Load settings from config with null safety
+        
         if (configManager != null) {
             this.maxWorldsPerPlayer = configManager.getMaxWorldsPerPlayer();
             this.worldBorderSize = configManager.getWorldBorderSize();
         } else {
-            this.maxWorldsPerPlayer = 5; // Default value
-            this.worldBorderSize = 300; // Default value
+            this.maxWorldsPerPlayer = 5; 
+            this.worldBorderSize = 300; 
         }
     }
     
@@ -86,8 +86,8 @@ public class WorldManagerImpl implements IWorldManager {
         this.configManager = plugin.getServiceRegistry().getConfigManager();
         this.worlds = new HashMap<>();
         this.playerWorlds = new HashMap<>();
-        this.maxWorldsPerPlayer = 5; // Default value
-        this.worldBorderSize = 300; // Default value
+        this.maxWorldsPerPlayer = 5; 
+        this.worldBorderSize = 300; 
     }
     
     /**
@@ -98,23 +98,23 @@ public class WorldManagerImpl implements IWorldManager {
      * Konstruktor für ServiceRegistry (verwendet ConfigManager und Plugin)
      */
     public WorldManagerImpl(ConfigManager configManager, MegaCreative plugin) {
-        this.plugin = plugin; // Use the injected plugin
-        this.codingManager = null; // Will be injected by ServiceRegistry
+        this.plugin = plugin; 
+        this.codingManager = null; 
         this.configManager = configManager;
         this.worlds = new HashMap<>();
         this.playerWorlds = new HashMap<>();
         
-        // Load settings from config with null safety
+        
         if (configManager != null) {
             this.maxWorldsPerPlayer = configManager.getMaxWorldsPerPlayer();
             this.worldBorderSize = configManager.getWorldBorderSize();
         } else {
-            this.maxWorldsPerPlayer = 5; // Default value
-            this.worldBorderSize = 300; // Default value
+            this.maxWorldsPerPlayer = 5; 
+            this.worldBorderSize = 300; 
         }
         
-        // Do not load worlds immediately - wait for delayed initialization
-        // Removed empty if statement
+        
+        
     }
     
     /**
@@ -125,23 +125,23 @@ public class WorldManagerImpl implements IWorldManager {
      * Konstruktor für ServiceRegistry (verwendet ConfigManager)
      */
     public WorldManagerImpl(ConfigManager configManager) {
-        this.plugin = null; // Will be injected later
-        this.codingManager = null; // Will be injected by ServiceRegistry
+        this.plugin = null; 
+        this.codingManager = null; 
         this.configManager = configManager;
         this.worlds = new HashMap<>();
         this.playerWorlds = new HashMap<>();
         
-        // Load settings from config with null safety
+        
         if (configManager != null) {
             this.maxWorldsPerPlayer = configManager.getMaxWorldsPerPlayer();
             this.worldBorderSize = configManager.getWorldBorderSize();
         } else {
-            this.maxWorldsPerPlayer = 5; // Default value
-            this.worldBorderSize = 300; // Default value
+            this.maxWorldsPerPlayer = 5; 
+            this.worldBorderSize = 300; 
         }
         
-        // Do not load worlds immediately - wait for delayed initialization
-        // Removed empty if statement
+        
+        
     }
     
     /**
@@ -153,7 +153,7 @@ public class WorldManagerImpl implements IWorldManager {
      */
     public void setPlugin(Plugin plugin) {
         this.plugin = plugin;
-        // Removed empty if statement
+        
     }
     
     /**
@@ -190,21 +190,21 @@ public class WorldManagerImpl implements IWorldManager {
      */
     @Override
     public void initialize() {
-        // Check if plugin is available
+        
         Plugin plugin = getPlugin();
         if (plugin == null) {
             return;
         }
         
         try {
-            // Reduced logging - only log when debugging
-            // plugin.getLogger().info("Initializing WorldManagerImpl...");
             
-            // Load all worlds from storage
+            
+            
+            
             loadWorlds();
             
-            // Reduced logging - only log when debugging
-            // plugin.getLogger().info("WorldManagerImpl initialized successfully with " + worlds.size() + " worlds");
+            
+            
         } catch (Exception e) {
             plugin.getLogger().severe("Failed to initialize WorldManagerImpl: " + e.getMessage());
             plugin.getLogger().severe("Stack trace: " + java.util.Arrays.toString(e.getStackTrace()));
@@ -240,8 +240,8 @@ public class WorldManagerImpl implements IWorldManager {
                 }
             }
             
-            // Reduced logging - only log when debugging
-            // plugin.getLogger().info("Loaded " + loadedCount + " worlds from storage");
+            
+            
         } catch (Exception e) {
             if (plugin != null) {
                 plugin.getLogger().severe("Error in loadWorlds: " + e.getMessage());
@@ -260,32 +260,32 @@ public class WorldManagerImpl implements IWorldManager {
         }
         
         try {
-            // Read the JSON file
+            
             String jsonContent = new String(java.nio.file.Files.readAllBytes(worldFile.toPath()));
             
-            // Deserialize the world
+            
             CreativeWorld world = com.megacreative.utils.JsonSerializer.deserializeWorld(jsonContent, (MegaCreative) plugin);
             
             if (world != null) {
-                // Inject ScriptEngine into CreativeWorld
+                
                 if (plugin instanceof MegaCreative) {
                     MegaCreative megaPlugin = (MegaCreative) plugin;
                     ScriptEngine scriptEngine = megaPlugin.getServiceRegistry().getScriptEngine();
                     world.setScriptEngine(scriptEngine);
                 }
 
-                // Register the world in memory
+                
                 worlds.put(world.getId(), world);
                 
-                // Register the world with the player
+                
                 playerWorlds.computeIfAbsent(world.getOwnerId(), k -> new ArrayList<>()).add(world.getId());
                 
-                // Load scripts for the world
+                
                 if (codingManager != null) {
                     codingManager.loadScriptsForWorld(world);
                 }
                 
-                // Register CodeHandler with ActivatorManager
+                
                 if (plugin instanceof MegaCreative) {
                     MegaCreative megaPlugin = (MegaCreative) plugin;
                     ActivatorManager activatorManager = megaPlugin.getServiceRegistry().getActivatorManager();
@@ -309,7 +309,7 @@ public class WorldManagerImpl implements IWorldManager {
      * @return A unique ID string
      */
     private String generateUniqueId() {
-        // Generate a 6-digit numeric ID instead of long UUID
+        
         return String.format("%06d", ThreadLocalRandom.current().nextInt(100000, 999999));
     }
     
@@ -348,12 +348,12 @@ public class WorldManagerImpl implements IWorldManager {
             return false;
         }
         
-        // Check length (3-20 characters)
+        
         if (name.length() < 3 || name.length() > 20) {
             return false;
         }
         
-        // Check for valid characters (letters, numbers, underscores)
+        
         return name.matches("[a-zA-Z0-9_]+");
     }
     
@@ -369,10 +369,10 @@ public class WorldManagerImpl implements IWorldManager {
         }
         
         try {
-            // Serialize the world to JSON
+            
             String json = com.megacreative.utils.JsonSerializer.serializeWorld(world);
             
-            // Write to file
+            
             File worldsDir = new File(plugin.getDataFolder(), "worlds");
             if (!worldsDir.exists()) {
                 worldsDir.mkdirs();
@@ -381,9 +381,9 @@ public class WorldManagerImpl implements IWorldManager {
             File worldFile = new File(worldsDir, world.getId() + ".json");
             java.nio.file.Files.write(worldFile.toPath(), json.getBytes(java.nio.charset.StandardCharsets.UTF_8));
             
-            // Save scripts for the world
+            
             if (codingManager != null) {
-                // Scripts are saved by the coding manager
+                
             }
         } catch (Exception e) {
             plugin.getLogger().severe("Error saving world " + world.getName() + ": " + e.getMessage());
@@ -413,7 +413,7 @@ public class WorldManagerImpl implements IWorldManager {
      */
     @Override
     public void saveAllWorlds() {
-        // Save all worlds in the system
+        
         for (CreativeWorld world : worlds.values()) {
             saveWorld(world);
         }
@@ -440,9 +440,9 @@ public class WorldManagerImpl implements IWorldManager {
         createWorld(player, name, worldType, CreativeWorld.WorldDualMode.STANDALONE, null);
     }
     
-    // 🎆 ENHANCED: Reference system-style dual world creation with pairing support
-    // 🎆 УСОВЕРШЕНСТВОВАННАЯ: Создание парных миров в стиле reference system с поддержкой сопряжения
-    // 🎆 VERBESSERTE: Referenzsystem-Stil duale Welt-Erstellung mit Paarungsunterstützung
+    
+    
+    
     /**
      * Creates a dual world for a player
      * @param player the player
@@ -461,7 +461,7 @@ public class WorldManagerImpl implements IWorldManager {
      */
     @Override
     public void createDualWorld(Player player, String name, CreativeWorldType worldType) {
-        // Create dev world first
+        
         String devWorldId = generateUniqueId();
         String playWorldId = generateUniqueId();
         
@@ -493,20 +493,20 @@ public class WorldManagerImpl implements IWorldManager {
      */
     public void createWorld(Player player, String name, CreativeWorldType worldType, 
                            CreativeWorld.WorldDualMode dualMode, String pairedWorldId) {
-        // Валидация имени мира
+        
         if (!isValidWorldName(name)) {
             player.sendMessage("§cНекорректное имя мира!");
             player.sendMessage("§7Имя должно содержать 3-20 символов (буквы, цифры, подчеркивания)");
             return;
         }
         
-        // Проверка на дублирование имени
+        
         if (worldExists(name)) {
             player.sendMessage("§cМир с таким именем уже существует!");
             return;
         }
         
-        // Проверка лимита миров
+        
         if (getPlayerWorldCount(player) >= maxWorldsPerPlayer) {
             player.sendMessage("§cВы достигли лимита в " + maxWorldsPerPlayer + " миров.");
             return;
@@ -514,62 +514,62 @@ public class WorldManagerImpl implements IWorldManager {
 
         player.sendMessage("§eПодготовка к созданию мира '" + name + "'...");
 
-        // Генерация ID и создание объекта мира синхронно
+        
         String worldId = generateUniqueId();
         CreativeWorld creativeWorld = new CreativeWorld(worldId, name, player.getUniqueId(), player.getName(), worldType);
         
-        // 🎆 ENHANCED: Set dual world properties
+        
         creativeWorld.setDualMode(dualMode);
         if (pairedWorldId != null) {
             creativeWorld.setPairedWorldId(pairedWorldId);
         }
 
-        // Вся работа с миром выполняется синхронно
+        
         Bukkit.getScheduler().runTask(plugin, () -> {
             try {
-                // Закрываем инвентарь в основном потоке
+                
                 player.closeInventory();
                 player.sendMessage("§eСоздание мира... Пожалуйста, подождите.");
                 World newWorld = createMinecraftWorld(creativeWorld);
 
                 if (newWorld != null) {
-                    // Настройка мира (границы, геймрулы) - должно должно быть синхронно
+                    
                     setupWorld(newWorld, creativeWorld);
 
-                    // Inject ScriptEngine into CreativeWorld
+                    
                     if (plugin instanceof MegaCreative) {
                         MegaCreative megaPlugin = (MegaCreative) plugin;
                         ScriptEngine scriptEngine = megaPlugin.getServiceRegistry().getScriptEngine();
                         creativeWorld.setScriptEngine(scriptEngine);
                     }
 
-                    // Регистрация мира в памяти
+                    
                     worlds.put(worldId, creativeWorld);
                     playerWorlds.computeIfAbsent(player.getUniqueId(), k -> new ArrayList<>()).add(worldId);
 
-                    // Загрузка скриптов для мира (тоже синхронно, т.к. связано с миром)
+                    
                     if (codingManager != null) {
                         codingManager.loadScriptsForWorld(creativeWorld);
                     }
                     
-                    // Initialize CodeHandler for the world and register with ActivatorManager
+                    
                     if (plugin instanceof MegaCreative) {
                         MegaCreative megaPlugin = (MegaCreative) plugin;
                         CodeHandler codeHandler = new CodeHandler(megaPlugin, creativeWorld);
                         creativeWorld.setCodeHandler(codeHandler);
                         
-                        // Register with ActivatorManager
+                        
                         ActivatorManager activatorManager = megaPlugin.getServiceRegistry().getActivatorManager();
                         if (activatorManager != null) {
                             activatorManager.registerCodeHandler(worldId, codeHandler);
                         }
                     }
                     
-                    // Телепортация - синхронно
+                    
                     player.teleport(newWorld.getSpawnLocation());
                     player.sendMessage("§aМир '" + name + "' успешно создан!");
 
-                    // Асинхронное сохранение файла с синхронизацией
+                    
                     saveWorldAsync(creativeWorld, player);
                     
                 } else {
@@ -580,33 +580,33 @@ public class WorldManagerImpl implements IWorldManager {
                 getPlugin().getLogger().severe("Stack trace: " + java.util.Arrays.toString(e.getStackTrace()));
                 player.sendMessage("§cПроизошла ошибка при создании мира. Пожалуйста, обратитесь к администратору.");
 
-                // Пытаемся очистить мир, если он был частично создан
+                
                 if (creativeWorld != null && creativeWorld.getWorldName() != null) {
-                    Bukkit.getScheduler().runTask(plugin, () -> { // Очистку делаем синхронно
+                    Bukkit.getScheduler().runTask(plugin, () -> { 
                         World partiallyCreatedWorld = Bukkit.getWorld(creativeWorld.getWorldName());
                         if (partiallyCreatedWorld != null) {
-                            // Reduced logging - only log when debugging
-                            // getPlugin().getLogger().info("Попытка очистки частично созданного мира: " + partiallyCreatedWorld.getName());
+                            
+                            
 
-                            // Кикаем всех игроков (хотя их там быть не должно)
+                            
                             for (Player p : partiallyCreatedWorld.getPlayers()) {
                                 p.teleport(Bukkit.getWorlds().get(0).getSpawnLocation());
                                 p.sendMessage("§cМир, в котором вы находились, не смог создаться и был удален.");
                             }
                             
-                            // Выгружаем мир
+                            
                             if (!Bukkit.unloadWorld(partiallyCreatedWorld, false)) {
                                 getPlugin().getLogger().warning("Не удалось выгрузить частично созданный мир для удаления.");
-                                return; // Дальше нет смысла, так как файлы заблокированы
+                                return; 
                             }
                             
-                            // Удаляем файлы мира асинхронно, чтобы не тормозить сервер
+                            
                             File worldFolder = partiallyCreatedWorld.getWorldFolder();
                             Bukkit.getScheduler().runTaskAsynchronously(plugin, () -> {
                                 try {
                                     deleteFolder(worldFolder);
-                                    // Reduced logging - only log when debugging
-                                    // getPlugin().getLogger().info("Файлы поврежденного мира удалены: " + worldFolder.getName());
+                                    
+                                    
                                 } catch (Exception deleteEx) {
                                     getPlugin().getLogger().severe("Не удалось удалить файлы поврежденного мира: " + deleteEx.getMessage());
                                 }
@@ -622,17 +622,17 @@ public class WorldManagerImpl implements IWorldManager {
         WorldCreator creator = new WorldCreator(creativeWorld.getWorldName());
         creator.environment(creativeWorld.getWorldType().getEnvironment());
         
-        // Настройка генератора в зависимости от типа
+        
         switch (creativeWorld.getWorldType()) {
             case FLAT:
                 creator.type(org.bukkit.WorldType.FLAT);
-                // 🔧 FIX: Add proper flat world generator settings to prevent "No key layers" error
+                
                 creator.generatorSettings("{\"layers\":[{\"block\":\"bedrock\",\"height\":1},{\"block\":\"stone\",\"height\":2},{\"block\":\"grass_block\",\"height\":1}],\"biome\":\"plains\"}");
                 break;
             case VOID:
                 creator.type(org.bukkit.WorldType.FLAT);
                 creator.generateStructures(false);
-                // Настройка генератора для создания только спавн платформы (современный JSON формат)
+                
                 creator.generatorSettings("{\"layers\":[{\"block\":\"bedrock\",\"height\":1},{\"block\":\"stone\",\"height\":2},{\"block\":\"grass_block\",\"height\":1}],\"biome\":\"plains\"}");
                 break;
             case OCEAN:
@@ -643,19 +643,19 @@ public class WorldManagerImpl implements IWorldManager {
                 break;
         }
         
-        // Этот метод вызывается асинхронно. Он только создает объект мира.
-        // Вся настройка (setupWorld) будет произведена в основном потоке.
+        
+        
         return Bukkit.createWorld(creator);
     }
     
     private void setupWorld(World world, CreativeWorld creativeWorld) {
-        // Настройка границ мира
+        
         WorldBorder border = world.getWorldBorder();
         border.setCenter(0, 0);
         border.setSize(worldBorderSize);
         border.setWarningDistance(10);
         
-        // Настройка правил мира
+        
         WorldFlags flags = creativeWorld.getFlags();
         world.setGameRule(GameRule.DO_MOB_SPAWNING, flags.isMobSpawning());
         world.setGameRule(GameRule.DO_FIRE_TICK, flags.isFireSpread());
@@ -664,7 +664,7 @@ public class WorldManagerImpl implements IWorldManager {
         world.setGameRule(GameRule.DO_DAYLIGHT_CYCLE, flags.isDayNightCycle());
         world.setPVP(flags.isPvp());
         
-        // Установка спавна
+        
         world.setSpawnLocation(0, world.getHighestBlockYAt(0, 0) + 1, 0);
     }
     
@@ -675,39 +675,39 @@ public class WorldManagerImpl implements IWorldManager {
             return;
         }
         
-        // Сначала убеждаемся, что мир полностью выгружен
+        
         World bukkitWorld = Bukkit.getWorld(world.getWorldName());
         if (bukkitWorld != null) {
-            if (!bukkitWorld.getPlayers().isEmpty()) { // Сначала кикаем игроков, если они там есть.
+            if (!bukkitWorld.getPlayers().isEmpty()) { 
                 bukkitWorld.getPlayers().forEach(p -> p.teleport(getPlugin().getServer().getWorlds().get(0).getSpawnLocation()));
             }
-            boolean unloadedMain = Bukkit.unloadWorld(bukkitWorld, false); // Сохранять изменения в момент удаления - не всегда хорошая идея, т.к. может сохранить ошибки
+            boolean unloadedMain = Bukkit.unloadWorld(bukkitWorld, false); 
             if (!unloadedMain) {
                 getPlugin().getLogger().warning("Failed to unload main world: " + world.getWorldName() + ". Files might be locked.");
                 requester.sendMessage("§cНе удалось полностью выгрузить основной мир. Возможно, требуется перезагрузка сервера.");
-                return; // Не можем удалить файлы, если мир не выгружен
+                return; 
             }
         }
 
         World devWorld = Bukkit.getWorld(world.getDevWorldName());
         if (devWorld != null) {
-            if (!devWorld.getPlayers().isEmpty()) { // Кикаем игроков
+            if (!devWorld.getPlayers().isEmpty()) { 
                 devWorld.getPlayers().forEach(p -> p.teleport(getPlugin().getServer().getWorlds().get(0).getSpawnLocation()));
             }
             boolean unloadedDev = Bukkit.unloadWorld(devWorld, false);
              if (!unloadedDev) {
                 getPlugin().getLogger().warning("Failed to unload dev world: " + world.getDevWorldName() + ". Files might be locked.");
                 requester.sendMessage("§cНе удалось полностью выгрузить мир разработки. Возможно, требуется перезагрузка сервера.");
-                return; // Не можем удалить файлы, если мир не выгружен
+                return; 
             }
         }
 
-        // Удаление из памяти
+        
         worlds.remove(worldId);
         if (playerWorlds.containsKey(world.getOwnerId())) {
             List<String> playerWorldList = playerWorlds.get(world.getOwnerId());
             playerWorldList.remove(worldId);
-            // If the player has no more worlds, remove the entry entirely
+            
             if (playerWorldList.isEmpty()) {
                 playerWorlds.remove(world.getOwnerId());
             }
@@ -715,7 +715,7 @@ public class WorldManagerImpl implements IWorldManager {
         if (codingManager != null) {
             codingManager.unloadScriptsForWorld(world);
         }
-        // Также очистите все связанные блоки кодинга, если они хранятся вне самого мира.
+        
         if (plugin instanceof MegaCreative) {
             MegaCreative megaPlugin = (MegaCreative) plugin;
             com.megacreative.coding.BlockPlacementHandler blockPlacementHandler = megaPlugin.getServiceRegistry().getBlockPlacementHandler();
@@ -730,15 +730,15 @@ public class WorldManagerImpl implements IWorldManager {
                 blockPlacementHandler.clearAllCodeBlocksInWorld(devWorldToRemove);
             }
             
-            // Unregister CodeHandler from ActivatorManager
+            
             com.megacreative.coding.activators.ActivatorManager activatorManager = megaPlugin.getServiceRegistry().getActivatorManager();
             if (activatorManager != null) {
                 activatorManager.unregisterCodeHandler(worldId);
             }
         }
 
-        // Удаление файлов мира - асинхронно
-        // Переместим deleteWorldFiles(world); сюда:
+        
+        
         Bukkit.getScheduler().runTaskAsynchronously(getPlugin(), () -> deleteWorldFilesInternal(world, requester));
 
         requester.sendMessage("§aМир '" + world.getName() + "' успешно помечен к удалению файлов!");
@@ -751,22 +751,22 @@ public class WorldManagerImpl implements IWorldManager {
         File dataFile = new File(getPlugin().getDataFolder(), "worlds/" + world.getId() + ".json");
         
         try {
-            // Try to delete main world folder
+            
             boolean successMain = deleteFolderRecursive(worldFolder);
             if (!successMain) {
-                // Try again after a short delay using Bukkit scheduler
+                
                 Bukkit.getScheduler().runTaskLater(getPlugin(), () -> {
                     boolean retrySuccess = deleteFolderRecursive(worldFolder);
                     if (!retrySuccess) {
                         getPlugin().getLogger().warning("Failed to delete main world folder after retry: " + world.getWorldName());
                     }
-                    // Continue with dev world deletion
+                    
                     attemptDeleteDevWorld(world, devWorldFolder, dataFile, requester);
-                }, 20L); // 1 second delay
+                }, 20L); 
                 return;
             }
             
-            // Continue with dev world deletion
+            
             attemptDeleteDevWorld(world, devWorldFolder, dataFile, requester);
         } catch (Exception e) {
             getPlugin().getLogger().severe("Error deleting world files for world ID " + world.getId() + ": " + e.getMessage());
@@ -776,22 +776,22 @@ public class WorldManagerImpl implements IWorldManager {
     
     private void attemptDeleteDevWorld(CreativeWorld world, File devWorldFolder, File dataFile, Player requester) {
         try {
-            // Try to delete dev world folder
+            
             boolean successDev = deleteFolderRecursive(devWorldFolder);
             if (!successDev) {
-                // Try again after a short delay using Bukkit scheduler
+                
                 Bukkit.getScheduler().runTaskLater(getPlugin(), () -> {
                     boolean retrySuccess = deleteFolderRecursive(devWorldFolder);
                     if (!retrySuccess) {
                         getPlugin().getLogger().warning("Failed to delete dev world folder after retry: " + world.getDevWorldName());
                     }
-                    // Continue with data file deletion
+                    
                     attemptDeleteDataFile(world, dataFile, requester);
-                }, 20L); // 1 second delay
+                }, 20L); 
                 return;
             }
             
-            // Continue with data file deletion
+            
             attemptDeleteDataFile(world, dataFile, requester);
         } catch (Exception e) {
             getPlugin().getLogger().severe("Error deleting dev world files for world ID " + world.getId() + ": " + e.getMessage());
@@ -801,25 +801,25 @@ public class WorldManagerImpl implements IWorldManager {
     
     private void attemptDeleteDataFile(CreativeWorld world, File dataFile, Player requester) {
         try {
-            // Try to delete data file
+            
             boolean successDataFile = true;
             if (dataFile.exists()) {
                 successDataFile = dataFile.delete();
                 if (!successDataFile) {
-                    // Try again after a short delay using Bukkit scheduler
+                    
                     Bukkit.getScheduler().runTaskLater(getPlugin(), () -> {
                         boolean retrySuccess = dataFile.delete();
                         if (!retrySuccess) {
                             getPlugin().getLogger().warning("Failed to delete data file after retry: " + dataFile.getName());
                         }
-                        // Finish up
+                        
                         finishWorldDeletion(world, requester, true, true, retrySuccess);
-                    }, 20L); // 1 second delay
+                    }, 20L); 
                     return;
                 }
             }
             
-            // Finish up
+            
             finishWorldDeletion(world, requester, true, true, successDataFile);
         } catch (Exception e) {
             getPlugin().getLogger().severe("Error deleting data file for world ID " + world.getId() + ": " + e.getMessage());
@@ -829,15 +829,15 @@ public class WorldManagerImpl implements IWorldManager {
     
     private void finishWorldDeletion(CreativeWorld world, Player requester, boolean successMain, boolean successDev, boolean successDataFile) {
         if (successMain && successDev && successDataFile) {
-            // Reduced logging - only log when debugging
-            // getPlugin().getLogger().info("Successfully deleted world files for world ID " + world.getId());
+            
+            
             requester.sendMessage("§a✓ Файлы мира '" + world.getName() + "' полностью удалены.");
         } else {
             getPlugin().getLogger().warning("Failed to fully delete world files for world ID " + world.getId() + 
                                         ". Main: " + successMain + ", Dev: " + successDev + ", Data: " + successDataFile);
             requester.sendMessage("§c⚠ Ошибка удаления всех файлов мира. Возможно, они были заблокированы. Проверьте логи сервера.");
             
-            // Try one more time with more aggressive approach
+            
             Bukkit.getScheduler().runTaskLater(getPlugin(), () -> {
                 File worldFolder = new File(Bukkit.getWorldContainer(), world.getWorldName());
                 File devWorldFolder = new File(Bukkit.getWorldContainer(), world.getDevWorldName());
@@ -846,31 +846,31 @@ public class WorldManagerImpl implements IWorldManager {
                 if (worldFolder.exists()) deleteFolderRecursive(worldFolder);
                 if (devWorldFolder.exists()) deleteFolderRecursive(devWorldFolder);
                 if (dataFile.exists()) dataFile.delete();
-            }, 20L); // Run after 1 second
+            }, 20L); 
         }
     }
 
-    // Агрессивная рекурсивная функция удаления папки
+    
     private boolean deleteFolderRecursive(File folder) {
         if (!folder.exists()) {
             return true;
         }
         
-        // ВАЖНО: нужно очищать только те файлы, которые реально принадлежат миру.
-        // Здесь используется очень агрессивное удаление. 
-        // ВНИМАНИЕ: НЕ ИСПОЛЬЗУЙТЕ ЕГО НА ПАПКАХ ВАЖНЕЕ МИРОВОЙ ПАПКИ, иначе можете удалить важные данные.
-        // Также удостоверьтесь, что это папка точно для мира.
+        
+        
+        
+        
         
         try {
             if (folder.isDirectory()) {
                 File[] files = folder.listFiles();
                 if (files != null) {
                     for (File file : files) {
-                        deleteFolderRecursive(file); // Рекурсивный вызов для подпапок и файлов
+                        deleteFolderRecursive(file); 
                     }
                 }
             }
-            // Удаляем саму папку или файл после того, как ее содержимое удалено
+            
             return folder.delete();
         } catch (Exception e) {
             getPlugin().getLogger().severe("Failed to delete " + folder.getName() + ": " + e.getMessage());
@@ -919,7 +919,7 @@ public class WorldManagerImpl implements IWorldManager {
         return null;
     }
     
-    // 🎆 ENHANCED: Add missing switchToDevWorld method for proper dev mode switching
+    
     @Override
     public void switchToDevWorld(Player player, String worldId) {
         CreativeWorld world = getWorld(worldId);
@@ -933,10 +933,10 @@ public class WorldManagerImpl implements IWorldManager {
             return;
         }
         
-        // Set mode to DEV
+        
         world.setMode(com.megacreative.models.WorldMode.DEV);
         
-        // Set player mode to DEV
+        
         if (plugin instanceof MegaCreative) {
             PlayerModeManager modeManager = ((MegaCreative) plugin).getServiceRegistry().getPlayerModeManager();
             modeManager.setMode(player, PlayerModeManager.PlayerMode.DEV);
@@ -946,7 +946,7 @@ public class WorldManagerImpl implements IWorldManager {
         World bukkitWorld = Bukkit.getWorld(devWorldName);
         
         if (bukkitWorld == null) {
-            // Create dev world if it doesn't exist
+            
             createDevWorldIfNotExists(world);
             bukkitWorld = Bukkit.getWorld(devWorldName);
         }
@@ -955,14 +955,14 @@ public class WorldManagerImpl implements IWorldManager {
             player.teleport(bukkitWorld.getSpawnLocation());
             player.setGameMode(org.bukkit.GameMode.CREATIVE);
             
-            // Выдаем блоки кодирования ДИНАМИЧЕСКИ
+            
             com.megacreative.coding.CodingItems.giveCodingItems(player, (MegaCreative) plugin);
             
             player.sendMessage("§a🎮 Переключение в режим разработки!");
             player.sendMessage("§7✅ Код включен, скрипты будут выполняться");
             player.sendMessage("§7Креатив для кодирования");
             
-            // 🎆 ENHANCED: Track world mode switch
+            
             if (plugin instanceof MegaCreative) {
                 ((MegaCreative) plugin).getServiceRegistry().getPlayerManager().trackPlayerWorldEntry(player, worldId, "DEV");
             }
@@ -979,39 +979,39 @@ public class WorldManagerImpl implements IWorldManager {
             return;
         }
         
-        // Set mode to PLAY
+        
         world.setMode(com.megacreative.models.WorldMode.PLAY);
         
-        // Set player mode to PLAY
+        
         if (plugin instanceof MegaCreative) {
             PlayerModeManager modeManager = ((MegaCreative) plugin).getServiceRegistry().getPlayerModeManager();
             modeManager.setMode(player, PlayerModeManager.PlayerMode.PLAY);
         }
         
-        // Get the correct play world name based on dual mode
+        
         String playWorldName;
         if (world.getDualMode() == CreativeWorld.WorldDualMode.STANDALONE) {
-            // For standalone worlds, use the main world name
+            
             playWorldName = world.getWorldName();
         } else if (world.getDualMode() == CreativeWorld.WorldDualMode.DEV) {
-            // If this is a dev world, get the paired play world
+            
             if (world.getPairedWorldId() != null) {
                 CreativeWorld pairedWorld = getWorld(world.getPairedWorldId());
                 if (pairedWorld != null) {
                     playWorldName = pairedWorld.getWorldName();
                 } else {
-                    // Fallback to generated play world name
+                    
                     playWorldName = world.getPlayWorldName();
                 }
             } else {
-                // Fallback to generated play world name
+                
                 playWorldName = world.getPlayWorldName();
             }
         } else if (world.getDualMode() == CreativeWorld.WorldDualMode.PLAY) {
-            // This is already a play world
+            
             playWorldName = world.getWorldName();
         } else {
-            // Fallback to generated play world name
+            
             playWorldName = world.getPlayWorldName();
         }
         
@@ -1019,17 +1019,17 @@ public class WorldManagerImpl implements IWorldManager {
         
         if (bukkitWorld == null) {
             player.sendMessage("§cPlay world does not exist! Creating it...");
-            // Try to create it
+            
             WorldCreator creator = new WorldCreator(playWorldName);
             creator.environment(world.getWorldType().getEnvironment());
             
-            // Copy from dev world if it exists
+            
             String devWorldName = world.getDevWorldName();
             World devWorld = Bukkit.getWorld(devWorldName);
             if (devWorld != null) {
                 creator.copy(devWorld);
             } else {
-                // Set appropriate world type
+                
                 switch (world.getWorldType()) {
                     case FLAT:
                         creator.type(WorldType.FLAT);
@@ -1061,23 +1061,23 @@ public class WorldManagerImpl implements IWorldManager {
             }
         }
         
-        // Teleport player to play world
+        
         player.teleport(bukkitWorld.getSpawnLocation());
-        player.setGameMode(org.bukkit.GameMode.ADVENTURE); // Play mode should be adventure
-        player.getInventory().clear(); // Clear inventory for play mode
+        player.setGameMode(org.bukkit.GameMode.ADVENTURE); 
+        player.getInventory().clear(); 
         
         player.sendMessage("§a🎮 Switched to play mode!");
         
-        // 🎆 ENHANCED: Track world mode switch
+        
         if (plugin instanceof MegaCreative) {
             ((MegaCreative) plugin).getServiceRegistry().getPlayerManager().trackPlayerWorldEntry(player, worldId, "PLAY");
         }
         
-        // Save world state
+        
         saveWorld(world);
     }
     
-    // 🎆 ENHANCED: Add missing switchToBuildWorld method for proper build mode switching
+    
     @Override
     public void switchToBuildWorld(Player player, String worldId) {
         CreativeWorld world = getWorld(worldId);
@@ -1086,20 +1086,20 @@ public class WorldManagerImpl implements IWorldManager {
             return;
         }
         
-        // Check permissions
+        
         if (!world.canEdit(player)) {
             player.sendMessage("§cYou don't have permission to edit this world!");
             return;
         }
         
-        // Set mode to BUILD
+        
         world.setMode(com.megacreative.models.WorldMode.BUILD);
         
         String devWorldName = world.isDevWorld() ? world.getWorldName() : world.getDevWorldName();
         World bukkitWorld = Bukkit.getWorld(devWorldName);
         
         if (bukkitWorld == null) {
-            // Create dev world if it doesn't exist
+            
             createDevWorldIfNotExists(world);
             bukkitWorld = Bukkit.getWorld(devWorldName);
         }
@@ -1108,14 +1108,14 @@ public class WorldManagerImpl implements IWorldManager {
             player.teleport(bukkitWorld.getSpawnLocation());
             player.setGameMode(org.bukkit.GameMode.CREATIVE);
             
-            // Give coding items DYNAMICALLY
+            
             com.megacreative.coding.CodingItems.giveCodingItems(player, (MegaCreative) plugin);
             
             player.sendMessage("§a🎮 Switched to build mode!");
             player.sendMessage("§7✅ Building enabled, scripts will execute");
             player.sendMessage("§7Creative mode for building");
             
-            // 🎆 ENHANCED: Track world mode switch
+            
             if (plugin instanceof MegaCreative) {
                 ((MegaCreative) plugin).getServiceRegistry().getPlayerManager().trackPlayerWorldEntry(player, worldId, "BUILD");
             }
@@ -1136,7 +1136,7 @@ public class WorldManagerImpl implements IWorldManager {
             WorldCreator creator = new WorldCreator(devWorldName);
             creator.environment(world.getWorldType().getEnvironment());
             
-            // Set appropriate world type
+            
             switch (world.getWorldType()) {
                 case FLAT:
                     creator.type(WorldType.FLAT);
@@ -1163,7 +1163,7 @@ public class WorldManagerImpl implements IWorldManager {
             bukkitWorld = Bukkit.createWorld(creator);
             
             if (bukkitWorld != null) {
-                // Setup the dev world
+                
                 setupWorld(bukkitWorld, world);
             }
         }
@@ -1226,10 +1226,10 @@ public class WorldManagerImpl implements IWorldManager {
     
     @Override
     public void shutdown() {
-        // Save all worlds before shutdown
+        
         saveAllWorlds();
         
-        // Clear all collections
+        
         worlds.clear();
         playerWorlds.clear();
     }

@@ -16,8 +16,8 @@ public class ElseAction implements BlockAction {
     
     @Override
     public ExecutionResult execute(CodeBlock block, ExecutionContext context) {
-        // Else action typically doesn't perform any specific action itself
-        // It's a control flow marker that affects script execution logic
+        
+        
         context.getPlugin().getLogger().info("Else block executed");
         return ExecutionResult.success("Else block executed");
     }

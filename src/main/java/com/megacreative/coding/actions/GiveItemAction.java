@@ -26,7 +26,7 @@ public class GiveItemAction implements BlockAction {
         }
 
         try {
-            // Get parameters from the new parameter system
+            
             DataValue materialValue = block.getParameter("material");
             DataValue amountValue = block.getParameter("amount");
             
@@ -34,21 +34,21 @@ public class GiveItemAction implements BlockAction {
                 return ExecutionResult.error("Material parameter is missing");
             }
             
-            // Parse material
+            
             Material material = Material.valueOf(materialValue.asString().toUpperCase());
             
-            // Parse amount (default to 1)
+            
             int amount = 1;
             if (amountValue != null && !amountValue.isEmpty()) {
                 try {
                     amount = Integer.parseInt(amountValue.asString());
-                    amount = Math.max(1, Math.min(64, amount)); // Clamp between 1 and 64
+                    amount = Math.max(1, Math.min(64, amount)); 
                 } catch (NumberFormatException e) {
-                    // Use default amount
+                    
                 }
             }
             
-            // Create and give item
+            
             ItemStack item = new ItemStack(material, amount);
             player.getInventory().addItem(item);
             

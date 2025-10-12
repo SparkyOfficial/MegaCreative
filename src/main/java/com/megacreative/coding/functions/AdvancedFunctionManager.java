@@ -33,30 +33,30 @@ import java.util.Arrays;
 public class AdvancedFunctionManager {
     
     private final MegaCreative plugin;
-    private ScriptEngine scriptEngine; // Remove final to allow late initialization
+    private ScriptEngine scriptEngine; 
     
-    // Function storage
+    
     private final Map<String, FunctionDefinition> globalFunctions = new ConcurrentHashMap<>();
     private final Map<UUID, Map<String, FunctionDefinition>> playerFunctions = new ConcurrentHashMap<>();
     private final Map<String, Map<String, FunctionDefinition>> worldFunctions = new ConcurrentHashMap<>();
     
-    // Execution tracking
+    
     private final Map<UUID, FunctionExecutionContext> activeExecutions = new ConcurrentHashMap<>();
     private final Map<String, FunctionLibrary> libraries = new ConcurrentHashMap<>();
     
-    // Performance settings
+    
     private static final int MAX_RECURSION_DEPTH = 50;
-    private static final long MAX_EXECUTION_TIME = 10000; // 10 seconds
+    private static final long MAX_EXECUTION_TIME = 10000; 
     private static final int MAX_CONCURRENT_EXECUTIONS = 100;
     
     public AdvancedFunctionManager(MegaCreative plugin) {
         this.plugin = plugin;
         
-        // ScriptEngine will be set later via setScriptEngine()
-        // Cannot access ServiceRegistry during construction as it's still being built
+        
+        
         this.scriptEngine = null;
         
-        // Initialize built-in function libraries
+        
         initializeBuiltInLibraries();
         
         plugin.getLogger().info(" YYS Advanced Function Manager initialized (ScriptEngine will be set later)");
@@ -87,12 +87,12 @@ public class AdvancedFunctionManager {
             return false;
         }
         
-        // Check for name conflicts
+        
         if (functionExists(function.getName(), function.getOwner(), function.getScope())) {
             return false;
         }
         
-        // Register based on scope
+        
         switch (function.getScope()) {
             case GLOBAL:
                 globalFunctions.put(function.getName(), function);
@@ -109,7 +109,7 @@ public class AdvancedFunctionManager {
                 }
                 break;
             case SHARED:
-                // Store as player function but with shared access
+                
                 playerFunctions.computeIfAbsent(function.getOwner().getUniqueId(), k -> new ConcurrentHashMap<>())
                     .put(function.getName(), function);
                 break;
@@ -127,15 +127,15 @@ public class AdvancedFunctionManager {
             return null;
         }
         
-        // Search order: player -> world -> global
         
-        // 1. Check player functions
+        
+        
         Map<String, FunctionDefinition> playerFuncs = playerFunctions.get(caller.getUniqueId());
         if (playerFuncs != null && playerFuncs.containsKey(name)) {
             return playerFuncs.get(name);
         }
         
-        // 2. Check shared functions from other players
+        
         for (Map<String, FunctionDefinition> funcs : playerFunctions.values()) {
             FunctionDefinition func = funcs.get(name);
             if (func != null && func.getScope() == FunctionDefinition.FunctionScope.SHARED && func.canCall(caller)) {
@@ -143,7 +143,7 @@ public class AdvancedFunctionManager {
             }
         }
         
-        // 3. Check world functions
+        
         String worldId = getPlayerWorldId(caller);
         if (worldId != null) {
             Map<String, FunctionDefinition> worldFuncs = worldFunctions.get(worldId);
@@ -155,7 +155,7 @@ public class AdvancedFunctionManager {
             }
         }
         
-        // 4. Check global functions
+        
         FunctionDefinition globalFunc = globalFunctions.get(name);
         if (globalFunc != null && globalFunc.canCall(caller)) {
             return globalFunc;
@@ -176,33 +176,33 @@ public class AdvancedFunctionManager {
      */
     public CompletableFuture<ExecutionResult> executeFunction(String functionName, Player caller, 
                                                              DataValue[] arguments, Map<String, Object> contextData) {
-        // Check if ScriptEngine is available
+        
         if (scriptEngine == null) {
             return CompletableFuture.completedFuture(
                 ExecutionResult.error("ScriptEngine not available for function execution"));
         }
         
-        // Find function
+        
         FunctionDefinition function = findFunction(functionName, caller);
         if (function == null) {
             return CompletableFuture.completedFuture(
                 ExecutionResult.error("Function not found: " + functionName));
         }
         
-        // Check if function is enabled
+        
         if (!function.isEnabled()) {
             return CompletableFuture.completedFuture(
                 ExecutionResult.error("Function is disabled: " + functionName));
         }
         
-        // Validate arguments
+        
         FunctionDefinition.ValidationResult validation = function.validateArguments(arguments);
         if (!validation.isValid()) {
             return CompletableFuture.completedFuture(
                 ExecutionResult.error("Invalid arguments: " + validation.getMessage()));
         }
         
-        // Check recursion depth
+        
         UUID executionId = UUID.randomUUID();
         FunctionExecutionContext execContext = activeExecutions.get(caller.getUniqueId());
         if (execContext != null && execContext.getRecursionDepth() >= function.getMaxRecursionDepth()) {
@@ -210,13 +210,13 @@ public class AdvancedFunctionManager {
                 ExecutionResult.error("Maximum recursion depth exceeded: " + function.getMaxRecursionDepth()));
         }
         
-        // Check concurrent execution limit
+        
         if (activeExecutions.size() >= MAX_CONCURRENT_EXECUTIONS) {
             return CompletableFuture.completedFuture(
                 ExecutionResult.error("Maximum concurrent executions exceeded"));
         }
         
-        // Create execution context
+        
         FunctionExecutionContext newContext = new FunctionExecutionContext(
             executionId, function, caller, arguments, contextData);
         newContext.setRecursionDepth(execContext != null ? execContext.getRecursionDepth() + 1 : 0);
@@ -225,18 +225,18 @@ public class AdvancedFunctionManager {
         
         long startTime = System.currentTimeMillis();
         
-        // Execute function blocks
+        
         return executeFunctionBlocks(function, newContext)
             .whenComplete((result, throwable) -> {
                 long executionTime = System.currentTimeMillis() - startTime;
                 
-                // Record execution statistics
+                
                 function.recordExecution(executionTime, throwable == null && result.isSuccess());
                 
-                // Remove from active executions
+                
                 activeExecutions.remove(caller.getUniqueId());
                 
-                // Restore previous context if nested
+                
                 if (execContext != null) {
                     activeExecutions.put(caller.getUniqueId(), execContext);
                 }
@@ -249,18 +249,18 @@ public class AdvancedFunctionManager {
     private CompletableFuture<ExecutionResult> executeFunctionBlocks(FunctionDefinition function, 
                                                                  FunctionExecutionContext context) {
         try {
-            // Check if this is a built-in function (no actual blocks)
+            
             if (function.getFunctionBlocks().isEmpty() || 
                 (function.getFunctionBlocks().size() == 1 && 
                  "return".equals(function.getFunctionBlocks().get(0).getAction()))) {
-                // This is likely a built-in function, execute it directly
+                
                 return executeBuiltInFunction(function, context);
             }
             
-            // Create local scope with function parameters
+            
             Map<String, DataValue> localScope = function.createLocalScope(context.getArguments());
             
-            // Create execution context for script engine
+            
             ExecutionContext scriptContext = new ExecutionContext.Builder()
                 .plugin(plugin)
                 .player(context.getCaller())
@@ -268,34 +268,34 @@ public class AdvancedFunctionManager {
                 .currentBlock(function.getFunctionBlocks().get(0))
                 .build();
             
-            // Add local variables to context
+            
             for (Map.Entry<String, DataValue> entry : localScope.entrySet()) {
                 scriptContext.setVariable(entry.getKey(), entry.getValue().getValue());
             }
             
-            // Add context data
+            
             for (Map.Entry<String, Object> entry : context.getContextData().entrySet()) {
                 scriptContext.setVariable(entry.getKey(), entry.getValue());
             }
             
-            // Create temporary script from function blocks
+            
             CodeScript functionScript = new CodeScript(
                 "Function: " + function.getName(), true, function.getFunctionBlocks().get(0));
             
-            // Link function blocks
+            
             for (int i = 0; i < function.getFunctionBlocks().size() - 1; i++) {
                 function.getFunctionBlocks().get(i).setNextBlock(function.getFunctionBlocks().get(i + 1));
             }
             
-            // Execute function script
+            
             return scriptEngine.executeScript(functionScript, context.getCaller(), "function_call")
                 .thenApply(result -> {
-                    // Handle return value and termination
+                    
                     Object returnValue = scriptContext.getVariable("return");
                     if (returnValue != null) {
                         ExecutionResult newResult = ExecutionResult.success("Function executed with return value: " + returnValue);
                         newResult.setReturnValue(returnValue);
-                        // Preserve termination status
+                        
                         newResult.setTerminated(result.isTerminated());
                         return newResult;
                     }
@@ -317,7 +317,7 @@ public class AdvancedFunctionManager {
             String functionName = function.getName();
             DataValue[] arguments = context.getArguments();
             
-            // Determine which library this function belongs to by checking prefixes
+            
             Object result = null;
             
             if (functionName.startsWith("abs") || functionName.startsWith("round") || 
@@ -330,7 +330,7 @@ public class AdvancedFunctionManager {
                 functionName.startsWith("asin") || functionName.startsWith("atan") ||
                 functionName.startsWith("cbrt") || functionName.startsWith("hypot") ||
                 functionName.startsWith("toDegrees") || functionName.startsWith("toRadians")) {
-                // Math functions
+                
                 result = executeMathFunction(functionName, arguments);
             } else if (functionName.startsWith("length") || functionName.startsWith("toUpperCase") ||
                        functionName.startsWith("toLowerCase") || functionName.startsWith("substring") ||
@@ -339,7 +339,7 @@ public class AdvancedFunctionManager {
                        functionName.startsWith("trim") || functionName.startsWith("split") ||
                        functionName.startsWith("indexOf") || functionName.startsWith("lastIndexOf") ||
                        functionName.startsWith("concat") || functionName.startsWith("repeat")) {
-                // String functions
+                
                 result = executeStringFunction(functionName, arguments);
             } else if (functionName.startsWith("random") || functionName.startsWith("currentTimeMillis") ||
                        functionName.startsWith("format") || functionName.startsWith("join") ||
@@ -347,7 +347,7 @@ public class AdvancedFunctionManager {
                        functionName.startsWith("map") || functionName.startsWith("range") ||
                        functionName.startsWith("sort") || functionName.startsWith("reverse") ||
                        functionName.startsWith("shuffle")) {
-                // Utility functions
+                
                 result = executeUtilityFunction(functionName, arguments);
             }
             
@@ -497,7 +497,7 @@ public class AdvancedFunctionManager {
                 case "currentTimeMillis":
                     return (double) System.currentTimeMillis();
                 case "format":
-                    // Simple string formatting (first arg is format string, rest are values)
+                    
                     if (arguments.length > 0) {
                         String format = arguments[0].asString();
                         Object[] values = new Object[arguments.length - 1];
@@ -526,11 +526,11 @@ public class AdvancedFunctionManager {
                     }
                     return 0.0;
                 case "list":
-                    // Create a new list from arguments
+                    
                     List<DataValue> newList = new ArrayList<>(Arrays.asList(arguments));
                     return new ListValue(newList);
                 case "map":
-                    // Create a map from key-value pairs
+                    
                     Map<String, DataValue> newMap = new HashMap<>();
                     for (int i = 0; i < arguments.length - 1; i += 2) {
                         String key = arguments[i].asString();
@@ -539,7 +539,7 @@ public class AdvancedFunctionManager {
                     }
                     return newMap;
                 case "range":
-                    // Create a list with numbers in a range
+                    
                     double start = arguments[0].asNumber().doubleValue();
                     double end = arguments[1].asNumber().doubleValue();
                     double step = arguments.length > 2 ? arguments[2].asNumber().doubleValue() : 1.0;
@@ -549,7 +549,7 @@ public class AdvancedFunctionManager {
                     }
                     return new ListValue(rangeList);
                 case "sort":
-                    // Sort a list
+                    
                     if (arguments[0].getType() == ValueType.LIST) {
                         ListValue list = (ListValue) arguments[0];
                         List<DataValue> sortedList = new ArrayList<DataValue>(list.getValues());
@@ -567,7 +567,7 @@ public class AdvancedFunctionManager {
                     }
                     return arguments[0];
                 case "reverse":
-                    // Reverse a list
+                    
                     if (arguments[0].getType() == ValueType.LIST) {
                         ListValue list = (ListValue) arguments[0];
                         List<DataValue> reversedList = new ArrayList<DataValue>(list.getValues());
@@ -576,7 +576,7 @@ public class AdvancedFunctionManager {
                     }
                     return arguments[0];
                 case "shuffle":
-                    // Shuffle a list
+                    
                     if (arguments[0].getType() == ValueType.LIST) {
                         ListValue list = (ListValue) arguments[0];
                         List<DataValue> shuffledList = new ArrayList<DataValue>(list.getValues());
@@ -599,13 +599,13 @@ public class AdvancedFunctionManager {
     public List<FunctionDefinition> getAvailableFunctions(Player player) {
         List<FunctionDefinition> available = new ArrayList<>();
         
-        // Add player functions
+        
         Map<String, FunctionDefinition> playerFuncs = playerFunctions.get(player.getUniqueId());
         if (playerFuncs != null) {
             available.addAll(playerFuncs.values());
         }
         
-        // Add shared functions
+        
         for (Map<String, FunctionDefinition> funcs : playerFunctions.values()) {
             for (FunctionDefinition func : funcs.values()) {
                 if (func.getScope() == FunctionDefinition.FunctionScope.SHARED && func.canCall(player)) {
@@ -614,7 +614,7 @@ public class AdvancedFunctionManager {
             }
         }
         
-        // Add world functions
+        
         String worldId = getPlayerWorldId(player);
         if (worldId != null) {
             Map<String, FunctionDefinition> worldFuncs = worldFunctions.get(worldId);
@@ -625,7 +625,7 @@ public class AdvancedFunctionManager {
             }
         }
         
-        // Add global functions
+        
         available.addAll(globalFunctions.values().stream()
             .filter(func -> func.canCall(player))
             .collect(Collectors.toList()));
@@ -637,7 +637,7 @@ public class AdvancedFunctionManager {
      * Removes a function by name and player (for player/shared functions)
      */
     public boolean removeFunction(String name, Player player) {
-        // Try to remove from player functions
+        
         Map<String, FunctionDefinition> playerFuncs = playerFunctions.get(player.getUniqueId());
         if (playerFuncs != null && playerFuncs.containsKey(name)) {
             FunctionDefinition func = playerFuncs.get(name);
@@ -648,7 +648,7 @@ public class AdvancedFunctionManager {
             }
         }
         
-        // Try to remove from world functions (if player is owner)
+        
         String worldId = getPlayerWorldId(player);
         if (worldId != null) {
             Map<String, FunctionDefinition> worldFuncs = worldFunctions.get(worldId);
@@ -728,12 +728,12 @@ public class AdvancedFunctionManager {
      * Initializes built-in function libraries
      */
     private void initializeBuiltInLibraries() {
-        // Math library
+        
         FunctionLibrary mathLib = new FunctionLibrary("math", "Mathematical functions");
         
-        // Add basic math functions
+        
         try {
-            // Math functions
+            
             mathLib.addFunction(createMathFunction("abs", "Returns the absolute value of a number", ValueType.NUMBER, 1));
             mathLib.addFunction(createMathFunction("round", "Rounds a number to the nearest integer", ValueType.NUMBER, 1));
             mathLib.addFunction(createMathFunction("floor", "Returns the largest integer less than or equal to a number", ValueType.NUMBER, 1));
@@ -760,20 +760,20 @@ public class AdvancedFunctionManager {
             plugin.getLogger().warning("Failed to initialize math library: " + e.getMessage());
         }
         
-        // String library
+        
         FunctionLibrary stringLib = new FunctionLibrary("string", "String manipulation functions");
         
-        // Add basic string functions
+        
         try {
-            // String functions
+            
             stringLib.addFunction(createStringFunction("length", "Returns the length of a string", ValueType.NUMBER, 1));
             stringLib.addFunction(createStringFunction("toUpperCase", "Converts a string to uppercase", ValueType.TEXT, 1));
             stringLib.addFunction(createStringFunction("toLowerCase", "Converts a string to lowercase", ValueType.TEXT, 1));
-            stringLib.addFunction(createStringFunction("substring", "Returns a substring of a string", ValueType.TEXT, 3)); // string, start, end
+            stringLib.addFunction(createStringFunction("substring", "Returns a substring of a string", ValueType.TEXT, 3)); 
             stringLib.addFunction(createStringFunction("contains", "Checks if a string contains a substring", ValueType.BOOLEAN, 2));
             stringLib.addFunction(createStringFunction("startsWith", "Checks if a string starts with a prefix", ValueType.BOOLEAN, 2));
             stringLib.addFunction(createStringFunction("endsWith", "Checks if a string ends with a suffix", ValueType.BOOLEAN, 2));
-            stringLib.addFunction(createStringFunction("replace", "Replaces all occurrences of a substring with another substring", ValueType.TEXT, 3)); // string, target, replacement
+            stringLib.addFunction(createStringFunction("replace", "Replaces all occurrences of a substring with another substring", ValueType.TEXT, 3)); 
             stringLib.addFunction(createStringFunction("trim", "Removes whitespace from both ends of a string", ValueType.TEXT, 1));
             stringLib.addFunction(createStringFunction("split", "Splits a string into a list by a delimiter", ValueType.LIST, 2));
             stringLib.addFunction(createStringFunction("indexOf", "Returns the index of the first occurrence of a substring", ValueType.NUMBER, 2));
@@ -786,21 +786,21 @@ public class AdvancedFunctionManager {
             plugin.getLogger().warning("Failed to initialize string library: " + e.getMessage());
         }
         
-        // Utility library
+        
         FunctionLibrary utilLib = new FunctionLibrary("util", "Utility functions");
         
-        // Add basic utility functions
+        
         try {
-            // Utility functions
+            
             utilLib.addFunction(createUtilityFunction("random", "Generates a random number between 0 and 1", ValueType.NUMBER, 0));
             utilLib.addFunction(createUtilityFunction("randomRange", "Generates a random number between min and max", ValueType.NUMBER, 2));
             utilLib.addFunction(createUtilityFunction("currentTimeMillis", "Returns the current time in milliseconds", ValueType.NUMBER, 0));
-            utilLib.addFunction(createUtilityFunction("format", "Formats a string with arguments", ValueType.TEXT, -1)); // Variable arguments
+            utilLib.addFunction(createUtilityFunction("format", "Formats a string with arguments", ValueType.TEXT, -1)); 
             utilLib.addFunction(createUtilityFunction("join", "Joins a list of values with a separator", ValueType.TEXT, 2));
             utilLib.addFunction(createUtilityFunction("size", "Returns the size of a list or map", ValueType.NUMBER, 1));
-            utilLib.addFunction(createUtilityFunction("list", "Creates a new list from arguments", ValueType.LIST, -1)); // Variable arguments
-            utilLib.addFunction(createUtilityFunction("map", "Creates a new map from key-value pairs", ValueType.DICTIONARY, -1)); // Variable arguments
-            utilLib.addFunction(createUtilityFunction("range", "Creates a list with numbers in a range", ValueType.LIST, -1)); // 2-3 arguments
+            utilLib.addFunction(createUtilityFunction("list", "Creates a new list from arguments", ValueType.LIST, -1)); 
+            utilLib.addFunction(createUtilityFunction("map", "Creates a new map from key-value pairs", ValueType.DICTIONARY, -1)); 
+            utilLib.addFunction(createUtilityFunction("range", "Creates a list with numbers in a range", ValueType.LIST, -1)); 
             utilLib.addFunction(createUtilityFunction("sort", "Sorts a list", ValueType.LIST, 1));
             utilLib.addFunction(createUtilityFunction("reverse", "Reverses a list", ValueType.LIST, 1));
             utilLib.addFunction(createUtilityFunction("shuffle", "Shuffles a list randomly", ValueType.LIST, 1));
@@ -865,7 +865,7 @@ public class AdvancedFunctionManager {
             this.startTime = System.currentTimeMillis();
         }
         
-        // Getters
+        
         public UUID getExecutionId() { return executionId; }
         public FunctionDefinition getFunction() { return function; }
         public Player getCaller() { return caller; }
@@ -906,7 +906,7 @@ public class AdvancedFunctionManager {
             return functions.values();
         }
         
-        // Getters
+        
         public String getName() { return name; }
         public String getDescription() { return description; }
         public int getFunctionCount() { return functions.size(); }
@@ -916,10 +916,10 @@ public class AdvancedFunctionManager {
      * Cleanup and shutdown
      */
     public void shutdown() {
-        // Cancel all active executions
+        
         activeExecutions.clear();
         
-        // Clear all function definitions
+        
         globalFunctions.clear();
         playerFunctions.clear();
         worldFunctions.clear();
@@ -928,7 +928,7 @@ public class AdvancedFunctionManager {
         plugin.getLogger().info(" YYS Advanced Function Manager shut down");
     }
     
-    // Helper methods for creating built-in functions
+    
     
     /**
      * Creates a math function with the specified parameters
@@ -936,13 +936,13 @@ public class AdvancedFunctionManager {
     private FunctionDefinition createMathFunction(String name, String description, ValueType returnType, int paramCount) {
         List<FunctionDefinition.FunctionParameter> parameters = new ArrayList<>();
         
-        // Add parameters based on paramCount
+        
         for (int i = 0; i < paramCount; i++) {
             String paramName = "param" + (i + 1);
             parameters.add(new FunctionDefinition.FunctionParameter(paramName, ValueType.NUMBER, true, DataValue.of(0.0), "Parameter " + (i + 1)));
         }
         
-        // Create a simple function block that just returns a result
+        
         List<CodeBlock> functionBlocks = new ArrayList<>();
         CodeBlock returnBlock = new CodeBlock();
         returnBlock.setAction("return");
@@ -957,14 +957,14 @@ public class AdvancedFunctionManager {
     private FunctionDefinition createStringFunction(String name, String description, ValueType returnType, int paramCount) {
         List<FunctionDefinition.FunctionParameter> parameters = new ArrayList<>();
         
-        // Add parameters based on paramCount
+        
         for (int i = 0; i < paramCount; i++) {
             String paramName = "param" + (i + 1);
-            ValueType paramType = ValueType.TEXT; // All params are text
+            ValueType paramType = ValueType.TEXT; 
             parameters.add(new FunctionDefinition.FunctionParameter(paramName, paramType, true, DataValue.of(""), "Parameter " + (i + 1)));
         }
         
-        // Create a simple function block that just returns a result
+        
         List<CodeBlock> functionBlocks = new ArrayList<>();
         CodeBlock returnBlock = new CodeBlock();
         returnBlock.setAction("return");
@@ -979,18 +979,18 @@ public class AdvancedFunctionManager {
     private FunctionDefinition createUtilityFunction(String name, String description, ValueType returnType, int paramCount) {
         List<FunctionDefinition.FunctionParameter> parameters = new ArrayList<>();
         
-        // Add parameters based on paramCount (-1 for variable arguments)
+        
         if (paramCount >= 0) {
             for (int i = 0; i < paramCount; i++) {
                 String paramName = "param" + (i + 1);
                 parameters.add(new FunctionDefinition.FunctionParameter(paramName, ValueType.TEXT, true, DataValue.of(""), "Parameter " + (i + 1)));
             }
         } else {
-            // Variable arguments
+            
             parameters.add(new FunctionDefinition.FunctionParameter("args", ValueType.LIST, true, DataValue.of(new ArrayList<>()), "Variable arguments"));
         }
         
-        // Create a simple function block that just returns a result
+        
         List<CodeBlock> functionBlocks = new ArrayList<>();
         CodeBlock returnBlock = new CodeBlock();
         returnBlock.setAction("return");

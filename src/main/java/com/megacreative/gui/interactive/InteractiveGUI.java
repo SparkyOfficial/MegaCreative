@@ -23,11 +23,11 @@ public class InteractiveGUI implements GUIManager.ManagedGUIInterface {
     private final Inventory inventory;
     private final String title;
     
-    // Element management
+    
     private final Map<Integer, InteractiveGUIManager.InteractiveElement> slotElements = new ConcurrentHashMap<>();
     private final Map<String, InteractiveGUIManager.InteractiveElement> namedElements = new ConcurrentHashMap<>();
     
-    // Update tracking
+    
     private final Set<Integer> dirtySlots = ConcurrentHashMap.newKeySet();
     private boolean needsRefresh = false;
     
@@ -37,7 +37,7 @@ public class InteractiveGUI implements GUIManager.ManagedGUIInterface {
         this.title = title;
         this.inventory = Bukkit.createInventory(null, size, title);
         
-        // Setup auto-refresh for dynamic elements
+        
         setupAutoRefresh();
     }
     
@@ -45,23 +45,23 @@ public class InteractiveGUI implements GUIManager.ManagedGUIInterface {
      * Adds an interactive element to a specific slot
      */
     public void setElement(int slot, InteractiveGUIManager.InteractiveElement element) {
-        // Remove existing element if present
+        
         if (slotElements.containsKey(slot)) {
             InteractiveGUIManager.InteractiveElement existing = slotElements.get(slot);
             namedElements.remove(existing.getId());
         }
         
-        // Add new element
+        
         slotElements.put(slot, element);
         namedElements.put(element.getId(), element);
         
-        // Setup change listener for real-time updates
+        
         element.addChangeListener(value -> {
             markSlotDirty(slot);
             scheduleRefresh();
         });
         
-        // Initial render
+        
         markSlotDirty(slot);
         scheduleRefresh();
     }
@@ -99,11 +99,11 @@ public class InteractiveGUI implements GUIManager.ManagedGUIInterface {
         if (element != null) {
             element.handleClick(clickType);
             
-            // Update display immediately
+            
             markSlotDirty(slot);
             refreshNow();
             
-            // Play click sound
+            
             player.playSound(player.getLocation(), org.bukkit.Sound.UI_BUTTON_CLICK, 0.5f, 1.0f);
         }
     }
@@ -115,7 +115,7 @@ public class InteractiveGUI implements GUIManager.ManagedGUIInterface {
         refreshAll();
         player.openInventory(inventory);
         
-        // Play open sound
+        
         player.playSound(player.getLocation(), org.bukkit.Sound.BLOCK_CHEST_OPEN, 0.7f, 1.2f);
     }
     
@@ -171,7 +171,7 @@ public class InteractiveGUI implements GUIManager.ManagedGUIInterface {
      * Sets up automatic refresh for dynamic elements
      */
     private void setupAutoRefresh() {
-        // Schedule periodic refresh for smooth animations
+        
         Bukkit.getScheduler().runTaskTimer(
             manager.getPlugin(), 
             () -> {
@@ -179,8 +179,8 @@ public class InteractiveGUI implements GUIManager.ManagedGUIInterface {
                     refreshNow();
                 }
             }, 
-            1L, // Start after 1 tick
-            2L  // Refresh every 2 ticks (10 times per second)
+            1L, 
+            2L  
         );
     }
     
@@ -188,10 +188,10 @@ public class InteractiveGUI implements GUIManager.ManagedGUIInterface {
      * Called when the GUI is closed
      */
     public void onClose() {
-        // Play close sound
+        
         player.playSound(player.getLocation(), org.bukkit.Sound.BLOCK_CHEST_CLOSE, 0.7f, 0.8f);
         
-        // Cleanup
+        
         manager.removeActiveGUI(player);
     }
     
@@ -223,7 +223,7 @@ public class InteractiveGUI implements GUIManager.ManagedGUIInterface {
         return slotElements.size();
     }
     
-    // GUIManager.ManagedGUIInterface implementation
+    
     
     @Override
     public String getGUITitle() {
@@ -250,7 +250,7 @@ public class InteractiveGUI implements GUIManager.ManagedGUIInterface {
     public void onPlayerQuit(org.bukkit.event.player.PlayerQuitEvent event) {
         if (!event.getPlayer().equals(player)) return;
         
-        // Cleanup on player quit
+        
         manager.removeActiveGUI(player);
     }
 }

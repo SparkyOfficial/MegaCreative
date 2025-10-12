@@ -43,7 +43,7 @@ public abstract class AbstractEventDataExtractor<T extends Event> implements Eve
     @Override
     public Map<String, DataValue> extractData(T event) {
         Map<String, DataValue> data = new HashMap<>();
-        // Subclasses should override this method to extract data from the event
+        
         return data;
     }
     

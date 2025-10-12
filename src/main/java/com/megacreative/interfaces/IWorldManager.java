@@ -244,7 +244,7 @@ public interface IWorldManager {
      */
     List<CreativeWorld> getCreativeWorlds();
     
-    // 🎆 ENHANCED: Reference system-style world switching methods
+    
     
     /**
      * Gets the paired world for dual world architecture

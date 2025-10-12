@@ -37,10 +37,10 @@ public class CommandRegistry {
      */
     public void registerCommands() {
         try {
-            // Register build command with its dependencies
+            
             registerBuildCommand();
             
-            // Register other commands here as we refactor them
+            
             registerSimpleCommands();
             
             log.info("Commands registered successfully");
@@ -85,7 +85,7 @@ public class CommandRegistry {
         if (plugin == null) return;
         
         try {
-            // Register commands with proper dependency injection
+            
             org.bukkit.command.PluginCommand megacreativeCmd = plugin.getCommand("megacreative");
             if (megacreativeCmd != null) {
                 megacreativeCmd.setExecutor(new MainCommand(plugin));
@@ -136,7 +136,7 @@ public class CommandRegistry {
                 confirmdeleteCmd.setExecutor(new ConfirmDeleteCommand(plugin));
             }
             
-            // Register interactive GUI command
+            
             org.bukkit.command.PluginCommand interactiveCmd = plugin.getCommand("interactive");
             if (interactiveCmd != null) {
                 InteractiveCommand interactiveCommand = new InteractiveCommand(plugin);
@@ -144,7 +144,7 @@ public class CommandRegistry {
                 interactiveCmd.setTabCompleter(interactiveCommand);
             }
             
-            // Enemy player management command
+            
             org.bukkit.command.PluginCommand enemyCmd = plugin.getCommand("enemy");
             if (enemyCmd != null) {
                 EnemyPlayerCommand enemyPlayerCommand = new EnemyPlayerCommand(plugin);
@@ -152,7 +152,7 @@ public class CommandRegistry {
                 enemyCmd.setTabCompleter(enemyPlayerCommand);
             }
             
-            // Performance monitoring command
+            
             org.bukkit.command.PluginCommand performanceCmd = plugin.getCommand("performance");
             if (performanceCmd != null) {
                 PerformanceCommand performanceCommand = new PerformanceCommand(plugin);
@@ -160,20 +160,20 @@ public class CommandRegistry {
                 performanceCmd.setTabCompleter(performanceCommand);
             }
             
-            // Global chat command
+            
             org.bukkit.command.PluginCommand ccCmd = plugin.getCommand("cc");
             if (ccCmd != null) {
                 ccCmd.setExecutor(new GlobalChatCommand(plugin));
             }
             
-            // Register create world command
+            
             org.bukkit.command.PluginCommand createCmd = plugin.getCommand("create");
             if (createCmd != null && serviceRegistry != null) {
                 IWorldManager worldManager = serviceRegistry.getWorldManager();
                 createCmd.setExecutor(new CreateWorldCommand(plugin, worldManager));
             }
             
-            // Log successful command registration
+            
             log.info("All commands registered successfully");
         } catch (Exception e) {
             log.severe("Failed to register simple commands: " + e.getMessage());

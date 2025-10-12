@@ -22,7 +22,7 @@ import java.util.Map;
  * This class handles the display and interaction with script blocks.
  */
 public class ScriptBlockGUI {
-    private static final int INVENTORY_SIZE = 54; // 6 rows of inventory
+    private static final int INVENTORY_SIZE = 54; 
     private static final String INVENTORY_TITLE = ChatColor.DARK_PURPLE + "Визуальный редактор скриптов";
     
     private final Player player;
@@ -45,7 +45,7 @@ public class ScriptBlockGUI {
      * Loads block configurations from the config file
      */
     private void loadBlockConfigs() {
-        // TODO: Load block configurations from coding_blocks.yml
+        
     }
     
     /**
@@ -64,7 +64,7 @@ public class ScriptBlockGUI {
             blockSlots.put(slot, block);
         }
         
-        // Add block type selector items
+        
         addBlockTypeSelectors();
     }
     
@@ -102,7 +102,7 @@ public class ScriptBlockGUI {
         ItemMeta meta = item.getItemMeta();
         meta.setDisplayName(name);
         
-        // Add block description and parameters to lore
+        
         lore.add(ChatColor.GRAY + "Тип: " + block.getType());
         lore.add(ChatColor.GRAY + "Содержимое: " + block.getContent());
         
@@ -115,9 +115,9 @@ public class ScriptBlockGUI {
      * Adds block type selector items to the inventory
      */
     private void addBlockTypeSelectors() {
-        int startSlot = INVENTORY_SIZE - 9; // Bottom row
+        int startSlot = INVENTORY_SIZE - 9; 
         
-        // Add trigger block selector
+        
         ItemStack triggerSelector = createTypeSelector(
             Material.DIAMOND_BLOCK,
             ChatColor.AQUA + "Добавить триггер",
@@ -125,7 +125,7 @@ public class ScriptBlockGUI {
         );
         inventory.setItem(startSlot, triggerSelector);
         
-        // Add action block selector
+        
         ItemStack actionSelector = createTypeSelector(
             Material.COBBLESTONE,
             ChatColor.GRAY + "Добавить действие",
@@ -133,7 +133,7 @@ public class ScriptBlockGUI {
         );
         inventory.setItem(startSlot + 1, actionSelector);
         
-        // Add condition block selector
+        
         ItemStack conditionSelector = createTypeSelector(
             Material.GOLD_BLOCK,
             ChatColor.YELLOW + "Добавить условие",
@@ -141,7 +141,7 @@ public class ScriptBlockGUI {
         );
         inventory.setItem(startSlot + 2, conditionSelector);
         
-        // Add loop block selector
+        
         ItemStack loopSelector = createTypeSelector(
             Material.EMERALD_BLOCK,
             ChatColor.GREEN + "Добавить цикл",

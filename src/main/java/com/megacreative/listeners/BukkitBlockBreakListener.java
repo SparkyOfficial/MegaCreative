@@ -20,14 +20,14 @@ public class BukkitBlockBreakListener implements Listener {
     
     @EventHandler
     public void onBlockBreak(BlockBreakEvent bukkitEvent) {
-        // Create our custom event
+        
         MegaBlockBreakEvent internalEvent = new MegaBlockBreakEvent(
             bukkitEvent.getPlayer(),
             bukkitEvent.getBlock().getLocation(),
             bukkitEvent.getBlock().getType()
         );
         
-        // Publish it to our event system
+        
         plugin.getServer().getPluginManager().callEvent(internalEvent);
     }
 }

@@ -25,17 +25,17 @@ public class IsNearBlockCondition implements BlockCondition {
         }
 
         try {
-            // Get parameters from the new parameter system
+            
             DataValue blockValue = block.getParameter("block");
             DataValue distanceValue = block.getParameter("distance");
             
-            // Parse block type parameter
+            
             if (blockValue == null || blockValue.isEmpty()) {
                 context.getPlugin().getLogger().warning("IsNearBlockCondition: 'block' parameter is missing.");
                 return false;
             }
             
-            // Resolve any placeholders in the block type
+            
             ParameterResolver resolver = new ParameterResolver(context);
             DataValue resolvedBlock = resolver.resolve(context, blockValue);
             
@@ -45,7 +45,7 @@ public class IsNearBlockCondition implements BlockCondition {
                 return false;
             }
 
-            // Parse distance parameter (default to 5)
+            
             int distance = 5;
             if (distanceValue != null && !distanceValue.isEmpty()) {
                 try {
@@ -55,11 +55,11 @@ public class IsNearBlockCondition implements BlockCondition {
                 }
             }
 
-            // Check if the specified block type is near the player
+            
             try {
                 Material material = Material.valueOf(blockName.toUpperCase());
                 
-                // Check blocks around the player within the specified distance
+                
                 for (int x = -distance; x <= distance; x++) {
                     for (int y = -distance; y <= distance; y++) {
                         for (int z = -distance; z <= distance; z++) {
@@ -76,7 +76,7 @@ public class IsNearBlockCondition implements BlockCondition {
                 return false;
             }
         } catch (Exception e) {
-            // If there's an error, return false
+            
             context.getPlugin().getLogger().warning("Error in IsNearBlockCondition: " + e.getMessage());
             return false;
         }

@@ -66,13 +66,13 @@ public class CodeBlockSignManager implements Listener {
      * Creates a sign for a code block
      */
     private void createSignForBlock(Location blockLocation, CodeBlock codeBlock) {
-        // Find an appropriate location for the sign (above the block)
+        
         Location signLocation = blockLocation.clone().add(0, 1, 0);
         Block signBlock = signLocation.getBlock();
         
-        // Check if there's already a block above
+        
         if (!signBlock.getType().isAir() && signBlock.getType() != Material.OAK_SIGN && signBlock.getType() != Material.OAK_WALL_SIGN) {
-            // Try to find another spot
+            
             signLocation = findAvailableSignLocation(blockLocation);
             if (signLocation == null) {
                 LOGGER.warning("No available location for sign at " + blockLocation);
@@ -81,11 +81,11 @@ public class CodeBlockSignManager implements Listener {
             signBlock = signLocation.getBlock();
         }
         
-        // Set the block to a sign
+        
         if (signBlock.getType().isAir() || signBlock.getType() == Material.OAK_SIGN || signBlock.getType() == Material.OAK_WALL_SIGN) {
-            signBlock.setType(Material.OAK_SIGN); // Use oak sign by default
+            signBlock.setType(Material.OAK_SIGN); 
             
-            // Update the sign text
+            
             if (signBlock.getState() instanceof Sign sign) {
                 updateSignText(sign, codeBlock);
                 sign.update();
@@ -97,11 +97,11 @@ public class CodeBlockSignManager implements Listener {
      * Removes a sign from a block location
      */
     private void removeSignFromBlock(Location blockLocation) {
-        // Check above the block for a sign
+        
         Location signLocation = blockLocation.clone().add(0, 1, 0);
         Block signBlock = signLocation.getBlock();
         
-        // If there's a sign above, remove it
+        
         if (signBlock.getType() == Material.OAK_SIGN || signBlock.getType() == Material.OAK_WALL_SIGN) {
             signBlock.setType(Material.AIR);
         }
@@ -113,14 +113,14 @@ public class CodeBlockSignManager implements Listener {
     private void updateSignText(Sign sign, CodeBlock codeBlock) {
         String[] lines = new String[4];
         
-        // First line: Block type indicator
+        
         if (codeBlock.isBracket()) {
             lines[0] = ChatColor.GOLD + "[BRACKET]";
         } else {
             lines[0] = ChatColor.BLUE + "[CODE]";
         }
         
-        // Second line: Action/Event/Condition
+        
         if (codeBlock.getAction() != null && !codeBlock.getAction().equals("NOT_SET")) {
             lines[1] = ChatColor.WHITE + truncateString(codeBlock.getAction(), 15);
         } else if (codeBlock.getEvent() != null && !codeBlock.getEvent().equals("NOT_SET")) {
@@ -131,10 +131,10 @@ public class CodeBlockSignManager implements Listener {
             lines[1] = ChatColor.GRAY + "NOT_SET";
         }
         
-        // Third line: Material
+        
         lines[2] = ChatColor.GRAY + truncateString(codeBlock.getMaterial().name(), 15);
         
-        // Fourth line: ID or status
+        
         if (codeBlock.getId() != null) {
             String id = codeBlock.getId().toString();
             lines[3] = ChatColor.DARK_GRAY + "#" + id.substring(0, Math.min(12, id.length()));
@@ -142,7 +142,7 @@ public class CodeBlockSignManager implements Listener {
             lines[3] = "";
         }
         
-        // Set the lines on the sign
+        
         for (int i = 0; i < 4; i++) {
             if (lines[i] != null) {
                 sign.setLine(i, lines[i]);
@@ -154,13 +154,13 @@ public class CodeBlockSignManager implements Listener {
      * Finds an available location for placing a sign near a block
      */
     private Location findAvailableSignLocation(Location blockLocation) {
-        // Check adjacent locations for available space
+        
         Location[] adjacentLocations = {
-            blockLocation.clone().add(1, 0, 0),  // East
-            blockLocation.clone().add(-1, 0, 0), // West
-            blockLocation.clone().add(0, 0, 1),  // South
-            blockLocation.clone().add(0, 0, -1), // North
-            blockLocation.clone().add(0, 1, 0)   // Above (already checked, but included for completeness)
+            blockLocation.clone().add(1, 0, 0),  
+            blockLocation.clone().add(-1, 0, 0), 
+            blockLocation.clone().add(0, 0, 1),  
+            blockLocation.clone().add(0, 0, -1), 
+            blockLocation.clone().add(0, 1, 0)   
         };
         
         for (Location location : adjacentLocations) {
@@ -170,7 +170,7 @@ public class CodeBlockSignManager implements Listener {
             }
         }
         
-        return null; // No available location found
+        return null; 
     }
     
     /**

@@ -49,12 +49,12 @@ public class ItemStackTypeAdapter implements com.google.gson.JsonSerializer<Item
             return JsonNull.INSTANCE;
         }
         
-        // Используем встроенную в Bukkit сериализацию, она надежна и безопасна
-        // Use Bukkit's built-in serialization, it's reliable and safe
-        // Verwenden Sie die in Bukkit eingebaute Serialisierung, sie ist zuverlässig und sicher
-        // Это решает проблему InaccessibleObjectException с Java 9+ модулями
-        // This solves the InaccessibleObjectException problem with Java 9+ modules
-        // Dies löst das InaccessibleObjectException-Problem mit Java 9+-Modulen
+        
+        
+        
+        
+        
+        
         Map<String, Object> serializedData = itemStack.serialize();
         return context.serialize(serializedData);
     }
@@ -89,15 +89,15 @@ public class ItemStackTypeAdapter implements com.google.gson.JsonSerializer<Item
         }
 
         try {
-            // Десериализуем из карты, которую создает Bukkit
-            // Deserialize from the map that Bukkit creates
-            // Deserialisieren aus der Karte, die Bukkit erstellt
+            
+            
+            
             Map<String, Object> serializedData = context.deserialize(jsonElement, Map.class);
             return ItemStack.deserialize(serializedData);
         } catch (Exception e) {
             throw new JsonParseException("Failed to deserialize ItemStack using Bukkit serialization: " + e.getMessage(), e);
-            // Не удалось десериализовать ItemStack с использованием сериализации Bukkit:
-            // Fehler bei der Deserialisierung von ItemStack mit Bukkit-Serialisierung:
+            
+            
         }
     }
 }

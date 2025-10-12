@@ -20,12 +20,12 @@ public class BukkitInventoryClickListener implements Listener {
     
     @EventHandler
     public void onInventoryClick(InventoryClickEvent bukkitEvent) {
-        // Only handle player inventory click events
+        
         if (!(bukkitEvent.getWhoClicked() instanceof org.bukkit.entity.Player)) {
             return;
         }
         
-        // Create our custom event
+        
         MegaInventoryClickEvent internalEvent = new MegaInventoryClickEvent(
             (org.bukkit.entity.Player) bukkitEvent.getWhoClicked(),
             bukkitEvent.getInventory(),
@@ -34,7 +34,7 @@ public class BukkitInventoryClickListener implements Listener {
             bukkitEvent.getClick()
         );
         
-        // Publish it to our event system
+        
         plugin.getServer().getPluginManager().callEvent(internalEvent);
     }
 }

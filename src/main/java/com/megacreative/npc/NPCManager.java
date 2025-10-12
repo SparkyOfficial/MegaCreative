@@ -99,7 +99,7 @@ public class NPCManager {
             public void run() {
                 updateNPCs();
             }
-        }.runTaskTimer(plugin, 0L, 5L); // Run every 5 ticks (4 times per second)
+        }.runTaskTimer(plugin, 0L, 5L); 
     }
     
     /**
@@ -117,7 +117,7 @@ public class NPCManager {
      */
     private void updateNPCs() {
         for (CustomNPC npc : npcs.values()) {
-            // Update NPC behaviors, animations, etc.
+            
             updateNPC(npc);
         }
     }
@@ -127,12 +127,12 @@ public class NPCManager {
      * @param npc The NPC to update
      */
     private void updateNPC(CustomNPC npc) {
-        // This is where we would implement NPC AI behaviors
-        // For example:
-        // - Look at nearby players
-        // - Play random animations
-        // - Follow paths
-        // - Respond to player interactions
+        
+        
+        
+        
+        
+        
     }
     
     /**

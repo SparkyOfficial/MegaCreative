@@ -26,7 +26,7 @@ public class WorkspaceSession {
     private Set<UUID> collaborators = new HashSet<>();
     private boolean allowCollaboration = false;
     
-    // Undo/Redo
+    
     private Stack<ScriptSnapshot> undoStack = new Stack<>();
     private Stack<ScriptSnapshot> redoStack = new Stack<>();
     
@@ -49,7 +49,7 @@ public class WorkspaceSession {
         this.createdTime = System.currentTimeMillis();
     }
     
-    // Script management
+    
     /**
      * Добавляет блок в скрипт
      * @param block Блок для добавления
@@ -83,7 +83,7 @@ public class WorkspaceSession {
         }
     }
     
-    // Undo/Redo
+    
     /**
      * Сохраняет снимок скрипта для отмены/повтора
      * @param description Описание снимка
@@ -131,7 +131,7 @@ public class WorkspaceSession {
         }
     }
     
-    // Collaboration
+    
     /**
      * Включает режим совместной работы
      *
@@ -174,7 +174,7 @@ public class WorkspaceSession {
         player.sendMessage("§aScript saved!");
     }
     
-    // Getters/Setters
+    
     /**
      * Получает игрока сессии
      * @return Игрок сессии
@@ -375,7 +375,7 @@ class ScriptBlock {
         return new ScriptBlock(this);
     }
     
-    // Getters/Setters
+    
     /**
      * Получает действие блока
      * @return Действие блока

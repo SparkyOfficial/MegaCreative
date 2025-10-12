@@ -26,10 +26,10 @@ public class MainMenu extends AbstractMenu {
     
     @Override
     public void fillItems(Player player) {
-        // Fill border with decorative items
+        
         fillBorder();
         
-        // Add main menu items
+        
         setItem(10, createMenuItem(Material.BOOK, "§e§lMy Worlds", "§7Manage your creative worlds"));
         setItem(11, createMenuItem(Material.COMMAND_BLOCK, "§e§lScripts", "§7Create and manage scripts"));
         setItem(12, createMenuItem(Material.REDSTONE, "§e§lBlocks", "§7Configure code blocks"));
@@ -38,7 +38,7 @@ public class MainMenu extends AbstractMenu {
         setItem(15, createMenuItem(Material.EMERALD, "§e§lMarketplace", "§7Browse community creations"));
         setItem(16, createMenuItem(Material.NETHER_STAR, "§e§lPlugins", "§7Manage plugins and extensions"));
         
-        // Add quick access items
+        
         setItem(28, createMenuItem(Material.CLOCK, "§6§lRecent Worlds", "§7Quick access to recent worlds"));
         setItem(29, createMenuItem(Material.MAP, "§6§lFavorites", "§7Your favorite scripts and worlds"));
         setItem(30, createMenuItem(Material.PAPER, "§6§lTutorials", "§7Learn how to use MegaCreative"));
@@ -47,13 +47,13 @@ public class MainMenu extends AbstractMenu {
         setItem(33, createMenuItem(Material.CHEST, "§6§lResources", "§7Manage resources and assets"));
         setItem(34, createMenuItem(Material.ENCHANTING_TABLE, "§6§lAdvanced Tools", "§7Access advanced features"));
         
-        // Add reference system-style magic items
+        
         setItem(40, createMenuItem(Material.END_CRYSTAL, "§d§lMagic Center", "§7Access reference system features"));
         
-        // Add player info
+        
         setItem(45, createPlayerInfoItem());
         
-        // Add system info
+        
         setItem(53, createSystemInfoItem());
     }
     
@@ -64,58 +64,58 @@ public class MainMenu extends AbstractMenu {
         Player player = (Player) event.getWhoClicked();
         int slot = event.getRawSlot();
         
-        // Handle menu navigation
+        
         switch (slot) {
             case 10:
-                // My Worlds
+                
                 player.sendMessage("§eOpening My Worlds menu...");
                 player.closeInventory();
-                // TODO: Open My Worlds menu
+                
                 break;
             case 11:
-                // Scripts
+                
                 player.sendMessage("§eOpening Scripts menu...");
                 player.closeInventory();
-                // TODO: Open Scripts menu
+                
                 break;
             case 12:
-                // Blocks
+                
                 player.sendMessage("§eOpening Blocks menu...");
                 player.closeInventory();
-                // TODO: Open Blocks menu
+                
                 break;
             case 13:
-                // Player Settings
+                
                 player.sendMessage("§eOpening Player Settings menu...");
                 player.closeInventory();
-                // TODO: Open Player Settings menu
+                
                 break;
             case 14:
-                // World Templates
+                
                 player.sendMessage("§eOpening World Templates menu...");
                 player.closeInventory();
-                // TODO: Open World Templates menu
+                
                 break;
             case 15:
-                // Marketplace
+                
                 player.sendMessage("§eOpening Marketplace...");
                 player.closeInventory();
-                // TODO: Open Marketplace
+                
                 break;
             case 16:
-                // Plugins
+                
                 player.sendMessage("§eOpening Plugins menu...");
                 player.closeInventory();
-                // TODO: Open Plugins menu
+                
                 break;
             case 40:
-                // Magic Center
+                
                 player.sendMessage("§d✨ Accessing reference system magic...");
                 player.closeInventory();
-                // TODO: Open Magic Center
+                
                 break;
             default:
-                // Do nothing for other slots
+                
                 break;
         }
     }
@@ -125,7 +125,7 @@ public class MainMenu extends AbstractMenu {
         Player player = (Player) event.getPlayer();
         player.sendMessage("§aWelcome to MegaCreative! §7(Reference System Style)");
         
-        // Add visual effects for reference system-style magic
+        
         player.spawnParticle(org.bukkit.Particle.ENCHANTMENT_TABLE, 
             player.getLocation().add(0, 1, 0), 15, 0.5, 0.5, 0.5, 1);
         player.playSound(player.getLocation(), org.bukkit.Sound.BLOCK_BEACON_ACTIVATE, 1.0f, 1.0f);

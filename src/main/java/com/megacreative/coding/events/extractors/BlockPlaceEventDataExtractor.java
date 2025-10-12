@@ -22,7 +22,7 @@ public class BlockPlaceEventDataExtractor extends AbstractEventDataExtractor<Blo
     
     @Override
     protected void initializeVariables() {
-        // Player variables
+        
         registerVariable("playerName", "Name of the player who placed the block");
         registerVariable("playerUUID", "UUID of the player who placed the block");
         registerVariable("playerDisplayName", "Display name of the player");
@@ -32,7 +32,7 @@ public class BlockPlaceEventDataExtractor extends AbstractEventDataExtractor<Blo
         registerVariable("playerLevel", "Level of the player");
         registerVariable("playerExp", "Experience of the player");
         
-        // Block variables
+        
         registerVariable("blockType", "Type/material of the placed block");
         registerVariable("blockX", "X coordinate of the placed block");
         registerVariable("blockY", "Y coordinate of the placed block");
@@ -41,12 +41,12 @@ public class BlockPlaceEventDataExtractor extends AbstractEventDataExtractor<Blo
         registerVariable("blockLocation", "Complete block location as string");
         registerVariable("blockData", "Block data/state information");
         
-        // Item variables
+        
         registerVariable("itemType", "Type/material of the item used to place the block");
         registerVariable("itemName", "Display name of the item used to place the block");
         registerVariable("itemAmount", "Amount of items in the stack used to place the block");
         
-        // Event specific variables
+        
         registerVariable("isCancelled", "Whether the place event is cancelled");
         registerVariable("canBuild", "Whether the player can build at this location");
         registerVariable("hand", "Which hand was used to place the block");
@@ -61,17 +61,17 @@ public class BlockPlaceEventDataExtractor extends AbstractEventDataExtractor<Blo
         Location blockLocation = block.getLocation();
         ItemStack itemInHand = event.getItemInHand();
         
-        // Extract player data
+        
         extractPlayerData(data, player);
         
-        // Extract block location data
+        
         extractLocationData(data, blockLocation, "block");
         
-        // Block specific data
+        
         data.put("blockType", DataValue.fromObject(block.getType().name()));
         data.put("blockData", DataValue.fromObject(block.getBlockData().getAsString()));
         
-        // Item specific data
+        
         if (itemInHand != null) {
             data.put("itemType", DataValue.fromObject(itemInHand.getType().name()));
             if (itemInHand.hasItemMeta() && itemInHand.getItemMeta().hasDisplayName()) {
@@ -82,7 +82,7 @@ public class BlockPlaceEventDataExtractor extends AbstractEventDataExtractor<Blo
             data.put("itemAmount", DataValue.fromObject(itemInHand.getAmount()));
         }
         
-        // Event specific data
+        
         data.put("isCancelled", DataValue.fromObject(event.isCancelled()));
         data.put("canBuild", DataValue.fromObject(event.canBuild()));
         data.put("hand", DataValue.fromObject(event.getHand().name()));

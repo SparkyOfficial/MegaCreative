@@ -46,12 +46,12 @@ public class EventSelectionGUI implements GUIManager.ManagedGUIInterface {
     private final BlockConfigService blockConfigService;
     private final CustomEventManager eventManager;
     
-    // Categories for different types of events
+    
     private static final Map<String, String> CATEGORY_NAMES = new LinkedHashMap<>();
     private static final Map<String, Material> CATEGORY_MATERIALS = new HashMap<>();
     
     static {
-        // Define category names and their display names
+        
         CATEGORY_NAMES.put("PLAYER", "👤 Игрок");
         CATEGORY_NAMES.put("WORLD", "🌍 Мир");
         CATEGORY_NAMES.put("BLOCK", "🧱 Блоки");
@@ -59,7 +59,7 @@ public class EventSelectionGUI implements GUIManager.ManagedGUIInterface {
         CATEGORY_NAMES.put("SYSTEM", "⚙️ Система");
         CATEGORY_NAMES.put("CHAT", "💬 Чат");
         
-        // Define materials for category items
+        
         CATEGORY_MATERIALS.put("PLAYER", Material.PLAYER_HEAD);
         CATEGORY_MATERIALS.put("WORLD", Material.GRASS_BLOCK);
         CATEGORY_MATERIALS.put("BLOCK", Material.COBBLESTONE);
@@ -82,7 +82,7 @@ public class EventSelectionGUI implements GUIManager.ManagedGUIInterface {
         this.blockMaterial = blockMaterial;
         this.guiManager = plugin.getServiceRegistry().getGuiManager();
         
-        // Add null check for service registry
+        
         if (plugin != null && plugin.getServiceRegistry() != null) {
             this.blockConfigService = plugin.getServiceRegistry().getBlockConfigService();
             this.eventManager = plugin.getServiceRegistry().getCustomEventManager();
@@ -92,7 +92,7 @@ public class EventSelectionGUI implements GUIManager.ManagedGUIInterface {
             player.sendMessage("§cBlock configuration service not available!");
         }
         
-        // Create inventory with appropriate size
+        
         this.inventory = Bukkit.createInventory(null, 54, "§8Выбор события: " + getBlockDisplayName());
         
         setupInventory();
@@ -102,7 +102,7 @@ public class EventSelectionGUI implements GUIManager.ManagedGUIInterface {
      * Получает отображаемое имя блока
      */
     private String getBlockDisplayName() {
-        // Get display name from block config service
+        
         BlockConfigService.BlockConfig config = blockConfigService.getBlockConfigByMaterial(blockMaterial);
         return config != null ? config.getDisplayName() : blockMaterial.name();
     }
@@ -113,20 +113,20 @@ public class EventSelectionGUI implements GUIManager.ManagedGUIInterface {
     private void setupInventory() {
         inventory.clear();
         
-        // Add decorative border
+        
         ItemStack borderItem = new ItemStack(Material.BLACK_STAINED_GLASS_PANE);
         ItemMeta borderMeta = borderItem.getItemMeta();
         borderMeta.setDisplayName(" ");
         borderItem.setItemMeta(borderMeta);
         
-        // Fill border slots
+        
         for (int i = 0; i < 54; i++) {
             if (i < 9 || i >= 45 || i % 9 == 0 || i % 9 == 8) {
                 inventory.setItem(i, borderItem);
             }
         }
         
-        // Add info item in the center
+        
         ItemStack infoItem = new ItemStack(blockMaterial);
         ItemMeta infoMeta = infoItem.getItemMeta();
         infoMeta.setDisplayName("§e§l" + getBlockDisplayName());
@@ -142,7 +142,7 @@ public class EventSelectionGUI implements GUIManager.ManagedGUIInterface {
         infoItem.setItemMeta(infoMeta);
         inventory.setItem(4, infoItem);
         
-        // Add category items
+        
         int slot = 10;
         for (Map.Entry<String, String> category : CATEGORY_NAMES.entrySet()) {
             String categoryKey = category.getKey();
@@ -161,8 +161,8 @@ public class EventSelectionGUI implements GUIManager.ManagedGUIInterface {
             categoryItem.setItemMeta(categoryMeta);
             inventory.setItem(slot, categoryItem);
             
-            slot += 2; // Space out categories
-            if (slot >= 44) break; // Don't go into border area
+            slot += 2; 
+            if (slot >= 44) break; 
         }
     }
     
@@ -173,10 +173,10 @@ public class EventSelectionGUI implements GUIManager.ManagedGUIInterface {
         guiManager.registerGUI(player, this, inventory);
         player.openInventory(inventory);
         
-        // Аудио обратная связь при открытии GUI
+        
         player.playSound(player.getLocation(), org.bukkit.Sound.UI_BUTTON_CLICK, 0.7f, 1.2f);
         
-        // Add visual effects for reference system-style magic
+        
         player.spawnParticle(org.bukkit.Particle.ENCHANTMENT_TABLE, 
             player.getLocation().add(0, 1, 0), 10, 0.5, 0.5, 0.5, 1);
     }
@@ -199,7 +199,7 @@ public class EventSelectionGUI implements GUIManager.ManagedGUIInterface {
         if (!player.equals(event.getWhoClicked())) return;
         if (!inventory.equals(event.getInventory())) return;
         
-        event.setCancelled(true); // Cancel all clicks by default
+        event.setCancelled(true); 
         
         ItemStack clicked = event.getCurrentItem();
         if (clicked == null || !clicked.hasItemMeta()) return;
@@ -207,24 +207,24 @@ public class EventSelectionGUI implements GUIManager.ManagedGUIInterface {
         ItemMeta meta = clicked.getItemMeta();
         String displayName = meta.getDisplayName();
         
-        // Check if it's a category item
+        
         for (Map.Entry<String, String> category : CATEGORY_NAMES.entrySet()) {
             String categoryName = category.getValue();
             if (displayName.contains(categoryName)) {
-                // Open category selection GUI
+                
                 openCategorySelectionGUI(category.getKey());
                 return;
             }
         }
         
-        // Handle other clicks
+        
         List<String> lore = meta.getLore();
         if (lore != null) {
-            // Find event ID in lore
+            
             String eventId = null;
             for (String line : lore) {
                 if (line.startsWith("§8ID: ")) {
-                    eventId = line.substring(5).trim(); // Remove "§8ID: " prefix
+                    eventId = line.substring(5).trim(); 
                     break;
                 }
             }
@@ -243,23 +243,23 @@ public class EventSelectionGUI implements GUIManager.ManagedGUIInterface {
      * @param category Категория для отображения
      */
     private void openCategorySelectionGUI(String category) {
-        // Create new inventory for category selection
+        
         Inventory categoryInventory = Bukkit.createInventory(null, 54, "§8" + CATEGORY_NAMES.getOrDefault(category, category));
         
-        // Add decorative border
+        
         ItemStack borderItem = new ItemStack(Material.GRAY_STAINED_GLASS_PANE);
         ItemMeta borderMeta = borderItem.getItemMeta();
         borderMeta.setDisplayName(" ");
         borderItem.setItemMeta(borderMeta);
         
-        // Fill border slots
+        
         for (int i = 0; i < 54; i++) {
             if (i < 9 || i >= 45 || i % 9 == 0 || i % 9 == 8) {
                 categoryInventory.setItem(i, borderItem);
             }
         }
         
-        // Add back button
+        
         ItemStack backButton = new ItemStack(Material.ARROW);
         ItemMeta backMeta = backButton.getItemMeta();
         backMeta.setDisplayName("§c⬅ Назад");
@@ -269,10 +269,10 @@ public class EventSelectionGUI implements GUIManager.ManagedGUIInterface {
         backButton.setItemMeta(backMeta);
         categoryInventory.setItem(49, backButton);
         
-        // Load events for this category
+        
         loadEventsForCategory(categoryInventory, category);
         
-        // Open the category inventory
+        
         player.openInventory(categoryInventory);
     }
     
@@ -282,16 +282,16 @@ public class EventSelectionGUI implements GUIManager.ManagedGUIInterface {
      * @param category Категория для загрузки
      */
     private void loadEventsForCategory(Inventory inventory, String category) {
-        // Check if eventManager is available
+        
         if (eventManager == null) {
             player.sendMessage("§cОшибка: Менеджер событий недоступен!");
             return;
         }
         
-        // Get all registered events from the event manager
+        
         Map<String, CustomEvent> events = eventManager.getEvents();
         
-        // Filter events by category
+        
         List<String> categoryEvents = new ArrayList<>();
         for (Map.Entry<String, CustomEvent> entry : events.entrySet()) {
             String eventId = entry.getKey();
@@ -303,10 +303,10 @@ public class EventSelectionGUI implements GUIManager.ManagedGUIInterface {
             }
         }
         
-        // Create event items
+        
         int slot = 10;
         for (String eventId : categoryEvents) {
-            if (slot >= 44) break; // Don't go into border area
+            if (slot >= 44) break; 
             
             CustomEvent event = events.get(eventId);
             if (event != null) {
@@ -315,7 +315,7 @@ public class EventSelectionGUI implements GUIManager.ManagedGUIInterface {
             }
             
             slot++;
-            if (slot % 9 == 8) slot += 2; // Skip border slots
+            if (slot % 9 == 8) slot += 2; 
         }
     }
     
@@ -325,15 +325,15 @@ public class EventSelectionGUI implements GUIManager.ManagedGUIInterface {
      * @return ItemStack элемент события
      */
     private ItemStack createEventItem(CustomEvent event) {
-        // Create appropriate material for event type
+        
         Material material = getEventMaterial(event);
         ItemStack item = new ItemStack(material);
         ItemMeta meta = item.getItemMeta();
         
-        // Set display name
+        
         meta.setDisplayName("§a§l" + getEventDisplayName(event));
         
-        // Set lore with description and category
+        
         List<String> lore = new ArrayList<>();
         lore.add("§7" + getEventDescription(event));
         lore.add("");
@@ -387,7 +387,7 @@ public class EventSelectionGUI implements GUIManager.ManagedGUIInterface {
      * @return Материал для события
      */
     private Material getEventMaterial(CustomEvent event) {
-        // Return appropriate materials based on event type
+        
         switch (getEventCategory(event)) {
             case "PLAYER": return Material.PLAYER_HEAD;
             case "WORLD": return Material.GRASS_BLOCK;
@@ -405,7 +405,7 @@ public class EventSelectionGUI implements GUIManager.ManagedGUIInterface {
      * @return Отображаемое имя события
      */
     private String getEventDisplayName(CustomEvent event) {
-        // Return user-friendly names for events
+        
         String eventId = event.getId().toString();
         switch (eventId.toLowerCase()) {
             case "onjoin": return "При входе";
@@ -427,7 +427,7 @@ public class EventSelectionGUI implements GUIManager.ManagedGUIInterface {
      * @return Описание события
      */
     private String getEventDescription(CustomEvent event) {
-        // Return descriptions for events
+        
         String eventId = event.getId().toString();
         switch (eventId.toLowerCase()) {
             case "onjoin": return "Срабатывает когда игрок заходит на сервер";
@@ -448,7 +448,7 @@ public class EventSelectionGUI implements GUIManager.ManagedGUIInterface {
      * @param eventId ID события
      */
     private void selectEvent(String eventId) {
-        // Get the code block
+        
         BlockPlacementHandler placementHandler = plugin.getServiceRegistry().getBlockPlacementHandler();
         if (placementHandler == null) {
             player.sendMessage("§cОшибка: Не удалось получить обработчик блоков");
@@ -461,26 +461,26 @@ public class EventSelectionGUI implements GUIManager.ManagedGUIInterface {
             return;
         }
         
-        // Set the event
+        
         codeBlock.setEvent(eventId);
         codeBlock.setAction("NOT_SET");
         
-        // Save the world
+        
         var creativeWorld = plugin.getServiceRegistry().getWorldManager().findCreativeWorldByBukkit(player.getWorld());
         if (creativeWorld != null) {
             plugin.getServiceRegistry().getWorldManager().saveWorld(creativeWorld);
         }
         
-        // Notify player
+        
         player.sendMessage("§a✓ Событие '" + eventId + "' установлено!");
         player.sendMessage("§eКликните снова по блоку для настройки параметров.");
         
-        // Add visual feedback for reference system-style magic
+        
         player.spawnParticle(org.bukkit.Particle.VILLAGER_HAPPY, 
             player.getLocation().add(0, 1, 0), 15, 0.5, 0.5, 0.5, 1);
         player.playSound(player.getLocation(), org.bukkit.Sound.ENTITY_EXPERIENCE_ORB_PICKUP, 1.0f, 1.2f);
         
-        // Close this GUI
+        
         player.closeInventory();
     }
     
@@ -490,8 +490,8 @@ public class EventSelectionGUI implements GUIManager.ManagedGUIInterface {
      * @param event Событие закрытия инвентаря
      */
     public void onInventoryClose(InventoryCloseEvent event) {
-        // Optional cleanup when GUI is closed
-        // GUIManager handles automatic unregistration
+        
+        
     }
     
     @Override
@@ -499,7 +499,7 @@ public class EventSelectionGUI implements GUIManager.ManagedGUIInterface {
      * Выполняет очистку ресурсов при закрытии интерфейса
      */
     public void onCleanup() {
-        // Called when GUI is being cleaned up by GUIManager
-        // No special cleanup needed for this GUI
+        
+        
     }
 }

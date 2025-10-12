@@ -14,13 +14,13 @@ public class DataItemFactory {
     private static NamespacedKey DATA_TYPE_KEY;
     private static NamespacedKey DATA_VALUE_KEY;
     
-    // Initialize keys with plugin instance
+    
     public static void initialize(MegaCreative plugin) {
         DATA_TYPE_KEY = new NamespacedKey(plugin, "data_type");
         DATA_VALUE_KEY = new NamespacedKey(plugin, "data_value");
     }
     
-    // Remove fallback methods and use only the initialized keys
+    
     public static NamespacedKey getDataTypeKey() {
         if (DATA_TYPE_KEY == null) {
             throw new IllegalStateException("DataItemFactory not initialized. Call initialize() first.");
@@ -36,7 +36,7 @@ public class DataItemFactory {
     }
 
     public static ItemStack createDataItem(DataType type, String initialValue) {
-        ItemStack item = new ItemStack(Material.BOOK); // Используем книгу как универсальный контейнер
+        ItemStack item = new ItemStack(Material.BOOK); 
         ItemMeta meta = item.getItemMeta();
         
         meta.setDisplayName("§bДанные: " + type.getDisplayName());
@@ -71,6 +71,6 @@ public class DataItemFactory {
         return fromItemStack(item).isPresent();
     }
     
-    // Вложенный класс для удобства
+    
     public record DataItem(DataType type, String value) {}
 }

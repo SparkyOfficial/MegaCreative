@@ -19,13 +19,13 @@ import java.util.regex.Pattern;
 @Deprecated
 public class PlaceholderResolver {
     
-    // Constants for placeholder patterns
+    
     private static final String PLAYER_PLACEHOLDER_PREFIX = "%";
     private static final String PLAYER_PLACEHOLDER_SUFFIX = "%";
     private static final String VARIABLE_PLACEHOLDER_PREFIX = "${";
     private static final String VARIABLE_PLACEHOLDER_SUFFIX = "}";
     
-    // Constants for player placeholders
+    
     private static final String PLACEHOLDER_PLAYER = "player";
     private static final String PLACEHOLDER_WORLD = "world";
     private static final String PLACEHOLDER_X = "x";
@@ -46,7 +46,7 @@ public class PlaceholderResolver {
             return input;
         }
         
-        // Delegate to reference system placeholder resolver for comprehensive support
+        
         return ReferenceSystemPlaceholderResolver.resolvePlaceholders(input, context);
     }
     
@@ -65,7 +65,7 @@ public class PlaceholderResolver {
         String result = input;
         Location location = player.getLocation();
         
-        // Replace common player placeholders
+        
         result = result.replace("%player%", player.getName())
                       .replace("%world%", player.getWorld().getName())
                       .replace("%x%", String.valueOf(location.getBlockX()))
@@ -82,19 +82,19 @@ public class PlaceholderResolver {
      * @return The string with variable placeholders resolved
      */
     private static String resolveVariablePlaceholders(String input, ExecutionContext context) {
-        // Find all variable placeholders
+        
         Matcher matcher = VARIABLE_PLACEHOLDER_PATTERN.matcher(input);
         StringBuffer result = new StringBuffer();
         
         while (matcher.find()) {
             String variableName = matcher.group(1);
             
-            // Get the variable value from the context
+            
             DataValue value = context.getPlugin().getServiceRegistry().getVariableManager().getVariable(variableName, 
                 com.megacreative.coding.variables.IVariableManager.VariableScope.PLAYER, 
                 context.getPlayer() != null ? context.getPlayer().getUniqueId().toString() : null);
             
-            // Replace with the variable value or empty string if not found
+            
             String replacement = value != null ? value.asString() : "";
             matcher.appendReplacement(result, Matcher.quoteReplacement(replacement));
         }
@@ -110,7 +110,7 @@ public class PlaceholderResolver {
      * @return The resolved value or the original placeholder if not found
      */
     public static String resolvePlaceholder(String placeholder, ExecutionContext context) {
-        // Try player placeholders first
+        
         Player player = context.getPlayer();
         if (player != null) {
             Location location = player.getLocation();
@@ -127,12 +127,12 @@ public class PlaceholderResolver {
                 case PLACEHOLDER_Z:
                     return String.valueOf(location.getBlockZ());
                 default:
-                    // Try variable placeholders for unknown player placeholders
+                    
                     break;
             }
         }
         
-        // Try variable placeholders
+        
         DataValue value = context.getPlugin().getServiceRegistry().getVariableManager().getVariable(placeholder, 
             com.megacreative.coding.variables.IVariableManager.VariableScope.PLAYER, 
             context.getPlayer() != null ? context.getPlayer().getUniqueId().toString() : null);
@@ -140,7 +140,7 @@ public class PlaceholderResolver {
             return value.asString();
         }
         
-        // Return the original placeholder if not found
+        
         return "%" + placeholder + "%";
     }
 }

@@ -12,7 +12,7 @@ public class FunctionBlockExecutor implements BlockExecutor {
     private static final Logger LOGGER = java.util.logging.Logger.getLogger(FunctionBlockExecutor.class.getName());
     
     public FunctionBlockExecutor() {
-        // No dependencies needed for basic function blocks
+        
     }
     
     @Override
@@ -36,7 +36,7 @@ public class FunctionBlockExecutor implements BlockExecutor {
             if (functionNameValue != null && !functionNameValue.isEmpty()) {
                 String functionName = functionNameValue.asString();
                 LOGGER.fine("Calling function: " + functionName);
-                // Function calling logic would go here
+                
                 return ExecutionResult.success("Function " + functionName + " called");
             } else {
                 LOGGER.warning("Function call has no function name parameter");

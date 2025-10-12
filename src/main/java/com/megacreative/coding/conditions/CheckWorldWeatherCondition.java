@@ -19,14 +19,14 @@ public class CheckWorldWeatherCondition implements BlockCondition {
         if (player == null) return false;
 
         try {
-            // Get parameters from the new parameter system
+            
             DataValue weatherValue = block.getParameter("weather");
             if (weatherValue == null || weatherValue.isEmpty()) {
                 context.getPlugin().getLogger().warning("CheckWorldWeatherCondition: 'weather' parameter is missing.");
                 return false;
             }
             
-            // Resolve any placeholders in the weather
+            
             ParameterResolver resolver = new ParameterResolver(context);
             DataValue resolvedWeather = resolver.resolve(context, weatherValue);
             

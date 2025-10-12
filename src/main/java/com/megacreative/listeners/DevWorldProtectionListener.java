@@ -34,27 +34,27 @@ public class DevWorldProtectionListener implements Listener {
     private final ITrustedPlayerManager trustedPlayerManager;
     private final BlockConfigService blockConfigService;
     
-    // Жестко закодированные разрешенные материалы для инструментов разработчика
+    
     private static final Set<Material> ALLOWED_TOOLS_AND_UTILITIES_HARDCODED = Set.of(
-        Material.ENDER_CHEST,    // Эндер сундук
-        Material.ANVIL,          // Наковальня
-        Material.CHIPPED_ANVIL,  // Поврежденная наковальня
-        Material.DAMAGED_ANVIL,  // Сильно поврежденная наковальня
-        Material.CRAFTING_TABLE, // Верстак
-        Material.CHEST,          // Сундук
-        Material.BARREL,         // Бочка
-        Material.LECTERN,        // Кафедра
-        Material.REDSTONE_WIRE,  // Редстоун провод
-        Material.REPEATER,       // Редстоун повторитель
-        Material.COMPARATOR,     // Редстоун компаратор
-        Material.TORCH,          // Факел
-        Material.REDSTONE_TORCH, // Редстоун факел
-        Material.BLUE_STAINED_GLASS, // Платформа для размещения блоков кода (события/функции)
-        Material.LIGHT_BLUE_STAINED_GLASS, // Платформа для соединений между линиями
-        Material.GRAY_STAINED_GLASS,  // Платформа для размещения блоков кода
-        Material.WHITE_STAINED_GLASS,      // Платформа для размещения блоков кода
+        Material.ENDER_CHEST,    
+        Material.ANVIL,          
+        Material.CHIPPED_ANVIL,  
+        Material.DAMAGED_ANVIL,  
+        Material.CRAFTING_TABLE, 
+        Material.CHEST,          
+        Material.BARREL,         
+        Material.LECTERN,        
+        Material.REDSTONE_WIRE,  
+        Material.REPEATER,       
+        Material.COMPARATOR,     
+        Material.TORCH,          
+        Material.REDSTONE_TORCH, 
+        Material.BLUE_STAINED_GLASS, 
+        Material.LIGHT_BLUE_STAINED_GLASS, 
+        Material.GRAY_STAINED_GLASS,  
+        Material.WHITE_STAINED_GLASS,      
         
-        // Шалкеры
+        
         Material.SHULKER_BOX, Material.WHITE_SHULKER_BOX, Material.ORANGE_SHULKER_BOX,
         Material.MAGENTA_SHULKER_BOX, Material.LIGHT_BLUE_SHULKER_BOX, Material.YELLOW_SHULKER_BOX,
         Material.LIME_SHULKER_BOX, Material.PINK_SHULKER_BOX, Material.GRAY_SHULKER_BOX,
@@ -63,10 +63,10 @@ public class DevWorldProtectionListener implements Listener {
         Material.RED_SHULKER_BOX, Material.BLACK_SHULKER_BOX
     );
     
-    // Этот сет будет содержать ВСЕ разрешенные материалы (инструменты + кодовые блоки)
+    
     private final Set<Material> allPermittedPlaceAndBreakBlocks = new HashSet<>();
     
-    // Разрешенные материалы для взаимодействия
+    
     private static final Set<Material> ALLOWED_INTERACT = Set.of(
         Material.ENDER_CHEST, Material.ANVIL, Material.CHIPPED_ANVIL, 
         Material.DAMAGED_ANVIL, Material.CRAFTING_TABLE, Material.CHEST,
@@ -78,7 +78,7 @@ public class DevWorldProtectionListener implements Listener {
         Material.BLUE_SHULKER_BOX, Material.BROWN_SHULKER_BOX, Material.GREEN_SHULKER_BOX,
         Material.RED_SHULKER_BOX, Material.BLACK_SHULKER_BOX,
         
-        // ДОБАВЛЯЕМ ВСЕ ВИДЫ ТАБЛИЧЕК ДЛЯ "УМНЫХ ТАБЛИЧЕК"
+        
         Material.OAK_SIGN, Material.OAK_WALL_SIGN,
         Material.SPRUCE_SIGN, Material.SPRUCE_WALL_SIGN,
         Material.BIRCH_SIGN, Material.BIRCH_WALL_SIGN,
@@ -92,24 +92,24 @@ public class DevWorldProtectionListener implements Listener {
         Material.WARPED_SIGN, Material.WARPED_WALL_SIGN
     );
 
-    // Конструктор должен принимать зависимости
+    
     public DevWorldProtectionListener(MegaCreative plugin, ITrustedPlayerManager trustedPlayerManager, BlockConfigService blockConfigService) {
         this.plugin = plugin;
         this.trustedPlayerManager = trustedPlayerManager;
         this.blockConfigService = blockConfigService;
-        // Здесь не инициализируем allowedDevWorldBlocks. Инициализируем после загрузки всех сервисов.
+        
     }
 
     public boolean isInDevWorld(Player player) {
         String worldName = player.getWorld().getName();
-        // Enhanced detection for dev worlds with new naming scheme to match BlockPlacementHandler
+        
         return worldName.contains("dev") || worldName.contains("Dev") || 
                worldName.contains("разработка") || worldName.contains("Разработка") ||
                worldName.contains("creative") || worldName.contains("Creative") ||
                worldName.contains("-code") || worldName.endsWith("-code") || 
                worldName.contains("_code") || worldName.endsWith("_dev") ||
                worldName.contains("megacreative_") || worldName.contains("DEV") ||
-               // Check for dual world mode dev worlds
+               
                (worldName.startsWith("megacreative_") && worldName.endsWith("-code"));
     }
 
@@ -147,10 +147,10 @@ public class DevWorldProtectionListener implements Listener {
         allPermittedPlaceAndBreakBlocks.clear();
         allPermittedPlaceAndBreakBlocks.addAll(ALLOWED_TOOLS_AND_UTILITIES_HARDCODED); 
         
-        // Check if blockConfigService is available and has loaded its configuration
+        
         if (blockConfigService != null) {
-            // Ensure the blockConfigService has loaded its configuration
-            // If the materialToBlockIds map is empty, try to reload the configuration
+            
+            
             if (blockConfigService.getCodeBlockMaterials().isEmpty()) {
                 plugin.getLogger().warning("DevWorldProtectionListener: BlockConfigService has empty code block materials, attempting to reload configuration");
                 blockConfigService.reload();
@@ -180,34 +180,34 @@ public class DevWorldProtectionListener implements Listener {
      * This ensures that the allowed blocks are properly initialized even if the initial initialization failed
      */
     private void ensureAllowedBlocksAreInitialized() {
-        // If the allowed blocks set is empty or only contains the hardcoded tools, 
-        // try to reinitialize it
+        
+        
         if (allPermittedPlaceAndBreakBlocks.size() <= ALLOWED_TOOLS_AND_UTILITIES_HARDCODED.size()) {
             plugin.getLogger().info("DevWorldProtectionListener: Reinitializing allowed blocks");
             initializeDynamicAllowedBlocks();
         }
     }
     
-    // === ЗАЩИТА ОТ РАЗМЕЩЕНИЯ НЕРАЗРЕШЕННЫХ БЛОКОВ ===
+    
     
     @EventHandler(priority = EventPriority.HIGHEST)
     public void onBlockPlace(BlockPlaceEvent event) {
         Player player = event.getPlayer();
         if (!isInDevWorld(player)) return;
         
-        // Ensure allowed blocks are properly initialized
+        
         ensureAllowedBlocksAreInitialized();
         
         Material placedMaterial = event.getBlockPlaced().getType();
         
-        // 1. Сначала проверьте, можно ли поставить это вообще, используя динамически созданный список
+        
         if (!isMaterialAllowedInDevWorldForAction(placedMaterial)) {
             event.setCancelled(true);
             player.sendMessage("§cВы не можете размещать этот блок в мире разработки!");
             return;
         }
 
-        // 2. Проверяем права доступа к кодированию
+        
         if (isMaterialAConfiguredCodeBlock(placedMaterial)) {
             CreativeWorld creativeWorld = plugin.getServiceRegistry().getWorldManager().findCreativeWorldByBukkit(player.getWorld());
             if (creativeWorld != null && !creativeWorld.canCode(player)) {
@@ -216,20 +216,20 @@ public class DevWorldProtectionListener implements Listener {
                 return;
             }
             
-            // 3. Проверяем правильность позиции блока кода (Reference system-like validation)
+            
             if (!isValidCodeBlockPlacement(event.getBlockPlaced(), player)) {
                 event.setCancelled(true);
-                return; // Сообщение об ошибке уже отправлено в методе
+                return; 
             }
         }
         
-        // Если блок является одним из `ALLOWED_TOOLS_AND_UTILITIES_HARDCODED`
-        // (сундук, наковальня и т.д.), он будет разрешен уже первой проверкой.
-        // `BlockPlacementHandler` затем создаст `CodeBlock` для настоящих блоков кода,
-        // а для остальных - просто разместит их как есть.
+        
+        
+        
+        
     }
     
-    // === ЗАЩИТА ОТ РАЗРУШЕНИЯ БЛОКОВ ===
+    
     
     @EventHandler(priority = EventPriority.HIGHEST)
     public void onBlockBreak(BlockBreakEvent event) {
@@ -238,7 +238,7 @@ public class DevWorldProtectionListener implements Listener {
 
         Material brokenBlockType = event.getBlock().getType();
         
-        // 1. Не даем ломать саму структуру платформы (стены из барьера, стекло линий)
+        
         if (brokenBlockType == Material.BARRIER || brokenBlockType == Material.BEACON || 
             (brokenBlockType.name().contains("GLASS") && brokenBlockType.name().contains("STAINED"))) {
             event.setCancelled(true);
@@ -246,8 +246,8 @@ public class DevWorldProtectionListener implements Listener {
             return;
         }
 
-        // 2. Проверяем, можно ли ломать этот блок вообще
-        // Разрешаем ломать И настоящие блоки кодинга, И утилиты/контейнеры.
+        
+        
         if (isMaterialAConfiguredCodeBlock(brokenBlockType) || ALLOWED_TOOLS_AND_UTILITIES_HARDCODED.contains(brokenBlockType)) {
              CreativeWorld creativeWorld = plugin.getServiceRegistry().getWorldManager().findCreativeWorldByBukkit(player.getWorld());
             if (creativeWorld != null && !creativeWorld.canCode(player)) {
@@ -255,54 +255,54 @@ public class DevWorldProtectionListener implements Listener {
                 player.sendMessage("§cУ вас нет прав на удаление блоков в этом мире!");
             }
         } else {
-            // Если это не CodeBlock, не инструмент и не часть платформы, значит, это что-то нежелательное.
+            
             event.setCancelled(true);
             player.sendMessage("§cВы не можете ломать этот блок в мире разработки!");
         }
     }
     
-    // === ЗАЩИТА ВЗАИМОДЕЙСТВИЙ ===
+    
     
     @EventHandler(priority = EventPriority.HIGHEST)
     public void onPlayerInteract(PlayerInteractEvent event) {
         Player player = event.getPlayer();
         if (!isInDevWorld(player)) return;
 
-        // Check if player is in DEV mode
+        
         if (plugin != null && plugin.getServiceRegistry() != null) {
             PlayerModeManager modeManager = plugin.getServiceRegistry().getPlayerModeManager();
             if (modeManager.isInPlayMode(player)) {
-                // If player is in PLAY mode, don't allow interactions with coding blocks
-                // This interaction may be part of their game, not development
+                
+                
                 return;
             }
         }
 
-        // Не отменяем событие, если это AIR
+        
         if (event.getClickedBlock() == null) return; 
 
         Material clickedBlockType = event.getClickedBlock().getType();
 
-        // 1. Если блок НЕ является разрешенным для взаимодействия
-        //    (т.е. не является контейнером, наковальней, книжной полкой и т.д., И не является блоком кодинга)
+        
+        
         if (!ALLOWED_INTERACT.contains(clickedBlockType) && !isMaterialAConfiguredCodeBlock(clickedBlockType)) {
-             // И при этом он не является блоком-основой платформы
+             
             if (!((clickedBlockType.name().contains("GLASS") && clickedBlockType.name().contains("STAINED")) ||
                  clickedBlockType == Material.BEACON || clickedBlockType == Material.BARRIER)) {
                 event.setCancelled(true);
-                //player.sendMessage("§cВзаимодействие с этим блоком в мире разработки запрещено!");
+                
                 return;
             }
         }
-        // Если взаимодействие разрешено, то BlockPlacementHandler или BlockContainerManager могут дальше обработать.
-        // НЕ ставим тут setCancelled(true), чтобы дать возможность другим слушателям (нашим) сработать
-        // Но `BlockPlacementHandler` и `BlockContainerManager` (которые будут слушателями на NORMAL)
-        // должны уметь обрабатывать и отменять событие, если они хотят управлять им.
+        
+        
+        
+        
     }
     
-    // === ЗАЩИТА ПРЕДМЕТОВ КОДИНГА ===
     
-    // Запрещаем выкидывать предметы кодинга
+    
+    
     @EventHandler
     public void onPlayerDropItem(PlayerDropItemEvent event) {
         Player player = event.getPlayer();
@@ -312,7 +312,7 @@ public class DevWorldProtectionListener implements Listener {
         }
     }
 
-    // Запрещаем перемещать предметы кодинга в инвентаре (например, в сундук)
+    
     @EventHandler
     public void onInventoryClick(InventoryClickEvent event) {
         if (!(event.getWhoClicked() instanceof Player player)) return;
@@ -321,7 +321,7 @@ public class DevWorldProtectionListener implements Listener {
         ItemStack clickedItem = event.getCurrentItem();
 
         if (isCodingItem(clickedItem)) {
-            // Разрешаем клики в своем инвентаре (hotbar/main), но отменяем любые другие
+            
             if (event.getClickedInventory() != player.getInventory()) {
                 event.setCancelled(true);
                 player.sendMessage("§cНельзя перемещать инструменты разработчика в другие инвентари!");
@@ -329,7 +329,7 @@ public class DevWorldProtectionListener implements Listener {
         }
     }
     
-    // === ВСПОМОГАТЕЛЬНЫЕ МЕТОДЫ ===
+    
 
     /**
      * Проверяет, является ли материал блоком кода
@@ -343,7 +343,7 @@ public class DevWorldProtectionListener implements Listener {
      * Переименуем для ясности: этот метод определяет, МОЖНО ли _поместить_ или _сломать_ блок этого типа.
      */
     public boolean isMaterialAllowedInDevWorldForAction(Material material) {
-        // Мы хотим, чтобы ЛЮБОЙ код-блок можно было ставить, а также любые utility-блоки
+        
         return isMaterialAConfiguredCodeBlock(material) || ALLOWED_TOOLS_AND_UTILITIES_HARDCODED.contains(material);
     }
     
@@ -362,17 +362,17 @@ public class DevWorldProtectionListener implements Listener {
     private boolean isValidCodeBlockPlacement(org.bukkit.block.Block placedBlock, Player player) {
         org.bukkit.Location location = placedBlock.getLocation();
         
-        // Check if we're in a valid code line position
+        
         if (!DevWorldGenerator.isValidCodePosition(location.getBlockX(), location.getBlockZ())) {
             player.sendMessage("§cБлоки кода можно размещать только на линиях кодирования!");
             return false;
         }
         
-        // Get the glass block underneath
+        
         org.bukkit.block.Block underBlock = location.clone().add(0, -1, 0).getBlock();
         Material underMaterial = underBlock.getType();
         
-        // Get block configuration from the item in hand
+        
         org.bukkit.inventory.ItemStack itemInHand = player.getInventory().getItemInMainHand();
         if (!itemInHand.hasItemMeta() || !itemInHand.getItemMeta().hasDisplayName()) {
             player.sendMessage("§cИспользуйте специальные предметы кодирования!");
@@ -387,7 +387,7 @@ public class DevWorldProtectionListener implements Listener {
             return false;
         }
         
-        // Validate placement based on block type and glass color (Reference system rules)
+        
         return validatePlacementByTypeAndGlass(config, underMaterial, location, player);
     }
     
@@ -402,7 +402,7 @@ public class DevWorldProtectionListener implements Listener {
         switch (blockType) {
             case "EVENT":
             case "FUNCTION":
-                // Events and functions can only be placed on blue glass at position 0
+                
                 if (positionX != 0 || glassMaterial != Material.BLUE_STAINED_GLASS) {
                     player.sendMessage("§cСобытия и функции можно размещать только на синем стекле в начале линии!");
                     return false;
@@ -410,7 +410,7 @@ public class DevWorldProtectionListener implements Listener {
                 break;
                 
             case "CONTROL":
-                // Control blocks (if, loops) can be placed on blue glass (start of line) or after other blocks
+                
                 if (positionX == 0 && glassMaterial != Material.BLUE_STAINED_GLASS) {
                     player.sendMessage("§cБлоки управления в начале линии можно размещать только на синем стекле!");
                     return false;
@@ -423,12 +423,12 @@ public class DevWorldProtectionListener implements Listener {
             case "ACTION":
             case "CONDITION":
             case "VARIABLE":
-                // Actions, conditions, and variables cannot be placed at position 0
+                
                 if (positionX == 0) {
                     player.sendMessage("§cДействия, условия и переменные нельзя размещать в начале линии!");
                     return false;
                 }
-                // Must be placed on gray or white glass
+                
                 if (glassMaterial != Material.GRAY_STAINED_GLASS && glassMaterial != Material.WHITE_STAINED_GLASS) {
                     player.sendMessage("§cЭтот блок можно размещать только на серых или белых линиях!");
                     return false;
@@ -436,7 +436,7 @@ public class DevWorldProtectionListener implements Listener {
                 break;
                 
             default:
-                // For unknown types, allow placement on gray or white glass only
+                
                 if (glassMaterial != Material.GRAY_STAINED_GLASS && glassMaterial != Material.WHITE_STAINED_GLASS) {
                     player.sendMessage("§cЭтот блок можно размещать только на серых или белых линиях!");
                     return false;

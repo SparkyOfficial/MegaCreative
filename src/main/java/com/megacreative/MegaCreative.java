@@ -55,17 +55,17 @@ public class MegaCreative extends JavaPlugin {
     @Override
     public void onDisable() {
         try {
-            // Stop the tick scheduler
+            
             if (tickTask != null) {
                 tickTask.cancel();
             }
             
-            // Stop auto-save task
+            
             if (autoSaveTask != null) {
                 autoSaveTask.cancel();
             }
             
-            // Shutdown all services gracefully through ServiceRegistry
+            
             if (serviceRegistry != null) {
                 serviceRegistry.dispose();
             }
@@ -78,22 +78,22 @@ public class MegaCreative extends JavaPlugin {
      * Initialize dependency injection container and service registry
      */
     private void initializeDependencyInjection() {
-        // Create dependency injection container
+        
         this.dependencyContainer = new DependencyContainer();
         
-        // Register this plugin instance as a singleton in the dependency container
+        
         this.dependencyContainer.registerSingleton(MegaCreative.class, this);
         
-        // Initialize DataItemFactory with plugin instance
+        
         com.megacreative.coding.data.DataItemFactory.initialize(this);
         
-        // Create service registry
+        
         this.serviceRegistry = new ServiceRegistry(this, dependencyContainer);
         
-        // Create command registry
+        
         this.commandRegistry = new CommandRegistry(this, serviceRegistry);
         
-        // Initialize all services
+        
         this.serviceRegistry.initializeServices();
     }
     
@@ -101,22 +101,22 @@ public class MegaCreative extends JavaPlugin {
      * Bootstrap the application by starting core services
      */
     private void bootstrap() {
-        // Connect services after initialization but before use
+        
         serviceRegistry.connectServices();
         
-        // Register events
+        
         registerEvents();
         
-        // Register commands
+        
         registerCommands();
         
-        // Start tick scheduler
+        
         startTickScheduler();
         
-        // Start auto-save system
+        
         startAutoSaveSystem();
         
-        // Delay world loading until after Bukkit is fully initialized
+        
         getServer().getScheduler().runTaskLater(this, this::loadWorlds, 1L);
     }
     
@@ -125,17 +125,17 @@ public class MegaCreative extends JavaPlugin {
      */
     private void loadWorlds() {
         try {
-            // Load worlds after Bukkit is ready
+            
             IWorldManager worldManager = serviceRegistry.getWorldManager();
             if (worldManager instanceof com.megacreative.managers.WorldManagerImpl worldManagerImpl) {
                 worldManagerImpl.loadWorlds();
             }
             
-            // Initialize additional services that depend on worlds being loaded
+            
             serviceRegistry.initializeAdditionalServices();
             
-            // Now that worlds are loaded, rebuild event handler maps
-            // PlayerEventsListener is deprecated, we're using ScriptTriggerManager instead
+            
+            
         } catch (Exception e) {
             getLogger().log(Level.SEVERE, "Error loading worlds", e);
         }
@@ -145,7 +145,7 @@ public class MegaCreative extends JavaPlugin {
      * Register all event listeners
      */
     private void registerEvents() {
-        // Register new architecture listeners
+        
         if (serviceRegistry != null) {
             getServer().getPluginManager().registerEvents(serviceRegistry.getBlockLinker(), this);
             getServer().getPluginManager().registerEvents(serviceRegistry.getBlockHierarchyManager(), this);
@@ -153,10 +153,10 @@ public class MegaCreative extends JavaPlugin {
             getServer().getPluginManager().registerEvents(serviceRegistry.getCodeBlockSignManager(), this);
             getServer().getPluginManager().registerEvents(serviceRegistry.getBlockPlacementHandler(), this);
             
-            // Register DevInventoryManager to handle world change events
+            
             getServer().getPluginManager().registerEvents(serviceRegistry.getDevInventoryManager(), this);
             
-            // Register new Bukkit listeners for clean event bus
+            
             getServer().getPluginManager().registerEvents(new BukkitPlayerJoinListener(this), this);
             getServer().getPluginManager().registerEvents(new BukkitPlayerMoveListener(this), this);
             getServer().getPluginManager().registerEvents(new BukkitPlayerChatListener(this), this);
@@ -171,22 +171,22 @@ public class MegaCreative extends JavaPlugin {
             getServer().getPluginManager().registerEvents(new BukkitInventoryClickListener(this), this);
             getServer().getPluginManager().registerEvents(new BukkitInventoryOpenListener(this), this);
             
-            // Register PlayerWorldChangeListener to handle player world changes and give coding items
+            
             getServer().getPluginManager().registerEvents(new PlayerWorldChangeListener(this), this);
             
-            // Register GUIManager to handle GUI events
+            
             getServer().getPluginManager().registerEvents(serviceRegistry.getGuiManager(), this);
             
-            // Register ScriptTriggerManager to listen to our custom events
+            
             getServer().getPluginManager().registerEvents(serviceRegistry.getScriptTriggerManager(), this);
             
-            // Register DataItemListener to handle data item events
+            
             getServer().getPluginManager().registerEvents(new DataItemListener(this), this);
             
-            // Register WorldInteractListener to handle starter item interactions
+            
             getServer().getPluginManager().registerEvents(new WorldInteractListener(this), this);
             
-            // Register GUIClickListener to handle GUI click events
+            
             getServer().getPluginManager().registerEvents(serviceRegistry.getService(GUIClickListener.class), this);
         }
     }
@@ -207,7 +207,7 @@ public class MegaCreative extends JavaPlugin {
         tickTask = new BukkitRunnable() {
             @Override
             public void run() {
-                // Get the TickManager from the service registry and call tick()
+                
                 if (serviceRegistry != null) {
                     TickManager tickManager = serviceRegistry.getTickManager();
                     if (tickManager != null) {
@@ -215,13 +215,13 @@ public class MegaCreative extends JavaPlugin {
                     }
                 }
                 
-                // Check TPS every 20 ticks (1 second)
+                
                 if (++tpsCheckCounter >= 20) {
                     tpsCheckCounter = 0;
-                    // TPS monitoring logic would go here if needed
+                    
                 }
             }
-        }.runTaskTimer(this, 1L, 1L); // Run every tick
+        }.runTaskTimer(this, 1L, 1L); 
     }
     
     /**
@@ -232,12 +232,12 @@ public class MegaCreative extends JavaPlugin {
             @Override
             public void run() {
                 try {
-                    // Save all creative worlds
+                    
                     if (serviceRegistry != null) {
                         serviceRegistry.getWorldManager().saveAllWorlds();
                     }
                     
-                    // Save player data
+                    
                     if (serviceRegistry != null) {
                         serviceRegistry.getPlayerManager().saveAllPlayerData();
                         serviceRegistry.getVariableManager().savePersistentData();
@@ -249,10 +249,10 @@ public class MegaCreative extends JavaPlugin {
                     e.printStackTrace();
                 }
             }
-        }.runTaskTimer(this, 6000L, 6000L); // Run every 5 minutes (6000 ticks)
+        }.runTaskTimer(this, 6000L, 6000L); 
     }
     
-    // Getters for services
+    
     public ServiceRegistry getServiceRegistry() {
         return serviceRegistry;
     }

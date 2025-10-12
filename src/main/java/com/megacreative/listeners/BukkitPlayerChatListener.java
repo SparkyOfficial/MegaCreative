@@ -20,13 +20,13 @@ public class BukkitPlayerChatListener implements Listener {
     
     @EventHandler
     public void onPlayerChat(AsyncPlayerChatEvent bukkitEvent) {
-        // Create our custom event
+        
         MegaPlayerChatEvent internalEvent = new MegaPlayerChatEvent(
             bukkitEvent.getPlayer(),
             bukkitEvent.getMessage()
         );
         
-        // Publish it to our event system synchronously since MegaPlayerChatEvent is synchronous only
+        
         plugin.getServer().getScheduler().runTask(plugin, () -> {
             plugin.getServer().getPluginManager().callEvent(internalEvent);
         });

@@ -15,11 +15,11 @@ public class PlayerModeManager {
      * Enum representing the two player modes
      */
     public enum PlayerMode {
-        DEV,  // Development mode - Creative, coding blocks, no script execution
-        PLAY  // Play mode - Adventure/Survival, clean inventory, script execution enabled
+        DEV,  
+        PLAY  
     }
     
-    // Map to store each player's current mode
+    
     private final Map<UUID, PlayerMode> playerModes = new HashMap<>();
     
     /**

@@ -20,7 +20,7 @@ public class PlayerDeathEventDataExtractor extends AbstractEventDataExtractor<Pl
     
     @Override
     protected void initializeVariables() {
-        // Player variables
+        
         registerVariable("playerName", "Name of the player who died");
         registerVariable("playerUUID", "UUID of the player who died");
         registerVariable("playerDisplayName", "Display name of the player who died");
@@ -30,7 +30,7 @@ public class PlayerDeathEventDataExtractor extends AbstractEventDataExtractor<Pl
         registerVariable("playerLevel", "Level of the player");
         registerVariable("playerExp", "Experience of the player");
         
-        // Death location variables
+        
         registerVariable("deathX", "X coordinate of death location");
         registerVariable("deathY", "Y coordinate of death location");
         registerVariable("deathZ", "Z coordinate of death location");
@@ -39,7 +39,7 @@ public class PlayerDeathEventDataExtractor extends AbstractEventDataExtractor<Pl
         registerVariable("deathYaw", "Yaw rotation at death location");
         registerVariable("deathPitch", "Pitch rotation at death location");
         
-        // Death specific variables
+        
         registerVariable("deathMessage", "Death message displayed to players");
         registerVariable("deathCause", "Cause of death");
         registerVariable("keepInventory", "Whether player keeps inventory on death");
@@ -55,14 +55,14 @@ public class PlayerDeathEventDataExtractor extends AbstractEventDataExtractor<Pl
         
         Player player = event.getEntity();
         
-        // Extract player data
+        
         extractPlayerData(data, player);
         
-        // Extract death location data
+        
         Location deathLocation = player.getLocation();
         extractLocationData(data, deathLocation, "death");
         
-        // Death specific data
+        
         data.put("deathMessage", DataValue.fromObject(event.getDeathMessage()));
         data.put("deathCause", DataValue.fromObject(
             player.getLastDamageCause() != null ? 

@@ -147,7 +147,7 @@ public class InteractiveCommand implements CommandExecutor, TabCompleter {
         InteractiveGUI gui = guiManager.createInteractiveGUI(player, 
             "🎆 Reference System Interactive Demo", 54);
         
-        // Material selector demo
+        
         InteractiveGUIManager.MaterialSelectorElement materialSelector = 
             new InteractiveGUIManager.MaterialSelectorElement("demo_material", 
                 java.util.Map.of("materials", Arrays.asList(
@@ -159,7 +159,7 @@ public class InteractiveCommand implements CommandExecutor, TabCompleter {
         
         gui.setElement(10, materialSelector);
         
-        // Mode toggle demo
+        
         InteractiveGUIManager.ModeToggleElement modeToggle = 
             new InteractiveGUIManager.ModeToggleElement("demo_mode", 
                 java.util.Map.of("modes", Arrays.asList("ON", "OFF", "AUTO")));
@@ -169,7 +169,7 @@ public class InteractiveCommand implements CommandExecutor, TabCompleter {
         
         gui.setElement(12, modeToggle);
         
-        // Number slider demo
+        
         InteractiveGUIManager.NumberSliderElement numberSlider = 
             new InteractiveGUIManager.NumberSliderElement("demo_number", 
                 java.util.Map.of("min", 0.0, "max", 100.0, "step", 5.0, "value", 50.0));
@@ -179,7 +179,7 @@ public class InteractiveCommand implements CommandExecutor, TabCompleter {
         
         gui.setElement(14, numberSlider);
         
-        // Color picker demo
+        
         InteractiveGUIManager.ColorPickerElement colorPicker = 
             new InteractiveGUIManager.ColorPickerElement("demo_color", java.util.Map.of());
         
@@ -188,7 +188,7 @@ public class InteractiveCommand implements CommandExecutor, TabCompleter {
         
         gui.setElement(16, colorPicker);
         
-        // Item editor demo
+        
         InteractiveGUIManager.ItemStackEditorElement itemEditor = 
             new InteractiveGUIManager.ItemStackEditorElement("demo_item", java.util.Map.of());
         
@@ -222,13 +222,13 @@ public class InteractiveCommand implements CommandExecutor, TabCompleter {
         
         String actionId = args[1];
         
-        // Create a dummy code block for demonstration
+        
         Location location = player.getLocation();
         CodeBlock dummyBlock = new CodeBlock(Material.STONE.name(), actionId);
-        // Note: CodeBlock doesn't have setLocation method in current implementation
-        // Location will be handled by the block placement system
         
-        // Add some example parameters
+        
+        
+        
         dummyBlock.setParameter("message", "Hello World!");
         dummyBlock.setParameter("amount", 1);
         dummyBlock.setParameter("enabled", true);
@@ -250,7 +250,7 @@ public class InteractiveCommand implements CommandExecutor, TabCompleter {
      * @param player Spieler, für den die Einstellungen geöffnet werden
      */
     private void openWorldSettings(Player player) {
-        // Find current creative world
+        
         CreativeWorld world = plugin.getServiceRegistry().getWorldManager().findCreativeWorldByBukkit(player.getWorld());
         if (world == null) {
             player.sendMessage("§cYou must be in a creative world to use world settings!");
@@ -361,7 +361,7 @@ public class InteractiveCommand implements CommandExecutor, TabCompleter {
         List<String> completions = new ArrayList<>();
         
         if (args.length == 1) {
-            // Main command completions
+            
             List<String> commands = Arrays.asList("demo", "block", "world", "test", "help");
             return commands.stream()
                 .filter(cmd -> cmd.startsWith(args[0].toLowerCase()))
@@ -371,14 +371,14 @@ public class InteractiveCommand implements CommandExecutor, TabCompleter {
         if (args.length == 2) {
             switch (args[0].toLowerCase()) {
                 case "block":
-                    // Action ID completions
+                    
                     return Arrays.asList("sendMessage", "teleport", "giveItem", "playSound", "effect")
                         .stream()
                         .filter(action -> action.toLowerCase().startsWith(args[1].toLowerCase()))
                         .collect(Collectors.toList());
                         
                 case "test":
-                    // Element type completions
+                    
                     return Arrays.asList("material", "toggle", "slider", "color", "item", "text")
                         .stream()
                         .filter(type -> type.startsWith(args[1].toLowerCase()))

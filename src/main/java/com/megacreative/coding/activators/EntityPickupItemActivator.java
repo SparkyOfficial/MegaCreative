@@ -70,20 +70,20 @@ public class EntityPickupItemActivator extends Activator {
             return;
         }
         
-        // Execute all actions associated with this activator
+        
         for (com.megacreative.coding.CodeBlock action : actionList) {
             try {
-                // Get the script engine from the plugin
+                
                 com.megacreative.coding.ScriptEngine scriptEngine = plugin.getServiceRegistry().getScriptEngine();
                 
                 if (scriptEngine != null) {
-                    // Convert the first entity to a player if possible
+                    
                     Player player = null;
                     if (!selectedEntities.isEmpty() && selectedEntities.get(0) instanceof Player) {
                         player = (Player) selectedEntities.get(0);
                     }
                     
-                    // Execute the action block
+                    
                     scriptEngine.executeBlock(action, player, "activator_entity_pickup_item")
                         .thenAccept(result -> {
                             if (!result.isSuccess()) {
@@ -118,14 +118,14 @@ public class EntityPickupItemActivator extends Activator {
             return;
         }
         
-        // Create a game event with entity pickup item context
+        
         GameEvent gameEvent = new GameEvent("onEntityPickupItem");
         gameEvent.setPlayer(player);
         if (location != null) {
             gameEvent.setLocation(location);
         }
         
-        // Add custom data
+        
         Map<String, Object> customData = new HashMap<>();
         if (item != null) {
             customData.put("itemType", item.getType().name());
@@ -135,7 +135,7 @@ public class EntityPickupItemActivator extends Activator {
         customData.put("quantity", quantity);
         gameEvent.setCustomData(customData);
         
-        // Activate the script
+        
         execute(gameEvent, new java.util.ArrayList<>(), 0, new java.util.concurrent.atomic.AtomicInteger(0));
     }
 }

@@ -33,18 +33,18 @@ public class InventoryClickActivator extends BukkitEventActivator {
     
     @Override
     public void execute(GameEvent gameEvent, List<org.bukkit.entity.Entity> selectedEntities, int stackCounter, AtomicInteger callCounter) {
-        // Set the selected entities
+        
         this.selectedEntities = selectedEntities;
         
-        // Execute all actions associated with this activator
-        // This would integrate with the existing script execution system
+        
+        
         for (com.megacreative.coding.CodeBlock action : actionList) {
             try {
-                // Get the script engine from the plugin
+                
                 com.megacreative.coding.ScriptEngine scriptEngine = plugin.getServiceRegistry().getScriptEngine();
                 
                 if (scriptEngine != null) {
-                    // Execute the action block
+                    
                     scriptEngine.executeBlock(action, 
                         selectedEntities.isEmpty() ? null : (org.bukkit.entity.Player) selectedEntities.get(0), 
                         "activator_inventory_click");
@@ -63,17 +63,17 @@ public class InventoryClickActivator extends BukkitEventActivator {
      * @param clickedItem The item that was clicked
      */
     public void activate(Player player, int slot, ItemStack clickedItem) {
-        // Create a game event for this activation
+        
         GameEvent event = new GameEvent("inventory_click");
         event.setPlayer(player);
         
-        // Add click information to the event
+        
         Map<String, Object> eventData = new HashMap<>();
         eventData.put("slot", slot);
         eventData.put("clicked_item", clickedItem != null ? clickedItem.getType().name() : "AIR");
         event.setCustomData(eventData);
         
-        // Execute the activator with the event
+        
         execute(event, List.of(player), 0, new AtomicInteger(0));
     }
 }

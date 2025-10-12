@@ -28,13 +28,13 @@ public class WorldInteractListener implements Listener {
         
         String displayName = item.getItemMeta().getDisplayName();
         
-        // Проверка на клик по алмазу (Мои миры)
+        
         if (item.getType() == Material.DIAMOND && displayName.contains("Мои миры")) {
             event.setCancelled(true);
             player.performCommand("myworlds");
         }
         
-        // Проверка на клик по компасу (Браузер миров)
+        
         else if (item.getType() == Material.COMPASS && displayName.contains("Браузер миров")) {
             event.setCancelled(true);
             player.performCommand("worldbrowser");

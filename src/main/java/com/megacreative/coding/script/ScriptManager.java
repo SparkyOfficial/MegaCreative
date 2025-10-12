@@ -64,16 +64,16 @@ public class ScriptManager {
         File scriptFile = new File(worldFolder, name + ".yml");
         YamlConfiguration config = new YamlConfiguration();
         
-        // Сохраняем основную информацию о скрипте
+        
         config.set("name", name);
         config.set("world", world.getName());
         config.set("created", System.currentTimeMillis());
         
-        // Сохраняем переменные скрипта
+        
         Map<String, Object> variables = builder.getVariables();
         config.createSection("variables", variables);
         
-        // Сохраняем блоки скрипта
+        
         List<ScriptBlock> blocks = builder.getBlocks();
         List<Map<String, Object>> serializedBlocks = new ArrayList<>();
         
@@ -109,11 +109,11 @@ public class ScriptManager {
         
         YamlConfiguration config = YamlConfiguration.loadConfiguration(scriptFile);
         
-        // Создаем нового строителя скриптов
-        Player owner = null; // Владелец может быть null при загрузке из файла
+        
+        Player owner = null; 
         ScriptBuilder builder = new ScriptBuilder(owner);
         
-        // Загружаем переменные
+        
         ConfigurationSection variablesSection = config.getConfigurationSection("variables");
         if (variablesSection != null) {
             for (String key : variablesSection.getKeys(false)) {
@@ -121,11 +121,11 @@ public class ScriptManager {
             }
         }
         
-        // Загружаем блоки скрипта
+        
         List<Map<?, ?>> blocksList = config.getMapList("blocks");
         Map<Integer, ScriptBlock> blockMap = new HashMap<>();
         
-        // Сначала создаем все блоки
+        
         for (Map<?, ?> blockData : blocksList) {
             int id = (Integer) blockData.get("id");
             ScriptBlock block = deserializeScriptBlock(blockData);
@@ -135,13 +135,13 @@ public class ScriptManager {
             }
         }
         
-        // Затем устанавливаем связи между блоками
+        
         for (Map<?, ?> blockData : blocksList) {
             int id = (Integer) blockData.get("id");
             ScriptBlock block = blockMap.get(id);
             
             if (block != null) {
-                // Устанавливаем следующий блок
+                
                 if (blockData.containsKey("nextBlockId")) {
                     int nextId = (Integer) blockData.get("nextBlockId");
                     ScriptBlock nextBlock = blockMap.get(nextId);
@@ -150,7 +150,7 @@ public class ScriptManager {
                     }
                 }
                 
-                // Устанавливаем блок else для условий
+                
                 if (blockData.containsKey("elseBlockId")) {
                     int elseId = (Integer) blockData.get("elseBlockId");
                     ScriptBlock elseBlock = blockMap.get(elseId);
@@ -161,7 +161,7 @@ public class ScriptManager {
             }
         }
         
-        // Сохраняем скрипт в кэше
+        
         Map<String, ScriptBuilder> worldScriptMap = worldScripts.computeIfAbsent(
             world.getName(),
             k -> new HashMap<>()
@@ -215,21 +215,21 @@ public class ScriptManager {
         blockData.put("id", id);
         blockData.put("type", block.getType().name());
         
-        // Сохраняем связи с другими блоками
+        
         if (block.getNextBlock() != null) {
-            // Здесь мы должны знать ID следующего блока
-            // В реальной реализации нужно будет отслеживать ID всех блоков
-            // Для простоты предположим, что следующий блок имеет ID + 1
+            
+            
+            
             blockData.put("nextBlockId", id + 1);
         }
         
         if (block.getElseBlock() != null) {
-            // Аналогично, для простоты используем условную логику
-            // В реальной реализации нужно будет отслеживать ID всех блоков
+            
+            
             blockData.put("elseBlockId", id + 2);
         }
         
-        // Сериализуем содержимое блока в зависимости от его типа
+        
         Object content = block.getContent();
         if (content instanceof EventCondition) {
             EventCondition condition = (EventCondition) content;
@@ -237,7 +237,7 @@ public class ScriptManager {
             blockData.put("contentName", condition.getName());
             blockData.put("contentDescription", condition.getDescription());
             
-            // Сохраняем параметры условия
+            
             Map<String, Object> params = new HashMap<>();
             for (Map.Entry<String, DataValue> entry : condition.getRequiredVariables().entrySet()) {
                 params.put(entry.getKey(), entry.getValue().getValue());
@@ -249,7 +249,7 @@ public class ScriptManager {
             blockData.put("contentName", action.getName());
             blockData.put("contentDescription", action.getDescription());
             
-            // Сохраняем параметры действия
+            
             Map<String, Object> params = new HashMap<>();
             for (Map.Entry<String, DataValue> entry : action.getParameters().entrySet()) {
                 params.put(entry.getKey(), entry.getValue().getValue());
@@ -273,45 +273,45 @@ public class ScriptManager {
         String contentName = (String) blockData.get("contentName");
         String contentDescription = (String) blockData.get("contentDescription");
         
-        // Создаем содержимое блока в зависимости от его типа
+        
         if ("condition".equals(contentType)) {
-            // Для простоты создаем базовое условие
-            // В реальной реализации нужно будет восстанавливать точный тип условия
+            
+            
             EventCondition condition = new EventCondition(
                 contentName,
                 contentDescription,
-                event -> true // Заглушка для предиката
+                event -> true 
             );
             
-            // Восстанавливаем параметры условия
+            
             Map<?, ?> params = (Map<?, ?>) blockData.get("contentParams");
             if (params != null) {
                 for (Map.Entry<?, ?> entry : params.entrySet()) {
                     String key = entry.getKey().toString();
                     Object value = entry.getValue();
-                    // Здесь нужно создать DataValue из value
-                    // Для простоты опустим эту часть
+                    
+                    
                 }
             }
             
             return new ScriptBlock(type, condition);
         } else if ("action".equals(contentType)) {
-            // Для простоты создаем базовое действие
-            // В реальной реализации нужно будет восстанавливать точный тип действия
+            
+            
             EventAction action = new EventAction(
                 contentName,
                 contentDescription,
-                event -> {} // Заглушка для действия
+                event -> {} 
             );
             
-            // Восстанавливаем параметры действия
+            
             Map<?, ?> params = (Map<?, ?>) blockData.get("contentParams");
             if (params != null) {
                 for (Map.Entry<?, ?> entry : params.entrySet()) {
                     String key = entry.getKey().toString();
                     Object value = entry.getValue();
-                    // Здесь нужно создать DataValue из value
-                    // Для простоты опустим эту часть
+                    
+                    
                 }
             }
             

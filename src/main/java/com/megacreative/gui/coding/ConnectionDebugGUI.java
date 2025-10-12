@@ -58,7 +58,7 @@ public class ConnectionDebugGUI implements GUIManager.ManagedGUIInterface {
         this.guiManager = plugin.getServiceRegistry().getGuiManager();
         this.blockPlacementHandler = plugin.getServiceRegistry().getBlockPlacementHandler();
         
-        // Create inventory with appropriate size (54 slots for double chest GUI)
+        
         this.inventory = Bukkit.createInventory(null, 54, "§8Отладка связей: " + getLocationString(rootBlockLocation));
         
         setupInventory();
@@ -78,35 +78,35 @@ public class ConnectionDebugGUI implements GUIManager.ManagedGUIInterface {
     private void setupInventory() {
         inventory.clear();
         
-        // Add decorative border with category-specific materials
+        
         ItemStack borderItem = new ItemStack(Material.BLACK_STAINED_GLASS_PANE);
         ItemMeta borderMeta = borderItem.getItemMeta();
         borderMeta.setDisplayName(" ");
         borderItem.setItemMeta(borderMeta);
         
-        // Fill border slots
+        
         for (int i = 0; i < 54; i++) {
             if (i < 9 || i >= 45 || i % 9 == 0 || i % 9 == 8) {
                 inventory.setItem(i, borderItem);
             }
         }
         
-        // Get root block
+        
         CodeBlock rootBlock = blockPlacementHandler.getCodeBlock(rootBlockLocation);
         if (rootBlock == null) {
             showError(Constants.BLOCK_NOT_FOUND);
             return;
         }
         
-        // Add root block info with enhanced visual design
+        
         ItemStack rootItem = createBlockInfoItem(rootBlock, rootBlockLocation, true);
-        inventory.setItem(22, rootItem); // Center position
+        inventory.setItem(22, rootItem); 
         slotToBlockLocation.put(22, rootBlockLocation);
         
-        // Map connected blocks
+        
         mapConnectedBlocks(rootBlock, rootBlockLocation);
         
-        // Add control items with enhanced design
+        
         addControlItems();
     }
     
@@ -117,17 +117,17 @@ public class ConnectionDebugGUI implements GUIManager.ManagedGUIInterface {
         Set<Location> visitedBlocks = new HashSet<>();
         Queue<BlockConnection> toProcess = new LinkedList<>();
         
-        // Start with root block
+        
         toProcess.offer(new BlockConnection(rootBlock, rootLocation, 22, 0));
         visitedBlocks.add(rootLocation);
         
         while (!toProcess.isEmpty()) {
             BlockConnection current = toProcess.poll();
             
-            // Skip if too deep to avoid infinite loops
+            
             if (current.depth > 3) continue;
             
-            // Process next block
+            
             if (current.block.getNextBlock() != null) {
                 Location nextLocation = findBlockLocation(current.block.getNextBlock());
                 if (nextLocation != null && !visitedBlocks.contains(nextLocation)) {
@@ -137,7 +137,7 @@ public class ConnectionDebugGUI implements GUIManager.ManagedGUIInterface {
                         inventory.setItem(nextSlot, nextItem);
                         slotToBlockLocation.put(nextSlot, nextLocation);
                         
-                        // Add connection arrow
+                        
                         addConnectionArrow(current.slot, nextSlot, Constants.NEXT_BLOCK_ARROW);
                         
                         toProcess.offer(new BlockConnection(current.block.getNextBlock(), nextLocation, nextSlot, current.depth + 1));
@@ -146,7 +146,7 @@ public class ConnectionDebugGUI implements GUIManager.ManagedGUIInterface {
                 }
             }
             
-            // Process child blocks
+            
             if (!current.block.getChildren().isEmpty()) {
                 for (int i = 0; i < current.block.getChildren().size() && i < 2; i++) {
                     CodeBlock child = current.block.getChildren().get(i);
@@ -158,7 +158,7 @@ public class ConnectionDebugGUI implements GUIManager.ManagedGUIInterface {
                             inventory.setItem(childSlot, childItem);
                             slotToBlockLocation.put(childSlot, childLocation);
                             
-                            // Add connection arrow
+                            
                             addConnectionArrow(current.slot, childSlot, Constants.CHILD_BLOCK_ARROW);
                             
                             toProcess.offer(new BlockConnection(child, childLocation, childSlot, current.depth + 1));
@@ -178,18 +178,18 @@ public class ConnectionDebugGUI implements GUIManager.ManagedGUIInterface {
             return false;
         }
         
-        // In the new architecture, we can check for parent blocks through the BlockHierarchyManager
-        // For now, we'll check if any other block references this block as a child or next block
+        
+        
         if (blockPlacementHandler != null) {
             Map<Location, CodeBlock> allBlocks = blockPlacementHandler.getBlockCodeBlocks();
             if (allBlocks != null) {
                 for (CodeBlock otherBlock : allBlocks.values()) {
                     if (otherBlock != block) {
-                        // Check if otherBlock has this block as a child
+                        
                         if (otherBlock.getChildren().contains(block)) {
                             return true;
                         }
-                        // Check if otherBlock has this block as next block
+                        
                         if (otherBlock.getNextBlock() == block) {
                             return true;
                         }
@@ -222,7 +222,7 @@ public class ConnectionDebugGUI implements GUIManager.ManagedGUIInterface {
             lore.add("§7Действие: §c<не установлено>");
         }
         
-        // Add parameter info
+        
         if (!block.getParameters().isEmpty()) {
             lore.add("");
             lore.add("§eПараметры:");
@@ -237,7 +237,7 @@ public class ConnectionDebugGUI implements GUIManager.ManagedGUIInterface {
             }
         }
         
-        // Add connection info
+        
         lore.add("");
         if (block.getNextBlock() != null) {
             lore.add("§a→ Имеет следующий блок");
@@ -246,7 +246,7 @@ public class ConnectionDebugGUI implements GUIManager.ManagedGUIInterface {
             lore.add("§b↓ Дочерних блоков: " + block.getChildren().size());
         }
         
-        // Check for parent relationship
+        
         if (hasParentBlock(block)) {
             lore.add("§c↑ Имеет родительский блок");
         }
@@ -272,13 +272,13 @@ public class ConnectionDebugGUI implements GUIManager.ManagedGUIInterface {
      * Adds connection arrow
      */
     private void addConnectionArrow(int fromSlot, int toSlot, String connectionType) {
-        // Calculate position between slots for arrow
+        
         int arrowSlot = calculateArrowSlot(fromSlot, toSlot);
         if (arrowSlot != -1 && inventory.getItem(arrowSlot) != null) {
             ItemStack currentItem = inventory.getItem(arrowSlot);
             if (currentItem.getType() == Material.GRAY_STAINED_GLASS_PANE || 
                 currentItem.getType() == Material.BLACK_STAINED_GLASS_PANE) {
-                // Replace glass pane with connection arrow
+                
                 ItemStack arrow = new ItemStack(Material.ARROW);
                 ItemMeta arrowMeta = arrow.getItemMeta();
                 arrowMeta.setDisplayName(connectionType);
@@ -297,12 +297,12 @@ public class ConnectionDebugGUI implements GUIManager.ManagedGUIInterface {
      * Calculates arrow slot
      */
     private int calculateArrowSlot(int fromSlot, int toSlot) {
-        // Simple calculation for arrow position
+        
         if (Math.abs(fromSlot - toSlot) == 1) {
-            return -1; // Adjacent slots, no space for arrow
+            return -1; 
         }
         
-        // Collapse the if statement - both branches return the same value
+        
         return (fromSlot + toSlot) / 2;
     }
     
@@ -310,7 +310,7 @@ public class ConnectionDebugGUI implements GUIManager.ManagedGUIInterface {
      * Gets next available slot
      */
     private int getNextAvailableSlot(int centerSlot, String direction) {
-        // Get available slot around center based on direction
+        
         int[] candidates;
         
         switch (direction) {
@@ -338,20 +338,20 @@ public class ConnectionDebugGUI implements GUIManager.ManagedGUIInterface {
             }
         }
         
-        return -1; // No available slot
+        return -1; 
     }
     
     /**
      * Finds block location
      */
     private Location findBlockLocation(CodeBlock block) {
-        // In the new architecture, we would use BlockPlacementHandler or BlockLinker to find block locations
-        // For now, we'll search through all loaded blocks to find the matching one
+        
+        
         if (block == null || blockPlacementHandler == null) {
             return null;
         }
         
-        // Get all code blocks and search for the matching one
+        
         Map<Location, CodeBlock> allCodeBlocks = blockPlacementHandler.getBlockCodeBlocks();
         if (allCodeBlocks != null) {
             for (Map.Entry<Location, CodeBlock> entry : allCodeBlocks.entrySet()) {
@@ -369,7 +369,7 @@ public class ConnectionDebugGUI implements GUIManager.ManagedGUIInterface {
      * Adds control items with enhanced design
      */
     private void addControlItems() {
-        // Refresh button with enhanced visual design
+        
         ItemStack refresh = new ItemStack(Material.LIME_STAINED_GLASS);
         ItemMeta refreshMeta = refresh.getItemMeta();
         refreshMeta.setDisplayName("§a§l🔄 Обновить");
@@ -382,7 +382,7 @@ public class ConnectionDebugGUI implements GUIManager.ManagedGUIInterface {
         refresh.setItemMeta(refreshMeta);
         inventory.setItem(45, refresh);
         
-        // Close button with enhanced visual design
+        
         ItemStack close = new ItemStack(Material.RED_STAINED_GLASS);
         ItemMeta closeMeta = close.getItemMeta();
         closeMeta.setDisplayName("§c§l❌ Закрыть");
@@ -394,7 +394,7 @@ public class ConnectionDebugGUI implements GUIManager.ManagedGUIInterface {
         close.setItemMeta(closeMeta);
         inventory.setItem(53, close);
         
-        // Help button with enhanced visual design
+        
         ItemStack help = new ItemStack(Material.BOOK);
         ItemMeta helpMeta = help.getItemMeta();
         helpMeta.setDisplayName("§e§l❓ Помощь");
@@ -412,7 +412,7 @@ public class ConnectionDebugGUI implements GUIManager.ManagedGUIInterface {
         help.setItemMeta(helpMeta);
         inventory.setItem(49, help);
         
-        // Add back button
+        
         ItemStack backButton = new ItemStack(Material.ARROW);
         ItemMeta backMeta = backButton.getItemMeta();
         backMeta.setDisplayName("§c⬅ Назад");
@@ -454,7 +454,7 @@ public class ConnectionDebugGUI implements GUIManager.ManagedGUIInterface {
         Player player = (Player) event.getWhoClicked();
         int slot = event.getSlot();
         
-        // Handle slot clicks
+        
         if (slotToBlockLocation.containsKey(slot)) {
             Location blockLocation = slotToBlockLocation.get(slot);
             if (blockLocation != null) {
@@ -462,15 +462,15 @@ public class ConnectionDebugGUI implements GUIManager.ManagedGUIInterface {
                 player.sendMessage("§aТелепортирован к блоку на координатах: " + 
                     blockLocation.getBlockX() + ", " + blockLocation.getBlockY() + ", " + blockLocation.getBlockZ());
             }
-        } else if (slot == 45) { // Refresh button
+        } else if (slot == 45) { 
             setupInventory();
             player.sendMessage("§aКарта связей обновлена!");
-        } else if (slot == 53) { // Close button
+        } else if (slot == 53) { 
             player.closeInventory();
-        } else if (slot == 49) { // Help button
+        } else if (slot == 49) { 
             showHelp();
-        } else if (slot == 46) { // Back button
-            // Close the current menu
+        } else if (slot == 46) { 
+            
             player.closeInventory();
         }
     }
@@ -507,7 +507,7 @@ public class ConnectionDebugGUI implements GUIManager.ManagedGUIInterface {
         Inventory helpInventory = Bukkit.createInventory(null, 27, "§8Помощь по отладке связей");
         helpInventory.setItem(13, helpItem);
         
-        // Add close button
+        
         ItemStack close = new ItemStack(Material.RED_STAINED_GLASS);
         ItemMeta closeMeta = close.getItemMeta();
         closeMeta.setDisplayName("§c§l❌ Закрыть");
@@ -528,7 +528,7 @@ public class ConnectionDebugGUI implements GUIManager.ManagedGUIInterface {
      */
     @Override
     public void onInventoryClose(InventoryCloseEvent event) {
-        // Cleanup resources if needed
+        
         slotToBlockLocation.clear();
     }
     

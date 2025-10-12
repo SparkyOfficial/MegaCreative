@@ -17,7 +17,7 @@ public class SetGlobalVarAction implements BlockAction {
     @Override
     public ExecutionResult execute(CodeBlock block, ExecutionContext context) {
         try {
-            // Get variable parameters from the new parameter system
+            
             DataValue nameValue = block.getParameter("name");
             DataValue valueValue = block.getParameter("value");
             
@@ -29,12 +29,12 @@ public class SetGlobalVarAction implements BlockAction {
                 return ExecutionResult.error("No value provided");
             }
 
-            // Resolve any placeholders in the parameters
+            
             ParameterResolver resolver = new ParameterResolver(context);
             DataValue resolvedName = resolver.resolve(context, nameValue);
             DataValue resolvedValue = resolver.resolve(context, valueValue);
             
-            // Parse parameters
+            
             String varName = resolvedName.asString();
             String valueStr = resolvedValue.asString();
             
@@ -42,7 +42,7 @@ public class SetGlobalVarAction implements BlockAction {
                 return ExecutionResult.error("Invalid variable name");
             }
 
-            // Get the variable manager to set the actual variable
+            
             VariableManager variableManager = context.getPlugin().getServiceRegistry().getVariableManager();
             variableManager.setGlobalVariable(varName, DataValue.of(valueStr));
             

@@ -82,18 +82,18 @@ public class JoinCommand implements CommandExecutor {
             return true;
         }
         
-        // Проверка доступа к приватному миру
+        
         if (creativeWorld.isPrivate() && !creativeWorld.isOwner(player) && 
             !creativeWorld.isTrustedBuilder(player) && !creativeWorld.isTrustedCoder(player)) {
             player.sendMessage("§cЭтот мир приватный!");
             return true;
         }
         
-        // Загрузка мира если не загружен
+        
         World bukkitWorld = Bukkit.getWorld(creativeWorld.getWorldName());
         if (bukkitWorld == null) {
             player.sendMessage("§eЗагрузка мира...");
-            // Загружаем или создаем мир если он не загружен
+            
             org.bukkit.WorldCreator creator = new org.bukkit.WorldCreator(creativeWorld.getWorldName());
             bukkitWorld = org.bukkit.Bukkit.createWorld(creator);
             if (bukkitWorld == null) {
@@ -102,7 +102,7 @@ public class JoinCommand implements CommandExecutor {
             }
         }
         
-        // Телепортация
+        
         player.teleport(bukkitWorld.getSpawnLocation());
         creativeWorld.addOnlinePlayer(player.getUniqueId());
         

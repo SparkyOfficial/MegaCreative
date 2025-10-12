@@ -65,17 +65,17 @@ public class TrustedPlayersGUI implements GUIManager.ManagedGUIInterface {
      * Richtet die GUI ein
      */
     private void setupGUI() {
-        // Заполняем фон
+        
         ItemStack background = createItem(Material.BLACK_STAINED_GLASS_PANE, "§7", "");
         for (int i = 0; i < inventory.getSize(); i++) {
             inventory.setItem(i, background);
         }
 
-        // Заголовок
+        
         inventory.setItem(4, createItem(Material.SHIELD, "§e§lДоверенные игроки", 
             "§7Управление правами доступа"));
 
-        // Кнопки действий
+        
         inventory.setItem(19, createItem(Material.EMERALD, "§a§lДобавить строителя", 
             "§7Добавить доверенного строителя",
             "§7ПКМ для выбора игрока"));
@@ -89,7 +89,7 @@ public class TrustedPlayersGUI implements GUIManager.ManagedGUIInterface {
             "§7Просмотр информации о правах",
             "§7ПКМ для выбора игрока"));
 
-        // Список доверенных игроков
+        
         displayTrustedPlayers();
     }
 
@@ -111,7 +111,7 @@ public class TrustedPlayersGUI implements GUIManager.ManagedGUIInterface {
 
         int slot = 28;
         for (TrustedPlayer trusted : allTrusted) {
-            if (slot >= 53) break; // Не выходим за границы инвентаря
+            if (slot >= 53) break; 
             
             ItemStack head = new ItemStack(Material.PLAYER_HEAD);
             SkullMeta meta = (SkullMeta) head.getItemMeta();
@@ -143,7 +143,7 @@ public class TrustedPlayersGUI implements GUIManager.ManagedGUIInterface {
      * Öffnet die GUI für den Spieler
      */
     public void open() {
-        // Register with GUIManager and open inventory
+        
         guiManager.registerGUI(player, this, inventory);
         player.openInventory(inventory);
     }
@@ -188,11 +188,11 @@ public class TrustedPlayersGUI implements GUIManager.ManagedGUIInterface {
         
         String displayName = clicked.getItemMeta().getDisplayName();
         
-        // Handle different button clicks
+        
         if (displayName.contains("Добавить строителя")) {
             player.closeInventory();
             player.sendMessage("§aНапишите имя игрока для добавления в строители:");
-            // Here you would typically store state to handle the input
+            
         } else if (displayName.contains("Добавить программиста")) {
             player.closeInventory();
             player.sendMessage("§aНапишите имя игрока для добавления в программисты:");
@@ -200,12 +200,12 @@ public class TrustedPlayersGUI implements GUIManager.ManagedGUIInterface {
             player.closeInventory();
             player.sendMessage("§cНапишите имя игрока для удаления:");
         } else if (displayName.contains("Информация")) {
-            // Show information about trusted players system
+            
             player.sendMessage("§e=== Информация о доверенных игроках ===");
             player.sendMessage("§aСтроители: могут строить в ваших мирах");
             player.sendMessage("§bПрограммисты: могут редактировать скрипты");
         }
-        // Handle clicks on trusted player heads for removal
+        
         else if (clicked.getType() == Material.PLAYER_HEAD) {
             String playerName = displayName.replace("§f", "");
             player.sendMessage("§cУдалить " + playerName + " из доверенных? Напишите 'да' для подтверждения");
@@ -271,8 +271,8 @@ public class TrustedPlayersGUI implements GUIManager.ManagedGUIInterface {
      * @param event Inventarschließ-Ereignis
      */
     public void onInventoryClose(InventoryCloseEvent event) {
-        // Optional cleanup when GUI is closed
-        // GUIManager handles automatic unregistration
+        
+        
     }
     
     @Override
@@ -284,7 +284,7 @@ public class TrustedPlayersGUI implements GUIManager.ManagedGUIInterface {
      * Führt eine Ressourcenbereinigung durch, wenn die Schnittstelle geschlossen wird
      */
     public void onCleanup() {
-        // Called when GUI is being cleaned up by GUIManager
-        // No special cleanup needed for this GUI
+        
+        
     }
 }

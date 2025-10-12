@@ -22,16 +22,16 @@ public class IsNightCondition implements BlockCondition {
         }
 
         try {
-            // Get parameters from the new parameter system
-            // This condition doesn't require any parameters, but we'll check if a time parameter is provided
-            // for backward compatibility or future expansion
-            // For now, we'll just check if it's currently night in the player's world
+            
+            
+            
+            
             
             long worldTime = player.getWorld().getTime();
-            // Night time in Minecraft is from 12542 to 23459 ticks
+            
             return worldTime >= 12542 && worldTime <= 23459;
         } catch (Exception e) {
-            // If there's an error, return false
+            
             context.getPlugin().getLogger().warning("Error in IsNightCondition: " + e.getMessage());
             return false;
         }

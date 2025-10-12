@@ -21,7 +21,7 @@ public class SubVarAction implements BlockAction {
     @Override
     public ExecutionResult execute(CodeBlock block, ExecutionContext context) {
         try {
-            // Get and validate parameters from the new parameter system
+            
             DataValue nameValue = block.getParameter("name");
             DataValue valueValue = block.getParameter("value");
             
@@ -33,7 +33,7 @@ public class SubVarAction implements BlockAction {
                 return ExecutionResult.error("No value provided");
             }
 
-            // Resolve any placeholders in the parameters
+            
             ParameterResolver resolver = new ParameterResolver(context);
             DataValue resolvedName = resolver.resolve(context, nameValue);
             DataValue resolvedValue = resolver.resolve(context, valueValue);
@@ -45,13 +45,13 @@ public class SubVarAction implements BlockAction {
                 return ExecutionResult.error("Invalid variable name");
             }
 
-            // Parse the numeric value to subtract
+            
             double valueToSubtract = parseValue(valueStr);
             if (Double.isNaN(valueToSubtract)) {
                 return ExecutionResult.error("Invalid value: " + valueStr);
             }
 
-            // Process the variable update
+            
             return updateVariableValue(context, varName, valueToSubtract);
         } catch (Exception e) {
             return ExecutionResult.error("Failed to update variable: " + e.getMessage());
@@ -76,17 +76,17 @@ public class SubVarAction implements BlockAction {
         VariableManager variableManager = context.getPlugin().getServiceRegistry().getVariableManager();
         Player player = context.getPlayer();
 
-        // Find the variable in different scopes
+        
         VariableScopeInfo scopeInfo = findVariableScope(variableManager, player, context.getScriptId(), varName);
 
-        // Get current value or default to 0
+        
         double currentValue = getCurrentVariableValue(scopeInfo.getCurrentVar());
 
-        // Calculate and set new value (subtract instead of add)
+        
         double newValue = currentValue - valueToSubtract;
         setVariableValue(variableManager, scopeInfo, varName, newValue, context.getScriptId(), player);
 
-        // Log the operation
+        
         context.getPlugin().getLogger().info(
                 String.format("Subtracting %s from variable %s (new value: %s)",
                         valueToSubtract, varName, newValue)
@@ -99,7 +99,7 @@ public class SubVarAction implements BlockAction {
      * Finds the scope of an existing variable
      */
     private VariableScopeInfo findVariableScope(VariableManager variableManager, Player player, String scriptId, String varName) {
-        // Try player variables first if player is not null
+        
         if (player != null) {
             DataValue playerVar = variableManager.getPlayerVariable(player.getUniqueId(), varName);
             if (playerVar != null) {
@@ -111,7 +111,7 @@ public class SubVarAction implements BlockAction {
             }
         }
 
-        // Try local variables
+        
         DataValue localVar = variableManager.getLocalVariable(scriptId, varName);
         if (localVar != null) {
             return new VariableScopeInfo(
@@ -121,7 +121,7 @@ public class SubVarAction implements BlockAction {
             );
         }
 
-        // Try global variables
+        
         DataValue globalVar = variableManager.getGlobalVariable(varName);
         if (globalVar != null) {
             return new VariableScopeInfo(
@@ -131,7 +131,7 @@ public class SubVarAction implements BlockAction {
             );
         }
 
-        // Try server variables
+        
         DataValue serverVar = variableManager.getServerVariable(varName);
         if (serverVar != null) {
             return new VariableScopeInfo(
@@ -141,7 +141,7 @@ public class SubVarAction implements BlockAction {
             );
         }
 
-        // Variable doesn't exist yet, will be created as local
+        
         return new VariableScopeInfo(null, null, null);
     }
 
@@ -167,7 +167,7 @@ public class SubVarAction implements BlockAction {
         DataValue newValueData = DataValue.of(newValue);
 
         if (scopeInfo.getScope() == null) {
-            // Variable doesn't exist, create as local
+            
             variableManager.setLocalVariable(scriptId, varName, newValueData);
             return;
         }
@@ -186,7 +186,7 @@ public class SubVarAction implements BlockAction {
                 variableManager.setServerVariable(varName, newValueData);
                 break;
             default:
-                // Fallback to local variable
+                
                 variableManager.setLocalVariable(scriptId, varName, newValueData);
         }
     }

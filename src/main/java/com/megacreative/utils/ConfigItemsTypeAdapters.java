@@ -109,9 +109,9 @@ public class ConfigItemsTypeAdapters {
                         configItems.put(slot, item);
                     }
                 } catch (NumberFormatException e) {
-                    // Пропустить недопустимые номера слотов
-                    // Skip invalid slot numbers
-                    // Ungültige Slot-Nummern überspringen
+                    
+                    
+                    
                 }
             }
             

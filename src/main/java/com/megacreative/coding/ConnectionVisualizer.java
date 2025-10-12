@@ -32,7 +32,7 @@ public class ConnectionVisualizer implements Listener {
         if (distance == 0) return;
         
         org.bukkit.util.Vector vector = to.toVector().subtract(from.toVector()).normalize().multiply(0.25);
-        Location current = from.clone().add(0.5, 0.5, 0.5); // Центрируем частицы
+        Location current = from.clone().add(0.5, 0.5, 0.5); 
 
         for (double d = 0; d < distance; d += 0.25) {
             world.spawnParticle(Particle.REDSTONE, current, 1, 0, 0, 0, 0,

@@ -93,7 +93,7 @@ public class ErrorDisplayGUI implements GUIManager.ManagedGUIInterface {
         this.errors = errors;
         this.guiManager = plugin.getServiceRegistry().getGuiManager();
         
-        // Calculate inventory size based on number of errors (54 slots max for double chest)
+        
         int size = Math.min(54, Math.max(27, ((errors.size() + 2) / 7 + 1) * 9));
         this.inventory = Bukkit.createInventory(null, size, "§8Ошибки: " + errorTitle);
         
@@ -106,20 +106,20 @@ public class ErrorDisplayGUI implements GUIManager.ManagedGUIInterface {
     private void setupInventory() {
         inventory.clear();
         
-        // Add decorative border with category-specific materials
+        
         ItemStack borderItem = new ItemStack(Material.BLACK_STAINED_GLASS_PANE);
         ItemMeta borderMeta = borderItem.getItemMeta();
         borderMeta.setDisplayName(" ");
         borderItem.setItemMeta(borderMeta);
         
-        // Fill border slots
+        
         for (int i = 0; i < inventory.getSize(); i++) {
             if (i < 9 || i >= inventory.getSize() - 9 || i % 9 == 0 || i % 9 == 8) {
                 inventory.setItem(i, borderItem);
             }
         }
         
-        // Add title item with enhanced visual design
+        
         ItemStack titleItem = new ItemStack(Material.REDSTONE_BLOCK);
         ItemMeta titleMeta = titleItem.getItemMeta();
         titleMeta.setDisplayName("§c§l" + errorTitle);
@@ -134,7 +134,7 @@ public class ErrorDisplayGUI implements GUIManager.ManagedGUIInterface {
         titleItem.setItemMeta(titleMeta);
         inventory.setItem(4, titleItem);
         
-        // Add error items with enhanced design
+        
         int slot = 10;
         for (int i = 0; i < errors.size() && slot < inventory.getSize() - 9; i++) {
             ErrorInfo error = errors.get(i);
@@ -142,12 +142,12 @@ public class ErrorDisplayGUI implements GUIManager.ManagedGUIInterface {
             
             inventory.setItem(slot, errorItem);
             
-            // Move to next slot, skipping borders
+            
             slot++;
-            if (slot % 9 == 8) slot += 2; // Skip border
+            if (slot % 9 == 8) slot += 2; 
         }
         
-        // Add control buttons with enhanced design
+        
         addControlButtons();
     }
     
@@ -155,7 +155,7 @@ public class ErrorDisplayGUI implements GUIManager.ManagedGUIInterface {
      * Adds control buttons with enhanced design
      */
     private void addControlButtons() {
-        // Close button with enhanced visual design
+        
         ItemStack closeItem = new ItemStack(Material.BARRIER);
         ItemMeta closeMeta = closeItem.getItemMeta();
         closeMeta.setDisplayName("§c§lЗакрыть");
@@ -168,7 +168,7 @@ public class ErrorDisplayGUI implements GUIManager.ManagedGUIInterface {
         closeItem.setItemMeta(closeMeta);
         inventory.setItem(inventory.getSize() - 5, closeItem);
         
-        // Add back button
+        
         ItemStack backButton = new ItemStack(Material.ARROW);
         ItemMeta backMeta = backButton.getItemMeta();
         backMeta.setDisplayName("§c⬅ Назад");
@@ -237,10 +237,10 @@ public class ErrorDisplayGUI implements GUIManager.ManagedGUIInterface {
         guiManager.registerGUI(player, this, inventory);
         player.openInventory(inventory);
         
-        // Audio feedback when opening GUI
+        
         player.playSound(player.getLocation(), org.bukkit.Sound.BLOCK_NOTE_BLOCK_BASS, 0.8f, 0.5f);
         
-        // Add visual effects for reference system-style magic
+        
         player.spawnParticle(org.bukkit.Particle.ENCHANTMENT_TABLE, 
             player.getLocation().add(0, 1, 0), 10, 0.5, 0.5, 0.5, 1);
     }
@@ -263,7 +263,7 @@ public class ErrorDisplayGUI implements GUIManager.ManagedGUIInterface {
         if (!player.equals(event.getWhoClicked())) return;
         if (!inventory.equals(event.getInventory())) return;
         
-        event.setCancelled(true); // Cancel all clicks by default
+        event.setCancelled(true); 
         
         ItemStack clicked = event.getCurrentItem();
         if (clicked == null || !clicked.hasItemMeta()) return;
@@ -271,19 +271,19 @@ public class ErrorDisplayGUI implements GUIManager.ManagedGUIInterface {
         String displayName = clicked.getItemMeta().getDisplayName();
         int slot = event.getSlot();
         
-        // Handle back button
+        
         if (slot == inventory.getSize() - 6) {
             player.closeInventory();
             return;
         }
         
-        // Handle close button
+        
         if (displayName.contains("Закрыть")) {
             player.closeInventory();
             return;
         }
         
-        // Handle error items with quick fixes
+        
         if (displayName.contains("Ошибка #")) {
             String numberStr = displayName.replaceAll(".*#(\\d+).*", "$1");
             try {
@@ -294,7 +294,7 @@ public class ErrorDisplayGUI implements GUIManager.ManagedGUIInterface {
                         player.sendMessage("§a⚡ Выполняется быстрое исправление...");
                         player.playSound(player.getLocation(), org.bukkit.Sound.ENTITY_EXPERIENCE_ORB_PICKUP, 1.0f, 1.2f);
                         
-                        // Execute quick fix
+                        
                         Bukkit.getScheduler().runTask(plugin, () -> {
                             try {
                                 error.getQuickFix().run();
@@ -310,7 +310,7 @@ public class ErrorDisplayGUI implements GUIManager.ManagedGUIInterface {
                     }
                 }
             } catch (NumberFormatException e) {
-                // Ignore invalid number
+                
             }
         }
     }
@@ -321,8 +321,8 @@ public class ErrorDisplayGUI implements GUIManager.ManagedGUIInterface {
      * @param event Inventory close event
      */
     public void onInventoryClose(InventoryCloseEvent event) {
-        // Optional cleanup when GUI is closed
-        // GUIManager handles automatic unregistration
+        
+        
     }
     
     @Override
@@ -330,7 +330,7 @@ public class ErrorDisplayGUI implements GUIManager.ManagedGUIInterface {
      * Performs resource cleanup when interface is closed
      */
     public void onCleanup() {
-        // Called when GUI is being cleaned up by GUIManager
-        // No special cleanup needed for this GUI
+        
+        
     }
 }

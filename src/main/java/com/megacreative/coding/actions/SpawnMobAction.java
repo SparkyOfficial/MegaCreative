@@ -24,7 +24,7 @@ public class SpawnMobAction implements BlockAction {
         }
 
         try {
-            // Get mob parameters from the new parameter system
+            
             DataValue mobValue = block.getParameter("mob");
             DataValue countValue = block.getParameter("count");
             
@@ -32,7 +32,7 @@ public class SpawnMobAction implements BlockAction {
                 return ExecutionResult.error("No mob type provided");
             }
 
-            // Parse parameters
+            
             EntityType entityType;
             try {
                 entityType = EntityType.valueOf(mobValue.asString().toUpperCase());
@@ -45,14 +45,14 @@ public class SpawnMobAction implements BlockAction {
                 try {
                     count = Math.max(1, Integer.parseInt(countValue.asString()));
                 } catch (NumberFormatException e) {
-                    // Use default count
+                    
                 }
             }
 
-            // Get the location where the mob should be spawned (default to player location)
+            
             Location location = player.getLocation();
 
-            // Spawn the mob
+            
             for (int i = 0; i < count; i++) {
                 player.getWorld().spawnEntity(location, entityType);
             }

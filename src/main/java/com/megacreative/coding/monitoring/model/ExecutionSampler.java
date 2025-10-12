@@ -35,7 +35,7 @@ public class ExecutionSampler {
      */
     public void start() {
         isRunning = true;
-        // Start background thread for continuous sampling if needed
+        
     }
     
     /**

@@ -18,7 +18,7 @@ public class WaitAction implements BlockAction {
     @Override
     public ExecutionResult execute(CodeBlock block, ExecutionContext context) {
         try {
-            // Get duration parameter
+            
             DataValue durationValue = block.getParameter("duration");
             
             if (durationValue == null || durationValue.isEmpty()) {
@@ -27,10 +27,10 @@ public class WaitAction implements BlockAction {
             
             long duration = Long.parseLong(durationValue.asString());
             
-            // Convert milliseconds to ticks (1 tick = 50 milliseconds)
+            
             long ticks = Math.max(1, duration / 50);
             
-            // Return a pause result - the ScriptEngine will handle scheduling
+            
             return ExecutionResult.pause(ticks);
         } catch (Exception e) {
             return ExecutionResult.error("Failed to wait: " + e.getMessage());

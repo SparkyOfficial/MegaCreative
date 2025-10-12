@@ -25,16 +25,16 @@ public class PlayerGameModeCondition implements BlockCondition {
         }
 
         try {
-            // Get parameters from the new parameter system
+            
             DataValue modeValue = block.getParameter("mode");
             
-            // Parse game mode parameter
+            
             if (modeValue == null || modeValue.isEmpty()) {
                 context.getPlugin().getLogger().warning("PlayerGameModeCondition: 'mode' parameter is missing.");
                 return false;
             }
             
-            // Resolve any placeholders in the mode name
+            
             ParameterResolver resolver = new ParameterResolver(context);
             DataValue resolvedMode = resolver.resolve(context, modeValue);
             
@@ -44,7 +44,7 @@ public class PlayerGameModeCondition implements BlockCondition {
                 return false;
             }
 
-            // Check if player is in the specified game mode
+            
             try {
                 GameMode gameMode = GameMode.valueOf(modeName.toUpperCase());
                 return player.getGameMode() == gameMode;
@@ -53,7 +53,7 @@ public class PlayerGameModeCondition implements BlockCondition {
                 return false;
             }
         } catch (Exception e) {
-            // If there's an error, return false
+            
             context.getPlugin().getLogger().warning("Error in PlayerGameModeCondition: " + e.getMessage());
             return false;
         }

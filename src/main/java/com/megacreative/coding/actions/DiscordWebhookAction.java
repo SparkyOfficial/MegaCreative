@@ -27,7 +27,7 @@ public class DiscordWebhookAction implements BlockAction {
         }
 
         try {
-            // Get parameters from the block
+            
             DataValue webhookUrlValue = block.getParameter("webhook_url");
             DataValue messageValue = block.getParameter("message");
             DataValue usernameValue = block.getParameter("username", DataValue.of("MegaCreative"));
@@ -40,7 +40,7 @@ public class DiscordWebhookAction implements BlockAction {
                 return ExecutionResult.error("Message parameter is missing.");
             }
             
-            // Resolve parameters
+            
             ParameterResolver resolver = new ParameterResolver(context);
             DataValue resolvedWebhookUrl = resolver.resolve(context, webhookUrlValue);
             DataValue resolvedMessage = resolver.resolve(context, messageValue);
@@ -50,12 +50,12 @@ public class DiscordWebhookAction implements BlockAction {
             String message = resolvedMessage.asString();
             String username = resolvedUsername.asString();
             
-            // Send message to Discord webhook asynchronously
+            
             CompletableFuture<Boolean> future = CompletableFuture.supplyAsync(() -> {
                 return sendDiscordMessage(webhookUrl, message, username);
             });
             
-            // Create a CompletableFuture that will complete with an ExecutionResult
+            
             CompletableFuture<ExecutionResult> resultFuture = future.thenApply(success -> {
                 if (success) {
                     return ExecutionResult.success("Message sent to Discord.");
@@ -66,7 +66,7 @@ public class DiscordWebhookAction implements BlockAction {
                 return ExecutionResult.error("Error sending message to Discord: " + throwable.getMessage());
             });
             
-            // Return an await result - the ScriptEngine will handle the future
+            
             return ExecutionResult.await(resultFuture);
 
         } catch (Exception e) {

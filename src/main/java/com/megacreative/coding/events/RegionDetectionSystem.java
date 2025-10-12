@@ -26,16 +26,16 @@ public class RegionDetectionSystem {
     private final MegaCreative plugin;
     private final CustomEventManager eventManager;
     
-    // Region definitions
+    
     private final Map<String, Region> regions = new ConcurrentHashMap<>();
     
-    // Player region tracking
+    
     private final Map<UUID, Set<String>> playerRegions = new ConcurrentHashMap<>();
     
-    // Region event handlers
+    
     private final Map<String, List<RegionEventHandler>> regionEventHandlers = new ConcurrentHashMap<>();
     
-    // Cached region lookups for performance
+    
     private final Map<String, List<Region>> worldRegions = new ConcurrentHashMap<>();
     
     public RegionDetectionSystem(MegaCreative plugin, CustomEventManager eventManager) {
@@ -51,7 +51,7 @@ public class RegionDetectionSystem {
         Region region = new Region(regionId, worldName, minPoint, maxPoint, description, metadata);
         regions.put(regionId, region);
         
-        // Update world regions cache
+        
         worldRegions.computeIfAbsent(worldName, k -> new ArrayList<>()).add(region);
         
         log.info("Defined region: " + regionId + " in world " + worldName);
@@ -65,7 +65,7 @@ public class RegionDetectionSystem {
         Region region = new Region(regionId, worldName, center, radius, description, metadata);
         regions.put(regionId, region);
         
-        // Update world regions cache
+        
         worldRegions.computeIfAbsent(worldName, k -> new ArrayList<>()).add(region);
         
         log.info("Defined circular region: " + regionId + " in world " + worldName);
@@ -77,7 +77,7 @@ public class RegionDetectionSystem {
     public void removeRegion(String regionId) {
         Region region = regions.remove(regionId);
         if (region != null) {
-            // Remove from world regions cache
+            
             List<Region> worldRegionList = worldRegions.get(region.getWorldName());
             if (worldRegionList != null) {
                 worldRegionList.remove(region);
@@ -86,7 +86,7 @@ public class RegionDetectionSystem {
                 }
             }
             
-            // Remove from player tracking
+            
             for (Set<String> playerRegionSet : playerRegions.values()) {
                 playerRegionSet.remove(regionId);
             }
@@ -136,7 +136,7 @@ public class RegionDetectionSystem {
         String worldName = player.getWorld().getName();
         Set<String> currentRegions = new HashSet<>();
         
-        // Find all regions the player is in
+        
         List<Region> worldRegionList = worldRegions.get(worldName);
         if (worldRegionList != null) {
             for (Region region : worldRegionList) {
@@ -146,25 +146,25 @@ public class RegionDetectionSystem {
             }
         }
         
-        // Get previous regions
+        
         Set<String> previousRegions = playerRegions.getOrDefault(player.getUniqueId(), new HashSet<>());
         
-        // Detect region enter/exit events
+        
         for (String regionId : currentRegions) {
             if (!previousRegions.contains(regionId)) {
-                // Player entered region
+                
                 triggerRegionEnterEvent(player, regionId);
             }
         }
         
         for (String regionId : previousRegions) {
             if (!currentRegions.contains(regionId)) {
-                // Player exited region
+                
                 triggerRegionExitEvent(player, regionId);
             }
         }
         
-        // Update tracking
+        
         playerRegions.put(player.getUniqueId(), currentRegions);
     }
     
@@ -180,7 +180,7 @@ public class RegionDetectionSystem {
             eventData.put("regionName", DataValue.fromObject(region.getDescription()));
             eventData.put("world", DataValue.fromObject(region.getWorldName()));
             
-            // Add region metadata
+            
             if (region.getMetadata() != null) {
                 for (Map.Entry<String, Object> entry : region.getMetadata().entrySet()) {
                     eventData.put("metadata_" + entry.getKey(), DataValue.fromObject(entry.getValue()));
@@ -208,7 +208,7 @@ public class RegionDetectionSystem {
             eventData.put("regionName", DataValue.fromObject(region.getDescription()));
             eventData.put("world", DataValue.fromObject(region.getWorldName()));
             
-            // Add region metadata
+            
             if (region.getMetadata() != null) {
                 for (Map.Entry<String, Object> entry : region.getMetadata().entrySet()) {
                     eventData.put("metadata_" + entry.getKey(), DataValue.fromObject(entry.getValue()));
@@ -294,18 +294,18 @@ public class RegionDetectionSystem {
      * @param script The script to associate
      */
     public void setRegionScript(String regionId, String eventName, CodeScript script) {
-        // Get the coding manager to save the script
+        
         ServiceRegistry serviceRegistry = plugin.getServiceRegistry();
         if (serviceRegistry == null) return;
         
         ICodingManager codingManager = serviceRegistry.getService(ICodingManager.class);
         if (codingManager == null) return;
         
-        // Set the script name to follow the pattern: region_{regionId}_{eventName}
+        
         String scriptName = "region_" + regionId + "_" + eventName;
         script.setName(scriptName);
         
-        // Save the script using the coding manager
+        
         codingManager.saveScript(script);
         
         log.info("Set region script: " + scriptName);
@@ -318,14 +318,14 @@ public class RegionDetectionSystem {
      * @return The associated script, or null if none exists
      */
     public CodeScript getRegionScript(String regionId, String eventName) {
-        // Get the coding manager to retrieve the script
+        
         ServiceRegistry serviceRegistry = plugin.getServiceRegistry();
         if (serviceRegistry == null) return null;
         
         ICodingManager codingManager = serviceRegistry.getService(ICodingManager.class);
         if (codingManager == null) return null;
         
-        // Look for the script with the pattern: region_{regionId}_{eventName}
+        
         String scriptName = "region_" + regionId + "_" + eventName;
         return codingManager.getScript(scriptName);
     }
@@ -336,14 +336,14 @@ public class RegionDetectionSystem {
      * @param eventName The event name (regionEnter, regionExit, etc.)
      */
     public void removeRegionScript(String regionId, String eventName) {
-        // Get the coding manager to delete the script
+        
         ServiceRegistry serviceRegistry = plugin.getServiceRegistry();
         if (serviceRegistry == null) return;
         
         ICodingManager codingManager = serviceRegistry.getService(ICodingManager.class);
         if (codingManager == null) return;
         
-        // Delete the script with the pattern: region_{regionId}_{eventName}
+        
         String scriptName = "region_" + regionId + "_" + eventName;
         codingManager.deleteScript(scriptName);
         
@@ -356,18 +356,18 @@ public class RegionDetectionSystem {
      * @param script The script to associate
      */
     public void setGenericRegionScript(String eventName, CodeScript script) {
-        // Get the coding manager to save the script
+        
         ServiceRegistry serviceRegistry = plugin.getServiceRegistry();
         if (serviceRegistry == null) return;
         
         ICodingManager codingManager = serviceRegistry.getService(ICodingManager.class);
         if (codingManager == null) return;
         
-        // Set the script name to follow the pattern: region_{eventName}
+        
         String scriptName = "region_" + eventName;
         script.setName(scriptName);
         
-        // Save the script using the coding manager
+        
         codingManager.saveScript(script);
         
         log.info("Set generic region script: " + scriptName);
@@ -379,14 +379,14 @@ public class RegionDetectionSystem {
      * @return The associated script, or null if none exists
      */
     public CodeScript getGenericRegionScript(String eventName) {
-        // Get the coding manager to retrieve the script
+        
         ServiceRegistry serviceRegistry = plugin.getServiceRegistry();
         if (serviceRegistry == null) return null;
         
         ICodingManager codingManager = serviceRegistry.getService(ICodingManager.class);
         if (codingManager == null) return null;
         
-        // Look for the script with the pattern: region_{eventName}
+        
         String scriptName = "region_" + eventName;
         return codingManager.getScript(scriptName);
     }
@@ -405,7 +405,7 @@ public class RegionDetectionSystem {
         private final Map<String, Object> metadata;
         private final boolean isCircular;
         
-        // Rectangular region constructor
+        
         public Region(String id, String worldName, Location minPoint, Location maxPoint, 
                      String description, Map<String, Object> metadata) {
             this.id = id;
@@ -425,7 +425,7 @@ public class RegionDetectionSystem {
             this.isCircular = false;
         }
         
-        // Circular region constructor
+        
         public Region(String id, String worldName, Location center, double radius,
                      String description, Map<String, Object> metadata) {
             this.id = id;
@@ -443,23 +443,23 @@ public class RegionDetectionSystem {
          * Checks if a location is within this region
          */
         public boolean contains(Location location) {
-            // Check world first
+            
             if (!location.getWorld().getName().equals(worldName)) {
                 return false;
             }
             
             if (isCircular) {
-                // Circular region check
+                
                 return location.distance(center) <= radius;
             } else {
-                // Rectangular region check
+                
                 return location.getX() >= minPoint.getX() && location.getX() <= maxPoint.getX() &&
                        location.getY() >= minPoint.getY() && location.getY() <= maxPoint.getY() &&
                        location.getZ() >= minPoint.getZ() && location.getZ() <= maxPoint.getZ();
             }
         }
         
-        // Getters
+        
         public String getId() { return id; }
         public String getWorldName() { return worldName; }
         public Location getMinPoint() { return isCircular ? null : minPoint.clone(); }
@@ -487,13 +487,13 @@ public class RegionDetectionSystem {
         private final String eventName;
         private final java.util.function.Predicate<Map<String, DataValue>> condition;
         private final int priority;
-        private final MegaCreative plugin; // Add plugin field
+        private final MegaCreative plugin; 
         
         public RegionEventHandler(String eventName, java.util.function.Predicate<Map<String, DataValue>> condition, int priority, MegaCreative plugin) {
             this.eventName = eventName;
             this.condition = condition;
             this.priority = priority;
-            this.plugin = plugin; // Store plugin reference
+            this.plugin = plugin; 
         }
         
         public boolean canHandle(Map<String, DataValue> eventData) {
@@ -501,53 +501,53 @@ public class RegionDetectionSystem {
         }
         
         public void handle(Map<String, DataValue> eventData, Player player, String worldName) {
-            // Get the plugin instance from the stored field
+            
             MegaCreative plugin = this.plugin;
             if (plugin == null) return;
             
-            // Get the script engine through ServiceRegistry
+            
             ServiceRegistry serviceRegistry = plugin.getServiceRegistry();
             if (serviceRegistry == null) return;
             
             ScriptEngine scriptEngine = serviceRegistry.getService(ScriptEngine.class);
             if (scriptEngine == null) return;
             
-            // Create execution context using the correct constructor
+            
             ExecutionContext context = new ExecutionContext(
                 plugin,
                 player,
-                null, // creativeWorld
-                null, // event
-                null, // blockLocation
-                null  // currentBlock
+                null, 
+                null, 
+                null, 
+                null  
             );
             
-            // Add event data to context
+            
             if (eventData != null) {
                 for (Map.Entry<String, DataValue> entry : eventData.entrySet()) {
                     context.setVariable(entry.getKey(), entry.getValue().getValue());
                 }
             }
             
-            // Trigger any associated scripts for this region event
-            // Look up region-specific scripts from the data store
+            
+            
             String regionId = null;
             if (eventData != null && eventData.get("regionId") != null) {
                 regionId = eventData.get("regionId").asString();
             }
             if (regionId != null) {
                 try {
-                    // Get the coding manager to access scripts
+                    
                     ICodingManager codingManager = plugin.getServiceRegistry().getService(ICodingManager.class);
                     if (codingManager != null) {
-                        // Look for region-specific scripts with pattern: "region_{regionId}_{eventName}"
+                        
                         String scriptName = "region_" + regionId + "_" + eventName;
                         CodeScript script = codingManager.getScript(scriptName);
                         
                         if (script != null && script.isEnabled()) {
                             plugin.getLogger().info("Executing region script: " + scriptName + " for player " + player.getName());
                             
-                            // Execute the script using the script engine
+                            
                             scriptEngine.executeScript(script, player, "region_event")
                                 .thenAccept(result -> {
                                     if (!result.isSuccess()) {
@@ -559,14 +559,14 @@ public class RegionDetectionSystem {
                                     return null;
                                 });
                         } else {
-                            // Check for generic region event scripts
+                            
                             String genericScriptName = "region_" + eventName;
                             CodeScript genericScript = codingManager.getScript(genericScriptName);
                             
                             if (genericScript != null && genericScript.isEnabled()) {
                                 plugin.getLogger().info("Executing generic region script: " + genericScriptName + " for player " + player.getName() + " in region " + regionId);
                                 
-                                // Execute the generic script using the script engine
+                                
                                 scriptEngine.executeScript(genericScript, player, "region_event")
                                     .thenAccept(result -> {
                                         if (!result.isSuccess()) {
@@ -594,16 +594,16 @@ public class RegionDetectionSystem {
          * This method is kept for backward compatibility but the main logic is now in the handle method
          */
         private void executeRegionScript(ScriptEngine scriptEngine, String scriptId, ExecutionContext context, Player player, String regionId) {
-            // Proper implementation that executes actual scripts
-            MegaCreative plugin = this.plugin; // Use stored plugin reference
+            
+            MegaCreative plugin = this.plugin; 
             if (plugin == null) return;
             
             plugin.getLogger().info("Executing script " + scriptId + " for player " + player.getName() + " in region " + regionId);
             
-            // Load and execute the actual script by scriptId
+            
             CodeScript script = null;
             
-            // Check in the current world
+            
             if (script == null) {
                 CreativeWorld creativeWorld = plugin.getServiceRegistry().getWorldManager().findCreativeWorldByBukkit(player.getWorld());
                 if (creativeWorld != null) {
@@ -614,9 +614,9 @@ public class RegionDetectionSystem {
                 }
             }
             
-            // If we found a script, execute it
+            
             if (script != null) {
-                // Use the script engine to execute the script
+                
                 scriptEngine.executeScript(script, player, "region_event")
                         .thenAccept(result -> {
                             if (result.isSuccess()) {
@@ -632,25 +632,25 @@ public class RegionDetectionSystem {
                             return null;
                         });
             } else {
-                // Fallback to the original behavior if script not found
+                
                 switch (eventName) {
                     case "regionEnter":
-                        // Example: Give player a welcome message
+                        
                         player.sendMessage("§aWelcome to region: " + regionId);
                         break;
                     case "regionExit":
-                        // Example: Give player a farewell message
+                        
                         player.sendMessage("§cLeaving region: " + regionId);
                         break;
                     default:
-                        // Generic handling
+                        
                         player.sendMessage("§eRegion event triggered: " + eventName + " in " + regionId);
                         break;
                 }
             }
         }
         
-        // Getters
+        
         public String getEventName() { return eventName; }
         public java.util.function.Predicate<Map<String, DataValue>> getCondition() { return condition; }
         public int getPriority() { return priority; }

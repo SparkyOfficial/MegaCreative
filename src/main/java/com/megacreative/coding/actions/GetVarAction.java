@@ -18,7 +18,7 @@ public class GetVarAction implements BlockAction {
     @Override
     public ExecutionResult execute(CodeBlock block, ExecutionContext context) {
         try {
-            // Get variable name parameter
+            
             DataValue nameValue = block.getParameter("name");
             
             if (nameValue == null || nameValue.isEmpty()) {
@@ -27,14 +27,14 @@ public class GetVarAction implements BlockAction {
             
             String varName = nameValue.asString();
             
-            // Get the variable from the context as DataValue
+            
             DataValue varValue = context.getVariableAsDataValue(varName);
             
             if (varValue == null) {
                 return ExecutionResult.error("Variable not found: " + varName);
             }
             
-            // Store the value in the block's result
+            
             block.setParameter("result", varValue);
             
             return ExecutionResult.success("Variable retrieved successfully");

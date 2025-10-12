@@ -74,7 +74,7 @@ public class ConfirmDeleteCommand implements CommandExecutor {
             return true;
         }
         
-        // Проверка, что игрок - владелец
+        
         if (!world.isOwner(player)) {
             player.sendMessage("§cТолько владелец может удалить этот мир.");
             return true;

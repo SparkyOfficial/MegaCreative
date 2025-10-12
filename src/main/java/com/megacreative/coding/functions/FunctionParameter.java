@@ -14,7 +14,7 @@ public class FunctionParameter {
     private boolean required;
     private String description;
     
-    // Getters and Setters
+    
     public String getName() { return name; }
     public void setName(final String name) { this.name = name; }
     
@@ -30,7 +30,7 @@ public class FunctionParameter {
     public String getDescription() { return description; }
     public void setDescription(final String description) { this.description = description; }
     
-    // equals and hashCode
+    
     @Override
     public boolean equals(final Object o) {
         if (this == o) {
@@ -52,7 +52,7 @@ public class FunctionParameter {
         return Objects.hash(name, expectedType, defaultValue, required, description);
     }
     
-    // No-args constructor
+    
     public FunctionParameter() {
     }
     

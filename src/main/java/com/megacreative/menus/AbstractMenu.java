@@ -27,12 +27,12 @@ public abstract class AbstractMenu implements InventoryMenu {
     protected String title;
     protected int rows;
     
-    // Standard items used across menus
+    
     protected final ItemStack AIR_ITEM = new ItemStack(Material.AIR);
     protected final ItemStack DECORATION_ITEM = createItem(Material.LIGHT_GRAY_STAINED_GLASS_PANE, 1, " ");
     protected final ItemStack CATEGORY_SEPARATOR = createItem(Material.ORANGE_STAINED_GLASS_PANE, 1, " ");
     
-    // Slots where content can be placed (standard 6-row inventory pattern)
+    
     protected final int[] CONTENT_SLOTS = {
         10, 11, 12, 13, 14, 15, 16, 
         19, 20, 21, 22, 23, 24, 25,
@@ -41,7 +41,7 @@ public abstract class AbstractMenu implements InventoryMenu {
     };
     
     public AbstractMenu(int rows, String title) {
-        this.rows = Math.max(1, Math.min(6, rows)); // Clamp between 1-6 rows
+        this.rows = Math.max(1, Math.min(6, rows)); 
         this.title = title;
         this.creationTime = System.currentTimeMillis();
     }
@@ -172,18 +172,18 @@ public abstract class AbstractMenu implements InventoryMenu {
     protected void fillBorder() {
         ItemStack decoration = createDecorationItem();
         
-        // Fill top and bottom rows
+        
         for (int i = 0; i < 9; i++) {
-            setItem(i, decoration); // Top row
+            setItem(i, decoration); 
             if (rows > 1) {
-                setItem((rows - 1) * 9 + i, decoration); // Bottom row
+                setItem((rows - 1) * 9 + i, decoration); 
             }
         }
         
-        // Fill sides
+        
         for (int i = 1; i < rows - 1; i++) {
-            setItem(i * 9, decoration); // Left side
-            setItem(i * 9 + 8, decoration); // Right side
+            setItem(i * 9, decoration); 
+            setItem(i * 9 + 8, decoration); 
         }
     }
     

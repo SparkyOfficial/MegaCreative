@@ -25,7 +25,7 @@ import java.util.HashMap;
 @BlockMeta(id = "genericCondition", displayName = "§aGeneric Condition", type = BlockType.CONDITION)
 public class GenericCondition implements BlockCondition {
     
-    // Condition handlers map for easy extension
+    
     private static final Map<String, BiFunction<ExecutionContext, Map<String, DataValue>, Boolean>> CONDITION_HANDLERS = new HashMap<>();
     
     static {
@@ -38,10 +38,10 @@ public class GenericCondition implements BlockCondition {
             String conditionId = block.getAction();
             Map<String, DataValue> params = block.getParameters();
             
-            // Check for negation first
+            
             boolean isNegated = params.containsKey("negated") && params.get("negated").asBoolean();
             
-            // Get the condition handler
+            
             BiFunction<ExecutionContext, Map<String, DataValue>, Boolean> handler = CONDITION_HANDLERS.get(conditionId);
             boolean result;
             
@@ -52,7 +52,7 @@ public class GenericCondition implements BlockCondition {
                 return false;
             }
             
-            // Apply negation if needed
+            
             return isNegated != result;
             
         } catch (Exception e) {
@@ -67,7 +67,7 @@ public class GenericCondition implements BlockCondition {
      * Add new conditions here instead of creating new classes
      */
     private static void initializeConditionHandlers() {
-        // === PLAYER STATE CONDITIONS ===
+        
         CONDITION_HANDLERS.put("isSneaking", (context, params) -> {
             return context.getPlayer().isSneaking();
         });
@@ -92,7 +92,7 @@ public class GenericCondition implements BlockCondition {
             return context.getPlayer().isBlocking();
         });
         
-        // === NEW ESSENTIAL CONDITIONS ===
+        
         CONDITION_HANDLERS.put("isSwimming", (context, params) -> {
             return context.getPlayer().isSwimming();
         });
@@ -137,7 +137,7 @@ public class GenericCondition implements BlockCondition {
             return context.getPlayer().getLocation().distance(targetPlayer.getLocation()) <= distance;
         });
         
-        // === PERMISSION CONDITIONS ===
+        
         CONDITION_HANDLERS.put("hasPermission", (context, params) -> {
             String permission = params.get("permission").asString();
             return context.getPlayer().hasPermission(permission);
@@ -147,7 +147,7 @@ public class GenericCondition implements BlockCondition {
             return context.getPlayer().isOp();
         });
         
-        // === GAMEMODE CONDITIONS ===
+        
         CONDITION_HANDLERS.put("isGameMode", (context, params) -> {
             String mode = params.get("gamemode").asString().toLowerCase();
             GameMode playerMode = context.getPlayer().getGameMode();
@@ -166,7 +166,7 @@ public class GenericCondition implements BlockCondition {
             }
         });
         
-        // === HEALTH/FOOD CONDITIONS ===
+        
         CONDITION_HANDLERS.put("healthEquals", (context, params) -> {
             double targetHealth = params.get("health").asNumber().doubleValue();
             return Math.abs(context.getPlayer().getHealth() - targetHealth) < 0.1;
@@ -197,7 +197,7 @@ public class GenericCondition implements BlockCondition {
             return context.getPlayer().getFoodLevel() < targetFood;
         });
         
-        // === INVENTORY CONDITIONS ===
+        
         CONDITION_HANDLERS.put("hasItem", (context, params) -> {
             Material material = Material.valueOf(params.get("material").asString());
             int amount = params.get("amount").asNumber().intValue();
@@ -223,10 +223,10 @@ public class GenericCondition implements BlockCondition {
             return true;
         });
         
-        // === LOCATION CONDITIONS ===
+        
         CONDITION_HANDLERS.put("atLocation", (context, params) -> {
             try {
-                // Parse location string (format: "world,x,y,z")
+                
                 String locString = params.get("location").asString();
                 String[] parts = locString.split(",");
                 
@@ -242,7 +242,7 @@ public class GenericCondition implements BlockCondition {
                 
                 Location targetLoc = new Location(context.getPlayer().getWorld(), x, y, z);
                 
-                // Check if player is in the same world
+                
                 if (!context.getPlayer().getWorld().getName().equals(worldName)) {
                     return false;
                 }
@@ -284,7 +284,7 @@ public class GenericCondition implements BlockCondition {
                 
                 Location playerLoc = context.getPlayer().getLocation();
                 
-                // Check blocks in a cube around the player
+                
                 for (int x = -searchRadius; x <= searchRadius; x++) {
                     for (int y = -searchRadius; y <= searchRadius; y++) {
                         for (int z = -searchRadius; z <= searchRadius; z++) {
@@ -304,7 +304,7 @@ public class GenericCondition implements BlockCondition {
             }
         });
         
-        // === TIME/WEATHER CONDITIONS ===
+        
         CONDITION_HANDLERS.put("isDay", (context, params) -> {
             long time = context.getPlayer().getWorld().getTime();
             return time >= 0 && time < 12300;
@@ -323,17 +323,17 @@ public class GenericCondition implements BlockCondition {
             return context.getPlayer().getWorld().isThundering();
         });
         
-        // === POTION EFFECT CONDITIONS ===
+        
         CONDITION_HANDLERS.put("hasPotionEffect", (context, params) -> {
             String effectName = params.get("effect").asString();
             PotionEffectType effectType = PotionEffectType.getByName(effectName);
             return effectType != null && context.getPlayer().hasPotionEffect(effectType);
         });
         
-        // === BLOCK CONDITIONS ===
+        
         CONDITION_HANDLERS.put("blockAtLocation", (context, params) -> {
             try {
-                // Parse location string (format: "world,x,y,z")
+                
                 String locString = params.get("location").asString();
                 String[] parts = locString.split(",");
                 
@@ -349,7 +349,7 @@ public class GenericCondition implements BlockCondition {
                 
                 Location targetLoc = new Location(context.getPlayer().getWorld(), x, y, z);
                 
-                // Check if player is in the same world
+                
                 if (!context.getPlayer().getWorld().getName().equals(worldName)) {
                     return false;
                 }
@@ -373,15 +373,15 @@ public class GenericCondition implements BlockCondition {
             return loc.getBlock().getType() == material;
         });
         
-        // === COMPARISON CONDITIONS ===
+        
         CONDITION_HANDLERS.put("randomChance", (context, params) -> {
-            double chance = params.get("chance").asNumber().doubleValue(); // 0.0 to 1.0
+            double chance = params.get("chance").asNumber().doubleValue(); 
             return Math.random() < chance;
         });
         
         CONDITION_HANDLERS.put("playerCount", (context, params) -> {
             int targetCount = params.get("count").asNumber().intValue();
-            String operator = params.get("operator").asString(); // "equals", "greater", "less"
+            String operator = params.get("operator").asString(); 
             int actualCount = context.getPlayer().getServer().getOnlinePlayers().size();
             
             switch (operator.toLowerCase()) {
@@ -396,21 +396,21 @@ public class GenericCondition implements BlockCondition {
             }
         });
         
-        // === ECONOMY CONDITIONS (if Vault is available) ===
+        
         CONDITION_HANDLERS.put("hasMoney", (context, params) -> {
             try {
                 double amount = params.get("amount").asNumber().doubleValue();
                 
-                // Check player's balance using a custom variable
+                
                 Object balanceObj = context.getVariable("balance");
                 if (balanceObj instanceof Number) {
                     return ((Number) balanceObj).doubleValue() >= amount;
                 }
                 
-                // Default fallback - return false if we can't determine balance
+                
                 return false;
             } catch (Exception e) {
-                // Log the error and return false
+                
                 if (context.getPlugin() != null) {
                     context.getPlugin().getLogger().warning("Error checking player balance: " + e.getMessage());
                 }

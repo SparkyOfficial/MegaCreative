@@ -65,7 +65,7 @@ public class WorldActionsGUI implements GUIManager.ManagedGUIInterface {
     private void setupInventory() {
         inventory.clear();
         
-        // Заполнение стеклом
+        
         ItemStack glass = new ItemStack(Material.GRAY_STAINED_GLASS_PANE);
         ItemMeta glassMeta = glass.getItemMeta();
         glassMeta.setDisplayName(" ");
@@ -75,7 +75,7 @@ public class WorldActionsGUI implements GUIManager.ManagedGUIInterface {
             inventory.setItem(i, glass);
         }
         
-        // Войти в мир
+        
         ItemStack joinButton = new ItemStack(Material.EMERALD);
         ItemMeta joinMeta = joinButton.getItemMeta();
         joinMeta.setDisplayName("§a§lВойти в мир");
@@ -87,7 +87,7 @@ public class WorldActionsGUI implements GUIManager.ManagedGUIInterface {
         joinButton.setItemMeta(joinMeta);
         inventory.setItem(10, joinButton);
         
-        // Настройки мира
+        
         ItemStack settingsButton = new ItemStack(Material.COMPARATOR);
         ItemMeta settingsMeta = settingsButton.getItemMeta();
         settingsMeta.setDisplayName("§e§lНастройки мира");
@@ -99,7 +99,7 @@ public class WorldActionsGUI implements GUIManager.ManagedGUIInterface {
         settingsButton.setItemMeta(settingsMeta);
         inventory.setItem(11, settingsButton);
         
-        // Комментарии
+        
         ItemStack commentsButton = new ItemStack(Material.BOOK);
         ItemMeta commentsMeta = commentsButton.getItemMeta();
         commentsMeta.setDisplayName("§b§lКомментарии");
@@ -111,7 +111,7 @@ public class WorldActionsGUI implements GUIManager.ManagedGUIInterface {
         commentsButton.setItemMeta(commentsMeta);
         inventory.setItem(12, commentsButton);
         
-        // Скрипты
+        
         ItemStack scriptsButton = new ItemStack(Material.COMMAND_BLOCK);
         ItemMeta scriptsMeta = scriptsButton.getItemMeta();
         scriptsMeta.setDisplayName("§6§lСкрипты");
@@ -123,7 +123,7 @@ public class WorldActionsGUI implements GUIManager.ManagedGUIInterface {
         scriptsButton.setItemMeta(scriptsMeta);
         inventory.setItem(13, scriptsButton);
         
-        // Удалить мир
+        
         ItemStack deleteButton = new ItemStack(Material.BARRIER);
         ItemMeta deleteMeta = deleteButton.getItemMeta();
         deleteMeta.setDisplayName("§c§lУдалить мир");
@@ -135,7 +135,7 @@ public class WorldActionsGUI implements GUIManager.ManagedGUIInterface {
         deleteButton.setItemMeta(deleteMeta);
         inventory.setItem(14, deleteButton);
         
-        // Кнопка назад
+        
         ItemStack backButton = new ItemStack(Material.ARROW);
         ItemMeta backMeta = backButton.getItemMeta();
         backMeta.setDisplayName("§e§lНазад");
@@ -151,7 +151,7 @@ public class WorldActionsGUI implements GUIManager.ManagedGUIInterface {
      * Öffnet die GUI für den Spieler
      */
     public void open() {
-        // Use the new GUIManager system
+        
         plugin.getServiceRegistry().getGuiManager().registerGUI(player, this, inventory);
         player.openInventory(inventory);
     }
@@ -196,47 +196,47 @@ public class WorldActionsGUI implements GUIManager.ManagedGUIInterface {
         
         String displayName = clicked.getItemMeta().getDisplayName();
         
-        // Кнопка назад
+        
         if (displayName.contains("Назад")) {
             player.closeInventory();
-            // GUIManager will handle cleanup automatically
+            
             new WorldBrowserGUI(plugin, player).open();
             return;
         }
         
-        // Войти в мир
+        
         if (displayName.contains("Войти в мир")) {
             player.closeInventory();
-            // GUIManager will handle cleanup automatically
+            
             player.performCommand("join " + world.getId());
         }
         
-        // Настройки мира
+        
         else if (displayName.contains("Настройки мира")) {
             player.closeInventory();
-            // GUIManager will handle cleanup automatically
+            
             new WorldSettingsGUI(plugin, player, world).open();
         }
         
-        // Комментарии
+        
         else if (displayName.contains("Комментарии")) {
             player.closeInventory();
-            // GUIManager will handle cleanup automatically
+            
             new WorldCommentsGUI(plugin, player, world, 0).open();
         }
         
-        // Скрипты
+        
         else if (displayName.contains("Скрипты")) {
             player.closeInventory();
-            // ScriptsGUI is removed as part of unused functionality cleanup
+            
             player.sendMessage("§cScripts GUI is not available.");
         }
         
-        // Удалить мир
+        
         else if (displayName.contains("Удалить мир")) {
             player.closeInventory();
-            // GUIManager will handle cleanup automatically
-            // Confirm deletion with the player
+            
+            
             player.sendMessage("§cВы уверены, что хотите удалить мир '" + world.getName() + "'? Это действие нельзя отменить.");
             player.sendMessage("§cВведите /confirmdelete " + world.getId() + " для подтверждения удаления.");
         }

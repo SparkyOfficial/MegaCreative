@@ -26,7 +26,7 @@ public class CreateListAction implements BlockAction {
         }
 
         try {
-            // Get parameters from the block
+            
             DataValue listNameValue = block.getParameter("list_name");
             DataValue initialValuesValue = block.getParameter("initial_values");
             
@@ -34,13 +34,13 @@ public class CreateListAction implements BlockAction {
                 return ExecutionResult.error("List name parameter is missing.");
             }
             
-            // Resolve parameters
+            
             ParameterResolver resolver = new ParameterResolver(context);
             DataValue resolvedListName = resolver.resolve(context, listNameValue);
             
             String listName = resolvedListName.asString();
             
-            // Create the list
+            
             List<DataValue> initialValues = new ArrayList<>();
             if (initialValuesValue != null && !initialValuesValue.isEmpty()) {
                 DataValue resolvedInitialValues = resolver.resolve(context, initialValuesValue);
@@ -51,7 +51,7 @@ public class CreateListAction implements BlockAction {
             
             ListValue listValue = new ListValue(initialValues);
             
-            // Store the list in the variable manager
+            
             VariableManager variableManager = context.getPlugin().getServiceRegistry().getVariableManager();
             if (variableManager != null) {
                 variableManager.setVariable(listName, listValue, VariableScope.LOCAL, context.getScriptId());

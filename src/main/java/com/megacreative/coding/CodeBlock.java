@@ -4,7 +4,7 @@ import com.megacreative.coding.values.DataValue;
 import org.bukkit.Material;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.inventory.meta.ItemMeta;
-// Removed unused Bukkit imports
+
 
 import java.util.*;
 
@@ -14,12 +14,12 @@ import java.util.*;
  * Simplified to be a pure data object without plugin dependencies.
  */
 public class CodeBlock implements Cloneable {
-    // ===== CLASS FIELDS =====
+    
     
     /** Unique block identifier */
     private UUID id;
     
-    // Removed deprecated Material field - use materialName instead
+    
     
     /** Selected action (e.g. onJoin, sendMessage) */
     private String action;
@@ -63,7 +63,7 @@ public class CodeBlock implements Cloneable {
     /** Else block for conditional statements */
     private CodeBlock elseBlock;
     
-    // ===== ENUMS =====
+    
     
     /**
      * Enum for bracket types - used for grouping code blocks
@@ -84,7 +84,7 @@ public class CodeBlock implements Cloneable {
         public String getSymbol() { return symbol; }
     }
     
-    // ===== CONSTRUCTORS =====
+    
     
     /**
      * Default constructor
@@ -121,7 +121,7 @@ public class CodeBlock implements Cloneable {
         this.event = event;
     }
     
-    // ===== GETTERS AND SETTERS =====
+    
     
     public UUID getId() { 
         return id; 
@@ -140,10 +140,10 @@ public class CodeBlock implements Cloneable {
             try {
                 return Material.valueOf(materialName);
             } catch (IllegalArgumentException e) {
-                return Material.STONE; // Default fallback
+                return Material.STONE; 
             }
         }
-        return Material.STONE; // Default fallback
+        return Material.STONE; 
     }
     
     /**
@@ -318,7 +318,7 @@ public class CodeBlock implements Cloneable {
         this.elseBlock = elseBlock;
     }
     
-    // ===== UTILITY METHODS =====
+    
     
     /**
      * Sets a parameter for the block.
@@ -437,7 +437,7 @@ public class CodeBlock implements Cloneable {
         this.nextBlock = next;
     }
     
-    // ===== METHODS FOR WORKING WITH ITEMS =====
+    
     
     /**
      * Sets a configuration item in the specified slot
@@ -448,7 +448,7 @@ public class CodeBlock implements Cloneable {
         if (item == null || item.getType().isAir()) {
             configItems.remove(slot);
         } else {
-            // Save a copy to avoid problems with changing the original
+            
             configItems.put(slot, item.clone());
         }
     }
@@ -477,7 +477,7 @@ public class CodeBlock implements Cloneable {
         configItems.clear();
     }
     
-    // ===== METHODS FOR WORKING WITH ITEM GROUPS =====
+    
     
     /**
      * Creates an item group
@@ -628,7 +628,7 @@ public class CodeBlock implements Cloneable {
         
         String rawValue = meta.getDisplayName();
         
-        // Resolve placeholders using the reference system
+        
         return com.megacreative.coding.placeholders.ReferenceSystemPlaceholderResolver.resolvePlaceholders(rawValue, context);
     }
     
@@ -679,7 +679,7 @@ public class CodeBlock implements Cloneable {
             return parameters;
         }
         
-        // We don't have access to the slot names here, so we'll return what we can
+        
         for (Map.Entry<Integer, ItemStack> entry : configItems.entrySet()) {
             Integer slotNumber = entry.getKey();
             ItemStack item = entry.getValue();
@@ -689,7 +689,7 @@ public class CodeBlock implements Cloneable {
                 if (meta != null && meta.hasDisplayName()) {
                     String rawValue = meta.getDisplayName();
                     String resolvedValue = com.megacreative.coding.placeholders.ReferenceSystemPlaceholderResolver.resolvePlaceholders(rawValue, context);
-                    // We'll use the slot number as the key since we don't have the name
+                    
                     parameters.put("slot_" + slotNumber, resolvedValue);
                 }
             }
@@ -698,7 +698,7 @@ public class CodeBlock implements Cloneable {
         return parameters;
     }
     
-    // ===== OVERRIDDEN METHODS =====
+    
     
     @Override
     public boolean equals(Object o) {
@@ -728,10 +728,10 @@ public class CodeBlock implements Cloneable {
     public CodeBlock clone() {
         try {
             CodeBlock cloned = (CodeBlock) super.clone();
-            cloned.id = UUID.randomUUID(); // New ID for the new block
+            cloned.id = UUID.randomUUID(); 
             cloned.parameters = new HashMap<>(this.parameters);
             
-            // Deep copy configItems
+            
             cloned.configItems = new HashMap<>();
             for (Map.Entry<Integer, ItemStack> entry : this.configItems.entrySet()) {
                 if (entry.getValue() != null) {
@@ -739,12 +739,12 @@ public class CodeBlock implements Cloneable {
                 }
             }
             
-            // Important: don't copy nextBlock and children to avoid unpredictable connections
-            // These should be set up properly by the connection logic after cloning
+            
+            
             cloned.nextBlock = null;
             cloned.children = new ArrayList<>();
             
-            // Deep copy itemGroups
+            
             cloned.itemGroups = new HashMap<>();
             for (Map.Entry<String, List<Integer>> entry : this.itemGroups.entrySet()) {
                 if (entry.getValue() != null) {

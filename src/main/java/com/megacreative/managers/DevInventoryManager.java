@@ -29,8 +29,8 @@ public class DevInventoryManager implements Listener {
     
     public DevInventoryManager(MegaCreative plugin) {
         this.plugin = plugin;
-        // Не запускаем автоматическую проверку - будем использовать команды
-        // startInventoryChecker(); // Отключено по запросу для уменьшения спама
+        
+        
     }
     
     @EventHandler(priority = EventPriority.MONITOR)
@@ -51,7 +51,7 @@ public class DevInventoryManager implements Listener {
             return;
         }
         
-        // ВАЖНО: Сначала сохраняем, ПОТОМ очищаем!
+        
         savedInventories.put(player.getUniqueId(), player.getInventory().getContents().clone());
         playersInDevWorld.add(player.getUniqueId());
         giveDevTools(player);
@@ -79,7 +79,7 @@ public class DevInventoryManager implements Listener {
             return;
         }
 
-        // Проходим по ВСЕМ блокам, определенным в coding_blocks.yml
+        
         for (BlockConfigService.BlockConfig config : configService.getAllBlockConfigs()) {
             if (currentSlot >= 36) break;
 
@@ -98,7 +98,7 @@ public class DevInventoryManager implements Listener {
             currentSlot++;
         }
 
-        // Добавляем специальные инструменты
+        
         if (currentSlot < 36) {
             player.getInventory().setItem(currentSlot, CodingItems.getGameValue());
             currentSlot++;
@@ -113,7 +113,7 @@ public class DevInventoryManager implements Listener {
         }
         if (currentSlot < 36) {
             player.getInventory().setItem(currentSlot, CodingItems.getCodeMover());
-            // No need to increment currentSlot after the last item
+            
         }
 
         player.updateInventory();
@@ -133,13 +133,13 @@ public class DevInventoryManager implements Listener {
                     }
                 }
             }
-        }.runTaskTimer(plugin, 200L, 600L); // Проверяем каждые 30 секунд (вместо 5), меньше спама
+        }.runTaskTimer(plugin, 200L, 600L); 
     }
     
     private void checkAndRestoreTools(Player player) {
         if (!playersInDevWorld.contains(player.getUniqueId())) return;
         
-        // Вместо полного сброса, будем просто добавлять недостающие
+        
         List<String> missingItems = getMissingCodingItems(player);
         if (!missingItems.isEmpty()) {
             giveMissingItems(player, missingItems);
@@ -153,12 +153,12 @@ public class DevInventoryManager implements Listener {
     private List<String> getMissingCodingItems(Player player) {
         List<String> missingItems = new ArrayList<>();
     
-        // Проверяем ключевые инструменты (не все блоки кода!)
+        
         boolean hasCopier = false;
         boolean hasArrowNot = false;
         boolean hasDataCreator = false;
         boolean hasCodeMover = false;
-        boolean hasGameValue = false; // Add this line
+        boolean hasGameValue = false; 
     
         for (ItemStack item : player.getInventory().getContents()) {
             if (item != null && item.hasItemMeta() && item.getItemMeta().hasDisplayName()) {
@@ -169,17 +169,17 @@ public class DevInventoryManager implements Listener {
                     hasDataCreator = true;
                 } else if (name.contains("Перемещатель кода") || name.contains(CodingItems.CODE_MOVER_NAME)) {
                     hasCodeMover = true;
-                } else if (name.contains("Игровое значение") || name.contains(CodingItems.GAME_VALUE_NAME)) { // Add this condition
+                } else if (name.contains("Игровое значение") || name.contains(CodingItems.GAME_VALUE_NAME)) { 
                     hasGameValue = true;
                 }
             }
         }
     
-        // Добавляем недостающие инструменты
+        
         if (!hasArrowNot) missingItems.add("arrow_not");
         if (!hasDataCreator) missingItems.add("data_creator");
         if (!hasCodeMover) missingItems.add("code_mover");
-        if (!hasGameValue) missingItems.add("game_value"); // Add this line
+        if (!hasGameValue) missingItems.add("game_value"); 
     
         return missingItems;
     }
@@ -193,9 +193,9 @@ public class DevInventoryManager implements Listener {
                 case "arrow_not" -> player.getInventory().addItem(CodingItems.getArrowNot());
                 case "data_creator" -> player.getInventory().addItem(CodingItems.getDataCreator());
                 case "code_mover" -> player.getInventory().addItem(CodingItems.getCodeMover());
-                case "game_value" -> player.getInventory().addItem(CodingItems.getGameValue()); // Add this case
+                case "game_value" -> player.getInventory().addItem(CodingItems.getGameValue()); 
                 default -> {
-                    // Unknown item type, ignore
+                    
                 }
             }
         }
@@ -212,7 +212,7 @@ public class DevInventoryManager implements Listener {
     }
     
     private boolean isDevWorld(String worldName) {
-        // Use the same logic as PlayerWorldChangeListener
+        
         return worldName.endsWith("-code") || worldName.endsWith("_dev");
     }
     
@@ -222,8 +222,8 @@ public class DevInventoryManager implements Listener {
     public void savePlayerInventory(Player player) {
         if (playersInDevWorld.contains(player.getUniqueId())) {
             savedInventories.put(player.getUniqueId(), player.getInventory().getContents());
-            // Reduced logging - only log when debugging
-            // plugin.getLogger().info("Saved dev inventory for " + player.getName());
+            
+            
         }
     }
     
@@ -242,7 +242,7 @@ public class DevInventoryManager implements Listener {
     }
     
     public void forceRestoreTools(Player player) {
-        // 🔧 FIX: Always give dev tools regardless of dev world status
+        
         giveDevTools(player);
         player.sendMessage("§aИнструменты принудительно восстановлены!");
     }

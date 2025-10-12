@@ -17,7 +17,7 @@ public class ScriptOptimizationReport {
         this.generatedAt = new Date();
     }
     
-    // Getters
+    
     public String getScriptName() {
         return scriptName;
     }

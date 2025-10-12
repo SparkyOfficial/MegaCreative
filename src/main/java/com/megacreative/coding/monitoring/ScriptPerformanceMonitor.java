@@ -10,7 +10,7 @@ import org.bukkit.plugin.Plugin;
 import java.util.*;
 import java.util.concurrent.*;
 import java.util.concurrent.atomic.*;
-// import java.util.logging.Logger;  // Removed logger import
+
 
 /**
  * Advanced performance monitoring system for visual programming scripts
@@ -20,20 +20,20 @@ public class ScriptPerformanceMonitor {
     private final Plugin plugin;
     private final long startTime;
     
-    // Performance tracking data structures
+    
     private final Map<UUID, PlayerScriptMetrics> playerMetrics = new ConcurrentHashMap<>();
     private final Map<String, ActionPerformanceData> actionPerformance = new ConcurrentHashMap<>();
     private final Map<String, ScriptPerformanceProfile> scriptProfiles = new ConcurrentHashMap<>();
     private final AtomicLong totalExecutions = new AtomicLong(0);
     private final AtomicLong totalExecutionTime = new AtomicLong(0);
     
-    // Advanced monitoring features
+    
     private final com.megacreative.coding.monitoring.model.ExecutionSampler executionSampler = 
         new com.megacreative.coding.monitoring.model.ExecutionSampler();
     private final MemoryMonitor memoryMonitor;
     private final BottleneckDetector bottleneckDetector = new BottleneckDetector();
     
-    // Performance thresholds (loaded from config)
+    
     private final long slowExecutionThreshold;
     private final long memoryWarningThreshold;
     private final int maxConcurrentScripts;
@@ -69,14 +69,14 @@ public class ScriptPerformanceMonitor {
         this.plugin = plugin;
         this.startTime = System.currentTimeMillis();
         
-        // Load performance thresholds from config
+        
         this.slowExecutionThreshold = plugin.getConfig().getLong("coding.performance.slow_execution_threshold", 50);
         this.memoryWarningThreshold = plugin.getConfig().getLong("coding.performance.memory_warning_threshold", 100 * 1024 * 1024);
         this.maxConcurrentScripts = plugin.getConfig().getInt("coding.max_concurrent_scripts", 20);
         
         this.memoryMonitor = new MemoryMonitor();
         
-        // Start monitoring services
+        
         executionSampler.start();
         memoryMonitor.start();
         bottleneckDetector.start();
@@ -94,35 +94,35 @@ public class ScriptPerformanceMonitor {
     public void recordExecution(Player player, String scriptName, String actionType, 
                                long executionTime, boolean success, String errorMessage) {
         if (player != null) {
-            // Update player metrics
+            
             PlayerScriptMetrics metrics = playerMetrics.computeIfAbsent(
                 player.getUniqueId(), PlayerScriptMetrics::new);
             metrics.recordExecution(scriptName, actionType, executionTime, success);
             
-            // Update global metrics
+            
             totalExecutions.incrementAndGet();
             totalExecutionTime.addAndGet(executionTime);
             
-            // Update action performance data
+            
             actionPerformance.computeIfAbsent(actionType, k -> new ActionPerformanceData(actionType))
                 .recordExecution(executionTime, success);
             
-            // Update script profile with success status
+            
             ScriptPerformanceProfile profile = scriptProfiles.computeIfAbsent(
                 scriptName, ScriptPerformanceProfile::new);
             profile.recordExecution(actionType, executionTime, success);
             
-            // Sample execution for pattern detection
+            
             executionSampler.recordExecution(scriptName, actionType, executionTime);
             
-            // Convert ScriptPerformanceProfile to ScriptMetrics and check for bottlenecks
+            
             List<ScriptMetrics> metricsList = new ArrayList<>();
             for (ScriptPerformanceProfile scriptProfile : scriptProfiles.values()) {
                 metricsList.add(new ScriptMetrics(scriptProfile));
             }
             bottleneckDetector.detectBottlenecks(metricsList);
             
-            // Log slow executions
+            
 
         }
     }

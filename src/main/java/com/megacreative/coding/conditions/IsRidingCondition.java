@@ -25,16 +25,16 @@ public class IsRidingCondition implements BlockCondition {
         }
 
         try {
-            // Get parameters from the new parameter system
+            
             DataValue entityValue = block.getParameter("entity");
             
-            // If a specific entity type is provided, check for that type
+            
             if (entityValue != null && !entityValue.isEmpty()) {
-                // Resolve any placeholders in the entity name
+                
                 ParameterResolver resolver = new ParameterResolver(context);
                 DataValue resolvedEntity = resolver.resolve(context, entityValue);
                 
-                // Parse entity type parameter
+                
                 String entityName = resolvedEntity.asString();
                 if (entityName == null || entityName.isEmpty()) {
                     context.getPlugin().getLogger().warning("IsRidingCondition: 'entity' parameter is empty.");
@@ -55,11 +55,11 @@ public class IsRidingCondition implements BlockCondition {
                     return false;
                 }
             } else {
-                // If no entity type is specified, just check if the player is riding anything
+                
                 return player.isInsideVehicle();
             }
         } catch (Exception e) {
-            // If there's an error, return false
+            
             context.getPlugin().getLogger().warning("Error in IsRidingCondition: " + e.getMessage());
             return false;
         }

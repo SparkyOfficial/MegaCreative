@@ -252,7 +252,7 @@ public class GameScoreboardManager {
     public void clearAllScoreboards() {
         playerScoreboards.clear();
         
-        // Удаляем глобальный скорборд
+        
         Scoreboard mainScoreboard = Bukkit.getScoreboardManager().getMainScoreboard();
         Objective objective = mainScoreboard.getObjective("game_global");
         if (objective != null) {

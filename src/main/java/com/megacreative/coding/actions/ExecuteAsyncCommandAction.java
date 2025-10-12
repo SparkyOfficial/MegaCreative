@@ -26,17 +26,17 @@ public class ExecuteAsyncCommandAction implements BlockAction {
         }
 
         try {
-            // Get command parameter from the new parameter system
+            
             DataValue commandValue = block.getParameter("command");
             if (commandValue == null || commandValue.isEmpty()) {
                 return ExecutionResult.error("No command provided");
             }
 
-            // Resolve any placeholders in the command
+            
             ParameterResolver resolver = new ParameterResolver(context);
             DataValue resolvedCommand = resolver.resolve(context, commandValue);
 
-            // Execute the command with proper thread safety
+            
             Bukkit.getScheduler().runTask(context.getPlugin(), () -> {
                 try {
                     Bukkit.dispatchCommand(player, resolvedCommand.asString());

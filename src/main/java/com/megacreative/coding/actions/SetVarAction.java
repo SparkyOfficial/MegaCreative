@@ -21,7 +21,7 @@ public class SetVarAction implements BlockAction {
     @Override
     public ExecutionResult execute(CodeBlock block, ExecutionContext context) {
         try {
-            // Get and validate parameters from the new parameter system
+            
             DataValue nameValue = block.getParameter("name");
             DataValue valueValue = block.getParameter("value");
             
@@ -33,7 +33,7 @@ public class SetVarAction implements BlockAction {
                 return ExecutionResult.error("No value provided");
             }
 
-            // Resolve any placeholders in the parameters
+            
             ParameterResolver resolver = new ParameterResolver(context);
             DataValue resolvedName = resolver.resolve(context, nameValue);
             DataValue resolvedValue = resolver.resolve(context, valueValue);
@@ -44,7 +44,7 @@ public class SetVarAction implements BlockAction {
                 return ExecutionResult.error("Invalid variable name");
             }
 
-            // Process the variable update
+            
             return setVariableValue(context, varName, resolvedValue);
         } catch (Exception e) {
             return ExecutionResult.error("Failed to set variable: " + e.getMessage());
@@ -58,12 +58,12 @@ public class SetVarAction implements BlockAction {
         VariableManager variableManager = context.getPlugin().getServiceRegistry().getVariableManager();
         Player player = context.getPlayer();
 
-        // Find the variable in different scopes
+        
         VariableScopeInfo scopeInfo = findVariableScope(variableManager, player, context.getScriptId(), varName);
 
-        // Set the variable value in the appropriate scope
+        
         if (scopeInfo.getScope() == null) {
-            // Variable doesn't exist, create as local
+            
             variableManager.setLocalVariable(context.getScriptId(), varName, valueToSet);
             return ExecutionResult.success("Variable set successfully as local variable");
         }
@@ -82,7 +82,7 @@ public class SetVarAction implements BlockAction {
                 variableManager.setServerVariable(varName, valueToSet);
                 break;
             default:
-                // Fallback to local variable
+                
                 variableManager.setLocalVariable(context.getScriptId(), varName, valueToSet);
         }
 
@@ -93,7 +93,7 @@ public class SetVarAction implements BlockAction {
      * Finds the scope of an existing variable
      */
     private VariableScopeInfo findVariableScope(VariableManager variableManager, Player player, String scriptId, String varName) {
-        // Try player variables first if player is not null
+        
         if (player != null) {
             DataValue playerVar = variableManager.getPlayerVariable(player.getUniqueId(), varName);
             if (playerVar != null) {
@@ -105,7 +105,7 @@ public class SetVarAction implements BlockAction {
             }
         }
 
-        // Try local variables
+        
         DataValue localVar = variableManager.getLocalVariable(scriptId, varName);
         if (localVar != null) {
             return new VariableScopeInfo(
@@ -115,7 +115,7 @@ public class SetVarAction implements BlockAction {
             );
         }
 
-        // Try global variables
+        
         DataValue globalVar = variableManager.getGlobalVariable(varName);
         if (globalVar != null) {
             return new VariableScopeInfo(
@@ -125,7 +125,7 @@ public class SetVarAction implements BlockAction {
             );
         }
 
-        // Try server variables
+        
         DataValue serverVar = variableManager.getServerVariable(varName);
         if (serverVar != null) {
             return new VariableScopeInfo(
@@ -135,7 +135,7 @@ public class SetVarAction implements BlockAction {
             );
         }
 
-        // Variable doesn't exist yet, will be created as local
+        
         return new VariableScopeInfo(null, null, null);
     }
 

@@ -36,7 +36,7 @@ public class ExecutionResult {
         this.awaitFuture = builder.awaitFuture;
     }
 
-    // Getters
+    
     public boolean isSuccess() {
         return success;
     }
@@ -223,7 +223,7 @@ public class ExecutionResult {
             .details(this.details)
             .build();
         result.setPaused(true);
-        // Copy other important fields
+        
         result.setTerminated(this.terminated);
         result.setReturnValue(this.returnValue);
         return result;

@@ -54,17 +54,17 @@ public class CodeBlockClipboard {
     public void copyBlock(Player player, Location location) {
         CodeBlock block = null;
         
-        // Try to get CodeBlock from BlockPlacementHandler first
-        // Сначала попытаться получить CodeBlock из BlockPlacementHandler
-        // Zuerst versuchen, CodeBlock aus BlockPlacementHandler zu erhalten
+        
+        
+        
         if (placementHandler != null && placementHandler.hasCodeBlock(location)) {
             block = placementHandler.getCodeBlock(location);
         }
         
         if (block == null) {
             player.sendMessage("§c✖ No code block found at target location!");
-            // §c✖ Кодовый блок не найден в целевом местоположении!
-            // §c✖ Kein Codeblock an der Zielposition gefunden!
+            
+            
             return;
         }
         
@@ -87,22 +87,22 @@ public class CodeBlockClipboard {
     public void copyBlock(Player player, CodeBlock block) {
         ClipboardData data = new ClipboardData(ClipboardType.SINGLE_BLOCK, player.getLocation());
         
-        // Create deep copy of the block to preserve all parameters
-        // Создать глубокую копию блока для сохранения всех параметров
-        // Tiefe Kopie des Blocks erstellen, um alle Parameter zu erhalten
+        
+        
+        
         CodeBlock copiedBlock = createDeepCopy(block);
-        data.addBlock(copiedBlock, new Location(player.getWorld(), 0, 0, 0)); // Relative position
-        // Относительное положение
-        // Relative Position
+        data.addBlock(copiedBlock, new Location(player.getWorld(), 0, 0, 0)); 
+        
+        
         
         playerClipboards.put(player.getUniqueId(), data);
         player.sendMessage("§a✓ Copied code block: " + block.getAction());
-        // §a✓ Скопированный кодовый блок:
-        // §a✓ Kopierter Codeblock:
+        
+        
         
         log.info("Player " + player.getName() + " copied code block: " + block.getAction());
-        // Игрок скопировал кодовый блок:
-        // Spieler hat Codeblock kopiert:
+        
+        
     }
     
     /**
@@ -125,16 +125,16 @@ public class CodeBlockClipboard {
         World world = corner1.getWorld();
         if (world == null || !world.equals(corner2.getWorld())) {
             player.sendMessage("§c✖ Both corners must be in the same world!");
-            // §c✖ Оба угла должны быть в одном мире!
-            // §c✖ Beide Ecken müssen in derselben Welt sein!
+            
+            
             return;
         }
         
         ClipboardData data = new ClipboardData(ClipboardType.REGION, corner1);
         
-        // Calculate region bounds
-        // Вычислить границы региона
-        // Regionsgrenzen berechnen
+        
+        
+        
         int minX = Math.min(corner1.getBlockX(), corner2.getBlockX());
         int maxX = Math.max(corner1.getBlockX(), corner2.getBlockX());
         int minY = Math.min(corner1.getBlockY(), corner2.getBlockY());
@@ -144,26 +144,26 @@ public class CodeBlockClipboard {
         
         int blocksFound = 0;
         
-        // Scan the region for code blocks
-        // Сканировать регион на наличие кодовых блоков
-        // Region nach Codeblöcken scannen
+        
+        
+        
         for (int x = minX; x <= maxX; x++) {
             for (int y = minY; y <= maxY; y++) {
                 for (int z = minZ; z <= maxZ; z++) {
                     Location loc = new Location(world, x, y, z);
                     CodeBlock block = null;
                     
-                    // Try to get CodeBlock from placement handler
-                    // Попытаться получить CodeBlock из обработчика размещения
-                    // Versuchen, CodeBlock vom Platzierungshandler zu erhalten
+                    
+                    
+                    
                     if (placementHandler != null && placementHandler.hasCodeBlock(loc)) {
                         block = placementHandler.getCodeBlock(loc);
                     }
                     
                     if (block != null) {
-                        // Create deep copy and calculate relative position
-                        // Создать глубокую копию и вычислить относительное положение
-                        // Tiefe Kopie erstellen und relative Position berechnen
+                        
+                        
+                        
                         CodeBlock copiedBlock = createDeepCopy(block);
                         Location relativePos = new Location(world, x - corner1.getBlockX(), y - corner1.getBlockY(), z - corner1.getBlockZ());
                         data.addBlock(copiedBlock, relativePos);
@@ -175,19 +175,19 @@ public class CodeBlockClipboard {
         
         if (blocksFound == 0) {
             player.sendMessage("§c✖ No code blocks found in the selected region!");
-            // §c✖ Кодовые блоки не найдены в выбранном регионе!
-            // §c✖ Keine Codeblöcke in der ausgewählten Region gefunden!
+            
+            
             return;
         }
         
         playerClipboards.put(player.getUniqueId(), data);
         player.sendMessage("§a✓ Copied " + blocksFound + " code blocks from region");
-        // §a✓ Скопировано кодовых блоков из региона:
-        // §a✓ Kopierte Codeblöcke aus der Region:
+        
+        
         
         log.info("Player " + player.getName() + " copied " + blocksFound + " code blocks from region");
-        // Игрок скопировал кодовых блоков из региона:
-        // Spieler hat Codeblöcke aus der Region kopiert:
+        
+        
     }
     
     /**
@@ -204,8 +204,8 @@ public class CodeBlockClipboard {
         ClipboardData data = playerClipboards.get(player.getUniqueId());
         if (data == null) {
             player.sendMessage("§c✖ No blocks in clipboard! Copy some blocks first.");
-            // §c✖ Нет блоков в буфере обмена! Сначала скопируйте несколько блоков.
-            // §c✖ Keine Blöcke in der Zwischenablage! Kopiere zuerst einige Blöcke.
+            
+            
             return;
         }
         
@@ -214,23 +214,23 @@ public class CodeBlockClipboard {
         
         if (world == null) {
             player.sendMessage("§c✖ Invalid world!");
-            // §c✖ Недействительный мир!
-            // §c✖ Ungültige Welt!
+            
+            
             return;
         }
         
         int blocksPasted = 0;
         
-        // Paste each block in the clipboard
-        // Вставить каждый блок из буфера обмена
-        // Jeden Block aus der Zwischenablage einfügen
+        
+        
+        
         for (Map.Entry<Location, CodeBlock> entry : data.getBlocks().entrySet()) {
             Location relativePos = entry.getKey();
             CodeBlock originalBlock = entry.getValue();
             
-            // Calculate absolute position
-            // Вычислить абсолютное положение
-            // Absolute Position berechnen
+            
+            
+            
             Location absolutePos = new Location(
                 world,
                 pasteLocation.getBlockX() + relativePos.getBlockX(),
@@ -238,14 +238,14 @@ public class CodeBlockClipboard {
                 pasteLocation.getBlockZ() + relativePos.getBlockZ()
             );
             
-            // Create new block and copy all properties
-            // Создать новый блок и скопировать все свойства
-            // Neuen Block erstellen und alle Eigenschaften kopieren
+            
+            
+            
             CodeBlock newBlock = createDeepCopy(originalBlock);
             
-            // Place the block using BlockPlacementHandler
-            // Разместить блок с помощью BlockPlacementHandler
-            // Block mit BlockPlacementHandler platzieren
+            
+            
+            
             if (placementHandler != null) {
                 placementHandler.addCodeBlock(absolutePos, newBlock);
                 blocksPasted++;
@@ -253,12 +253,12 @@ public class CodeBlockClipboard {
         }
         
         player.sendMessage("§a✓ Pasted " + blocksPasted + " code blocks");
-        // §a✓ Вставлено кодовых блоков:
-        // §a✓ Eingefügte Codeblöcke:
+        
+        
         
         log.info("Player " + player.getName() + " pasted " + blocksPasted + " code blocks");
-        // Игрок вставил кодовых блоков:
-        // Spieler hat Codeblöcke eingefügt:
+        
+        
     }
     
     /**
@@ -278,19 +278,19 @@ public class CodeBlockClipboard {
         ClipboardData data = playerClipboards.get(player.getUniqueId());
         if (data == null) {
             player.sendMessage("§c✖ No blocks in clipboard! Copy some blocks first.");
-            // §c✖ Нет блоков в буфере обмена! Сначала скопируйте несколько блоков.
-            // §c✖ Keine Blöcke in der Zwischenablage! Kopiere zuerst einige Blöcke.
+            
+            
             return;
         }
         
         sharedClipboards.put(name, data);
         player.sendMessage("§a✓ Saved clipboard as shared: " + name);
-        // §a✓ Сохранено в буфере обмена как общее:
-        // §a✓ Zwischenablage als geteilt gespeichert:
+        
+        
         
         log.info("Player " + player.getName() + " saved shared clipboard: " + name);
-        // Игрок сохранил общий буфер обмена:
-        // Spieler hat geteilte Zwischenablage gespeichert:
+        
+        
     }
     
     /**
@@ -310,19 +310,19 @@ public class CodeBlockClipboard {
         ClipboardData data = sharedClipboards.get(name);
         if (data == null) {
             player.sendMessage("§c✖ Shared clipboard not found: " + name);
-            // §c✖ Общий буфер обмена не найден:
-            // §c✖ Geteilte Zwischenablage nicht gefunden:
+            
+            
             return;
         }
         
         playerClipboards.put(player.getUniqueId(), data);
         player.sendMessage("§a✓ Loaded shared clipboard: " + name);
-        // §a✓ Загружен общий буфер обмена:
-        // §a✓ Geteilte Zwischenablage geladen:
+        
+        
         
         log.info("Player " + player.getName() + " loaded shared clipboard: " + name);
-        // Игрок загрузил общий буфер обмена:
-        // Spieler hat geteilte Zwischenablage geladen:
+        
+        
     }
     
     /**
@@ -339,12 +339,12 @@ public class CodeBlockClipboard {
         ClipboardData removed = playerClipboards.remove(player.getUniqueId());
         if (removed != null) {
             player.sendMessage("§a✓ Clipboard cleared");
-            // §a✓ Буфер обмена очищен
-            // §a✓ Zwischenablage geleert
+            
+            
         } else {
             player.sendMessage("§c✖ No clipboard to clear");
-            // §c✖ Нет буфера обмена для очистки
-            // §c✖ Keine Zwischenablage zum Leeren
+            
+            
         }
     }
     
@@ -376,30 +376,30 @@ public class CodeBlockClipboard {
      * @return Tiefe Kopie von CodeBlock
      */
     private CodeBlock createDeepCopy(CodeBlock original) {
-        // Create new block with same properties
-        // Создать новый блок с теми же свойствами
-        // Neuen Block mit denselben Eigenschaften erstellen
+        
+        
+        
         CodeBlock copy = new CodeBlock(original.getMaterial().name(), original.getAction());
         
-        // Copy all parameters
-        // Скопировать все параметры
-        // Alle Parameter kopieren
+        
+        
+        
         Map<String, DataValue> parameters = original.getParameters();
         for (Map.Entry<String, DataValue> entry : parameters.entrySet()) {
             copy.setParameter(entry.getKey(), entry.getValue());
         }
         
-        // Copy config items
-        // Скопировать элементы конфигурации
-        // Konfigurationselemente kopieren
+        
+        
+        
         Map<Integer, org.bukkit.inventory.ItemStack> configItems = original.getConfigItems();
         for (Map.Entry<Integer, org.bukkit.inventory.ItemStack> entry : configItems.entrySet()) {
             copy.setConfigItem(entry.getKey(), entry.getValue().clone());
         }
         
-        // Copy bracket properties if any
-        // Скопировать свойства скобок, если есть
-        // Klammereigenschaften kopieren, falls vorhanden
+        
+        
+        
         if (original.isBracket()) {
             copy.setBracketType(original.getBracketType());
         }
@@ -415,9 +415,9 @@ public class CodeBlockClipboard {
      * Zwischenablagentypen
      */
     public enum ClipboardType {
-        SINGLE_BLOCK, // Один блок // Ein Block // Single block
-        REGION,       // Регион // Region // Region
-        TEMPLATE      // Шаблон // Vorlage // Template
+        SINGLE_BLOCK, 
+        REGION,       
+        TEMPLATE      
     }
     
     /**

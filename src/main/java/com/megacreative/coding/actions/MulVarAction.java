@@ -18,7 +18,7 @@ public class MulVarAction implements BlockAction {
     @Override
     public ExecutionResult execute(CodeBlock block, ExecutionContext context) {
         try {
-            // Get parameters from the new parameter system
+            
             DataValue nameValue = block.getParameter("name");
             DataValue valueValue = block.getParameter("value");
             
@@ -30,12 +30,12 @@ public class MulVarAction implements BlockAction {
                 return ExecutionResult.error("No value provided");
             }
 
-            // Resolve any placeholders in the parameters
+            
             ParameterResolver resolver = new ParameterResolver(context);
             DataValue resolvedName = resolver.resolve(context, nameValue);
             DataValue resolvedValue = resolver.resolve(context, valueValue);
             
-            // Parse parameters
+            
             String varName = resolvedName.asString();
             String valueStr = resolvedValue.asString();
             
@@ -43,7 +43,7 @@ public class MulVarAction implements BlockAction {
                 return ExecutionResult.error("Invalid variable name");
             }
 
-            // Parse the value as a number
+            
             double value;
             try {
                 value = Double.parseDouble(valueStr);
@@ -51,15 +51,15 @@ public class MulVarAction implements BlockAction {
                 return ExecutionResult.error("Invalid value: " + valueStr);
             }
 
-            // Get the actual variable value from the VariableManager
+            
             VariableManager variableManager = context.getPlugin().getServiceRegistry().getVariableManager();
             Player player = context.getPlayer();
             
-            // Try to get the variable from different scopes
+            
             DataValue currentVar = null;
             VariableManager.VariableScope scope = null;
             
-            // First try player variables
+            
             if (player != null) {
                 java.util.UUID playerUUID = player.getUniqueId();
                 if (playerUUID != null) {
@@ -70,7 +70,7 @@ public class MulVarAction implements BlockAction {
                 }
             }
             
-            // If not found, try local variables
+            
             if (currentVar == null) {
                 currentVar = variableManager.getLocalVariable(context.getScriptId(), varName);
                 if (currentVar != null) {
@@ -78,7 +78,7 @@ public class MulVarAction implements BlockAction {
                 }
             }
             
-            // If not found, try global variables
+            
             if (currentVar == null) {
                 currentVar = variableManager.getGlobalVariable(varName);
                 if (currentVar != null) {
@@ -86,7 +86,7 @@ public class MulVarAction implements BlockAction {
                 }
             }
             
-            // If not found, try server variables
+            
             if (currentVar == null) {
                 currentVar = variableManager.getServerVariable(varName);
                 if (currentVar != null) {
@@ -94,21 +94,21 @@ public class MulVarAction implements BlockAction {
                 }
             }
             
-            // Get current value or default to 0
+            
             double currentValue = 0.0;
             if (currentVar != null) {
                 try {
                     currentValue = currentVar.asNumber().doubleValue();
                 } catch (NumberFormatException e) {
-                    // If current value is not a number, treat as 0
+                    
                     currentValue = 0.0;
                 }
             }
             
-            // Calculate new value
+            
             double newValue = currentValue * value;
             
-            // Set the updated value based on the scope
+            
             DataValue newValueData = DataValue.of(newValue);
             switch (scope) {
                 case PLAYER:
@@ -129,7 +129,7 @@ public class MulVarAction implements BlockAction {
                     variableManager.setServerVariable(varName, newValueData);
                     break;
                 default:
-                    // If variable doesn't exist, create it as a local variable
+                    
                     variableManager.setLocalVariable(context.getScriptId(), varName, newValueData);
                     break;
             }

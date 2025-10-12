@@ -38,7 +38,7 @@ public class ParameterResolver {
             return value;
         }
 
-        // 🎆 ENHANCED: Use reference system placeholder resolver for comprehensive support
+        
         String resolvedText = ReferenceSystemPlaceholderResolver.resolvePlaceholders(text, context);
         
         return DataValue.of(resolvedText);
@@ -65,7 +65,7 @@ public class ParameterResolver {
      */
     @Deprecated
     private String resolvePlaceholder(String placeholder, ExecutionContext context) {
-        // Handle player-related placeholders
+        
         Player player = context.getPlayer();
         if (player != null) {
             switch (placeholder.toLowerCase()) {
@@ -84,12 +84,12 @@ public class ParameterResolver {
                 case "player_z":
                     return String.valueOf(player.getLocation().getZ());
                 default:
-                    // Continue to next placeholder resolution mechanism
+                    
                     break;
             }
         }
 
-        // Handle location-related placeholders
+        
         if (context.getBlockLocation() != null) {
             Location location = context.getBlockLocation();
             switch (placeholder.toLowerCase()) {
@@ -102,15 +102,15 @@ public class ParameterResolver {
                 case "block_world":
                     return location.getWorld().getName();
                 default:
-                    // Continue to next placeholder resolution mechanism
+                    
                     break;
             }
         }
 
-        // Handle variable placeholders with enhanced scope resolution
+        
         VariableManager variableManager = context.getPlugin().getServiceRegistry().getVariableManager();
         if (variableManager != null) {
-            // Use enhanced variable resolution with fallback mechanism
+            
             String playerContext = getPlayerContext(context);
             DataValue variableValue = variableManager.resolveVariable(placeholder, playerContext);
             if (variableValue != null) {
@@ -118,14 +118,14 @@ public class ParameterResolver {
             }
         }
 
-        // Handle built-in placeholders
+        
         switch (placeholder.toLowerCase()) {
             case "timestamp":
                 return String.valueOf(System.currentTimeMillis());
             case "random":
                 return String.valueOf(Math.random());
             default:
-                // If we can't resolve it, return null
+                
                 return null;
         }
     }

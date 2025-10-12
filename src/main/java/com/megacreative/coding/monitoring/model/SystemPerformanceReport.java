@@ -29,7 +29,7 @@ public class SystemPerformanceReport {
         this.memoryUsage = memoryUsage;
         this.gcStatistics = gcStatistics;
         this.bottlenecks = bottlenecks != null ? new ArrayList<>(bottlenecks) : Collections.emptyList();
-        this.uniqueActionTypes = 0; // This would be calculated from actual data
+        this.uniqueActionTypes = 0; 
         this.uptimeMs = uptimeMs;
     }
     

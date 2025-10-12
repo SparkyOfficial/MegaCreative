@@ -94,20 +94,20 @@ public class BlockPlaceActivator extends BukkitEventActivator {
             return;
         }
         
-        // Execute all actions associated with this activator
+        
         for (com.megacreative.coding.CodeBlock action : actionList) {
             try {
-                // Get the script engine from the plugin
+                
                 com.megacreative.coding.ScriptEngine scriptEngine = plugin.getServiceRegistry().getScriptEngine();
                 
                 if (scriptEngine != null) {
-                    // Convert the first entity to a player if possible
+                    
                     Player player = null;
                     if (!selectedEntities.isEmpty() && selectedEntities.get(0) instanceof Player) {
                         player = (Player) selectedEntities.get(0);
                     }
                     
-                    // Execute the action block
+                    
                     scriptEngine.executeBlock(action, player, "activator_block_place")
                         .thenAccept(result -> {
                             if (!result.isSuccess()) {
@@ -142,12 +142,12 @@ public class BlockPlaceActivator extends BukkitEventActivator {
             return;
         }
         
-        // Check if we should only trigger for specific block types
+        
         if (!anyBlockType && blockType != null && block.getType() != blockType) {
             return;
         }
         
-        // Create a game event with block place context
+        
         GameEvent gameEvent = new GameEvent("onBlockPlace");
         gameEvent.setPlayer(player);
         if (location != null) {
@@ -156,14 +156,14 @@ public class BlockPlaceActivator extends BukkitEventActivator {
             gameEvent.setLocation(block.getLocation());
         }
         
-        // Add custom data
+        
         Map<String, Object> customData = new HashMap<>();
         customData.put("block", block);
         customData.put("blockType", block.getType());
         customData.put("itemInHand", itemInHand);
         gameEvent.setCustomData(customData);
         
-        // Activate the script
+        
         execute(gameEvent, new java.util.ArrayList<>(), 0, new java.util.concurrent.atomic.AtomicInteger(0));
     }
 }

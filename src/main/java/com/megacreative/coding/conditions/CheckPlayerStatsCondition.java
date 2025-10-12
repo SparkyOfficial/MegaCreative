@@ -19,7 +19,7 @@ public class CheckPlayerStatsCondition implements BlockCondition {
         if (player == null) return false;
         
         try {
-            // Get parameters from the new parameter system
+            
             DataValue statTypeValue = block.getParameter("stat_type");
             DataValue valueValue = block.getParameter("value");
             DataValue operatorValue = block.getParameter("operator");
@@ -34,7 +34,7 @@ public class CheckPlayerStatsCondition implements BlockCondition {
                 return false;
             }
             
-            // Resolve any placeholders in the parameters
+            
             ParameterResolver resolver = new ParameterResolver(context);
             DataValue resolvedStatType = resolver.resolve(context, statTypeValue);
             DataValue resolvedValue = resolver.resolve(context, valueValue);
@@ -44,7 +44,7 @@ public class CheckPlayerStatsCondition implements BlockCondition {
             double checkValue = resolvedValue.asNumber().doubleValue();
             String operator = resolvedOperator != null ? resolvedOperator.asString() : "==";
             
-            // Get the player's statistic value
+            
             double playerStatValue = 0;
             try {
                 Statistic statistic = Statistic.valueOf(statType);
@@ -54,7 +54,7 @@ public class CheckPlayerStatsCondition implements BlockCondition {
                 return false;
             }
             
-            // Compare values based on operator
+            
             switch (operator) {
                 case ">=":
                     return playerStatValue >= checkValue;

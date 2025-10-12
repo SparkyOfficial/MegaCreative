@@ -20,7 +20,7 @@ public class PlayerJoinEventDataExtractor extends AbstractEventDataExtractor<Pla
     
     @Override
     protected void initializeVariables() {
-        // Player variables
+        
         registerVariable("playerName", "Name of the joining player");
         registerVariable("playerUUID", "UUID of the joining player");
         registerVariable("playerDisplayName", "Display name of the joining player");
@@ -30,7 +30,7 @@ public class PlayerJoinEventDataExtractor extends AbstractEventDataExtractor<Pla
         registerVariable("playerLevel", "Level of the joining player");
         registerVariable("playerExp", "Experience of the joining player");
         
-        // Join location variables
+        
         registerVariable("joinX", "X coordinate of join location");
         registerVariable("joinY", "Y coordinate of join location");
         registerVariable("joinZ", "Z coordinate of join location");
@@ -39,7 +39,7 @@ public class PlayerJoinEventDataExtractor extends AbstractEventDataExtractor<Pla
         registerVariable("joinYaw", "Yaw rotation at join location");
         registerVariable("joinPitch", "Pitch rotation at join location");
         
-        // Join specific variables
+        
         registerVariable("joinMessage", "Join message displayed to other players");
         registerVariable("firstTime", "Whether this is the player's first time joining");
         registerVariable("lastPlayed", "Timestamp of when player last played");
@@ -52,14 +52,14 @@ public class PlayerJoinEventDataExtractor extends AbstractEventDataExtractor<Pla
         
         Player player = event.getPlayer();
         
-        // Extract player data
+        
         extractPlayerData(data, player);
         
-        // Extract join location data
+        
         Location joinLocation = player.getLocation();
         extractLocationData(data, joinLocation, "join");
         
-        // Join specific data
+        
         data.put("joinMessage", DataValue.fromObject(event.getJoinMessage()));
         data.put("firstTime", DataValue.fromObject(!player.hasPlayedBefore()));
         data.put("lastPlayed", DataValue.fromObject(player.getLastPlayed()));

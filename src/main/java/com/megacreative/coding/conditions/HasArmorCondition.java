@@ -27,7 +27,7 @@ public class HasArmorCondition implements BlockCondition {
         }
 
         try {
-            // Get parameters from the new parameter system
+            
             DataValue armorValue = block.getParameter("armor");
             
             if (armorValue == null || armorValue.isEmpty()) {
@@ -35,18 +35,18 @@ public class HasArmorCondition implements BlockCondition {
                 return false;
             }
 
-            // Resolve any placeholders in the armor name
+            
             ParameterResolver resolver = new ParameterResolver(context);
             DataValue resolvedArmor = resolver.resolve(context, armorValue);
             
-            // Parse armor parameter
+            
             String armorName = resolvedArmor.asString();
             if (armorName == null || armorName.isEmpty()) {
                 context.getPlugin().getLogger().warning("HasArmorCondition: 'armor' parameter is empty.");
                 return false;
             }
 
-            // Check if player is wearing the specified armor
+            
             try {
                 Material material = Material.valueOf(armorName.toUpperCase());
                 PlayerInventory inventory = player.getInventory();
@@ -55,7 +55,7 @@ public class HasArmorCondition implements BlockCondition {
                 ItemStack leggings = inventory.getLeggings();
                 ItemStack boots = inventory.getBoots();
                 
-                // Check each armor slot
+                
                 return (helmet != null && helmet.getType() == material) ||
                        (chestplate != null && chestplate.getType() == material) ||
                        (leggings != null && leggings.getType() == material) ||
@@ -65,7 +65,7 @@ public class HasArmorCondition implements BlockCondition {
                 return false;
             }
         } catch (Exception e) {
-            // If there's an error, return false
+            
             context.getPlugin().getLogger().warning("Error in HasArmorCondition: " + e.getMessage());
             return false;
         }

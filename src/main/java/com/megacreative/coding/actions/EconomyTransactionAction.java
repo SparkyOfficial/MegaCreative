@@ -26,23 +26,23 @@ class EconomyException extends Exception {
 
 @BlockMeta(id = "economyTransaction", displayName = "§aEconomy Transaction", type = BlockType.ACTION)
 public class EconomyTransactionAction implements BlockAction {
-    // Константы для сообщений
+    
     private static final String PLAYER_NOT_FOUND = "Игрок не найден.";
     private static final String VAULT_NOT_FOUND = "Плагин Vault не найден или не включен. Для работы с экономикой требуется Vault.";
     private static final String ECONOMY_PROVIDER_NOT_FOUND = "Провайдер экономики не найден. Убедитесь, что установлен плагин экономики.";
     private static final String INSUFFICIENT_FUNDS = "Недостаточно средств.";
     
-    // Константы для работы с экономикой
+    
     private static final String ECONOMY_BALANCE_VAR = "economy_balance";
     private static final String VAULT_ECONOMY_CLASS = "net.milkbowl.vault.economy.Economy";
     private static final String REGISTERED_SERVICE_PROVIDER_CLASS = "org.bukkit.plugin.RegisteredServiceProvider";
     
-    // Константы для параметров
+    
     private static final String PARAM_OPERATION = "operation";
     private static final String PARAM_AMOUNT = "amount";
     private static final String PARAM_TARGET = "target";
     
-    // Допустимые операции
+    
     private static final String OP_GIVE = "give";
     private static final String OP_TAKE = "take";
     private static final String OP_CHECK = "check";
@@ -55,24 +55,24 @@ public class EconomyTransactionAction implements BlockAction {
         }
 
         try {
-            // Get and validate parameters
+            
             OperationParameters params = getAndValidateParameters(block, context);
             if (params.error() != null) {
                 return ExecutionResult.error(params.error());
             }
 
-            // Check if Vault is available
+            
             if (!isVaultAvailable()) {
                 return ExecutionResult.error("Vault plugin is not installed or enabled. Economy transactions require Vault.");
             }
 
-            // Get economy provider
+            
             Object economy = getEconomyProvider();
             if (economy == null) {
                 return ExecutionResult.error("Economy service not found. Make sure an economy plugin is installed.");
             }
 
-            // Выполняем запрошенную операцию
+            
             String operation = params.operation() != null ? params.operation().toLowerCase() : "";
             return switch (operation) {
                 case OP_GIVE -> executeGive(economy, player, params.amount(), params.target());
@@ -101,7 +101,7 @@ public class EconomyTransactionAction implements BlockAction {
         ParameterResolver resolver = new ParameterResolver(context);
         String operation = resolver.resolve(context, operationValue).asString();
         
-        // Only validate amount for operations that need it
+        
         if (!operation.equalsIgnoreCase("check") && (amountValue == null || amountValue.isEmpty())) {
             return new OperationParameters("Amount parameter is missing for operation: " + operation);
         }
@@ -215,7 +215,7 @@ public class EconomyTransactionAction implements BlockAction {
             double balance = (Double) economyClass.getMethod("getBalance", Player.class)
                                                 .invoke(economy, target);
             
-            // Сохраняем баланс в переменную для использования в других блоках
+            
             context.setVariable(ECONOMY_BALANCE_VAR, balance);
             
             String message = targetName != null

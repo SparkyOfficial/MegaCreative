@@ -61,7 +61,7 @@ public class WorldCreationGUI implements GUIManager.ManagedGUIInterface {
     private void setupInventory() {
         inventory.clear();
         
-        // Заполнение стеклом
+        
         ItemStack glass = new ItemStack(Material.GRAY_STAINED_GLASS_PANE);
         ItemMeta glassMeta = glass.getItemMeta();
         glassMeta.setDisplayName(" ");
@@ -71,7 +71,7 @@ public class WorldCreationGUI implements GUIManager.ManagedGUIInterface {
             inventory.setItem(i, glass);
         }
         
-        // Типы миров
+        
         ItemStack normalWorld = new ItemStack(Material.GRASS_BLOCK);
         ItemMeta normalMeta = normalWorld.getItemMeta();
         normalMeta.setDisplayName("§a§lОбычный мир");
@@ -138,7 +138,7 @@ public class WorldCreationGUI implements GUIManager.ManagedGUIInterface {
         endWorld.setItemMeta(endMeta);
         inventory.setItem(15, endWorld);
         
-        // Кнопка отмены
+        
         ItemStack cancelButton = new ItemStack(Material.RED_STAINED_GLASS);
         ItemMeta cancelMeta = cancelButton.getItemMeta();
         cancelMeta.setDisplayName("§c§лОтмена");
@@ -198,13 +198,13 @@ public class WorldCreationGUI implements GUIManager.ManagedGUIInterface {
         
         String displayName = clicked.getItemMeta().getDisplayName();
         
-        // Отмена
+        
         if (displayName.contains("Отмена")) {
             player.closeInventory();
             return;
         }
         
-        // Выбор типа мира
+        
         CreativeWorldType worldType = null;
         
         if (displayName.contains("Обычный мир")) {
@@ -222,14 +222,14 @@ public class WorldCreationGUI implements GUIManager.ManagedGUIInterface {
         }
         
         if (worldType != null) {
-            // Close the current GUI and prompt for world name
+            
             player.closeInventory();
             
-            // Send a message with template name suggestions
+            
             player.sendMessage("§aВведите название для вашего нового мира в чат:");
             player.sendMessage("§7Примеры: §f" + player.getName() + "'s World, My Awesome Build, Creative Paradise");
             
-            // Store the selected world type in metadata for later use
+            
             plugin.getServiceRegistry().getGuiManager().setPlayerMetadata(player, "pending_world_type", worldType);
             plugin.getServiceRegistry().getGuiManager().setPlayerMetadata(player, "awaiting_world_name", true);
         }
@@ -247,8 +247,8 @@ public class WorldCreationGUI implements GUIManager.ManagedGUIInterface {
      * @param event Inventarschließ-Ereignis
      */
     public void onInventoryClose(InventoryCloseEvent event) {
-        // Optional cleanup when GUI is closed
-        // GUIManager handles automatic unregistration
+        
+        
     }
     
     @Override
@@ -260,7 +260,7 @@ public class WorldCreationGUI implements GUIManager.ManagedGUIInterface {
      * Führt eine Ressourcenbereinigung durch, wenn die Schnittstelle geschlossen wird
      */
     public void onCleanup() {
-        // Called when GUI is being cleaned up by GUIManager
-        // No special cleanup needed for this GUI
+        
+        
     }
 }

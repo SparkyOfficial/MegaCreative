@@ -26,14 +26,14 @@ public class SetWeatherAction implements BlockAction {
         }
 
         try {
-            // Get the weather type from the new parameter system
+            
             DataValue weatherValue = block.getParameter("weather");
             
             if (weatherValue == null || weatherValue.isEmpty()) {
                 return ExecutionResult.error("Weather type is not configured");
             }
 
-            // Resolve any placeholders in the weather type
+            
             ParameterResolver resolver = new ParameterResolver(context);
             DataValue resolvedWeather = resolver.resolve(context, weatherValue);
             
@@ -43,7 +43,7 @@ public class SetWeatherAction implements BlockAction {
                 return ExecutionResult.error("Weather type is not configured");
             }
 
-            // Set the weather in the world
+            
             World world = player.getWorld();
             
             switch (weatherType.toLowerCase()) {

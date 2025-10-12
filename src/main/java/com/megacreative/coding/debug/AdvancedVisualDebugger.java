@@ -24,16 +24,16 @@ import java.util.concurrent.CompletableFuture;
 /**
  * Represents the state of a block during visualization
  */
-// Make VisualizationState package-private instead of public to fix visibility issue
+
 enum VisualizationState {
-    IDLE,          // Default state
-    EXECUTING,     // Block is currently being executed
-    SUCCESS,       // Block executed successfully
-    ERROR,         // Block execution resulted in an error
-    BREAKPOINT,    // Execution is paused at this breakpoint
-    WATCHED,       // Block is being watched
-    HIGHLIGHTED,   // Block is highlighted for emphasis
-    MODIFIED       // Block's state was modified during execution
+    IDLE,          
+    EXECUTING,     
+    SUCCESS,       
+    ERROR,         
+    BREAKPOINT,    
+    WATCHED,       
+    HIGHLIGHTED,   
+    MODIFIED       
 }
 
 public class AdvancedVisualDebugger {
@@ -43,7 +43,7 @@ public class AdvancedVisualDebugger {
     private final Map<UUID, VisualizationSession> visualizationSessions = new ConcurrentHashMap<>();
     private final Map<UUID, PerformanceAnalyzer> performanceAnalyzers = new ConcurrentHashMap<>();
     private final Map<UUID, BreakpointManager> breakpointManagers = new ConcurrentHashMap<>();
-    // Removed unused globalBreakpoints collection
+    
     
     public AdvancedVisualDebugger(MegaCreative plugin, VisualDebugger basicDebugger) {
         this.plugin = plugin;
@@ -89,16 +89,16 @@ public class AdvancedVisualDebugger {
         private final Player player;
         private final CodeScript script;
         private final VisualizationMode mode;
-        // Removed unused collections: blockStates, executionHistory, activeBreakpoints, watchExpressions, metadata
+        
         private boolean active = true;
         private long startTime;
         private long lastUpdate;
         private int currentStep = 0;
         private boolean paused = false;
-        private int executionSpeed = 1; // 1x speed by default
-        private CodeBlock currentBlock; // Current block being executed
-        private Location currentLocation; // Location of current block
-        private CompletableFuture<Void> executionFuture; // Future for async execution
+        private int executionSpeed = 1; 
+        private CodeBlock currentBlock; 
+        private Location currentLocation; 
+        private CompletableFuture<Void> executionFuture; 
 
         public VisualizationSession(Player player, CodeScript script) {
             this.sessionId = UUID.randomUUID();
@@ -118,11 +118,11 @@ public class AdvancedVisualDebugger {
             this.lastUpdate = startTime;
         }
 
-        // Getters and setters
+        
         public UUID getSessionId() { return sessionId; }
         public Player getPlayer() { return player; }
         public CodeScript getScript() { return script; }
-        // Removed getBlockStates method
+        
         public boolean isActive() { return active; }
         public void setActive(boolean active) { this.active = active; }
         public long getStartTime() { return startTime; }
@@ -131,14 +131,14 @@ public class AdvancedVisualDebugger {
         public void setLastUpdate(long lastUpdate) { this.lastUpdate = lastUpdate; }
         public int getCurrentStep() { return currentStep; }
         public void setCurrentStep(int currentStep) { this.currentStep = currentStep; }
-        // Removed getExecutionHistory method
-        // Removed getActiveBreakpoints method
+        
+        
         public boolean isPaused() { return paused; }
         public void setPaused(boolean paused) { this.paused = paused; }
         public int getExecutionSpeed() { return executionSpeed; }
         public void setExecutionSpeed(int executionSpeed) { this.executionSpeed = executionSpeed; }
-        // Removed getWatchExpressions method
-        // Removed getMetadata method
+        
+        
         public CodeBlock getCurrentBlock() { return currentBlock; }
         public void setCurrentBlock(CodeBlock currentBlock) { this.currentBlock = currentBlock; }
         public Location getCurrentLocation() { return currentLocation; }
@@ -205,8 +205,8 @@ public class AdvancedVisualDebugger {
             this.analyzerId = UUID.randomUUID();
             this.player = player;
             this.script = script;
-            this.startTime = 0; // Will be set properly when analysis starts
-            this.isActive = false; // Will be set to true when analysis starts
+            this.startTime = 0; 
+            this.isActive = false; 
         }
         
         public UUID getAnalyzerId() { return analyzerId; }
@@ -303,7 +303,7 @@ public class AdvancedVisualDebugger {
                 this.errorMessage = errorMessage;
             }
 
-            // Getters
+            
             public String getRecordId() { return recordId; }
             public CodeBlock getBlock() { return block; }
             public long getExecutionTime() { return executionTime; }
@@ -342,11 +342,11 @@ public class AdvancedVisualDebugger {
      * Represents the visualization mode for debugging
      */
     public enum VisualizationMode {
-        STANDARD,       // Standard visualization with basic highlighting
-        STEP_BY_STEP,   // Step-through debugging mode
-        PERFORMANCE,    // Performance visualization mode
-        MEMORY,         // Memory usage visualization
-        VARIABLES       // Variable tracking visualization
+        STANDARD,       
+        STEP_BY_STEP,   
+        PERFORMANCE,    
+        MEMORY,         
+        VARIABLES       
     }
     
     /**
@@ -358,7 +358,7 @@ public class AdvancedVisualDebugger {
         private final long createdTime;
         private boolean enabled = true;
         private int hitCount = 0;
-        private int hitLimit = -1; // -1 means no limit
+        private int hitLimit = -1; 
         
         public Breakpoint(Location location, String condition) {
             this.location = location.clone();
@@ -366,7 +366,7 @@ public class AdvancedVisualDebugger {
             this.createdTime = System.currentTimeMillis();
         }
         
-        // Getters and setters
+        
         public Location getLocation() { return location; }
         public String getCondition() { return condition; }
         public long getCreatedTime() { return createdTime; }
@@ -402,7 +402,7 @@ public class AdvancedVisualDebugger {
      */
     public static class BreakpointManager {
         private final Map<Location, Breakpoint> breakpoints = new ConcurrentHashMap<>();
-        // Removed unused breakpointData collection
+        
         
         public void addBreakpoint(Breakpoint breakpoint) {
             breakpoints.put(breakpoint.getLocation(), breakpoint);
@@ -424,10 +424,10 @@ public class AdvancedVisualDebugger {
             return breakpoints.containsKey(location);
         }
         
-        // Removed unused breakpoint data methods
+        
     }
     
-    // Visualization session management
+    
     public void startVisualizationSession(Player player, VisualizationMode mode) {
         if (player == null || mode == null) {
             throw new IllegalArgumentException("Player and mode cannot be null");
@@ -466,7 +466,7 @@ public class AdvancedVisualDebugger {
         
         Breakpoint breakpoint = new Breakpoint(location, condition);
         manager.addBreakpoint(breakpoint);
-        // Removed unused globalBreakpoints.put(location, breakpoint);
+        
         
         player.sendMessage("§a✓ Breakpoint set at " + formatLocation(location));
         if (condition != null && !condition.isEmpty()) {
@@ -483,7 +483,7 @@ public class AdvancedVisualDebugger {
         BreakpointManager manager = breakpointManagers.get(player.getUniqueId());
         if (manager != null) {
             if (manager.removeBreakpoint(location)) {
-                // Removed unused globalBreakpoints.remove(location);
+                
                 player.sendMessage("§a✓ Breakpoint removed at " + formatLocation(location));
             } else {
                 player.sendMessage("§cNo breakpoint found at " + formatLocation(location));
@@ -554,12 +554,12 @@ public class AdvancedVisualDebugger {
         VisualizationSession session = visualizationSessions.get(player.getUniqueId());
         if (session == null) return;
         
-        // Update session state
+        
         session.setCurrentBlock(block);
         session.setCurrentLocation(blockLocation);
         session.setCurrentStep(session.getCurrentStep() + 1);
         
-        // Check for breakpoints
+        
         BreakpointManager bpManager = breakpointManagers.get(player.getUniqueId());
         if (bpManager != null) {
             Breakpoint bp = bpManager.getBreakpoint(blockLocation);
@@ -567,30 +567,30 @@ public class AdvancedVisualDebugger {
                 bp.incrementHitCount();
                 session.setPaused(true);
                 showBreakpointInfo(player, bp, block, blockLocation);
-                return; // Pause execution
+                return; 
             }
         }
         
-        // Update the visualization based on the mode
+        
         switch (session.mode) {
             case STANDARD:
-                // Basic block highlighting
+                
                 highlightBlock(player, blockLocation);
                 break;
             case STEP_BY_STEP:
-                // Step through execution
+                
                 stepThroughExecution(player, block, blockLocation);
                 break;
             case PERFORMANCE:
-                // Performance visualization
+                
                 visualizePerformance(player, block, blockLocation);
                 break;
             case MEMORY:
-                // Memory usage visualization
+                
                 visualizeMemoryUsage(player, block, blockLocation);
                 break;
             case VARIABLES:
-                // Variable tracking visualization
+                
                 visualizeVariables(player, block, blockLocation);
                 break;
         }
@@ -632,7 +632,7 @@ public class AdvancedVisualDebugger {
         if (player == null) return;
         PerformanceAnalyzer analyzer = performanceAnalyzers.get(player.getUniqueId());
         if (analyzer != null) {
-            // Generate and send performance report to player
+            
             sendPerformanceReport(player, analyzer);
         }
     }
@@ -641,12 +641,12 @@ public class AdvancedVisualDebugger {
         visualizationSessions.clear();
         performanceAnalyzers.clear();
         breakpointManagers.clear();
-        // Removed unused globalBreakpoints.clear();
+        
     }
     
-    // Private helper methods
+    
     private void highlightBlock(Player player, Location location) {
-        // Implementation for highlighting a block with particles
+        
         if (location != null) {
             player.spawnParticle(Particle.REDSTONE, location.clone().add(0.5, 1.5, 0.5), 20, 0.3, 0.3, 0.3, 
                 new Particle.DustOptions(Color.fromRGB(0, 255, 0), 1.0f));
@@ -654,7 +654,7 @@ public class AdvancedVisualDebugger {
     }
     
     private void stepThroughExecution(Player player, CodeBlock block, Location location) {
-        // Implementation for step-through execution with visual feedback
+        
         if (location != null) {
             player.spawnParticle(Particle.REDSTONE, location.clone().add(0.5, 1.5, 0.5), 30, 0.4, 0.4, 0.4, 
                 new Particle.DustOptions(Color.fromRGB(0, 100, 255), 1.5f));
@@ -663,9 +663,9 @@ public class AdvancedVisualDebugger {
     }
     
     private void visualizePerformance(Player player, CodeBlock block, Location location) {
-        // Implementation for performance visualization with color-coded particles
+        
         if (location != null) {
-            // Green for fast execution, red for slow execution
+            
             player.spawnParticle(Particle.REDSTONE, location.clone().add(0.5, 1.5, 0.5), 15, 0.2, 0.2, 0.2, 
                 new Particle.DustOptions(Color.fromRGB(0, 255, 100), 1.0f));
         }
@@ -673,7 +673,7 @@ public class AdvancedVisualDebugger {
     }
     
     private void visualizeMemoryUsage(Player player, CodeBlock block, Location location) {
-        // Implementation for memory usage visualization
+        
         Runtime runtime = Runtime.getRuntime();
         long usedMemory = (runtime.totalMemory() - runtime.freeMemory()) / (1024 * 1024);
         if (location != null) {
@@ -684,20 +684,20 @@ public class AdvancedVisualDebugger {
     }
     
     private void visualizeVariables(Player player, CodeBlock block, Location location) {
-        // Implementation for variable tracking visualization
+        
         if (location != null) {
             player.spawnParticle(Particle.REDSTONE, location.clone().add(0.5, 1.5, 0.5), 25, 0.3, 0.3, 0.3, 
                 new Particle.DustOptions(Color.fromRGB(255, 0, 255), 1.2f));
         }
         
-        // Send variable information to the player
+        
         player.sendMessage("§d=== Variables in scope at " + block.getAction() + " ===");
         
-        // Get the current execution context from the visualization session
+        
         VisualizationSession session = visualizationSessions.get(player.getUniqueId());
         if (session != null) {
-            // In a real implementation, we would get the actual ExecutionContext from the script engine
-            // For now, we'll send a message indicating that variable tracking is working
+            
+            
             player.sendMessage("§dVariables tracking is active for block: " + block.getAction());
             player.sendMessage("§7(Location: " + formatLocation(location) + ")");
         }
@@ -716,7 +716,7 @@ public class AdvancedVisualDebugger {
     }
     
     private void sendPerformanceReport(Player player, PerformanceAnalyzer analyzer) {
-        // Implementation for sending performance report
+        
         player.sendMessage("§6=== Performance Report ===");
         player.sendMessage("§7Total Executions: §f" + analyzer.getTotalExecutions());
         player.sendMessage("§7Total Execution Time: §f" + analyzer.getTotalExecutionTime() + "ms");

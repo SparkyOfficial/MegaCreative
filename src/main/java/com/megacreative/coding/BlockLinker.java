@@ -32,7 +32,7 @@ public class BlockLinker implements Listener {
     private final MegaCreative plugin;
     private final Map<Location, CodeBlock> locationToBlock = new HashMap<>();
     
-    // Shared map with other connection managers
+    
     private Map<Location, CodeBlock> sharedLocationToBlock = new HashMap<>();
     
     public BlockLinker(MegaCreative plugin) {
@@ -54,13 +54,13 @@ public class BlockLinker implements Listener {
      */
     public Map<Location, CodeBlock> getWorldBlocks(World world) {
         Map<Location, CodeBlock> worldBlocks = new HashMap<>();
-        // First check our own map
+        
         for (Map.Entry<Location, CodeBlock> entry : locationToBlock.entrySet()) {
             if (entry.getKey().getWorld().equals(world)) {
                 worldBlocks.put(entry.getKey(), entry.getValue());
             }
         }
-        // Then check the shared map
+        
         for (Map.Entry<Location, CodeBlock> entry : sharedLocationToBlock.entrySet()) {
             if (entry.getKey().getWorld().equals(world)) {
                 worldBlocks.put(entry.getKey(), entry.getValue());
@@ -75,13 +75,13 @@ public class BlockLinker implements Listener {
      * @return The code block at that location, or null if not found
      */
     private CodeBlock getBlockAtLocation(Location location) {
-        // First check our own map
+        
         CodeBlock block = locationToBlock.get(location);
         if (block != null) {
             return block;
         }
         
-        // Then check the shared map
+        
         return sharedLocationToBlock.get(location);
     }
     
@@ -93,44 +93,44 @@ public class BlockLinker implements Listener {
         CodeBlock codeBlock = event.getCodeBlock();
         Location location = event.getLocation();
         
-        // Skip connection logic for bracket blocks
+        
         if (codeBlock.isBracket()) {
             LOGGER.fine("Skipping connection for bracket block at " + location);
             return;
         }
         
-        // Add block to our tracking
+        
         locationToBlock.put(location, codeBlock);
         
-        // Connect with previous block in the same line (horizontal connection)
+        
         Location prevLocation = getPreviousLocationInLine(location);
         if (prevLocation != null) {
             CodeBlock prevBlock = getBlockAtLocation(prevLocation);
-            if (prevBlock != null && !prevBlock.isBracket()) { // Skip brackets
+            if (prevBlock != null && !prevBlock.isBracket()) { 
                 prevBlock.setNextBlock(codeBlock);
                 LOGGER.fine("Connected horizontal: " + prevLocation + " -> " + location);
                 
-                // Fire event for connection visualization
+                
                 plugin.getServer().getPluginManager().callEvent(
                     new CodeBlocksConnectedEvent(prevLocation, location));
             }
         }
         
-        // Connect with next block in the same line (for validation)
+        
         Location nextLocation = getNextLocationInLine(location);
         if (nextLocation != null) {
             CodeBlock nextBlock = getBlockAtLocation(nextLocation);
-            if (nextBlock != null && !nextBlock.isBracket()) { // Skip brackets
+            if (nextBlock != null && !nextBlock.isBracket()) { 
                 codeBlock.setNextBlock(nextBlock);
                 LOGGER.fine("Connected horizontal: " + location + " -> " + nextLocation);
                 
-                // Fire event for connection visualization
+                
                 plugin.getServer().getPluginManager().callEvent(
                     new CodeBlocksConnectedEvent(location, nextLocation));
             }
         }
         
-        // Enhanced connection logic for complex structures
+        
         establishComplexConnections(location, codeBlock);
     }
     
@@ -140,36 +140,36 @@ public class BlockLinker implements Listener {
      * @param codeBlock The placed code block
      */
     private void establishComplexConnections(Location location, CodeBlock codeBlock) {
-        // Handle connections for control flow blocks (IF, WHILE, etc.)
+        
         if (isControlFlowBlock(codeBlock)) {
-            // Find matching closing bracket or end of control structure
+            
             Location endLocation = findControlStructureEnd(location);
             if (endLocation != null) {
                 CodeBlock endBlock = getBlockAtLocation(endLocation);
                 if (endBlock != null) {
-                    // Create connection to end of control structure
+                    
                     codeBlock.setNextBlock(endBlock);
                     LOGGER.fine("Connected control flow: " + location + " -> " + endLocation);
                     
-                    // Fire event for connection visualization
+                    
                     plugin.getServer().getPluginManager().callEvent(
                         new CodeBlocksConnectedEvent(location, endLocation));
                 }
             }
         }
         
-        // Handle connections for function blocks
+        
         if (isFunctionBlock(codeBlock)) {
-            // Find function end or return statement
+            
             Location functionEndLocation = findFunctionEnd(location);
             if (functionEndLocation != null) {
                 CodeBlock functionEndBlock = getBlockAtLocation(functionEndLocation);
                 if (functionEndBlock != null) {
-                    // Create connection to end of function
+                    
                     codeBlock.setNextBlock(functionEndBlock);
                     LOGGER.fine("Connected function: " + location + " -> " + functionEndLocation);
                     
-                    // Fire event for connection visualization
+                    
                     plugin.getServer().getPluginManager().callEvent(
                         new CodeBlocksConnectedEvent(location, functionEndLocation));
                 }
@@ -221,17 +221,17 @@ public class BlockLinker implements Listener {
         int maxBlocksPerLine = DevWorldGenerator.getBlocksPerLine();
         World world = startLocation.getWorld();
         
-        // Look for the next block at the same indentation level
+        
         for (int x = startX + 1; x < maxBlocksPerLine; x++) {
             Location checkLocation = new Location(world, x, startLocation.getBlockY(), startLocation.getBlockZ());
             CodeBlock checkBlock = getBlockAtLocation(checkLocation);
             
             if (checkBlock != null) {
-                // If we find a block at the same indentation level, it's the end of the control structure
+                
                 if (x == startX) {
                     return checkLocation;
                 }
-                // If we find a block with less indentation, it's the end of the control structure
+                
                 else if (x < startX) {
                     return checkLocation;
                 }
@@ -256,13 +256,13 @@ public class BlockLinker implements Listener {
         int maxBlocksPerLine = DevWorldGenerator.getBlocksPerLine();
         World world = startLocation.getWorld();
         
-        // Look for a return statement or end of function
+        
         for (int x = startX + 1; x < maxBlocksPerLine; x++) {
             Location checkLocation = new Location(world, x, startLocation.getBlockY(), startLocation.getBlockZ());
             CodeBlock checkBlock = getBlockAtLocation(checkLocation);
             
             if (checkBlock != null) {
-                // If we find a return statement, it's the end of the function
+                
                 if (checkBlock.getAction() != null && checkBlock.getAction().toLowerCase().contains("return")) {
                     return checkLocation;
                 }
@@ -284,7 +284,7 @@ public class BlockLinker implements Listener {
         int currentX = location.getBlockX();
         if (currentX <= 0) return null;
         
-        // Return the previous block in the same line
+        
         return new Location(location.getWorld(), currentX - 1, location.getBlockY(), location.getBlockZ()).clone();
     }
     
@@ -302,7 +302,7 @@ public class BlockLinker implements Listener {
         
         if (currentX >= maxBlocksPerLine - 1) return null;
         
-        // Return the next block in the same line
+        
         return new Location(location.getWorld(), currentX + 1, location.getBlockY(), location.getBlockZ()).clone();
     }
     
@@ -323,10 +323,10 @@ public class BlockLinker implements Listener {
             Location location = entry.getKey();
             CodeBlock block = entry.getValue();
             
-            // Validate next block connection
+            
             CodeBlock nextBlock = block.getNextBlock();
             if (nextBlock != null) {
-                // Check if the next block actually exists at the expected location
+                
                 Location expectedLocation = getNextLocationInLine(location);
                 if (expectedLocation != null) {
                     CodeBlock actualBlock = getBlockAtLocation(expectedLocation);
@@ -337,7 +337,7 @@ public class BlockLinker implements Listener {
                 }
             }
             
-            // Validate child block connections
+            
             for (CodeBlock child : block.getChildren()) {
                 if (child == null) {
                     LOGGER.warning("Null child block found at " + location);
@@ -360,19 +360,19 @@ public class BlockLinker implements Listener {
         
         LOGGER.info("Rebuilding connections in world: " + world.getName());
         
-        // Clear all existing connections
+        
         Map<Location, CodeBlock> worldBlocks = getWorldBlocks(world);
         for (CodeBlock block : worldBlocks.values()) {
             block.setNextBlock(null);
             block.setChildren(new ArrayList<>());
         }
         
-        // Rebuild all connections by re-processing each block
+        
         for (Map.Entry<Location, CodeBlock> entry : worldBlocks.entrySet()) {
             Location location = entry.getKey();
             CodeBlock block = entry.getValue();
             
-            // Re-establish horizontal connections
+            
             Location prevLocation = getPreviousLocationInLine(location);
             if (prevLocation != null) {
                 CodeBlock prevBlock = getBlockAtLocation(prevLocation);
@@ -389,7 +389,7 @@ public class BlockLinker implements Listener {
                 }
             }
             
-            // Re-establish complex connections
+            
             establishComplexConnections(location, block);
         }
         

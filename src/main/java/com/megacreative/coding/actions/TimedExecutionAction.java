@@ -20,11 +20,11 @@ public class TimedExecutionAction implements BlockAction {
         }
 
         try {
-            // Get parameters from the block
-            DataValue delayValue = block.getParameter("delay", DataValue.of(20)); // Default 1 second (20 ticks)
+            
+            DataValue delayValue = block.getParameter("delay", DataValue.of(20)); 
             DataValue repeatValue = block.getParameter("repeat", DataValue.of(false));
             
-            // Resolve parameters
+            
             ParameterResolver resolver = new ParameterResolver(context);
             DataValue resolvedDelay = resolver.resolve(context, delayValue);
             DataValue resolvedRepeat = resolver.resolve(context, repeatValue);
@@ -32,27 +32,27 @@ public class TimedExecutionAction implements BlockAction {
             int delay = resolvedDelay.asNumber().intValue();
             boolean repeat = resolvedRepeat.asBoolean();
             
-            // Get the next block to execute
+            
             CodeBlock nextBlock = block.getNextBlock();
             if (nextBlock == null) {
                 return ExecutionResult.error("No block to execute after delay.");
             }
             
-            // Get the script engine
+            
             ScriptEngine scriptEngine = context.getPlugin().getServiceRegistry().getService(ScriptEngine.class);
             if (scriptEngine == null) {
                 return ExecutionResult.error("Script engine not available.");
             }
             
             if (repeat) {
-                // Schedule repeating execution
+                
                 Bukkit.getScheduler().runTaskTimer(context.getPlugin(), () -> {
                     scriptEngine.executeBlockChain(nextBlock, player, "timed_execution");
                 }, delay, delay);
                 
                 return ExecutionResult.success("Repeating execution scheduled with delay of " + delay + " ticks.");
             } else {
-                // Schedule one-time execution
+                
                 Bukkit.getScheduler().runTaskLater(context.getPlugin(), () -> {
                     scriptEngine.executeBlockChain(nextBlock, player, "timed_execution");
                 }, delay);

@@ -49,7 +49,7 @@ public class ScriptBlockGUIListener implements Listener {
             return;
         }
         
-        event.setCancelled(true); // Prevent item movement
+        event.setCancelled(true); 
         
         ItemStack clickedItem = event.getCurrentItem();
         if (clickedItem == null) {
@@ -58,13 +58,13 @@ public class ScriptBlockGUIListener implements Listener {
         
         int slot = event.getRawSlot();
         
-        // Handle block type selector clicks
-        if (slot >= 45) { // Bottom row
+        
+        if (slot >= 45) { 
             handleBlockTypeSelection(player, gui, clickedItem);
             return;
         }
         
-        // Handle existing block clicks
+        
         ScriptBlock block = gui.getBlockAt(slot);
         if (block != null) {
             handleBlockClick(player, gui, block, event.isRightClick());
@@ -75,7 +75,7 @@ public class ScriptBlockGUIListener implements Listener {
     public void onInventoryDrag(InventoryDragEvent event) {
         Player player = (Player) event.getWhoClicked();
         if (openGUIs.containsKey(player.getUniqueId())) {
-            event.setCancelled(true); // Prevent item dragging
+            event.setCancelled(true); 
         }
     }
     
@@ -112,12 +112,12 @@ public class ScriptBlockGUIListener implements Listener {
      */
     private void handleBlockClick(Player player, ScriptBlockGUI gui, ScriptBlock block, boolean isRightClick) {
         if (isRightClick) {
-            // Remove block
+            
             gui.getScriptBuilder().removeBlock(gui.getScriptBuilder().getBlocks().indexOf(block));
             gui.updateDisplay();
             player.sendMessage(ChatColor.RED + "Блок удален");
         } else {
-            // Edit block
+            
             openBlockConfigMenu(player, gui, block.getType());
         }
     }
@@ -126,7 +126,7 @@ public class ScriptBlockGUIListener implements Listener {
      * Opens the configuration menu for a block type
      */
     private void openBlockConfigMenu(Player player, ScriptBlockGUI gui, ScriptBlockType type) {
-        // TODO: Implement block configuration menu
+        
         player.sendMessage(ChatColor.YELLOW + "Открытие меню настройки для " + type);
     }
 }

@@ -29,7 +29,7 @@ import java.util.logging.Logger;
 
 public class CodingManagerImpl implements ICodingManager {
 
-    // Constants for script execution messages
+    
     private static final String SCRIPT_EXECUTION_FAILED_EXCEPTION = "Script execution failed with exception: ";
     private static final String SCRIPT_EXECUTION_FAILED = "Script execution failed: ";
     private static final String WORLD_SCRIPTS_DIRECTORY_CREATION_FAILED = "Failed to create world scripts directory for ";
@@ -43,7 +43,7 @@ public class CodingManagerImpl implements ICodingManager {
     private static final String SCRIPT_WITHOUT_WORLD_NAME = "Cannot save script without world name: ";
     private static final String CODING_MANAGER_SHUTDOWN_COMPLETED = "CodingManager shutdown completed";
     
-    // Constants for file extensions
+    
     private static final String SCRIPT_FILE_EXTENSION = ".json";
     private static final String SCRIPTS_DIRECTORY_NAME = "scripts";
 
@@ -58,7 +58,7 @@ public class CodingManagerImpl implements ICodingManager {
         this.logger = plugin.getLogger();
         this.scriptsDirectory = Paths.get(plugin.getDataFolder().getAbsolutePath(), SCRIPTS_DIRECTORY_NAME);
         
-        // Create scripts directory if it doesn't exist
+        
         if (!Files.exists(scriptsDirectory)) {
             try {
                 Files.createDirectories(scriptsDirectory);
@@ -70,7 +70,7 @@ public class CodingManagerImpl implements ICodingManager {
     
     @Override
     public void executeScript(CodeScript script, Player player, String trigger) {
-        // Get the script engine from service registry
+        
         ServiceRegistry serviceRegistry = plugin.getServiceRegistry();
         if (serviceRegistry == null) {
             logger.warning(WORLD_MANAGER_NOT_AVAILABLE);
@@ -83,10 +83,10 @@ public class CodingManagerImpl implements ICodingManager {
             return;
         }
         
-        // Execute the script using the script engine
+        
         scriptEngine.executeScript(script, player, trigger)
             .whenComplete((result, throwable) -> {
-                // Handle the result
+                
                 if (throwable != null) {
                     logger.warning(SCRIPT_EXECUTION_FAILED_EXCEPTION + throwable.getMessage());
                     logError(player, SCRIPT_EXECUTION_FAILED + throwable.getMessage());
@@ -101,7 +101,7 @@ public class CodingManagerImpl implements ICodingManager {
     
     @Override
     public void loadScriptsForWorld(CreativeWorld world) {
-        // Load scripts from storage
+        
         String worldName = world.getName();
         Path worldScriptsDir = scriptsDirectory.resolve(worldName);
         
@@ -110,7 +110,7 @@ public class CodingManagerImpl implements ICodingManager {
                 Files.createDirectories(worldScriptsDir);
             } catch (IOException e) {
                 logger.severe(WORLD_SCRIPTS_DIRECTORY_CREATION_FAILED + worldName + ": " + e.getMessage());
-                // Initialize empty scripts list
+                
                 if (world.getScripts() == null) {
                     world.setScripts(new java.util.ArrayList<>());
                 }
@@ -118,14 +118,14 @@ public class CodingManagerImpl implements ICodingManager {
             }
         }
         
-        // Initialize scripts list
+        
         if (world.getScripts() == null) {
             world.setScripts(new java.util.ArrayList<>());
         } else {
             world.getScripts().clear();
         }
         
-        // Load all script files from the world directory
+        
         try (java.util.stream.Stream<Path> paths = Files.list(worldScriptsDir)) {
             paths
                 .filter(path -> path.toString().endsWith(SCRIPT_FILE_EXTENSION))
@@ -134,7 +134,7 @@ public class CodingManagerImpl implements ICodingManager {
                         String content = new String(Files.readAllBytes(path), StandardCharsets.UTF_8);
                         CodeScript script = com.megacreative.utils.JsonSerializer.deserializeScript(content);
                         if (script != null) {
-                            // Set the world name for the script
+                            
                             script.setWorldName(world.getName());
                             world.getScripts().add(script);
                             logger.info("Loaded script: " + script.getName() + " for world: " + worldName);
@@ -152,9 +152,9 @@ public class CodingManagerImpl implements ICodingManager {
     
     @Override
     public void unloadScriptsForWorld(CreativeWorld world) {
-        // Save scripts to storage before clearing
+        
         if (world.getScripts() != null) {
-            // Save all scripts
+            
             for (CodeScript script : world.getScripts()) {
                 saveScript(script);
             }
@@ -165,8 +165,8 @@ public class CodingManagerImpl implements ICodingManager {
     
     @Override
     public CodeScript getScript(String name) {
-        // Search for a script by name with enhanced matching
-        // Search through all worlds for a script with the given name
+        
+        
         if (worldManager == null) {
             logger.warning(WORLD_MANAGER_NOT_AVAILABLE);
             return null;
@@ -202,17 +202,17 @@ public class CodingManagerImpl implements ICodingManager {
         }
         
         for (CodeScript script : world.getScripts()) {
-            // Check for exact match first
+            
             if (script.getName().equals(name)) {
                 return script;
             }
             
-            // Check for case-insensitive match
+            
             if (script.getName().equalsIgnoreCase(name)) {
                 return script;
             }
             
-            // Check for partial match (contains)
+            
             if (script.getName().toLowerCase().contains(name.toLowerCase())) {
                 return script;
             }
@@ -223,19 +223,19 @@ public class CodingManagerImpl implements ICodingManager {
     
     @Override
     public java.util.List<CodeScript> getWorldScripts(CreativeWorld world) {
-        // Return the scripts list for the world
+        
         return world.getScripts() != null ? world.getScripts() : new java.util.ArrayList<>();
     }
     
     @Override
     public void saveScript(CodeScript script) {
-        // Save a script to storage
+        
         if (script.getWorldName() == null || script.getWorldName().isEmpty()) {
             logger.warning(SCRIPT_WITHOUT_WORLD_NAME + script.getName());
             return;
         }
         
-        // Create world directory if it doesn't exist
+        
         Path worldScriptsDir = scriptsDirectory.resolve(script.getWorldName());
         if (!Files.exists(worldScriptsDir)) {
             try {
@@ -246,7 +246,7 @@ public class CodingManagerImpl implements ICodingManager {
             }
         }
         
-        // Save script to file
+        
         Path scriptFile = worldScriptsDir.resolve(script.getName() + SCRIPT_FILE_EXTENSION);
         try {
             String json = com.megacreative.utils.JsonSerializer.serializeScript(script);
@@ -259,9 +259,9 @@ public class CodingManagerImpl implements ICodingManager {
     
     @Override
     public void cancelScriptExecution(String scriptId) {
-        // Cancel a running script
+        
         logger.info("Cancelled script execution: " + scriptId);
-        // Get the script engine and cancel the execution
+        
         ScriptEngine engine = getScriptEngine();
         if (engine != null) {
             engine.stopExecution(scriptId);
@@ -270,10 +270,10 @@ public class CodingManagerImpl implements ICodingManager {
     
     @Override
     public void deleteScript(String scriptName) {
-        // Delete a script from storage
+        
         logger.info("Deleting script: " + scriptName);
         
-        // Find and remove the script from all worlds
+        
         if (worldManager == null) {
             logger.warning(WORLD_MANAGER_NOT_AVAILABLE);
             return;
@@ -302,7 +302,7 @@ public class CodingManagerImpl implements ICodingManager {
             return;
         }
         
-        // Remove from memory
+        
         CodeScript scriptToRemove = findScriptByName(world.getScripts(), scriptName);
         if (scriptToRemove != null) {
             world.getScripts().remove(scriptToRemove);
@@ -344,7 +344,7 @@ public class CodingManagerImpl implements ICodingManager {
     
     @Override
     public Object getGlobalVariable(String name) {
-        // Implementation for global variables
+        
         ServiceRegistry serviceRegistry = plugin.getServiceRegistry();
         if (serviceRegistry != null) {
             VariableManager variableManager = serviceRegistry.getVariableManager();
@@ -358,7 +358,7 @@ public class CodingManagerImpl implements ICodingManager {
     
     @Override
     public void setGlobalVariable(String name, Object value) {
-        // Implementation for setting global variables
+        
         ServiceRegistry serviceRegistry = plugin.getServiceRegistry();
         if (serviceRegistry != null) {
             VariableManager variableManager = serviceRegistry.getVariableManager();
@@ -370,7 +370,7 @@ public class CodingManagerImpl implements ICodingManager {
     
     @Override
     public Object getServerVariable(String name) {
-        // Implementation for server variables
+        
         ServiceRegistry serviceRegistry = plugin.getServiceRegistry();
         if (serviceRegistry != null) {
             VariableManager variableManager = serviceRegistry.getVariableManager();
@@ -384,7 +384,7 @@ public class CodingManagerImpl implements ICodingManager {
     
     @Override
     public void setServerVariable(String name, Object value) {
-        // Implementation for setting server variables
+        
         ServiceRegistry serviceRegistry = plugin.getServiceRegistry();
         if (serviceRegistry != null) {
             VariableManager variableManager = serviceRegistry.getVariableManager();
@@ -396,7 +396,7 @@ public class CodingManagerImpl implements ICodingManager {
     
     @Override
     public java.util.Map<String, Object> getGlobalVariables() {
-        // Implementation for getting all global variables
+        
         ServiceRegistry serviceRegistry = plugin.getServiceRegistry();
         if (serviceRegistry != null) {
             VariableManager variableManager = serviceRegistry.getVariableManager();
@@ -414,7 +414,7 @@ public class CodingManagerImpl implements ICodingManager {
     
     @Override
     public java.util.Map<String, Object> getServerVariables() {
-        // Implementation for getting all server variables
+        
         ServiceRegistry serviceRegistry = plugin.getServiceRegistry();
         if (serviceRegistry != null) {
             VariableManager variableManager = serviceRegistry.getVariableManager();
@@ -432,7 +432,7 @@ public class CodingManagerImpl implements ICodingManager {
     
     @Override
     public void clearVariables() {
-        // Implementation for clearing all variables
+        
         ServiceRegistry serviceRegistry = plugin.getServiceRegistry();
         if (serviceRegistry != null) {
             VariableManager variableManager = serviceRegistry.getVariableManager();
@@ -454,7 +454,7 @@ public class CodingManagerImpl implements ICodingManager {
     
     @Override
     public void shutdown() {
-        // Cleanup resources if needed
+        
         logger.info(CODING_MANAGER_SHUTDOWN_COMPLETED);
     }
     
@@ -464,7 +464,7 @@ public class CodingManagerImpl implements ICodingManager {
             player.sendMessage("§cError: " + message);
         }
         
-        // Log to visual debugger if available
+        
         ServiceRegistry serviceRegistry = plugin.getServiceRegistry();
         if (serviceRegistry != null) {
             VisualDebugger debugger = serviceRegistry.getScriptDebugger();
@@ -474,7 +474,7 @@ public class CodingManagerImpl implements ICodingManager {
         }
     }
     
-    // Utility class for Paths (since we're using it in the constructor)
+    
     private static class Paths {
         public static Path get(String first, String... more) {
             return java.nio.file.Paths.get(first, more);

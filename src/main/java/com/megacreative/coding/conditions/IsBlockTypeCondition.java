@@ -27,7 +27,7 @@ public class IsBlockTypeCondition implements BlockCondition {
         }
 
         try {
-            // Get parameters from the new parameter system
+            
             DataValue blockValue = block.getParameter("block");
             DataValue relativeXValue = block.getParameter("relativeX");
             DataValue relativeYValue = block.getParameter("relativeY");
@@ -38,7 +38,7 @@ public class IsBlockTypeCondition implements BlockCondition {
                 return false;
             }
 
-            // Parse relative coordinates (default to 0)
+            
             int relativeX = 0, relativeY = 0, relativeZ = 0;
             
             if (relativeXValue != null && !relativeXValue.isEmpty()) {
@@ -65,23 +65,23 @@ public class IsBlockTypeCondition implements BlockCondition {
                 }
             }
 
-            // Resolve any placeholders in the block type
+            
             ParameterResolver resolver = new ParameterResolver(context);
             DataValue resolvedBlock = resolver.resolve(context, blockValue);
             
-            // Parse block type parameter
+            
             String blockName = resolvedBlock.asString();
             if (blockName == null || blockName.isEmpty()) {
                 context.getPlugin().getLogger().warning("IsBlockTypeCondition: 'block' parameter is empty.");
                 return false;
             }
 
-            // Get the block at the relative position
+            
             Location playerLocation = player.getLocation();
             Location blockLocation = playerLocation.clone().add(relativeX, relativeY, relativeZ);
             Block targetBlock = blockLocation.getBlock();
 
-            // Check if the block is of the specified type
+            
             try {
                 Material material = Material.valueOf(blockName.toUpperCase());
                 return targetBlock.getType() == material;
@@ -90,7 +90,7 @@ public class IsBlockTypeCondition implements BlockCondition {
                 return false;
             }
         } catch (Exception e) {
-            // If there's an error, return false
+            
             context.getPlugin().getLogger().warning("Error in IsBlockTypeCondition: " + e.getMessage());
             return false;
         }

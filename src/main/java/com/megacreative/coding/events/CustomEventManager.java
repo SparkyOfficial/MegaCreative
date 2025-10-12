@@ -39,31 +39,31 @@ public class CustomEventManager implements Listener, EventPublisher, EventSubscr
     private final MegaCreative plugin;
     private final EventDispatcher eventDispatcher;
     
-    // Event definitions
+    
     private final Map<String, CustomEvent> eventDefinitions = new ConcurrentHashMap<>();
     
-    // Event handlers - maps event name to list of handler blocks
+    
     private final Map<String, List<EventHandler>> eventHandlers = new ConcurrentHashMap<>();
     
-    // Global event handlers (work across all worlds)
+    
     private final Map<String, List<EventHandler>> globalEventHandlers = new ConcurrentHashMap<>();
     
-    // Event execution history for debugging
+    
     private final Map<String, List<EventExecution>> executionHistory = new ConcurrentHashMap<>();
     
-    // Event categories for organization
+    
     private final Map<String, Set<String>> eventCategories = new ConcurrentHashMap<>();
     
-    // Advanced event triggers
+    
     private final Map<String, AdvancedEventTrigger> advancedTriggers = new ConcurrentHashMap<>();
     
-    // Scheduled triggers
+    
     private final Map<String, ScheduledTrigger> scheduledTriggers = new ConcurrentHashMap<>();
     
-    // Event correlation engine
+    
     private final EventCorrelationEngine correlationEngine;
     
-    // Region detection system
+    
     private final RegionDetectionSystem regionDetectionSystem;
     
     public CustomEventManager(MegaCreative plugin) {
@@ -98,7 +98,7 @@ public class CustomEventManager implements Listener, EventPublisher, EventSubscr
             globalEventHandlers.putIfAbsent(eventName, new CopyOnWriteArrayList<>());
         }
         
-        // Add to category
+        
         String category = event.getCategory();
         if (category != null) {
             eventCategories.computeIfAbsent(category, k -> ConcurrentHashMap.newKeySet()).add(eventName);
@@ -122,7 +122,7 @@ public class CustomEventManager implements Listener, EventPublisher, EventSubscr
             eventHandlers.remove(eventName);
             globalEventHandlers.remove(eventName);
             
-            // Remove from category
+            
             String category = event.getCategory();
             if (category != null) {
                 Set<String> categoryEvents = eventCategories.get(category);
@@ -237,38 +237,38 @@ public class CustomEventManager implements Listener, EventPublisher, EventSubscr
             throw new IllegalArgumentException("Event not defined: " + eventName);
         }
         
-        // Check if event is abstract
+        
         if (event.isAbstract()) {
             throw new IllegalArgumentException("Cannot trigger abstract event: " + eventName);
         }
         
         try {
-            // Validate and prepare event data
+            
             event.validateEventData(eventData);
             Map<String, DataValue> effectiveData = event.prepareEventData(eventData);
             
-            // Process event through correlation engine
+            
             correlationEngine.processEvent(eventName, effectiveData, source, worldName);
             
-            // Create event execution record
+            
             EventExecution execution = new EventExecution(eventName, effectiveData, source, worldName);
             
-            // Get applicable handlers
+            
             List<EventHandler> applicableHandlers = getApplicableEventHandlers(eventName, event, worldName, filter);
             
-            // Sort handlers by priority (highest first)
+            
             applicableHandlers.sort(Comparator.comparingInt(EventHandler::getPriority).reversed());
             
-            // Execute handlers
+            
             int executedCount = executeEventHandlers(applicableHandlers, event, eventName, effectiveData, source, worldName);
             
             execution.setHandlersExecuted(executedCount);
             execution.setExecutionTime(System.currentTimeMillis() - execution.getTriggeredTime());
             
-            // Store execution history with size limit
+            
             List<EventExecution> history = executionHistory.computeIfAbsent(eventName, k -> new ArrayList<>());
             history.add(execution);
-            // Limit history size to prevent memory leaks
+            
             if (history.size() > 1000) {
                 history.subList(0, history.size() - 1000).clear();
             }
@@ -331,13 +331,13 @@ public class CustomEventManager implements Listener, EventPublisher, EventSubscr
                                                         Predicate<EventHandler> filter) {
         List<EventHandler> applicableHandlers = new ArrayList<>();
         
-        // Add global handlers
+        
         List<EventHandler> globalHandlers = globalEventHandlers.get(eventName);
         if (globalHandlers != null) {
             applicableHandlers.addAll(globalHandlers);
         }
         
-        // Add world-specific handlers
+        
         if (!event.isGlobal()) {
             List<EventHandler> worldHandlers = eventHandlers.get(eventName);
             if (worldHandlers != null) {
@@ -347,7 +347,7 @@ public class CustomEventManager implements Listener, EventPublisher, EventSubscr
             }
         }
         
-        // Apply custom filter if provided
+        
         if (filter != null) {
             applicableHandlers.removeIf(handler -> !filter.test(handler));
         }
@@ -367,7 +367,7 @@ public class CustomEventManager implements Listener, EventPublisher, EventSubscr
                     handler.handle(eventData, source, worldName);
                     executedCount++;
                     
-                    // Stop if this is a one-time event and it was handled
+                    
                     if (event.isOneTime()) {
                         unregisterEvent(eventName);
                         break;
@@ -431,7 +431,7 @@ public class CustomEventManager implements Listener, EventPublisher, EventSubscr
      * @return a list of event handlers
      */
     public List<EventHandler> getEventHandlers(String eventName) {
-        // Return world-specific handlers
+        
         List<EventHandler> handlers = eventHandlers.get(eventName);
         return handlers != null ? new ArrayList<>(handlers) : Collections.emptyList();
     }
@@ -560,7 +560,7 @@ public class CustomEventManager implements Listener, EventPublisher, EventSubscr
      * Initializes built-in events
      */
     private void initializeBuiltInEvents() {
-        // Player events
+        
         CustomEvent playerConnectEvent = new CustomEvent("playerConnect", "system")
             .addDataField("player", Player.class, true, "Player who connected")
             .addDataField("firstTime", Boolean.class, false, "Is this the player's first time?");
@@ -577,7 +577,7 @@ public class CustomEventManager implements Listener, EventPublisher, EventSubscr
         playerDisconnectEvent.addTag("connection");
         registerEvent(playerDisconnectEvent);
             
-        // Script events
+        
         CustomEvent scriptCompleteEvent = new CustomEvent("scriptComplete", "system")
             .addDataField("scriptName", String.class, true, "Name of completed script")
             .addDataField("executionTime", Long.class, false, "Execution time in milliseconds")
@@ -586,7 +586,7 @@ public class CustomEventManager implements Listener, EventPublisher, EventSubscr
         scriptCompleteEvent.addTag("execution");
         registerEvent(scriptCompleteEvent);
             
-        // Custom user events
+        
         CustomEvent userMessageEvent = new CustomEvent("userMessage", "system")
             .addDataField("message", String.class, true, "Message content")
             .addDataField("sender", Player.class, false, "Message sender")
@@ -594,7 +594,7 @@ public class CustomEventManager implements Listener, EventPublisher, EventSubscr
         userMessageEvent.addTag("communication");
         registerEvent(userMessageEvent);
         
-        // Region events
+        
         CustomEvent regionEnterEvent = new CustomEvent("regionEnter", "system")
             .addDataField("player", Player.class, true, "Player who entered the region")
             .addDataField("regionId", String.class, true, "ID of the region entered")
@@ -625,7 +625,7 @@ public class CustomEventManager implements Listener, EventPublisher, EventSubscr
         
         triggerEvent("playerConnect", data, event.getPlayer(), event.getPlayer().getWorld().getName());
         
-        // Update region tracking for the player
+        
         regionDetectionSystem.updatePlayerRegions(event.getPlayer());
     }
     
@@ -637,18 +637,18 @@ public class CustomEventManager implements Listener, EventPublisher, EventSubscr
         
         triggerEvent("playerDisconnect", data, event.getPlayer(), event.getPlayer().getWorld().getName());
         
-        // Clean up region tracking for the player
+        
         regionDetectionSystem.cleanupPlayerTracking(event.getPlayer().getUniqueId());
     }
     
     @org.bukkit.event.EventHandler
     public void onPlayerMove(PlayerMoveEvent event) {
-        // Only process if the player actually moved to a different block
+        
         if (event.getFrom().getBlockX() != event.getTo().getBlockX() ||
             event.getFrom().getBlockY() != event.getTo().getBlockY() ||
             event.getFrom().getBlockZ() != event.getTo().getBlockZ()) {
             
-            // Update region tracking for the player
+            
             regionDetectionSystem.updatePlayerRegions(event.getPlayer());
         }
     }
@@ -675,10 +675,10 @@ public class CustomEventManager implements Listener, EventPublisher, EventSubscr
      * Starts the correlation cleanup task
      */
     private void startCorrelationCleanupTask() {
-        // Use Bukkit's scheduler instead of creating direct threads
+        
         plugin.getServer().getScheduler().runTaskTimer(plugin, () -> {
             correlationEngine.cleanupExpiredInstances();
-        }, 1200L, 1200L); // Run every minute (1200 ticks = 60 seconds)
+        }, 1200L, 1200L); 
     }
     
     /**
@@ -692,13 +692,13 @@ public class CustomEventManager implements Listener, EventPublisher, EventSubscr
             return null;
         }
         
-        // Direct match
+        
         CustomEvent event = eventDefinitions.get(eventName);
         if (event != null) {
             return event;
         }
         
-        // Check aliases
+        
         for (CustomEvent customEvent : eventDefinitions.values()) {
             if (customEvent != null && customEvent.getAliases().contains(eventName)) {
                 return customEvent;
@@ -853,9 +853,9 @@ public class CustomEventManager implements Listener, EventPublisher, EventSubscr
     @Override
     public void publishEvent(CustomEvent event) {
         if (event != null) {
-            // Convert CustomEvent to the new event system format
+            
             Map<String, DataValue> eventData = new HashMap<>();
-            // Add event metadata to the data
+            
             eventData.put("event_name", DataValue.fromObject(event.getName()));
             eventData.put("event_category", DataValue.fromObject(event.getCategory()));
             
@@ -884,7 +884,7 @@ public class CustomEventManager implements Listener, EventPublisher, EventSubscr
      */
     @Override
     public void handleEvent(String eventName, Map<String, DataValue> eventData, Player source, String worldName) {
-        // Handle events from other components in the system
+        
         triggerEvent(eventName, eventData, source, worldName);
     }
     
@@ -895,7 +895,7 @@ public class CustomEventManager implements Listener, EventPublisher, EventSubscr
      */
     @Override
     public String[] getSubscribedEvents() {
-        // Subscribe to all custom events that this manager handles
+        
         return eventDefinitions.keySet().toArray(new String[0]);
     }
     
@@ -907,7 +907,7 @@ public class CustomEventManager implements Listener, EventPublisher, EventSubscr
      */
     @Override
     public int getPriority() {
-        return 100; // High priority for the event manager
+        return 100; 
     }
     
     /**
@@ -931,38 +931,38 @@ public class CustomEventManager implements Listener, EventPublisher, EventSubscr
         }
         
         public boolean canHandle(Player source, String sourceWorld, Map<String, DataValue> eventData) {
-            // Global handlers can handle any event
+            
             if (isGlobal) return true;
             
-            // Check world restriction
+            
             if (worldName != null && !worldName.equals(sourceWorld)) return false;
             
-            // Check player restriction
+            
             if (playerId != null && source != null && !playerId.equals(source.getUniqueId())) return false;
             
             return true;
         }
         
         public void handle(Map<String, DataValue> eventData, Player source, String sourceWorld) {
-            // Execute the handler block with event data as variables
-            // This would integrate with the existing script execution system
+            
+            
             if (handlerBlock == null) {
                 return;
             }
             
             try {
-                // Get the plugin instance from the stored field
+                
                 com.megacreative.MegaCreative plugin = this.plugin;
                 if (plugin == null) {
                     log.warning("Plugin instance is null in EventHandler");
                     return;
                 }
                 
-                // Set event data as local variables for the handler
+                
                 com.megacreative.coding.variables.VariableManager variableManager = 
                     plugin.getServiceRegistry() != null ? plugin.getServiceRegistry().getVariableManager() : null;
                 
-                // Set event data as local variables in the player's context
+                
                 if (source != null && variableManager != null) {
                     for (Map.Entry<String, DataValue> entry : eventData.entrySet()) {
                         try {
@@ -973,13 +973,13 @@ public class CustomEventManager implements Listener, EventPublisher, EventSubscr
                     }
                 }
                 
-                // Execute the handler block using the script engine
+                
                 com.megacreative.coding.ScriptEngine scriptEngine = 
                     plugin.getServiceRegistry() != null ? 
                     plugin.getServiceRegistry().getService(com.megacreative.coding.ScriptEngine.class) : null;
                 
                 if (scriptEngine != null) {
-                    // Execute the block asynchronously
+                    
                     scriptEngine.executeBlock(handlerBlock, source, "event_handler")
                         .thenAccept(result -> {
                             if (result != null && !result.isSuccess()) {
@@ -993,17 +993,17 @@ public class CustomEventManager implements Listener, EventPublisher, EventSubscr
                             return null;
                         });
                 } else {
-                    // Fallback to simple execution
+                    
                     log.info("EventHandler called for player " + (source != null ? source.getName() : "unknown") + 
                             " in world " + sourceWorld);
                 }
             } catch (Exception e) {
-                // Log error but don't propagate to avoid breaking other handlers
+                
                 log.log(Level.WARNING, "Error in EventHandler.handle()", e);
             }
         }
         
-        // Getters
+        
         public CodeBlock getHandlerBlock() { return handlerBlock; }
         public UUID getPlayerId() { return playerId; }
         public String getWorldName() { return worldName; }
@@ -1031,7 +1031,7 @@ public class CustomEventManager implements Listener, EventPublisher, EventSubscr
             this.triggeredTime = System.currentTimeMillis();
         }
         
-        // Getters
+        
         public String getEventName() { return eventName; }
         public Map<String, DataValue> getEventData() { return eventData; }
         public UUID getSourcePlayerId() { return sourcePlayerId; }
@@ -1040,7 +1040,7 @@ public class CustomEventManager implements Listener, EventPublisher, EventSubscr
         public int getHandlersExecuted() { return handlersExecuted; }
         public long getExecutionTime() { return executionTime; }
         
-        // Setters
+        
         public void setHandlersExecuted(int handlersExecuted) { this.handlersExecuted = handlersExecuted; }
         public void setExecutionTime(long executionTime) { this.executionTime = executionTime; }
     }
@@ -1053,16 +1053,16 @@ public class CustomEventManager implements Listener, EventPublisher, EventSubscr
         private final long delayMs;
         private final UUID playerId;
         private final String worldName;
-        private final MegaCreative plugin; // Add plugin reference
+        private final MegaCreative plugin; 
         private boolean cancelled = false;
-        private int taskId = -1; // Bukkit task ID
+        private int taskId = -1; 
         
         public ScheduledTrigger(String triggerId, long delayMs, Player player, String worldName, MegaCreative plugin) {
             this.triggerId = Objects.requireNonNull(triggerId, "Trigger ID cannot be null");
             this.delayMs = delayMs;
             this.playerId = player != null ? player.getUniqueId() : null;
             this.worldName = worldName;
-            this.plugin = Objects.requireNonNull(plugin, "Plugin cannot be null"); // Store plugin reference
+            this.plugin = Objects.requireNonNull(plugin, "Plugin cannot be null"); 
         }
         
         public void schedule(CustomEventManager manager) {
@@ -1071,7 +1071,7 @@ public class CustomEventManager implements Listener, EventPublisher, EventSubscr
                 return;
             }
             
-            // Use Bukkit's scheduler instead of creating direct threads
+            
             this.taskId = plugin.getServer().getScheduler().scheduleSyncDelayedTask(plugin, () -> {
                 if (!cancelled) {
                     try {
@@ -1082,7 +1082,7 @@ public class CustomEventManager implements Listener, EventPublisher, EventSubscr
                         log.log(Level.WARNING, "Error executing scheduled trigger: " + triggerId, e);
                     }
                 }
-            }, delayMs / 50); // Convert milliseconds to ticks (1 tick = 50ms)
+            }, delayMs / 50); 
         }
         
         public void cancel() {

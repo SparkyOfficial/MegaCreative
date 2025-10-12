@@ -31,17 +31,17 @@ public class PlayerJoinActivator extends Activator {
     
     @Override
     public void execute(GameEvent gameEvent, List<Entity> selectedEntities, int stackCounter, AtomicInteger callCounter) {
-        // Set the selected entities
+        
         this.selectedEntities = selectedEntities;
         
-        // Execute all actions associated with this activator
+        
         for (com.megacreative.coding.CodeBlock action : actionList) {
             try {
-                // Get the script engine from the plugin
+                
                 com.megacreative.coding.ScriptEngine scriptEngine = plugin.getServiceRegistry().getScriptEngine();
                 
                 if (scriptEngine != null) {
-                    // Execute the action block
+                    
                     scriptEngine.executeBlock(action, 
                         selectedEntities.isEmpty() ? null : (org.bukkit.entity.Player) selectedEntities.get(0), 
                         "activator_player_join")

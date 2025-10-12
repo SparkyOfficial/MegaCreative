@@ -48,32 +48,32 @@ public class ConfigManager {
         plugin.reloadConfig();
         config = plugin.getConfig();
         
-        // Установка значений по умолчанию
-        // Setting default values
-        // Standardwerte festlegen
+        
+        
+        
         config.addDefault("worlds.maxPerPlayer", 5);
         config.addDefault("worlds.borderSize", 300);
         config.addDefault("worlds.autoSave", true);
-        config.addDefault("worlds.autoSaveInterval", 300); // 5 минут
-        // 5 minutes
-        // 5 Minuten
+        config.addDefault("worlds.autoSaveInterval", 300); 
+        
+        
         
         config.addDefault("messages.prefix", "§8[§bMegaCreative§8] ");
         config.addDefault("messages.noPermission", "§cУ вас нет прав на это действие!");
-        // You don't have permission for this action!
-        // Sie haben keine Berechtigung für diese Aktion!
+        
+        
         config.addDefault("messages.worldNotFound", "§cМир не найден!");
-        // World not found!
-        // Welt nicht gefunden!
+        
+        
         config.addDefault("messages.worldLimitReached", "§cВы достигли лимита миров!");
-        // You have reached the world limit!
-        // Sie haben das Weltlimit erreicht!
+        
+        
         config.addDefault("messages.worldCreated", "§aМир успешно создан!");
-        // World created successfully!
-        // Welt erfolgreich erstellt!
+        
+        
         config.addDefault("messages.worldDeleted", "§aМир успешно удален!");
-        // World deleted successfully!
-        // Welt erfolgreich gelöscht!
+        
+        
         
         config.options().copyDefaults(true);
         plugin.saveConfig();
@@ -91,9 +91,9 @@ public class ConfigManager {
      */
     public int getMaxWorldsPerPlayer() {
         if (config == null) {
-            return 5; // Default value
-            // Значение по умолчанию
-            // Standardwert
+            return 5; 
+            
+            
         }
         return config.getInt("worlds.maxPerPlayer", 5);
     }
@@ -110,9 +110,9 @@ public class ConfigManager {
      */
     public int getWorldBorderSize() {
         if (config == null) {
-            return 300; // Default value
-            // Значение по умолчанию
-            // Standardwert
+            return 300; 
+            
+            
         }
         return config.getInt("worlds.borderSize", 300);
     }
@@ -129,9 +129,9 @@ public class ConfigManager {
      */
     public boolean isAutoSaveEnabled() {
         if (config == null) {
-            return true; // Default value
-            // Значение по умолчанию
-            // Standardwert
+            return true; 
+            
+            
         }
         return config.getBoolean("worlds.autoSave", true);
     }
@@ -148,9 +148,9 @@ public class ConfigManager {
      */
     public int getAutoSaveInterval() {
         if (config == null) {
-            return 300; // Default value
-            // Значение по умолчанию
-            // Standardwert
+            return 300; 
+            
+            
         }
         return config.getInt("worlds.autoSaveInterval", 300);
     }
@@ -170,9 +170,9 @@ public class ConfigManager {
      */
     public String getMessage(String key) {
         if (config == null) {
-            return "§cСообщение не найдено: " + key; // Default value
-            // Message not found:
-            // Nachricht nicht gefunden:
+            return "§cСообщение не найдено: " + key; 
+            
+            
         }
         return config.getString("messages." + key, "§cСообщение не найдено: " + key);
     }
@@ -189,9 +189,9 @@ public class ConfigManager {
      */
     public String getPrefix() {
         if (config == null) {
-            return "§8[§bMegaCreative§8] "; // Default value
-            // Значение по умолчанию
-            // Standardwert
+            return "§8[§bMegaCreative§8] "; 
+            
+            
         }
         return config.getString("messages.prefix", "§8[§bMegaCreative§8] ");
     }
@@ -207,9 +207,9 @@ public class ConfigManager {
      * @return WorldCode-Klasse für statischen Zugriff
      */
     public Class<WorldCode> getWorldCode() {
-        return WorldCode.class; // Return the class for static access
-        // Возвращает класс для статического доступа
-        // Gibt die Klasse für statischen Zugriff zurück
+        return WorldCode.class; 
+        
+        
     }
     
     /**
@@ -220,9 +220,9 @@ public class ConfigManager {
      * Schaltet den Konfigurationsmanager aus und bereinigt Ressourcen
      */
     public void shutdown() {
-        // Save any pending configuration changes
-        // Сохранить все ожидающие изменения конфигурации
-        // Alle ausstehenden Konfigurationsänderungen speichern
+        
+        
+        
         plugin.saveConfig();
         config = null;
     }

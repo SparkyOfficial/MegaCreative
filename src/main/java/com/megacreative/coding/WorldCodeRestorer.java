@@ -35,32 +35,32 @@ public class WorldCodeRestorer implements Listener {
     public void onWorldLoad(WorldLoadEvent event) {
         World world = event.getWorld();
         
-        // Check if this is a development world
+        
         if (isDevWorld(world)) {
             try {
-                // In the new architecture, connection restoration is handled by BlockLinker and BlockHierarchyManager
-                // These services listen to events and manage connections automatically
+                
+                
                 plugin.getLogger().info("Development world loaded: " + world.getName() + " - connection restoration handled by services");
                 
-                // Get the BlockLinker service
+                
                 BlockLinker blockLinker = serviceRegistry.getBlockLinker();
                 if (blockLinker != null) {
-                    // The BlockLinker automatically handles connections through event listeners
+                    
                     plugin.getLogger().info("BlockLinker service available for world: " + world.getName());
                 } else {
                     plugin.getLogger().warning("BlockLinker service not available for connection restoration in world: " + world.getName());
                 }
                 
-                // Get the BlockHierarchyManager service
+                
                 BlockHierarchyManager hierarchyManager = serviceRegistry.getBlockHierarchyManager();
                 if (hierarchyManager != null) {
-                    // The BlockHierarchyManager automatically handles hierarchy through event listeners
+                    
                     plugin.getLogger().info("BlockHierarchyManager service available for world: " + world.getName());
                 } else {
                     plugin.getLogger().warning("BlockHierarchyManager service not available for hierarchy restoration in world: " + world.getName());
                 }
             } catch (Exception e) {
-                // Log the error instead of silent handling
+                
                 plugin.getLogger().warning("Error handling world load for " + world.getName() + ": " + e.getMessage());
                 e.printStackTrace();
             }

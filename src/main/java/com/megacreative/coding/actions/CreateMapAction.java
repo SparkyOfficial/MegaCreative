@@ -26,24 +26,24 @@ public class CreateMapAction implements BlockAction {
         }
 
         try {
-            // Get parameters from the block
+            
             DataValue mapNameValue = block.getParameter("map_name");
             
             if (mapNameValue == null || mapNameValue.isEmpty()) {
                 return ExecutionResult.error("Map name parameter is missing.");
             }
             
-            // Resolve parameters
+            
             ParameterResolver resolver = new ParameterResolver(context);
             DataValue resolvedMapName = resolver.resolve(context, mapNameValue);
             
             String mapName = resolvedMapName.asString();
             
-            // Create the map
+            
             Map<String, DataValue> initialMap = new HashMap<>();
             MapValue mapValue = new MapValue(initialMap);
             
-            // Store the map in the variable manager
+            
             VariableManager variableManager = context.getPlugin().getServiceRegistry().getVariableManager();
             if (variableManager != null) {
                 variableManager.setVariable(mapName, mapValue, VariableScope.LOCAL, context.getScriptId());

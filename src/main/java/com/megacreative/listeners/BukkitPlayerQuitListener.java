@@ -23,7 +23,7 @@ public class BukkitPlayerQuitListener implements Listener {
         try {
 
             
-            // Additional cleanup can be added here if needed
+            
         } catch (Exception e) {
             if (plugin != null) {
                 plugin.getLogger().warning("Error during player quit cleanup: " + e.getMessage());

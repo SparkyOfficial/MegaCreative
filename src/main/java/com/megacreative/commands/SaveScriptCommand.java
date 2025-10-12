@@ -44,7 +44,7 @@ public class SaveScriptCommand implements CommandExecutor {
         
         String scriptName = args[0];
         
-        // Get the player's current world
+        
         World bukkitWorld = player.getWorld();
         CreativeWorld playerWorld = plugin.getServiceRegistry().getWorldManager().findCreativeWorldByBukkit(bukkitWorld);
         if (playerWorld == null) {
@@ -52,15 +52,15 @@ public class SaveScriptCommand implements CommandExecutor {
             return true;
         }
         
-        // Get all code blocks in the world
+        
         Map<Location, CodeBlock> blockCodeBlocks = plugin.getServiceRegistry().getBlockPlacementHandler().getBlockCodeBlocks();
         if (blockCodeBlocks.isEmpty()) {
             player.sendMessage("§cВ мире нет блоков кода для сохранения!");
             return true;
         }
         
-        // Create the script
-        // Find the root block (event)
+        
+        
         CodeBlock rootBlock = null;
         for (CodeBlock block : blockCodeBlocks.values()) {
             if (block.getMaterial() == org.bukkit.Material.DIAMOND_BLOCK) {
@@ -75,12 +75,12 @@ public class SaveScriptCommand implements CommandExecutor {
         }
         
         CodeScript script = new CodeScript(scriptName, true, rootBlock);
-        // Use the script engine to save the script
+        
         var scriptEngine = plugin.getServiceRegistry().getScriptEngine();
         
-        // Save the script
+        
         try {
-            // TODO: Implement proper script saving mechanism
+            
             player.sendMessage("§aСкрипт успешно сохранен: " + scriptName);
             
             player.sendMessage("§7Блоков в скрипте: " + blockCodeBlocks.size());

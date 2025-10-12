@@ -37,30 +37,30 @@ public class RemoveCustomNPCAction implements BlockAction {
         }
         
         try {
-            // Get parameters from the block
+            
             DataValue npcIdValue = block.getParameter("npcId");
             
             if (npcIdValue == null || npcIdValue.isEmpty()) {
                 return ExecutionResult.error("NPC ID parameter is missing.");
             }
             
-            // Resolve parameters
+            
             ParameterResolver resolver = new ParameterResolver(context);
             DataValue resolvedNpcId = resolver.resolve(context, npcIdValue);
             
-            // Get NPC manager
+            
             NPCManager npcManager = plugin.getServiceRegistry().getService(NPCManager.class);
             if (npcManager == null) {
                 return ExecutionResult.error("NPC Manager not available.");
             }
             
-            // Get the NPC by ID
+            
             CustomNPC npc;
             try {
                 UUID npcId = UUID.fromString(resolvedNpcId.asString());
                 npc = npcManager.getNPC(npcId);
             } catch (IllegalArgumentException e) {
-                // Try by name
+                
                 npc = npcManager.getNPC(resolvedNpcId.asString());
             }
             
@@ -68,7 +68,7 @@ public class RemoveCustomNPCAction implements BlockAction {
                 return ExecutionResult.error("NPC not found: " + resolvedNpcId.asString());
             }
             
-            // Remove the NPC
+            
             npcManager.removeNPC(npc);
             
             return ExecutionResult.success("Removed custom NPC '" + npc.getName() + "'.");

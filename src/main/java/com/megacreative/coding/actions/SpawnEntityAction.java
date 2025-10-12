@@ -23,7 +23,7 @@ public class SpawnEntityAction implements BlockAction {
         }
 
         try {
-            // Get entity parameters from the new parameter system
+            
             DataValue entityTypeValue = block.getParameter("entityType");
             DataValue countValue = block.getParameter("count");
             DataValue radiusValue = block.getParameter("radius");
@@ -32,7 +32,7 @@ public class SpawnEntityAction implements BlockAction {
                 return ExecutionResult.error("No entity type provided");
             }
 
-            // Parse parameters with defaults
+            
             EntityType entityType;
             try {
                 entityType = EntityType.valueOf(entityTypeValue.asString().toUpperCase());
@@ -45,7 +45,7 @@ public class SpawnEntityAction implements BlockAction {
                 try {
                     count = Math.max(1, Integer.parseInt(countValue.asString()));
                 } catch (NumberFormatException e) {
-                    // Use default count
+                    
                 }
             }
 
@@ -54,21 +54,21 @@ public class SpawnEntityAction implements BlockAction {
                 try {
                     radius = Math.max(0, Double.parseDouble(radiusValue.asString()));
                 } catch (NumberFormatException e) {
-                    // Use default radius
+                    
                 }
             }
 
-            // Spawn the entities
+            
             Location spawnLocation = player.getLocation();
             
             int spawnedCount = 0;
             for (int i = 0; i < count; i++) {
-                // Add some randomness to the spawn location within the radius
+                
                 double offsetX = (Math.random() - 0.5) * 2 * radius;
                 double offsetZ = (Math.random() - 0.5) * 2 * radius;
                 Location entityLocation = spawnLocation.clone().add(offsetX, 0, offsetZ);
                 
-                // Make sure the entity spawns on the ground
+                
                 entityLocation.setY(spawnLocation.getWorld().getHighestBlockYAt(entityLocation));
                 
                 if (spawnLocation.getWorld().spawnEntity(entityLocation, entityType) != null) {

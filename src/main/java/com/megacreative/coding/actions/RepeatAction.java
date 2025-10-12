@@ -21,7 +21,7 @@ import java.util.logging.Level;
 @BlockMeta(id = "repeat", displayName = "§aRepeat", type = BlockType.ACTION)
 public class RepeatAction implements BlockAction {
 
-    // Constants for magic numbers
+    
     private static final int DEFAULT_ITERATION_COUNT = 1;
     private static final int MIN_ITERATION_COUNT = 1;
     private static final int MAX_ITERATION_COUNT = 1000;
@@ -29,35 +29,35 @@ public class RepeatAction implements BlockAction {
     
     @Override
     public ExecutionResult execute(CodeBlock block, ExecutionContext context) {
-        // Validate inputs
+        
         if (!validateInputs(block, context)) {
             return ExecutionResult.error(Constants.PLAYER_OR_BLOCK_IS_NULL);
         }
         
         Player player = context.getPlayer();
 
-        // Get times parameter from the new parameter system
+        
         int times = getTimesFromParameter(block, context);
         
-        // Validate repeat count
+        
         ExecutionResult validationResult = validateRepeatCount(times);
         if (validationResult != null) {
             return validationResult;
         }
         
-        // Validate next block
+        
         CodeBlock nextBlock = block.getNextBlock();
         if (nextBlock == null) {
             return ExecutionResult.error(Constants.NO_BLOCK_TO_REPEAT);
         }
         
-        // Get ScriptEngine from ServiceRegistry
+        
         ScriptEngine scriptEngine = context.getPlugin().getServiceRegistry().getService(ScriptEngine.class);
         if (scriptEngine == null) {
             return ExecutionResult.error(Constants.FAILED_TO_GET_SCRIPT_ENGINE);
         }
         
-        // Execute the repeat loop asynchronously
+        
         executeRepeatLoop(times, nextBlock, context, scriptEngine, player);
         
         return ExecutionResult.success(Constants.REPEAT_ACTION_STARTED);
@@ -82,7 +82,7 @@ public class RepeatAction implements BlockAction {
             return ExecutionResult.error(Constants.MAXIMUM_REPEAT_COUNT_IS_1000);
         }
         
-        return null; // Valid count
+        return null; 
     }
     
     /**
@@ -90,7 +90,7 @@ public class RepeatAction implements BlockAction {
      */
     private void executeRepeatLoop(int times, CodeBlock nextBlock, ExecutionContext context, 
                                   ScriptEngine scriptEngine, Player player) {
-        // Use the ScriptEngine's async execution capabilities instead of manual CompletableFuture
+        
         executeRepeatLoopSequentially(times, nextBlock, context, scriptEngine, player, 0);
     }
     
@@ -99,29 +99,29 @@ public class RepeatAction implements BlockAction {
      */
     private void executeRepeatLoopSequentially(int times, CodeBlock nextBlock, ExecutionContext context, 
                                              ScriptEngine scriptEngine, Player player, int currentIndex) {
-        // Base case: we've completed all iterations
+        
         if (currentIndex >= times) {
             player.sendMessage("§a🔄 Повторено " + times + " раз");
             return;
         }
         
-        // Check if we should break or continue before executing iteration
+        
         if (shouldBreak(context, player, currentIndex + 1)) {
             player.sendMessage("§a🔄 Повторено " + currentIndex + " раз (прервано)");
             return;
         }
         
-        // Check if we should continue (skip this iteration)
+        
         if (shouldContinue(context, player, currentIndex + 1)) {
-            // Continue to next iteration
+            
             executeRepeatLoopSequentially(times, nextBlock, context, scriptEngine, player, currentIndex + 1);
             return;
         }
         
-        // Create a new context for each iteration
+        
         ExecutionContext loopContext = createLoopContext(context, nextBlock, currentIndex, times);
         
-        // Execute the block chain for this iteration and continue when it completes
+        
         scriptEngine.executeBlockChain(nextBlock, player, REPEAT_LOOP_CONTEXT)
             .exceptionally(throwable -> {
                 logError(loopContext, "Error in iteration " + (currentIndex + 1) + ": " + throwable.getMessage(), throwable);
@@ -129,13 +129,13 @@ public class RepeatAction implements BlockAction {
                 return ExecutionResult.error(throwable.getMessage());
             })
             .thenAccept(result -> {
-                // Check if we should break or continue after executing iteration
+                
                 if (shouldBreak(context, player, currentIndex + 1)) {
                     player.sendMessage("§a🔄 Повторено " + (currentIndex + 1) + " раз (прервано)");
                     return;
                 }
                 
-                // Continue to next iteration
+                
                 executeRepeatLoopSequentially(times, nextBlock, context, scriptEngine, player, currentIndex + 1);
             });
     }
@@ -180,7 +180,7 @@ public class RepeatAction implements BlockAction {
      */
     private int getTimesFromParameter(CodeBlock block, ExecutionContext context) {
         try {
-            // Get times parameter from the new parameter system
+            
             DataValue timesValue = block.getParameter("times");
             
             if (timesValue != null && !timesValue.isEmpty()) {
@@ -190,7 +190,7 @@ public class RepeatAction implements BlockAction {
             logError(context, "Error getting times parameter in RepeatAction: " + e.getMessage(), e);
         }
         
-        return DEFAULT_ITERATION_COUNT; // Default to 1 iteration
+        return DEFAULT_ITERATION_COUNT; 
     }
     
     /**

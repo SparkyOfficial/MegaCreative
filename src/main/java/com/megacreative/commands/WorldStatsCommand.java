@@ -80,7 +80,7 @@ public class WorldStatsCommand implements CommandExecutor, TabCompleter {
         }
         
         if (args.length == 0) {
-            // Show statistics for current world
+            
             CreativeWorld world = worldManager.findCreativeWorldByBukkit(player.getWorld());
             if (world == null) {
                 player.sendMessage("§cВы не находитесь в управляемом мире!");
@@ -88,7 +88,7 @@ public class WorldStatsCommand implements CommandExecutor, TabCompleter {
             }
             showWorldStatistics(player, world);
         } else {
-            // Show statistics for specified world
+            
             String worldName = args[0];
             CreativeWorld world = worldManager.getWorldByName(worldName);
             if (world == null) {
@@ -96,7 +96,7 @@ public class WorldStatsCommand implements CommandExecutor, TabCompleter {
                 return true;
             }
             
-            // Check if player has permission to view stats
+            
             if (!world.isOwner(player) && !player.hasPermission("megacreative.world.stats.others")) {
                 player.sendMessage("§cУ вас нет доступа к статистике этого мира!");
                 return true;
@@ -243,12 +243,12 @@ public class WorldStatsCommand implements CommandExecutor, TabCompleter {
         if (args.length == 1) {
             List<String> worldNames = new ArrayList<>();
             
-            // Add worlds the player owns
+            
             for (CreativeWorld world : worldManager.getPlayerWorlds(player)) {
                 worldNames.add(world.getName());
             }
             
-            // Filter by current input
+            
             String input = args[0].toLowerCase();
             return worldNames.stream()
                 .filter(name -> name.toLowerCase().startsWith(input))

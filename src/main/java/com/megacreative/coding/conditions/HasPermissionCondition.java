@@ -22,7 +22,7 @@ public class HasPermissionCondition implements BlockCondition {
         }
 
         try {
-            // Get permission parameter
+            
             com.megacreative.coding.values.DataValue permissionValue = block.getParameter("permission");
             if (permissionValue == null || permissionValue.isEmpty()) {
                 return false;
@@ -30,10 +30,10 @@ public class HasPermissionCondition implements BlockCondition {
             
             String permission = permissionValue.asString();
             
-            // Check if the player has the permission
+            
             return player.hasPermission(permission);
         } catch (Exception e) {
-            // If there's an error, return false
+            
             return false;
         }
     }

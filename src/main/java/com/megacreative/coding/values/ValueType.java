@@ -9,12 +9,12 @@ import java.util.Objects;
  */
 public enum ValueType {
     
-    // === BASIC TYPES ===
+    
     TEXT("Text", "§aТекст", "String values and messages"),
     NUMBER("Number", "§bЧисло", "Integer and decimal numbers"),
     BOOLEAN("Boolean", "§cБулево", "True/false values"),
     
-    // === MINECRAFT TYPES ===
+    
     LOCATION("Location", "§eПозиция", "World coordinates (x, y, z)"),
     ITEM("Item", "§6Предмет", "Minecraft items with NBT"),
     BLOCK("Block", "§8Блок", "Block types and materials"),
@@ -22,7 +22,7 @@ public enum ValueType {
     PLAYER("Player", "§9Игрок", "Online players"),
     WORLD("World", "§2Мир", "Minecraft worlds"),
     
-    // === ADVANCED TYPES ===
+    
     LIST("List", "§5Список", "Arrays of any value type"),
     DICTIONARY("Dictionary", "§4Словарь", "Key-value mappings"),
     VECTOR("Vector", "§3Вектор", "3D direction vectors"),
@@ -30,19 +30,19 @@ public enum ValueType {
     PARTICLE("Particle", "§bЧастица", "Visual particle effects"),
     POTION("Potion", "§dЗелье", "Potion effects and types"),
     
-    // === SPECIAL TYPES ===
+    
     ANY("Any", "§fЛюбой", "Accepts any value type"),
     VARIABLE("Variable", "§7Переменная", "Variable references"),
     FUNCTION("Function", "§1Функция", "Function references"),
     EVENT("Event", "§cСобытие", "Event data and context"),
     
-    // === API TYPES ===
+    
     JSON("JSON", "§eJSON", "JSON objects and arrays"),
     HTTP_RESPONSE("HTTP Response", "§6HTTP Ответ", "Web API responses"),
     DATABASE_RESULT("Database Result", "§2Результат БД", "Database query results"),
     PERMISSION("Permission", "§4Разрешение", "Permission nodes"),
     
-    // === VISUAL TYPES ===
+    
     COLOR("Color", "§cЦвет", "RGB and hex colors"),
     MATERIAL("Material", "§8Материал", "Block and item materials"),
     ENCHANTMENT("Enchantment", "§5Зачарование", "Item enchantments"),
@@ -109,7 +109,7 @@ public enum ValueType {
         } else if (value instanceof org.bukkit.GameMode) {
             return GAMEMODE;
         } else if (value instanceof String) {
-            // Try to parse as JSON
+            
             try {
                 new org.json.JSONObject(value.toString());
                 return JSON;
@@ -133,16 +133,16 @@ public enum ValueType {
         if (this == ANY || other == ANY) return true;
         if (this == other) return true;
         
-        // Special compatibility rules
+        
         switch (this) {
             case NUMBER:
-                return other == TEXT; // Numbers can be converted to text
+                return other == TEXT; 
             case TEXT:
-                return other == NUMBER || other == BOOLEAN; // Text can be parsed
+                return other == NUMBER || other == BOOLEAN; 
             case LIST:
-                return true; // Lists can contain any type
+                return true; 
             case VARIABLE:
-                return true; // Variables can hold any type
+                return true; 
             default:
                 return false;
         }
@@ -168,38 +168,38 @@ public enum ValueType {
             case BOOLEAN:
                 return false;
             case LOCATION:
-                // Return a default location at world spawn
+                
                 return new org.bukkit.Location(null, 0, 0, 0);
             case ITEM:
-                // Return a default air item
+                
                 return new org.bukkit.inventory.ItemStack(org.bukkit.Material.AIR);
             case BLOCK:
-                // Return a default air block
+                
                 return org.bukkit.Material.AIR;
             case ENTITY:
-                // Entities can't have a default value, return null
+                
                 return null;
             case PLAYER:
-                // Players can't have a default value, return null
+                
                 return null;
             case WORLD:
-                // Worlds can't have a default value, return null
+                
                 return null;
             case LIST:
                 return new java.util.ArrayList<>();
             case DICTIONARY:
                 return new java.util.HashMap<>();
             case VECTOR:
-                // Return a default zero vector
+                
                 return new org.bukkit.util.Vector(0, 0, 0);
             case SOUND:
-                // Return a default sound
+                
                 return org.bukkit.Sound.ENTITY_PLAYER_LEVELUP;
             case PARTICLE:
-                // Return a default particle
+                
                 return org.bukkit.Particle.FLAME;
             case POTION:
-                // Return a default potion effect
+                
                 return org.bukkit.potion.PotionEffectType.SPEED;
             default:
                 return null;

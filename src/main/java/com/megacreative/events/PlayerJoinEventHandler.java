@@ -31,7 +31,7 @@ public class PlayerJoinEventHandler {
         this.worldManager = worldManager;
         this.eventManager = eventManager;
         
-        // Register this handler with the CustomEventManager
+        
         registerEventHandler();
     }
     
@@ -39,17 +39,17 @@ public class PlayerJoinEventHandler {
      * Register this handler with the CustomEventManager
      */
     private void registerEventHandler() {
-        // Create an event handler for the playerConnect event
+        
         EventHandler handler = new EventHandler(
-            null, // We'll create code blocks dynamically
-            null, // No specific player restriction
-            null, // No specific world restriction
-            0,    // Default priority
+            null, 
+            null, 
+            null, 
+            0,    
             plugin
         ) {
             @Override
             public boolean canHandle(Player source, String sourceWorld, Map<String, DataValue> eventData) {
-                return true; // Handle all playerConnect events
+                return true; 
             }
             
             @Override
@@ -58,7 +58,7 @@ public class PlayerJoinEventHandler {
             }
         };
         
-        // Register the handler with the event manager
+        
         eventManager.registerEventHandler("playerConnect", handler);
         LOGGER.info("Registered PlayerJoinEventHandler for playerConnect events");
     }
@@ -77,7 +77,7 @@ public class PlayerJoinEventHandler {
                 return;
             }
             
-            // Execute any scripts associated with player join
+            
             executeScriptsForPlayerJoin(player, creativeWorld);
         } catch (Exception e) {
             LOGGER.warning("Error handling player join event: " + e.getMessage());
@@ -88,8 +88,8 @@ public class PlayerJoinEventHandler {
      * Execute scripts for player join event
      */
     private void executeScriptsForPlayerJoin(Player player, CreativeWorld creativeWorld) {
-        // This would be implemented to find and execute the appropriate code blocks
-        // For now, we'll just log that we would execute scripts
+        
+        
         LOGGER.info("Would execute scripts for player join: " + player.getName() + " in world " + creativeWorld.getName());
     }
 }

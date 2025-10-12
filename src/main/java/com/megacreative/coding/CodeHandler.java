@@ -87,7 +87,7 @@ public class CodeHandler {
      * @param player The player associated with the event (can be null)
      */
     public void handleEvent(com.megacreative.coding.activators.ActivatorType activatorType, GameEvent gameEvent, Player player) {
-        // Find all activators of this type
+        
         List<Activator> typeActivators = getActivatorsByType(activatorType);
         
         if (typeActivators.isEmpty()) {
@@ -97,11 +97,11 @@ public class CodeHandler {
         
         LOGGER.info("Handling activator type: " + activatorType + " with " + typeActivators.size() + " activators");
         
-        // Execute each activator
+        
         for (Activator activator : typeActivators) {
             try {
                 LOGGER.info("Executing activator: " + activator.getId() + " of type: " + activatorType + " with name: " + activator.getCustomName());
-                // Execute the activator with the game event
+                
                 activator.execute(gameEvent, 0, new AtomicInteger());
                 LOGGER.info("Successfully executed activator: " + activator.getId());
             } catch (Exception e) {
@@ -157,11 +157,11 @@ public class CodeHandler {
      * @param gameEvent The game event to pass to the loop
      */
     public void startGameLoop(String name, GameEvent gameEvent) {
-        // Find game loop activators with the matching name
+        
         List<Activator> gameLoops = getActivatorsByType(com.megacreative.coding.activators.ActivatorType.GAME_LOOP);
         for (Activator activator : gameLoops) {
             if (name.equals(activator.getCustomName())) {
-                // Execute the game loop activator
+                
                 activator.execute(gameEvent, 0, new AtomicInteger());
                 break;
             }
@@ -174,11 +174,11 @@ public class CodeHandler {
      * @param gameEvent The game event to pass to the function
      */
     public void callFunction(String name, GameEvent gameEvent) {
-        // Find function activators with the matching name
+        
         List<Activator> functions = getActivatorsByType(com.megacreative.coding.activators.ActivatorType.FUNCTION);
         for (Activator activator : functions) {
             if (name.equals(activator.getCustomName())) {
-                // Execute the function activator
+                
                 activator.execute(gameEvent, 0, new AtomicInteger());
                 break;
             }

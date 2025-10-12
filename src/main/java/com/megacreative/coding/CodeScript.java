@@ -15,22 +15,22 @@ public class CodeScript {
      * Типы скриптов
      */
     public enum ScriptType {
-        EVENT,      // Скрипт-событие (запускается по триггеру)
-        FUNCTION    // Функция (вызывается из других скриптов)
+        EVENT,      
+        FUNCTION    
     }
 
     private UUID id;
     private String name;
     private boolean enabled;
-    private ScriptType type = ScriptType.EVENT; // По умолчанию - событие
-    private final CodeBlock rootBlock; // Начальный блок-событие
+    private ScriptType type = ScriptType.EVENT; 
+    private final CodeBlock rootBlock; 
     
-    // 🎆 ENHANCED: Add world name field for script persistence
+    
     private String worldName;
     private String author;
     private String description;
     
-    // Constructors
+    
     public CodeScript(String name, boolean enabled, CodeBlock rootBlock) {
         this.id = UUID.randomUUID();
         this.name = name;
@@ -47,7 +47,7 @@ public class CodeScript {
         this("Безымянный скрипт", true, rootBlock);
     }
 
-    // Getters and setters
+    
     public UUID getId() { return id; }
     public void setId(UUID id) { this.id = id; }
     
@@ -71,7 +71,7 @@ public class CodeScript {
     public String getDescription() { return description; }
     public void setDescription(String description) { this.description = description; }
     
-    // Main methods
+    
     
     /**
      * Проверяет, является ли корневой блок событием.
@@ -99,16 +99,16 @@ public class CodeScript {
         
         blocks.add(block);
         
-        // Добавляем дочерние блоки
+        
         for (CodeBlock child : block.getChildren()) {
             collectBlocks(child, blocks);
         }
         
-        // Добавляем следующий блок в цепочке
+        
         collectBlocks(block.getNextBlock(), blocks);
     }
     
-    // equals and hashCode
+    
     
     @Override
     public boolean equals(Object o) {

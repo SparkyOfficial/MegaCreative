@@ -8,7 +8,7 @@ import java.util.*;
  * Represents a custom event that can be triggered and handled within scripts
  */
 public class CustomEvent {
-    // No-args constructor
+    
     public CustomEvent() {
         this.id = UUID.randomUUID();
         this.createdTime = System.currentTimeMillis();
@@ -17,7 +17,7 @@ public class CustomEvent {
         this.metadata = new HashMap<>();
         this.aliases = new ArrayList<>();
     }
-    // Getters and Setters
+    
     public UUID getId() { return id; }
     public void setId(UUID id) { this.id = id; }
     
@@ -69,20 +69,20 @@ public class CustomEvent {
     private long createdTime;
     private String author;
     
-    // Event data schema - defines what data this event can carry
+    
     private Map<String, EventDataField> dataFields = new HashMap<>();
     
-    // Event metadata
-    private boolean isGlobal = false; // Global events can be triggered/handled across worlds
-    private boolean isOneTime = false; // One-time events are automatically removed after first trigger
-    private int priority = 0; // Higher priority events are handled first
+    
+    private boolean isGlobal = false; 
+    private boolean isOneTime = false; 
+    private int priority = 0; 
     private Set<String> tags = new HashSet<>();
     
-    // Advanced features
-    private String parentEvent; // Parent event for inheritance
-    private boolean isAbstract = false; // Abstract events cannot be directly triggered
-    private Map<String, Object> metadata = new HashMap<>(); // Custom metadata
-    private List<String> aliases = new ArrayList<>(); // Event name aliases
+    
+    private String parentEvent; 
+    private boolean isAbstract = false; 
+    private Map<String, Object> metadata = new HashMap<>(); 
+    private List<String> aliases = new ArrayList<>(); 
     
     public CustomEvent(String name, String author) {
         this.id = UUID.randomUUID();
@@ -116,14 +116,14 @@ public class CustomEvent {
      * Validates event data against the schema
      */
     public void validateEventData(Map<String, DataValue> eventData) {
-        // Check required fields
+        
         for (EventDataField field : dataFields.values()) {
             if (field.isRequired() && !eventData.containsKey(field.getName())) {
                 throw new IllegalArgumentException("Missing required field: " + field.getName());
             }
         }
         
-        // Check field types
+        
         for (Map.Entry<String, DataValue> entry : eventData.entrySet()) {
             String fieldName = entry.getKey();
             DataValue value = entry.getValue();
@@ -148,7 +148,7 @@ public class CustomEvent {
     public Map<String, DataValue> prepareEventData(Map<String, DataValue> providedData) {
         Map<String, DataValue> effectiveData = new HashMap<>(providedData);
         
-        // Apply defaults for missing optional fields
+        
         for (EventDataField field : dataFields.values()) {
             if (!effectiveData.containsKey(field.getName()) && field.getDefaultValue() != null) {
                 effectiveData.put(field.getName(), field.getDefaultValue());
@@ -210,7 +210,7 @@ public class CustomEvent {
         copy.getMetadata().putAll(this.metadata);
         copy.getAliases().addAll(this.aliases);
         
-        // Copy data fields
+        
         for (EventDataField field : this.dataFields.values()) {
             copy.addDataField(field.getName(), field.getExpectedType(), field.isRequired(), field.getDescription());
             if (field.getDefaultValue() != null) {
@@ -218,7 +218,7 @@ public class CustomEvent {
             }
         }
         
-        // Copy tags
+        
         copy.tags.addAll(this.tags);
         
         return copy;
@@ -230,9 +230,9 @@ public class CustomEvent {
     public CustomEvent inheritFrom(CustomEvent parent) {
         this.parentEvent = parent.getName();
         
-        // Copy parent's data fields
+        
         for (EventDataField field : parent.getDataFields().values()) {
-            // Only add if not already defined (allow overriding)
+            
             if (!this.dataFields.containsKey(field.getName())) {
                 EventDataField copiedField = new EventDataField(
                     field.getName(), 
@@ -247,10 +247,10 @@ public class CustomEvent {
             }
         }
         
-        // Copy parent's tags
+        
         this.tags.addAll(parent.getTags());
         
-        // Copy parent's metadata if not already present
+        
         for (Map.Entry<String, Object> entry : parent.getMetadata().entrySet()) {
             if (!this.metadata.containsKey(entry.getKey())) {
                 this.metadata.put(entry.getKey(), entry.getValue());
@@ -323,7 +323,7 @@ public class CustomEvent {
      */
     
     public static class EventDataField {
-        // No-args constructor
+        
         public EventDataField() {
             this.name = "";
             this.expectedType = Object.class;
@@ -331,7 +331,7 @@ public class CustomEvent {
             this.description = "";
         }
         
-        // Getters and Setters
+        
         public String getName() { return name; }
         public void setName(String name) { this.name = name; }
         
@@ -366,12 +366,12 @@ public class CustomEvent {
         public boolean isCompatible(DataValue value) {
             if (value == null) return !required;
             
-            // Handle direct type matching first
+            
             if (expectedType.isAssignableFrom(value.getClass())) {
                 return true;
             }
             
-            // Handle DataValue wrapper to expected type matching
+            
             if (expectedType == org.bukkit.entity.Player.class && value instanceof com.megacreative.coding.values.types.PlayerValue) {
                 return true;
             }
@@ -398,12 +398,12 @@ public class CustomEvent {
                 return true;
             }
             
-            // Handle generic object matching
+            
             if (expectedType.equals(Object.class)) {
                 return true;
             }
             
-            // Check if the underlying value in DataValue is compatible
+            
             if (value.getValue() != null && expectedType.isAssignableFrom(value.getValue().getClass())) {
                 return true;
             }

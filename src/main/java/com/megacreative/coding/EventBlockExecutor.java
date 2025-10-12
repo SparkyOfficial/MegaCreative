@@ -11,7 +11,7 @@ public class EventBlockExecutor implements BlockExecutor {
     private static final Logger LOGGER = java.util.logging.Logger.getLogger(EventBlockExecutor.class.getName());
     
     public EventBlockExecutor() {
-        // No dependencies needed for event blocks
+        
     }
     
     @Override
@@ -32,8 +32,8 @@ public class EventBlockExecutor implements BlockExecutor {
                    (actionId != null ? actionId : "none") + " for player: " + 
                    (context.getPlayer() != null ? context.getPlayer().getName() : "unknown"));
         
-        // Event blocks are typically root blocks that trigger other blocks
-        // They don't have direct execution logic, but we log the event processing
+        
+        
         LOGGER.fine("Event block processed for event: " + eventId);
         return ExecutionResult.success("Event block processed for event: " + eventId);
     }

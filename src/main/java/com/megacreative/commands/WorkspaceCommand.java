@@ -66,14 +66,14 @@ public class WorkspaceCommand implements CommandExecutor {
         
         Player player = (Player) sender;
         
-        // Check if player is in a creative world
+        
         CreativeWorld world = plugin.getServiceRegistry().getWorldManager().findCreativeWorldByBukkit(player.getWorld());
         if (world == null) {
             player.sendMessage("§cYou must be in a creative world to use the coding workspace!");
             return true;
         }
         
-        // Check coding permissions
+        
         if (!world.canCode(player)) {
             player.sendMessage("§cYou don't have permission to code in this world!");
             return true;
@@ -158,7 +158,7 @@ public class WorkspaceCommand implements CommandExecutor {
         player.sendMessage("");
         player.sendMessage("§aUse §e/dev §ato enter development mode!");
         
-        // Teleport to dev world if not already there
+        
         if (!player.getWorld().getName().endsWith("_dev")) {
             player.performCommand("dev");
         }

@@ -26,7 +26,7 @@ public class SetPlayerExperienceAction implements BlockAction {
         }
         
         try {
-            // Get level parameter
+            
             DataValue levelValue = block.getParameter("level");
             if (levelValue == null || levelValue.isEmpty()) {
                 return ExecutionResult.error("Level parameter is required for experience modification");
@@ -34,23 +34,23 @@ public class SetPlayerExperienceAction implements BlockAction {
             
             int level = levelValue.asNumber().intValue();
             
-            // Get progress parameter (default to 0.0)
+            
             DataValue progressValue = block.getParameter("progress");
             float progress = 0.0f;
             if (progressValue != null && !progressValue.isEmpty()) {
                 progress = progressValue.asNumber().floatValue();
-                // Clamp progress between 0.0 and 1.0
+                
                 progress = Math.max(0.0f, Math.min(1.0f, progress));
             }
             
-            // Get mode parameter (default to "set")
+            
             DataValue modeValue = block.getParameter("mode");
             String mode = "set";
             if (modeValue != null && !modeValue.isEmpty()) {
                 mode = modeValue.asString().toLowerCase();
             }
             
-            // Apply experience based on mode
+            
             switch (mode) {
                 case "set":
                     player.setLevel(level);
@@ -58,11 +58,11 @@ public class SetPlayerExperienceAction implements BlockAction {
                     break;
                 case "add":
                     player.giveExpLevels(level);
-                    // Progress is not directly modifiable in add mode
+                    
                     break;
                 case "remove":
                     player.giveExpLevels(-level);
-                    // Progress is not directly modifiable in remove mode
+                    
                     break;
                 default:
                     return ExecutionResult.error("Invalid mode: " + mode + ". Use 'set', 'add', or 'remove'");

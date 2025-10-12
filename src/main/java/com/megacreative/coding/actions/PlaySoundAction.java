@@ -24,7 +24,7 @@ public class PlaySoundAction implements BlockAction {
         }
 
         try {
-            // Get sound parameters
+            
             String soundName = getParameterValue(block, "sound");
             float volume = getFloatParameter(block, "volume", 1.0f);
             float pitch = getFloatParameter(block, "pitch", 1.0f);
@@ -33,13 +33,13 @@ public class PlaySoundAction implements BlockAction {
                 return ExecutionResult.error("Sound name is not configured");
             }
 
-            // Parse sound
+            
             Sound sound = parseSound(soundName);
             if (sound == null) {
                 return ExecutionResult.error("Invalid sound name: " + soundName);
             }
 
-            // Play the sound
+            
             player.playSound(player.getLocation(), sound, volume, pitch);
             return ExecutionResult.success("Sound played successfully");
         } catch (Exception e) {
@@ -58,7 +58,7 @@ public class PlaySoundAction implements BlockAction {
             try {
                 return Float.parseFloat(value.asString());
             } catch (NumberFormatException e) {
-                // Use default value
+                
             }
         }
         return defaultValue;
@@ -68,11 +68,11 @@ public class PlaySoundAction implements BlockAction {
         try {
             return Sound.valueOf(soundName.toUpperCase());
         } catch (IllegalArgumentException e) {
-            // Try with "ENTITY_" prefix for newer sound names
+            
             try {
                 return Sound.valueOf("ENTITY_" + soundName.toUpperCase());
             } catch (IllegalArgumentException e2) {
-                // Try with "BLOCK_" prefix
+                
                 try {
                     return Sound.valueOf("BLOCK_" + soundName.toUpperCase());
                 } catch (IllegalArgumentException e3) {

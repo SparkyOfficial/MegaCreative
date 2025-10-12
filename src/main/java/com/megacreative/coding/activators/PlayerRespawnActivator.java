@@ -57,20 +57,20 @@ public class PlayerRespawnActivator extends BukkitEventActivator {
             return;
         }
         
-        // Execute all actions associated with this activator
+        
         for (com.megacreative.coding.CodeBlock action : actionList) {
             try {
-                // Get the script engine from the plugin
+                
                 com.megacreative.coding.ScriptEngine scriptEngine = plugin.getServiceRegistry().getScriptEngine();
                 
                 if (scriptEngine != null) {
-                    // Convert the first entity to a player if possible
+                    
                     Player player = null;
                     if (!selectedEntities.isEmpty() && selectedEntities.get(0) instanceof Player) {
                         player = (Player) selectedEntities.get(0);
                     }
                     
-                    // Execute the action block
+                    
                     scriptEngine.executeBlock(action, player, "activator_player_respawn")
                         .thenAccept(result -> {
                             if (!result.isSuccess()) {
@@ -113,7 +113,7 @@ public class PlayerRespawnActivator extends BukkitEventActivator {
             return;
         }
         
-        // Create a game event with player respawn context
+        
         GameEvent gameEvent = new GameEvent("onPlayerRespawn");
         gameEvent.setPlayer(player);
         if (location != null) {
@@ -122,13 +122,13 @@ public class PlayerRespawnActivator extends BukkitEventActivator {
             gameEvent.setLocation(respawnLocation);
         }
         
-        // Add custom data
+        
         Map<String, Object> customData = new HashMap<>();
         customData.put("respawnLocation", respawnLocation);
         customData.put("isBedSpawn", isBedSpawn);
         gameEvent.setCustomData(customData);
         
-        // Activate the script
+        
         execute(gameEvent, new java.util.ArrayList<>(), 0, new java.util.concurrent.atomic.AtomicInteger(0));
     }
 }

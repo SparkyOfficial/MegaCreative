@@ -23,17 +23,17 @@ public class SetTimeAction implements BlockAction {
         }
 
         try {
-            // Get time parameters from the new parameter system
+            
             DataValue timeValue = block.getParameter("time");
             DataValue relativeValue = block.getParameter("relative");
 
-            // Parse parameters with defaults
+            
             long time = 0;
             if (timeValue != null && !timeValue.isEmpty()) {
                 try {
                     time = Long.parseLong(timeValue.asString());
                 } catch (NumberFormatException e) {
-                    // Use default time
+                    
                 }
             }
 
@@ -42,7 +42,7 @@ public class SetTimeAction implements BlockAction {
                 relative = Boolean.parseBoolean(relativeValue.asString());
             }
 
-            // Set the time in the world
+            
             World world = player.getWorld();
             if (relative) {
                 world.setTime(world.getTime() + time);

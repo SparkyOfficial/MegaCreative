@@ -42,7 +42,7 @@ public class CreateCustomNPCAction implements BlockAction {
         }
 
         try {
-            // Get parameters from the block
+            
             DataValue nameValue = block.getParameter("name");
             DataValue skinValue = block.getParameter("skin");
             DataValue xValue = block.getParameter("x");
@@ -55,7 +55,7 @@ public class CreateCustomNPCAction implements BlockAction {
                 return ExecutionResult.error("NPC name parameter is missing.");
             }
             
-            // Resolve parameters
+            
             ParameterResolver resolver = new ParameterResolver(context);
             DataValue resolvedName = resolver.resolve(context, nameValue);
             DataValue resolvedSkin = skinValue != null ? resolver.resolve(context, skinValue) : null;
@@ -68,7 +68,7 @@ public class CreateCustomNPCAction implements BlockAction {
             String name = resolvedName.asString();
             String skin = resolvedSkin != null ? resolvedSkin.asString() : null;
             
-            // Determine spawn location
+            
             Location location;
             if (resolvedX != null && resolvedY != null && resolvedZ != null) {
                 double x = resolvedX.asNumber().doubleValue();
@@ -80,39 +80,39 @@ public class CreateCustomNPCAction implements BlockAction {
                     world = plugin.getServer().getWorld(resolvedWorld.asString());
                 }
                 
-                // Fallback to player's world
+                
                 if (world == null) {
                     world = player.getWorld();
                 }
                 
                 location = new Location(world, x, y, z);
             } else {
-                // Use player's location
+                
                 location = player.getLocation();
             }
             
-            // Get NPC manager
+            
             NPCManager npcManager = plugin.getServiceRegistry().getService(NPCManager.class);
             if (npcManager == null) {
                 return ExecutionResult.error("NPC Manager not available.");
             }
             
-            // Create the NPC
+            
             CustomNPC npc = npcManager.createNPC(name, location);
             if (skin != null && !skin.isEmpty()) {
                 npc.setSkinName(skin);
             }
             
-            // Spawn the NPC
+            
             if (!npc.spawn()) {
                 return ExecutionResult.error("Failed to spawn NPC: " + name);
             }
             
-            // Store NPC reference in variable if specified
+            
             if (resolvedVariable != null && !resolvedVariable.isEmpty()) {
                 String variableName = resolvedVariable.asString();
                 if (variableName != null && !variableName.isEmpty()) {
-                    // Store the NPC's UUID in the variable
+                    
                     context.getPlugin().getServiceRegistry().getVariableManager()
                         .setPlayerVariable(player.getUniqueId(), variableName, 
                                          DataValue.fromObject(npc.getUniqueId().toString()));

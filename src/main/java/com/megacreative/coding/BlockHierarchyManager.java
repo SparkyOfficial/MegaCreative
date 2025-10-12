@@ -24,7 +24,7 @@ public class BlockHierarchyManager implements Listener {
     private static final Logger LOGGER = Logger.getLogger(BlockHierarchyManager.class.getName());
     
     private final Map<Location, CodeBlock> locationToBlock = new HashMap<>();
-    // Shared map with other connection managers
+    
     private Map<Location, CodeBlock> sharedLocationToBlock = new HashMap<>();
     
     /**
@@ -41,13 +41,13 @@ public class BlockHierarchyManager implements Listener {
      * @return The code block at that location, or null if not found
      */
     private CodeBlock getBlockAtLocation(Location location) {
-        // First check our own map
+        
         CodeBlock block = locationToBlock.get(location);
         if (block != null) {
             return block;
         }
         
-        // Then check the shared map
+        
         return sharedLocationToBlock.get(location);
     }
     
@@ -59,16 +59,16 @@ public class BlockHierarchyManager implements Listener {
         CodeBlock codeBlock = event.getCodeBlock();
         Location location = event.getLocation();
         
-        // Skip hierarchy logic for bracket blocks
+        
         if (codeBlock.isBracket()) {
             LOGGER.fine("Skipping hierarchy for bracket block at " + location);
             return;
         }
         
-        // Add block to our tracking
+        
         locationToBlock.put(location, codeBlock);
         
-        // Find parent block and establish parent-child relationship
+        
         CodeBlock parentBlock = findParentBlock(location);
         if (parentBlock != null) {
             parentBlock.addChild(codeBlock);
@@ -85,14 +85,14 @@ public class BlockHierarchyManager implements Listener {
         int childX = childLocation.getBlockX();
         
         if (childX <= 0) {
-            return null; // No parent for blocks at the start of the line
+            return null; 
         }
         
-        // Look for parent in previous lines with less indentation
+        
         for (int parentLine = childLine - 1; parentLine >= 0; parentLine--) {
             int parentZ = DevWorldGenerator.getZForCodeLine(parentLine);
             
-            // Look for blocks with less X coordinate (less indentation)
+            
             for (int parentX = 0; parentX < childX; parentX++) {
                 Location parentLocation = new Location(
                     childLocation.getWorld(), 
@@ -100,7 +100,7 @@ public class BlockHierarchyManager implements Listener {
                     childLocation.getBlockY(), 
                     parentZ
                 );
-                // Use the shared map to find parent blocks
+                
                 CodeBlock parentBlock = getBlockAtLocation(parentLocation);
                 
                 if (parentBlock != null && isControlBlock(parentBlock)) {
@@ -118,8 +118,8 @@ public class BlockHierarchyManager implements Listener {
      * Checks if a block is a control block that can have children
      */
     private boolean isControlBlock(CodeBlock block) {
-        // For now, we'll consider any non-bracket block as potentially having children
-        // In a more sophisticated implementation, this would check block configuration
+        
+        
         return !block.isBracket();
     }
     
@@ -127,14 +127,14 @@ public class BlockHierarchyManager implements Listener {
      * Gets a string representation of a block's location for logging
      */
     private String getLocationString(CodeBlock block) {
-        // Find the location of this block in our map
+        
         for (Map.Entry<Location, CodeBlock> entry : locationToBlock.entrySet()) {
             if (entry.getValue() == block) {
                 Location loc = entry.getKey();
                 return "(" + loc.getBlockX() + ", " + loc.getBlockZ() + ")";
             }
         }
-        // Also check the shared map
+        
         for (Map.Entry<Location, CodeBlock> entry : sharedLocationToBlock.entrySet()) {
             if (entry.getValue() == block) {
                 Location loc = entry.getKey();

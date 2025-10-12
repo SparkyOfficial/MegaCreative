@@ -17,7 +17,7 @@ import org.bukkit.scheduler.BukkitTask;
 import java.util.UUID;
 
 public class RepeatTriggerAction implements BlockAction {
-    // Removed static field and will use RepeatingTaskManager service instead
+    
     
     @Override
     public ExecutionResult execute(CodeBlock block, ExecutionContext context) {
@@ -27,7 +27,7 @@ public class RepeatTriggerAction implements BlockAction {
             return ExecutionResult.error("Player or block is null");
         }
 
-        // Получаем и разрешаем параметры
+        
 
         ParameterResolver resolver = new ParameterResolver(context);
         
@@ -43,8 +43,8 @@ public class RepeatTriggerAction implements BlockAction {
         
         if (rawAction != null) {
             DataValue actionValue = resolver.resolve(context, rawAction);
-            // The value actionValue.asString() assigned to actionStr is never used
-            // String actionStr = actionValue.asString();  // Removed unused assignment
+            
+            
         }
 
         if (ticksStr == null) {
@@ -54,20 +54,20 @@ public class RepeatTriggerAction implements BlockAction {
         try {
             int ticks = Integer.parseInt(ticksStr);
             
-            // Получаем RepeatingTaskManager из ServiceRegistry
+            
             ServiceRegistry serviceRegistry = context.getPlugin().getServiceRegistry();
             RepeatingTaskManager taskManager = serviceRegistry.getRepeatingTaskManager();
             
-            // Останавливаем предыдущую задачу для этого игрока, если она существует
+            
             taskManager.stopRepeatingTask(player.getUniqueId());
             
-            // Создаем уникальный идентификатор для задачи
+            
             UUID taskId = UUID.randomUUID();
             
-            // Запускаем повторяющуюся задачу
+            
             BukkitTask task = Bukkit.getScheduler().runTaskTimer(context.getPlugin(), () -> {
                 try {
-                    // Получаем ScriptEngine из ServiceRegistry
+                    
                     ScriptEngine scriptEngine = context.getPlugin().getServiceRegistry().getService(ScriptEngine.class);
                     if (scriptEngine == null) {
                         player.sendMessage("§cОшибка: не удалось получить ScriptEngine");
@@ -75,11 +75,11 @@ public class RepeatTriggerAction implements BlockAction {
                         return;
                     }
                     
-                    // Выполняем действие
+                    
                     CodeBlock nextBlock = block.getNextBlock();
                     if (nextBlock != null) {
                         ExecutionContext newContext = context.withCurrentBlock(nextBlock, context.getBlockLocation());
-                        // Используем ScriptEngine для выполнения следующего блока
+                        
                         scriptEngine.executeBlockChain(nextBlock, player, "repeat_trigger")
                             .exceptionally(throwable -> {
                                 player.sendMessage("§cОшибка в повторяющемся триггере: " + throwable.getMessage());
@@ -93,7 +93,7 @@ public class RepeatTriggerAction implements BlockAction {
                 }
             }, ticks, ticks);
             
-            // Сохраняем ID задачи через RepeatingTaskManager
+            
             taskManager.startRepeatingTask(player.getUniqueId(), task);
             
             player.sendMessage("§a🔄 Повторяющийся триггер запущен каждые " + ticks + " тиков");
@@ -110,7 +110,7 @@ public class RepeatTriggerAction implements BlockAction {
      */
     @Deprecated
     public static void stopRepeatingTask(UUID playerId) {
-        // Deprecated method - use RepeatingTaskManager service directly
+        
     }
     
     /**
@@ -120,7 +120,7 @@ public class RepeatTriggerAction implements BlockAction {
      */
     @Deprecated
     public static int stopAllRepeatingTasks() {
-        // Deprecated method - use RepeatingTaskManager service directly
+        
         return 0;
     }
     
@@ -130,7 +130,7 @@ public class RepeatTriggerAction implements BlockAction {
      */
     @Deprecated
     public static boolean hasActiveTask(UUID playerId) {
-        // Deprecated method - use RepeatingTaskManager service directly
+        
         return false;
     }
 }

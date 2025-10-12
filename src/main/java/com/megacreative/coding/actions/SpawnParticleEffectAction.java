@@ -19,13 +19,13 @@ import org.bukkit.entity.Player;
 @BlockMeta(id = "spawnParticleEffect", displayName = "§aSpawn Particle Effect", type = BlockType.ACTION)
 public class SpawnParticleEffectAction implements BlockAction {
     
-    // Maximum number of particles that can be spawned at once to prevent lag
+    
     private static final int MAX_PARTICLES = 1000;
-    // Maximum spread value to prevent excessive particle spread
+    
     private static final double MAX_SPREAD = 10.0;
-    // Maximum speed value to prevent particles from moving too fast
+    
     private static final double MAX_SPEED = 5.0;
-    // Maximum offset values
+    
     private static final double MAX_OFFSET = 10.0;
 
     @Override
@@ -40,7 +40,7 @@ public class SpawnParticleEffectAction implements BlockAction {
         }
 
         try {
-            // Get parameters from the block with default values
+            
             DataValue particleValue = block.getParameter("particle");
             DataValue countValue = block.getParameter("count", DataValue.of(10));
             DataValue offsetXValue = block.getParameter("offsetX", DataValue.of(0.5));
@@ -53,7 +53,7 @@ public class SpawnParticleEffectAction implements BlockAction {
                 return ExecutionResult.error("Particle type parameter is missing.");
             }
             
-            // Resolve parameters
+            
             ParameterResolver resolver = new ParameterResolver(context);
             DataValue resolvedParticle = resolver.resolve(context, particleValue);
             DataValue resolvedCount = resolver.resolve(context, countValue);
@@ -70,12 +70,12 @@ public class SpawnParticleEffectAction implements BlockAction {
             String particleType = resolvedParticle.asString().toUpperCase();
             String pattern = resolvedPattern.asString().toLowerCase();
             
-            // Validate particle type
+            
             Particle particle;
             try {
                 particle = Particle.valueOf(particleType);
             } catch (IllegalArgumentException e) {
-                // Try some common aliases
+                
                 switch (particleType) {
                     case "HAPPY":
                     case "VILLAGER":
@@ -94,7 +94,7 @@ public class SpawnParticleEffectAction implements BlockAction {
                 }
             }
             
-            // Validate and sanitize count
+            
             int count;
             try {
                 count = resolvedCount.asNumber().intValue();
@@ -109,7 +109,7 @@ public class SpawnParticleEffectAction implements BlockAction {
                 return ExecutionResult.error("Invalid particle count: " + resolvedCount.asString());
             }
             
-            // Validate and sanitize offsets
+            
             double offsetX, offsetY, offsetZ;
             try {
                 offsetX = Math.abs(resolvedOffsetX.asNumber().doubleValue());
@@ -132,7 +132,7 @@ public class SpawnParticleEffectAction implements BlockAction {
                 return ExecutionResult.error("Invalid offset value: " + e.getMessage());
             }
             
-            // Validate and sanitize speed
+            
             double speed;
             try {
                 speed = Math.abs(resolvedSpeed.asNumber().doubleValue());
@@ -144,13 +144,13 @@ public class SpawnParticleEffectAction implements BlockAction {
                 return ExecutionResult.error("Invalid speed value: " + resolvedSpeed.asString());
             }
             
-            // Determine spawn location
+            
             Location location = context.getBlockLocation() != null ? 
                 context.getBlockLocation() : player.getLocation();
             
-            // Spawn particles based on pattern
+            
             if ("basic".equals(pattern) || count <= 10) {
-                // Basic particle spawning
+                
                 location.getWorld().spawnParticle(
                     particle,
                     location,
@@ -161,7 +161,7 @@ public class SpawnParticleEffectAction implements BlockAction {
                     speed
                 );
             } else {
-                // Advanced patterns for larger counts
+                
                 spawnAdvancedPattern(player, location, particle, count, offsetX, offsetY, offsetZ, speed, pattern);
             }
             
@@ -191,7 +191,7 @@ public class SpawnParticleEffectAction implements BlockAction {
                 spawnBurstPattern(player, center, particle, count, offsetX, speed);
                 break;
             default:
-                // Auto-select pattern based on count
+                
                 if (count <= 20) {
                     spawnCircularPattern(player, center, particle, count, offsetX, speed);
                 } else if (count <= 50) {

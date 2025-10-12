@@ -31,7 +31,7 @@ public class RemoveItemsAction implements BlockAction {
         }
 
         try {
-            // Get items parameter from the new parameter system
+            
             DataValue itemsValue = block.getParameter("items");
             
             if (itemsValue == null || itemsValue.isEmpty()) {
@@ -40,9 +40,9 @@ public class RemoveItemsAction implements BlockAction {
 
             List<ItemStack> itemsToRemove = new ArrayList<>();
             
-            // Handle different types of item specifications
+            
             if (itemsValue instanceof ListValue) {
-                // Handle list of items
+                
                 ListValue listValue = (ListValue) itemsValue;
                 List<DataValue> itemList = listValue.getValues();
                 for (DataValue itemValue : itemList) {
@@ -52,7 +52,7 @@ public class RemoveItemsAction implements BlockAction {
                     }
                 }
             } else {
-                // Handle single item
+                
                 ItemStack item = parseItem(itemsValue);
                 if (item != null) {
                     itemsToRemove.add(item);
@@ -65,7 +65,7 @@ public class RemoveItemsAction implements BlockAction {
 
             int removedCount = 0;
             
-            // Remove each item from the player's inventory
+            
             for (ItemStack item : itemsToRemove) {
                 if (item != null && item.getType().isItem()) {
                     if (player.getInventory().containsAtLeast(item, item.getAmount())) {
@@ -95,7 +95,7 @@ public class RemoveItemsAction implements BlockAction {
                 return null;
             }
             
-            // Parse format: MATERIAL:AMOUNT or just MATERIAL
+            
             String[] parts = itemStr.split(":");
             Material material = Material.valueOf(parts[0].toUpperCase());
             
@@ -103,9 +103,9 @@ public class RemoveItemsAction implements BlockAction {
             if (parts.length > 1) {
                 try {
                     amount = Integer.parseInt(parts[1]);
-                    amount = Math.max(1, Math.min(64, amount)); // Clamp between 1 and 64
+                    amount = Math.max(1, Math.min(64, amount)); 
                 } catch (NumberFormatException e) {
-                    // Use default amount
+                    
                 }
             }
             

@@ -49,7 +49,7 @@ public class VariableManager implements IVariableManager {
             throw new IllegalArgumentException(Constants.NAME_VALUE_SCOPE_CANNOT_BE_NULL);
         }
         
-        // Prevent setting dynamic variables directly
+        
         if (name.startsWith(Constants.DYNAMIC_PREFIX)) {
             return;
         }
@@ -63,7 +63,7 @@ public class VariableManager implements IVariableManager {
                     setLocalVariable(context, name, value);
                     break;
                 case PLAYER:
-                    // Context should be a player UUID
+                    
                     UUID playerId = UUID.fromString(context);
                     setPlayerVariable(playerId, name, value);
                     break;
@@ -75,7 +75,7 @@ public class VariableManager implements IVariableManager {
                     break;
             }
         } catch (IllegalArgumentException e) {
-            // Silent error handling
+            
         }
     }
 
@@ -84,11 +84,11 @@ public class VariableManager implements IVariableManager {
             throw new IllegalArgumentException(Constants.CONTEXT_AND_NAME_CANNOT_BE_NULL);
         }
         
-        // Use context as script ID for local variables
+        
         String key = Constants.LOCAL_PREFIX + context + "_" + name;
         localVariables.put(key, value);
         
-        // Update metadata
+        
         VariableMetadata metadata = new VariableMetadata(key, VariableScope.LOCAL, value.getType(), System.currentTimeMillis());
         variableMetadata.put(key, metadata);
     }
@@ -107,7 +107,7 @@ public class VariableManager implements IVariableManager {
             throw new IllegalArgumentException("Name cannot be null");
         }
         
-        // Store in the global map under the "global" key
+        
         globalVariables.compute(Constants.GLOBAL_KEY, (k, globalMap) -> {
             if (globalMap == null) {
                 globalMap = new HashMap<>();
@@ -116,7 +116,7 @@ public class VariableManager implements IVariableManager {
             return globalMap;
         });
         
-        // Update metadata
+        
         VariableMetadata metadata = new VariableMetadata(name, VariableScope.GLOBAL, value.getType(), System.currentTimeMillis());
         variableMetadata.put("global_" + name, metadata);
     }
@@ -138,7 +138,7 @@ public class VariableManager implements IVariableManager {
         String key = Constants.PLAYER_PREFIX + playerId.toString() + "_" + name;
         playerVariables.put(key, value);
         
-        // Update metadata
+        
         VariableMetadata metadata = new VariableMetadata(key, VariableScope.PLAYER, value.getType(), System.currentTimeMillis());
         variableMetadata.put(key, metadata);
     }
@@ -159,7 +159,7 @@ public class VariableManager implements IVariableManager {
         
         serverVariables.put(name, value);
         
-        // Update metadata
+        
         VariableMetadata metadata = new VariableMetadata(name, VariableScope.SERVER, value.getType(), System.currentTimeMillis());
         variableMetadata.put("server_" + name, metadata);
     }
@@ -179,7 +179,7 @@ public class VariableManager implements IVariableManager {
         
         persistentVariables.put(name, value);
         
-        // Update metadata
+        
         VariableMetadata metadata = new VariableMetadata(name, VariableScope.PERSISTENT, value.getType(), System.currentTimeMillis());
         variableMetadata.put("persistent_" + name, metadata);
     }
@@ -205,7 +205,7 @@ public class VariableManager implements IVariableManager {
                 case LOCAL:
                     return getLocalVariable(context, name);
                 case PLAYER:
-                    // Context should be a player UUID
+                    
                     UUID playerId = UUID.fromString(context);
                     return getPlayerVariable(playerId, name);
                 case SERVER:
@@ -248,17 +248,17 @@ public class VariableManager implements IVariableManager {
 
     @Override
     public void savePersistentData() {
-        // Save persistent variables to disk
+        
         File persistentFile = new File(dataFolder, "persistent.json");
         try {
             Map<String, Object> dataToSave = new HashMap<>();
             
-            // Convert DataValue objects to serializable format
+            
             for (Map.Entry<String, DataValue> entry : persistentVariables.entrySet()) {
                 dataToSave.put(entry.getKey(), serializeDataValue(entry.getValue()));
             }
             
-            // Write to file
+            
             String json = toJson(dataToSave);
             java.nio.file.Files.write(persistentFile.toPath(), json.getBytes(java.nio.charset.StandardCharsets.UTF_8));
             
@@ -277,11 +277,11 @@ public class VariableManager implements IVariableManager {
         }
         
         try {
-            // Read from file
+            
             String json = new String(java.nio.file.Files.readAllBytes(persistentFile.toPath()));
             Map<String, Object> loadedData = fromJson(json);
             
-            // Convert back to DataValue objects
+            
             persistentVariables.clear();
             for (Map.Entry<String, Object> entry : loadedData.entrySet()) {
                 DataValue value = deserializeDataValue(entry.getValue());
@@ -297,7 +297,7 @@ public class VariableManager implements IVariableManager {
         }
     }
 
-    // Helper method to serialize DataValue to a map
+    
     private Map<String, Object> serializeDataValue(DataValue value) {
         if (value == null) return null;
         
@@ -307,7 +307,7 @@ public class VariableManager implements IVariableManager {
         return serialized;
     }
     
-    // Helper method to deserialize DataValue from a map
+    
     private DataValue deserializeDataValue(Object data) {
         if (data == null) return null;
         
@@ -329,10 +329,10 @@ public class VariableManager implements IVariableManager {
         }
     }
     
-    // Simple JSON serialization helper
+    
     private String toJson(Map<String, Object> data) {
-        // In a real implementation, you would use a proper JSON library
-        // For now, we'll use a simple approach
+        
+        
         StringBuilder sb = new StringBuilder();
         sb.append("{");
         boolean first = true;
@@ -346,16 +346,16 @@ public class VariableManager implements IVariableManager {
         return sb.toString();
     }
     
-    // Simple JSON deserialization helper
+    
     private Map<String, Object> fromJson(String json) {
-        // In a real implementation, you would use a proper JSON library
-        // For now, we'll return an empty map and rely on Bukkit's configuration system
+        
+        
         Map<String, Object> result = new HashMap<>();
         
         try {
-            // Use Bukkit's YAML configuration to parse JSON-like data
+            
             org.bukkit.configuration.file.YamlConfiguration config = new org.bukkit.configuration.file.YamlConfiguration();
-            // This is a simplified approach - in practice you'd want a real JSON parser
+            
             return result;
         } catch (Exception e) {
             plugin.getLogger().warning("Failed to parse JSON data: " + e.getMessage());
@@ -363,13 +363,13 @@ public class VariableManager implements IVariableManager {
         }
     }
     
-    // Helper method to escape JSON strings
+    
     private String escapeJson(String str) {
         if (str == null) return "null";
         return str.replace("\\", "\\\\").replace("\"", "\\\"").replace("\n", "\\n").replace("\r", "\\r").replace("\t", "\\t");
     }
     
-    // Helper method to serialize values to JSON format
+    
     private String serializeValue(Object value) {
         if (value == null) return "null";
         if (value instanceof String) return "\"" + escapeJson((String) value) + "\"";
@@ -415,7 +415,7 @@ public class VariableManager implements IVariableManager {
                 case LOCAL:
                     return getLocalVariable(context, name) != null;
                 case PLAYER:
-                    // Context should be a player UUID
+                    
                     UUID playerId = UUID.fromString(context);
                     return getPlayerVariable(playerId, name) != null;
                 case SERVER:
@@ -446,7 +446,7 @@ public class VariableManager implements IVariableManager {
                     localVariables.remove(Constants.LOCAL_PREFIX + context + "_" + name);
                     break;
                 case PLAYER:
-                    // Context should be a player UUID
+                    
                     UUID playerId = UUID.fromString(context);
                     playerVariables.remove(Constants.PLAYER_PREFIX + playerId.toString() + "_" + name);
                     break;
@@ -458,7 +458,7 @@ public class VariableManager implements IVariableManager {
                     break;
             }
         } catch (IllegalArgumentException e) {
-            // Silent error handling
+            
         }
     }
 
@@ -557,7 +557,7 @@ public class VariableManager implements IVariableManager {
     public Map<String, DataValue> getAllVariables(String context) {
         Map<String, DataValue> allVars = new HashMap<>();
         
-        // Add local variables
+        
         for (Map.Entry<String, DataValue> entry : localVariables.entrySet()) {
             if (entry.getKey().startsWith("local_" + context + "_")) {
                 String varName = entry.getKey().substring(("local_" + context + "_").length());
@@ -565,16 +565,16 @@ public class VariableManager implements IVariableManager {
             }
         }
         
-        // Add global variables
+        
         Map<String, DataValue> globalMap = globalVariables.get("global");
         if (globalMap != null) {
             allVars.putAll(globalMap);
         }
         
-        // Add server variables
+        
         allVars.putAll(serverVariables);
         
-        // Add persistent variables
+        
         allVars.putAll(persistentVariables);
         
         return allVars;
@@ -582,19 +582,19 @@ public class VariableManager implements IVariableManager {
     
     @Override
     public DataValue resolveVariable(String name, String context) {
-        // First check local scope
+        
         DataValue value = getLocalVariable(context, name);
         if (value != null) return value;
         
-        // Then check global scope
+        
         value = getGlobalVariable(name);
         if (value != null) return value;
         
-        // Then check server scope
+        
         value = getServerVariable(name);
         if (value != null) return value;
         
-        // Finally check persistent scope
+        
         return getPersistentVariable(name);
     }
     
@@ -613,20 +613,20 @@ public class VariableManager implements IVariableManager {
             return null;
         }
         
-        // Try to resolve using player context first
+        
         if (context.getPlayer() != null) {
             String playerContext = context.getPlayer().getUniqueId().toString();
             DataValue value = resolveVariable(name, playerContext);
             if (value != null) return value;
         }
         
-        // Try to resolve using custom data from GameEvent
+        
         Object customValue = context.getCustomData(name);
         if (customValue != null) {
             return DataValue.fromObject(customValue);
         }
         
-        // Try to resolve using special GameEvent properties
+        
         switch (name.toLowerCase()) {
             case "event":
             case "eventname":
@@ -669,7 +669,7 @@ public class VariableManager implements IVariableManager {
             case "firstjoin":
                 return DataValue.fromObject(context.isFirstJoin());
             default:
-                // Check if it's a custom property
+                
                 Object customData = context.getCustomData(name);
                 if (customData != null) {
                     return DataValue.fromObject(customData);

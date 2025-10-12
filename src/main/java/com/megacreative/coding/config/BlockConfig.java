@@ -48,7 +48,7 @@ public class BlockConfig implements ConfigurationSerializable {
         this.lore = section.getStringList("lore");
         this.enabled = section.getBoolean("enabled", true);
         
-        // Load parameters
+        
         if (section.isConfigurationSection("parameters")) {
             ConfigurationSection paramsSection = section.getConfigurationSection("parameters");
             for (String key : paramsSection.getKeys(false)) {
@@ -56,7 +56,7 @@ public class BlockConfig implements ConfigurationSerializable {
             }
         }
         
-        // Load required permissions
+        
         if (section.isList("required-permissions")) {
             this.requiredPermissions = section.getStringList("required-permissions");
         }
@@ -87,7 +87,7 @@ public class BlockConfig implements ConfigurationSerializable {
         
         section.set("enabled", enabled);
         
-        // Save parameters
+        
         if (parameters != null && !parameters.isEmpty()) {
             ConfigurationSection paramsSection = section.createSection("parameters");
             for (Map.Entry<String, Object> entry : parameters.entrySet()) {
@@ -95,7 +95,7 @@ public class BlockConfig implements ConfigurationSerializable {
             }
         }
         
-        // Save required permissions
+        
         if (requiredPermissions != null && !requiredPermissions.isEmpty()) {
             section.set("required-permissions", requiredPermissions);
         }
@@ -133,7 +133,7 @@ public class BlockConfig implements ConfigurationSerializable {
         return result;
     }
     
-    // Getters and Setters
+    
     
     public String getId() {
         return id;

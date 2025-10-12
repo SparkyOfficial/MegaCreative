@@ -20,12 +20,12 @@ public class RandomNumberAction implements BlockAction {
     @Override
     public ExecutionResult execute(CodeBlock block, ExecutionContext context) {
         try {
-            // Get parameters directly from block parameters (new system)
+            
             String minValue = block.getParameterValue("minValue", String.class);
             String maxValue = block.getParameterValue("maxValue", String.class);
             String targetVariable = block.getParameterValue("targetVariable", String.class);
 
-            // Parse parameters with defaults
+            
             int min = 1;
             int max = 100;
 
@@ -44,10 +44,10 @@ public class RandomNumberAction implements BlockAction {
                 return ExecutionResult.error("Target variable not specified");
             }
 
-            // Generate random number
+            
             int randomNumber = RANDOM.nextInt(max - min + 1) + min;
 
-            // 🎆 ENHANCED: Actually set the variable using VariableManager
+            
             Player player = context.getPlayer();
             if (player == null) {
                 return ExecutionResult.error("No player found in execution context");
@@ -58,7 +58,7 @@ public class RandomNumberAction implements BlockAction {
                 return ExecutionResult.error("Variable manager not available");
             }
 
-            // Set the variable for the player
+            
             DataValue dataValue = DataValue.of(String.valueOf(randomNumber));
             variableManager.setPlayerVariable(player.getUniqueId(), targetVariable, dataValue);
 

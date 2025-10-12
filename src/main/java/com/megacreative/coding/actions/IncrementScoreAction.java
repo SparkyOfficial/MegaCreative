@@ -25,7 +25,7 @@ public class IncrementScoreAction implements BlockAction {
         }
 
         try {
-            // Get parameters from the new parameter system
+            
             DataValue keyValue = block.getParameter("key");
             DataValue incrementValue = block.getParameter("increment");
             
@@ -33,12 +33,12 @@ public class IncrementScoreAction implements BlockAction {
                 return ExecutionResult.error("No score key provided");
             }
 
-            // Resolve any placeholders in the parameters
+            
             ParameterResolver resolver = new ParameterResolver(context);
             DataValue resolvedKey = resolver.resolve(context, keyValue);
             DataValue resolvedIncrement = resolver.resolve(context, incrementValue);
             
-            // Parse parameters
+            
             String key = resolvedKey.asString();
             String incrementStr = resolvedIncrement.asString();
             
@@ -46,8 +46,8 @@ public class IncrementScoreAction implements BlockAction {
                 return ExecutionResult.error("Invalid score key");
             }
 
-            // Parse the increment value as a number
-            int increment = 1; // Default increment
+            
+            int increment = 1; 
             if (incrementStr != null && !incrementStr.isEmpty()) {
                 try {
                     increment = Integer.parseInt(incrementStr);
@@ -56,7 +56,7 @@ public class IncrementScoreAction implements BlockAction {
                 }
             }
 
-            // Increment the score using the Bukkit scoreboard system
+            
             Scoreboard scoreboard = player.getScoreboard();
             if (scoreboard == null) {
                 return ExecutionResult.error("No scoreboard found for player");

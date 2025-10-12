@@ -29,18 +29,18 @@ public class ReferenceSystemEventManager {
     private final ReferenceSystemEventsListener standardEventsListener;
     private final ReferenceSystemCustomEventsListener customEventsListener;
     
-    // Region tracking for enter/leave events
+    
     private final Map<UUID, Set<String>> playerRegions = new ConcurrentHashMap<>();
     private final Map<String, RegionData> definedRegions = new ConcurrentHashMap<>();
     
-    // Variable monitoring
+    
     private final Map<UUID, Map<String, Object>> playerVariables = new ConcurrentHashMap<>();
     
-    // Timer system
+    
     private final Map<String, BukkitTask> activeTimers = new ConcurrentHashMap<>();
     private final Map<String, TimerData> timerData = new ConcurrentHashMap<>();
     
-    // Event analytics
+    
     private final Map<String, Long> eventCounts = new ConcurrentHashMap<>();
     private final Map<String, Long> eventTotalTime = new ConcurrentHashMap<>();
     
@@ -49,19 +49,19 @@ public class ReferenceSystemEventManager {
         this.standardEventsListener = new ReferenceSystemEventsListener(plugin);
         this.customEventsListener = new ReferenceSystemCustomEventsListener(plugin);
         
-        // Register listeners
+        
         Bukkit.getPluginManager().registerEvents(standardEventsListener, plugin);
         Bukkit.getPluginManager().registerEvents(customEventsListener, plugin);
         
-        // Start region monitoring task
+        
         startRegionMonitoring();
         
         plugin.getLogger().info("🎆 Reference System Event Manager initialized with comprehensive event coverage");
     }
     
-    // ============================================================================
-    // REGION MANAGEMENT
-    // ============================================================================
+    
+    
+    
     
     /**
      * Define a new region for enter/leave event detection
@@ -77,7 +77,7 @@ public class ReferenceSystemEventManager {
      */
     public void removeRegion(String regionName) {
         definedRegions.remove(regionName);
-        // Remove all players from this region
+        
         playerRegions.values().forEach(regions -> regions.remove(regionName));
         plugin.getLogger().info("🎆 Removed region: " + regionName);
     }
@@ -103,7 +103,7 @@ public class ReferenceSystemEventManager {
             for (Player player : Bukkit.getOnlinePlayers()) {
                 checkPlayerRegions(player);
             }
-        }, 20L, 20L); // Check every second
+        }, 20L, 20L); 
     }
     
     /**
@@ -116,12 +116,12 @@ public class ReferenceSystemEventManager {
         
         Location playerLoc = player.getLocation();
         
-        // Check all defined regions
+        
         for (String regionName : definedRegions.keySet()) {
             if (isLocationInRegion(playerLoc, regionName)) {
                 newRegions.add(regionName);
                 
-                // If player wasn't in this region before, fire enter event
+                
                 if (!currentRegions.contains(regionName)) {
                     PlayerEnterRegionEvent event = new PlayerEnterRegionEvent(player, regionName, playerLoc);
                     Bukkit.getPluginManager().callEvent(event);
@@ -129,7 +129,7 @@ public class ReferenceSystemEventManager {
             }
         }
         
-        // Check for regions the player left
+        
         for (String regionName : currentRegions) {
             if (!newRegions.contains(regionName)) {
                 PlayerLeaveRegionEvent event = new PlayerLeaveRegionEvent(player, regionName, playerLoc);
@@ -137,13 +137,13 @@ public class ReferenceSystemEventManager {
             }
         }
         
-        // Update player's current regions
+        
         playerRegions.put(playerId, newRegions);
     }
     
-    // ============================================================================
-    // VARIABLE MONITORING
-    // ============================================================================
+    
+    
+    
     
     /**
      * Monitor a variable for changes
@@ -156,7 +156,7 @@ public class ReferenceSystemEventManager {
         if (!Objects.equals(oldValue, currentValue)) {
             variables.put(variableName, currentValue);
             
-            // Fire variable change event
+            
             PlayerVariableChangeEvent event = new PlayerVariableChangeEvent(player, variableName, oldValue, currentValue);
             Bukkit.getPluginManager().callEvent(event);
         }
@@ -176,26 +176,26 @@ public class ReferenceSystemEventManager {
         playerVariables.remove(player.getUniqueId());
     }
     
-    // ============================================================================
-    // TIMER SYSTEM
-    // ============================================================================
+    
+    
+    
     
     /**
      * Start a timer that will fire an event when it expires
      */
     public void startTimer(Player player, String timerName, long delayTicks, Object timerData) {
-        // Cancel existing timer with same name
+        
         stopTimer(timerName);
         
         TimerData data = new TimerData(player, timerName, delayTicks, timerData);
         this.timerData.put(timerName, data);
         
         BukkitTask task = Bukkit.getScheduler().runTaskLater(plugin, () -> {
-            // Fire timer expire event
+            
             TimerExpireEvent event = new TimerExpireEvent(player, timerName, delayTicks, timerData);
             Bukkit.getPluginManager().callEvent(event);
             
-            // Clean up
+            
             activeTimers.remove(timerName);
             this.timerData.remove(timerName);
         }, delayTicks);
@@ -231,13 +231,13 @@ public class ReferenceSystemEventManager {
         if (data == null) return -1;
         
         long elapsed = System.currentTimeMillis() - data.startTime;
-        long elapsedTicks = elapsed / 50; // Convert to ticks (20 TPS)
+        long elapsedTicks = elapsed / 50; 
         return Math.max(0, data.duration - elapsedTicks);
     }
     
-    // ============================================================================
-    // CUSTOM EVENT TRIGGERING
-    // ============================================================================
+    
+    
+    
     
     /**
      * Trigger a custom action event
@@ -271,9 +271,9 @@ public class ReferenceSystemEventManager {
         Bukkit.getPluginManager().callEvent(event);
     }
     
-    // ============================================================================
-    // EVENT ANALYTICS
-    // ============================================================================
+    
+    
+    
     
     /**
      * Track event execution statistics
@@ -314,20 +314,20 @@ public class ReferenceSystemEventManager {
         eventTotalTime.clear();
     }
     
-    // ============================================================================
-    // CLEANUP AND SHUTDOWN
-    // ============================================================================
+    
+    
+    
     
     /**
      * Cleanup resources
      */
     public void shutdown() {
-        // Cancel all active timers
+        
         activeTimers.values().forEach(BukkitTask::cancel);
         activeTimers.clear();
         timerData.clear();
         
-        // Clear all tracking data
+        
         playerRegions.clear();
         playerVariables.clear();
         definedRegions.clear();
@@ -339,13 +339,13 @@ public class ReferenceSystemEventManager {
      * Refresh event caches
      */
     public void refreshEventCaches() {
-        // Note: These methods don't exist in the listeners, so we'll just log a message
+        
         plugin.getLogger().info("Refreshing event caches for Reference System Event Manager");
     }
     
-    // ============================================================================
-    // HELPER CLASSES
-    // ============================================================================
+    
+    
+    
     
     /**
      * Region data structure

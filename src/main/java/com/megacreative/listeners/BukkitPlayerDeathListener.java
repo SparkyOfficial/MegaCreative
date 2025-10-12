@@ -20,13 +20,13 @@ public class BukkitPlayerDeathListener implements Listener {
     
     @EventHandler
     public void onPlayerDeath(PlayerDeathEvent bukkitEvent) {
-        // Create our custom event
+        
         MegaPlayerDeathEvent internalEvent = new MegaPlayerDeathEvent(
             bukkitEvent.getEntity(),
             bukkitEvent.getDeathMessage()
         );
         
-        // Publish it to our event system
+        
         plugin.getServer().getPluginManager().callEvent(internalEvent);
     }
 }

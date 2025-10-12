@@ -29,7 +29,7 @@ public class SetItemInSlotAction implements BlockAction {
     @Override
     public ExecutionResult execute(CodeBlock block, ExecutionContext context) {
         try {
-            // Get parameters
+            
             DataValue menuVariableValue = block.getParameter("menuVariable");
             DataValue slotValue = block.getParameter("slot");
             DataValue itemValue = block.getParameter("item");
@@ -46,7 +46,7 @@ public class SetItemInSlotAction implements BlockAction {
                 return ExecutionResult.error("Menu variable name cannot be empty");
             }
             
-            // Get the GUI inventory from the global variable
+            
             VariableManager variableManager = plugin.getServiceRegistry().getVariableManager();
             if (variableManager == null) {
                 return ExecutionResult.error("Variable manager not available");
@@ -63,12 +63,12 @@ public class SetItemInSlotAction implements BlockAction {
             
             CreateMenuAction.GUIInventory guiInventory = (CreateMenuAction.GUIInventory) menuValue.getValue();
             
-            // Validate slot
+            
             if (slot < 0 || slot >= guiInventory.getInventory().getSize()) {
                 return ExecutionResult.error("Invalid slot number: " + slot + ". Must be between 0 and " + (guiInventory.getInventory().getSize() - 1));
             }
             
-            // Create or modify the item
+            
             ItemStack itemStack = null;
             if (itemObj instanceof ItemStack) {
                 itemStack = (ItemStack) itemObj;
@@ -78,7 +78,7 @@ public class SetItemInSlotAction implements BlockAction {
                 return ExecutionResult.error("Invalid item type: " + (itemObj != null ? itemObj.getClass().getSimpleName() : "null"));
             }
             
-            // Set item title if provided
+            
             DataValue titleValue = block.getParameter("title");
             if (titleValue != null && !titleValue.isEmpty()) {
                 String title = titleValue.asString();
@@ -91,7 +91,7 @@ public class SetItemInSlotAction implements BlockAction {
                 }
             }
             
-            // Set item lore if provided
+            
             DataValue loreValue = block.getParameter("lore");
             if (loreValue != null && !loreValue.isEmpty() && loreValue.getValue() instanceof java.util.List) {
                 java.util.List<?> loreList = (java.util.List<?>) loreValue.getValue();
@@ -110,7 +110,7 @@ public class SetItemInSlotAction implements BlockAction {
                 }
             }
             
-            // Set the item in the slot
+            
             guiInventory.setSlotItem(slot, itemStack);
             
             return ExecutionResult.success("Set item in slot " + slot + " of menu '" + guiInventory.getTitle() + "'");

@@ -10,7 +10,7 @@ import org.bukkit.inventory.ItemStack;
  * Based on YottaCreative's ActivatorType but adapted for MegaCreative
  */
 public enum ActivatorType {
-    // Player events
+    
     PLAYER_JOIN("Player Join", Material.OAK_DOOR, "Triggers when a player joins the world"),
     PLAYER_QUIT("Player Quit", Material.IRON_DOOR, "Triggers when a player leaves the world"),
     PLAYER_RIGHT_CLICK("Right Click", Material.WOODEN_SWORD, "Triggers when a player right-clicks"),
@@ -37,7 +37,7 @@ public enum ActivatorType {
     INVENTORY_CLICK("Inventory Click", Material.CHEST, "Triggers when a player clicks in an inventory"),
     ENTITY_DAMAGE("Entity Damage", Material.DIAMOND_SWORD, "Triggers when an entity takes damage"),
     
-    // Game events
+    
     GAME_LOOP("Game Loop", Material.EMERALD_BLOCK, "Triggers repeatedly at specified intervals"),
     FUNCTION("Function", Material.LAPIS_BLOCK, "Represents a callable function"),
     TICK("Tick", Material.CLOCK, "Triggers on game ticks");
@@ -94,7 +94,7 @@ public enum ActivatorType {
             case CHAT:
                 return new ChatActivator(plugin, world);
             default:
-                // Default to a generic activator for other types
+                
                 return new GenericActivator(plugin, world, this);
         }
     }

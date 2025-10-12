@@ -21,13 +21,13 @@ public class BlockGroupManager {
     private final Plugin plugin;
     private final IPlayerManager playerManager;
     
-    // Active block groups by world
+    
     private final Map<String, Map<UUID, BlockGroup>> worldGroups = new ConcurrentHashMap<>();
     
-    // Advanced block groups
+    
     private final Map<String, Map<UUID, AdvancedBlockGroup>> worldAdvancedGroups = new ConcurrentHashMap<>();
     
-    // Player selection state for creating groups
+    
     private final Map<UUID, GroupSelectionState> playerSelections = new ConcurrentHashMap<>();
     
     public BlockGroupManager(Plugin plugin, IPlayerManager playerManager) {
@@ -55,10 +55,10 @@ public class BlockGroupManager {
         }
         
         if (state.getSelectedBlocks().containsKey(blockLocation)) {
-            // Deselect block
+            
             state.getSelectedBlocks().remove(blockLocation);
         } else {
-            // Select block
+            
             state.getSelectedBlocks().put(blockLocation, codeBlock);
         }
     }
@@ -139,14 +139,14 @@ public class BlockGroupManager {
      * Handles click on collapsed group display
      */
     public void handleCollapsedGroupClick(Player player, Location location) {
-        // Find group at this location and expand it
+        
         String worldName = player.getWorld().getName();
         Map<UUID, BlockGroup> groups = worldGroups.get(worldName);
         if (groups == null) return;
         
         for (BlockGroup group : groups.values()) {
             if (group.getOwner().equals(player.getUniqueId()) && group.isCollapsed()) {
-                // Simple location-based matching - can be enhanced
+                
                 expandGroup(player, group.getName());
                 break;
             }
@@ -177,7 +177,7 @@ public class BlockGroupManager {
             return;
         }
         
-        // Create the group
+        
         BlockGroup group = new BlockGroup(
             UUID.randomUUID(),
             groupName != null ? groupName : "Group " + (getPlayerGroupCount(player) + 1),
@@ -186,12 +186,12 @@ public class BlockGroupManager {
             calculateGroupBounds(state.getSelectedBlocks().keySet())
         );
         
-        // Add to world groups
+        
         String worldName = player.getWorld().getName();
         worldGroups.computeIfAbsent(worldName, k -> new ConcurrentHashMap<>())
                   .put(group.getId(), group);
         
-        // Clear selection
+        
         clearSelection(player);
         
         log.info("Player " + player.getName() + " created group: " + group.getName() + 
@@ -208,7 +208,7 @@ public class BlockGroupManager {
             return;
         }
         
-        // Create the advanced group
+        
         AdvancedBlockGroup group = new AdvancedBlockGroup(
             UUID.randomUUID(),
             groupName != null ? groupName : "Group " + (getPlayerGroupCount(player) + 1),
@@ -219,12 +219,12 @@ public class BlockGroupManager {
         
         group.setExecutionMode(executionMode != null ? executionMode : AdvancedBlockGroup.ExecutionMode.SEQUENTIAL);
         
-        // Add to world advanced groups
+        
         String worldName = player.getWorld().getName();
         worldAdvancedGroups.computeIfAbsent(worldName, k -> new ConcurrentHashMap<>())
                           .put(group.getId(), group);
         
-        // Clear selection
+        
         clearSelection(player);
         
         log.info("Player " + player.getName() + " created advanced group: " + group.getName() + 
@@ -240,7 +240,7 @@ public class BlockGroupManager {
             return null;
         }
         
-        // Create advanced group from regular group
+        
         AdvancedBlockGroup advancedGroup = new AdvancedBlockGroup(
             regularGroup.getId(),
             regularGroup.getName(),
@@ -249,17 +249,17 @@ public class BlockGroupManager {
             regularGroup.getBounds()
         );
         
-        // Copy properties
+        
         advancedGroup.setCollapsed(regularGroup.isCollapsed());
         
-        // Replace in world groups
+        
         String worldName = player.getWorld().getName();
         Map<UUID, BlockGroup> groups = worldGroups.get(worldName);
         if (groups != null) {
             groups.remove(regularGroup.getId());
         }
         
-        // Add to advanced groups
+        
         worldAdvancedGroups.computeIfAbsent(worldName, k -> new ConcurrentHashMap<>())
                           .put(advancedGroup.getId(), advancedGroup);
         
@@ -353,7 +353,7 @@ public class BlockGroupManager {
         playerSelections.clear();
     }
     
-    // Private helper methods
+    
     
     private void clearSelection(Player player) {
         playerSelections.remove(player.getUniqueId());
@@ -389,7 +389,7 @@ public class BlockGroupManager {
         return new GroupBounds(minX, minY, minZ, maxX, maxY, maxZ);
     }
     
-    // Data classes
+    
     
     public static class GroupSelectionState {
         private final Map<Location, CodeBlock> selectedBlocks = new HashMap<>();

@@ -24,11 +24,11 @@ public class WorldTimeCondition implements BlockCondition {
         }
 
         try {
-            // Get parameters from the new parameter system
+            
             DataValue timeValue = block.getParameter("time");
             DataValue operatorValue = block.getParameter("operator");
             
-            // Parse time parameter
+            
             long worldTime = 0;
             if (timeValue != null && !timeValue.isEmpty()) {
                 try {
@@ -39,7 +39,7 @@ public class WorldTimeCondition implements BlockCondition {
                 }
             }
 
-            // Resolve any placeholders in the time
+            
             ParameterResolver resolver = new ParameterResolver(context);
             DataValue resolvedTime = resolver.resolve(context, DataValue.of(String.valueOf(worldTime)));
             
@@ -51,7 +51,7 @@ public class WorldTimeCondition implements BlockCondition {
                 time = 0;
             }
 
-            // Parse operator parameter (default to "equal")
+            
             String operator = "equal";
             if (operatorValue != null && !operatorValue.isEmpty()) {
                 DataValue resolvedOperator = resolver.resolve(context, operatorValue);
@@ -59,10 +59,10 @@ public class WorldTimeCondition implements BlockCondition {
             }
             operator = operator != null && !operator.isEmpty() ? operator : "equal";
 
-            // Get the current world time
+            
             long currentWorldTime = player.getWorld().getTime();
 
-            // Compare based on operator
+            
             switch (operator.toLowerCase()) {
                 case "equal":
                 case "equals":
@@ -87,7 +87,7 @@ public class WorldTimeCondition implements BlockCondition {
                     return currentWorldTime == time;
             }
         } catch (Exception e) {
-            // If there's an error, return false
+            
             context.getPlugin().getLogger().warning("Error in WorldTimeCondition: " + e.getMessage());
             return false;
         }

@@ -111,7 +111,7 @@ public abstract class Activator {
     public void execute(com.megacreative.coding.events.GameEvent gameEvent, 
                        int stackCounter, 
                        AtomicInteger callCounter) {
-        // Use the player from the game event as the default entity
+        
         List<Entity> entities = new java.util.ArrayList<>();
         if (gameEvent.getPlayer() != null) {
             entities.add(gameEvent.getPlayer());

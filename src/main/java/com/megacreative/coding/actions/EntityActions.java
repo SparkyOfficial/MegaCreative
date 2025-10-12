@@ -31,7 +31,7 @@ public class EntityActions implements BlockAction {
     @Override
     public ExecutionResult execute(CodeBlock block, ExecutionContext context) {
         try {
-            // Get action type
+            
             DataValue actionValue = block.getParameter("action");
             if (actionValue == null) {
                 return ExecutionResult.error("Action parameter is required");
@@ -78,7 +78,7 @@ public class EntityActions implements BlockAction {
      */
     private ExecutionResult spawnEntity(CodeBlock block, ExecutionContext context, ParameterResolver resolver) {
         try {
-            // Get entity type
+            
             DataValue entityTypeValue = block.getParameter("entityType");
             if (entityTypeValue == null) {
                 return ExecutionResult.error("Entity type parameter is required");
@@ -92,16 +92,16 @@ public class EntityActions implements BlockAction {
                 return ExecutionResult.error("Invalid entity type: " + entityTypeStr);
             }
             
-            // Get location
+            
             Location location = getTargetLocation(block, context, resolver);
             if (location == null || location.getWorld() == null) {
                 return ExecutionResult.error("Invalid location for entity spawn");
             }
             
-            // Spawn the entity
+            
             Entity entity = location.getWorld().spawnEntity(location, entityType);
             if (entity != null) {
-                // Set custom name if provided
+                
                 DataValue nameValue = block.getParameter("name");
                 if (nameValue != null) {
                     String name = resolver.resolve(context, nameValue).asString();
@@ -233,7 +233,7 @@ public class EntityActions implements BlockAction {
                 return ExecutionResult.error("Entity cannot receive potion effects");
             }
             
-            // Get potion effect type
+            
             DataValue effectTypeValue = block.getParameter("effectType");
             if (effectTypeValue == null) {
                 return ExecutionResult.error("Effect type parameter is required");
@@ -245,14 +245,14 @@ public class EntityActions implements BlockAction {
                 return ExecutionResult.error("Invalid potion effect type: " + effectTypeStr);
             }
             
-            // Get duration and amplifier
+            
             DataValue durationValue = block.getParameter("duration");
             DataValue amplifierValue = block.getParameter("amplifier");
             
             int duration = durationValue != null ? 
-                resolver.resolve(context, durationValue).asNumber().intValue() : 600; // 30 seconds default
+                resolver.resolve(context, durationValue).asNumber().intValue() : 600; 
             int amplifier = amplifierValue != null ? 
-                resolver.resolve(context, amplifierValue).asNumber().intValue() : 0; // Level 1 default
+                resolver.resolve(context, amplifierValue).asNumber().intValue() : 0; 
             
             PotionEffect effect = new PotionEffect(effectType, duration, amplifier);
             ((LivingEntity) targetEntity).addPotionEffect(effect);
@@ -277,7 +277,7 @@ public class EntityActions implements BlockAction {
                 return ExecutionResult.error("Entity cannot have potion effects removed");
             }
             
-            // Get potion effect type
+            
             DataValue effectTypeValue = block.getParameter("effectType");
             if (effectTypeValue == null) {
                 return ExecutionResult.error("Effect type parameter is required");
@@ -307,7 +307,7 @@ public class EntityActions implements BlockAction {
                 return ExecutionResult.error("Target entity not found");
             }
             
-            // Get velocity components
+            
             DataValue xValue = block.getParameter("velocityX");
             DataValue yValue = block.getParameter("velocityY");
             DataValue zValue = block.getParameter("velocityZ");
@@ -330,7 +330,7 @@ public class EntityActions implements BlockAction {
      */
     private Entity getTargetEntity(CodeBlock block, ExecutionContext context, ParameterResolver resolver) {
         try {
-            // Try to get entity by UUID first
+            
             DataValue entityIdValue = block.getParameter("entityId");
             if (entityIdValue != null) {
                 String entityIdStr = resolver.resolve(context, entityIdValue).asString();
@@ -344,11 +344,11 @@ public class EntityActions implements BlockAction {
                         }
                     }
                 } catch (IllegalArgumentException e) {
-                    // Not a valid UUID, try other methods
+                    
                 }
             }
             
-            // Try to get entity by type near player
+            
             DataValue entityTypeValue = block.getParameter("entityType");
             if (entityTypeValue != null && context.getPlayer() != null) {
                 String entityTypeStr = resolver.resolve(context, entityTypeValue).asString();
@@ -363,11 +363,11 @@ public class EntityActions implements BlockAction {
                         }
                     }
                 } catch (IllegalArgumentException e) {
-                    // Invalid entity type
+                    
                 }
             }
             
-            // Default to player if no specific entity specified
+            
             return context.getPlayer();
         } catch (Exception e) {
             return null;
@@ -379,7 +379,7 @@ public class EntityActions implements BlockAction {
      */
     private Location getTargetLocation(CodeBlock block, ExecutionContext context, ParameterResolver resolver) {
         try {
-            // Try to get location from coordinates
+            
             DataValue xValue = block.getParameter("x");
             DataValue yValue = block.getParameter("y");
             DataValue zValue = block.getParameter("z");
@@ -389,7 +389,7 @@ public class EntityActions implements BlockAction {
                 double y = resolver.resolve(context, yValue).asNumber().doubleValue();
                 double z = resolver.resolve(context, zValue).asNumber().doubleValue();
                 
-                // Try to get world
+                
                 World world = null;
                 DataValue worldValue = block.getParameter("world");
                 if (worldValue != null) {
@@ -397,7 +397,7 @@ public class EntityActions implements BlockAction {
                     world = context.getPlugin().getServer().getWorld(worldName);
                 }
                 
-                // Fallback to player's world
+                
                 if (world == null && context.getPlayer() != null) {
                     world = context.getPlayer().getWorld();
                 }
@@ -407,7 +407,7 @@ public class EntityActions implements BlockAction {
                 }
             }
             
-            // Fallback to player location
+            
             if (context.getPlayer() != null) {
                 return context.getPlayer().getLocation();
             }

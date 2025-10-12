@@ -78,7 +78,7 @@ public class WorldCommentsGUI implements GUIManager.ManagedGUIInterface {
     private void setupInventory() {
         inventory.clear();
         
-        // Заполнение стеклом
+        
         ItemStack glass = new ItemStack(Material.GRAY_STAINED_GLASS_PANE);
         ItemMeta glassMeta = glass.getItemMeta();
         glassMeta.setDisplayName(" ");
@@ -92,7 +92,7 @@ public class WorldCommentsGUI implements GUIManager.ManagedGUIInterface {
         int startIndex = page * COMMENTS_PER_PAGE;
         int endIndex = Math.min(startIndex + COMMENTS_PER_PAGE, comments.size());
         
-        // Отображение комментариев
+        
         int slot = 10;
         for (int i = startIndex; i < endIndex; i++) {
             if (slot > 43) break;
@@ -118,7 +118,7 @@ public class WorldCommentsGUI implements GUIManager.ManagedGUIInterface {
             if (slot % 9 == 8) slot += 2;
         }
         
-        // Кнопка добавления комментария
+        
         ItemStack addButton = new ItemStack(Material.EMERALD);
         ItemMeta addMeta = addButton.getItemMeta();
         addMeta.setDisplayName("§a§lДобавить комментарий");
@@ -130,7 +130,7 @@ public class WorldCommentsGUI implements GUIManager.ManagedGUIInterface {
         addButton.setItemMeta(addMeta);
         inventory.setItem(49, addButton);
         
-        // Навигация
+        
         if (page > 0) {
             ItemStack prevButton = new ItemStack(Material.ARROW);
             ItemMeta prevMeta = prevButton.getItemMeta();
@@ -147,7 +147,7 @@ public class WorldCommentsGUI implements GUIManager.ManagedGUIInterface {
             inventory.setItem(53, nextButton);
         }
         
-        // Кнопка назад
+        
         ItemStack backButton = new ItemStack(Material.BARRIER);
         ItemMeta backMeta = backButton.getItemMeta();
         backMeta.setDisplayName("§c§лНазад");
@@ -163,7 +163,7 @@ public class WorldCommentsGUI implements GUIManager.ManagedGUIInterface {
      * Öffnet die GUI für den Spieler
      */
     public void open() {
-        // Register with GUIManager and open inventory
+        
         guiManager.registerGUI(player, this, inventory);
         player.openInventory(inventory);
     }
@@ -208,35 +208,35 @@ public class WorldCommentsGUI implements GUIManager.ManagedGUIInterface {
         
         String displayName = clicked.getItemMeta().getDisplayName();
         
-        // Кнопка назад
+        
         if (displayName.contains("Назад")) {
             player.closeInventory();
-            // GUIManager will handle automatic cleanup
+            
             new WorldActionsGUI(plugin, player, world).open();
             return;
         }
         
-        // Добавление комментария
+        
         if (displayName.contains("Добавить комментарий")) {
             player.closeInventory();
-            // GUIManager will handle automatic cleanup
+            
             plugin.getServiceRegistry().getGuiManager().setPlayerMetadata(player, "comment_input_world_id", world.getId());
             plugin.getServiceRegistry().getGuiManager().setPlayerMetadata(player, "awaiting_comment_input", true);
             player.sendMessage("§aНапишите ваш комментарий в чат или §eотмена§a для отмены:");
             return;
         }
         
-        // Навигация
+        
         if (displayName.contains("Предыдущая страница")) {
             player.closeInventory();
-            // GUIManager will handle automatic cleanup
+            
             new WorldCommentsGUI(plugin, player, world, page - 1).open();
             return;
         }
         
         if (displayName.contains("Следующая страница")) {
             player.closeInventory();
-            // GUIManager will handle automatic cleanup
+            
             new WorldCommentsGUI(plugin, player, world, page + 1).open();
             return;
         }
@@ -254,8 +254,8 @@ public class WorldCommentsGUI implements GUIManager.ManagedGUIInterface {
      * @param event Inventarschließ-Ereignis
      */
     public void onInventoryClose(InventoryCloseEvent event) {
-        // Optional cleanup when GUI is closed
-        // GUIManager handles automatic unregistration
+        
+        
     }
     
     @Override
@@ -267,7 +267,7 @@ public class WorldCommentsGUI implements GUIManager.ManagedGUIInterface {
      * Führt eine Ressourcenbereinigung durch, wenn die Schnittstelle geschlossen wird
      */
     public void onCleanup() {
-        // Called when GUI is being cleaned up by GUIManager
-        // No special cleanup needed for this GUI
+        
+        
     }
 }

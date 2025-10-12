@@ -65,9 +65,9 @@ public class WorldComment {
         this.timestamp = timestamp;
     }
     
-    // Getters and Setters
-    // Геттеры и сеттеры
-    // Getter und Setter
+    
+    
+    
     
     /**
      * Gets the author ID

@@ -45,7 +45,7 @@ public class EnhancedActionParameterGUI {
         this.plugin = plugin;
         this.guiManager = new InteractiveGUIManager(plugin);
         
-        // Add null check for service registry
+        
         if (plugin != null && plugin.getServiceRegistry() != null) {
             this.blockConfigService = plugin.getServiceRegistry().getBlockConfigService();
         } else {
@@ -57,37 +57,37 @@ public class EnhancedActionParameterGUI {
      * Creates an enhanced parameter editor for a code block
      */
     public InteractiveGUI createParameterEditor(Player player, Location blockLocation, String actionId) {
-        // Get the code block
+        
         CodeBlock block = getCodeBlock(blockLocation);
         if (block == null) {
             player.sendMessage("§cError: Code block not found at location");
             return null;
         }
         
-        // Create interactive GUI with enhanced design
+        
         InteractiveGUI gui = guiManager.createInteractiveGUI(player, 
             "§8🎆 " + actionId + " Parameters", 54);
         
-        // Add decorative border with category-specific materials
+        
         ItemStack borderItem = new ItemStack(Material.BLACK_STAINED_GLASS_PANE);
         ItemMeta borderMeta = borderItem.getItemMeta();
         borderMeta.setDisplayName(" ");
         borderItem.setItemMeta(borderMeta);
         
-        // Fill border slots
+        
         for (int i = 0; i < 54; i++) {
             if (i < 9 || i >= 45 || i % 9 == 0 || i % 9 == 8) {
                 gui.getInventory().setItem(i, borderItem);
             }
         }
         
-        // Add title display with enhanced visual design
+        
         gui.getInventory().setItem(4, createTitleItem(actionId, block));
         
-        // Setup parameter editors based on action type
+        
         setupParameterEditors(gui, actionId, block, player);
         
-        // Add control buttons with enhanced design
+        
         setupControlButtons(gui, block, player, blockLocation);
         
         return gui;
@@ -97,7 +97,7 @@ public class EnhancedActionParameterGUI {
      * Sets up parameter editors based on action configuration
      */
     private void setupParameterEditors(InteractiveGUI gui, String actionId, CodeBlock block, Player player) {
-        // Get action configuration
+        
         var actionConfigurations = blockConfigService != null ? blockConfigService.getActionConfigurations() : null;
         if (actionConfigurations == null) {
             setupGenericParameterEditors(gui, block);
@@ -110,7 +110,7 @@ public class EnhancedActionParameterGUI {
             return;
         }
         
-        // Setup specific parameter editors based on configuration
+        
         var parametersConfig = actionConfig.getConfigurationSection("parameters");
         if (parametersConfig != null) {
             setupConfiguredParameterEditors(gui, parametersConfig, block);
@@ -125,7 +125,7 @@ public class EnhancedActionParameterGUI {
     private void setupConfiguredParameterEditors(InteractiveGUI gui, 
                                                org.bukkit.configuration.ConfigurationSection parametersConfig, 
                                                CodeBlock block) {
-        int slot = 10; // Start position
+        int slot = 10; 
         
         for (String paramName : parametersConfig.getKeys(false)) {
             var paramConfig = parametersConfig.getConfigurationSection(paramName);
@@ -135,21 +135,21 @@ public class EnhancedActionParameterGUI {
             String displayName = paramConfig.getString("display_name", paramName);
             String description = paramConfig.getString("description", "Parameter: " + paramName);
             
-            // Create appropriate interactive element based on type
+            
             InteractiveGUIManager.InteractiveElement element = createParameterElement(
                 paramName, paramType, paramConfig, block);
             
             if (element != null) {
-                // Bind to block parameter
+                
                 element.addChangeListener(value -> {
                     block.setParameter(paramName, value.getValue());
                     saveBlockToWorld(block);
                 });
                 
                 gui.setElement(slot, element);
-                slot += 2; // Space out elements
+                slot += 2; 
                 
-                if (slot >= 44) break; // Don't overflow into control area
+                if (slot >= 44) break; 
             }
         }
     }
@@ -163,18 +163,18 @@ public class EnhancedActionParameterGUI {
                                                                           CodeBlock block) {
         Map<String, Object> properties = new HashMap<>();
         
-        // Convert config to properties map
+        
         for (String key : paramConfig.getKeys(false)) {
             properties.put(key, paramConfig.get(key));
         }
         
-        // Set current value if exists
+        
         Object currentValue = block.getParameter(paramName);
         if (currentValue != null) {
             properties.put("value", currentValue);
         }
         
-        // Create element based on type
+        
         switch (paramType.toLowerCase()) {
             case "material":
                 return createMaterialSelector(paramName, properties);
@@ -200,12 +200,12 @@ public class EnhancedActionParameterGUI {
      * Creates material selector element
      */
     private InteractiveGUIManager.InteractiveElement createMaterialSelector(String paramName, Map<String, Object> properties) {
-        // Setup available materials
+        
         Object materialsObj = properties.get("options");
         if (materialsObj instanceof List) {
             properties.put("materials", materialsObj);
         } else {
-            // Default materials for different parameter types
+            
             switch (paramName.toLowerCase()) {
                 case "block":
                 case "material":
@@ -234,7 +234,7 @@ public class EnhancedActionParameterGUI {
      * Creates number slider element
      */
     private InteractiveGUIManager.InteractiveElement createNumberSlider(String paramName, Map<String, Object> properties) {
-        // Set defaults based on parameter name
+        
         switch (paramName.toLowerCase()) {
             case "amount":
             case "count":
@@ -296,9 +296,9 @@ public class EnhancedActionParameterGUI {
      * Sets up generic parameter editors for unknown actions
      */
     private void setupGenericParameterEditors(InteractiveGUI gui, CodeBlock block) {
-        // Common parameters for most actions
         
-        // Message parameter (common for many actions)
+        
+        
         Map<String, Object> messageProps = new HashMap<>();
         messageProps.put("value", block.getParameterValue("message", String.class, ""));
         InteractiveGUIManager.TextInputElement messageInput = 
@@ -309,7 +309,7 @@ public class EnhancedActionParameterGUI {
         });
         gui.setElement(10, messageInput);
         
-        // Amount parameter
+        
         Map<String, Object> amountProps = new HashMap<>();
         amountProps.put("min", 1.0);
         amountProps.put("max", 64.0);
@@ -322,7 +322,7 @@ public class EnhancedActionParameterGUI {
         });
         gui.setElement(12, amountSlider);
         
-        // Enabled toggle
+        
         Map<String, Object> enabledProps = new HashMap<>();
         enabledProps.put("modes", Arrays.asList("ENABLED", "DISABLED"));
         InteractiveGUIManager.ModeToggleElement enabledToggle = 
@@ -338,19 +338,19 @@ public class EnhancedActionParameterGUI {
      * Sets up control buttons with enhanced design
      */
     private void setupControlButtons(InteractiveGUI gui, CodeBlock block, Player player, Location blockLocation) {
-        // Save button with enhanced visual design
+        
         gui.getInventory().setItem(45, createSaveButton());
         
-        // Cancel button with enhanced visual design
+        
         gui.getInventory().setItem(53, createCancelButton());
         
-        // Reset button with enhanced visual design
+        
         gui.getInventory().setItem(49, createResetButton());
         
-        // Help button with enhanced visual design
+        
         gui.getInventory().setItem(48, createHelpButton(block.getAction()));
         
-        // Add back button
+        
         gui.getInventory().setItem(46, createBackButton());
     }
     
@@ -492,7 +492,7 @@ public class EnhancedActionParameterGUI {
     }
     
     private void saveBlockToWorld(CodeBlock block) {
-        // Save the world to persist changes
+        
         Location blockLocation = new org.bukkit.Location(org.bukkit.Bukkit.getWorld(block.getWorldId()), block.getX(), block.getY(), block.getZ());
         com.megacreative.models.CreativeWorld world = plugin.getServiceRegistry().getWorldManager().findCreativeWorldByBukkit(blockLocation.getWorld());
         if (world != null) {

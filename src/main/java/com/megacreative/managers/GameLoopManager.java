@@ -23,7 +23,7 @@ public class GameLoopManager {
     private final IWorldManager worldManager;
     private final ScriptEngine scriptEngine;
     
-    // Track game loop status for each player
+    
     private final Map<String, Boolean> playerGameLoopEnabled = new ConcurrentHashMap<>();
     
     public GameLoopManager(MegaCreative plugin, IWorldManager worldManager, ScriptEngine scriptEngine) {
@@ -69,12 +69,12 @@ public class GameLoopManager {
      * This method is called on every server tick (20 times per second)
      */
     public void executeGameLoop() {
-        // Get all online players
+        
         Player[] players = plugin.getServer().getOnlinePlayers().toArray(new Player[0]);
         
-        // Execute game loop for each player
+        
         for (Player player : players) {
-            // Check if game loop is enabled for this player
+            
             if (isGameLoopEnabled(player)) {
                 executePlayerGameLoop(player);
             }
@@ -87,23 +87,23 @@ public class GameLoopManager {
      */
     private void executePlayerGameLoop(Player player) {
         try {
-            // Find the creative world for this player
+            
             CreativeWorld creativeWorld = worldManager.findCreativeWorldByBukkit(player.getWorld());
             if (creativeWorld == null || !creativeWorld.canCode(player)) {
                 return;
             }
             
-            // Get the code handler for this world
+            
             CodeHandler codeHandler = creativeWorld.getCodeHandler();
             if (codeHandler == null) {
                 return;
             }
             
-            // TODO: Find and execute the game loop code blocks for this player
-            // This would involve finding blocks with the "Game Loop" event type
-            // and executing them through the ScriptEngine
             
-            // For now, we'll just log that we would execute the game loop
+            
+            
+            
+            
             LOGGER.fine("Executing game loop for player: " + player.getName());
             
         } catch (Exception e) {
@@ -115,7 +115,7 @@ public class GameLoopManager {
      * Initialize the game loop system
      */
     public void initialize() {
-        // Enable game loop for all players by default
+        
         for (Player player : plugin.getServer().getOnlinePlayers()) {
             enableGameLoop(player);
         }

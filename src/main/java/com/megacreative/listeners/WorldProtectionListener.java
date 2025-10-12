@@ -38,9 +38,9 @@ public class WorldProtectionListener implements Listener {
         CreativeWorld world = worldManager.findCreativeWorldByBukkit(player.getWorld());
         
         if (world != null) {
-            // Check access permissions for current world
+            
             if (!world.canAccess(player, world.getDualMode())) {
-                // Kick player to hub if they don't have access
+                
                 player.sendMessage("§c🚫 У вас нет доступа к этому миру!");
                 plugin.getServer().getScheduler().runTask(plugin, () -> {
                     player.performCommand("hub");
@@ -48,7 +48,7 @@ public class WorldProtectionListener implements Listener {
                 return;
             }
             
-            // Send welcome message with permission info
+            
             sendWorldWelcomeMessage(player, world);
         }
     }
@@ -59,7 +59,7 @@ public class WorldProtectionListener implements Listener {
         CreativeWorld world = worldManager.findCreativeWorldByBukkit(player.getWorld());
         
         if (world != null) {
-            // Check access permissions for new world
+            
             if (!world.canAccess(player, world.getDualMode())) {
                 player.sendMessage("§c🚫 У вас нет доступа к этому миру!");
                 plugin.getServer().getScheduler().runTask(plugin, () -> {
@@ -68,10 +68,10 @@ public class WorldProtectionListener implements Listener {
                 return;
             }
             
-            // Apply world-specific settings
+            
             applyWorldSettings(player, world);
             
-            // Send mode-specific welcome message
+            
             sendWorldWelcomeMessage(player, world);
         }
     }
@@ -94,12 +94,12 @@ public class WorldProtectionListener implements Listener {
     public void onPlayerInteract(PlayerInteractEvent event) {
         Player player = event.getPlayer();
         
-        // Check if player is in DEV mode
+        
         if (plugin != null && plugin.getServiceRegistry() != null) {
             PlayerModeManager modeManager = plugin.getServiceRegistry().getPlayerModeManager();
             if (modeManager.isInPlayMode(player)) {
-                // If player is in PLAY mode, don't allow interactions that might interfere with gameplay
-                // This interaction may be part of their game, not development
+                
+                
                 return;
             }
         }
@@ -185,7 +185,7 @@ public class WorldProtectionListener implements Listener {
         CreativeWorld world = worldManager.findCreativeWorldByBukkit(player.getWorld());
         
         if (world == null) {
-            return true; // Not a managed world
+            return true; 
         }
         
         boolean hasPermission = world.canPerform(player, action);
@@ -202,14 +202,14 @@ public class WorldProtectionListener implements Listener {
     private void applyWorldSettings(Player player, CreativeWorld world) {
         WorldPermissions permissions = world.getPermissions();
         
-        // Apply flight settings for play mode
+        
         if (world.getDualMode() == CreativeWorld.WorldDualMode.PLAY) {
             if (!permissions.isAllowFlightInPlay() && !world.canPerform(player, "admin")) {
                 player.setFlying(false);
                 player.setAllowFlight(false);
             }
         } else {
-            // Allow flight in dev mode
+            
             player.setAllowFlight(true);
         }
     }
@@ -225,7 +225,7 @@ public class WorldProtectionListener implements Listener {
         player.sendMessage(modeColor + modeEmoji + " Добро пожаловать в " + world.getName());
         player.sendMessage("§7Режим: " + world.getDualMode().getDisplayName());
         
-        // Show permission level
+        
         WorldPermissions permissions = world.getPermissions();
         if (world.isOwner(player)) {
             player.sendMessage("§c⚡ Вы владелец этого мира");
@@ -234,7 +234,7 @@ public class WorldProtectionListener implements Listener {
             player.sendMessage("§7Ваш уровень: " + level.getDisplayName());
         }
         
-        // Show access mode
+        
         WorldPermissions.AccessMode accessMode = world.getDualMode() == CreativeWorld.WorldDualMode.DEV ? 
             permissions.getDevWorldAccess() : permissions.getPlayWorldAccess();
         player.sendMessage("§7Доступ: " + accessMode.getDisplayName());

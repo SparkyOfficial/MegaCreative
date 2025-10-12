@@ -35,10 +35,10 @@ public class ScriptMetrics {
         this.successCount.set((long)(profile.getTotalExecutions() * profile.getSuccessRate()));
         this.failureCount.set(profile.getTotalExecutions() - successCount.get());
 
-        // Convert ActionPerformanceData to ActionMetrics
+        
         for (ActionPerformanceData actionData : profile.getAllActionData()) {
             ActionMetrics actionMetrics = new ActionMetrics(actionData.getActionType());
-            // If needed, copy more data from actionData to actionMetrics
+            
             this.actionMetrics.put(actionData.getActionType(), actionMetrics);
         }
     }

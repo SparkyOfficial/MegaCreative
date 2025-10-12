@@ -14,7 +14,7 @@ import java.util.logging.Logger;
  */
 public class ControlFlowBlockExecutor implements BlockExecutor {
     private static final Logger LOGGER = java.util.logging.Logger.getLogger(ControlFlowBlockExecutor.class.getName());
-    private static final int MAX_LOOP_ITERATIONS = 10000; // Prevent infinite loops
+    private static final int MAX_LOOP_ITERATIONS = 10000; 
     
     private final ActionFactory actionFactory;
     private final ConditionFactory conditionFactory;
@@ -37,16 +37,16 @@ public class ControlFlowBlockExecutor implements BlockExecutor {
             return ExecutionResult.error("Control action is null or empty");
         }
         
-        // Log the control action being processed
+        
         LOGGER.info("Processing control action: " + controlAction + " for player: " + 
                    (context.getPlayer() != null ? context.getPlayer().getName() : "unknown"));
         
-        // Handle different control flow actions
+        
         switch (controlAction) {
             case "conditionalBranch":
                 return handleConditionalBranch(block, context);
             case "else":
-                // ELSE block - just continue to next block
+                
                 LOGGER.fine("ELSE block processed");
                 return ExecutionResult.success("ELSE block processed");
             case "whileLoop":
@@ -71,7 +71,7 @@ public class ControlFlowBlockExecutor implements BlockExecutor {
     
     private ExecutionResult handleConditionalBranch(CodeBlock block, ExecutionContext context) {
         try {
-            // Get the condition to evaluate
+            
             DataValue conditionValue = block.getParameter("condition");
             if (conditionValue == null || conditionValue.isEmpty()) {
                 LOGGER.warning("Conditional branch has no condition parameter");
@@ -84,7 +84,7 @@ public class ControlFlowBlockExecutor implements BlockExecutor {
                 return ExecutionResult.error("Conditional branch has empty condition parameter");
             }
             
-            // Evaluate the condition
+            
             BlockCondition conditionHandler = conditionFactory.createCondition(conditionId);
             if (conditionHandler == null) {
                 LOGGER.warning("No condition handler found for: " + conditionId);
@@ -94,10 +94,10 @@ public class ControlFlowBlockExecutor implements BlockExecutor {
             boolean conditionResult = conditionHandler.evaluate(block, context);
             LOGGER.fine("Conditional branch condition " + conditionId + " evaluated to " + conditionResult);
             
-            // Store the condition result in the execution context for use by the ScriptEngine
+            
             context.setVariable("_condition_result", conditionResult);
             
-            // Return result with condition evaluation
+            
             return new ExecutionResult.Builder()
                 .success(true)
                 .message("Conditional branch processed, condition " + conditionId + " = " + conditionResult)
@@ -112,7 +112,7 @@ public class ControlFlowBlockExecutor implements BlockExecutor {
     
     private ExecutionResult handleWhileLoop(CodeBlock block, ExecutionContext context) {
         try {
-            // Get the condition to evaluate
+            
             DataValue conditionValue = block.getParameter("condition");
             if (conditionValue == null || conditionValue.isEmpty()) {
                 LOGGER.warning("While loop has no condition parameter");
@@ -125,13 +125,13 @@ public class ControlFlowBlockExecutor implements BlockExecutor {
                 return ExecutionResult.error("While loop has empty condition parameter");
             }
             
-            // Get maximum iterations to prevent infinite loops
+            
             int maxIterations = block.getParameterValue("maxIterations", Integer.class, MAX_LOOP_ITERATIONS);
             
             LOGGER.fine("Processing while loop with condition: " + conditionId + ", max iterations: " + maxIterations);
             
-            // Store loop information for the ScriptEngine to handle
-            // The actual loop execution will be handled by the ScriptEngine
+            
+            
             return new ExecutionResult.Builder()
                 .success(true)
                 .message("While loop initialized with condition " + conditionId)
@@ -148,7 +148,7 @@ public class ControlFlowBlockExecutor implements BlockExecutor {
     
     private ExecutionResult handleForEachLoop(CodeBlock block, ExecutionContext context) {
         try {
-            // Get the collection to iterate over
+            
             DataValue collectionValue = block.getParameter("collection");
             if (collectionValue == null || collectionValue.isEmpty()) {
                 LOGGER.warning("For-each loop has no collection parameter");
@@ -161,7 +161,7 @@ public class ControlFlowBlockExecutor implements BlockExecutor {
                 return ExecutionResult.error("For-each loop has empty collection parameter");
             }
             
-            // Get the variable name to store each item
+            
             DataValue variableValue = block.getParameter("variable");
             if (variableValue == null || variableValue.isEmpty()) {
                 LOGGER.warning("For-each loop has no variable parameter");
@@ -176,8 +176,8 @@ public class ControlFlowBlockExecutor implements BlockExecutor {
             
             LOGGER.fine("Processing for-each loop over collection: " + collectionName + " with variable: " + variableName);
             
-            // Store loop information for the ScriptEngine to handle
-            // The actual loop execution will be handled by the ScriptEngine
+            
+            
             return new ExecutionResult.Builder()
                 .success(true)
                 .message("For-each loop initialized over collection " + collectionName)

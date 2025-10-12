@@ -30,7 +30,7 @@ public class CheckSlotItemAction implements BlockAction {
     @Override
     public ExecutionResult execute(CodeBlock block, ExecutionContext context) {
         try {
-            // Get parameters
+            
             DataValue menuVariableValue = block.getParameter("menuVariable");
             DataValue slotValue = block.getParameter("slot");
             DataValue itemValue = block.getParameter("item");
@@ -52,7 +52,7 @@ public class CheckSlotItemAction implements BlockAction {
                 return ExecutionResult.error("Result variable name cannot be empty");
             }
             
-            // Get the GUI inventory from the global variable
+            
             VariableManager variableManager = plugin.getServiceRegistry().getVariableManager();
             if (variableManager == null) {
                 return ExecutionResult.error("Variable manager not available");
@@ -69,15 +69,15 @@ public class CheckSlotItemAction implements BlockAction {
             
             CreateMenuAction.GUIInventory guiInventory = (CreateMenuAction.GUIInventory) menuValue.getValue();
             
-            // Validate slot
+            
             if (slot < 0 || slot >= guiInventory.getInventory().getSize()) {
                 return ExecutionResult.error("Invalid slot number: " + slot + ". Must be between 0 and " + (guiInventory.getInventory().getSize() - 1));
             }
             
-            // Get the item in the slot from the actual inventory
+            
             ItemStack slotItem = guiInventory.getInventory().getItem(slot);
             
-            // Check if the item matches
+            
             boolean matches = false;
             Object itemObj = itemValue.getValue();
             
@@ -87,15 +87,15 @@ public class CheckSlotItemAction implements BlockAction {
                 } else if (itemObj instanceof ItemStack) {
                     matches = slotItem.isSimilar((ItemStack) itemObj);
                 } else {
-                    // Compare by material name
+                    
                     matches = slotItem.getType().name().equalsIgnoreCase(itemObj.toString());
                 }
             } else if (slotItem == null && itemObj == null) {
-                // Both are null, so they match
+                
                 matches = true;
             }
             
-            // Store the result in a variable
+            
             variableManager.setPlayerVariable(
                 context.getPlayer().getUniqueId(), 
                 resultVariableName, 

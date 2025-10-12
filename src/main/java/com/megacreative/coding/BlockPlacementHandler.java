@@ -40,19 +40,19 @@ public class BlockPlacementHandler implements Listener {
     private static final Logger log = Logger.getLogger(BlockPlacementHandler.class.getName());
     private final MegaCreative plugin;
     
-    // Use ConcurrentHashMap for thread safety
+    
     private final Map<Location, CodeBlock> blockCodeBlocks = new ConcurrentHashMap<>();
     
-    // Lazy initialized dependencies
+    
     private ITrustedPlayerManager trustedPlayerManager;
     private BlockConfigService blockConfigService;
     
     public BlockPlacementHandler(MegaCreative plugin) {
         this.plugin = plugin;
-        // Dependencies will be lazily initialized when needed
+        
     }
     
-    // Lazy initialization methods
+    
     private ITrustedPlayerManager getTrustedPlayerManager() {
         if (trustedPlayerManager == null && plugin != null && plugin.getServiceRegistry() != null) {
             trustedPlayerManager = plugin.getServiceRegistry().getTrustedPlayerManager();
@@ -76,7 +76,7 @@ public class BlockPlacementHandler implements Listener {
         if (plugin == null || plugin.getServiceRegistry() == null || actionId == null) {
             return false;
         }
-        // Try to create the action to see if it's registered
+        
         return plugin.getServiceRegistry().getActionFactory().createAction(actionId) != null;
     }
     
@@ -90,7 +90,7 @@ public class BlockPlacementHandler implements Listener {
         if (configService == null || eventId == null) {
             return false;
         }
-        // Try to get the block config to see if it's registered
+        
         BlockConfigService.BlockConfig config = configService.getBlockConfig(eventId);
         return config != null;
     }
@@ -104,7 +104,7 @@ public class BlockPlacementHandler implements Listener {
         if (plugin == null || plugin.getServiceRegistry() == null || conditionId == null) {
             return false;
         }
-        // Try to create the condition to see if it's registered
+        
         return plugin.getServiceRegistry().getConditionFactory().createCondition(conditionId) != null;
     }
 
@@ -121,7 +121,7 @@ public class BlockPlacementHandler implements Listener {
         Player player = event.getPlayer();
         Block block = event.getBlockPlaced();
 
-        // Проверка на поверхность установки
+        
         if (!isCorrectPlacementSurface(block)) {
             player.sendMessage("§cThis block can only be placed on the correct surface!");
             player.playSound(block.getLocation(), org.bukkit.Sound.ENTITY_VILLAGER_NO, 1.0f, 0.8f);
@@ -132,18 +132,18 @@ public class BlockPlacementHandler implements Listener {
         CodeBlock newCodeBlock = createCodeBlockFor(block);
         
         if (newCodeBlock == null) {
-            // Если это не наш специальный блок, отменяем установку.
+            
             player.sendMessage("§cYou can only place special coding blocks!");
             player.playSound(block.getLocation(), org.bukkit.Sound.ENTITY_VILLAGER_NO, 1.0f, 0.8f);
             event.setCancelled(true);
             return;
         }
 
-        // 1. Сохраняем созданный блок
+        
         blockCodeBlocks.put(block.getLocation(), newCodeBlock);
         log.info("Created CodeBlock at " + block.getLocation() + " with material " + newCodeBlock.getMaterial());
         
-        // 2. Отправляем наше собственное событие в систему!
+        
         CodeBlockPlacedEvent placedEvent = new CodeBlockPlacedEvent(player, newCodeBlock, block.getLocation());
         plugin.getServer().getPluginManager().callEvent(placedEvent);
         log.info("Fired CodeBlockPlacedEvent for block at " + block.getLocation());
@@ -170,58 +170,58 @@ public class BlockPlacementHandler implements Listener {
             return;
         }
 
-        // Если по этому адресу был наш CodeBlock...
+        
         if (blockCodeBlocks.containsKey(loc)) {
             CodeBlock removedBlock = blockCodeBlocks.remove(loc);
             
-            // 2. Отправляем наше событие об уничтожении!
+            
             CodeBlockBrokenEvent brokenEvent = new CodeBlockBrokenEvent(player, removedBlock, loc);
             plugin.getServer().getPluginManager().callEvent(brokenEvent);
             
             player.sendMessage("§cCode block removed!");
         }
         
-        // Special handling for piston brackets
+        
         else if (event.getBlock().getType() == Material.PISTON || event.getBlock().getType() == Material.STICKY_PISTON) {
-            // Check if this bracket is protected
+            
             if (isProtectedBracket(loc)) {
-                // Cancel the event to prevent breaking brackets
+                
                 event.setCancelled(true);
                 player.sendMessage("§cBrackets cannot be broken directly!");
                 player.playSound(loc, org.bukkit.Sound.BLOCK_NOTE_BLOCK_BASS, 1.0f, 0.5f);
                 return;
             }
             
-            // This is a piston bracket, remove it from our map
+            
             CodeBlock removedBlock = blockCodeBlocks.remove(loc);
             
-            // Fire custom event for other systems to react to
+            
             if (removedBlock != null) {
                 CodeBlockBrokenEvent brokenEvent = new CodeBlockBrokenEvent(player, removedBlock, loc);
                 plugin.getServer().getPluginManager().callEvent(brokenEvent);
             }
             
-            // Enhanced feedback for bracket removal
+            
             player.sendMessage("§cBracket removed!");
             player.playSound(loc, org.bukkit.Sound.BLOCK_PISTON_CONTRACT, 0.8f, 1.2f);
         }
     }
     
-    // Вспомогательный метод для создания CodeBlock
+    
     private CodeBlock createCodeBlockFor(Block block) {
         BlockConfigService configService = getBlockConfigService();
         if (configService == null) {
             return null;
         }
 
-        // Это блок-скобка?
+        
         if (block.getType() == Material.PISTON || block.getType() == Material.STICKY_PISTON) {
             CodeBlock bracket = new CodeBlock(block.getType().name(), "BRACKET");
-            bracket.setBracketType(CodeBlock.BracketType.OPEN); // По умолчанию
+            bracket.setBracketType(CodeBlock.BracketType.OPEN); 
             return bracket;
         }
         
-        // Это наш кодовый блок?
+        
         if (configService.isCodeBlock(block.getType())) {
             return new CodeBlock(block.getType().name(), "NOT_SET");
         }
@@ -244,36 +244,36 @@ public class BlockPlacementHandler implements Listener {
         Player player = event.getPlayer();
         if (!isInDevWorld(player)) return;
 
-        // ... (проверка на режим PLAY остается, если она вам нужна)
+        
 
         Location location = event.getClickedBlock().getLocation();
         if (!blockCodeBlocks.containsKey(location)) {
             return;
         }
         
-        event.setCancelled(true); // Предотвращаем стандартное поведение
+        event.setCancelled(true); 
         CodeBlock codeBlock = blockCodeBlocks.get(location);
 
-        // Обработка клика по скобкам (эта логика остается здесь)
+        
         if (codeBlock.isBracket()) {
             toggleBracketType(codeBlock, event.getClickedBlock(), player);
             return;
         }
         
-        // --- НОВАЯ УНИВЕРСАЛЬНАЯ ЛОГИКА ---
+        
 
         String blockId = getBlockIdentifier(codeBlock);
 
-        // Если блок еще не настроен, открываем выбор действия
+        
         if (blockId == null || blockId.equals("NOT_SET")) {
             new ActionSelectionGUI(plugin, player, location, codeBlock.getMaterial()).open();
             return;
         }
 
-        // Определяем тип блока для универсального GUI
+        
         String blockType = determineBlockType(codeBlock, blockId);
 
-        // Открываем универсальный GUI для настройки параметров
+        
         CodeBlockGUI parameterGUI = new CodeBlockGUI(plugin, player, location, blockId, blockType);
         parameterGUI.open();
     }
@@ -289,13 +289,13 @@ public class BlockPlacementHandler implements Listener {
             return;
         }
         
-        // Переключаем тип скобки
+        
         CodeBlock.BracketType currentType = codeBlock.getBracketType();
         CodeBlock.BracketType newType = (currentType == CodeBlock.BracketType.OPEN) ? 
             CodeBlock.BracketType.CLOSE : CodeBlock.BracketType.OPEN;
         codeBlock.setBracketType(newType);
         
-        // Отправляем сообщение игроку
+        
         player.sendMessage("§aBracket type changed to: " + newType.getDisplayName());
         player.playSound(block.getLocation(), org.bukkit.Sound.BLOCK_NOTE_BLOCK_PLING, 1.0f, 1.0f);
     }
@@ -309,7 +309,7 @@ public class BlockPlacementHandler implements Listener {
     private String determineBlockType(CodeBlock codeBlock, String blockId) {
         BlockConfigService configService = getBlockConfigService();
         if (configService == null) {
-            return "ACTION"; // Fallback
+            return "ACTION"; 
         }
 
         BlockConfigService.BlockConfig config = configService.getBlockConfig(blockId);
@@ -317,7 +317,7 @@ public class BlockPlacementHandler implements Listener {
             return config.getType();
         }
 
-        // Fallback: определяем по материалу блока
+        
         Material material = codeBlock.getMaterial();
         switch (material) {
             case DIAMOND_BLOCK:
@@ -327,22 +327,22 @@ public class BlockPlacementHandler implements Listener {
             case OAK_PLANKS:
                 return "CONDITION";
             case OBSIDIAN:
-                return "CONDITION"; // IF_VARIABLE
+                return "CONDITION"; 
             case REDSTONE_BLOCK:
-                return "CONDITION"; // IF_GAME
+                return "CONDITION"; 
             case BRICKS:
-                return "CONDITION"; // IF_ENTITY
+                return "CONDITION"; 
             case EMERALD_BLOCK:
-                return "CONTROL";   // REPEAT
+                return "CONTROL";   
             case LAPIS_BLOCK:
             case BOOKSHELF:
                 return "FUNCTION";
             case IRON_BLOCK:
                 return "VARIABLE";
             case END_STONE:
-                return "CONTROL";   // ELSE
+                return "CONTROL";   
             default:
-                return "ACTION"; // Fallback
+                return "ACTION"; 
         }
     }
     
@@ -356,7 +356,7 @@ public class BlockPlacementHandler implements Listener {
             return null;
         }
         
-        // Проверяем параметры блока для определения его типа
+        
         String action = codeBlock.getAction();
         String event = codeBlock.getEvent();
         
@@ -374,14 +374,14 @@ public class BlockPlacementHandler implements Listener {
      */
     public boolean isInDevWorld(Player player) {
         String worldName = player.getWorld().getName();
-        // Enhanced detection for dev worlds with new naming scheme
+        
         return worldName.contains("dev") || worldName.contains("Dev") || 
                worldName.contains("разработка") || worldName.contains("Разработка") ||
                worldName.contains("creative") || worldName.contains("Creative") ||
                worldName.contains("-code") || worldName.endsWith("-code") || 
                worldName.contains("_code") || worldName.endsWith("_dev") ||
                worldName.contains("megacreative_") || worldName.contains("DEV") ||
-               // Check for dual world mode dev worlds
+               
                (worldName.startsWith("megacreative_") && worldName.endsWith("-code"));
     }
     
@@ -391,15 +391,15 @@ public class BlockPlacementHandler implements Listener {
      * @return true if the bracket is protected, false otherwise
      */
     private boolean isProtectedBracket(Location location) {
-        // Get the code block at this location
+        
         CodeBlock codeBlock = blockCodeBlocks.get(location);
         
-        // If this is a bracket block, check if it's part of a constructor structure
+        
         if (codeBlock != null && codeBlock.isBracket()) {
-            // Find nearby constructor blocks
+            
             Location constructorLoc = findNearbyConstructor(location);
             if (constructorLoc != null) {
-                return true; // Bracket is protected as part of constructor structure
+                return true; 
             }
         }
         
@@ -422,17 +422,17 @@ public class BlockPlacementHandler implements Listener {
      * @return Location of the constructor block, or null if none found
      */
     private Location findNearbyConstructor(Location bracketLocation) {
-        // Check adjacent locations for constructor blocks
+        
         for (int x = -3; x <= 3; x++) {
             for (int z = -3; z <= 3; z++) {
                 Location checkLoc = bracketLocation.clone().add(x, 0, z);
                 CodeBlock checkBlock = blockCodeBlocks.get(checkLoc);
                 
                 if (checkBlock != null) {
-                    // Get block configuration
+                    
                     BlockConfigService.BlockConfig config = blockConfigService.getBlockConfig(checkBlock.getAction());
                     if (config != null && config.isConstructor()) {
-                        return checkLoc; // Found a constructor block
+                        return checkLoc; 
                     }
                 }
             }
@@ -447,29 +447,29 @@ public class BlockPlacementHandler implements Listener {
      * Other blocks should only be placed on grey glass
      */
     private boolean isCorrectPlacementSurface(Block block) {
-        // Get the block below the placed block
+        
         Block below = block.getRelative(org.bukkit.block.BlockFace.DOWN);
         
-        // If blockConfigService is not available, allow placement (fallback)
+        
         BlockConfigService configService = getBlockConfigService();
         if (configService == null) {
             return true;
         }
         
-        // Get block config
+        
         BlockConfigService.BlockConfig config = configService.getBlockConfigByMaterial(block.getType());
         
-        // If no config found, allow placement (fallback)
+        
         if (config == null) {
             return true;
         }
         
-        // Check if this is an EVENT block (DIAMOND_BLOCK)
+        
         if ("EVENT".equals(config.getType())) {
-            // EVENT blocks should only be placed on blue glass
+            
             return below.getType() == org.bukkit.Material.BLUE_STAINED_GLASS;
         } else {
-            // All other blocks should only be placed on grey glass
+            
             return below.getType() == org.bukkit.Material.GRAY_STAINED_GLASS || 
                    below.getType() == org.bukkit.Material.LIGHT_GRAY_STAINED_GLASS;
         }
@@ -494,13 +494,13 @@ public class BlockPlacementHandler implements Listener {
         Location location = block.getLocation();
         Material material = block.getType();
         
-        // Check if this is a code block material
+        
         BlockConfigService configService = getBlockConfigService();
         if (configService == null || !configService.isCodeBlock(material)) {
-            // Handle brackets specially
+            
             if (material == Material.PISTON || material == Material.STICKY_PISTON) {
                 CodeBlock bracketBlock = new CodeBlock(material.name(), "BRACKET");
-                // Determine bracket type from sign text or default to OPEN
+                
                 String[] lines = sign.getLines();
                 if (lines.length > 1) {
                     String line1 = lines[1];
@@ -509,10 +509,10 @@ public class BlockPlacementHandler implements Listener {
                     } else if (line1.contains("}")) {
                         bracketBlock.setBracketType(CodeBlock.BracketType.CLOSE);
                     } else {
-                        bracketBlock.setBracketType(CodeBlock.BracketType.OPEN); // Default
+                        bracketBlock.setBracketType(CodeBlock.BracketType.OPEN); 
                     }
                 } else {
-                    bracketBlock.setBracketType(CodeBlock.BracketType.OPEN); // Default
+                    bracketBlock.setBracketType(CodeBlock.BracketType.OPEN); 
                 }
                 
                 bracketBlock.setLocation(location.getWorld().getName(), location.getBlockX(), location.getBlockY(), location.getBlockZ());
@@ -522,16 +522,16 @@ public class BlockPlacementHandler implements Listener {
             return null;
         }
         
-        // Create a new code block
+        
         CodeBlock codeBlock = new CodeBlock(material.name(), "NOT_SET");
         codeBlock.setLocation(location.getWorld().getName(), location.getBlockX(), location.getBlockY(), location.getBlockZ());
         
-        // Try to extract action/event from sign
+        
         String[] lines = sign.getLines();
         if (lines.length > 1) {
             String line1 = lines[1];
-            // Try to extract action from the sign text
-            // Look for patterns like "[Action: sendMessage]" or "sendMessage"
+            
+            
             if (line1.contains("[Action:")) {
                 int start = line1.indexOf("[Action:") + 8;
                 int end = line1.indexOf("]", start);
@@ -540,7 +540,7 @@ public class BlockPlacementHandler implements Listener {
                     codeBlock.setAction(action);
                 }
             } else if (line1.contains("[Event:")) {
-                // Try to extract event from the sign text
+                
                 int start = line1.indexOf("[Event:") + 7;
                 int end = line1.indexOf("]", start);
                 if (start > 0 && end > start) {
@@ -548,37 +548,37 @@ public class BlockPlacementHandler implements Listener {
                     codeBlock.setEvent(event);
                 }
             } else if (line1.contains("[Condition:")) {
-                // Try to extract condition from the sign text
+                
                 int start = line1.indexOf("[Condition:") + 11;
                 int end = line1.indexOf("]", start);
                 if (start > 0 && end > start) {
                     String condition = line1.substring(start, end).trim();
-                    // Store condition in parameters since CodeBlock doesn't have a setCondition method
+                    
                     codeBlock.setParameter("condition", condition);
                 }
             } else if (line1.contains("§")) {
-                // Try to extract action from colored text
-                // This is a simplified approach - in a real implementation, 
-                // you might want to store action data in the sign's persistent data
+                
+                
+                
                 String cleanLine = org.bukkit.ChatColor.stripColor(line1).trim();
                 if (!cleanLine.isEmpty() && !"NOT_SET".equals(cleanLine)) {
-                    // Try to determine if this is an action, event, or condition based on registered items
+                    
                     if (isRegisteredAction(cleanLine)) {
                         codeBlock.setAction(cleanLine);
                     } else if (isRegisteredEvent(cleanLine)) {
                         codeBlock.setEvent(cleanLine);
                     } else if (isRegisteredCondition(cleanLine)) {
-                        // Store condition in parameters since CodeBlock doesn't have a setCondition method
+                        
                         codeBlock.setParameter("condition", cleanLine);
                     } else {
-                        // Default to action if not found
+                        
                         codeBlock.setAction(cleanLine);
                     }
                 }
             }
         }
         
-        // Add to tracking
+        
         blockCodeBlocks.put(location, codeBlock);
         return codeBlock;
     }
@@ -609,8 +609,8 @@ public class BlockPlacementHandler implements Listener {
      */
     public void clearAllCodeBlocksInWorld(World world) {
         blockCodeBlocks.entrySet().removeIf(entry -> entry.getKey().getWorld().equals(world));
-        // Reduced logging - only log when debugging
-        // plugin.getLogger().info("Cleared all code blocks from world: " + world.getName() + " in BlockPlacementHandler.");
+        
+        
     }
     
     /**
@@ -634,14 +634,14 @@ public class BlockPlacementHandler implements Listener {
             return;
         }
         
-        // Get the creative world associated with this Bukkit world
+        
         CreativeWorld creativeWorld = plugin.getServiceRegistry().getWorldManager().findCreativeWorldByBukkit(world);
         if (creativeWorld == null) {
             plugin.getLogger().warning("No CreativeWorld found for Bukkit world: " + world.getName());
             return;
         }
         
-        // Save the world to persist any changes to code blocks
+        
         plugin.getServiceRegistry().getWorldManager().saveWorld(creativeWorld);
         plugin.getLogger().fine("Saved all code blocks in world: " + world.getName());
     }
