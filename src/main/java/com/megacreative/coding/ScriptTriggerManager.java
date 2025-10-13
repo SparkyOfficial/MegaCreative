@@ -28,6 +28,9 @@ import java.util.List;
 public class ScriptTriggerManager implements Listener {
     private static final Logger LOGGER = Logger.getLogger(ScriptTriggerManager.class.getName());
     
+    // Add a counter to limit tick event processing frequency
+    private static final AtomicInteger tickCounter = new AtomicInteger(0);
+    
     private final MegaCreative plugin;
     private final IWorldManager worldManager;
     private final PlayerModeManager playerModeManager;
@@ -536,17 +539,37 @@ public class ScriptTriggerManager implements Listener {
     @Deprecated
     @EventHandler
     public void onTick(com.megacreative.events.TickEvent event) {
+        int count = tickCounter.incrementAndGet();
         
+        // Only process every 10th tick to reduce load
+        if (count % 10 != 0) {
+            return;
+        }
         
-        for (CreativeWorld creativeWorld : worldManager.getCreativeWorlds()) {
-            if (creativeWorld == null) continue;
-            
-            CodeHandler codeHandler = creativeWorld.getCodeHandler();
-            
-            GameEvent gameEvent = new GameEvent("onTick");
-            
-            codeHandler.handleEvent(ActivatorType.TICK, gameEvent, null);
-            LOGGER.info("Triggered TICK activators for world " + creativeWorld.getName());
+        // Reset counter periodically to prevent overflow
+        if (count > 1000000) {
+            tickCounter.set(0);
+        }
+        
+        try {
+            for (CreativeWorld creativeWorld : worldManager.getCreativeWorlds()) {
+                if (creativeWorld == null) continue;
+                
+                CodeHandler codeHandler = creativeWorld.getCodeHandler();
+                
+                if (codeHandler != null) {
+                    GameEvent gameEvent = new GameEvent("onTick");
+                    
+                    // Only log at fine level to reduce spam
+                    if (LOGGER.isLoggable(java.util.logging.Level.FINE)) {
+                        LOGGER.fine("Triggered TICK activators for world " + creativeWorld.getName());
+                    }
+                    
+                    codeHandler.handleEvent(ActivatorType.TICK, gameEvent, null);
+                }
+            }
+        } catch (Exception e) {
+            LOGGER.log(java.util.logging.Level.WARNING, "Error processing tick event", e);
         }
     }
 }

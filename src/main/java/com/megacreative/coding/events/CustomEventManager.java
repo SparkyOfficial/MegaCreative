@@ -831,12 +831,20 @@ public class CustomEventManager implements Listener, EventPublisher, EventSubscr
     
     // Add a repeating task to trigger the tick event
     private void startTickTask() {
+        // Run every 5 ticks instead of every tick to reduce server load
         plugin.getServer().getScheduler().runTaskTimer(plugin, () -> {
-            Map<String, DataValue> data = new HashMap<>();
-            data.put("tickCount", DataValue.fromObject(System.currentTimeMillis()));
-            
-            triggerEvent("tick", data, null, "global");
-        }, 1L, 1L); // Run every tick
+            try {
+                Map<String, DataValue> data = new HashMap<>();
+                data.put("tickCount", DataValue.fromObject(System.currentTimeMillis()));
+                
+                // Only trigger if there are handlers registered for the tick event
+                if (isEventRegistered("tick") && getEventHandlerCount("tick") > 0) {
+                    triggerEvent("tick", data, null, "global");
+                }
+            } catch (Exception e) {
+                log.log(Level.WARNING, "Error in tick task", e);
+            }
+        }, 5L, 5L); // Run every 5 ticks instead of every tick
     }
     
     /**
