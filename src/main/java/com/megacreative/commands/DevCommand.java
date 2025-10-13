@@ -205,14 +205,12 @@ public class DevCommand implements CommandExecutor {
     private World createDevWorld(CreativeWorld creativeWorld) {
         try {
             WorldCreator creator = new WorldCreator(creativeWorld.getDevWorldName());
-            creator.type(WorldType.FLAT);
             creator.environment(World.Environment.NORMAL);
             
             
             creator.generator(new com.megacreative.worlds.DevWorldGenerator());
             
             
-            creator.generatorSettings("{\"layers\":[{\"block\":\"bedrock\",\"height\":1},{\"block\":\"stone\",\"height\":2},{\"block\":\"grass_block\",\"height\":1}],\"biome\":\"plains\"}");
             creator.generateStructures(false);
             
             
@@ -226,7 +224,6 @@ public class DevCommand implements CommandExecutor {
             try {
                 WorldCreator fallbackCreator = new WorldCreator(creativeWorld.getDevWorldName());
                 fallbackCreator.environment(World.Environment.NORMAL);
-                fallbackCreator.type(WorldType.NORMAL);
                 fallbackCreator.generateStructures(false);
                 
                 fallbackCreator.generator(new com.megacreative.worlds.DevWorldGenerator());

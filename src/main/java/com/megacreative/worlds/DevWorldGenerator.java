@@ -16,6 +16,8 @@ import java.util.Random;
  *
  * Entwicklungs-Weltgenerator mit Codierplattformen
  * Erstellt strukturierte Linien für die Platzierung von Codeblöcken
+ * 
+ * @author Андрій Будильников
  */
 public class DevWorldGenerator extends ChunkGenerator {
 
@@ -128,7 +130,6 @@ public class DevWorldGenerator extends ChunkGenerator {
         
         
         
-        
         for (int x = 0; x < 16; x++) {
             int worldX = chunkX * 16 + x;
             
@@ -140,7 +141,7 @@ public class DevWorldGenerator extends ChunkGenerator {
                 
                 if (worldX >= -10 && worldX < BLOCKS_PER_LINE + 10 && 
                     worldZ >= -10 && worldZ < LINES_COUNT * LINES_SPACING + 10) {
-                    chunkData.setBlock(x, floorY, z, Material.WHITE_STAINED_GLASS);
+                    chunkData.setBlock(x, floorY - 1, z, Material.WHITE_STAINED_GLASS);
                 }
                 
                 
@@ -178,7 +179,6 @@ public class DevWorldGenerator extends ChunkGenerator {
         
         
         
-        
         generateAirSpace(chunkData, chunkX, chunkZ, floorY);
     }
     
@@ -194,6 +194,7 @@ public class DevWorldGenerator extends ChunkGenerator {
         
         
         if (worldX == 0) {
+            chunkData.setBlock(x, y - 1, z, Material.WHITE_STAINED_GLASS);
             chunkData.setBlock(x, y, z, Material.BLUE_STAINED_GLASS);
             
             
@@ -204,6 +205,7 @@ public class DevWorldGenerator extends ChunkGenerator {
         
         
         else if (worldX == 1) {
+            chunkData.setBlock(x, y - 1, z, Material.WHITE_STAINED_GLASS);
             chunkData.setBlock(x, y, z, Material.WHITE_STAINED_GLASS);
         }
         
@@ -213,6 +215,7 @@ public class DevWorldGenerator extends ChunkGenerator {
             
             
             
+            chunkData.setBlock(x, y - 1, z, Material.WHITE_STAINED_GLASS);
             if ((worldX - 2) % 2 == 0) {
                 chunkData.setBlock(x, y, z, Material.GRAY_STAINED_GLASS);
             } else {
@@ -236,16 +239,17 @@ public class DevWorldGenerator extends ChunkGenerator {
                          worldZ == -10 || worldZ == LINES_COUNT * LINES_SPACING + 9);
         
         if (isEdge) {
+            chunkData.setBlock(x, y - 1, z, Material.WHITE_STAINED_GLASS);
+            chunkData.setBlock(x, y, z, Material.BARRIER);
             chunkData.setBlock(x, y + 1, z, Material.BARRIER);
-            chunkData.setBlock(x, y + 2, z, Material.BARRIER);
         }
-        
         
         
         
         if ((worldX == -5 && worldZ == -5) || 
             (worldX == BLOCKS_PER_LINE + 5 && worldZ == LINES_COUNT * LINES_SPACING + 5)) {
-            chunkData.setBlock(x, y + 1, z, Material.OAK_SIGN);
+            chunkData.setBlock(x, y - 1, z, Material.WHITE_STAINED_GLASS);
+            chunkData.setBlock(x, y, z, Material.OAK_SIGN);
         }
     }
     
@@ -309,10 +313,7 @@ public class DevWorldGenerator extends ChunkGenerator {
         
         
         
-        
-        
         addFloorToWorld(world, floorNumber);
-        
         
         
         
@@ -343,9 +344,7 @@ public class DevWorldGenerator extends ChunkGenerator {
         
         
         
-        
         for (org.bukkit.Chunk chunk : world.getLoadedChunks()) {
-            
             
             
             
@@ -377,7 +376,10 @@ public class DevWorldGenerator extends ChunkGenerator {
                 if (worldX >= -10 && worldX < BLOCKS_PER_LINE + 10 && 
                     worldZ >= -10 && worldZ < LINES_COUNT * LINES_SPACING + 10) {
                     
-                    org.bukkit.Location loc = new org.bukkit.Location(world, worldX, floorY, worldZ);
+                    org.bukkit.Location loc = new org.bukkit.Location(world, worldX, floorY - 1, worldZ);
+                    world.getBlockAt(loc).setType(Material.WHITE_STAINED_GLASS);
+                    
+                    loc = new org.bukkit.Location(world, worldX, floorY, worldZ);
                     world.getBlockAt(loc).setType(Material.WHITE_STAINED_GLASS);
                 }
                 
@@ -389,8 +391,10 @@ public class DevWorldGenerator extends ChunkGenerator {
                         int lineZ = line * LINES_SPACING;
                         
                         if (worldZ == lineZ) {
-                            org.bukkit.Location loc = new org.bukkit.Location(world, worldX, floorY, worldZ);
+                            org.bukkit.Location loc = new org.bukkit.Location(world, worldX, floorY - 1, worldZ);
+                            world.getBlockAt(loc).setType(Material.WHITE_STAINED_GLASS);
                             
+                            loc = new org.bukkit.Location(world, worldX, floorY, worldZ);
                             if (worldX == 0) {
                                 world.getBlockAt(loc).setType(Material.BLUE_STAINED_GLASS);
                                 world.getBlockAt(loc.add(0, 1, 0)).setType(Material.BEACON);

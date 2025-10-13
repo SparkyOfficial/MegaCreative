@@ -169,7 +169,10 @@ public class ScriptTriggerManager implements Listener {
             
             CodeHandler codeHandler = creativeWorld.getCodeHandler();
             if (codeHandler == null) {
-                LOGGER.warning("CodeHandler is null for world: " + creativeWorld.getName());
+                // Only log at fine level to reduce spam
+                if (LOGGER.isLoggable(java.util.logging.Level.FINE)) {
+                    LOGGER.fine("CodeHandler is null for world: " + creativeWorld.getName());
+                }
                 return;
             }
             
@@ -182,10 +185,16 @@ public class ScriptTriggerManager implements Listener {
             
             ActivatorType activatorType = mapEventToActivatorType(eventName);
             if (activatorType != null) {
-                LOGGER.info("Executing scripts for event: " + eventName + " with activator type: " + activatorType);
+                // Only log at fine level to reduce spam
+                if (LOGGER.isLoggable(java.util.logging.Level.FINE)) {
+                    LOGGER.fine("Executing scripts for event: " + eventName + " with activator type: " + activatorType);
+                }
                 codeHandler.handleEvent(activatorType, gameEvent, player);
             } else {
-                LOGGER.warning("No activator type found for event: " + eventName);
+                // Only log at fine level to reduce spam
+                if (LOGGER.isLoggable(java.util.logging.Level.FINE)) {
+                    LOGGER.fine("No activator type found for event: " + eventName);
+                }
             }
             
             
@@ -198,8 +207,8 @@ public class ScriptTriggerManager implements Listener {
                         handler.handle(gameEvent.getEventData(), player, creativeWorld.getName());
                         
                         
-                        if (LOGGER.isLoggable(java.util.logging.Level.FINE)) {
-                            LOGGER.fine("Executed event handler for " + eventName + " in world " + creativeWorld.getName());
+                        if (LOGGER.isLoggable(java.util.logging.Level.FINEST)) {
+                            LOGGER.finest("Executed event handler for " + eventName + " in world " + creativeWorld.getName());
                         }
                     }
                 }
@@ -222,7 +231,10 @@ public class ScriptTriggerManager implements Listener {
             
             CodeHandler codeHandler = creativeWorld.getCodeHandler();
             if (codeHandler == null) {
-                LOGGER.warning("CodeHandler is null for world: " + creativeWorld.getName());
+                // Only log at fine level to reduce spam
+                if (LOGGER.isLoggable(java.util.logging.Level.FINE)) {
+                    LOGGER.fine("CodeHandler is null for world: " + creativeWorld.getName());
+                }
                 return;
             }
             
@@ -232,10 +244,16 @@ public class ScriptTriggerManager implements Listener {
             
             ActivatorType activatorType = mapEventToActivatorType(eventName);
             if (activatorType != null) {
-                LOGGER.info("Executing scripts for global event: " + eventName + " with activator type: " + activatorType);
+                // Only log at fine level to reduce spam
+                if (LOGGER.isLoggable(java.util.logging.Level.FINE)) {
+                    LOGGER.fine("Executing scripts for global event: " + eventName + " with activator type: " + activatorType);
+                }
                 codeHandler.handleEvent(activatorType, gameEvent, null);
             } else {
-                LOGGER.warning("No activator type found for global event: " + eventName);
+                // Only log at fine level to reduce spam
+                if (LOGGER.isLoggable(java.util.logging.Level.FINE)) {
+                    LOGGER.fine("No activator type found for global event: " + eventName);
+                }
             }
             
             
@@ -248,8 +266,8 @@ public class ScriptTriggerManager implements Listener {
                         handler.handle(gameEvent.getEventData(), null, creativeWorld.getName());
                         
                         
-                        if (LOGGER.isLoggable(java.util.logging.Level.FINE)) {
-                            LOGGER.fine("Executed global event handler for " + eventName + " in world " + creativeWorld.getName());
+                        if (LOGGER.isLoggable(java.util.logging.Level.FINEST)) {
+                            LOGGER.finest("Executed global event handler for " + eventName + " in world " + creativeWorld.getName());
                         }
                     }
                 }

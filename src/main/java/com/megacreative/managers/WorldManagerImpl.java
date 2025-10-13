@@ -1136,34 +1136,17 @@ public class WorldManagerImpl implements IWorldManager {
             WorldCreator creator = new WorldCreator(devWorldName);
             creator.environment(world.getWorldType().getEnvironment());
             
-            
-            switch (world.getWorldType()) {
-                case FLAT:
-                    creator.type(WorldType.FLAT);
-                    creator.generatorSettings("{\"layers\":[{\"block\":\"bedrock\",\"height\":1},{\"block\":\"stone\",\"height\":2},{\"block\":\"grass_block\",\"height\":1}],\"biome\":\"plains\"}");
-                    break;
-                case VOID:
-                    creator.type(WorldType.FLAT);
-                    creator.generatorSettings("{\"layers\":[{\"block\":\"air\",\"height\":1}],\"biome\":\"plains\"}");
-                    break;
-                case OCEAN:
-                    creator.type(WorldType.NORMAL);
-                    break;
-                case NETHER:
-                    creator.environment(World.Environment.NETHER);
-                    break;
-                case END:
-                    creator.environment(World.Environment.THE_END);
-                    break;
-                default:
-                    creator.type(WorldType.NORMAL);
-                    break;
-            }
+            // Use the DevWorldGenerator instead of flat world settings
+            creator.generator(new com.megacreative.worlds.DevWorldGenerator());
+            creator.generateStructures(false);
             
             bukkitWorld = Bukkit.createWorld(creator);
             
             if (bukkitWorld != null) {
+                // Setup the world with proper spawn location
+                bukkitWorld.setSpawnLocation(0, 65, 0);
                 
+                // Apply world settings
                 setupWorld(bukkitWorld, world);
             }
         }
