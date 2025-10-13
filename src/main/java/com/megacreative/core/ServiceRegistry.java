@@ -203,7 +203,11 @@ public class ServiceRegistry implements DependencyContainer.Disposable {
     }
     
     private void initializeImplementationManagers() {
-        
+        // Register the CodingManagerImpl as a factory since it needs dependencies
+        dependencyContainer.registerFactory(ICodingManager.class, (DependencyContainer.Supplier<ICodingManager>) () -> {
+            IWorldManager worldManager = dependencyContainer.resolve(IWorldManager.class);
+            return new CodingManagerImpl((MegaCreative) plugin, worldManager);
+        });
     }
     
     private void initializeCodingServices() {

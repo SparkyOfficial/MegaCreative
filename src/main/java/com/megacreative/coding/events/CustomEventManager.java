@@ -72,6 +72,7 @@ public class CustomEventManager implements Listener, EventPublisher, EventSubscr
         this.correlationEngine = new EventCorrelationEngine(this);
         this.regionDetectionSystem = new RegionDetectionSystem(plugin, this);
         initializeBuiltInEvents();
+        startTickTask();
         startCorrelationCleanupTask();
     }
     
@@ -560,7 +561,7 @@ public class CustomEventManager implements Listener, EventPublisher, EventSubscr
      * Initializes built-in events
      */
     private void initializeBuiltInEvents() {
-        
+        // Player connection events
         CustomEvent playerConnectEvent = new CustomEvent("playerConnect", "system")
             .addDataField("player", Player.class, true, "Player who connected")
             .addDataField("firstTime", Boolean.class, false, "Is this the player's first time?");
@@ -577,7 +578,83 @@ public class CustomEventManager implements Listener, EventPublisher, EventSubscr
         playerDisconnectEvent.addTag("connection");
         registerEvent(playerDisconnectEvent);
             
+        // Player movement event
+        CustomEvent playerMoveEvent = new CustomEvent("playerMove", "system")
+            .addDataField("player", Player.class, true, "Player who moved")
+            .addDataField("from", org.bukkit.Location.class, true, "Previous location")
+            .addDataField("to", org.bukkit.Location.class, true, "New location");
+        playerMoveEvent.addTag("player");
+        playerMoveEvent.addTag("movement");
+        registerEvent(playerMoveEvent);
+            
+        // Player chat event
+        CustomEvent playerChatEvent = new CustomEvent("playerChat", "system")
+            .addDataField("player", Player.class, true, "Player who sent the message")
+            .addDataField("message", String.class, true, "The message content");
+        playerChatEvent.addTag("player");
+        playerChatEvent.addTag("communication");
+        registerEvent(playerChatEvent);
         
+        // Player death event
+        CustomEvent playerDeathEvent = new CustomEvent("playerDeath", "system")
+            .addDataField("player", Player.class, true, "Player who died")
+            .addDataField("killer", Player.class, false, "Player who killed (if any)")
+            .addDataField("cause", String.class, false, "Cause of death");
+        playerDeathEvent.addTag("player");
+        playerDeathEvent.addTag("combat");
+        registerEvent(playerDeathEvent);
+        
+        // Player respawn event
+        CustomEvent playerRespawnEvent = new CustomEvent("playerRespawn", "system")
+            .addDataField("player", Player.class, true, "Player who respawned")
+            .addDataField("location", org.bukkit.Location.class, true, "Respawn location");
+        playerRespawnEvent.addTag("player");
+        playerRespawnEvent.addTag("spawn");
+        registerEvent(playerRespawnEvent);
+        
+        // Player teleport event
+        CustomEvent playerTeleportEvent = new CustomEvent("playerTeleport", "system")
+            .addDataField("player", Player.class, true, "Player who teleported")
+            .addDataField("from", org.bukkit.Location.class, true, "Previous location")
+            .addDataField("to", org.bukkit.Location.class, true, "New location");
+        playerTeleportEvent.addTag("player");
+        playerTeleportEvent.addTag("movement");
+        registerEvent(playerTeleportEvent);
+        
+        // Entity damage event
+        CustomEvent entityDamageEvent = new CustomEvent("entityDamage", "system")
+            .addDataField("player", Player.class, true, "Player involved in damage")
+            .addDataField("damaged", org.bukkit.entity.Entity.class, true, "Entity that was damaged")
+            .addDataField("damage", Double.class, true, "Amount of damage");
+        entityDamageEvent.addTag("player");
+        entityDamageEvent.addTag("combat");
+        registerEvent(entityDamageEvent);
+        
+        // Inventory click event
+        CustomEvent inventoryClickEvent = new CustomEvent("inventoryClick", "system")
+            .addDataField("player", Player.class, true, "Player who clicked")
+            .addDataField("slot", Integer.class, true, "Clicked slot number")
+            .addDataField("item", org.bukkit.inventory.ItemStack.class, false, "Item in the slot");
+        inventoryClickEvent.addTag("player");
+        inventoryClickEvent.addTag("inventory");
+        registerEvent(inventoryClickEvent);
+        
+        // Entity pickup item event
+        CustomEvent entityPickupItemEvent = new CustomEvent("entityPickupItem", "system")
+            .addDataField("player", Player.class, true, "Player who picked up the item")
+            .addDataField("item", org.bukkit.inventory.ItemStack.class, true, "Item that was picked up");
+        entityPickupItemEvent.addTag("player");
+        entityPickupItemEvent.addTag("inventory");
+        registerEvent(entityPickupItemEvent);
+        
+        // Tick event (global)
+        CustomEvent tickEvent = new CustomEvent("tick", "system")
+            .addDataField("tickCount", Long.class, true, "Current tick count");
+        tickEvent.setGlobal(true);
+        tickEvent.addTag("system");
+        registerEvent(tickEvent);
+            
+        // Script completion event
         CustomEvent scriptCompleteEvent = new CustomEvent("scriptComplete", "system")
             .addDataField("scriptName", String.class, true, "Name of completed script")
             .addDataField("executionTime", Long.class, false, "Execution time in milliseconds")
@@ -586,7 +663,7 @@ public class CustomEventManager implements Listener, EventPublisher, EventSubscr
         scriptCompleteEvent.addTag("execution");
         registerEvent(scriptCompleteEvent);
             
-        
+        // User message event
         CustomEvent userMessageEvent = new CustomEvent("userMessage", "system")
             .addDataField("message", String.class, true, "Message content")
             .addDataField("sender", Player.class, false, "Message sender")
@@ -594,7 +671,7 @@ public class CustomEventManager implements Listener, EventPublisher, EventSubscr
         userMessageEvent.addTag("communication");
         registerEvent(userMessageEvent);
         
-        
+        // Region events
         CustomEvent regionEnterEvent = new CustomEvent("regionEnter", "system")
             .addDataField("player", Player.class, true, "Player who entered the region")
             .addDataField("regionId", String.class, true, "ID of the region entered")
@@ -643,14 +720,123 @@ public class CustomEventManager implements Listener, EventPublisher, EventSubscr
     
     @org.bukkit.event.EventHandler
     public void onPlayerMove(PlayerMoveEvent event) {
-        
+        // Only trigger if player actually moved to a different block
         if (event.getFrom().getBlockX() != event.getTo().getBlockX() ||
             event.getFrom().getBlockY() != event.getTo().getBlockY() ||
             event.getFrom().getBlockZ() != event.getTo().getBlockZ()) {
             
+            // Trigger the custom playerMove event
+            Map<String, DataValue> data = new HashMap<>();
+            data.put("player", DataValue.fromObject(event.getPlayer()));
+            data.put("from", DataValue.fromObject(event.getFrom()));
+            data.put("to", DataValue.fromObject(event.getTo()));
             
+            triggerEvent("playerMove", data, event.getPlayer(), event.getPlayer().getWorld().getName());
+            
+            // Update region tracking
             regionDetectionSystem.updatePlayerRegions(event.getPlayer());
         }
+    }
+    
+    @org.bukkit.event.EventHandler
+    public void onPlayerChat(org.bukkit.event.player.PlayerChatEvent event) {
+        // Trigger the custom playerChat event
+        Map<String, DataValue> data = new HashMap<>();
+        data.put("player", DataValue.fromObject(event.getPlayer()));
+        data.put("message", DataValue.fromObject(event.getMessage()));
+        
+        triggerEvent("playerChat", data, event.getPlayer(), event.getPlayer().getWorld().getName());
+    }
+    
+    @org.bukkit.event.EventHandler
+    public void onPlayerDeath(org.bukkit.event.entity.PlayerDeathEvent event) {
+        // Trigger the custom playerDeath event
+        Map<String, DataValue> data = new HashMap<>();
+        data.put("player", DataValue.fromObject(event.getEntity()));
+        if (event.getEntity().getKiller() != null) {
+            data.put("killer", DataValue.fromObject(event.getEntity().getKiller()));
+        }
+        data.put("cause", DataValue.fromObject(event.getDeathMessage()));
+        
+        triggerEvent("playerDeath", data, event.getEntity(), event.getEntity().getWorld().getName());
+    }
+    
+    @org.bukkit.event.EventHandler
+    public void onPlayerRespawn(org.bukkit.event.player.PlayerRespawnEvent event) {
+        // Trigger the custom playerRespawn event
+        Map<String, DataValue> data = new HashMap<>();
+        data.put("player", DataValue.fromObject(event.getPlayer()));
+        data.put("location", DataValue.fromObject(event.getRespawnLocation()));
+        
+        triggerEvent("playerRespawn", data, event.getPlayer(), event.getPlayer().getWorld().getName());
+    }
+    
+    @org.bukkit.event.EventHandler
+    public void onPlayerTeleport(org.bukkit.event.player.PlayerTeleportEvent event) {
+        // Trigger the custom playerTeleport event
+        Map<String, DataValue> data = new HashMap<>();
+        data.put("player", DataValue.fromObject(event.getPlayer()));
+        data.put("from", DataValue.fromObject(event.getFrom()));
+        data.put("to", DataValue.fromObject(event.getTo()));
+        
+        triggerEvent("playerTeleport", data, event.getPlayer(), event.getPlayer().getWorld().getName());
+    }
+    
+    @org.bukkit.event.EventHandler
+    public void onEntityDamage(org.bukkit.event.entity.EntityDamageEvent event) {
+        // Only handle player damage events
+        if (event.getEntity() instanceof Player) {
+            // Trigger the custom entityDamage event
+            Map<String, DataValue> data = new HashMap<>();
+            data.put("player", DataValue.fromObject((Player) event.getEntity()));
+            data.put("damaged", DataValue.fromObject(event.getEntity()));
+            data.put("damage", DataValue.fromObject(event.getDamage()));
+            
+            triggerEvent("entityDamage", data, (Player) event.getEntity(), event.getEntity().getWorld().getName());
+        }
+    }
+    
+    @org.bukkit.event.EventHandler
+    public void onInventoryClick(org.bukkit.event.inventory.InventoryClickEvent event) {
+        // Only handle player inventory clicks
+        if (event.getWhoClicked() instanceof Player) {
+            Player player = (Player) event.getWhoClicked();
+            
+            // Trigger the custom inventoryClick event
+            Map<String, DataValue> data = new HashMap<>();
+            data.put("player", DataValue.fromObject(player));
+            data.put("slot", DataValue.fromObject(event.getSlot()));
+            if (event.getCurrentItem() != null) {
+                data.put("item", DataValue.fromObject(event.getCurrentItem()));
+            }
+            
+            triggerEvent("inventoryClick", data, player, player.getWorld().getName());
+        }
+    }
+    
+    @org.bukkit.event.EventHandler
+    public void onEntityPickupItem(org.bukkit.event.entity.EntityPickupItemEvent event) {
+        // Only handle player pickup events
+        if (event.getEntity() instanceof Player) {
+            Player player = (Player) event.getEntity();
+            
+            // Trigger the custom entityPickupItem event
+            Map<String, DataValue> data = new HashMap<>();
+            data.put("player", DataValue.fromObject(player));
+            data.put("item", DataValue.fromObject(event.getItem().getItemStack()));
+            
+            triggerEvent("entityPickupItem", data, player, player.getWorld().getName());
+        }
+    }
+    
+    // Add a repeating task to trigger the tick event
+    private void startTickTask() {
+        plugin.getServer().getScheduler().runTaskTimer(plugin, () -> {
+            Map<String, DataValue> data = new HashMap<>();
+            data.put("tickCount", DataValue.fromObject(System.currentTimeMillis()));
+            
+            triggerEvent("tick", data, null, "global");
+        }, 1L, 1L); // Run every tick
     }
     
     /**
