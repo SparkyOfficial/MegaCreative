@@ -1,12 +1,8 @@
 package com.megacreative;
 
-import com.megacreative.commands.*;
-import com.megacreative.config.ConfigurationValidator;
 import com.megacreative.core.CommandRegistry;
 import com.megacreative.core.DependencyContainer;
 import com.megacreative.core.ServiceRegistry;
-import com.megacreative.exceptions.ConfigurationException;
-import com.megacreative.interfaces.IWorldManager;
 import com.megacreative.listeners.*;
 import com.megacreative.managers.TickManager;
 import org.bukkit.plugin.java.JavaPlugin;
@@ -126,7 +122,7 @@ public class MegaCreative extends JavaPlugin {
     private void loadWorlds() {
         try {
             
-            IWorldManager worldManager = serviceRegistry.getWorldManager();
+            com.megacreative.interfaces.IWorldManager worldManager = serviceRegistry.getWorldManager();
             if (worldManager instanceof com.megacreative.managers.WorldManagerImpl worldManagerImpl) {
                 worldManagerImpl.loadWorlds();
             }
@@ -228,6 +224,14 @@ public class MegaCreative extends JavaPlugin {
      * Start the auto-save system
      */
     private void startAutoSaveSystem() {
+        com.megacreative.utils.ConfigManager cfg = serviceRegistry != null ? serviceRegistry.getConfigManager() : null;
+        boolean enabled = cfg == null || cfg.isAutoSaveEnabled();
+        int seconds = cfg == null ? 300 : cfg.getAutoSaveInterval();
+        long periodTicks = Math.max(20L, seconds * 20L);
+        if (!enabled) {
+            logger.info("Auto-save disabled via config");
+            return;
+        }
         autoSaveTask = new BukkitRunnable() {
             @Override
             public void run() {
@@ -249,7 +253,7 @@ public class MegaCreative extends JavaPlugin {
                     e.printStackTrace();
                 }
             }
-        }.runTaskTimer(this, 6000L, 6000L); 
+        }.runTaskTimer(this, periodTicks, periodTicks); 
     }
     
     

@@ -2,7 +2,6 @@ package com.megacreative.core;
 
 import com.megacreative.coding.BlockPlacementHandler;
 import com.megacreative.coding.ConnectionVisualizer;
-import com.megacreative.coding.ScriptCompiler;
 import com.megacreative.coding.ScriptEngine;
 import com.megacreative.coding.DefaultScriptEngine;
 import com.megacreative.coding.ActionFactory;
@@ -12,6 +11,7 @@ import com.megacreative.coding.BlockHierarchyManager;
 import com.megacreative.coding.WorldCodeRestorer;
 import com.megacreative.coding.CodeBlockSignManager;
 import com.megacreative.coding.ScriptTriggerManager;
+import com.megacreative.coding.ScriptValidator;
 import com.megacreative.listeners.*;
 import com.megacreative.coding.containers.BlockContainerManager;
 import com.megacreative.coding.variables.VariableManager;
@@ -39,7 +39,6 @@ import com.megacreative.services.CodeCompiler;
 import com.megacreative.coding.activators.ActivatorManager;
 import com.megacreative.services.RepeatingTaskManager;
 import org.bukkit.plugin.Plugin;
-import java.util.concurrent.ConcurrentHashMap;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
@@ -89,6 +88,7 @@ public class ServiceRegistry implements DependencyContainer.Disposable {
         
         dependencyContainer.registerType(IWorldManager.class, WorldManagerImpl.class);
         dependencyContainer.registerType(GameLoopManager.class, GameLoopManager.class);
+        dependencyContainer.registerFactory(TickManager.class, (DependencyContainer.Supplier<TickManager>) () -> new TickManager((MegaCreative) plugin));
         dependencyContainer.registerType(IPlayerManager.class, PlayerManagerImpl.class);
         dependencyContainer.registerType(ITrustedPlayerManager.class, TrustedPlayerManager.class);
         
@@ -237,28 +237,34 @@ public class ServiceRegistry implements DependencyContainer.Disposable {
         // Register interfaces for factories
         dependencyContainer.registerType(com.megacreative.interfaces.IActionFactory.class, ActionFactory.class);
         dependencyContainer.registerType(com.megacreative.interfaces.IConditionFactory.class, ConditionFactory.class);
-        dependencyContainer.registerType(com.megacreative.interfaces.IScriptEngine.class, DefaultScriptEngine.class);
         
         // Register concrete classes
-        dependencyContainer.registerFactory(ActionFactory.class, (DependencyContainer.Supplier<ActionFactory>) () -> 
-            new ActionFactory((MegaCreative) plugin));
-        dependencyContainer.registerFactory(ConditionFactory.class, (DependencyContainer.Supplier<ConditionFactory>) () -> 
-            new ConditionFactory((MegaCreative) plugin));
+        ActionFactory actionFactoryInstance = new ActionFactory((MegaCreative) plugin);
+        actionFactoryInstance.registerAllActions();
+        dependencyContainer.registerSingleton(ActionFactory.class, actionFactoryInstance);
+        dependencyContainer.registerSingleton(com.megacreative.interfaces.IActionFactory.class, actionFactoryInstance);
+
+        ConditionFactory conditionFactoryInstance = new ConditionFactory((MegaCreative) plugin);
+        conditionFactoryInstance.registerAllConditions();
+        dependencyContainer.registerSingleton(ConditionFactory.class, conditionFactoryInstance);
+        dependencyContainer.registerSingleton(com.megacreative.interfaces.IConditionFactory.class, conditionFactoryInstance);
         
-        // Register ScriptCompiler as a factory since it needs BlockLinker as a dependency
-        dependencyContainer.registerFactory(ScriptCompiler.class, (DependencyContainer.Supplier<ScriptCompiler>) () -> {
-            BlockConfigService blockConfigService = dependencyContainer.resolve(BlockConfigService.class);
-            BlockLinker blockLinker = dependencyContainer.resolve(BlockLinker.class);
-            return new ScriptCompiler((MegaCreative) plugin, blockConfigService, blockLinker);
-        });
         
-        // Register ScriptEngine as a factory - this is critical for proper initialization
-        dependencyContainer.registerFactory(ScriptEngine.class, (DependencyContainer.Supplier<ScriptEngine>) () -> {
-            VariableManager variableManager = dependencyContainer.resolve(VariableManager.class);
-            VisualDebugger visualDebugger = dependencyContainer.resolve(VisualDebugger.class);
-            BlockConfigService blockConfigService = dependencyContainer.resolve(BlockConfigService.class);
-            return new DefaultScriptEngine((MegaCreative) plugin, variableManager, visualDebugger, blockConfigService);
-        });
+        
+		// Register ScriptValidator as a singleton to consolidate validation surface
+		dependencyContainer.registerFactory(ScriptValidator.class, (DependencyContainer.Supplier<ScriptValidator>) () -> {
+			BlockConfigService blockConfigService = dependencyContainer.resolve(BlockConfigService.class);
+			return new ScriptValidator(blockConfigService);
+		});
+
+		// Register ScriptEngine as a factory - this is critical for proper initialization
+		dependencyContainer.registerFactory(ScriptEngine.class, (DependencyContainer.Supplier<ScriptEngine>) () -> {
+			VariableManager variableManager = dependencyContainer.resolve(VariableManager.class);
+			VisualDebugger visualDebugger = dependencyContainer.resolve(VisualDebugger.class);
+			BlockConfigService blockConfigService = dependencyContainer.resolve(BlockConfigService.class);
+			ScriptValidator scriptValidator = dependencyContainer.resolve(ScriptValidator.class);
+			return new DefaultScriptEngine((MegaCreative) plugin, variableManager, visualDebugger, blockConfigService, scriptValidator);
+		});
     }
     
     private void initializeNewArchitectureServices() {
@@ -446,9 +452,7 @@ public class ServiceRegistry implements DependencyContainer.Disposable {
         return dependencyContainer.resolve(ScriptEngine.class);
     }
     
-    public IScriptEngine getScriptEngineInterface() {
-        return dependencyContainer.resolve(IScriptEngine.class);
-    }
+    
     
     public DefaultScriptEngine getDefaultScriptEngine() {
         return dependencyContainer.resolve(DefaultScriptEngine.class);
@@ -506,9 +510,7 @@ public class ServiceRegistry implements DependencyContainer.Disposable {
         return dependencyContainer.resolve(CodeCompiler.class);
     }
     
-    public ScriptCompiler getScriptCompiler() { 
-        return dependencyContainer.resolve(ScriptCompiler.class);
-    }
+    
     
     public ConnectionVisualizer getConnectionVisualizer() { 
         return dependencyContainer.resolve(ConnectionVisualizer.class);

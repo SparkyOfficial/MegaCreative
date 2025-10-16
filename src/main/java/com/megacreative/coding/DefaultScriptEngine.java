@@ -23,11 +23,11 @@ import com.megacreative.coding.executors.ExecutionResult;
 import com.megacreative.coding.values.DataValue;
 import com.megacreative.coding.values.types.ListValue;
 import com.megacreative.coding.variables.VariableManager;
-import com.megacreative.interfaces.IScriptEngine;
+ 
 import com.megacreative.services.BlockConfigService;
 import com.megacreative.coding.events.CustomEventManager;
 
-public class DefaultScriptEngine implements ScriptEngine, EnhancedScriptEngine, EventPublisher, IScriptEngine {
+public class DefaultScriptEngine implements ScriptEngine, EnhancedScriptEngine, EventPublisher {
     
     
     private static final String BLOCK_TYPE_EVENT = "EVENT";
@@ -97,7 +97,7 @@ public class DefaultScriptEngine implements ScriptEngine, EnhancedScriptEngine, 
     private ConditionFactory conditionFactory;
     
     public DefaultScriptEngine(MegaCreative plugin, VariableManager variableManager, VisualDebugger debugger,
-                               BlockConfigService blockConfigService) {
+                               BlockConfigService blockConfigService, ScriptValidator scriptValidator) {
         this.plugin = plugin;
         this.variableManager = variableManager;
         this.debugger = debugger;
@@ -107,7 +107,7 @@ public class DefaultScriptEngine implements ScriptEngine, EnhancedScriptEngine, 
         this.advancedExecutionEngine = new AdvancedExecutionEngine(plugin);
         
         
-        this.scriptValidator = new ScriptValidator(blockConfigService);
+        this.scriptValidator = scriptValidator != null ? scriptValidator : new ScriptValidator(blockConfigService);
         
         
         this.executionCache = new BlockExecutionCache(5L, TimeUnit.MINUTES, 1000);
@@ -123,20 +123,18 @@ public class DefaultScriptEngine implements ScriptEngine, EnhancedScriptEngine, 
      * Initialize block executors for the Strategy pattern
      */
     private void initializeExecutors() {
-        
-        ActionFactory actionFactory = new ActionFactory(plugin);
-        this.conditionFactory = new ConditionFactory(plugin); 
-        
-        
+        ActionFactory actionFactory = plugin.getServiceRegistry().getActionFactory() instanceof ActionFactory
+            ? (ActionFactory) plugin.getServiceRegistry().getActionFactory()
+            : new ActionFactory(plugin);
+        this.conditionFactory = plugin.getServiceRegistry().getConditionFactory() instanceof ConditionFactory
+            ? (ConditionFactory) plugin.getServiceRegistry().getConditionFactory()
+            : new ConditionFactory(plugin);
+
         executors.put(BlockType.EVENT, new EventBlockExecutor());
         executors.put(BlockType.ACTION, new ActionBlockExecutor(actionFactory));
         executors.put(BlockType.CONDITION, new ConditionBlockExecutor(conditionFactory));
         executors.put(BlockType.CONTROL, new ControlFlowBlockExecutor(actionFactory, conditionFactory));
         executors.put(BlockType.FUNCTION, new FunctionBlockExecutor());
-        
-        
-        actionFactory.registerAllActions();
-        conditionFactory.registerAllConditions();
     }
     
     public void initialize() {
@@ -145,14 +143,16 @@ public class DefaultScriptEngine implements ScriptEngine, EnhancedScriptEngine, 
     }
     
     public int getActionCount() {
-        
-        ActionFactory actionFactory = new ActionFactory(plugin);
+        ActionFactory actionFactory = plugin.getServiceRegistry().getActionFactory() instanceof ActionFactory
+            ? (ActionFactory) plugin.getServiceRegistry().getActionFactory()
+            : new ActionFactory(plugin);
         return actionFactory.getActionCount();
     }
     
     public int getConditionCount() {
-        
-        ConditionFactory conditionFactory = new ConditionFactory(plugin);
+        ConditionFactory conditionFactory = plugin.getServiceRegistry().getConditionFactory() instanceof ConditionFactory
+            ? (ConditionFactory) plugin.getServiceRegistry().getConditionFactory()
+            : new ConditionFactory(plugin);
         return conditionFactory.getConditionCount();
     }
     

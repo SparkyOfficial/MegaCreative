@@ -4,7 +4,6 @@ import com.megacreative.MegaCreative;
 import com.megacreative.coding.CodeBlock;
 import com.megacreative.coding.CodeScript;
 import com.megacreative.coding.BlockPlacementHandler;
-import com.megacreative.services.BlockConfigService;
 import com.megacreative.configs.WorldCode;
 import org.bukkit.World;
 import org.bukkit.Location;
@@ -12,9 +11,6 @@ import org.bukkit.block.Block;
 import org.bukkit.block.Sign;
 import org.bukkit.Material;
 import org.bukkit.ChatColor;
-import org.bukkit.block.data.type.WallSign;
-import org.bukkit.block.Container;
-import org.bukkit.inventory.Inventory;
 import org.bukkit.inventory.ItemStack;
 import com.megacreative.coding.values.DataValue;
 import com.megacreative.coding.values.types.*;
@@ -34,7 +30,7 @@ import org.bukkit.block.BlockFace;
  * CodeCompiler-Dienst, der Weltenstrukturen scannt und in CodeScript-Objekte umwandelt
  * Dies implementiert die Funktion "Kompilierung aus der Welt", die im Vergleich mit dem Referenzsystem erwähnt wird
  */
-public class CodeCompiler {
+public class CodeCompiler implements org.bukkit.event.Listener {
     
     private final MegaCreative plugin;
     private final Logger logger;
@@ -56,6 +52,38 @@ public class CodeCompiler {
         this.logger = plugin.getLogger();
         this.blockConfigService = plugin.getServiceRegistry().getBlockConfigService();
         this.blockPlacementHandler = plugin.getServiceRegistry().getBlockPlacementHandler();
+        try {
+            org.bukkit.plugin.PluginManager pm = plugin.getServer().getPluginManager();
+            pm.registerEvents(this, plugin);
+        } catch (Exception ignored) {}
+    }
+
+    @org.bukkit.event.EventHandler
+    public void onCodeBlockPlaced(com.megacreative.events.CodeBlockPlacedEvent event) {
+        try {
+            org.bukkit.Location location = event.getLocation();
+            CodeBlock eventBlock = event.getCodeBlock();
+            CodeScript script = compileScriptFromEventBlock(location, eventBlock);
+            com.megacreative.interfaces.IWorldManager worldManager = plugin.getServiceRegistry().getWorldManager();
+            com.megacreative.models.CreativeWorld creativeWorld = worldManager.findCreativeWorldByBukkit(location.getWorld());
+            if (creativeWorld != null) {
+                createAndRegisterActivator(eventBlock, creativeWorld, location);
+                addScriptToWorld(eventBlock, script, creativeWorld, worldManager);
+            }
+        } catch (Exception e) {
+            logger.warning("Error handling CodeBlockPlacedEvent: " + e.getMessage());
+        }
+    }
+
+    @org.bukkit.event.EventHandler
+    public void onCodeBlockBroken(com.megacreative.events.CodeBlockBrokenEvent event) {
+        try {
+            org.bukkit.Location location = event.getLocation();
+            CodeBlock eventBlock = event.getCodeBlock();
+            removeScript(eventBlock, location);
+        } catch (Exception e) {
+            logger.warning("Error handling CodeBlockBrokenEvent: " + e.getMessage());
+        }
     }
     
     /**
@@ -203,18 +231,73 @@ public class CodeCompiler {
         
         
         
-        com.megacreative.coding.ScriptCompiler scriptCompiler = plugin.getServiceRegistry().getScriptCompiler();
-        if (scriptCompiler != null) {
-            logger.fine("Recompiling world scripts with ScriptCompiler");
-            
-            // Use the correct method name
-            scriptCompiler.compileWorldScripts(startLocation.getWorld());
-        }
+        
         
         logger.fine("Script structure building completed for script: " + script.getName());
         
         
         
+    }
+
+    private void createAndRegisterActivator(CodeBlock eventBlock, com.megacreative.models.CreativeWorld creativeWorld, org.bukkit.Location location) {
+        try {
+            com.megacreative.coding.CodeHandler codeHandler = creativeWorld.getCodeHandler();
+            if (codeHandler == null) return;
+            com.megacreative.coding.activators.Activator activator = null;
+            String action = eventBlock.getAction();
+            if ("onJoin".equals(action)) activator = new com.megacreative.coding.activators.PlayerJoinActivator(plugin, creativeWorld);
+            else if ("onPlayerMove".equals(action)) activator = new com.megacreative.coding.activators.PlayerMoveActivator(plugin, creativeWorld);
+            else if ("onBlockPlace".equals(action)) activator = new com.megacreative.coding.activators.BlockPlaceActivator(plugin, creativeWorld);
+            else if ("onBlockBreak".equals(action)) activator = new com.megacreative.coding.activators.BlockBreakActivator(plugin, creativeWorld);
+            else if ("onChat".equals(action)) activator = new com.megacreative.coding.activators.ChatActivator(plugin, creativeWorld);
+            else if ("onPlayerQuit".equals(action)) activator = new com.megacreative.coding.activators.PlayerQuitActivator(plugin, creativeWorld);
+            else if ("onPlayerDeath".equals(action)) activator = new com.megacreative.coding.activators.PlayerDeathActivator(plugin, creativeWorld);
+            else if ("onPlayerRespawn".equals(action)) activator = new com.megacreative.coding.activators.PlayerRespawnActivator(plugin, creativeWorld);
+            else if ("onPlayerTeleport".equals(action)) activator = new com.megacreative.coding.activators.PlayerTeleportActivator(plugin, creativeWorld);
+            else if ("onEntityPickupItem".equals(action)) activator = new com.megacreative.coding.activators.EntityPickupItemActivator(plugin, creativeWorld);
+            if (activator != null) {
+                activator.addAction(eventBlock);
+                if (activator instanceof com.megacreative.coding.activators.BukkitEventActivator) {
+                    ((com.megacreative.coding.activators.BukkitEventActivator) activator).setLocation(location);
+                }
+                codeHandler.registerActivator(activator);
+            }
+        } catch (Exception e) {
+            logger.warning("Error creating and registering activator: " + e.getMessage());
+        }
+    }
+
+    private void addScriptToWorld(CodeBlock eventBlock, CodeScript script, com.megacreative.models.CreativeWorld creativeWorld, com.megacreative.interfaces.IWorldManager worldManager) {
+        try {
+            java.util.List<CodeScript> scripts = creativeWorld.getScripts();
+            if (scripts == null) {
+                scripts = new java.util.ArrayList<>();
+                creativeWorld.setScripts(scripts);
+            }
+            scripts.removeIf(existing -> existing.getRootBlock() != null && existing.getRootBlock().getId().equals(eventBlock.getId()));
+            scripts.add(script);
+            worldManager.saveWorld(creativeWorld);
+            logger.fine("Added compiled script to world: " + creativeWorld.getName());
+        } catch (Exception e) {
+            logger.warning("Error adding script to world: " + e.getMessage());
+        }
+    }
+
+    private void removeScript(CodeBlock eventBlock, org.bukkit.Location location) {
+        try {
+            com.megacreative.interfaces.IWorldManager worldManager = plugin.getServiceRegistry().getWorldManager();
+            com.megacreative.models.CreativeWorld creativeWorld = worldManager.findCreativeWorldByBukkit(location.getWorld());
+            if (creativeWorld == null) return;
+            java.util.List<CodeScript> scripts = creativeWorld.getScripts();
+            if (scripts == null) return;
+            boolean removed = scripts.removeIf(script -> script.getRootBlock() != null && script.getRootBlock().getId().equals(eventBlock.getId()));
+            if (removed) {
+                worldManager.saveWorld(creativeWorld);
+                logger.fine("Removed script for block at: " + formatLocation(location));
+            }
+        } catch (Exception e) {
+            logger.warning("Error removing script: " + e.getMessage());
+        }
     }
     
     /**
@@ -421,7 +504,6 @@ public class CodeCompiler {
         
         
         
-        Location location = block.getLocation();
         BlockFace[] faces = {BlockFace.NORTH, BlockFace.SOUTH, BlockFace.EAST, BlockFace.WEST};
         
         for (BlockFace face : faces) {
@@ -1174,21 +1256,7 @@ public class CodeCompiler {
      *
      * Prüft, ob ein ItemStack ein Platzhalterelement ist
      */
-    private boolean isPlaceholderItem(ItemStack item) {
-        if (item == null || !item.hasItemMeta()) return false;
-        
-        org.bukkit.inventory.meta.ItemMeta meta = item.getItemMeta();
-        if (meta.hasLore()) {
-            List<String> lore = meta.getLore();
-            for (String line : lore) {
-                if (line.contains("placeholder") || line.contains("Placeholder")) {
-                    return true;
-                }
-            }
-        }
-        
-        return false;
-    }
+    
 
     /**
      * Форматирует расположение для целей логирования/отображения

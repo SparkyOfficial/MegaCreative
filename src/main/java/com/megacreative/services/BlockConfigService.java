@@ -141,7 +141,12 @@ public class BlockConfigService {
         
         if (blocksSection != null) {
             plugin.getLogger().info("Blocks section keys: " + blocksSection.getKeys(false).size());
+            Set<String> seenIds = new HashSet<>();
             for (String id : blocksSection.getKeys(false)) {
+                if (!seenIds.add(id)) {
+                    plugin.getLogger().severe("Duplicate block ID detected in coding_blocks.yml: " + id + ". This ID must be unique.");
+                    continue;
+                }
                 ConfigurationSection section = blocksSection.getConfigurationSection(id);
                 if (section != null) {
                     try {
@@ -154,7 +159,12 @@ public class BlockConfigService {
                         if (material != null) {
                             
                             blockConfig.setMaterial(material);
-                            materialToBlockIds.computeIfAbsent(material, k -> new ArrayList<>()).add(id);
+                            List<String> ids = materialToBlockIds.computeIfAbsent(material, k -> new ArrayList<>());
+                            if (ids.contains(id)) {
+                                plugin.getLogger().severe("Duplicate mapping for material " + material + " to block ID " + id + ". Skipping duplicate.");
+                            } else {
+                                ids.add(id);
+                            }
                             plugin.getLogger().info("Successfully loaded block config: " + id + " with material " + material);
                         } else {
                             plugin.getLogger().warning("Invalid material for block config: " + id);
@@ -179,6 +189,9 @@ public class BlockConfigService {
         
         
         ensureMaterialsAreSet();
+
+        // Validate uniqueness across actions lists
+        validateUniqueActionsPerMaterial();
         
         
         plugin.getLogger().info("Loaded materials: " + materialToBlockIds.keySet().size());
@@ -188,6 +201,28 @@ public class BlockConfigService {
             if (actions != null) {
                 for (String action : actions) {
                     plugin.getLogger().info("  - " + action);
+                }
+            }
+        }
+    }
+
+    /**
+     * Validates that action identifiers are unique per material to avoid ambiguous resolution
+     */
+    private void validateUniqueActionsPerMaterial() {
+        for (Map.Entry<Material, List<String>> entry : materialToBlockIds.entrySet()) {
+            Material material = entry.getKey();
+            Map<String, Integer> counts = new HashMap<>();
+            for (String id : entry.getValue()) {
+                BlockConfig cfg = blockConfigs.get(id);
+                if (cfg == null) continue;
+                for (String action : cfg.getActions()) {
+                    counts.merge(action, 1, Integer::sum);
+                }
+            }
+            for (Map.Entry<String, Integer> c : counts.entrySet()) {
+                if (c.getValue() > 1) {
+                    logger.severe("Duplicate action '" + c.getKey() + "' for material " + material + " across multiple block IDs. Please fix coding_blocks.yml");
                 }
             }
         }

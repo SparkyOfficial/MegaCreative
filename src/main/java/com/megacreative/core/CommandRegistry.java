@@ -3,6 +3,7 @@ package com.megacreative.core;
 import com.megacreative.MegaCreative;
 import com.megacreative.commands.*;
 import com.megacreative.interfaces.IWorldManager;
+import com.megacreative.interfaces.IPlayerManager;
 import com.megacreative.managers.PlayerModeManager;
 import com.megacreative.managers.DevInventoryManager;
 import com.megacreative.coding.BlockPlacementHandler;
@@ -126,6 +127,35 @@ public class CommandRegistry {
                 workspaceCmd.setExecutor(new WorkspaceCommand(plugin));
             }
             
+            org.bukkit.command.PluginCommand joinCmd = plugin.getCommand("join");
+            if (joinCmd != null && serviceRegistry != null) {
+                IWorldManager worldManager = serviceRegistry.getWorldManager();
+                joinCmd.setExecutor(new JoinCommand(plugin, worldManager));
+            }
+            
+            org.bukkit.command.PluginCommand playCmd = plugin.getCommand("play");
+            if (playCmd != null) {
+                playCmd.setExecutor(new PlayCommand(plugin));
+            }
+            
+            org.bukkit.command.PluginCommand hubCmd = plugin.getCommand("hub");
+            if (hubCmd != null && serviceRegistry != null) {
+                IPlayerManager playerManager = serviceRegistry.getPlayerManager();
+                hubCmd.setExecutor(new HubCommand(plugin, playerManager));
+            }
+            
+            org.bukkit.command.PluginCommand switchCmd = plugin.getCommand("switch");
+            if (switchCmd != null && serviceRegistry != null) {
+                IWorldManager worldManager = serviceRegistry.getWorldManager();
+                switchCmd.setExecutor(new SwitchCommand(plugin, worldManager));
+            }
+            
+            org.bukkit.command.PluginCommand groupCmd = plugin.getCommand("group");
+            if (groupCmd != null && serviceRegistry != null) {
+                groupCmd.setExecutor(new GroupCommand(serviceRegistry));
+                groupCmd.setTabCompleter(new GroupCommand(serviceRegistry));
+            }
+            
             org.bukkit.command.PluginCommand deleteCmd = plugin.getCommand("delete");
             if (deleteCmd != null) {
                 deleteCmd.setExecutor(new DeleteCommand(plugin));
@@ -164,6 +194,13 @@ public class CommandRegistry {
             org.bukkit.command.PluginCommand ccCmd = plugin.getCommand("cc");
             if (ccCmd != null) {
                 ccCmd.setExecutor(new GlobalChatCommand(plugin));
+            }
+
+            org.bukkit.command.PluginCommand clipboardCmd = plugin.getCommand("clipboard");
+            if (clipboardCmd != null && serviceRegistry != null) {
+                IWorldManager worldManager = serviceRegistry.getWorldManager();
+                PlaceholdersCommand placeholders = new PlaceholdersCommand(plugin, worldManager);
+                clipboardCmd.setExecutor(placeholders);
             }
             
             
