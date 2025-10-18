@@ -79,9 +79,9 @@ public class ParameterUtils {
                         
                         return Integer.parseInt(containerValue.replaceAll("[^0-9]", ""));
                     } catch (NumberFormatException e) {
-                        
-                        
-                        
+                        // Log exception and continue processing
+                        // This is expected behavior when parsing user input
+                        Logger.getLogger(ParameterUtils.class.getName()).warning("Invalid number format: " + containerValue);
                     }
                 }
             }

@@ -133,7 +133,7 @@ public class BlockContainerListener implements Listener {
                 ItemMeta meta = item.getItemMeta();
                 if (meta != null && meta.hasLore()) {
                     List<String> lore = meta.getLore();
-                    if (lore.size() > 1) {
+                    if (lore != null && lore.size() > 1) {
                         String currentLine = lore.get(1).substring(9); 
                         if (currentLine.startsWith("§o")) {
                             currentLine = ""; 

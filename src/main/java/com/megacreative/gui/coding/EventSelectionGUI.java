@@ -82,16 +82,9 @@ public class EventSelectionGUI implements GUIManager.ManagedGUIInterface {
         this.blockMaterial = blockMaterial;
         this.guiManager = plugin.getServiceRegistry().getGuiManager();
         
-        
-        if (plugin != null && plugin.getServiceRegistry() != null) {
-            this.blockConfigService = plugin.getServiceRegistry().getBlockConfigService();
-            this.eventManager = plugin.getServiceRegistry().getCustomEventManager();
-        } else {
-            this.blockConfigService = null;
-            this.eventManager = null;
-            player.sendMessage("§cBlock configuration service not available!");
-        }
-        
+        // Initialize services directly since plugin is never null
+        this.blockConfigService = plugin.getServiceRegistry().getBlockConfigService();
+        this.eventManager = plugin.getServiceRegistry().getCustomEventManager();
         
         this.inventory = Bukkit.createInventory(null, 54, "§8Выбор события: " + getBlockDisplayName());
         

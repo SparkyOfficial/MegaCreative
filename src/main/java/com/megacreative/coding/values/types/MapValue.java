@@ -163,7 +163,7 @@ public class MapValue implements DataValue {
     
     @Override
     public boolean isValid() {
-        return values != null;
+        return true; // values is never null as it's initialized in constructor
     }
     
     @Override

@@ -45,6 +45,8 @@ permissions:
       megacreative.command.hub: true
       megacreative.command.interactive: true
       megacreative.command.performance: true
+      megacreative.command.like: true
+      megacreative.command.dislike: true
 
   megacreative.admin:
     description: Admin permissions
@@ -84,6 +86,14 @@ permissions:
 
   megacreative.command.performance:
     description: Performance monitoring and optimization
+    default: true
+
+  megacreative.command.like:
+    description: Like worlds
+    default: true
+
+  megacreative.command.dislike:
+    description: Dislike worlds
     default: true
 
 commands:
@@ -242,6 +252,30 @@ commands:
       &6/performance clear &f- Clear performance data (admin only)
     permission: megacreative.user
     aliases: [perfmon, monitor]
+
+  like:
+    description: Like the current world
+    usage: /like
+    permission: megacreative.user
+    aliases: [upvote]
+
+  dislike:
+    description: Dislike the current world
+    usage: /dislike
+    permission: megacreative.user
+    aliases: [downvote]
+
+  comment:
+    description: Comment on the current world
+    usage: /comment <text>
+    permission: megacreative.user
+    aliases: [cmt]
+
+  worldstats:
+    description: View world statistics
+    usage: /worldstats [world]
+    permission: megacreative.user
+    aliases: [wstats, ws]
 
   cc:
     description: Send message to global chat

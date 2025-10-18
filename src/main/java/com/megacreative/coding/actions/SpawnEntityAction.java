@@ -45,7 +45,9 @@ public class SpawnEntityAction implements BlockAction {
                 try {
                     count = Math.max(1, Integer.parseInt(countValue.asString()));
                 } catch (NumberFormatException e) {
-                    
+                    // Log exception and continue processing
+                    // This is expected behavior when parsing user input
+                    context.getPlugin().getLogger().warning("Invalid count value: " + countValue.asString());
                 }
             }
 
@@ -54,7 +56,9 @@ public class SpawnEntityAction implements BlockAction {
                 try {
                     radius = Math.max(0, Double.parseDouble(radiusValue.asString()));
                 } catch (NumberFormatException e) {
-                    
+                    // Log exception and continue processing
+                    // This is expected behavior when parsing user input
+                    context.getPlugin().getLogger().warning("Invalid radius value: " + radiusValue.asString());
                 }
             }
 
@@ -71,9 +75,8 @@ public class SpawnEntityAction implements BlockAction {
                 
                 entityLocation.setY(spawnLocation.getWorld().getHighestBlockYAt(entityLocation));
                 
-                if (spawnLocation.getWorld().spawnEntity(entityLocation, entityType) != null) {
-                    spawnedCount++;
-                }
+                spawnLocation.getWorld().spawnEntity(entityLocation, entityType);
+                spawnedCount++;
             }
             
             return ExecutionResult.success("Spawned " + spawnedCount + " " + entityType.name() + "(s)");

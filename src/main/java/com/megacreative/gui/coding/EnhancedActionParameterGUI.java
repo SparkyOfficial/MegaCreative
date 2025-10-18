@@ -45,12 +45,8 @@ public class EnhancedActionParameterGUI {
         this.plugin = plugin;
         this.guiManager = new InteractiveGUIManager(plugin);
         
-        
-        if (plugin != null && plugin.getServiceRegistry() != null) {
-            this.blockConfigService = plugin.getServiceRegistry().getBlockConfigService();
-        } else {
-            this.blockConfigService = null;
-        }
+        // Initialize block config service directly since plugin is never null
+        this.blockConfigService = plugin.getServiceRegistry().getBlockConfigService();
     }
     
     /**
@@ -370,10 +366,10 @@ public class EnhancedActionParameterGUI {
             lore.add("§7Parameters: §f" + block.getParameters().size());
             lore.add("");
             lore.add("§a✨ Real-time parameter editing");
-            lore.add("§a🎆 Reference System-style interface");
+            lore.add("§a.EVT Reference System-style interface");
             lore.add("§7Use the interactive elements below");
             lore.add("");
-            lore.add("§f✨ Reference system-стиль: универсальные блоки");
+            lore.add("§f.EVT Reference system-стиль: универсальные блоки");
             lore.add("§fс настройкой через GUI");
             meta.setLore(lore);
             item.setItemMeta(meta);
@@ -387,14 +383,14 @@ public class EnhancedActionParameterGUI {
         ItemMeta meta = item.getItemMeta();
         
         if (meta != null) {
-            meta.setDisplayName("§a🎆 Save & Apply");
+            meta.setDisplayName("§a.EVT Save & Apply");
             List<String> lore = new ArrayList<>();
             lore.add("§7Save all parameter changes");
             lore.add("§7and apply them to the block");
             lore.add("");
             lore.add("§eChanges are auto-saved on edit");
             lore.add("");
-            lore.add("§f✨ Reference system-стиль: универсальные блоки");
+            lore.add("§f.EVT Reference system-стиль: универсальные блоки");
             lore.add("§fс настройкой через GUI");
             meta.setLore(lore);
             item.setItemMeta(meta);
@@ -408,12 +404,12 @@ public class EnhancedActionParameterGUI {
         ItemMeta meta = item.getItemMeta();
         
         if (meta != null) {
-            meta.setDisplayName("§c erotik Close Editor");
+            meta.setDisplayName("§c.EVT Close Editor");
             List<String> lore = new ArrayList<>();
             lore.add("§7Close the parameter editor");
             lore.add("§7Changes are already saved");
             lore.add("");
-            lore.add("§f✨ Reference system-стиль: универсальные блоки");
+            lore.add("§f.EVT Reference system-стиль: универсальные блоки");
             lore.add("§fс настройкой через GUI");
             meta.setLore(lore);
             item.setItemMeta(meta);
@@ -427,14 +423,14 @@ public class EnhancedActionParameterGUI {
         ItemMeta meta = item.getItemMeta();
         
         if (meta != null) {
-            meta.setDisplayName("§6 erotik Reset Parameters");
+            meta.setDisplayName("§6.EVT Reset Parameters");
             List<String> lore = new ArrayList<>();
             lore.add("§7Reset all parameters");
             lore.add("§7to their default values");
             lore.add("");
             lore.add("§cThis cannot be undone!");
             lore.add("");
-            lore.add("§f✨ Reference system-стиль: универсальные блоки");
+            lore.add("§f.EVT Reference system-стиль: универсальные блоки");
             lore.add("§fс настройкой через GUI");
             meta.setLore(lore);
             item.setItemMeta(meta);
@@ -448,14 +444,14 @@ public class EnhancedActionParameterGUI {
         ItemMeta meta = item.getItemMeta();
         
         if (meta != null) {
-            meta.setDisplayName("§b erotik Help: " + actionId);
+            meta.setDisplayName("§b.EVT Help: " + actionId);
             List<String> lore = new ArrayList<>();
             lore.add("§7Get help for this action type");
             lore.add("§7and its parameters");
             lore.add("");
             lore.add("§eClick for detailed help");
             lore.add("");
-            lore.add("§f✨ Reference system-стиль: универсальные блоки");
+            lore.add("§f.EVT Reference system-стиль: универсальные блоки");
             lore.add("§fс настройкой через GUI");
             meta.setLore(lore);
             item.setItemMeta(meta);
@@ -473,7 +469,7 @@ public class EnhancedActionParameterGUI {
             List<String> lore = new ArrayList<>();
             lore.add("§7Вернуться к предыдущему меню");
             lore.add("");
-            lore.add("§f✨ Reference system-стиль: универсальные блоки");
+            lore.add("§f.EVT Reference system-стиль: универсальные блоки");
             lore.add("§fс настройкой через GUI");
             meta.setLore(lore);
             item.setItemMeta(meta);

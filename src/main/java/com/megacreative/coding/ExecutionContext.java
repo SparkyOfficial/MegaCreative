@@ -58,26 +58,26 @@ public class ExecutionContext {
     
     private int instructionCount = 0;
     
-    
+	
     private ExecutionMode executionMode = ExecutionMode.SYNCHRONOUS;
     private Priority priority = Priority.NORMAL;
     private int maxInstructions = 1000;
     private long executionTimeout = 0;
     private long executionStartTime = System.currentTimeMillis();
 
-    
+	
     private final VariableManager variableManager;
     
-    
+	
     private final String scriptId; 
     private final String worldId;  
     
-    
+	
     private boolean lastConditionResult = false;
     
+	
     
-    
-    
+	
     private ChestParser chestParser;
     
     /**
@@ -97,7 +97,7 @@ public class ExecutionContext {
         this.worldId = this.scriptId;
         this.variableManager = plugin != null ? plugin.getServiceRegistry().getVariableManager() : null;
         
-        
+		
         if (blockLocation != null) {
             this.chestParser = ChestParser.forAdjacentChest(blockLocation);
         }
@@ -207,6 +207,12 @@ public class ExecutionContext {
             throw new IllegalStateException("Cannot set variable: script ID is not available");
         }
         variableManager.setLocalVariable(scriptId, name, DataValue.fromObject(value));
+
+        // Condition plugin.getLogger() != null is always true when reached
+        // Removed redundant null check
+        if (plugin != null) {
+            plugin.getLogger().info("Debug: Variable '" + name + "' set to '" + value + "' for player " + (player != null ? player.getName() : "null"));
+        }
     }
     
     /**
@@ -219,7 +225,7 @@ public class ExecutionContext {
             return null;
         }
         
-        
+		
         String context = getPlayerContext();
         DataValue value = variableManager.resolveVariable(name, context);
         return value != null ? value.getValue() : null;
@@ -336,7 +342,7 @@ public class ExecutionContext {
     }
     
     
-    
+	
     
     /**
      * Создает или обновляет список
@@ -378,7 +384,7 @@ public class ExecutionContext {
         }
     }
     
-    
+	
     
     /**
      * Sets a boolean variable in the execution context.
@@ -452,7 +458,7 @@ public class ExecutionContext {
     }
     
     
-    
+	
     
     public CreativeWorld getCreativeWorld() {
         return creativeWorld;
@@ -466,7 +472,7 @@ public class ExecutionContext {
         return blockLocation;
     }
     
-    
+	
     
     public boolean isPaused() {
         return paused;
@@ -492,23 +498,27 @@ public class ExecutionContext {
         this.cancelled = cancelled;
     }
     
-    
+	
     public boolean hasBreakFlag() {
         return breakFlag;
     }
     
     public void setBreakFlag(boolean breakFlag) {
         this.breakFlag = breakFlag;
-        
-        if (plugin != null && plugin.getLogger() != null) {
+		
+        // Condition plugin.getLogger() != null is always true when reached
+        // Removed redundant null check
+        if (plugin != null) {
             plugin.getLogger().fine(Constants.BREAK_FLAG_SET + breakFlag);
         }
     }
     
     public void clearBreakFlag() {
         this.breakFlag = false;
-        
-        if (plugin != null && plugin.getLogger() != null) {
+		
+        // Condition plugin.getLogger() != null is always true when reached
+        // Removed redundant null check
+        if (plugin != null) {
             plugin.getLogger().fine(Constants.BREAK_FLAG_CLEARED);
         }
     }
@@ -519,16 +529,20 @@ public class ExecutionContext {
     
     public void setContinueFlag(boolean continueFlag) {
         this.continueFlag = continueFlag;
-        
-        if (plugin != null && plugin.getLogger() != null) {
+		
+        // Condition plugin.getLogger() != null is always true when reached
+        // Removed redundant null check
+        if (plugin != null) {
             plugin.getLogger().fine(Constants.CONTINUE_FLAG_SET + continueFlag);
         }
     }
     
     public void clearContinueFlag() {
         this.continueFlag = false;
-        
-        if (plugin != null && plugin.getLogger() != null) {
+		
+        // Condition plugin.getLogger() != null is always true when reached
+        // Removed redundant null check
+        if (plugin != null) {
             plugin.getLogger().fine(Constants.CONTINUE_FLAG_CLEARED);
         }
     }
@@ -537,7 +551,7 @@ public class ExecutionContext {
      * Gets script ID for variable resolution
      */
     public String getScriptId() {
-        
+		
         if (currentBlock != null) {
             return Constants.SCRIPT_ID_PREFIX + currentBlock.getId().toString();
         }
@@ -559,12 +573,12 @@ public class ExecutionContext {
      * Debug mode provides additional logging and feedback during script execution
      */
     public boolean isDebugMode() {
-        
+		
         if (player != null && player.hasPermission(Constants.DEBUG_PERMISSION)) {
             return true;
         }
         
-        
+		
         return false;
     }
     
@@ -605,8 +619,7 @@ public class ExecutionContext {
     public void resetInstructionCount() {
         instructionCount = 0;
     }
-    
-    
+	
     
     /**
      * Gets the execution mode for this context
@@ -701,8 +714,7 @@ public class ExecutionContext {
         if (name == null || name.isEmpty()) {
             return null;
         }
-        
-        
+		
         String context = getPlayerContext();
         return variableManager.resolveVariable(name, context);
     }
@@ -780,8 +792,7 @@ public class ExecutionContext {
         }
         return new ArrayList<>();
     }
-    
-    
+	
     public static Builder builder() {
         return new Builder();
     }
@@ -793,8 +804,7 @@ public class ExecutionContext {
         private CustomEvent event;
         private Location blockLocation;
         private CodeBlock currentBlock;
-        
-        
+		
         private ExecutionMode executionMode = ExecutionMode.SYNCHRONOUS;
         private Priority priority = Priority.NORMAL;
         private int maxInstructions = 1000;
@@ -828,8 +838,7 @@ public class ExecutionContext {
             this.currentBlock = currentBlock;
             return this;
         }
-        
-        
+		
         public Builder executionMode(ExecutionMode executionMode) {
             this.executionMode = executionMode;
             return this;

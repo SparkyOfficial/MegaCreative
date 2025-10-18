@@ -67,20 +67,17 @@ public class BlockPlaceEventDataExtractor extends AbstractEventDataExtractor<Blo
         
         extractLocationData(data, blockLocation, "block");
         
-        
         data.put("blockType", DataValue.fromObject(block.getType().name()));
         data.put("blockData", DataValue.fromObject(block.getBlockData().getAsString()));
         
         
-        if (itemInHand != null) {
-            data.put("itemType", DataValue.fromObject(itemInHand.getType().name()));
-            if (itemInHand.hasItemMeta() && itemInHand.getItemMeta().hasDisplayName()) {
-                data.put("itemName", DataValue.fromObject(itemInHand.getItemMeta().getDisplayName()));
-            } else {
-                data.put("itemName", DataValue.fromObject(""));
-            }
-            data.put("itemAmount", DataValue.fromObject(itemInHand.getAmount()));
+        data.put("itemType", DataValue.fromObject(itemInHand.getType().name()));
+        if (itemInHand.hasItemMeta() && itemInHand.getItemMeta().hasDisplayName()) {
+            data.put("itemName", DataValue.fromObject(itemInHand.getItemMeta().getDisplayName()));
+        } else {
+            data.put("itemName", DataValue.fromObject(""));
         }
+        data.put("itemAmount", DataValue.fromObject(itemInHand.getAmount()));
         
         
         data.put("isCancelled", DataValue.fromObject(event.isCancelled()));

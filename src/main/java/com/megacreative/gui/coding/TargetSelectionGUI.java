@@ -409,34 +409,8 @@ public class TargetSelectionGUI implements GUIManager.ManagedGUIInterface {
         if (lore == null) return;
         
         
-        if (inventory.getSize() == 54 && inventory.getItem(49) != null && 
-            inventory.getItem(49).hasItemMeta()) {
-            ItemMeta backMeta = inventory.getItem(49).getItemMeta();
-            if (backMeta != null && backMeta.getDisplayName().equals("§c⬅ Назад")) {
-            
-                
-                if (slot == 49) {
-                    
-                    player.closeInventory();
-                    Bukkit.getScheduler().runTaskLater(plugin, this::open, 1L);
-                    return;
-                }
-                
-                
-                String targetId = null;
-                for (String line : lore) {
-                    if (line.startsWith("§8ID: ")) {
-                        targetId = line.substring(6); 
-                        break;
-                    }
-                }
-                
-                if (targetId != null) {
-                    selectTarget(targetId);
-                }
-                return;
-            }
-        }
+        // Condition slot == 49 is always false
+        // Removed redundant check since we already handled slot 49 above
         
         
         String targetId = null;

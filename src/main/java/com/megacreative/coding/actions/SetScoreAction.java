@@ -60,9 +60,6 @@ public class SetScoreAction implements BlockAction {
 
             
             Scoreboard scoreboard = player.getScoreboard();
-            if (scoreboard == null) {
-                return ExecutionResult.error("No scoreboard found for player");
-            }
             
             Objective objective = scoreboard.getObjective("main");
             if (objective == null) {

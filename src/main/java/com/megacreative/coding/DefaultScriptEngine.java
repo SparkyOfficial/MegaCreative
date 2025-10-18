@@ -394,7 +394,7 @@ public class DefaultScriptEngine implements ScriptEngine, EnhancedScriptEngine, 
             public void run() {
                 try {
                     plugin.getLogger().info("Starting block execution for player: " + getPlayerName(player) + 
-                                          " with action: " + (block != null ? block.getAction() : "null"));
+                                          " with action: " + block.getAction());
                     ExecutionResult result = processBlock(block, context, 0);
                     
                     
@@ -472,7 +472,7 @@ public class DefaultScriptEngine implements ScriptEngine, EnhancedScriptEngine, 
             public void run() {
                 try {
                     plugin.getLogger().info("Starting block chain execution for player: " + getPlayerName(player) + 
-                                          " with start block action: " + (startBlock != null ? startBlock.getAction() : "null"));
+                                          " with start block action: " + startBlock.getAction());
                     
                     List<CodeBlock> executionChain = new ArrayList<>();
                     ExecutionResult result = processBlockChain(startBlock, context, executionChain, 0);
@@ -528,10 +528,13 @@ public class DefaultScriptEngine implements ScriptEngine, EnhancedScriptEngine, 
         if (action == null) return false;
         
         
-        return !action.toLowerCase().contains("random") && 
-               !action.toLowerCase().contains("spawn") &&
-               !action.toLowerCase().contains("give") &&
-               !action.toLowerCase().contains("teleport");
+        String lowerAction = action.toLowerCase();
+        return !lowerAction.contains("random") && 
+               !lowerAction.contains("spawn") &&
+               !lowerAction.contains("give") &&
+               !lowerAction.contains("teleport") &&
+               !lowerAction.contains("wait") &&
+               !lowerAction.contains("pause");
     }
     
     private ExecutionResult processBlock(CodeBlock block, ExecutionContext context, int recursionDepth) {
@@ -615,7 +618,9 @@ public class DefaultScriptEngine implements ScriptEngine, EnhancedScriptEngine, 
 
         
         BlockType blockType = BlockType.ACTION; 
-        if (block != null && block.getAction() != null) {
+        // Condition block != null is always true
+        // Removed redundant null check since we already check for null above
+        if (block.getAction() != null) {
             BlockType type = getBlockType(block.getMaterial(), block.getAction());
             if (type != null) {
                 blockType = type;
@@ -735,7 +740,7 @@ public class DefaultScriptEngine implements ScriptEngine, EnhancedScriptEngine, 
             }
         
             
-            if (result != null && result.isSuccess() && isCacheable(block)) {
+            if (result.isSuccess() && isCacheable(block)) {
                 executionCache.put(block, cacheContext, result);
             }
         
@@ -805,7 +810,9 @@ public class DefaultScriptEngine implements ScriptEngine, EnhancedScriptEngine, 
         }
         
         
-        CodeBlock current = null;
+        // Variable current initializer null is redundant
+        // Removed redundant initializer
+        CodeBlock current;
         
         
         if (!conditionalBlock.getChildren().isEmpty()) {
@@ -914,7 +921,9 @@ public class DefaultScriptEngine implements ScriptEngine, EnhancedScriptEngine, 
             }
             
             
-            if (result != null && !result.isSuccess()) {
+            // Condition result != null is always true
+            // Removed redundant null check since we already check for null above
+            if (!result.isSuccess()) {
                 plugin.getLogger().warning("Block execution failed: " + result.getMessage());
                 return result;
             }

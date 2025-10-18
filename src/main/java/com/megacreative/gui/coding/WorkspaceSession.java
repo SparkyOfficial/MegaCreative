@@ -21,7 +21,7 @@ public class WorkspaceSession {
     private final long createdTime;
     
     private Inventory currentGUI;
-    private List<ScriptBlock> currentScript = new ArrayList<>();
+    private List<WorkspaceScriptBlock> currentScript = new ArrayList<>();
     private Map<String, DataValue> variables = new HashMap<>();
     private Set<UUID> collaborators = new HashSet<>();
     private boolean allowCollaboration = false;
@@ -60,7 +60,7 @@ public class WorkspaceSession {
      * Fügt Block zum Skript hinzu
      * @param block Hinzuzufügender Block
      */
-    public void addBlock(ScriptBlock block) {
+    public void addBlock(WorkspaceScriptBlock block) {
         saveSnapshot("Add " + block.getAction());
         currentScript.add(block);
     }
@@ -77,7 +77,7 @@ public class WorkspaceSession {
      */
     public void removeBlock(int index) {
         if (index >= 0 && index < currentScript.size()) {
-            ScriptBlock removed = currentScript.get(index);
+            WorkspaceScriptBlock removed = currentScript.get(index);
             saveSnapshot("Remove " + removed.getAction());
             currentScript.remove(index);
         }
@@ -209,7 +209,7 @@ public class WorkspaceSession {
      * Ruft das aktuelle Skript ab
      * @return Aktuelles Skript
      */
-    public List<ScriptBlock> getCurrentScript() { return currentScript; }
+    public List<WorkspaceScriptBlock> getCurrentScript() { return currentScript; }
     
     /**
      * Получает текущий графический интерфейс
@@ -249,204 +249,6 @@ public class WorkspaceSession {
      * @return true, wenn der Spieler ein Mitarbeiter ist
      */
     public boolean isCollaborator(UUID playerId) { return collaborators.contains(playerId); }
-}
-
-/**
- * Снимок скрипта для отмены/повтора
- *
- * Script snapshot for undo/redo
- *
- * Skript-Snapshot für Rückgängig/Wiederholen
- */
-class ScriptSnapshot {
-    private final List<ScriptBlock> script;
-    private final String description;
-    private final long timestamp;
-    
-    /**
-     * Инициализирует снимок скрипта
-     * @param script Скрипт для снимка
-     * @param description Описание снимка
-     *
-     * Initializes script snapshot
-     * @param script Script for snapshot
-     * @param description Snapshot description
-     *
-     * Initialisiert den Skript-Snapshot
-     * @param script Skript für den Snapshot
-     * @param description Snapshot-Beschreibung
-     */
-    public ScriptSnapshot(List<ScriptBlock> script, String description) {
-        this.script = script;
-        this.description = description;
-        this.timestamp = System.currentTimeMillis();
-    }
-    
-    /**
-     * Получает скрипт снимка
-     * @return Скрипт снимка
-     *
-     * Gets snapshot script
-     * @return Snapshot script
-     *
-     * Ruft das Snapshot-Skript ab
-     * @return Snapshot-Skript
-     */
-    public List<ScriptBlock> getScript() { return script; }
-    
-    /**
-     * Получает описание снимка
-     * @return Описание снимка
-     *
-     * Gets snapshot description
-     * @return Snapshot description
-     *
-     * Ruft die Snapshot-Beschreibung ab
-     * @return Snapshot-Beschreibung
-     */
-    public String getDescription() { return description; }
-    
-    /**
-     * Получает временную метку снимка
-     * @return Временная метка снимка
-     *
-     * Gets snapshot timestamp
-     * @return Snapshot timestamp
-     *
-     * Ruft den Snapshot-Zeitstempel ab
-     * @return Snapshot-Zeitstempel
-     */
-    public long getTimestamp() { return timestamp; }
-}
-
-/**
- * Представление блока скрипта
- *
- * Script block representation
- *
- * Skriptblock-Darstellung
- */
-class ScriptBlock {
-    private String action;
-    private BlockCategory category;
-    private org.bukkit.Material material;
-    private Map<String, DataValue> parameters = new HashMap<>();
-    private boolean hasNext = false;
-    
-    /**
-     * Инициализирует блок скрипта
-     * @param action Действие блока
-     * @param category Категория блока
-     * @param material Материал блока
-     *
-     * Initializes script block
-     * @param action Block action
-     * @param category Block category
-     * @param material Block material
-     *
-     * Initialisiert den Skriptblock
-     * @param action Block-Aktion
-     * @param category Block-Kategorie
-     * @param material Block-Material
-     */
-    public ScriptBlock(String action, BlockCategory category, org.bukkit.Material material) {
-        this.action = action;
-        this.category = category;
-        this.material = material;
-    }
-    
-    /**
-     * Copy constructor
-     * @param other The ScriptBlock to copy
-     */
-    public ScriptBlock(ScriptBlock other) {
-        this.action = other.action;
-        this.category = other.category;
-        this.material = other.material;
-        this.parameters = new HashMap<>(other.parameters);
-        this.hasNext = other.hasNext;
-    }
-    
-    /**
-     * Creates a copy of this ScriptBlock
-     * @return A new ScriptBlock with the same properties
-     */
-    public ScriptBlock copy() {
-        return new ScriptBlock(this);
-    }
-    
-    
-    /**
-     * Получает действие блока
-     * @return Действие блока
-     *
-     * Gets block action
-     * @return Block action
-     *
-     * Ruft die Block-Aktion ab
-     * @return Block-Aktion
-     */
-    public String getAction() { return action; }
-    
-    /**
-     * Получает категорию блока
-     * @return Категория блока
-     *
-     * Gets block category
-     * @return Block category
-     *
-     * Ruft die Block-Kategorie ab
-     * @return Block-Kategorie
-     */
-    public BlockCategory getCategory() { return category; }
-    
-    /**
-     * Получает материал блока
-     * @return Материал блока
-     *
-     * Gets block material
-     * @return Block material
-     *
-     * Ruft das Block-Material ab
-     * @return Block-Material
-     */
-    public org.bukkit.Material getMaterial() { return material; }
-    
-    /**
-     * Получает параметры блока
-     * @return Параметры блока
-     *
-     * Gets block parameters
-     * @return Block parameters
-     *
-     * Ruft die Block-Parameter ab
-     * @return Block-Parameter
-     */
-    public Map<String, DataValue> getParameters() { return parameters; }
-    
-    /**
-     * Проверяет, есть ли следующий блок
-     * @return true, если есть следующий блок
-     *
-     * Checks if has next block
-     * @return true if has next block
-     *
-     * Prüft, ob ein nächster Block vorhanden ist
-     * @return true, wenn ein nächster Block vorhanden ist
-     */
-    public boolean hasNext() { return hasNext; }
-    
-    /**
-     * Устанавливает наличие следующего блока
-     * @param hasNext Наличие следующего блока
-     *
-     * Sets has next block
-     * @param hasNext Has next block
-     *
-     * Setzt das Vorhandensein des nächsten Blocks
-     * @param hasNext Vorhandensein des nächsten Blocks
-     */
-    public void setHasNext(boolean hasNext) { this.hasNext = hasNext; }
 }
 
 /**

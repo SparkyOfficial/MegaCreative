@@ -45,7 +45,7 @@ public class CheckPlayerStatsCondition implements BlockCondition {
             String operator = resolvedOperator != null ? resolvedOperator.asString() : "==";
             
             
-            double playerStatValue = 0;
+            double playerStatValue;
             try {
                 Statistic statistic = Statistic.valueOf(statType);
                 playerStatValue = player.getStatistic(statistic);

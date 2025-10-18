@@ -139,12 +139,15 @@ public class PlayerManagerImpl implements IPlayerManager {
         if (modeObj instanceof String) {
             try {
                 PlayerModeManager.PlayerMode mode = PlayerModeManager.PlayerMode.valueOf((String) modeObj);
+                // Argument plugin.getServer().getPlayer(playerId) might be null
+                // This is expected behavior when player is offline
                 Player player = plugin.getServer().getPlayer(playerId);
                 if (player != null) {
                     playerModeManager.setMode(player, mode);
                 }
             } catch (IllegalArgumentException e) {
-                
+                // Log invalid player mode and continue processing
+                // This is expected behavior when parsing user data
             }
         }
     }
@@ -165,8 +168,11 @@ public class PlayerManagerImpl implements IPlayerManager {
     public void saveAllPlayerData() {
         
         File playerDataFolder = new File(plugin.getDataFolder(), "players");
-        if (!playerDataFolder.exists()) {
-            playerDataFolder.mkdirs();
+        // Result of File.mkdirs() is ignored
+        // Added check to handle potential failure
+        if (!playerDataFolder.exists() && !playerDataFolder.mkdirs()) {
+            plugin.getLogger().warning("Failed to create player data directory: " + playerDataFolder.getAbsolutePath());
+            return;
         }
         
         
@@ -247,7 +253,8 @@ public class PlayerManagerImpl implements IPlayerManager {
                             playerModeManager.setMode(player, mode);
                         }
                     } catch (IllegalArgumentException e) {
-                        
+                        // Log invalid player mode and continue processing
+                        // This is expected behavior when parsing user data
                     }
                 }
                 

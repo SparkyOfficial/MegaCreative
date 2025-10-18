@@ -124,7 +124,7 @@ public class GenericCondition implements BlockCondition {
         CONDITION_HANDLERS.put("isLookingAt", (context, params) -> {
             Material material = Material.valueOf(params.get("material").asString());
             org.bukkit.block.Block target = context.getPlayer().getTargetBlock(null, 5);
-            return target != null && target.getType() == material;
+            return target.getType() == material;
         });
         
         CONDITION_HANDLERS.put("nearPlayer", (context, params) -> {

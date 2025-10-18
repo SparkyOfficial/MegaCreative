@@ -31,8 +31,8 @@ public class ScriptManager {
         this.activeBuilders = new HashMap<>();
         this.worldScripts = new HashMap<>();
         this.scriptsFolder = new File(dataFolder, "scripts");
-        if (!scriptsFolder.exists()) {
-            scriptsFolder.mkdirs();
+        if (!scriptsFolder.exists() && !scriptsFolder.mkdirs()) {
+            System.err.println("Failed to create scripts directory: " + scriptsFolder.getAbsolutePath());
         }
     }
     
@@ -57,8 +57,9 @@ public class ScriptManager {
      */
     public void saveScript(World world, String name, ScriptBuilder builder) {
         File worldFolder = new File(scriptsFolder, world.getName());
-        if (!worldFolder.exists()) {
-            worldFolder.mkdirs();
+        if (!worldFolder.exists() && !worldFolder.mkdirs()) {
+            System.err.println("Failed to create world scripts directory: " + worldFolder.getAbsolutePath());
+            return;
         }
         
         File scriptFile = new File(worldFolder, name + ".yml");

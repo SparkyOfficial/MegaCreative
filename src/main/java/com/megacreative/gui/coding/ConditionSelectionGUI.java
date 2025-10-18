@@ -79,14 +79,8 @@ public class ConditionSelectionGUI implements GUIManager.ManagedGUIInterface {
         this.blockMaterial = blockMaterial;
         this.guiManager = plugin.getServiceRegistry().getGuiManager();
         
-        
-        if (plugin != null && plugin.getServiceRegistry() != null) {
-            this.blockConfigService = plugin.getServiceRegistry().getBlockConfigService();
-        } else {
-            this.blockConfigService = null;
-            player.sendMessage("§cBlock configuration service not available!");
-        }
-        
+        // Initialize block config service directly since plugin is never null
+        this.blockConfigService = plugin.getServiceRegistry().getBlockConfigService();
         
         this.inventory = Bukkit.createInventory(null, 54, "§8Выбор условия: " + getBlockDisplayName());
         

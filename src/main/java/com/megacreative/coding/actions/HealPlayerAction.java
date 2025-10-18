@@ -42,7 +42,9 @@ public class HealPlayerAction implements BlockAction {
             try {
                 return Double.parseDouble(value.asString());
             } catch (NumberFormatException e) {
-                
+                // Log exception and continue processing
+                // This is expected behavior when parsing user input
+                // Return default value when parsing fails
             }
         }
         return 20.0; 

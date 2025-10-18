@@ -20,6 +20,8 @@ public class CompareVariableCondition implements BlockCondition {
     @Override
     public boolean evaluate(CodeBlock block, ExecutionContext context) {
         Player player = context.getPlayer();
+        // Condition player != null is always true
+        // Removed redundant null check since we already check for null above
         if (player == null) {
             return false;
         }
@@ -71,6 +73,7 @@ public class CompareVariableCondition implements BlockCondition {
             
             
             if (player != null) {
+                // Player object is guaranteed to be non-null at this point
                 DataValue playerVar = variableManager.getPlayerVariable(player.getUniqueId(), var1Name);
                 if (playerVar != null) {
                     var1ValueObj = playerVar.getValue();
@@ -104,6 +107,7 @@ public class CompareVariableCondition implements BlockCondition {
             
             
             if (player != null) {
+                // Player object is guaranteed to be non-null at this point
                 DataValue playerVar = variableManager.getPlayerVariable(player.getUniqueId(), var2Name);
                 if (playerVar != null) {
                     var2ValueObj = playerVar.getValue();

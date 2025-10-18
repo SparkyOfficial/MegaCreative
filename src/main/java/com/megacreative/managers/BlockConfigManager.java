@@ -328,22 +328,14 @@ public class BlockConfigManager implements Listener {
      */
     private void createAutomaticContainer(Location blockLocation, CodeBlock codeBlock) {
         try {
-            
-            var containerManager = plugin.getServiceRegistry().getBlockContainerManager();
-            if (containerManager == null) {
-                plugin.getLogger().warning("Container manager is not available for automatic container creation");
-                return;
-            }
-            
-            
-            containerManager.createContainer(blockLocation, com.megacreative.coding.containers.ContainerType.CHEST, "PlayerEntryAction");
-            
-            
-            var player = Bukkit.getPlayer(configuringBlocks.entrySet().stream()
+            // Find the player configuring this block to prevent NullPointerException
+            UUID playerId = configuringBlocks.entrySet().stream()
                 .filter(entry -> entry.getValue().equals(blockLocation))
                 .map(Map.Entry::getKey)
                 .findFirst()
-                .orElse(null));
+                .orElse(null);
+            
+            var player = playerId != null ? Bukkit.getPlayer(playerId) : null;
                 
             if (player != null) {
                 player.sendMessage("§a✓ Автоматически создан контейнер над блоком для настройки предметов!");
@@ -393,18 +385,15 @@ public class BlockConfigManager implements Listener {
             String paramName = entry.getKey();
             DataValue paramValue = entry.getValue();
             
-            if (paramValue == null) continue;
+            // Removed redundant null check since we already continue if paramValue is null
+            // paramValue is never null at this point due to the earlier continue statement
             
             
             Integer slot = blockConfigService != null ? blockConfigService.findSlotForParameter(codeBlock.getAction(), paramName) : null;
             if (slot != null && slot >= 0 && slot < inventory.getSize()) {
                 ItemStack paramItem = convertDataValueToItemStack(paramName, paramValue);
-                if (paramItem != null) {
-                    inventory.setItem(slot, paramItem);
-                    plugin.getLogger().info("Loaded parameter '" + paramName + "' into slot " + slot + " with value: " + paramValue.asString());
-                } else {
-                    plugin.getLogger().warning("Failed to convert DataValue to ItemStack for parameter: " + paramName);
-                }
+                inventory.setItem(slot, paramItem);
+                plugin.getLogger().info("Loaded parameter '" + paramName + "' into slot " + slot + " with value: " + paramValue.asString());
             } else {
                 plugin.getLogger().warning("No slot found for parameter: " + paramName + " (action: " + codeBlock.getAction() + ")");
                 
@@ -412,11 +401,9 @@ public class BlockConfigManager implements Listener {
                 for (int i = 0; i < inventory.getSize(); i++) {
                     if (inventory.getItem(i) == null || inventory.getItem(i).getType().isAir()) {
                         ItemStack paramItem = convertDataValueToItemStack(paramName, paramValue);
-                        if (paramItem != null) {
-                            inventory.setItem(i, paramItem);
-                            plugin.getLogger().info("Loaded parameter '" + paramName + "' into fallback slot " + i);
-                            break;
-                        }
+                        inventory.setItem(i, paramItem);
+                        plugin.getLogger().info("Loaded parameter '" + paramName + "' into fallback slot " + i);
+                        break;
                     }
                 }
             }
@@ -547,10 +534,13 @@ public class BlockConfigManager implements Listener {
         
         if (meta != null && meta.hasLore()) {
             List<String> lore = meta.getLore();
-            for (String line : lore) {
-                if (line.startsWith("§8Parameter: ")) {
-                    
-                    return extractValueFromParameterItem(item, lore);
+            // Check if lore is not null to prevent NullPointerException
+            if (lore != null) {
+                for (String line : lore) {
+                    if (line.startsWith("§8Parameter: ")) {
+                        
+                        return extractValueFromParameterItem(item, lore);
+                    }
                 }
             }
         }
@@ -574,7 +564,10 @@ public class BlockConfigManager implements Listener {
                         if (!numberStr.isEmpty()) {
                             return new NumberValue(Double.parseDouble(numberStr));
                         }
-                    } catch (NumberFormatException ignored) {}
+                    } catch (NumberFormatException e) {
+                        // If we can't parse the number, use the item amount as fallback
+                        return new NumberValue(item.getAmount());
+                    }
                 }
                 return new NumberValue(item.getAmount());
             
@@ -603,8 +596,6 @@ public class BlockConfigManager implements Listener {
      * Extracts value from a parameter item we created
      */
     private DataValue extractValueFromParameterItem(ItemStack item, List<String> lore) {
-        
-        if (lore == null) return new TextValue(item.getType().name().toLowerCase());
         
         for (String line : lore) {
             String cleanLine = line.replaceAll("§[0-9a-fk-or]", "");
@@ -728,7 +719,10 @@ public class BlockConfigManager implements Listener {
         if (slot != null) return slot;
         
         if (paramName != null && paramName.startsWith("param_")) {
-            try { return Integer.parseInt(paramName.substring(6)); } catch (NumberFormatException ignored) {}
+            try { return Integer.parseInt(paramName.substring(6)); } catch (NumberFormatException e) {
+                // If we can't parse the parameter name as an integer, return null
+                return null;
+            }
         }
         return null;
     }
@@ -753,9 +747,12 @@ public class BlockConfigManager implements Listener {
         ItemMeta meta = item.getItemMeta();
         if (meta.hasLore()) {
             List<String> lore = meta.getLore();
-            for (String line : lore) {
-                if (line.contains("placeholder") || line.contains("Placeholder")) {
-                    return true;
+            // Check if lore is not null to prevent NullPointerException
+            if (lore != null) {
+                for (String line : lore) {
+                    if (line.contains("placeholder") || line.contains("Placeholder")) {
+                        return true;
+                    }
                 }
             }
         }

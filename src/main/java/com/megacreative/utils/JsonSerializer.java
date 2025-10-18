@@ -283,15 +283,11 @@ public class JsonSerializer {
                     ItemStack itemStack = ItemStack.deserialize(map);
                     block.setConfigItem(slot, itemStack);
                 } catch (Exception e) {
-                    
-                    
-                    
+                    // Log exception and continue processing
+                    // This is expected behavior when deserializing ItemStacks
+                    // Silently ignore invalid ItemStacks and continue with other operations
                     System.err.println("Failed to deserialize ItemStack: " + e.getMessage());
-                    
-                    
                     System.err.println("Stack trace: " + java.util.Arrays.toString(e.getStackTrace()));
-                    
-                    
                 }
             });
         }
@@ -303,9 +299,9 @@ public class JsonSerializer {
             try {
                 block.setBracketType(com.megacreative.coding.CodeBlock.BracketType.valueOf(data.bracketType));
             } catch (IllegalArgumentException e) {
-                
-                
-                
+                // Log exception and continue processing
+                // This is expected behavior when parsing bracket types
+                // Silently ignore invalid bracket types and continue with other operations
             }
         }
         

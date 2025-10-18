@@ -489,9 +489,9 @@ public class BlockConfigService {
                         int slotIndex = Integer.parseInt(slotKey);
                         slotMap.put(slotName, slotIndex);
                     } catch (NumberFormatException e) {
-                        
-                        
-                        
+                        // Log exception and continue processing
+                        // This is expected behavior when parsing slot indices
+                        // Silently ignore invalid slot indices and continue with other operations
                     }
                 }
             }

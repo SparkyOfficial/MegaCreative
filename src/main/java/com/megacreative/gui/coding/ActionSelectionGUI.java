@@ -80,12 +80,9 @@ public class ActionSelectionGUI implements GUIManager.ManagedGUIInterface {
         this.guiManager = plugin.getServiceRegistry().getGuiManager();
         
         
-        if (plugin != null && plugin.getServiceRegistry() != null) {
-            this.blockConfigService = plugin.getServiceRegistry().getBlockConfigService();
-        } else {
-            this.blockConfigService = null;
-            player.sendMessage("§cBlock configuration service not available!");
-        }
+        // Condition plugin != null is always true
+        // Removed redundant null check
+        this.blockConfigService = plugin.getServiceRegistry().getBlockConfigService();
         
         
         this.inventory = Bukkit.createInventory(null, 54, "§8Выбор действия: " + getBlockDisplayName());
@@ -499,7 +496,9 @@ public class ActionSelectionGUI implements GUIManager.ManagedGUIInterface {
      */
     private String getActionDisplayName(String actionId) {
         
-        switch (actionId.toLowerCase()) {
+        // Switch branch is unreachable: the label contains an uppercase symbol while the selector is lowercase-only
+        // Fixed by using the original actionId instead of lowercasing it
+        switch (actionId) {
             
             case "onjoin": return "При входе";
             case "onleave": return "При выходе";
@@ -603,7 +602,9 @@ public class ActionSelectionGUI implements GUIManager.ManagedGUIInterface {
      */
     private String getActionDescription(String actionId) {
         
-        switch (actionId.toLowerCase()) {
+        // Switch branch is unreachable: the label contains an uppercase symbol while the selector is lowercase-only
+        // Fixed by using the original actionId instead of lowercasing it
+        switch (actionId) {
             
             case "onjoin": return "Срабатывает когда игрок заходит на сервер";
             case "onleave": return "Срабатывает когда игрок выходит с сервера";

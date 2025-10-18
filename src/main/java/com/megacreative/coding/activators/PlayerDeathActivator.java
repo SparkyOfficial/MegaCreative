@@ -57,19 +57,15 @@ public class PlayerDeathActivator extends BukkitEventActivator {
             return;
         }
         
-        
         for (com.megacreative.coding.CodeBlock action : actionList) {
             try {
-                
                 com.megacreative.coding.ScriptEngine scriptEngine = plugin.getServiceRegistry().getScriptEngine();
                 
                 if (scriptEngine != null) {
-                    
                     Player player = null;
                     if (!selectedEntities.isEmpty() && selectedEntities.get(0) instanceof Player) {
                         player = (Player) selectedEntities.get(0);
                     }
-                    
                     
                     scriptEngine.executeBlock(action, player, "activator_player_death")
                         .thenAccept(result -> {
@@ -117,15 +113,13 @@ public class PlayerDeathActivator extends BukkitEventActivator {
         gameEvent.setPlayer(player);
         if (location != null) {
             gameEvent.setLocation(location);
-        } else if (player.getLocation() != null) {
+        } else {
             gameEvent.setLocation(player.getLocation());
         }
-        
         
         Map<String, Object> customData = new HashMap<>();
         customData.put("deathMessage", deathMessage);
         gameEvent.setCustomData(customData);
-        
         
         execute(gameEvent, new java.util.ArrayList<>(), 0, new java.util.concurrent.atomic.AtomicInteger(0));
     }

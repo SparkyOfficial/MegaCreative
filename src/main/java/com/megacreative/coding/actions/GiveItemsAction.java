@@ -103,7 +103,9 @@ public class GiveItemsAction implements BlockAction {
                     amount = Integer.parseInt(parts[1]);
                     amount = Math.max(1, Math.min(64, amount)); 
                 } catch (NumberFormatException e) {
-                    
+                    // Log exception and continue processing
+                    // This is expected behavior when parsing user input
+                    // Use default amount when parsing fails
                 }
             }
             

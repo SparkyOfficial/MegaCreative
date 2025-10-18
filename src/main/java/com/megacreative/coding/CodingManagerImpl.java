@@ -460,10 +460,11 @@ public class CodingManagerImpl implements ICodingManager {
     
     private void logError(Player player, String message) {
         logger.severe(message);
+        // Argument player might be null
+        // The check has been noted but left as is since it's part of the method signature
         if (player != null && player.isOnline()) {
             player.sendMessage("§cError: " + message);
         }
-        
         
         ServiceRegistry serviceRegistry = plugin.getServiceRegistry();
         if (serviceRegistry != null) {

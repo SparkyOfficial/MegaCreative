@@ -17,7 +17,7 @@ public class IsNightCondition implements BlockCondition {
     @Override
     public boolean evaluate(CodeBlock block, ExecutionContext context) {
         Player player = context.getPlayer();
-        if (player == null || player.getWorld() == null) {
+        if (player == null) {
             return false;
         }
 

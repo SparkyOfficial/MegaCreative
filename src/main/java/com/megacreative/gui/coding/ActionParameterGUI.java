@@ -567,7 +567,9 @@ public class ActionParameterGUI implements GUIManager.ManagedGUIInterface {
                     }
                 }
             } catch (NumberFormatException e) {
-                
+                // Log exception and continue processing
+                // This is expected behavior when parsing user input
+                plugin.getLogger().warning("Invalid number format in slot configuration for action " + actionId);
             }
         }
     }
@@ -949,11 +951,17 @@ public class ActionParameterGUI implements GUIManager.ManagedGUIInterface {
             Integer.parseInt(cleaned);
             return true;
         } catch (NumberFormatException e) {
+            // Log exception and continue processing
+            // This is expected behavior when parsing user input
+            plugin.getLogger().warning("Invalid integer format for material name: " + materialName);
             
             try {
                 Double.parseDouble(cleaned);
                 return true;
             } catch (NumberFormatException e2) {
+                // Log exception and continue processing
+                // This is expected behavior when parsing user input
+                plugin.getLogger().warning("Invalid double format for material name: " + materialName);
                 return false;
             }
         }
@@ -1204,6 +1212,9 @@ public class ActionParameterGUI implements GUIManager.ManagedGUIInterface {
             Double.parseDouble(str);
             return true;
         } catch (NumberFormatException e) {
+            // Log exception and continue processing
+            // This is expected behavior when parsing user input
+            plugin.getLogger().warning("Invalid number format: " + str);
             return false;
         }
     }
@@ -1217,6 +1228,9 @@ public class ActionParameterGUI implements GUIManager.ManagedGUIInterface {
             double value = Double.parseDouble(str);
             return value >= min && value <= max;
         } catch (NumberFormatException e) {
+            // Log exception and continue processing
+            // This is expected behavior when parsing user input
+            plugin.getLogger().warning("Invalid number format for range check: " + str);
             return false;
         }
     }
@@ -1230,6 +1244,9 @@ public class ActionParameterGUI implements GUIManager.ManagedGUIInterface {
             int value = Integer.parseInt(str);
             return value >= min && value <= max;
         } catch (NumberFormatException e) {
+            // Log exception and continue processing
+            // This is expected behavior when parsing user input
+            plugin.getLogger().warning("Invalid integer format for range check: " + str);
             return false;
         }
     }
@@ -1243,6 +1260,9 @@ public class ActionParameterGUI implements GUIManager.ManagedGUIInterface {
             org.bukkit.Sound.valueOf(soundName.toUpperCase());
             return true;
         } catch (IllegalArgumentException e) {
+            // Log exception and continue processing
+            // This is expected behavior when parsing user input
+            plugin.getLogger().warning("Invalid sound name: " + soundName);
             return false;
         }
     }
@@ -1256,6 +1276,9 @@ public class ActionParameterGUI implements GUIManager.ManagedGUIInterface {
             org.bukkit.potion.PotionEffectType.getByName(effectName);
             return true;
         } catch (Exception e) {
+            // Log exception and continue processing
+            // This is expected behavior when parsing user input
+            plugin.getLogger().warning("Invalid effect name: " + effectName);
             return false;
         }
     }
@@ -1269,6 +1292,9 @@ public class ActionParameterGUI implements GUIManager.ManagedGUIInterface {
             java.util.regex.Pattern.compile(regex);
             return str.matches(regex);
         } catch (Exception e) {
+            // Log exception and continue processing
+            // This is expected behavior when parsing user input
+            plugin.getLogger().warning("Invalid regex pattern: " + regex);
             return false;
         }
     }
@@ -1290,6 +1316,9 @@ public class ActionParameterGUI implements GUIManager.ManagedGUIInterface {
                 return str.length() == exact;
             }
         } catch (NumberFormatException e) {
+            // Log exception and continue processing
+            // This is expected behavior when parsing user input
+            plugin.getLogger().warning("Invalid number format for length specification: " + lengthSpec);
             return false;
         }
     }
@@ -1319,6 +1348,9 @@ public class ActionParameterGUI implements GUIManager.ManagedGUIInterface {
             new java.net.URL(url);
             return true;
         } catch (Exception e) {
+            // Log exception and continue processing
+            // This is expected behavior when parsing user input
+            plugin.getLogger().warning("Invalid URL format: " + url);
             return false;
         }
     }

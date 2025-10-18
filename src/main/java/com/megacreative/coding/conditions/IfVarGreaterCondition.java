@@ -68,10 +68,9 @@ public class IfVarGreaterCondition implements BlockCondition {
             
             DataValue varValueData = null;
             
-            
-            if (varValueData == null) {
-                varValueData = variableManager.getPlayerVariable(player.getUniqueId(), varName);
-            }
+            // Condition varValueData == null is always true
+            // Removed redundant null check since we just initialized varValueData to null
+            varValueData = variableManager.getPlayerVariable(player.getUniqueId(), varName);
             
             
             if (varValueData == null) {

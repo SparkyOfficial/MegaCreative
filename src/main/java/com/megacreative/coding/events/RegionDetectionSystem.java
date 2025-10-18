@@ -603,17 +603,14 @@ public class RegionDetectionSystem {
             
             CodeScript script = null;
             
-            
-            if (script == null) {
-                CreativeWorld creativeWorld = plugin.getServiceRegistry().getWorldManager().findCreativeWorldByBukkit(player.getWorld());
-                if (creativeWorld != null) {
-                    script = creativeWorld.getScripts().stream()
-                            .filter(s -> s.getName().equals(scriptId))
-                            .findFirst()
-                            .orElse(null);
-                }
+            // Remove the redundant check and directly get the script
+            CreativeWorld creativeWorld = plugin.getServiceRegistry().getWorldManager().findCreativeWorldByBukkit(player.getWorld());
+            if (creativeWorld != null) {
+                script = creativeWorld.getScripts().stream()
+                        .filter(s -> s.getName().equals(scriptId))
+                        .findFirst()
+                        .orElse(null);
             }
-            
             
             if (script != null) {
                 
@@ -649,7 +646,6 @@ public class RegionDetectionSystem {
                 }
             }
         }
-        
         
         public String getEventName() { return eventName; }
         public java.util.function.Predicate<Map<String, DataValue>> getCondition() { return condition; }

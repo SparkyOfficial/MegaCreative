@@ -47,10 +47,13 @@ public class CommandListener implements Listener {
     @EventHandler
     public void onPlayerCommand(PlayerCommandPreprocessEvent event) {
         Player player = event.getPlayer();
-        if (player == null) return;
+        // Condition player == null is always false
+        // Removed redundant null check since Bukkit always provides a valid player object
         
         String message = event.getMessage();
-        if (message == null || !message.startsWith("/")) return;
+        // Condition message == null is always false
+        // Removed redundant null check since Bukkit always provides a valid message object
+        if (!message.startsWith("/")) return;
         
         String command = message.substring(1); 
         

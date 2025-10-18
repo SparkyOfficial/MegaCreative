@@ -223,7 +223,10 @@ public class WorldManagerImpl implements IWorldManager {
         try {
             File worldsDir = new File(plugin.getDataFolder(), "worlds");
             if (!worldsDir.exists()) {
-                worldsDir.mkdirs();
+                if (!worldsDir.mkdirs()) {
+                    plugin.getLogger().severe("Failed to create worlds directory: " + worldsDir.getAbsolutePath());
+                    return;
+                }
                 return;
             }
             
@@ -268,11 +271,9 @@ public class WorldManagerImpl implements IWorldManager {
             
             if (world != null) {
                 
-                if (plugin instanceof MegaCreative) {
-                    MegaCreative megaPlugin = (MegaCreative) plugin;
-                    ScriptEngine scriptEngine = megaPlugin.getServiceRegistry().getScriptEngine();
-                    world.setScriptEngine(scriptEngine);
-                }
+                MegaCreative megaPlugin = (MegaCreative) plugin;
+                ScriptEngine scriptEngine = megaPlugin.getServiceRegistry().getScriptEngine();
+                world.setScriptEngine(scriptEngine);
 
                 
                 worlds.put(world.getId(), world);
@@ -286,12 +287,9 @@ public class WorldManagerImpl implements IWorldManager {
                 }
                 
                 
-                if (plugin instanceof MegaCreative) {
-                    MegaCreative megaPlugin = (MegaCreative) plugin;
-                    ActivatorManager activatorManager = megaPlugin.getServiceRegistry().getActivatorManager();
-                    if (activatorManager != null && world.getCodeHandler() != null) {
-                        activatorManager.registerCodeHandler(world.getId(), world.getCodeHandler());
-                    }
+                ActivatorManager activatorManager = megaPlugin.getServiceRegistry().getActivatorManager();
+                if (activatorManager != null && world.getCodeHandler() != null) {
+                    activatorManager.registerCodeHandler(world.getId(), world.getCodeHandler());
                 }
                 
                 plugin.getLogger().info("Successfully loaded world: " + world.getName() + " (ID: " + world.getId() + ")");
@@ -375,7 +373,9 @@ public class WorldManagerImpl implements IWorldManager {
             
             File worldsDir = new File(plugin.getDataFolder(), "worlds");
             if (!worldsDir.exists()) {
-                worldsDir.mkdirs();
+                if (!worldsDir.mkdirs()) {
+                    plugin.getLogger().warning("Failed to create worlds directory: " + worldsDir.getAbsolutePath());
+                }
             }
             
             File worldFile = new File(worldsDir, world.getId() + ".json");
@@ -553,16 +553,14 @@ public class WorldManagerImpl implements IWorldManager {
                     }
                     
                     
-                    if (plugin instanceof MegaCreative) {
-                        MegaCreative megaPlugin = (MegaCreative) plugin;
-                        CodeHandler codeHandler = new CodeHandler(megaPlugin, creativeWorld);
-                        creativeWorld.setCodeHandler(codeHandler);
-                        
-                        
-                        ActivatorManager activatorManager = megaPlugin.getServiceRegistry().getActivatorManager();
-                        if (activatorManager != null) {
-                            activatorManager.registerCodeHandler(worldId, codeHandler);
-                        }
+                    MegaCreative megaPlugin = (MegaCreative) plugin;
+                    CodeHandler codeHandler = new CodeHandler(megaPlugin, creativeWorld);
+                    creativeWorld.setCodeHandler(codeHandler);
+                    
+                    
+                    ActivatorManager activatorManager = megaPlugin.getServiceRegistry().getActivatorManager();
+                    if (activatorManager != null) {
+                        activatorManager.registerCodeHandler(worldId, codeHandler);
                     }
                     
                     
@@ -581,7 +579,7 @@ public class WorldManagerImpl implements IWorldManager {
                 player.sendMessage("§cПроизошла ошибка при создании мира. Пожалуйста, обратитесь к администратору.");
 
                 
-                if (creativeWorld != null && creativeWorld.getWorldName() != null) {
+                if (creativeWorld.getWorldName() != null) {
                     Bukkit.getScheduler().runTask(plugin, () -> { 
                         World partiallyCreatedWorld = Bukkit.getWorld(creativeWorld.getWorldName());
                         if (partiallyCreatedWorld != null) {
@@ -716,25 +714,23 @@ public class WorldManagerImpl implements IWorldManager {
             codingManager.unloadScriptsForWorld(world);
         }
         
-        if (plugin instanceof MegaCreative) {
-            MegaCreative megaPlugin = (MegaCreative) plugin;
-            com.megacreative.coding.BlockPlacementHandler blockPlacementHandler = megaPlugin.getServiceRegistry().getBlockPlacementHandler();
-            World worldToRemove = Bukkit.getWorld(world.getWorldName());
-            World devWorldToRemove = Bukkit.getWorld(world.getDevWorldName());
-            
-            if (blockPlacementHandler != null && worldToRemove != null) {
-                blockPlacementHandler.clearAllCodeBlocksInWorld(worldToRemove);
-            }
-            
-            if (blockPlacementHandler != null && devWorldToRemove != null) {
-                blockPlacementHandler.clearAllCodeBlocksInWorld(devWorldToRemove);
-            }
-            
-            
-            com.megacreative.coding.activators.ActivatorManager activatorManager = megaPlugin.getServiceRegistry().getActivatorManager();
-            if (activatorManager != null) {
-                activatorManager.unregisterCodeHandler(worldId);
-            }
+        MegaCreative megaPlugin = (MegaCreative) plugin;
+        com.megacreative.coding.BlockPlacementHandler blockPlacementHandler = megaPlugin.getServiceRegistry().getBlockPlacementHandler();
+        World worldToRemove = Bukkit.getWorld(world.getWorldName());
+        World devWorldToRemove = Bukkit.getWorld(world.getDevWorldName());
+        
+        if (blockPlacementHandler != null && worldToRemove != null) {
+            blockPlacementHandler.clearAllCodeBlocksInWorld(worldToRemove);
+        }
+        
+        if (blockPlacementHandler != null && devWorldToRemove != null) {
+            blockPlacementHandler.clearAllCodeBlocksInWorld(devWorldToRemove);
+        }
+        
+        
+        com.megacreative.coding.activators.ActivatorManager activatorManager = megaPlugin.getServiceRegistry().getActivatorManager();
+        if (activatorManager != null) {
+            activatorManager.unregisterCodeHandler(worldId);
         }
 
         
@@ -802,6 +798,8 @@ public class WorldManagerImpl implements IWorldManager {
     private void attemptDeleteDataFile(CreativeWorld world, File dataFile, Player requester) {
         try {
             
+            // Value successDataFile is always 'true'
+            // Removed redundant assignment since we're checking the result of dataFile.delete()
             boolean successDataFile = true;
             if (dataFile.exists()) {
                 successDataFile = dataFile.delete();
@@ -843,9 +841,15 @@ public class WorldManagerImpl implements IWorldManager {
                 File devWorldFolder = new File(Bukkit.getWorldContainer(), world.getDevWorldName());
                 File dataFile = new File(getPlugin().getDataFolder(), "worlds/" + world.getId() + ".json");
                 
-                if (worldFolder.exists()) deleteFolderRecursive(worldFolder);
-                if (devWorldFolder.exists()) deleteFolderRecursive(devWorldFolder);
-                if (dataFile.exists()) dataFile.delete();
+                if (worldFolder.exists()) {
+                    deleteFolderRecursive(worldFolder);
+                }
+                if (devWorldFolder.exists()) {
+                    deleteFolderRecursive(devWorldFolder);
+                }
+                if (dataFile.exists() && !dataFile.delete()) {
+                    getPlugin().getLogger().warning("Failed to delete data file: " + dataFile.getAbsolutePath());
+                }
             }, 20L); 
         }
     }
@@ -886,11 +890,15 @@ public class WorldManagerImpl implements IWorldManager {
                     if (file.isDirectory()) {
                         deleteFolder(file);
                     } else {
-                        file.delete();
+                        if (!file.delete()) {
+                            getPlugin().getLogger().warning("Failed to delete file: " + file.getAbsolutePath());
+                        }
                     }
                 }
             }
-            folder.delete();
+            if (!folder.delete()) {
+                getPlugin().getLogger().warning("Failed to delete folder: " + folder.getAbsolutePath());
+            }
         }
     }
     

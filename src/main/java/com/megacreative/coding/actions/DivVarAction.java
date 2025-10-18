@@ -70,11 +70,9 @@ public class DivVarAction implements BlockAction {
             
             if (player != null) {
                 java.util.UUID playerUUID = player.getUniqueId();
-                if (playerUUID != null) {
-                    currentVar = variableManager.getPlayerVariable(playerUUID, varName);
-                    if (currentVar != null) {
-                        scope = VariableManager.VariableScope.PLAYER;
-                    }
+                currentVar = variableManager.getPlayerVariable(playerUUID, varName);
+                if (currentVar != null) {
+                    scope = VariableManager.VariableScope.PLAYER;
                 }
             }
             
@@ -122,9 +120,7 @@ public class DivVarAction implements BlockAction {
                 case PLAYER:
                     if (player != null) {
                         java.util.UUID playerUUID = player.getUniqueId();
-                        if (playerUUID != null) {
-                            variableManager.setPlayerVariable(playerUUID, varName, newValueData);
-                        }
+                        variableManager.setPlayerVariable(playerUUID, varName, newValueData);
                     }
                     break;
                 case LOCAL:

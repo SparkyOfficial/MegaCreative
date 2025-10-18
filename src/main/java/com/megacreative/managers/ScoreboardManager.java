@@ -36,8 +36,7 @@ public class ScoreboardManager {
         
         
         for (Player player : Bukkit.getOnlinePlayers()) {
-            if (player.getScoreboard() != null && 
-                !player.getScoreboard().equals(Bukkit.getScoreboardManager().getMainScoreboard())) {
+            if (!player.getScoreboard().equals(Bukkit.getScoreboardManager().getMainScoreboard())) {
                 player.setScoreboard(Bukkit.getScoreboardManager().getNewScoreboard());
             }
         }

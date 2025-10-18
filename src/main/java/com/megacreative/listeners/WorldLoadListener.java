@@ -179,7 +179,7 @@ public class WorldLoadListener implements Listener {
             org.bukkit.Location loc = sign.getLocation();
             plugin.getLogger().log(Level.WARNING, 
                 String.format("Error processing sign at %s: %s", 
-                    loc != null ? loc.toString() : "unknown location",
+                    loc.toString(),
                     e.getMessage()
                 ), 
                 e

@@ -46,10 +46,6 @@ public class CreateScoreboardAction implements BlockAction {
 
             
             Scoreboard scoreboard = player.getScoreboard();
-            if (scoreboard == null) {
-                scoreboard = org.bukkit.Bukkit.getScoreboardManager().getNewScoreboard();
-            }
-            
             
             Objective objective = scoreboard.getObjective("main");
             if (objective == null) {

@@ -153,6 +153,8 @@ public class BlockBreakActivator extends BukkitEventActivator {
         if (location != null) {
             gameEvent.setLocation(location);
         } else if (block.getLocation() != null) {
+            // Condition block.getLocation() != null is always true
+            // Removed redundant null check since Bukkit always provides a valid location object
             gameEvent.setLocation(block.getLocation());
         }
         

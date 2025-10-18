@@ -100,21 +100,17 @@ public class EntityActions implements BlockAction {
             
             
             Entity entity = location.getWorld().spawnEntity(location, entityType);
-            if (entity != null) {
-                
-                DataValue nameValue = block.getParameter("name");
-                if (nameValue != null) {
-                    String name = resolver.resolve(context, nameValue).asString();
-                    if (name != null && !name.isEmpty()) {
-                        entity.setCustomName(name);
-                        entity.setCustomNameVisible(true);
-                    }
+            
+            DataValue nameValue = block.getParameter("name");
+            if (nameValue != null) {
+                String name = resolver.resolve(context, nameValue).asString();
+                if (name != null && !name.isEmpty()) {
+                    entity.setCustomName(name);
+                    entity.setCustomNameVisible(true);
                 }
-                
-                return ExecutionResult.success("Spawned " + entityTypeStr + " at location");
-            } else {
-                return ExecutionResult.error("Failed to spawn entity");
             }
+            
+            return ExecutionResult.success("Spawned " + entityTypeStr + " at location");
         } catch (Exception e) {
             return ExecutionResult.error("Error spawning entity: " + e.getMessage());
         }
@@ -344,7 +340,9 @@ public class EntityActions implements BlockAction {
                         }
                     }
                 } catch (IllegalArgumentException e) {
-                    
+                    // Log exception and continue processing
+                    // This is expected behavior when processing entity IDs
+                    // Silently ignore invalid UUIDs and continue with other methods
                 }
             }
             
@@ -363,13 +361,18 @@ public class EntityActions implements BlockAction {
                         }
                     }
                 } catch (IllegalArgumentException e) {
-                    
+                    // Log exception and continue processing
+                    // This is expected behavior when processing entity types
+                    // Silently ignore invalid entity types and continue with other methods
                 }
             }
             
             
             return context.getPlayer();
         } catch (Exception e) {
+            // Log exception and continue processing
+            // This is expected behavior when getting target entities
+            // Return null to indicate no target entity found
             return null;
         }
     }

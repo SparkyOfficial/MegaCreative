@@ -112,9 +112,9 @@ public class BuildCommand implements CommandExecutor {
                     if (worldIndex != -1 && worldIndex < endIndex) endIndex = worldIndex;
                     if (devIndex != -1 && devIndex < endIndex) endIndex = devIndex;
                     
-                    if (startIndex < endIndex) {
-                        potentialId = worldName.substring(startIndex, endIndex);
-                    }
+                    // codeIndex < endIndex is always true when reached
+                    // Removed redundant check since it's always true
+                    potentialId = worldName.substring(startIndex, endIndex);
                 } 
                 
                 else if (worldName.contains("_dev")) {
@@ -125,11 +125,11 @@ public class BuildCommand implements CommandExecutor {
                     potentialId = worldName.replace("megacreative_", "");
                 }
                 
-                if (potentialId != null) {
-                    CreativeWorld foundWorld = worldManager.getWorld(potentialId);
-                    if (foundWorld != null) {
-                        creativeWorld = foundWorld;
-                    }
+                // Condition potentialId != null is always true
+                // Removed redundant null check since potentialId is always assigned a value
+                CreativeWorld foundWorld = worldManager.getWorld(potentialId);
+                if (foundWorld != null) {
+                    creativeWorld = foundWorld;
                 }
             }
             

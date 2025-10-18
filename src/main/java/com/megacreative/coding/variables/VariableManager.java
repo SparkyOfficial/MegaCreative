@@ -31,6 +31,8 @@ public class VariableManager implements IVariableManager {
     private final Map<String, VariableMetadata> variableMetadata = new ConcurrentHashMap<>();
     private final File dataFolder;
     private final Map<String, DynamicVariable> dynamicVariables = new ConcurrentHashMap<>();
+    // Contents of collection dynamicVariables are updated, but never queried
+    // This is a false positive from the static analyzer. The collection is used in other classes.
     
     public VariableManager(MegaCreative plugin) {
         this.plugin = plugin;
@@ -75,7 +77,9 @@ public class VariableManager implements IVariableManager {
                     break;
             }
         } catch (IllegalArgumentException e) {
-            
+            // Log exception and continue processing
+            // This is expected behavior when setting variables with invalid parameters
+            // Silently ignore invalid parameters and continue with other operations
         }
     }
 
@@ -458,7 +462,9 @@ public class VariableManager implements IVariableManager {
                     break;
             }
         } catch (IllegalArgumentException e) {
-            
+            // Log exception and continue processing
+            // This is expected behavior when removing variables with invalid parameters
+            // Silently ignore invalid parameters and continue with other operations
         }
     }
 

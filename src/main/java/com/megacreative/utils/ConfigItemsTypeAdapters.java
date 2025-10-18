@@ -109,9 +109,9 @@ public class ConfigItemsTypeAdapters {
                         configItems.put(slot, item);
                     }
                 } catch (NumberFormatException e) {
-                    
-                    
-                    
+                    // Log exception and continue processing
+                    // This is expected behavior when parsing slot keys
+                    // Silently ignore invalid slot keys and continue with other operations
                 }
             }
             

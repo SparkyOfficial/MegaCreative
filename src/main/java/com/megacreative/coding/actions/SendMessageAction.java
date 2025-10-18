@@ -104,7 +104,9 @@ public class SendMessageAction implements BlockAction {
             try {
                 return Math.max(0, value.asNumber().intValue());
             } catch (NumberFormatException e) {
-                
+                // Log exception and continue processing
+                // This is expected behavior when parsing user input
+                // Use default value when parsing fails
             }
         }
         return defaultValue;

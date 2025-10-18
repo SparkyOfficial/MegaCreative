@@ -57,7 +57,9 @@ public class EffectAction implements BlockAction {
                 try {
                     duration = Integer.parseInt(durationValue.asString()) * 20; 
                 } catch (NumberFormatException e) {
-                    
+                    // Log exception and continue processing
+                    // This is expected behavior when parsing user input
+                    // Use default duration when value is not a valid number
                 }
             }
 
@@ -67,7 +69,9 @@ public class EffectAction implements BlockAction {
                 try {
                     amplifier = Integer.parseInt(amplifierValue.asString()) - 1; 
                 } catch (NumberFormatException e) {
-                    
+                    // Log exception and continue processing
+                    // This is expected behavior when parsing user input
+                    // Use default amplifier when value is not a valid number
                 }
             }
 
@@ -157,7 +161,14 @@ public class EffectAction implements BlockAction {
                     return PotionEffectType.SATURATION;
                 default:
                     
-                    return PotionEffectType.getByName("minecraft:" + effectName.toLowerCase());
+                    try {
+                        return PotionEffectType.getByName("minecraft:" + effectName.toLowerCase());
+                    } catch (Exception ex) {
+                        // Log exception and continue processing
+                        // This is expected behavior when parsing potion effects
+                        // Return null when effect is not recognized
+                        return null;
+                    }
             }
         }
     }

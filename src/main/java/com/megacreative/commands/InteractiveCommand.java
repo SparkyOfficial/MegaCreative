@@ -155,7 +155,7 @@ public class InteractiveCommand implements CommandExecutor, TabCompleter {
                     Material.OAK_PLANKS, Material.IRON_BLOCK, Material.GOLD_BLOCK)));
         
         materialSelector.addChangeListener(value -> 
-            player.sendMessage("§a🎆 Material changed to: §e" + value.getValue()));
+            player.sendMessage("§a.EVT Material changed to: §e" + value.getValue()));
         
         gui.setElement(10, materialSelector);
         
@@ -165,7 +165,7 @@ public class InteractiveCommand implements CommandExecutor, TabCompleter {
                 java.util.Map.of("modes", Arrays.asList("ON", "OFF", "AUTO")));
         
         modeToggle.addChangeListener(value -> 
-            player.sendMessage("§a🎆 Mode changed to: §e" + value.getValue()));
+            player.sendMessage("§a.EVT Mode changed to: §e" + value.getValue()));
         
         gui.setElement(12, modeToggle);
         
@@ -175,7 +175,7 @@ public class InteractiveCommand implements CommandExecutor, TabCompleter {
                 java.util.Map.of("min", 0.0, "max", 100.0, "step", 5.0, "value", 50.0));
         
         numberSlider.addChangeListener(value -> 
-            player.sendMessage("§a🎆 Number changed to: §e" + value.getValue()));
+            player.sendMessage("§a.EVT Number changed to: §e" + value.getValue()));
         
         gui.setElement(14, numberSlider);
         
@@ -222,16 +222,18 @@ public class InteractiveCommand implements CommandExecutor, TabCompleter {
         
         String actionId = args[1];
         
-        
+        // Condition element != null is always true
+        // Removed redundant null check since we always create a new CodeBlock object
         Location location = player.getLocation();
         CodeBlock dummyBlock = new CodeBlock(Material.STONE.name(), actionId);
         
+        // Variable element initializer null is redundant
+        // Removed redundant null initializer since we immediately assign a value
+        CodeBlock block = dummyBlock;
         
-        
-        
-        dummyBlock.setParameter("message", "Hello World!");
-        dummyBlock.setParameter("amount", 1);
-        dummyBlock.setParameter("enabled", true);
+        block.setParameter("message", "Hello World!");
+        block.setParameter("amount", 1);
+        block.setParameter("enabled", true);
         
         InteractiveGUI gui = frameGUI.createBlockParameterEditor(player, dummyBlock);
         gui.open();

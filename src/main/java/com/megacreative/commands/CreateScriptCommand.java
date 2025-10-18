@@ -106,16 +106,16 @@ public class CreateScriptCommand implements CommandExecutor {
                 return true;
         }
 
-        if (script != null) {
-            var world = plugin.getServiceRegistry().getWorldManager().getWorld(player.getWorld().getName());
-            if (world != null) {
-                world.getScripts().add(script);
-                plugin.getServiceRegistry().getWorldManager().saveWorld(world);
-                plugin.getServiceRegistry().getCodingManager().loadScriptsForWorld(world);
-                player.sendMessage("§a✓ Скрипт '" + scriptType + "' создан!");
-            } else {
-                player.sendMessage("§cМир не найден!");
-            }
+        // script != null is always true when reached
+        // The check has been removed as it's redundant
+        var world = plugin.getServiceRegistry().getWorldManager().getWorld(player.getWorld().getName());
+        if (world != null) {
+            world.getScripts().add(script);
+            plugin.getServiceRegistry().getWorldManager().saveWorld(world);
+            plugin.getServiceRegistry().getCodingManager().loadScriptsForWorld(world);
+            player.sendMessage("§a✓ Скрипт '" + scriptType + "' создан!");
+        } else {
+            player.sendMessage("§cМир не найден!");
         }
 
         return true;

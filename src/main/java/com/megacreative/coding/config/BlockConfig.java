@@ -51,8 +51,10 @@ public class BlockConfig implements ConfigurationSerializable {
         
         if (section.isConfigurationSection("parameters")) {
             ConfigurationSection paramsSection = section.getConfigurationSection("parameters");
-            for (String key : paramsSection.getKeys(false)) {
-                this.parameters.put(key, paramsSection.get(key));
+            if (paramsSection != null) {
+                for (String key : paramsSection.getKeys(false)) {
+                    this.parameters.put(key, paramsSection.get(key));
+                }
             }
         }
         

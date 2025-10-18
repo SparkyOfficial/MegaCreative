@@ -331,9 +331,7 @@ public class WorldPermissions {
         UUID playerId = player.getUniqueId();
         PermissionLevel level = playerPermissions.getOrDefault(playerId, PermissionLevel.VISITOR);
         
-        
-        
-        
+        // Check for bypass permission first
         if (player.hasPermission("megacreative.world.bypass")) {
             return true;
         }
@@ -361,7 +359,8 @@ public class WorldPermissions {
                 
             case "view":
             case "explore":
-                return level.ordinal() >= PermissionLevel.VISITOR.ordinal();
+                // Visitor level or higher can view/explore
+                return true;
                 
             default:
                 return false;

@@ -147,7 +147,7 @@ public class GroupCommand implements CommandExecutor, TabCompleter {
      */
     @Override
     public List<String> onTabComplete(CommandSender sender, Command command, String alias, String[] args) {
-        if (!(sender instanceof Player)) {
+        if (!(sender instanceof Player player)) {
             return new ArrayList<>();
         }
         
@@ -160,7 +160,7 @@ public class GroupCommand implements CommandExecutor, TabCompleter {
             if ("collapse".equals(subCommand) || "expand".equals(subCommand) || "delete".equals(subCommand)) {
                 
                 BlockGroupManager groupManager = serviceRegistry.getService(BlockGroupManager.class);
-                if (groupManager != null && sender instanceof Player player) {
+                if (groupManager != null) {
                     List<String> groupNames = new ArrayList<>();
                     
                     

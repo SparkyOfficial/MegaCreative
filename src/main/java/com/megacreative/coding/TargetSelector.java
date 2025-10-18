@@ -184,7 +184,8 @@ public class TargetSelector {
             targets.removeIf(player -> 
                 player.getLocation().distance(referenceLocation) > radius);
         } catch (NumberFormatException e) {
-            
+            // Log the error but continue with default behavior
+            e.printStackTrace();
         }
     }
     
@@ -203,7 +204,8 @@ public class TargetSelector {
             try {
                 x = Double.parseDouble(arguments.get(ARG_X));
             } catch (NumberFormatException e) {
-                
+                // Log the error but continue with default coordinate
+                e.printStackTrace();
             }
         }
         
@@ -211,7 +213,8 @@ public class TargetSelector {
             try {
                 y = Double.parseDouble(arguments.get(ARG_Y));
             } catch (NumberFormatException e) {
-                
+                // Log the error but continue with default coordinate
+                e.printStackTrace();
             }
         }
         
@@ -219,7 +222,8 @@ public class TargetSelector {
             try {
                 z = Double.parseDouble(arguments.get(ARG_Z));
             } catch (NumberFormatException e) {
-                
+                // Log the error but continue with default coordinate
+                e.printStackTrace();
             }
         }
         
@@ -251,7 +255,8 @@ public class TargetSelector {
                     break;
             }
         } catch (NumberFormatException e) {
-            
+            // Log the error but continue with default game mode behavior
+            e.printStackTrace();
         }
     }
     

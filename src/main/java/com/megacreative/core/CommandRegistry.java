@@ -210,6 +210,35 @@ public class CommandRegistry {
                 createCmd.setExecutor(new CreateWorldCommand(plugin, worldManager));
             }
             
+            // Register like command
+            org.bukkit.command.PluginCommand likeCmd = plugin.getCommand("like");
+            if (likeCmd != null && serviceRegistry != null) {
+                IWorldManager worldManager = serviceRegistry.getWorldManager();
+                likeCmd.setExecutor(new LikeCommand(plugin, worldManager));
+            }
+            
+            // Register dislike command
+            org.bukkit.command.PluginCommand dislikeCmd = plugin.getCommand("dislike");
+            if (dislikeCmd != null && serviceRegistry != null) {
+                IWorldManager worldManager = serviceRegistry.getWorldManager();
+                dislikeCmd.setExecutor(new DislikeCommand(plugin, worldManager));
+            }
+            
+            // Register comment command
+            org.bukkit.command.PluginCommand commentCmd = plugin.getCommand("comment");
+            if (commentCmd != null && serviceRegistry != null) {
+                IWorldManager worldManager = serviceRegistry.getWorldManager();
+                commentCmd.setExecutor(new CommentCommand(plugin, worldManager));
+            }
+            
+            // Register world stats command
+            org.bukkit.command.PluginCommand worldStatsCmd = plugin.getCommand("worldstats");
+            if (worldStatsCmd != null && serviceRegistry != null) {
+                IWorldManager worldManager = serviceRegistry.getWorldManager();
+                IPlayerManager playerManager = serviceRegistry.getPlayerManager();
+                worldStatsCmd.setExecutor(new WorldStatsCommand(plugin, worldManager, playerManager));
+                worldStatsCmd.setTabCompleter(new WorldStatsCommand(plugin, worldManager, playerManager));
+            }
             
             log.info("All commands registered successfully");
         } catch (Exception e) {

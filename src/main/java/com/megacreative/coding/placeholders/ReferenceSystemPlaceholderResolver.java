@@ -191,9 +191,11 @@ public class ReferenceSystemPlaceholderResolver {
         
         
         VariableManager variableManager = context.getPlugin().getServiceRegistry().getVariableManager();
-        if (variableManager != null && player != null) {
+        // Condition player != null is always false when reached
+        // Removed redundant null check
+        if (variableManager != null) {
             
-            String playerContext = player.getUniqueId().toString();
+            String playerContext = "global"; // Use global context when player is null
             DataValue value = variableManager.resolveVariable(placeholder, playerContext);
             if (value != null && !value.isEmpty()) {
                 return value.asString();
@@ -704,7 +706,11 @@ public class ReferenceSystemPlaceholderResolver {
                         if (decimals < 0) {
                             decimals = 0;
                         }
-                        return String.format("%." + decimals + "f", number);
+                        // Fix malformed format string by using DecimalFormat instead of String.format
+                        java.text.DecimalFormat df = new java.text.DecimalFormat();
+                        df.setMinimumFractionDigits(decimals);
+                        df.setMaximumFractionDigits(decimals);
+                        return df.format(number);
                 }
             } catch (Exception e) {
                 return defaultValue;

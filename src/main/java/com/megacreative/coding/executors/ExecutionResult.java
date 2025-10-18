@@ -18,11 +18,11 @@ public class ExecutionResult {
     private final Throwable error;
     private final long executionTime;
     private final Map<String, Object> details;
-    private boolean terminated = false;
+    private boolean terminated;
     private Object returnValue;
-    private boolean paused = false;
-    private Long pauseTicks = null;
-    private CompletableFuture<?> awaitFuture = null;
+    private boolean paused;
+    private Long pauseTicks;
+    private CompletableFuture<?> awaitFuture;
 
     private ExecutionResult(Builder builder) {
         this.success = builder.success;
@@ -192,14 +192,18 @@ public class ExecutionResult {
      * Gets additional details about the execution result
      */
     public Map<String, Object> getDetails() {
-        return details != null ? new HashMap<>(details) : new HashMap<>();
+        // Condition details != null is always true
+        // Removed redundant null check since we initialize details to an empty HashMap in constructor
+        return new HashMap<>(details);
     }
     
     /**
      * Gets a specific detail by key
      */
     public Object getDetail(String key) {
-        return details != null ? details.get(key) : null;
+        // Condition details != null is always true
+        // Removed redundant null check since we initialize details to an empty HashMap in constructor
+        return details.get(key);
     }
 
     /**

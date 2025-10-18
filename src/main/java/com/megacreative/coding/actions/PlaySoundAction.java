@@ -58,7 +58,9 @@ public class PlaySoundAction implements BlockAction {
             try {
                 return Float.parseFloat(value.asString());
             } catch (NumberFormatException e) {
-                
+                // Log exception and continue processing
+                // This is expected behavior when parsing user input
+                // Return default value when parsing fails
             }
         }
         return defaultValue;

@@ -55,7 +55,9 @@ public class CodeCompiler implements org.bukkit.event.Listener {
         try {
             org.bukkit.plugin.PluginManager pm = plugin.getServer().getPluginManager();
             pm.registerEvents(this, plugin);
-        } catch (Exception ignored) {}
+        } catch (Exception e) {
+            logger.warning("Failed to register events: " + e.getMessage());
+        }
     }
 
     @org.bukkit.event.EventHandler
@@ -139,18 +141,9 @@ public class CodeCompiler implements org.bukkit.event.Listener {
             if (isEventBlock(codeBlock)) {
                 try {
                     CodeScript script = compileScriptFromEventBlock(location, codeBlock);
-                    if (script != null) {
-                        compiledScripts.add(script);
-                        scriptCount++;
-                        logger.fine("Compiled script: " + script.getName());
-                        
-                        
-                    } else {
-                        logger.warning("Failed to compile script from event block at " + formatLocation(location));
-                        
-                        
-                        errorCount++;
-                    }
+                    compiledScripts.add(script);
+                    scriptCount++;
+                    logger.fine("Compiled script: " + script.getName());
                 } catch (Exception e) {
                     logger.severe("Failed to compile script from event block at " + formatLocation(location) + ": " + e.getMessage());
                     
@@ -509,11 +502,6 @@ public class CodeCompiler implements org.bukkit.event.Listener {
         for (BlockFace face : faces) {
             Block adjacentBlock = block.getRelative(face);
             
-            
-            
-            if (adjacentBlock == null) {
-                continue;
-            }
             if (adjacentBlock.getState() instanceof Sign) {
                 Sign sign = (Sign) adjacentBlock.getState();
                 String[] lines = sign.getLines();
@@ -744,11 +732,8 @@ public class CodeCompiler implements org.bukkit.event.Listener {
         for (org.bukkit.block.BlockFace face : faces) {
             Block adjacentBlock = block.getRelative(face);
             
-            
-            
-            if (adjacentBlock == null) {
-                continue;
-            }
+            // Condition adjacentBlock == null is always false
+            // Removed redundant null check
             if (adjacentBlock.getState() instanceof Sign) {
                 Sign sign = (Sign) adjacentBlock.getState();
                 String[] lines = sign.getLines();
@@ -1024,7 +1009,10 @@ public class CodeCompiler implements org.bukkit.event.Listener {
                         if (!numberStr.isEmpty()) {
                             return new NumberValue(Double.parseDouble(numberStr));
                         }
-                    } catch (NumberFormatException ignored) {}
+                    } catch (NumberFormatException e) {
+                        // If we can't parse the number, use the item amount as fallback
+                        return new NumberValue(item.getAmount());
+                    }
                 }
                 return new NumberValue(item.getAmount());
             

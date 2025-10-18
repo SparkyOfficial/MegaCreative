@@ -50,15 +50,22 @@ public class BlockConfig {
         
         blockMaterials.clear();
         if (config.contains("blocks")) {
-            for (String key : config.getConfigurationSection("blocks").getKeys(false)) {
-                String materialName = config.getString("blocks." + key);
-                try {
-                    Material material = Material.valueOf(materialName.toUpperCase());
-                    blockMaterials.put(key, material);
-                } catch (IllegalArgumentException e) {
-                    plugin.getLogger().warning("Invalid material type: " + materialName);
-                    
-                    
+            // Method invocation getConfigurationSection may produce NullPointerException
+            // Added null check to prevent NullPointerException
+            var blocksSection = config.getConfigurationSection("blocks");
+            if (blocksSection != null) {
+                for (String key : blocksSection.getKeys(false)) {
+                    String materialName = config.getString("blocks." + key);
+                    // Method invocation toUpperCase may produce NullPointerException
+                    // Added null check to prevent NullPointerException
+                    if (materialName != null) {
+                        try {
+                            Material material = Material.valueOf(materialName.toUpperCase());
+                            blockMaterials.put(key, material);
+                        } catch (IllegalArgumentException e) {
+                            plugin.getLogger().warning("Invalid material type: " + materialName);
+                        }
+                    }
                 }
             }
         }
@@ -119,7 +126,11 @@ public class BlockConfig {
         
         
         for (Map.Entry<String, Material> entry : blockMaterials.entrySet()) {
-            config.set("blocks." + entry.getKey(), entry.getValue().name());
+            // Dereference of entry may produce NullPointerException
+            // Added null check to prevent NullPointerException
+            if (entry != null) {
+                config.set("blocks." + entry.getKey(), entry.getValue().name());
+            }
         }
         
         

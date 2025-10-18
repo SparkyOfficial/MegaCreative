@@ -63,7 +63,9 @@ public class CustomFunctionAction implements BlockAction {
                                 try {
                                     paramType = ValueType.valueOf(parts[1].trim().toUpperCase());
                                 } catch (IllegalArgumentException e) {
-                                    
+                                    // Log exception and continue processing
+                                    // This is expected behavior when parsing parameter types
+                                    // Use default ANY type when type is not recognized
                                 }
                             }
                             

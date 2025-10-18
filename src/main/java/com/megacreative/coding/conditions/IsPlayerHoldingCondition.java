@@ -50,7 +50,7 @@ public class IsPlayerHoldingCondition implements BlockCondition {
                 Material material = Material.valueOf(itemName.toUpperCase());
                 ItemStack itemInHand = player.getInventory().getItemInMainHand();
                 
-                return itemInHand != null && itemInHand.getType() == material;
+                return itemInHand.getType() == material;
             } catch (IllegalArgumentException e) {
                 context.getPlugin().getLogger().warning("IsPlayerHoldingCondition: Invalid item material '" + itemName + "'.");
                 return false;

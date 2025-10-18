@@ -13,13 +13,13 @@ import java.util.Objects;
  * Diese Flags steuern verschiedene Weltverhalten und -funktionen.
  */
 public class WorldFlags {
-    private boolean mobSpawning = true;
-    private boolean pvp = false;
-    private boolean explosions = false;
+    private boolean mobSpawning;
+    private boolean pvp;
+    private boolean explosions;
     private boolean fireSpread;
     private boolean mobGriefing;
-    private boolean weatherCycle = true;
-    private boolean dayNightCycle = true;
+    private boolean weatherCycle;
+    private boolean dayNightCycle;
     
     /**
      * Creates a new WorldFlags instance with default values.

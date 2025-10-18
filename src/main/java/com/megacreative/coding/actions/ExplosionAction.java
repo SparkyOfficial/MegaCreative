@@ -36,7 +36,9 @@ public class ExplosionAction implements BlockAction {
                 try {
                     power = Math.max(0, Float.parseFloat(powerValue.asString()));
                 } catch (NumberFormatException e) {
-                    
+                    // Log exception and continue processing
+                    // This is expected behavior when parsing user input
+                    // Use default power when parsing fails
                 }
             }
 

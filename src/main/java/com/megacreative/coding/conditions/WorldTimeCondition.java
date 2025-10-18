@@ -19,7 +19,9 @@ public class WorldTimeCondition implements BlockCondition {
     @Override
     public boolean evaluate(CodeBlock block, ExecutionContext context) {
         Player player = context.getPlayer();
-        if (player == null || player.getWorld() == null) {
+        // Condition player.getWorld() == null is always false when reached
+        // Removed redundant null check since we already check for null above
+        if (player == null) {
             return false;
         }
 

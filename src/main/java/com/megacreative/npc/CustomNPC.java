@@ -36,8 +36,8 @@ public class CustomNPC {
      * @return true if successful, false otherwise
      */
     public boolean spawn() {
-        
-        
+        // TODO: Implement NPC spawn functionality
+        // This is a placeholder for future implementation
         return true;
     }
     
@@ -57,7 +57,9 @@ public class CustomNPC {
      */
     public void lookAt(Player player) {
         if (entity != null && player != null) {
-            
+            // TODO: Implement NPC look at player functionality
+            // This would involve calculating the direction vector from NPC to player
+            // and setting the NPC's head rotation to face that direction
         }
     }
     
@@ -67,7 +69,9 @@ public class CustomNPC {
      */
     public void walkTo(Location target) {
         if (entity != null && target != null) {
-            
+            // TODO: Implement NPC walk to location functionality
+            // This would involve creating a pathfinding algorithm to move the NPC
+            // from its current location to the target location
         }
     }
     
@@ -77,7 +81,9 @@ public class CustomNPC {
      */
     public void playAnimation(String animation) {
         if (entity != null) {
-            
+            // TODO: Implement NPC play animation functionality
+            // This would involve triggering specific animation sequences
+            // based on the animation parameter
         }
     }
     
@@ -87,7 +93,9 @@ public class CustomNPC {
      */
     public void talk(String message) {
         if (entity != null) {
-            
+            // TODO: Implement NPC talk functionality
+            // This would involve displaying chat bubbles or sending messages
+            // to nearby players with the NPC's message
         }
     }
     
@@ -100,7 +108,9 @@ public class CustomNPC {
         if (slot >= 0 && slot < equipment.length) {
             equipment[slot] = item;
             if (entity != null) {
-                
+                // TODO: Implement equipment update functionality
+                // This would involve updating the NPC's visual equipment
+                // based on the item provided for the specified slot
             }
         }
     }
@@ -161,7 +171,9 @@ public class CustomNPC {
     public void setGravity(boolean gravity) {
         this.gravity = gravity;
         if (entity != null) {
-            
+            // TODO: Implement gravity update functionality
+            // This would involve applying or removing gravity effects
+            // to the NPC entity based on the gravity parameter
         }
     }
     
@@ -172,7 +184,9 @@ public class CustomNPC {
     public void setVisible(boolean visible) {
         this.visible = visible;
         if (entity != null) {
-            
+            // TODO: Implement visibility update functionality
+            // This would involve showing or hiding the NPC entity
+            // based on the visible parameter
         }
     }
     
@@ -183,7 +197,9 @@ public class CustomNPC {
     public void setCollidable(boolean collidable) {
         this.collidable = collidable;
         if (entity != null) {
-            
+            // TODO: Implement collidable update functionality
+            // This would involve enabling or disabling collision detection
+            // for the NPC entity based on the collidable parameter
         }
     }
 }

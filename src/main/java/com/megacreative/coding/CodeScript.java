@@ -120,7 +120,7 @@ public class CodeScript {
                Objects.equals(name, that.name) &&
                type == that.type &&
                Objects.equals(rootBlock, that.rootBlock) &&
-               worldName == that.worldName &&
+               Objects.equals(worldName, that.worldName) &&
                Objects.equals(author, that.author) &&
                Objects.equals(description, that.description);
     }

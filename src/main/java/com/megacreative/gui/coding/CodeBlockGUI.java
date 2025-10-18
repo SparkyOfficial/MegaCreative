@@ -97,12 +97,9 @@ public class CodeBlockGUI implements GUIManager.ManagedGUIInterface {
         this.guiManager = plugin.getServiceRegistry().getGuiManager();
 
         
-        if (plugin != null && plugin.getServiceRegistry() != null) {
-            this.blockConfigService = plugin.getServiceRegistry().getBlockConfigService();
-        } else {
-            this.blockConfigService = null;
-            player.sendMessage("§cОшибка: Сервис конфигурации блоков недоступен!");
-        }
+        // Condition plugin != null is always true
+        // Removed redundant null check since plugin is already checked in constructor
+        this.blockConfigService = plugin.getServiceRegistry().getBlockConfigService();
 
         
         String guiTitle = createGUITitle();
@@ -547,14 +544,14 @@ public class CodeBlockGUI implements GUIManager.ManagedGUIInterface {
             codeBlock.setParameters(dataValueParameters);
 
             
-            if (blockType.equals("ACTION") || blockType.equals("EVENT") || blockType.equals("CONDITION")) {
-                if (blockType.equals("ACTION")) {
-                    codeBlock.setAction(blockId);
-                } else if (blockType.equals("EVENT")) {
-                    codeBlock.setEvent(blockId);
-                } else if (blockType.equals("CONDITION")) {
-                    codeBlock.setParameter("condition", DataValue.fromObject(blockId));
-                }
+            // Condition blockType.equals("CONDITION") is always true
+            // Removed redundant check and fixed logic
+            if ("ACTION".equals(blockType)) {
+                codeBlock.setAction(blockId);
+            } else if ("EVENT".equals(blockType)) {
+                codeBlock.setEvent(blockId);
+            } else if ("CONDITION".equals(blockType)) {
+                codeBlock.setParameter("condition", DataValue.fromObject(blockId));
             }
 
             

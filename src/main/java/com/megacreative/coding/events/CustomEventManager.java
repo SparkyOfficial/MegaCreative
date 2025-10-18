@@ -1281,7 +1281,7 @@ public class CustomEventManager implements Listener, EventPublisher, EventSubscr
         
         public void cancel() {
             cancelled = true;
-            if (taskId != -1 && plugin != null && plugin.getServer() != null) {
+            if (taskId != -1 && plugin != null) {
                 try {
                     plugin.getServer().getScheduler().cancelTask(taskId);
                 } catch (Exception e) {

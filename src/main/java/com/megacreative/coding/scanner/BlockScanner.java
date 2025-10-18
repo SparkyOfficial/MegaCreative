@@ -31,7 +31,9 @@ public class BlockScanner {
             try {
                 scanPackage(packageName);
             } catch (Exception e) {
-                
+                // Log exception and continue processing
+                // This is expected behavior when scanning packages
+                System.err.println("Error scanning package " + packageName + ": " + e.getMessage());
             }
         }
     }
@@ -130,9 +132,13 @@ public class BlockScanner {
                 }
             }
         } catch (ClassNotFoundException e) {
-            
+            // Log exception and continue processing
+            // This is expected behavior when processing classes
+            System.err.println("Class not found: " + className + " - " + e.getMessage());
         } catch (Exception e) {
-            
+            // Log exception and continue processing
+            // This is expected behavior when processing classes
+            System.err.println("Error processing class " + className + ": " + e.getMessage());
         }
     }
     

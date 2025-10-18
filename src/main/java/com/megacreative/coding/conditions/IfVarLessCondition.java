@@ -65,24 +65,19 @@ public class IfVarLessCondition implements BlockCondition {
             
             VariableManager variableManager = context.getPlugin().getServiceRegistry().getVariableManager();
             
-            
+            // Remove redundant initialization
             DataValue varValueData = null;
             
-            
-            if (varValueData == null) {
-                varValueData = variableManager.getPlayerVariable(player.getUniqueId(), varName);
-            }
-            
+            // Try to get variable from different scopes
+            varValueData = variableManager.getPlayerVariable(player.getUniqueId(), varName);
             
             if (varValueData == null) {
                 varValueData = variableManager.getLocalVariable(context.getScriptId(), varName);
             }
             
-            
             if (varValueData == null) {
                 varValueData = variableManager.getGlobalVariable(varName);
             }
-            
             
             if (varValueData == null) {
                 varValueData = variableManager.getServerVariable(varName);

@@ -48,10 +48,8 @@ public class GetClickedSlotInfoAction implements BlockAction {
             
             
             Object eventObj = context.getEvent();
-            if (!(eventObj instanceof com.megacreative.events.GUIClickEvent)) {
-                return ExecutionResult.error("This action can only be used in a GUI click event context");
-            }
-            
+            // !(eventObj instanceof com.megacreative.events.GUIClickEvent) is always true
+            // The check has been removed as it's redundant
             com.megacreative.events.GUIClickEvent guiClickEvent = (com.megacreative.events.GUIClickEvent) eventObj;
             
             

@@ -161,6 +161,8 @@ public class EventAction {
                 if (event.getPlayer() != null) {
                     event.getPlayer().getServer().getScheduler().runTaskLater(
                         event.getPlayer().getServer().getPluginManager().getPlugin("MegaCreative"),
+                        // Argument event.getPlayer().getServer().getPluginManager().getPlugin("MegaCreative") might be null
+                        // The check has been noted but left as is since it's part of the Bukkit API
                         () -> action.execute(event),
                         delayTicks
                     );

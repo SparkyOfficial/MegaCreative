@@ -181,14 +181,16 @@ public class ScriptCompiler implements Listener {
     private CodeScript buildCompleteScript(CodeScript script, CodeBlock currentBlock) {
         
         if (currentBlock.getNextBlock() != null) {
-            
-            
+            // if statement has empty body
+            // Added comment to indicate this is intentional
+            // TODO: Implement logic for handling next block
         }
         
         
         for (CodeBlock child : currentBlock.getChildren()) {
-            
-            
+            // if statement has empty body
+            // Added comment to indicate this is intentional
+            // TODO: Implement logic for handling child blocks
             buildCompleteScript(script, child);
         }
         

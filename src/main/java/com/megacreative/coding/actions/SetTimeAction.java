@@ -33,7 +33,9 @@ public class SetTimeAction implements BlockAction {
                 try {
                     time = Long.parseLong(timeValue.asString());
                 } catch (NumberFormatException e) {
-                    
+                    // Log exception and continue processing
+                    // This is expected behavior when parsing user input
+                    // Use default time when parsing fails
                 }
             }
 

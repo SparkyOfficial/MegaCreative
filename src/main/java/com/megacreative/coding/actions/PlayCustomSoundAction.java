@@ -29,9 +29,8 @@ public class PlayCustomSoundAction implements BlockAction {
 
             
             Sound sound = Sound.valueOf(soundValue.asString().toUpperCase());
-            if (sound == null) {
-                return ExecutionResult.error("Invalid sound: " + soundValue.asString());
-            }
+            // sound == null check is always false since Sound.valueOf() throws IllegalArgumentException for invalid values
+            // The check has been removed as it's redundant
 
             
             float volume = volumeValue.asNumber().floatValue();

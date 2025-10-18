@@ -69,7 +69,7 @@ public class SetItemInSlotAction implements BlockAction {
             }
             
             
-            ItemStack itemStack = null;
+            ItemStack itemStack;
             if (itemObj instanceof ItemStack) {
                 itemStack = (ItemStack) itemObj;
             } else if (itemObj instanceof org.bukkit.Material) {

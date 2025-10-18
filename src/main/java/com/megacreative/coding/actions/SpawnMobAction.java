@@ -45,7 +45,9 @@ public class SpawnMobAction implements BlockAction {
                 try {
                     count = Math.max(1, Integer.parseInt(countValue.asString()));
                 } catch (NumberFormatException e) {
-                    
+                    // Log exception and continue processing
+                    // This is expected behavior when parsing user input
+                    context.getPlugin().getLogger().warning("Invalid count value: " + countValue.asString());
                 }
             }
 

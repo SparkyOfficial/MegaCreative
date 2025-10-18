@@ -180,7 +180,9 @@ public class ListValue implements DataValue {
     
     @Override
     public boolean isValid() {
-        return values != null;
+        // values != null is always true since values is initialized in constructor
+        // The check has been simplified as the null check is redundant
+        return true;
     }
     
     @Override

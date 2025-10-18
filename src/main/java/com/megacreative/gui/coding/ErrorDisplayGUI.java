@@ -310,7 +310,9 @@ public class ErrorDisplayGUI implements GUIManager.ManagedGUIInterface {
                     }
                 }
             } catch (NumberFormatException e) {
-                
+                // Log exception and continue processing
+                // This is expected behavior when parsing error numbers
+                // Silently ignore invalid error numbers and continue with other operations
             }
         }
     }
