@@ -64,7 +64,7 @@ public class SaveScriptCommand implements CommandExecutor {
         
         CodeBlock rootBlock = null;
         for (CodeBlock block : blockCodeBlocks.values()) {
-            if (block.getMaterial() == org.bukkit.Material.DIAMOND_BLOCK) {
+            if (org.bukkit.Material.getMaterial(block.getMaterialName()) == org.bukkit.Material.DIAMOND_BLOCK) {
                 rootBlock = block;
                 break;
             }

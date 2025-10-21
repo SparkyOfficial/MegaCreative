@@ -131,7 +131,7 @@ public class CodeBlockSignManager implements Listener {
         }
         
         
-        lines[2] = ChatColor.GRAY + truncateString(codeBlock.getMaterial().name(), 15);
+        lines[2] = ChatColor.GRAY + truncateString(codeBlock.getMaterialName(), 15);
         
         
         if (codeBlock.getId() != null) {

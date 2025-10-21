@@ -80,7 +80,7 @@ public class BlockConfigManager implements Listener {
     private void showActionSelectionGUI(Player player, CodeBlock codeBlock, Location blockLocation) {
         
         var blockConfigService = plugin.getServiceRegistry().getBlockConfigService();
-        List<String> availableActions = blockConfigService.getActionsForMaterial(codeBlock.getMaterial());
+        List<String> availableActions = blockConfigService.getActionsForMaterial(org.bukkit.Material.getMaterial(codeBlock.getMaterialName()));
         
         if (availableActions.isEmpty()) {
             player.sendMessage("§cОшибка: нет доступных действий для данного типа блока.");
@@ -94,7 +94,7 @@ public class BlockConfigManager implements Listener {
             plugin, 
             player, 
             blockLocation, 
-            codeBlock.getMaterial()
+            org.bukkit.Material.getMaterial(codeBlock.getMaterialName())
         );
         actionGUI.open();
     }

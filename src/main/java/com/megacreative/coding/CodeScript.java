@@ -78,7 +78,7 @@ public class CodeScript {
      * @return true, если корневой блок - это событие
      */
     public boolean isValid() {
-        return rootBlock != null && rootBlock.getMaterial() == org.bukkit.Material.DIAMOND_BLOCK;
+        return rootBlock != null && org.bukkit.Material.getMaterial(rootBlock.getMaterialName()) == org.bukkit.Material.DIAMOND_BLOCK;
     }
     
     /**

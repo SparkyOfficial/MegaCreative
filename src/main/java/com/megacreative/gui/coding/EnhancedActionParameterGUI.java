@@ -362,7 +362,7 @@ public class EnhancedActionParameterGUI {
             meta.setDisplayName("§6🎆 Reference System Parameter Editor");
             List<String> lore = new ArrayList<>();
             lore.add("§7Action: §e" + actionId);
-            lore.add("§7Block: §f" + block.getMaterial().name());
+            lore.add("§7Block: §f" + block.getMaterialName());
             lore.add("§7Parameters: §f" + block.getParameters().size());
             lore.add("");
             lore.add("§a✨ Real-time parameter editing");

@@ -178,7 +178,7 @@ public class CodeMoverListener implements Listener {
             
             
             Block physicalBlock = newLoc.getBlock();
-            physicalBlock.setType(newBlock.getMaterial());
+            physicalBlock.setType(org.bukkit.Material.getMaterial(newBlock.getMaterialName()));
             
             
             if (newBlock.isBracket()) {

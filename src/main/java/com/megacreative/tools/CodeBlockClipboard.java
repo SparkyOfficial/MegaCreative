@@ -379,7 +379,7 @@ public class CodeBlockClipboard {
         
         
         
-        CodeBlock copy = new CodeBlock(original.getMaterial().name(), original.getAction());
+        CodeBlock copy = new CodeBlock(original.getMaterialName(), original.getAction());
         
         
         

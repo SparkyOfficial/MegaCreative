@@ -253,7 +253,7 @@ public class ReferenceSystemStyleGUI {
             meta.setDisplayName("§6🎆 Editing Block: §e" + block.getAction());
             meta.setLore(Arrays.asList(
                 "§7Block Type: §f" + block.getAction(),
-                "§7Material: §f" + block.getMaterial().name(),
+                "§7Material: §f" + block.getMaterialName(),
                 "§7Parameters: §f" + block.getParameters().size(),
                 "",
                 "§eUse the controls below to modify parameters"

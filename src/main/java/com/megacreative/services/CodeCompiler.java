@@ -551,7 +551,7 @@ public class CodeCompiler implements org.bukkit.event.Listener {
         
         
         
-        return codeBlock.getMaterial() == Material.DIAMOND_BLOCK;
+        return Material.getMaterial(codeBlock.getMaterialName()) == Material.DIAMOND_BLOCK;
     }
 
     /**
@@ -1383,7 +1383,7 @@ public class CodeCompiler implements org.bukkit.event.Listener {
             
             
             
-            if (block.getMaterial() == Material.PISTON || block.getMaterial() == Material.STICKY_PISTON) {
+            if (Material.getMaterial(block.getMaterialName()) == Material.PISTON || Material.getMaterial(block.getMaterialName()) == Material.STICKY_PISTON) {
                 if (block.getBracketType() == CodeBlock.BracketType.OPEN) {
                     return "{";
                 } else if (block.getBracketType() == CodeBlock.BracketType.CLOSE) {
@@ -1396,7 +1396,7 @@ public class CodeCompiler implements org.bukkit.event.Listener {
         
         
         
-        if (block.getMaterial() == Material.PISTON || block.getMaterial() == Material.STICKY_PISTON) {
+        if (Material.getMaterial(block.getMaterialName()) == Material.PISTON || Material.getMaterial(block.getMaterialName()) == Material.STICKY_PISTON) {
             if (block.getBracketType() == CodeBlock.BracketType.OPEN) {
                 return "{";
             } else if (block.getBracketType() == CodeBlock.BracketType.CLOSE) {
@@ -1408,7 +1408,7 @@ public class CodeCompiler implements org.bukkit.event.Listener {
         
         
         
-        if (block.getMaterial() == Material.DIAMOND_BLOCK) {
+        if (Material.getMaterial(block.getMaterialName()) == Material.DIAMOND_BLOCK) {
             switch (action) {
                 case "onJoin": return "joinEvent";
                 case "onLeave": return "quitEvent";
@@ -1424,7 +1424,7 @@ public class CodeCompiler implements org.bukkit.event.Listener {
         
         
         
-        if (block.getMaterial() == Material.COBBLESTONE) {
+        if (Material.getMaterial(block.getMaterialName()) == Material.COBBLESTONE) {
             return action;
         }
         
