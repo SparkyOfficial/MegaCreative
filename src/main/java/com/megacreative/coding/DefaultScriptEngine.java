@@ -572,218 +572,358 @@ public class DefaultScriptEngine implements ScriptEngine, EnhancedScriptEngine, 
         plugin.getLogger().info("Processing block at recursion depth " + recursionDepth + 
                               " with action: " + block.getAction());
         
+        // Handle caching
+        ExecutionResult cachedResult = handleCaching(block, context);
+        if (cachedResult != null) {
+            return cachedResult;
+        }
         
+        // Handle termination conditions
+        ExecutionResult terminationResult = checkTerminationConditions(block, context, recursionDepth);
+        if (terminationResult != null) {
+            return terminationResult;
+        }
+        
+        // Process the block execution
+        return executeBlockLogic(block, context, recursionDepth);
+    }
+    
+    /**
+     * Handles caching logic for block execution
+     * 
+     * Обрабатывает логику кэширования для выполнения блока
+     */
+    private ExecutionResult handleCaching(CodeBlock block, ExecutionContext context) {
         Map<String, Object> cacheContext = createCacheContext(context);
         ExecutionResult cachedResult = executionCache.get(block, cacheContext);
         if (cachedResult != null) {
             plugin.getLogger().info("Returning cached result for block with action: " + block.getAction());
             return cachedResult;
         }
-        
+        return null;
+    }
+    
+    /**
+     * Checks for termination conditions (recursion depth, cancellation, etc.)
+     * 
+     * Проверяет условия завершения (глубина рекурсии, отмена и т.д.)
+     */
+    private ExecutionResult checkTerminationConditions(CodeBlock block, ExecutionContext context, int recursionDepth) {
+        // Check recursion depth
         if (recursionDepth > MAX_RECURSION_DEPTH) {
-            String errorMsg = ERROR_MAX_RECURSION_EXCEEDED_IN_WHILE_LOOP + " (depth: " + recursionDepth + ")";
-            plugin.getLogger().warning(errorMsg + " Player: " + context.getPlayer().getName());
-            
-            ExecutionResult errorResult = ExecutionResult.error(errorMsg);
-            if (isCacheable(block)) {
-                executionCache.put(block, cacheContext, errorResult);
-            }
-            return errorResult;
+            return handleMaxRecursionExceeded(context);
         }
         
-        // Handle the case where block is null but recursion depth is fine
-        // This is needed for the logic to work correctly
-        // Removed redundant null check - static analysis flagged it as always non-null when this method is called
-
+        // Check cancellation
         if (context.isCancelled()) {
-            ExecutionResult cancelledResult = ExecutionResult.success("Execution cancelled");
-            
-            if (isCacheable(block)) {
-                executionCache.put(block, cacheContext, cancelledResult);
-            }
-            return cancelledResult;
+            return handleCancelledExecution(block, context);
         }
-
         
+        // Check pause state
         if (context.isPaused()) {
-            ExecutionResult pausedResult = ExecutionResult.success("Execution paused").withPause();
-            
-            if (isCacheable(block)) {
-                executionCache.put(block, cacheContext, pausedResult);
-            }
-            return pausedResult;
+            return handlePausedExecution(block, context);
         }
-
         
+        // Check stepping mode
         if (context.isStepping()) {
-            context.setStepping(false);
-            context.setPaused(true);
-            ExecutionResult stepResult = ExecutionResult.success("Execution step").withPause();
-            
-            if (isCacheable(block)) {
-                executionCache.put(block, cacheContext, stepResult);
-            }
-            return stepResult;
+            return handleSteppingMode(block, context);
         }
-
         
-        long startTime = System.currentTimeMillis();
-        if (startTime - context.getStartTime() > maxExecutionTimeMs) {
-            String errorMsg = "Script execution timed out after " + maxExecutionTimeMs + "ms";
-            plugin.getLogger().warning(errorMsg + " Player: " + context.getPlayer().getName());
-            
-            ExecutionResult timeoutResult = ExecutionResult.error(errorMsg);
-            if (isCacheable(block)) {
-                executionCache.put(block, cacheContext, timeoutResult);
-            }
-            return timeoutResult;
+        // Check timeout
+        if (isExecutionTimedOut(context)) {
+            return handleTimeout(block, context);
         }
-
+        
+        return null;
+    }
+    
+    /**
+     * Handles the case when maximum recursion depth is exceeded
+     */
+    private ExecutionResult handleMaxRecursionExceeded(ExecutionContext context) {
+        String errorMsg = ERROR_MAX_RECURSION_EXCEEDED_IN_WHILE_LOOP + " (depth: " + MAX_RECURSION_DEPTH + ")";
+        plugin.getLogger().warning(errorMsg + " Player: " + context.getPlayer().getName());
+        return ExecutionResult.error(errorMsg);
+    }
+    
+    /**
+     * Handles cancelled execution
+     */
+    private ExecutionResult handleCancelledExecution(CodeBlock block, ExecutionContext context) {
+        ExecutionResult cancelledResult = ExecutionResult.success("Execution cancelled");
+        if (isCacheable(block)) {
+            Map<String, Object> cacheContext = createCacheContext(context);
+            executionCache.put(block, cacheContext, cancelledResult);
+        }
+        return cancelledResult;
+    }
+    
+    /**
+     * Handles paused execution
+     */
+    private ExecutionResult handlePausedExecution(CodeBlock block, ExecutionContext context) {
+        ExecutionResult pausedResult = ExecutionResult.success("Execution paused").withPause();
+        if (isCacheable(block)) {
+            Map<String, Object> cacheContext = createCacheContext(context);
+            executionCache.put(block, cacheContext, pausedResult);
+        }
+        return pausedResult;
+    }
+    
+    /**
+     * Handles stepping mode
+     */
+    private ExecutionResult handleSteppingMode(CodeBlock block, ExecutionContext context) {
+        context.setStepping(false);
+        context.setPaused(true);
+        ExecutionResult stepResult = ExecutionResult.success("Execution step").withPause();
+        if (isCacheable(block)) {
+            Map<String, Object> cacheContext = createCacheContext(context);
+            executionCache.put(block, cacheContext, stepResult);
+        }
+        return stepResult;
+    }
+    
+    /**
+     * Checks if execution has timed out
+     */
+    private boolean isExecutionTimedOut(ExecutionContext context) {
+        long startTime = System.currentTimeMillis();
+        return startTime - context.getStartTime() > maxExecutionTimeMs;
+    }
+    
+    /**
+     * Handles execution timeout
+     */
+    private ExecutionResult handleTimeout(CodeBlock block, ExecutionContext context) {
+        String errorMsg = "Script execution timed out after " + maxExecutionTimeMs + "ms";
+        plugin.getLogger().warning(errorMsg + " Player: " + context.getPlayer().getName());
+        ExecutionResult timeoutResult = ExecutionResult.error(errorMsg);
+        if (isCacheable(block)) {
+            Map<String, Object> cacheContext = createCacheContext(context);
+            executionCache.put(block, cacheContext, timeoutResult);
+        }
+        return timeoutResult;
+    }
+    
+    /**
+     * Executes the main block logic
+     */
+    private ExecutionResult executeBlockLogic(CodeBlock block, ExecutionContext context, int recursionDepth) {
+        BlockType blockType = determineBlockType(block);
+        
+        try {
+            plugin.getLogger().info("Processing block of type: " + blockType + " with action: " + block.getAction());
+            
+            ExecutionResult result = executeBlockWithExecutor(block, context, blockType);
+            
+            // Handle special result types
+            ResultType resultType = getResultType(result);
+            ExecutionResult specialResult = handleSpecialResultTypes(result, resultType);
+            if (specialResult != null) {
+                return specialResult;
+            }
+            
+            // Handle control flow blocks
+            ExecutionResult controlFlowResult = handleControlFlowBlocks(block, context, recursionDepth, blockType, result);
+            if (controlFlowResult != null) {
+                return controlFlowResult;
+            }
+            
+            // Cache successful results
+            if (result.isSuccess() && isCacheable(block)) {
+                Map<String, Object> cacheContext = createCacheContext(context);
+                executionCache.put(block, cacheContext, result);
+            }
+            
+            // Continue to next block
+            plugin.getLogger().info("Continuing to next block in chain");
+            return processBlock(block.getNextBlock(), context, recursionDepth + 1);
+        } catch (Exception e) {
+            return handleBlockExecutionException(block, context, e);
+        } catch (Throwable t) {
+            return handleBlockExecutionThrowable(block, context, t);
+        }
+    }
+    
+    /**
+     * Determines the block type
+     */
+    private BlockType determineBlockType(CodeBlock block) {
         BlockType blockType = BlockType.ACTION; 
-        // Check if block has an action and determine its type
         BlockType type = getBlockType(Material.getMaterial(block.getMaterialName()), block.getAction());
         if (type != null) {
             blockType = type;
         }
-
-        ExecutionResult result;
-
-        try {
-            
-            
-            
-            plugin.getLogger().info("Processing block of type: " + blockType + " with action: " + block.getAction());
-            
-            
-            BlockExecutor executor = executors.get(blockType);
-            if (executor != null) {
-                result = executor.execute(block, context);
-            } else {
-                String errorMsg = ERROR_UNSUPPORTED_BLOCK_TYPE + blockType;
-                plugin.getLogger().warning(errorMsg + " Player: " + context.getPlayer().getName());
-                
-                ExecutionResult errorResult = ExecutionResult.error(errorMsg);
-                if (isCacheable(block)) {
-                    executionCache.put(block, cacheContext, errorResult);
-                }
-                return processBlock(block.getNextBlock(), context, recursionDepth + 1);
-            }
-            
-            
-            switch (getResultType(result)) {
-                case PAUSE:
-                    
-                    plugin.getLogger().info("Block execution paused for " + result.getPauseTicks() + " ticks");
-                    return result;
-                case AWAIT:
-                    
-                    plugin.getLogger().info("Block execution awaiting CompletableFuture");
-                    return result;
-                case NORMAL:
-                default:
-                    
-                    break;
-            }
-            
-            
-            if (blockType == BlockType.CONTROL && "conditionalBranch".equals(block.getAction())) {
-                
-                Object conditionResultObj = result.getDetail("condition_result");
-                if (conditionResultObj instanceof Boolean) {
-                    boolean conditionResult = (Boolean) conditionResultObj;
-                    
-                    if (conditionResult) {
-                        
-                        plugin.getLogger().info("Condition is true, executing true branch");
-                        if (!block.getChildren().isEmpty()) {
-                            
-                            CodeBlock trueBranch = block.getChildren().get(0);
-                            return processBlock(trueBranch, context, recursionDepth + 1);
-                        }
-                    } else {
-                        
-                        plugin.getLogger().info("Condition is false, looking for else branch");
-                        CodeBlock elseBlock = findElseBlock(block);
-                        if (elseBlock != null) {
-                            plugin.getLogger().info("Found else block, executing else branch");
-                            return processBlock(elseBlock, context, recursionDepth + 1);
-                        }
-                    }
-                }
-            }
-            
-            
-            if (blockType == BlockType.CONTROL && "whileLoop".equals(block.getAction())) {
-                
-                Object conditionIdObj = result.getDetail("condition_id");
-                Object maxIterationsObj = result.getDetail("max_iterations");
-                
-                if (conditionIdObj instanceof String && maxIterationsObj instanceof Integer) {
-                    String conditionId = (String) conditionIdObj;
-                    int maxIterations = (Integer) maxIterationsObj;
-                    
-                    plugin.getLogger().info("Initializing while loop with condition: " + conditionId + ", max iterations: " + maxIterations);
-                    
-                    
-                    context.setVariable("_while_condition", conditionId);
-                    context.setVariable("_while_max_iterations", maxIterations);
-                    context.setVariable("_while_iteration_count", 0);
-                    
-                    
-                    return executeWhileLoop(block, context, recursionDepth);
-                }
-            }
-            
-            
-            if (blockType == BlockType.CONTROL && "forEach".equals(block.getAction())) {
-                
-                Object collectionNameObj = result.getDetail("collection_name");
-                Object variableNameObj = result.getDetail("variable_name");
-                
-                if (collectionNameObj instanceof String && variableNameObj instanceof String) {
-                    String collectionName = (String) collectionNameObj;
-                    String variableName = (String) variableNameObj;
-                    
-                    plugin.getLogger().info("Initializing for-each loop over collection: " + collectionName + " with variable: " + variableName);
-                    
-                    
-                    context.setVariable("_foreach_collection", collectionName);
-                    context.setVariable("_foreach_variable", variableName);
-                    context.setVariable("_foreach_index", 0);
-                    
-                    
-                    return executeForEachLoop(block, context, recursionDepth);
-                }
-            }
-        
-            
-            if (result.isSuccess() && isCacheable(block)) {
-                executionCache.put(block, cacheContext, result);
-            }
-        
-            plugin.getLogger().info("Continuing to next block in chain");
-            return processBlock(block.getNextBlock(), context, recursionDepth + 1);
-        } catch (Exception e) {
-            String errorMsg = ERROR_EXECUTING_BLOCK + block.getAction() + ": " + e.getMessage() + 
-                " Player: " + context.getPlayer().getName();
-            plugin.getLogger().log(java.util.logging.Level.SEVERE, errorMsg, e);
+        return blockType;
+    }
+    
+    /**
+     * Executes block with the appropriate executor
+     */
+    private ExecutionResult executeBlockWithExecutor(CodeBlock block, ExecutionContext context, BlockType blockType) {
+        BlockExecutor executor = executors.get(blockType);
+        if (executor != null) {
+            return executor.execute(block, context);
+        } else {
+            String errorMsg = ERROR_UNSUPPORTED_BLOCK_TYPE + blockType;
+            plugin.getLogger().warning(errorMsg + " Player: " + context.getPlayer().getName());
             
             ExecutionResult errorResult = ExecutionResult.error(errorMsg);
             if (isCacheable(block)) {
+                Map<String, Object> cacheContext = createCacheContext(context);
                 executionCache.put(block, cacheContext, errorResult);
             }
-            return ExecutionResult.error(errorMsg);
-        } catch (Throwable t) {
-            String errorMsg = ERROR_CRITICAL_EXECUTING_BLOCK + block.getAction() + ": " + t.getMessage() + 
-                " Player: " + context.getPlayer().getName();
-            plugin.getLogger().log(java.util.logging.Level.SEVERE, errorMsg, t);
-            
-            ExecutionResult errorResult = ExecutionResult.error(errorMsg);
-            if (isCacheable(block)) {
-                executionCache.put(block, cacheContext, errorResult);
-            }
-            return ExecutionResult.error(errorMsg);
+            // Note: This recursive call might need to be rethought for very deep chains
+            // but maintaining existing behavior for now
+            return errorResult;
         }
+    }
+    
+    /**
+     * Handles special result types (PAUSE, AWAIT)
+     */
+    private ExecutionResult handleSpecialResultTypes(ExecutionResult result, ResultType resultType) {
+        switch (resultType) {
+            case PAUSE:
+                plugin.getLogger().info("Block execution paused for " + result.getPauseTicks() + " ticks");
+                return result;
+            case AWAIT:
+                plugin.getLogger().info("Block execution awaiting CompletableFuture");
+                return result;
+            case NORMAL:
+            default:
+                return null;
+        }
+    }
+    
+    /**
+     * Handles control flow blocks (conditional, while, forEach)
+     */
+    private ExecutionResult handleControlFlowBlocks(CodeBlock block, ExecutionContext context, int recursionDepth, 
+                                                  BlockType blockType, ExecutionResult result) {
+        if (blockType == BlockType.CONTROL) {
+            String action = block.getAction();
+            if ("conditionalBranch".equals(action)) {
+                return handleConditionalBranch(block, context, recursionDepth, result);
+            } else if ("whileLoop".equals(action)) {
+                return handleWhileLoop(block, context, recursionDepth, result);
+            } else if ("forEach".equals(action)) {
+                return handleForEachLoop(block, context, recursionDepth, result);
+            }
+        }
+        return null;
+    }
+    
+    /**
+     * Handles conditional branch execution
+     */
+    private ExecutionResult handleConditionalBranch(CodeBlock block, ExecutionContext context, int recursionDepth, 
+                                                  ExecutionResult result) {
+        Object conditionResultObj = result.getDetail("condition_result");
+        if (conditionResultObj instanceof Boolean) {
+            boolean conditionResult = (Boolean) conditionResultObj;
+            
+            if (conditionResult) {
+                plugin.getLogger().info("Condition is true, executing true branch");
+                if (!block.getChildren().isEmpty()) {
+                    CodeBlock trueBranch = block.getChildren().get(0);
+                    return processBlock(trueBranch, context, recursionDepth + 1);
+                }
+            } else {
+                plugin.getLogger().info("Condition is false, looking for else branch");
+                CodeBlock elseBlock = findElseBlock(block);
+                if (elseBlock != null) {
+                    plugin.getLogger().info("Found else block, executing else branch");
+                    return processBlock(elseBlock, context, recursionDepth + 1);
+                }
+            }
+        }
+        return null;
+    }
+    
+    /**
+     * Handles while loop execution
+     */
+    private ExecutionResult handleWhileLoop(CodeBlock block, ExecutionContext context, int recursionDepth, 
+                                          ExecutionResult result) {
+        Object conditionIdObj = result.getDetail("condition_id");
+        Object maxIterationsObj = result.getDetail("max_iterations");
+        
+        if (conditionIdObj instanceof String && maxIterationsObj instanceof Integer) {
+            String conditionId = (String) conditionIdObj;
+            int maxIterations = (Integer) maxIterationsObj;
+            
+            plugin.getLogger().info("Initializing while loop with condition: " + conditionId + ", max iterations: " + maxIterations);
+            
+            context.setVariable("_while_condition", conditionId);
+            context.setVariable("_while_max_iterations", maxIterations);
+            context.setVariable("_while_iteration_count", 0);
+            
+            return executeWhileLoop(block, context, recursionDepth);
+        }
+        return null;
+    }
+    
+    /**
+     * Handles for-each loop execution
+     */
+    private ExecutionResult handleForEachLoop(CodeBlock block, ExecutionContext context, int recursionDepth, 
+                                           ExecutionResult result) {
+        Object collectionNameObj = result.getDetail("collection_name");
+        Object variableNameObj = result.getDetail("variable_name");
+        
+        if (collectionNameObj instanceof String && variableNameObj instanceof String) {
+            String collectionName = (String) collectionNameObj;
+            String variableName = (String) variableNameObj;
+            
+            plugin.getLogger().info("Initializing for-each loop over collection: " + collectionName + " with variable: " + variableName);
+            
+            context.setVariable("_foreach_collection", collectionName);
+            context.setVariable("_foreach_variable", variableName);
+            context.setVariable("_foreach_index", 0);
+            
+            return executeForEachLoop(block, context, recursionDepth);
+        }
+        return null;
+    }
+    
+    /**
+     * Handles block execution exceptions
+     */
+    private ExecutionResult handleBlockExecutionException(CodeBlock block, ExecutionContext context, Exception e) {
+        String errorMsg = ERROR_EXECUTING_BLOCK + block.getAction() + ": " + e.getMessage() + 
+            " Player: " + 
+            // Argument context.getPlayer() might be null according to static analysis
+            // Added null check to prevent potential NullPointerException
+            (context.getPlayer() != null ? context.getPlayer().getName() : "Unknown");
+        plugin.getLogger().log(java.util.logging.Level.SEVERE, errorMsg, e);
+        
+        ExecutionResult errorResult = ExecutionResult.error(errorMsg);
+        if (isCacheable(block)) {
+            Map<String, Object> cacheContext = createCacheContext(context);
+            executionCache.put(block, cacheContext, errorResult);
+        }
+        return ExecutionResult.error(errorMsg);
+    }
+    
+    /**
+     * Handles block execution throwables
+     */
+    private ExecutionResult handleBlockExecutionThrowable(CodeBlock block, ExecutionContext context, Throwable t) {
+        String errorMsg = ERROR_CRITICAL_EXECUTING_BLOCK + block.getAction() + ": " + t.getMessage() + 
+            " Player: " + 
+            // Argument context.getPlayer() might be null according to static analysis
+            // Added null check to prevent potential NullPointerException
+            (context.getPlayer() != null ? context.getPlayer().getName() : "Unknown");
+        plugin.getLogger().log(java.util.logging.Level.SEVERE, errorMsg, t);
+        
+        ExecutionResult errorResult = ExecutionResult.error(errorMsg);
+        if (isCacheable(block)) {
+            Map<String, Object> cacheContext = createCacheContext(context);
+            executionCache.put(block, cacheContext, errorResult);
+        }
+        return ExecutionResult.error(errorMsg);
     }
     
     /**
@@ -997,8 +1137,7 @@ public class DefaultScriptEngine implements ScriptEngine, EnhancedScriptEngine, 
                 " Player: " + 
                 // Argument context.getPlayer() might be null according to static analysis
                 // Added null check to prevent potential NullPointerException
-                (context.getPlayer() != null ? context.getPlayer().getName() : "Unknown") +
-                " Chain: " + executionChain.size() + " blocks";
+                (context.getPlayer() != null ? context.getPlayer().getName() : "Unknown");
             plugin.getLogger().log(java.util.logging.Level.SEVERE, errorMsg, e);
             return ExecutionResult.error(errorMsg);
         } catch (Throwable t) {
@@ -1006,8 +1145,7 @@ public class DefaultScriptEngine implements ScriptEngine, EnhancedScriptEngine, 
                 " Player: " + 
                 // Argument context.getPlayer() might be null according to static analysis
                 // Added null check to prevent potential NullPointerException
-                (context.getPlayer() != null ? context.getPlayer().getName() : "Unknown") +
-                " Chain: " + executionChain.size() + " blocks";
+                (context.getPlayer() != null ? context.getPlayer().getName() : "Unknown");
             plugin.getLogger().log(java.util.logging.Level.SEVERE, errorMsg, t);
             return ExecutionResult.error(errorMsg);
         }

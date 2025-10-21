@@ -173,7 +173,7 @@ public class CodeMoverListener implements Listener {
             }
             
             
-            CodeBlock newBlock = oldBlock.clone();
+            CodeBlock newBlock = CodeBlock.copyOf(oldBlock);
             newChain.add(newBlock);
             
             

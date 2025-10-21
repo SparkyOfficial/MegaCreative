@@ -172,53 +172,11 @@ public class ScriptTriggerManager implements Listener, com.megacreative.coding.e
         }
         
         try {
+            // Handle code execution for the event
+            handleEventExecution(eventName, player, creativeWorld);
             
-            CodeHandler codeHandler = creativeWorld.getCodeHandler();
-            if (codeHandler == null) {
-                // Only log at fine level to reduce spam
-                if (LOGGER.isLoggable(java.util.logging.Level.FINE)) {
-                    LOGGER.fine("CodeHandler is null for world: " + creativeWorld.getName());
-                }
-                return;
-            }
-            
-            
-            GameEvent gameEvent = new GameEvent(eventName);
-            if (player != null) {
-                gameEvent.setPlayer(player);
-            }
-            
-            
-            ActivatorType activatorType = mapEventToActivatorType(eventName);
-            if (activatorType != null) {
-                // Only log at fine level to reduce spam
-                if (LOGGER.isLoggable(java.util.logging.Level.FINE)) {
-                    LOGGER.fine("Executing scripts for event: " + eventName + " with activator type: " + activatorType);
-                }
-                codeHandler.handleEvent(activatorType, gameEvent, player);
-            } else {
-                // Only log at fine level to reduce spam
-                if (LOGGER.isLoggable(java.util.logging.Level.FINE)) {
-                    LOGGER.fine("No activator type found for event: " + eventName);
-                }
-            }
-            
-            
-            List<CustomEventManager.EventHandler> handlers = customEventManager.getEventHandlers(eventName);
-            if (handlers != null && !handlers.isEmpty()) {
-                for (CustomEventManager.EventHandler handler : handlers) {
-                    
-                    if (handler.canHandle(player, creativeWorld.getName(), gameEvent.getEventData())) {
-                        
-                        handler.handle(gameEvent.getEventData(), player, creativeWorld.getName());
-                        
-                        
-                        if (LOGGER.isLoggable(java.util.logging.Level.FINEST)) {
-                            LOGGER.finest("Executed event handler for " + eventName + " in world " + creativeWorld.getName());
-                        }
-                    }
-                }
-            }
+            // Handle custom event handlers
+            handleCustomEventHandlers(eventName, player, creativeWorld);
         } catch (Exception e) {
             LOGGER.warning("Error executing scripts for event " + eventName + ": " + e.getMessage());
             LOGGER.log(java.util.logging.Level.SEVERE, "Error executing scripts for event " + eventName, e);
@@ -234,53 +192,125 @@ public class ScriptTriggerManager implements Listener, com.megacreative.coding.e
         }
         
         try {
+            // Handle code execution for the global event
+            handleGlobalEventExecution(eventName, creativeWorld);
             
-            CodeHandler codeHandler = creativeWorld.getCodeHandler();
-            if (codeHandler == null) {
-                // Only log at fine level to reduce spam
-                if (LOGGER.isLoggable(java.util.logging.Level.FINE)) {
-                    LOGGER.fine("CodeHandler is null for world: " + creativeWorld.getName());
-                }
-                return;
-            }
-            
-            
-            GameEvent gameEvent = new GameEvent(eventName);
-            
-            
-            ActivatorType activatorType = mapEventToActivatorType(eventName);
-            if (activatorType != null) {
-                // Only log at fine level to reduce spam
-                if (LOGGER.isLoggable(java.util.logging.Level.FINE)) {
-                    LOGGER.fine("Executing scripts for global event: " + eventName + " with activator type: " + activatorType);
-                }
-                codeHandler.handleEvent(activatorType, gameEvent, null);
-            } else {
-                // Only log at fine level to reduce spam
-                if (LOGGER.isLoggable(java.util.logging.Level.FINE)) {
-                    LOGGER.fine("No activator type found for global event: " + eventName);
-                }
-            }
-            
-            
-            List<CustomEventManager.EventHandler> handlers = customEventManager.getEventHandlers(eventName);
-            if (handlers != null && !handlers.isEmpty()) {
-                for (CustomEventManager.EventHandler handler : handlers) {
-                    
-                    if (handler.canHandle(null, creativeWorld.getName(), gameEvent.getEventData())) {
-                        
-                        handler.handle(gameEvent.getEventData(), null, creativeWorld.getName());
-                        
-                        
-                        if (LOGGER.isLoggable(java.util.logging.Level.FINEST)) {
-                            LOGGER.finest("Executed global event handler for " + eventName + " in world " + creativeWorld.getName());
-                        }
-                    }
-                }
-            }
+            // Handle custom event handlers for global events
+            handleCustomGlobalEventHandlers(eventName, creativeWorld);
         } catch (Exception e) {
             LOGGER.warning("Error executing scripts for global event " + eventName + ": " + e.getMessage());
             LOGGER.log(java.util.logging.Level.SEVERE, "Error executing scripts for global event " + eventName, e);
+        }
+    }
+    
+    /**
+     * Handle code execution for a player event
+     * 
+     * Обробляє виконання коду для події гравця
+     */
+    private void handleEventExecution(String eventName, Player player, CreativeWorld creativeWorld) {
+        CodeHandler codeHandler = creativeWorld.getCodeHandler();
+        if (codeHandler == null) {
+            // Only log at fine level to reduce spam
+            if (LOGGER.isLoggable(java.util.logging.Level.FINE)) {
+                LOGGER.fine("CodeHandler is null for world: " + creativeWorld.getName());
+            }
+            return;
+        }
+        
+        GameEvent gameEvent = new GameEvent(eventName);
+        if (player != null) {
+            gameEvent.setPlayer(player);
+        }
+        
+        ActivatorType activatorType = mapEventToActivatorType(eventName);
+        if (activatorType != null) {
+            // Only log at fine level to reduce spam
+            if (LOGGER.isLoggable(java.util.logging.Level.FINE)) {
+                LOGGER.fine("Executing scripts for event: " + eventName + " with activator type: " + activatorType);
+            }
+            codeHandler.handleEvent(activatorType, gameEvent, player);
+        } else {
+            // Only log at fine level to reduce spam
+            if (LOGGER.isLoggable(java.util.logging.Level.FINE)) {
+                LOGGER.fine("No activator type found for event: " + eventName);
+            }
+        }
+    }
+    
+    /**
+     * Handle code execution for a global event
+     * 
+     * Обробляє виконання коду для глобальної події
+     */
+    private void handleGlobalEventExecution(String eventName, CreativeWorld creativeWorld) {
+        CodeHandler codeHandler = creativeWorld.getCodeHandler();
+        if (codeHandler == null) {
+            // Only log at fine level to reduce spam
+            if (LOGGER.isLoggable(java.util.logging.Level.FINE)) {
+                LOGGER.fine("CodeHandler is null for world: " + creativeWorld.getName());
+            }
+            return;
+        }
+        
+        GameEvent gameEvent = new GameEvent(eventName);
+        
+        ActivatorType activatorType = mapEventToActivatorType(eventName);
+        if (activatorType != null) {
+            // Only log at fine level to reduce spam
+            if (LOGGER.isLoggable(java.util.logging.Level.FINE)) {
+                LOGGER.fine("Executing scripts for global event: " + eventName + " with activator type: " + activatorType);
+            }
+            codeHandler.handleEvent(activatorType, gameEvent, null);
+        } else {
+            // Only log at fine level to reduce spam
+            if (LOGGER.isLoggable(java.util.logging.Level.FINE)) {
+                LOGGER.fine("No activator type found for global event: " + eventName);
+            }
+        }
+    }
+    
+    /**
+     * Handle custom event handlers for player events
+     * 
+     * Обробляє спеціальні обробники подій для подій гравця
+     */
+    private void handleCustomEventHandlers(String eventName, Player player, CreativeWorld creativeWorld) {
+        List<CustomEventManager.EventHandler> handlers = customEventManager.getEventHandlers(eventName);
+        if (handlers != null && !handlers.isEmpty()) {
+            GameEvent gameEvent = new GameEvent(eventName);
+            
+            for (CustomEventManager.EventHandler handler : handlers) {
+                if (handler.canHandle(player, creativeWorld.getName(), gameEvent.getEventData())) {
+                    handler.handle(gameEvent.getEventData(), player, creativeWorld.getName());
+                    
+                    if (LOGGER.isLoggable(java.util.logging.Level.FINEST)) {
+                        LOGGER.finest("Executed event handler for " + eventName + " in world " + creativeWorld.getName());
+                    }
+                }
+            }
+        }
+    }
+    
+    /**
+     * Handle custom event handlers for global events
+     * 
+     * Обробляє спеціальні обробники подій для глобальних подій
+     */
+    private void handleCustomGlobalEventHandlers(String eventName, CreativeWorld creativeWorld) {
+        List<CustomEventManager.EventHandler> handlers = customEventManager.getEventHandlers(eventName);
+        if (handlers != null && !handlers.isEmpty()) {
+            GameEvent gameEvent = new GameEvent(eventName);
+            
+            for (CustomEventManager.EventHandler handler : handlers) {
+                if (handler.canHandle(null, creativeWorld.getName(), gameEvent.getEventData())) {
+                    handler.handle(gameEvent.getEventData(), null, creativeWorld.getName());
+                    
+                    if (LOGGER.isLoggable(java.util.logging.Level.FINEST)) {
+                        LOGGER.finest("Executed global event handler for " + eventName + " in world " + creativeWorld.getName());
+                    }
+                }
+            }
         }
     }
     
@@ -325,265 +355,97 @@ public class ScriptTriggerManager implements Listener, com.megacreative.coding.e
     @Deprecated
     @EventHandler
     public void onMegaPlayerJoin(MegaPlayerJoinedEvent event) {
-        
-        
-        Player player = event.getPlayer();
-        CreativeWorld creativeWorld = worldManager.findCreativeWorldByBukkit(player.getWorld());
-
-        if (creativeWorld != null) {
-            CodeHandler codeHandler = creativeWorld.getCodeHandler();
-            
-            GameEvent gameEvent = new GameEvent("onJoin");
-            gameEvent.setPlayer(player);
-            
-            codeHandler.handleEvent(ActivatorType.PLAYER_JOIN, gameEvent, player);
-            // Use rate-limited logging for frequent events to reduce log spam
-            com.megacreative.utils.LogUtils.infoRateLimited(
-                "Triggered PLAYER_JOIN activators for player " + player.getName(), 
-                "player_join_" + player.getName()
-            );
-        }
+        handleDeprecatedEvent(event.getPlayer(), "onJoin", ActivatorType.PLAYER_JOIN, "player_join");
     }
     
     @Deprecated
     @EventHandler
     public void onMegaPlayerMove(MegaPlayerMoveEvent event) {
-        
-        Player player = event.getPlayer();
-        CreativeWorld creativeWorld = worldManager.findCreativeWorldByBukkit(player.getWorld());
-
-        if (creativeWorld != null) {
-            CodeHandler codeHandler = creativeWorld.getCodeHandler();
-            
-            GameEvent gameEvent = new GameEvent("onPlayerMove");
-            gameEvent.setPlayer(player);
-            
-            codeHandler.handleEvent(ActivatorType.PLAYER_MOVE, gameEvent, player);
-            // Use rate-limited logging for frequent events to reduce log spam
-            com.megacreative.utils.LogUtils.infoRateLimited(
-                "Triggered PLAYER_MOVE activators for player " + player.getName(), 
-                "player_move_" + player.getName()
-            );
-        }
+        handleDeprecatedEvent(event.getPlayer(), "onPlayerMove", ActivatorType.PLAYER_MOVE, "player_move");
     }
     
     @Deprecated
     @EventHandler
     public void onMegaPlayerChat(MegaPlayerChatEvent event) {
-        
-        Player player = event.getPlayer();
-        CreativeWorld creativeWorld = worldManager.findCreativeWorldByBukkit(player.getWorld());
-
-        if (creativeWorld != null) {
-            CodeHandler codeHandler = creativeWorld.getCodeHandler();
-            
-            GameEvent gameEvent = new GameEvent("onChat");
-            gameEvent.setPlayer(player);
-            
-            codeHandler.handleEvent(ActivatorType.PLAYER_CHAT, gameEvent, player);
-            // Use rate-limited logging for frequent events to reduce log spam
-            com.megacreative.utils.LogUtils.infoRateLimited(
-                "Triggered PLAYER_CHAT activators for player " + player.getName(), 
-                "player_chat_" + player.getName()
-            );
-        }
+        handleDeprecatedEvent(event.getPlayer(), "onChat", ActivatorType.PLAYER_CHAT, "player_chat");
     }
     
     @Deprecated
     @EventHandler
     public void onMegaBlockPlace(MegaBlockPlaceEvent event) {
-        
-        Player player = event.getPlayer();
-        CreativeWorld creativeWorld = worldManager.findCreativeWorldByBukkit(player.getWorld());
-
-        if (creativeWorld != null) {
-            CodeHandler codeHandler = creativeWorld.getCodeHandler();
-            
-            GameEvent gameEvent = new GameEvent("onBlockPlace");
-            gameEvent.setPlayer(player);
-            
-            codeHandler.handleEvent(ActivatorType.BLOCK_PLACE, gameEvent, player);
-            // Use rate-limited logging for frequent events to reduce log spam
-            com.megacreative.utils.LogUtils.infoRateLimited(
-                "Triggered BLOCK_PLACE activators for player " + player.getName(), 
-                "block_place_" + player.getName()
-            );
-        }
+        handleDeprecatedEvent(event.getPlayer(), "onBlockPlace", ActivatorType.BLOCK_PLACE, "block_place");
     }
     
     @Deprecated
     @EventHandler
     public void onMegaBlockBreak(MegaBlockBreakEvent event) {
-        
-        Player player = event.getPlayer();
-        CreativeWorld creativeWorld = worldManager.findCreativeWorldByBukkit(player.getWorld());
-
-        if (creativeWorld != null) {
-            CodeHandler codeHandler = creativeWorld.getCodeHandler();
-            
-            GameEvent gameEvent = new GameEvent("onBlockBreak");
-            gameEvent.setPlayer(player);
-            
-            codeHandler.handleEvent(ActivatorType.BLOCK_BREAK, gameEvent, player);
-            // Use rate-limited logging for frequent events to reduce log spam
-            com.megacreative.utils.LogUtils.infoRateLimited(
-                "Triggered BLOCK_BREAK activators for player " + player.getName(), 
-                "block_break_" + player.getName()
-            );
-        }
+        handleDeprecatedEvent(event.getPlayer(), "onBlockBreak", ActivatorType.BLOCK_BREAK, "block_break");
     }
     
     @Deprecated
     @EventHandler
     public void onMegaEntityPickupItem(MegaEntityPickupItemEvent event) {
-        
-        Player player = event.getPlayer();
-        CreativeWorld creativeWorld = worldManager.findCreativeWorldByBukkit(player.getWorld());
-
-        if (creativeWorld != null) {
-            CodeHandler codeHandler = creativeWorld.getCodeHandler();
-            
-            GameEvent gameEvent = new GameEvent("onEntityPickupItem");
-            gameEvent.setPlayer(player);
-            
-            codeHandler.handleEvent(ActivatorType.ENTITY_PICKUP_ITEM, gameEvent, player);
-            // Use rate-limited logging for frequent events to reduce log spam
-            com.megacreative.utils.LogUtils.infoRateLimited(
-                "Triggered ENTITY_PICKUP_ITEM activators for player " + player.getName(), 
-                "entity_pickup_item_" + player.getName()
-            );
-        }
+        handleDeprecatedEvent(event.getPlayer(), "onEntityPickupItem", ActivatorType.ENTITY_PICKUP_ITEM, "entity_pickup_item");
     }
     
     @Deprecated
     @EventHandler
     public void onMegaPlayerDeath(MegaPlayerDeathEvent event) {
-        
-        Player player = event.getPlayer();
-        CreativeWorld creativeWorld = worldManager.findCreativeWorldByBukkit(player.getWorld());
-
-        if (creativeWorld != null) {
-            CodeHandler codeHandler = creativeWorld.getCodeHandler();
-            
-            GameEvent gameEvent = new GameEvent("onPlayerDeath");
-            gameEvent.setPlayer(player);
-            
-            codeHandler.handleEvent(ActivatorType.PLAYER_DEATH, gameEvent, player);
-            // Use rate-limited logging for frequent events to reduce log spam
-            com.megacreative.utils.LogUtils.infoRateLimited(
-                "Triggered PLAYER_DEATH activators for player " + player.getName(), 
-                "player_death_" + player.getName()
-            );
-        }
+        handleDeprecatedEvent(event.getPlayer(), "onPlayerDeath", ActivatorType.PLAYER_DEATH, "player_death");
     }
     
     @Deprecated
     @EventHandler
     public void onMegaPlayerQuit(MegaPlayerQuitEvent event) {
-        
-        Player player = event.getPlayer();
-        CreativeWorld creativeWorld = worldManager.findCreativeWorldByBukkit(player.getWorld());
-
-        if (creativeWorld != null) {
-            CodeHandler codeHandler = creativeWorld.getCodeHandler();
-            
-            GameEvent gameEvent = new GameEvent("onQuit");
-            gameEvent.setPlayer(player);
-            
-            codeHandler.handleEvent(ActivatorType.PLAYER_QUIT, gameEvent, player);
-            // Use rate-limited logging for frequent events to reduce log spam
-            com.megacreative.utils.LogUtils.infoRateLimited(
-                "Triggered PLAYER_QUIT activators for player " + player.getName(), 
-                "player_quit_" + player.getName()
-            );
-        }
+        handleDeprecatedEvent(event.getPlayer(), "onQuit", ActivatorType.PLAYER_QUIT, "player_quit");
     }
     
     @Deprecated
     @EventHandler
     public void onMegaPlayerRespawn(MegaPlayerRespawnEvent event) {
-        
-        Player player = event.getPlayer();
-        CreativeWorld creativeWorld = worldManager.findCreativeWorldByBukkit(player.getWorld());
-
-        if (creativeWorld != null) {
-            CodeHandler codeHandler = creativeWorld.getCodeHandler();
-            
-            GameEvent gameEvent = new GameEvent("onRespawn");
-            gameEvent.setPlayer(player);
-            
-            codeHandler.handleEvent(ActivatorType.PLAYER_RESPAWN, gameEvent, player);
-            // Use rate-limited logging for frequent events to reduce log spam
-            com.megacreative.utils.LogUtils.infoRateLimited(
-                "Triggered PLAYER_RESPAWN activators for player " + player.getName(), 
-                "player_respawn_" + player.getName()
-            );
-        }
+        handleDeprecatedEvent(event.getPlayer(), "onRespawn", ActivatorType.PLAYER_RESPAWN, "player_respawn");
     }
     
     @Deprecated
     @EventHandler
     public void onMegaPlayerTeleport(MegaPlayerTeleportEvent event) {
-        
-        Player player = event.getPlayer();
-        CreativeWorld creativeWorld = worldManager.findCreativeWorldByBukkit(player.getWorld());
-
-        if (creativeWorld != null) {
-            CodeHandler codeHandler = creativeWorld.getCodeHandler();
-            
-            GameEvent gameEvent = new GameEvent("onTeleport");
-            gameEvent.setPlayer(player);
-            
-            codeHandler.handleEvent(ActivatorType.PLAYER_TELEPORT, gameEvent, player);
-            // Use rate-limited logging for frequent events to reduce log spam
-            com.megacreative.utils.LogUtils.infoRateLimited(
-                "Triggered PLAYER_TELEPORT activators for player " + player.getName(), 
-                "player_teleport_" + player.getName()
-            );
-        }
+        handleDeprecatedEvent(event.getPlayer(), "onTeleport", ActivatorType.PLAYER_TELEPORT, "player_teleport");
     }
     
     @Deprecated
     @EventHandler
     public void onMegaEntityDamage(MegaEntityDamageEvent event) {
-        
-        Player player = event.getPlayer();
-        CreativeWorld creativeWorld = worldManager.findCreativeWorldByBukkit(player.getWorld());
-
-        if (creativeWorld != null) {
-            CodeHandler codeHandler = creativeWorld.getCodeHandler();
-            
-            GameEvent gameEvent = new GameEvent("onEntityDamage");
-            gameEvent.setPlayer(player);
-            
-            codeHandler.handleEvent(ActivatorType.ENTITY_DAMAGE, gameEvent, player);
-            // Use rate-limited logging for frequent events to reduce log spam
-            com.megacreative.utils.LogUtils.infoRateLimited(
-                "Triggered ENTITY_DAMAGE activators for player " + player.getName(), 
-                "entity_damage_" + player.getName()
-            );
-        }
+        handleDeprecatedEvent(event.getPlayer(), "onEntityDamage", ActivatorType.ENTITY_DAMAGE, "entity_damage");
     }
     
     @Deprecated
     @EventHandler
     public void onMegaInventoryClick(MegaInventoryClickEvent event) {
-        
-        Player player = event.getPlayer();
+        handleDeprecatedEvent(event.getPlayer(), "onInventoryClick", ActivatorType.INVENTORY_CLICK, "inventory_click");
+    }
+    
+    /**
+     * Handle deprecated events with common logic
+     * 
+     * Обробляє застарілі події з загальною логікою
+     */
+    private void handleDeprecatedEvent(Player player, String eventName, ActivatorType activatorType, String logKey) {
         CreativeWorld creativeWorld = worldManager.findCreativeWorldByBukkit(player.getWorld());
 
         if (creativeWorld != null) {
             CodeHandler codeHandler = creativeWorld.getCodeHandler();
             
-            GameEvent gameEvent = new GameEvent("onInventoryClick");
-            gameEvent.setPlayer(player);
-            
-            codeHandler.handleEvent(ActivatorType.INVENTORY_CLICK, gameEvent, player);
-            // Use rate-limited logging for frequent events to reduce log spam
-            com.megacreative.utils.LogUtils.infoRateLimited(
-                "Triggered INVENTORY_CLICK activators for player " + player.getName(), 
-                "inventory_click_" + player.getName()
-            );
+            if (codeHandler != null) {
+                GameEvent gameEvent = new GameEvent(eventName);
+                gameEvent.setPlayer(player);
+                
+                codeHandler.handleEvent(activatorType, gameEvent, player);
+                // Use rate-limited logging for frequent events to reduce log spam
+                com.megacreative.utils.LogUtils.infoRateLimited(
+                    "Triggered " + activatorType + " activators for player " + player.getName(), 
+                    logKey + "_" + player.getName()
+                );
+            }
         }
     }
     
@@ -602,25 +464,43 @@ public class ScriptTriggerManager implements Listener, com.megacreative.coding.e
             tickCounter.set(0);
         }
         
+        processTickEvent();
+    }
+    
+    /**
+     * Process tick event for all creative worlds
+     * 
+     * Обробляє подію тіку для всіх творчих світів
+     */
+    private void processTickEvent() {
         try {
             for (CreativeWorld creativeWorld : worldManager.getCreativeWorlds()) {
                 if (creativeWorld == null) continue;
                 
-                CodeHandler codeHandler = creativeWorld.getCodeHandler();
-                
-                if (codeHandler != null) {
-                    GameEvent gameEvent = new GameEvent("onTick");
-                    
-                    // Only log at fine level to reduce spam
-                    if (LOGGER.isLoggable(java.util.logging.Level.FINE)) {
-                        LOGGER.fine("Triggered TICK activators for world " + creativeWorld.getName());
-                    }
-                    
-                    codeHandler.handleEvent(ActivatorType.TICK, gameEvent, null);
-                }
+                processTickForWorld(creativeWorld);
             }
         } catch (Exception e) {
             LOGGER.log(java.util.logging.Level.WARNING, "Error processing tick event", e);
+        }
+    }
+    
+    /**
+     * Process tick event for a specific world
+     * 
+     * Обробляє подію тіку для певного світу
+     */
+    private void processTickForWorld(CreativeWorld creativeWorld) {
+        CodeHandler codeHandler = creativeWorld.getCodeHandler();
+        
+        if (codeHandler != null) {
+            GameEvent gameEvent = new GameEvent("onTick");
+            
+            // Only log at fine level to reduce spam
+            if (LOGGER.isLoggable(java.util.logging.Level.FINE)) {
+                LOGGER.fine("Triggered TICK activators for world " + creativeWorld.getName());
+            }
+            
+            codeHandler.handleEvent(ActivatorType.TICK, gameEvent, null);
         }
     }
     

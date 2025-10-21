@@ -452,25 +452,45 @@ public class ScriptValidator {
         
         allBlocks.add(block);
         
+        // Process next block in chain
         if (block.getNextBlock() != null) {
             collectAllBlocks(block.getNextBlock(), allBlocks);
         }
         
+        // Process all child blocks
         for (CodeBlock child : block.getChildren()) {
             collectAllBlocks(child, allBlocks);
         }
         
+        // Handle special control flow blocks
+        handleSpecialControlFlowBlocks(block, allBlocks);
+    }
+    
+    /**
+     * Handles special control flow blocks for collection
+     * 
+     * Обрабатывает специальные блоки управления потоком для коллекции
+     */
+    private void handleSpecialControlFlowBlocks(CodeBlock block, Set<CodeBlock> allBlocks) {
         if ("conditionalBranch".equals(block.getAction())) {
-            
-            CodeBlock trueBlock = block.getNextBlock();
-            if (trueBlock != null) {
-                CodeBlock current = trueBlock;
-                while (current != null && current.getNextBlock() != null) {
-                    current = current.getNextBlock();
-                }
-                if (current != null && "ELSE".equals(current.getAction())) {
-                    collectAllBlocks(current.getNextBlock(), allBlocks);
-                }
+            handleConditionalBranchCollection(block, allBlocks);
+        }
+    }
+    
+    /**
+     * Handles conditional branch blocks for collection
+     * 
+     * Обрабатывает блоки условных переходов для коллекции
+     */
+    private void handleConditionalBranchCollection(CodeBlock block, Set<CodeBlock> allBlocks) {
+        CodeBlock trueBlock = block.getNextBlock();
+        if (trueBlock != null) {
+            CodeBlock current = trueBlock;
+            while (current != null && current.getNextBlock() != null) {
+                current = current.getNextBlock();
+            }
+            if (current != null && "ELSE".equals(current.getAction())) {
+                collectAllBlocks(current.getNextBlock(), allBlocks);
             }
         }
     }
@@ -487,38 +507,77 @@ public class ScriptValidator {
         
         reachableBlocks.add(block);
         
+        // Process next block in chain
         if (block.getNextBlock() != null) {
             findReachableBlocks(block.getNextBlock(), reachableBlocks);
         }
         
+        // Process all child blocks
         for (CodeBlock child : block.getChildren()) {
             findReachableBlocks(child, reachableBlocks);
         }
         
-        if ("conditionalBranch".equals(block.getAction())) {
+        // Handle special control flow blocks
+        handleControlFlowBlocks(block, reachableBlocks);
+    }
+    
+    /**
+     * Handles special control flow blocks like conditionals, loops, etc.
+     * 
+     * Обрабатывает специальные блоки управления потоком, такие как условные операторы, циклы и т.д.
+     */
+    private void handleControlFlowBlocks(CodeBlock block, Set<CodeBlock> reachableBlocks) {
+        String action = block.getAction();
+        
+        if ("conditionalBranch".equals(action)) {
+            handleConditionalBranch(block, reachableBlocks);
+        } else if ("whileLoop".equals(action)) {
+            handleWhileLoop(block, reachableBlocks);
+        } else if ("forEach".equals(action)) {
+            handleForEachLoop(block, reachableBlocks);
+        }
+    }
+    
+    /**
+     * Handles conditional branch blocks
+     * 
+     * Обрабатывает блоки условных переходов
+     */
+    private void handleConditionalBranch(CodeBlock block, Set<CodeBlock> reachableBlocks) {
+        CodeBlock trueBlock = block.getNextBlock();
+        if (trueBlock != null) {
+            findReachableBlocks(trueBlock, reachableBlocks);
             
-            CodeBlock trueBlock = block.getNextBlock();
-            if (trueBlock != null) {
-                findReachableBlocks(trueBlock, reachableBlocks);
-                
-                CodeBlock current = trueBlock;
-                while (current != null && current.getNextBlock() != null) {
-                    current = current.getNextBlock();
-                }
-                if (current != null && "ELSE".equals(current.getAction())) {
-                    findReachableBlocks(current.getNextBlock(), reachableBlocks);
-                }
+            // Find the ELSE block if it exists
+            CodeBlock current = trueBlock;
+            while (current != null && current.getNextBlock() != null) {
+                current = current.getNextBlock();
             }
-        } else if ("whileLoop".equals(block.getAction())) {
-            
-            if (block.getNextBlock() != null) {
-                findReachableBlocks(block.getNextBlock(), reachableBlocks);
+            if (current != null && "ELSE".equals(current.getAction())) {
+                findReachableBlocks(current.getNextBlock(), reachableBlocks);
             }
-        } else if ("forEach".equals(block.getAction())) {
-            
-            if (block.getNextBlock() != null) {
-                findReachableBlocks(block.getNextBlock(), reachableBlocks);
-            }
+        }
+    }
+    
+    /**
+     * Handles while loop blocks
+     * 
+     * Обрабатывает блоки цикла while
+     */
+    private void handleWhileLoop(CodeBlock block, Set<CodeBlock> reachableBlocks) {
+        if (block.getNextBlock() != null) {
+            findReachableBlocks(block.getNextBlock(), reachableBlocks);
+        }
+    }
+    
+    /**
+     * Handles for each loop blocks
+     * 
+     * Обрабатывает блоки цикла for each
+     */
+    private void handleForEachLoop(CodeBlock block, Set<CodeBlock> reachableBlocks) {
+        if (block.getNextBlock() != null) {
+            findReachableBlocks(block.getNextBlock(), reachableBlocks);
         }
     }
     
@@ -528,16 +587,13 @@ public class ScriptValidator {
      * Проверяет проблемные комбинации параметров
      */
     private void checkParameterCombinations(CodeBlock block, List<ValidationError> warnings) {
-        
-        // TODO: Implement logic for checking problematic parameter combinations
         // This method is a placeholder for future implementation
         // Possible implementation: Check for parameter combinations that might cause issues
-        // Static analysis warning fix - empty method body
-        // This method is a placeholder for future implementation
-        // TODO: Implement logic for checking problematic parameter combinations
-        // Исправление предупреждения статического анализа - пустое тело метода
         // Этот метод является заглушкой для будущей реализации
-        // TODO: Реализовать логику проверки проблемных комбинаций параметров
+        // Возможная реализация: Проверка комбинаций параметров, которые могут вызвать проблемы
+        
+        // Currently no specific parameter combination checks are implemented
+        // В настоящее время проверки комбинаций параметров не реализованы
     }
     
     /**
@@ -546,24 +602,27 @@ public class ScriptValidator {
      * Проверяет потенциальные проблемы производительности
      */
     private void checkPerformanceIssues(CodeBlock block, List<ValidationError> warnings) {
-        
         String action = block.getAction();
+        
         if ("whileLoop".equals(action)) {
             warnings.add(new ValidationError(ValidationError.Severity.WARNING, 
                 WARNING_WHILE_LOOP_PERFORMANCE, block, "action"));
         } else if ("forEach".equals(action)) {
-            DataValue listParam = block.getParameter("list");
-            if (listParam != null && listParam.getType().getName().equals("List")) {
-                // TODO: Implement logic for checking list parameter in forEach loop
-                // This check is a placeholder for future implementation
-                // Possible implementation: Validate list parameter for forEach loops
-                // Static analysis warning fix - empty if body
-                // This check is a placeholder for future implementation
-                // TODO: Implement logic for checking list parameter in forEach loop
-                // Исправление предупреждения статического анализа - пустое тело if
-                // Эта проверка является заглушкой для будущей реализации
-                // TODO: Реализовать логику проверки параметра списка в цикле forEach
-            }
+            validateForEachLoopParameters(block, warnings);
+        }
+    }
+    
+    /**
+     * Validates parameters for forEach loop blocks
+     * 
+     * Проверяет параметры для блоков цикла forEach
+     */
+    private void validateForEachLoopParameters(CodeBlock block, List<ValidationError> warnings) {
+        DataValue listParam = block.getParameter("list");
+        if (listParam != null && "List".equals(listParam.getType().getName())) {
+            // In the future, we might add more specific validations here
+            // For now, this is a placeholder for potential future implementation
+            // Потенциально здесь могут быть добавлены дополнительные проверки
         }
     }
     
@@ -573,7 +632,7 @@ public class ScriptValidator {
      * Проверяет, допустим ли тип блока для конфигурации
      */
     private boolean isValidBlockType(CodeBlock block, String expectedType) {
-        
+        // Early returns for invalid inputs
         if (block == null || expectedType == null) {
             return false;
         }
@@ -593,19 +652,24 @@ public class ScriptValidator {
             return false;
         }
         
+        return isActionValidForMaterial(block.getAction(), material);
+    }
+    
+    /**
+     * Checks if an action is valid for a given material
+     * 
+     * Проверяет, допустимо ли действие для данного материала
+     */
+    private boolean isActionValidForMaterial(String action, Material material) {
         List<BlockConfigService.BlockConfig> configs = blockConfigService.getBlockConfigsForMaterial(material);
         if (configs == null || configs.isEmpty()) {
             return false;
         }
         
-        for (BlockConfigService.BlockConfig config : configs) {
-            List<String> actions = config.getActions();
-            if (actions != null && actions.contains(block.getAction())) {
-                return true;
-            }
-        }
-        
-        return false;
+        return configs.stream()
+            .map(BlockConfigService.BlockConfig::getActions)
+            .filter(Objects::nonNull)
+            .anyMatch(actions -> actions.contains(action));
     }
     
     /**

@@ -108,39 +108,15 @@ public class ScriptCompiler implements Listener {
             }
             
             
-            Activator activator = null;
-            
-            if ("onJoin".equals(eventBlock.getAction())) {
-                activator = new PlayerJoinActivator(plugin, creativeWorld);
-            } else if ("onPlayerMove".equals(eventBlock.getAction())) {
-                activator = new PlayerMoveActivator(plugin, creativeWorld);
-            } else if ("onBlockPlace".equals(eventBlock.getAction())) {
-                activator = new BlockPlaceActivator(plugin, creativeWorld);
-            } else if ("onBlockBreak".equals(eventBlock.getAction())) {
-                activator = new BlockBreakActivator(plugin, creativeWorld);
-            } else if ("onChat".equals(eventBlock.getAction())) {
-                activator = new ChatActivator(plugin, creativeWorld);
-            } else if ("onPlayerQuit".equals(eventBlock.getAction())) {
-                activator = new PlayerQuitActivator(plugin, creativeWorld);
-            } else if ("onPlayerDeath".equals(eventBlock.getAction())) {
-                activator = new PlayerDeathActivator(plugin, creativeWorld);
-            } else if ("onPlayerRespawn".equals(eventBlock.getAction())) {
-                activator = new PlayerRespawnActivator(plugin, creativeWorld);
-            } else if ("onPlayerTeleport".equals(eventBlock.getAction())) {
-                activator = new PlayerTeleportActivator(plugin, creativeWorld);
-            } else if ("onEntityPickupItem".equals(eventBlock.getAction())) {
-                activator = new EntityPickupItemActivator(plugin, creativeWorld);
-            }
-            
+            Activator activator = createActivatorForEvent(eventBlock, plugin, creativeWorld);
             
             if (activator != null) {
                 
                 activator.addAction(eventBlock);
                 
-                
-                if (activator instanceof BukkitEventActivator) {
-                    ((BukkitEventActivator) activator).setLocation(location);
-                }
+                // Set location for Bukkit event activators
+                // Установить местоположение для активаторов событий Bukkit
+                setActivatorLocation(activator, location);
                 
                 codeHandler.registerActivator(activator);
             }
@@ -148,6 +124,53 @@ public class ScriptCompiler implements Listener {
             
             plugin.getLogger().warning("Error creating and registering activator: " + e.getMessage());
             // Ошибка создания и регистрации активатора: " + e.getMessage()
+        }
+    }
+    
+    /**
+     * Creates an appropriate activator for an event block
+     * 
+     * Создает подходящий активатор для блока события
+     */
+    private Activator createActivatorForEvent(CodeBlock eventBlock, MegaCreative plugin, CreativeWorld creativeWorld) {
+        String action = eventBlock.getAction();
+        
+        // Use a switch statement for better performance and readability
+        // Использовать оператор switch для лучшей производительности и читаемости
+        switch (action) {
+            case "onJoin":
+                return new PlayerJoinActivator(plugin, creativeWorld);
+            case "onPlayerMove":
+                return new PlayerMoveActivator(plugin, creativeWorld);
+            case "onBlockPlace":
+                return new BlockPlaceActivator(plugin, creativeWorld);
+            case "onBlockBreak":
+                return new BlockBreakActivator(plugin, creativeWorld);
+            case "onChat":
+                return new ChatActivator(plugin, creativeWorld);
+            case "onPlayerQuit":
+                return new PlayerQuitActivator(plugin, creativeWorld);
+            case "onPlayerDeath":
+                return new PlayerDeathActivator(plugin, creativeWorld);
+            case "onPlayerRespawn":
+                return new PlayerRespawnActivator(plugin, creativeWorld);
+            case "onPlayerTeleport":
+                return new PlayerTeleportActivator(plugin, creativeWorld);
+            case "onEntityPickupItem":
+                return new EntityPickupItemActivator(plugin, creativeWorld);
+            default:
+                return null;
+        }
+    }
+    
+    /**
+     * Sets the location for Bukkit event activators
+     * 
+     * Устанавливает местоположение для активаторов событий Bukkit
+     */
+    private void setActivatorLocation(Activator activator, Location location) {
+        if (activator instanceof BukkitEventActivator) {
+            ((BukkitEventActivator) activator).setLocation(location);
         }
     }
     
@@ -200,25 +223,15 @@ public class ScriptCompiler implements Listener {
     private CodeScript buildCompleteScript(CodeScript script, CodeBlock currentBlock) {
         
         if (currentBlock.getNextBlock() != null) {
-            // TODO: Implement proper handling of next block in script compilation
-            // This is a placeholder for future implementation
-            // The method should properly handle the connection and compilation of the next block in the chain
-            // According to static analysis, this statement has empty body
-            // Add proper implementation for handling next block
-            // Согласно статическому анализу, это утверждение имеет пустое тело
-            // Добавьте правильную реализацию для обработки следующего блока
+            // Recursively process the next block in the chain
+            // Рекурсивно обрабатывать следующий блок в цепочке
             buildCompleteScript(script, currentBlock.getNextBlock());
         }
         
         
         for (CodeBlock child : currentBlock.getChildren()) {
-            // TODO: Implement proper handling of child blocks in script compilation
-            // This is a placeholder for future implementation
-            // The method should properly handle the compilation of child blocks (nested structures)
-            // According to static analysis, this statement has empty body
-            // Add proper implementation for handling child blocks
-            // Согласно статическому анализу, это утверждение имеет пустое тело
-            // Добавьте правильную реализацию для обработки дочерних блоков
+            // Recursively process all child blocks (nested structures)
+            // Рекурсивно обрабатывать все дочерние блоки (вложенные структуры)
             buildCompleteScript(script, child);
         }
         
@@ -252,34 +265,8 @@ public class ScriptCompiler implements Listener {
             CreativeWorld creativeWorld = worldManager.findCreativeWorldByBukkit(world);
             if (creativeWorld == null) return;
             
-            // Get the block placement handler to access all code blocks
-            // Получить обработчик размещения блоков для доступа ко всем блокам кода
-            BlockPlacementHandler placementHandler = plugin.getServiceRegistry().getBlockPlacementHandler();
-            
-            List<CodeScript> newScripts = new ArrayList<>();
-            
-            // Use the placement handler to get all blocks in the world
-            // Использовать обработчик размещения для получения всех блоков в мире
-            for (Map.Entry<Location, CodeBlock> entry : placementHandler.getBlockCodeBlocks().entrySet()) {
-                Location location = entry.getKey();
-                // Check if this block is in the specified world
-                // Проверить, находится ли этот блок в указанном мире
-                if (location.getWorld().equals(world)) {
-                    CodeBlock block = entry.getValue();
-                    if (isEventBlock(block)) {
-                        try {
-                            CodeScript compiledScript = compileScriptFromEventBlock(block);
-                            if (compiledScript != null) {
-                                newScripts.add(compiledScript);
-                            }
-                        } catch (Exception e) {
-                            // Log the exception but continue processing other blocks
-                            // Записать исключение в журнал, но продолжить обработку других блоков
-                            plugin.getLogger().warning("Error compiling script from block: " + e.getMessage());
-                        }
-                    }
-                }
-            }
+            // Compile all event blocks in the world
+            List<CodeScript> newScripts = compileEventBlocksInWorld(world);
             
             creativeWorld.setScripts(newScripts);
             worldManager.saveWorld(creativeWorld);
@@ -288,6 +275,67 @@ public class ScriptCompiler implements Listener {
             // Log the exception
             // Записать исключение в журнал
             plugin.getLogger().warning("Error compiling world scripts: " + e.getMessage());
+        }
+    }
+    
+    /**
+     * Compiles all event blocks in a specific world
+     * 
+     * Компилирует все блоки событий в определенном мире
+     */
+    private List<CodeScript> compileEventBlocksInWorld(World world) {
+        List<CodeScript> newScripts = new ArrayList<>();
+        
+        // Get the block placement handler to access all code blocks
+        // Получить обработчик размещения блоков для доступа ко всем блокам кода
+        BlockPlacementHandler placementHandler = plugin.getServiceRegistry().getBlockPlacementHandler();
+        
+        // Process all code blocks in the world
+        // Обработать все блоки кода в мире
+        for (Map.Entry<Location, CodeBlock> entry : placementHandler.getBlockCodeBlocks().entrySet()) {
+            Location location = entry.getKey();
+            
+            // Check if this block is in the specified world
+            // Проверить, находится ли этот блок в указанном мире
+            if (isBlockInWorld(location, world)) {
+                CodeBlock block = entry.getValue();
+                
+                // Process event blocks only
+                // Обрабатывать только блоки событий
+                if (isEventBlock(block)) {
+                    CodeScript compiledScript = compileBlockToScript(block);
+                    if (compiledScript != null) {
+                        newScripts.add(compiledScript);
+                    }
+                }
+            }
+        }
+        
+        return newScripts;
+    }
+    
+    /**
+     * Checks if a block location is in the specified world
+     * 
+     * Проверяет, находится ли расположение блока в указанном мире
+     */
+    private boolean isBlockInWorld(Location location, World world) {
+        return location.getWorld().equals(world);
+    }
+    
+    /**
+     * Compiles a single block to a script with error handling
+     * 
+     * Компилирует один блок в скрипт с обработкой ошибок
+     */
+    private CodeScript compileBlockToScript(CodeBlock block) {
+        try {
+            return compileScriptFromEventBlock(block);
+        } catch (Exception e) {
+            // Log the exception but continue processing other blocks
+            // Записать исключение в журнал, но продолжить обработку других блоков
+            plugin.getLogger().warning("Error compiling script from block: " + e.getMessage());
+            return null;
         }
     }
     

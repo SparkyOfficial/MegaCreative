@@ -1,87 +1,79 @@
 package com.megacreative.coding;
 
 import com.megacreative.coding.values.DataValue;
-import org.bukkit.Material;
 import org.bukkit.inventory.ItemStack;
-import org.bukkit.inventory.meta.ItemMeta;
-
-
 import java.util.*;
 
 /**
- * Represents a single block in a script.
- * Contains type, parameters and references to other blocks.
- * Simplified to be a pure data object without plugin dependencies.
+ * Represents a single code block in the visual programming system
  * 
- * Представляет собой один блок в скрипте.
- * Содержит тип, параметры и ссылки на другие блоки.
- * Упрощен до чистого объекта данных без зависимостей от плагина.
+ * Представляє один блок коду у системі візуального програмування
  * 
  * @author Андрій Будильников
  */
-public class CodeBlock implements Cloneable {
+public class CodeBlock {
     
     
     /** Unique block identifier 
-     *  Уникальный идентификатор блока */
+     *  Уникальний ідентифікатор блоку */
     private UUID id;
     
     
     
     /** Selected action (e.g. onJoin, sendMessage) 
-     *  Выбранное действие (например, onJoin, sendMessage) */
+     *  Вибране дію (наприклад, onJoin, sendMessage) */
     private String action;
     
     /** Selected event (e.g. onJoin, onLeave) 
-     *  Выбранное событие (например, onJoin, onLeave) */
+     *  Вибране подію (наприклад, onJoin, onLeave) */
     private String event;
     
     /** Block parameters 
-     *  Параметры блока */
+     *  Параметри блоку */
     private Map<String, DataValue> parameters;
     
     /** Nested blocks (e.g. inside IF condition) 
-     *  Вложенные блоки (например, внутри условия IF) */
+     *  Вкладені блоки (наприклад, всередині умови IF) */
     private List<CodeBlock> children;
     
     /** Next block in sequence 
-     *  Следующий блок в последовательности */
+     *  Наступний блок в послідовності */
     private CodeBlock nextBlock;
     
     /** Configuration items 
-     *  Элементы конфигурации */
+     *  Елементи конфігурації */
     private Map<Integer, ItemStack> configItems;
     
     /** Item groups for complex configurations 
-     *  Группы предметов для сложных конфигураций */
+     *  Групи предметів для складних конфігурацій */
     private Map<String, List<Integer>> itemGroups;
     
     /** Bracket type for grouping blocks 
-     *  Тип скобок для группировки блоков */
+     *  Тип дужок для групування блоків */
     private BracketType bracketType = null;
     
     /** World ID where the block is located 
-     *  ID мира, где находится блок */
+     *  ID світу, де знаходиться блок */
     private String worldId;
     
     /** X coordinate of the block 
-     *  X координата блока */
+     *  X координата блоку */
     private int x;
     
     /** Y coordinate of the block 
-     *  Y координата блока */
+     *  Y координата блоку */
     private int y;
     
     /** Z coordinate of the block 
-     *  Z координата блока */
+     *  Z координата блоку */
     private int z;
     
     /** Material name instead of Material object 
-     *  Название материала вместо объекта Material */
+     *  Назва матеріалу замість об'єкта Material */
     private String materialName;
     
     /** Else block for conditional statements 
-     *  Блок else для условных операторов */
+     *  Блок else для умовних операторів */
     private CodeBlock elseBlock;
     
     
@@ -89,7 +81,7 @@ public class CodeBlock implements Cloneable {
     /**
      * Enum for bracket types - used for grouping code blocks
      * 
-     * Перечисление для типов скобок - используется для группировки блоков кода
+     * Перечислення для типів дужок - використовується для групування блоків коду
      */
     public enum BracketType {
         OPEN("Opening Bracket", "{"),
@@ -112,7 +104,7 @@ public class CodeBlock implements Cloneable {
     /**
      * Default constructor
      * 
-     * Конструктор по умолчанию
+     * Конструктор за замовчуванням
      */
     public CodeBlock() {
         this.id = UUID.randomUUID();
@@ -126,8 +118,8 @@ public class CodeBlock implements Cloneable {
      * Constructor with basic parameters
      * @param materialName Block material name
      * 
-     * Конструктор с базовыми параметрами
-     * @param materialName Название материала блока
+     * Конструктор з базовими параметрами
+     * @param materialName Назва матеріалу блоку
      */
     public CodeBlock(String materialName, String action) {
         this();
@@ -141,10 +133,10 @@ public class CodeBlock implements Cloneable {
      * @param action Block action
      * @param event Block event
      * 
-     * Конструктор с параметрами действия и события
-     * @param materialName Название материала блока
-     * @param action Действие блока
-     * @param event Событие блока
+     * Конструктор з параметрами дії та події
+     * @param materialName Назва матеріалу блоку
+     * @param action Дія блоку
+     * @param event Подія блоку
      */
     public CodeBlock(String materialName, String action, String event) {
         this();
@@ -732,38 +724,74 @@ public class CodeBlock implements Cloneable {
         return Objects.hash(id, materialName, action, parameters, children, nextBlock, configItems, itemGroups, worldId, x, y, z);
     }
     
-    @Override
-    public CodeBlock clone() {
-        try {
-            CodeBlock cloned = (CodeBlock) super.clone();
-            cloned.id = UUID.randomUUID(); 
-            cloned.parameters = new HashMap<>(this.parameters);
-            
-            
-            cloned.configItems = new HashMap<>();
-            for (Map.Entry<Integer, ItemStack> entry : this.configItems.entrySet()) {
-                if (entry.getValue() != null) {
-                    cloned.configItems.put(entry.getKey(), entry.getValue().clone());
-                }
-            }
-            
-            
-            
-            cloned.nextBlock = null;
-            cloned.children = new ArrayList<>();
-            
-            
-            cloned.itemGroups = new HashMap<>();
-            for (Map.Entry<String, List<Integer>> entry : this.itemGroups.entrySet()) {
-                if (entry.getValue() != null) {
-                    cloned.itemGroups.put(entry.getKey(), new ArrayList<>(entry.getValue()));
-                }
-            }
-            
-            return cloned;
-        } catch (CloneNotSupportedException e) {
-            throw new AssertionError("CodeBlock cloning failed", e);
+    /**
+     * Copy constructor - creates a new CodeBlock with the same properties as the source
+     * @param source The CodeBlock to copy
+     * 
+     * Конструктор копіювання - створює новий CodeBlock з тими ж властивостями, що й джерело
+     */
+    public CodeBlock(CodeBlock source) {
+        if (source == null) {
+            throw new IllegalArgumentException("Source CodeBlock cannot be null");
         }
+        
+        // Create new ID for the copy
+        this.id = UUID.randomUUID();
+        this.action = source.action;
+        this.event = source.event;
+        this.materialName = source.materialName;
+        this.worldId = source.worldId;
+        this.x = source.x;
+        this.y = source.y;
+        this.z = source.z;
+        this.bracketType = source.bracketType;
+        
+        // Deep copy parameters
+        this.parameters = new HashMap<>();
+        if (source.parameters != null) {
+            this.parameters.putAll(source.parameters);
+        }
+        
+        // Deep copy config items
+        this.configItems = new HashMap<>();
+        if (source.configItems != null) {
+            for (Map.Entry<Integer, ItemStack> entry : source.configItems.entrySet()) {
+                if (entry.getValue() != null) {
+                    this.configItems.put(entry.getKey(), entry.getValue().clone());
+                } else {
+                    this.configItems.put(entry.getKey(), null);
+                }
+            }
+        }
+        
+        // Deep copy item groups
+        this.itemGroups = new HashMap<>();
+        if (source.itemGroups != null) {
+            for (Map.Entry<String, List<Integer>> entry : source.itemGroups.entrySet()) {
+                if (entry.getValue() != null) {
+                    this.itemGroups.put(entry.getKey(), new ArrayList<>(entry.getValue()));
+                } else {
+                    this.itemGroups.put(entry.getKey(), null);
+                }
+            }
+        }
+        
+        // Initialize empty collections for children and nextBlock
+        // Note: These are not copied to avoid circular references
+        this.children = new ArrayList<>();
+        this.nextBlock = null;
+        this.elseBlock = null;
+    }
+    
+    /**
+     * Static factory method to create a copy of a CodeBlock
+     * @param source The CodeBlock to copy
+     * @return A new CodeBlock instance with copied properties
+     * 
+     * Статичний фабричний метод для створення копії CodeBlock
+     */
+    public static CodeBlock copyOf(CodeBlock source) {
+        return new CodeBlock(source);
     }
     
     @Override
