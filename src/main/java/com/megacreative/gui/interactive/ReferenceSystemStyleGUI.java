@@ -22,6 +22,16 @@ import java.util.Map;
  * - Mode toggles with visual feedback
  * - Dynamic value adjustments
  * - Real-time parameter editing
+ * 
+ * 🎆 Примеры интерактивного GUI в стиле Reference System
+ * 
+ * Демонстрирует различные интерактивные элементы в стиле reference system:
+ * - Выбор материалов с предварительным просмотром
+ * - Переключатели режимов с визуальной обратной связью
+ * - Динамическая настройка значений
+ * - Редактирование параметров в реальном времени
+ * 
+ * @author Андрій Будильников
  */
 public class ReferenceSystemStyleGUI {
     
@@ -35,6 +45,8 @@ public class ReferenceSystemStyleGUI {
     
     /**
      * Creates a reference system-style block parameter editor
+     * 
+     * Создает редактор параметров блока в стиле reference system
      */
     public InteractiveGUI createBlockParameterEditor(Player player, CodeBlock block) {
         InteractiveGUI gui = guiManager.createInteractiveGUI(player, 
@@ -123,6 +135,8 @@ public class ReferenceSystemStyleGUI {
     
     /**
      * Creates a reference system-style world settings GUI
+     * 
+     * Создает GUI настроек мира в стиле reference system
      */
     public InteractiveGUI createWorldSettingsGUI(Player player, CreativeWorld world) {
         InteractiveGUI gui = guiManager.createInteractiveGUI(player, 

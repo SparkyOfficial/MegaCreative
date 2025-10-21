@@ -12,6 +12,10 @@ import java.util.concurrent.atomic.AtomicInteger;
 
 /**
  * Activator that triggers when a player joins the world
+ * 
+ * Активатор, который срабатывает, когда игрок присоединяется к миру
+ * 
+ * @author Андрій Будильников
  */
 public class PlayerJoinActivator extends Activator {
     

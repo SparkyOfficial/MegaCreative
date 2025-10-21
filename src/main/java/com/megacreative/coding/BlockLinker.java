@@ -39,6 +39,10 @@ public class BlockLinker implements Listener {
     
     /**
      * Handles block placement and establishes horizontal connections
+     * 
+     * Обрабатывает размещение блоков и устанавливает горизонтальные соединения
+     * 
+     * Behandelt Blockplatzierung und etabliert horizontale Verbindungen
      */
     @EventHandler
     public void onCodeBlockPlaced(CodeBlockPlacedEvent event) {
@@ -91,6 +95,14 @@ public class BlockLinker implements Listener {
      * Establishes complex connections for nested structures and control flow
      * @param location The location of the placed block
      * @param codeBlock The placed code block
+     * 
+     * Устанавливает сложные соединения для вложенных структур и потока управления
+     * @param location Расположение размещенного блока
+     * @param codeBlock Размещенный блок кода
+     * 
+     * Stellt komplexe Verbindungen für verschachtelte Strukturen und Ablaufsteuerung her
+     * @param location Die Position des platzierten Blocks
+     * @param codeBlock Der platzierte Codeblock
      */
     private void establishComplexConnections(Location location, CodeBlock codeBlock) {
         // Handle connections for control flow blocks (IF, WHILE, etc.)
@@ -134,6 +146,14 @@ public class BlockLinker implements Listener {
      * Checks if a block is a control flow block (IF, WHILE, FOR, etc.)
      * @param block The block to check
      * @return true if the block is a control flow block
+     * 
+     * Проверяет, является ли блок блоком потока управления (IF, WHILE, FOR и т.д.)
+     * @param block Блок для проверки
+     * @return true, если блок является блоком потока управления
+     * 
+     * Prüft, ob ein Block ein Ablaufsteuerungsblock ist (IF, WHILE, FOR usw.)
+     * @param block Der zu prüfende Block
+     * @return true, wenn der Block ein Ablaufsteuerungsblock ist
      */
     private boolean isControlFlowBlock(CodeBlock block) {
         if (block == null || block.getAction() == null) {
@@ -149,6 +169,14 @@ public class BlockLinker implements Listener {
      * Checks if a block is a function block
      * @param block The block to check
      * @return true if the block is a function block
+     * 
+     * Проверяет, является ли блок функциональным блоком
+     * @param block Блок для проверки
+     * @return true, если блок является функциональным блоком
+     * 
+     * Prüft, ob ein Block ein Funktionsblock ist
+     * @param block Der zu prüfende Block
+     * @return true, wenn der Block ein Funktionsblock ist
      */
     private boolean isFunctionBlock(CodeBlock block) {
         if (block == null || block.getAction() == null) {
@@ -163,6 +191,14 @@ public class BlockLinker implements Listener {
      * Finds the end of a control structure (matching bracket or structure end)
      * @param startLocation The starting location of the control structure
      * @return The location of the end of the control structure, or null if not found
+     * 
+     * Находит конец структуры управления (соответствующая скобка или конец структуры)
+     * @param startLocation Начальное расположение структуры управления
+     * @return Расположение конца структуры управления или null, если не найдено
+     * 
+     * Findet das Ende einer Kontrollstruktur (passende Klammer oder Struktur-Ende)
+     * @param startLocation Die Startposition der Kontrollstruktur
+     * @return Die Position des Endes der Kontrollstruktur oder null, wenn nicht gefunden
      */
     private Location findControlStructureEnd(Location startLocation) {
         if (startLocation == null) {
@@ -198,6 +234,14 @@ public class BlockLinker implements Listener {
      * Finds the end of a function (return statement or end of function)
      * @param startLocation The starting location of the function
      * @return The location of the end of the function, or null if not found
+     * 
+     * Находит конец функции (оператор return или конец функции)
+     * @param startLocation Начальное расположение функции
+     * @return Расположение конца функции или null, если не найдено
+     * 
+     * Findet das Ende einer Funktion (Return-Anweisung oder Funktionsende)
+     * @param startLocation Die Startposition der Funktion
+     * @return Die Position des Endes der Funktion oder null, wenn nicht gefunden
      */
     private Location findFunctionEnd(Location startLocation) {
         if (startLocation == null) {
@@ -227,6 +271,16 @@ public class BlockLinker implements Listener {
     
     /**
      * Gets the previous location in the same line
+     * @param location The current location
+     * @return The previous location in the same line, or null if not found
+     * 
+     * Получает предыдущее расположение в той же строке
+     * @param location Текущее расположение
+     * @return Предыдущее расположение в той же строке или null, если не найдено
+     * 
+     * Gibt die vorherige Position in derselben Zeile zurück
+     * @param location Die aktuelle Position
+     * @return Die vorherige Position in derselben Zeile oder null, wenn nicht gefunden
      */
     private Location getPreviousLocationInLine(Location location) {
         if (location == null) return null;
@@ -243,6 +297,16 @@ public class BlockLinker implements Listener {
     
     /**
      * Gets the next location in the same line
+     * @param location The current location
+     * @return The next location in the same line, or null if not found
+     * 
+     * Получает следующее расположение в той же строке
+     * @param location Текущее расположение
+     * @return Следующее расположение в той же строке или null, если не найдено
+     * 
+     * Gibt die nächste Position in derselben Zeile zurück
+     * @param location Die aktuelle Position
+     * @return Die nächste Position in derselben Zeile oder null, wenn nicht gefunden
      */
     private Location getNextLocationInLine(Location location) {
         if (location == null) return null;

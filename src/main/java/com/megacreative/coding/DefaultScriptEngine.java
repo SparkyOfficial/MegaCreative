@@ -126,6 +126,10 @@ public class DefaultScriptEngine implements ScriptEngine, EnhancedScriptEngine, 
     
     /**
      * Initialize block executors for the Strategy pattern
+     * 
+     * Инициализирует исполнители блоков для паттерна Strategy
+     * 
+     * Initialisiert Block-Executors für das Strategy-Muster
      */
     private void initializeExecutors() {
         ActionFactory actionFactory = plugin.getServiceRegistry().getActionFactory() instanceof ActionFactory
@@ -365,6 +369,10 @@ public class DefaultScriptEngine implements ScriptEngine, EnhancedScriptEngine, 
     
     /**
      * Completes script execution and handles cleanup
+     * 
+     * Завершает выполнение скрипта и обрабатывает очистку
+     * 
+     * Beendet die Skriptausführung und behandelt die Bereinigung
      */
     private void completeScriptExecution(ExecutionResult result, CompletableFuture<ExecutionResult> future, 
                                        CodeScript script, Player player, String trigger, String executionId) {
@@ -514,6 +522,10 @@ public class DefaultScriptEngine implements ScriptEngine, EnhancedScriptEngine, 
     
     /**
      * Safely gets player name, handling null cases
+     * 
+     * Безопасно получает имя игрока, обрабатывая случаи null
+     * 
+     * Ruft sicher den Spielernamen ab und behandelt Nullfälle
      */
     private String getPlayerName(Player player) {
         // Removed redundant null check - static analysis flagged it as always non-null when this method is called
@@ -522,6 +534,10 @@ public class DefaultScriptEngine implements ScriptEngine, EnhancedScriptEngine, 
     
     /**
      * Creates a context map for caching purposes
+     * 
+     * Создает карту контекста для целей кэширования
+     * 
+     * Erstellt eine Kontextkarte für Caching-Zwecke
      */
     private Map<String, Object> createCacheContext(ExecutionContext context) {
         Map<String, Object> cacheContext = new HashMap<>();
@@ -534,6 +550,10 @@ public class DefaultScriptEngine implements ScriptEngine, EnhancedScriptEngine, 
     
     /**
      * Checks if a block's execution result can be cached
+     * 
+     * Проверяет, можно ли кэшировать результат выполнения блока
+     * 
+     * Prüft, ob das Ergebnis der Blockausführung zwischengespeichert werden kann
      */
     private boolean isCacheable(CodeBlock block) {
         // Removed redundant null checks - static analysis flagged them as always non-null when this method is called
@@ -621,7 +641,7 @@ public class DefaultScriptEngine implements ScriptEngine, EnhancedScriptEngine, 
 
         BlockType blockType = BlockType.ACTION; 
         // Check if block has an action and determine its type
-        BlockType type = getBlockType(block.getMaterial(), block.getAction());
+        BlockType type = getBlockType(Material.getMaterial(block.getMaterialName()), block.getAction());
         if (type != null) {
             blockType = type;
         }
@@ -768,6 +788,10 @@ public class DefaultScriptEngine implements ScriptEngine, EnhancedScriptEngine, 
     
     /**
      * Determine the type of ExecutionResult for switch-case handling
+     * 
+     * Определяет тип ExecutionResult для обработки switch-case
+     * 
+     * Bestimmt den Typ von ExecutionResult für die Switch-Case-Behandlung
      */
     private ResultType getResultType(ExecutionResult result) {
         if (result == null) {
@@ -787,6 +811,10 @@ public class DefaultScriptEngine implements ScriptEngine, EnhancedScriptEngine, 
     
     /**
      * Enum for ExecutionResult types to enable switch-case handling
+     * 
+     * Перечисление для типов ExecutionResult для включения обработки switch-case
+     * 
+     * Aufzählung für ExecutionResult-Typen zur Aktivierung der Switch-Case-Behandlung
      */
     private enum ResultType {
         NORMAL,
@@ -799,6 +827,16 @@ public class DefaultScriptEngine implements ScriptEngine, EnhancedScriptEngine, 
      * 
      * @param conditionalBlock The conditional branch block
      * @return The else block if found, null otherwise
+     * 
+     * Находит блок else, связанный с условной ветвью
+     * 
+     * @param conditionalBlock Блок условной ветви
+     * @return Блок else, если найден, иначе null
+     * 
+     * Findet den else-Block, der mit einem bedingten Verzweigungsblock verbunden ist
+     * 
+     * @param conditionalBlock Der bedingte Verzweigungsblock
+     * @return Der else-Block, falls gefunden, sonst null
      */
     private CodeBlock findElseBlock(CodeBlock conditionalBlock) {
         
@@ -856,6 +894,22 @@ public class DefaultScriptEngine implements ScriptEngine, EnhancedScriptEngine, 
      * @param executionChain The chain of blocks executed (for debugging)
      * @param recursionDepth The current recursion depth
      * @return The execution result
+     * 
+     * Обрабатывает цепочку блоков с улучшенной обработкой ошибок и управлением контекстом
+     * 
+     * @param block Текущий блок для обработки
+     * @param context Контекст выполнения
+     * @param executionChain Цепочка выполненных блоков (для отладки)
+     * @param recursionDepth Текущая глубина рекурсии
+     * @return Результат выполнения
+     * 
+     * Verarbeitet eine Blockkette mit verbesserter Fehlerbehandlung und Kontextverwaltung
+     * 
+     * @param block Der aktuelle zu verarbeitende Block
+     * @param context Der Ausführungskontext
+     * @param executionChain Die Kette der ausgeführten Blöcke (zur Fehlersuche)
+     * @param recursionDepth Die aktuelle Rekursionstiefe
+     * @return Das Ausführungsergebnis
      */
     private ExecutionResult processBlockChain(CodeBlock block, ExecutionContext context, List<CodeBlock> executionChain, int recursionDepth) {
         
@@ -978,6 +1032,16 @@ public class DefaultScriptEngine implements ScriptEngine, EnhancedScriptEngine, 
      * 
      * @param actionId The action ID
      * @param action The BlockAction implementation
+     * 
+     * Регистрирует действие с определенным ID
+     * 
+     * @param actionId ID действия
+     * @param action Реализация BlockAction
+     * 
+     * Registriert eine Aktion mit einer bestimmten ID
+     * 
+     * @param actionId Die Aktions-ID
+     * @param action Die BlockAction-Implementierung
      */
     public void registerAction(String actionId, BlockAction action) {
         
@@ -989,6 +1053,16 @@ public class DefaultScriptEngine implements ScriptEngine, EnhancedScriptEngine, 
      * 
      * @param conditionId The condition ID
      * @param condition The BlockCondition implementation
+     * 
+     * Регистрирует условие с определенным ID
+     * 
+     * @param conditionId ID условия
+     * @param condition Реализация BlockCondition
+     * 
+     * Registriert eine Bedingung mit einer bestimmten ID
+     * 
+     * @param conditionId Die Bedingungs-ID
+     * @param condition Die BlockCondition-Implementierung
      */
     public void registerCondition(String conditionId, BlockCondition condition) {
         

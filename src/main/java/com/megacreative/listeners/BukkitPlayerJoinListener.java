@@ -10,6 +10,11 @@ import org.bukkit.plugin.Plugin;
 /**
  * Bukkit listener that converts PlayerJoinEvent to MegaPlayerJoinedEvent
  * This is a "dumb" listener that only converts Bukkit events to our custom events
+ * 
+ * Слушатель Bukkit, который преобразует PlayerJoinEvent в MegaPlayerJoinedEvent
+ * Это "глупый" слушатель, который только преобразует события Bukkit в наши пользовательские события
+ * 
+ * @author Андрій Будильников
  */
 public class BukkitPlayerJoinListener implements Listener {
     private final Plugin plugin;

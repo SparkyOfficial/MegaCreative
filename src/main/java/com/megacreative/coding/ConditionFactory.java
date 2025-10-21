@@ -30,6 +30,10 @@ public class ConditionFactory implements IConditionFactory {
     
     /**
      * Scans for annotated conditions and registers them
+     * 
+     * Сканирует аннотированные условия и регистрирует их
+     * 
+     * Scannt nach annotierten Bedingungen und registriert sie
      */
     public void registerAllConditions() {
         conditionRegistry.clear();
@@ -73,6 +77,16 @@ public class ConditionFactory implements IConditionFactory {
      * @param clazz The class of the block condition
      * @param className The name of the class
      * @return A supplier that creates instances of the block condition
+     * 
+     * Создает поставщика для условия блока
+     * @param clazz Класс условия блока
+     * @param className Имя класса
+     * @return Поставщик, который создает экземпляры условия блока
+     * 
+     * Erstellt einen Lieferanten für eine Blockbedingung
+     * @param clazz Die Klasse der Blockbedingung
+     * @param className Der Name der Klasse
+     * @return Ein Lieferant, der Instanzen der Blockbedingung erstellt
      */
     private Supplier<BlockCondition> createConditionSupplier(Class<?> clazz, String className) {
         return () -> {
@@ -100,6 +114,16 @@ public class ConditionFactory implements IConditionFactory {
      * 
      * @param conditionId The condition ID
      * @return The display name, or the condition ID if no display name is set
+     * 
+     * Получает отображаемое имя для условия
+     * 
+     * @param conditionId ID условия
+     * @return Отображаемое имя или ID условия, если отображаемое имя не установлено
+     * 
+     * Ruft den Anzeigenamen für eine Bedingung ab
+     * 
+     * @param conditionId Die Bedingungs-ID
+     * @return Der Anzeigename oder die Bedingungs-ID, wenn kein Anzeigename festgelegt ist
      */
     public String getConditionDisplayName(String conditionId) {
         return conditionDisplayNames.getOrDefault(conditionId, conditionId);
@@ -109,6 +133,14 @@ public class ConditionFactory implements IConditionFactory {
      * Gets all registered condition display names
      * 
      * @return A map of condition IDs to display names
+     * 
+     * Получает все зарегистрированные отображаемые имена условий
+     * 
+     * @return Карта ID условий и отображаемых имен
+     * 
+     * Ruft alle registrierten Bedingungs-Anzeigenamen ab
+     * 
+     * @return Eine Karte von Bedingungs-IDs zu Anzeigenamen
      */
     public Map<String, String> getConditionDisplayNames() {
         return new HashMap<>(conditionDisplayNames);
@@ -122,6 +154,14 @@ public class ConditionFactory implements IConditionFactory {
      * Publishes an event to the event system.
      * 
      * @param event The event to publish
+     * 
+     * Публикует событие в системе событий.
+     * 
+     * @param event Событие для публикации
+     * 
+     * Veröffentlicht ein Ereignis im Ereignissystem.
+     * 
+     * @param event Das zu veröffentlichende Ereignis
      */
     @Override
     public void publishEvent(CustomEvent event) {
@@ -165,6 +205,16 @@ public class ConditionFactory implements IConditionFactory {
      * 
      * @param eventName The name of the event
      * @param eventData The data associated with the event
+     * 
+     * Публикует событие с ассоциированными данными в системе событий.
+     * 
+     * @param eventName Имя события
+     * @param eventData Данные, ассоциированные с событием
+     * 
+     * Veröffentlicht ein Ereignis mit zugehörigen Daten im Ereignissystem.
+     * 
+     * @param eventName Der Name des Ereignisses
+     * @param eventData Die mit dem Ereignis verknüpften Daten
      */
     @Override
     public void publishEvent(String eventName, Map<String, DataValue> eventData) {

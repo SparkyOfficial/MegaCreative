@@ -13,6 +13,11 @@ import org.bukkit.Bukkit;
 /**
  * Action for executing a server command.
  * This action retrieves a command and executes it on the server.
+ * 
+ * Действие для выполнения серверной команды.
+ * Это действие получает команду и выполняет ее на сервере.
+ * 
+ * @author Андрій Budильников
  */
 @BlockMeta(id = "command", displayName = "§aExecute Command", type = BlockType.ACTION)
 public class CommandAction implements BlockAction {

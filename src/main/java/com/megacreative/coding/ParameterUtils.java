@@ -12,6 +12,12 @@ import java.util.logging.Logger;
  * Utility class for parameter extraction and resolution.
  * Provides common functionality for extracting parameters from both
  * the new parameter system and the old container-based system.
+ * 
+ * Утилитный класс для извлечения и разрешения параметров.
+ * Предоставляет общую функциональность для извлечения параметров как из
+ * новой системы параметров, так и из старой системы на основе контейнеров.
+ * 
+ * @author Андрій Budильников
  */
 public class ParameterUtils {
     
@@ -25,6 +31,16 @@ public class ParameterUtils {
      * @param slotName The name of the slot in the container (for fallback)
      * @param defaultValue The default value if parameter is not found
      * @return The extracted parameter value
+     * 
+     * Получает строковый параметр из CodeBlock, используя новую систему параметров
+     * с резервным вариантом на старую систему на основе контейнеров.
+     *
+     * @param block Блок кода для извлечения параметров
+     * @param context Контекст выполнения
+     * @param paramName Имя параметра для извлечения
+     * @param slotName Имя слота в контейнере (для резервного варианта)
+     * @param defaultValue Значение по умолчанию, если параметр не найден
+     * @return Извлеченное значение параметра
      */
     public static String getStringParameter(CodeBlock block, ExecutionContext context, 
                                           String paramName, String slotName, String defaultValue) {
@@ -44,6 +60,7 @@ public class ParameterUtils {
             }
         } catch (Exception e) {
             // Remove redundant null check since we already check for null above
+            // Удалена избыточная проверка на null, так как мы уже проверяем на null выше
             if (context.getPlugin() != null) {
                 context.getPlugin().getLogger().warning("Error getting parameter '" + paramName + "': " + e.getMessage());
             }
@@ -62,6 +79,16 @@ public class ParameterUtils {
      * @param slotName The name of the slot in the container (for fallback)
      * @param defaultValue The default value if parameter is not found
      * @return The extracted parameter value
+     * 
+     * Получает целочисленный параметр из CodeBlock, используя новую систему параметров
+     * с резервным вариантом на старую систему на основе контейнеров.
+     *
+     * @param block Блок кода для извлечения параметров
+     * @param context Контекст выполнения
+     * @param paramName Имя параметра для извлечения
+     * @param slotName Имя слота в контейнере (для резервного варианта)
+     * @param defaultValue Значение по умолчанию, если параметр не найден
+     * @return Извлеченное значение параметра
      */
     public static int getIntParameter(CodeBlock block, ExecutionContext context, 
                                     String paramName, String slotName, int defaultValue) {
@@ -82,12 +109,15 @@ public class ParameterUtils {
                     } catch (NumberFormatException e) {
                         // Log exception and continue processing
                         // This is expected behavior when parsing user input
+                        // Записываем исключение и продолжаем обработку
+                        // Это ожидаемое поведение при разборе пользовательского ввода
                         Logger.getLogger(ParameterUtils.class.getName()).warning("Invalid number format: " + containerValue);
                     }
                 }
             }
         } catch (Exception e) {
             // Remove redundant null check since we already check for null above
+            // Удалена избыточная проверка на null, так как мы уже проверяем на null выше
             if (context.getPlugin() != null) {
                 context.getPlugin().getLogger().warning("Error getting parameter '" + paramName + "': " + e.getMessage());
             }
@@ -103,6 +133,13 @@ public class ParameterUtils {
      * @param context The execution context
      * @param slotName The name of the slot to extract from
      * @return The extracted string value or null if not found
+     * 
+     * Извлекает строковое значение из предмета в контейнере
+     *
+     * @param block Блок кода
+     * @param context Контекст выполнения
+     * @param slotName Имя слота для извлечения
+     * @return Извлеченное строковое значение или null, если не найдено
      */
     private static String getStringFromContainer(CodeBlock block, ExecutionContext context, String slotName) {
         try {
@@ -145,6 +182,7 @@ public class ParameterUtils {
             return getStringFromItem(item);
         } catch (Exception e) {
             // Remove redundant null check since we already check for null above
+            // Удалена избыточная проверка на null, так как мы уже проверяем на null выше
             if (context.getPlugin() != null) {
                 context.getPlugin().getLogger().warning("Error getting string from container slot '" + slotName + "': " + e.getMessage());
             }
@@ -158,6 +196,12 @@ public class ParameterUtils {
      *
      * @param item The item to extract value from
      * @return The extracted string value or null if not found
+     * 
+     * Извлекает строковое значение из предмета
+     * Этот метод сохраняет цветовые коды и другое форматирование
+     *
+     * @param item Предмет для извлечения значения
+     * @return Извлеченное строковое значение или null, если не найдено
      */
     private static String getStringFromItem(ItemStack item) {
         ItemMeta meta = item.getItemMeta();
@@ -165,6 +209,8 @@ public class ParameterUtils {
             String displayName = meta.getDisplayName();
             // Remove redundant null check since we already check meta != null
             // and displayName will never be null according to Bukkit API
+            // Удалена избыточная проверка на null, так как мы уже проверяем meta != null
+            // и displayName никогда не будет null согласно API Bukkit
             return displayName;
         }
         return null;
@@ -176,6 +222,12 @@ public class ParameterUtils {
      *
      * @param item The item to extract value from
      * @return The extracted string value with color codes removed, or null if not found
+     * 
+     * Извлекает строковое значение из предмета, удаляя цветовые коды
+     * Используйте этот метод, когда вам нужен чистый текст без форматирования
+     *
+     * @param item Предмет для извлечения значения
+     * @return Извлеченное строковое значение с удаленными цветовыми кодами или null, если не найдено
      */
     public static String getCleanStringFromItem(ItemStack item) {
         String value = getStringFromItem(item);

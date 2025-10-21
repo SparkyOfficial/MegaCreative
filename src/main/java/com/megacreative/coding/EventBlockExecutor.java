@@ -6,6 +6,11 @@ import java.util.logging.Logger;
 /**
  * Executor for event blocks
  * This executor handles EVENT type blocks
+ * 
+ * Исполнитель для блоков событий
+ * Этот исполнитель обрабатывает блоки типа EVENT
+ * 
+ * @author Андрій Budильников
  */
 public class EventBlockExecutor implements BlockExecutor {
     private static final Logger LOGGER = java.util.logging.Logger.getLogger(EventBlockExecutor.class.getName());

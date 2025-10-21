@@ -7,6 +7,11 @@ import java.util.logging.Logger;
 /**
  * Executor for function blocks
  * This executor handles FUNCTION type blocks
+ * 
+ * Исполнитель для блоков функций
+ * Этот исполнитель обрабатывает блоки типа FUNCTION
+ * 
+ * @author Андрій Budильников
  */
 public class FunctionBlockExecutor implements BlockExecutor {
     private static final Logger LOGGER = java.util.logging.Logger.getLogger(FunctionBlockExecutor.class.getName());

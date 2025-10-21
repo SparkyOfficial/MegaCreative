@@ -3,10 +3,15 @@ package com.megacreative.coding;
 import com.megacreative.coding.validation.BlockGraphValidator;
 import com.megacreative.coding.values.DataValue;
 import com.megacreative.services.BlockConfigService;
+import org.bukkit.Material;
 import java.util.*;
 
 /**
  * Advanced script validator for comprehensive script validation and error detection
+ * 
+ * Расширенный валидатор скриптов для комплексной проверки скриптов и обнаружения ошибок
+ * 
+ * @author Андрій Budильников
  */
 public class ScriptValidator {
     
@@ -36,6 +41,8 @@ public class ScriptValidator {
     
     /**
      * Validation result containing all issues found
+     * 
+     * Результат валидации, содержащий все найденные проблемы
      */
     public static class ValidationResult {
         private final boolean valid;
@@ -67,6 +74,8 @@ public class ScriptValidator {
     
     /**
      * Represents a validation error or warning
+     * 
+     * Представляет ошибку или предупреждение валидации
      */
     public static class ValidationError {
         public enum Severity {
@@ -102,6 +111,10 @@ public class ScriptValidator {
      * Validates a complete script
      * @param script The script to validate
      * @return ValidationResult containing all validation issues
+     * 
+     * Проверяет полный скрипт
+     * @param script Скрипт для проверки
+     * @return ValidationResult, содержащий все проблемы валидации
      */
     public ValidationResult validateScript(CodeScript script) {
         if (script == null) {
@@ -122,6 +135,8 @@ public class ScriptValidator {
     
     /**
      * Creates a validation result for a null script
+     * 
+     * Создает результат валидации для нулевого скрипта
      */
     private ValidationResult createNullScriptResult() {
         List<ValidationError> errors = new ArrayList<>();
@@ -131,6 +146,8 @@ public class ScriptValidator {
     
     /**
      * Validates the script name
+     * 
+     * Проверяет имя скрипта
      */
     private void validateScriptName(CodeScript script, List<ValidationError> errors, List<ValidationError> warnings) {
         if (script.getName() == null || script.getName().trim().isEmpty()) {
@@ -142,6 +159,8 @@ public class ScriptValidator {
     
     /**
      * Validates the root block of a script
+     * 
+     * Проверяет корневой блок скрипта
      */
     private void validateRootBlock(CodeScript script, List<ValidationError> errors, List<ValidationError> warnings) {
         if (script.getRootBlock() == null) {
@@ -162,6 +181,8 @@ public class ScriptValidator {
     
     /**
      * Validates a single block and its chain
+     * 
+     * Проверяет один блок и его цепочку
      */
     private void validateBlockChain(CodeBlock block, List<ValidationError> errors, List<ValidationError> warnings) {
         Set<UUID> visitedBlocks = new HashSet<>();
@@ -183,6 +204,8 @@ public class ScriptValidator {
     
     /**
      * Validates a single block
+     * 
+     * Проверяет один блок
      */
     private void validateBlock(CodeBlock block, List<ValidationError> errors, List<ValidationError> warnings) {
         if (block == null) return;
@@ -200,9 +223,11 @@ public class ScriptValidator {
     
     /**
      * Validates block required fields
+     * 
+     * Проверяет обязательные поля блока
      */
     private void validateBlockFields(CodeBlock block, List<ValidationError> errors) {
-        if (block.getMaterial() == null) {
+        if (block.getMaterialName() == null) {
             errors.add(new ValidationError(ValidationError.Severity.ERROR, 
                 ERROR_BLOCK_MATERIAL_REQUIRED, block, "material"));
         }
@@ -215,6 +240,8 @@ public class ScriptValidator {
     
     /**
      * Validates block action and parameters
+     * 
+     * Проверяет действие блока и параметры
      */
     private void validateBlockAction(CodeBlock block, List<ValidationError> errors, List<ValidationError> warnings) {
         String action = block.getAction();
@@ -236,6 +263,8 @@ public class ScriptValidator {
     
     /**
      * Validates block parameters against configuration
+     * 
+     * Проверяет параметры блока по конфигурации
      */
     private void validateBlockParameters(CodeBlock block, BlockConfigService.BlockConfig config, 
                                        List<ValidationError> errors, List<ValidationError> warnings) {
@@ -250,6 +279,8 @@ public class ScriptValidator {
     
     /**
      * Checks required parameters
+     * 
+     * Проверяет обязательные параметры
      */
     private void checkRequiredParameters(CodeBlock block, Map<String, BlockConfigService.ParameterConfig> paramConfigs, 
                                        List<ValidationError> errors) {
@@ -266,6 +297,8 @@ public class ScriptValidator {
     
     /**
      * Validates parameter values
+     * 
+     * Проверяет значения параметров
      */
     private void validateParameterValues(CodeBlock block, Map<String, BlockConfigService.ParameterConfig> paramConfigs, 
                                        List<ValidationError> errors, List<ValidationError> warnings) {
@@ -291,6 +324,8 @@ public class ScriptValidator {
     
     /**
      * Validates block type matches configuration
+     * 
+     * Проверяет, что тип блока соответствует конфигурации
      */
     private void validateBlockType(CodeBlock block, BlockConfigService.BlockConfig config, List<ValidationError> errors) {
         String expectedType = config.getType();
@@ -302,6 +337,8 @@ public class ScriptValidator {
     
     /**
      * Validates block children
+     * 
+     * Проверяет дочерние блоки
      */
     private void validateBlockChildren(CodeBlock block, List<ValidationError> errors, List<ValidationError> warnings) {
         for (CodeBlock child : block.getChildren()) {
@@ -311,6 +348,8 @@ public class ScriptValidator {
     
     /**
      * Validates bracket consistency
+     * 
+     * Проверяет согласованность скобок
      */
     private void validateBracketConsistency(CodeBlock block, List<ValidationError> errors) {
         if (block.isBracket()) {
@@ -323,6 +362,8 @@ public class ScriptValidator {
     
     /**
      * Checks for potential issues in a block
+     * 
+     * Проверяет потенциальные проблемы в блоке
      */
     private void checkBlockIssues(CodeBlock block, List<ValidationError> errors, List<ValidationError> warnings) {
         
@@ -338,6 +379,8 @@ public class ScriptValidator {
     
     /**
      * Checks script structure for common issues
+     * 
+     * Проверяет структуру скрипта на распространенные проблемы
      */
     private void checkScriptStructure(CodeScript script, List<ValidationError> errors, List<ValidationError> warnings) {
         
@@ -355,6 +398,8 @@ public class ScriptValidator {
     
     /**
      * Checks if a script has any executable blocks
+     * 
+     * Проверяет, есть ли в скрипте исполняемые блоки
      */
     private boolean hasExecutableBlocks(CodeBlock rootBlock) {
         CodeBlock current = rootBlock;
@@ -371,6 +416,8 @@ public class ScriptValidator {
     
     /**
      * Checks for unreachable blocks in the script
+     * 
+     * Проверяет наличие недостижимых блоков в скрипте
      */
     private void checkUnreachableBlocks(CodeScript script, List<ValidationError> warnings) {
         if (script == null || script.getRootBlock() == null) {
@@ -395,6 +442,8 @@ public class ScriptValidator {
     
     /**
      * Collects all blocks in the script recursively
+     * 
+     * Рекурсивно собирает все блоки в скрипте
      */
     private void collectAllBlocks(CodeBlock block, Set<CodeBlock> allBlocks) {
         if (block == null || allBlocks.contains(block)) {
@@ -428,6 +477,8 @@ public class ScriptValidator {
     
     /**
      * Finds all reachable blocks from the root block
+     * 
+     * Находит все достижимые блоки от корневого блока
      */
     private void findReachableBlocks(CodeBlock block, Set<CodeBlock> reachableBlocks) {
         if (block == null || reachableBlocks.contains(block)) {
@@ -473,15 +524,22 @@ public class ScriptValidator {
     
     /**
      * Checks for problematic parameter combinations
+     * 
+     * Проверяет проблемные комбинации параметров
      */
     private void checkParameterCombinations(CodeBlock block, List<ValidationError> warnings) {
         // Static analysis warning fix - empty method body
         // This method is a placeholder for future implementation
         // TODO: Implement logic for checking problematic parameter combinations
+        // Исправление предупреждения статического анализа - пустое тело метода
+        // Этот метод является заглушкой для будущей реализации
+        // TODO: Реализовать логику проверки проблемных комбинаций параметров
     }
     
     /**
      * Checks for potential performance issues
+     * 
+     * Проверяет потенциальные проблемы производительности
      */
     private void checkPerformanceIssues(CodeBlock block, List<ValidationError> warnings) {
         
@@ -495,12 +553,17 @@ public class ScriptValidator {
                 // Static analysis warning fix - empty if body
                 // This check is a placeholder for future implementation
                 // TODO: Implement logic for checking list parameter in forEach loop
+                // Исправление предупреждения статического анализа - пустое тело if
+                // Эта проверка является заглушкой для будущей реализации
+                // TODO: Реализовать логику проверки параметра списка в цикле forEach
             }
         }
     }
     
     /**
      * Checks if a block type is valid for the configuration
+     * 
+     * Проверяет, допустим ли тип блока для конфигурации
      */
     private boolean isValidBlockType(CodeBlock block, String expectedType) {
         
@@ -512,7 +575,18 @@ public class ScriptValidator {
             return false;
         }
         
-        List<BlockConfigService.BlockConfig> configs = blockConfigService.getBlockConfigsForMaterial(block.getMaterial());
+        // Convert material name to Material object
+        String materialName = block.getMaterialName();
+        if (materialName == null) {
+            return false;
+        }
+        
+        Material material = Material.matchMaterial(materialName);
+        if (material == null) {
+            return false;
+        }
+        
+        List<BlockConfigService.BlockConfig> configs = blockConfigService.getBlockConfigsForMaterial(material);
         if (configs == null || configs.isEmpty()) {
             return false;
         }
@@ -529,6 +603,8 @@ public class ScriptValidator {
     
     /**
      * Checks if an action is deprecated
+     * 
+     * Проверяет, устарело ли действие
      */
     private boolean isDeprecatedAction(String action) {
         
@@ -547,6 +623,8 @@ public class ScriptValidator {
     
     /**
      * Gets a formatted validation report
+     * 
+     * Получает отформатированный отчет о валидации
      */
     public String getValidationReport(ValidationResult result) {
         StringBuilder report = new StringBuilder();
@@ -570,6 +648,8 @@ public class ScriptValidator {
     
     /**
      * Appends error details to the validation report
+     * 
+     * Добавляет детали ошибок в отчет о валидации
      */
     private void appendErrorDetails(ValidationResult result, StringBuilder report) {
         if (!result.getErrors().isEmpty()) {
@@ -589,6 +669,8 @@ public class ScriptValidator {
     
     /**
      * Appends warning details to the validation report
+     * 
+     * Добавляет детали предупреждений в отчет о валидации
      */
     private void appendWarningDetails(ValidationResult result, StringBuilder report) {
         if (!result.getWarnings().isEmpty()) {

@@ -20,6 +20,11 @@ import static com.megacreative.utils.ItemUtils.createItem;
 /**
  * Abstract base class for all menus in MegaCreative
  * Implements hierarchical menu system with categories like OpenCreative
+ * 
+ * Абстрактный базовый класс для всех меню в MegaCreative
+ * Реализует иерархическую систему меню с категориями, как в OpenCreative
+ * 
+ * @author Андрій Будильников
  */
 public abstract class AbstractMenu implements InventoryMenu {
     
@@ -76,18 +81,27 @@ public abstract class AbstractMenu implements InventoryMenu {
     /**
      * Fill the inventory with items
      * @param player The player viewing the menu
+     * 
+     * Заполняет инвентарь предметами
+     * @param player Игрок, просматривающий меню
      */
     public abstract void fillItems(Player player);
     
     /**
      * Handle inventory click events
      * @param event The click event
+     * 
+     * Обрабатывает события кликов в инвентаре
+     * @param event Событие клика
      */
     public abstract void onClick(@NotNull InventoryClickEvent event);
     
     /**
      * Handle inventory open events
      * @param event The open event
+     * 
+     * Обрабатывает события открытия инвентаря
+     * @param event Событие открытия
      */
     public abstract void onOpen(@NotNull InventoryOpenEvent event);
     
@@ -95,6 +109,10 @@ public abstract class AbstractMenu implements InventoryMenu {
      * Set an item in the inventory
      * @param slot The slot to set the item in
      * @param item The item to set
+     * 
+     * Устанавливает предмет в инвентаре
+     * @param slot Слот для установки предмета
+     * @param item Предмет для установки
      */
     protected void setItem(int slot, ItemStack item) {
         if (slot >= 0 && slot < getInventory().getSize()) {
@@ -106,6 +124,10 @@ public abstract class AbstractMenu implements InventoryMenu {
      * Set the same item in multiple slots
      * @param item The item to set
      * @param slots The slots to set the item in
+     * 
+     * Устанавливает один и тот же предмет в нескольких слотах
+     * @param item Предмет для установки
+     * @param slots Слоты для установки предмета
      */
     protected void setItem(ItemStack item, int... slots) {
         for (int slot : slots) {
@@ -117,6 +139,10 @@ public abstract class AbstractMenu implements InventoryMenu {
      * Get an item from the inventory
      * @param slot The slot to get the item from
      * @return The item in the slot, or AIR_ITEM if empty
+     * 
+     * Получает предмет из инвентаря
+     * @param slot Слот для получения предмета
+     * @return Предмет в слоте или AIR_ITEM, если пусто
      */
     protected @NotNull ItemStack getItem(int slot) {
         if (slot < 0 || slot >= getInventory().getSize()) {
@@ -130,6 +156,10 @@ public abstract class AbstractMenu implements InventoryMenu {
      * Check if an item is not empty (not air)
      * @param item The item to check
      * @return true if the item is not empty
+     * 
+     * Проверяет, не является ли предмет пустым (не воздухом)
+     * @param item Предмет для проверки
+     * @return true, если предмет не пустой
      */
     protected boolean isNotEmpty(ItemStack item) {
         return item != null && item.getType() != Material.AIR;
@@ -140,6 +170,11 @@ public abstract class AbstractMenu implements InventoryMenu {
      * @param categoryName The name of the category
      * @param itemCount The number of items in the category
      * @return The category header item
+     * 
+     * Создает заголовок категории
+     * @param categoryName Название категории
+     * @param itemCount Количество предметов в категории
+     * @return Заголовок категории
      */
     protected ItemStack createCategoryHeader(String categoryName, int itemCount) {
         ItemStack item = new ItemStack(Material.ORANGE_STAINED_GLASS_PANE);
@@ -158,6 +193,9 @@ public abstract class AbstractMenu implements InventoryMenu {
     /**
      * Create a decorative item for menu borders
      * @return The decorative item
+     * 
+     * Создает декоративный предмет для границ меню
+     * @return Декоративный предмет
      */
     protected ItemStack createDecorationItem() {
         ItemStack item = new ItemStack(Material.GRAY_STAINED_GLASS_PANE);
@@ -169,6 +207,8 @@ public abstract class AbstractMenu implements InventoryMenu {
     
     /**
      * Fill the border of the inventory with decorative items
+     * 
+     * Заполняет границы инвентаря декоративными предметами
      */
     protected void fillBorder() {
         ItemStack decoration = createDecorationItem();
@@ -191,4 +231,7 @@ public abstract class AbstractMenu implements InventoryMenu {
     // Removed identical method to super method
     // The destroy() method was identical to the one in the super interface,
     // so it has been removed to eliminate redundancy
+    // Удален идентичный метод из суперинтерфейса
+    // Метод destroy() был идентичен методу в суперинтерфейсе,
+    // поэтому он был удален для устранения избыточности
 }

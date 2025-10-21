@@ -8,6 +8,15 @@ import com.megacreative.coding.values.DataValue;
 import com.megacreative.coding.annotations.BlockMeta;
 import com.megacreative.coding.BlockType;
 
+/**
+ * Action for conditional branching in scripts.
+ * This action handles conditional logic and variable management.
+ * 
+ * Действие для условного ветвления в скриптах.
+ * Это действие обрабатывает условную логику и управление переменными.
+ * 
+ * @author Андрій Budильников
+ */
 @BlockMeta(id = "conditionalBranch", displayName = "§aConditional Branch", type = BlockType.ACTION)
 public class ConditionalBranchAction implements BlockAction {
 
@@ -26,7 +35,6 @@ public class ConditionalBranchAction implements BlockAction {
         if (context.getPlugin() != null) {
             context.getPlugin().getLogger().fine("Executing conditional branch with condition: " + condition);
         }
-        
         
         
         try {
@@ -48,6 +56,8 @@ public class ConditionalBranchAction implements BlockAction {
     
     /**
      * Validates the condition parameter
+     * 
+     * Проверяет параметр условия
      */
     private boolean validateCondition(CodeBlock block, ExecutionContext context, String condition) {
         
@@ -65,6 +75,8 @@ public class ConditionalBranchAction implements BlockAction {
     
     /**
      * Processes the condition and performs additional actions
+     * 
+     * Обрабатывает условие и выполняет дополнительные действия
      */
     private void processCondition(CodeBlock block, ExecutionContext context, String condition) {
         

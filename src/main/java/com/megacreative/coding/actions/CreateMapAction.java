@@ -15,6 +15,15 @@ import org.bukkit.entity.Player;
 import java.util.HashMap;
 import java.util.Map;
 
+/**
+ * Action for creating a map variable.
+ * This action creates a new map variable with optional initial values.
+ * 
+ * Действие для создания переменной карты.
+ * Это действие создает новую переменную карты с необязательными начальными значениями.
+ * 
+ * @author Андрій Budильников
+ */
 @BlockMeta(id = "createMap", displayName = "§aCreate Map", type = BlockType.ACTION)
 public class CreateMapAction implements BlockAction {
 

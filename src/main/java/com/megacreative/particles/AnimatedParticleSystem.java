@@ -12,6 +12,10 @@ import java.util.concurrent.CopyOnWriteArrayList;
 
 /**
  * An animated particle system that can create dynamic, time-based particle effects
+ * 
+ * Анимированная система частиц, которая может создавать динамические, основанные на времени эффекты частиц
+ * 
+ * @author Андрій Будильников
  */
 public class AnimatedParticleSystem {
     private final MegaCreative plugin;
@@ -34,6 +38,10 @@ public class AnimatedParticleSystem {
      * Adds a new animation to the system
      * @param animation The animation to add
      * @return This particle system for chaining
+     * 
+     * Добавляет новую анимацию в систему
+     * @param animation Анимация для добавления
+     * @return Эта система частиц для цепочки вызовов
      */
     public AnimatedParticleSystem addAnimation(ParticleAnimation animation) {
         animations.add(animation);
@@ -44,6 +52,10 @@ public class AnimatedParticleSystem {
      * Starts the particle animation
      * @param durationTicks The duration in ticks (20 ticks = 1 second)
      * @return This particle system for chaining
+     * 
+     * Запускает анимацию частиц
+     * @param durationTicks Длительность в тиках (20 тиков = 1 секунда)
+     * @return Эта система частиц для цепочки вызовов
      */
     public AnimatedParticleSystem start(long durationTicks) {
         if (isRunning) {
@@ -80,6 +92,8 @@ public class AnimatedParticleSystem {
     
     /**
      * Stops the particle animation
+     * 
+     * Останавливает анимацию частиц
      */
     public void stop() {
         if (animationTask != null && !animationTask.isCancelled()) {
@@ -91,6 +105,9 @@ public class AnimatedParticleSystem {
     /**
      * Checks if the animation is currently running
      * @return true if running, false otherwise
+     * 
+     * Проверяет, запущена ли анимация в данный момент
+     * @return true, если запущена, false в противном случае
      */
     public boolean isRunning() {
         return isRunning;
@@ -98,11 +115,16 @@ public class AnimatedParticleSystem {
     
     /**
      * Interface for particle animations
+     * 
+     * Интерфейс для анимаций частиц
      */
     public interface ParticleAnimation {
         /**
          * Updates the animation state
          * @param progress Progress from 0.0 to 1.0
+         * 
+         * Обновляет состояние анимации
+         * @param progress Прогресс от 0.0 до 1.0
          */
         void update(double progress);
         
@@ -110,12 +132,18 @@ public class AnimatedParticleSystem {
          * Gets the particles for the current progress
          * @param progress Progress from 0.0 to 1.0
          * @return List of particle positions
+         * 
+         * Получает частицы для текущего прогресса
+         * @param progress Прогресс от 0.0 до 1.0
+         * @return Список позиций частиц
          */
         List<Vector3D> getParticles(double progress);
     }
     
     /**
      * A rotating circle animation
+     * 
+     * Анимация вращающегося круга
      */
     public static class RotatingCircleAnimation implements ParticleAnimation {
         private final Vector3D center;
@@ -171,6 +199,8 @@ public class AnimatedParticleSystem {
     
     /**
      * A pulsing sphere animation
+     * 
+     * Анимация пульсирующей сферы
      */
     public static class PulsingSphereAnimation implements ParticleAnimation {
         private final Vector3D center;

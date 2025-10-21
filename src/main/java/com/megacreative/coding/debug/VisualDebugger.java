@@ -25,6 +25,9 @@ import java.util.UUID;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.logging.Logger;
 
+/**
+ * @author Андрій Будильников
+ */
 public class VisualDebugger {
     private static final Logger log = Logger.getLogger(VisualDebugger.class.getName());
     
@@ -57,6 +60,8 @@ public class VisualDebugger {
     
     /**
      * Checks if a player is currently in a debug session
+     * 
+     * Проверяет, находится ли игрок в текущей сессии отладки
      */
     public boolean isDebugging(Player player) {
         return activeSessions.containsKey(player.getUniqueId());
@@ -64,6 +69,8 @@ public class VisualDebugger {
     
     /**
      * Starts a new debug session for the player
+     * 
+     * Начинает новую сессию отладки для игрока
      */
     public void startDebugSession(Player player, String sessionName) {
         DebugSession session = new DebugSession(player, sessionName);
@@ -76,6 +83,8 @@ public class VisualDebugger {
     
     /**
      * Stops the current debug session for a player
+     * 
+     * Останавливает текущую сессию отладки для игрока
      */
     public void stopDebugSession(Player player) {
         DebugSession session = activeSessions.remove(player.getUniqueId());
@@ -120,6 +129,10 @@ public class VisualDebugger {
      * Logs an error message for a player
      * @param player The player to log the error for
      * @param errorMessage The error message to log
+     * 
+     * Логирует сообщение об ошибке для игрока
+     * @param player Игрок, для которого логируется ошибка
+     * @param errorMessage Сообщение об ошибке для логирования
      */
     public void logError(Player player, String errorMessage) {
         
@@ -135,9 +148,13 @@ public class VisualDebugger {
     
     /**
      * Sets a breakpoint at a specific block location
+     * 
+     * Устанавливает точку останова в определенном месте блока
      */
     /**
      * Adds a breakpoint at the specified location
+     * 
+     * Добавляет точку останова в указанном месте
      */
     public void addBreakpoint(Player player, Location location, String condition) {
         BreakpointManager manager = breakpointManagers.computeIfAbsent(
@@ -156,6 +173,8 @@ public class VisualDebugger {
     
     /**
      * Gets all breakpoints for a player
+     * 
+     * Получает все точки останова для игрока
      */
     public List<Location> getBreakpoints(Player player) {
         BreakpointManager manager = breakpointManagers.get(player.getUniqueId());
@@ -169,9 +188,13 @@ public class VisualDebugger {
     
     /**
      * Removes a breakpoint at a specific block location
+     * 
+     * Удаляет точку останова в определенном месте блока
      */
     /**
      * Removes a breakpoint at the specified location
+     * 
+     * Удаляет точку останова в указанном месте
      */
     public void removeBreakpoint(Player player, Location location) {
         BreakpointManager manager = breakpointManagers.get(player.getUniqueId());
@@ -186,6 +209,8 @@ public class VisualDebugger {
     
     /**
      * Lists all breakpoints for a player
+     * 
+     * Выводит список всех точек останова для игрока
      */
     public void listBreakpoints(Player player) {
         BreakpointManager manager = breakpointManagers.get(player.getUniqueId());

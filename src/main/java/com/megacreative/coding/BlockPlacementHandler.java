@@ -70,7 +70,12 @@ public class BlockPlacementHandler implements Listener {
     /**
      * Checks if an action ID is registered in the action factory
      * @param actionId The action ID to check
-     * @return true if the action is registered, false otherwise
+     * 
+     * Проверяет, зарегистрирован ли ID действия в фабрике действий
+     * @param actionId ID действия для проверки
+     * 
+     * Prüft, ob eine Aktions-ID in der Aktionsfabrik registriert ist
+     * @param actionId Die zu prüfende Aktions-ID
      */
     private boolean isRegisteredAction(String actionId) {
         if (plugin == null || plugin.getServiceRegistry() == null || actionId == null) {
@@ -84,6 +89,14 @@ public class BlockPlacementHandler implements Listener {
      * Checks if an event ID is registered in the block config service
      * @param eventId The event ID to check
      * @return true if the event is registered, false otherwise
+     * 
+     * Проверяет, зарегистрирован ли ID события в сервисе конфигурации блоков
+     * @param eventId ID события для проверки
+     * @return true, если событие зарегистрировано, иначе false
+     * 
+     * Prüft, ob eine Ereignis-ID im Block-Konfigurationsdienst registriert ist
+     * @param eventId Die zu prüfende Ereignis-ID
+     * @return true, wenn das Ereignis registriert ist, sonst false
      */
     private boolean isRegisteredEvent(String eventId) {
         BlockConfigService configService = getBlockConfigService();
@@ -99,6 +112,14 @@ public class BlockPlacementHandler implements Listener {
      * Checks if a condition ID is registered in the condition factory
      * @param conditionId The condition ID to check
      * @return true if the condition is registered, false otherwise
+     * 
+     * Проверяет, зарегистрирован ли ID условия в фабрике условий
+     * @param conditionId ID условия для проверки
+     * @return true, если условие зарегистрировано, иначе false
+     * 
+     * Prüft, ob eine Bedingungs-ID in der Bedingungsfabrik registriert ist
+     * @param conditionId Die zu prüfende Bedingungs-ID
+     * @return true, wenn die Bedingung registriert ist, sonst false
      */
     private boolean isRegisteredCondition(String conditionId) {
         if (plugin == null || plugin.getServiceRegistry() == null || conditionId == null) {
@@ -111,6 +132,12 @@ public class BlockPlacementHandler implements Listener {
     /**
      * Создает CodeBlock и генерирует событие CodeBlockPlacedEvent.
      * Не занимается логикой соединений или компиляции.
+     * 
+     * Creates a CodeBlock and fires a CodeBlockPlacedEvent.
+     * Does not handle connection logic or compilation.
+     * 
+     * Erstellt einen CodeBlock und feuert ein CodeBlockPlacedEvent.
+     * Behandelt keine Verbindungslogik oder Kompilierung.
      */
     @EventHandler(priority = EventPriority.HIGH)
     public void onBlockPlace(BlockPlaceEvent event) {
@@ -141,7 +168,7 @@ public class BlockPlacementHandler implements Listener {
 
         
         blockCodeBlocks.put(block.getLocation(), newCodeBlock);
-        log.info("Created CodeBlock at " + block.getLocation() + " with material " + newCodeBlock.getMaterial());
+        log.info("Created CodeBlock at " + block.getLocation() + " with material " + newCodeBlock.getMaterialName());
         
         
         CodeBlockPlacedEvent placedEvent = new CodeBlockPlacedEvent(player, newCodeBlock, block.getLocation());
@@ -153,6 +180,10 @@ public class BlockPlacementHandler implements Listener {
 
     /**
      * Ловит уничтожение блока, удаляет CodeBlock и генерирует CodeBlockBrokenEvent.
+     * 
+     * Catches block destruction, removes CodeBlock and fires CodeBlockBrokenEvent.
+     * 
+     * Fängt Blockzerstörung ab, entfernt CodeBlock und feuert CodeBlockBrokenEvent.
      */
     @EventHandler(priority = EventPriority.HIGH)
     public void onBlockBreak(BlockBreakEvent event) {
@@ -266,7 +297,7 @@ public class BlockPlacementHandler implements Listener {
 
         
         if (blockId == null || blockId.equals("NOT_SET")) {
-            new ActionSelectionGUI(plugin, player, location, codeBlock.getMaterial()).open();
+            new ActionSelectionGUI(plugin, player, location, Material.getMaterial(codeBlock.getMaterialName())).open();
             return;
         }
 
@@ -318,7 +349,7 @@ public class BlockPlacementHandler implements Listener {
         }
 
         
-        Material material = codeBlock.getMaterial();
+        Material material = Material.getMaterial(codeBlock.getMaterialName());
         switch (material) {
             case DIAMOND_BLOCK:
                 return "EVENT";

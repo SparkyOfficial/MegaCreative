@@ -15,6 +15,11 @@ import org.bukkit.inventory.PlayerInventory;
 /**
  * Condition for checking if a player is wearing specific armor from the new parameter system.
  * This condition returns true if the player is wearing the specified armor piece.
+ * 
+ * Условие для проверки, носит ли игрок определенную броню из новой системы параметров.
+ * Это условие возвращает true, если игрок носит указанную часть брони.
+ * 
+ * @author Андрій Будильников
  */
 @BlockMeta(id = "hasArmor", displayName = "§aHas Armor", type = BlockType.CONDITION)
 public class HasArmorCondition implements BlockCondition {
@@ -43,6 +48,8 @@ public class HasArmorCondition implements BlockCondition {
             String armorName = resolvedArmor.asString();
             // Fix for Qodana issue: Condition armorName == null is always false
             // This was a false positive - we need to properly check for empty strings
+            // Исправление для проблемы Qodana: Условие armorName == null всегда false
+            // Это был ложный срабатывание - нам нужно правильно проверить пустые строки
             if (armorName.isEmpty()) {
                 context.getPlugin().getLogger().warning("HasArmorCondition: 'armor' parameter is empty.");
                 return false;
@@ -75,6 +82,8 @@ public class HasArmorCondition implements BlockCondition {
     
     /**
      * Helper class to hold armor parameters
+     * 
+     * Вспомогательный класс для хранения параметров брони
      */
     private static class HasArmorParams {
         String armorStr = "";

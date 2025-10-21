@@ -35,6 +35,10 @@ public class ActionFactory implements IActionFactory {
 
     /**
      * Scans for annotated actions and registers them
+     * 
+     * Сканирует аннотированные действия и регистрирует их
+     * 
+     * Scannt nach annotierten Aktionen und registriert sie
      */
     public void registerAllActions() {
         actionRegistry.clear();
@@ -76,6 +80,10 @@ public class ActionFactory implements IActionFactory {
 
     /**
      * Register an action with display name
+     * 
+     * Регистрирует действие с отображаемым именем
+     * 
+     * Registriert eine Aktion mit Anzeigenamen
      */
     private void register(String actionId, String displayName, Supplier<BlockAction> supplier) {
         actionRegistry.put(actionId, supplier);
@@ -108,6 +116,16 @@ public class ActionFactory implements IActionFactory {
      * 
      * @param actionId The action ID
      * @return The display name, or the action ID if no display name is set
+     * 
+     * Получает отображаемое имя для действия
+     * 
+     * @param actionId ID действия
+     * @return Отображаемое имя или ID действия, если отображаемое имя не установлено
+     * 
+     * Ruft den Anzeigenamen für eine Aktion ab
+     * 
+     * @param actionId Die Aktions-ID
+     * @return Der Anzeigename oder die Aktions-ID, wenn kein Anzeigename festgelegt ist
      */
     public String getActionDisplayName(String actionId) {
         return actionDisplayNames.getOrDefault(actionId, actionId);
@@ -117,6 +135,14 @@ public class ActionFactory implements IActionFactory {
      * Gets all registered action display names
      * 
      * @return A map of action IDs to display names
+     * 
+     * Получает все зарегистрированные отображаемые имена действий
+     * 
+     * @return Карта ID действий и отображаемых имен
+     * 
+     * Ruft alle registrierten Aktions-Anzeigenamen ab
+     * 
+     * @return Eine Karte von Aktions-IDs zu Anzeigenamen
      */
     public Map<String, String> getActionDisplayNames() {
         return new HashMap<>(actionDisplayNames);
@@ -140,6 +166,14 @@ public class ActionFactory implements IActionFactory {
      * Publishes an event to the event system.
      * 
      * @param event The event to publish
+     * 
+     * Публикует событие в системе событий.
+     * 
+     * @param event Событие для публикации
+     * 
+     * Veröffentlicht ein Ereignis im Ereignissystem.
+     * 
+     * @param event Das zu veröffentlichende Ereignis
      */
     @Override
     public void publishEvent(CustomEvent event) {
@@ -183,6 +217,16 @@ public class ActionFactory implements IActionFactory {
      * 
      * @param eventName The name of the event
      * @param eventData The data associated with the event
+     * 
+     * Публикует событие с ассоциированными данными в системе событий.
+     * 
+     * @param eventName Название события
+     * @param eventData Данные, ассоциированные с событием
+     * 
+     * Veröffentlicht ein Ereignis mit zugehörigen Daten im Ereignissystem.
+     * 
+     * @param eventName Der Name des Ereignisses
+     * @param eventData Die mit dem Ereignis verknüpften Daten
      */
     @Override
     public void publishEvent(String eventName, Map<String, DataValue> eventData) {

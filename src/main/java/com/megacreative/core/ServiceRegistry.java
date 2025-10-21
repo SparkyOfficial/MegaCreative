@@ -70,6 +70,14 @@ public class ServiceRegistry implements DependencyContainer.Disposable {
      * Creates a new service registry
      * @param plugin The plugin instance
      * @param dependencyContainer The dependency container
+     * 
+     * Создает новый реестр сервисов
+     * @param plugin Экземпляр плагина
+     * @param dependencyContainer Контейнер зависимостей
+     * 
+     * Erstellt eine neue Serviceregistry
+     * @param plugin Die Plugin-Instanz
+     * @param dependencyContainer Der Dependency Container
      */
     public ServiceRegistry(Plugin plugin, DependencyContainer dependencyContainer) {
         this.plugin = plugin;
@@ -85,6 +93,10 @@ public class ServiceRegistry implements DependencyContainer.Disposable {
     
     /**
      * Register core services in the dependency container
+     * 
+     * Регистрирует основные сервисы в контейнере зависимостей
+     * 
+     * Registriert Kerndienste im Dependency Container
      */
     private void registerCoreServices() {
         
@@ -111,6 +123,10 @@ public class ServiceRegistry implements DependencyContainer.Disposable {
     
     /**
      * Initialize all services
+     * 
+     * Инициализирует все сервисы
+     * 
+     * Initialisiert alle Dienste
      */
     public void initializeServices() {
         log.info("Initializing Service Registry...");
@@ -144,6 +160,12 @@ public class ServiceRegistry implements DependencyContainer.Disposable {
     /**
      * Connect services that depend on each other after they are all created
      * This should be called after all services are registered and initialized
+     * 
+     * Подключает сервисы, которые зависят друг от друга, после их создания
+     * Это должно вызываться после регистрации и инициализации всех сервисов
+     * 
+     * Verbindet Dienste, die voneinander abhängen, nachdem sie alle erstellt wurden
+     * Dies sollte aufgerufen werden, nachdem alle Dienste registriert und initialisiert wurden
      */
     public void connectServices() {
         if (servicesConnected) {
@@ -204,6 +226,8 @@ public class ServiceRegistry implements DependencyContainer.Disposable {
     
     private void initializeImplementationManagers() {
         // Register the CodingManagerImpl as a factory since it needs dependencies
+        // Регистрирует CodingManagerImpl как фабрику, так как ему нужны зависимости
+        // Registriert den CodingManagerImpl als Factory, da er Abhängigkeiten benötigt
         dependencyContainer.registerFactory(ICodingManager.class, (DependencyContainer.Supplier<ICodingManager>) () -> {
             IWorldManager worldManager = dependencyContainer.resolve(IWorldManager.class);
             return new CodingManagerImpl((MegaCreative) plugin, worldManager);
@@ -212,15 +236,23 @@ public class ServiceRegistry implements DependencyContainer.Disposable {
     
     private void initializeCodingServices() {
         // Register coding service mappings
+        // Регистрирует сопоставления сервисов кодирования
+        // Registriert Codierungsdienst-Zuordnungen
         // BlockPlacementHandler will be created on demand, with lazy initialization of dependencies
+        // BlockPlacementHandler будет создаваться по запросу с ленивой инициализацией зависимостей
+        // BlockPlacementHandler wird bei Bedarf erstellt, mit Lazy Initialization von Abhängigkeiten
         dependencyContainer.registerType(BlockPlacementHandler.class, BlockPlacementHandler.class);
         dependencyContainer.registerType(ConnectionVisualizer.class, ConnectionVisualizer.class);
         // Register BlockLinker as a factory since it needs BlockPlacementHandler as a dependency
+        // Регистрирует BlockLinker как фабрику, так как ему нужен BlockPlacementHandler как зависимость
+        // Registriert BlockLinker als Factory, da er BlockPlacementHandler als Abhängigkeit benötigt
         dependencyContainer.registerFactory(BlockLinker.class, (DependencyContainer.Supplier<BlockLinker>) () -> {
             BlockPlacementHandler placementHandler = dependencyContainer.resolve(BlockPlacementHandler.class);
             return new BlockLinker((MegaCreative) plugin, placementHandler);
         });
         // Register BlockHierarchyManager as a factory since it needs BlockPlacementHandler as a dependency
+        // Регистрирует BlockHierarchyManager как фабрику, так как ему нужен BlockPlacementHandler как зависимость
+        // Registriert BlockHierarchyManager als Factory, da er BlockPlacementHandler als Abhängigkeit benötigt
         dependencyContainer.registerFactory(BlockHierarchyManager.class, (DependencyContainer.Supplier<BlockHierarchyManager>) () -> {
             BlockPlacementHandler placementHandler = dependencyContainer.resolve(BlockPlacementHandler.class);
             return new BlockHierarchyManager(placementHandler);
@@ -228,6 +260,8 @@ public class ServiceRegistry implements DependencyContainer.Disposable {
         dependencyContainer.registerType(WorldCodeRestorer.class, WorldCodeRestorer.class);
         dependencyContainer.registerType(CodeBlockSignManager.class, CodeBlockSignManager.class);
         // Register ScriptTriggerManager as a factory since it needs dependencies
+        // Регистрирует ScriptTriggerManager как фабрику, так как ему нужны зависимости
+        // Registriert ScriptTriggerManager als Factory, da er Abhängigkeiten benötigt
         dependencyContainer.registerFactory(ScriptTriggerManager.class, (DependencyContainer.Supplier<ScriptTriggerManager>) () -> {
             IWorldManager worldManager = dependencyContainer.resolve(IWorldManager.class);
             PlayerModeManager playerModeManager = dependencyContainer.resolve(PlayerModeManager.class);
@@ -235,10 +269,14 @@ public class ServiceRegistry implements DependencyContainer.Disposable {
         });
         
         // Register interfaces for factories
+        // Регистрирует интерфейсы для фабрик
+        // Registriert Schnittstellen für Factories
         dependencyContainer.registerType(com.megacreative.interfaces.IActionFactory.class, ActionFactory.class);
         dependencyContainer.registerType(com.megacreative.interfaces.IConditionFactory.class, ConditionFactory.class);
         
         // Register concrete classes
+        // Регистрирует конкретные классы
+        // Registriert konkrete Klassen
         ActionFactory actionFactoryInstance = new ActionFactory((MegaCreative) plugin);
         actionFactoryInstance.registerAllActions();
         dependencyContainer.registerSingleton(ActionFactory.class, actionFactoryInstance);
@@ -251,12 +289,16 @@ public class ServiceRegistry implements DependencyContainer.Disposable {
         
         
         // Register ScriptValidator as a singleton to consolidate validation surface
+        // Регистрирует ScriptValidator как синглтон для консолидации поверхности валидации
+        // Registriert ScriptValidator als Singleton, um die Validierungsoberfläche zu konsolidieren
         dependencyContainer.registerFactory(ScriptValidator.class, (DependencyContainer.Supplier<ScriptValidator>) () -> {
             BlockConfigService blockConfigService = dependencyContainer.resolve(BlockConfigService.class);
             return new ScriptValidator(blockConfigService);
         });
 
         // Register ScriptEngine as a factory - this is critical for proper initialization
+        // Регистрирует ScriptEngine как фабрику - это критично для правильной инициализации
+        // Registriert ScriptEngine als Factory - dies ist entscheidend für die ordnungsgemäß Initialisierung
         dependencyContainer.registerFactory(ScriptEngine.class, (DependencyContainer.Supplier<ScriptEngine>) () -> {
             VariableManager variableManager = dependencyContainer.resolve(VariableManager.class);
             VisualDebugger visualDebugger = dependencyContainer.resolve(VisualDebugger.class);
@@ -304,6 +346,10 @@ public class ServiceRegistry implements DependencyContainer.Disposable {
     
     /**
      * Initialize additional services that depend on core services being available
+     * 
+     * Инициализирует дополнительные сервисы, которые зависят от доступности основных сервисов
+     * 
+     * Initialisiert zusätzliche Dienste, die von der Verfügbarkeit der Kerndienste abhängen
      */
     public void initializeAdditionalServices() {
         log.info("Initializing additional services...");
@@ -318,6 +364,10 @@ public class ServiceRegistry implements DependencyContainer.Disposable {
     
     /**
      * Gets a service by type with proper type safety
+     * 
+     * Получает сервис по типу с надлежащей безопасностью типов
+     * 
+     * Ruft einen Dienst nach Typ mit ordnungsgemäßer Typsicherheit ab
      */
     public <T> T getService(Class<T> serviceType) {
         return dependencyContainer.resolve(serviceType);
@@ -325,6 +375,10 @@ public class ServiceRegistry implements DependencyContainer.Disposable {
     
     /**
      * Checks if a service is registered
+     * 
+     * Проверяет, зарегистрирован ли сервис
+     * 
+     * Prüft, ob ein Dienst registriert ist
      */
     public boolean hasService(Class<?> serviceType) {
         return dependencyContainer.isRegistered(serviceType);
@@ -332,6 +386,10 @@ public class ServiceRegistry implements DependencyContainer.Disposable {
     
     /**
      * Shuts down all services gracefully
+     * 
+     * Корректно завершает работу всех сервисов
+     * 
+     * Fährt alle Dienste ordnungsgemäß herunter
      */
     @Override
     public void dispose() {

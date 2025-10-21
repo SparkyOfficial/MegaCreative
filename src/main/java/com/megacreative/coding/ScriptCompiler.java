@@ -36,6 +36,8 @@ public class ScriptCompiler implements Listener {
     private final BlockConfigService blockConfigService;
     // This field needs to remain as a class field since it maintains state across method calls
     // Static analysis flags it as convertible to a local variable, but this is a false positive
+    // Это поле должно оставаться полем класса, так как оно сохраняет состояние между вызовами методов
+    // Статический анализ помечает его как конвертируемое в локальную переменную, но это ложное срабатывание
     private final BlockLinker blockLinker; 
 
     public ScriptCompiler(MegaCreative plugin, BlockConfigService blockConfigService, BlockLinker blockLinker) {
@@ -65,6 +67,7 @@ public class ScriptCompiler implements Listener {
         } catch (Exception e) {
             
             plugin.getLogger().warning("Error compiling script from block place event: " + e.getMessage());
+            // Ошибка компиляции скрипта из события размещения блока: " + e.getMessage()
         }
     }
     
@@ -79,6 +82,7 @@ public class ScriptCompiler implements Listener {
         } catch (Exception e) {
             
             plugin.getLogger().warning("Error removing script from block break event: " + e.getMessage());
+            // Ошибка удаления скрипта из события разрушения блока: " + e.getMessage()
         }
     }
     
@@ -88,6 +92,12 @@ public class ScriptCompiler implements Listener {
      * @param script The compiled script
      * @param creativeWorld The creative world
      * @param location The location of the event block
+     * 
+     * Создает и регистрирует активатор для блока события
+     * @param eventBlock Блок события
+     * @param script Скомпилированный скрипт
+     * @param creativeWorld Творческий мир
+     * @param location Расположение блока события
      */
     private void createAndRegisterActivator(CodeBlock eventBlock, CodeScript script, CreativeWorld creativeWorld, Location location) {
         try {
@@ -137,6 +147,7 @@ public class ScriptCompiler implements Listener {
         } catch (Exception e) {
             
             plugin.getLogger().warning("Error creating and registering activator: " + e.getMessage());
+            // Ошибка создания и регистрации активатора: " + e.getMessage()
         }
     }
     
@@ -156,6 +167,7 @@ public class ScriptCompiler implements Listener {
         } catch (Exception e) {
             
             plugin.getLogger().warning("Error removing script: " + e.getMessage());
+            // Ошибка удаления скрипта: " + e.getMessage()
         }
     }
     
@@ -179,12 +191,19 @@ public class ScriptCompiler implements Listener {
      * @param script The script to build
      * @param currentBlock The current block being processed
      * @return The completed script
+     * 
+     * Строит полный скрипт, обходя структуру блоков
+     * @param script Скрипт для построения
+     * @param currentBlock Текущий обрабатываемый блок
+     * @return Завершенный скрипт
      */
     private CodeScript buildCompleteScript(CodeScript script, CodeBlock currentBlock) {
         
         if (currentBlock.getNextBlock() != null) {
             // According to static analysis, this statement has empty body
             // Add proper implementation for handling next block
+            // Согласно статическому анализу, это утверждение имеет пустое тело
+            // Добавьте правильную реализацию для обработки следующего блока
             buildCompleteScript(script, currentBlock.getNextBlock());
         }
         
@@ -192,6 +211,8 @@ public class ScriptCompiler implements Listener {
         for (CodeBlock child : currentBlock.getChildren()) {
             // According to static analysis, this statement has empty body
             // Add proper implementation for handling child blocks
+            // Согласно статическому анализу, это утверждение имеет пустое тело
+            // Добавьте правильную реализацию для обработки дочерних блоков
             buildCompleteScript(script, child);
         }
         
@@ -214,6 +235,10 @@ public class ScriptCompiler implements Listener {
      * Recompiles all scripts in a world
      * This should be called when the world is loaded or when significant changes are made
      * @param world the world to recompile scripts for
+     * 
+     * Перекомпилирует все скрипты в мире
+     * Это должно вызываться при загрузке мира или при внесении значительных изменений
+     * @param world мир, для которого нужно перекомпилировать скрипты
      */
     public void compileWorldScripts(World world) {
         try {
@@ -222,14 +247,17 @@ public class ScriptCompiler implements Listener {
             if (creativeWorld == null) return;
             
             // Get the block placement handler to access all code blocks
+            // Получить обработчик размещения блоков для доступа ко всем блокам кода
             BlockPlacementHandler placementHandler = plugin.getServiceRegistry().getBlockPlacementHandler();
             
             List<CodeScript> newScripts = new ArrayList<>();
             
             // Use the placement handler to get all blocks in the world
+            // Использовать обработчик размещения для получения всех блоков в мире
             for (Map.Entry<Location, CodeBlock> entry : placementHandler.getBlockCodeBlocks().entrySet()) {
                 Location location = entry.getKey();
                 // Check if this block is in the specified world
+                // Проверить, находится ли этот блок в указанном мире
                 if (location.getWorld().equals(world)) {
                     CodeBlock block = entry.getValue();
                     if (isEventBlock(block)) {
@@ -240,6 +268,7 @@ public class ScriptCompiler implements Listener {
                             }
                         } catch (Exception e) {
                             // Log the exception but continue processing other blocks
+                            // Записать исключение в журнал, но продолжить обработку других блоков
                             plugin.getLogger().warning("Error compiling script from block: " + e.getMessage());
                         }
                     }
@@ -251,6 +280,7 @@ public class ScriptCompiler implements Listener {
             
         } catch (Exception e) {
             // Log the exception
+            // Записать исключение в журнал
             plugin.getLogger().warning("Error compiling world scripts: " + e.getMessage());
         }
     }
@@ -259,6 +289,10 @@ public class ScriptCompiler implements Listener {
      * Checks if a block is an event block
      * @param block the block to check
      * @return true if the block is an event block
+     * 
+     * Проверяет, является ли блок блоком события
+     * @param block блок для проверки
+     * @return true, если блок является блоком события
      */
     private boolean isEventBlock(CodeBlock block) {
         if (block == null || block.getAction() == null) {

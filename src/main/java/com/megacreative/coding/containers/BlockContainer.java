@@ -5,6 +5,10 @@ import org.bukkit.Location;
 
 /**
  * Block container data
+ * 
+ * Данные контейнера блока
+ * 
+ * @author Андрій Будильников
  */
 public class BlockContainer {
     private final Location blockLocation;

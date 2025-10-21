@@ -16,6 +16,10 @@ import org.bukkit.entity.Player;
 
 /**
  * Action to create and configure a custom NPC
+ * 
+ * Действие для создания и настройки пользовательского NPC
+ * 
+ * @author Андрій Budильников
  */
 @BlockMeta(
     id = "create_custom_npc",
@@ -113,6 +117,8 @@ public class CreateCustomNPCAction implements BlockAction {
                 String variableName = resolvedVariable.asString();
                 // Fix for Qodana issue: Condition variableName != null is always true
                 // This was a false positive - we need to properly check for empty strings
+                // Исправление для проблемы Qodana: Условие variableName != null всегда true
+                // Это был ложный срабатывание - нам нужно правильно проверить пустые строки
                 if (!variableName.isEmpty()) {
                     
                     context.getPlugin().getServiceRegistry().getVariableManager()

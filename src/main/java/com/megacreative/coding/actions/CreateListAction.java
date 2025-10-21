@@ -15,6 +15,15 @@ import org.bukkit.entity.Player;
 import java.util.ArrayList;
 import java.util.List;
 
+/**
+ * Action for creating a list variable.
+ * This action creates a new list variable with optional initial values.
+ * 
+ * Действие для создания переменной списка.
+ * Это действие создает новую переменную списка с необязательными начальными значениями.
+ * 
+ * @author Андрій Budильников
+ */
 @BlockMeta(id = "createList", displayName = "§aCreate List", type = BlockType.ACTION)
 public class CreateListAction implements BlockAction {
 

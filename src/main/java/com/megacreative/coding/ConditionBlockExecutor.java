@@ -6,6 +6,11 @@ import java.util.logging.Logger;
 /**
  * Executor for condition blocks
  * This executor handles CONDITION type blocks by delegating to the ConditionFactory
+ * 
+ * Исполнитель для блоков условий
+ * Этот исполнитель обрабатывает блоки типа CONDITION, делегируя их ConditionFactory
+ * 
+ * @author Андрій Budильников
  */
 public class ConditionBlockExecutor implements BlockExecutor {
     private static final Logger LOGGER = java.util.logging.Logger.getLogger(ConditionBlockExecutor.class.getName());

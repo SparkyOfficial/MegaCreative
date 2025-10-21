@@ -177,7 +177,9 @@ public class CodingManagerImpl implements ICodingManager {
     /**
      * Finds a script by name in all worlds
      * @param name The name of the script to find
-     * @return The found script or null if not found
+     * 
+     * Находит скрипт по имени во всех мирах
+     * @param name Имя скрипта для поиска
      */
     private CodeScript findScriptInWorlds(String name) {
         for (CreativeWorld world : worldManager.getCreativeWorlds()) {
@@ -194,6 +196,11 @@ public class CodingManagerImpl implements ICodingManager {
      * @param world The world to search in
      * @param name The name of the script to find
      * @return The found script or null if not found
+     * 
+     * Находит скрипт по имени в определенном мире
+     * @param world Мир для поиска
+     * @param name Имя скрипта для поиска
+     * @return Найденный скрипт или null, если не найден
      */
     private CodeScript findScriptInWorld(CreativeWorld world, String name) {
         if (world.getScripts() == null) {
@@ -284,6 +291,9 @@ public class CodingManagerImpl implements ICodingManager {
     /**
      * Deletes a script from all worlds
      * @param scriptName The name of the script to delete
+     * 
+     * Удаляет скрипт из всех миров
+     * @param scriptName Имя скрипта для удаления
      */
     private void deleteScriptFromAllWorlds(String scriptName) {
         for (CreativeWorld world : worldManager.getCreativeWorlds()) {
@@ -295,6 +305,10 @@ public class CodingManagerImpl implements ICodingManager {
      * Deletes a script from a specific world
      * @param world The world to delete the script from
      * @param scriptName The name of the script to delete
+     * 
+     * Удаляет скрипт из определенного мира
+     * @param world Мир, из которого нужно удалить скрипт
+     * @param scriptName Имя скрипта для удаления
      */
     private void deleteScriptFromWorld(CreativeWorld world, String scriptName) {
         if (world.getScripts() == null) {
@@ -314,6 +328,11 @@ public class CodingManagerImpl implements ICodingManager {
      * @param scripts The list of scripts to search
      * @param scriptName The name of the script to find
      * @return The found script or null if not found
+     * 
+     * Находит скрипт по имени в списке скриптов
+     * @param scripts Список скриптов для поиска
+     * @param scriptName Имя скрипта для поиска
+     * @return Найденный скрипт или null, если не найден
      */
     private CodeScript findScriptByName(java.util.List<CodeScript> scripts, String scriptName) {
         for (CodeScript script : scripts) {
@@ -328,6 +347,10 @@ public class CodingManagerImpl implements ICodingManager {
      * Deletes a script file from storage
      * @param world The world the script belongs to
      * @param scriptName The name of the script file to delete
+     * 
+     * Удаляет файл скрипта из хранилища
+     * @param world Мир, которому принадлежит скрипт
+     * @param scriptName Имя файла скрипта для удаления
      */
     private void deleteScriptFile(CreativeWorld world, String scriptName) {
         Path scriptFile = scriptsDirectory.resolve(world.getName()).resolve(scriptName + SCRIPT_FILE_EXTENSION);
@@ -461,6 +484,8 @@ public class CodingManagerImpl implements ICodingManager {
         logger.severe(message);
         // Added null check to prevent potential NullPointerException
         // Static analysis correctly identified that player might be null
+        // Добавлена проверка на null для предотвращения потенциального NullPointerException
+        // Статический анализ правильно определил, что игрок может быть null
         if (player != null && player.isOnline()) {
             player.sendMessage("§cError: " + message);
         }

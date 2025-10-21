@@ -11,6 +11,14 @@ import org.jetbrains.annotations.NotNull;
  * Event fired when a CodeBlock is placed in a development world.
  * This event allows other systems to react to block placement without
  * directly accessing BlockPlacementHandler's internal data structures.
+ * 
+ * Событие, возникающее при размещении CodeBlock в мире разработки.
+ * Это событие позволяет другим системам реагировать на размещение блоков без
+ * прямого доступа к внутренним структурам данных BlockPlacementHandler.
+ * 
+ * Ereignis, das ausgelöst wird, wenn ein CodeBlock in einer Entwicklungs-Welt platziert wird.
+ * Dieses Ereignis ermöglicht es anderen Systemen, auf Blockplatzierungen zu reagieren, ohne
+ * direkt auf die internen Datenstrukturen von BlockPlacementHandler zuzugreifen.
  */
 public class CodeBlockPlacedEvent extends Event {
     private static final HandlerList handlers = new HandlerList();

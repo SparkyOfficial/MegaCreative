@@ -8,23 +8,34 @@ import java.util.Map;
 /**
  * Advanced data value interface with serialization and validation
  * Provides type safety and automatic conversion between types
+ * 
+ * Расширенный интерфейс данных со сериализацией и валидацией
+ * Обеспечивает безопасность типов и автоматическое преобразование между типами
+ * 
+ * @author Андрій Будильников
  */
 public interface DataValue extends ConfigurationSerializable {
     
     /**
      * Gets the value type
+     * 
+     * Получает тип значения
      */
     @org.jetbrains.annotations.NotNull
     ValueType getType();
     
     /**
      * Gets the raw value object
+     * 
+     * Получает объект необработанного значения
      */
     @org.jetbrains.annotations.NotNull
     Object getValue();
     
     /**
      * Gets the raw value object (alias for getValue)
+     * 
+     * Получает объект необработанного значения (псевдоним для getValue)
      */
     @org.jetbrains.annotations.NotNull
     default Object getRawValue() {
@@ -33,39 +44,54 @@ public interface DataValue extends ConfigurationSerializable {
     
     /**
      * Sets the raw value with validation
+     * 
+     * Устанавливает необработанное значение с валидацией
      */
     void setValue(@org.jetbrains.annotations.NotNull Object value) throws IllegalArgumentException;
     
     /**
      * Converts this value to a string representation
+     * 
+     * Преобразует это значение в строковое представление
      */
     @org.jetbrains.annotations.NotNull
     String asString();
     
     /**
      * Converts this value to a number
+     * 
+     * Преобразует это значение в число
      */
     @org.jetbrains.annotations.NotNull
     Number asNumber() throws NumberFormatException;
     
     /**
      * Converts this value to a boolean
+     * 
+     * Преобразует это значение в булево значение
      */
     boolean asBoolean();
     
     /**
      * Checks if this value is null or empty
+     * 
+     * Проверяет, является ли это значение null или пустым
      */
     boolean isEmpty();
     
     /**
      * Validates the current value
+     * 
+     * Проверяет текущее значение
      */
     boolean isValid();
     
     /**
      * Checks if this value represents text
      * @return true if this value is a string or can be converted to a string
+     * 
+     * Проверяет, представляет ли это значение текст
+     * @return true, если это значение является строкой или может быть преобразовано в строку
      */
     default boolean isText() {
         return getValue() instanceof String || getValue() instanceof CharSequence;
@@ -74,6 +100,9 @@ public interface DataValue extends ConfigurationSerializable {
     /**
      * Checks if this value represents a number
      * @return true if this value is a number or can be converted to a number
+     * 
+     * Проверяет, представляет ли это значение число
+     * @return true, если это значение является числом или может быть преобразовано в число
      */
     default boolean isNumber() {
         try {
@@ -86,12 +115,16 @@ public interface DataValue extends ConfigurationSerializable {
     
     /**
      * Gets a human-readable description of this value
+     * 
+     * Получает человекочитаемое описание этого значения
      */
     @org.jetbrains.annotations.NotNull
     String getDescription();
     
     /**
      * Creates a deep copy of this value
+     * 
+     * Создает глубокую копию этого значения
      */
     @org.jetbrains.annotations.NotNull
     DataValue copy();
@@ -100,6 +133,10 @@ public interface DataValue extends ConfigurationSerializable {
      * Creates a DataValue from an object
      * @param value The value to convert
      * @return A new DataValue instance
+     * 
+     * Создает DataValue из объекта
+     * @param value Значение для преобразования
+     * @return Новый экземпляр DataValue
      */
     static @org.jetbrains.annotations.NotNull DataValue of(@org.jetbrains.annotations.NotNull Object value) {
         return DataValue.fromObject(value);
@@ -107,12 +144,16 @@ public interface DataValue extends ConfigurationSerializable {
     
     /**
      * Serializes this value to a map for storage
+     * 
+     * Сериализует это значение в карту для хранения
      */
     @org.jetbrains.annotations.NotNull
     Map<String, Object> serialize();
     
     /**
      * Deserializes a value from a map
+     * 
+     * Десериализует значение из карты
      */
     static @org.jetbrains.annotations.NotNull DataValue deserialize(@org.jetbrains.annotations.NotNull Map<String, Object> map) {
         ValueType type = ValueType.valueOf((String) map.get("type"));
@@ -140,6 +181,8 @@ public interface DataValue extends ConfigurationSerializable {
     
     /**
      * Creates a value from an object with automatic type detection
+     * 
+     * Создает значение из объекта с автоматическим определением типа
      */
     static @org.jetbrains.annotations.NotNull DataValue fromObject(@org.jetbrains.annotations.NotNull Object object) {
         if (object instanceof String) return new TextValue((String) object);
@@ -172,6 +215,8 @@ public interface DataValue extends ConfigurationSerializable {
     
     /**
      * Converts between compatible types
+     * 
+     * Преобразует между совместимыми типами
      */
     static @org.jetbrains.annotations.NotNull DataValue convert(@org.jetbrains.annotations.NotNull DataValue value, @org.jetbrains.annotations.NotNull ValueType targetType) {
         if (value.getType() == targetType) return value;

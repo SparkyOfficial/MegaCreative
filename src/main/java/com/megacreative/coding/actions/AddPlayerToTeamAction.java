@@ -16,6 +16,11 @@ import org.bukkit.scoreboard.Team;
 /**
  * Action for adding a player to a team.
  * This action retrieves parameters from the new parameter system with fallback to container configuration.
+ * 
+ * Действие для добавления игрока в команду.
+ * Это действие получает параметры из новой системы параметров с резервным вариантом на конфигурацию контейнера.
+ * 
+ * @author Андрій Budильников
  */
 @BlockMeta(id = "addPlayerToTeam", displayName = "§aAdd Player To Team", type = BlockType.ACTION)
 public class AddPlayerToTeamAction implements BlockAction {

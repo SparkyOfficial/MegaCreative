@@ -26,6 +26,20 @@ import java.util.logging.Logger;
  * - Potions with names become effect values
  * - Apples with special names become dynamic values
  * - Magma cream becomes dynamic variables
+ * 
+ * Парсер, который извлекает параметры из сундуков, размещенных рядом со знаками.
+ * Эта система позволяет игрокам визуально настраивать параметры скрипта, размещая предметы в сундуках,
+ * делая систему намного более удобной для пользователя, чем традиционные файлы конфигурации.
+ * 
+ * Парсер распознает различные типы предметов и преобразует их в соответствующие значения данных:
+ * - Книги с именами становятся текстовыми значениями
+ * - Слизневые шары с именами становятся числовыми значениями
+ * - Бумага с именами становится значениями местоположения
+ * - Зелья с именами становятся значениями эффектов
+ * - Яблоки со специальными именами становятся динамическими значениями
+ * - Магмовый крем становится динамическими переменными
+ * 
+ * @author Андрій Budильников
  */
 public class ChestParser {
     
@@ -43,6 +57,10 @@ public class ChestParser {
      * Creates a ChestParser for a chest block adjacent to a sign
      * @param signLocation The location of the sign
      * @return The ChestParser, or null if no chest is found
+     * 
+     * Создает ChestParser для блока сундука, примыкающего к знаку
+     * @param signLocation Расположение знака
+     * @return ChestParser или null, если сундук не найден
      */
     public static ChestParser forAdjacentChest(Location signLocation) {
         
@@ -63,6 +81,10 @@ public class ChestParser {
      * Gets text from an item in the chest
      * @param slot The slot index (0-26 for single chest)
      * @return The text value, or null if not found
+     * 
+     * Получает текст из предмета в сундуке
+     * @param slot Индекс слота (0-26 для одиночного сундука)
+     * @return Текстовое значение или null, если не найдено
      */
     public String getText(int slot) {
         if (slot < 0 || slot >= chestInventory.getSize()) {
@@ -89,6 +111,10 @@ public class ChestParser {
      * Gets a number from an item in the chest
      * @param slot The slot index (0-26 for single chest)
      * @return The numeric value, or 0 if not found
+     * 
+     * Получает число из предмета в сундуке
+     * @param slot Индекс слота (0-26 для одиночного сундука)
+     * @return Числовое значение или 0, если не найдено
      */
     public double getNumber(int slot) {
         if (slot < 0 || slot >= chestInventory.getSize()) {
@@ -119,6 +145,10 @@ public class ChestParser {
      * Gets a location from an item in the chest
      * @param slot The slot index (0-26 for single chest)
      * @return The location value, or null if not found
+     * 
+     * Получает местоположение из предмета в сундуке
+     * @param slot Индекс слота (0-26 для одиночного сундука)
+     * @return Значение местоположения или null, если не найдено
      */
     public Location getLocation(int slot) {
         if (slot < 0 || slot >= chestInventory.getSize()) {
@@ -157,6 +187,10 @@ public class ChestParser {
      * Gets an item stack from a slot in the chest
      * @param slot The slot index (0-26 for single chest)
      * @return The item stack, or null if not found
+     * 
+     * Получает стек предметов из слота в сундуке
+     * @param slot Индекс слота (0-26 для одиночного сундука)
+     * @return Стек предметов или null, если не найден
      */
     public ItemStack getItem(int slot) {
         if (slot < 0 || slot >= chestInventory.getSize()) {
@@ -169,6 +203,9 @@ public class ChestParser {
     /**
      * Gets all items from the chest as a list
      * @return List of all items in the chest
+     * 
+     * Получает все предметы из сундука в виде списка
+     * @return Список всех предметов в сундуке
      */
     public List<ItemStack> getAllItems() {
         List<ItemStack> items = new ArrayList<>();
@@ -184,6 +221,9 @@ public class ChestParser {
     /**
      * Gets the chest inventory
      * @return The chest inventory
+     * 
+     * Получает инвентарь сундука
+     * @return Инвентарь сундука
      */
     public Inventory getChestInventory() {
         return chestInventory;
@@ -192,6 +232,9 @@ public class ChestParser {
     /**
      * Gets the chest location
      * @return The chest location
+     * 
+     * Получает местоположение сундука
+     * @return Местоположение сундука
      */
     public Location getChestLocation() {
         return chestLocation;

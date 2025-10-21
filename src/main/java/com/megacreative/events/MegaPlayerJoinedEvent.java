@@ -8,6 +8,12 @@ import org.jetbrains.annotations.NotNull;
 /**
  * Custom event for when a player joins the server
  * This event is fired when a player joins, after being processed by our Bukkit listener
+ * 
+ * Пользовательское событие для присоединения игрока к серверу
+ * Это событие срабатывает при присоединении игрока, после обработки нашим слушателем Bukkit
+ * 
+ * Benutzerdefiniertes Ereignis für den Beitritt eines Spielers zum Server
+ * Dieses Ereignis wird ausgelöst, wenn ein Spieler beitritt, nachdem es von unserem Bukkit-Listener verarbeitet wurde
  */
 public class MegaPlayerJoinedEvent extends Event {
     private static final HandlerList handlers = new HandlerList();

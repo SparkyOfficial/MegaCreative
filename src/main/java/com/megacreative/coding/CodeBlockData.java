@@ -6,6 +6,11 @@ import java.util.*;
 /**
  * Safe serializable data transfer object for CodeBlock.
  * Contains only serializable data, avoiding complex Bukkit objects that cause serialization issues.
+ * 
+ * Безопасный сериализуемый объект передачи данных для CodeBlock.
+ * Содержит только сериализуемые данные, избегая сложных объектов Bukkit, которые вызывают проблемы с сериализацией.
+ * 
+ * @author Андрій Budильников
  */
 public class CodeBlockData {
     public UUID id;
@@ -21,10 +26,12 @@ public class CodeBlockData {
 
     /**
      * Constructor that converts a "live" CodeBlock to "serializable" data
+     * 
+     * Конструктор, который преобразует "живой" CodeBlock в "сериализуемые" данные
      */
     public CodeBlockData(CodeBlock block) {
         this.id = block.getId();
-        this.materialName = block.getMaterial() != null ? block.getMaterial().name() : null;
+        this.materialName = block.getMaterialName();
         this.action = block.getAction();
         
         

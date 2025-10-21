@@ -4,6 +4,12 @@ package com.megacreative.coding;
  * Centralized constants for the MegaCreative plugin.
  * This class contains commonly used string literals to avoid duplication
  * and improve maintainability across the codebase.
+ * 
+ * Централизованные константы для плагина MegaCreative.
+ * Этот класс содержит часто используемые строковые литералы для избежания дублирования
+ * и улучшения поддержки кода.
+ * 
+ * @author Андрій Budильников
  */
 public class Constants {
     

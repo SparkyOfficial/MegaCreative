@@ -71,6 +71,10 @@ public class MegaCreative extends JavaPlugin {
     
     /**
      * Initialize dependency injection container and service registry
+     * 
+     * Инициализирует контейнер внедрения зависимостей и реестр сервисов
+     * 
+     * Initialisiert den Dependency Injection Container und die Service-Registry
      */
     private void initializeDependencyInjection() {
         
@@ -94,6 +98,10 @@ public class MegaCreative extends JavaPlugin {
     
     /**
      * Bootstrap the application by starting core services
+     * 
+     * Загружает приложение, запуская основные сервисы
+     * 
+     * Bootstrapt die Anwendung durch Starten der Kernservices
      */
     private void bootstrap() {
         
@@ -117,6 +125,10 @@ public class MegaCreative extends JavaPlugin {
     
     /**
      * Load worlds after Bukkit is fully initialized
+     * 
+     * Загружает миры после полной инициализации Bukkit
+     * 
+     * Lädt Welten nach vollständiger Initialisierung von Bukkit
      */
     private void loadWorlds() {
         try {
@@ -138,6 +150,10 @@ public class MegaCreative extends JavaPlugin {
     
     /**
      * Register all event listeners
+     * 
+     * Регистрирует все слушатели событий
+     * 
+     * Registriert alle Event-Listener
      */
     private void registerEvents() {
         
@@ -191,6 +207,10 @@ public class MegaCreative extends JavaPlugin {
     
     /**
      * Register all commands
+     * 
+     * Регистрирует все команды
+     * 
+     * Registriert alle Befehle
      */
     private void registerCommands() {
         if (commandRegistry != null) {
@@ -200,6 +220,10 @@ public class MegaCreative extends JavaPlugin {
     
     /**
      * Start the tick scheduler for our custom tick events
+     * 
+     * Запускает планировщик тиков для наших пользовательских событий тиков
+     * 
+     * Startet den Tick-Scheduler für unsere benutzerdefinierten Tick-Ereignisse
      */
     private void startTickScheduler() {
         tickTask = new BukkitRunnable() {
@@ -224,6 +248,10 @@ public class MegaCreative extends JavaPlugin {
     
     /**
      * Start the auto-save system
+     * 
+     * Запускает систему автоматического сохранения
+     * 
+     * Startet das automatische Speichersystem
      */
     private void startAutoSaveSystem() {
         com.megacreative.utils.ConfigManager cfg = serviceRegistry != null ? serviceRegistry.getConfigManager() : null;

@@ -12,61 +12,84 @@ import java.util.*;
  * Represents a single block in a script.
  * Contains type, parameters and references to other blocks.
  * Simplified to be a pure data object without plugin dependencies.
+ * 
+ * Представляет собой один блок в скрипте.
+ * Содержит тип, параметры и ссылки на другие блоки.
+ * Упрощен до чистого объекта данных без зависимостей от плагина.
+ * 
+ * @author Андрій Будильников
  */
 public class CodeBlock implements Cloneable {
     
     
-    /** Unique block identifier */
+    /** Unique block identifier 
+     *  Уникальный идентификатор блока */
     private UUID id;
     
     
     
-    /** Selected action (e.g. onJoin, sendMessage) */
+    /** Selected action (e.g. onJoin, sendMessage) 
+     *  Выбранное действие (например, onJoin, sendMessage) */
     private String action;
     
-    /** Selected event (e.g. onJoin, onLeave) */
+    /** Selected event (e.g. onJoin, onLeave) 
+     *  Выбранное событие (например, onJoin, onLeave) */
     private String event;
     
-    /** Block parameters */
+    /** Block parameters 
+     *  Параметры блока */
     private Map<String, DataValue> parameters;
     
-    /** Nested blocks (e.g. inside IF condition) */
+    /** Nested blocks (e.g. inside IF condition) 
+     *  Вложенные блоки (например, внутри условия IF) */
     private List<CodeBlock> children;
     
-    /** Next block in sequence */
+    /** Next block in sequence 
+     *  Следующий блок в последовательности */
     private CodeBlock nextBlock;
     
-    /** Configuration items */
+    /** Configuration items 
+     *  Элементы конфигурации */
     private Map<Integer, ItemStack> configItems;
     
-    /** Item groups for complex configurations */
+    /** Item groups for complex configurations 
+     *  Группы предметов для сложных конфигураций */
     private Map<String, List<Integer>> itemGroups;
     
-    /** Bracket type for grouping blocks */
+    /** Bracket type for grouping blocks 
+     *  Тип скобок для группировки блоков */
     private BracketType bracketType = null;
     
-    /** World ID where the block is located */
+    /** World ID where the block is located 
+     *  ID мира, где находится блок */
     private String worldId;
     
-    /** X coordinate of the block */
+    /** X coordinate of the block 
+     *  X координата блока */
     private int x;
     
-    /** Y coordinate of the block */
+    /** Y coordinate of the block 
+     *  Y координата блока */
     private int y;
     
-    /** Z coordinate of the block */
+    /** Z coordinate of the block 
+     *  Z координата блока */
     private int z;
     
-    /** Material name instead of Material object */
+    /** Material name instead of Material object 
+     *  Название материала вместо объекта Material */
     private String materialName;
     
-    /** Else block for conditional statements */
+    /** Else block for conditional statements 
+     *  Блок else для условных операторов */
     private CodeBlock elseBlock;
     
     
     
     /**
      * Enum for bracket types - used for grouping code blocks
+     * 
+     * Перечисление для типов скобок - используется для группировки блоков кода
      */
     public enum BracketType {
         OPEN("Opening Bracket", "{"),
@@ -88,6 +111,8 @@ public class CodeBlock implements Cloneable {
     
     /**
      * Default constructor
+     * 
+     * Конструктор по умолчанию
      */
     public CodeBlock() {
         this.id = UUID.randomUUID();
@@ -100,7 +125,9 @@ public class CodeBlock implements Cloneable {
     /**
      * Constructor with basic parameters
      * @param materialName Block material name
-     * @param action Block action
+     * 
+     * Конструктор с базовыми параметрами
+     * @param materialName Название материала блока
      */
     public CodeBlock(String materialName, String action) {
         this();
@@ -113,6 +140,11 @@ public class CodeBlock implements Cloneable {
      * @param materialName Block material name
      * @param action Block action
      * @param event Block event
+     * 
+     * Конструктор с параметрами действия и события
+     * @param materialName Название материала блока
+     * @param action Действие блока
+     * @param event Событие блока
      */
     public CodeBlock(String materialName, String action, String event) {
         this();
@@ -129,31 +161,6 @@ public class CodeBlock implements Cloneable {
     
     public void setId(UUID id) { 
         this.id = id; 
-    }
-    
-    /**
-     * Gets the material of this block
-     * @return Block material or STONE in case of error
-     */
-    public Material getMaterial() { 
-        if (materialName != null) {
-            try {
-                return Material.valueOf(materialName);
-            } catch (IllegalArgumentException e) {
-                return Material.STONE; 
-            }
-        }
-        return Material.STONE; 
-    }
-    
-    /**
-     * Sets the material of this block
-     * @param material Block material
-     */
-    public void setMaterial(Material material) { 
-        if (material != null) {
-            this.materialName = material.name();
-        }
     }
     
     public String getAction() { 

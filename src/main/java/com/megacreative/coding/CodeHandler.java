@@ -19,6 +19,17 @@ import java.util.concurrent.atomic.AtomicInteger;
  * 2. Receiving events from activators
  * 3. Finding and executing the appropriate scripts
  * 4. Coordinating the execution flow
+ * 
+ * Централизованный менеджер выполнения скриптов, который обрабатывает поток от активаторов к действиям.
+ * Этот класс служит "клеем", который соединяет систему событий с системой выполнения скриптов.
+ * 
+ * CodeHandler отвечает за:
+ * 1. Управление всеми активаторами в творческом мире
+ * 2. Получение событий от активаторов
+ * 3. Поиск и выполнение соответствующих скриптов
+ * 4. Координацию потока выполнения
+ * 
+ * @author Андрій Budильников
  */
 public class CodeHandler {
     
@@ -39,6 +50,9 @@ public class CodeHandler {
     /**
      * Registers an activator with this code handler
      * @param activator The activator to register
+     * 
+     * Регистрирует активатор с этим обработчиком кода
+     * @param activator Активатор для регистрации
      */
     public void registerActivator(Activator activator) {
         activators.put(activator.getId(), activator);
@@ -48,6 +62,9 @@ public class CodeHandler {
     /**
      * Unregisters an activator from this code handler
      * @param activatorId The ID of the activator to unregister
+     * 
+     * Отменяет регистрацию активатора из этого обработчика кода
+     * @param activatorId ID активатора для отмены регистрации
      */
     public void unregisterActivator(UUID activatorId) {
         Activator removed = activators.remove(activatorId);
@@ -60,6 +77,10 @@ public class CodeHandler {
      * Gets an activator by its ID
      * @param activatorId The ID of the activator to get
      * @return The activator, or null if not found
+     * 
+     * Получает активатор по его ID
+     * @param activatorId ID активатора для получения
+     * @return Активатор или null, если не найден
      */
     public Activator getActivator(UUID activatorId) {
         return activators.get(activatorId);
@@ -69,6 +90,10 @@ public class CodeHandler {
      * Gets all activators of a specific type
      * @param type The activator type to filter by
      * @return List of activators of the specified type
+     * 
+     * Получает все активаторы определенного типа
+     * @param type Тип активатора для фильтрации
+     * @return Список активаторов указанного типа
      */
     public List<Activator> getActivatorsByType(com.megacreative.coding.activators.ActivatorType type) {
         List<Activator> result = new ArrayList<>();
@@ -85,6 +110,11 @@ public class CodeHandler {
      * @param activatorType The type of activator to trigger
      * @param gameEvent The game event containing context data
      * @param player The player associated with the event (can be null)
+     * 
+     * Обрабатывает событие, выполняя все активаторы соответствующего типа
+     * @param activatorType Тип активатора для запуска
+     * @param gameEvent Игровое событие, содержащее контекстные данные
+     * @param player Игрок, связанный с событием (может быть null)
      */
     public void handleEvent(com.megacreative.coding.activators.ActivatorType activatorType, GameEvent gameEvent, Player player) {
         
@@ -114,6 +144,9 @@ public class CodeHandler {
     /**
      * Gets all registered activators
      * @return Collection of all activators
+     * 
+     * Получает все зарегистрированные активаторы
+     * @return Коллекция всех активаторов
      */
     public Collection<Activator> getAllActivators() {
         return new ArrayList<>(activators.values());
@@ -122,6 +155,9 @@ public class CodeHandler {
     /**
      * Gets the creative world this code handler manages
      * @return The creative world
+     * 
+     * Получает творческий мир, которым управляет этот обработчик кода
+     * @return Творческий мир
      */
     public CreativeWorld getCreativeWorld() {
         return creativeWorld;
@@ -130,6 +166,9 @@ public class CodeHandler {
     /**
      * Gets the script engine used by this code handler
      * @return The script engine
+     * 
+     * Получает движок скриптов, используемый этим обработчиком кода
+     * @return Движок скриптов
      */
     public ScriptEngine getScriptEngine() {
         return scriptEngine;
@@ -137,6 +176,8 @@ public class CodeHandler {
     
     /**
      * Clears all activators from this code handler
+     * 
+     * Очищает все активаторы из этого обработчика кода
      */
     public void clearActivators() {
         activators.clear();
@@ -146,6 +187,9 @@ public class CodeHandler {
     /**
      * Gets the number of registered activators
      * @return The count of activators
+     * 
+     * Получает количество зарегистрированных активаторов
+     * @return Количество активаторов
      */
     public int getActivatorCount() {
         return activators.size();
@@ -155,6 +199,10 @@ public class CodeHandler {
      * Starts a game loop with the specified name
      * @param name The name of the game loop
      * @param gameEvent The game event to pass to the loop
+     * 
+     * Запускает игровой цикл с указанным именем
+     * @param name Имя игрового цикла
+     * @param gameEvent Игровое событие для передачи в цикл
      */
     public void startGameLoop(String name, GameEvent gameEvent) {
         
@@ -172,6 +220,10 @@ public class CodeHandler {
      * Calls a function with the specified name
      * @param name The name of the function to call
      * @param gameEvent The game event to pass to the function
+     * 
+     * Вызывает функцию с указанным именем
+     * @param name Имя функции для вызова
+     * @param gameEvent Игровое событие для передачи в функцию
      */
     public void callFunction(String name, GameEvent gameEvent) {
         

@@ -6,6 +6,10 @@ import java.util.*;
 
 /**
  * Represents a custom event that can be triggered and handled within scripts
+ * 
+ * Представляет собой пользовательское событие, которое может быть запущено и обработано в скриптах
+ * 
+ * @author Андрій Будильников
  */
 public class CustomEvent {
     
@@ -95,6 +99,8 @@ public class CustomEvent {
     
     /**
      * Adds a data field to this event
+     * 
+     * Добавляет поле данных к этому событию
      */
     public CustomEvent addDataField(String fieldName, Class<?> fieldType, boolean required, String description) {
         EventDataField field = new EventDataField(fieldName, fieldType, required, description);
@@ -104,6 +110,8 @@ public class CustomEvent {
     
     /**
      * Adds a data field with default value
+     * 
+     * Добавляет поле данных со значением по умолчанию
      */
     public CustomEvent addDataField(String fieldName, Class<?> fieldType, DataValue defaultValue, String description) {
         EventDataField field = new EventDataField(fieldName, fieldType, defaultValue != null, description);
@@ -114,6 +122,8 @@ public class CustomEvent {
     
     /**
      * Validates event data against the schema
+     * 
+     * Проверяет данные события на соответствие схеме
      */
     public void validateEventData(Map<String, DataValue> eventData) {
         
@@ -144,6 +154,8 @@ public class CustomEvent {
     
     /**
      * Prepares event data with defaults
+     * 
+     * Подготавливает данные события со значениями по умолчанию
      */
     public Map<String, DataValue> prepareEventData(Map<String, DataValue> providedData) {
         Map<String, DataValue> effectiveData = new HashMap<>(providedData);
@@ -160,6 +172,8 @@ public class CustomEvent {
     
     /**
      * Adds a tag to this event
+     * 
+     * Добавляет тег к этому событию
      */
     public CustomEvent addTag(String tag) {
         this.tags.add(tag.toLowerCase());
@@ -168,6 +182,8 @@ public class CustomEvent {
     
     /**
      * Checks if event has a specific tag
+     * 
+     * Проверяет, имеет ли событие определенный тег
      */
     public boolean hasTag(String tag) {
         return this.tags.contains(tag.toLowerCase());
@@ -175,6 +191,8 @@ public class CustomEvent {
     
     /**
      * Gets event signature as string
+     * 
+     * Получает сигнатуру события в виде строки
      */
     public String getSignature() {
         StringBuilder sb = new StringBuilder();
@@ -197,6 +215,8 @@ public class CustomEvent {
     
     /**
      * Creates a copy of this event definition
+     * 
+     * Создает копию определения этого события
      */
     public CustomEvent copy() {
         CustomEvent copy = new CustomEvent(this.name + "_copy", this.author);

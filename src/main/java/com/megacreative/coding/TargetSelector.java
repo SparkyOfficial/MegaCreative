@@ -11,6 +11,10 @@ import java.util.Map;
 
 /**
  * Target selector system for actions, similar to Minecraft's @a, @p, @r, @s selectors
+ * 
+ * Система выбора целей для действий, аналогичная селекторам Minecraft @a, @p, @r, @s
+ * 
+ * @author Андрій Budильников
  */
 public class TargetSelector {
     
@@ -57,6 +61,10 @@ public class TargetSelector {
      * Resolves the target selector to a list of players
      * @param context The execution context
      * @return List of target players
+     * 
+     * Разрешает селектор целей в список игроков
+     * @param context Контекст выполнения
+     * @return Список целевых игроков
      */
     public List<Player> resolveTargets(ExecutionContext context) {
         List<Player> targets = new ArrayList<>();
@@ -112,6 +120,11 @@ public class TargetSelector {
      * @param targets The list of potential targets
      * @param context The execution context
      * @return Filtered list of targets
+     * 
+     * Применяет фильтры к списку целей на основе аргументов селектора
+     * @param targets Список потенциальных целей
+     * @param context Контекст выполнения
+     * @return Отфильтрованный список целей
      */
     private List<Player> applyFilters(List<Player> targets, ExecutionContext context) {
         
@@ -142,6 +155,13 @@ public class TargetSelector {
      * @param targets The list of targets to filter
      * @param context The execution context
      * @param allArguments All parsed arguments for coordinate-based calculations
+     * 
+     * Обрабатывает один аргумент селектора
+     * @param key Ключ аргумента (например, "r" или "name")
+     * @param value Значение аргумента (например, "5" или "Steve")
+     * @param targets Список целей для фильтрации
+     * @param context Контекст выполнения
+     * @param allArguments Все разобранные аргументы для расчетов на основе координат
      */
     private void processArgument(String key, String value, List<Player> targets, ExecutionContext context, Map<String, String> allArguments) {
         switch (key) {
@@ -162,16 +182,20 @@ public class TargetSelector {
             case ARG_Y: 
             case ARG_Z: 
                 // These arguments are handled elsewhere or don't require filtering
+                // Эти аргументы обрабатываются в другом месте или не требуют фильтрации
                 break;
                 
             default:
                 // Unknown argument, ignore
+                // Неизвестный аргумент, игнорировать
                 break;
         }
     }
     
     /**
      * Apply radius filter to targets using either player location or specified coordinates
+     * 
+     * Применяет фильтр радиуса к целям, используя либо местоположение игрока, либо указанные координаты
      */
     private void applyRadiusFilter(List<Player> targets, ExecutionContext context, String radiusValue, Map<String, String> allArguments) {
         try {
@@ -185,12 +209,19 @@ public class TargetSelector {
             // Log exception and continue processing
             // This is expected behavior when parsing user input
             // Silently ignore invalid parameters and continue with other operations
+            // Записываем ошибку, но продолжаем с поведением по умолчанию
+            // Записываем исключение и продолжаем обработку
+            // Это ожидаемое поведение при разборе пользовательского ввода
+            // Тихо игнорируем недействительные параметры и продолжаем с другими операциями
         }
     }
     
     /**
      * Get reference location for distance calculations.
      * Uses specified coordinates if provided, otherwise uses player location.
+     * 
+     * Получает эталонное местоположение для расчета расстояния.
+     * Использует указанные координаты, если они предоставлены, иначе использует местоположение игрока.
      */
     private Location getReferenceLocation(ExecutionContext context, Map<String, String> arguments) {
         Location playerLocation = context.getPlayer().getLocation();
@@ -207,6 +238,10 @@ public class TargetSelector {
                 // Log exception and continue processing
             // This is expected behavior when parsing user input
             // Silently ignore invalid parameters and continue with other operations
+                // Записываем ошибку, но продолжаем с координатой по умолчанию
+                // Записываем исключение и продолжаем обработку
+            // Это ожидаемое поведение при разборе пользовательского ввода
+            // Тихо игнорируем недействительные параметры и продолжаем с другими операциями
             }
         }
         
@@ -218,6 +253,10 @@ public class TargetSelector {
                 // Log exception and continue processing
             // This is expected behavior when parsing user input
             // Silently ignore invalid parameters and continue with other operations
+                // Записываем ошибку, но продолжаем с координатой по умолчанию
+                // Записываем исключение и продолжаем обработку
+            // Это ожидаемое поведение при разборе пользовательского ввода
+            // Тихо игнорируем недействительные параметры и продолжаем с другими операциями
             }
         }
         
@@ -229,6 +268,10 @@ public class TargetSelector {
                 // Log exception and continue processing
             // This is expected behavior when parsing user input
             // Silently ignore invalid parameters and continue with other operations
+                // Записываем ошибку, но продолжаем с координатой по умолчанию
+                // Записываем исключение и продолжаем обработку
+            // Это ожидаемое поведение при разборе пользовательского ввода
+            // Тихо игнорируем недействительные параметры и продолжаем с другими операциями
             }
         }
         
@@ -238,6 +281,8 @@ public class TargetSelector {
     
     /**
      * Apply game mode filter to targets
+     * 
+     * Применяет фильтр игрового режима к целям
      */
     private void applyGameModeFilter(List<Player> targets, String gameModeValue) {
         try {
@@ -264,11 +309,17 @@ public class TargetSelector {
             // Log exception and continue processing
             // This is expected behavior when parsing user input
             // Silently ignore invalid parameters and continue with other operations
+            // Записываем ошибку, но продолжаем с поведением игрового режима по умолчанию
+            // Записываем исключение и продолжаем обработку
+            // Это ожидаемое поведение при разборе пользовательского ввода
+            // Тихо игнорируем недействительные параметры и продолжаем с другими операциями
         }
     }
     
     /**
      * Apply name filter to targets
+     * 
+     * Применяет фильтр имени к целям
      */
     private void applyNameFilter(List<Player> targets, String nameValue) {
         targets.removeIf(player -> 
@@ -279,6 +330,10 @@ public class TargetSelector {
      * Finds the nearest player to the given player
      * @param player The reference player
      * @return The nearest player, or null if none found
+     * 
+     * Находит ближайшего игрока к заданному игроку
+     * @param player Эталонный игрок
+     * @return Ближайший игрок или null, если не найден
      */
     private Player findNearestPlayer(Player player) {
         Player nearest = null;
@@ -305,6 +360,10 @@ public class TargetSelector {
      * Finds a random player (excluding the reference player)
      * @param player The reference player
      * @return A random player, or null if none found
+     * 
+     * Находит случайного игрока (исключая эталонного игрока)
+     * @param player Эталонный игрок
+     * @return Случайный игрок или null, если не найден
      */
     private Player findRandomPlayer(Player player) {
         List<Player> players = new ArrayList<>(player.getWorld().getPlayers());
@@ -323,6 +382,10 @@ public class TargetSelector {
      * Parses a target selector string (e.g., "@p", "@a", "@r", "@s")
      * @param selector The selector string
      * @return A TargetSelector instance
+     * 
+     * Разбирает строку селектора целей (например, "@p", "@a", "@r", "@s")
+     * @param selector Строка селектора
+     * @return Экземпляр TargetSelector
      */
     public static TargetSelector parse(String selector) {
         if (selector == null || selector.isEmpty()) {
@@ -354,6 +417,10 @@ public class TargetSelector {
      * Parses advanced selectors with arguments
      * @param selector The selector string
      * @return A TargetSelector instance
+     * 
+     * Разбирает расширенные селекторы с аргументами
+     * @param selector Строка селектора
+     * @return Экземпляр TargetSelector
      */
     private static TargetSelector parseAdvancedSelector(String selector) {
         

@@ -169,17 +169,30 @@ public class WorldCommentsGUI implements GUIManager.ManagedGUIInterface {
     }
     
     /**
+     * Получает заголовок графического интерфейса
+     * @return Заголовок интерфейса
+     *
      * Gets the GUI title
      * @return Interface title
+     *
+     * Ruft den GUI-Titel ab
+     * @return Schnittstellentitel
      */
     @Override
     public String getGUITitle() {
         return "World Comments GUI for " + world.getName();
+        // Графический интерфейс комментариев к миру для " + world.getName();
     }
     
     /**
+     * Обрабатывает события кликов в инвентаре
+     * @param event Событие клика в инвентаре
+     *
      * Handles inventory click events
      * @param event Inventory click event
+     *
+     * Verarbeitet Inventarklick-Ereignisse
+     * @param event Inventarklick-Ereignis
      */
     @Override
     public void onInventoryClick(InventoryClickEvent event) {
@@ -192,23 +205,30 @@ public class WorldCommentsGUI implements GUIManager.ManagedGUIInterface {
         
         if (slot == 49) {
             // Add comment button
+            // Кнопка добавления комментария
             player.closeInventory();
             // TODO: Implement add comment functionality
+            // TODO: Реализовать функциональность добавления комментария
         } else if (slot == 45 && page > 0) {
             // Previous page button
+            // Кнопка предыдущей страницы
             new WorldCommentsGUI(plugin, player, world, page - 1).open();
         } else if (slot == 53 && (page + 1) * COMMENTS_PER_PAGE < world.getComments().size()) {
             // Next page button
+            // Кнопка следующей страницы
             new WorldCommentsGUI(plugin, player, world, page + 1).open();
         } else if (slot == 46) {
             // Back button
+            // Кнопка назад
             player.closeInventory();
             // TODO: Return to previous GUI
+            // TODO: Вернуться к предыдущему графическому интерфейсу
         }
     }
     
     @Override
     public void onInventoryClose(InventoryCloseEvent event) {
         // Clean up if needed
+        // Очистка при необходимости
     }
 }

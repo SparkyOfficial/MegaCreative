@@ -12,6 +12,11 @@ import java.util.logging.Logger;
 /**
  * Executor for control flow blocks
  * This executor handles CONTROL type blocks (if-else, while, for-each, etc.)
+ * 
+ * Исполнитель для блоков управления потоком
+ * Этот исполнитель обрабатывает блоки типа CONTROL (if-else, while, for-each и т.д.)
+ * 
+ * @author Андрій Budильников
  */
 public class ControlFlowBlockExecutor implements BlockExecutor {
     private static final Logger LOGGER = java.util.logging.Logger.getLogger(ControlFlowBlockExecutor.class.getName());
@@ -83,6 +88,9 @@ public class ControlFlowBlockExecutor implements BlockExecutor {
             // According to static analysis, conditionId is never null
             // This is a false positive - we need this check for safety
             // Removed redundant null check - static analysis flagged it as always non-null when this method is called
+            // Согласно статическому анализу, conditionId никогда не равен null
+            // Это ложное срабатывание - нам нужна эта проверка для безопасности
+            // Удалена избыточная проверка на null - статический анализ отметил ее как всегда ненулевую при вызове этого метода
             
             
             BlockCondition conditionHandler = conditionFactory.createCondition(conditionId);
@@ -122,6 +130,9 @@ public class ControlFlowBlockExecutor implements BlockExecutor {
             // According to static analysis, conditionId is never null
             // This is a false positive - we need this check for safety
             // Removed redundant null check - static analysis flagged it as always non-null when this method is called
+            // Согласно статическому анализу, conditionId никогда не равен null
+            // Это ложное срабатывание - нам нужна эта проверка для безопасности
+            // Удалена избыточная проверка на null - статический анализ отметил ее как всегда ненулевую при вызове этого метода
             
             
             int maxIterations = block.getParameterValue("maxIterations", Integer.class, MAX_LOOP_ITERATIONS);
@@ -154,6 +165,7 @@ public class ControlFlowBlockExecutor implements BlockExecutor {
             
             String conditionId = conditionValue.asString();
             // Removed redundant null check - static analysis flagged it as always non-null when this method is called
+            // Удалена избыточная проверка на null - статический анализ отметил ее как всегда ненулевую при вызове этого метода
             
             DataValue collectionValue = block.getParameter("collection");
             if (collectionValue == null || collectionValue.isEmpty()) {
@@ -163,6 +175,7 @@ public class ControlFlowBlockExecutor implements BlockExecutor {
             
             String collectionName = collectionValue.asString();
             // Removed redundant null check - static analysis flagged it as always non-null when this method is called
+            // Удалена избыточная проверка на null - статический анализ отметил ее как всегда ненулевую при вызове этого метода
             
             DataValue variableValue = block.getParameter("variable");
             if (variableValue == null || variableValue.isEmpty()) {
@@ -172,6 +185,7 @@ public class ControlFlowBlockExecutor implements BlockExecutor {
             
             String variableName = variableValue.asString();
             // Removed redundant null check - static analysis flagged it as always non-null when this method is called
+            // Удалена избыточная проверка на null - статический анализ отметил ее как всегда ненулевую при вызове этого метода
             
             LOGGER.fine("Processing for-each loop over collection: " + collectionName + " with variable: " + variableName);
             

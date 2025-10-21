@@ -6,6 +6,11 @@ import java.util.logging.Logger;
 /**
  * Executor for action blocks
  * This executor handles ACTION type blocks by delegating to the ActionFactory
+ * 
+ * Исполнитель для блоков действий
+ * Этот исполнитель обрабатывает блоки типа ACTION, делегируя их ActionFactory
+ * 
+ * @author Андрій Budильников
  */
 public class ActionBlockExecutor implements BlockExecutor {
     private static final Logger LOGGER = java.util.logging.Logger.getLogger(ActionBlockExecutor.class.getName());

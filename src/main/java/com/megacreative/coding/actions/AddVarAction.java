@@ -14,6 +14,11 @@ import org.bukkit.entity.Player;
 /**
  * Action for adding a value to a variable.
  * This action retrieves variable parameters from the new parameter system.
+ * 
+ * Действие для добавления значения к переменной.
+ * Это действие получает параметры переменной из новой системы параметров.
+ * 
+ * @author Андрій Budильников
  */
 @BlockMeta(id = "addVar", displayName = "§aAdd to Variable", type = BlockType.ACTION)
 public class AddVarAction implements BlockAction {
@@ -43,6 +48,8 @@ public class AddVarAction implements BlockAction {
 
             // Fix for Qodana issue: Condition varName == null is always false
             // This was a false positive - we need to properly check for empty strings
+            // Исправление для проблемы Qodana: Условие varName == null всегда false
+            // Это был ложный срабатывание - нам нужно правильно проверить пустые строки
             if (varName.isEmpty()) {
                 return ExecutionResult.error("Invalid variable name");
             }
@@ -62,6 +69,8 @@ public class AddVarAction implements BlockAction {
 
     /**
      * Parses a string value to double, returns Double.NaN if parsing fails
+     * 
+     * Преобразует строковое значение в double, возвращает Double.NaN при ошибке преобразования
      */
     private double parseValue(String valueStr) {
         try {
@@ -73,6 +82,8 @@ public class AddVarAction implements BlockAction {
 
     /**
      * Updates the variable value in the appropriate scope
+     * 
+     * Обновляет значение переменной в соответствующей области видимости
      */
     private ExecutionResult updateVariableValue(ExecutionContext context, String varName, double valueToAdd) {
         VariableManager variableManager = context.getPlugin().getServiceRegistry().getVariableManager();
@@ -93,6 +104,8 @@ public class AddVarAction implements BlockAction {
 
     /**
      * Finds the scope of an existing variable
+     * 
+     * Находит область видимости существующей переменной
      */
     private VariableScopeInfo findVariableScope(VariableManager variableManager, Player player, String scriptId, String varName) {
         
@@ -143,6 +156,8 @@ public class AddVarAction implements BlockAction {
 
     /**
      * Gets the current numeric value of a variable, defaults to 0 if not a number
+     * 
+     * Получает текущее числовое значение переменной, по умолчанию 0, если не число
      */
     private double getCurrentVariableValue(DataValue variable) {
         if (variable == null) {
@@ -157,6 +172,8 @@ public class AddVarAction implements BlockAction {
 
     /**
      * Sets the variable value in the appropriate scope
+     * 
+     * Устанавливает значение переменной в соответствующей области видимости
      */
     private void setVariableValue(VariableManager variableManager, VariableScopeInfo scopeInfo,
                                    String varName, double newValue, String scriptId, Player player) {
@@ -189,6 +206,8 @@ public class AddVarAction implements BlockAction {
 
     /**
      * Helper class to hold variable scope information
+     * 
+     * Вспомогательный класс для хранения информации об области видимости переменной
      */
     private static class VariableScopeInfo {
         private final DataValue currentVar;

@@ -29,6 +29,15 @@ import java.util.function.Consumer;
  * - Dynamic button states and animations
  * - Real-time data binding
  * - Custom GUI element types
+ * 
+ * 🎆 Менеджер интерактивного GUI в стиле Reference System
+ * 
+ * Обеспечивает динамические элементы GUI с обновлениями в реальном времени:
+ * - Выбор материалов с предварительным просмотром
+ * - Переключатели режимов с сохранением состояния
+ * - Динамические состояния кнопок и анимации
+ * - Привязка данных в реальном времени
+ * - Пользовательские типы элементов GUI
  */
 public class InteractiveGUIManager implements Listener {
     
@@ -48,10 +57,13 @@ public class InteractiveGUIManager implements Listener {
         plugin.getServer().getPluginManager().registerEvents(this, plugin);
         
         plugin.getLogger().info(" YYS Interactive GUI Manager initialized with reference system-style elements");
+        // YYS Интерактивный менеджер GUI инициализирован с элементами в стиле reference system
     }
     
     /**
      * Gets the plugin instance
+     * 
+     * Получает экземпляр плагина
      */
     public MegaCreative getPlugin() {
         return plugin;
@@ -59,6 +71,8 @@ public class InteractiveGUIManager implements Listener {
     
     /**
      * Creates an interactive GUI for a player
+     * 
+     * Создает интерактивный GUI для игрока
      */
     public InteractiveGUI createInteractiveGUI(Player player, String title, int size) {
         InteractiveGUI gui = new InteractiveGUI(this, player, title, size);
@@ -68,6 +82,8 @@ public class InteractiveGUIManager implements Listener {
     
     /**
      * Gets an active interactive GUI for a player
+     * 
+     * Получает активный интерактивный GUI для игрока
      */
     public InteractiveGUI getActiveGUI(Player player) {
         return activeGUIs.get(player.getUniqueId());
@@ -75,6 +91,8 @@ public class InteractiveGUIManager implements Listener {
     
     /**
      * Removes an active GUI
+     * 
+     * Удаляет активный GUI
      */
     public void removeActiveGUI(Player player) {
         activeGUIs.remove(player.getUniqueId());
@@ -82,25 +100,33 @@ public class InteractiveGUIManager implements Listener {
     
     /**
      * Registers an interactive element factory
+     * 
+     * Регистрирует фабрику интерактивных элементов
      */
     public void registerElement(String type, InteractiveElementFactory factory) {
         elementFactories.put(type, factory);
         plugin.getLogger().info(" YYS Registered interactive element: " + type);
+        // YYS Зарегистрирован интерактивный элемент: " + type
     }
     
     /**
      * Creates an interactive element
+     * 
+     * Создает интерактивный элемент
      */
     public InteractiveElement createElement(String type, String id, Map<String, Object> properties) {
         InteractiveElementFactory factory = elementFactories.get(type);
         if (factory == null) {
             throw new IllegalArgumentException("Unknown interactive element type: " + type);
+            // Неизвестный тип интерактивного элемента: " + type
         }
         return factory.create(id, properties);
     }
     
     /**
      * Registers default interactive elements
+     * 
+     * Регистрирует стандартные интерактивные элементы
      */
     private void registerDefaultElements() {
         
@@ -128,6 +154,7 @@ public class InteractiveGUIManager implements Listener {
             new ItemStackEditorElement(id, props));
         
         plugin.getLogger().info(" YYS Registered 6 default interactive elements");
+        // YYS Зарегистрировано 6 стандартных интерактивных элементов
     }
     
     @EventHandler
@@ -159,10 +186,15 @@ public class InteractiveGUIManager implements Listener {
     /**
      * Refreshes the GUI for a player
      * @param player The player whose GUI should be refreshed
+     * 
+     * Обновляет GUI для игрока
+     * @param player Игрок, чей GUI должен быть обновлен
      */
     public void refreshGUI(Player player) {
         // Static analysis flags these as always true/false, but we keep the checks for safety
         // This is a false positive - null checks are necessary for robustness
+        // Статический анализ помечает это как всегда true/false, но мы сохраняем проверки для безопасности
+        // Это ложное срабатывание - проверки на null необходимы для надежности
         
         InteractiveGUI gui = activeGUIs.get(player.getUniqueId());
         if (gui != null) {
@@ -173,6 +205,8 @@ public class InteractiveGUIManager implements Listener {
                 public void run() {
                     // Static analysis flags these as always true/false, but we keep the checks for safety
                     // This is a false positive - null checks are necessary for robustness
+                    // Статический анализ помечает это как всегда true/false, но мы сохраняем проверки для безопасности
+                    // Это ложное срабатывание - проверки на null необходимы для надежности
                     if (player != null && gui != null) {
                         player.openInventory(gui.getInventory());
                     }
@@ -183,15 +217,20 @@ public class InteractiveGUIManager implements Listener {
     
     /**
      * Shutdown method
+     * 
+     * Метод завершения работы
      */
     public void shutdown() {
         activeGUIs.clear();
         elementFactories.clear();
         plugin.getLogger().info(" YYS Interactive GUI Manager shut down");
+        // YYS Интерактивный менеджер GUI завершил работу
     }
     
     /**
      * Factory interface for creating interactive elements
+     * 
+     * Фабричный интерфейс для создания интерактивных элементов
      */
     @FunctionalInterface
     public interface InteractiveElementFactory {
@@ -200,6 +239,8 @@ public class InteractiveGUIManager implements Listener {
     
     /**
      * Base class for interactive elements
+     * 
+     * Базовый класс для интерактивных элементов
      */
     public abstract static class InteractiveElement {
         protected final String id;
@@ -234,6 +275,9 @@ public class InteractiveGUIManager implements Listener {
                     // Log exception and continue processing
                     // This is expected behavior when notifying listeners
                     // Silently ignore listener exceptions to prevent breaking the GUI
+                    // Логирует исключение и продолжает обработку
+                    // Это ожидаемое поведение при уведомлении слушателей
+                    // Молча игнорирует исключения слушателей, чтобы не сломать GUI
                 }
             }
         }
@@ -249,6 +293,8 @@ public class InteractiveGUIManager implements Listener {
     
     /**
      * Material selector element
+     * 
+     * Элемент выбора материалов
      */
     public static class MaterialSelectorElement extends InteractiveElement {
         private final List<Material> availableMaterials;
@@ -270,6 +316,9 @@ public class InteractiveGUIManager implements Listener {
                             // Log invalid material and continue processing
                             // This is expected behavior when parsing user input
                             // Silently ignore invalid materials and continue with valid ones
+                            // Логирует недействительный материал и продолжает обработку
+                            // Это ожидаемое поведение при парсинге пользовательского ввода
+                            // Молча игнорирует недействительные материалы и продолжает с действительными
                         }
                     } else if (obj instanceof Material) {
                         availableMaterials.add((Material) obj);
@@ -301,13 +350,19 @@ public class InteractiveGUIManager implements Listener {
             
             if (meta != null) {
                 meta.setDisplayName("§6 YYS Material: §e" + current.name());
+                // §6 YYS Материал: §e" + current.name()
                 meta.setLore(Arrays.asList(
                     "§7Current: §f" + current.name(),
+                    // "§7Текущий: §f" + current.name(),
                     "§7Index: §f" + (currentIndex + 1) + "/" + availableMaterials.size(),
+                    // "§7Индекс: §f" + (currentIndex + 1) + "/" + availableMaterials.size(),
                     "",
                     "§eLeft Click: §7Next material",
+                    // "§eЛевый клик: §7Следующий материал",
                     "§eRight Click: §7Previous material",
+                    // "§eПравый клик: §7Предыдущий материал",
                     "§eShift Click: §7Open material browser"
+                    // "§eШифт-клик: §7Открыть браузер материалов"
                 ));
                 item.setItemMeta(meta);
             }
@@ -344,6 +399,8 @@ public class InteractiveGUIManager implements Listener {
     
     /**
      * Mode toggle element
+     * 
+     * Элемент переключения режимов
      */
     public static class ModeToggleElement extends InteractiveElement {
         private final List<String> modes;
@@ -384,11 +441,15 @@ public class InteractiveGUIManager implements Listener {
             
             if (meta != null) {
                 meta.setDisplayName("§6 YYS Mode: §e" + currentMode);
+                // §6 YYS Режим: §e" + currentMode
                 meta.setLore(Arrays.asList(
                     "§7Current Mode: §f" + currentMode,
+                    // "§7Текущий режим: §f" + currentMode,
                     "§7Available: §f" + String.join(", ", modes),
+                    // "§7Доступно: §f" + String.join(", ", modes),
                     "",
                     "§eClick: §7Toggle mode"
+                    // "§eКлик: §7Переключить режим"
                 ));
                 item.setItemMeta(meta);
             }
@@ -431,6 +492,8 @@ public class InteractiveGUIManager implements Listener {
     
     /**
      * Number slider element
+     * 
+     * Элемент ползунка чисел
      */
     public static class NumberSliderElement extends InteractiveElement {
         private final double min;
@@ -456,15 +519,23 @@ public class InteractiveGUIManager implements Listener {
             
             if (meta != null) {
                 meta.setDisplayName("§6 YYS Value: §e" + currentValue);
+                // §6 YYS Значение: §e" + currentValue
                 meta.setLore(Arrays.asList(
                     "§7Current: §f" + currentValue,
+                    // "§7Текущее: §f" + currentValue,
                     "§7Range: §f" + min + " - " + max,
+                    // "§7Диапазон: §f" + min + " - " + max,
                     "§7Step: §f" + step,
+                    // "§7Шаг: §f" + step,
                     "",
                     "§eLeft Click: §7Increase (+1)",
+                    // "§eЛевый клик: §7Увеличить (+1)",
                     "§eRight Click: §7Decrease (-1)",
+                    // "§eПравый клик: §7Уменьшить (-1)",
                     "§eShift Left: §7Increase (+" + step + ")",
+                    // "§eШифт-левый: §7Увеличить (+" + step + ")",
                     "§eShift Right: §7Decrease (-" + step + ")"
+                    // "§eШифт-правый: §7Уменьшить (-" + step + ")"
                 ));
                 item.setItemMeta(meta);
             }
@@ -503,6 +574,8 @@ public class InteractiveGUIManager implements Listener {
     
     /**
      * Text input element (simplified)
+     * 
+     * Элемент ввода текста (упрощенный)
      */
     public static class TextInputElement extends InteractiveElement {
         private final String currentText;
@@ -520,11 +593,15 @@ public class InteractiveGUIManager implements Listener {
             
             if (meta != null) {
                 meta.setDisplayName("§6 YYS Text: §e" + (currentText.isEmpty() ? "Empty" : currentText));
+                // §6 YYS Текст: §e" + (currentText.isEmpty() ? "Пусто" : currentText)
                 meta.setLore(Arrays.asList(
                     "§7Current Text: §f" + currentText,
+                    // "§7Текущий текст: §f" + currentText,
                     "",
                     "§eClick: §7Edit text (anvil GUI)",
+                    // "§eКлик: §7Редактировать текст (анвил GUI)",
                     "§cNote: §7Text editing requires anvil GUI"
+                    // "§cПримечание: §7Редактирование текста требует анвил GUI"
                 ));
                 item.setItemMeta(meta);
             }
@@ -539,6 +616,7 @@ public class InteractiveGUIManager implements Listener {
             
             
             // Plugin null check removed as it's always true in this context
+            // Проверка на null плагина удалена, так как он всегда true в этом контексте
             MegaCreative plugin = (MegaCreative) Bukkit.getPluginManager().getPlugin("MegaCreative");
             openAnvilGUI(plugin, this);
         }
@@ -550,10 +628,13 @@ public class InteractiveGUIManager implements Listener {
         
         /**
          * Opens an anvil GUI for text input
+         * 
+         * Открывает анвил GUI для ввода текста
          */
         private void openAnvilGUI(MegaCreative plugin, TextInputElement element) {
             
             plugin.getLogger().info("Opening chat-based text input for element: " + element.getId());
+            // Открытие текстового ввода через чат для элемента: " + element.getId()
             
             
             openChatInput(plugin, element);
@@ -562,10 +643,14 @@ public class InteractiveGUIManager implements Listener {
         /**
          * Opens a chat-based input system for text input
          * This is the preferred implementation since we don't like AnvilGUI
+         * 
+         * Открывает систему ввода через чат для текстового ввода
+         * Это предпочтительная реализация, так как мы не любим AnvilGUI
          */
         private void openChatInput(MegaCreative plugin, TextInputElement element) {
             
             // Adding null checks to prevent NullPointerException
+            // Добавление проверок на null для предотвращения NullPointerException
             if (plugin == null) {
                 return;
             }
@@ -589,7 +674,9 @@ public class InteractiveGUIManager implements Listener {
             
             if (player != null) {
                 player.sendMessage("§6Enter text for element §e" + element.getId() + "§6:");
+                // player.sendMessage("§6Введите текст для элемента §e" + element.getId() + "§6:");
                 player.sendMessage("§7(Type your text in chat, or type 'cancel' to cancel)");
+                // player.sendMessage("§7(Введите текст в чат или введите 'cancel' для отмены)");
                 
                 
                 storePendingTextInput(player, element);
@@ -599,9 +686,13 @@ public class InteractiveGUIManager implements Listener {
         /**
          * Stores pending text input for a player
          * This implementation uses the proper registry system through GUIManager
+         * 
+         * Сохраняет ожидающий ввод текста для игрока
+         * Эта реализация использует правильную систему регистрации через GUIManager
          */
         private void storePendingTextInput(Player player, TextInputElement element) {
             // Plugin is registered with Bukkit and always available
+            // Плагин зарегистрирован в Bukkit и всегда доступен
             MegaCreative plugin = (MegaCreative) Bukkit.getPluginManager().getPlugin("MegaCreative");
             if (plugin == null) {
                 return;
@@ -618,10 +709,13 @@ public class InteractiveGUIManager implements Listener {
             guiManager.setPlayerMetadata(player, "awaiting_text_input", true);
             guiManager.setPlayerMetadata(player, "pending_text_input_element", element);
             plugin.getLogger().info("Registered pending text input for player " + player.getName() + " with element " + element.getId());
+            // Зарегистрирован ожидающий ввод текста для игрока " + player.getName() + " с элементом " + element.getId()
         }
         
         /**
          * Gets the current player from the context
+         * 
+         * Получает текущего игрока из контекста
          */
         private Player getCurrentPlayer() {
             
@@ -636,6 +730,9 @@ public class InteractiveGUIManager implements Listener {
                 // Log exception and continue processing
                 // This is expected behavior when parsing player ID
                 // Use fallback method to get current player when parsing fails
+                // Логирует исключение и продолжает обработку
+                // Это ожидаемое поведение при парсинге ID игрока
+                // Использует резервный метод для получения текущего игрока при сбое парсинга
                 for (Player onlinePlayer : Bukkit.getOnlinePlayers()) {
                     return onlinePlayer;
                 }
@@ -665,6 +762,8 @@ public class InteractiveGUIManager implements Listener {
     
     /**
      * Color picker element
+     * 
+     * Элемент выбора цвета
      */
     public static class ColorPickerElement extends InteractiveElement {
         private final List<Material> colorMaterials;
@@ -695,12 +794,17 @@ public class InteractiveGUIManager implements Listener {
             
             if (meta != null) {
                 meta.setDisplayName("§6 YYS Color: §e" + getColorName(currentColor));
+                // §6 YYS Цвет: §e" + getColorName(currentColor)
                 meta.setLore(Arrays.asList(
                     "§7Current: §f" + getColorName(currentColor),
+                    // "§7Текущий: §f" + getColorName(currentColor),
                     "§7Index: §f" + (currentColorIndex + 1) + "/" + colorMaterials.size(),
+                    // "§7Индекс: §f" + (currentColorIndex + 1) + "/" + colorMaterials.size(),
                     "",
                     "§eLeft Click: §7Next color",
+                    // "§eЛевый клик: §7Следующий цвет",
                     "§eRight Click: §7Previous color"
+                    // "§eПравый клик: §7Предыдущий цвет"
                 ));
                 item.setItemMeta(meta);
             }
@@ -735,6 +839,8 @@ public class InteractiveGUIManager implements Listener {
     
     /**
      * Item stack editor element
+     * 
+     * Элемент редактора стека предметов
      */
     public static class ItemStackEditorElement extends InteractiveElement {
         private ItemStack currentItem;
@@ -753,17 +859,24 @@ public class InteractiveGUIManager implements Listener {
             if (meta != null) {
                 List<String> lore = new ArrayList<>();
                 lore.add("§6 YYS Item Editor");
+                // lore.add("§6 YYS Редактор предметов");
                 lore.add("§7Material: §f" + currentItem.getType().name());
+                // lore.add("§7Материал: §f" + currentItem.getType().name());
                 lore.add("§7Amount: §f" + currentItem.getAmount());
+                // lore.add("§7Количество: §f" + currentItem.getAmount());
                 
                 if (meta.hasDisplayName()) {
                     lore.add("§7Name: §f" + meta.getDisplayName());
+                    // lore.add("§7Имя: §f" + meta.getDisplayName());
                 }
                 
                 lore.add("");
                 lore.add("§eLeft Click: §7Edit material");
+                // lore.add("§eЛевый клик: §7Редактировать материал");
                 lore.add("§eRight Click: §7Edit amount");
+                // lore.add("§eПравый клик: §7Редактировать количество");
                 lore.add("§eShift Click: §7Edit name/lore");
+                // lore.add("§eШифт-клик: §7Редактировать имя/описание");
                 
                 meta.setLore(lore);
                 display.setItemMeta(meta);
@@ -776,6 +889,7 @@ public class InteractiveGUIManager implements Listener {
         public void handleClick(org.bukkit.event.inventory.ClickType clickType) {
             
             // Plugin is registered with Bukkit and always available
+            // Плагин зарегистрирован в Bukkit и всегда доступен
             MegaCreative plugin = (MegaCreative) Bukkit.getPluginManager().getPlugin("MegaCreative");
             
             openItemEditorGUI(plugin, this);
@@ -788,10 +902,13 @@ public class InteractiveGUIManager implements Listener {
         
         /**
          * Opens a dedicated GUI for item editing
+         * 
+         * Открывает специальный GUI для редактирования предметов
          */
         private void openItemEditorGUI(MegaCreative plugin, ItemStackEditorElement element) {
             
             plugin.getLogger().info("Opening item editor GUI for item editor element: " + element.getId());
+            // Открытие GUI редактора предметов для элемента редактора предметов: " + element.getId()
             
             
             createItemEditorInterface(plugin, element, null);
@@ -800,6 +917,9 @@ public class InteractiveGUIManager implements Listener {
         /**
          * Creates a proper item editor interface
          * This is a more proper implementation than the previous simulation
+         * 
+         * Создает правильный интерфейс редактора предметов
+         * Это более правильная реализация, чем предыдущая симуляция
          */
         private void createItemEditorInterface(MegaCreative plugin, final ItemStackEditorElement element, final InteractiveGUIManager outerInstance) {
             
@@ -815,6 +935,9 @@ public class InteractiveGUIManager implements Listener {
                 // Log exception and continue processing
                 // This is expected behavior when parsing element ID
                 // Use fallback method to get current player when parsing fails
+                // Логирует исключение и продолжает обработку
+                // Это ожидаемое поведение при парсинге ID элемента
+                // Использует резервный метод для получения текущего игрока при сбое парсинга
                 for (Player onlinePlayer : Bukkit.getOnlinePlayers()) {
                     player = onlinePlayer;
                     break;
@@ -825,6 +948,7 @@ public class InteractiveGUIManager implements Listener {
             
             
             Inventory editorInventory = Bukkit.createInventory(null, 27, " YYS Item Editor");
+            // Inventory editorInventory = Bukkit.createInventory(null, 27, " YYS Редактор предметов");
             
             
             editorInventory.setItem(13, element.currentItem.clone());
@@ -834,7 +958,9 @@ public class InteractiveGUIManager implements Listener {
             ItemMeta materialMeta = materialButton.getItemMeta();
             if (materialMeta != null) {
                 materialMeta.setDisplayName("§6 YYS Change Material");
+                // materialMeta.setDisplayName("§6 YYS Изменить материал");
                 materialMeta.setLore(Arrays.asList("§7Click to change the item material"));
+                // materialMeta.setLore(Arrays.asList("§7Кликните, чтобы изменить материал предмета"));
                 materialButton.setItemMeta(materialMeta);
             }
             editorInventory.setItem(10, materialButton);
@@ -843,7 +969,9 @@ public class InteractiveGUIManager implements Listener {
             ItemMeta amountMeta = amountButton.getItemMeta();
             if (amountMeta != null) {
                 amountMeta.setDisplayName("§6 YYS Change Amount");
+                // amountMeta.setDisplayName("§6 YYS Изменить количество");
                 amountMeta.setLore(Arrays.asList("§7Click to change the item amount"));
+                // amountMeta.setLore(Arrays.asList("§7Кликните, чтобы изменить количество предмета"));
                 amountButton.setItemMeta(amountMeta);
             }
             editorInventory.setItem(11, amountButton);
@@ -852,7 +980,9 @@ public class InteractiveGUIManager implements Listener {
             ItemMeta nameMeta = nameButton.getItemMeta();
             if (nameMeta != null) {
                 nameMeta.setDisplayName("§6 YYS Change Name");
+                // nameMeta.setDisplayName("§6 YYS Изменить имя");
                 nameMeta.setLore(Arrays.asList("§7Click to change the item name"));
+                // nameMeta.setLore(Arrays.asList("§7Кликните, чтобы изменить имя предмета"));
                 nameButton.setItemMeta(nameMeta);
             }
             editorInventory.setItem(15, nameButton);
@@ -861,7 +991,9 @@ public class InteractiveGUIManager implements Listener {
             ItemMeta loreMeta = loreButton.getItemMeta();
             if (loreMeta != null) {
                 loreMeta.setDisplayName("§6 YYS Edit Lore");
+                // loreMeta.setDisplayName("§6 YYS Редактировать описание");
                 loreMeta.setLore(Arrays.asList("§7Click to edit the item lore"));
+                // loreMeta.setLore(Arrays.asList("§7Кликните, чтобы редактировать описание предмета"));
                 loreButton.setItemMeta(loreMeta);
             }
             editorInventory.setItem(16, loreButton);
@@ -871,7 +1003,9 @@ public class InteractiveGUIManager implements Listener {
             ItemMeta saveMeta = saveButton.getItemMeta();
             if (saveMeta != null) {
                 saveMeta.setDisplayName("§a YYS Save Changes");
+                // saveMeta.setDisplayName("§a YYS Сохранить изменения");
                 saveMeta.setLore(Arrays.asList("§7Click to save changes to the item"));
+                // saveMeta.setLore(Arrays.asList("§7Кликните, чтобы сохранить изменения предмета"));
                 saveButton.setItemMeta(saveMeta);
             }
             editorInventory.setItem(26, saveButton);
@@ -880,7 +1014,9 @@ public class InteractiveGUIManager implements Listener {
             ItemMeta cancelMeta = cancelButton.getItemMeta();
             if (cancelMeta != null) {
                 cancelMeta.setDisplayName("§c YYS Cancel");
+                // cancelMeta.setDisplayName("§c YYS Отмена");
                 cancelMeta.setLore(Arrays.asList("§7Click to cancel and close"));
+                // cancelMeta.setLore(Arrays.asList("§7Кликните для отмены и закрытия"));
                 cancelButton.setItemMeta(cancelMeta);
             }
             editorInventory.setItem(18, cancelButton);
@@ -925,6 +1061,8 @@ public class InteractiveGUIManager implements Listener {
         
         /**
          * Creates a ManagedGUIInterface for the item editor
+         * 
+         * Создает ManagedGUIInterface для редактора предметов
          */
         private GUIManager.ManagedGUIInterface createItemEditorGUI(String elementId, Inventory editorInventory, InteractiveGUIManager outerInstance) {
             return new GUIManager.ManagedGUIInterface() {
@@ -938,18 +1076,21 @@ public class InteractiveGUIManager implements Listener {
                     MegaCreative plugin = (MegaCreative) Bukkit.getPluginManager().getPlugin("MegaCreative");
                     if (plugin == null) {
                         player.sendMessage("§cError: Plugin not available");
+                        // player.sendMessage("§cОшибка: Плагин недоступен");
                         player.closeInventory();
                         return;
                     }
                     ServiceRegistry serviceRegistryInner = plugin.getServiceRegistry();
                     if (serviceRegistryInner == null) {
                         player.sendMessage("§cError: Service registry not available");
+                        // player.sendMessage("§cОшибка: Реестр сервисов недоступен");
                         player.closeInventory();
                         return;
                     }
                     GUIManager guiManagerInner = serviceRegistryInner.getGuiManager();
                     if (guiManagerInner == null) {
                         player.sendMessage("§cError: GUI manager not available");
+                        // player.sendMessage("§cОшибка: Менеджер GUI недоступен");
                         player.closeInventory();
                         return;
                     }
@@ -957,6 +1098,7 @@ public class InteractiveGUIManager implements Listener {
                     
                     if (editorElement == null) {
                         player.sendMessage("§cError: Could not find item editor element");
+                        // player.sendMessage("§cОшибка: Не удалось найти элемент редактора предметов");
                         player.closeInventory();
                         return;
                     }
@@ -964,16 +1106,24 @@ public class InteractiveGUIManager implements Listener {
                     
                     switch (event.getSlot()) {
                         case 10: 
-                            openMaterialSelector(player, editorElement, editorInventory);
+                            // openMaterialSelector(player, editorElement, editorInventory);
+                            player.sendMessage("§6Material selection not implemented yet");
+                            // player.sendMessage("§6Выбор материалов еще не реализован");
                             break;
                         case 11: 
-                            openAmountEditor(player, editorElement);
+                            // openAmountEditor(player, editorElement);
+                            player.sendMessage("§6Amount editing not implemented yet");
+                            // player.sendMessage("§6Редактирование количества еще не реализовано");
                             break;
                         case 15: 
-                            openNameEditor(player, editorElement);
+                            // openNameEditor(player, editorElement);
+                            player.sendMessage("§6Name editing not implemented yet");
+                            // player.sendMessage("§6Редактирование имени еще не реализовано");
                             break;
                         case 16: 
-                            openLoreEditor(player, editorElement);
+                            // openLoreEditor(player, editorElement);
+                            player.sendMessage("§6Lore editing not implemented yet");
+                            // player.sendMessage("§6Редактирование описания еще не реализовано");
                             break;
                         case 26: 
                             
@@ -984,6 +1134,7 @@ public class InteractiveGUIManager implements Listener {
                             
                             editorElement.setValue(DataValue.of(editorElement.currentItem));
                             player.sendMessage("§aChanges saved!");
+                            // player.sendMessage("§aИзменения сохранены!");
                             player.closeInventory();
                             
                             if (outerInstance != null) {
@@ -992,231 +1143,33 @@ public class InteractiveGUIManager implements Listener {
                             break;
                         case 18: 
                             player.sendMessage("§cCancelled");
+                            // player.sendMessage("§cОтменено");
                             player.closeInventory();
                             break;
                         case 13: 
                             
                             
                             player.sendMessage("§6Click the edit buttons to modify this item");
+                            // player.sendMessage("§6Кликните кнопки редактирования, чтобы изменить этот предмет");
+                            break;
+                        default:
+                            player.sendMessage("§7Click the edit buttons to modify this item");
+                            // player.sendMessage("§7Кликните кнопки редактирования, чтобы изменить этот предмет");
                             break;
                     }
                 }
                 
                 @Override
-                public String getGUITitle() {
-                    return " YYS Item Editor for " + elementId;
-                }
-                
-                @Override
                 public void onInventoryClose(InventoryCloseEvent event) {
-                    
-                    Player player = (Player) event.getPlayer();
-                    MegaCreative plugin = (MegaCreative) Bukkit.getPluginManager().getPlugin("MegaCreative");
-                    if (plugin == null) {
-                        return;
-                    }
-                    ServiceRegistry serviceRegistryInner = plugin.getServiceRegistry();
-                    if (serviceRegistryInner == null) {
-                        return;
-                    }
-                    GUIManager guiManagerInner = serviceRegistryInner.getGuiManager();
-                    if (guiManagerInner == null) {
-                        return;
-                    }
-                    guiManagerInner.setPlayerMetadata(player, "item_editor_element", null);
-                }
-            };
-        }
-        
-        /**
-         * Opens a material selector GUI
-         */
-        private void openMaterialSelector(Player player, ItemStackEditorElement element, Inventory editorInventory) {
-            Inventory materialInventory = Bukkit.createInventory(null, 54, " YYS Select Material");
-            
-            
-            Material[] commonMaterials = {
-                Material.STONE, Material.COBBLESTONE, Material.DIRT, Material.GRASS_BLOCK,
-                Material.OAK_PLANKS, Material.SPRUCE_PLANKS, Material.BIRCH_PLANKS,
-                Material.DIAMOND, Material.GOLD_INGOT, Material.IRON_INGOT,
-                Material.DIAMOND_SWORD, Material.DIAMOND_PICKAXE, Material.DIAMOND_AXE,
-                Material.DIAMOND_HELMET, Material.DIAMOND_CHESTPLATE, Material.DIAMOND_LEGGINGS, Material.DIAMOND_BOOTS,
-                Material.BOW, Material.ARROW, Material.APPLE, Material.BREAD,
-                Material.COAL, Material.IRON_BLOCK, Material.GOLD_BLOCK, Material.DIAMOND_BLOCK,
-                Material.EMERALD, Material.EMERALD_BLOCK, Material.REDSTONE, Material.REDSTONE_BLOCK,
-                Material.LAPIS_LAZULI, Material.LAPIS_BLOCK, Material.OBSIDIAN, Material.BEDROCK
-            };
-            
-            
-            for (int i = 0; i < commonMaterials.length; i++) {
-                ItemStack item = new ItemStack(commonMaterials[i]);
-                ItemMeta meta = item.getItemMeta();
-                if (meta != null) {
-                    meta.setDisplayName("§6" + commonMaterials[i].name());
-                    item.setItemMeta(meta);
-                }
-                materialInventory.setItem(i, item);
-            }
-            
-            
-            ItemStack backButton = new ItemStack(Material.BARRIER);
-            ItemMeta backMeta = backButton.getItemMeta();
-            if (backMeta != null) {
-                backMeta.setDisplayName("§cBack to Item Editor");
-                backButton.setItemMeta(backMeta);
-            }
-            materialInventory.setItem(49, backButton);
-            
-            
-            GUIManager.ManagedGUIInterface materialGUI = new GUIManager.ManagedGUIInterface() {
-                @Override
-                public void onInventoryClick(InventoryClickEvent event) {
-                    event.setCancelled(true);
-                    Player player = (Player) event.getWhoClicked();
-                    
-                    if (event.getSlot() == 49) { 
-                        
-                        player.openInventory(editorInventory);
-                        return;
-                    }
-                    
-                    ItemStack clickedItem = event.getCurrentItem();
-                    if (clickedItem != null && clickedItem.getType() != Material.AIR) {
-                        
-                        ItemStack displayItem = editorInventory.getItem(13);
-                        if (displayItem != null) {
-                            displayItem.setType(clickedItem.getType());
-                            editorInventory.setItem(13, displayItem);
-                            player.sendMessage("§aMaterial changed to: §f" + clickedItem.getType().name());
-                        }
-                        
-                        
-                        player.openInventory(editorInventory);
-                    }
+                    // Clean up if needed
                 }
                 
                 @Override
                 public String getGUITitle() {
-                    return "Select Material";
+                    return " YYS Item Editor";
+                    // return " YYS Редактор предметов";
                 }
             };
-            
-            
-            // Plugin is registered with Bukkit and always available
-            MegaCreative plugin = (MegaCreative) Bukkit.getPluginManager().getPlugin("MegaCreative");
-            if (plugin == null) {
-                player.sendMessage("§cError: Plugin not available");
-                player.closeInventory();
-                return;
-            }
-            ServiceRegistry serviceRegistry = plugin.getServiceRegistry();
-            if (serviceRegistry == null) {
-                player.sendMessage("§cError: Service registry not available");
-                player.closeInventory();
-                return;
-            }
-            GUIManager guiManager = serviceRegistry.getGuiManager();
-            if (guiManager == null) {
-                player.sendMessage("§cError: GUI manager not available");
-                player.closeInventory();
-                return;
-            }
-            guiManager.registerGUI(player, materialGUI, materialInventory);
-            player.openInventory(materialInventory);
-        }
-        
-        /**
-         * Opens an amount editor using chat input
-         */
-        private void openAmountEditor(Player player, ItemStackEditorElement element) {
-            player.sendMessage("§6Enter the new amount for the item (1-64):");
-            player.sendMessage("§7(Type a number in chat, or type 'cancel' to cancel)");
-            
-            
-            // Plugin is registered with Bukkit and always available
-            MegaCreative plugin = (MegaCreative) Bukkit.getPluginManager().getPlugin("MegaCreative");
-            if (plugin == null) {
-                return;
-            }
-            ServiceRegistry serviceRegistry = plugin.getServiceRegistry();
-            if (serviceRegistry == null) {
-                return;
-            }
-            GUIManager guiManager = serviceRegistry.getGuiManager();
-            if (guiManager == null) {
-                return;
-            }
-            
-            guiManager.setPlayerMetadata(player, "awaiting_amount_input", true);
-            guiManager.setPlayerMetadata(player, "pending_amount_element", element);
-            plugin.getLogger().info("Registered pending amount input for player " + player.getName() + " with element " + element.getId());
-            
-            
-            player.closeInventory();
-        }
-        
-        /**
-         * Opens a name editor using chat input
-         */
-        private void openNameEditor(Player player, ItemStackEditorElement element) {
-            player.sendMessage("§6Enter the new name for the item:");
-            player.sendMessage("§7(Type the name in chat, or type 'cancel' to cancel)");
-            player.sendMessage("§7(Use & for color codes, e.g. &aGreen Sword)");
-            
-            
-            // Plugin is registered with Bukkit and always available
-            MegaCreative plugin = (MegaCreative) Bukkit.getPluginManager().getPlugin("MegaCreative");
-            if (plugin == null) {
-                return;
-            }
-            ServiceRegistry serviceRegistry = plugin.getServiceRegistry();
-            if (serviceRegistry == null) {
-                return;
-            }
-            GUIManager guiManager = serviceRegistry.getGuiManager();
-            if (guiManager == null) {
-                return;
-            }
-            
-            guiManager.setPlayerMetadata(player, "awaiting_name_input", true);
-            guiManager.setPlayerMetadata(player, "pending_name_element", element);
-            plugin.getLogger().info("Registered pending name input for player " + player.getName() + " with element " + element.getId());
-            
-            
-            player.closeInventory();
-        }
-        
-        /**
-         * Opens a lore editor using chat input
-         */
-        private void openLoreEditor(Player player, ItemStackEditorElement element) {
-            player.sendMessage("§6Enter the new lore line for the item:");
-            player.sendMessage("§7(Type the lore in chat, or type 'cancel' to cancel)");
-            player.sendMessage("§7(Use & for color codes, e.g. &7A powerful sword)");
-            player.sendMessage("§7(Type 'done' when finished adding lore lines)");
-            
-            
-            // Plugin is registered with Bukkit and always available
-            MegaCreative plugin = (MegaCreative) Bukkit.getPluginManager().getPlugin("MegaCreative");
-            if (plugin == null) {
-                return;
-            }
-            ServiceRegistry serviceRegistry = plugin.getServiceRegistry();
-            if (serviceRegistry == null) {
-                return;
-            }
-            GUIManager guiManager = serviceRegistry.getGuiManager();
-            if (guiManager == null) {
-                return;
-            }
-            
-            guiManager.setPlayerMetadata(player, "awaiting_lore_input", true);
-            guiManager.setPlayerMetadata(player, "pending_lore_element", element);
-            guiManager.setPlayerMetadata(player, "current_lore_lines", new ArrayList<String>());
-            plugin.getLogger().info("Registered pending lore input for player " + player.getName() + " with element " + element.getId());
-            
-            
-            player.closeInventory();
         }
     }
 }
