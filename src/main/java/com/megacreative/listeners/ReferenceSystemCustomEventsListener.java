@@ -66,8 +66,9 @@ public class ReferenceSystemCustomEventsListener implements Listener {
         Player player = event.getPlayer();
         
         if (hasPlayerEnteredRegion(event.getFrom(), event.getTo())) {
-            // Add proper implementation for player enter region event
             // TODO: Implement player enter region event handling
+            // This method needs proper implementation to handle player entering regions
+            // Possible implementation: Check if player entered a specific region and trigger appropriate events
             player.sendMessage("§ePlayer entered region: " + getRegionName(event.getTo()));
         }
     }
@@ -80,8 +81,9 @@ public class ReferenceSystemCustomEventsListener implements Listener {
         Player player = event.getPlayer();
         
         if (hasPlayerLeftRegion(event.getFrom(), event.getTo())) {
-            // Add proper implementation for player leave region event
             // TODO: Implement player leave region event handling
+            // This method needs proper implementation to handle player leaving regions
+            // Possible implementation: Check if player left a specific region and trigger appropriate events
             player.sendMessage("§ePlayer left region: " + getRegionName(event.getFrom()));
         }
     }
@@ -98,8 +100,9 @@ public class ReferenceSystemCustomEventsListener implements Listener {
         
         Player player = event.getPlayer();
         
-        // Add proper implementation for player variable change event
         // TODO: Implement player variable change event handling
+        // This method needs proper implementation to handle player variable changes
+        // Possible implementation: Update player variables and trigger related scripts
         player.sendMessage("§eVariable changed: " + event.getVariableName() + " = " + event.getNewValue());
         
     }
@@ -116,8 +119,9 @@ public class ReferenceSystemCustomEventsListener implements Listener {
         
         Player player = event.getPlayer();
         
-        // Add proper implementation for timer expire event
         // TODO: Implement timer expire event handling
+        // This method needs proper implementation to handle timer expiration
+        // Possible implementation: Trigger scripts or actions when timers expire
         player.sendMessage("§eTimer expired: " + event.getTimerName());
         
     }
@@ -134,8 +138,9 @@ public class ReferenceSystemCustomEventsListener implements Listener {
         
         Player player = event.getPlayer();
         
-        // Add proper implementation for player custom action event
         // TODO: Implement player custom action event handling
+        // This method needs proper implementation to handle custom player actions
+        // Possible implementation: Process custom actions and trigger related functionality
         player.sendMessage("§eCustom action triggered: " + event.getActionName());
         
     }
@@ -152,8 +157,9 @@ public class ReferenceSystemCustomEventsListener implements Listener {
         
         Player player = event.getPlayer();
         
-        // Add proper implementation for player score change event
         // TODO: Implement player score change event handling
+        // This method needs proper implementation to handle player score changes
+        // Possible implementation: Update player scores and trigger related events
         player.sendMessage("§eScore changed: " + event.getScoreType() + " = " + String.valueOf(event.getNewScore()));
         
     }
@@ -170,8 +176,9 @@ public class ReferenceSystemCustomEventsListener implements Listener {
         
         Player player = event.getPlayer();
         
-        // Add proper implementation for function call event
         // TODO: Implement function call event handling
+        // This method needs proper implementation to handle function calls
+        // Possible implementation: Execute custom functions and handle their results
         player.sendMessage("§eFunction called: " + event.getFunctionName());
         
     }
@@ -188,8 +195,9 @@ public class ReferenceSystemCustomEventsListener implements Listener {
         
         Player player = event.getPlayer();
         
-        // Add proper implementation for world mode change event
         // TODO: Implement world mode change event handling
+        // This method needs proper implementation to handle world mode changes
+        // Possible implementation: Update world state and trigger mode-specific functionality
         player.sendMessage("§eWorld mode changed to: " + event.getNewMode());
         
     }

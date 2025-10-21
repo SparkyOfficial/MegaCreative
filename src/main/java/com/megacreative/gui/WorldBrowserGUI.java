@@ -203,6 +203,9 @@ public class WorldBrowserGUI implements GUIManager.ManagedGUIInterface {
         } else if (displayName.contains("Информация")) {
             // Do nothing for info item
         } else {
+            // TODO: Implement world interaction logic
+            // This is a placeholder for future implementation
+            // Possible implementation: Handle world item clicks and open world management GUI
             // Handle world item clicks
             // TODO: Implement world interaction logic
         }
@@ -210,6 +213,9 @@ public class WorldBrowserGUI implements GUIManager.ManagedGUIInterface {
     
     @Override
     public void onInventoryClose(InventoryCloseEvent event) {
+        // TODO: Implement cleanup logic for WorldBrowserGUI
+        // This is a placeholder for future implementation
+        // Possible implementation: Clean up resources and save any changes when GUI is closed
         // Clean up if needed
     }
 }

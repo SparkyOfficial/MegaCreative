@@ -50,6 +50,7 @@ public class CustomNPC {
         // This is a placeholder for future implementation
         // TODO: Реализовать функциональность создания NPC
         // Это заглушка для будущей реализации
+        // Possible implementation: Create NPC entity, set skin, position, and other properties
         LOGGER.fine("NPC spawn method called for " + name + " but not yet implemented");
         // Метод создания NPC вызван для " + name + ", но еще не реализован
         return true;
@@ -82,6 +83,7 @@ public class CustomNPC {
             // TODO: Реализовать функциональность NPC, смотрящего на игрока
             // Это включает в себя вычисление вектора направления от NPC к игроку
             // и установку поворота головы NPC в этом направлении
+            // Possible implementation: Calculate direction vector and rotate NPC head
             LOGGER.fine("NPC lookAt method called for " + name + " but not yet implemented");
             // Метод lookAt NPC вызван для " + name + ", но еще не реализован
         }
@@ -102,6 +104,7 @@ public class CustomNPC {
             // TODO: Реализовать функциональность NPC, идущего к местоположению
             // Это включает в себя создание алгоритма поиска пути для перемещения NPC
             // от его текущего местоположения к целевому местоположению
+            // Possible implementation: Use pathfinding API to move NPC to target location
             LOGGER.fine("NPC walkTo method called for " + name + " but not yet implemented");
             // Метод walkTo NPC вызван для " + name + ", но еще не реализован
         }
@@ -122,6 +125,7 @@ public class CustomNPC {
             // TODO: Реализовать функциональность воспроизведения анимации NPC
             // Это включает в себя запуск определенных последовательностей анимации
             // на основе параметра анимации
+            // Possible implementation: Trigger animation based on animation name
             LOGGER.fine("NPC playAnimation method called for " + name + " with animation " + animation + " but not yet implemented");
             // Метод playAnimation NPC вызван для " + name + " с анимацией " + animation + ", но еще не реализован
         }
@@ -142,6 +146,7 @@ public class CustomNPC {
             // TODO: Реализовать функциональность разговора NPC
             // Это включает в себя отображение облачков чата или отправку сообщений
             // ближайшим игрокам с сообщением NPC
+            // Possible implementation: Display chat bubble or send message to players
             LOGGER.fine("NPC talk method called for " + name + " with message " + message + " but not yet implemented");
             // Метод talk NPC вызван для " + name + " с сообщением " + message + ", но еще не реализован
         }
@@ -166,6 +171,7 @@ public class CustomNPC {
                 // TODO: Реализовать функциональность обновления снаряжения
                 // Это включает в себя обновление визуального снаряжения NPC
                 // на основе предмета, предоставленного для указанного слота
+                // Possible implementation: Update NPC equipment visualization
                 LOGGER.fine("NPC setEquipment method called for " + name + " but not yet implemented");
                 // Метод setEquipment NPC вызван для " + name + ", но еще не реализован
             }
@@ -236,6 +242,7 @@ public class CustomNPC {
             // TODO: Реализовать функциональность обновления гравитации
             // Это включает в себя применение или удаление эффектов гравитации
             // к сущности NPC на основе параметра гравитации
+            // Possible implementation: Apply or remove gravity to NPC entity
             LOGGER.fine("NPC setGravity method called for " + name + " but not yet implemented");
             // Метод setGravity NPC вызван для " + name + ", но еще не реализован
         }

@@ -52,6 +52,9 @@ public class BooleanValue implements DataValue {
     
     @Override
     public boolean isEmpty() { 
+        // TODO: Properly implement isEmpty for boolean values
+        // This is a placeholder implementation that needs improvement
+        // For boolean values, isEmpty might need different logic than just checking the value
         // Properly implement isEmpty for boolean values
         // Static analysis flagged this as always true, but we're checking the boolean value itself
         return !value; 

@@ -208,6 +208,8 @@ public class WorldCommentsGUI implements GUIManager.ManagedGUIInterface {
             // Кнопка добавления комментария
             player.closeInventory();
             // TODO: Implement add comment functionality
+            // This is a placeholder for future implementation
+            // Possible implementation: Open a text input GUI for adding comments to the world
             // TODO: Реализовать функциональность добавления комментария
         } else if (slot == 45 && page > 0) {
             // Previous page button
@@ -222,12 +224,17 @@ public class WorldCommentsGUI implements GUIManager.ManagedGUIInterface {
             // Кнопка назад
             player.closeInventory();
             // TODO: Return to previous GUI
+            // This is a placeholder for future implementation
+            // Possible implementation: Return to the previous GUI screen (likely WorldBrowserGUI)
             // TODO: Вернуться к предыдущему графическому интерфейсу
         }
     }
     
     @Override
     public void onInventoryClose(InventoryCloseEvent event) {
+        // TODO: Implement cleanup logic for WorldCommentsGUI
+        // This is a placeholder for future implementation
+        // Possible implementation: Clean up resources and save any changes when GUI is closed
         // Clean up if needed
         // Очистка при необходимости
     }

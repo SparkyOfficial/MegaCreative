@@ -200,6 +200,9 @@ public class ScriptCompiler implements Listener {
     private CodeScript buildCompleteScript(CodeScript script, CodeBlock currentBlock) {
         
         if (currentBlock.getNextBlock() != null) {
+            // TODO: Implement proper handling of next block in script compilation
+            // This is a placeholder for future implementation
+            // The method should properly handle the connection and compilation of the next block in the chain
             // According to static analysis, this statement has empty body
             // Add proper implementation for handling next block
             // Согласно статическому анализу, это утверждение имеет пустое тело
@@ -209,6 +212,9 @@ public class ScriptCompiler implements Listener {
         
         
         for (CodeBlock child : currentBlock.getChildren()) {
+            // TODO: Implement proper handling of child blocks in script compilation
+            // This is a placeholder for future implementation
+            // The method should properly handle the compilation of child blocks (nested structures)
             // According to static analysis, this statement has empty body
             // Add proper implementation for handling child blocks
             // Согласно статическому анализу, это утверждение имеет пустое тело

@@ -528,6 +528,10 @@ public class ScriptValidator {
      * Проверяет проблемные комбинации параметров
      */
     private void checkParameterCombinations(CodeBlock block, List<ValidationError> warnings) {
+        
+        // TODO: Implement logic for checking problematic parameter combinations
+        // This method is a placeholder for future implementation
+        // Possible implementation: Check for parameter combinations that might cause issues
         // Static analysis warning fix - empty method body
         // This method is a placeholder for future implementation
         // TODO: Implement logic for checking problematic parameter combinations
@@ -550,6 +554,9 @@ public class ScriptValidator {
         } else if ("forEach".equals(action)) {
             DataValue listParam = block.getParameter("list");
             if (listParam != null && listParam.getType().getName().equals("List")) {
+                // TODO: Implement logic for checking list parameter in forEach loop
+                // This check is a placeholder for future implementation
+                // Possible implementation: Validate list parameter for forEach loops
                 // Static analysis warning fix - empty if body
                 // This check is a placeholder for future implementation
                 // TODO: Implement logic for checking list parameter in forEach loop

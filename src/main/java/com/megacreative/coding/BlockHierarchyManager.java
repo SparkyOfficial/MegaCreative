@@ -95,8 +95,12 @@ public class BlockHierarchyManager implements Listener {
      * Checks if a block is a control block that can have children
      */
     private boolean isControlBlock(CodeBlock block) {
+        // TODO: Implement proper control block detection
+        // This is a placeholder implementation that needs improvement
+        // In a more sophisticated implementation, this would check block configuration
         // For now, we'll consider any non-bracket block as potentially having children
         // In a more sophisticated implementation, this would check block configuration
+        // Possible implementation: Check block configuration to determine if it's a control block
         return !block.isBracket();
     }
     

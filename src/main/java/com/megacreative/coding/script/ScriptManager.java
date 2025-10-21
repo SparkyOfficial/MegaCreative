@@ -126,6 +126,9 @@ public class ScriptManager {
         // The owner variable is intentionally null as a fallback when loading scripts
         // In a real implementation, we would retrieve the actual owner from the configuration
         // owner = getActualOwnerFromConfig(config); // TODO: Implement actual owner retrieval
+        // TODO: Implement actual owner retrieval functionality
+        // This is a placeholder for future implementation
+        // Possible implementation: Retrieve the actual owner from the configuration file
         
         ScriptBuilder builder = new ScriptBuilder(owner);
         
