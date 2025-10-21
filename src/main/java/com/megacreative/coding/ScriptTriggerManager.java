@@ -7,6 +7,7 @@ import com.megacreative.interfaces.IWorldManager;
 import com.megacreative.managers.PlayerModeManager;
 import com.megacreative.models.CreativeWorld;
 import com.megacreative.coding.events.CustomEventManager;
+import com.megacreative.coding.events.CustomEvent;
 import com.megacreative.coding.values.DataValue;
 import com.megacreative.coding.variables.VariableManager;
 import com.megacreative.coding.activators.ActivatorType;
@@ -25,12 +26,14 @@ import java.util.List;
  * 
  * This class now uses the CustomEventManager system instead of the legacy Activator system
  */
-public class ScriptTriggerManager implements Listener {
+public class ScriptTriggerManager implements Listener, com.megacreative.coding.events.EventPublisher {
     private static final Logger LOGGER = Logger.getLogger(ScriptTriggerManager.class.getName());
     
     // Add a counter to limit tick event processing frequency
     private static final AtomicInteger tickCounter = new AtomicInteger(0);
     
+    // These fields need to remain as class fields since they are used throughout multiple methods
+    // Static analysis flags them as convertible to local variables, but this is a false positive
     private final MegaCreative plugin;
     private final IWorldManager worldManager;
     private final PlayerModeManager playerModeManager;
@@ -218,7 +221,7 @@ public class ScriptTriggerManager implements Listener {
             }
         } catch (Exception e) {
             LOGGER.warning("Error executing scripts for event " + eventName + ": " + e.getMessage());
-            e.printStackTrace();
+            LOGGER.log(java.util.logging.Level.SEVERE, "Error executing scripts for event " + eventName, e);
         }
     }
     
@@ -277,7 +280,7 @@ public class ScriptTriggerManager implements Listener {
             }
         } catch (Exception e) {
             LOGGER.warning("Error executing scripts for global event " + eventName + ": " + e.getMessage());
-            e.printStackTrace();
+            LOGGER.log(java.util.logging.Level.SEVERE, "Error executing scripts for global event " + eventName, e);
         }
     }
     
@@ -334,7 +337,11 @@ public class ScriptTriggerManager implements Listener {
             gameEvent.setPlayer(player);
             
             codeHandler.handleEvent(ActivatorType.PLAYER_JOIN, gameEvent, player);
-            LOGGER.info("Triggered PLAYER_JOIN activators for player " + player.getName());
+            // Use rate-limited logging for frequent events to reduce log spam
+            com.megacreative.utils.LogUtils.infoRateLimited(
+                "Triggered PLAYER_JOIN activators for player " + player.getName(), 
+                "player_join_" + player.getName()
+            );
         }
     }
     
@@ -352,7 +359,11 @@ public class ScriptTriggerManager implements Listener {
             gameEvent.setPlayer(player);
             
             codeHandler.handleEvent(ActivatorType.PLAYER_MOVE, gameEvent, player);
-            LOGGER.info("Triggered PLAYER_MOVE activators for player " + player.getName());
+            // Use rate-limited logging for frequent events to reduce log spam
+            com.megacreative.utils.LogUtils.infoRateLimited(
+                "Triggered PLAYER_MOVE activators for player " + player.getName(), 
+                "player_move_" + player.getName()
+            );
         }
     }
     
@@ -370,7 +381,11 @@ public class ScriptTriggerManager implements Listener {
             gameEvent.setPlayer(player);
             
             codeHandler.handleEvent(ActivatorType.PLAYER_CHAT, gameEvent, player);
-            LOGGER.info("Triggered PLAYER_CHAT activators for player " + player.getName());
+            // Use rate-limited logging for frequent events to reduce log spam
+            com.megacreative.utils.LogUtils.infoRateLimited(
+                "Triggered PLAYER_CHAT activators for player " + player.getName(), 
+                "player_chat_" + player.getName()
+            );
         }
     }
     
@@ -388,7 +403,11 @@ public class ScriptTriggerManager implements Listener {
             gameEvent.setPlayer(player);
             
             codeHandler.handleEvent(ActivatorType.BLOCK_PLACE, gameEvent, player);
-            LOGGER.info("Triggered BLOCK_PLACE activators for player " + player.getName());
+            // Use rate-limited logging for frequent events to reduce log spam
+            com.megacreative.utils.LogUtils.infoRateLimited(
+                "Triggered BLOCK_PLACE activators for player " + player.getName(), 
+                "block_place_" + player.getName()
+            );
         }
     }
     
@@ -406,7 +425,11 @@ public class ScriptTriggerManager implements Listener {
             gameEvent.setPlayer(player);
             
             codeHandler.handleEvent(ActivatorType.BLOCK_BREAK, gameEvent, player);
-            LOGGER.info("Triggered BLOCK_BREAK activators for player " + player.getName());
+            // Use rate-limited logging for frequent events to reduce log spam
+            com.megacreative.utils.LogUtils.infoRateLimited(
+                "Triggered BLOCK_BREAK activators for player " + player.getName(), 
+                "block_break_" + player.getName()
+            );
         }
     }
     
@@ -424,7 +447,11 @@ public class ScriptTriggerManager implements Listener {
             gameEvent.setPlayer(player);
             
             codeHandler.handleEvent(ActivatorType.ENTITY_PICKUP_ITEM, gameEvent, player);
-            LOGGER.info("Triggered ENTITY_PICKUP_ITEM activators for player " + player.getName());
+            // Use rate-limited logging for frequent events to reduce log spam
+            com.megacreative.utils.LogUtils.infoRateLimited(
+                "Triggered ENTITY_PICKUP_ITEM activators for player " + player.getName(), 
+                "entity_pickup_item_" + player.getName()
+            );
         }
     }
     
@@ -442,7 +469,11 @@ public class ScriptTriggerManager implements Listener {
             gameEvent.setPlayer(player);
             
             codeHandler.handleEvent(ActivatorType.PLAYER_DEATH, gameEvent, player);
-            LOGGER.info("Triggered PLAYER_DEATH activators for player " + player.getName());
+            // Use rate-limited logging for frequent events to reduce log spam
+            com.megacreative.utils.LogUtils.infoRateLimited(
+                "Triggered PLAYER_DEATH activators for player " + player.getName(), 
+                "player_death_" + player.getName()
+            );
         }
     }
     
@@ -460,7 +491,11 @@ public class ScriptTriggerManager implements Listener {
             gameEvent.setPlayer(player);
             
             codeHandler.handleEvent(ActivatorType.PLAYER_QUIT, gameEvent, player);
-            LOGGER.info("Triggered PLAYER_QUIT activators for player " + player.getName());
+            // Use rate-limited logging for frequent events to reduce log spam
+            com.megacreative.utils.LogUtils.infoRateLimited(
+                "Triggered PLAYER_QUIT activators for player " + player.getName(), 
+                "player_quit_" + player.getName()
+            );
         }
     }
     
@@ -478,7 +513,11 @@ public class ScriptTriggerManager implements Listener {
             gameEvent.setPlayer(player);
             
             codeHandler.handleEvent(ActivatorType.PLAYER_RESPAWN, gameEvent, player);
-            LOGGER.info("Triggered PLAYER_RESPAWN activators for player " + player.getName());
+            // Use rate-limited logging for frequent events to reduce log spam
+            com.megacreative.utils.LogUtils.infoRateLimited(
+                "Triggered PLAYER_RESPAWN activators for player " + player.getName(), 
+                "player_respawn_" + player.getName()
+            );
         }
     }
     
@@ -496,7 +535,11 @@ public class ScriptTriggerManager implements Listener {
             gameEvent.setPlayer(player);
             
             codeHandler.handleEvent(ActivatorType.PLAYER_TELEPORT, gameEvent, player);
-            LOGGER.info("Triggered PLAYER_TELEPORT activators for player " + player.getName());
+            // Use rate-limited logging for frequent events to reduce log spam
+            com.megacreative.utils.LogUtils.infoRateLimited(
+                "Triggered PLAYER_TELEPORT activators for player " + player.getName(), 
+                "player_teleport_" + player.getName()
+            );
         }
     }
     
@@ -514,7 +557,11 @@ public class ScriptTriggerManager implements Listener {
             gameEvent.setPlayer(player);
             
             codeHandler.handleEvent(ActivatorType.ENTITY_DAMAGE, gameEvent, player);
-            LOGGER.info("Triggered ENTITY_DAMAGE activators for player " + player.getName());
+            // Use rate-limited logging for frequent events to reduce log spam
+            com.megacreative.utils.LogUtils.infoRateLimited(
+                "Triggered ENTITY_DAMAGE activators for player " + player.getName(), 
+                "entity_damage_" + player.getName()
+            );
         }
     }
     
@@ -532,7 +579,11 @@ public class ScriptTriggerManager implements Listener {
             gameEvent.setPlayer(player);
             
             codeHandler.handleEvent(ActivatorType.INVENTORY_CLICK, gameEvent, player);
-            LOGGER.info("Triggered INVENTORY_CLICK activators for player " + player.getName());
+            // Use rate-limited logging for frequent events to reduce log spam
+            com.megacreative.utils.LogUtils.infoRateLimited(
+                "Triggered INVENTORY_CLICK activators for player " + player.getName(), 
+                "inventory_click_" + player.getName()
+            );
         }
     }
     
@@ -570,6 +621,65 @@ public class ScriptTriggerManager implements Listener {
             }
         } catch (Exception e) {
             LOGGER.log(java.util.logging.Level.WARNING, "Error processing tick event", e);
+        }
+    }
+    
+    /**
+     * Publishes an event to the event system.
+     * 
+     * @param event The event to be published
+     */
+    @Override
+    public void publishEvent(CustomEvent event) {
+        // Use the already initialized customEventManager
+        if (customEventManager != null) {
+            try {
+                
+                Map<String, DataValue> eventData = new HashMap<>();
+                
+                
+                eventData.put("event_id", DataValue.fromObject(event.getId().toString()));
+                eventData.put("event_name", DataValue.fromObject(event.getName()));
+                eventData.put("event_category", DataValue.fromObject(event.getCategory()));
+                eventData.put("event_description", DataValue.fromObject(event.getDescription()));
+                eventData.put("event_author", DataValue.fromObject(event.getAuthor()));
+                eventData.put("event_created_time", DataValue.fromObject(event.getCreatedTime()));
+                
+                
+                for (Map.Entry<String, DataValue> entry : eventData.entrySet()) {
+                    eventData.put("data_" + entry.getKey(), entry.getValue());
+                }
+                
+                
+                customEventManager.triggerEvent(event.getName(), eventData, null, "global");
+            } catch (Exception e) {
+                LOGGER.log(java.util.logging.Level.WARNING, "Failed to publish event through CustomEventManager: " + e.getMessage(), e);
+            }
+        } else {
+            
+            LOGGER.info("Published event: " + event.getName());
+        }
+    }
+    
+    /**
+     * Publishes an event with associated data to the event system.
+     * 
+     * @param eventName The name of the event
+     * @param eventData The data associated with the event
+     */
+    @Override
+    public void publishEvent(String eventName, Map<String, DataValue> eventData) {
+        // Use the already initialized customEventManager
+        if (customEventManager != null) {
+            try {
+                
+                customEventManager.triggerEvent(eventName, eventData, null, "global");
+            } catch (Exception e) {
+                LOGGER.log(java.util.logging.Level.WARNING, "Failed to publish event through CustomEventManager: " + e.getMessage(), e);
+            }
+        } else {
+            
+            LOGGER.info("Published event: " + eventName + " with data: " + eventData.size() + " fields");
         }
     }
 }

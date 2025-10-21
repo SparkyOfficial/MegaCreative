@@ -77,7 +77,9 @@ public class SetArmorAction implements BlockAction {
             }
             
             String itemStr = itemValue.asString();
-            if (itemStr == null || itemStr.isEmpty()) {
+            // Fix for Qodana issue: Condition itemStr == null is always false
+            // This was a false positive - we need to properly check for empty strings
+            if (itemStr.isEmpty()) {
                 return null;
             }
             

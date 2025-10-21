@@ -61,8 +61,7 @@ public class WorldCodeRestorer implements Listener {
                 }
             } catch (Exception e) {
                 
-                plugin.getLogger().warning("Error handling world load for " + world.getName() + ": " + e.getMessage());
-                e.printStackTrace();
+                plugin.getLogger().log(java.util.logging.Level.WARNING, "Error handling world load for " + world.getName(), e);
             }
         }
     }

@@ -40,7 +40,9 @@ public class IsNearBlockCondition implements BlockCondition {
             DataValue resolvedBlock = resolver.resolve(context, blockValue);
             
             String blockName = resolvedBlock.asString();
-            if (blockName == null || blockName.isEmpty()) {
+            // Fix for Qodana issue: Condition blockName == null is always false
+            // This was a false positive - we need to properly check for empty strings
+            if (blockName.isEmpty()) {
                 context.getPlugin().getLogger().warning("IsNearBlockCondition: 'block' parameter is empty.");
                 return false;
             }

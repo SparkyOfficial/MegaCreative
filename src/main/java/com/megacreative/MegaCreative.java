@@ -42,8 +42,7 @@ public class MegaCreative extends JavaPlugin {
             bootstrap();
             logger.info("MegaCreative initialized successfully!");
         } catch (Exception e) {
-            logger.severe("Failed to enable MegaCreative: " + e.getMessage());
-            e.printStackTrace();
+            logger.log(java.util.logging.Level.SEVERE, "Failed to enable MegaCreative", e);
             getServer().getPluginManager().disablePlugin(this);
         }
     }
@@ -253,7 +252,7 @@ public class MegaCreative extends JavaPlugin {
                     logger.info("Auto-save completed successfully");
                 } catch (Exception e) {
                     logger.severe("Error during auto-save: " + e.getMessage());
-                    e.printStackTrace();
+                    logger.log(Level.SEVERE, "Error during auto-save", e);
                 }
             }
         }.runTaskTimer(this, periodTicks, periodTicks); 

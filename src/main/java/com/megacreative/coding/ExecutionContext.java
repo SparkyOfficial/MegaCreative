@@ -31,13 +31,13 @@ import java.util.UUID;
 public class ExecutionContext {
 
     
-    private String executionId;
+    private final String executionId;
     private CodeScript script;
     private Player playerField;
     private String trigger;
     private long startTime;
     private CodeBlock currentBlockField;
-    private boolean cancelledField = false;
+    private final boolean cancelledField = false;
 
     private final MegaCreative plugin; 
     private final Player player; 
@@ -63,7 +63,7 @@ public class ExecutionContext {
     private Priority priority = Priority.NORMAL;
     private int maxInstructions = 1000;
     private long executionTimeout = 0;
-    private long executionStartTime = System.currentTimeMillis();
+    private final long executionStartTime = System.currentTimeMillis();
 
 	
     private final VariableManager variableManager;
@@ -446,9 +446,6 @@ public class ExecutionContext {
         return number != null ? number.intValue() : 0;
     }
     
-    /**
-     * Получает число как double
-     */
     /**
      * Gets a number as a double
      */

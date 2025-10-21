@@ -45,7 +45,7 @@ public class ReferenceSystemCustomEvents {
          * @param regionName Regionsname
          * @param location Standort
          */
-        public PlayerEnterRegionEvent(Player player, String regionName, Location location) {
+        public PlayerEnterRegionEvent(@org.jetbrains.annotations.NotNull Player player, @org.jetbrains.annotations.NotNull String regionName, @org.jetbrains.annotations.NotNull Location location) {
             this.player = player;
             this.regionName = regionName;
             this.location = location;
@@ -61,6 +61,7 @@ public class ReferenceSystemCustomEvents {
          * Ruft den Spieler ab
          * @return Spieler
          */
+        @org.jetbrains.annotations.NotNull
         public Player getPlayer() { return player; }
         
         /**
@@ -73,6 +74,7 @@ public class ReferenceSystemCustomEvents {
          * Ruft den Regionsnamen ab
          * @return Regionsname
          */
+        @org.jetbrains.annotations.NotNull
         public String getRegionName() { return regionName; }
         
         /**
@@ -85,10 +87,13 @@ public class ReferenceSystemCustomEvents {
          * Ruft den Standort ab
          * @return Standort
          */
+        @org.jetbrains.annotations.NotNull
         public Location getLocation() { return location; }
 
+        @org.jetbrains.annotations.NotNull
         @Override
         public HandlerList getHandlers() { return handlers; }
+        @org.jetbrains.annotations.NotNull
         public static HandlerList getHandlerList() { return handlers; }
     }
 
@@ -121,7 +126,7 @@ public class ReferenceSystemCustomEvents {
          * @param regionName Regionsname
          * @param location Standort
          */
-        public PlayerLeaveRegionEvent(Player player, String regionName, Location location) {
+        public PlayerLeaveRegionEvent(@org.jetbrains.annotations.NotNull Player player, @org.jetbrains.annotations.NotNull String regionName, @org.jetbrains.annotations.NotNull Location location) {
             this.player = player;
             this.regionName = regionName;
             this.location = location;
@@ -137,6 +142,7 @@ public class ReferenceSystemCustomEvents {
          * Ruft den Spieler ab
          * @return Spieler
          */
+        @org.jetbrains.annotations.NotNull
         public Player getPlayer() { return player; }
         
         /**
@@ -149,6 +155,7 @@ public class ReferenceSystemCustomEvents {
          * Ruft den Regionsnamen ab
          * @return Regionsname
          */
+        @org.jetbrains.annotations.NotNull
         public String getRegionName() { return regionName; }
         
         /**
@@ -161,10 +168,13 @@ public class ReferenceSystemCustomEvents {
          * Ruft den Standort ab
          * @return Standort
          */
+        @org.jetbrains.annotations.NotNull
         public Location getLocation() { return location; }
 
+        @org.jetbrains.annotations.NotNull
         @Override
         public HandlerList getHandlers() { return handlers; }
+        @org.jetbrains.annotations.NotNull
         public static HandlerList getHandlerList() { return handlers; }
     }
 
@@ -201,7 +211,7 @@ public class ReferenceSystemCustomEvents {
          * @param oldValue Alter Wert
          * @param newValue Neuer Wert
          */
-        public PlayerVariableChangeEvent(Player player, String variableName, Object oldValue, Object newValue) {
+        public PlayerVariableChangeEvent(@org.jetbrains.annotations.NotNull Player player, @org.jetbrains.annotations.NotNull String variableName, Object oldValue, Object newValue) {
             this.player = player;
             this.variableName = variableName;
             this.oldValue = oldValue;
@@ -218,6 +228,7 @@ public class ReferenceSystemCustomEvents {
          * Ruft den Spieler ab
          * @return Spieler
          */
+        @org.jetbrains.annotations.NotNull
         public Player getPlayer() { return player; }
         
         /**
@@ -230,6 +241,7 @@ public class ReferenceSystemCustomEvents {
          * Ruft den Variablennamen ab
          * @return Variablenname
          */
+        @org.jetbrains.annotations.NotNull
         public String getVariableName() { return variableName; }
         
         /**
@@ -256,8 +268,10 @@ public class ReferenceSystemCustomEvents {
          */
         public Object getNewValue() { return newValue; }
 
+        @org.jetbrains.annotations.NotNull
         @Override
         public HandlerList getHandlers() { return handlers; }
+        @org.jetbrains.annotations.NotNull
         public static HandlerList getHandlerList() { return handlers; }
     }
 
@@ -294,7 +308,7 @@ public class ReferenceSystemCustomEvents {
          * @param duration Dauer
          * @param timerData Timer-Daten
          */
-        public TimerExpireEvent(Player player, String timerName, long duration, Object timerData) {
+        public TimerExpireEvent(@org.jetbrains.annotations.NotNull Player player, @org.jetbrains.annotations.NotNull String timerName, long duration, Object timerData) {
             this.player = player;
             this.timerName = timerName;
             this.duration = duration;
@@ -311,6 +325,7 @@ public class ReferenceSystemCustomEvents {
          * Ruft den Spieler ab
          * @return Spieler
          */
+        @org.jetbrains.annotations.NotNull
         public Player getPlayer() { return player; }
         
         /**
@@ -323,6 +338,7 @@ public class ReferenceSystemCustomEvents {
          * Ruft den Timer-Namen ab
          * @return Timer-Name
          */
+        @org.jetbrains.annotations.NotNull
         public String getTimerName() { return timerName; }
         
         /**
@@ -349,8 +365,10 @@ public class ReferenceSystemCustomEvents {
          */
         public Object getTimerData() { return timerData; }
 
+        @org.jetbrains.annotations.NotNull
         @Override
         public HandlerList getHandlers() { return handlers; }
+        @org.jetbrains.annotations.NotNull
         public static HandlerList getHandlerList() { return handlers; }
     }
 
@@ -383,7 +401,7 @@ public class ReferenceSystemCustomEvents {
          * @param actionName Aktionsname
          * @param actionData Aktionsdaten
          */
-        public PlayerCustomActionEvent(Player player, String actionName, Map<String, Object> actionData) {
+        public PlayerCustomActionEvent(@org.jetbrains.annotations.NotNull Player player, @org.jetbrains.annotations.NotNull String actionName, @org.jetbrains.annotations.NotNull Map<String, Object> actionData) {
             this.player = player;
             this.actionName = actionName;
             this.actionData = actionData;
@@ -399,6 +417,7 @@ public class ReferenceSystemCustomEvents {
          * Ruft den Spieler ab
          * @return Spieler
          */
+        @org.jetbrains.annotations.NotNull
         public Player getPlayer() { return player; }
         
         /**
@@ -411,6 +430,7 @@ public class ReferenceSystemCustomEvents {
          * Ruft den Aktionsnamen ab
          * @return Aktionsname
          */
+        @org.jetbrains.annotations.NotNull
         public String getActionName() { return actionName; }
         
         /**
@@ -423,10 +443,13 @@ public class ReferenceSystemCustomEvents {
          * Ruft die Aktionsdaten ab
          * @return Aktionsdaten
          */
+        @org.jetbrains.annotations.NotNull
         public Map<String, Object> getActionData() { return actionData; }
 
+        @org.jetbrains.annotations.NotNull
         @Override
         public HandlerList getHandlers() { return handlers; }
+        @org.jetbrains.annotations.NotNull
         public static HandlerList getHandlerList() { return handlers; }
     }
 
@@ -467,7 +490,7 @@ public class ReferenceSystemCustomEvents {
          * @param newScore Neue Punkte
          * @param reason Grund
          */
-        public PlayerScoreChangeEvent(Player player, String scoreType, int oldScore, int newScore, String reason) {
+        public PlayerScoreChangeEvent(@org.jetbrains.annotations.NotNull Player player, @org.jetbrains.annotations.NotNull String scoreType, int oldScore, int newScore, @org.jetbrains.annotations.NotNull String reason) {
             this.player = player;
             this.scoreType = scoreType;
             this.oldScore = oldScore;
@@ -485,6 +508,7 @@ public class ReferenceSystemCustomEvents {
          * Ruft den Spieler ab
          * @return Spieler
          */
+        @org.jetbrains.annotations.NotNull
         public Player getPlayer() { return player; }
         
         /**
@@ -497,6 +521,7 @@ public class ReferenceSystemCustomEvents {
          * Ruft den Punkte-Typ ab
          * @return Punkte-Typ
          */
+        @org.jetbrains.annotations.NotNull
         public String getScoreType() { return scoreType; }
         
         /**
@@ -533,10 +558,13 @@ public class ReferenceSystemCustomEvents {
          * Ruft den Grund ab
          * @return Grund
          */
+        @org.jetbrains.annotations.NotNull
         public String getReason() { return reason; }
 
+        @org.jetbrains.annotations.NotNull
         @Override
         public HandlerList getHandlers() { return handlers; }
+        @org.jetbrains.annotations.NotNull
         public static HandlerList getHandlerList() { return handlers; }
     }
 
@@ -569,7 +597,7 @@ public class ReferenceSystemCustomEvents {
          * @param functionName Funktionsname
          * @param parameters Parameter
          */
-        public FunctionCallEvent(Player player, String functionName, Object[] parameters) {
+        public FunctionCallEvent(@org.jetbrains.annotations.NotNull Player player, @org.jetbrains.annotations.NotNull String functionName, Object[] parameters) {
             this.player = player;
             this.functionName = functionName;
             this.parameters = parameters;
@@ -585,6 +613,7 @@ public class ReferenceSystemCustomEvents {
          * Ruft den Spieler ab
          * @return Spieler
          */
+        @org.jetbrains.annotations.NotNull
         public Player getPlayer() { return player; }
         
         /**
@@ -597,6 +626,7 @@ public class ReferenceSystemCustomEvents {
          * Ruft den Funktionsnamen ab
          * @return Funktionsname
          */
+        @org.jetbrains.annotations.NotNull
         public String getFunctionName() { return functionName; }
         
         /**
@@ -611,8 +641,10 @@ public class ReferenceSystemCustomEvents {
          */
         public Object[] getParameters() { return parameters; }
 
+        @org.jetbrains.annotations.NotNull
         @Override
         public HandlerList getHandlers() { return handlers; }
+        @org.jetbrains.annotations.NotNull
         public static HandlerList getHandlerList() { return handlers; }
     }
 
@@ -649,7 +681,7 @@ public class ReferenceSystemCustomEvents {
          * @param oldMode Alter Modus
          * @param newMode Neuer Modus
          */
-        public WorldModeChangeEvent(Player player, String worldId, String oldMode, String newMode) {
+        public WorldModeChangeEvent(@org.jetbrains.annotations.NotNull Player player, @org.jetbrains.annotations.NotNull String worldId, @org.jetbrains.annotations.NotNull String oldMode, @org.jetbrains.annotations.NotNull String newMode) {
             this.player = player;
             this.worldId = worldId;
             this.oldMode = oldMode;
@@ -666,6 +698,7 @@ public class ReferenceSystemCustomEvents {
          * Ruft den Spieler ab
          * @return Spieler
          */
+        @org.jetbrains.annotations.NotNull
         public Player getPlayer() { return player; }
         
         /**
@@ -678,6 +711,7 @@ public class ReferenceSystemCustomEvents {
          * Ruft die Welt-ID ab
          * @return Welt-ID
          */
+        @org.jetbrains.annotations.NotNull
         public String getWorldId() { return worldId; }
         
         /**
@@ -690,6 +724,7 @@ public class ReferenceSystemCustomEvents {
          * Ruft den alten Modus ab
          * @return Alter Modus
          */
+        @org.jetbrains.annotations.NotNull
         public String getOldMode() { return oldMode; }
         
         /**
@@ -702,10 +737,13 @@ public class ReferenceSystemCustomEvents {
          * Ruft den neuen Modus ab
          * @return Neuer Modus
          */
+        @org.jetbrains.annotations.NotNull
         public String getNewMode() { return newMode; }
 
+        @org.jetbrains.annotations.NotNull
         @Override
         public HandlerList getHandlers() { return handlers; }
+        @org.jetbrains.annotations.NotNull
         public static HandlerList getHandlerList() { return handlers; }
     }
 }

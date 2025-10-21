@@ -2,6 +2,7 @@ package com.megacreative.coding.values.types;
 
 import com.megacreative.coding.values.DataValue;
 import com.megacreative.coding.values.ValueType;
+import org.jetbrains.annotations.NotNull;
 
 import java.util.*;
 
@@ -17,22 +18,24 @@ public class MapValue implements DataValue {
         this.values = new HashMap<>();
     }
     
-    public MapValue(Map<String, DataValue> values) {
+    public MapValue(@NotNull Map<String, DataValue> values) {
         this.values = new HashMap<>(values);
     }
     
     @Override
+    @NotNull
     public ValueType getType() {
         return ValueType.DICTIONARY;
     }
     
     @Override
+    @NotNull
     public Object getValue() {
         return values;
     }
     
     @Override
-    public void setValue(Object value) throws IllegalArgumentException {
+    public void setValue(@NotNull Object value) throws IllegalArgumentException {
         values.clear();
         if (value instanceof Map) {
             Map<?, ?> map = (Map<?, ?>) value;
@@ -53,35 +56,35 @@ public class MapValue implements DataValue {
     /**
      * Puts a key-value pair into the map
      */
-    public DataValue put(String key, DataValue value) {
+    public DataValue put(@NotNull String key, @NotNull DataValue value) {
         return values.put(key, value);
     }
     
     /**
      * Gets a value by key
      */
-    public DataValue get(String key) {
+    public DataValue get(@NotNull String key) {
         return values.get(key);
     }
     
     /**
      * Removes a key-value pair by key
      */
-    public DataValue remove(String key) {
+    public DataValue remove(@NotNull String key) {
         return values.remove(key);
     }
     
     /**
      * Checks if the map contains a key
      */
-    public boolean containsKey(String key) {
+    public boolean containsKey(@NotNull String key) {
         return values.containsKey(key);
     }
     
     /**
      * Checks if the map contains a value
      */
-    public boolean containsValue(DataValue value) {
+    public boolean containsValue(@NotNull DataValue value) {
         return values.containsValue(value);
     }
     
@@ -109,6 +112,7 @@ public class MapValue implements DataValue {
     /**
      * Gets all keys in the map
      */
+    @NotNull
     public Set<String> keySet() {
         return values.keySet();
     }
@@ -116,6 +120,7 @@ public class MapValue implements DataValue {
     /**
      * Gets a copy of the internal map
      */
+    @NotNull
     public Map<String, DataValue> getValues() {
         return new HashMap<>(values);
     }
@@ -123,18 +128,20 @@ public class MapValue implements DataValue {
     /**
      * Merges another map into this one
      */
-    public void putAll(MapValue other) {
+    public void putAll(@NotNull MapValue other) {
         values.putAll(other.values);
     }
     
     /**
      * Gets a value with a default if key doesn't exist
      */
-    public DataValue getOrDefault(String key, DataValue defaultValue) {
+    @NotNull
+    public DataValue getOrDefault(@NotNull String key, @NotNull DataValue defaultValue) {
         return values.getOrDefault(key, defaultValue);
     }
     
     @Override
+    @NotNull
     public String asString() {
         StringBuilder sb = new StringBuilder();
         sb.append("{");
@@ -152,6 +159,7 @@ public class MapValue implements DataValue {
     }
     
     @Override
+    @NotNull
     public Number asNumber() {
         return size();
     }
@@ -167,11 +175,13 @@ public class MapValue implements DataValue {
     }
     
     @Override
+    @NotNull
     public String getDescription() {
         return "Map with " + size() + " key-value pairs";
     }
     
     @Override
+    @NotNull
     public DataValue copy() {
         Map<String, DataValue> copiedValues = new HashMap<>();
         for (Map.Entry<String, DataValue> entry : values.entrySet()) {
@@ -181,6 +191,7 @@ public class MapValue implements DataValue {
     }
     
     @Override
+    @NotNull
     public Map<String, Object> serialize() {
         Map<String, Object> result = new HashMap<>();
         result.put("type", getType().name());
@@ -206,6 +217,7 @@ public class MapValue implements DataValue {
     }
     
     @Override
+    @NotNull
     public String toString() {
         return "MapValue{size=" + size() + ", values=" + asString() + "}";
     }

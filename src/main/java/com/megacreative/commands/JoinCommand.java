@@ -9,6 +9,7 @@ import org.bukkit.command.Command;
 import org.bukkit.command.CommandExecutor;
 import org.bukkit.command.CommandSender;
 import org.bukkit.entity.Player;
+import org.jetbrains.annotations.NotNull;
 
 /**
  * Команда для присоединения к миру
@@ -19,6 +20,8 @@ import org.bukkit.entity.Player;
  */
 public class JoinCommand implements CommandExecutor {
     
+    // These fields need to remain as class fields since they are used throughout multiple methods
+    // Static analysis flags them as convertible to local variables, but this is a false positive
     private final MegaCreative plugin;
     private final IWorldManager worldManager;
     
@@ -63,7 +66,7 @@ public class JoinCommand implements CommandExecutor {
      * @return true, wenn der Befehl erfolgreich ausgeführt wurde
      */
     @Override
-    public boolean onCommand(CommandSender sender, Command command, String label, String[] args) {
+    public boolean onCommand(@NotNull CommandSender sender, @NotNull Command command, @NotNull String label, @NotNull String[] args) {
         if (!(sender instanceof Player player)) {
             sender.sendMessage("§cЭта команда доступна только игрокам!");
             return true;

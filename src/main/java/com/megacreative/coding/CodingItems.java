@@ -77,49 +77,49 @@ public class CodingItems {
         for (String itemName : missingItems) {
             switch (itemName) {
                 case "Блок события":
-                    player.getInventory().addItem(createSimpleBlock(Material.DIAMOND_BLOCK, EVENT_BLOCK_NAME));
+                    player.getInventory().addItem(createNamedItem(Material.DIAMOND_BLOCK, EVENT_BLOCK_NAME));
                     break;
                 case "Блок действия":
-                    player.getInventory().addItem(createSimpleBlock(Material.COBBLESTONE, ACTION_BLOCK_NAME));
+                    player.getInventory().addItem(createNamedItem(Material.COBBLESTONE, ACTION_BLOCK_NAME));
                     break;
                 case "Блок условия":
-                    player.getInventory().addItem(createSimpleBlock(Material.OAK_PLANKS, CONDITION_BLOCK_NAME));
+                    player.getInventory().addItem(createNamedItem(Material.OAK_PLANKS, CONDITION_BLOCK_NAME));
                     break;
                 case "Блок переменной":
-                    player.getInventory().addItem(createSimpleBlock(Material.IRON_BLOCK, VARIABLE_BLOCK_NAME));
+                    player.getInventory().addItem(createNamedItem(Material.IRON_BLOCK, VARIABLE_BLOCK_NAME));
                     break;
                 case "Блок повтора":
-                    player.getInventory().addItem(createSimpleBlock(Material.EMERALD_BLOCK, REPEAT_BLOCK_NAME));
+                    player.getInventory().addItem(createNamedItem(Material.EMERALD_BLOCK, REPEAT_BLOCK_NAME));
                     break;
                 case "Блок иначе":
-                    player.getInventory().addItem(createSimpleBlock(Material.END_STONE, ELSE_BLOCK_NAME));
+                    player.getInventory().addItem(createNamedItem(Material.END_STONE, ELSE_BLOCK_NAME));
                     break;
                 case "Игровое действие":
-                    player.getInventory().addItem(createSimpleBlock(Material.NETHERITE_BLOCK, GAME_ACTION_BLOCK_NAME));
+                    player.getInventory().addItem(createNamedItem(Material.NETHERITE_BLOCK, GAME_ACTION_BLOCK_NAME));
                     break;
                 case "Если переменная":
-                    player.getInventory().addItem(createSimpleBlock(Material.OBSIDIAN, IF_VAR_BLOCK_NAME));
+                    player.getInventory().addItem(createNamedItem(Material.OBSIDIAN, IF_VAR_BLOCK_NAME));
                     break;
                 case "Если игра":
-                    player.getInventory().addItem(createSimpleBlock(Material.REDSTONE_BLOCK, IF_GAME_BLOCK_NAME));
+                    player.getInventory().addItem(createNamedItem(Material.REDSTONE_BLOCK, IF_GAME_BLOCK_NAME));
                     break;
                 case "Если существо":
-                    player.getInventory().addItem(createSimpleBlock(Material.BRICKS, IF_MOB_BLOCK_NAME));
+                    player.getInventory().addItem(createNamedItem(Material.BRICKS, IF_MOB_BLOCK_NAME));
                     break;
                 case "Получить данные":
-                    player.getInventory().addItem(createSimpleBlock(Material.POLISHED_GRANITE, GET_DATA_BLOCK_NAME));
+                    player.getInventory().addItem(createNamedItem(Material.POLISHED_GRANITE, GET_DATA_BLOCK_NAME));
                     break;
                 case "Вызвать функцию":
-                    player.getInventory().addItem(createSimpleBlock(Material.LAPIS_BLOCK, CALL_FUNCTION_BLOCK_NAME));
+                    player.getInventory().addItem(createNamedItem(Material.LAPIS_BLOCK, CALL_FUNCTION_BLOCK_NAME));
                     break;
                 case "Сохранить функцию":
-                    player.getInventory().addItem(createSimpleBlock(Material.BOOKSHELF, SAVE_FUNCTION_BLOCK_NAME));
+                    player.getInventory().addItem(createNamedItem(Material.BOOKSHELF, SAVE_FUNCTION_BLOCK_NAME));
                     break;
                 case "Повторяющийся триггер":
-                    player.getInventory().addItem(createSimpleBlock(Material.REDSTONE_BLOCK, REPEAT_TRIGGER_BLOCK_NAME));
+                    player.getInventory().addItem(createNamedItem(Material.REDSTONE_BLOCK, REPEAT_TRIGGER_BLOCK_NAME));
                     break;
                 case "Скобка":
-                    player.getInventory().addItem(createSimpleBlock(Material.PISTON, BRACKET_BLOCK_NAME));
+                    player.getInventory().addItem(createNamedItem(Material.PISTON, BRACKET_BLOCK_NAME));
                     break;
                 case "Отрицание НЕ":
                     player.getInventory().addItem(getArrowNot());
@@ -136,7 +136,7 @@ public class CodingItems {
                 default:
                     
                     if (itemName.contains("блок") || itemName.contains("Блок")) {
-                        player.getInventory().addItem(createSimpleBlock(Material.STONE, "§7" + itemName));
+                        player.getInventory().addItem(createNamedItem(Material.STONE, "§7" + itemName));
                     }
                     break;
             }
@@ -147,32 +147,35 @@ public class CodingItems {
      * Выдаёт игроку 9 новых универсальных блоков для кодинга
      */
     public static void giveCodingItems(Player player) {
+        // Extracted method for creating simple block items
+        giveSimpleBlockItems(player);
         
-        player.getInventory().addItem(createSimpleBlock(Material.DIAMOND_BLOCK, "§b§lСобытие игрока"));
-        player.getInventory().addItem(createSimpleBlock(Material.OAK_PLANKS, "§6§lУсловие игрока"));
-        player.getInventory().addItem(createSimpleBlock(Material.COBBLESTONE, "§7§lДействие игрока"));
-        player.getInventory().addItem(createSimpleBlock(Material.IRON_BLOCK, "§f§lПрисвоить переменную"));
-        player.getInventory().addItem(createSimpleBlock(Material.END_STONE, "§e§lИначе"));
-        player.getInventory().addItem(createSimpleBlock(Material.NETHERITE_BLOCK, "§8§lИгровое действие"));
-        player.getInventory().addItem(createSimpleBlock(Material.OBSIDIAN, "§5§lЕсли переменная"));
-        player.getInventory().addItem(createSimpleBlock(Material.REDSTONE_BLOCK, "§c§lЕсли игра"));
-        player.getInventory().addItem(createSimpleBlock(Material.BRICKS, "§d§lЕсли существо"));
-        player.getInventory().addItem(createSimpleBlock(Material.POLISHED_GRANITE, "§a§lПолучить данные"));
-        player.getInventory().addItem(createSimpleBlock(Material.EMERALD_BLOCK, "§f🔄 Повторить N раз"));
-        player.getInventory().addItem(createSimpleBlock(Material.LAPIS_BLOCK, "§b📞 Вызвать функцию"));
-        player.getInventory().addItem(createSimpleBlock(Material.BOOKSHELF, "§d💾 Сохранить функцию"));
-        player.getInventory().addItem(createSimpleBlock(Material.REDSTONE_BLOCK, "§e⏰ Повторяющийся триггер"));
-        player.getInventory().addItem(createSimpleBlock(Material.PISTON, BRACKET_BLOCK_NAME));
         player.getInventory().addItem(getArrowNot());
-        
-    
         
         player.getInventory().addItem(getDataCreator());
         
-        
         player.getInventory().addItem(getCodeMover());
-
-        
+    }
+    
+    /**
+     * Helper method to give simple block items to player
+     */
+    private static void giveSimpleBlockItems(Player player) {
+        player.getInventory().addItem(createNamedItem(Material.DIAMOND_BLOCK, "§b§lСобытие игрока"));
+        player.getInventory().addItem(createNamedItem(Material.OAK_PLANKS, "§6§lУсловие игрока"));
+        player.getInventory().addItem(createNamedItem(Material.COBBLESTONE, "§7§lДействие игрока"));
+        player.getInventory().addItem(createNamedItem(Material.IRON_BLOCK, "§f§lПрисвоить переменную"));
+        player.getInventory().addItem(createNamedItem(Material.END_STONE, "§e§lИначе"));
+        player.getInventory().addItem(createNamedItem(Material.NETHERITE_BLOCK, "§8§lИгровое действие"));
+        player.getInventory().addItem(createNamedItem(Material.OBSIDIAN, "§5§lЕсли переменная"));
+        player.getInventory().addItem(createNamedItem(Material.REDSTONE_BLOCK, "§c§lЕсли игра"));
+        player.getInventory().addItem(createNamedItem(Material.BRICKS, "§d§lЕсли существо"));
+        player.getInventory().addItem(createNamedItem(Material.POLISHED_GRANITE, "§a§lПолучить данные"));
+        player.getInventory().addItem(createNamedItem(Material.EMERALD_BLOCK, "§f🔄 Повторить N раз"));
+        player.getInventory().addItem(createNamedItem(Material.LAPIS_BLOCK, "§b📞 Вызвать функцию"));
+        player.getInventory().addItem(createNamedItem(Material.BOOKSHELF, "§d💾 Сохранить функцию"));
+        player.getInventory().addItem(createNamedItem(Material.REDSTONE_BLOCK, "§e⏰ Повторяющийся триггер"));
+        player.getInventory().addItem(createNamedItem(Material.PISTON, BRACKET_BLOCK_NAME));
     }
     
     /**
@@ -209,57 +212,62 @@ public class CodingItems {
     }
     
     public static ItemStack getDataCreator() {
-        ItemStack item = new ItemStack(Material.IRON_INGOT);
-        ItemMeta meta = item.getItemMeta();
-        meta.setDisplayName("§b§lСоздать данные");
-        meta.setLore(Arrays.asList(
+        return createItemWithLore(Material.IRON_INGOT, "§b§lСоздать данные", Arrays.asList(
             "§7Используйте для создания предметов-данных:",
             "§aПКМ§7 - открыть меню создания данных",
             "§7Данные можно вставлять в параметры блоков"
         ));
-        item.setItemMeta(meta);
-        return item;
     }
     
     public static ItemStack getCodeMover() {
-        ItemStack item = new ItemStack(Material.COMPARATOR);
-        ItemMeta meta = item.getItemMeta();
-        meta.setDisplayName(CODE_MOVER_NAME);
-        meta.setLore(Arrays.asList(
+        return createItemWithLore(Material.COMPARATOR, CODE_MOVER_NAME, Arrays.asList(
             "§7Инструмент для перемещения блоков кода:",
             "§eShift+ПКМ§7 - скопировать цепочку",
             "§aПКМ§7 - вставить цепочку",
             "§cЛКМ§7 - очистить буфер",
             "§8Для быстрого перемещения отдельных веток кода"
         ));
-        item.setItemMeta(meta);
-        return item;
     }
     
     public static ItemStack getBracketBlock() {
-        ItemStack item = new ItemStack(Material.PISTON);
-        ItemMeta meta = item.getItemMeta();
-        meta.setDisplayName(BRACKET_BLOCK_NAME);
-        meta.setLore(Arrays.asList(
+        return createItemWithLore(Material.PISTON, BRACKET_BLOCK_NAME, Arrays.asList(
             "§7Блок для группировки логических секций:",
             "§aПО умолчанию: Открывающая скобка {",
             "§eПКМ§7 - переключить тип скобки",
             "§8Используется для структурирования кода"
         ));
-        item.setItemMeta(meta);
-        return item;
     }
     
     public static ItemStack getArrowNot() {
-        ItemStack item = new ItemStack(Material.ARROW);
-        ItemMeta meta = item.getItemMeta();
-        meta.setDisplayName(ARROW_NOT_NAME);
-        meta.setLore(Arrays.asList(
+        return createItemWithLore(Material.ARROW, ARROW_NOT_NAME, Arrays.asList(
             "§7Инструмент для отрицания условий:",
             "§eПКМ§ по блоку условия - инвертировать результат",
             "§7Преобразует 'истина' в 'ложь' и наоборот",
             "§8Полезно для создания 'Если НЕ' условий"
         ));
+    }
+    
+    public static ItemStack getGameValue() {
+        return createItemWithLore(Material.GOLDEN_APPLE, GAME_VALUE_NAME, Arrays.asList(
+            "§7Используйте для получения игровых значений:",
+            "§aПКМ§7 - открыть меню выбора значения",
+            "§7Можно использовать в параметрах блоков",
+            "§8Примеры: здоровье, голод, позиция и т.д."
+        ));
+    }
+    
+    /**
+     * Creates an item with the specified material, display name, and lore
+     * @param material The material for the item
+     * @param displayName The display name for the item
+     * @param lore The lore for the item
+     * @return The created ItemStack
+     */
+    private static ItemStack createItemWithLore(Material material, String displayName, List<String> lore) {
+        ItemStack item = new ItemStack(material);
+        ItemMeta meta = item.getItemMeta();
+        meta.setDisplayName(displayName);
+        meta.setLore(lore);
         item.setItemMeta(meta);
         return item;
     }
@@ -274,18 +282,19 @@ public class CodingItems {
         return item;
     }
     
-    public static ItemStack getGameValue() {
-        ItemStack item = new ItemStack(Material.GOLDEN_APPLE);
+    /**
+     * Creates an item with the specified material and display name
+     * @param material The material for the item
+     * @param displayName The display name for the item
+     * @return The created ItemStack
+     */
+    private static ItemStack createNamedItem(Material material, String displayName) {
+        ItemStack item = new ItemStack(material);
         ItemMeta meta = item.getItemMeta();
-        meta.setDisplayName(GAME_VALUE_NAME);
-        meta.setLore(Arrays.asList(
-            "§7Используйте для получения игровых значений:",
-            "§aПКМ§7 - открыть меню выбора значения",
-            "§7Можно использовать в параметрах блоков",
-            "§8Примеры: здоровье, голод, позиция и т.д."
-        ));
-        item.setItemMeta(meta);
+        if (meta != null) {
+            meta.setDisplayName(displayName);
+            item.setItemMeta(meta);
+        }
         return item;
     }
-
 }

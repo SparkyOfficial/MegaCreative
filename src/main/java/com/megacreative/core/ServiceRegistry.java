@@ -58,6 +58,8 @@ public class ServiceRegistry implements DependencyContainer.Disposable {
     private final DependencyContainer dependencyContainer;
     
     
+    // These fields track initialization state across method calls and cannot be converted to local variables
+    // They are required to prevent re-initialization of services and track which initialization steps have been completed
     private boolean coreServicesRegistered = false;
     private boolean managersInitialized = false;
     private boolean codingServicesInitialized = false;
@@ -134,8 +136,7 @@ public class ServiceRegistry implements DependencyContainer.Disposable {
             
             log.info("Service Registry initialized successfully!");
         } catch (Exception e) {
-            log.severe("Failed to initialize Service Registry: " + e.getMessage());
-            e.printStackTrace();
+            log.log(Level.SEVERE, "Service registry initialization failed", e);
             throw new RuntimeException("Service registry initialization failed", e);
         }
     }
@@ -189,8 +190,7 @@ public class ServiceRegistry implements DependencyContainer.Disposable {
             servicesConnected = true;
             log.info("All services connected successfully!");
         } catch (Exception e) {
-            log.severe("Failed to connect services: " + e.getMessage());
-            e.printStackTrace();
+            log.log(Level.SEVERE, "Failed to connect services", e);
         }
     }
     
@@ -250,21 +250,20 @@ public class ServiceRegistry implements DependencyContainer.Disposable {
         dependencyContainer.registerSingleton(com.megacreative.interfaces.IConditionFactory.class, conditionFactoryInstance);
         
         
-        
-		// Register ScriptValidator as a singleton to consolidate validation surface
-		dependencyContainer.registerFactory(ScriptValidator.class, (DependencyContainer.Supplier<ScriptValidator>) () -> {
-			BlockConfigService blockConfigService = dependencyContainer.resolve(BlockConfigService.class);
-			return new ScriptValidator(blockConfigService);
-		});
+        // Register ScriptValidator as a singleton to consolidate validation surface
+        dependencyContainer.registerFactory(ScriptValidator.class, (DependencyContainer.Supplier<ScriptValidator>) () -> {
+            BlockConfigService blockConfigService = dependencyContainer.resolve(BlockConfigService.class);
+            return new ScriptValidator(blockConfigService);
+        });
 
-		// Register ScriptEngine as a factory - this is critical for proper initialization
-		dependencyContainer.registerFactory(ScriptEngine.class, (DependencyContainer.Supplier<ScriptEngine>) () -> {
-			VariableManager variableManager = dependencyContainer.resolve(VariableManager.class);
-			VisualDebugger visualDebugger = dependencyContainer.resolve(VisualDebugger.class);
-			BlockConfigService blockConfigService = dependencyContainer.resolve(BlockConfigService.class);
-			ScriptValidator scriptValidator = dependencyContainer.resolve(ScriptValidator.class);
-			return new DefaultScriptEngine((MegaCreative) plugin, variableManager, visualDebugger, blockConfigService, scriptValidator);
-		});
+        // Register ScriptEngine as a factory - this is critical for proper initialization
+        dependencyContainer.registerFactory(ScriptEngine.class, (DependencyContainer.Supplier<ScriptEngine>) () -> {
+            VariableManager variableManager = dependencyContainer.resolve(VariableManager.class);
+            VisualDebugger visualDebugger = dependencyContainer.resolve(VisualDebugger.class);
+            BlockConfigService blockConfigService = dependencyContainer.resolve(BlockConfigService.class);
+            ScriptValidator scriptValidator = dependencyContainer.resolve(ScriptValidator.class);
+            return new DefaultScriptEngine((MegaCreative) plugin, variableManager, visualDebugger, blockConfigService, scriptValidator);
+        });
     }
     
     private void initializeNewArchitectureServices() {
@@ -313,8 +312,7 @@ public class ServiceRegistry implements DependencyContainer.Disposable {
             
             log.info("Additional services initialized successfully!");
         } catch (Exception e) {
-            log.severe("Failed to initialize additional services: " + e.getMessage());
-            e.printStackTrace();
+            log.log(Level.SEVERE, "Failed to initialize additional services", e);
         }
     }
     
@@ -340,8 +338,6 @@ public class ServiceRegistry implements DependencyContainer.Disposable {
         log.info("Shutting down MegaCreative services...");
         
         try {
-
-            
             
             if (dependencyContainer != null) {
                 try {
@@ -357,6 +353,7 @@ public class ServiceRegistry implements DependencyContainer.Disposable {
         
         log.info("All services shut down successfully");
     }
+    
     
     
     
@@ -454,6 +451,7 @@ public class ServiceRegistry implements DependencyContainer.Disposable {
     
     
     
+    
     public DefaultScriptEngine getDefaultScriptEngine() {
         return dependencyContainer.resolve(DefaultScriptEngine.class);
     }
@@ -509,6 +507,7 @@ public class ServiceRegistry implements DependencyContainer.Disposable {
     public CodeCompiler getCodeCompiler() {
         return dependencyContainer.resolve(CodeCompiler.class);
     }
+    
     
     
     

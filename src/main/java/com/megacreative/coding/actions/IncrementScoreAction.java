@@ -42,13 +42,15 @@ public class IncrementScoreAction implements BlockAction {
             String key = resolvedKey.asString();
             String incrementStr = resolvedIncrement.asString();
             
-            if (key == null || key.isEmpty()) {
+            // Removed redundant null checks - static analysis flagged them as always non-null when this method is called
+            if (key.isEmpty()) {
                 return ExecutionResult.error("Invalid score key");
             }
 
             
             int increment = 1; 
-            if (incrementStr != null && !incrementStr.isEmpty()) {
+            // Removed redundant null check - static analysis flagged it as always non-null when this method is called
+            if (!incrementStr.isEmpty()) {
                 try {
                     increment = Integer.parseInt(incrementStr);
                 } catch (NumberFormatException e) {

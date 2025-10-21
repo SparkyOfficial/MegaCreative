@@ -60,6 +60,7 @@ public class MyWorldsGUI implements GUIManager.ManagedGUIInterface {
      * Richtet das GUI-Inventar ein
      */
     private void setupInventory() {
+        inventory.clear();
         
         ItemStack glass = new ItemStack(Material.GRAY_STAINED_GLASS_PANE);
         ItemMeta glassMeta = glass.getItemMeta();
@@ -70,7 +71,7 @@ public class MyWorldsGUI implements GUIManager.ManagedGUIInterface {
             inventory.setItem(i, glass);
         }
         
-        
+        // Create world button (only if player has less than 5 worlds)
         if (plugin.getServiceRegistry().getWorldManager().getPlayerWorldCount(player) < 5) {
             ItemStack createButton = new ItemStack(Material.EMERALD);
             ItemMeta createMeta = createButton.getItemMeta();
@@ -84,7 +85,7 @@ public class MyWorldsGUI implements GUIManager.ManagedGUIInterface {
             inventory.setItem(49, createButton);
         }
         
-        
+        // Display player worlds
         List<CreativeWorld> playerWorlds = plugin.getServiceRegistry().getWorldManager().getPlayerWorlds(player);
         int slot = 10;
         
@@ -119,12 +120,11 @@ public class MyWorldsGUI implements GUIManager.ManagedGUIInterface {
      * Öffnet die GUI für den Spieler
      */
     public void open() {
-        
+        // Register and open the GUI
         plugin.getServiceRegistry().getGuiManager().registerGUI(player, this, inventory);
         player.openInventory(inventory);
     }
     
-    @Override
     /**
      * Получает заголовок графического интерфейса
      * @return Заголовок интерфейса
@@ -135,11 +135,11 @@ public class MyWorldsGUI implements GUIManager.ManagedGUIInterface {
      * Ruft den GUI-Titel ab
      * @return Schnittstellentitel
      */
+    @Override
     public String getGUITitle() {
         return "My Worlds";
     }
     
-    @Override
     /**
      * Обрабатывает события кликов в инвентаре
      * @param event Событие клика в инвентаре
@@ -150,6 +150,7 @@ public class MyWorldsGUI implements GUIManager.ManagedGUIInterface {
      * Verarbeitet Inventarklick-Ereignisse
      * @param event Inventarklick-Ereignis
      */
+    @Override
     public void onInventoryClick(InventoryClickEvent event) {
         if (!event.getInventory().equals(inventory)) return;
         
@@ -164,14 +165,14 @@ public class MyWorldsGUI implements GUIManager.ManagedGUIInterface {
         
         String displayName = clicked.getItemMeta().getDisplayName();
         
-        
+        // Handle create world button
         if (clicked.getType() == Material.EMERALD && displayName.contains("Создать")) {
             player.closeInventory();
             new WorldCreationGUI(plugin, player).open();
             return;
         }
         
-        
+        // Handle world item clicks
         List<CreativeWorld> playerWorlds = plugin.getServiceRegistry().getWorldManager().getPlayerWorlds(player);
         int slot = event.getSlot();
         int worldIndex = getWorldIndexFromSlot(slot);
@@ -180,11 +181,11 @@ public class MyWorldsGUI implements GUIManager.ManagedGUIInterface {
             CreativeWorld world = playerWorlds.get(worldIndex);
             
             if (event.isLeftClick()) {
-                
+                // Join world
                 player.closeInventory();
                 player.performCommand("join " + world.getId());
             } else if (event.isRightClick()) {
-                
+                // Open world settings
                 player.closeInventory();
                 new WorldSettingsGUI(plugin, player, world).open();
             }
@@ -206,12 +207,10 @@ public class MyWorldsGUI implements GUIManager.ManagedGUIInterface {
      */
     private int getWorldIndexFromSlot(int slot) {
         if (slot < 10 || slot > 43) return -1;
+        if (slot % 9 == 0 || slot % 9 == 8) return -1;
         
-        int row = slot / 9;
-        int col = slot % 9;
-        
-        if (col == 0 || col == 8) return -1;
-        
-        return (row - 1) * 7 + (col - 1);
+        int row = slot / 9 - 1;
+        int col = slot % 9 - 1;
+        return row * 7 + col;
     }
 }

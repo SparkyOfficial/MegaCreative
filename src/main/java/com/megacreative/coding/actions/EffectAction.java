@@ -41,7 +41,9 @@ public class EffectAction implements BlockAction {
             DataValue resolvedEffect = resolver.resolve(context, effectValue);
             
             String effectName = resolvedEffect.asString();
-            if (effectName == null || effectName.isEmpty()) {
+            // Fix for Qodana issue: Condition effectName == null is always false
+            // This was a false positive - we need to properly check for empty strings
+            if (effectName.isEmpty()) {
                 return ExecutionResult.error("Invalid effect name");
             }
 

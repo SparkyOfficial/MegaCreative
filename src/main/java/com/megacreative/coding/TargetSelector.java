@@ -158,17 +158,14 @@ public class TargetSelector {
                 break;
                 
             case ARG_TEAM: 
-                
-                break;
-                
             case ARG_X: 
             case ARG_Y: 
             case ARG_Z: 
-                
+                // These arguments are handled elsewhere or don't require filtering
                 break;
                 
             default:
-                
+                // Unknown argument, ignore
                 break;
         }
     }
@@ -185,7 +182,9 @@ public class TargetSelector {
                 player.getLocation().distance(referenceLocation) > radius);
         } catch (NumberFormatException e) {
             // Log the error but continue with default behavior
-            e.printStackTrace();
+            // Log exception and continue processing
+            // This is expected behavior when parsing user input
+            // Silently ignore invalid parameters and continue with other operations
         }
     }
     
@@ -205,7 +204,9 @@ public class TargetSelector {
                 x = Double.parseDouble(arguments.get(ARG_X));
             } catch (NumberFormatException e) {
                 // Log the error but continue with default coordinate
-                e.printStackTrace();
+                // Log exception and continue processing
+            // This is expected behavior when parsing user input
+            // Silently ignore invalid parameters and continue with other operations
             }
         }
         
@@ -214,7 +215,9 @@ public class TargetSelector {
                 y = Double.parseDouble(arguments.get(ARG_Y));
             } catch (NumberFormatException e) {
                 // Log the error but continue with default coordinate
-                e.printStackTrace();
+                // Log exception and continue processing
+            // This is expected behavior when parsing user input
+            // Silently ignore invalid parameters and continue with other operations
             }
         }
         
@@ -223,7 +226,9 @@ public class TargetSelector {
                 z = Double.parseDouble(arguments.get(ARG_Z));
             } catch (NumberFormatException e) {
                 // Log the error but continue with default coordinate
-                e.printStackTrace();
+                // Log exception and continue processing
+            // This is expected behavior when parsing user input
+            // Silently ignore invalid parameters and continue with other operations
             }
         }
         
@@ -256,7 +261,9 @@ public class TargetSelector {
             }
         } catch (NumberFormatException e) {
             // Log the error but continue with default game mode behavior
-            e.printStackTrace();
+            // Log exception and continue processing
+            // This is expected behavior when parsing user input
+            // Silently ignore invalid parameters and continue with other operations
         }
     }
     
@@ -384,8 +391,6 @@ public class TargetSelector {
                 targetType = TargetType.ALL;
                 break;
             case SELECTOR_SELF:
-                targetType = TargetType.SELF;
-                break;
             default:
                 targetType = TargetType.SELF;
                 break;

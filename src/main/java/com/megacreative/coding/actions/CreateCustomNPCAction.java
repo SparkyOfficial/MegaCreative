@@ -111,7 +111,9 @@ public class CreateCustomNPCAction implements BlockAction {
             
             if (resolvedVariable != null && !resolvedVariable.isEmpty()) {
                 String variableName = resolvedVariable.asString();
-                if (variableName != null && !variableName.isEmpty()) {
+                // Fix for Qodana issue: Condition variableName != null is always true
+                // This was a false positive - we need to properly check for empty strings
+                if (!variableName.isEmpty()) {
                     
                     context.getPlugin().getServiceRegistry().getVariableManager()
                         .setPlayerVariable(player.getUniqueId(), variableName, 
@@ -122,7 +124,7 @@ public class CreateCustomNPCAction implements BlockAction {
             return ExecutionResult.success("Created custom NPC '" + name + "' at location.");
 
         } catch (Exception e) {
-            e.printStackTrace();
+            context.getPlugin().getLogger().log(java.util.logging.Level.SEVERE, "Error creating custom NPC", e);
             return ExecutionResult.error("Error creating custom NPC: " + e.getMessage());
         }
     }

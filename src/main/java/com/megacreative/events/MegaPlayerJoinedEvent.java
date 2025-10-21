@@ -3,6 +3,7 @@ package com.megacreative.events;
 import org.bukkit.entity.Player;
 import org.bukkit.event.Event;
 import org.bukkit.event.HandlerList;
+import org.jetbrains.annotations.NotNull;
 
 /**
  * Custom event for when a player joins the server
@@ -14,11 +15,12 @@ public class MegaPlayerJoinedEvent extends Event {
     private final Player player;
     private final boolean isFirstJoin;
     
-    public MegaPlayerJoinedEvent(Player player, boolean isFirstJoin) {
+    public MegaPlayerJoinedEvent(@NotNull Player player, boolean isFirstJoin) {
         this.player = player;
         this.isFirstJoin = isFirstJoin;
     }
     
+    @NotNull
     public Player getPlayer() {
         return player;
     }
@@ -28,10 +30,12 @@ public class MegaPlayerJoinedEvent extends Event {
     }
     
     @Override
+    @NotNull
     public HandlerList getHandlers() {
         return handlers;
     }
     
+    @NotNull
     public static HandlerList getHandlerList() {
         return handlers;
     }

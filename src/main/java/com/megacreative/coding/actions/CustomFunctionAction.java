@@ -49,7 +49,9 @@ public class CustomFunctionAction implements BlockAction {
             if (parametersValue != null && !parametersValue.isEmpty()) {
                 
                 String parametersStr = parametersValue.asString();
-                if (parametersStr != null && !parametersStr.isEmpty()) {
+                // Fix for Qodana issue: Condition parametersStr != null is always true
+                // This was a false positive - we need to properly check for empty strings
+                if (!parametersStr.isEmpty()) {
                     String[] paramPairs = parametersStr.split(",");
                     for (String paramPair : paramPairs) {
                         String[] parts = paramPair.trim().split(":");
@@ -66,6 +68,8 @@ public class CustomFunctionAction implements BlockAction {
                                     // Log exception and continue processing
                                     // This is expected behavior when parsing parameter types
                                     // Use default ANY type when type is not recognized
+                                    context.getPlugin().getLogger().warning("Unknown parameter type '" + parts[1].trim() + 
+                                        "' for function '" + functionName + "', using ANY type instead.");
                                 }
                             }
                             
@@ -90,7 +94,9 @@ public class CustomFunctionAction implements BlockAction {
                 try {
                     returnType = ValueType.valueOf(returnTypeValue.asString().toUpperCase());
                 } catch (IllegalArgumentException e) {
-                    
+                    // Log the exception for debugging purposes
+                    context.getPlugin().getLogger().warning("Unknown return type '" + returnTypeValue.asString() + 
+                        "' for function '" + functionName + "', using null (void) instead.");
                 }
             }
             
@@ -121,6 +127,10 @@ public class CustomFunctionAction implements BlockAction {
             }
 
         } catch (Exception e) {
+            // Log the exception for debugging purposes
+            if (context.getPlugin() != null) {
+                context.getPlugin().getLogger().log(java.util.logging.Level.WARNING, "Error defining custom function", e);
+            }
             return ExecutionResult.error("Ошибка при определении функции: " + e.getMessage());
         }
     }

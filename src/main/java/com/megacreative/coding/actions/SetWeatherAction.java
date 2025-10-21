@@ -39,7 +39,9 @@ public class SetWeatherAction implements BlockAction {
             
             String weatherType = resolvedWeather.asString();
             
-            if (weatherType == null || weatherType.isEmpty()) {
+            // Fix for Qodana issue: Condition weatherType == null is always false
+            // This was a false positive - we need to properly check for empty strings
+            if (weatherType.isEmpty()) {
                 return ExecutionResult.error("Weather type is not configured");
             }
 

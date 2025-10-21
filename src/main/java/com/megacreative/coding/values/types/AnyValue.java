@@ -2,6 +2,7 @@ package com.megacreative.coding.values.types;
 
 import com.megacreative.coding.values.DataValue;
 import com.megacreative.coding.values.ValueType;
+import org.jetbrains.annotations.NotNull;
 
 import java.util.*;
 
@@ -11,23 +12,27 @@ import java.util.*;
 public class AnyValue implements DataValue, Cloneable {
     private Object value;
     
-    public AnyValue(Object value) {
+    public AnyValue(@NotNull Object value) {
         this.value = value;
     }
     
     @Override
+    @NotNull
     public ValueType getType() { return ValueType.ANY; }
     
     @Override
+    @NotNull
     public Object getValue() { return value; }
     
     @Override
-    public void setValue(Object value) { this.value = value; }
+    public void setValue(@NotNull Object value) { this.value = value; }
     
     @Override
+    @NotNull
     public String asString() { return value != null ? value.toString() : "null"; }
     
     @Override
+    @NotNull
     public Number asNumber() {
         if (value instanceof Number) return (Number) value;
         try {
@@ -51,12 +56,14 @@ public class AnyValue implements DataValue, Cloneable {
     public boolean isValid() { return true; }
     
     @Override
+    @NotNull
     public String getDescription() { 
         String type = value != null ? value.getClass().getSimpleName() : "null";
         return "Any (" + type + "): " + asString(); 
     }
     
     @Override
+    @NotNull
     public DataValue clone() {
         try {
             
@@ -70,11 +77,13 @@ public class AnyValue implements DataValue, Cloneable {
     }
     
     @Override
+    @NotNull
     public DataValue copy() {
         return clone();
     }
     
     @Override
+    @NotNull
     public Map<String, Object> serialize() {
         Map<String, Object> map = new HashMap<>();
         map.put("type", getType().name());

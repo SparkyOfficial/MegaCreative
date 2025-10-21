@@ -6,17 +6,20 @@ import org.bukkit.entity.Player;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.util.Vector;
 import java.util.UUID;
+import java.util.logging.Logger;
 
 /**
  * Represents a custom NPC (Non-Player Character) with enhanced functionality
  */
 public class CustomNPC {
+    private static final Logger LOGGER = Logger.getLogger(CustomNPC.class.getName());
+    
     private final UUID uniqueId;
     private final String name;
     private Location location;
     private Entity entity;
     private String skinName;
-    private ItemStack[] equipment;
+    private final ItemStack[] equipment;
     private boolean gravity;
     private boolean visible;
     private boolean collidable;
@@ -38,6 +41,7 @@ public class CustomNPC {
     public boolean spawn() {
         // TODO: Implement NPC spawn functionality
         // This is a placeholder for future implementation
+        LOGGER.fine("NPC spawn method called for " + name + " but not yet implemented");
         return true;
     }
     
@@ -60,6 +64,7 @@ public class CustomNPC {
             // TODO: Implement NPC look at player functionality
             // This would involve calculating the direction vector from NPC to player
             // and setting the NPC's head rotation to face that direction
+            LOGGER.fine("NPC lookAt method called for " + name + " but not yet implemented");
         }
     }
     
@@ -72,6 +77,7 @@ public class CustomNPC {
             // TODO: Implement NPC walk to location functionality
             // This would involve creating a pathfinding algorithm to move the NPC
             // from its current location to the target location
+            LOGGER.fine("NPC walkTo method called for " + name + " but not yet implemented");
         }
     }
     
@@ -84,6 +90,7 @@ public class CustomNPC {
             // TODO: Implement NPC play animation functionality
             // This would involve triggering specific animation sequences
             // based on the animation parameter
+            LOGGER.fine("NPC playAnimation method called for " + name + " with animation " + animation + " but not yet implemented");
         }
     }
     
@@ -96,6 +103,7 @@ public class CustomNPC {
             // TODO: Implement NPC talk functionality
             // This would involve displaying chat bubbles or sending messages
             // to nearby players with the NPC's message
+            LOGGER.fine("NPC talk method called for " + name + " with message " + message + " but not yet implemented");
         }
     }
     
@@ -111,6 +119,7 @@ public class CustomNPC {
                 // TODO: Implement equipment update functionality
                 // This would involve updating the NPC's visual equipment
                 // based on the item provided for the specified slot
+                LOGGER.fine("NPC setEquipment method called for " + name + " but not yet implemented");
             }
         }
     }
@@ -126,8 +135,6 @@ public class CustomNPC {
         }
         return null;
     }
-    
-    
     
     public UUID getUniqueId() {
         return uniqueId;
@@ -174,6 +181,7 @@ public class CustomNPC {
             // TODO: Implement gravity update functionality
             // This would involve applying or removing gravity effects
             // to the NPC entity based on the gravity parameter
+            LOGGER.fine("NPC setGravity method called for " + name + " but not yet implemented");
         }
     }
     
@@ -187,6 +195,7 @@ public class CustomNPC {
             // TODO: Implement visibility update functionality
             // This would involve showing or hiding the NPC entity
             // based on the visible parameter
+            LOGGER.fine("NPC setVisible method called for " + name + " but not yet implemented");
         }
     }
     
@@ -200,6 +209,7 @@ public class CustomNPC {
             // TODO: Implement collidable update functionality
             // This would involve enabling or disabling collision detection
             // for the NPC entity based on the collidable parameter
+            LOGGER.fine("NPC setCollidable method called for " + name + " but not yet implemented");
         }
     }
 }

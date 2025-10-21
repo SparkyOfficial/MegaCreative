@@ -11,6 +11,7 @@ import org.bukkit.command.Command;
 import org.bukkit.command.CommandExecutor;
 import org.bukkit.command.CommandSender;
 import org.bukkit.entity.Player;
+import org.jetbrains.annotations.NotNull;
 
 /**
  * Команда для переключения мира в режим строительства
@@ -67,7 +68,7 @@ public class BuildCommand implements CommandExecutor {
      * @return true, wenn der Befehl erfolgreich ausgeführt wurde
      */
     @Override
-    public boolean onCommand(CommandSender sender, Command command, String label, String[] args) {
+    public boolean onCommand(@NotNull CommandSender sender, @NotNull Command command, @NotNull String label, @NotNull String[] args) {
         if (!(sender instanceof Player player)) {
             sender.sendMessage("§cThis command is only available to players!");
             return true;
@@ -94,44 +95,40 @@ public class BuildCommand implements CommandExecutor {
             String worldName = player.getWorld().getName();
             
             if (worldName.startsWith("megacreative_")) {
-                
-                String potentialId = null;
-                
-                
-                if (worldName.contains("-code") || worldName.contains("-world")) {
                     
-                    int startIndex = "megacreative_".length();
-                    int endIndex = worldName.length();
+                    String potentialId;
                     
                     
-                    int codeIndex = worldName.indexOf("-code");
-                    int worldIndex = worldName.indexOf("-world");
-                    int devIndex = worldName.indexOf("_dev");
+                    if (worldName.contains("-code") || worldName.contains("-world")) {
+                        
+                        int startIndex = "megacreative_".length();
+                        
+                        // Calculate indices
+                        int codeIndex = worldName.indexOf("-code");
+                        int worldIndex = worldName.indexOf("-world");
+                        int devIndex = worldName.indexOf("_dev");
+                        
+                        // Use the extracted method to calculate endIndex
+                        int endIndex = calculateEndIndex(worldName, codeIndex, worldIndex, devIndex, startIndex);
+                        
+                        // endIndex is always greater than startIndex when this point is reached
+                        potentialId = worldName.substring(startIndex, endIndex);
+                    } 
                     
-                    if (codeIndex != -1 && codeIndex < endIndex) endIndex = codeIndex;
-                    if (worldIndex != -1 && worldIndex < endIndex) endIndex = worldIndex;
-                    if (devIndex != -1 && devIndex < endIndex) endIndex = devIndex;
+                    else if (worldName.contains("_dev")) {
+                        potentialId = worldName.replace("megacreative_", "").replace("_dev", "");
+                    }
                     
-                    // codeIndex < endIndex is always true when reached
-                    // Removed redundant check since it's always true
-                    potentialId = worldName.substring(startIndex, endIndex);
-                } 
-                
-                else if (worldName.contains("_dev")) {
-                    potentialId = worldName.replace("megacreative_", "").replace("_dev", "");
+                    else {
+                        potentialId = worldName.replace("megacreative_", "");
+                    }
+                    
+                    // potentialId is always assigned a value in all code paths
+                    CreativeWorld foundWorld = worldManager.getWorld(potentialId);
+                    if (foundWorld != null) {
+                        creativeWorld = foundWorld;
+                    }
                 }
-                
-                else {
-                    potentialId = worldName.replace("megacreative_", "");
-                }
-                
-                // Condition potentialId != null is always true
-                // Removed redundant null check since potentialId is always assigned a value
-                CreativeWorld foundWorld = worldManager.getWorld(potentialId);
-                if (foundWorld != null) {
-                    creativeWorld = foundWorld;
-                }
-            }
             
             
             if (creativeWorld == null) {
@@ -185,5 +182,33 @@ public class BuildCommand implements CommandExecutor {
         worldManager.saveWorld(creativeWorld);
         
         return true;
+    }
+    
+    /**
+     * Calculates the end index for substring extraction
+     * @param worldName the world name to process
+     * @return the calculated end index
+     */
+    private int calculateEndIndex(String worldName) {
+        return worldName.length();
+    }
+    
+    /**
+     * Calculates the end index for substring extraction
+     * @param worldName the world name to process
+     * @param codeIndex index of "-code" substring
+     * @param worldIndex index of "-world" substring
+     * @param devIndex index of "_dev" substring
+     * @param startIndex starting index for substring
+     * @return the calculated end index
+     */
+    private int calculateEndIndex(String worldName, int codeIndex, int worldIndex, int devIndex, int startIndex) {
+        int endIndex = worldName.length();
+        
+        if (codeIndex != -1) endIndex = codeIndex;
+        if (worldIndex != -1 && worldIndex < endIndex) endIndex = worldIndex;
+        if (devIndex != -1 && devIndex < endIndex) endIndex = devIndex;
+        
+        return Math.max(endIndex, startIndex); // Ensure endIndex is never less than startIndex
     }
 }

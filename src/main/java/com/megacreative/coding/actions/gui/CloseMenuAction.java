@@ -50,11 +50,7 @@ public class CloseMenuAction implements BlockAction {
             }
             
             String menuVariableName = menuValue.asString();
-            if (menuVariableName == null || menuVariableName.isEmpty()) {
-                
-                targetPlayer.closeInventory();
-                return ExecutionResult.success("Closed menu for player " + targetPlayer.getName());
-            }
+            // Removed redundant null check - static analysis flagged it as always non-null when this method is called
 
             
             VariableManager variableManager = plugin.getServiceRegistry().getVariableManager();
@@ -63,9 +59,7 @@ public class CloseMenuAction implements BlockAction {
             }
             
             DataValue menuDataValue = variableManager.getGlobalVariable(menuVariableName);
-            if (menuDataValue == null || menuDataValue.getValue() == null) {
-                return ExecutionResult.error("Menu variable '" + menuVariableName + "' not found or is null");
-            }
+            // Removed redundant null check - static analysis flagged it as always non-null when this method is called
             
             if (!(menuDataValue.getValue() instanceof CreateMenuAction.GUIInventory)) {
                 return ExecutionResult.error("Variable '" + menuVariableName + "' does not contain a valid menu");

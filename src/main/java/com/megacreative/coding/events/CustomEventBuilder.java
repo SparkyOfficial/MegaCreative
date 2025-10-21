@@ -8,15 +8,15 @@ import java.util.*;
  * Builder for creating complex custom events with fluent API
  */
 public class CustomEventBuilder {
-    private String name;
+    private final String name;
     private String author = "system";
     private String description = "";
     private String category = "general";
     private boolean isGlobal = false;
     private boolean isOneTime = false;
     private int priority = 0;
-    private Set<String> tags = new HashSet<>();
-    private Map<String, CustomEvent.EventDataField> dataFields = new LinkedHashMap<>();
+    private final Set<String> tags = new HashSet<>();
+    private final Map<String, CustomEvent.EventDataField> dataFields = new LinkedHashMap<>();
     
     public CustomEventBuilder(String name) {
         this.name = name;

@@ -40,7 +40,9 @@ public class IsPlayerHoldingCondition implements BlockCondition {
             
             
             String itemName = resolvedItem.asString();
-            if (itemName == null || itemName.isEmpty()) {
+            // Fix for Qodana issue: Condition itemName == null is always false
+            // This was a false positive - we need to properly check for empty strings
+            if (itemName.isEmpty()) {
                 context.getPlugin().getLogger().warning("IsPlayerHoldingCondition: 'item' parameter is empty.");
                 return false;
             }

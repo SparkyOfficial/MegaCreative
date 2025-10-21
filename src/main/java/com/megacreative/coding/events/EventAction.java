@@ -159,13 +159,16 @@ public class EventAction {
             "Executes an action after a delay",
             event -> {
                 if (event.getPlayer() != null) {
-                    event.getPlayer().getServer().getScheduler().runTaskLater(
-                        event.getPlayer().getServer().getPluginManager().getPlugin("MegaCreative"),
-                        // Argument event.getPlayer().getServer().getPluginManager().getPlugin("MegaCreative") might be null
-                        // The check has been noted but left as is since it's part of the Bukkit API
-                        () -> action.execute(event),
-                        delayTicks
-                    );
+                    // According to static analysis, the argument might be null
+                    // We need to check for null before using it
+                    var plugin = event.getPlayer().getServer().getPluginManager().getPlugin("MegaCreative");
+                    if (plugin != null) {
+                        event.getPlayer().getServer().getScheduler().runTaskLater(
+                            plugin,
+                            () -> action.execute(event),
+                            delayTicks
+                        );
+                    }
                 }
             }
         );

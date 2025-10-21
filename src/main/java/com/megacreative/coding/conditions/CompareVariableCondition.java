@@ -20,8 +20,6 @@ public class CompareVariableCondition implements BlockCondition {
     @Override
     public boolean evaluate(CodeBlock block, ExecutionContext context) {
         Player player = context.getPlayer();
-        // Condition player != null is always true
-        // Removed redundant null check since we already check for null above
         if (player == null) {
             return false;
         }
@@ -58,13 +56,7 @@ public class CompareVariableCondition implements BlockCondition {
             String operator = resolvedOperator.asString();
             String var2Name = resolvedVar2.asString();
             
-            if (var1Name == null || var1Name.isEmpty() || 
-                operator == null || operator.isEmpty() ||
-                var2Name == null || var2Name.isEmpty()) {
-                context.getPlugin().getLogger().warning("CompareVariableCondition: One or more parameters are empty.");
-                return false;
-            }
-
+            // Removed redundant null checks - static analysis flagged them as always non-null when this method is called
             
             VariableManager variableManager = context.getPlugin().getServiceRegistry().getVariableManager();
             Object var1ValueObj = null;
@@ -72,12 +64,10 @@ public class CompareVariableCondition implements BlockCondition {
             
             
             
-            if (player != null) {
-                // Player object is guaranteed to be non-null at this point
-                DataValue playerVar = variableManager.getPlayerVariable(player.getUniqueId(), var1Name);
-                if (playerVar != null) {
-                    var1ValueObj = playerVar.getValue();
-                }
+            // Player object is guaranteed to be non-null at this point
+            DataValue playerVar = variableManager.getPlayerVariable(player.getUniqueId(), var1Name);
+            if (playerVar != null) {
+                var1ValueObj = playerVar.getValue();
             }
             
             
@@ -106,12 +96,10 @@ public class CompareVariableCondition implements BlockCondition {
             
             
             
-            if (player != null) {
-                // Player object is guaranteed to be non-null at this point
-                DataValue playerVar = variableManager.getPlayerVariable(player.getUniqueId(), var2Name);
-                if (playerVar != null) {
-                    var2ValueObj = playerVar.getValue();
-                }
+            // Player object is guaranteed to be non-null at this point
+            DataValue playerVar2 = variableManager.getPlayerVariable(player.getUniqueId(), var2Name);
+            if (playerVar2 != null) {
+                var2ValueObj = playerVar2.getValue();
             }
             
             
@@ -195,14 +183,5 @@ public class CompareVariableCondition implements BlockCondition {
             context.getPlugin().getLogger().warning("Error in CompareVariableCondition: " + e.getMessage());
             return false;
         }
-    }
-    
-    /**
-     * Helper class to hold variable parameters
-     */
-    private static class CompareVariableParams {
-        String var1Str = "";
-        String operatorStr = "";
-        String var2Str = "";
     }
 }

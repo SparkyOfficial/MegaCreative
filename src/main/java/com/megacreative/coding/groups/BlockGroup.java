@@ -19,7 +19,7 @@ public class BlockGroup {
     private final BlockGroupManager.GroupBounds bounds;
     
     private boolean collapsed = false;
-    private long createdTime;
+    private final long createdTime;
     private long lastModified;
     
     public BlockGroup(UUID id, String name, UUID owner, 

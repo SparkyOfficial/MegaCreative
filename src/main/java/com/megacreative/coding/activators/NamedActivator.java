@@ -19,14 +19,6 @@ public abstract class NamedActivator extends Activator {
         super(plugin, world);
     }
     
-    public String getCustomName() {
-        return customName;
-    }
-    
-    public void setCustomName(String customName) {
-        this.customName = customName;
-    }
-    
     @Override
     public void execute(GameEvent gameEvent, List<Entity> selectedEntities, int stackCounter, AtomicInteger callCounter) {
         

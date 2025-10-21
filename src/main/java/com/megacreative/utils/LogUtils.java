@@ -3,6 +3,9 @@ package com.megacreative.utils;
 import com.megacreative.MegaCreative;
 import java.util.logging.Level;
 import java.util.logging.Logger;
+import java.util.concurrent.ConcurrentHashMap;
+import java.util.Map;
+import java.util.concurrent.atomic.AtomicLong;
 
 /**
  * Утилитный класс для структурированного логирования в MegaCreative
@@ -16,6 +19,10 @@ public class LogUtils {
     private static final Logger logger = Logger.getLogger("MegaCreative");
     private static MegaCreative plugin;
     
+    // Rate limiting for frequent events
+    private static final Map<String, AtomicLong> lastLogTimes = new ConcurrentHashMap<>();
+    private static final long MIN_LOG_INTERVAL = 5000; // 5 seconds minimum between similar logs
+    
     /**
      * Инициализирует утилиту логирования с экземпляром плагина
      * @param megaCreative Экземпляр основного плагина
@@ -28,6 +35,27 @@ public class LogUtils {
      */
     public static void initialize(MegaCreative megaCreative) {
         plugin = megaCreative;
+    }
+    
+    /**
+     * Логирует информационное сообщение с ограничением частоты
+     * @param message Сообщение для логирования
+     * @param eventId Идентификатор события для ограничения частоты
+     *
+     * Logs an informational message with rate limiting
+     * @param message Message to log
+     * @param eventId Event identifier for rate limiting
+     */
+    public static void infoRateLimited(String message, String eventId) {
+        long now = System.currentTimeMillis();
+        AtomicLong lastLogTime = lastLogTimes.computeIfAbsent(eventId, k -> new AtomicLong(0));
+        long lastTime = lastLogTime.get();
+        
+        if (now - lastTime >= MIN_LOG_INTERVAL) {
+            if (lastLogTime.compareAndSet(lastTime, now)) {
+                info(message);
+            }
+        }
     }
     
     /**
@@ -107,7 +135,7 @@ public class LogUtils {
     
     /**
      * Логирует отладочную информацию
-     * @param message Отладочное сообщение
+     * @param message Сообщение для отладки
      *
      * Logs debug information
      * @param message Debug message
@@ -117,41 +145,27 @@ public class LogUtils {
      */
     public static void debug(String message) {
         if (plugin != null) {
-            plugin.getLogger().info("[DEBUG] " + message);
-        }
-    }
-    
-    /**
-     * Логирует информацию о производительности
-     * @param message Сообщение о производительности
-     *
-     * Logs performance information
-     * @param message Performance message
-     *
-     * Protokolliert Leistungsinformationen
-     * @param message Leistungsnachricht
-     */
-    public static void performance(String message) {
-        if (plugin != null) {
-            plugin.getLogger().info("[PERFORMANCE] " + message);
-        }
-    }
-    
-    /**
-     * Логирует информацию о безопасности
-     * @param message Сообщение о безопасности
-     *
-     * Logs security information
-     * @param message Security message
-     *
-     * Protokolliert Sicherheitsinformationen
-     * @param message Sicherheitsnachricht
-     */
-    public static void security(String message) {
-        if (plugin != null) {
-            plugin.getLogger().warning("[SECURITY] " + message);
+            plugin.getLogger().fine("[DEBUG] " + message);
         } else {
-            logger.warning("[SECURITY] " + message);
+            logger.fine("[DEBUG] " + message);
+        }
+    }
+    
+    /**
+     * Логирует подробную отладочную информацию
+     * @param message Сообщение для подробной отладки
+     *
+     * Logs detailed debug information
+     * @param message Detailed debug message
+     *
+     * Protokolliert detaillierte Debug-Informationen
+     * @param message Detaillierte Debug-Nachricht
+     */
+    public static void trace(String message) {
+        if (plugin != null) {
+            plugin.getLogger().finer("[TRACE] " + message);
+        } else {
+            logger.finer("[TRACE] " + message);
         }
     }
 }

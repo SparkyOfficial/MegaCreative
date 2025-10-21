@@ -13,6 +13,7 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.function.Supplier;
 import java.util.logging.Logger;
+import java.util.logging.Level;
 
 public class ConditionFactory implements IConditionFactory {
 
@@ -50,21 +51,10 @@ public class ConditionFactory implements IConditionFactory {
                         String displayName = meta.displayName();
                         String className = clazz.getName();
                         
-                        Supplier<BlockCondition> supplier = () -> {
-                            try {
-                                
-                                java.lang.reflect.Constructor<? extends BlockCondition> constructor = 
-                                    clazz.asSubclass(BlockCondition.class).getConstructor();
-                                return constructor.newInstance();
-                            } catch (Exception e) {
-                                LOGGER.severe("Не удалось создать экземпляр условия: " + className);
-                                e.printStackTrace();
-                                return null;
-                            }
-                        };
+                        Supplier<BlockCondition> supplier = createConditionSupplier(clazz, className);
                         register(conditionId, displayName, supplier);
                     } catch (Exception e) {
-                        LOGGER.severe("Не удалось зарегистрировать условие из класса (нужен пустой конструктор): " + clazz.getName());
+                        LOGGER.warning("Не удалось зарегистрировать условие из класса (нужен пустой конструктор): " + clazz.getName());
                     }
                 }
             }
@@ -76,6 +66,25 @@ public class ConditionFactory implements IConditionFactory {
     private void register(String conditionId, String displayName, Supplier<BlockCondition> supplier) {
         conditionRegistry.put(conditionId, supplier);
         conditionDisplayNames.put(conditionId, displayName);
+    }
+
+    /**
+     * Creates a supplier for a block condition
+     * @param clazz The class of the block condition
+     * @param className The name of the class
+     * @return A supplier that creates instances of the block condition
+     */
+    private Supplier<BlockCondition> createConditionSupplier(Class<?> clazz, String className) {
+        return () -> {
+            try {
+                java.lang.reflect.Constructor<? extends BlockCondition> constructor = 
+                    clazz.asSubclass(BlockCondition.class).getConstructor();
+                return constructor.newInstance();
+            } catch (Exception e) {
+                LOGGER.log(Level.WARNING, "Не удалось создать экземпляр условия: " + className, e);
+                return null;
+            }
+        };
     }
 
     public BlockCondition createCondition(String conditionId) {
@@ -143,8 +152,7 @@ public class ConditionFactory implements IConditionFactory {
                 
                 eventManager.triggerEvent(event.getName(), eventData, null, "global");
             } catch (Exception e) {
-                LOGGER.severe("Failed to publish event through CustomEventManager: " + e.getMessage());
-                e.printStackTrace();
+                LOGGER.log(Level.WARNING, "Failed to publish event through CustomEventManager: " + e.getMessage(), e);
             }
         } else {
             
@@ -171,8 +179,7 @@ public class ConditionFactory implements IConditionFactory {
                 
                 eventManager.triggerEvent(eventName, eventData, null, "global");
             } catch (Exception e) {
-                LOGGER.severe("Failed to publish event through CustomEventManager: " + e.getMessage());
-                e.printStackTrace();
+                LOGGER.log(Level.WARNING, "Failed to publish event through CustomEventManager: " + e.getMessage(), e);
             }
         } else {
             

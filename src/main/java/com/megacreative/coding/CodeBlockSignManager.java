@@ -10,6 +10,7 @@ import org.bukkit.block.Sign;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.Listener;
 import org.bukkit.ChatColor;
+import java.util.logging.Level;
 import java.util.logging.Logger;
 import java.util.UUID;
 
@@ -44,8 +45,7 @@ public class CodeBlockSignManager implements Listener {
         try {
             createSignForBlock(event.getLocation(), event.getCodeBlock());
         } catch (Exception e) {
-            LOGGER.severe("Failed to create sign for code block at " + event.getLocation() + ": " + e.getMessage());
-            e.printStackTrace();
+            LOGGER.log(Level.WARNING, "Failed to create sign for code block at " + event.getLocation() + ": " + e.getMessage(), e);
         }
     }
     
@@ -57,8 +57,7 @@ public class CodeBlockSignManager implements Listener {
         try {
             removeSignFromBlock(event.getLocation());
         } catch (Exception e) {
-            LOGGER.severe("Failed to remove sign for code block at " + event.getLocation() + ": " + e.getMessage());
-            e.printStackTrace();
+            LOGGER.log(Level.WARNING, "Failed to remove sign for code block at " + event.getLocation() + ": " + e.getMessage(), e);
         }
     }
     

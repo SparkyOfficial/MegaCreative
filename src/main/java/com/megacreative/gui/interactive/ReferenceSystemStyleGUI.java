@@ -129,11 +129,7 @@ public class ReferenceSystemStyleGUI {
             "🎆 Reference System World Settings - " + world.getName(), 54);
         
         
-        Map<String, Object> modeProps = new HashMap<>();
-        modeProps.put("modes", Arrays.asList("BUILD", "PLAY", "DEV"));
-        
-        InteractiveGUIManager.ModeToggleElement modeToggle = 
-            new InteractiveGUIManager.ModeToggleElement("world_mode", modeProps);
+        InteractiveGUIManager.ModeToggleElement modeToggle = createModeToggleElement(world);
         
         modeToggle.addChangeListener(value -> {
             try {
@@ -147,21 +143,7 @@ public class ReferenceSystemStyleGUI {
         gui.setElement(10, modeToggle);
         
         
-        Map<String, Object> timeProps = new HashMap<>();
-        timeProps.put("min", 0.0);
-        timeProps.put("max", 24000.0);
-        timeProps.put("step", 1000.0);
-        timeProps.put("value", (double) world.getBukkitWorld().getTime());
-        
-        InteractiveGUIManager.NumberSliderElement timeSlider = 
-            new InteractiveGUIManager.NumberSliderElement("time", timeProps);
-        
-        timeSlider.addChangeListener(value -> {
-            long time = ((Number) value.getValue()).longValue();
-            world.getBukkitWorld().setTime(time);
-        });
-        
-        gui.setElement(12, timeSlider);
+        gui.setElement(12, createTimeSlider(world));
         
         
         Map<String, Object> weatherProps = new HashMap<>();
@@ -228,16 +210,7 @@ public class ReferenceSystemStyleGUI {
         gui.setElement(13, itemEditor);
         
         
-        Map<String, Object> amountProps = new HashMap<>();
-        amountProps.put("min", 1.0);
-        amountProps.put("max", 64.0);
-        amountProps.put("step", 1.0);
-        amountProps.put("value", 1.0);
-        
-        InteractiveGUIManager.NumberSliderElement amountSlider = 
-            new InteractiveGUIManager.NumberSliderElement("amount", amountProps);
-        
-        gui.setElement(15, amountSlider);
+        gui.setElement(15, createAmountSliderElement());
         
         
         Map<String, Object> materialProps = new HashMap<>();
@@ -307,6 +280,50 @@ public class ReferenceSystemStyleGUI {
         }
         
         return item;
+    }
+    
+    /**
+     * Creates a time slider element for the world editor GUI
+     */
+    private InteractiveGUIManager.NumberSliderElement createTimeSlider(CreativeWorld world) {
+        Map<String, Object> timeProps = new HashMap<>();
+        timeProps.put("min", 0.0);
+        timeProps.put("max", 24000.0);
+        timeProps.put("step", 1000.0);
+        timeProps.put("value", (double) world.getBukkitWorld().getTime());
+        
+        InteractiveGUIManager.NumberSliderElement timeSlider = 
+            new InteractiveGUIManager.NumberSliderElement("time", timeProps);
+        
+        timeSlider.addChangeListener(value -> {
+            long time = ((Number) value.getValue()).longValue();
+            world.getBukkitWorld().setTime(time);
+        });
+        
+        return timeSlider;
+    }
+    
+    /**
+     * Creates a mode toggle element for world settings
+     */
+    private InteractiveGUIManager.ModeToggleElement createModeToggleElement(CreativeWorld world) {
+        Map<String, Object> modeProps = new HashMap<>();
+        modeProps.put("modes", Arrays.asList("BUILD", "PLAY", "DEV"));
+        
+        return new InteractiveGUIManager.ModeToggleElement("world_mode", modeProps);
+    }
+    
+    /**
+     * Creates an amount slider element for the item editor GUI
+     */
+    private InteractiveGUIManager.NumberSliderElement createAmountSliderElement() {
+        Map<String, Object> amountProps = new HashMap<>();
+        amountProps.put("min", 1.0);
+        amountProps.put("max", 64.0);
+        amountProps.put("step", 1.0);
+        amountProps.put("value", 1.0);
+        
+        return new InteractiveGUIManager.NumberSliderElement("amount", amountProps);
     }
     
     private void saveBlockToWorld(Player player, CodeBlock block) {

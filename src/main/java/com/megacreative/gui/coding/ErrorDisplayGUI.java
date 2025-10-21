@@ -317,22 +317,4 @@ public class ErrorDisplayGUI implements GUIManager.ManagedGUIInterface {
         }
     }
     
-    @Override
-    /**
-     * Handles inventory close events
-     * @param event Inventory close event
-     */
-    public void onInventoryClose(InventoryCloseEvent event) {
-        
-        
-    }
-    
-    @Override
-    /**
-     * Performs resource cleanup when interface is closed
-     */
-    public void onCleanup() {
-        
-        
-    }
 }

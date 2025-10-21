@@ -325,24 +325,20 @@ public class BlockPlacementHandler implements Listener {
             case COBBLESTONE:
                 return "ACTION";
             case OAK_PLANKS:
-                return "CONDITION";
             case OBSIDIAN:
-                return "CONDITION"; 
             case REDSTONE_BLOCK:
-                return "CONDITION"; 
             case BRICKS:
-                return "CONDITION"; 
+                return "CONDITION";
             case EMERALD_BLOCK:
-                return "CONTROL";   
+            case END_STONE:
+                return "CONTROL";
             case LAPIS_BLOCK:
             case BOOKSHELF:
                 return "FUNCTION";
             case IRON_BLOCK:
                 return "VARIABLE";
-            case END_STONE:
-                return "CONTROL";   
             default:
-                return "ACTION"; 
+                return "ACTION";
         }
     }
     

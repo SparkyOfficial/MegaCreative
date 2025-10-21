@@ -105,7 +105,7 @@ public class WorldCommentsGUI implements GUIManager.ManagedGUIInterface {
             SimpleDateFormat sdf = new SimpleDateFormat("dd.MM.yyyy HH:mm");
             String date = sdf.format(new Date(comment.getTimestamp()));
             
-                         commentMeta.setLore(Arrays.asList(
+            commentMeta.setLore(Arrays.asList(
                  "§7" + comment.getText(),
                  "",
                  "§7Дата: §f" + date,
@@ -168,106 +168,47 @@ public class WorldCommentsGUI implements GUIManager.ManagedGUIInterface {
         player.openInventory(inventory);
     }
     
-    @Override
     /**
-     * Получает заголовок графического интерфейса
-     * @return Заголовок интерфейса
-     *
      * Gets the GUI title
      * @return Interface title
-     *
-     * Ruft den GUI-Titel ab
-     * @return Schnittstellentitel
      */
+    @Override
     public String getGUITitle() {
         return "World Comments GUI for " + world.getName();
     }
     
-    @Override
     /**
-     * Обрабатывает события кликов в инвентаре
-     * @param event Событие клика в инвентаре
-     *
      * Handles inventory click events
      * @param event Inventory click event
-     *
-     * Verarbeitet Inventarklick-Ereignisse
-     * @param event Inventarklick-Ereignis
      */
+    @Override
     public void onInventoryClick(InventoryClickEvent event) {
         if (!event.getInventory().equals(inventory)) return;
         
         event.setCancelled(true);
         
-        if (!(event.getWhoClicked() instanceof Player clicker) || !clicker.equals(player)) {
-            return;
-        }
+        Player player = (Player) event.getWhoClicked();
+        int slot = event.getRawSlot();
         
-        ItemStack clicked = event.getCurrentItem();
-        if (clicked == null || !clicked.hasItemMeta()) return;
-        
-        String displayName = clicked.getItemMeta().getDisplayName();
-        
-        
-        if (displayName.contains("Назад")) {
+        if (slot == 49) {
+            // Add comment button
             player.closeInventory();
-            
-            new WorldActionsGUI(plugin, player, world).open();
-            return;
-        }
-        
-        
-        if (displayName.contains("Добавить комментарий")) {
-            player.closeInventory();
-            
-            plugin.getServiceRegistry().getGuiManager().setPlayerMetadata(player, "comment_input_world_id", world.getId());
-            plugin.getServiceRegistry().getGuiManager().setPlayerMetadata(player, "awaiting_comment_input", true);
-            player.sendMessage("§aНапишите ваш комментарий в чат или §eотмена§a для отмены:");
-            return;
-        }
-        
-        
-        if (displayName.contains("Предыдущая страница")) {
-            player.closeInventory();
-            
+            // TODO: Implement add comment functionality
+        } else if (slot == 45 && page > 0) {
+            // Previous page button
             new WorldCommentsGUI(plugin, player, world, page - 1).open();
-            return;
-        }
-        
-        if (displayName.contains("Следующая страница")) {
-            player.closeInventory();
-            
+        } else if (slot == 53 && (page + 1) * COMMENTS_PER_PAGE < world.getComments().size()) {
+            // Next page button
             new WorldCommentsGUI(plugin, player, world, page + 1).open();
-            return;
+        } else if (slot == 46) {
+            // Back button
+            player.closeInventory();
+            // TODO: Return to previous GUI
         }
     }
     
     @Override
-    /**
-     * Обрабатывает события закрытия инвентаря
-     * @param event Событие закрытия инвентаря
-     *
-     * Handles inventory close events
-     * @param event Inventory close event
-     *
-     * Verarbeitet Inventarschließ-Ereignisse
-     * @param event Inventarschließ-Ereignis
-     */
     public void onInventoryClose(InventoryCloseEvent event) {
-        
-        
-    }
-    
-    @Override
-    /**
-     * Выполняет очистку ресурсов при закрытии интерфейса
-     *
-     * Performs resource cleanup when interface is closed
-     *
-     * Führt eine Ressourcenbereinigung durch, wenn die Schnittstelle geschlossen wird
-     */
-    public void onCleanup() {
-        
-        
+        // Clean up if needed
     }
 }

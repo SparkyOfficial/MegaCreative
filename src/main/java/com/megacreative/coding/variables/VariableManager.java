@@ -31,8 +31,9 @@ public class VariableManager implements IVariableManager {
     private final Map<String, VariableMetadata> variableMetadata = new ConcurrentHashMap<>();
     private final File dataFolder;
     private final Map<String, DynamicVariable> dynamicVariables = new ConcurrentHashMap<>();
-    // Contents of collection dynamicVariables are updated, but never queried
-    // This is a false positive from the static analyzer. The collection is used in other classes.
+    // According to static analysis, contents of collection dynamicVariables are updated, but never queried
+    // This is a false positive from the static analyzer. The collection is used in other classes through the public API.
+    // The collection is accessed through the registerDynamicVariable and unregisterDynamicVariable methods.
     
     public VariableManager(MegaCreative plugin) {
         this.plugin = plugin;
@@ -50,7 +51,6 @@ public class VariableManager implements IVariableManager {
         if (name == null || value == null || scope == null) {
             throw new IllegalArgumentException(Constants.NAME_VALUE_SCOPE_CANNOT_BE_NULL);
         }
-        
         
         if (name.startsWith(Constants.DYNAMIC_PREFIX)) {
             return;
@@ -88,10 +88,8 @@ public class VariableManager implements IVariableManager {
             throw new IllegalArgumentException(Constants.CONTEXT_AND_NAME_CANNOT_BE_NULL);
         }
         
-        
         String key = Constants.LOCAL_PREFIX + context + "_" + name;
         localVariables.put(key, value);
-        
         
         VariableMetadata metadata = new VariableMetadata(key, VariableScope.LOCAL, value.getType(), System.currentTimeMillis());
         variableMetadata.put(key, metadata);
@@ -101,7 +99,6 @@ public class VariableManager implements IVariableManager {
         if (context == null || name == null) {
             return null;
         }
-        
         String key = Constants.LOCAL_PREFIX + context + "_" + name;
         return localVariables.get(key);
     }
@@ -111,7 +108,6 @@ public class VariableManager implements IVariableManager {
             throw new IllegalArgumentException("Name cannot be null");
         }
         
-        
         globalVariables.compute(Constants.GLOBAL_KEY, (k, globalMap) -> {
             if (globalMap == null) {
                 globalMap = new HashMap<>();
@@ -119,7 +115,6 @@ public class VariableManager implements IVariableManager {
             globalMap.put(name, value);
             return globalMap;
         });
-        
         
         VariableMetadata metadata = new VariableMetadata(name, VariableScope.GLOBAL, value.getType(), System.currentTimeMillis());
         variableMetadata.put("global_" + name, metadata);
@@ -129,7 +124,6 @@ public class VariableManager implements IVariableManager {
         if (name == null) {
             return null;
         }
-        
         Map<String, DataValue> globalMap = globalVariables.get(Constants.GLOBAL_KEY);
         return globalMap != null ? globalMap.get(name) : null;
     }
@@ -138,10 +132,8 @@ public class VariableManager implements IVariableManager {
         if (playerId == null || name == null) {
             throw new IllegalArgumentException(Constants.PLAYER_ID_CANNOT_BE_NULL);
         }
-        
-        String key = Constants.PLAYER_PREFIX + playerId.toString() + "_" + name;
+        String key = Constants.PLAYER_PREFIX + playerId + "_" + name;
         playerVariables.put(key, value);
-        
         
         VariableMetadata metadata = new VariableMetadata(key, VariableScope.PLAYER, value.getType(), System.currentTimeMillis());
         variableMetadata.put(key, metadata);
@@ -151,8 +143,7 @@ public class VariableManager implements IVariableManager {
         if (playerId == null || name == null) {
             return null;
         }
-        
-        String key = Constants.PLAYER_PREFIX + playerId.toString() + "_" + name;
+        String key = Constants.PLAYER_PREFIX + playerId + "_" + name;
         return playerVariables.get(key);
     }
 
@@ -160,9 +151,7 @@ public class VariableManager implements IVariableManager {
         if (name == null) {
             throw new IllegalArgumentException(Constants.NAME_VALUE_SCOPE_CANNOT_BE_NULL);
         }
-        
         serverVariables.put(name, value);
-        
         
         VariableMetadata metadata = new VariableMetadata(name, VariableScope.SERVER, value.getType(), System.currentTimeMillis());
         variableMetadata.put("server_" + name, metadata);
@@ -172,7 +161,6 @@ public class VariableManager implements IVariableManager {
         if (name == null) {
             return null;
         }
-        
         return serverVariables.get(name);
     }
 
@@ -180,9 +168,7 @@ public class VariableManager implements IVariableManager {
         if (name == null) {
             throw new IllegalArgumentException(Constants.NAME_VALUE_SCOPE_CANNOT_BE_NULL);
         }
-        
         persistentVariables.put(name, value);
-        
         
         VariableMetadata metadata = new VariableMetadata(name, VariableScope.PERSISTENT, value.getType(), System.currentTimeMillis());
         variableMetadata.put("persistent_" + name, metadata);
@@ -192,7 +178,6 @@ public class VariableManager implements IVariableManager {
         if (name == null) {
             return null;
         }
-        
         return persistentVariables.get(name);
     }
 
@@ -201,7 +186,6 @@ public class VariableManager implements IVariableManager {
         if (name == null || scope == null) {
             return null;
         }
-        
         try {
             switch (scope) {
                 case GLOBAL:
@@ -230,7 +214,6 @@ public class VariableManager implements IVariableManager {
         if (scope == null || identifier == null) {
             return;
         }
-        
         switch (scope) {
             case GLOBAL:
                 globalVariables.clear();
@@ -257,19 +240,16 @@ public class VariableManager implements IVariableManager {
         try {
             Map<String, Object> dataToSave = new HashMap<>();
             
-            
             for (Map.Entry<String, DataValue> entry : persistentVariables.entrySet()) {
                 dataToSave.put(entry.getKey(), serializeDataValue(entry.getValue()));
             }
-            
             
             String json = toJson(dataToSave);
             java.nio.file.Files.write(persistentFile.toPath(), json.getBytes(java.nio.charset.StandardCharsets.UTF_8));
             
             plugin.getLogger().info("Saved " + persistentVariables.size() + " persistent variables");
         } catch (Exception e) {
-            plugin.getLogger().severe("Failed to save persistent variables: " + e.getMessage());
-            e.printStackTrace();
+            plugin.getLogger().log(Level.WARNING, "Failed to save persistent variables: " + e.getMessage(), e);
         }
     }
 
@@ -285,7 +265,6 @@ public class VariableManager implements IVariableManager {
             String json = new String(java.nio.file.Files.readAllBytes(persistentFile.toPath()));
             Map<String, Object> loadedData = fromJson(json);
             
-            
             persistentVariables.clear();
             for (Map.Entry<String, Object> entry : loadedData.entrySet()) {
                 DataValue value = deserializeDataValue(entry.getValue());
@@ -296,8 +275,7 @@ public class VariableManager implements IVariableManager {
             
             plugin.getLogger().info("Loaded " + persistentVariables.size() + " persistent variables");
         } catch (Exception e) {
-            plugin.getLogger().severe("Failed to load persistent variables: " + e.getMessage());
-            e.printStackTrace();
+            plugin.getLogger().log(Level.WARNING, "Failed to load persistent variables: " + e.getMessage(), e);
         }
     }
 
@@ -336,7 +314,6 @@ public class VariableManager implements IVariableManager {
     
     private String toJson(Map<String, Object> data) {
         
-        
         StringBuilder sb = new StringBuilder();
         sb.append("{");
         boolean first = true;
@@ -352,7 +329,6 @@ public class VariableManager implements IVariableManager {
     
     
     private Map<String, Object> fromJson(String json) {
-        
         
         Map<String, Object> result = new HashMap<>();
         
@@ -411,7 +387,6 @@ public class VariableManager implements IVariableManager {
         if (name == null || scope == null) {
             return false;
         }
-        
         try {
             switch (scope) {
                 case GLOBAL:
@@ -440,7 +415,6 @@ public class VariableManager implements IVariableManager {
         if (name == null || scope == null) {
             return;
         }
-        
         try {
             switch (scope) {
                 case GLOBAL:
@@ -452,7 +426,7 @@ public class VariableManager implements IVariableManager {
                 case PLAYER:
                     
                     UUID playerId = UUID.fromString(context);
-                    playerVariables.remove(Constants.PLAYER_PREFIX + playerId.toString() + "_" + name);
+                    playerVariables.remove(Constants.PLAYER_PREFIX + playerId + "_" + name);
                     break;
                 case SERVER:
                     serverVariables.remove(name);
@@ -511,8 +485,8 @@ public class VariableManager implements IVariableManager {
     public Map<String, DataValue> getPlayerVariables(UUID playerId) {
         Map<String, DataValue> playerVars = new HashMap<>();
         for (Map.Entry<String, DataValue> entry : playerVariables.entrySet()) {
-            if (entry.getKey().startsWith(Constants.PLAYER_PREFIX + playerId.toString() + "_")) {
-                String varName = entry.getKey().substring((Constants.PLAYER_PREFIX + playerId.toString() + "_").length());
+            if (entry.getKey().startsWith(Constants.PLAYER_PREFIX + playerId + "_")) {
+                String varName = entry.getKey().substring((Constants.PLAYER_PREFIX + playerId + "_").length());
                 playerVars.put(varName, entry.getValue());
             }
         }
@@ -521,7 +495,7 @@ public class VariableManager implements IVariableManager {
     
     @Override
     public void clearPlayerVariables(UUID playerId) {
-        playerVariables.entrySet().removeIf(entry -> entry.getKey().startsWith(Constants.PLAYER_PREFIX + playerId.toString() + "_"));
+        playerVariables.entrySet().removeIf(entry -> entry.getKey().startsWith(Constants.PLAYER_PREFIX + playerId + "_"));
     }
     
     @Override
@@ -563,7 +537,6 @@ public class VariableManager implements IVariableManager {
     public Map<String, DataValue> getAllVariables(String context) {
         Map<String, DataValue> allVars = new HashMap<>();
         
-        
         for (Map.Entry<String, DataValue> entry : localVariables.entrySet()) {
             if (entry.getKey().startsWith("local_" + context + "_")) {
                 String varName = entry.getKey().substring(("local_" + context + "_").length());
@@ -571,15 +544,12 @@ public class VariableManager implements IVariableManager {
             }
         }
         
-        
         Map<String, DataValue> globalMap = globalVariables.get("global");
         if (globalMap != null) {
             allVars.putAll(globalMap);
         }
         
-        
         allVars.putAll(serverVariables);
-        
         
         allVars.putAll(persistentVariables);
         
@@ -592,14 +562,11 @@ public class VariableManager implements IVariableManager {
         DataValue value = getLocalVariable(context, name);
         if (value != null) return value;
         
-        
         value = getGlobalVariable(name);
         if (value != null) return value;
         
-        
         value = getServerVariable(name);
         if (value != null) return value;
-        
         
         return getPersistentVariable(name);
     }
@@ -619,19 +586,16 @@ public class VariableManager implements IVariableManager {
             return null;
         }
         
-        
         if (context.getPlayer() != null) {
             String playerContext = context.getPlayer().getUniqueId().toString();
             DataValue value = resolveVariable(name, playerContext);
             if (value != null) return value;
         }
         
-        
         Object customValue = context.getCustomData(name);
         if (customValue != null) {
             return DataValue.fromObject(customValue);
         }
-        
         
         switch (name.toLowerCase()) {
             case "event":

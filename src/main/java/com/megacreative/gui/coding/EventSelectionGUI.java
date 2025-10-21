@@ -174,20 +174,20 @@ public class EventSelectionGUI implements GUIManager.ManagedGUIInterface {
             player.getLocation().add(0, 1, 0), 10, 0.5, 0.5, 0.5, 1);
     }
     
-    @Override
     /**
      * Получает заголовок графического интерфейса
      * @return Заголовок интерфейса
      */
+    @Override
     public String getGUITitle() {
         return "Event Selection GUI for " + blockMaterial.name();
     }
     
-    @Override
     /**
      * Обрабатывает события кликов в инвентаре
      * @param event Событие клика в инвентаре
      */
+    @Override
     public void onInventoryClick(InventoryClickEvent event) {
         if (!player.equals(event.getWhoClicked())) return;
         if (!inventory.equals(event.getInventory())) return;
@@ -477,22 +477,4 @@ public class EventSelectionGUI implements GUIManager.ManagedGUIInterface {
         player.closeInventory();
     }
     
-    @Override
-    /**
-     * Обрабатывает события закрытия инвентаря
-     * @param event Событие закрытия инвентаря
-     */
-    public void onInventoryClose(InventoryCloseEvent event) {
-        
-        
-    }
-    
-    @Override
-    /**
-     * Выполняет очистку ресурсов при закрытии интерфейса
-     */
-    public void onCleanup() {
-        
-        
-    }
 }

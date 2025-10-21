@@ -73,7 +73,10 @@ public class WorldStatsCommand implements CommandExecutor, TabCompleter {
      * @return true, wenn der Befehl erfolgreich ausgeführt wurde
      */
     @Override
-    public boolean onCommand(CommandSender sender, Command command, String label, String[] args) {
+    public boolean onCommand(@org.jetbrains.annotations.NotNull CommandSender sender, 
+                            @org.jetbrains.annotations.NotNull Command command, 
+                            @org.jetbrains.annotations.NotNull String label, 
+                            @org.jetbrains.annotations.NotNull String[] args) {
         if (!(sender instanceof Player player)) {
             sender.sendMessage("§cЭта команда доступна только игрокам!");
             return true;
@@ -235,7 +238,10 @@ public class WorldStatsCommand implements CommandExecutor, TabCompleter {
      * @return Liste möglicher Vervollständigungen
      */
     @Override
-    public List<String> onTabComplete(CommandSender sender, Command command, String alias, String[] args) {
+    public List<String> onTabComplete(@org.jetbrains.annotations.NotNull CommandSender sender, 
+                                     @org.jetbrains.annotations.NotNull Command command, 
+                                     @org.jetbrains.annotations.NotNull String alias, 
+                                     @org.jetbrains.annotations.NotNull String[] args) {
         if (!(sender instanceof Player player)) {
             return new ArrayList<>();
         }

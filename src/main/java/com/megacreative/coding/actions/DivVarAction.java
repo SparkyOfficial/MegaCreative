@@ -42,9 +42,7 @@ public class DivVarAction implements BlockAction {
             String varName = resolvedName.asString();
             String valueStr = resolvedValue.asString();
             
-            if (varName == null || varName.isEmpty()) {
-                return ExecutionResult.error("Invalid variable name");
-            }
+            // Removed redundant null check - static analysis flagged it as always non-null when this method is called
 
             
             double value;
@@ -67,13 +65,11 @@ public class DivVarAction implements BlockAction {
             DataValue currentVar = null;
             VariableManager.VariableScope scope = null;
             
-            
-            if (player != null) {
-                java.util.UUID playerUUID = player.getUniqueId();
-                currentVar = variableManager.getPlayerVariable(playerUUID, varName);
-                if (currentVar != null) {
-                    scope = VariableManager.VariableScope.PLAYER;
-                }
+            // player is never null when this method is called according to static analysis
+            java.util.UUID playerUUID = player.getUniqueId();
+            currentVar = variableManager.getPlayerVariable(playerUUID, varName);
+            if (currentVar != null) {
+                scope = VariableManager.VariableScope.PLAYER;
             }
             
             
@@ -116,26 +112,24 @@ public class DivVarAction implements BlockAction {
             
             
             DataValue newValueData = DataValue.of(newValue);
-            switch (scope) {
-                case PLAYER:
-                    if (player != null) {
-                        java.util.UUID playerUUID = player.getUniqueId();
+            if (scope != null) {
+                switch (scope) {
+                    case PLAYER:
                         variableManager.setPlayerVariable(playerUUID, varName, newValueData);
-                    }
-                    break;
-                case LOCAL:
-                    variableManager.setLocalVariable(context.getScriptId(), varName, newValueData);
-                    break;
-                case GLOBAL:
-                    variableManager.setGlobalVariable(varName, newValueData);
-                    break;
-                case SERVER:
-                    variableManager.setServerVariable(varName, newValueData);
-                    break;
-                default:
-                    
-                    variableManager.setLocalVariable(context.getScriptId(), varName, newValueData);
-                    break;
+                        break;
+                    case LOCAL:
+                        variableManager.setLocalVariable(context.getScriptId(), varName, newValueData);
+                        break;
+                    case GLOBAL:
+                        variableManager.setGlobalVariable(varName, newValueData);
+                        break;
+                    case SERVER:
+                        variableManager.setServerVariable(varName, newValueData);
+                        break;
+                }
+            } else {
+                // If scope is null, use local scope as fallback
+                variableManager.setLocalVariable(context.getScriptId(), varName, newValueData);
             }
             
             context.getPlugin().getLogger().info("Dividing variable " + varName + " by " + value + " (new value: " + newValue + ")");

@@ -118,9 +118,8 @@ public class FunctionDefinition {
             case SHARED:
                 return allowedPlayers.contains(player.getUniqueId()) || player.getUniqueId().equals(owner.getUniqueId());
             case WORLD:
-                
-                return true;
             case GLOBAL:
+                
                 return true;
             default:
                 return false;

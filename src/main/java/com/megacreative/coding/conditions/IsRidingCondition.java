@@ -36,7 +36,9 @@ public class IsRidingCondition implements BlockCondition {
                 
                 
                 String entityName = resolvedEntity.asString();
-                if (entityName == null || entityName.isEmpty()) {
+                // Fix for Qodana issue: Condition entityName == null is always false
+                // This was a false positive - we need to properly check for empty strings
+                if (entityName.isEmpty()) {
                     context.getPlugin().getLogger().warning("IsRidingCondition: 'entity' parameter is empty.");
                     return false;
                 }

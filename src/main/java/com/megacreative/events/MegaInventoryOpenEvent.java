@@ -4,6 +4,7 @@ import org.bukkit.entity.Player;
 import org.bukkit.event.Event;
 import org.bukkit.event.HandlerList;
 import org.bukkit.inventory.Inventory;
+import org.jetbrains.annotations.NotNull;
 
 /**
  * Custom event for when a player opens an inventory
@@ -15,24 +16,28 @@ public class MegaInventoryOpenEvent extends Event {
     private final Player player;
     private final Inventory inventory;
     
-    public MegaInventoryOpenEvent(Player player, Inventory inventory) {
+    public MegaInventoryOpenEvent(@NotNull Player player, @NotNull Inventory inventory) {
         this.player = player;
         this.inventory = inventory;
     }
     
+    @NotNull
     public Player getPlayer() {
         return player;
     }
     
+    @NotNull
     public Inventory getInventory() {
         return inventory;
     }
     
     @Override
+    @NotNull
     public HandlerList getHandlers() {
         return handlers;
     }
     
+    @NotNull
     public static HandlerList getHandlerList() {
         return handlers;
     }

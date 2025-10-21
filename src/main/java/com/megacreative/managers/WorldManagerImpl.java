@@ -21,6 +21,7 @@ import java.io.File;
 import java.io.IOException;
 import java.util.*;
 import java.util.concurrent.ThreadLocalRandom;
+import java.util.logging.Level;
 
 /**
  * Implementation of the world manager
@@ -198,16 +199,9 @@ public class WorldManagerImpl implements IWorldManager {
         
         try {
             
-            
-            
-            
             loadWorlds();
-            
-            
-            
         } catch (Exception e) {
-            plugin.getLogger().severe("Failed to initialize WorldManagerImpl: " + e.getMessage());
-            plugin.getLogger().severe("Stack trace: " + java.util.Arrays.toString(e.getStackTrace()));
+            plugin.getLogger().log(Level.WARNING, "Failed to initialize WorldManagerImpl", e);
         }
     }
     
@@ -242,12 +236,9 @@ public class WorldManagerImpl implements IWorldManager {
                     plugin.getLogger().warning("Failed to load world from " + worldFile.getName() + ": " + e.getMessage());
                 }
             }
-            
-            
-            
         } catch (Exception e) {
             if (plugin != null) {
-                plugin.getLogger().severe("Error in loadWorlds: " + e.getMessage());
+                plugin.getLogger().log(Level.WARNING, "Error in loadWorlds", e);
             }
         }
     }
@@ -297,8 +288,7 @@ public class WorldManagerImpl implements IWorldManager {
                 plugin.getLogger().warning("Failed to deserialize world from file: " + worldFile.getName());
             }
         } catch (Exception e) {
-            plugin.getLogger().severe("Error loading world from file " + worldFile.getName() + ": " + e.getMessage());
-            e.printStackTrace();
+            plugin.getLogger().log(Level.WARNING, "Error loading world from file " + worldFile.getName(), e);
         }
     }
     
@@ -380,14 +370,8 @@ public class WorldManagerImpl implements IWorldManager {
             
             File worldFile = new File(worldsDir, world.getId() + ".json");
             java.nio.file.Files.write(worldFile.toPath(), json.getBytes(java.nio.charset.StandardCharsets.UTF_8));
-            
-            
-            if (codingManager != null) {
-                
-            }
         } catch (Exception e) {
-            plugin.getLogger().severe("Error saving world " + world.getName() + ": " + e.getMessage());
-            e.printStackTrace();
+            plugin.getLogger().log(Level.WARNING, "Error saving world " + world.getName(), e);
         }
     }
     
@@ -634,8 +618,6 @@ public class WorldManagerImpl implements IWorldManager {
                 creator.generatorSettings("{\"layers\":[{\"block\":\"bedrock\",\"height\":1},{\"block\":\"stone\",\"height\":2},{\"block\":\"grass_block\",\"height\":1}],\"biome\":\"plains\"}");
                 break;
             case OCEAN:
-                creator.type(org.bukkit.WorldType.NORMAL);
-                break;
             default:
                 creator.type(org.bukkit.WorldType.NORMAL);
                 break;
@@ -797,26 +779,22 @@ public class WorldManagerImpl implements IWorldManager {
     
     private void attemptDeleteDataFile(CreativeWorld world, File dataFile, Player requester) {
         try {
-            
-            // Value successDataFile is always 'true'
-            // Removed redundant assignment since we're checking the result of dataFile.delete()
-            boolean successDataFile = true;
-            if (dataFile.exists()) {
-                successDataFile = dataFile.delete();
-                if (!successDataFile) {
+            // Properly check if the file exists before trying to delete it
+            // Static analysis flagged this as always true, but it's actually correct logic
+            boolean dataFileExists = dataFile.exists();
+            boolean successDataFile = !dataFileExists || dataFile.delete();
+            if (dataFileExists && !successDataFile) {
+                // Retry deletion
+                Bukkit.getScheduler().runTaskLater(getPlugin(), () -> {
+                    boolean retrySuccess = dataFile.delete();
+                    if (!retrySuccess) {
+                        getPlugin().getLogger().warning("Failed to delete data file after retry: " + dataFile.getName());
+                    }
                     
-                    Bukkit.getScheduler().runTaskLater(getPlugin(), () -> {
-                        boolean retrySuccess = dataFile.delete();
-                        if (!retrySuccess) {
-                            getPlugin().getLogger().warning("Failed to delete data file after retry: " + dataFile.getName());
-                        }
-                        
-                        finishWorldDeletion(world, requester, true, true, retrySuccess);
-                    }, 20L); 
-                    return;
-                }
+                    finishWorldDeletion(world, requester, true, true, retrySuccess);
+                }, 20L); 
+                return;
             }
-            
             
             finishWorldDeletion(world, requester, true, true, successDataFile);
         } catch (Exception e) {
@@ -1031,36 +1009,10 @@ public class WorldManagerImpl implements IWorldManager {
             WorldCreator creator = new WorldCreator(playWorldName);
             creator.environment(world.getWorldType().getEnvironment());
             
+            // Use the DevWorldGenerator instead of flat world settings
+            creator.generator(new com.megacreative.worlds.DevWorldGenerator());
+            creator.generateStructures(false);
             
-            String devWorldName = world.getDevWorldName();
-            World devWorld = Bukkit.getWorld(devWorldName);
-            if (devWorld != null) {
-                creator.copy(devWorld);
-            } else {
-                
-                switch (world.getWorldType()) {
-                    case FLAT:
-                        creator.type(WorldType.FLAT);
-                        creator.generatorSettings("{\"layers\":[{\"block\":\"bedrock\",\"height\":1},{\"block\":\"stone\",\"height\":2},{\"block\":\"grass_block\",\"height\":1}],\"biome\":\"plains\"}");
-                        break;
-                    case VOID:
-                        creator.type(WorldType.FLAT);
-                        creator.generatorSettings("{\"layers\":[{\"block\":\"air\",\"height\":1}],\"biome\":\"plains\"}");
-                        break;
-                    case OCEAN:
-                        creator.type(WorldType.NORMAL);
-                        break;
-                    case NETHER:
-                        creator.environment(World.Environment.NETHER);
-                        break;
-                    case END:
-                        creator.environment(World.Environment.THE_END);
-                        break;
-                    default:
-                        creator.type(WorldType.NORMAL);
-                        break;
-                }
-            }
             bukkitWorld = Bukkit.createWorld(creator);
             
             if (bukkitWorld == null) {

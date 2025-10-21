@@ -130,16 +130,6 @@ public class WorldSettingsGUI implements GUIManager.ManagedGUIInterface {
     }
     
     @Override
-    /**
-     * Получает заголовок графического интерфейса
-     * @return Заголовок интерфейса
-     *
-     * Gets the GUI title
-     * @return Interface title
-     *
-     * Ruft den GUI-Titel ab
-     * @return Schnittstellentitel
-     */
     public String getGUITitle() {
         return "World Settings: " + world.getName();
     }

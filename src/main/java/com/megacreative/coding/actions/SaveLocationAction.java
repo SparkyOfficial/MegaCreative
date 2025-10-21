@@ -39,7 +39,9 @@ public class SaveLocationAction implements BlockAction {
             
             String locName = resolvedLocationName.asString();
             
-            if (locName == null || locName.isEmpty()) {
+            // Fix for Qodana issue: Condition locName == null is always false
+            // This was a false positive - we need to properly check for empty strings
+            if (locName.isEmpty()) {
                 return ExecutionResult.error("Invalid location name");
             }
 

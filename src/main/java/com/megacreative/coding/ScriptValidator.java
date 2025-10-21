@@ -10,7 +10,6 @@ import java.util.*;
  */
 public class ScriptValidator {
     
-    
     private static final String ERROR_SCRIPT_IS_NULL = "Script is null";
     private static final String ERROR_SCRIPT_NAME_REQUIRED = "Script name is required";
     private static final String WARNING_SCRIPT_NAME_LONG = "Script name is very long";
@@ -112,12 +111,9 @@ public class ScriptValidator {
         List<ValidationError> errors = new ArrayList<>();
         List<ValidationError> warnings = new ArrayList<>();
         
-        
         validateScriptName(script, errors, warnings);
         
-        
         validateRootBlock(script, errors, warnings);
-        
         
         checkScriptStructure(script, errors, warnings);
         
@@ -152,9 +148,6 @@ public class ScriptValidator {
             errors.add(new ValidationError(ValidationError.Severity.ERROR, ERROR_SCRIPT_ROOT_BLOCK_REQUIRED, null, "rootBlock"));
         } else {
             
-            
-            
-            
             BlockGraphValidator.ValidationResult graphResult = blockGraphValidator.validate(script.getRootBlock());
             if (!graphResult.isValid()) {
                 for (String error : graphResult.getErrors()) {
@@ -182,9 +175,7 @@ public class ScriptValidator {
                 break;
             }
             
-            
             validateBlock(current, errors, warnings);
-            
             
             current = current.getNextBlock();
         }
@@ -196,18 +187,13 @@ public class ScriptValidator {
     private void validateBlock(CodeBlock block, List<ValidationError> errors, List<ValidationError> warnings) {
         if (block == null) return;
         
-        
         validateBlockFields(block, errors);
-        
         
         validateBlockAction(block, errors, warnings);
         
-        
         validateBlockChildren(block, errors, warnings);
         
-        
         validateBracketConsistency(block, errors);
-        
         
         checkBlockIssues(block, errors, warnings);
     }
@@ -236,7 +222,6 @@ public class ScriptValidator {
             return; 
         }
         
-        
         BlockConfigService.BlockConfig config = blockConfigService.getBlockConfig(action);
         if (config == null) {
             errors.add(new ValidationError(ValidationError.Severity.ERROR, 
@@ -244,7 +229,6 @@ public class ScriptValidator {
         } else {
             
             validateBlockParameters(block, config, errors, warnings);
-            
             
             validateBlockType(block, config, errors);
         }
@@ -260,7 +244,6 @@ public class ScriptValidator {
         if (paramConfigs != null) {
             checkRequiredParameters(block, paramConfigs, errors);
         }
-        
         
         validateParameterValues(block, paramConfigs, errors, warnings);
     }
@@ -295,7 +278,6 @@ public class ScriptValidator {
                     WARNING_PARAMETER_NULL_VALUE + paramName, block, paramName));
                 continue;
             }
-            
             
             BlockConfigService.ParameterConfig paramConfig = paramConfigs != null ? paramConfigs.get(paramName) : null;
             if (paramConfig != null && paramConfig.isRequired()) {
@@ -349,9 +331,7 @@ public class ScriptValidator {
                 WARNING_ACTION_DEPRECATED + block.getAction(), block, "action"));
         }
         
-        
         checkParameterCombinations(block, warnings);
-        
         
         checkPerformanceIssues(block, warnings);
     }
@@ -365,12 +345,10 @@ public class ScriptValidator {
             return; 
         }
         
-        
         if (!hasExecutableBlocks(script.getRootBlock())) {
             warnings.add(new ValidationError(ValidationError.Severity.WARNING, 
                 WARNING_SCRIPT_NO_EXECUTABLE_BLOCKS, null, null));
         }
-        
         
         checkUnreachableBlocks(script, warnings);
     }
@@ -399,18 +377,14 @@ public class ScriptValidator {
             return;
         }
         
-        
         Set<CodeBlock> allBlocks = new HashSet<>();
         collectAllBlocks(script.getRootBlock(), allBlocks);
-        
         
         Set<CodeBlock> reachableBlocks = new HashSet<>();
         findReachableBlocks(script.getRootBlock(), reachableBlocks);
         
-        
         Set<CodeBlock> unreachableBlocks = new HashSet<>(allBlocks);
         unreachableBlocks.removeAll(reachableBlocks);
-        
         
         for (CodeBlock block : unreachableBlocks) {
             warnings.add(new ValidationError(ValidationError.Severity.WARNING, 
@@ -429,16 +403,13 @@ public class ScriptValidator {
         
         allBlocks.add(block);
         
-        
         if (block.getNextBlock() != null) {
             collectAllBlocks(block.getNextBlock(), allBlocks);
         }
         
-        
         for (CodeBlock child : block.getChildren()) {
             collectAllBlocks(child, allBlocks);
         }
-        
         
         if ("conditionalBranch".equals(block.getAction())) {
             
@@ -465,23 +436,19 @@ public class ScriptValidator {
         
         reachableBlocks.add(block);
         
-        
         if (block.getNextBlock() != null) {
             findReachableBlocks(block.getNextBlock(), reachableBlocks);
         }
         
-        
         for (CodeBlock child : block.getChildren()) {
             findReachableBlocks(child, reachableBlocks);
         }
-        
         
         if ("conditionalBranch".equals(block.getAction())) {
             
             CodeBlock trueBlock = block.getNextBlock();
             if (trueBlock != null) {
                 findReachableBlocks(trueBlock, reachableBlocks);
-                
                 
                 CodeBlock current = trueBlock;
                 while (current != null && current.getNextBlock() != null) {
@@ -508,9 +475,9 @@ public class ScriptValidator {
      * Checks for problematic parameter combinations
      */
     private void checkParameterCombinations(CodeBlock block, List<ValidationError> warnings) {
-        
-        
-        
+        // Static analysis warning fix - empty method body
+        // This method is a placeholder for future implementation
+        // TODO: Implement logic for checking problematic parameter combinations
     }
     
     /**
@@ -525,7 +492,9 @@ public class ScriptValidator {
         } else if ("forEach".equals(action)) {
             DataValue listParam = block.getParameter("list");
             if (listParam != null && listParam.getType().getName().equals("List")) {
-                
+                // Static analysis warning fix - empty if body
+                // This check is a placeholder for future implementation
+                // TODO: Implement logic for checking list parameter in forEach loop
             }
         }
     }
@@ -535,22 +504,18 @@ public class ScriptValidator {
      */
     private boolean isValidBlockType(CodeBlock block, String expectedType) {
         
-        
         if (block == null || expectedType == null) {
             return false;
         }
-        
         
         if (blockConfigService == null) {
             return false;
         }
         
-        
         List<BlockConfigService.BlockConfig> configs = blockConfigService.getBlockConfigsForMaterial(block.getMaterial());
         if (configs == null || configs.isEmpty()) {
             return false;
         }
-        
         
         for (BlockConfigService.BlockConfig config : configs) {
             List<String> actions = config.getActions();
@@ -567,9 +532,7 @@ public class ScriptValidator {
      */
     private boolean isDeprecatedAction(String action) {
         
-        
         if (action == null) return false;
-        
         
         Set<String> deprecatedActions = Set.of(
             "oldSendMessage", 

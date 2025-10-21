@@ -430,7 +430,11 @@ public class ReferenceSystemEventsListener implements Listener {
         if (event.getFrom().getBlockX() != event.getTo().getBlockX() ||
             event.getFrom().getBlockY() != event.getTo().getBlockY() ||
             event.getFrom().getBlockZ() != event.getTo().getBlockZ()) {
-            plugin.getLogger().fine(".EVT Player moved: " + player.getName());
+            // Use rate-limited logging for frequent events to reduce log spam
+            com.megacreative.utils.LogUtils.infoRateLimited(
+                ".EVT Player moved: " + player.getName(), 
+                "player_move_fine_" + player.getName()
+            );
             
             
             CodeScript script = movementScripts.get("on_move");
@@ -459,7 +463,11 @@ public class ReferenceSystemEventsListener implements Listener {
         if (!(event.getEntity() instanceof Player)) return;
         
         Player player = (Player) event.getEntity();
-        plugin.getLogger().fine(".EVT Item picked up by " + player.getName());
+        // Use rate-limited logging for frequent events to reduce log spam
+        com.megacreative.utils.LogUtils.infoRateLimited(
+            ".EVT Item picked up by " + player.getName(), 
+            "item_pickup_fine_" + player.getName()
+        );
         
         
         CodeScript script = itemScripts.get("on_pickup");
@@ -474,7 +482,11 @@ public class ReferenceSystemEventsListener implements Listener {
     @EventHandler
     public void onItemDrop(PlayerDropItemEvent event) {
         Player player = event.getPlayer();
-        plugin.getLogger().fine(".EVT Item dropped by " + player.getName());
+        // Use rate-limited logging for frequent events to reduce log spam
+        com.megacreative.utils.LogUtils.infoRateLimited(
+            ".EVT Item dropped by " + player.getName(), 
+            "item_drop_fine_" + player.getName()
+        );
         
         
         CodeScript script = itemScripts.get("on_drop");
@@ -493,7 +505,11 @@ public class ReferenceSystemEventsListener implements Listener {
     @EventHandler
     public void onPlayerChat(AsyncPlayerChatEvent event) {
         Player player = event.getPlayer();
-        plugin.getLogger().fine(".EVT Player chatted: " + player.getName());
+        // Use rate-limited logging for frequent events to reduce log spam
+        com.megacreative.utils.LogUtils.infoRateLimited(
+            ".EVT Player chatted: " + player.getName(), 
+            "player_chat_fine_" + player.getName()
+        );
         
         
         event.getPlayer().getServer().getScheduler().runTask(
@@ -517,7 +533,11 @@ public class ReferenceSystemEventsListener implements Listener {
     public void onPlayerCommand(PlayerCommandPreprocessEvent event) {
         Player player = event.getPlayer();
         String command = event.getMessage().substring(1); 
-        plugin.getLogger().fine(".EVT Player used command: " + command);
+        // Use rate-limited logging for frequent events to reduce log spam
+        com.megacreative.utils.LogUtils.infoRateLimited(
+            ".EVT Player used command: " + command, 
+            "player_command_fine_" + command
+        );
         
         
         CodeScript script = chatScripts.get("on_command");
@@ -537,7 +557,11 @@ public class ReferenceSystemEventsListener implements Listener {
      */
     @EventHandler
     public void onWorldLoad(WorldLoadEvent event) {
-        plugin.getLogger().fine(".EVT World loaded: " + event.getWorld().getName());
+        // Use rate-limited logging for frequent events to reduce log spam
+        com.megacreative.utils.LogUtils.infoRateLimited(
+            ".EVT World loaded: " + event.getWorld().getName(), 
+            "world_load_fine_" + event.getWorld().getName()
+        );
         
         
         CodeScript script = worldScripts.get("on_load");
@@ -551,7 +575,11 @@ public class ReferenceSystemEventsListener implements Listener {
      */
     @EventHandler
     public void onWorldUnload(WorldUnloadEvent event) {
-        plugin.getLogger().fine(".EVT World unloaded: " + event.getWorld().getName());
+        // Use rate-limited logging for frequent events to reduce log spam
+        com.megacreative.utils.LogUtils.infoRateLimited(
+            ".EVT World unloaded: " + event.getWorld().getName(), 
+            "world_unload_fine_" + event.getWorld().getName()
+        );
         
         
         CodeScript script = worldScripts.get("on_unload");

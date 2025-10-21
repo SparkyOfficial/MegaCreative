@@ -1,5 +1,6 @@
 package com.megacreative.menus;
 
+import com.megacreative.utils.LogUtils;
 import net.kyori.adventure.text.Component;
 import org.bukkit.Bukkit;
 import org.bukkit.Material;
@@ -68,7 +69,7 @@ public abstract class AbstractMenu implements InventoryMenu {
             player.openInventory(inventory);
         } catch (Exception e) {
             player.sendMessage("§cFailed to open menu: " + e.getMessage());
-            e.printStackTrace();
+            com.megacreative.utils.LogUtils.error("Failed to open menu", e);
         }
     }
     
@@ -187,8 +188,7 @@ public abstract class AbstractMenu implements InventoryMenu {
         }
     }
     
-    @Override
-    public void destroy() {
-        MenusManager.getInstance().unregisterMenu(this);
-    }
+    // Removed identical method to super method
+    // The destroy() method was identical to the one in the super interface,
+    // so it has been removed to eliminate redundancy
 }

@@ -6,14 +6,8 @@ import org.bukkit.command.Command;
 import org.bukkit.command.CommandExecutor;
 import org.bukkit.command.CommandSender;
 import org.bukkit.entity.Player;
+import org.jetbrains.annotations.NotNull;
 
-/**
- * Команда для подтверждения удаления мира
- *
- * Command to confirm world deletion
- *
- * Befehl zur Bestätigung der Weltenlöschung
- */
 public class ConfirmDeleteCommand implements CommandExecutor {
     
     private final MegaCreative plugin;
@@ -55,7 +49,7 @@ public class ConfirmDeleteCommand implements CommandExecutor {
      * @return true, wenn der Befehl erfolgreich ausgeführt wurde
      */
     @Override
-    public boolean onCommand(CommandSender sender, Command command, String label, String[] args) {
+    public boolean onCommand(@NotNull CommandSender sender, @NotNull Command command, @NotNull String label, @NotNull String[] args) {
         if (!(sender instanceof Player player)) {
             sender.sendMessage("§cЭта команда доступна только игрокам!");
             return true;
@@ -73,7 +67,6 @@ public class ConfirmDeleteCommand implements CommandExecutor {
             player.sendMessage("§cМир с ID " + worldId + " не найден.");
             return true;
         }
-        
         
         if (!world.isOwner(player)) {
             player.sendMessage("§cТолько владелец может удалить этот мир.");

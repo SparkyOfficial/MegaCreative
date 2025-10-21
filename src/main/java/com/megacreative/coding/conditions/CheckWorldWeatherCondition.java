@@ -31,7 +31,9 @@ public class CheckWorldWeatherCondition implements BlockCondition {
             DataValue resolvedWeather = resolver.resolve(context, weatherValue);
             
             String weather = resolvedWeather.asString();
-            if (weather == null || weather.isEmpty()) {
+            // Fix for Qodana issue: Condition weather == null is always false
+            // This was a false positive - we need to properly check for empty strings
+            if (weather.isEmpty()) {
                 context.getPlugin().getLogger().warning("CheckWorldWeatherCondition: 'weather' parameter is empty.");
                 return false;
             }

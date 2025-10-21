@@ -5,6 +5,7 @@ import org.bukkit.event.Event;
 import org.bukkit.event.HandlerList;
 import org.bukkit.inventory.Inventory;
 import org.bukkit.inventory.ItemStack;
+import org.jetbrains.annotations.NotNull;
 
 /**
  * Event fired when a player clicks on an item in a custom GUI
@@ -28,10 +29,12 @@ public class GUIClickEvent extends Event {
         this.menuTitle = menuTitle;
     }
     
+    @NotNull
     public Player getPlayer() {
         return player;
     }
     
+    @NotNull
     public Inventory getInventory() {
         return inventory;
     }
@@ -44,10 +47,12 @@ public class GUIClickEvent extends Event {
         return item;
     }
     
+    @NotNull
     public String getClickType() {
         return clickType;
     }
     
+    @NotNull
     public String getMenuTitle() {
         return menuTitle;
     }

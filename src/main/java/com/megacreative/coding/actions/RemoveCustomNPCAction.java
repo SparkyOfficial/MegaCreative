@@ -74,7 +74,7 @@ public class RemoveCustomNPCAction implements BlockAction {
             return ExecutionResult.success("Removed custom NPC '" + npc.getName() + "'.");
 
         } catch (Exception e) {
-            e.printStackTrace();
+            context.getPlugin().getLogger().log(java.util.logging.Level.SEVERE, "Error removing custom NPC", e);
             return ExecutionResult.error("Error removing custom NPC: " + e.getMessage());
         }
     }

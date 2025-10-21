@@ -12,10 +12,12 @@ import org.bukkit.command.CommandExecutor;
 import org.bukkit.command.CommandSender;
 import org.bukkit.command.TabCompleter;
 import org.bukkit.entity.Player;
+import org.jetbrains.annotations.NotNull;
 
 import java.text.SimpleDateFormat;
 import java.util.*;
 import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 /**
  * Команда для управления доверенными игроками
@@ -71,7 +73,10 @@ public class TrustedPlayerCommand implements CommandExecutor, TabCompleter {
      * @return true, wenn der Befehl erfolgreich ausgeführt wurde
      */
     @Override
-    public boolean onCommand(CommandSender sender, Command command, String label, String[] args) {
+    public boolean onCommand(@NotNull CommandSender sender, 
+                            @NotNull Command command, 
+                            @NotNull String label, 
+                            @NotNull String[] args) {
         if (!sender.hasPermission("megacreative.trusted")) {
             sender.sendMessage("§c❌ У вас нет прав для использования этой команды!");
             return true;
@@ -462,7 +467,10 @@ public class TrustedPlayerCommand implements CommandExecutor, TabCompleter {
      * @return Liste möglicher Vervollständigungen
      */
     @Override
-    public List<String> onTabComplete(CommandSender sender, Command command, String alias, String[] args) {
+    public List<String> onTabComplete(@NotNull CommandSender sender, 
+                                     @NotNull Command command, 
+                                     @NotNull String alias, 
+                                     @NotNull String[] args) {
         if (!sender.hasPermission("megacreative.trusted") || !(sender instanceof Player)) {
             return new ArrayList<>();
         }
@@ -480,9 +488,9 @@ public class TrustedPlayerCommand implements CommandExecutor, TabCompleter {
         }
 
         if (args.length == 1) {
-            return Arrays.asList("add", "remove", "list", "info", "gui").stream()
+            return Stream.of("add", "remove", "list", "info", "gui")
                     .filter(s -> s.toLowerCase().startsWith(args[0].toLowerCase()))
-                    .collect(Collectors.toList());
+                    .toList();
         }
 
         if (args.length == 2) {
@@ -493,19 +501,19 @@ public class TrustedPlayerCommand implements CommandExecutor, TabCompleter {
                         .map(trusted -> Bukkit.getOfflinePlayer(trusted.getPlayerId()).getName())
                         .filter(Objects::nonNull)
                         .filter(name -> name.toLowerCase().startsWith(args[1].toLowerCase()))
-                        .collect(Collectors.toList());
+                        .toList();
             } else if (args[0].equalsIgnoreCase("add")) {
                 
                 List<UUID> trustedPlayerIds = plugin.getServiceRegistry().getTrustedPlayerManager().getTrustedPlayers(world).stream()
                         .map(TrustedPlayer::getPlayerId)
-                        .collect(Collectors.toList());
+                        .toList();
                 
                 return Bukkit.getOnlinePlayers().stream()
                         .filter(p -> !p.getUniqueId().equals(player.getUniqueId())) 
                         .filter(p -> !trustedPlayerIds.contains(p.getUniqueId())) 
                         .map(Player::getName)
                         .filter(name -> name.toLowerCase().startsWith(args[1].toLowerCase()))
-                        .collect(Collectors.toList());
+                        .toList();
             }
         }
 

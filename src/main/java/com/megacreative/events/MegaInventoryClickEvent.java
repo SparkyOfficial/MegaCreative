@@ -5,6 +5,7 @@ import org.bukkit.event.Event;
 import org.bukkit.event.HandlerList;
 import org.bukkit.event.inventory.ClickType;
 import org.bukkit.inventory.Inventory;
+import org.jetbrains.annotations.NotNull;
 
 /**
  * Custom event for when a player clicks in an inventory
@@ -27,10 +28,12 @@ public class MegaInventoryClickEvent extends Event {
         this.clickType = clickType;
     }
     
+    @NotNull
     public Player getPlayer() {
         return player;
     }
     
+    @NotNull
     public Inventory getInventory() {
         return inventory;
     }
@@ -43,6 +46,7 @@ public class MegaInventoryClickEvent extends Event {
         return rawSlot;
     }
     
+    @NotNull
     public ClickType getClickType() {
         return clickType;
     }

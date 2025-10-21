@@ -11,6 +11,7 @@ import com.megacreative.coding.events.CustomEventManager;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.function.Supplier;
+import java.util.logging.Level;
 import java.util.logging.Logger;
 
 /**
@@ -59,14 +60,13 @@ public class ActionFactory implements IActionFactory {
                                     return constructor.newInstance();
                                 }
                             } catch (Exception e) {
-                                LOGGER.severe("Не удалось создать экземпляр действия: " + clazz.getName());
-                                e.printStackTrace();
+                                LOGGER.log(Level.WARNING, "Не удалось создать экземпляр действия: " + clazz.getName(), e);
                                 return null;
                             }
                         };
                         register(meta.id(), meta.displayName(), supplier);
                     } catch (Exception e) {
-                        LOGGER.severe("Не удалось зарегистрировать действие из класса (нужен пустой конструктор): " + clazz.getName());
+                        LOGGER.warning("Не удалось зарегистрировать действие из класса (нужен пустой конструктор): " + clazz.getName());
                     }
                 }
             }
@@ -170,8 +170,7 @@ public class ActionFactory implements IActionFactory {
                 
                 eventManager.triggerEvent(event.getName(), eventData, null, "global");
             } catch (Exception e) {
-                LOGGER.severe("Failed to publish event through CustomEventManager: " + e.getMessage());
-                e.printStackTrace();
+                LOGGER.log(Level.WARNING, "Failed to publish event through CustomEventManager: " + e.getMessage(), e);
             }
         } else {
             
@@ -198,8 +197,7 @@ public class ActionFactory implements IActionFactory {
                 
                 eventManager.triggerEvent(eventName, eventData, null, "global");
             } catch (Exception e) {
-                LOGGER.severe("Failed to publish event through CustomEventManager: " + e.getMessage());
-                e.printStackTrace();
+                LOGGER.log(Level.WARNING, "Failed to publish event through CustomEventManager: " + e.getMessage(), e);
             }
         } else {
             

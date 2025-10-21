@@ -41,14 +41,16 @@ public class RepeatTriggerAction implements BlockAction {
         DataValue ticksValue = resolver.resolve(context, rawTicks);
         String ticksStr = ticksValue.asString();
         
+        // Fix for Qodana issue: Condition ticksStr == null is always false
+        // This was a false positive - we need to properly check for empty strings
+        if (ticksStr.isEmpty()) {
+            return ExecutionResult.error("Ticks parameter is null");
+        }
+        
         if (rawAction != null) {
             DataValue actionValue = resolver.resolve(context, rawAction);
             
             
-        }
-
-        if (ticksStr == null) {
-            return ExecutionResult.error("Ticks parameter is null");
         }
 
         try {

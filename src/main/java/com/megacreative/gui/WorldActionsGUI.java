@@ -114,7 +114,7 @@ public class WorldActionsGUI implements GUIManager.ManagedGUIInterface {
         
         ItemStack scriptsButton = new ItemStack(Material.COMMAND_BLOCK);
         ItemMeta scriptsMeta = scriptsButton.getItemMeta();
-        scriptsMeta.setDisplayName("§6§lСкрипты");
+        scriptsMeta.setDisplayName("§6§лСкрипты");
         scriptsMeta.setLore(Arrays.asList(
             "§7Управление скриптами",
             "§7автоматизации",
@@ -126,7 +126,7 @@ public class WorldActionsGUI implements GUIManager.ManagedGUIInterface {
         
         ItemStack deleteButton = new ItemStack(Material.BARRIER);
         ItemMeta deleteMeta = deleteButton.getItemMeta();
-        deleteMeta.setDisplayName("§c§lУдалить мир");
+        deleteMeta.setDisplayName("§c§лУдалить мир");
         deleteMeta.setLore(Arrays.asList(
             "§7Удалить мир навсегда",
             "§c⚠ Это действие нельзя отменить!",
@@ -138,7 +138,7 @@ public class WorldActionsGUI implements GUIManager.ManagedGUIInterface {
         
         ItemStack backButton = new ItemStack(Material.ARROW);
         ItemMeta backMeta = backButton.getItemMeta();
-        backMeta.setDisplayName("§e§lНазад");
+        backMeta.setDisplayName("§e§лНазад");
         backButton.setItemMeta(backMeta);
         inventory.setItem(22, backButton);
     }
@@ -157,31 +157,11 @@ public class WorldActionsGUI implements GUIManager.ManagedGUIInterface {
     }
     
     @Override
-    /**
-     * Получает заголовок графического интерфейса
-     * @return Заголовок интерфейса
-     *
-     * Gets the GUI title
-     * @return Interface title
-     *
-     * Ruft den GUI-Titel ab
-     * @return Schnittstellentitel
-     */
     public String getGUITitle() {
         return "World Actions: " + world.getName();
     }
     
     @Override
-    /**
-     * Обрабатывает события кликов в инвентаре
-     * @param event Событие клика в инвентаре
-     *
-     * Handles inventory click events
-     * @param event Inventory click event
-     *
-     * Verarbeitet Inventarklick-Ereignisse
-     * @param event Inventarklick-Ereignis
-     */
     public void onInventoryClick(InventoryClickEvent event) {
         if (!event.getInventory().equals(inventory)) return;
         

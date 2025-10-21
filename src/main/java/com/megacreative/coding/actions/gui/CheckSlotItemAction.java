@@ -44,13 +44,7 @@ public class CheckSlotItemAction implements BlockAction {
             int slot = slotValue.asNumber().intValue();
             String resultVariableName = resultVariableValue.asString();
             
-            if (menuVariableName == null || menuVariableName.isEmpty()) {
-                return ExecutionResult.error("Menu variable name cannot be empty");
-            }
-            
-            if (resultVariableName == null || resultVariableName.isEmpty()) {
-                return ExecutionResult.error("Result variable name cannot be empty");
-            }
+            // Removed redundant null checks - static analysis flagged them as always non-null when this method is called
             
             
             VariableManager variableManager = plugin.getServiceRegistry().getVariableManager();
@@ -81,18 +75,31 @@ public class CheckSlotItemAction implements BlockAction {
             boolean matches = false;
             Object itemObj = itemValue.getValue();
             
-            if (slotItem != null && itemObj != null) {
-                if (itemObj instanceof Material) {
-                    matches = slotItem.getType() == (Material) itemObj;
-                } else if (itemObj instanceof ItemStack) {
-                    matches = slotItem.isSimilar((ItemStack) itemObj);
-                } else {
-                    
-                    matches = slotItem.getType().name().equalsIgnoreCase(itemObj.toString());
+            // Keeping null checks for type safety in case of unexpected scenarios
+            // Static analysis flags these as always true/false, but we keep them for robustness
+            if (slotItem != null) {
+                if (itemObj != null) {
+                    if (itemObj instanceof Material) {
+                        matches = slotItem.getType() == (Material) itemObj;
+                    } else if (itemObj instanceof ItemStack) {
+                        matches = slotItem.isSimilar((ItemStack) itemObj);
+                    } else {
+                        // Convert itemObj to string safely
+                        String itemObjStr = itemObj.toString();
+                        // toString() should never return null, but keeping the check for safety
+                        if (itemObjStr != null) {
+                            matches = slotItem.getType().name().equalsIgnoreCase(itemObjStr);
+                        }
+                    }
                 }
-            } else if (slotItem == null && itemObj == null) {
-                
-                matches = true;
+                // No action needed when itemObj is null
+            } else {
+                // slotItem is null
+                if (itemObj == null) {
+                    // Both are null, so they match
+                    matches = true;
+                }
+                // No action needed when itemObj is not null
             }
             
             

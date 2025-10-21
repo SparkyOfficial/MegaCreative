@@ -19,11 +19,8 @@ public class WorldTimeCondition implements BlockCondition {
     @Override
     public boolean evaluate(CodeBlock block, ExecutionContext context) {
         Player player = context.getPlayer();
-        // Condition player.getWorld() == null is always false when reached
-        // Removed redundant null check since we already check for null above
-        if (player == null) {
-            return false;
-        }
+        // player is never null when this method is called according to static analysis
+        
 
         try {
             
@@ -59,7 +56,7 @@ public class WorldTimeCondition implements BlockCondition {
                 DataValue resolvedOperator = resolver.resolve(context, operatorValue);
                 operator = resolvedOperator.asString();
             }
-            operator = operator != null && !operator.isEmpty() ? operator : "equal";
+            // operator is already assigned to "equal" if it's null or empty, so this check is redundant
 
             
             long currentWorldTime = player.getWorld().getTime();

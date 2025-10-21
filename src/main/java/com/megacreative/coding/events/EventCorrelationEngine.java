@@ -20,6 +20,8 @@ public class EventCorrelationEngine {
     private final CustomEventManager eventManager;
     
     
+    // According to static analysis, this field can be converted to a local variable
+    // However, it needs to be a class field to maintain state
     private final Map<String, EventPattern> patterns = new ConcurrentHashMap<>();
     
     
@@ -267,7 +269,7 @@ public class EventCorrelationEngine {
             private String patternId = UUID.randomUUID().toString();
             private String name;
             private String description = "";
-            private List<Step> steps = new ArrayList<>();
+            private final List<Step> steps = new ArrayList<>();
             private long timeoutMs = 30000; 
             
             public Builder(String name) {

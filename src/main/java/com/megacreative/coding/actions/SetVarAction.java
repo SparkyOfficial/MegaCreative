@@ -40,7 +40,8 @@ public class SetVarAction implements BlockAction {
             
             String varName = resolvedName.asString();
 
-            if (varName == null || varName.isEmpty()) {
+            // Removed redundant null check - static analysis flagged it as always non-null when this method is called
+            if (varName.isEmpty()) {
                 return ExecutionResult.error("Invalid variable name");
             }
 
@@ -82,8 +83,9 @@ public class SetVarAction implements BlockAction {
                 variableManager.setServerVariable(varName, valueToSet);
                 break;
             default:
-                
+                // Handle default case by using local scope
                 variableManager.setLocalVariable(context.getScriptId(), varName, valueToSet);
+                break;
         }
 
         return ExecutionResult.success("Variable set successfully");

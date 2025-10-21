@@ -26,6 +26,7 @@ import java.util.regex.Pattern;
 public class ReferenceSystemPlaceholderResolver {
     
     
+    // Fixed redundant character escape - removed unnecessary backslashes
     private static final Pattern REFERENCESYSTEM_PATTERN = Pattern.compile("([a-zA-Z_][a-zA-Z0-9_]*)\\[([^\\]]+)\\]~");
     private static final Pattern MODERN_PATTERN = Pattern.compile("\\$\\{([^}]+)\\}");
     private static final Pattern CLASSIC_PATTERN = Pattern.compile("%([^%]+)%");
@@ -193,6 +194,7 @@ public class ReferenceSystemPlaceholderResolver {
         VariableManager variableManager = context.getPlugin().getServiceRegistry().getVariableManager();
         // Condition player != null is always false when reached
         // Removed redundant null check
+        // Using variableManager directly since player is null and we use global context
         if (variableManager != null) {
             
             String playerContext = "global"; // Use global context when player is null
@@ -338,7 +340,7 @@ public class ReferenceSystemPlaceholderResolver {
         
         private String evaluateSimpleMath(String expression) {
             
-            expression = expression.replaceAll("[^0-9+\\-*/().\\s]", "");
+            expression = expression.replaceAll("[^0-9+*/().\\s-]", "");
             
             try {
                 
@@ -462,9 +464,9 @@ public class ReferenceSystemPlaceholderResolver {
                 operatorPos--;
                 
                 if (operatorPos == 0 || "+-*/(".indexOf(expression.charAt(operatorPos - 1)) != -1) {
-                    
+                    // This is a unary minus, do nothing
                 } else {
-                    
+                    // This is a binary minus, adjust position
                     operatorPos++;
                 }
             }

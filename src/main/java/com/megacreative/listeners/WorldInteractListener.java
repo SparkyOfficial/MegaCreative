@@ -11,10 +11,12 @@ import org.bukkit.inventory.ItemStack;
 
 public class WorldInteractListener implements Listener {
     
-    private final MegaCreative plugin;
+    // plugin field was converted to a local variable since it's only used in the constructor
+    // private final MegaCreative plugin;
     
     public WorldInteractListener(MegaCreative plugin) {
-        this.plugin = plugin;
+        // plugin is now a local variable
+        // this.plugin = plugin;
     }
     
     @EventHandler

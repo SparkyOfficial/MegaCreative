@@ -89,7 +89,7 @@ public class ScriptManager {
         try {
             config.save(scriptFile);
         } catch (IOException e) {
-            e.printStackTrace();
+            com.megacreative.utils.LogUtils.error("Failed to save script file: " + scriptFile.getAbsolutePath(), e);
         }
         
         Map<String, ScriptBuilder> worldScriptMap = worldScripts.computeIfAbsent(
@@ -112,6 +112,21 @@ public class ScriptManager {
         
         
         Player owner = null; 
+        // According to static analysis, value owner is always 'null'
+        // Get the actual owner from the configuration if available
+        String ownerUuidStr = config.getString("owner");
+        if (ownerUuidStr != null && !ownerUuidStr.isEmpty()) {
+            try {
+                UUID ownerUuid = UUID.fromString(ownerUuidStr);
+                owner = org.bukkit.Bukkit.getPlayer(ownerUuid);
+            } catch (IllegalArgumentException e) {
+                // Invalid UUID format, keep owner as null
+            }
+        }
+        // The owner variable is intentionally null as a fallback when loading scripts
+        // In a real implementation, we would retrieve the actual owner from the configuration
+        // owner = getActualOwnerFromConfig(config); // TODO: Implement actual owner retrieval
+        
         ScriptBuilder builder = new ScriptBuilder(owner);
         
         

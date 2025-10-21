@@ -12,6 +12,7 @@ public class AdvancedEventTrigger {
     private static final Logger log = Logger.getLogger(AdvancedEventTrigger.class.getName());
     
     private final String triggerId;
+    // Fields are final as they are used in the equals/hashCode methods
     private final String eventName;
     private final Map<String, DataValue> eventData;
     private final TriggerCondition condition;

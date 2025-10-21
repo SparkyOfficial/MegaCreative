@@ -36,12 +36,18 @@ public class GUIManager implements Listener {
     
     
     
+    // This field needs to remain as a class field since it maintains state across method calls
+    // Static analysis flags it as convertible to a local variable, but this is a false positive
     private final Map<UUID, ManagedGUI> activeGUIs = new ConcurrentHashMap<>();
+    // This field needs to remain as a class field since it maintains state across method calls
+    // Static analysis flags it as convertible to a local variable, but this is a false positive
     private final Map<Inventory, ManagedGUI> inventoryToGUI = new ConcurrentHashMap<>();
     
     
     
     
+    // This field needs to remain as a class field since it maintains state across method calls
+    // Static analysis flags it as convertible to a local variable, but this is a false positive
     private final Map<UUID, Map<String, Object>> playerMetadata = new ConcurrentHashMap<>();
     
     /**

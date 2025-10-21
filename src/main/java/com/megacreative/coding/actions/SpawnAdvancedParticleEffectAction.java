@@ -184,7 +184,7 @@ public class SpawnAdvancedParticleEffectAction implements BlockAction {
             }
 
         } catch (Exception e) {
-            e.printStackTrace();
+            context.getPlugin().getLogger().log(java.util.logging.Level.SEVERE, "Error creating particle effect", e);
             return ExecutionResult.error("Error creating particle effect: " + e.getMessage());
         }
     }

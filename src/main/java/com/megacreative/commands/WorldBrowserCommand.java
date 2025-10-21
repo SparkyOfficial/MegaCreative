@@ -6,20 +6,8 @@ import org.bukkit.command.Command;
 import org.bukkit.command.CommandExecutor;
 import org.bukkit.command.CommandSender;
 import org.bukkit.entity.Player;
+import org.jetbrains.annotations.NotNull;
 
-/**
- * Команда для открытия браузера миров
- * Позволяет игрокам просматривать доступные миры и присоединяться к ним
- * Управление навигацией по мирам и выбором миров для игры
- *
- * Command to open the world browser
- * Allows players to browse available worlds and join them
- * Management of world navigation and world selection for gameplay
- *
- * Befehl zum Öffnen des Weltenbrowsers
- * Ermöglicht es Spielern, verfügbare Welten zu durchsuchen und ihnen beizutreten
- * Verwaltung der Welt-Navigation und der Weltenauswahl für das Gameplay
- */
 public class WorldBrowserCommand implements CommandExecutor {
     
     private final MegaCreative plugin;
@@ -61,7 +49,7 @@ public class WorldBrowserCommand implements CommandExecutor {
      * @return true, wenn der Befehl erfolgreich ausgeführt wurde
      */
     @Override
-    public boolean onCommand(CommandSender sender, Command command, String label, String[] args) {
+    public boolean onCommand(@NotNull CommandSender sender, @NotNull Command command, @NotNull String label, @NotNull String[] args) {
         if (!(sender instanceof Player player)) {
             sender.sendMessage("§cЭта команда доступна только игрокам!");
             return true;

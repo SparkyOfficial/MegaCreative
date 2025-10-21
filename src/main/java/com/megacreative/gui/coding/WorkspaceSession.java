@@ -22,13 +22,13 @@ public class WorkspaceSession {
     
     private Inventory currentGUI;
     private List<WorkspaceScriptBlock> currentScript = new ArrayList<>();
-    private Map<String, DataValue> variables = new HashMap<>();
-    private Set<UUID> collaborators = new HashSet<>();
+    private final Map<String, DataValue> variables = new HashMap<>();
+    private final Set<UUID> collaborators = new HashSet<>();
     private boolean allowCollaboration = false;
     
     
-    private Stack<ScriptSnapshot> undoStack = new Stack<>();
-    private Stack<ScriptSnapshot> redoStack = new Stack<>();
+    private final Stack<ScriptSnapshot> undoStack = new Stack<>();
+    private final Stack<ScriptSnapshot> redoStack = new Stack<>();
     
     /**
      * Инициализирует сессию рабочей области

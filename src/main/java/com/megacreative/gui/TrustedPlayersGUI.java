@@ -258,33 +258,4 @@ public class TrustedPlayersGUI implements GUIManager.ManagedGUIInterface {
     public Inventory getInventory() {
         return inventory;
     }
-    
-    @Override
-    /**
-     * Обрабатывает события закрытия инвентаря
-     * @param event Событие закрытия инвентаря
-     *
-     * Handles inventory close events
-     * @param event Inventory close event
-     *
-     * Verarbeitet Inventarschließ-Ereignisse
-     * @param event Inventarschließ-Ereignis
-     */
-    public void onInventoryClose(InventoryCloseEvent event) {
-        
-        
-    }
-    
-    @Override
-    /**
-     * Выполняет очистку ресурсов при закрытии интерфейса
-     *
-     * Performs resource cleanup when interface is closed
-     *
-     * Führt eine Ressourcenbereinigung durch, wenn die Schnittstelle geschlossen wird
-     */
-    public void onCleanup() {
-        
-        
-    }
 }

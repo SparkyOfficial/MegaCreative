@@ -43,6 +43,9 @@ public class ConnectionDebugGUI implements GUIManager.ManagedGUIInterface {
     private final GUIManager guiManager;
     private final BlockPlacementHandler blockPlacementHandler;
     
+    // This field needs to be a class field to maintain state
+    // Convert initialization tracking fields to local variables where possible
+    // This field needs to remain as a class field since it maintains state across method calls
     private final Map<Integer, Location> slotToBlockLocation = new HashMap<>();
     
     /**
@@ -179,7 +182,6 @@ public class ConnectionDebugGUI implements GUIManager.ManagedGUIInterface {
         }
         
         
-        
         if (blockPlacementHandler != null) {
             Map<Location, CodeBlock> allBlocks = blockPlacementHandler.getBlockCodeBlocks();
             if (allBlocks != null) {
@@ -205,7 +207,22 @@ public class ConnectionDebugGUI implements GUIManager.ManagedGUIInterface {
      * Creates block info item with enhanced design
      */
     private ItemStack createBlockInfoItem(CodeBlock block, Location location, boolean isRoot) {
-        Material blockMaterial = location.getBlock().getType();
+        // Add null check for block to prevent NullPointerException
+        if (block == null) {
+            ItemStack errorItem = new ItemStack(Material.BARRIER);
+            ItemMeta errorMeta = errorItem.getItemMeta();
+            if (errorMeta != null) {
+                errorMeta.setDisplayName("§c❌ Error Block");
+                List<String> errorLore = new ArrayList<>();
+                errorLore.add("§7Block is null");
+                errorMeta.setLore(errorLore);
+                errorItem.setItemMeta(errorMeta);
+            }
+            return errorItem;
+        }
+        
+        // location might be null, causing NullPointerException
+        Material blockMaterial = location != null ? location.getBlock().getType() : Material.STONE;
         ItemStack item = new ItemStack(blockMaterial);
         ItemMeta meta = item.getItemMeta();
         
@@ -213,7 +230,12 @@ public class ConnectionDebugGUI implements GUIManager.ManagedGUIInterface {
         meta.setDisplayName(prefix + "§f" + (block.getAction() != null ? block.getAction() : Constants.BLOCK_UNASSIGNED));
         
         List<String> lore = new ArrayList<>();
-        lore.add("§7Координаты: §f" + location.getBlockX() + ", " + location.getBlockY() + ", " + location.getBlockZ());
+        // Add null check for location to prevent NullPointerException
+        if (location != null) {
+            lore.add("§7Координаты: §f" + location.getBlockX() + ", " + location.getBlockY() + ", " + location.getBlockZ());
+        } else {
+            lore.add("§7Координаты: §fНеизвестно");
+        }
         lore.add("§7Материал: §f" + blockMaterial.name());
         
         if (block.getAction() != null) {
@@ -390,6 +412,7 @@ public class ConnectionDebugGUI implements GUIManager.ManagedGUIInterface {
         closeLore.add("§7Закрыть отладчик связей");
         closeLore.add("");
         closeLore.add("§f✨ Reference system-стиль: универсальные блоки");
+        closeLore.add("§fс настройкой через GUI");
         closeMeta.setLore(closeLore);
         close.setItemMeta(closeMeta);
         inventory.setItem(53, close);
@@ -479,30 +502,7 @@ public class ConnectionDebugGUI implements GUIManager.ManagedGUIInterface {
      * Shows help information
      */
     private void showHelp() {
-        ItemStack helpItem = new ItemStack(Material.BOOK);
-        ItemMeta helpMeta = helpItem.getItemMeta();
-        helpMeta.setDisplayName("§e❓ Помощь по отладке связей");
-        List<String> helpLore = new ArrayList<>();
-        helpLore.add("§7Как читать карту связей:");
-        helpLore.add("");
-        helpLore.add("§a→ §7Зелёная стрелка = следующий блок");
-        helpLore.add("§b↓ §7Синяя стрелка = дочерний блок");
-        helpLore.add("§e⭐ §7Жёлтая звезда = корневой блок");
-        helpLore.add("§7• §7Серая точка = обычный блок");
-        helpLore.add("");
-        helpLore.add("§7Символы:");
-        helpLore.add("§e★ §7- Корневой блок");
-        helpLore.add("§a→ §7- Следующий блок");
-        helpLore.add("§b↓ §7- Дочерний блок");
-        helpLore.add("§c↑ §7- Родительский блок");
-        helpLore.add("");
-        helpLore.add("§eКликните по блоку для телепортации");
-        helpLore.add("§eКликните \"Обновить\" для перестройки карты");
-        helpLore.add("");
-        helpLore.add("§f✨ Reference system-стиль: универсальные блоки");
-        helpLore.add("§fс настройкой через GUI");
-        helpMeta.setLore(helpLore);
-        helpItem.setItemMeta(helpMeta);
+        ItemStack helpItem = createHelpItem();
         
         Inventory helpInventory = Bukkit.createInventory(null, 27, "§8Помощь по отладке связей");
         helpInventory.setItem(13, helpItem);
@@ -538,6 +538,38 @@ public class ConnectionDebugGUI implements GUIManager.ManagedGUIInterface {
     @Override
     public String getGUITitle() {
         return "Connection Debug GUI";
+    }
+    
+    /**
+     * Creates help item for the GUI
+     * Extracted method to improve code maturity
+     */
+    private ItemStack createHelpItem() {
+        ItemStack helpItem = new ItemStack(Material.BOOK);
+        ItemMeta helpMeta = helpItem.getItemMeta();
+        helpMeta.setDisplayName("§e❓ Помощь по отладке связей");
+        List<String> helpLore = new ArrayList<>();
+        helpLore.add("§7Как читать карту связей:");
+        helpLore.add("");
+        helpLore.add("§a→ §7Зелёная стрелка = следующий блок");
+        helpLore.add("§b↓ §7Синяя стрелка = дочерний блок");
+        helpLore.add("§e⭐ §7Жёлтая звезда = корневой блок");
+        helpLore.add("§7• §7Серая точка = обычный блок");
+        helpLore.add("");
+        helpLore.add("§7Символы:");
+        helpLore.add("§e★ §7- Корневой блок");
+        helpLore.add("§a→ §7- Следующий блок");
+        helpLore.add("§b↓ §7- Дочерний блок");
+        helpLore.add("§c↑ §7- Родительский блок");
+        helpLore.add("");
+        helpLore.add("§eКликните по блоку для телепортации");
+        helpLore.add("§eКликните \"Обновить\" для перестройки карты");
+        helpLore.add("");
+        helpLore.add("§f✨ Reference system-стиль: универсальные блоки");
+        helpLore.add("§fс настройкой через GUI");
+        helpMeta.setLore(helpLore);
+        helpItem.setItemMeta(helpMeta);
+        return helpItem;
     }
     
     /**

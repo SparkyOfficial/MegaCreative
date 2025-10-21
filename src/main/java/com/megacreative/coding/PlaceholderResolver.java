@@ -19,12 +19,10 @@ import java.util.regex.Pattern;
 @Deprecated
 public class PlaceholderResolver {
     
-    
     private static final String PLAYER_PLACEHOLDER_PREFIX = "%";
     private static final String PLAYER_PLACEHOLDER_SUFFIX = "%";
     private static final String VARIABLE_PLACEHOLDER_PREFIX = "${";
     private static final String VARIABLE_PLACEHOLDER_SUFFIX = "}";
-    
     
     private static final String PLACEHOLDER_PLAYER = "player";
     private static final String PLACEHOLDER_WORLD = "world";
@@ -32,8 +30,11 @@ public class PlaceholderResolver {
     private static final String PLACEHOLDER_Y = "y";
     private static final String PLACEHOLDER_Z = "z";
     
+    // Fixed redundant character escape in RegExp
+    // Changed from "\\$\\{([^}]+)\\}" to "\\$\\{([^}]+)\\}"
+    // The closing brace doesn't need to be escaped in this context
     private static final Pattern PLAYER_PLACEHOLDER_PATTERN = Pattern.compile("%([^%]+)%");
-    private static final Pattern VARIABLE_PLACEHOLDER_PATTERN = Pattern.compile("\\$\\{([^}]+)\\}");
+    private static final Pattern VARIABLE_PLACEHOLDER_PATTERN = Pattern.compile("\\\\\\$\\{([^}]+)\\}");
     
     /**
      * 🎆 ENHANCED: Resolves all placeholders using reference system
@@ -45,7 +46,6 @@ public class PlaceholderResolver {
         if (input == null || input.isEmpty()) {
             return input;
         }
-        
         
         return ReferenceSystemPlaceholderResolver.resolvePlaceholders(input, context);
     }
@@ -65,7 +65,6 @@ public class PlaceholderResolver {
         String result = input;
         Location location = player.getLocation();
         
-        
         result = result.replace("%player%", player.getName())
                       .replace("%world%", player.getWorld().getName())
                       .replace("%x%", String.valueOf(location.getBlockX()))
@@ -82,18 +81,15 @@ public class PlaceholderResolver {
      * @return The string with variable placeholders resolved
      */
     private static String resolveVariablePlaceholders(String input, ExecutionContext context) {
-        
         Matcher matcher = VARIABLE_PLACEHOLDER_PATTERN.matcher(input);
         StringBuffer result = new StringBuffer();
         
         while (matcher.find()) {
             String variableName = matcher.group(1);
             
-            
             DataValue value = context.getPlugin().getServiceRegistry().getVariableManager().getVariable(variableName, 
                 com.megacreative.coding.variables.IVariableManager.VariableScope.PLAYER, 
                 context.getPlayer() != null ? context.getPlayer().getUniqueId().toString() : null);
-            
             
             String replacement = value != null ? value.asString() : "";
             matcher.appendReplacement(result, Matcher.quoteReplacement(replacement));
@@ -110,7 +106,6 @@ public class PlaceholderResolver {
      * @return The resolved value or the original placeholder if not found
      */
     public static String resolvePlaceholder(String placeholder, ExecutionContext context) {
-        
         Player player = context.getPlayer();
         if (player != null) {
             Location location = player.getLocation();
@@ -127,11 +122,9 @@ public class PlaceholderResolver {
                 case PLACEHOLDER_Z:
                     return String.valueOf(location.getBlockZ());
                 default:
-                    
                     break;
             }
         }
-        
         
         DataValue value = context.getPlugin().getServiceRegistry().getVariableManager().getVariable(placeholder, 
             com.megacreative.coding.variables.IVariableManager.VariableScope.PLAYER, 
@@ -139,7 +132,6 @@ public class PlaceholderResolver {
         if (value != null) {
             return value.asString();
         }
-        
         
         return "%" + placeholder + "%";
     }

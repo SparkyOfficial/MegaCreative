@@ -104,7 +104,7 @@ public class EntityActions implements BlockAction {
             DataValue nameValue = block.getParameter("name");
             if (nameValue != null) {
                 String name = resolver.resolve(context, nameValue).asString();
-                if (name != null && !name.isEmpty()) {
+                if (!name.isEmpty()) {
                     entity.setCustomName(name);
                     entity.setCustomNameVisible(true);
                 }

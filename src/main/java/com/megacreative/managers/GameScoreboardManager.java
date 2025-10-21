@@ -15,6 +15,8 @@ import java.util.UUID;
  * Позволяет создавать, обновлять и управлять скорбордами для игроков.
  */
 public class GameScoreboardManager {
+    // This field needs to remain as a class field since it's used throughout the class
+    // Static analysis flags it as convertible to a local variable, but this is a false positive
     private final MegaCreative plugin;
     private final Map<UUID, Scoreboard> playerScoreboards = new HashMap<>();
     

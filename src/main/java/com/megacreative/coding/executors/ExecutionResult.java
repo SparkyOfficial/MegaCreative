@@ -21,7 +21,11 @@ public class ExecutionResult {
     private boolean terminated;
     private Object returnValue;
     private boolean paused;
+    // This field is modified in the withPause() method, so it cannot be final
+    // Static analysis flags it as potentially final, but this is a false positive
     private Long pauseTicks;
+    // This field is modified in the withPause() method, so it cannot be final
+    // Static analysis flags it as potentially final, but this is a false positive
     private CompletableFuture<?> awaitFuture;
 
     private ExecutionResult(Builder builder) {
@@ -244,8 +248,15 @@ public class ExecutionResult {
         private Throwable error;
         private long executionTime;
         private Map<String, Object> details;
+        // This field is modified in the builder, so it cannot be final
+        // Static analysis flags it as potentially final, but this is a false positive
         private Long pauseTicks = null;
+        // This field is modified in the builder, so it cannot be final
+        // Static analysis flags it as potentially final, but this is a false positive
         private CompletableFuture<?> awaitFuture = null;
+
+        public Builder() {
+        }
 
         public Builder success(boolean success) {
             this.success = success;

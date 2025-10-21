@@ -51,7 +51,7 @@ public class InventoryClickActivator extends BukkitEventActivator {
                 }
             } catch (Exception e) {
                 plugin.getLogger().severe("Error executing action in InventoryClickActivator: " + e.getMessage());
-                e.printStackTrace();
+                plugin.getLogger().log(java.util.logging.Level.SEVERE, "Error executing action in InventoryClickActivator", e);
             }
         }
     }

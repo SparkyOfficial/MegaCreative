@@ -47,7 +47,7 @@ public class CommandRegistry {
             log.info("Commands registered successfully");
         } catch (Exception e) {
             log.severe("Failed to register commands: " + e.getMessage());
-            e.printStackTrace();
+            log.log(java.util.logging.Level.SEVERE, "Failed to register commands", e);
         }
     }
     
@@ -60,25 +60,32 @@ public class CommandRegistry {
         try {
             org.bukkit.command.PluginCommand buildCmd = plugin.getCommand("build");
             if (buildCmd != null) {
-                IWorldManager worldManager = serviceRegistry.getWorldManager();
-                PlayerModeManager playerModeManager = serviceRegistry.getPlayerModeManager();
-                DevInventoryManager devInventoryManager = serviceRegistry.getDevInventoryManager();
-                BlockPlacementHandler blockPlacementHandler = serviceRegistry.getBlockPlacementHandler();
-                
-                BuildCommand buildCommand = new BuildCommand(
-                    worldManager,
-                    playerModeManager,
-                    devInventoryManager,
-                    blockPlacementHandler
-                );
-                
+                BuildCommand buildCommand = createBuildCommand();
                 buildCmd.setExecutor(buildCommand);
             }
         } catch (Exception e) {
-            log.severe("Failed to register build command: " + e.getMessage());
+            log.log(java.util.logging.Level.SEVERE, "Failed to register build command", e);
         }
     }
 
+    /**
+     * Creates a new BuildCommand instance with required dependencies
+     * @return BuildCommand instance
+     */
+    private BuildCommand createBuildCommand() {
+        IWorldManager worldManager = serviceRegistry.getWorldManager();
+        PlayerModeManager playerModeManager = serviceRegistry.getPlayerModeManager();
+        DevInventoryManager devInventoryManager = serviceRegistry.getDevInventoryManager();
+        BlockPlacementHandler blockPlacementHandler = serviceRegistry.getBlockPlacementHandler();
+        
+        return new BuildCommand(
+            worldManager,
+            playerModeManager,
+            devInventoryManager,
+            blockPlacementHandler
+        );
+    }
+    
     /**
      * Register simple commands that don't require many dependencies
      */

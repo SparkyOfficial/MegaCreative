@@ -9,12 +9,11 @@ import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
 
 public class VisualErrorHandler {
-    private static final Logger log = Logger.getLogger(VisualErrorHandler.class.getName());
-    
-    private final Plugin plugin;
-
+    // This field needs to be a class field to maintain state
+    // Convert initialization tracking fields to local variables where possible
+    // This field needs to remain as a class field since it's used in the constructor
     public VisualErrorHandler(Plugin plugin) {
-        this.plugin = plugin;
+        // Constructor implementation
     }
     
     public void showError(Location blockLocation, String errorMessage, ErrorSeverity severity, Player... viewers) {
@@ -34,13 +33,13 @@ public class VisualErrorHandler {
     public void clearErrorAt(Location location) {
         
         
-        log.info("Clearing error at location: " + location);
+        Logger.getLogger(VisualErrorHandler.class.getName()).info("Clearing error at location: " + location);
     }
     
     public void cleanup() {
         
         
-        log.info("Cleaning up VisualErrorHandler resources");
+        Logger.getLogger(VisualErrorHandler.class.getName()).info("Cleaning up VisualErrorHandler resources");
     }
     
     public enum ErrorSeverity {

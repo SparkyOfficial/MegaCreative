@@ -52,7 +52,7 @@ public class SetBlockAction implements BlockAction {
                     relativeX = Integer.parseInt(relativeXValue.asString());
                 } catch (NumberFormatException e) {
                     // Log the error but continue with default value of 0
-                    e.printStackTrace();
+                    context.getPlugin().getLogger().warning("NumberFormatException in SetBlockAction: " + e.getMessage());
                 }
             }
             
@@ -61,7 +61,7 @@ public class SetBlockAction implements BlockAction {
                     relativeY = Integer.parseInt(relativeYValue.asString());
                 } catch (NumberFormatException e) {
                     // Log the error but continue with default value of 0
-                    e.printStackTrace();
+                    context.getPlugin().getLogger().warning("NumberFormatException in SetBlockAction: " + e.getMessage());
                 }
             }
             
@@ -70,7 +70,7 @@ public class SetBlockAction implements BlockAction {
                     relativeZ = Integer.parseInt(relativeZValue.asString());
                 } catch (NumberFormatException e) {
                     // Log the error but continue with default value of 0
-                    e.printStackTrace();
+                    context.getPlugin().getLogger().warning("NumberFormatException in SetBlockAction: " + e.getMessage());
                 }
             }
 

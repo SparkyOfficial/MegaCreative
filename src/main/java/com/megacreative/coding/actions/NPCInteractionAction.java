@@ -130,7 +130,7 @@ public class NPCInteractionAction implements BlockAction {
             }
 
         } catch (Exception e) {
-            e.printStackTrace();
+            context.getPlugin().getLogger().log(java.util.logging.Level.SEVERE, "Error interacting with NPC", e);
             return ExecutionResult.error("Error interacting with NPC: " + e.getMessage());
         }
     }

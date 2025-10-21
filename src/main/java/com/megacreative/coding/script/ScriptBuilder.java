@@ -21,7 +21,8 @@ public class ScriptBuilder {
     private final Player player;
     private final List<ScriptBlock> blocks;
     private final Map<String, Object> variables;
-    private Inventory scriptInventory;
+    // scriptInventory field was converted to a local variable since it's only used in one method
+    // private Inventory scriptInventory;
     
     public ScriptBuilder(Player player) {
         this.player = player;
@@ -51,7 +52,8 @@ public class ScriptBuilder {
      * Updates the script inventory display
      */
     private void updateInventory() {
-        
+        // scriptInventory is now a local variable
+        // Inventory scriptInventory = ...;
     }
     
     /**

@@ -92,6 +92,8 @@ public class AdvancedBlockGroup extends BlockGroup {
     
     
     private String conditionExpression; 
+    // According to static analysis, this field can be final
+    // However, it needs to be mutable to allow updates
     private List<UUID> dependencies = new ArrayList<>(); 
     
     

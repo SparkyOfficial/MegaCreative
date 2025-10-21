@@ -72,6 +72,31 @@ public class ActionParameterGUI implements GUIManager.ManagedGUIInterface {
     }
     
     /**
+     * Creates the info item for the GUI
+     * @return The info item
+     */
+    private ItemStack createInfoItem() {
+        ItemStack infoItem = new ItemStack(Material.BOOK);
+        ItemMeta infoMeta = infoItem.getItemMeta();
+        infoMeta.setDisplayName("§e§l" + actionId);
+        List<String> infoLore = new ArrayList<>();
+        infoLore.add("§7Настройка параметров действия");
+        infoLore.add("");
+        infoLore.add("§aПеретащите предметы в слоты");
+        infoLore.add("§aдля настройки параметров");
+        infoLore.add("");
+        infoLore.add("§f⚡ Оптимизировано для быстрой настройки");
+        infoLore.add("§7• Валидация в реальном времени");
+        infoLore.add("§7• Автоматическая подсказка");
+        infoLore.add("");
+        infoLore.add("§f✨ Reference system-стиль: универсальные блоки");
+        infoLore.add("§fс настройкой через GUI");
+        infoMeta.setLore(infoLore);
+        infoItem.setItemMeta(infoMeta);
+        return infoItem;
+    }
+    
+    /**
      * Sets up the GUI inventory
      */
     private void setupInventory() {
@@ -91,23 +116,7 @@ public class ActionParameterGUI implements GUIManager.ManagedGUIInterface {
         }
         
         
-        ItemStack infoItem = new ItemStack(Material.BOOK);
-        ItemMeta infoMeta = infoItem.getItemMeta();
-        infoMeta.setDisplayName("§e§l" + actionId);
-        List<String> infoLore = new ArrayList<>();
-        infoLore.add("§7Настройка параметров действия");
-        infoLore.add("");
-        infoLore.add("§aПеретащите предметы в слоты");
-        infoLore.add("§aдля настройки параметров");
-        infoLore.add("");
-        infoLore.add("§f⚡ Оптимизировано для быстрой настройки");
-        infoLore.add("§7• Валидация в реальном времени");
-        infoLore.add("§7• Автоматическая подсказка");
-        infoLore.add("");
-        infoLore.add("§f✨ Reference system-стиль: универсальные блоки");
-        infoLore.add("§fс настройкой через GUI");
-        infoMeta.setLore(infoLore);
-        infoItem.setItemMeta(infoMeta);
+        ItemStack infoItem = createInfoItem();
         inventory.setItem(4, infoItem);
         
         
@@ -567,9 +576,9 @@ public class ActionParameterGUI implements GUIManager.ManagedGUIInterface {
                     }
                 }
             } catch (NumberFormatException e) {
-                // Log exception and continue processing
-                // This is expected behavior when parsing user input
-                plugin.getLogger().warning("Invalid number format in slot configuration for action " + actionId);
+                // Log the exception for debugging purposes and notify the player
+                plugin.getLogger().warning("Invalid number format in slot configuration for action " + actionId + ": " + e.getMessage());
+                player.sendMessage("§cОшибка в конфигурации слота для действия " + actionId + ": Неверный формат числа");
             }
         }
     }
@@ -598,7 +607,9 @@ public class ActionParameterGUI implements GUIManager.ManagedGUIInterface {
                     }
                 }
             } catch (NumberFormatException e) {
-                
+                // Log the exception for debugging purposes and notify the player
+                plugin.getLogger().warning("Invalid number format in slot name parsing for action " + actionId + ": " + e.getMessage());
+                player.sendMessage("§cОшибка в парсинге имени слота для действия " + actionId + ": Неверный формат числа");
             }
         }
         
@@ -902,7 +913,8 @@ public class ActionParameterGUI implements GUIManager.ManagedGUIInterface {
                     }
                 }
             } catch (NumberFormatException e) {
-                
+                // Intentionally empty catch block - we simply return null if parsing fails
+                // This is expected behavior when searching for slot indices
             }
         }
         
@@ -1109,20 +1121,20 @@ public class ActionParameterGUI implements GUIManager.ManagedGUIInterface {
             player.getLocation().add(0, 1, 0), 10, 0.5, 0.5, 0.5, 1);
     }
     
-    @Override
     /**
      * Gets the GUI title
      * @return Interface title
      */
+    @Override
     public String getGUITitle() {
         return "Action Parameter GUI for " + actionId;
     }
     
-    @Override
     /**
      * Handles inventory click events
      * @param event Inventory click event
      */
+    @Override
     public void onInventoryClick(InventoryClickEvent event) {
         if (!player.equals(event.getWhoClicked())) return;
         if (!inventory.equals(event.getInventory())) return;
@@ -1181,11 +1193,11 @@ public class ActionParameterGUI implements GUIManager.ManagedGUIInterface {
         }
     }
     
-    @Override
     /**
      * Handles inventory close events
      * @param event Inventory close event
      */
+    @Override
     public void onInventoryClose(InventoryCloseEvent event) {
         
         saveParameters();
@@ -1194,14 +1206,7 @@ public class ActionParameterGUI implements GUIManager.ManagedGUIInterface {
         
     }
     
-    @Override
-    /**
-     * Performs resource cleanup when interface is closed
-     */
-    public void onCleanup() {
-        
-        
-    }
+
     
     /**
      * 🎆 ENHANCED: Check if string is a valid number
@@ -1215,6 +1220,7 @@ public class ActionParameterGUI implements GUIManager.ManagedGUIInterface {
             // Log exception and continue processing
             // This is expected behavior when parsing user input
             plugin.getLogger().warning("Invalid number format: " + str);
+            player.sendMessage("§cОшибка: Неверный формат числа - " + str);
             return false;
         }
     }
@@ -1231,6 +1237,7 @@ public class ActionParameterGUI implements GUIManager.ManagedGUIInterface {
             // Log exception and continue processing
             // This is expected behavior when parsing user input
             plugin.getLogger().warning("Invalid number format for range check: " + str);
+            player.sendMessage("§cОшибка: Неверный формат числа для проверки диапазона - " + str);
             return false;
         }
     }
@@ -1247,6 +1254,7 @@ public class ActionParameterGUI implements GUIManager.ManagedGUIInterface {
             // Log exception and continue processing
             // This is expected behavior when parsing user input
             plugin.getLogger().warning("Invalid integer format for range check: " + str);
+            player.sendMessage("§cОшибка: Неверный формат целого числа для проверки диапазона - " + str);
             return false;
         }
     }
@@ -1263,6 +1271,7 @@ public class ActionParameterGUI implements GUIManager.ManagedGUIInterface {
             // Log exception and continue processing
             // This is expected behavior when parsing user input
             plugin.getLogger().warning("Invalid sound name: " + soundName);
+            player.sendMessage("§cОшибка: Неверное имя звука - " + soundName);
             return false;
         }
     }
@@ -1279,6 +1288,7 @@ public class ActionParameterGUI implements GUIManager.ManagedGUIInterface {
             // Log exception and continue processing
             // This is expected behavior when parsing user input
             plugin.getLogger().warning("Invalid effect name: " + effectName);
+            player.sendMessage("§cОшибка: Неверное имя эффекта - " + effectName);
             return false;
         }
     }
@@ -1295,6 +1305,7 @@ public class ActionParameterGUI implements GUIManager.ManagedGUIInterface {
             // Log exception and continue processing
             // This is expected behavior when parsing user input
             plugin.getLogger().warning("Invalid regex pattern: " + regex);
+            player.sendMessage("§cОшибка: Неверный формат регулярного выражения - " + regex);
             return false;
         }
     }
@@ -1319,6 +1330,7 @@ public class ActionParameterGUI implements GUIManager.ManagedGUIInterface {
             // Log exception and continue processing
             // This is expected behavior when parsing user input
             plugin.getLogger().warning("Invalid number format for length specification: " + lengthSpec);
+            player.sendMessage("§cОшибка: Неверный формат числа для спецификации длины - " + lengthSpec);
             return false;
         }
     }
@@ -1351,6 +1363,7 @@ public class ActionParameterGUI implements GUIManager.ManagedGUIInterface {
             // Log exception and continue processing
             // This is expected behavior when parsing user input
             plugin.getLogger().warning("Invalid URL format: " + url);
+            player.sendMessage("§cОшибка: Неверный формат URL - " + url);
             return false;
         }
     }

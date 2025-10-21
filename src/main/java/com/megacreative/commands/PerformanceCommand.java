@@ -9,6 +9,7 @@ import org.bukkit.command.CommandExecutor;
 import org.bukkit.command.CommandSender;
 import org.bukkit.command.TabCompleter;
 import org.bukkit.entity.Player;
+import org.jetbrains.annotations.NotNull;
 
 import java.util.*;
 
@@ -25,7 +26,10 @@ public class PerformanceCommand implements CommandExecutor, TabCompleter {
     }
     
     @Override
-    public boolean onCommand(CommandSender sender, Command command, String label, String[] args) {
+    public boolean onCommand(@NotNull CommandSender sender, 
+                            @NotNull Command command, 
+                            @NotNull String label, 
+                            @NotNull String[] args) {
         if (!(sender instanceof Player player)) {
             sender.sendMessage("§cThis command can only be used by players!");
             return true;
@@ -195,18 +199,8 @@ public class PerformanceCommand implements CommandExecutor, TabCompleter {
             player.sendMessage("§aNo optimization suggestions found! Script is well optimized.");
         } else {
             for (OptimizationSuggestion suggestion : suggestions) {
-                String color = "§7"; 
-                OptimizationPriority priority = suggestion.getPriority();
-                if (priority == OptimizationPriority.CRITICAL) {
-                    color = "§4";
-                } else if (priority == OptimizationPriority.HIGH) {
-                    color = "§c";
-                } else if (priority == OptimizationPriority.MEDIUM) {
-                    color = "§e";
-                }
-                
-                player.sendMessage(color + "» [" + suggestion.getPriority() + "] " + suggestion.getDescription());
-                player.sendMessage("§7  Recommendation: " + suggestion.getRecommendation());
+                String priorityColor = getPriorityColor(suggestion.getPriority());
+                player.sendMessage("§e» §f" + suggestion.getDescription() + " - " + priorityColor + suggestion.getPriority().name());
             }
         }
         
@@ -217,54 +211,22 @@ public class PerformanceCommand implements CommandExecutor, TabCompleter {
      * Shows detected performance bottlenecks
      */
     private void showBottlenecks(Player player) {
-        SystemPerformanceReport report = plugin.getServiceRegistry().getScriptPerformanceMonitor().getSystemPerformanceReport();
-        Collection<Bottleneck> bottlenecks = report.getBottlenecks();
+        Collection<Bottleneck> bottlenecks = plugin.getServiceRegistry().getScriptPerformanceMonitor().getSystemPerformanceReport().getBottlenecks();
         
         player.sendMessage("§8§m                    §r §b§lPerformance Bottlenecks §8§m                    ");
-        
         if (bottlenecks.isEmpty()) {
-            player.sendMessage("§aNo bottlenecks detected! System performance is optimal.");
+            player.sendMessage("§aNo performance bottlenecks detected!");
         } else {
-            player.sendMessage("§7Detected " + bottlenecks.size() + " bottlenecks:");
-            
-            
-            Map<Bottleneck.Severity, List<Bottleneck>> grouped = new HashMap<>();
+            player.sendMessage("§cDetected " + bottlenecks.size() + " bottlenecks:");
             for (Bottleneck bottleneck : bottlenecks) {
-                grouped.computeIfAbsent(bottleneck.getSeverity(), k -> new ArrayList<>()).add(bottleneck);
-            }
-            
-            
-            for (Bottleneck.Severity severity : Arrays.asList(
-                    Bottleneck.Severity.CRITICAL, 
-                    Bottleneck.Severity.HIGH, 
-                    Bottleneck.Severity.MEDIUM, 
-                    Bottleneck.Severity.LOW)) {
-                
-                List<Bottleneck> list = grouped.get(severity);
-                if (list != null && !list.isEmpty()) {
-                    String color = "§7"; 
-                    if (severity == Bottleneck.Severity.CRITICAL) {
-                        color = "§4";
-                    } else if (severity == Bottleneck.Severity.HIGH) {
-                        color = "§c";
-                    } else if (severity == Bottleneck.Severity.MEDIUM) {
-                        color = "§e";
-                    }
-                    
-                    player.sendMessage(color + severity + " Severity:");
-                    for (Bottleneck bottleneck : list) {
-                        player.sendMessage("§8» §f" + bottleneck.getScriptName() + " - " + bottleneck.getDescription());
-                        player.sendMessage("§7  Recommendation: " + bottleneck.getRecommendation());
-                    }
-                }
+                player.sendMessage("§c» §f" + bottleneck.getScriptName() + " - " + bottleneck.getDescription());
             }
         }
-        
         player.sendMessage("§8§m                                                        ");
     }
     
     /**
-     * Clears all performance data
+     * Clears performance data
      */
     private void clearPerformanceData(Player player) {
         plugin.getServiceRegistry().getScriptPerformanceMonitor().clearData();
@@ -285,46 +247,63 @@ public class PerformanceCommand implements CommandExecutor, TabCompleter {
         hours %= 24;
         
         StringBuilder sb = new StringBuilder();
-        if (days > 0) {
-            sb.append(days).append("d ");
-        }
-        if (hours > 0) {
-            sb.append(hours).append("h ");
-        }
-        if (minutes > 0) {
-            sb.append(minutes).append("m ");
-        }
+        if (days > 0) sb.append(days).append("d ");
+        if (hours > 0) sb.append(hours).append("h ");
+        if (minutes > 0) sb.append(minutes).append("m ");
         sb.append(seconds).append("s");
         
-        return sb.toString();
+        return sb.toString().trim();
     }
     
+    /**
+     * Gets color code for optimization priority
+     */
+    private String getPriorityColor(OptimizationPriority priority) {
+        switch (priority) {
+            case CRITICAL:
+                return "§c"; // Red
+            case HIGH:
+                return "§e"; // Yellow
+            case MEDIUM:
+                return "§a"; // Green
+            case LOW:
+                return "§7"; // Gray
+            default:
+                return "§f"; // White
+        }
+    }
+
     @Override
-    public List<String> onTabComplete(CommandSender sender, Command command, String alias, String[] args) {
+    public List<String> onTabComplete(@NotNull CommandSender sender, 
+                                     @NotNull Command command, 
+                                     @NotNull String alias, 
+                                     @NotNull String[] args) {
+        if (!(sender instanceof Player)) {
+            return new ArrayList<>();
+        }
+        
         List<String> completions = new ArrayList<>();
         
         if (args.length == 1) {
-            completions.addAll(Arrays.asList("report", "script", "optimize", "bottlenecks", "clear"));
-        } else if (args.length == 2 && (args[0].equalsIgnoreCase("script") || args[0].equalsIgnoreCase("optimize"))) {
-            
-            for (com.megacreative.models.CreativeWorld world : plugin.getServiceRegistry().getWorldManager().getCreativeWorlds()) {
-                if (world.getScripts() != null) {
-                    for (com.megacreative.coding.CodeScript script : world.getScripts()) {
-                        completions.add(script.getName());
-                    }
+            completions.addAll(Arrays.asList("report", "script", "optimize", "bottlenecks"));
+            if (sender.hasPermission("megacreative.admin")) {
+                completions.add("clear");
+            }
+            return completions;
+        }
+        
+        if (args.length == 2) {
+            String subCommand = args[0].toLowerCase();
+            if ("script".equals(subCommand) || "optimize".equals(subCommand)) {
+                // Return script names
+                Collection<ScriptMetrics> scripts = plugin.getServiceRegistry().getScriptPerformanceMonitor().getAllScriptProfiles();
+                for (ScriptMetrics script : scripts) {
+                    completions.add(script.getScriptName());
                 }
+                return completions;
             }
         }
         
-        
-        List<String> filtered = new ArrayList<>();
-        String lastArg = args[args.length - 1].toLowerCase();
-        for (String completion : completions) {
-            if (completion.toLowerCase().startsWith(lastArg)) {
-                filtered.add(completion);
-            }
-        }
-        
-        return filtered;
+        return new ArrayList<>();
     }
 }

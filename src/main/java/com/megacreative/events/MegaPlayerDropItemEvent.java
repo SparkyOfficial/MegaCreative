@@ -4,6 +4,7 @@ import org.bukkit.entity.Player;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.event.Event;
 import org.bukkit.event.HandlerList;
+import org.jetbrains.annotations.NotNull;
 
 /**
  * Custom event for when a player drops an item
@@ -20,6 +21,7 @@ public class MegaPlayerDropItemEvent extends Event {
         this.item = item;
     }
     
+    @NotNull
     public Player getPlayer() {
         return player;
     }

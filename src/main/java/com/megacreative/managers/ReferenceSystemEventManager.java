@@ -30,18 +30,32 @@ public class ReferenceSystemEventManager {
     private final ReferenceSystemCustomEventsListener customEventsListener;
     
     
+    // This field needs to remain as a class field since it maintains state across method calls
+    // Static analysis flags it as convertible to a local variable, but this is a false positive
     private final Map<UUID, Set<String>> playerRegions = new ConcurrentHashMap<>();
+    // This field needs to remain as a class field since it maintains state across method calls
+    // Static analysis flags it as convertible to a local variable, but this is a false positive
     private final Map<String, RegionData> definedRegions = new ConcurrentHashMap<>();
     
     
+    // This field needs to remain as a class field since it maintains state across method calls
+    // Static analysis flags it as convertible to a local variable, but this is a false positive
     private final Map<UUID, Map<String, Object>> playerVariables = new ConcurrentHashMap<>();
     
     
+    // This field needs to remain as a class field since it maintains state across method calls
+    // Static analysis flags it as convertible to a local variable, but this is a false positive
     private final Map<String, BukkitTask> activeTimers = new ConcurrentHashMap<>();
+    // This field needs to remain as a class field since it maintains state across method calls
+    // Static analysis flags it as convertible to a local variable, but this is a false positive
     private final Map<String, TimerData> timerData = new ConcurrentHashMap<>();
     
     
+    // This field needs to remain as a class field since it maintains state across method calls
+    // Static analysis flags it as convertible to a local variable, but this is a false positive
     private final Map<String, Long> eventCounts = new ConcurrentHashMap<>();
+    // This field needs to remain as a class field since it maintains state across method calls
+    // Static analysis flags it as convertible to a local variable, but this is a false positive
     private final Map<String, Long> eventTotalTime = new ConcurrentHashMap<>();
     
     public ReferenceSystemEventManager(MegaCreative plugin) {
@@ -69,7 +83,11 @@ public class ReferenceSystemEventManager {
     public void defineRegion(String regionName, Location corner1, Location corner2) {
         RegionData region = new RegionData(regionName, corner1, corner2);
         definedRegions.put(regionName, region);
-        plugin.getLogger().info("🎆 Defined region: " + regionName);
+        // Use rate-limited logging for frequent events to reduce log spam
+        com.megacreative.utils.LogUtils.infoRateLimited(
+            "🎆 Defined region: " + regionName, 
+            "define_region_" + regionName
+        );
     }
     
     /**
@@ -79,7 +97,11 @@ public class ReferenceSystemEventManager {
         definedRegions.remove(regionName);
         
         playerRegions.values().forEach(regions -> regions.remove(regionName));
-        plugin.getLogger().info("🎆 Removed region: " + regionName);
+        // Use rate-limited logging for frequent events to reduce log spam
+        com.megacreative.utils.LogUtils.infoRateLimited(
+            "🎆 Removed region: " + regionName, 
+            "remove_region_" + regionName
+        );
     }
     
     /**

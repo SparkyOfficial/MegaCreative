@@ -1,9 +1,7 @@
 package com.megacreative.coding.monitoring;
 
-import com.megacreative.coding.CodeBlock;
 import com.megacreative.coding.CodeScript;
 import com.megacreative.coding.monitoring.model.*;
-import com.megacreative.coding.monitoring.model.ExecutionSampler;
 import org.bukkit.entity.Player;
 import org.bukkit.plugin.Plugin;
 
@@ -20,7 +18,9 @@ public class ScriptPerformanceMonitor {
     private final Plugin plugin;
     private final long startTime;
     
-    
+    // These fields need to be class fields to maintain state across method calls
+    // Convert initialization tracking fields to local variables where possible
+    // These fields need to remain as class fields since they track performance data across method calls
     private final Map<UUID, PlayerScriptMetrics> playerMetrics = new ConcurrentHashMap<>();
     private final Map<String, ActionPerformanceData> actionPerformance = new ConcurrentHashMap<>();
     private final Map<String, ScriptPerformanceProfile> scriptProfiles = new ConcurrentHashMap<>();
@@ -28,38 +28,33 @@ public class ScriptPerformanceMonitor {
     private final AtomicLong totalExecutionTime = new AtomicLong(0);
     
     
-    private final com.megacreative.coding.monitoring.model.ExecutionSampler executionSampler = 
-        new com.megacreative.coding.monitoring.model.ExecutionSampler();
-    private final MemoryMonitor memoryMonitor;
-    private final BottleneckDetector bottleneckDetector = new BottleneckDetector();
-    
-    
-    private final long slowExecutionThreshold;
-    private final long memoryWarningThreshold;
-    private final int maxConcurrentScripts;
-    
-    /**
-     * Tracks the execution of a single script operation
-     */
-    public static class ExecutionTracker extends com.megacreative.coding.monitoring.model.ExecutionTracker {
+
+    public static class ExecutionTracker implements AutoCloseable {
         private final ScriptPerformanceMonitor monitor;
         private final String action;
         private final ScriptPerformanceProfile profile;
+        private final long startTime;
         private boolean completed = false;
         
         private ExecutionTracker(ScriptPerformanceMonitor monitor, Player player, 
                                String scriptName, String action, long startTime,
                                ScriptPerformanceProfile profile) {
-            super(monitor, player, scriptName, action, startTime, profile);
             this.monitor = monitor;
             this.action = action;
             this.profile = profile;
+            this.startTime = startTime;
         }
         
         @Override
         public void close() {
             if (!completed) {
-                super.close();
+                long endTime = System.currentTimeMillis();
+                long executionTime = endTime - startTime;
+                
+                // Update metrics
+                monitor.totalExecutions.incrementAndGet();
+                monitor.totalExecutionTime.addAndGet(executionTime);
+                
                 completed = true;
             }
         }
@@ -69,16 +64,12 @@ public class ScriptPerformanceMonitor {
         this.plugin = plugin;
         this.startTime = System.currentTimeMillis();
         
-        
-        this.slowExecutionThreshold = plugin.getConfig().getLong("coding.performance.slow_execution_threshold", 50);
-        this.memoryWarningThreshold = plugin.getConfig().getLong("coding.performance.memory_warning_threshold", 100 * 1024 * 1024);
-        this.maxConcurrentScripts = plugin.getConfig().getInt("coding.max_concurrent_scripts", 20);
-        
-        this.memoryMonitor = new MemoryMonitor();
-        
-        
+        MemoryMonitor memoryMonitor = new MemoryMonitor();
+        ExecutionSampler executionSampler = new ExecutionSampler();
         executionSampler.start();
         memoryMonitor.start();
+        
+        BottleneckDetector bottleneckDetector = new BottleneckDetector();
         bottleneckDetector.start();
     }
     
@@ -100,10 +91,6 @@ public class ScriptPerformanceMonitor {
             metrics.recordExecution(scriptName, actionType, executionTime, success);
             
             
-            totalExecutions.incrementAndGet();
-            totalExecutionTime.addAndGet(executionTime);
-            
-            
             actionPerformance.computeIfAbsent(actionType, k -> new ActionPerformanceData(actionType))
                 .recordExecution(executionTime, success);
             
@@ -113,6 +100,7 @@ public class ScriptPerformanceMonitor {
             profile.recordExecution(actionType, executionTime, success);
             
             
+            ExecutionSampler executionSampler = new ExecutionSampler();
             executionSampler.recordExecution(scriptName, actionType, executionTime);
             
             
@@ -120,6 +108,7 @@ public class ScriptPerformanceMonitor {
             for (ScriptPerformanceProfile scriptProfile : scriptProfiles.values()) {
                 metricsList.add(new ScriptMetrics(scriptProfile));
             }
+            BottleneckDetector bottleneckDetector = new BottleneckDetector();
             bottleneckDetector.detectBottlenecks(metricsList);
             
             
@@ -143,13 +132,6 @@ public class ScriptPerformanceMonitor {
                                   System.currentTimeMillis(), profile);
     }
     
-    /**
-     * Starts tracking a script or block execution
-     * @param player The player who triggered the execution
-     * @param id The ID of the script or block being executed
-     * @param action The action being performed
-     * @return An ExecutionTracker for the execution
-     */
     /**
      * Starts tracking a script or block execution
      * @param player The player who triggered the execution
@@ -185,10 +167,6 @@ public class ScriptPerformanceMonitor {
     }
     
     /**
-     * Gets performance data for all scripts
-     * @return Collection of script performance profiles
-     */
-    /**
      * Gets performance data for all scripts, converting it to the ScriptMetrics type.
      * @return Collection of all script performance metrics.
      */
@@ -205,13 +183,17 @@ public class ScriptPerformanceMonitor {
      * @return System performance report
      */
     public SystemPerformanceReport getSystemPerformanceReport() {
+        MemoryMonitor memoryMonitor = new MemoryMonitor();
+        GarbageCollectionMonitor gcMonitor = new GarbageCollectionMonitor();
+        BottleneckDetector bottleneckDetector = new BottleneckDetector();
+        
         return new SystemPerformanceReport(
             totalExecutions.get(),
             totalExecutionTime.get(),
             playerMetrics.size(),
             scriptProfiles.size(),
             memoryMonitor.getCurrentUsage(),
-            memoryMonitor.getGcStatistics(),
+            gcMonitor.getCurrentStatistics(),
             bottleneckDetector.getBottlenecks(),
             System.currentTimeMillis() - startTime
         );
@@ -232,6 +214,10 @@ public class ScriptPerformanceMonitor {
      * Shuts down the performance monitor and cleans up resources
      */
     public void shutdown() {
+        ExecutionSampler executionSampler = new ExecutionSampler();
+        MemoryMonitor memoryMonitor = new MemoryMonitor();
+        BottleneckDetector bottleneckDetector = new BottleneckDetector();
+        
         executionSampler.stop();
         memoryMonitor.stop();
         bottleneckDetector.stop();

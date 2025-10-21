@@ -92,8 +92,7 @@ public class EventDispatcher {
                     subscriber.handleEvent(eventName, eventData, source, worldName);
                 }
             } catch (Exception e) {
-                log.warning("Error in event subscriber: " + e.getMessage());
-                e.printStackTrace();
+                log.log(java.util.logging.Level.WARNING, "Error in event subscriber", e);
             }
         }
         

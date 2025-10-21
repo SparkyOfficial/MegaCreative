@@ -152,7 +152,7 @@ public class BlockPlaceActivator extends BukkitEventActivator {
         gameEvent.setPlayer(player);
         if (location != null) {
             gameEvent.setLocation(location);
-        } else if (block.getLocation() != null) {
+        } else {
             gameEvent.setLocation(block.getLocation());
         }
         

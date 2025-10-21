@@ -79,26 +79,10 @@ public class DevInventoryManager implements Listener {
             return;
         }
 
-        
-        for (BlockConfigService.BlockConfig config : configService.getAllBlockConfigs()) {
-            if (currentSlot >= 36) break;
+        // Extracted method for creating block items
+        currentSlot = createAndAddBlockItems(player, configService, currentSlot);
 
-            ItemStack item = new ItemStack(config.getMaterial());
-            ItemMeta meta = item.getItemMeta();
-            if (meta != null) {
-                meta.setDisplayName("§r" + config.getDisplayName());
-                List<String> lore = new ArrayList<>();
-                lore.add("§7" + config.getDescription());
-                lore.add("§8Тип: " + config.getType());
-                lore.add("§8ID: " + config.getId());
-                meta.setLore(lore);
-                item.setItemMeta(meta);
-            }
-            player.getInventory().setItem(currentSlot, item);
-            currentSlot++;
-        }
-
-        
+        // Continue with the rest of the method
         if (currentSlot < 36) {
             player.getInventory().setItem(currentSlot, CodingItems.getGameValue());
             currentSlot++;
@@ -113,10 +97,47 @@ public class DevInventoryManager implements Listener {
         }
         if (currentSlot < 36) {
             player.getInventory().setItem(currentSlot, CodingItems.getCodeMover());
-            
         }
 
         player.updateInventory();
+    }
+    
+    /**
+     * Creates and adds block items to player inventory
+     * @param player the player
+     * @param configService the block config service
+     * @param currentSlot the current inventory slot
+     * @return the updated slot index
+     */
+    private int createAndAddBlockItems(Player player, BlockConfigService configService, int currentSlot) {
+        for (BlockConfigService.BlockConfig config : configService.getAllBlockConfigs()) {
+            if (currentSlot >= 36) break;
+
+            ItemStack item = createBlockItem(config);
+            player.getInventory().setItem(currentSlot, item);
+            currentSlot++;
+        }
+        return currentSlot;
+    }
+    
+    /**
+     * Creates a block item from config
+     * @param config the block config
+     * @return the created ItemStack
+     */
+    private ItemStack createBlockItem(BlockConfigService.BlockConfig config) {
+        ItemStack item = new ItemStack(config.getMaterial());
+        ItemMeta meta = item.getItemMeta();
+        if (meta != null) {
+            meta.setDisplayName("§r" + config.getDisplayName());
+            List<String> lore = new ArrayList<>();
+            lore.add("§7" + config.getDescription());
+            lore.add("§8Тип: " + config.getType());
+            lore.add("§8ID: " + config.getId());
+            meta.setLore(lore);
+            item.setItemMeta(meta);
+        }
+        return item;
     }
     
     private void startInventoryChecker() {
@@ -139,7 +160,7 @@ public class DevInventoryManager implements Listener {
     private void checkAndRestoreTools(Player player) {
         if (!playersInDevWorld.contains(player.getUniqueId())) return;
         
-        
+        // Проверяет, каких именно предметов не хватает
         List<String> missingItems = getMissingCodingItems(player);
         if (!missingItems.isEmpty()) {
             giveMissingItems(player, missingItems);
@@ -153,7 +174,7 @@ public class DevInventoryManager implements Listener {
     private List<String> getMissingCodingItems(Player player) {
         List<String> missingItems = new ArrayList<>();
     
-        
+        // Remove redundant initialization
         boolean hasCopier = false;
         boolean hasArrowNot = false;
         boolean hasDataCreator = false;
@@ -175,7 +196,7 @@ public class DevInventoryManager implements Listener {
             }
         }
     
-        
+        // Add missing items to list
         if (!hasArrowNot) missingItems.add("arrow_not");
         if (!hasDataCreator) missingItems.add("data_creator");
         if (!hasCodeMover) missingItems.add("code_mover");
@@ -195,7 +216,7 @@ public class DevInventoryManager implements Listener {
                 case "code_mover" -> player.getInventory().addItem(CodingItems.getCodeMover());
                 case "game_value" -> player.getInventory().addItem(CodingItems.getGameValue()); 
                 default -> {
-                    
+                    // Handle unknown items
                 }
             }
         }
@@ -212,7 +233,7 @@ public class DevInventoryManager implements Listener {
     }
     
     private boolean isDevWorld(String worldName) {
-        
+        // Проверяет, является ли мир dev-миром
         return worldName.endsWith("-code") || worldName.endsWith("_dev");
     }
     
@@ -222,8 +243,7 @@ public class DevInventoryManager implements Listener {
     public void savePlayerInventory(Player player) {
         if (playersInDevWorld.contains(player.getUniqueId())) {
             savedInventories.put(player.getUniqueId(), player.getInventory().getContents());
-            
-            
+            // Сохраняет инвентарь игрока
         }
     }
     
@@ -242,7 +262,7 @@ public class DevInventoryManager implements Listener {
     }
     
     public void forceRestoreTools(Player player) {
-        
+        // Принудительно восстанавливает инструменты
         giveDevTools(player);
         player.sendMessage("§aИнструменты принудительно восстановлены!");
     }

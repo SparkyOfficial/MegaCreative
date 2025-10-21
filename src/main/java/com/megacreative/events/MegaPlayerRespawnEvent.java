@@ -4,6 +4,7 @@ import org.bukkit.entity.Player;
 import org.bukkit.Location;
 import org.bukkit.event.Event;
 import org.bukkit.event.HandlerList;
+import org.jetbrains.annotations.NotNull;
 
 /**
  * Custom event for when a player respawns
@@ -16,16 +17,18 @@ public class MegaPlayerRespawnEvent extends Event {
     private final Location respawnLocation;
     private final boolean isBedSpawn;
     
-    public MegaPlayerRespawnEvent(Player player, Location respawnLocation, boolean isBedSpawn) {
+    public MegaPlayerRespawnEvent(@NotNull Player player, @NotNull Location respawnLocation, boolean isBedSpawn) {
         this.player = player;
         this.respawnLocation = respawnLocation;
         this.isBedSpawn = isBedSpawn;
     }
     
+    @NotNull
     public Player getPlayer() {
         return player;
     }
     
+    @NotNull
     public Location getRespawnLocation() {
         return respawnLocation;
     }
@@ -35,10 +38,12 @@ public class MegaPlayerRespawnEvent extends Event {
     }
     
     @Override
+    @NotNull
     public HandlerList getHandlers() {
         return handlers;
     }
     
+    @NotNull
     public static HandlerList getHandlerList() {
         return handlers;
     }

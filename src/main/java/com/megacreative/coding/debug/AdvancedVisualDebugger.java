@@ -20,29 +20,19 @@ import java.util.concurrent.CompletableFuture;
 /**
  * Advanced visual debugger with enhanced visualization and analysis capabilities
  */
-
-/**
- * Represents the state of a block during visualization
- */
-
-enum VisualizationState {
-    IDLE,          
-    EXECUTING,     
-    SUCCESS,       
-    ERROR,         
-    BREAKPOINT,    
-    WATCHED,       
-    HIGHLIGHTED,   
-    MODIFIED       
-}
-
 public class AdvancedVisualDebugger {
     
     private final MegaCreative plugin;
     private final VisualDebugger basicDebugger;
-    private final Map<UUID, VisualizationSession> visualizationSessions = new ConcurrentHashMap<>();
-    private final Map<UUID, PerformanceAnalyzer> performanceAnalyzers = new ConcurrentHashMap<>();
-    private final Map<UUID, BreakpointManager> breakpointManagers = new ConcurrentHashMap<>();
+    // This field needs to remain as a class field since it maintains state across method calls
+    // Static analysis flags it as convertible to a local variable, but this is a false positive
+    private final Map<UUID, VisualizationSession> visualizationSessions = new ConcurrentHashMap();
+    // This field needs to remain as a class field since it maintains state across method calls
+    // Static analysis flags it as convertible to a local variable, but this is a false positive
+    private final Map<UUID, PerformanceAnalyzer> performanceAnalyzers = new ConcurrentHashMap();
+    // This field needs to remain as a class field since it maintains state across method calls
+    // Static analysis flags it as convertible to a local variable, but this is a false positive
+    private final Map<UUID, BreakpointManager> breakpointManagers = new ConcurrentHashMap();
     
     
     public AdvancedVisualDebugger(MegaCreative plugin, VisualDebugger basicDebugger) {
@@ -79,6 +69,20 @@ public class AdvancedVisualDebugger {
         if (analyzer != null) {
             analyzer.recordExecution(block, location, executionTime);
         }
+    }
+    
+    /**
+     * Represents the state of a block during visualization
+     */
+    enum VisualizationState {
+        IDLE,          
+        EXECUTING,     
+        SUCCESS,       
+        ERROR,         
+        BREAKPOINT,    
+        WATCHED,       
+        HIGHLIGHTED,   
+        MODIFIED       
     }
     
     /**

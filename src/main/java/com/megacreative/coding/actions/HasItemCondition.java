@@ -25,7 +25,8 @@ public class HasItemCondition implements BlockCondition {
         
         String itemName = resolver.resolve(context, rawItemName).asString();
         
-        if (itemName != null && !itemName.isEmpty()) {
+        // Removed redundant null check - static analysis flagged it as always non-null when this method is called
+        if (!itemName.isEmpty()) {
             try {
                 Material material = Material.valueOf(itemName.toUpperCase());
                 return player.getInventory().contains(material);

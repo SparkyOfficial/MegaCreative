@@ -6,6 +6,7 @@ import org.bukkit.command.Command;
 import org.bukkit.command.CommandExecutor;
 import org.bukkit.command.CommandSender;
 import org.bukkit.entity.Player;
+import org.jetbrains.annotations.NotNull;
 
 /**
  * Команда для удаления мира
@@ -55,7 +56,7 @@ public class DeleteCommand implements CommandExecutor {
      * @return true, wenn der Befehl erfolgreich ausgeführt wurde
      */
     @Override
-    public boolean onCommand(CommandSender sender, Command command, String label, String[] args) {
+    public boolean onCommand(@NotNull CommandSender sender, @NotNull Command command, @NotNull String label, @NotNull String[] args) {
         if (!(sender instanceof Player player)) {
             sender.sendMessage("§cЭта команда доступна только игрокам!");
             return true;
@@ -75,12 +76,10 @@ public class DeleteCommand implements CommandExecutor {
             return true;
         }
         
-        
         if (!world.isOwner(player)) {
             player.sendMessage("§cТолько владелец может удалить этот мир.");
             return true;
         }
-        
         
         if (args.length < 2 || !args[1].equalsIgnoreCase("confirm")) {
             player.sendMessage("§eВы уверены, что хотите удалить мир '" + world.getName() + "'?");

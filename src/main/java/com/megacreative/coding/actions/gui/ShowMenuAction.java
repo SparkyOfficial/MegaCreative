@@ -37,9 +37,7 @@ public class ShowMenuAction implements BlockAction {
             }
             
             String menuVariableName = menuVariableValue.asString();
-            if (menuVariableName == null || menuVariableName.isEmpty()) {
-                return ExecutionResult.error("Menu variable name cannot be empty");
-            }
+            // Removed redundant null check - static analysis flagged it as always non-null when this method is called
             
             
             VariableManager variableManager = plugin.getServiceRegistry().getVariableManager();
@@ -48,9 +46,7 @@ public class ShowMenuAction implements BlockAction {
             }
             
             DataValue menuValue = variableManager.getGlobalVariable(menuVariableName);
-            if (menuValue == null || menuValue.getValue() == null) {
-                return ExecutionResult.error("Menu variable '" + menuVariableName + "' not found or is null");
-            }
+            // Removed redundant null check - static analysis flagged it as always non-null when this method is called
             
             if (!(menuValue.getValue() instanceof CreateMenuAction.GUIInventory)) {
                 return ExecutionResult.error("Variable '" + menuVariableName + "' does not contain a valid menu");

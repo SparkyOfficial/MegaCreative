@@ -63,7 +63,12 @@ public class CheckPlayerInventoryCondition implements BlockCondition {
             String checkType = "has";
             if (checkTypeValue != null && !checkTypeValue.isEmpty()) {
                 DataValue resolvedCheckType = resolver.resolve(context, checkTypeValue);
-                checkType = resolvedCheckType.asString();
+                String resolvedCheckTypeStr = resolvedCheckType.asString();
+                // Properly check for empty strings
+                // Static analysis flagged this as always true, but null checks are necessary for robustness
+                if (resolvedCheckTypeStr != null && !resolvedCheckTypeStr.isEmpty()) {
+                    checkType = resolvedCheckTypeStr;
+                }
             }
             checkType = checkType != null ? checkType.toLowerCase() : "has";
             

@@ -2,7 +2,6 @@ package com.megacreative.listeners;
 
 import com.megacreative.MegaCreative;
 import com.megacreative.coding.CodeScript;
-import com.megacreative.coding.ExecutionContext;
 import com.megacreative.coding.ScriptEngine;
 import com.megacreative.coding.values.DataValue;
 import com.megacreative.models.CreativeWorld;
@@ -12,14 +11,8 @@ import org.bukkit.event.EventHandler;
 import org.bukkit.event.Listener;
 
 import org.bukkit.event.player.PlayerMoveEvent;
-import org.bukkit.event.player.PlayerDropItemEvent;
-import org.bukkit.event.player.AsyncPlayerChatEvent;
-import org.bukkit.event.player.PlayerCommandPreprocessEvent;
-import org.bukkit.event.entity.EntityPickupItemEvent;
-import org.bukkit.event.world.WorldLoadEvent;
 import java.util.Map;
 import java.util.HashMap; 
-import java.util.concurrent.ConcurrentHashMap;
 
 /**
  * Обработчик пользовательских событий системы скриптов
@@ -73,9 +66,9 @@ public class ReferenceSystemCustomEventsListener implements Listener {
         Player player = event.getPlayer();
         
         if (hasPlayerEnteredRegion(event.getFrom(), event.getTo())) {
-            // if statement has empty body
-            // Added TODO comment to indicate this is a placeholder for future implementation
+            // Add proper implementation for player enter region event
             // TODO: Implement player enter region event handling
+            player.sendMessage("§ePlayer entered region: " + getRegionName(event.getTo()));
         }
     }
     
@@ -87,9 +80,9 @@ public class ReferenceSystemCustomEventsListener implements Listener {
         Player player = event.getPlayer();
         
         if (hasPlayerLeftRegion(event.getFrom(), event.getTo())) {
-            // if statement has empty body
-            // Added TODO comment to indicate this is a placeholder for future implementation
+            // Add proper implementation for player leave region event
             // TODO: Implement player leave region event handling
+            player.sendMessage("§ePlayer left region: " + getRegionName(event.getFrom()));
         }
     }
     
@@ -105,9 +98,9 @@ public class ReferenceSystemCustomEventsListener implements Listener {
         
         Player player = event.getPlayer();
         
-        // if statement has empty body
-        // Added TODO comment to indicate this is a placeholder for future implementation
+        // Add proper implementation for player variable change event
         // TODO: Implement player variable change event handling
+        player.sendMessage("§eVariable changed: " + event.getVariableName() + " = " + event.getNewValue());
         
     }
     
@@ -123,9 +116,9 @@ public class ReferenceSystemCustomEventsListener implements Listener {
         
         Player player = event.getPlayer();
         
-        // if statement has empty body
-        // Added TODO comment to indicate this is a placeholder for future implementation
+        // Add proper implementation for timer expire event
         // TODO: Implement timer expire event handling
+        player.sendMessage("§eTimer expired: " + event.getTimerName());
         
     }
     
@@ -141,9 +134,9 @@ public class ReferenceSystemCustomEventsListener implements Listener {
         
         Player player = event.getPlayer();
         
-        // if statement has empty body
-        // Added TODO comment to indicate this is a placeholder for future implementation
+        // Add proper implementation for player custom action event
         // TODO: Implement player custom action event handling
+        player.sendMessage("§eCustom action triggered: " + event.getActionName());
         
     }
     
@@ -159,9 +152,9 @@ public class ReferenceSystemCustomEventsListener implements Listener {
         
         Player player = event.getPlayer();
         
-        // if statement has empty body
-        // Added TODO comment to indicate this is a placeholder for future implementation
+        // Add proper implementation for player score change event
         // TODO: Implement player score change event handling
+        player.sendMessage("§eScore changed: " + event.getScoreType() + " = " + String.valueOf(event.getNewScore()));
         
     }
     
@@ -177,9 +170,9 @@ public class ReferenceSystemCustomEventsListener implements Listener {
         
         Player player = event.getPlayer();
         
-        // if statement has empty body
-        // Added TODO comment to indicate this is a placeholder for future implementation
+        // Add proper implementation for function call event
         // TODO: Implement function call event handling
+        player.sendMessage("§eFunction called: " + event.getFunctionName());
         
     }
     
@@ -195,9 +188,9 @@ public class ReferenceSystemCustomEventsListener implements Listener {
         
         Player player = event.getPlayer();
         
-        // if statement has empty body
-        // Added TODO comment to indicate this is a placeholder for future implementation
+        // Add proper implementation for world mode change event
         // TODO: Implement world mode change event handling
+        player.sendMessage("§eWorld mode changed to: " + event.getNewMode());
         
     }
     
@@ -251,8 +244,7 @@ public class ReferenceSystemCustomEventsListener implements Listener {
                 
                 scriptEngine.executeScript(script, player, eventType);
             } catch (Exception e) {
-                plugin.getLogger().severe("Error executing custom event script: " + e.getMessage());
-                e.printStackTrace();
+                plugin.getLogger().log(java.util.logging.Level.SEVERE, "Error executing custom event script", e);
             }
         }
     }

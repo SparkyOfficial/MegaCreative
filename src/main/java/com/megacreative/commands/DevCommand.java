@@ -9,7 +9,9 @@ import org.bukkit.command.Command;
 import org.bukkit.command.CommandExecutor;
 import org.bukkit.command.CommandSender;
 import org.bukkit.entity.Player;
+import org.bukkit.persistence.PersistentDataContainer;
 import org.bukkit.persistence.PersistentDataType;
+import org.jetbrains.annotations.NotNull;
 
 /**
  * Команда для перехода в режим разработки
@@ -59,7 +61,7 @@ public class DevCommand implements CommandExecutor {
      * @return true, wenn der Befehl erfolgreich ausgeführt wurde
      */
     @Override
-    public boolean onCommand(CommandSender sender, Command command, String label, String[] args) {
+    public boolean onCommand(@NotNull CommandSender sender, @NotNull Command command, @NotNull String label, @NotNull String[] args) {
         if (!(sender instanceof Player player)) {
             sender.sendMessage("§cЭта команда доступна только игрокам!");
             return true;
@@ -127,20 +129,20 @@ public class DevCommand implements CommandExecutor {
         createVariableItem(variablesInventory, 14, org.bukkit.Material.COMPASS, "§b§lПеременная локации",
             "§7Для хранения координат", "§eПример: точка спавна", "§8Нажмите для создания");
             
-        createVariableItem(variablesInventory, 16, org.bukkit.Material.CHEST, "§6§lПеременная предмета",
+        createVariableItem(variablesInventory, 16, org.bukkit.Material.CHEST, "§6§лПеременная предмета",
             "§7Для хранения предметов", "§eПример: награда", "§8Нажмите для создания");
             
         
-        createVariableItem(variablesInventory, 28, org.bukkit.Material.REPEATER, "§d§lПеременная списка",
+        createVariableItem(variablesInventory, 28, org.bukkit.Material.REPEATER, "§d§лПеременная списка",
             "§7Для хранения списков", "§eПример: топ игроков", "§8Нажмите для создания");
             
-        createVariableItem(variablesInventory, 30, org.bukkit.Material.DISPENSER, "§5§lПеременная команды",
+        createVariableItem(variablesInventory, 30, org.bukkit.Material.DISPENSER, "§5§лПеременная команды",
             "§7Для хранения команд", "§eПример: действие", "§8Нажмите для создания");
             
-        createVariableItem(variablesInventory, 32, org.bukkit.Material.PLAYER_HEAD, "§3§lПеременная игрока",
+        createVariableItem(variablesInventory, 32, org.bukkit.Material.PLAYER_HEAD, "§3§лПеременная игрока",
             "§7Для хранения данных игрока", "§eПример: последний убийца", "§8Нажмите для создания");
             
-        createVariableItem(variablesInventory, 34, org.bukkit.Material.HOPPER, "§c§lГлобальная переменная",
+        createVariableItem(variablesInventory, 34, org.bukkit.Material.HOPPER, "§c§лГлобальная переменная",
             "§7Для хранения общих данных", "§eДоступна всем игрокам", "§8Нажмите для создания");
         
         
@@ -150,10 +152,10 @@ public class DevCommand implements CommandExecutor {
         }
         
         
-        createVariableItem(variablesInventory, 48, org.bukkit.Material.BOOK, "§e§lПомощь",
+        createVariableItem(variablesInventory, 48, org.bukkit.Material.BOOK, "§e§лПомощь",
             "§7Нажмите для просмотра", "§7руководства по переменным");
             
-        createVariableItem(variablesInventory, 50, org.bukkit.Material.BARRIER, "§c§lЗакрыть",
+        createVariableItem(variablesInventory, 50, org.bukkit.Material.BARRIER, "§c§лЗакрыть",
             "§7Нажмите для закрытия", "§7меню переменных");
         
         
@@ -183,7 +185,7 @@ public class DevCommand implements CommandExecutor {
     /**
      * Телепортирует игрока в мир разработки и настраивает его
      * Teleports player to development world and configures it
-     * Teleportiert den Spieler in die Entwicklungs-Welt und konfiguriert sie
+     * Teleportiert den Spieler in die Entwicklungs-Welt und konфигuriert sie
      */
     private void teleportToDevWorld(Player player, World devWorld) {
         player.teleport(devWorld.getSpawnLocation());

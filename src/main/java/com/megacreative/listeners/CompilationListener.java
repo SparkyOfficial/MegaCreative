@@ -36,7 +36,7 @@ public class CompilationListener implements Listener {
         Player player = event.getPlayer();
         World fromWorld = event.getFrom();
         
-        
+          logger.info("Player is leaving dev world: " + fromWorld.getName());
         if (fromWorld.getName().contains("-code")) {
             compileWorldCode(fromWorld);
         }
@@ -47,7 +47,7 @@ public class CompilationListener implements Listener {
         Player player = event.getPlayer();
         World world = player.getWorld();
         
-        
+          logger.info("Player is leaving dev world: " + world.getName());
         if (world.getName().contains("-code")) {
             compileWorldCode(world);
         }
@@ -60,26 +60,22 @@ public class CompilationListener implements Listener {
         try {
             logger.info("Starting automatic compilation for world: " + world.getName());
             
-            
-            CodeCompiler codeCompiler = plugin.getServiceRegistry().getCodeCompiler();
+              CodeCompiler codeCompiler = plugin.getServiceRegistry().getCodeCompiler();
             if (codeCompiler == null) {
                 logger.severe("CodeCompiler service not available for automatic compilation!");
                 return;
             }
             
-            
-            List<String> codeStrings = codeCompiler.compileWorldToCodeStrings(world);
+              List<String> codeStrings = codeCompiler.compileWorldToCodeStrings(world);
             logger.info("Compiled " + codeStrings.size() + " lines of code from world: " + world.getName());
             
-            
-            String worldId = world.getName().replace("-code", "");
+              String worldId = world.getName().replace("-code", "");
             codeCompiler.saveCompiledCode(worldId, codeStrings);
             
             logger.info("Successfully compiled and saved code for world: " + worldId);
             
         } catch (Exception e) {
-            logger.severe("Failed to automatically compile world code: " + e.getMessage());
-            e.printStackTrace();
+            logger.log(java.util.logging.Level.SEVERE, "Failed to automatically compile world code", e);
         }
     }
 }

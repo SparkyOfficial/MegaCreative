@@ -56,20 +56,9 @@ public class SafeCommandExecutor {
         String baseCommand = parts[0].toLowerCase();
         
         
-        
-        
-        if (!ALLOWED_COMMANDS.contains(baseCommand)) {
+        if (!isCommandAllowed(player, baseCommand)) {
             return false;
         }
-        
-        
-        
-        
-        if (!player.hasPermission("megacreative.script.command." + baseCommand)) {
-            return false;
-        }
-        
-        
         
         
         if (!isCommandSafe(baseCommand, parts)) {
@@ -77,14 +66,29 @@ public class SafeCommandExecutor {
         }
         
         try {
-            
-            
-            
             boolean success = Bukkit.dispatchCommand(player, command);
             return success;
         } catch (Exception e) {
             return false;
         }
+    }
+    
+    /**
+     * Checks if a command is allowed for a player
+     * @param player The player to check
+     * @param baseCommand The base command to check
+     * @return true if the command is allowed
+     */
+    private static boolean isCommandAllowed(Player player, String baseCommand) {
+        if (!ALLOWED_COMMANDS.contains(baseCommand)) {
+            return false;
+        }
+        
+        if (!player.hasPermission("megacreative.script.command." + baseCommand)) {
+            return false;
+        }
+        
+        return true;
     }
     
     /**
@@ -151,12 +155,6 @@ public class SafeCommandExecutor {
                         return false;
                     }
                 }
-                return true;
-                
-            case "kill":
-                
-                
-                
                 return true;
                 
             default:

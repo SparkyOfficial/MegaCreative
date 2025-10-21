@@ -260,6 +260,16 @@ public class BlockContainerManager {
         BlockContainer container = containers.get(containerLocation);
         if (container == null) return false;
         
+        return openContainer(player, container);
+    }
+    
+    /**
+     * Opens a container for a player
+     * @param player The player to open the container for
+     * @param container The container to open
+     * @return true if the container was opened successfully
+     */
+    private boolean openContainer(Player player, BlockContainer container) {
         switch (container.getType()) {
             case SIGN:
                 openSignEditor(player, container);

@@ -40,7 +40,8 @@ public class CreateScoreboardAction implements BlockAction {
             
             String scoreboardTitle = resolvedTitle.asString();
             
-            if (scoreboardTitle == null || scoreboardTitle.isEmpty()) {
+            // Removed redundant null check - static analysis flagged it as always non-null when this method is called
+            if (scoreboardTitle.isEmpty()) {
                 return ExecutionResult.error("Invalid scoreboard title");
             }
 

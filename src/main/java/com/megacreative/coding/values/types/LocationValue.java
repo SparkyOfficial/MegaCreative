@@ -3,6 +3,7 @@ package com.megacreative.coding.values.types;
 import com.megacreative.coding.values.DataValue;
 import com.megacreative.coding.values.ValueType;
 import org.bukkit.Location;
+import org.jetbrains.annotations.NotNull;
 
 import java.util.*;
 
@@ -12,18 +13,20 @@ import java.util.*;
 public class LocationValue implements DataValue {
     private Location value;
     
-    public LocationValue(Location value) {
-        this.value = value;
+    public LocationValue(@NotNull Location value) {
+        this.value = value.clone();
     }
     
     @Override
+    @NotNull
     public ValueType getType() { return ValueType.LOCATION; }
     
     @Override
+    @NotNull
     public Object getValue() { return value; }
     
     @Override
-    public void setValue(Object value) {
+    public void setValue(@NotNull Object value) {
         if (value instanceof Location) {
             this.value = (Location) value;
         } else {
@@ -32,6 +35,7 @@ public class LocationValue implements DataValue {
     }
     
     @Override
+    @NotNull
     public String asString() {
         if (value == null) return "null";
         return String.format("%.1f, %.1f, %.1f (%s)", 
@@ -40,6 +44,7 @@ public class LocationValue implements DataValue {
     }
     
     @Override
+    @NotNull
     public Number asNumber() { throw new NumberFormatException("Cannot convert location to number"); }
     
     @Override
@@ -52,14 +57,17 @@ public class LocationValue implements DataValue {
     public boolean isValid() { return value != null && value.getWorld() != null; }
     
     @Override
+    @NotNull
     public String getDescription() { return "Location: " + asString(); }
     
     @Override
+    @NotNull
     public DataValue copy() { 
         return new LocationValue(value != null ? value.clone() : null); 
     }
     
     @Override
+    @NotNull
     public Map<String, Object> serialize() {
         Map<String, Object> map = new HashMap<>();
         map.put("type", getType().name());

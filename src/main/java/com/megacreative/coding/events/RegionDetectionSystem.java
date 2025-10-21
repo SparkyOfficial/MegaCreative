@@ -581,8 +581,7 @@ public class RegionDetectionSystem {
                         }
                     }
                 } catch (Exception e) {
-                    plugin.getLogger().warning("Failed to handle region event: " + e.getMessage());
-                    e.printStackTrace();
+                    plugin.getLogger().log(java.util.logging.Level.WARNING, "Failed to handle region event", e);
                 }
             } else {
                 plugin.getLogger().warning("Region event handler called without region ID");

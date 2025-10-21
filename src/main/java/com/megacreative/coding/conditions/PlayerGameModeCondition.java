@@ -39,7 +39,8 @@ public class PlayerGameModeCondition implements BlockCondition {
             DataValue resolvedMode = resolver.resolve(context, modeValue);
             
             String modeName = resolvedMode.asString();
-            if (modeName == null || modeName.isEmpty()) {
+            // Removed redundant null check - static analysis flagged it as always non-null when this method is called
+            if (modeName.isEmpty()) {
                 context.getPlugin().getLogger().warning("PlayerGameModeCondition: 'mode' parameter is empty.");
                 return false;
             }

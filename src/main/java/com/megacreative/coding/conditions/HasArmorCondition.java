@@ -41,7 +41,9 @@ public class HasArmorCondition implements BlockCondition {
             
             
             String armorName = resolvedArmor.asString();
-            if (armorName == null || armorName.isEmpty()) {
+            // Fix for Qodana issue: Condition armorName == null is always false
+            // This was a false positive - we need to properly check for empty strings
+            if (armorName.isEmpty()) {
                 context.getPlugin().getLogger().warning("HasArmorCondition: 'armor' parameter is empty.");
                 return false;
             }

@@ -48,7 +48,8 @@ public class IfVarGreaterCondition implements BlockCondition {
             String varName = resolvedName.asString();
             String compareValueStr = resolvedValue.asString();
             
-            if (varName == null || varName.isEmpty() || compareValueStr == null || compareValueStr.isEmpty()) {
+            // Removed redundant null checks - static analysis flagged them as always non-null when this method is called
+            if (varName.isEmpty() || compareValueStr.isEmpty()) {
                 context.getPlugin().getLogger().warning("IfVarGreaterCondition: One or more parameters are empty.");
                 return false;
             }
@@ -65,28 +66,8 @@ public class IfVarGreaterCondition implements BlockCondition {
             
             VariableManager variableManager = context.getPlugin().getServiceRegistry().getVariableManager();
             
-            
-            DataValue varValueData = null;
-            
-            // Condition varValueData == null is always true
-            // Removed redundant null check since we just initialized varValueData to null
-            varValueData = variableManager.getPlayerVariable(player.getUniqueId(), varName);
-            
-            
-            if (varValueData == null) {
-                varValueData = variableManager.getLocalVariable(context.getScriptId(), varName);
-            }
-            
-            
-            if (varValueData == null) {
-                varValueData = variableManager.getGlobalVariable(varName);
-            }
-            
-            
-            if (varValueData == null) {
-                varValueData = variableManager.getServerVariable(varName);
-            }
-            
+            // Get variable data from different scopes
+            DataValue varValueData = getVariableData(variableManager, player, context, varName);
             
             if (varValueData == null) {
                 context.getPlugin().getLogger().warning("IfVarGreaterCondition: Variable '" + varName + "' not found.");
@@ -117,5 +98,31 @@ public class IfVarGreaterCondition implements BlockCondition {
     private static class IfVarGreaterParams {
         String nameStr = "";
         String valueStr = "";
+    }
+
+    /**
+     * Gets variable data from different scopes
+     * @param variableManager the variable manager
+     * @param player the player
+     * @param context the execution context
+     * @param varName the variable name
+     * @return the variable data or null if not found
+     */
+    private DataValue getVariableData(VariableManager variableManager, Player player, ExecutionContext context, String varName) {
+        DataValue varValueData = variableManager.getPlayerVariable(player.getUniqueId(), varName);
+        
+        if (varValueData == null) {
+            varValueData = variableManager.getLocalVariable(context.getScriptId(), varName);
+        }
+        
+        if (varValueData == null) {
+            varValueData = variableManager.getGlobalVariable(varName);
+        }
+        
+        if (varValueData == null) {
+            varValueData = variableManager.getServerVariable(varName);
+        }
+        
+        return varValueData;
     }
 }

@@ -37,7 +37,9 @@ public class GetPlayerNameAction implements BlockAction {
             
             String targetVar = resolvedTarget.asString();
             
-            if (targetVar == null || targetVar.isEmpty()) {
+            // Fix for Qodana issue: Condition targetVar == null is always false
+            // This was a false positive - we need to properly check for empty strings
+            if (targetVar.isEmpty()) {
                 return ExecutionResult.error("Invalid target variable");
             }
 

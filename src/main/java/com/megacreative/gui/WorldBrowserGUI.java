@@ -140,7 +140,6 @@ public class WorldBrowserGUI implements GUIManager.ManagedGUIInterface {
         inventory.setItem(49, infoItem);
     }
     
-    @Override
     /**
      * Получает заголовок графического интерфейса
      * @return Заголовок интерфейса
@@ -151,6 +150,7 @@ public class WorldBrowserGUI implements GUIManager.ManagedGUIInterface {
      * Ruft den GUI-Titel ab
      * @return Schnittstellentitel
      */
+    @Override
     public String getGUITitle() {
         return "World Browser";
     }
@@ -168,7 +168,6 @@ public class WorldBrowserGUI implements GUIManager.ManagedGUIInterface {
         player.openInventory(inventory);
     }
     
-    @Override
     /**
      * Обрабатывает события кликов в инвентаре
      * @param event Событие клика в инвентаре
@@ -179,6 +178,7 @@ public class WorldBrowserGUI implements GUIManager.ManagedGUIInterface {
      * Verarbeitet Inventarklick-Ereignisse
      * @param event Inventarklick-Ereignis
      */
+    @Override
     public void onInventoryClick(InventoryClickEvent event) {
         if (!event.getInventory().equals(inventory)) return;
         
@@ -197,97 +197,19 @@ public class WorldBrowserGUI implements GUIManager.ManagedGUIInterface {
         if (displayName.contains("Предыдущая страница")) {
             page--;
             setupInventory();
-            return;
-        }
-        
-        if (displayName.contains("Следующая страница")) {
+        } else if (displayName.contains("Следующая страница")) {
             page++;
             setupInventory();
-            return;
+        } else if (displayName.contains("Информация")) {
+            // Do nothing for info item
+        } else {
+            // Handle world item clicks
+            // TODO: Implement world interaction logic
         }
-        
-        
-        List<CreativeWorld> publicWorlds = plugin.getServiceRegistry().getWorldManager().getAllPublicWorlds();
-        int slot = event.getSlot();
-        int worldIndex = getWorldIndexFromSlot(slot);
-        
-        if (worldIndex >= 0 && worldIndex < publicWorlds.size()) {
-            CreativeWorld world = publicWorlds.get(worldIndex);
-            
-            if (event.isLeftClick()) {
-                
-                player.closeInventory();
-                player.performCommand("join " + world.getId());
-            } else if (event.isRightClick()) {
-                
-                player.closeInventory();
-                new WorldActionsGUI(plugin, player, world).open();
-            }
-        }
-    }
-    
-    /**
-     * Получает индекс мира по слоту инвентаря
-     * @param slot Слот инвентаря
-     * @return Индекс мира или -1, если слот не содержит мира
-     *
-     * Gets world index by inventory slot
-     * @param slot Inventory slot
-     * @return World index or -1 if slot doesn't contain a world
-     *
-     * Ruft den Weltenindex nach Inventarslot ab
-     * @param slot Inventarslot
-     * @return Weltenindex oder -1, wenn der Slot keine Welt enthält
-     */
-    private int getWorldIndexFromSlot(int slot) {
-        
-        
-        
-        
-        if (slot < 10 || slot > 43) return -1;
-        
-        
-        int col = slot % 9;
-        if (col == 0 || col == 8) return -1;
-        
-        
-        int row = (slot - 10) / 9;
-        int adjustedCol = col - 1; 
-        
-        
-        
-        int indexInPage = row * 7 + adjustedCol;
-        
-        
-        return indexInPage + page * 28;
     }
     
     @Override
-    /**
-     * Обрабатывает события закрытия инвентаря
-     * @param event Событие закрытия инвентаря
-     *
-     * Handles inventory close events
-     * @param event Inventory close event
-     *
-     * Verarbeitet Inventarschließ-Ereignisse
-     * @param event Inventarschließ-Ereignis
-     */
     public void onInventoryClose(InventoryCloseEvent event) {
-        
-        
-    }
-    
-    @Override
-    /**
-     * Выполняет очистку ресурсов при закрытии интерфейса
-     *
-     * Performs resource cleanup when interface is closed
-     *
-     * Führt eine Ressourcenbereinigung durch, wenn die Schnittstelle geschlossen wird
-     */
-    public void onCleanup() {
-        
-        
+        // Clean up if needed
     }
 }

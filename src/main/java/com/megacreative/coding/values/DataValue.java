@@ -14,16 +14,19 @@ public interface DataValue extends ConfigurationSerializable {
     /**
      * Gets the value type
      */
+    @org.jetbrains.annotations.NotNull
     ValueType getType();
     
     /**
      * Gets the raw value object
      */
+    @org.jetbrains.annotations.NotNull
     Object getValue();
     
     /**
      * Gets the raw value object (alias for getValue)
      */
+    @org.jetbrains.annotations.NotNull
     default Object getRawValue() {
         return getValue();
     }
@@ -31,16 +34,18 @@ public interface DataValue extends ConfigurationSerializable {
     /**
      * Sets the raw value with validation
      */
-    void setValue(Object value) throws IllegalArgumentException;
+    void setValue(@org.jetbrains.annotations.NotNull Object value) throws IllegalArgumentException;
     
     /**
      * Converts this value to a string representation
      */
+    @org.jetbrains.annotations.NotNull
     String asString();
     
     /**
      * Converts this value to a number
      */
+    @org.jetbrains.annotations.NotNull
     Number asNumber() throws NumberFormatException;
     
     /**
@@ -82,11 +87,13 @@ public interface DataValue extends ConfigurationSerializable {
     /**
      * Gets a human-readable description of this value
      */
+    @org.jetbrains.annotations.NotNull
     String getDescription();
     
     /**
      * Creates a deep copy of this value
      */
+    @org.jetbrains.annotations.NotNull
     DataValue copy();
     
     /**
@@ -94,19 +101,20 @@ public interface DataValue extends ConfigurationSerializable {
      * @param value The value to convert
      * @return A new DataValue instance
      */
-    static DataValue of(Object value) {
+    static @org.jetbrains.annotations.NotNull DataValue of(@org.jetbrains.annotations.NotNull Object value) {
         return DataValue.fromObject(value);
     }
     
     /**
      * Serializes this value to a map for storage
      */
+    @org.jetbrains.annotations.NotNull
     Map<String, Object> serialize();
     
     /**
      * Deserializes a value from a map
      */
-    static DataValue deserialize(Map<String, Object> map) {
+    static @org.jetbrains.annotations.NotNull DataValue deserialize(@org.jetbrains.annotations.NotNull Map<String, Object> map) {
         ValueType type = ValueType.valueOf((String) map.get("type"));
         Object value = map.get("value");
         
@@ -133,9 +141,7 @@ public interface DataValue extends ConfigurationSerializable {
     /**
      * Creates a value from an object with automatic type detection
      */
-    static DataValue fromObject(Object object) {
-        if (object == null) return new AnyValue(null);
-        
+    static @org.jetbrains.annotations.NotNull DataValue fromObject(@org.jetbrains.annotations.NotNull Object object) {
         if (object instanceof String) return new TextValue((String) object);
         if (object instanceof Number) return new NumberValue((Number) object);
         if (object instanceof Boolean) return new BooleanValue((Boolean) object);
@@ -167,7 +173,7 @@ public interface DataValue extends ConfigurationSerializable {
     /**
      * Converts between compatible types
      */
-    static DataValue convert(DataValue value, ValueType targetType) {
+    static @org.jetbrains.annotations.NotNull DataValue convert(@org.jetbrains.annotations.NotNull DataValue value, @org.jetbrains.annotations.NotNull ValueType targetType) {
         if (value.getType() == targetType) return value;
         if (!value.getType().isCompatible(targetType)) {
             throw new IllegalArgumentException("Cannot convert " + value.getType() + " to " + targetType);

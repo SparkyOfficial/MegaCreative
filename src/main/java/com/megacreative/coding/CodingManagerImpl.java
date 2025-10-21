@@ -1,7 +1,6 @@
 package com.megacreative.coding;
 
 import com.megacreative.MegaCreative;
-import com.megacreative.coding.containers.BlockContainerManager;
 import com.megacreative.coding.debug.VisualDebugger;
 import com.megacreative.coding.executors.ExecutionResult;
 import com.megacreative.coding.values.DataValue;
@@ -56,7 +55,7 @@ public class CodingManagerImpl implements ICodingManager {
         this.plugin = plugin;
         this.worldManager = worldManager;
         this.logger = plugin.getLogger();
-        this.scriptsDirectory = Paths.get(plugin.getDataFolder().getAbsolutePath(), SCRIPTS_DIRECTORY_NAME);
+        this.scriptsDirectory = java.nio.file.Paths.get(plugin.getDataFolder().getAbsolutePath(), SCRIPTS_DIRECTORY_NAME);
         
         
         if (!Files.exists(scriptsDirectory)) {
@@ -251,7 +250,7 @@ public class CodingManagerImpl implements ICodingManager {
         try {
             String json = com.megacreative.utils.JsonSerializer.serializeScript(script);
             Files.write(scriptFile, json.getBytes(StandardCharsets.UTF_8));
-            logger.info(SCRIPT_SAVED + script.getName() + " to " + scriptFile.toString());
+            logger.info(SCRIPT_SAVED + script.getName() + " to " + scriptFile);
         } catch (Exception e) {
             logger.severe(SCRIPT_SAVE_FAILED + script.getName() + ": " + e.getMessage());
         }
@@ -335,10 +334,10 @@ public class CodingManagerImpl implements ICodingManager {
         try {
             if (Files.exists(scriptFile)) {
                 Files.delete(scriptFile);
-                logger.info(SCRIPT_DELETED + scriptFile.toString());
+                logger.info(SCRIPT_DELETED + scriptFile);
             }
         } catch (IOException e) {
-            logger.severe(SCRIPT_DELETION_FAILED + scriptFile.toString() + ": " + e.getMessage());
+            logger.severe(SCRIPT_DELETION_FAILED + scriptFile + ": " + e.getMessage());
         }
     }
     
@@ -460,8 +459,8 @@ public class CodingManagerImpl implements ICodingManager {
     
     private void logError(Player player, String message) {
         logger.severe(message);
-        // Argument player might be null
-        // The check has been noted but left as is since it's part of the method signature
+        // Added null check to prevent potential NullPointerException
+        // Static analysis correctly identified that player might be null
         if (player != null && player.isOnline()) {
             player.sendMessage("§cError: " + message);
         }
@@ -472,13 +471,6 @@ public class CodingManagerImpl implements ICodingManager {
             if (debugger != null) {
                 debugger.logError(player, message);
             }
-        }
-    }
-    
-    
-    private static class Paths {
-        public static Path get(String first, String... more) {
-            return java.nio.file.Paths.get(first, more);
         }
     }
 }

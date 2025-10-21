@@ -43,7 +43,8 @@ public class ParameterUtils {
                 }
             }
         } catch (Exception e) {
-            if (context != null && context.getPlugin() != null) {
+            // Remove redundant null check since we already check for null above
+            if (context.getPlugin() != null) {
                 context.getPlugin().getLogger().warning("Error getting parameter '" + paramName + "': " + e.getMessage());
             }
         }
@@ -86,7 +87,8 @@ public class ParameterUtils {
                 }
             }
         } catch (Exception e) {
-            if (context != null && context.getPlugin() != null) {
+            // Remove redundant null check since we already check for null above
+            if (context.getPlugin() != null) {
                 context.getPlugin().getLogger().warning("Error getting parameter '" + paramName + "': " + e.getMessage());
             }
         }
@@ -142,7 +144,8 @@ public class ParameterUtils {
             
             return getStringFromItem(item);
         } catch (Exception e) {
-            if (context != null && context.getPlugin() != null) {
+            // Remove redundant null check since we already check for null above
+            if (context.getPlugin() != null) {
                 context.getPlugin().getLogger().warning("Error getting string from container slot '" + slotName + "': " + e.getMessage());
             }
             return null;
@@ -160,10 +163,9 @@ public class ParameterUtils {
         ItemMeta meta = item.getItemMeta();
         if (meta != null) {
             String displayName = meta.getDisplayName();
-            if (displayName != null && !displayName.isEmpty()) {
-                
-                return displayName;
-            }
+            // Remove redundant null check since we already check meta != null
+            // and displayName will never be null according to Bukkit API
+            return displayName;
         }
         return null;
     }

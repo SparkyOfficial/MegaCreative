@@ -7,6 +7,7 @@ import org.bukkit.command.Command;
 import org.bukkit.command.CommandExecutor;
 import org.bukkit.command.CommandSender;
 import org.bukkit.entity.Player;
+import org.jetbrains.annotations.NotNull;
 
 /**
  * Команда для создания нового мира
@@ -61,12 +62,11 @@ public class CreateWorldCommand implements CommandExecutor {
      * @return true, wenn der Befehl erfolgreich ausgeführt wurde
      */
     @Override
-    public boolean onCommand(CommandSender sender, Command command, String label, String[] args) {
+    public boolean onCommand(@NotNull CommandSender sender, @NotNull Command command, @NotNull String label, @NotNull String[] args) {
         if (!(sender instanceof Player player)) {
             sender.sendMessage("§cЭта команда доступна только игрокам!");
             return true;
         }
-        
         
         if (worldManager.getPlayerWorldCount(player) >= 5) {
             player.sendMessage("§c❌ Вы уже создали максимальное количество миров (5)!");
@@ -91,7 +91,6 @@ public class CreateWorldCommand implements CommandExecutor {
         String typeStr = args[0].toLowerCase();
         CreativeWorldType worldType;
         
-        
         boolean isDualMode = false;
         
         try {
@@ -101,17 +100,14 @@ public class CreateWorldCommand implements CommandExecutor {
             return true;
         }
         
-        
-        String worldName;
         int nameStartIndex = 1;
-        
         
         if (args.length > 1 && args[1].equals("--dual")) {
             isDualMode = true;
             nameStartIndex = 2;
         }
         
-        
+        String worldName;
         if (args.length > nameStartIndex) {
             
             StringBuilder nameBuilder = new StringBuilder();
@@ -125,7 +121,6 @@ public class CreateWorldCommand implements CommandExecutor {
             worldName = player.getName() + "'s World " + (worldManager.getPlayerWorldCount(player) + 1);
         }
         
-        
         if (worldName.length() < 3 || worldName.length() > 20) {
             player.sendMessage("§cНазвание мира должно содержать от 3 до 20 символов!");
             return true;
@@ -135,7 +130,6 @@ public class CreateWorldCommand implements CommandExecutor {
             player.sendMessage("§cНазвание мира может содержать только буквы, цифры, пробелы и подчеркивания!");
             return true;
         }
-        
         
         if (isDualMode) {
             player.sendMessage("§a⏳ Создание парных миров \"" + worldName + "\"...");
@@ -148,9 +142,6 @@ public class CreateWorldCommand implements CommandExecutor {
             
             worldManager.createWorld(player, worldName, worldType);
         }
-        
-        
-        
         
         return true;
     }

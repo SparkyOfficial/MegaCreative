@@ -8,6 +8,7 @@ import org.bukkit.command.CommandExecutor;
 import org.bukkit.command.CommandSender;
 import org.bukkit.command.TabCompleter;
 import org.bukkit.entity.Player;
+import org.jetbrains.annotations.NotNull;
 
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -66,7 +67,10 @@ public class GroupCommand implements CommandExecutor, TabCompleter {
      * @return true, wenn der Befehl erfolgreich ausgeführt wurde
      */
     @Override
-    public boolean onCommand(CommandSender sender, Command command, String label, String[] args) {
+    public boolean onCommand(@NotNull CommandSender sender, 
+                            @NotNull Command command, 
+                            @NotNull String label, 
+                            @NotNull String[] args) {
         if (!(sender instanceof Player player)) {
             sender.sendMessage("§cThis command can only be used by players!");
             return true;
@@ -146,7 +150,10 @@ public class GroupCommand implements CommandExecutor, TabCompleter {
      * @return Liste möglicher Vervollständigungen
      */
     @Override
-    public List<String> onTabComplete(CommandSender sender, Command command, String alias, String[] args) {
+    public List<String> onTabComplete(@NotNull CommandSender sender, 
+                                     @NotNull Command command, 
+                                     @NotNull String alias, 
+                                     @NotNull String[] args) {
         if (!(sender instanceof Player player)) {
             return new ArrayList<>();
         }
@@ -193,13 +200,11 @@ public class GroupCommand implements CommandExecutor, TabCompleter {
         player.sendMessage("§6=== Block Group Commands ===");
         player.sendMessage("§f/code group select §7- Start selecting blocks for grouping");
         player.sendMessage("§f/code group create [name] §7- Create group from selection");
-        player.sendMessage("§f/code group collapse <name> §7- Collapse a group");
-        player.sendMessage("§f/code group expand <name> §7- Expand a collapsed group");
-        player.sendMessage("§f/code group delete <name> §7- Delete a group");
-        player.sendMessage("§f/code group list §7- List all your groups");
+        player.sendMessage("§f/code group collapse <name> §7- Collapse group blocks");
+        player.sendMessage("§f/code group expand <name> §7- Expand group blocks");
+        player.sendMessage("§f/code group delete <name> §7- Delete group");
+        player.sendMessage("§f/code group list §7- List all groups");
         player.sendMessage("§f/code group cancel §7- Cancel current selection");
-        player.sendMessage("");
-        player.sendMessage("§7Groups allow you to organize related code blocks");
-        player.sendMessage("§7and collapse them for better visual organization.");
+        player.sendMessage("§8§m                                                        ");
     }
 }

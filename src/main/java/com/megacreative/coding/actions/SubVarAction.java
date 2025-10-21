@@ -41,7 +41,8 @@ public class SubVarAction implements BlockAction {
             String varName = resolvedName.asString();
             String valueStr = resolvedValue.asString();
 
-            if (varName == null || varName.isEmpty()) {
+            // Removed redundant null check - static analysis flagged it as always non-null when this method is called
+            if (varName.isEmpty()) {
                 return ExecutionResult.error("Invalid variable name");
             }
 
@@ -186,8 +187,9 @@ public class SubVarAction implements BlockAction {
                 variableManager.setServerVariable(varName, newValueData);
                 break;
             default:
-                
+                // Handle default case by using local scope
                 variableManager.setLocalVariable(scriptId, varName, newValueData);
+                break;
         }
     }
 

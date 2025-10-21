@@ -40,30 +40,48 @@ public class CustomEventManager implements Listener, EventPublisher, EventSubscr
     private final EventDispatcher eventDispatcher;
     
     
-    private final Map<String, CustomEvent> eventDefinitions = new ConcurrentHashMap<>();
+    // This field needs to remain as a class field since it maintains state across method calls
+    // Static analysis flags it as convertible to a local variable, but this is a false positive
+    private final Map<String, CustomEvent> eventDefinitions = new ConcurrentHashMap();
     
     
-    private final Map<String, List<EventHandler>> eventHandlers = new ConcurrentHashMap<>();
+    // This field needs to remain as a class field since it maintains state across method calls
+    // Static analysis flags it as convertible to a local variable, but this is a false positive
+    private final Map<String, List<EventHandler>> eventHandlers = new ConcurrentHashMap();
     
     
-    private final Map<String, List<EventHandler>> globalEventHandlers = new ConcurrentHashMap<>();
+    // This field needs to remain as a class field since it maintains state across method calls
+    // Static analysis flags it as convertible to a local variable, but this is a false positive
+    private final Map<String, List<EventHandler>> globalEventHandlers = new ConcurrentHashMap();
     
     
-    private final Map<String, List<EventExecution>> executionHistory = new ConcurrentHashMap<>();
+    // This field needs to remain as a class field since it maintains state across method calls
+    // Static analysis flags it as convertible to a local variable, but this is a false positive
+    private final Map<String, List<EventExecution>> executionHistory = new ConcurrentHashMap();
     
     
-    private final Map<String, Set<String>> eventCategories = new ConcurrentHashMap<>();
+    // This field needs to remain as a class field since it maintains state across method calls
+    // Static analysis flags it as convertible to a local variable, but this is a false positive
+    private final Map<String, Set<String>> eventCategories = new ConcurrentHashMap();
     
     
-    private final Map<String, AdvancedEventTrigger> advancedTriggers = new ConcurrentHashMap<>();
+    // This field needs to remain as a class field since it maintains state across method calls
+    // Static analysis flags it as convertible to a local variable, but this is a false positive
+    private final Map<String, AdvancedEventTrigger> advancedTriggers = new ConcurrentHashMap();
     
     
-    private final Map<String, ScheduledTrigger> scheduledTriggers = new ConcurrentHashMap<>();
+    // This field needs to remain as a class field since it maintains state across method calls
+    // Static analysis flags it as convertible to a local variable, but this is a false positive
+    private final Map<String, ScheduledTrigger> scheduledTriggers = new ConcurrentHashMap();
     
     
+    // This field needs to remain as a class field since it maintains state across method calls
+    // Static analysis flags it as convertible to a local variable, but this is a false positive
     private final EventCorrelationEngine correlationEngine;
     
     
+    // This field needs to remain as a class field since it maintains state across method calls
+    // Static analysis flags it as convertible to a local variable, but this is a false positive
     private final RegionDetectionSystem regionDetectionSystem;
     
     public CustomEventManager(MegaCreative plugin) {
@@ -344,7 +362,7 @@ public class CustomEventManager implements Listener, EventPublisher, EventSubscr
             if (worldHandlers != null) {
                 applicableHandlers.addAll(worldHandlers.stream()
                     .filter(h -> h.getWorldName() == null || h.getWorldName().equals(worldName))
-                    .collect(Collectors.toList()));
+                    .toList());
             }
         }
         
@@ -710,7 +728,10 @@ public class CustomEventManager implements Listener, EventPublisher, EventSubscr
     public void onPlayerQuit(PlayerQuitEvent event) {
         Map<String, DataValue> data = new HashMap<>();
         data.put("player", DataValue.fromObject(event.getPlayer()));
-        data.put("reason", DataValue.fromObject(event.getQuitMessage()));
+        // Argument event.getQuitMessage() might be null according to static analysis
+        // Added null check to prevent potential NullPointerException
+        String quitMessage = event.getQuitMessage();
+        data.put("reason", DataValue.fromObject(quitMessage != null ? quitMessage : ""));
         
         triggerEvent("playerDisconnect", data, event.getPlayer(), event.getPlayer().getWorld().getName());
         
@@ -756,7 +777,10 @@ public class CustomEventManager implements Listener, EventPublisher, EventSubscr
         if (event.getEntity().getKiller() != null) {
             data.put("killer", DataValue.fromObject(event.getEntity().getKiller()));
         }
-        data.put("cause", DataValue.fromObject(event.getDeathMessage()));
+        // Argument event.getDeathMessage() might be null according to static analysis
+        // Added null check to prevent potential NullPointerException
+        String deathMessage = event.getDeathMessage();
+        data.put("cause", DataValue.fromObject(deathMessage != null ? deathMessage : ""));
         
         triggerEvent("playerDeath", data, event.getEntity(), event.getEntity().getWorld().getName());
     }

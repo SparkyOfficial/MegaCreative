@@ -28,8 +28,7 @@ public class ClassScanner {
                 }
             }
         } catch (Exception e) {
-            plugin.getLogger().severe("Ошибка при сканировании классов в плагине:");
-            e.printStackTrace();
+            plugin.getLogger().log(java.util.logging.Level.SEVERE, "Ошибка при сканировании классов в плагине", e);
         }
         return classes;
     }

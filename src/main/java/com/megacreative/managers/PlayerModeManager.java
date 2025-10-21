@@ -12,13 +12,13 @@ import java.util.UUID;
 public class PlayerModeManager {
     
     /**
-     * Enum representing the two player modes
+     * Enum representing the player modes
      */
     public enum PlayerMode {
-        DEV,  
-        PLAY  
+        DEV,    // Development mode with coding permissions
+        PLAY,   // Play mode with survival permissions
+        BUILD   // Build mode with creative permissions but no coding
     }
-    
     
     private final Map<UUID, PlayerMode> playerModes = new HashMap<>();
     
@@ -56,6 +56,15 @@ public class PlayerModeManager {
      */
     public boolean isInDevMode(Player player) {
         return getMode(player) == PlayerMode.DEV;
+    }
+    
+    /**
+     * Checks if a player is in BUILD mode
+     * @param player The player to check
+     * @return true if the player is in BUILD mode, false otherwise
+     */
+    public boolean isInBuildMode(Player player) {
+        return getMode(player) == PlayerMode.BUILD;
     }
     
     /**

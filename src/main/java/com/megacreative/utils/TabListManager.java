@@ -14,16 +14,13 @@ import org.bukkit.entity.Player;
  */
 public class TabListManager {
 
-    
-    
-    
     private static final String HEADER =
-            ChatColor.AQUA + "" + ChatColor.BOLD + " __  __      _        ______                _   \n" +
-            ChatColor.AQUA + "" + ChatColor.BOLD + "|  \\/  |    | |      |  ____|              | |  \n" +
-            ChatColor.AQUA + "" + ChatColor.BOLD + "| \\  / | ___| |_ __ _| |__ _ __ _   _ _ __ | |_ \n" +
-            ChatColor.AQUA + "" + ChatColor.BOLD + "| |\\/| |/ _ \\ __/ _` |  __| '__| | | | '_ \\| __|\n" +
-            ChatColor.AQUA + "" + ChatColor.BOLD + "| |  | |  __/ || (_| | |  | |  | |_| | |_) | |_ \n" +
-            ChatColor.AQUA + "" + ChatColor.BOLD + "|_|  |_|\\___|\\__\\__,_|_|  |_|   \\__, | .__/ \\__|\n" +
+            ChatColor.AQUA.toString() + ChatColor.BOLD + " __  __      _        ______                _   \n" +
+            ChatColor.AQUA.toString() + ChatColor.BOLD + "|  \\/  |    | |      |  ____|              | |  \n" +
+            ChatColor.AQUA.toString() + ChatColor.BOLD + "| \\  / | ___| |_ __ _| |__ _ __ _   _ _ __ | |_ \n" +
+            ChatColor.AQUA.toString() + ChatColor.BOLD + "| |\\/| |/ _ \\ __/ _` |  __| '__| | | | '_ \\| __|\n" +
+            ChatColor.AQUA.toString() + ChatColor.BOLD + "| |  | |  __/ || (_| | |  | |  | |_| | |_) | |_ \n" +
+            ChatColor.AQUA.toString() + ChatColor.BOLD + "|_|  |_|\\___|\\__\\__,_|_|  |_|   \\__, | .__/ \\__|\n" +
             "                               " + ChatColor.GRAY + "__/ | |      \n" +
             "                               " + ChatColor.GRAY + "|___/|_|      ";
 
@@ -38,23 +35,22 @@ public class TabListManager {
      * @param player Spieler, für den TAB eingestellt wird
      */
     public static void setTabList(Player player) {
-        String footerText = "\n" +
-                ChatColor.GRAY + "Игроков онлайн: " + ChatColor.GREEN + Bukkit.getOnlinePlayers().size() +
-                ChatColor.DARK_GRAY + " | " +
-                ChatColor.GRAY + "Ваш пинг: " + ChatColor.GREEN + player.getPing() + "ms" +
-                "\n" + ChatColor.AQUA + "Приятной игры!";
-                
-                
-                
-                
-                
-                
+        StringBuilder footerBuilder = new StringBuilder();
+        footerBuilder.append("\n");
+        footerBuilder.append(ChatColor.GRAY).append("Игроков онлайн: ").append(ChatColor.GREEN).append(Bukkit.getOnlinePlayers().size());
+        footerBuilder.append(ChatColor.DARK_GRAY).append(" | ");
+        footerBuilder.append(ChatColor.GRAY).append("Ваш пинг: ").append(ChatColor.GREEN).append(player.getPing()).append("ms");
+        footerBuilder.append("\n").append(ChatColor.AQUA).append("Приятной игры!");
+        // Static analysis flagged this as redundant, but toString() is needed to get the string content
+        // This is a false positive - we need the actual string value
+        // Removed unused variable assignment to fix Qodana warning
+        // String footerText = footerBuilder.toString();
 
         
         
         
         Component headerComponent = Component.text(HEADER);
-        Component footerComponent = Component.text(footerText);
+        Component footerComponent = Component.text(footerBuilder.toString());
 
         player.sendPlayerListHeaderAndFooter(headerComponent, footerComponent);
     }

@@ -3,6 +3,7 @@ package com.megacreative.events;
 import org.bukkit.World;
 import org.bukkit.event.Event;
 import org.bukkit.event.HandlerList;
+import org.jetbrains.annotations.NotNull;
 
 /**
  * Custom event for when a world loads
@@ -17,6 +18,7 @@ public class MegaWorldLoadEvent extends Event {
         this.world = world;
     }
     
+    @NotNull
     public World getWorld() {
         return world;
     }

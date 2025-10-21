@@ -139,7 +139,6 @@ public class PlayerManagerImpl implements IPlayerManager {
         if (modeObj instanceof String) {
             try {
                 PlayerModeManager.PlayerMode mode = PlayerModeManager.PlayerMode.valueOf((String) modeObj);
-                // Argument plugin.getServer().getPlayer(playerId) might be null
                 // This is expected behavior when player is offline
                 Player player = plugin.getServer().getPlayer(playerId);
                 if (player != null) {
@@ -189,7 +188,10 @@ public class PlayerManagerImpl implements IPlayerManager {
                 playerData.put("favorites", new ArrayList<>(favorites));
                 
                 
-                PlayerModeManager.PlayerMode mode = playerModeManager.getMode(plugin.getServer().getPlayer(playerId));
+                // According to static analysis, the argument might be null
+                // We need to check for null before using it
+                var player = plugin.getServer().getPlayer(playerId);
+                PlayerModeManager.PlayerMode mode = player != null ? playerModeManager.getMode(player) : null;
                 playerData.put("mode", mode != null ? mode.name() : "DEV");
                 
                 
@@ -211,7 +213,11 @@ public class PlayerManagerImpl implements IPlayerManager {
             }
         }
         
-        plugin.getLogger().info("Saved data for " + playerFavorites.size() + " players");
+        // Use rate-limited logging for frequent events to reduce log spam
+        com.megacreative.utils.LogUtils.infoRateLimited(
+            "Saved data for " + playerFavorites.size() + " players", 
+            "save_player_data"
+        );
     }
 
     @Override
@@ -278,7 +284,11 @@ public class PlayerManagerImpl implements IPlayerManager {
             }
         }
         
-        plugin.getLogger().info("Loaded data for " + loadedCount + " players");
+        // Use rate-limited logging for frequent events to reduce log spam
+        com.megacreative.utils.LogUtils.infoRateLimited(
+            "Loaded data for " + loadedCount + " players", 
+            "load_player_data"
+        );
     }
 
     @Override
@@ -377,7 +387,11 @@ public class PlayerManagerImpl implements IPlayerManager {
         worldPlayerModes.computeIfAbsent(worldId, k -> new ConcurrentHashMap<>())
                        .put(playerId, mode);
         
-        plugin.getLogger().info("🏠 Player " + player.getName() + " entered world " + worldId + " in " + mode + " mode");
+        // Use rate-limited logging for frequent events to reduce log spam
+        com.megacreative.utils.LogUtils.infoRateLimited(
+            "🏠 Player " + player.getName() + " entered world " + worldId + " in " + mode + " mode", 
+            "player_world_entry_" + player.getName()
+        );
     }
     
     @Override

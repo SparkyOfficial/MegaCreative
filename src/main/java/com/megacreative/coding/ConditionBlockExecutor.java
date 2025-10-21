@@ -46,7 +46,7 @@ public class ConditionBlockExecutor implements BlockExecutor {
                     .build();
             } catch (Exception e) {
                 LOGGER.severe("Exception during evaluation of condition " + conditionId + ": " + e.getMessage());
-                e.printStackTrace();
+                LOGGER.severe("Stack trace: " + java.util.Arrays.toString(e.getStackTrace()));
                 return ExecutionResult.error("Exception during condition evaluation: " + e.getMessage());
             }
         } else {

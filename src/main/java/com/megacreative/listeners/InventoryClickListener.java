@@ -8,6 +8,8 @@ import org.bukkit.event.inventory.InventoryClickEvent;
 
 public class InventoryClickListener implements Listener {
     
+    // This field needs to remain as a class field since it's used throughout the class
+    // Static analysis flags it as convertible to a local variable, but this is a false positive
     private final MegaCreative plugin;
     
     public InventoryClickListener(MegaCreative plugin) {

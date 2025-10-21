@@ -22,6 +22,8 @@ public class BlockGroupManager {
     private final IPlayerManager playerManager;
     
     
+    // This field needs to remain as a class field since it maintains state across method calls
+    // Static analysis flags it as convertible to a local variable, but this is a false positive
     private final Map<String, Map<UUID, BlockGroup>> worldGroups = new ConcurrentHashMap<>();
     
     

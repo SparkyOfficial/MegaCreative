@@ -3,6 +3,7 @@ package com.megacreative.events;
 import org.bukkit.entity.Player;
 import org.bukkit.event.Event;
 import org.bukkit.event.HandlerList;
+import org.jetbrains.annotations.NotNull;
 
 /**
  * Custom event for when a player dies
@@ -19,6 +20,7 @@ public class MegaPlayerDeathEvent extends Event {
         this.deathMessage = deathMessage;
     }
     
+    @NotNull
     public Player getPlayer() {
         return player;
     }

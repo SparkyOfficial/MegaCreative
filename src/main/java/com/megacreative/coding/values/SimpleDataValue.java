@@ -12,7 +12,7 @@ import java.util.Map;
  */
 @SerializableAs("SimpleDataValue")
 public class SimpleDataValue implements DataValue {
-    private ValueType type;
+    private final ValueType type;
     private Object value;
 
     public SimpleDataValue(Object value, ValueType type) {
@@ -21,26 +21,30 @@ public class SimpleDataValue implements DataValue {
     }
 
     @Override
+    @NotNull
     public ValueType getType() {
         return type;
     }
 
     @Override
+    @NotNull
     public Object getValue() {
         return value;
     }
 
     @Override
-    public void setValue(Object value) throws IllegalArgumentException {
+    public void setValue(@NotNull Object value) throws IllegalArgumentException {
         this.value = value;
     }
 
     @Override
+    @NotNull
     public String asString() {
         return value != null ? value.toString() : "";
     }
 
     @Override
+    @NotNull
     public Number asNumber() throws NumberFormatException {
         if (value instanceof Number) {
             return (Number) value;
@@ -62,8 +66,8 @@ public class SimpleDataValue implements DataValue {
         return value == null || (value instanceof String && ((String) value).trim().isEmpty());
     }
 
-    @NotNull
     @Override
+    @NotNull
     public Map<String, Object> serialize() {
         Map<String, Object> result = new HashMap<>();
         result.put("type", type.name());
@@ -71,13 +75,14 @@ public class SimpleDataValue implements DataValue {
         return result;
     }
 
-    public static SimpleDataValue deserialize(Map<String, Object> args) {
+    public static @NotNull SimpleDataValue deserialize(@NotNull Map<String, Object> args) {
         ValueType type = ValueType.valueOf((String) args.get("type"));
         Object value = args.get("value");
         return new SimpleDataValue(value, type);
     }
 
     @Override
+    @NotNull
     public DataValue copy() {
         return new SimpleDataValue(value, type);
     }
@@ -87,7 +92,10 @@ public class SimpleDataValue implements DataValue {
         if (this == obj) return true;
         if (!(obj instanceof DataValue)) return false;
         DataValue other = (DataValue) obj;
-        return (value == null) ? other.getValue() == null : value.equals(other.getValue());
+        if (value == null) {
+            return other.getValue() == null;
+        }
+        return value.equals(other.getValue());
     }
 
     @Override
@@ -102,6 +110,7 @@ public class SimpleDataValue implements DataValue {
     }
     
     @Override
+    @NotNull
     public String getDescription() {
         return "Simple data value of type " + (type != null ? type.name() : "null");
     }

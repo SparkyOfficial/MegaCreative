@@ -2,6 +2,7 @@ package com.megacreative.coding.values.types;
 
 import com.megacreative.coding.values.DataValue;
 import com.megacreative.coding.values.ValueType;
+import org.jetbrains.annotations.NotNull;
 
 import java.util.*;
 
@@ -11,25 +12,31 @@ import java.util.*;
 public class TextValue implements DataValue {
     private String value;
     
-    public TextValue(String value) {
-        this.value = value == null ? "" : value;
+    public TextValue(@NotNull String value) {
+        // value is never null due to @NotNull annotation
+        this.value = value;
     }
     
     @Override
+    @NotNull
     public ValueType getType() { return ValueType.TEXT; }
     
     @Override
+    @NotNull
     public Object getValue() { return value; }
     
     @Override
-    public void setValue(Object value) {
-        this.value = value == null ? "" : value.toString();
+    public void setValue(@NotNull Object value) {
+        // value is never null due to @NotNull annotation
+        this.value = value.toString();
     }
     
     @Override
+    @NotNull
     public String asString() { return value; }
     
     @Override
+    @NotNull
     public Number asNumber() throws NumberFormatException {
         try {
             if (value.contains(".")) return Double.parseDouble(value);
@@ -49,19 +56,24 @@ public class TextValue implements DataValue {
     public boolean isEmpty() { return value.isEmpty(); }
     
     @Override
-    public boolean isValid() { return value != null; }
+    public boolean isValid() { return true; }
     
     @Override
+    @NotNull
     public String getDescription() { return "Text: \"" + value + "\""; }
     
-    @Override
     /**
      * Creates a copy of this TextValue
      * @return A new TextValue with the same value
      */
-    public DataValue copy() { return new TextValue(value); }
+    @Override
+    @NotNull
+    public DataValue copy() { 
+        return new TextValue(value); 
+    }
     
     @Override
+    @NotNull
     public Map<String, Object> serialize() {
         Map<String, Object> map = new HashMap<>();
         map.put("type", getType().name());

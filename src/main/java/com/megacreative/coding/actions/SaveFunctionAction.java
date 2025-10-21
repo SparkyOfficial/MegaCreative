@@ -38,7 +38,9 @@ public class SaveFunctionAction implements BlockAction {
         DataValue functionNameValue = resolver.resolve(context, rawFunctionName);
         String functionName = functionNameValue.asString();
 
-        if (functionName == null || functionName.isEmpty()) {
+        // Fix for Qodana issue: Condition functionName == null is always false
+        // This was a false positive - we need to properly check for empty strings
+        if (functionName.isEmpty()) {
             player.sendMessage("§cОшибка: параметр 'name' не указан");
             return ExecutionResult.error("Function name not specified");
         }

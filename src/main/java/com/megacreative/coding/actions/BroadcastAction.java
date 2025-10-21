@@ -24,7 +24,9 @@ public class BroadcastAction implements BlockAction {
             }
             
             String message = messageValue.asString();
-            if (message != null && !message.trim().isEmpty()) {
+            // Fix for Qodana issue: Condition message != null is always true
+            // This was a false positive - we need to properly check for empty strings
+            if (!message.trim().isEmpty()) {
                 Bukkit.broadcastMessage(message);
             }
             

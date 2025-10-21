@@ -52,7 +52,9 @@ public boolean evaluate(CodeBlock block, ExecutionContext context) {
                         
                         
                         String mobName = resolvedMob.asString();
-                        if (mobName != null && !mobName.isEmpty()) {
+                        // Fix for Qodana issue: Condition mobName != null is always true
+                        // This was a false positive - we need to properly check for empty strings
+                        if (!mobName.isEmpty()) {
                             try {
                                 EntityType mobType = EntityType.valueOf(mobName.toUpperCase());
                                 if (entity.getType() == mobType) {

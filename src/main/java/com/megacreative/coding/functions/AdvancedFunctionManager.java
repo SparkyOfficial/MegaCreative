@@ -552,36 +552,21 @@ public class AdvancedFunctionManager {
                     
                     if (arguments[0].getType() == ValueType.LIST) {
                         ListValue list = (ListValue) arguments[0];
-                        List<DataValue> sortedList = new ArrayList<DataValue>(list.getValues());
-                        Collections.sort(sortedList, new Comparator<DataValue>() {
-                            @Override
-                            public int compare(DataValue a, DataValue b) {
-                                if (a.getType() == ValueType.NUMBER && b.getType() == ValueType.NUMBER) {
-                                    return Double.compare(a.asNumber().doubleValue(), b.asNumber().doubleValue());
-                                } else {
-                                    return a.asString().compareTo(b.asString());
-                                }
-                            }
-                        });
-                        return new ListValue(sortedList);
+                        return sortList(list);
                     }
                     return arguments[0];
                 case "reverse":
                     
                     if (arguments[0].getType() == ValueType.LIST) {
                         ListValue list = (ListValue) arguments[0];
-                        List<DataValue> reversedList = new ArrayList<DataValue>(list.getValues());
-                        Collections.reverse(reversedList);
-                        return new ListValue(reversedList);
+                        return reverseList(list);
                     }
                     return arguments[0];
                 case "shuffle":
                     
                     if (arguments[0].getType() == ValueType.LIST) {
                         ListValue list = (ListValue) arguments[0];
-                        List<DataValue> shuffledList = new ArrayList<DataValue>(list.getValues());
-                        Collections.shuffle(shuffledList);
-                        return new ListValue(shuffledList);
+                        return shuffleList(list);
                     }
                     return arguments[0];
                 default:
@@ -621,14 +606,14 @@ public class AdvancedFunctionManager {
             if (worldFuncs != null) {
                 available.addAll(worldFuncs.values().stream()
                     .filter(func -> func.canCall(player))
-                    .collect(Collectors.toList()));
+                    .toList());
             }
         }
         
         
         available.addAll(globalFunctions.values().stream()
             .filter(func -> func.canCall(player))
-            .collect(Collectors.toList()));
+            .toList());
         
         return available;
     }
@@ -998,4 +983,47 @@ public class AdvancedFunctionManager {
         
         return new FunctionDefinition(name, description, null, parameters, functionBlocks, returnType, FunctionDefinition.FunctionScope.GLOBAL);
     }
+    
+    /**
+     * Sorts a list of DataValues
+     * @param list The list to sort
+     * @return The sorted list
+     */
+    private ListValue sortList(ListValue list) {
+        List<DataValue> sortedList = new ArrayList<DataValue>(list.getValues());
+        Collections.sort(sortedList, new Comparator<DataValue>() {
+            @Override
+            public int compare(DataValue a, DataValue b) {
+                if (a.getType() == ValueType.NUMBER && b.getType() == ValueType.NUMBER) {
+                    return Double.compare(a.asNumber().doubleValue(), b.asNumber().doubleValue());
+                } else {
+                    return a.asString().compareTo(b.asString());
+                }
+            }
+        });
+        return new ListValue(sortedList);
+    }
+
+    /**
+     * Reverses a list of DataValues
+     * @param list The list to reverse
+     * @return The reversed list
+     */
+    private ListValue reverseList(ListValue list) {
+        List<DataValue> reversedList = new ArrayList<DataValue>(list.getValues());
+        Collections.reverse(reversedList);
+        return new ListValue(reversedList);
+    }
+
+    /**
+     * Shuffles a list of DataValues
+     * @param list The list to shuffle
+     * @return The shuffled list
+     */
+    private ListValue shuffleList(ListValue list) {
+        List<DataValue> shuffledList = new ArrayList<DataValue>(list.getValues());
+        Collections.shuffle(shuffledList);
+        return new ListValue(shuffledList);
+    }
+
 }

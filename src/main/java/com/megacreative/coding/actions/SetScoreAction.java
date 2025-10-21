@@ -46,7 +46,9 @@ public class SetScoreAction implements BlockAction {
             String key = resolvedKey.asString();
             String valueStr = resolvedValue.asString();
             
-            if (key == null || key.isEmpty()) {
+            // Fix for Qodana issue: Condition key == null is always false
+            // This was a false positive - we need to properly check for empty strings
+            if (key.isEmpty()) {
                 return ExecutionResult.error("Invalid score key");
             }
 

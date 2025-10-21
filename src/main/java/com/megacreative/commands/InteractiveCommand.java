@@ -13,6 +13,7 @@ import org.bukkit.command.CommandExecutor;
 import org.bukkit.command.CommandSender;
 import org.bukkit.command.TabCompleter;
 import org.bukkit.entity.Player;
+import org.jetbrains.annotations.NotNull;
 
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -77,7 +78,10 @@ public class InteractiveCommand implements CommandExecutor, TabCompleter {
      * @return true, wenn der Befehl erfolgreich ausgeführt wurde
      */
     @Override
-    public boolean onCommand(CommandSender sender, Command command, String label, String[] args) {
+    public boolean onCommand(@NotNull CommandSender sender, 
+                            @NotNull Command command, 
+                            @NotNull String label, 
+                            @NotNull String[] args) {
         if (!(sender instanceof Player)) {
             sender.sendMessage("§cThis command can only be used by players.");
             return true;
@@ -123,7 +127,7 @@ public class InteractiveCommand implements CommandExecutor, TabCompleter {
      * @param player Spieler, dem die Hilfe gesendet wird
      */
     private void showHelp(Player player) {
-        player.sendMessage("§6🎆 Reference System Interactive GUI System");
+        player.sendMessage("§6.EVT Reference System Interactive GUI System");
         player.sendMessage("§e/interactive demo §7- Open interactive element demo");
         player.sendMessage("§e/interactive block <action> §7- Open block parameter editor");
         player.sendMessage("§e/interactive world §7- Open world settings GUI");
@@ -145,30 +149,23 @@ public class InteractiveCommand implements CommandExecutor, TabCompleter {
      */
     private void openDemoGUI(Player player) {
         InteractiveGUI gui = guiManager.createInteractiveGUI(player, 
-            "🎆 Reference System Interactive Demo", 54);
+            ".EVT Reference System Interactive Demo", 54);
         
-        
-        InteractiveGUIManager.MaterialSelectorElement materialSelector = 
-            new InteractiveGUIManager.MaterialSelectorElement("demo_material", 
-                java.util.Map.of("materials", Arrays.asList(
-                    Material.STONE, Material.DIRT, Material.GRASS_BLOCK, 
-                    Material.OAK_PLANKS, Material.IRON_BLOCK, Material.GOLD_BLOCK)));
+        InteractiveGUIManager.MaterialSelectorElement materialSelector = createMaterialSelector();
         
         materialSelector.addChangeListener(value -> 
             player.sendMessage("§a.EVT Material changed to: §e" + value.getValue()));
         
         gui.setElement(10, materialSelector);
         
-        
         InteractiveGUIManager.ModeToggleElement modeToggle = 
             new InteractiveGUIManager.ModeToggleElement("demo_mode", 
-                java.util.Map.of("modes", Arrays.asList("ON", "OFF", "AUTO")));
+                java.util.Map.of("modes", java.util.List.of("ON", "OFF", "AUTO")));
         
         modeToggle.addChangeListener(value -> 
             player.sendMessage("§a.EVT Mode changed to: §e" + value.getValue()));
         
         gui.setElement(12, modeToggle);
-        
         
         InteractiveGUIManager.NumberSliderElement numberSlider = 
             new InteractiveGUIManager.NumberSliderElement("demo_number", 
@@ -179,7 +176,6 @@ public class InteractiveCommand implements CommandExecutor, TabCompleter {
         
         gui.setElement(14, numberSlider);
         
-        
         InteractiveGUIManager.ColorPickerElement colorPicker = 
             new InteractiveGUIManager.ColorPickerElement("demo_color", java.util.Map.of());
         
@@ -187,7 +183,6 @@ public class InteractiveCommand implements CommandExecutor, TabCompleter {
             player.sendMessage("§a.EVT Color changed to: §e" + value.getValue()));
         
         gui.setElement(16, colorPicker);
-        
         
         InteractiveGUIManager.ItemStackEditorElement itemEditor = 
             new InteractiveGUIManager.ItemStackEditorElement("demo_item", java.util.Map.of());
@@ -199,6 +194,17 @@ public class InteractiveCommand implements CommandExecutor, TabCompleter {
         
         gui.open();
         player.sendMessage("§a.EVT Opened Reference System Interactive Demo!");
+    }
+    
+    /**
+     * Creates a material selector element for the demo GUI
+     * @return MaterialSelectorElement instance
+     */
+    private InteractiveGUIManager.MaterialSelectorElement createMaterialSelector() {
+        return new InteractiveGUIManager.MaterialSelectorElement("demo_material", 
+                java.util.Map.of("materials", java.util.List.of(
+                    Material.STONE, Material.DIRT, Material.GRASS_BLOCK, 
+                    Material.OAK_PLANKS, Material.IRON_BLOCK, Material.GOLD_BLOCK)));
     }
     
     /**
@@ -222,20 +228,14 @@ public class InteractiveCommand implements CommandExecutor, TabCompleter {
         
         String actionId = args[1];
         
-        // Condition element != null is always true
-        // Removed redundant null check since we always create a new CodeBlock object
         Location location = player.getLocation();
-        CodeBlock dummyBlock = new CodeBlock(Material.STONE.name(), actionId);
-        
-        // Variable element initializer null is redundant
-        // Removed redundant null initializer since we immediately assign a value
-        CodeBlock block = dummyBlock;
+        CodeBlock block = new CodeBlock(Material.STONE.name(), actionId);
         
         block.setParameter("message", "Hello World!");
         block.setParameter("amount", 1);
         block.setParameter("enabled", true);
         
-        InteractiveGUI gui = frameGUI.createBlockParameterEditor(player, dummyBlock);
+        InteractiveGUI gui = frameGUI.createBlockParameterEditor(player, block);
         gui.open();
         
         player.sendMessage("§a.EVT Opened block editor for: §e" + actionId);
@@ -290,17 +290,17 @@ public class InteractiveCommand implements CommandExecutor, TabCompleter {
         InteractiveGUI gui = guiManager.createInteractiveGUI(player, 
             ".EVT Test: " + elementType.toUpperCase(), 27);
         
-        InteractiveGUIManager.InteractiveElement element = null;
+        InteractiveGUIManager.InteractiveElement element;
         
         switch (elementType) {
             case "material":
                 element = new InteractiveGUIManager.MaterialSelectorElement("test", 
-                    java.util.Map.of("materials", Arrays.asList(
+                    java.util.Map.of("materials", java.util.List.of(
                         Material.STONE, Material.DIRT, Material.OAK_PLANKS, Material.IRON_BLOCK)));
                 break;
             case "toggle":
                 element = new InteractiveGUIManager.ModeToggleElement("test", 
-                    java.util.Map.of("modes", Arrays.asList("ENABLED", "DISABLED", "AUTO")));
+                    java.util.Map.of("modes", java.util.List.of("ENABLED", "DISABLED", "AUTO")));
                 break;
             case "slider":
                 element = new InteractiveGUIManager.NumberSliderElement("test", 
@@ -321,15 +321,14 @@ public class InteractiveCommand implements CommandExecutor, TabCompleter {
                 return;
         }
         
-        if (element != null) {
-            element.addChangeListener(value -> 
-                player.sendMessage("§a.EVT " + elementType + " value: §e" + value.getValue()));
-            
-            gui.setElement(13, element);
-            gui.open();
-            
-            player.sendMessage("§a.EVT Opened test GUI for: §e" + elementType);
-        }
+        // Element is guaranteed to be non-null when we reach this point due to the early return in default case
+        element.addChangeListener(value -> 
+            player.sendMessage("§a.EVT " + elementType + " value: §e" + value.getValue()));
+        
+        gui.setElement(13, element);
+        gui.open();
+        
+        player.sendMessage("§a.EVT Opened test GUI for: §e" + elementType);
     }
 
     /**
@@ -355,7 +354,10 @@ public class InteractiveCommand implements CommandExecutor, TabCompleter {
      * @return Liste möglicher Vervollständigungen
      */
     @Override
-    public List<String> onTabComplete(CommandSender sender, Command command, String alias, String[] args) {
+    public List<String> onTabComplete(@NotNull CommandSender sender, 
+                                     @NotNull Command command, 
+                                     @NotNull String alias, 
+                                     @NotNull String[] args) {
         if (!(sender instanceof Player)) {
             return new ArrayList<>();
         }
@@ -364,27 +366,24 @@ public class InteractiveCommand implements CommandExecutor, TabCompleter {
         
         if (args.length == 1) {
             
-            List<String> commands = Arrays.asList("demo", "block", "world", "test", "help");
-            return commands.stream()
+            return java.util.stream.Stream.of("demo", "block", "world", "test", "help")
                 .filter(cmd -> cmd.startsWith(args[0].toLowerCase()))
-                .collect(Collectors.toList());
+                .toList();
         }
         
         if (args.length == 2) {
             switch (args[0].toLowerCase()) {
                 case "block":
                     
-                    return Arrays.asList("sendMessage", "teleport", "giveItem", "playSound", "effect")
-                        .stream()
+                    return java.util.stream.Stream.of("sendMessage", "teleport", "giveItem", "playSound", "effect")
                         .filter(action -> action.toLowerCase().startsWith(args[1].toLowerCase()))
-                        .collect(Collectors.toList());
+                        .toList();
                         
                 case "test":
                     
-                    return Arrays.asList("material", "toggle", "slider", "color", "item", "text")
-                        .stream()
+                    return java.util.stream.Stream.of("material", "toggle", "slider", "color", "item", "text")
                         .filter(type -> type.startsWith(args[1].toLowerCase()))
-                        .collect(Collectors.toList());
+                        .toList();
             }
         }
         

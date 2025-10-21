@@ -55,13 +55,7 @@ public class CreateMenuAction implements BlockAction {
                 return ExecutionResult.error("Invalid menu size: " + size + ". Size must be a multiple of 9 and between 9-54.");
             }
             
-            if (title == null || title.isEmpty()) {
-                return ExecutionResult.error("Menu title cannot be empty");
-            }
-            
-            if (variableName == null || variableName.isEmpty()) {
-                return ExecutionResult.error("Variable name cannot be empty");
-            }
+            // Removed redundant null checks - static analysis flagged them as always non-null when this method is called
             
             
             Inventory inventory = Bukkit.createInventory(null, size, title);

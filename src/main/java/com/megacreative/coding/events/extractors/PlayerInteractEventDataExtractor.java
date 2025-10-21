@@ -99,9 +99,11 @@ public class PlayerInteractEventDataExtractor extends AbstractEventDataExtractor
                 item.getType().name()));
             data.put("itemLore", DataValue.fromObject(
                 item.hasItemMeta() ? 
-                // Argument item.getItemMeta().getLore() might be null
-                // The check has been noted but left as is since it's part of the Bukkit API
-                (item.getItemMeta().hasLore() ? String.join("\\n", item.getItemMeta().getLore()) : "") :
+                // According to static analysis, item.getItemMeta().getLore() might be null
+                // We need to check for null before using it
+                (item.getItemMeta().hasLore() ? 
+                    (item.getItemMeta().getLore() != null ? String.join("\\n", item.getItemMeta().getLore()) : "") 
+                    : "") :
                 ""));
         } else {
             

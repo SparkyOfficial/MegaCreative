@@ -71,7 +71,7 @@ public class IsBlockTypeCondition implements BlockCondition {
             
             
             String blockName = resolvedBlock.asString();
-            if (blockName == null || blockName.isEmpty()) {
+            if (blockName.isEmpty()) {
                 context.getPlugin().getLogger().warning("IsBlockTypeCondition: 'block' parameter is empty.");
                 return false;
             }

@@ -2,6 +2,7 @@ package com.megacreative.events;
 
 import org.bukkit.event.Event;
 import org.bukkit.event.HandlerList;
+import org.jetbrains.annotations.NotNull;
 
 /**
  * Event that is fired on every server tick
@@ -82,10 +83,12 @@ public class TickEvent extends Event {
     }
     
     @Override
+    @NotNull
     public HandlerList getHandlers() {
         return handlers;
     }
     
+    @NotNull
     public static HandlerList getHandlerList() {
         return handlers;
     }

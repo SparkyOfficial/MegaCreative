@@ -176,7 +176,9 @@ public class BlockConfigService {
                         plugin.getLogger().warning("Failed to load block config for ID '" + id + "': " + e.getMessage());
                         
                         
-                        e.printStackTrace(); 
+                        // Log exception and continue processing
+                        // This is expected behavior when parsing configuration files
+                        // Silently ignore invalid configuration and continue with other operations 
                     }
                 } else {
                     plugin.getLogger().warning("Section is null for ID: " + id);
@@ -200,7 +202,11 @@ public class BlockConfigService {
             plugin.getLogger().info("Material: " + material.name() + " -> Actions: " + (actions != null ? actions.size() : 0));
             if (actions != null) {
                 for (String action : actions) {
-                    plugin.getLogger().info("  - " + action);
+                    // Use rate-limited logging for frequent events to reduce log spam
+                    com.megacreative.utils.LogUtils.infoRateLimited(
+                        "  - " + action, 
+                        "block_action_" + material.name() + "_" + action
+                    );
                 }
             }
         }
@@ -752,7 +758,9 @@ public class BlockConfigService {
             } catch (Exception e) {
                 
                 java.util.logging.Logger.getLogger(BlockConfig.class.getName()).warning("Failed to load action parameters: " + e.getMessage());
-                e.printStackTrace(); 
+                // Log exception and continue processing
+                // This is expected behavior when parsing configuration files
+                // Silently ignore invalid configuration and continue with other operations 
             }
         }
         

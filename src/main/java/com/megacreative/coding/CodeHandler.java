@@ -106,7 +106,7 @@ public class CodeHandler {
                 LOGGER.info("Successfully executed activator: " + activator.getId());
             } catch (Exception e) {
                 LOGGER.severe("Error executing activator " + activator.getId() + ": " + e.getMessage());
-                e.printStackTrace();
+                LOGGER.severe("Stack trace: " + java.util.Arrays.toString(e.getStackTrace()));
             }
         }
     }

@@ -647,6 +647,7 @@ public class CodeBlock implements Cloneable {
         }
         
         int[] slotNumbers = groupResolver.apply(groupName);
+        // Check both null and empty array cases
         if (slotNumbers == null || slotNumbers.length == 0) {
             return parameters;
         }

@@ -3,6 +3,7 @@ package com.megacreative.events;
 import org.bukkit.entity.Player;
 import org.bukkit.event.Event;
 import org.bukkit.event.HandlerList;
+import org.jetbrains.annotations.NotNull;
 import org.bukkit.event.entity.EntityDamageEvent;
 
 /**
@@ -22,6 +23,7 @@ public class MegaEntityDamageEvent extends Event {
         this.cause = cause;
     }
     
+    @NotNull
     public Player getPlayer() {
         return player;
     }
@@ -30,6 +32,7 @@ public class MegaEntityDamageEvent extends Event {
         return damage;
     }
     
+    @NotNull
     public EntityDamageEvent.DamageCause getCause() {
         return cause;
     }

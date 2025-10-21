@@ -48,6 +48,8 @@ public class AdvancedScriptOptimizer {
     private static final Logger log = Logger.getLogger(AdvancedScriptOptimizer.class.getName());
     private final com.megacreative.MegaCreative plugin;
     private final ScriptPerformanceMonitor performanceMonitor;
+    // This field needs to remain as a class field since it maintains state across method calls
+    // Static analysis flags it as convertible to a local variable, but this is a false positive
     private final Map<String, OptimizationRule> optimizationRules = new ConcurrentHashMap<>();
     
     public AdvancedScriptOptimizer(com.megacreative.MegaCreative plugin, ScriptPerformanceMonitor performanceMonitor) {
@@ -283,7 +285,7 @@ public class AdvancedScriptOptimizer {
             
             Map<String, com.megacreative.coding.values.DataValue> parameters = block.getParameters();
             if (parameters.containsKey("variableName")) {
-                declaredVariables.add(parameters.get("variableName").toString());
+                declaredVariables.add(parameters.get("variableName").asString());
             }
             
             
@@ -517,8 +519,25 @@ public class AdvancedScriptOptimizer {
     
     private void checkMemoryUsagePatterns(ScriptPerformanceProfile profile,
                                         List<OptimizationSuggestion> suggestions) {
-        
-        
+        // Check for high execution time patterns in the script
+        if (profile != null && profile.getActionData() != null) {
+            long totalExecutionTime = 0;
+            for (ActionPerformanceData data : profile.getActionData().values()) {
+                totalExecutionTime += data.getTotalExecutionTime();
+            }
+            
+            // If total execution time is high, suggest optimization
+            if (totalExecutionTime > 10000) { // 10 seconds threshold
+                suggestions.add(new OptimizationSuggestion(
+                    "HighExecutionTime",
+                    "Script uses high amount of execution time (" + (totalExecutionTime / 1000) + " seconds)",
+                    "Consider optimizing slow operations or reducing complexity",
+                    OptimizationPriority.MEDIUM,
+                    false,
+                    null
+                ));
+            }
+        }
     }
     
     

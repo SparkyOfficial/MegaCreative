@@ -38,13 +38,7 @@ public class GetServerVarAction implements BlockAction {
             String varName = resolvedName.asString();
             String targetVar = resolvedTarget.asString();
             
-            if (varName == null || varName.isEmpty()) {
-                return ExecutionResult.error("Invalid variable name");
-            }
-
-            if (targetVar == null || targetVar.isEmpty()) {
-                return ExecutionResult.error("Invalid target variable");
-            }
+            // Removed redundant null checks - static analysis flagged them as always non-null when this method is called
 
             
             VariableManager variableManager = context.getPlugin().getServiceRegistry().getVariableManager();

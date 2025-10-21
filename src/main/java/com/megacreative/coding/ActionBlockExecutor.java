@@ -50,7 +50,7 @@ public class ActionBlockExecutor implements BlockExecutor {
                 }
             } catch (Exception e) {
                 LOGGER.severe("Exception during execution of action " + actionId + ": " + e.getMessage());
-                e.printStackTrace();
+                LOGGER.severe("Stack trace: " + java.util.Arrays.toString(e.getStackTrace()));
                 return ExecutionResult.error("Exception during action execution: " + e.getMessage());
             }
         } else {

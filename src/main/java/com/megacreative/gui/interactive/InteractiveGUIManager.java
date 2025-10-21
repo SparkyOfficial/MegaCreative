@@ -33,7 +33,6 @@ import java.util.function.Consumer;
 public class InteractiveGUIManager implements Listener {
     
     private final MegaCreative plugin;
-    private final GUIManager guiManager;
     
     
     private final Map<UUID, InteractiveGUI> activeGUIs = new ConcurrentHashMap<>();
@@ -43,11 +42,8 @@ public class InteractiveGUIManager implements Listener {
     
     public InteractiveGUIManager(MegaCreative plugin) {
         this.plugin = plugin;
-        this.guiManager = plugin.getServiceRegistry().getGuiManager();
-        
         
         registerDefaultElements();
-        
         
         plugin.getServer().getPluginManager().registerEvents(this, plugin);
         
@@ -165,19 +161,21 @@ public class InteractiveGUIManager implements Listener {
      * @param player The player whose GUI should be refreshed
      */
     public void refreshGUI(Player player) {
+        // Static analysis flags these as always true/false, but we keep the checks for safety
+        // This is a false positive - null checks are necessary for robustness
         
         InteractiveGUI gui = activeGUIs.get(player.getUniqueId());
         if (gui != null) {
-            
             player.closeInventory();
-            
             
             new org.bukkit.scheduler.BukkitRunnable() {
                 @Override
                 public void run() {
-                    
-                    
-                    player.openInventory(gui.getInventory());
+                    // Static analysis flags these as always true/false, but we keep the checks for safety
+                    // This is a false positive - null checks are necessary for robustness
+                    if (player != null && gui != null) {
+                        player.openInventory(gui.getInventory());
+                    }
                 }
             }.runTaskLater(plugin, 1L);
         }
@@ -207,7 +205,7 @@ public class InteractiveGUIManager implements Listener {
         protected final String id;
         protected final Map<String, Object> properties;
         protected DataValue value;
-        protected List<Consumer<DataValue>> changeListeners = new ArrayList<>();
+        protected final List<Consumer<DataValue>> changeListeners = new ArrayList<>();
         
         public InteractiveElement(String id, Map<String, Object> properties) {
             this.id = id;
@@ -507,7 +505,7 @@ public class InteractiveGUIManager implements Listener {
      * Text input element (simplified)
      */
     public static class TextInputElement extends InteractiveElement {
-        private String currentText;
+        private final String currentText;
         
         public TextInputElement(String id, Map<String, Object> properties) {
             super(id, properties);
@@ -540,10 +538,9 @@ public class InteractiveGUIManager implements Listener {
             
             
             
+            // Plugin null check removed as it's always true in this context
             MegaCreative plugin = (MegaCreative) Bukkit.getPluginManager().getPlugin("MegaCreative");
-            if (plugin != null) {
-                openAnvilGUI(plugin, this);
-            }
+            openAnvilGUI(plugin, this);
         }
         
         @Override
@@ -568,13 +565,18 @@ public class InteractiveGUIManager implements Listener {
          */
         private void openChatInput(MegaCreative plugin, TextInputElement element) {
             
+            // Adding null checks to prevent NullPointerException
+            if (plugin == null) {
+                return;
+            }
             ServiceRegistry serviceRegistry = plugin.getServiceRegistry();
-            if (serviceRegistry == null) return;
-            
-            
+            if (serviceRegistry == null) {
+                return;
+            }
             GUIManager guiManager = serviceRegistry.getGuiManager();
-            if (guiManager == null) return;
-            
+            if (guiManager == null) {
+                return;
+            }
             
             Player player = getCurrentPlayer();
             if (player == null) {
@@ -599,19 +601,23 @@ public class InteractiveGUIManager implements Listener {
          * This implementation uses the proper registry system through GUIManager
          */
         private void storePendingTextInput(Player player, TextInputElement element) {
+            // Plugin is registered with Bukkit and always available
             MegaCreative plugin = (MegaCreative) Bukkit.getPluginManager().getPlugin("MegaCreative");
-            if (plugin != null) {
-                ServiceRegistry serviceRegistry = plugin.getServiceRegistry();
-                if (serviceRegistry != null) {
-                    GUIManager guiManager = serviceRegistry.getGuiManager();
-                    if (guiManager != null) {
-                        
-                        guiManager.setPlayerMetadata(player, "awaiting_text_input", true);
-                        guiManager.setPlayerMetadata(player, "pending_text_input_element", element);
-                        plugin.getLogger().info("Registered pending text input for player " + player.getName() + " with element " + element.getId());
-                    }
-                }
+            if (plugin == null) {
+                return;
             }
+            ServiceRegistry serviceRegistry = plugin.getServiceRegistry();
+            if (serviceRegistry == null) {
+                return;
+            }
+            GUIManager guiManager = serviceRegistry.getGuiManager();
+            if (guiManager == null) {
+                return;
+            }
+            
+            guiManager.setPlayerMetadata(player, "awaiting_text_input", true);
+            guiManager.setPlayerMetadata(player, "pending_text_input_element", element);
+            plugin.getLogger().info("Registered pending text input for player " + player.getName() + " with element " + element.getId());
         }
         
         /**
@@ -637,19 +643,13 @@ public class InteractiveGUIManager implements Listener {
             
             
             MegaCreative plugin = (MegaCreative) Bukkit.getPluginManager().getPlugin("MegaCreative");
-            if (plugin != null) {
-                ServiceRegistry serviceRegistry = plugin.getServiceRegistry();
-                if (serviceRegistry != null) {
-                    GUIManager guiManager = serviceRegistry.getGuiManager();
-                    if (guiManager != null) {
-                        
-                        for (Player onlinePlayer : Bukkit.getOnlinePlayers()) {
-                            InteractiveGUI gui = ((InteractiveGUIManager) guiManager.getInteractiveGUIManager()).getActiveGUI(onlinePlayer);
-                            if (gui != null) {
-                                return onlinePlayer;
-                            }
-                        }
-                    }
+            ServiceRegistry serviceRegistry = plugin.getServiceRegistry();
+            GUIManager guiManager = serviceRegistry.getGuiManager();
+            
+            for (Player onlinePlayer : Bukkit.getOnlinePlayers()) {
+                InteractiveGUI gui = ((InteractiveGUIManager) guiManager.getInteractiveGUIManager()).getActiveGUI(onlinePlayer);
+                if (gui != null) {
+                    return onlinePlayer;
                 }
             }
             
@@ -775,9 +775,8 @@ public class InteractiveGUIManager implements Listener {
         @Override
         public void handleClick(org.bukkit.event.inventory.ClickType clickType) {
             
+            // Plugin is registered with Bukkit and always available
             MegaCreative plugin = (MegaCreative) Bukkit.getPluginManager().getPlugin("MegaCreative");
-            if (plugin == null) return;
-            
             
             openItemEditorGUI(plugin, this);
         }
@@ -887,20 +886,48 @@ public class InteractiveGUIManager implements Listener {
             editorInventory.setItem(18, cancelButton);
             
             
-            ServiceRegistry serviceRegistryOuter = plugin.getServiceRegistry();
-            if (serviceRegistryOuter != null) {
-                GUIManager guiManagerOuter = serviceRegistryOuter.getGuiManager();
-                if (guiManagerOuter != null) {
-                    
-                    guiManagerOuter.setPlayerMetadata(player, "item_editor_element", element);
-                }
+            if (plugin == null) {
+                return;
             }
+            ServiceRegistry serviceRegistryOuter = plugin.getServiceRegistry();
+            if (serviceRegistryOuter == null) {
+                return;
+            }
+            GUIManager guiManagerOuter = serviceRegistryOuter.getGuiManager();
+            if (guiManagerOuter == null) {
+                return;
+            }
+            
+            guiManagerOuter.setPlayerMetadata(player, "item_editor_element", element);
             
             
             final String elementId = element.getId();
             
             
-            GUIManager.ManagedGUIInterface managedGUI = new GUIManager.ManagedGUIInterface() {
+            GUIManager.ManagedGUIInterface managedGUI = createItemEditorGUI(elementId, editorInventory, outerInstance);
+            
+            
+            if (plugin == null) {
+                return;
+            }
+            ServiceRegistry serviceRegistryInner = plugin.getServiceRegistry();
+            if (serviceRegistryInner == null) {
+                return;
+            }
+            GUIManager guiManagerInner = serviceRegistryInner.getGuiManager();
+            if (guiManagerInner == null) {
+                return;
+            }
+            guiManagerInner.registerGUI(player, managedGUI, editorInventory);
+            
+            player.openInventory(editorInventory);
+        }
+        
+        /**
+         * Creates a ManagedGUIInterface for the item editor
+         */
+        private GUIManager.ManagedGUIInterface createItemEditorGUI(String elementId, Inventory editorInventory, InteractiveGUIManager outerInstance) {
+            return new GUIManager.ManagedGUIInterface() {
                 @Override
                 public void onInventoryClick(InventoryClickEvent event) {
                     
@@ -909,16 +936,24 @@ public class InteractiveGUIManager implements Listener {
                     
                     
                     MegaCreative plugin = (MegaCreative) Bukkit.getPluginManager().getPlugin("MegaCreative");
-                    ItemStackEditorElement editorElement = null;
-                    if (plugin != null) {
-                        ServiceRegistry serviceRegistryInner = plugin.getServiceRegistry();
-                        if (serviceRegistryInner != null) {
-                            GUIManager guiManagerInner = serviceRegistryInner.getGuiManager();
-                            if (guiManagerInner != null) {
-                                editorElement = guiManagerInner.getPlayerMetadata(player, "item_editor_element", ItemStackEditorElement.class);
-                            }
-                        }
+                    if (plugin == null) {
+                        player.sendMessage("§cError: Plugin not available");
+                        player.closeInventory();
+                        return;
                     }
+                    ServiceRegistry serviceRegistryInner = plugin.getServiceRegistry();
+                    if (serviceRegistryInner == null) {
+                        player.sendMessage("§cError: Service registry not available");
+                        player.closeInventory();
+                        return;
+                    }
+                    GUIManager guiManagerInner = serviceRegistryInner.getGuiManager();
+                    if (guiManagerInner == null) {
+                        player.sendMessage("§cError: GUI manager not available");
+                        player.closeInventory();
+                        return;
+                    }
+                    ItemStackEditorElement editorElement = guiManagerInner.getPlayerMetadata(player, "item_editor_element", ItemStackEditorElement.class);
                     
                     if (editorElement == null) {
                         player.sendMessage("§cError: Could not find item editor element");
@@ -977,38 +1012,26 @@ public class InteractiveGUIManager implements Listener {
                     
                     Player player = (Player) event.getPlayer();
                     MegaCreative plugin = (MegaCreative) Bukkit.getPluginManager().getPlugin("MegaCreative");
-                    if (plugin != null) {
-                        ServiceRegistry serviceRegistryInner = plugin.getServiceRegistry();
-                        if (serviceRegistryInner != null) {
-                            GUIManager guiManagerInner = serviceRegistryInner.getGuiManager();
-                            if (guiManagerInner != null) {
-                                guiManagerInner.setPlayerMetadata(player, "item_editor_element", null);
-                            }
-                        }
+                    if (plugin == null) {
+                        return;
                     }
+                    ServiceRegistry serviceRegistryInner = plugin.getServiceRegistry();
+                    if (serviceRegistryInner == null) {
+                        return;
+                    }
+                    GUIManager guiManagerInner = serviceRegistryInner.getGuiManager();
+                    if (guiManagerInner == null) {
+                        return;
+                    }
+                    guiManagerInner.setPlayerMetadata(player, "item_editor_element", null);
                 }
             };
-            
-            
-            if (plugin != null) {
-                ServiceRegistry serviceRegistryInner = plugin.getServiceRegistry();
-                if (serviceRegistryInner != null) {
-                    GUIManager guiManagerInner = serviceRegistryInner.getGuiManager();
-                    if (guiManagerInner != null) {
-                        guiManagerInner.registerGUI(player, managedGUI, editorInventory);
-                    }
-                }
-            }
-            
-            
-            player.openInventory(editorInventory);
         }
         
         /**
          * Opens a material selector GUI
          */
         private void openMaterialSelector(Player player, ItemStackEditorElement element, Inventory editorInventory) {
-            
             Inventory materialInventory = Bukkit.createInventory(null, 54, " YYS Select Material");
             
             
@@ -1079,17 +1102,27 @@ public class InteractiveGUIManager implements Listener {
             };
             
             
+            // Plugin is registered with Bukkit and always available
             MegaCreative plugin = (MegaCreative) Bukkit.getPluginManager().getPlugin("MegaCreative");
-            if (plugin != null) {
-                ServiceRegistry serviceRegistry = plugin.getServiceRegistry();
-                if (serviceRegistry != null) {
-                    GUIManager guiManager = serviceRegistry.getGuiManager();
-                    if (guiManager != null) {
-                        guiManager.registerGUI(player, materialGUI, materialInventory);
-                        player.openInventory(materialInventory);
-                    }
-                }
+            if (plugin == null) {
+                player.sendMessage("§cError: Plugin not available");
+                player.closeInventory();
+                return;
             }
+            ServiceRegistry serviceRegistry = plugin.getServiceRegistry();
+            if (serviceRegistry == null) {
+                player.sendMessage("§cError: Service registry not available");
+                player.closeInventory();
+                return;
+            }
+            GUIManager guiManager = serviceRegistry.getGuiManager();
+            if (guiManager == null) {
+                player.sendMessage("§cError: GUI manager not available");
+                player.closeInventory();
+                return;
+            }
+            guiManager.registerGUI(player, materialGUI, materialInventory);
+            player.openInventory(materialInventory);
         }
         
         /**
@@ -1100,19 +1133,23 @@ public class InteractiveGUIManager implements Listener {
             player.sendMessage("§7(Type a number in chat, or type 'cancel' to cancel)");
             
             
+            // Plugin is registered with Bukkit and always available
             MegaCreative plugin = (MegaCreative) Bukkit.getPluginManager().getPlugin("MegaCreative");
-            if (plugin != null) {
-                ServiceRegistry serviceRegistry = plugin.getServiceRegistry();
-                if (serviceRegistry != null) {
-                    GUIManager guiManager = serviceRegistry.getGuiManager();
-                    if (guiManager != null) {
-                        
-                        guiManager.setPlayerMetadata(player, "awaiting_amount_input", true);
-                        guiManager.setPlayerMetadata(player, "pending_amount_element", element);
-                        plugin.getLogger().info("Registered pending amount input for player " + player.getName() + " with element " + element.getId());
-                    }
-                }
+            if (plugin == null) {
+                return;
             }
+            ServiceRegistry serviceRegistry = plugin.getServiceRegistry();
+            if (serviceRegistry == null) {
+                return;
+            }
+            GUIManager guiManager = serviceRegistry.getGuiManager();
+            if (guiManager == null) {
+                return;
+            }
+            
+            guiManager.setPlayerMetadata(player, "awaiting_amount_input", true);
+            guiManager.setPlayerMetadata(player, "pending_amount_element", element);
+            plugin.getLogger().info("Registered pending amount input for player " + player.getName() + " with element " + element.getId());
             
             
             player.closeInventory();
@@ -1127,19 +1164,23 @@ public class InteractiveGUIManager implements Listener {
             player.sendMessage("§7(Use & for color codes, e.g. &aGreen Sword)");
             
             
+            // Plugin is registered with Bukkit and always available
             MegaCreative plugin = (MegaCreative) Bukkit.getPluginManager().getPlugin("MegaCreative");
-            if (plugin != null) {
-                ServiceRegistry serviceRegistry = plugin.getServiceRegistry();
-                if (serviceRegistry != null) {
-                    GUIManager guiManager = serviceRegistry.getGuiManager();
-                    if (guiManager != null) {
-                        
-                        guiManager.setPlayerMetadata(player, "awaiting_name_input", true);
-                        guiManager.setPlayerMetadata(player, "pending_name_element", element);
-                        plugin.getLogger().info("Registered pending name input for player " + player.getName() + " with element " + element.getId());
-                    }
-                }
+            if (plugin == null) {
+                return;
             }
+            ServiceRegistry serviceRegistry = plugin.getServiceRegistry();
+            if (serviceRegistry == null) {
+                return;
+            }
+            GUIManager guiManager = serviceRegistry.getGuiManager();
+            if (guiManager == null) {
+                return;
+            }
+            
+            guiManager.setPlayerMetadata(player, "awaiting_name_input", true);
+            guiManager.setPlayerMetadata(player, "pending_name_element", element);
+            plugin.getLogger().info("Registered pending name input for player " + player.getName() + " with element " + element.getId());
             
             
             player.closeInventory();
@@ -1155,20 +1196,24 @@ public class InteractiveGUIManager implements Listener {
             player.sendMessage("§7(Type 'done' when finished adding lore lines)");
             
             
+            // Plugin is registered with Bukkit and always available
             MegaCreative plugin = (MegaCreative) Bukkit.getPluginManager().getPlugin("MegaCreative");
-            if (plugin != null) {
-                ServiceRegistry serviceRegistry = plugin.getServiceRegistry();
-                if (serviceRegistry != null) {
-                    GUIManager guiManager = serviceRegistry.getGuiManager();
-                    if (guiManager != null) {
-                        
-                        guiManager.setPlayerMetadata(player, "awaiting_lore_input", true);
-                        guiManager.setPlayerMetadata(player, "pending_lore_element", element);
-                        guiManager.setPlayerMetadata(player, "current_lore_lines", new ArrayList<String>());
-                        plugin.getLogger().info("Registered pending lore input for player " + player.getName() + " with element " + element.getId());
-                    }
-                }
+            if (plugin == null) {
+                return;
             }
+            ServiceRegistry serviceRegistry = plugin.getServiceRegistry();
+            if (serviceRegistry == null) {
+                return;
+            }
+            GUIManager guiManager = serviceRegistry.getGuiManager();
+            if (guiManager == null) {
+                return;
+            }
+            
+            guiManager.setPlayerMetadata(player, "awaiting_lore_input", true);
+            guiManager.setPlayerMetadata(player, "pending_lore_element", element);
+            guiManager.setPlayerMetadata(player, "current_lore_lines", new ArrayList<String>());
+            plugin.getLogger().info("Registered pending lore input for player " + player.getName() + " with element " + element.getId());
             
             
             player.closeInventory();

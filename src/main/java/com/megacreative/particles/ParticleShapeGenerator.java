@@ -136,7 +136,10 @@ public class ParticleShapeGenerator {
                     point = new Vector3D(center.x + wave, center.y, center.z + pos);
                     break;
                 default:
+                    // Handle invalid axis values gracefully
+                    // Using axis 0 as fallback
                     point = new Vector3D(center.x + pos, center.y + wave, center.z);
+                    break;
             }
             
             particles.add(point);
@@ -193,13 +196,7 @@ public class ParticleShapeGenerator {
      * @param locations The locations to spawn particles at
      */
     public static void spawnParticles(Player player, Particle particle, List<Vector3D> locations) {
-        for (Vector3D location : locations) {
-            player.spawnParticle(
-                particle,
-                location.x, location.y, location.z,
-                1, 0, 0, 0, 0
-            );
-        }
+        spawnParticles(player, particle, locations, 0, 0, 0);
     }
     
     /**
@@ -210,12 +207,25 @@ public class ParticleShapeGenerator {
      * @param offset The base location to offset from
      */
     public static void spawnParticles(Player player, Particle particle, List<Vector3D> locations, Location offset) {
+        spawnParticles(player, particle, locations, offset.getX(), offset.getY(), offset.getZ());
+    }
+    
+    /**
+     * Spawns particles at the given locations with an offset
+     * @param player The player to spawn particles for
+     * @param particle The particle type to spawn
+     * @param locations The locations to spawn particles at
+     * @param offsetX The X offset to apply to each location
+     * @param offsetY The Y offset to apply to each location
+     * @param offsetZ The Z offset to apply to each location
+     */
+    private static void spawnParticles(Player player, Particle particle, List<Vector3D> locations, double offsetX, double offsetY, double offsetZ) {
         for (Vector3D location : locations) {
             player.spawnParticle(
                 particle,
-                offset.getX() + location.x, 
-                offset.getY() + location.y, 
-                offset.getZ() + location.z,
+                offsetX + location.x, 
+                offsetY + location.y, 
+                offsetZ + location.z,
                 1, 0, 0, 0, 0
             );
         }
