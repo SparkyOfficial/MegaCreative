@@ -61,12 +61,12 @@ public class EnemyPlayerRestrictionManager implements Listener {
         List<String> enemyList = config.getStringList("security.enemy_players");
         enemyPlayers.clear();
         enemyPlayers.addAll(enemyList);
-        logger.info("Loaded " + enemyList.size() + " enemy players");
+        logger.fine("Loaded " + enemyList.size() + " enemy players");
         
         List<String> restrictedList = config.getStringList("security.restricted_players");
         restrictedPlayers.clear();
         restrictedPlayers.addAll(restrictedList);
-        logger.info("Loaded " + restrictedList.size() + " restricted players");
+        logger.fine("Loaded " + restrictedList.size() + " restricted players");
     }
     
     /**
@@ -151,7 +151,7 @@ public class EnemyPlayerRestrictionManager implements Listener {
                     WorldPermissions permissions = world.getPermissions();
                     if (permissions != null) {
                         permissions.addToBlacklist(playerId);
-                        logger.info("Added " + playerName + " to blacklist of world " + world.getName());
+                        logger.fine("Added " + playerName + " to blacklist of world " + world.getName());
                     }
                 }
                 break;
@@ -177,7 +177,7 @@ public class EnemyPlayerRestrictionManager implements Listener {
                     WorldPermissions permissions = world.getPermissions();
                     if (permissions != null) {
                         permissions.removeFromBlacklist(playerId);
-                        logger.info("Removed " + playerName + " from blacklist of world " + world.getName());
+                        logger.fine("Removed " + playerName + " from blacklist of world " + world.getName());
                     }
                 }
                 break;
@@ -201,7 +201,7 @@ public class EnemyPlayerRestrictionManager implements Listener {
                 WorldPermissions permissions = world.getPermissions();
                 if (permissions != null) {
                     permissions.setPlayerPermission(player.getUniqueId(), WorldPermissions.PermissionLevel.VISITOR);
-                    logger.info("Applied restrictions for player " + player.getName() + " in world " + world.getName());
+                    logger.fine("Applied restrictions for player " + player.getName() + " in world " + world.getName());
                 }
             }
         }
@@ -229,7 +229,7 @@ public class EnemyPlayerRestrictionManager implements Listener {
                     permissions.addToBlacklist(playerId);
                 }
             }
-            logger.info("Enemy player " + player.getName() + " added to all world blacklists");
+            logger.fine("Enemy player " + player.getName() + " added to all world blacklists");
             player.kickPlayer("§cYou have been blacklisted from this server!");
         }
         

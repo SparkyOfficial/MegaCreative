@@ -2,8 +2,7 @@ package com.megacreative.coding;
 
 import com.megacreative.MegaCreative;
 import com.megacreative.core.ServiceRegistry;
-import com.megacreative.coding.BlockLinker;
-import com.megacreative.coding.BlockHierarchyManager;
+import com.megacreative.coding.CodeStructureManager;
 import org.bukkit.World;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.Listener;
@@ -40,24 +39,15 @@ public class WorldCodeRestorer implements Listener {
             try {
                 
                 
-                plugin.getLogger().info("Development world loaded: " + world.getName() + " - connection restoration handled by services");
+                plugin.getLogger().fine("Development world loaded: " + world.getName() + " - connection restoration handled by services");
                 
                 
-                BlockLinker blockLinker = serviceRegistry.getBlockLinker();
-                if (blockLinker != null) {
+                CodeStructureManager structureManager = serviceRegistry.getCodeStructureManager();
+                if (structureManager != null) {
                     
-                    plugin.getLogger().info("BlockLinker service available for world: " + world.getName());
+                    plugin.getLogger().fine("CodeStructureManager service available for world: " + world.getName());
                 } else {
-                    plugin.getLogger().warning("BlockLinker service not available for connection restoration in world: " + world.getName());
-                }
-                
-                
-                BlockHierarchyManager hierarchyManager = serviceRegistry.getBlockHierarchyManager();
-                if (hierarchyManager != null) {
-                    
-                    plugin.getLogger().info("BlockHierarchyManager service available for world: " + world.getName());
-                } else {
-                    plugin.getLogger().warning("BlockHierarchyManager service not available for hierarchy restoration in world: " + world.getName());
+                    plugin.getLogger().warning("CodeStructureManager service not available for connection restoration in world: " + world.getName());
                 }
             } catch (Exception e) {
                 

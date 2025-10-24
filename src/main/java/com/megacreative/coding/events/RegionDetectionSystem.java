@@ -54,7 +54,7 @@ public class RegionDetectionSystem {
         
         worldRegions.computeIfAbsent(worldName, k -> new ArrayList<>()).add(region);
         
-        log.info("Defined region: " + regionId + " in world " + worldName);
+        log.fine("Defined region: " + regionId + " in world " + worldName);
     }
     
     /**
@@ -68,7 +68,7 @@ public class RegionDetectionSystem {
         
         worldRegions.computeIfAbsent(worldName, k -> new ArrayList<>()).add(region);
         
-        log.info("Defined circular region: " + regionId + " in world " + worldName);
+        log.fine("Defined circular region: " + regionId + " in world " + worldName);
     }
     
     /**
@@ -91,7 +91,7 @@ public class RegionDetectionSystem {
                 playerRegionSet.remove(regionId);
             }
             
-            log.info("Removed region: " + regionId);
+            log.fine("Removed region: " + regionId);
         }
     }
     
@@ -308,7 +308,7 @@ public class RegionDetectionSystem {
         
         codingManager.saveScript(script);
         
-        log.info("Set region script: " + scriptName);
+        log.fine("Set region script: " + scriptName);
     }
     
     /**
@@ -347,7 +347,7 @@ public class RegionDetectionSystem {
         String scriptName = "region_" + regionId + "_" + eventName;
         codingManager.deleteScript(scriptName);
         
-        log.info("Removed region script: " + scriptName);
+        log.fine("Removed region script: " + scriptName);
     }
     
     /**
@@ -370,7 +370,7 @@ public class RegionDetectionSystem {
         
         codingManager.saveScript(script);
         
-        log.info("Set generic region script: " + scriptName);
+        log.fine("Set generic region script: " + scriptName);
     }
     
     /**
@@ -545,7 +545,7 @@ public class RegionDetectionSystem {
                         CodeScript script = codingManager.getScript(scriptName);
                         
                         if (script != null && script.isEnabled()) {
-                            plugin.getLogger().info("Executing region script: " + scriptName + " for player " + player.getName());
+                            plugin.getLogger().fine("Executing region script: " + scriptName + " for player " + player.getName());
                             
                             
                             scriptEngine.executeScript(script, player, "region_event")
@@ -564,7 +564,7 @@ public class RegionDetectionSystem {
                             CodeScript genericScript = codingManager.getScript(genericScriptName);
                             
                             if (genericScript != null && genericScript.isEnabled()) {
-                                plugin.getLogger().info("Executing generic region script: " + genericScriptName + " for player " + player.getName() + " in region " + regionId);
+                                plugin.getLogger().fine("Executing generic region script: " + genericScriptName + " for player " + player.getName() + " in region " + regionId);
                                 
                                 
                                 scriptEngine.executeScript(genericScript, player, "region_event")
@@ -597,7 +597,7 @@ public class RegionDetectionSystem {
             MegaCreative plugin = this.plugin; 
             if (plugin == null) return;
             
-            plugin.getLogger().info("Executing script " + scriptId + " for player " + player.getName() + " in region " + regionId);
+            plugin.getLogger().fine("Executing script " + scriptId + " for player " + player.getName() + " in region " + regionId);
             
             
             CodeScript script = null;
@@ -616,7 +616,7 @@ public class RegionDetectionSystem {
                 scriptEngine.executeScript(script, player, "region_event")
                         .thenAccept(result -> {
                             if (result.isSuccess()) {
-                                plugin.getLogger().info("Successfully executed region script " + scriptId + " for player " + player.getName());
+                                plugin.getLogger().fine("Successfully executed region script " + scriptId + " for player " + player.getName());
                             } else {
                                 plugin.getLogger().warning("Failed to execute region script " + scriptId + ": " + result.getMessage());
                                 player.sendMessage("§cError executing region script: " + result.getMessage());

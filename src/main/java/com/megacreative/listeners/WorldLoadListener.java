@@ -55,7 +55,7 @@ public class WorldLoadListener implements Listener {
             return;
         }
 
-        plugin.getLogger().info("Starting rehydration for world: " + world.getName());
+        plugin.getLogger().fine("Starting rehydration for world: " + world.getName());
         
         BlockPlacementHandler placementHandler = plugin.getServiceRegistry().getBlockPlacementHandler();
         if (placementHandler == null) {
@@ -79,11 +79,11 @@ public class WorldLoadListener implements Listener {
         
         Chunk[] chunks = world.getLoadedChunks();
         if (chunks == null || chunks.length == 0) {
-            plugin.getLogger().info("No chunks to process in world: " + world.getName());
+            plugin.getLogger().fine("No chunks to process in world: " + world.getName());
             return;
         }
         
-        plugin.getLogger().info("Processing " + chunks.length + " chunks in world: " + world.getName());
+        plugin.getLogger().fine("Processing " + chunks.length + " chunks in world: " + world.getName());
         
         
         processChunksAsync(world, chunks, placementHandler, configService);
@@ -105,7 +105,7 @@ public class WorldLoadListener implements Listener {
                 if (currentIndex >= chunks.length) {
                     
                     long duration = System.currentTimeMillis() - startTime;
-                    plugin.getLogger().info(String.format(
+                    plugin.getLogger().fine(String.format(
                         "Rehydration complete for %s. Processed %d code blocks in %.2f seconds",
                         world.getName(),
                         blockCount.get(),

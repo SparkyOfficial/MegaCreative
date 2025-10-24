@@ -62,7 +62,7 @@ public class RandomNumberAction implements BlockAction {
             DataValue dataValue = DataValue.of(String.valueOf(randomNumber));
             variableManager.setPlayerVariable(player.getUniqueId(), targetVariable, dataValue);
 
-            context.getPlugin().getLogger().info("Random number generated: " + randomNumber + " -> " + targetVariable + " for player " + player.getName());
+            context.getPlugin().getLogger().fine("Random number generated: " + randomNumber + " -> " + targetVariable + " for player " + player.getName());
 
             return ExecutionResult.success("Random number " + randomNumber + " generated and stored in '" + targetVariable + "'");
         } catch (Exception e) {

@@ -44,7 +44,7 @@ public class ControlFlowBlockExecutor implements BlockExecutor {
         }
         
         
-        LOGGER.info("Processing control action: " + controlAction + " for player: " + 
+        LOGGER.fine("Processing control action: " + controlAction + " for player: " + 
                    (context.getPlayer() != null ? context.getPlayer().getName() : "unknown"));
         
         

@@ -148,7 +148,7 @@ public class DefaultScriptEngine implements ScriptEngine, EnhancedScriptEngine, 
     
     public void initialize() {
         
-        plugin.getLogger().info("Initializing ScriptEngine with Strategy pattern executors");
+        plugin.getLogger().fine("Initializing ScriptEngine with Strategy pattern executors");
     }
     
     public int getActionCount() {
@@ -204,7 +204,7 @@ public class DefaultScriptEngine implements ScriptEngine, EnhancedScriptEngine, 
             }
         } else {
             
-            plugin.getLogger().info("Published event: " + event.getName());
+            plugin.getLogger().fine("Published event: " + event.getName());
         }
     }
     
@@ -242,7 +242,16 @@ public class DefaultScriptEngine implements ScriptEngine, EnhancedScriptEngine, 
     
     @Override
     public CompletableFuture<ExecutionResult> executeScript(CodeScript script, Player player, String trigger) {
+        // Use fine logging instead of info to reduce spam
+        if (player != null) {
+            player.sendMessage("§aScript engine executing script with trigger: " + trigger);
+            plugin.getLogger().fine("DefaultScriptEngine: Executing script with trigger " + trigger + " for player " + (player != null ? player.getName() : "null"));
+        }
+        
         if (script == null || !script.isEnabled() || script.getRootBlock() == null) {
+            if (player != null) {
+                player.sendMessage("§cScript is invalid or disabled");
+            }
             return CompletableFuture.completedFuture(ExecutionResult.success(Constants.SCRIPT_IS_INVALID_OR_DISABLED));
         }
 
@@ -252,120 +261,119 @@ public class DefaultScriptEngine implements ScriptEngine, EnhancedScriptEngine, 
             String errorMessage = ERROR_SCRIPT_VALIDATION_FAILED + 
                 validationResult.getErrorCount() + " errors found. " +
                 "First error: " + (validationResult.getErrors().isEmpty() ? "Unknown" : validationResult.getErrors().get(0).getMessage());
+            if (player != null) {
+                player.sendMessage("§cScript validation failed: " + errorMessage);
+            }
             return CompletableFuture.completedFuture(ExecutionResult.error(errorMessage));
         }
 
-        String executionId = UUID.randomUUID().toString();
-        ExecutionContext context = new ExecutionContext.Builder()
-            .plugin(plugin)
-            .player(player)
-            .creativeWorld(plugin.getServiceRegistry().getWorldManager().findCreativeWorldByBukkit(player.getWorld()))
-            .currentBlock(script.getRootBlock())
-            .build();
-        
-        activeExecutions.put(executionId, context);
-        
-        
-        Map<String, DataValue> startEventData = new HashMap<>();
-        startEventData.put("script_id", DataValue.fromObject(script.getId()));
-        // Removed redundant null check for player - static analysis flagged it as always non-null when this method is called
-        startEventData.put("player_name", DataValue.fromObject(player.getName()));
-        startEventData.put("trigger", DataValue.fromObject(trigger));
-        publishEvent(EVENT_SCRIPT_START, startEventData);
-
-        CompletableFuture<ExecutionResult> future = new CompletableFuture<>();
-        
-        
-        new BukkitRunnable() {
-            @Override
-            public void run() {
-                try {
-                    // Use rate-limited logging for frequent events to reduce log spam
-                    com.megacreative.utils.LogUtils.infoRateLimited(
-                        "Starting script execution for player: " + player.getName(), 
-                        "script_execution_" + player.getName()
-                    );
-                    if (debugger.isDebugging(player)) {
-                        debugger.onScriptStart(player, script);
-                    }
-                    ExecutionResult result = processBlock(script.getRootBlock(), context, 0);
-                    
-                    
-                    switch (getResultType(result)) {
-                        case PAUSE:
-                            
-                            long ticks = result.getPauseTicks();
-                            plugin.getServer().getScheduler().runTaskLater(plugin, () -> {
-                                try {
-                                    ExecutionResult nextResult = processBlock(script.getRootBlock().getNextBlock(), context, 0);
-                                    completeScriptExecution(nextResult, future, script, player, trigger, executionId);
-                                } catch (Exception e) {
-                                    future.completeExceptionally(e);
-                                    activeExecutions.remove(executionId);
-                                }
-                            }, ticks);
-                            return; 
-                        case AWAIT:
-                            
-                            result.getAwaitFuture().thenRun(() -> {
-                                plugin.getServer().getScheduler().runTask(plugin, () -> {
-                                    try {
-                                        ExecutionResult nextResult = processBlock(script.getRootBlock().getNextBlock(), context, 0);
-                                        completeScriptExecution(nextResult, future, script, player, trigger, executionId);
-                                    } catch (Exception e) {
-                                        future.completeExceptionally(e);
-                                        activeExecutions.remove(executionId);
-                                    }
-                                });
-                            }).exceptionally(throwable -> {
-                                plugin.getServer().getScheduler().runTask(plugin, () -> {
-                                    future.completeExceptionally(throwable);
-                                    activeExecutions.remove(executionId);
-                                });
-                                return null;
-                            });
-                            return; 
-                        case NORMAL:
-                        default:
-                            
-                            completeScriptExecution(result, future, script, player, trigger, executionId);
-                            break;
-                    }
-                } catch (Exception e) {
-                    String errorMsg = "Script execution error: " + e.getMessage();
-                    plugin.getLogger().log(java.util.logging.Level.SEVERE, errorMsg, e);
-                    future.completeExceptionally(e);
-                    
-                    
-                    Map<String, DataValue> errorEventData = new HashMap<>();
-                    errorEventData.put("script_id", DataValue.fromObject(script.getId()));
-                    errorEventData.put("player_name", DataValue.fromObject(player.getName()));
-                    errorEventData.put("trigger", DataValue.fromObject(trigger));
-                    errorEventData.put("error", DataValue.fromObject(e.getMessage()));
-                    publishEvent(EVENT_BLOCK_ERROR, errorEventData);
-                    
-                    activeExecutions.remove(executionId);
-                } catch (Throwable t) {
-                    String errorMsg = "Critical script execution error: " + t.getMessage();
-                    plugin.getLogger().log(java.util.logging.Level.SEVERE, errorMsg, t);
-                    future.completeExceptionally(new RuntimeException(Constants.CRITICAL_EXECUTION_ERROR, t));
-                    
-                    
-                    Map<String, DataValue> errorEventData = new HashMap<>();
-                    errorEventData.put("script_id", DataValue.fromObject(script.getId()));
-                    errorEventData.put("player_name", DataValue.fromObject(player.getName()));
-                    errorEventData.put("trigger", DataValue.fromObject(trigger));
-                    errorEventData.put("error", DataValue.fromObject(t.getMessage()));
-                    errorEventData.put("critical", DataValue.fromObject(true));
-                    publishEvent(EVENT_BLOCK_ERROR, errorEventData);
-                    
-                    activeExecutions.remove(executionId);
-                }
+        // Simplified synchronous execution for debugging
+        try {
+            ExecutionContext context = new ExecutionContext.Builder()
+                .plugin(plugin)
+                .player(player)
+                .creativeWorld(plugin.getServiceRegistry().getWorldManager().findCreativeWorldByBukkit(player != null ? player.getWorld() : null))
+                .currentBlock(script.getRootBlock())
+                .build();
+            
+            // Add debug logging
+            if (player != null) {
+                player.sendMessage("§aStarting script execution with root block action: " + script.getRootBlock().getAction());
+                plugin.getLogger().fine("DefaultScriptEngine: Starting script execution with root block action " + script.getRootBlock().getAction());
             }
-        }.runTask(plugin);
-
-        return future;
+            
+            ExecutionResult result = simplifiedProcessBlock(script.getRootBlock(), context, 0);
+            
+            // Add debug logging
+            if (player != null) {
+                player.sendMessage("§aScript execution completed with result: " + (result.isSuccess() ? "SUCCESS" : "ERROR"));
+                plugin.getLogger().fine("DefaultScriptEngine: Script execution completed with result: " + (result.isSuccess() ? "SUCCESS" : "ERROR"));
+            }
+            
+            return CompletableFuture.completedFuture(result);
+        } catch (Exception e) {
+            String errorMsg = "Script execution error: " + e.getMessage();
+            plugin.getLogger().log(java.util.logging.Level.SEVERE, errorMsg, e);
+            if (player != null) {
+                player.sendMessage("§cScript execution error: " + e.getMessage());
+            }
+            return CompletableFuture.completedFuture(ExecutionResult.error(errorMsg));
+        }
     }
+    
+    // Simplified processBlock method for debugging
+    private ExecutionResult simplifiedProcessBlock(CodeBlock block, ExecutionContext context, int depth) {
+        // Add debug logging
+        Player player = context.getPlayer();
+        if (player != null) {
+            player.sendMessage("§aProcessing block at depth " + depth + " with action: " + (block != null ? block.getAction() : "null"));
+            plugin.getLogger().fine("DefaultScriptEngine: Processing block at depth " + depth + " with action: " + (block != null ? block.getAction() : "null"));
+        }
+        
+        if (block == null || depth > MAX_RECURSION_DEPTH) {
+            if (player != null) {
+                player.sendMessage("§cBlock is null or max depth exceeded");
+            }
+            return ExecutionResult.success(); // End of chain
+        }
+
+        // 1. Execute the current block
+        BlockType blockType = determineBlockType(block);
+        BlockExecutor executor = executors.get(blockType);
+        if (executor == null) {
+            if (player != null) {
+                player.sendMessage("§cNo executor found for block type: " + blockType);
+            }
+            return ExecutionResult.error("No executor found for block type: " + blockType);
+        }
+        
+        ExecutionResult result = executor.execute(block, context);
+        
+        // Add debug logging
+        if (player != null) {
+            player.sendMessage("§aBlock execution result: " + (result.isSuccess() ? "SUCCESS" : "ERROR") + " - " + result.getMessage());
+            plugin.getLogger().fine("DefaultScriptEngine: Block execution result: " + (result.isSuccess() ? "SUCCESS" : "ERROR") + " - " + result.getMessage());
+        }
+
+        // If this was an error, exit
+        if (!result.isSuccess()) {
+            if (player != null) {
+                player.sendMessage("§cBlock execution error: " + result.getMessage());
+            }
+            return result;
+        }
+        
+        // 2. Determine where to go next (the most important part!)
+        if (blockType == BlockType.CONDITION) {
+             Object conditionResultObj = result.getDetail("condition_result");
+             if (conditionResultObj instanceof Boolean) {
+                 boolean conditionMet = (Boolean) conditionResultObj;
+                 if (conditionMet) {
+                     // Go into the child block (inside IF)
+                     if (!block.getChildren().isEmpty()) {
+                         if (player != null) {
+                             player.sendMessage("§aCondition met, going to child block");
+                         }
+                         return simplifiedProcessBlock(block.getChildren().get(0), context, depth + 1);
+                     }
+                 } else {
+                     // Skip IF, look for ELSE or go to next block in main chain
+                     if (player != null) {
+                         player.sendMessage("§aCondition not met, looking for else or next block");
+                     }
+                     // For now, just go to the next block
+                     return simplifiedProcessBlock(block.getNextBlock(), context, depth + 1);
+                 }
+             }
+        }
+        
+        // For regular blocks, just go to the next block
+        if (player != null) {
+            player.sendMessage("§aGoing to next block");
+        }
+        return simplifiedProcessBlock(block.getNextBlock(), context, depth + 1);
+    }
+
     
     /**
      * Completes script execution and handles cleanup
@@ -496,7 +504,7 @@ public class DefaultScriptEngine implements ScriptEngine, EnhancedScriptEngine, 
             @Override
             public void run() {
                 try {
-                    plugin.getLogger().info("Starting block chain execution for player: " + (player != null ? player.getName() : "Unknown") + 
+                    plugin.getLogger().fine("Starting block chain execution for player: " + (player != null ? player.getName() : "Unknown") + 
                                           " with start block action: " + startBlock.getAction());
                     
                     List<CodeBlock> executionChain = new ArrayList<>();
@@ -569,7 +577,7 @@ public class DefaultScriptEngine implements ScriptEngine, EnhancedScriptEngine, 
     }
     
     private ExecutionResult processBlock(CodeBlock block, ExecutionContext context, int recursionDepth) {
-        plugin.getLogger().info("Processing block at recursion depth " + recursionDepth + 
+        plugin.getLogger().fine("Processing block at recursion depth " + recursionDepth + 
                               " with action: " + block.getAction());
         
         // Handle caching
@@ -597,7 +605,7 @@ public class DefaultScriptEngine implements ScriptEngine, EnhancedScriptEngine, 
         Map<String, Object> cacheContext = createCacheContext(context);
         ExecutionResult cachedResult = executionCache.get(block, cacheContext);
         if (cachedResult != null) {
-            plugin.getLogger().info("Returning cached result for block with action: " + block.getAction());
+            plugin.getLogger().fine("Returning cached result for block with action: " + block.getAction());
             return cachedResult;
         }
         return null;
@@ -713,7 +721,7 @@ public class DefaultScriptEngine implements ScriptEngine, EnhancedScriptEngine, 
         BlockType blockType = determineBlockType(block);
         
         try {
-            plugin.getLogger().info("Processing block of type: " + blockType + " with action: " + block.getAction());
+            plugin.getLogger().fine("Processing block of type: " + blockType + " with action: " + block.getAction());
             
             ExecutionResult result = executeBlockWithExecutor(block, context, blockType);
             
@@ -737,7 +745,7 @@ public class DefaultScriptEngine implements ScriptEngine, EnhancedScriptEngine, 
             }
             
             // Continue to next block
-            plugin.getLogger().info("Continuing to next block in chain");
+            plugin.getLogger().fine("Continuing to next block in chain");
             return processBlock(block.getNextBlock(), context, recursionDepth + 1);
         } catch (Exception e) {
             return handleBlockExecutionException(block, context, e);
@@ -786,10 +794,10 @@ public class DefaultScriptEngine implements ScriptEngine, EnhancedScriptEngine, 
     private ExecutionResult handleSpecialResultTypes(ExecutionResult result, ResultType resultType) {
         switch (resultType) {
             case PAUSE:
-                plugin.getLogger().info("Block execution paused for " + result.getPauseTicks() + " ticks");
+                plugin.getLogger().fine("Block execution paused for " + result.getPauseTicks() + " ticks");
                 return result;
             case AWAIT:
-                plugin.getLogger().info("Block execution awaiting CompletableFuture");
+                plugin.getLogger().fine("Block execution awaiting CompletableFuture");
                 return result;
             case NORMAL:
             default:
@@ -825,16 +833,16 @@ public class DefaultScriptEngine implements ScriptEngine, EnhancedScriptEngine, 
             boolean conditionResult = (Boolean) conditionResultObj;
             
             if (conditionResult) {
-                plugin.getLogger().info("Condition is true, executing true branch");
+                plugin.getLogger().fine("Condition is true, executing true branch");
                 if (!block.getChildren().isEmpty()) {
                     CodeBlock trueBranch = block.getChildren().get(0);
                     return processBlock(trueBranch, context, recursionDepth + 1);
                 }
             } else {
-                plugin.getLogger().info("Condition is false, looking for else branch");
+                plugin.getLogger().fine("Condition is false, looking for else branch");
                 CodeBlock elseBlock = findElseBlock(block);
                 if (elseBlock != null) {
-                    plugin.getLogger().info("Found else block, executing else branch");
+                    plugin.getLogger().fine("Found else block, executing else branch");
                     return processBlock(elseBlock, context, recursionDepth + 1);
                 }
             }
@@ -854,7 +862,7 @@ public class DefaultScriptEngine implements ScriptEngine, EnhancedScriptEngine, 
             String conditionId = (String) conditionIdObj;
             int maxIterations = (Integer) maxIterationsObj;
             
-            plugin.getLogger().info("Initializing while loop with condition: " + conditionId + ", max iterations: " + maxIterations);
+            plugin.getLogger().fine("Initializing while loop with condition: " + conditionId + ", max iterations: " + maxIterations);
             
             context.setVariable("_while_condition", conditionId);
             context.setVariable("_while_max_iterations", maxIterations);
@@ -877,7 +885,7 @@ public class DefaultScriptEngine implements ScriptEngine, EnhancedScriptEngine, 
             String collectionName = (String) collectionNameObj;
             String variableName = (String) variableNameObj;
             
-            plugin.getLogger().info("Initializing for-each loop over collection: " + collectionName + " with variable: " + variableName);
+            plugin.getLogger().fine("Initializing for-each loop over collection: " + collectionName + " with variable: " + variableName);
             
             context.setVariable("_foreach_collection", collectionName);
             context.setVariable("_foreach_variable", variableName);
@@ -1053,7 +1061,7 @@ public class DefaultScriptEngine implements ScriptEngine, EnhancedScriptEngine, 
      */
     private ExecutionResult processBlockChain(CodeBlock block, ExecutionContext context, List<CodeBlock> executionChain, int recursionDepth) {
         
-        plugin.getLogger().info("Processing block chain at recursion depth " + recursionDepth + 
+        plugin.getLogger().fine("Processing block chain at recursion depth " + recursionDepth + 
                               " with block action: " + (block != null ? block.getAction() : "null"));
         
         
@@ -1096,11 +1104,11 @@ public class DefaultScriptEngine implements ScriptEngine, EnhancedScriptEngine, 
             switch (getResultType(result)) {
                 case PAUSE:
                     
-                    plugin.getLogger().info("Block execution paused for " + result.getPauseTicks() + " ticks in chain");
+                    plugin.getLogger().fine("Block execution paused for " + result.getPauseTicks() + " ticks in chain");
                     return result;
                 case AWAIT:
                     
-                    plugin.getLogger().info("Block execution awaiting CompletableFuture in chain");
+                    plugin.getLogger().fine("Block execution awaiting CompletableFuture in chain");
                     return result;
                 case NORMAL:
                 default:
@@ -1110,7 +1118,7 @@ public class DefaultScriptEngine implements ScriptEngine, EnhancedScriptEngine, 
             
             
             if (result.isTerminated()) {
-                plugin.getLogger().info("Block execution terminated");
+                plugin.getLogger().fine("Block execution terminated");
                 return result;
             }
             
@@ -1125,12 +1133,12 @@ public class DefaultScriptEngine implements ScriptEngine, EnhancedScriptEngine, 
             
             CodeBlock nextBlock = block.getNextBlock();
             if (nextBlock != null) {
-                plugin.getLogger().info("Continuing to next block in chain with action: " + nextBlock.getAction());
+                plugin.getLogger().fine("Continuing to next block in chain with action: " + nextBlock.getAction());
                 return processBlockChain(nextBlock, context, executionChain, recursionDepth + 1);
             }
             
             
-            plugin.getLogger().info("End of block chain reached");
+            plugin.getLogger().fine("End of block chain reached");
             return result;
         } catch (Exception e) {
             String errorMsg = ERROR_EXECUTING_BLOCK + block.getAction() + ": " + e.getMessage() + 
@@ -1155,14 +1163,14 @@ public class DefaultScriptEngine implements ScriptEngine, EnhancedScriptEngine, 
     public void registerAction(BlockType type, BlockAction action) {
         
         
-        plugin.getLogger().info("Action registration via ScriptEngine is deprecated. Use @BlockMeta annotation instead.");
+        plugin.getLogger().fine("Action registration via ScriptEngine is deprecated. Use @BlockMeta annotation instead.");
     }
 
     @Override
     public void registerCondition(BlockType type, BlockCondition condition) {
         
         
-        plugin.getLogger().info("Condition registration via ScriptEngine is deprecated. Use @BlockMeta annotation instead.");
+        plugin.getLogger().fine("Condition registration via ScriptEngine is deprecated. Use @BlockMeta annotation instead.");
     }
     
     /**
@@ -1490,7 +1498,7 @@ public class DefaultScriptEngine implements ScriptEngine, EnhancedScriptEngine, 
             
             
             if (iterationCount >= maxIterations) {
-                plugin.getLogger().info("While loop reached maximum iterations: " + maxIterations);
+                plugin.getLogger().fine("While loop reached maximum iterations: " + maxIterations);
                 return ExecutionResult.success("While loop completed");
             }
             
@@ -1505,7 +1513,7 @@ public class DefaultScriptEngine implements ScriptEngine, EnhancedScriptEngine, 
             
             if (conditionResult) {
                 
-                plugin.getLogger().info("While loop condition is true, executing loop body (iteration " + iterationCount + ")");
+                plugin.getLogger().fine("While loop condition is true, executing loop body (iteration " + iterationCount + ")");
                 
                 
                 context.setVariable("_while_iteration_count", iterationCount + 1);
@@ -1520,10 +1528,10 @@ public class DefaultScriptEngine implements ScriptEngine, EnhancedScriptEngine, 
                     
                     if (bodyResult.isTerminated()) {
                         if (bodyResult.getMessage().contains("BREAK")) {
-                            plugin.getLogger().info("While loop terminated by BREAK statement");
+                            plugin.getLogger().fine("While loop terminated by BREAK statement");
                             return ExecutionResult.success("While loop terminated by BREAK");
                         } else if (bodyResult.getMessage().contains("CONTINUE")) {
-                            plugin.getLogger().info("While loop iteration skipped by CONTINUE statement");
+                            plugin.getLogger().fine("While loop iteration skipped by CONTINUE statement");
                             
                         }
                     }
@@ -1536,7 +1544,7 @@ public class DefaultScriptEngine implements ScriptEngine, EnhancedScriptEngine, 
                 }
             } else {
                 
-                plugin.getLogger().info("While loop condition is false, exiting loop");
+                plugin.getLogger().fine("While loop condition is false, exiting loop");
                 return ExecutionResult.success("While loop completed");
             }
         } catch (Exception e) {
@@ -1597,7 +1605,7 @@ public class DefaultScriptEngine implements ScriptEngine, EnhancedScriptEngine, 
             
             
             if (index >= items.size()) {
-                plugin.getLogger().info("For-each loop completed, processed " + index + " items");
+                plugin.getLogger().fine("For-each loop completed, processed " + index + " items");
                 return ExecutionResult.success("For-each loop completed");
             }
             
@@ -1611,7 +1619,7 @@ public class DefaultScriptEngine implements ScriptEngine, EnhancedScriptEngine, 
             context.setVariable("_foreach_index", index + 1);
             
             
-            plugin.getLogger().info("For-each loop processing item " + index + " of " + items.size());
+            plugin.getLogger().fine("For-each loop processing item " + index + " of " + items.size());
             
             
             if (!block.getChildren().isEmpty()) {
@@ -1623,10 +1631,10 @@ public class DefaultScriptEngine implements ScriptEngine, EnhancedScriptEngine, 
                 
                 if (bodyResult.isTerminated()) {
                     if (bodyResult.getMessage().contains("BREAK")) {
-                        plugin.getLogger().info("For-each loop terminated by BREAK statement");
+                        plugin.getLogger().fine("For-each loop terminated by BREAK statement");
                         return ExecutionResult.success("For-each loop terminated by BREAK");
                     } else if (bodyResult.getMessage().contains("CONTINUE")) {
-                        plugin.getLogger().info("For-each loop iteration skipped by CONTINUE statement");
+                        plugin.getLogger().fine("For-each loop iteration skipped by CONTINUE statement");
                         
                     }
                 }

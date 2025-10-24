@@ -196,7 +196,7 @@ public class BlockGroupManager {
         
         clearSelection(player);
         
-        log.info("Player " + player.getName() + " created group: " + group.getName() + 
+        log.fine("Player " + player.getName() + " created group: " + group.getName() + 
                 " with " + group.getBlocks().size() + " blocks");
     }
     
@@ -229,7 +229,7 @@ public class BlockGroupManager {
         
         clearSelection(player);
         
-        log.info("Player " + player.getName() + " created advanced group: " + group.getName() + 
+        log.fine("Player " + player.getName() + " created advanced group: " + group.getName() + 
                 " with " + group.getBlocks().size() + " blocks");
     }
     

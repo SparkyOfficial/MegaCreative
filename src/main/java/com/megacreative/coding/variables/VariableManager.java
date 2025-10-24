@@ -247,7 +247,7 @@ public class VariableManager implements IVariableManager {
             String json = toJson(dataToSave);
             java.nio.file.Files.write(persistentFile.toPath(), json.getBytes(java.nio.charset.StandardCharsets.UTF_8));
             
-            plugin.getLogger().info("Saved " + persistentVariables.size() + " persistent variables");
+            plugin.getLogger().fine("Saved " + persistentVariables.size() + " persistent variables");
         } catch (Exception e) {
             plugin.getLogger().log(Level.WARNING, "Failed to save persistent variables: " + e.getMessage(), e);
         }
@@ -273,7 +273,7 @@ public class VariableManager implements IVariableManager {
                 }
             }
             
-            plugin.getLogger().info("Loaded " + persistentVariables.size() + " persistent variables");
+            plugin.getLogger().fine("Loaded " + persistentVariables.size() + " persistent variables");
         } catch (Exception e) {
             plugin.getLogger().log(Level.WARNING, "Failed to load persistent variables: " + e.getMessage(), e);
         }

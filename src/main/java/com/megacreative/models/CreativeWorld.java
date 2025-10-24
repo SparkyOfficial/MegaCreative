@@ -1,6 +1,7 @@
 package com.megacreative.models;
 
 import com.megacreative.MegaCreative;
+import com.megacreative.coding.CodeBlock;
 import com.megacreative.coding.CodeHandler;
 import com.megacreative.coding.CodeScript;
 import com.megacreative.coding.ScriptEngine;
@@ -797,8 +798,27 @@ public class CreativeWorld {
         return players;
     }
     
-    
-    
+    /**
+     * Creates a test script for player join -> send message
+     * @return A test script
+     */
+    public CodeScript createTestScript() {
+        // Create event block (diamond block for player join)
+        CodeBlock eventBlock = new CodeBlock("DIAMOND_BLOCK", "onJoin");
+        eventBlock.setParameter("event", "playerConnect");
+        
+        // Create action block (cobblestone for send message)
+        CodeBlock actionBlock = new CodeBlock("COBBLESTONE", "sendMessage");
+        actionBlock.setParameter("message", "Hello, %player%!");
+        actionBlock.setParameter("type", "chat");
+        
+        // Connect the blocks
+        eventBlock.setNextBlock(actionBlock);
+        
+        // Create script
+        CodeScript script = new CodeScript("Test Player Join Script", true, eventBlock);
+        return script;
+    }
     
     public String getId() {
         return id;
@@ -932,6 +952,17 @@ public class CreativeWorld {
     
     public List<CodeScript> getScripts() {
         return scripts;
+    }
+    
+    /**
+     * Adds a script to this world
+     * @param script The script to add
+     */
+    public void addScript(CodeScript script) {
+        if (scripts == null) {
+            scripts = new ArrayList<>();
+        }
+        scripts.add(script);
     }
     
     public Set<UUID> getOnlinePlayers() {

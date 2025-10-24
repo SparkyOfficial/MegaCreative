@@ -116,7 +116,7 @@ public class PlayCommand implements CommandExecutor {
                                                     plugin.getLogger().log(Level.WARNING, "Detailed error for onJoin script execution", result.getError());
                                                 }
                                             } else {
-                                                plugin.getLogger().info("Successfully executed onJoin script for player: " + player.getName());
+                                                plugin.getLogger().fine("Successfully executed onJoin script for player: " + player.getName());
                                             }
                                         } else {
                                             plugin.getLogger().warning("onJoin script execution returned null result for player: " + player.getName());

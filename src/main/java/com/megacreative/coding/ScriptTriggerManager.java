@@ -34,11 +34,11 @@ public class ScriptTriggerManager implements Listener, com.megacreative.coding.e
     
     // These fields need to remain as class fields since they are used throughout multiple methods
     // Static analysis flags them as convertible to local variables, but this is a false positive
-    private final MegaCreative plugin;
-    private final IWorldManager worldManager;
-    private final PlayerModeManager playerModeManager;
-    private final CustomEventManager customEventManager;
-    private final VariableManager variableManager;
+    protected final MegaCreative plugin;
+    protected final IWorldManager worldManager;
+    protected final PlayerModeManager playerModeManager;
+    protected final CustomEventManager customEventManager;
+    protected final VariableManager variableManager;
     
     public ScriptTriggerManager(MegaCreative plugin, IWorldManager worldManager, PlayerModeManager playerModeManager) {
         this.plugin = plugin;
@@ -49,6 +49,27 @@ public class ScriptTriggerManager implements Listener, com.megacreative.coding.e
         
         
         registerEventHandlers();
+    }
+    
+    // Protected getter methods for access by subclasses
+    protected MegaCreative getPlugin() {
+        return plugin;
+    }
+    
+    protected IWorldManager getWorldManager() {
+        return worldManager;
+    }
+    
+    protected PlayerModeManager getPlayerModeManager() {
+        return playerModeManager;
+    }
+    
+    protected CustomEventManager getCustomEventManager() {
+        return customEventManager;
+    }
+    
+    protected VariableManager getVariableManager() {
+        return variableManager;
     }
     
     /**
@@ -70,7 +91,7 @@ public class ScriptTriggerManager implements Listener, com.megacreative.coding.e
         
         customEventManager.registerEventHandler("tick", createGlobalEventHandler("onTick"));
         
-        LOGGER.info("Registered event handlers with CustomEventManager");
+        LOGGER.fine("Registered event handlers with CustomEventManager");
     }
     
     /**
@@ -537,7 +558,7 @@ public class ScriptTriggerManager implements Listener, com.megacreative.coding.e
             }
         } else {
             
-            LOGGER.info("Published event: " + event.getName());
+            LOGGER.fine("Published event: " + event.getName());
         }
     }
     
@@ -559,7 +580,7 @@ public class ScriptTriggerManager implements Listener, com.megacreative.coding.e
             }
         } else {
             
-            LOGGER.info("Published event: " + eventName + " with data: " + eventData.size() + " fields");
+            LOGGER.fine("Published event: " + eventName + " with data: " + eventData.size() + " fields");
         }
     }
 }

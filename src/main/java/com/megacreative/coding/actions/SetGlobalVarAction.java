@@ -49,7 +49,7 @@ public class SetGlobalVarAction implements BlockAction {
             VariableManager variableManager = context.getPlugin().getServiceRegistry().getVariableManager();
             variableManager.setGlobalVariable(varName, DataValue.of(valueStr));
             
-            context.getPlugin().getLogger().info("Setting global variable " + varName + " to " + valueStr);
+            context.getPlugin().getLogger().fine("Setting global variable " + varName + " to " + valueStr);
             
             return ExecutionResult.success("Global variable set successfully");
         } catch (Exception e) {

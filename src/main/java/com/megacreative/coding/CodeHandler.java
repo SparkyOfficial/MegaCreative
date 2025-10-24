@@ -56,7 +56,7 @@ public class CodeHandler {
      */
     public void registerActivator(Activator activator) {
         activators.put(activator.getId(), activator);
-        LOGGER.info("Registered activator: " + activator.getId() + " of type: " + activator.getType() + " with name: " + activator.getCustomName());
+        LOGGER.fine("Registered activator: " + activator.getId() + " of type: " + activator.getType() + " with name: " + activator.getCustomName());
     }
     
     /**
@@ -69,7 +69,7 @@ public class CodeHandler {
     public void unregisterActivator(UUID activatorId) {
         Activator removed = activators.remove(activatorId);
         if (removed != null) {
-            LOGGER.info("Unregistered activator: " + activatorId);
+            LOGGER.fine("Unregistered activator: " + activatorId);
         }
     }
     
@@ -125,15 +125,15 @@ public class CodeHandler {
             return;
         }
         
-        LOGGER.info("Handling activator type: " + activatorType + " with " + typeActivators.size() + " activators");
+        LOGGER.fine("Handling activator type: " + activatorType + " with " + typeActivators.size() + " activators");
         
         
         for (Activator activator : typeActivators) {
             try {
-                LOGGER.info("Executing activator: " + activator.getId() + " of type: " + activatorType + " with name: " + activator.getCustomName());
+                LOGGER.fine("Executing activator: " + activator.getId() + " of type: " + activatorType + " with name: " + activator.getCustomName());
                 
                 activator.execute(gameEvent, 0, new AtomicInteger());
-                LOGGER.info("Successfully executed activator: " + activator.getId());
+                LOGGER.fine("Successfully executed activator: " + activator.getId());
             } catch (Exception e) {
                 LOGGER.severe("Error executing activator " + activator.getId() + ": " + e.getMessage());
                 LOGGER.severe("Stack trace: " + java.util.Arrays.toString(e.getStackTrace()));
@@ -181,7 +181,7 @@ public class CodeHandler {
      */
     public void clearActivators() {
         activators.clear();
-        LOGGER.info("Cleared all activators");
+        LOGGER.fine("Cleared all activators");
     }
     
     /**

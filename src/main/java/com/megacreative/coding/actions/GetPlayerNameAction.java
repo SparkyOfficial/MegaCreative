@@ -56,7 +56,7 @@ public class GetPlayerNameAction implements BlockAction {
             DataValue dataValue = DataValue.of(playerName);
             variableManager.setPlayerVariable(player.getUniqueId(), targetVar, dataValue);
             
-            context.getPlugin().getLogger().info("💾 Player name stored: " + playerName + " -> " + targetVar + " for player " + player.getName());
+            context.getPlugin().getLogger().fine("💾 Player name stored: " + playerName + " -> " + targetVar + " for player " + player.getName());
             
             return ExecutionResult.success("Player name '" + playerName + "' stored in variable '" + targetVar + "'");
         } catch (Exception e) {

@@ -157,7 +157,7 @@ public class DevWorldProtectionListener implements Listener {
             }
             
             allPermittedPlaceAndBreakBlocks.addAll(blockConfigService.getCodeBlockMaterials());
-            plugin.getLogger().info("DevWorldProtectionListener: Dynamically added " + blockConfigService.getCodeBlockMaterials().size() + " code blocks to permitted list.");
+            plugin.getLogger().fine("DevWorldProtectionListener: Dynamically added " + blockConfigService.getCodeBlockMaterials().size() + " code blocks to permitted list.");
         } else {
             plugin.getLogger().severe("DevWorldProtectionListener: BlockConfigService is null during dynamic initialization. This indicates a ServiceRegistry initialization order issue.");
         }
@@ -171,7 +171,7 @@ public class DevWorldProtectionListener implements Listener {
         if (blockConfigService != null) {
             blockConfigService.reload();
             initializeDynamicAllowedBlocks();
-            plugin.getLogger().info("DevWorldProtectionListener: Block configuration reloaded and permissions updated.");
+            plugin.getLogger().fine("DevWorldProtectionListener: Block configuration reloaded and permissions updated.");
         }
     }
     
@@ -183,7 +183,7 @@ public class DevWorldProtectionListener implements Listener {
         
         
         if (allPermittedPlaceAndBreakBlocks.size() <= ALLOWED_TOOLS_AND_UTILITIES_HARDCODED.size()) {
-            plugin.getLogger().info("DevWorldProtectionListener: Reinitializing allowed blocks");
+            plugin.getLogger().fine("DevWorldProtectionListener: Reinitializing allowed blocks");
             initializeDynamicAllowedBlocks();
         }
     }

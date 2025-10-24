@@ -90,7 +90,7 @@ public class SetBlockAction implements BlockAction {
             
             targetLocation.getBlock().setType(material);
             
-            context.getPlugin().getLogger().info("Setting block " + material + " at relative position (" + relativeX + ", " + relativeY + ", " + relativeZ + ")");
+            context.getPlugin().getLogger().fine("Setting block " + material + " at relative position (" + relativeX + ", " + relativeY + ", " + relativeZ + ")");
             
             return ExecutionResult.success("Block set successfully");
         } catch (Exception e) {

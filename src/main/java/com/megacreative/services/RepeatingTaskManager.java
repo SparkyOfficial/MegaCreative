@@ -65,7 +65,7 @@ public class RepeatingTaskManager implements DependencyContainer.Disposable {
             Bukkit.getScheduler().cancelTask(taskId);
         }
         activeTasks.clear();
-        LOGGER.info("Stopped " + count + " repeating tasks");
+        LOGGER.fine("Stopped " + count + " repeating tasks");
         return count;
     }
     
@@ -92,7 +92,7 @@ public class RepeatingTaskManager implements DependencyContainer.Disposable {
      */
     public void shutdown() {
         stopAllRepeatingTasks();
-        LOGGER.info("RepeatingTaskManager shutdown completed");
+        LOGGER.fine("RepeatingTaskManager shutdown completed");
     }
     
     @Override

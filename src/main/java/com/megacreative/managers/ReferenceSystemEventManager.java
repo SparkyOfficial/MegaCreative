@@ -70,7 +70,7 @@ public class ReferenceSystemEventManager {
         
         startRegionMonitoring();
         
-        plugin.getLogger().info("🎆 Reference System Event Manager initialized with comprehensive event coverage");
+        plugin.getLogger().fine("🎆 Reference System Event Manager initialized with comprehensive event coverage");
     }
     
     
@@ -354,7 +354,7 @@ public class ReferenceSystemEventManager {
         playerVariables.clear();
         definedRegions.clear();
         
-        plugin.getLogger().info("🎆 Reference System Event Manager shut down");
+        plugin.getLogger().fine("🎆 Reference System Event Manager shut down");
     }
     
     /**
@@ -362,7 +362,7 @@ public class ReferenceSystemEventManager {
      */
     public void refreshEventCaches() {
         
-        plugin.getLogger().info("Refreshing event caches for Reference System Event Manager");
+        plugin.getLogger().fine("Refreshing event caches for Reference System Event Manager");
     }
     
     

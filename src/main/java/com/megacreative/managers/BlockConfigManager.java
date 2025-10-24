@@ -368,11 +368,11 @@ public class BlockConfigManager implements Listener {
     private void loadParametersFromGui(Inventory inventory, CodeBlock codeBlock) {
         Map<String, DataValue> parameters = codeBlock.getParameters();
         if (parameters.isEmpty()) {
-            plugin.getLogger().info("No parameters to load for action: " + codeBlock.getAction());
+            plugin.getLogger().fine("No parameters to load for action: " + codeBlock.getAction());
             return;
         }
         
-        plugin.getLogger().info("Loading " + parameters.size() + " parameters for action: " + codeBlock.getAction());
+        plugin.getLogger().fine("Loading " + parameters.size() + " parameters for action: " + codeBlock.getAction());
         
         
         var blockConfigService = plugin.getServiceRegistry().getBlockConfigService();
@@ -387,7 +387,7 @@ public class BlockConfigManager implements Listener {
             if (slot != null && slot >= 0 && slot < inventory.getSize()) {
                 ItemStack paramItem = convertDataValueToItemStack(paramName, paramValue);
                 inventory.setItem(slot, paramItem);
-                plugin.getLogger().info("Loaded parameter '" + paramName + "' into slot " + slot + " with value: " + paramValue.asString());
+                plugin.getLogger().fine("Loaded parameter '" + paramName + "' into slot " + slot + " with value: " + paramValue.asString());
             } else {
                 plugin.getLogger().warning("No slot found for parameter: " + paramName + " (action: " + codeBlock.getAction() + ")");
                 
@@ -396,7 +396,7 @@ public class BlockConfigManager implements Listener {
                     if (inventory.getItem(i) == null || inventory.getItem(i).getType().isAir()) {
                         ItemStack paramItem = convertDataValueToItemStack(paramName, paramValue);
                         inventory.setItem(i, paramItem);
-                        plugin.getLogger().info("Loaded parameter '" + paramName + "' into fallback slot " + i);
+                        plugin.getLogger().fine("Loaded parameter '" + paramName + "' into fallback slot " + i);
                         break;
                     }
                 }
@@ -443,7 +443,7 @@ public class BlockConfigManager implements Listener {
         
         Player player = null; 
         if (processedItems > 0) {
-            plugin.getLogger().info("Converted " + processedItems + " ItemStacks to DataValue parameters for block " + codeBlock.getAction());
+            plugin.getLogger().fine("Converted " + processedItems + " ItemStacks to DataValue parameters for block " + codeBlock.getAction());
         }
     }
     

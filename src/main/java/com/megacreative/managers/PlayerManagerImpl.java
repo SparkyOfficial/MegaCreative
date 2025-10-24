@@ -413,7 +413,7 @@ public class PlayerManagerImpl implements IPlayerManager {
             }
         }
         
-        plugin.getLogger().info("🏠 Player " + player.getName() + " exited world " + worldId);
+        plugin.getLogger().fine("🏠 Player " + player.getName() + " exited world " + worldId);
     }
     
     @Override
@@ -460,7 +460,7 @@ public class PlayerManagerImpl implements IPlayerManager {
         worldStats.computeIfAbsent(worldId, k -> new WorldStatistics())
                  .recordSession(playerId, mode, duration);
         
-        plugin.getLogger().info("📈 Session recorded: Player " + playerId + " spent " + 
+        plugin.getLogger().fine("📈 Session recorded: Player " + playerId + " spent " + 
                               (duration / 1000) + "s in world " + worldId + " (" + mode + " mode)");
     }
     

@@ -75,7 +75,7 @@ public class ActionFactory implements IActionFactory {
                 }
             }
         }
-        LOGGER.info("Загружено " + actionRegistry.size() + " действий блоков.");
+        LOGGER.fine("Загружено " + actionRegistry.size() + " действий блоков.");
     }
 
     /**
@@ -208,7 +208,7 @@ public class ActionFactory implements IActionFactory {
             }
         } else {
             
-            LOGGER.info("Published event: " + event.getName());
+            LOGGER.fine("Published event: " + event.getName());
         }
     }
     
@@ -245,7 +245,7 @@ public class ActionFactory implements IActionFactory {
             }
         } else {
             
-            LOGGER.info("Published event: " + eventName + " with data: " + eventData.size() + " fields");
+            LOGGER.fine("Published event: " + eventName + " with data: " + eventData.size() + " fields");
         }
     }
 }

@@ -68,7 +68,7 @@ public class BottleneckDetector {
             }
         }
         
-        log.info("Detected " + bottlenecks.size() + " potential bottlenecks");
+        log.fine("Detected " + bottlenecks.size() + " potential bottlenecks");
     }
     
     /**
@@ -87,7 +87,7 @@ public class BottleneckDetector {
             isRunning = true;
             
             detectionTask = scheduler.scheduleAtFixedRate(this::performPeriodicDetection, 30, 30, TimeUnit.SECONDS);
-            log.info("BottleneckDetector started");
+            log.fine("BottleneckDetector started");
         }
     }
     
@@ -109,7 +109,7 @@ public class BottleneckDetector {
             detectionTask.cancel(false);
         }
         scheduler.shutdown();
-        log.info("BottleneckDetector stopped");
+        log.fine("BottleneckDetector stopped");
     }
     
     /**

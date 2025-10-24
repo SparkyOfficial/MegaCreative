@@ -690,7 +690,7 @@ public class AdvancedScriptOptimizer {
     
     private void applyOptimization(CodeScript script, OptimizationSuggestion suggestion) {
         
-        plugin.getLogger().info(Constants.APPLIED_OPTIMIZATION + suggestion.getType() + 
+        plugin.getLogger().fine(Constants.APPLIED_OPTIMIZATION + suggestion.getType() + 
                                Constants.APPLIED_OPTIMIZATION_TO_SCRIPT + script.getName());
         
         
@@ -752,9 +752,9 @@ public class AdvancedScriptOptimizer {
     
     private void logExpensiveOperations(int loopIndex, List<CodeBlock> expensiveOps) {
         if (!expensiveOps.isEmpty()) {
-            plugin.getLogger().info(Constants.FOUND_EXPENSIVE_OPERATIONS + expensiveOps.size() + Constants.FOUND_EXPENSIVE_OPERATIONS_SUFFIX + loopIndex);
+            plugin.getLogger().fine(Constants.FOUND_EXPENSIVE_OPERATIONS + expensiveOps.size() + Constants.FOUND_EXPENSIVE_OPERATIONS_SUFFIX + loopIndex);
             for (CodeBlock op : expensiveOps) {
-                plugin.getLogger().info(Constants.EXPENSIVE_OPERATION + op.getAction());
+                plugin.getLogger().fine(Constants.EXPENSIVE_OPERATION + op.getAction());
             }
         }
     }
@@ -781,14 +781,14 @@ public class AdvancedScriptOptimizer {
         
         if (blocks == null || blocks.isEmpty()) return;
         
-        plugin.getLogger().info("Reducing nesting depth in script optimization");
+        plugin.getLogger().fine("Reducing nesting depth in script optimization");
     }
     
     private void simplifyConditionChains(List<CodeBlock> blocks) {
         
         if (blocks == null || blocks.isEmpty()) return;
         
-        plugin.getLogger().info("Simplifying condition chains in script optimization");
+        plugin.getLogger().fine("Simplifying condition chains in script optimization");
     }
     
     
@@ -910,7 +910,7 @@ public class AdvancedScriptOptimizer {
         
         for (Map.Entry<String, Integer> entry : variableUsage.entrySet()) {
             if (entry.getValue() > 10) { 
-                plugin.getLogger().info("Frequently used variable: " + entry.getKey() + 
+                plugin.getLogger().fine("Frequently used variable: " + entry.getKey() + 
                                       " (used " + entry.getValue() + " times)");
             }
         }

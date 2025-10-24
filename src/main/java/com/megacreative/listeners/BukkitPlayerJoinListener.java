@@ -25,12 +25,16 @@ public class BukkitPlayerJoinListener implements Listener {
     
     @EventHandler
     public void onPlayerJoin(PlayerJoinEvent bukkitEvent) {
+        // Use fine logging instead of info to reduce spam
+        plugin.getLogger().fine("BukkitPlayerJoinListener: Player " + bukkitEvent.getPlayer().getName() + " joined the server");
         
         MegaPlayerJoinedEvent internalEvent = new MegaPlayerJoinedEvent(
             bukkitEvent.getPlayer(),
             !bukkitEvent.getPlayer().hasPlayedBefore()
         );
         
+        // Use fine logging instead of info to reduce spam
+        plugin.getLogger().fine("BukkitPlayerJoinListener: Firing MegaPlayerJoinedEvent for " + bukkitEvent.getPlayer().getName());
         
         plugin.getServer().getPluginManager().callEvent(internalEvent);
     }

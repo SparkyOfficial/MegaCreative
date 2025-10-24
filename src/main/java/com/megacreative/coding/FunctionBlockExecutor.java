@@ -33,7 +33,7 @@ public class FunctionBlockExecutor implements BlockExecutor {
             return ExecutionResult.error("Function action is null or empty");
         }
         
-        LOGGER.info("Processing function action: " + functionAction + " for player: " + 
+        LOGGER.fine("Processing function action: " + functionAction + " for player: " + 
                    (context.getPlayer() != null ? context.getPlayer().getName() : "unknown"));
         
         if ("callFunction".equals(functionAction)) {

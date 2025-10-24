@@ -67,7 +67,11 @@ public class DevCommand implements CommandExecutor {
             return true;
         }
         
-        
+        // Check for test script command
+        if (args.length > 0 && "testscript".equals(args[0])) {
+            createTestScript(player);
+            return true;
+        }
         
         World currentWorld = player.getWorld();
         CreativeWorld creativeWorld = findCreativeWorld(currentWorld);
@@ -88,6 +92,46 @@ public class DevCommand implements CommandExecutor {
         return true;
     }
     
+    /**
+     * Creates a test script for player join -> send message
+     */
+    private void createTestScript(Player player) {
+        try {
+            World currentWorld = player.getWorld();
+            CreativeWorld creativeWorld = findCreativeWorld(currentWorld);
+            
+            if (creativeWorld == null) {
+                player.sendMessage("§cВы не находитесь в мире MegaCreative!");
+                return;
+            }
+            
+            // Create event block (diamond block for player join)
+            com.megacreative.coding.CodeBlock eventBlock = new com.megacreative.coding.CodeBlock("DIAMOND_BLOCK", "onJoin");
+            eventBlock.setParameter("event", "playerConnect");
+            
+            // Create action block (cobblestone for send message)
+            com.megacreative.coding.CodeBlock actionBlock = new com.megacreative.coding.CodeBlock("COBBLESTONE", "sendMessage");
+            actionBlock.setParameter("message", "Hello, %player%!");
+            actionBlock.setParameter("type", "chat");
+            
+            // Connect the blocks
+            eventBlock.setNextBlock(actionBlock);
+            
+            // Create script
+            com.megacreative.coding.CodeScript script = new com.megacreative.coding.CodeScript("Test Player Join Script", true, eventBlock);
+            
+            // Add script to world
+            creativeWorld.addScript(script);
+            
+            player.sendMessage("§aТестовый скрипт создан успешно!");
+            player.sendMessage("§7Попробуйте выйти и снова войти на сервер для тестирования.");
+        } catch (Exception e) {
+            player.sendMessage("§cОшибка создания тестового скрипта: " + e.getMessage());
+            plugin.getLogger().severe("Ошибка создания тестового скрипта: " + e.getMessage());
+            e.printStackTrace();
+        }
+    }
+
     /**
      * Отображает справку по команде /dev
      * Displays help for the /dev command
@@ -123,10 +167,10 @@ public class DevCommand implements CommandExecutor {
         createVariableItem(variablesInventory, 10, org.bukkit.Material.WRITABLE_BOOK, "§e§lТекстовая переменная",
             "§7Для хранения текста", "§eПример: имя, сообщение", "§8Нажмите для создания");
             
-        createVariableItem(variablesInventory, 12, org.bukkit.Material.SLIME_BALL, "§a§lЧисловая переменная",
+        createVariableItem(variablesInventory, 12, org.bukkit.Material.SLIME_BALL, "§a§лЧисловая переменная",
             "§7Для хранения чисел", "§eПример: счет, уровень", "§8Нажмите для создания");
             
-        createVariableItem(variablesInventory, 14, org.bukkit.Material.COMPASS, "§b§lПеременная локации",
+        createVariableItem(variablesInventory, 14, org.bukkit.Material.COMPASS, "§b§лПеременная локации",
             "§7Для хранения координат", "§eПример: точка спавна", "§8Нажмите для создания");
             
         createVariableItem(variablesInventory, 16, org.bukkit.Material.CHEST, "§6§лПеременная предмета",
@@ -260,7 +304,7 @@ public class DevCommand implements CommandExecutor {
             
             
             if (!devWorld.getPersistentDataContainer().has(new NamespacedKey(plugin, "initialized"), PersistentDataType.BYTE)) {
-                plugin.getLogger().info("Производится первичная настройка мира разработки...");
+                plugin.getLogger().fine("Производится первичная настройка мира разработки...");
                 
                 
                 spawnLocation = new Location(devWorld, 0, 66, 0);

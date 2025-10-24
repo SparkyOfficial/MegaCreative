@@ -59,7 +59,7 @@ public class AdvancedFunctionManager {
         
         initializeBuiltInLibraries();
         
-        plugin.getLogger().info(" YYS Advanced Function Manager initialized (ScriptEngine will be set later)");
+        plugin.getLogger().fine(" YYS Advanced Function Manager initialized (ScriptEngine will be set later)");
     }
     
     /**
@@ -68,7 +68,7 @@ public class AdvancedFunctionManager {
     public void setScriptEngine(ScriptEngine scriptEngine) {
         if (this.scriptEngine == null && scriptEngine != null) {
             this.scriptEngine = scriptEngine;
-            plugin.getLogger().info(" YYS ScriptEngine set for AdvancedFunctionManager");
+            plugin.getLogger().fine(" YYS ScriptEngine set for AdvancedFunctionManager");
         }
     }
     
@@ -115,7 +115,7 @@ public class AdvancedFunctionManager {
                 break;
         }
         
-        plugin.getLogger().info(" YYS Registered function: " + function.getName() + " (scope: " + function.getScope() + ")");
+        plugin.getLogger().fine(" YYS Registered function: " + function.getName() + " (scope: " + function.getScope() + ")");
         return true;
     }
     
@@ -628,7 +628,7 @@ public class AdvancedFunctionManager {
             FunctionDefinition func = playerFuncs.get(name);
             if (func.getOwner().getUniqueId().equals(player.getUniqueId())) {
                 playerFuncs.remove(name);
-                plugin.getLogger().info(".EVT Removed function: " + name + " by " + player.getName());
+                plugin.getLogger().fine(".EVT Removed function: " + name + " by " + player.getName());
                 return true;
             }
         }
@@ -641,7 +641,7 @@ public class AdvancedFunctionManager {
                 FunctionDefinition func = worldFuncs.get(name);
                 if (func.getOwner().getUniqueId().equals(player.getUniqueId())) {
                     worldFuncs.remove(name);
-                    plugin.getLogger().info(".EVT Removed world function: " + name + " by " + player.getName());
+                    plugin.getLogger().fine(".EVT Removed world function: " + name + " by " + player.getName());
                     return true;
                 }
             }
@@ -795,7 +795,7 @@ public class AdvancedFunctionManager {
             plugin.getLogger().warning("Failed to initialize utility library: " + e.getMessage());
         }
         
-        plugin.getLogger().info(" YYS Initialized " + libraries.size() + " built-in function libraries with " + 
+        plugin.getLogger().fine(" YYS Initialized " + libraries.size() + " built-in function libraries with " + 
             (mathLib.getFunctionCount() + stringLib.getFunctionCount() + utilLib.getFunctionCount()) + " functions");
     }
     
@@ -910,7 +910,7 @@ public class AdvancedFunctionManager {
         worldFunctions.clear();
         libraries.clear();
         
-        plugin.getLogger().info(" YYS Advanced Function Manager shut down");
+        plugin.getLogger().fine(" YYS Advanced Function Manager shut down");
     }
     
     

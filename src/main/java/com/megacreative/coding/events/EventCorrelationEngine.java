@@ -39,7 +39,7 @@ public class EventCorrelationEngine {
      */
     public void registerPattern(EventPattern pattern) {
         patterns.put(pattern.getPatternId(), pattern);
-        log.info("Registered event pattern: " + pattern.getPatternId());
+        log.fine("Registered event pattern: " + pattern.getPatternId());
     }
     
     /**
@@ -50,7 +50,7 @@ public class EventCorrelationEngine {
         
         activeInstances.entrySet().removeIf(entry -> 
             entry.getValue().getPattern().getPatternId().equals(patternId));
-        log.info("Unregistered event pattern: " + patternId);
+        log.fine("Unregistered event pattern: " + patternId);
     }
     
     /**
@@ -126,7 +126,7 @@ public class EventCorrelationEngine {
                         
                         notifyPatternCompletion(instance);
                         
-                        log.info("Pattern completed: " + pattern.getPatternId() + " (instance: " + instanceId + ")");
+                        log.fine("Pattern completed: " + pattern.getPatternId() + " (instance: " + instanceId + ")");
                     }
                 }
                 

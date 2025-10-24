@@ -48,7 +48,7 @@ public class GetServerVarAction implements BlockAction {
             
             variableManager.setLocalVariable(context.getScriptId(), targetVar, DataValue.of(varValue));
             
-            context.getPlugin().getLogger().info("Getting server variable " + varName + " into " + targetVar);
+            context.getPlugin().getLogger().fine("Getting server variable " + varName + " into " + targetVar);
             
             return ExecutionResult.success("Server variable retrieved successfully");
         } catch (Exception e) {

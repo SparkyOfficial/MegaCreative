@@ -123,7 +123,7 @@ public class CustomEventManager implements Listener, EventPublisher, EventSubscr
             eventCategories.computeIfAbsent(category, k -> ConcurrentHashMap.newKeySet()).add(eventName);
         }
         
-        log.info("Registered custom event: " + eventName + " (" + event.getSignature() + ")");
+        log.fine("Registered custom event: " + eventName + " (" + event.getSignature() + ")");
     }
     
     /**
@@ -153,7 +153,7 @@ public class CustomEventManager implements Listener, EventPublisher, EventSubscr
                 }
             }
             
-            log.info("Unregistered custom event: " + eventName);
+            log.fine("Unregistered custom event: " + eventName);
         }
     }
     
@@ -169,7 +169,7 @@ public class CustomEventManager implements Listener, EventPublisher, EventSubscr
         advancedTriggers.clear();
         scheduledTriggers.clear();
         
-        log.info("Cleared all events and handlers");
+        log.fine("Cleared all events and handlers");
     }
     
     /**
@@ -863,6 +863,8 @@ public class CustomEventManager implements Listener, EventPublisher, EventSubscr
                 
                 // Only trigger if there are handlers registered for the tick event
                 if (isEventRegistered("tick") && getEventHandlerCount("tick") > 0) {
+                    // Use fine logging instead of info to reduce spam
+                    log.fine("Triggering tick event with " + getEventHandlerCount("tick") + " handlers");
                     triggerEvent("tick", data, null, "global");
                 }
             } catch (Exception e) {
@@ -972,7 +974,7 @@ public class CustomEventManager implements Listener, EventPublisher, EventSubscr
     public void registerAdvancedTrigger(AdvancedEventTrigger trigger) {
         if (trigger != null) {
             advancedTriggers.put(trigger.getTriggerId(), trigger);
-            log.info("Registered advanced event trigger: " + trigger.getTriggerId() + " for event: " + trigger.getEventName());
+            log.fine("Registered advanced event trigger: " + trigger.getTriggerId() + " for event: " + trigger.getEventName());
         }
     }
     
@@ -985,7 +987,7 @@ public class CustomEventManager implements Listener, EventPublisher, EventSubscr
         if (triggerId != null) {
             AdvancedEventTrigger trigger = advancedTriggers.remove(triggerId);
             if (trigger != null) {
-                log.info("Unregistered advanced event trigger: " + triggerId);
+                log.fine("Unregistered advanced event trigger: " + triggerId);
             }
         }
     }
@@ -1212,7 +1214,7 @@ public class CustomEventManager implements Listener, EventPublisher, EventSubscr
                         });
                 } else {
                     
-                    log.info("EventHandler called for player " + (source != null ? source.getName() : "unknown") + 
+                    log.fine("EventHandler called for player " + (source != null ? source.getName() : "unknown") + 
                             " in world " + sourceWorld);
                 }
             } catch (Exception e) {

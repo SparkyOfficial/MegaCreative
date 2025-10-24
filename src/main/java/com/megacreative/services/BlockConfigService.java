@@ -75,7 +75,7 @@ public class BlockConfigService {
             return;
         }
         
-        plugin.getLogger().info("Loading action parameters for all block configurations...");
+        plugin.getLogger().fine("Loading action parameters for all block configurations...");
         for (BlockConfig config : blockConfigs.values()) {
             try {
                 config.loadActionParameters(plugin);
@@ -83,7 +83,7 @@ public class BlockConfigService {
                 plugin.getLogger().warning("Failed to load action parameters for block config " + config.getId() + ": " + e.getMessage());
             }
         }
-        plugin.getLogger().info("Finished loading action parameters for all block configurations");
+        plugin.getLogger().fine("Finished loading action parameters for all block configurations");
     }
     
     /**
@@ -99,7 +99,7 @@ public class BlockConfigService {
                     config.setMaterial(material);
                     
                     materialToBlockIds.computeIfAbsent(material, k -> new ArrayList<>()).add(config.getId());
-                    plugin.getLogger().info("Set material " + material.name() + " for block config " + config.getId());
+                    plugin.getLogger().fine("Set material " + material.name() + " for block config " + config.getId());
                 }
             }
         }
@@ -124,23 +124,23 @@ public class BlockConfigService {
         YamlConfiguration config = YamlConfiguration.loadConfiguration(configFile);
         
         
-        plugin.getLogger().info("Loading coding_blocks.yml from: " + configFile.getAbsolutePath());
-        plugin.getLogger().info("File exists: " + configFile.exists());
+        plugin.getLogger().fine("Loading coding_blocks.yml from: " + configFile.getAbsolutePath());
+        plugin.getLogger().fine("File exists: " + configFile.exists());
         
         
         
         
         actionConfigurations = config.getConfigurationSection("action_configurations");
-        plugin.getLogger().info("Action configurations loaded: " + (actionConfigurations != null));
+        plugin.getLogger().fine("Action configurations loaded: " + (actionConfigurations != null));
 
         
         
         
         ConfigurationSection blocksSection = config.getConfigurationSection("blocks");
-        plugin.getLogger().info("Blocks section exists: " + (blocksSection != null));
+        plugin.getLogger().fine("Blocks section exists: " + (blocksSection != null));
         
         if (blocksSection != null) {
-            plugin.getLogger().info("Blocks section keys: " + blocksSection.getKeys(false).size());
+            plugin.getLogger().fine("Blocks section keys: " + blocksSection.getKeys(false).size());
             Set<String> seenIds = new HashSet<>();
             for (String id : blocksSection.getKeys(false)) {
                 if (!seenIds.add(id)) {
@@ -150,7 +150,7 @@ public class BlockConfigService {
                 ConfigurationSection section = blocksSection.getConfigurationSection(id);
                 if (section != null) {
                     try {
-                        plugin.getLogger().info("Loading block config: " + id);
+                        plugin.getLogger().fine("Loading block config: " + id);
                         BlockConfig blockConfig = new BlockConfig(id, section, plugin);
                         blockConfigs.put(id, blockConfig);
                         
@@ -165,7 +165,7 @@ public class BlockConfigService {
                             } else {
                                 ids.add(id);
                             }
-                            plugin.getLogger().info("Successfully loaded block config: " + id + " with material " + material);
+                            plugin.getLogger().fine("Successfully loaded block config: " + id + " with material " + material);
                         } else {
                             plugin.getLogger().warning("Invalid material for block config: " + id);
                             
@@ -185,7 +185,7 @@ public class BlockConfigService {
                 }
             }
         }
-        plugin.getLogger().info("Loaded " + blockConfigs.size() + " block definitions from coding_blocks.yml.");
+        plugin.getLogger().fine("Loaded " + blockConfigs.size() + " block definitions from coding_blocks.yml.");
         
         
         
@@ -196,10 +196,10 @@ public class BlockConfigService {
         validateUniqueActionsPerMaterial();
         
         
-        plugin.getLogger().info("Loaded materials: " + materialToBlockIds.keySet().size());
+        plugin.getLogger().fine("Loaded materials: " + materialToBlockIds.keySet().size());
         for (Material material : materialToBlockIds.keySet()) {
             List<String> actions = materialToBlockIds.get(material);
-            plugin.getLogger().info("Material: " + material.name() + " -> Actions: " + (actions != null ? actions.size() : 0));
+            plugin.getLogger().fine("Material: " + material.name() + " -> Actions: " + (actions != null ? actions.size() : 0));
             if (actions != null) {
                 for (String action : actions) {
                     // Use rate-limited logging for frequent events to reduce log spam

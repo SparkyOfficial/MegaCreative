@@ -25,7 +25,7 @@ public class GenericBlockCondition implements BlockCondition {
         
         
         
-        context.getPlugin().getLogger().info("Evaluating generic condition: " + config.getName());
+        context.getPlugin().getLogger().fine("Evaluating generic condition: " + config.getName());
         
         
         String conditionType = config.getActionName();

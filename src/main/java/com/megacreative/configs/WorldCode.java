@@ -29,7 +29,7 @@ public class WorldCode {
             try {
                 boolean created = file.createNewFile();
                 if (created) {
-                    logger.info("Created world-codes.yml configuration file");
+                    logger.fine("Created world-codes.yml configuration file");
                 } else {
                     logger.warning("world-codes.yml file already exists or could not be created");
                 }
@@ -39,7 +39,7 @@ public class WorldCode {
         }
         
         customFile = YamlConfiguration.loadConfiguration(file);
-        logger.info("WorldCode configuration system initialized");
+        logger.fine("WorldCode configuration system initialized");
     }
     
     public static FileConfiguration get() {

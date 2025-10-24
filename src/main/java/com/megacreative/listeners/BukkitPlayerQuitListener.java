@@ -25,7 +25,7 @@ public class BukkitPlayerQuitListener implements Listener {
             
             // Currently just logging that the player quit
             // According to static analysis, plugin and event.getPlayer() are never null when this method is called
-            plugin.getLogger().info("Player " + event.getPlayer().getName() + " disconnected from the server");
+            plugin.getLogger().fine("Player " + event.getPlayer().getName() + " disconnected from the server");
         } catch (Exception e) {
             // According to static analysis, plugin is never null when this method is called
             plugin.getLogger().warning("Error during player quit cleanup: " + e.getMessage());

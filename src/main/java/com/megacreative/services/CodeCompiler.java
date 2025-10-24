@@ -107,13 +107,13 @@ public class CodeCompiler implements org.bukkit.event.Listener {
      * Dies ist der Haupteinstiegspunkt für den Prozess der "Kompilierung aus der Welt"
      */
     public List<CodeScript> compileWorldScripts(World world) {
-        logger.info("Starting compilation of world: " + world.getName());
+        logger.fine("Starting compilation of world: " + world.getName());
         
         
         
         
         Map<Location, CodeBlock> scannedBlocks = scanWorldStructure(world);
-        logger.info("World scan found " + scannedBlocks.size() + " code blocks");
+        logger.fine("World scan found " + scannedBlocks.size() + " code blocks");
         
         
         
@@ -154,7 +154,7 @@ public class CodeCompiler implements org.bukkit.event.Listener {
             }
         }
         
-        logger.info("Compilation completed. Found " + scriptCount + " scripts with " + errorCount + " errors.");
+        logger.fine("Compilation completed. Found " + scriptCount + " scripts with " + errorCount + " errors.");
         
         
         return compiledScripts;
@@ -576,7 +576,7 @@ public class CodeCompiler implements org.bukkit.event.Listener {
         
         
         
-        logger.info("Starting enhanced world scan for code structures in world: " + world.getName());
+        logger.fine("Starting enhanced world scan for code structures in world: " + world.getName());
         
         
         
@@ -674,7 +674,7 @@ public class CodeCompiler implements org.bukkit.event.Listener {
             }
         }
         
-        logger.info("World scan completed. Scanned " + blocksScanned + " blocks, processed " + blocksProcessed + " code blocks.");
+        logger.fine("World scan completed. Scanned " + blocksScanned + " blocks, processed " + blocksProcessed + " code blocks.");
         
         
         
@@ -1315,14 +1315,14 @@ public class CodeCompiler implements org.bukkit.event.Listener {
             }
         }
         
-        logger.info("Compiled " + compiledCode.size() + " lines of code from world: " + world.getName());
+        logger.fine("Compiled " + compiledCode.size() + " lines of code from world: " + world.getName());
         
         
         
         String worldId = world.getName().replace("-code", "");
         if (!compiledCode.isEmpty()) {
             WorldCode.setCode(worldId, compiledCode);
-            logger.info("Saved " + compiledCode.size() + " lines of compiled code for world: " + worldId);
+            logger.fine("Saved " + compiledCode.size() + " lines of compiled code for world: " + worldId);
             
             
             
@@ -1451,17 +1451,17 @@ public class CodeCompiler implements org.bukkit.event.Listener {
         
         
         
-        logger.info("Saving compiled code for world: " + worldId);
+        logger.fine("Saving compiled code for world: " + worldId);
         
         
         
-        logger.info("Code lines: " + codeLines.size());
+        logger.fine("Code lines: " + codeLines.size());
         
         
         
         com.megacreative.configs.WorldCode.setCode(worldId, codeLines);
         
-        logger.info("Successfully saved compiled code to WorldCode configuration");
+        logger.fine("Successfully saved compiled code to WorldCode configuration");
         
         
         

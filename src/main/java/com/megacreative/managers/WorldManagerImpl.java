@@ -283,7 +283,7 @@ public class WorldManagerImpl implements IWorldManager {
                     activatorManager.registerCodeHandler(world.getId(), world.getCodeHandler());
                 }
                 
-                plugin.getLogger().info("Successfully loaded world: " + world.getName() + " (ID: " + world.getId() + ")");
+                plugin.getLogger().fine("Successfully loaded world: " + world.getName() + " (ID: " + world.getId() + ")");
             } else {
                 plugin.getLogger().warning("Failed to deserialize world from file: " + worldFile.getName());
             }

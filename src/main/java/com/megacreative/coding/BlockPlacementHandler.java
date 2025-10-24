@@ -168,12 +168,14 @@ public class BlockPlacementHandler implements Listener {
 
         
         blockCodeBlocks.put(block.getLocation(), newCodeBlock);
-        log.info("Created CodeBlock at " + block.getLocation() + " with material " + newCodeBlock.getMaterialName());
+        // Use fine logging instead of info to reduce spam
+        log.fine("Created CodeBlock at " + block.getLocation() + " with material " + newCodeBlock.getMaterialName());
         
         
         CodeBlockPlacedEvent placedEvent = new CodeBlockPlacedEvent(player, newCodeBlock, block.getLocation());
         plugin.getServer().getPluginManager().callEvent(placedEvent);
-        log.info("Fired CodeBlockPlacedEvent for block at " + block.getLocation());
+        // Use fine logging instead of info to reduce spam
+        log.fine("Fired CodeBlockPlacedEvent for block at " + block.getLocation());
 
         player.sendMessage("§a✓ Code block placed!");
     }
@@ -210,6 +212,8 @@ public class BlockPlacementHandler implements Listener {
             plugin.getServer().getPluginManager().callEvent(brokenEvent);
             
             player.sendMessage("§cCode block removed!");
+            // Add debug message to see what type of block was removed
+            player.sendMessage("§cRemoved block: " + removedBlock.getMaterialName() + " with action: " + removedBlock.getAction());
         }
         
         
@@ -285,6 +289,10 @@ public class BlockPlacementHandler implements Listener {
         event.setCancelled(true); 
         CodeBlock codeBlock = blockCodeBlocks.get(location);
 
+        // Add debug logging
+        player.sendMessage("§aInteracted with code block: " + codeBlock.getMaterialName() + " with action: " + codeBlock.getAction());
+        log.fine("Player " + player.getName() + " interacted with code block at " + location + " with material " + codeBlock.getMaterialName() + " and action " + codeBlock.getAction());
+        
         
         if (codeBlock.isBracket()) {
             toggleBracketType(codeBlock, event.getClickedBlock(), player);
@@ -402,14 +410,20 @@ public class BlockPlacementHandler implements Listener {
     public boolean isInDevWorld(Player player) {
         String worldName = player.getWorld().getName();
         
-        return worldName.contains("dev") || worldName.contains("Dev") || 
+        boolean isDevWorld = worldName.contains("dev") || worldName.contains("Dev") || 
                worldName.contains("разработка") || worldName.contains("Разработка") ||
                worldName.contains("creative") || worldName.contains("Creative") ||
                worldName.contains("-code") || worldName.endsWith("-code") || 
                worldName.contains("_code") || worldName.endsWith("_dev") ||
                worldName.contains("megacreative_") || worldName.contains("DEV") ||
-               
                (worldName.startsWith("megacreative_") && worldName.endsWith("-code"));
+        
+        // Use fine logging instead of info to reduce spam
+        if (isDevWorld) {
+            log.fine("Player " + player.getName() + " is in dev world: " + worldName);
+        }
+        
+        return isDevWorld;
     }
     
     /**

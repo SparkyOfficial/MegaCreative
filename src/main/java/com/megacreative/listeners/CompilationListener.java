@@ -28,7 +28,7 @@ public class CompilationListener implements Listener {
     public CompilationListener(MegaCreative plugin) {
         this.plugin = plugin;
         this.logger = plugin.getLogger();
-        logger.info("🎆 Compilation listener initialized for automatic code compilation");
+        logger.fine("🎆 Compilation listener initialized for automatic code compilation");
     }
     
     @EventHandler(priority = EventPriority.LOWEST)
@@ -36,7 +36,7 @@ public class CompilationListener implements Listener {
         Player player = event.getPlayer();
         World fromWorld = event.getFrom();
         
-          logger.info("Player is leaving dev world: " + fromWorld.getName());
+          logger.fine("Player is leaving dev world: " + fromWorld.getName());
         if (fromWorld.getName().contains("-code")) {
             compileWorldCode(fromWorld);
         }
@@ -47,7 +47,7 @@ public class CompilationListener implements Listener {
         Player player = event.getPlayer();
         World world = player.getWorld();
         
-          logger.info("Player is leaving dev world: " + world.getName());
+          logger.fine("Player is leaving dev world: " + world.getName());
         if (world.getName().contains("-code")) {
             compileWorldCode(world);
         }
@@ -58,7 +58,7 @@ public class CompilationListener implements Listener {
      */
     private void compileWorldCode(World world) {
         try {
-            logger.info("Starting automatic compilation for world: " + world.getName());
+            logger.fine("Starting automatic compilation for world: " + world.getName());
             
               CodeCompiler codeCompiler = plugin.getServiceRegistry().getCodeCompiler();
             if (codeCompiler == null) {
@@ -67,12 +67,12 @@ public class CompilationListener implements Listener {
             }
             
               List<String> codeStrings = codeCompiler.compileWorldToCodeStrings(world);
-            logger.info("Compiled " + codeStrings.size() + " lines of code from world: " + world.getName());
+            logger.fine("Compiled " + codeStrings.size() + " lines of code from world: " + world.getName());
             
               String worldId = world.getName().replace("-code", "");
             codeCompiler.saveCompiledCode(worldId, codeStrings);
             
-            logger.info("Successfully compiled and saved code for world: " + worldId);
+            logger.fine("Successfully compiled and saved code for world: " + worldId);
             
         } catch (Exception e) {
             logger.log(java.util.logging.Level.SEVERE, "Failed to automatically compile world code", e);

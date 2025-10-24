@@ -38,7 +38,7 @@ public class TrustedPlayerManager implements ITrustedPlayerManager {
     @Override
     public void initialize() {
         loadTrustedPlayers();
-        plugin.getLogger().info("TrustedPlayerManager initialized");
+        plugin.getLogger().fine("TrustedPlayerManager initialized");
     }
     
     

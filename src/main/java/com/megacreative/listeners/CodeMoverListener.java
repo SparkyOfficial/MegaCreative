@@ -105,7 +105,7 @@ public class CodeMoverListener implements Listener {
         clipboardLocations.put(player.getUniqueId(), locations);
         
         player.sendMessage("§a✓ Скопирована цепочка из " + chain.size() + " блоков!");
-        plugin.getLogger().info("Player " + player.getName() + " copied " + chain.size() + " code blocks");
+        plugin.getLogger().fine("Player " + player.getName() + " copied " + chain.size() + " code blocks");
     }
     
     /**
@@ -197,7 +197,7 @@ public class CodeMoverListener implements Listener {
         
         
         player.sendMessage("§aЦепочка из " + newChain.size() + " блоков вставлена!");
-        plugin.getLogger().info("Player " + player.getName() + " pasted " + newChain.size() + " code blocks");
+        plugin.getLogger().fine("Player " + player.getName() + " pasted " + newChain.size() + " code blocks");
     }
     
     /**

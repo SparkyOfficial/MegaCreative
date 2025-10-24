@@ -44,7 +44,7 @@ public class CommandRegistry {
             
             registerSimpleCommands();
             
-            log.info("Commands registered successfully");
+            log.fine("Commands registered successfully");
         } catch (Exception e) {
             log.severe("Failed to register commands: " + e.getMessage());
             log.log(java.util.logging.Level.SEVERE, "Failed to register commands", e);
@@ -247,7 +247,7 @@ public class CommandRegistry {
                 worldStatsCmd.setTabCompleter(new WorldStatsCommand(plugin, worldManager, playerManager));
             }
             
-            log.info("All commands registered successfully");
+            log.fine("All commands registered successfully");
         } catch (Exception e) {
             log.severe("Failed to register simple commands: " + e.getMessage());
         }

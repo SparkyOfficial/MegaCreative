@@ -45,7 +45,7 @@ public class EventDataExtractorRegistry {
         registerExtractor(new PlayerInteractEventDataExtractor());
         registerExtractor(new PlayerCommandPreprocessEventDataExtractor());
         
-        log.info("Registered " + extractors.size() + " event data extractors");
+        log.fine("Registered " + extractors.size() + " event data extractors");
     }
     
     /**
@@ -54,7 +54,7 @@ public class EventDataExtractorRegistry {
      */
     public <T extends Event> void registerExtractor(EventDataExtractor<T> extractor) {
         extractors.put(extractor.getEventType(), extractor);
-        log.info("Registered extractor for " + extractor.getEventType().getSimpleName());
+        log.fine("Registered extractor for " + extractor.getEventType().getSimpleName());
     }
     
     /**

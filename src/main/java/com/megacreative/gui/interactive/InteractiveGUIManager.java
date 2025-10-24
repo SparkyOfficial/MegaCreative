@@ -56,7 +56,7 @@ public class InteractiveGUIManager implements Listener {
         
         plugin.getServer().getPluginManager().registerEvents(this, plugin);
         
-        plugin.getLogger().info(" YYS Interactive GUI Manager initialized with reference system-style elements");
+        plugin.getLogger().fine(" YYS Interactive GUI Manager initialized with reference system-style elements");
         // YYS Интерактивный менеджер GUI инициализирован с элементами в стиле reference system
     }
     
@@ -105,7 +105,7 @@ public class InteractiveGUIManager implements Listener {
      */
     public void registerElement(String type, InteractiveElementFactory factory) {
         elementFactories.put(type, factory);
-        plugin.getLogger().info(" YYS Registered interactive element: " + type);
+        plugin.getLogger().fine(" YYS Registered interactive element: " + type);
         // YYS Зарегистрирован интерактивный элемент: " + type
     }
     
@@ -153,7 +153,7 @@ public class InteractiveGUIManager implements Listener {
         registerElement("item_editor", (id, props) -> 
             new ItemStackEditorElement(id, props));
         
-        plugin.getLogger().info(" YYS Registered 6 default interactive elements");
+        plugin.getLogger().fine(" YYS Registered 6 default interactive elements");
         // YYS Зарегистрировано 6 стандартных интерактивных элементов
     }
     
@@ -223,7 +223,7 @@ public class InteractiveGUIManager implements Listener {
     public void shutdown() {
         activeGUIs.clear();
         elementFactories.clear();
-        plugin.getLogger().info(" YYS Interactive GUI Manager shut down");
+        plugin.getLogger().fine(" YYS Interactive GUI Manager shut down");
         // YYS Интерактивный менеджер GUI завершил работу
     }
     
@@ -633,7 +633,7 @@ public class InteractiveGUIManager implements Listener {
          */
         private void openAnvilGUI(MegaCreative plugin, TextInputElement element) {
             
-            plugin.getLogger().info("Opening chat-based text input for element: " + element.getId());
+            plugin.getLogger().fine("Opening chat-based text input for element: " + element.getId());
             // Открытие текстового ввода через чат для элемента: " + element.getId()
             
             
@@ -708,7 +708,7 @@ public class InteractiveGUIManager implements Listener {
             
             guiManager.setPlayerMetadata(player, "awaiting_text_input", true);
             guiManager.setPlayerMetadata(player, "pending_text_input_element", element);
-            plugin.getLogger().info("Registered pending text input for player " + player.getName() + " with element " + element.getId());
+            plugin.getLogger().fine("Registered pending text input for player " + player.getName() + " with element " + element.getId());
             // Зарегистрирован ожидающий ввод текста для игрока " + player.getName() + " с элементом " + element.getId()
         }
         
@@ -907,7 +907,7 @@ public class InteractiveGUIManager implements Listener {
          */
         private void openItemEditorGUI(MegaCreative plugin, ItemStackEditorElement element) {
             
-            plugin.getLogger().info("Opening item editor GUI for item editor element: " + element.getId());
+            plugin.getLogger().fine("Opening item editor GUI for item editor element: " + element.getId());
             // Открытие GUI редактора предметов для элемента редактора предметов: " + element.getId()
             
             

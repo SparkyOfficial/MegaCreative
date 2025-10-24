@@ -132,7 +132,7 @@ public class DivVarAction implements BlockAction {
                 variableManager.setLocalVariable(context.getScriptId(), varName, newValueData);
             }
             
-            context.getPlugin().getLogger().info("Dividing variable " + varName + " by " + value + " (new value: " + newValue + ")");
+            context.getPlugin().getLogger().fine("Dividing variable " + varName + " by " + value + " (new value: " + newValue + ")");
             
             return ExecutionResult.success("Variable updated successfully");
         } catch (Exception e) {

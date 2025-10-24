@@ -63,7 +63,7 @@ public class AdvancedEventTrigger {
     public void execute(CustomEventManager eventManager, Player player, String world) {
         
         if (condition != null && !condition.test(player, world, eventData)) {
-            log.info("Trigger condition not met for: " + triggerId);
+            log.fine("Trigger condition not met for: " + triggerId);
             return;
         }
         

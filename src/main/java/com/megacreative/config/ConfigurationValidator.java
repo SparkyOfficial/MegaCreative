@@ -268,7 +268,7 @@ public class ConfigurationValidator {
             
             if (configFile.exists()) {
                 java.nio.file.Files.copy(configFile.toPath(), backupFile.toPath(), java.nio.file.StandardCopyOption.REPLACE_EXISTING);
-                plugin.getLogger().info("Создана резервная копия конфигурации");
+                plugin.getLogger().fine("Создана резервная копия конфигурации");
                 
                 
             }
@@ -293,7 +293,7 @@ public class ConfigurationValidator {
             
             if (backupFile.exists()) {
                 java.nio.file.Files.copy(backupFile.toPath(), configFile.toPath(), java.nio.file.StandardCopyOption.REPLACE_EXISTING);
-                plugin.getLogger().info("Конфигурация восстановлена из резервной копии");
+                plugin.getLogger().fine("Конфигурация восстановлена из резервной копии");
                 
                 
             } else {

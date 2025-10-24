@@ -60,7 +60,7 @@ public class PlayerJoinEventHandler {
         
         
         eventManager.registerEventHandler("playerConnect", handler);
-        LOGGER.info("Registered PlayerJoinEventHandler for playerConnect events");
+        LOGGER.fine("Registered PlayerJoinEventHandler for playerConnect events");
     }
     
     /**
@@ -90,6 +90,6 @@ public class PlayerJoinEventHandler {
     private void executeScriptsForPlayerJoin(Player player, CreativeWorld creativeWorld) {
         
         
-        LOGGER.info("Would execute scripts for player join: " + player.getName() + " in world " + creativeWorld.getName());
+        LOGGER.fine("Would execute scripts for player join: " + player.getName() + " in world " + creativeWorld.getName());
     }
 }

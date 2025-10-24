@@ -229,7 +229,7 @@ public class DependencyContainer {
      * Disposes all registered disposable services
      */
     public void dispose() {
-        log.info("Starting DependencyContainer disposal...");
+        log.fine("Starting DependencyContainer disposal...");
         
         
         List<Exception> disposalExceptions = new ArrayList<>();
@@ -262,7 +262,7 @@ public class DependencyContainer {
             log.warning("Encountered " + disposalExceptions.size() + " exceptions during disposal");
         }
         
-        log.info("DependencyContainer disposal completed");
+        log.fine("DependencyContainer disposal completed");
     }
     
     

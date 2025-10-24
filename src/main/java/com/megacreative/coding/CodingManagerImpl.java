@@ -136,7 +136,7 @@ public class CodingManagerImpl implements ICodingManager {
                             
                             script.setWorldName(world.getName());
                             world.getScripts().add(script);
-                            logger.info("Loaded script: " + script.getName() + " for world: " + worldName);
+                            logger.fine("Loaded script: " + script.getName() + " for world: " + worldName);
                         }
                     } catch (Exception e) {
                         logger.severe(SCRIPT_FILE_LOADING_FAILED + path.toString() + ": " + e.getMessage());
@@ -146,7 +146,7 @@ public class CodingManagerImpl implements ICodingManager {
             logger.severe(WORLD_SCRIPTS_LISTING_FAILED + worldName + ": " + e.getMessage());
         }
         
-        logger.info("Loaded " + world.getScripts().size() + " scripts for world: " + worldName);
+        logger.fine("Loaded " + world.getScripts().size() + " scripts for world: " + worldName);
     }
     
     @Override
@@ -159,7 +159,7 @@ public class CodingManagerImpl implements ICodingManager {
             }
             world.getScripts().clear();
         }
-        logger.info("Unloaded scripts for world: " + world.getName());
+        logger.fine("Unloaded scripts for world: " + world.getName());
     }
     
     @Override
@@ -257,7 +257,7 @@ public class CodingManagerImpl implements ICodingManager {
         try {
             String json = com.megacreative.utils.JsonSerializer.serializeScript(script);
             Files.write(scriptFile, json.getBytes(StandardCharsets.UTF_8));
-            logger.info(SCRIPT_SAVED + script.getName() + " to " + scriptFile);
+            logger.fine(SCRIPT_SAVED + script.getName() + " to " + scriptFile);
         } catch (Exception e) {
             logger.severe(SCRIPT_SAVE_FAILED + script.getName() + ": " + e.getMessage());
         }
@@ -266,7 +266,7 @@ public class CodingManagerImpl implements ICodingManager {
     @Override
     public void cancelScriptExecution(String scriptId) {
         
-        logger.info("Cancelled script execution: " + scriptId);
+        logger.fine("Cancelled script execution: " + scriptId);
         
         ScriptEngine engine = getScriptEngine();
         if (engine != null) {
@@ -277,7 +277,7 @@ public class CodingManagerImpl implements ICodingManager {
     @Override
     public void deleteScript(String scriptName) {
         
-        logger.info("Deleting script: " + scriptName);
+        logger.fine("Deleting script: " + scriptName);
         
         
         if (worldManager == null) {
@@ -357,7 +357,7 @@ public class CodingManagerImpl implements ICodingManager {
         try {
             if (Files.exists(scriptFile)) {
                 Files.delete(scriptFile);
-                logger.info(SCRIPT_DELETED + scriptFile);
+                logger.fine(SCRIPT_DELETED + scriptFile);
             }
         } catch (IOException e) {
             logger.severe(SCRIPT_DELETION_FAILED + scriptFile + ": " + e.getMessage());
@@ -477,7 +477,7 @@ public class CodingManagerImpl implements ICodingManager {
     @Override
     public void shutdown() {
         
-        logger.info(CODING_MANAGER_SHUTDOWN_COMPLETED);
+        logger.fine(CODING_MANAGER_SHUTDOWN_COMPLETED);
     }
     
     private void logError(Player player, String message) {

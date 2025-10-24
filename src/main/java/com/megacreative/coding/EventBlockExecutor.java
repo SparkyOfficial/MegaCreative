@@ -33,7 +33,7 @@ public class EventBlockExecutor implements BlockExecutor {
         }
         
         String actionId = block.getAction();
-        LOGGER.info("Processing event block: " + eventId + " with action: " + 
+        LOGGER.fine("Processing event block: " + eventId + " with action: " + 
                    (actionId != null ? actionId : "none") + " for player: " + 
                    (context.getPlayer() != null ? context.getPlayer().getName() : "unknown"));
         

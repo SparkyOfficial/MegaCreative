@@ -26,7 +26,7 @@ public class MessagingService {
         this.plugin = plugin;
         this.logger = plugin.getLogger();
         this.adventure = BukkitAudiences.create(plugin);
-        logger.info("MessagingService initialized with Adventure API");
+        logger.fine("MessagingService initialized with Adventure API");
     }
     
     /**
@@ -92,7 +92,7 @@ public class MessagingService {
         
         adventure.console().sendMessage(chatMessage);
         
-        logger.info("[Global Chat] " + player.getName() + ": " + message);
+        logger.fine("[Global Chat] " + player.getName() + ": " + message);
     }
     
     /**
@@ -195,7 +195,7 @@ public class MessagingService {
     public void shutdown() {
         if (adventure != null) {
             adventure.close();
-            logger.info("Adventure API shut down");
+            logger.fine("Adventure API shut down");
         }
     }
 }

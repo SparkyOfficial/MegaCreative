@@ -35,7 +35,7 @@ public class ConditionBlockExecutor implements BlockExecutor {
         }
         
         
-        LOGGER.info("Evaluating condition: " + conditionId + " for player: " + 
+        LOGGER.fine("Evaluating condition: " + conditionId + " for player: " + 
                    (context.getPlayer() != null ? context.getPlayer().getName() : "unknown"));
         
         BlockCondition conditionHandler = conditionFactory.createCondition(conditionId);

@@ -48,7 +48,7 @@ public class GetGlobalVarAction implements BlockAction {
             
             variableManager.setLocalVariable(context.getScriptId(), targetVar, DataValue.of(varValue));
             
-            context.getPlugin().getLogger().info("Getting global variable " + varName + " into " + targetVar);
+            context.getPlugin().getLogger().fine("Getting global variable " + varName + " into " + targetVar);
             
             return ExecutionResult.success("Global variable retrieved successfully");
         } catch (Exception e) {

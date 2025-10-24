@@ -64,7 +64,7 @@ public class ConditionFactory implements IConditionFactory {
             }
         }
         
-        LOGGER.info("Загружено " + conditionRegistry.size() + " условий блоков.");
+        LOGGER.fine("Загружено " + conditionRegistry.size() + " условий блоков.");
     }
     
     private void register(String conditionId, String displayName, Supplier<BlockCondition> supplier) {
@@ -196,7 +196,7 @@ public class ConditionFactory implements IConditionFactory {
             }
         } else {
             
-            LOGGER.info("Published event: " + event.getName());
+            LOGGER.fine("Published event: " + event.getName());
         }
     }
     
@@ -233,7 +233,7 @@ public class ConditionFactory implements IConditionFactory {
             }
         } else {
             
-            LOGGER.info("Published event: " + eventName + " with data: " + eventData.size() + " fields");
+            LOGGER.fine("Published event: " + eventName + " with data: " + eventData.size() + " fields");
         }
     }
 }

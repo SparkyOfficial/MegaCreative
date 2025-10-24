@@ -35,7 +35,7 @@ public class ActionBlockExecutor implements BlockExecutor {
         }
         
         
-        LOGGER.info("Executing action: " + actionId + " for player: " + 
+        LOGGER.fine("Executing action: " + actionId + " for player: " + 
                    (context.getPlayer() != null ? context.getPlayer().getName() : "unknown"));
         
         BlockAction actionHandler = actionFactory.createAction(actionId);

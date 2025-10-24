@@ -88,7 +88,7 @@ public class SubVarAction implements BlockAction {
         setVariableValue(variableManager, scopeInfo, varName, newValue, context.getScriptId(), player);
 
         
-        context.getPlugin().getLogger().info(
+        context.getPlugin().getLogger().fine(
                 String.format("Subtracting %s from variable %s (new value: %s)",
                         valueToSubtract, varName, newValue)
         );

@@ -799,7 +799,7 @@ public class VisualDebugger {
             advancedDebugger.shutdown();
         }
         
-        plugin.getLogger().info("Visual debugger has been shut down");
+        plugin.getLogger().fine("Visual debugger has been shut down");
     }
     
     private static class DebugSession {

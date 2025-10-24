@@ -63,7 +63,7 @@ public class GarbageCollectionMonitor {
             isRunning = true;
             
             getCurrentStatistics();
-            log.info("GarbageCollectionMonitor started");
+            log.fine("GarbageCollectionMonitor started");
         }
     }
     
@@ -73,7 +73,7 @@ public class GarbageCollectionMonitor {
     public void stop() {
         isRunning = false;
         scheduler.shutdown();
-        log.info("GarbageCollectionMonitor stopped");
+        log.fine("GarbageCollectionMonitor stopped");
     }
     
     /**

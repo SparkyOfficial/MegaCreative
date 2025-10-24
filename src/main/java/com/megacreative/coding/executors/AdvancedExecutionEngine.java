@@ -97,7 +97,7 @@ public class AdvancedExecutionEngine {
         
         startBackgroundProcessor();
         
-        plugin.getLogger().info("🎆 Advanced Execution Engine initialized with " + MAX_ASYNC_THREADS + " async threads");
+        plugin.getLogger().fine("🎆 Advanced Execution Engine initialized with " + MAX_ASYNC_THREADS + " async threads");
     }
     
     /**
@@ -452,7 +452,7 @@ public class AdvancedExecutionEngine {
             Thread.currentThread().interrupt();
         }
         
-        plugin.getLogger().info("🎆 Advanced Execution Engine shutdown complete");
+        plugin.getLogger().fine("🎆 Advanced Execution Engine shutdown complete");
     }
     
     

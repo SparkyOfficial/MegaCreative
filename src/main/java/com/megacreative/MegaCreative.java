@@ -158,17 +158,20 @@ public class MegaCreative extends JavaPlugin {
     private void registerEvents() {
         
         if (serviceRegistry != null) {
-            getServer().getPluginManager().registerEvents(serviceRegistry.getBlockLinker(), this);
-            getServer().getPluginManager().registerEvents(serviceRegistry.getBlockHierarchyManager(), this);
-            getServer().getPluginManager().registerEvents(serviceRegistry.getWorldCodeRestorer(), this);
-            getServer().getPluginManager().registerEvents(serviceRegistry.getCodeBlockSignManager(), this);
+            // Essential components for basic script execution
+            getServer().getPluginManager().registerEvents(serviceRegistry.getCodeStructureManager(), this);
+            // getServer().getPluginManager().registerEvents(serviceRegistry.getWorldCodeRestorer(), this);
+            // getServer().getPluginManager().registerEvents(serviceRegistry.getCodeBlockSignManager(), this);
             getServer().getPluginManager().registerEvents(serviceRegistry.getBlockPlacementHandler(), this);
             
+            // Development inventory manager - might be needed for basic functionality
+            // getServer().getPluginManager().registerEvents(serviceRegistry.getDevInventoryManager(), this);
             
-            getServer().getPluginManager().registerEvents(serviceRegistry.getDevInventoryManager(), this);
-            
-            
+            // Essential player join listener
             getServer().getPluginManager().registerEvents(new BukkitPlayerJoinListener(this), this);
+            
+            // Comment out all other listeners for now to focus on basic functionality
+            /*
             getServer().getPluginManager().registerEvents(new BukkitPlayerMoveListener(this), this);
             getServer().getPluginManager().registerEvents(new BukkitPlayerChatListener(this), this);
             getServer().getPluginManager().registerEvents(new BukkitBlockPlaceListener(this), this);
@@ -182,26 +185,29 @@ public class MegaCreative extends JavaPlugin {
             getServer().getPluginManager().registerEvents(new BukkitInventoryClickListener(this), this);
             getServer().getPluginManager().registerEvents(new BukkitInventoryOpenListener(this), this);
             
-            
+            // World change listener
             getServer().getPluginManager().registerEvents(new PlayerWorldChangeListener(this), this);
             
-            
+            // GUI manager
             getServer().getPluginManager().registerEvents(serviceRegistry.getGuiManager(), this);
+            */
             
-            
+            // Essential script trigger manager
             getServer().getPluginManager().registerEvents(serviceRegistry.getScriptTriggerManager(), this);
             
-            
+            // Essential custom event manager
             getServer().getPluginManager().registerEvents(serviceRegistry.getCustomEventManager(), this);
             
-            
+            /*
+            // Data item listener
             getServer().getPluginManager().registerEvents(new DataItemListener(this), this);
             
-            
+            // World interact listener
             getServer().getPluginManager().registerEvents(new WorldInteractListener(this), this);
             
-            
+            // GUI click listener
             getServer().getPluginManager().registerEvents(serviceRegistry.getService(GUIClickListener.class), this);
+            */
         }
     }
     

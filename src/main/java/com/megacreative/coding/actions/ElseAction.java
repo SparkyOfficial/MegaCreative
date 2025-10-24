@@ -18,7 +18,7 @@ public class ElseAction implements BlockAction {
     public ExecutionResult execute(CodeBlock block, ExecutionContext context) {
         
         
-        context.getPlugin().getLogger().info("Else block executed");
+        context.getPlugin().getLogger().fine("Else block executed");
         return ExecutionResult.success("Else block executed");
     }
 }

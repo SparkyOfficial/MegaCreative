@@ -37,14 +37,14 @@ public class VisualErrorHandler {
         // TODO: Implement proper error clearing functionality
         // This is a placeholder implementation that needs improvement
         // Possible implementation: Remove visual error indicators at the specified location
-        Logger.getLogger(VisualErrorHandler.class.getName()).info("Clearing error at location: " + location);
+        Logger.getLogger(VisualErrorHandler.class.getName()).fine("Clearing error at location: " + location);
     }
     
     public void cleanup() {
         // TODO: Implement proper cleanup functionality for VisualErrorHandler
         // This is a placeholder implementation that needs improvement
         // Possible implementation: Clean up resources and remove all visual error indicators
-        Logger.getLogger(VisualErrorHandler.class.getName()).info("Cleaning up VisualErrorHandler resources");
+        Logger.getLogger(VisualErrorHandler.class.getName()).fine("Cleaning up VisualErrorHandler resources");
     }
     
     public enum ErrorSeverity {

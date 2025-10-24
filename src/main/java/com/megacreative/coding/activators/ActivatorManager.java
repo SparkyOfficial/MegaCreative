@@ -34,7 +34,7 @@ public class ActivatorManager {
      */
     public void registerCodeHandler(String worldId, CodeHandler codeHandler) {
         worldCodeHandlers.put(worldId, codeHandler);
-        LOGGER.info("Registered code handler for world: " + worldId);
+        LOGGER.fine("Registered code handler for world: " + worldId);
     }
     
     /**
@@ -44,7 +44,7 @@ public class ActivatorManager {
     public void unregisterCodeHandler(String worldId) {
         CodeHandler removed = worldCodeHandlers.remove(worldId);
         if (removed != null) {
-            LOGGER.info("Unregistered code handler for world: " + worldId);
+            LOGGER.fine("Unregistered code handler for world: " + worldId);
         }
     }
     
@@ -86,7 +86,7 @@ public class ActivatorManager {
      */
     public void clearAllCodeHandlers() {
         worldCodeHandlers.clear();
-        LOGGER.info("Cleared all code handlers");
+        LOGGER.fine("Cleared all code handlers");
     }
     
     /**

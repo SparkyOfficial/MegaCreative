@@ -211,7 +211,7 @@ public class ExecutionContext {
         // Condition plugin.getLogger() != null is always true when reached
         // Removed redundant null check
         if (plugin != null) {
-            plugin.getLogger().info("Debug: Variable '" + name + "' set to '" + value + "' for player " + (player != null ? player.getName() : "null"));
+            plugin.getLogger().fine("Debug: Variable '" + name + "' set to '" + value + "' for player " + (player != null ? player.getName() : "null"));
         }
     }
     

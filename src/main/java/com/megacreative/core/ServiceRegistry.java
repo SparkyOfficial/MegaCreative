@@ -6,12 +6,12 @@ import com.megacreative.coding.ScriptEngine;
 import com.megacreative.coding.DefaultScriptEngine;
 import com.megacreative.coding.ActionFactory;
 import com.megacreative.coding.ConditionFactory;
-import com.megacreative.coding.BlockLinker;
-import com.megacreative.coding.BlockHierarchyManager;
+import com.megacreative.coding.CodeStructureManager;
 import com.megacreative.coding.WorldCodeRestorer;
 import com.megacreative.coding.CodeBlockSignManager;
 import com.megacreative.coding.ScriptTriggerManager;
 import com.megacreative.coding.ScriptValidator;
+import com.megacreative.coding.SimpleScriptTriggerManager;
 import com.megacreative.listeners.*;
 import com.megacreative.coding.containers.BlockContainerManager;
 import com.megacreative.coding.variables.VariableManager;
@@ -129,7 +129,7 @@ public class ServiceRegistry implements DependencyContainer.Disposable {
      * Initialisiert alle Dienste
      */
     public void initializeServices() {
-        log.info("Initializing Service Registry...");
+        log.fine("Initializing Service Registry...");
         
         try {
             
@@ -150,7 +150,7 @@ public class ServiceRegistry implements DependencyContainer.Disposable {
             initializeNewArchitectureServices();
             newArchitectureServicesInitialized = true;
             
-            log.info("Service Registry initialized successfully!");
+            log.fine("Service Registry initialized successfully!");
         } catch (Exception e) {
             log.log(Level.SEVERE, "Service registry initialization failed", e);
             throw new RuntimeException("Service registry initialization failed", e);
@@ -173,7 +173,7 @@ public class ServiceRegistry implements DependencyContainer.Disposable {
         }
         
         try {
-            log.info("Connecting services...");
+            log.fine("Connecting services...");
             
             
             ScriptEngine scriptEngine = dependencyContainer.resolve(ScriptEngine.class);
@@ -181,11 +181,11 @@ public class ServiceRegistry implements DependencyContainer.Disposable {
             
             if (scriptEngine != null && advancedFunctionManager != null) {
                 advancedFunctionManager.setScriptEngine(scriptEngine);
-                log.info("Connected ScriptEngine to AdvancedFunctionManager");
+                log.fine("Connected ScriptEngine to AdvancedFunctionManager");
             } else {
                 log.warning("Could not connect ScriptEngine to AdvancedFunctionManager - one or both are null");
-                log.info("ScriptEngine: " + (scriptEngine != null));
-                log.info("AdvancedFunctionManager: " + (advancedFunctionManager != null));
+                log.fine("ScriptEngine: " + (scriptEngine != null));
+                log.fine("AdvancedFunctionManager: " + (advancedFunctionManager != null));
             }
             
             
@@ -194,23 +194,23 @@ public class ServiceRegistry implements DependencyContainer.Disposable {
             
             if (worldManager != null && codingManager != null && worldManager instanceof WorldManagerImpl) {
                 ((WorldManagerImpl) worldManager).setCodingManager(codingManager);
-                log.info("Connected CodingManager to WorldManager");
+                log.fine("Connected CodingManager to WorldManager");
             }
             
             
             if (worldManager != null && worldManager instanceof WorldManagerImpl) {
                 ((WorldManagerImpl) worldManager).setPlugin(plugin);
-                log.info("Connected Plugin to WorldManager");
+                log.fine("Connected Plugin to WorldManager");
             }
             
             
             if (worldManager != null) {
                 worldManager.initialize();
-                log.info("WorldManager initialized");
+                log.fine("WorldManager initialized");
             }
             
             servicesConnected = true;
-            log.info("All services connected successfully!");
+            log.fine("All services connected successfully!");
         } catch (Exception e) {
             log.log(Level.SEVERE, "Failed to connect services", e);
         }
@@ -243,29 +243,22 @@ public class ServiceRegistry implements DependencyContainer.Disposable {
         // BlockPlacementHandler wird bei Bedarf erstellt, mit Lazy Initialization von Abhängigkeiten
         dependencyContainer.registerType(BlockPlacementHandler.class, BlockPlacementHandler.class);
         dependencyContainer.registerType(ConnectionVisualizer.class, ConnectionVisualizer.class);
-        // Register BlockLinker as a factory since it needs BlockPlacementHandler as a dependency
-        // Регистрирует BlockLinker как фабрику, так как ему нужен BlockPlacementHandler как зависимость
-        // Registriert BlockLinker als Factory, da er BlockPlacementHandler als Abhängigkeit benötigt
-        dependencyContainer.registerFactory(BlockLinker.class, (DependencyContainer.Supplier<BlockLinker>) () -> {
+        // Register CodeStructureManager as a factory since it needs BlockPlacementHandler as a dependency
+        // Регистрирует CodeStructureManager как фабрику, так как ему нужен BlockPlacementHandler как зависимость
+        // Registriert CodeStructureManager als Factory, da er BlockPlacementHandler als Abhängigkeit benötigt
+        dependencyContainer.registerFactory(CodeStructureManager.class, (DependencyContainer.Supplier<CodeStructureManager>) () -> {
             BlockPlacementHandler placementHandler = dependencyContainer.resolve(BlockPlacementHandler.class);
-            return new BlockLinker((MegaCreative) plugin, placementHandler);
-        });
-        // Register BlockHierarchyManager as a factory since it needs BlockPlacementHandler as a dependency
-        // Регистрирует BlockHierarchyManager как фабрику, так как ему нужен BlockPlacementHandler как зависимость
-        // Registriert BlockHierarchyManager als Factory, da er BlockPlacementHandler als Abhängigkeit benötigt
-        dependencyContainer.registerFactory(BlockHierarchyManager.class, (DependencyContainer.Supplier<BlockHierarchyManager>) () -> {
-            BlockPlacementHandler placementHandler = dependencyContainer.resolve(BlockPlacementHandler.class);
-            return new BlockHierarchyManager(placementHandler);
+            return new CodeStructureManager((MegaCreative) plugin, placementHandler);
         });
         dependencyContainer.registerType(WorldCodeRestorer.class, WorldCodeRestorer.class);
         dependencyContainer.registerType(CodeBlockSignManager.class, CodeBlockSignManager.class);
-        // Register ScriptTriggerManager as a factory since it needs dependencies
-        // Регистрирует ScriptTriggerManager как фабрику, так как ему нужны зависимости
-        // Registriert ScriptTriggerManager als Factory, da er Abhängigkeiten benötigt
+        // Register SimpleScriptTriggerManager as a factory since it needs dependencies
+        // Регистрирует SimpleScriptTriggerManager как фабрику, так как ему нужны зависимости
+        // Registriert SimpleScriptTriggerManager als Factory, da er Abhängigkeiten benötigt
         dependencyContainer.registerFactory(ScriptTriggerManager.class, (DependencyContainer.Supplier<ScriptTriggerManager>) () -> {
             IWorldManager worldManager = dependencyContainer.resolve(IWorldManager.class);
             PlayerModeManager playerModeManager = dependencyContainer.resolve(PlayerModeManager.class);
-            return new ScriptTriggerManager((MegaCreative) plugin, worldManager, playerModeManager);
+            return new SimpleScriptTriggerManager((MegaCreative) plugin, worldManager, playerModeManager);
         });
         
         // Register interfaces for factories
@@ -330,7 +323,7 @@ public class ServiceRegistry implements DependencyContainer.Disposable {
             
             
             if (blockConfigService != null && blockConfigService.getCodeBlockMaterials().isEmpty()) {
-                log.info("BlockConfigService has empty materials, forcing configuration load");
+                log.fine("BlockConfigService has empty materials, forcing configuration load");
                 blockConfigService.reload();
             }
             
@@ -352,11 +345,11 @@ public class ServiceRegistry implements DependencyContainer.Disposable {
      * Initialisiert zusätzliche Dienste, die von der Verfügbarkeit der Kerndienste abhängen
      */
     public void initializeAdditionalServices() {
-        log.info("Initializing additional services...");
+        log.fine("Initializing additional services...");
         
         try {
             
-            log.info("Additional services initialized successfully!");
+            log.fine("Additional services initialized successfully!");
         } catch (Exception e) {
             log.log(Level.SEVERE, "Failed to initialize additional services", e);
         }
@@ -393,14 +386,14 @@ public class ServiceRegistry implements DependencyContainer.Disposable {
      */
     @Override
     public void dispose() {
-        log.info("Shutting down MegaCreative services...");
+        log.fine("Shutting down MegaCreative services...");
         
         try {
             
             if (dependencyContainer != null) {
                 try {
                     dependencyContainer.dispose();
-                    log.info("Dependency container disposed successfully");
+                    log.fine("Dependency container disposed successfully");
                 } catch (Exception e) {
                     log.log(Level.WARNING, "Error during dependency container disposal", e);
                 }
@@ -409,7 +402,7 @@ public class ServiceRegistry implements DependencyContainer.Disposable {
             log.log(Level.WARNING, "Error during service shutdown", e);
         }
         
-        log.info("All services shut down successfully");
+        log.fine("All services shut down successfully");
     }
     
     
@@ -573,12 +566,8 @@ public class ServiceRegistry implements DependencyContainer.Disposable {
         return dependencyContainer.resolve(ConnectionVisualizer.class);
     }
     
-    public BlockLinker getBlockLinker() {
-        return dependencyContainer.resolve(BlockLinker.class);
-    }
-    
-    public BlockHierarchyManager getBlockHierarchyManager() {
-        return dependencyContainer.resolve(BlockHierarchyManager.class);
+    public CodeStructureManager getCodeStructureManager() {
+        return dependencyContainer.resolve(CodeStructureManager.class);
     }
     
     public WorldCodeRestorer getWorldCodeRestorer() {

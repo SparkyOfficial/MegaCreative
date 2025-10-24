@@ -125,7 +125,7 @@ public class MulVarAction implements BlockAction {
                 variableManager.setLocalVariable(context.getScriptId(), varName, newValueData);
             }
             
-            context.getPlugin().getLogger().info("Multiplying variable " + varName + " by " + value + " (new value: " + newValue + ")");
+            context.getPlugin().getLogger().fine("Multiplying variable " + varName + " by " + value + " (new value: " + newValue + ")");
             
             return ExecutionResult.success("Variable updated successfully");
         } catch (Exception e) {

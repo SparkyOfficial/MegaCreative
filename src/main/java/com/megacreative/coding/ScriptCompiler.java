@@ -38,12 +38,12 @@ public class ScriptCompiler implements Listener {
     // Static analysis flags it as convertible to a local variable, but this is a false positive
     // Это поле должно оставаться полем класса, так как оно сохраняет состояние между вызовами методов
     // Статический анализ помечает его как конвертируемое в локальную переменную, но это ложное срабатывание
-    private final BlockLinker blockLinker; 
+    private final CodeStructureManager codeStructureManager; 
 
-    public ScriptCompiler(MegaCreative plugin, BlockConfigService blockConfigService, BlockLinker blockLinker) {
+    public ScriptCompiler(MegaCreative plugin, BlockConfigService blockConfigService, CodeStructureManager codeStructureManager) {
         this.plugin = plugin;
         this.blockConfigService = blockConfigService;
-        this.blockLinker = blockLinker;
+        this.codeStructureManager = codeStructureManager;
     }
     
     @EventHandler

@@ -39,7 +39,7 @@ public class GameLoopManager {
     public void enableGameLoop(Player player) {
         if (player != null) {
             playerGameLoopEnabled.put(player.getUniqueId().toString(), true);
-            LOGGER.info("Enabled game loop for player: " + player.getName());
+            LOGGER.fine("Enabled game loop for player: " + player.getName());
         }
     }
     
@@ -50,7 +50,7 @@ public class GameLoopManager {
     public void disableGameLoop(Player player) {
         if (player != null) {
             playerGameLoopEnabled.put(player.getUniqueId().toString(), false);
-            LOGGER.info("Disabled game loop for player: " + player.getName());
+            LOGGER.fine("Disabled game loop for player: " + player.getName());
         }
     }
     
@@ -120,7 +120,7 @@ public class GameLoopManager {
             enableGameLoop(player);
         }
         
-        LOGGER.info("GameLoopManager initialized");
+        LOGGER.fine("GameLoopManager initialized");
     }
     
     /**
@@ -128,6 +128,6 @@ public class GameLoopManager {
      */
     public void cleanup() {
         playerGameLoopEnabled.clear();
-        LOGGER.info("GameLoopManager cleaned up");
+        LOGGER.fine("GameLoopManager cleaned up");
     }
 }

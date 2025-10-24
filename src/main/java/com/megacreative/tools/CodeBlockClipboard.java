@@ -100,7 +100,7 @@ public class CodeBlockClipboard {
         
         
         
-        log.info("Player " + player.getName() + " copied code block: " + block.getAction());
+        log.fine("Player " + player.getName() + " copied code block: " + block.getAction());
         
         
     }
@@ -185,7 +185,7 @@ public class CodeBlockClipboard {
         
         
         
-        log.info("Player " + player.getName() + " copied " + blocksFound + " code blocks from region");
+        log.fine("Player " + player.getName() + " copied " + blocksFound + " code blocks from region");
         
         
     }
@@ -256,7 +256,7 @@ public class CodeBlockClipboard {
         
         
         
-        log.info("Player " + player.getName() + " pasted " + blocksPasted + " code blocks");
+        log.fine("Player " + player.getName() + " pasted " + blocksPasted + " code blocks");
         
         
     }
@@ -288,7 +288,7 @@ public class CodeBlockClipboard {
         
         
         
-        log.info("Player " + player.getName() + " saved shared clipboard: " + name);
+        log.fine("Player " + player.getName() + " saved shared clipboard: " + name);
         
         
     }
@@ -320,7 +320,7 @@ public class CodeBlockClipboard {
         
         
         
-        log.info("Player " + player.getName() + " loaded shared clipboard: " + name);
+        log.fine("Player " + player.getName() + " loaded shared clipboard: " + name);
         
         
     }
