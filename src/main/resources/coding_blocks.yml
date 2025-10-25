@@ -372,7 +372,7 @@ action_configurations:
   sendActionBar:
     slots:
       0:
-        name: "§aСообщение в ActionBar"
+        name: "§аСообщение в ActionBar"
         description: "§7Положите бумагу с названием сообщения для ActionBar. Поддерживает плейсхолдеры: %player%"
         placeholder_item: "PAPER"
         slot_name: "message"
@@ -482,7 +482,7 @@ action_configurations:
         validation: "length:1-16"
         hint: "Имя команды должно содержать от 1 до 16 символов"
       1:
-        name: "§bИмя игрока"
+        name: "§бИмя игрока"
         description: "§7Положите бумагу с названием имени игрока (оставьте пустым для текущего игрока)"
         placeholder_item: "PAPER"
         slot_name: "targetPlayer"
@@ -511,7 +511,7 @@ action_configurations:
         validation: "length:1-32"
         hint: "Имя локации должно содержать от 1 до 32 символов"
       1:
-        name: "§bЦелевая переменная"
+        name: "§бЦелевая переменная"
         description: "§7Положите бумагу с названием целевой переменной"
         placeholder_item: "PAPER"
         slot_name: "targetVariable"
@@ -702,7 +702,7 @@ action_configurations:
   hasArmor:
     slots:
       0:
-        name: "§aТребуемая броня"
+        name: "§аТребуемая броня"
         description: "§7Положите предмет брони, которую должен носить игрок"
         placeholder_item: "DIAMOND_HELMET"
         slot_name: "armor_slot"
@@ -735,7 +735,7 @@ action_configurations:
         placeholder_item: "DIAMOND_LEGGINGS"
         slot_name: "leggings_slot"
       3:
-        name: "§dБотинки"
+        name: "§дБотинки"
         description: "§7Положите ботинки для установки"
         placeholder_item: "DIAMOND_BOOTS"
         slot_name: "boots_slot"
@@ -750,7 +750,7 @@ action_configurations:
         slot_name: "item"
         required: true
       1:
-        name: "§bКоличество"
+        name: "§бКоличество"
         description: "§7Положите бумагу с количеством (по умолчанию 1)"
         placeholder_item: "PAPER"
         slot_name: "amount"
@@ -761,14 +761,14 @@ action_configurations:
   playSound:
     slots:
       0:
-        name: "§aЗвук"
+        name: "§аЗвук"
         description: "§7Положите бумагу с названием звука (например: minecraft:block.note_block.harp)"
         placeholder_item: "PAPER"
         slot_name: "sound"
         required: true
         validation: "sound_name"
       1:
-        name: "§bГромкость"
+        name: "§бГромкость"
         description: "§7Положите бумагу с громкостью (0.0-1.0, по умолчанию 1.0)"
         placeholder_item: "PAPER"
         slot_name: "volume"
@@ -786,14 +786,14 @@ action_configurations:
   effect:
     slots:
       0:
-        name: "§aЭффект"
+        name: "§аЭффект"
         description: "§7Положите бумагу с названием эффекта (например: SPEED, STRENGTH)"
         placeholder_item: "PAPER"
         slot_name: "effect_type"
         required: true
         validation: "effect_name"
       1:
-        name: "§bДлительность"
+        name: "§бДлительность"
         description: "§7Положите бумагу с длительностью в секундах"
         placeholder_item: "PAPER"
         slot_name: "duration"
@@ -811,7 +811,7 @@ action_configurations:
   wait:
     slots:
       0:
-        name: "§aВремя ожидания"
+        name: "§аВремя ожидания"
         description: "§7Положите бумагу с временем в тиках (20 тиков = 1 секунда)"
         placeholder_item: "PAPER"
         slot_name: "delay"
@@ -842,12 +842,12 @@ action_configurations:
   addVar:
     slots:
       0:
-        name: "§aИмя переменной"
+        name: "§аИмя переменной"
         description: "§7Положите бумагу с названием переменной"
         placeholder_item: "PAPER"
         slot_name: "name"
       1:
-        name: "§bЗначение для добавления"
+        name: "§бЗначение для добавления"
         description: "§7Положите предмет или бумагу с значением"
         placeholder_item: "PAPER"
         slot_name: "value"
@@ -874,12 +874,12 @@ action_configurations:
   subVar:
     slots:
       0:
-        name: "§aИмя переменной"
+        name: "§аИмя переменной"
         description: "§7Положите бумагу с названием переменной"
         placeholder_item: "PAPER"
         slot_name: "name"
       1:
-        name: "§bЗначение для вычитания"
+        name: "§бЗначение для вычитания"
         description: "§7Положите предмет или бумагу с значением"
         placeholder_item: "PAPER"
         slot_name: "value"
@@ -888,12 +888,12 @@ action_configurations:
   mulVar:
     slots:
       0:
-        name: "§aИмя переменной"
+        name: "§аИмя переменной"
         description: "§7Положите бумагу с названием переменной"
         placeholder_item: "PAPER"
         slot_name: "name"
       1:
-        name: "§bЗначение для умножения"
+        name: "§бЗначение для умножения"
         description: "§7Положите предмет или бумагу с значением"
         placeholder_item: "PAPER"
         slot_name: "value"
@@ -902,12 +902,12 @@ action_configurations:
   divVar:
     slots:
       0:
-        name: "§aИмя переменной"
+        name: "§аИмя переменной"
         description: "§7Положите бумагу с названием переменной"
         placeholder_item: "PAPER"
         slot_name: "name"
       1:
-        name: "§bЗначение для деления"
+        name: "§бЗначение для деления"
         description: "§7Положите предмет или бумагу с значением"
         placeholder_item: "PAPER"
         slot_name: "value"
@@ -916,12 +916,12 @@ action_configurations:
   setGlobalVar:
     slots:
       0:
-        name: "§aИмя глобальной переменной"
+        name: "§аИмя глобальной переменной"
         description: "§7Положите бумагу с названием глобальной переменной"
         placeholder_item: "PAPER"
         slot_name: "name"
       1:
-        name: "§bЗначение переменной"
+        name: "§бЗначение переменной"
         description: "§7Положите предмет или бумагу со значением"
         placeholder_item: "PAPER"
         slot_name: "value"
@@ -930,7 +930,7 @@ action_configurations:
   getGlobalVar:
     slots:
       0:
-        name: "§aИмя глобальной переменной"
+        name: "§аИмя глобальной переменной"
         description: "§7Положите бумагу с названием глобальной переменной"
         placeholder_item: "PAPER"
         slot_name: "name"
@@ -949,7 +949,7 @@ action_configurations:
         placeholder_item: "PAPER"
         slot_name: "name"
       1:
-        name: "§bЗначение переменной"
+        name: "§бЗначение переменной"
         description: "§7Положите предмет или бумагу со значением"
         placeholder_item: "PAPER"
         slot_name: "value"
@@ -987,7 +987,7 @@ action_configurations:
   getGlobalVar:
     slots:
       0:
-        name: "§aИмя глобальной переменной"
+        name: "§аИмя глобальной переменной"
         description: "§7Положите бумагу с названием глобальной переменной"
         placeholder_item: "PAPER"
         slot_name: "globalVariable"
@@ -1023,7 +1023,7 @@ action_configurations:
   randomNumber:
     slots:
       0:
-        name: "§aМинимальное значение"
+        name: "§аМинимальное значение"
         description: "§7Положите бумагу с минимальным значением (по умолчанию 1)"
         placeholder_item: "PAPER"
         slot_name: "minValue"
@@ -1039,7 +1039,7 @@ action_configurations:
         default_value: "100"
         hint: "Максимальное значение для генерации"
       2:
-        name: "§cЦелевая переменная"
+        name: "§цЦелевая переменная"
         description: "§7Положите бумагу с названием переменной для сохранения результата"
         placeholder_item: "PAPER"
         slot_name: "targetVariable"
@@ -1050,7 +1050,7 @@ action_configurations:
   variableInspector:
     slots:
       0:
-        name: "§aОбласть видимости"
+        name: "§аОбласть видимости"
         description: "§7Положите бумагу с областью видимости (local/world/player/server)"
         placeholder_item: "PAPER"
         slot_name: "scope"
@@ -1068,12 +1068,12 @@ action_configurations:
   ifVarEquals:
     slots:
       0:
-        name: "§aИмя переменной"
+        name: "§аИмя переменной"
         description: "§7Положите бумагу с названием переменной"
         placeholder_item: "PAPER"
         slot_name: "name"
       1:
-        name: "§bЗначение для сравнения"
+        name: "§бЗначение для сравнения"
         description: "§7Положите предмет или бумагу со значением"
         placeholder_item: "PAPER"
         slot_name: "value"
@@ -1082,12 +1082,12 @@ action_configurations:
   ifVarGreater:
     slots:
       0:
-        name: "§aИмя переменной"
+        name: "§аИмя переменной"
         description: "§7Положите бумагу с названием переменной"
         placeholder_item: "PAPER"
         slot_name: "name"
       1:
-        name: "§bЗначение для сравнения"
+        name: "§бЗначение для сравнения"
         description: "§7Положите предмет или бумагу со значением"
         placeholder_item: "PAPER"
         slot_name: "value"
@@ -1096,12 +1096,12 @@ action_configurations:
   ifVarLess:
     slots:
       0:
-        name: "§aИмя переменной"
+        name: "§аИмя переменной"
         description: "§7Положите бумагу с названием переменной"
         placeholder_item: "PAPER"
         slot_name: "name"
       1:
-        name: "§bЗначение для сравнения"
+        name: "§бЗначение для сравнения"
         description: "§7Положите предмет или бумагу со значением"
         placeholder_item: "PAPER"
         slot_name: "value"
@@ -1110,12 +1110,12 @@ action_configurations:
   compareVariable:
     slots:
       0:
-        name: "§aПервая переменная"
+        name: "§аПервая переменная"
         description: "§7Положите бумагу с названием первой переменной"
         placeholder_item: "PAPER"
         slot_name: "var1"
       1:
-        name: "§bОператор сравнения"
+        name: "§бОператор сравнения"
         description: "§7Положите бумагу с оператором (==, !=, <, >, <=, >=)"
         placeholder_item: "PAPER"
         slot_name: "operator"
@@ -1177,7 +1177,7 @@ action_configurations:
         validation: "number_range:0.5-2.0"
         default_value: "1.0"
       3:
-        name: "§dРасположение"
+        name: "§дРасположение"
         description: "§7Положите предмет, представляющий расположение звука"
         placeholder_item: "COMPASS"
         slot_name: "location"
@@ -1192,7 +1192,7 @@ action_configurations:
         slot_name: "particle"
         validation: "particle_type"
       1:
-        name: "§bКоличество"
+        name: "§бКоличество"
         description: "§7Положите бумагу с количеством частиц"
         placeholder_item: "PAPER"
         slot_name: "count"
@@ -1206,7 +1206,7 @@ action_configurations:
         validation: "number_range:0.0-10.0"
         default_value: "1.0"
       3:
-        name: "§dСкорость"
+        name: "§дСкорость"
         description: "§7Положите бумагу со скоростью частиц"
         placeholder_item: "PAPER"
         slot_name: "speed"
@@ -1247,7 +1247,7 @@ action_configurations:
         slot_name: "tps_threshold"
         validation: "number_range:1-20"
       1:
-        name: "§bУсловие"
+        name: "§бУсловие"
         description: "§7Положите бумагу с условием (above/below)"
         placeholder_item: "PAPER"
         slot_name: "condition"
@@ -1257,13 +1257,13 @@ action_configurations:
   createList:
     slots:
       0:
-        name: "§aИмя списка"
+        name: "§аИмя списка"
         description: "§7Положите бумагу с именем переменной списка"
         placeholder_item: "PAPER"
         slot_name: "list_name"
         validation: "variable_name"
       1:
-        name: "§bНачальные значения"
+        name: "§бНачальные значения"
         description: "§7Положите предметы для начальных значений списка"
         placeholder_item: "PAPER"
         slot_name: "initial_values"
@@ -1272,13 +1272,13 @@ action_configurations:
   listOperation:
     slots:
       0:
-        name: "§aИмя списка"
+        name: "§аИмя списка"
         description: "§7Положите бумагу с именем списка"
         placeholder_item: "PAPER"
         slot_name: "list_name"
         validation: "variable_name"
       1:
-        name: "§bОперация"
+        name: "§бОперация"
         description: "§7Положите бумагу с операцией (add/remove/get/set/size)"
         placeholder_item: "PAPER"
         slot_name: "operation"
@@ -1290,7 +1290,7 @@ action_configurations:
         slot_name: "value"
         validation: "any"
       3:
-        name: "§dИндекс"
+        name: "§дИндекс"
         description: "§7Положите бумагу с индексом (для get/set)"
         placeholder_item: "PAPER"
         slot_name: "index"
@@ -1299,7 +1299,7 @@ action_configurations:
   createMap:
     slots:
       0:
-        name: "§aИмя карты"
+        name: "§аИмя карты"
         description: "§7Положите бумагу с именем переменной карты"
         placeholder_item: "PAPER"
         slot_name: "map_name"
@@ -1308,13 +1308,13 @@ action_configurations:
   mapOperation:
     slots:
       0:
-        name: "§aИмя карты"
+        name: "§аИмя карты"
         description: "§7Положите бумагу с именем карты"
         placeholder_item: "PAPER"
         slot_name: "map_name"
         validation: "variable_name"
       1:
-        name: "§bОперация"
+        name: "§бОперация"
         description: "§7Положите бумагу с операцией (put/get/remove/keys/values)"
         placeholder_item: "PAPER"
         slot_name: "operation"
@@ -1326,7 +1326,7 @@ action_configurations:
         slot_name: "key"
         validation: "text"
       3:
-        name: "§dЗначение"
+        name: "§дЗначение"
         description: "§7Положите предмет или бумагу со значением (для put)"
         placeholder_item: "PAPER"
         slot_name: "value"
@@ -1342,13 +1342,13 @@ action_configurations:
         slot_name: "operation"
         validation: "enum:give,take,check"
       1:
-        name: "§bСумма"
+        name: "§бСумма"
         description: "§7Положите бумагу с суммой транзакции"
         placeholder_item: "PAPER"
         slot_name: "amount"
         validation: "number"
       2:
-        name: "§cЦелевой игрок"
+        name: "§цЦелевой игрок"
         description: "§7Положите предмет, представляющий игрока"
         placeholder_item: "PLAYER_HEAD"
         slot_name: "target"
@@ -1379,13 +1379,13 @@ action_configurations:
   debugLog:
     slots:
       0:
-        name: "§aСообщение"
+        name: "§аСообщение"
         description: "§7Положите бумагу с отладочным сообщением"
         placeholder_item: "PAPER"
         slot_name: "message"
         validation: "text"
       1:
-        name: "§bУровень"
+        name: "§бУровень"
         description: "§7Положите бумагу с уровнем логирования (INFO/WARN/ERROR)"
         placeholder_item: "PAPER"
         slot_name: "level"
@@ -1403,13 +1403,13 @@ action_configurations:
   variableInspector:
     slots:
       0:
-        name: "§aОбласть видимости"
+        name: "§аОбласть видимости"
         description: "§7Положите бумагу с областью видимости (local/world/player/server)"
         placeholder_item: "PAPER"
         slot_name: "scope"
         validation: "enum:local,world,player,server"
       1:
-        name: "§bФильтр"
+        name: "§бФильтр"
         description: "§7Положите бумагу с фильтром имен переменных (необязательно)"
         placeholder_item: "PAPER"
         slot_name: "filter"
